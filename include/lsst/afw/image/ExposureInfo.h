@@ -29,6 +29,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/Exposure.h"
 
 namespace lsst { namespace afw {
 
@@ -48,6 +49,51 @@ namespace image {
 
 class Calib;
 class Wcs;
+
+/**
+ *  @brief A simple Persistable struct containing ExposureCatalogs that record the inputs to a coadd.
+ *
+ *  The visits catalog corresponds to what task code refers to as coaddTempExps, while the 
+ *  ccds catalog corresponds to individual input CCD images (calexps), and has a "visitId"
+ *  column that points back to the visits catalog.
+ *
+ *  The records in the visits catalog will all have the same Wcs as the coadd, as they
+ *  represent images that have already been warped to the coadd frame.  Regardless of whether
+ *  or not the coadd is PSF-matched, the visit record Psf will generally be CoaddPsfs (albeit
+ *  single-depth ones, so they simply pick out the single non-coadd-Psf that is valid for each
+ *  point).
+ */
+class CoaddInputs : public table::io::PersistableFacade<CoaddInputs>, public table::io::Persistable {
+public:
+    table::ExposureCatalog visits;
+    table::ExposureCatalog ccds;
+    
+    /**
+     *  @brief Default constructor.
+     *
+     *  This simply calls the Catalog default constructors, which means the catalogs have no associated
+     *  Table and hence cannot be used for anything until a valid Catalog is assigned to them.
+     */
+    CoaddInputs();
+
+    /// Construct new catalogs from the given schemas.
+    CoaddInputs(table::Schema const & visitSchema, table::Schema const & ccdSchema);
+
+    /// Construct from shallow copies of the given catalogs.
+    CoaddInputs(table::ExposureCatalog const & visits_, table::ExposureCatalog const & ccds_);
+
+    /**
+     *  @brief Whether the object is in fact persistable - in this case, always true.
+     *
+     *  To avoid letting coadd provenance prevent coadd code from running, if a nested Wcs or
+     *  Psf is not persistable, it will silently not be saved, instead of throwing an exception.
+     */
+    virtual bool isPersistable() const;
+
+protected:
+    virtual std::string getPersistenceName() const;
+    virtual void write(OutputArchiveHandle & handle) const;
+};
 
 /**
  *  @brief A collection of all the things that make an Exposure different from a MaskedImage
@@ -130,6 +176,15 @@ public:
     /// Set the exposure's point-spread function
     void setPsf(CONST_PTR(detection::Psf) psf) { _psf = _clonePsf(psf); }
 
+    /// Does this exposure have coadd provenance catalogs?
+    bool hasCoaddInputs() const { return static_cast<bool>(_coaddInputs); }
+
+    /// Set the exposure's coadd provenance catalogs.
+    void setCoaddInputs(PTR(CoaddInputs) coaddInputs) { _coaddInputs = coaddInputs; }
+
+    /// Return a pair of catalogs that record the inputs, if this Exposure is a coadd (otherwise null).
+    PTR(CoaddInputs) getCoaddInputs() const { return _coaddInputs; }
+
     /**
      *  @brief Construct an ExposureInfo from its various components.
      *
@@ -143,7 +198,8 @@ public:
         CONST_PTR(Calib) const & calib = CONST_PTR(Calib)(),
         CONST_PTR(cameraGeom::Detector) const & detector = CONST_PTR(cameraGeom::Detector)(),
         Filter const & filter = Filter(),
-        PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)()
+        PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)(),
+        PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)()
     );
 
     /// Copy constructor; deep-copies all components except the metadata.
@@ -230,6 +286,7 @@ private:
     CONST_PTR(cameraGeom::Detector) _detector;
     Filter _filter;
     PTR(daf::base::PropertySet) _metadata;
+    PTR(CoaddInputs) _coaddInputs;
 };
 
 }}} // lsst::afw::image
