@@ -28,8 +28,59 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 namespace lsst { namespace afw { namespace image {
+
+//-----------------------------------------------------------------------------------------------------------
+//----- CoaddInputs -----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+
+namespace {
+
+class CoaddInputsFactory : public table::io::PersistableFactory {
+public:
+
+    virtual PTR(table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 2);
+        PTR(CoaddInputs) result = boost::make_shared<CoaddInputs>();
+        result->visits = table::ExposureCatalog::readFromArchive(archive, catalogs.front());
+        result->ccds = table::ExposureCatalog::readFromArchive(archive, catalogs.back());
+        return result;
+    }
+
+    CoaddInputsFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+
+};
+
+CoaddInputsFactory registration("CoaddInputs");
+
+} // anonymous
+
+CoaddInputs::CoaddInputs() : visits(), ccds() {}
+
+CoaddInputs::CoaddInputs(table::Schema const & visitSchema, table::Schema const & ccdSchema) :
+    visits(visitSchema), ccds(ccdSchema)
+{}
+
+CoaddInputs::CoaddInputs(table::ExposureCatalog const & visits_, table::ExposureCatalog const & ccds_) :
+    visits(visits_), ccds(ccds_)
+{}
+
+bool CoaddInputs::isPersistable() const { return true; }
+
+std::string CoaddInputs::getPersistenceName() const { return "CoaddInputs"; }
+
+void CoaddInputs::write(OutputArchiveHandle & handle) const {
+    visits.writeToArchive(handle, true); // true == permissive - just ignore Psfs, Wcss that can't be saved
+    ccds.writeToArchive(handle, true);
+}
+
+//-----------------------------------------------------------------------------------------------------------
+//----- ExposureInfo ----------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
@@ -57,7 +108,8 @@ ExposureInfo::ExposureInfo(
     CONST_PTR(Calib) const & calib,
     CONST_PTR(cameraGeom::Detector) const & detector,
     Filter const & filter,
-    PTR(daf::base::PropertySet) const & metadata
+    PTR(daf::base::PropertySet) const & metadata,
+    PTR(CoaddInputs) const & coaddInputs
 ) : _wcs(_cloneWcs(wcs)),
     _psf(_clonePsf(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
@@ -115,6 +167,10 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     // In the future, we might not have exactly three image HDUs, but we always do right now,
     // so 1=primary, 2=image, 3=mask, 4=variance, 5+=archive
     data.metadata->set("AR_HDU", 5, "HDU containing the archive used to store ancillary objects");
+    if (hasCoaddInputs()) {
+        int coaddInputsId = data.archive.put(getCoaddInputs());
+        data.metadata->set("COADD_INPUTS_ID", coaddInputsId, "archive ID for coadd inputs catalogs");
+    }
     if (hasPsf() && getPsf()->isPersistable()) {
         int psfId = data.archive.put(getPsf());
         data.metadata->set("PSF_ID", psfId, "archive ID for the Exposure's main Psf");
@@ -205,7 +261,9 @@ void ExposureInfo::_readFits(
         int psfId = metadata->get<int>("PSF_ID", 0);
         _psf = archive.get<detection::Psf>(psfId);
         int wcsId = metadata->get<int>("WCS_ID", 0);
-        _wcs = archive.get<Wcs>(wcsId);        
+        _wcs = archive.get<Wcs>(wcsId);
+        int coaddInputsId = metadata->get<int>("COADD_INPUTS_ID", 0);
+        _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
     }
 
     _metadata = metadata;
