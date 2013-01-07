@@ -17,22 +17,16 @@ namespace detection {
 //
 // WarpedPsf: a class which combines an unwarped psf and a camera distortion
 //
-// If B_0(x) = true surface brightness (unwarped, not PSF convolved)
-//    B_1 = unwarped PSF-convolved brightness
-//    B_2 = warped PSF-convolved brightness
+// If K_0(x,x') is the unwarped PSF, and f is the camera distortion, then the 
+// warped PSF is defined by
 //
-//    P_0 = unwarped PSF = convolution kernel relating B_0 and B_1
-//    P_1 = warped PSF = convolution kernel relating B_0 and B_2
+//   K(f(x),f(x')) = K_0(x,x')      (*)
 //
-// Then
-//   B_2(x) = B_1(T(x))
-//          = 
+// We linearize the camera distortion in the vicinity of the point where the
+// PSF is computed.  The definition (*) does not include the Jacobian of the
+// transformation, since the afw convention is that PSF's are normalized to
+// have integral 1 anyway.
 //
-//   B_{obs}(x) = int d^2x' P(x,x') B_0(x')
-//
-//   B_
-//
-
 class WarpedPsf : public Psf {
 public:
     typedef boost::shared_ptr<WarpedPsf> Ptr;
@@ -50,22 +44,20 @@ public:
     // convention for the transform is that p' = distortion.forwardTransform(p)
     //
     WarpedPsf(Psf::Ptr undistorted_psf, XYTransform::Ptr distortion);
-    
 
 protected:
     //
     // Devirtualize class Psf
     //
-    // The main work is done in doComputeImage().  We also define doGetLocalKernel(), which simply calls doComputeImage()
-    // and returns a FixedKernel.  We currently don't define doGetKernel() (the default implementation in the parent class
-    // returns a null pointer, which caller is responsible for treating as an error).  Defining doGetKernel() is problematic:
-    // we would need to compute a "global" kernel size; this is tricky since the size has pixel dependence which is controlled
-    // by derivatives of the distortion.
+    // We currently don't define doGetKernel() (the default implementation in the parent class
+    // returns a null pointer, which caller is responsible for handling).  Defining doGetKernel()
+    // would be problematic; we would need to compute a "global" kernel size and center but these
+    // are pixel-dependent.
     //
     virtual Psf::Ptr clone() const;
 
     //
-    // Notes:
+    // API notes:
     //   (1) 'size' param can be Extent2I(0,0) if caller wants "native" size
     //   (2) 'distort' param ignored for now (this will eventually be removed in favor of a different API)
     //
@@ -86,8 +78,10 @@ protected:
     Psf::Ptr _undistorted_psf;
     lsst::afw::image::XYTransform::Ptr _distortion;
 
-    Image::Ptr _make_warped_kernel_image(Point2D const &p, Color const &color, Point2I &ctr) const;
     Kernel::Ptr _doGetLocalKernel(Point2D const &p, Color const &c) const;
+    
+    // the image returned by this member function is used in doComputeImage() and doGetLocalKernel()
+    Image::Ptr _make_warped_kernel_image(Point2D const &p, Color const &color, Point2I &ctr) const;
 };
 
 
