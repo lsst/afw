@@ -88,18 +88,6 @@ public:
      */
     bool contains(geom::Point2D const & point, Wcs const & wcs) const;
 
-    /**
-     *  @brief Return true if the bounding box overlaps the given box, taking into account its Wcs
-     *         (given) and the Wcs of the ExposureRecord.
-     *
-     *  This method assumes the projection of a box from one Wcs to another is a quadrilateral (i.e.
-     *  the sides of the region are still straight).  This is not quite correct for some combinations
-     *  of projections, but it should always be very close when both boxes are small.
-     *
-     *  @throw LogicErrorException if the ExposureRecord has no Wcs
-     */
-    bool overlaps(geom::Box2D const & box, Wcs const & wcs) const;
-
     //@{
     /// Get/Set the the attached Wcs or Psf.  No copies are made.
     PTR(Wcs) getWcs() { return _wcs; }
@@ -342,20 +330,6 @@ public:
         ExposureCatalogT result(this->getTable());
         for (const_iterator i = this->begin(); i != this->end(); ++i) {
             if (i->contains(point, wcs)) result.push_back(i);
-        }
-        return result;
-    }
-
-    /**
-     *  @brief Return a shallow subset of the catalog that with only those records that overlap the
-     *         given box.
-     *
-     *  @sa ExposureRecord::overlaps
-     */
-    ExposureCatalogT findOverlaps(geom::Box2D const & box, Wcs const & wcs) const {
-        ExposureCatalogT result(this->getTable());
-        for (const_iterator i = this->begin(); i != this->end(); ++i) {
-            if (i->overlaps(box, wcs)) result.push_back(i);
         }
         return result;
     }

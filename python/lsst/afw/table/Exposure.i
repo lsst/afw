@@ -81,7 +81,6 @@ public:
 
     ExposureCatalogT findContains(Coord const & coord) const;
     ExposureCatalogT findContains(geom::Point2D const & point, Wcs const & wcs) const;
-    ExposureCatalogT findOverlaps(geom::Box2D const & box, Wcs const & wcs) const;
 };
 
 %pythondynamic;

@@ -230,20 +230,6 @@ bool ExposureRecord::contains(geom::Point2D const & point, Wcs const & wcs) cons
     return contains(*wcs.pixelToSky(point));
 }
 
-bool ExposureRecord::overlaps(geom::Box2D const & box, Wcs const & wcs) const {
-    if (!getWcs()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
-            "ExposureRecord does not have a Wcs; cannot call overlaps()"
-        );
-    }
-    geom::Box2D bbox(getBBox());
-    return bbox.contains(getWcs()->skyToPixel(*wcs.pixelToSky(box.getMin())))
-        || bbox.contains(getWcs()->skyToPixel(*wcs.pixelToSky(box.getMax())))
-        || bbox.contains(getWcs()->skyToPixel(*wcs.pixelToSky(box.getMinX(), box.getMaxY())))
-        || bbox.contains(getWcs()->skyToPixel(*wcs.pixelToSky(box.getMaxX(), box.getMinY())));
-}
-
 ExposureRecord::ExposureRecord(PTR(ExposureTable) const & table) : BaseRecord(table) {}
 
 PTR(ExposureTable) ExposureTable::make(Schema const & schema) {
