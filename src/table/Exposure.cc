@@ -49,6 +49,27 @@ private:
 
 };
 
+// Schema prepended when saving an Exposure table
+struct PersistenceSchema : private boost::noncopyable {
+    Schema schema;
+    Key<int> wcs;
+    Key<int> psf;
+
+    static PersistenceSchema const & get() {
+        static PersistenceSchema const instance;
+        return instance;
+    }
+
+private:
+    PersistenceSchema() :
+        schema(),
+        wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
+        psf(schema.addField<int>("psf", "archive ID for Psf object"))
+    {
+        schema.getCitizen().markPersistent();
+    }
+};
+
 } // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
@@ -60,11 +81,12 @@ private:
 
 namespace {
 
+
 class ExposureFitsWriter : public io::FitsWriter {
 public:
 
     ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive = PTR(io::OutputArchive)())
-        : io::FitsWriter(fits), _doWriteArchive(false), _archive(archive), _psfCol(-1), _wcsCol(-1)
+        : io::FitsWriter(fits), _doWriteArchive(false), _archive(archive)
     {
         if (!_archive) {
             _doWriteArchive = true;
@@ -84,34 +106,34 @@ protected:
 
     bool _doWriteArchive;
     PTR(io::OutputArchive) _archive;
-    int _psfCol;
-    int _wcsCol;
+    PTR(BaseRecord) _record;
+    SchemaMapper _mapper;
 };
 
 void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(ExposureTable) table = boost::dynamic_pointer_cast<ExposureTable const>(t);
-    if (!table) {
+    CONST_PTR(ExposureTable) inTable = boost::dynamic_pointer_cast<ExposureTable const>(t);
+    if (!inTable) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Cannot use a ExposureFitsWriter on a non-Exposure table."
         );
     }
-    io::FitsWriter::_writeTable(table, nRows);
-    _psfCol = _fits->addColumn<int>("psf", 1, "archive ID of PSF");
-    _wcsCol = _fits->addColumn<int>("wcs", 1, "archive ID of WCS");
-    _fits->writeKey("PSF_COL", _psfCol + 1, "Column with archive ID of PSF");
-    _fits->writeKey("WCS_COL", _wcsCol + 1, "Column with archive ID of WCS");
+    std::vector<Schema> inSchemas;
+    inSchemas.push_back(PersistenceSchema::get().schema);
+    inSchemas.push_back(inTable->getSchema());
+    _mapper = SchemaMapper::join(inSchemas).back(); // don't need front; it's an identity mapper
+    PTR(BaseTable) outTable = BaseTable::make(_mapper.getOutputSchema());
+    io::FitsWriter::_writeTable(outTable, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
+    _record = outTable->makeRecord();
 }
 
 void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
     ExposureRecord const & record = static_cast<ExposureRecord const &>(r);
-    io::FitsWriter::_writeRecord(record);
-    int psfId = _archive->put(record.getPsf());
-    int wcsId = _archive->put(record.getWcs());
-    _fits->writeTableScalar(_row, _psfCol, psfId);
-    _fits->writeTableScalar(_row, _wcsCol, wcsId);
-    
+    _record->assign(record, _mapper);
+    _record->set(PersistenceSchema::get().psf, _archive->put(record.getPsf()));
+    _record->set(PersistenceSchema::get().wcs, _archive->put(record.getWcs()));
+    io::FitsWriter::_writeRecord(*_record);
 }
 
 } // anonymous
@@ -145,48 +167,32 @@ protected:
 
     virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
-    int _psfCol;
-    int _wcsCol;
+    PTR(BaseTable) _inTable;
     PTR(io::InputArchive) _archive;
+    SchemaMapper _mapper;
 };
 
 PTR(BaseTable) ExposureFitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
-    _psfCol = metadata->get("PSF_COL", 0);
-    if (_psfCol >= 0) {
-        metadata->remove("PSF_COL");
-        metadata->remove((boost::format("TTYPE%d") % _psfCol).str());
-        metadata->remove((boost::format("TFORM%d") % _psfCol).str());
-    }
-    _wcsCol = metadata->get("WCS_COL", 0);
-    if (_wcsCol >= 0) {
-        metadata->remove("WCS_COL");
-        metadata->remove((boost::format("TTYPE%d") % _wcsCol).str());
-        metadata->remove((boost::format("TFORM%d") % _wcsCol).str());
-    }
     Schema schema(*metadata, true);
-    PTR(ExposureTable) table =  ExposureTable::make(schema);
+    _inTable = BaseTable::make(schema);
+    _mapper = SchemaMapper::removeMinimalSchema(_inTable->getSchema(), PersistenceSchema::get().schema);
+    PTR(ExposureTable) table = ExposureTable::make(_mapper.getOutputSchema());
     _startRecords(*table);
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
     return table;
 }
 
-PTR(BaseRecord) ExposureFitsReader::_readRecord(PTR(BaseTable) const & table) {
-    PTR(ExposureRecord) record = boost::static_pointer_cast<ExposureRecord>(
-        io::FitsReader::_readRecord(table)
-    );
-    if (!record) return record;
-    if (_psfCol >= 0) {
-        int psfId = 0;
-        _fits->readTableScalar(_row, _psfCol, psfId);
-        record->setPsf(_archive->get<detection::Psf>(psfId));
-    }
-    if (_wcsCol >= 0) {
-        int wcsId = 0;
-        _fits->readTableScalar(_row, _wcsCol, wcsId);
-        record->setWcs(_archive->get<image::Wcs>(wcsId));
+PTR(BaseRecord) ExposureFitsReader::_readRecord(PTR(BaseTable) const & t) {
+    PTR(ExposureRecord) record;
+    PTR(ExposureTable) table = boost::static_pointer_cast<ExposureTable>(t);
+    PTR(BaseRecord) inRecord = io::FitsReader::_readRecord(_inTable);
+    if (inRecord) {
+        record = table->copyRecord(*inRecord, _mapper);
+        record->setPsf(_archive->get<Psf>(inRecord->get(PersistenceSchema::get().psf)));
+        record->setWcs(_archive->get<Wcs>(inRecord->get(PersistenceSchema::get().wcs)));
     }
     return record;
 }
