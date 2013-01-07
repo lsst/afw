@@ -85,8 +85,9 @@ public:
 };
 
 %pythondynamic;
+%template (_ExposureCatalogBase) CatalogT<ExposureRecord>;
 %template (_ExposureCatalogSortedBase) SortedCatalogT<ExposureRecord>;
 %pythonnondynamic;
-%declareSortedCatalog(ExposureCatalogT, Exposure)
+%declareCatalog(ExposureCatalogT, Exposure)
 
 }}} // namespace lsst::afw::table
