@@ -173,6 +173,7 @@ BaseCatalog OutputArchiveHandle::makeCatalog(Schema const & schema) {
 
 void OutputArchiveHandle::saveCatalog(BaseCatalog const & catalog) {
     _impl->saveCatalog(catalog, _id, _name, _catPersistable);
+    ++_catPersistable;
 }
 
 int OutputArchiveHandle::put(Persistable const * obj) {
