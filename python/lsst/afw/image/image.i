@@ -135,6 +135,8 @@
         return args[0]
     }
 }
+
+%supportSlicing(lsst::afw::image::Image, PIXEL_TYPE);
 %enddef
 
 

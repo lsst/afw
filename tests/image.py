@@ -369,7 +369,61 @@ class ImageTestCase(unittest.TestCase):
         self.image1 = factory(dims)
         self.assertEqual(self.image1.get(10, 10), 0)
 
+    def testImageSlices(self):
+        """Test image slicing, which generate sub-images using Box2I under the covers"""
+        im = afwImage.ImageF(10, 20)
+        im[-1, :] =  -5
+        im[..., 18] =   -5              # equivalent to im[:, 18]
+        im[4,  10]   =  10
+        im[-3:, -2:] = 100
+        im[-2, -2]   = -10
+        sim = im[1:4, 6:10]
+        sim[:] = -1
+        im[0:4, 0:4] = im[2:6, 8:12]
 
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0,  6),  0)
+        self.assertEqual(im.get(9, 15), -5)
+        self.assertEqual(im.get(5, 18), -5)
+        self.assertEqual(im.get(6, 17),  0)
+        self.assertEqual(im.get(7, 18),100)
+        self.assertEqual(im.get(9, 19),100)
+        self.assertEqual(im.get(8, 18),-10)
+        self.assertEqual(im.get(1,  6), -1)
+        self.assertEqual(im.get(3,  9), -1)
+        self.assertEqual(im.get(4, 10), 10)
+        self.assertEqual(im.get(4,  9),  0)
+        self.assertEqual(im.get(2,  2), 10)
+        self.assertEqual(im.get(0,  0), -1)
+
+    def testImageSliceFromBox(self):
+        """Test using a Box2I to index an Image"""
+        im = afwImage.ImageF(10, 20)
+        bbox = afwGeom.BoxI(afwGeom.PointI(1, 3), afwGeom.PointI(6, 9))
+        im[bbox] = -1
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0,  6),  0)
+        self.assertEqual(im.get(1,  6), -1)
+        self.assertEqual(im.get(3,  9), -1)
+
+    def testConversionToScalar(self):
+        """Test that 1-pixel images can be converted to scalars"""
+        self.assertEqual(int(afwImage.ImageI(1, 1)), 0.0)
+        self.assertEqual(float(afwImage.ImageI(1, 1)), 0.0)
+
+        im = afwImage.ImageF(10, 20)
+        im.set(666)
+
+        self.assertEqual(float(im[0,0]), 666)
+        self.assertEqual(int(im[0,0]), 666)
+
+        self.assertRaises(TypeError, int, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

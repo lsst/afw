@@ -411,6 +411,26 @@ class ExposureTestCase(unittest.TestCase):
         m = afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
         e = afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20))))
 
+    def testImageSlices(self):
+        """Test image slicing, which generate sub-images using Box2I under the covers"""
+        exp = afwImage.ExposureF(10, 20)
+        mi = exp.getMaskedImage()
+        mi[9, 19] = 10
+        # N.b. Exposures don't support setting/getting the pixels so can't replicate e.g. Image's slice tests
+        sexp = exp[1:4, 6:10]
+        self.assertEqual(sexp.getDimensions(), afwGeom.ExtentI(3, 4))
+        sexp = exp[..., -3:]
+        self.assertEqual(sexp.getDimensions(), afwGeom.ExtentI(exp.getWidth(), 3))
+        self.assertEqual(sexp.getMaskedImage().get(sexp.getWidth() - 1, sexp.getHeight() - 1),
+                          exp.getMaskedImage().get( exp.getWidth() - 1,  exp.getHeight() - 1))
+
+    def testConversionToScalar(self):
+        """Test that even 1-pixel Exposures can't be converted to scalars"""
+        im = afwImage.ExposureF(10, 20)
+
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
