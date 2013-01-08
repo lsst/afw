@@ -221,13 +221,12 @@ namespace math {
      * - The center pixels should be adjacent to the kernel center.
      *   Again, this avoids extra pixels that are sure to have value 0.
      * - It has two parameters: fractional x and fractional row position on the source %image.
-     *   The fractional position for each axis is in the range (-1, 1):
-     *   - 0 if the position of the source along that axis is on the center of the pixel.
-     *   - +/-0.999... if the position on the source along that axis
-     *     is almost on the center of one of the adjacent pixels.
-     * - If kernel center pixel is to the left/right of actual kernel center (remember that size is even)
-     *   then fractional x should be >= 0 / <= 0 to avoid wasting pixels. Similarly for y.
-     *   By default kernel center is to left/below kernel center, so fractional x and y should be >= 0.
+     *   The fractional position is the offset of the pixel position on the source
+     *   from the center of a nearby source pixel:
+     *   - The pixel whose center is just below or to the left of the source position:
+     *     0 <= fractional x and y < 0 and the kernel center is the default (size-1)/2.
+     *   - The pixel whose center is just above or to the right of the source position:
+     *     -1.0 < fractional x and y <= 0 and the kernel center must be set to (size+1)/2.
      */
     PTR(SeparableKernel) makeWarpingKernel(std::string name);
 

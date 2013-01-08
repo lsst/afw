@@ -85,17 +85,18 @@ class offsetImageTestCase(unittest.TestCase):
             ds9.mtv(self.inImage, frame=frame)
             ds9.pan(50, 50, frame=frame)
             ds9.dot("+", 50, 50, frame=frame)
-
-        for delta in [-0.49, 0.51]:
-            for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
-                outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, self.algorithm)
+        
+        for algorithm in ("lanczos5", "bilinear", "nearest"):
+            for delta in [-0.49, 0.51]:
+                for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
+                    outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, algorithm)
                 
-                if False and display:
-                    frame += 1
-                    ds9.mtv(outImage, frame=frame)
-                    ds9.pan(50, 50, frame=frame)
-                    ds9.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0(),
-                            frame=frame)
+                    if False and display:
+                        frame += 1
+                        ds9.mtv(outImage, frame=frame)
+                        ds9.pan(50, 50, frame=frame)
+                        ds9.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0(),
+                                frame=frame)
 
     def calcGaussian(self, im, x, y, amp, sigma1):
         """Insert a Gaussian into the image centered at (x, y)"""
@@ -112,44 +113,56 @@ class offsetImageTestCase(unittest.TestCase):
     def testOffsetGaussian(self):
         """Insert a Gaussian, offset, and check the residuals"""
         size = 100
-        im = afwImage.ImageF(size, size)
+        refIm = afwImage.ImageF(size, size)
+        unshiftedIm = afwImage.ImageF(size, size)
 
         xc, yc = size/2.0, size/2.0
 
         amp, sigma1 = 1.0, 3
-        #
-        # Calculate an image with a Gaussian at (xc -dx, yc - dy) and then shift it to (xc, yc)
-        #
-        dx, dy = 0.5, -0.5
-        self.calcGaussian(im, xc - dx, yc - dy, amp, sigma1)
-        im2 = afwMath.offsetImage(im, dx, dy, "lanczos5")
+
         #
         # Calculate Gaussian directly at (xc, yc)
         #
-        self.calcGaussian(im, xc, yc, amp, sigma1)
-        #
-        # See how they differ
-        #
-        if display:
-            ds9.mtv(im, frame=0)
+        self.calcGaussian(refIm, xc, yc, amp, sigma1)
 
-        im -= im2
+        for dx in (-0.5, 0.0, 0.3):
+            for dy in (-2.3, -0.9, 0.0, 0.5, 1.9):
+                self.calcGaussian(unshiftedIm, xc - dx, yc - dy, amp, sigma1)
+                for algorithm, maxMean, maxLimFac in (
+#                     ("lanczos5", 1e-7, 1.5e-3),
+#                     ("bilinear", 1e-7, 3e-2),
+                    ("nearest", 1e-7, 3e-2),
+                ):
+                    #
+                    # Calculate an image with a Gaussian at (xc -dx, yc - dy) and then shift it to (xc, yc)
+                    #
+                    im = afwImage.ImageF(size, size)
+                    im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
 
-        if display:
-            ds9.mtv(im, frame=1)
+                    if display:
+                        ds9.mtv(im, frame=0)
 
-        imArr = im.getArray()
-        imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
-        imMean = imGoodVals.mean()
-        imMax = imGoodVals.max()
-        imMin = imGoodVals.min()
+                    im -= refIm
 
-        if False:
-            print "mean = %g, min = %g, max = %g" % (imMean, imMin, imMax)
+                    if display:
+                        ds9.mtv(im, frame=1)
+
+                    imArr = im.getArray()
+                    imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
+                    imMean = imGoodVals.mean()
+                    imMax = imGoodVals.max()
+                    imMin = imGoodVals.min()
+
+                    if False:
+                        print "mean = %g, min = %g, max = %g" % (imMean, imMin, imMax)
             
-        self.assertTrue(abs(imMean) < 1e-7)
-        self.assertTrue(abs(imMin) < 1.2e-3*amp)
-        self.assertTrue(abs(imMax) < 1.2e-3*amp)
+                    try:
+                        self.assertLess(abs(imMean), maxMean)
+                        self.assertLess(abs(imMin), maxLimFac*amp)
+                        self.assertLess(abs(imMax), maxLimFac*amp)
+                    except:
+                        print "failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy)
+                        raise
 
 # the following would be preferable if there was an easy way to NaN pixels
 #

@@ -118,7 +118,7 @@ PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
  */
 afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (double x) const {
     // this expression is faster than using conditionals, but offers no sanity checking
-    return fabs(this->_params[0] - x) < 0.5 ? 1.0 : 0.0;
+    return static_cast<double>((fabs(this->_params[0]) < 0.5) == (fabs(x) < 0.5));
 }
 
 /**
