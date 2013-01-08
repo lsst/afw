@@ -58,22 +58,22 @@ class offsetImageTestCase(unittest.TestCase):
         self.inImage = afwImage.ImageF(200, 100)
         self.background = 200
         self.inImage.set(self.background)
-        self.algorithm = "lanczos5"
 
     def tearDown(self):
         del self.inImage
 
     def testSetFluxConvervation(self):
         """Test that flux is preserved"""
+        
+        for algorithm in ("lanczos5", "bilinear", "nearest"):
+            outImage = afwMath.offsetImage(self.inImage, 0, 0, algorithm)
+            self.assertEqual(outImage.get(50, 50), self.background)
 
-        outImage = afwMath.offsetImage(self.inImage, 0, 0, self.algorithm)
-        self.assertEqual(outImage.get(50, 50), self.background)
+            outImage = afwMath.offsetImage(self.inImage, 0.5, 0, algorithm)
+            self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
 
-        outImage = afwMath.offsetImage(self.inImage, 0.5, 0, self.algorithm)
-        self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
-
-        outImage = afwMath.offsetImage(self.inImage, 0.5, 0.5, self.algorithm)
-        self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
+            outImage = afwMath.offsetImage(self.inImage, 0.5, 0.5, algorithm)
+            self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
 
     def testSetIntegerOffset(self):
         """Test that we can offset by positive and negative amounts"""
@@ -112,6 +112,7 @@ class offsetImageTestCase(unittest.TestCase):
 
     def testOffsetGaussian(self):
         """Insert a Gaussian, offset, and check the residuals"""
+
         size = 50
         refIm = afwImage.ImageF(size, size)
         unshiftedIm = afwImage.ImageF(size, size)
