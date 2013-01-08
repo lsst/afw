@@ -261,13 +261,13 @@ ExposureTable::MinimalSchema & ExposureTable::getMinimalSchema() {
 }
 
 PTR(io::FitsWriter)
-ExposureTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
-    return boost::make_shared<ExposureFitsWriter>(fits);
+ExposureTable::makeFitsWriter(fits::Fits * fitsfile) const {
+    return boost::make_shared<ExposureFitsWriter>(fitsfile);
 }
 
 PTR(io::FitsWriter)
-ExposureTable::makeFitsWriter(io::FitsWriter::Fits * fits, PTR(io::OutputArchive) archive) const {
-    return boost::make_shared<ExposureFitsWriter>(fits, archive);
+ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive) const {
+    return boost::make_shared<ExposureFitsWriter>(fitsfile, archive);
 }
 
 template class CatalogT<ExposureRecord>;

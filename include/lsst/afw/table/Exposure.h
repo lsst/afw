@@ -202,8 +202,8 @@ private:
     template <typename RecordT> friend class ExposureCatalogT;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
-    PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits, PTR(io::OutputArchive) archive) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
+    PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive) const;
 };
 
 #ifndef SWIG
