@@ -28,8 +28,8 @@ im[1:5, 2:12] = 100
 
 This opens up various possiblities; the following all work:
 \code
-im[-1,  ...] =  -5
-im[..., 18] =   -5
+im[-1, :] =  -5
+im[..., 18] =   -5	# the same as im[:, 18]
 im[4,  10]   =  10
 im[-3:, -2:] = 100
 im[-2, -2]   = -10
