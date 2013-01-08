@@ -127,6 +127,22 @@ namespace boost {
 %template(pairDoubleDouble) std::pair<double, double>;
 %template(mapStringInt)     std::map<std::string, int>;
 
+%define %defineClone(PY_TYPE, TYPE, PIXEL_TYPES...)
+%extend TYPE<PIXEL_TYPES> {
+    %pythoncode {
+    def clone(self):
+        """Return a deep copy of self"""
+        return PY_TYPE(self, True)
+    #
+    # Call our ctor with the provided arguments
+    #
+    def Factory(self, *args):
+        """Return an object of this type"""
+        return PY_TYPE(*args)
+    }
+}
+%enddef
+
 /************************************************************************************************************/
 // Images, Masks, and MaskedImages
 %include "lsst/afw/image/LsstImageTypes.h"
@@ -189,14 +205,7 @@ namespace boost {
 %lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %boost_picklable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 
-%extend lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
-    %pythoncode {
-    def clone(self, *args):
-        """Return an Exposure of this type"""
-        return Exposure##TYPE(*args)
-    Factory = clone
-    }
-}
+%defineClone(Exposure##TYPE, lsst::afw::image::Exposure, PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %enddef
 
 %exposurePtr(boost::uint16_t);

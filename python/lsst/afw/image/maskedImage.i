@@ -47,14 +47,6 @@
 
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {
-    def clone(self, *args):
-        """Return a MaskedImage class of this type
-        
-        A synonym for the attribute __class__
-        """
-        return NAME##TYPE(*args)
-    Factory = clone
-
     def set(self, x, y=None, values=None):
         """Set the point (x, y) to a triple (value, mask, variance)"""
 
@@ -146,6 +138,7 @@
         return args[0]
     }
 }
+%defineClone(NAME##TYPE, lsst::afw::image::MaskedImage, PIXEL_TYPES);
 %enddef
 
 /************************************************************************************************************/

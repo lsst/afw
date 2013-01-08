@@ -85,14 +85,6 @@
     }
 
     %pythoncode {
-
-    def clone(self, *args):
-        """Return an Image class of this type
-        
-        A synonym for the attribute __class__
-        """
-        return NAME##TYPE(*args)
-    Factory = clone
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"
     #
@@ -135,8 +127,8 @@
         return args[0]
     }
 }
+%defineClone(NAME##TYPE, lsst::afw::image::Image, PIXEL_TYPE);
 %enddef
-
 
 /************************************************************************************************************/
 
