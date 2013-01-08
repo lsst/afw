@@ -145,10 +145,10 @@ namespace boost {
        -1
        1:10
        :-2
-       ... (python's Ellipsis)
+       : (equivalent to ... (python's Ellipsis) which is also supported)
 
     E.g.
-     im[-1,  ...]
+     im[-1, :]
      im[..., 18]
      im[4,  10]
      im[-3:, -2:]

@@ -372,8 +372,8 @@ class ImageTestCase(unittest.TestCase):
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
         im = afwImage.ImageF(10, 20)
-        im[-1,  ...] =  -5
-        im[..., 18] =   -5
+        im[-1, :] =  -5
+        im[..., 18] =   -5              # equivalent to im[:, 18]
         im[4,  10]   =  10
         im[-3:, -2:] = 100
         im[-2, -2]   = -10
