@@ -73,6 +73,16 @@ public:
         _ix(other._ix), _iy(other._iy),
         _fx(other._fx), _fy(other._fy), _peakValue(other._peakValue) 
     { }
+    Peak& operator=(Peak const & other)
+    {
+        if (this != &other) {
+            _id = ++id;
+            _ix = other._ix; _iy = other._iy;
+            _fx = other._fx; _fy = other._fy;
+            _peakValue = other._peakValue;
+        }
+        return *this;
+    }
 
     ~Peak() {};
     
