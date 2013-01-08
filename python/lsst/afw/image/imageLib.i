@@ -127,6 +127,22 @@ namespace boost {
 %template(pairDoubleDouble) std::pair<double, double>;
 %template(mapStringInt)     std::map<std::string, int>;
 
+%define %defineClone(PY_TYPE, TYPE, PIXEL_TYPES...)
+%extend TYPE<PIXEL_TYPES> {
+    %pythoncode {
+    def clone(self):
+        """Return a deep copy of self"""
+        return PY_TYPE(self, True)
+    #
+    # Call our ctor with the provided arguments
+    #
+    def Factory(self, *args):
+        """Return an object of this type"""
+        return PY_TYPE(*args)
+    }
+}
+%enddef
+
 /************************************************************************************************************/
 
 %pythoncode {
@@ -196,13 +212,13 @@ namespace boost {
         """
         __getitem__(self, imageSlice) -> NAME""" + """PIXEL_TYPES
         """
-        return self.clone(self, _getBBoxFromSliceTuple(self, imageSlice))
+        return self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
 
     def __setitem__(self, imageSlice, rhs):
         """
         __setitem__(self, imageSlice, value)
         """
-        lhs = self.clone(self, _getBBoxFromSliceTuple(self, imageSlice))
+        lhs = self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
         try:
             lhs <<= rhs
         except TypeError:
@@ -290,16 +306,10 @@ namespace boost {
 %lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 %boost_picklable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 
-%extend lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
-    %pythoncode {
-    def clone(self, *args):
-        """Return an Exposure of this type"""
-        return Exposure##TYPE(*args)
-    Factory = clone
-    }
-}
 %supportSlicing(lsst::afw::image::Exposure,
                 PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%defineClone(Exposure##TYPE, lsst::afw::image::Exposure,
+             PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %enddef
 
 %exposurePtr(boost::uint16_t);

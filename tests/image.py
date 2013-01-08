@@ -425,6 +425,23 @@ class ImageTestCase(unittest.TestCase):
         self.assertRaises(TypeError, int, im) # only single pixel images may be converted
         self.assertRaises(TypeError, float, im) # only single pixel images may be converted
 
+    def testClone(self):
+        """Test that clone works properly"""
+        im = afwImage.ImageF(10, 20)
+        im[0, 0] = 100
+        
+        im2 = im.clone()                # check that clone with no arguments makes a deep copy
+        self.assertEqual(im.getDimensions(), im2.getDimensions())
+        self.assertEqual(im.get(0,0), im2.get(0,0))
+        im2[0, 0] += 100
+        self.assertNotEqual(im.get(0,0), im2.get(0,0)) # so it's a deep copy
+
+        im2 = im[0:3, 0:5].clone()  # check that we can slice-then-clone
+        self.assertEqual(im2.getDimensions(), afwGeom.ExtentI(3, 5))
+        self.assertEqual(im.get(0,0), im2.get(0,0))
+        im2[0,0] += 10
+        self.assertNotEqual(float(im[0,0]), float(im2[0,0])) # equivalent to im.get(0, 0) etc.
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DecoratedImageTestCase(unittest.TestCase):
@@ -589,7 +606,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         image.set(2, 2, 100)
 
         bbox    = afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
-        subImage = image.Factory(image, bbox, afwImage.LOCAL)
+        subImage = image.Factory(image, bbox)
         subImageF = subImage.convertFloat()
         
         if display:
@@ -597,7 +614,7 @@ class DecoratedImageTestCase(unittest.TestCase):
             ds9.mtv(subImageF, frame=1, title="converted subImage")
 
         self.assertEqual(subImage.get(1, 1), subImageF.get(1, 1))
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):
