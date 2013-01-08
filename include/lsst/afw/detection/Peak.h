@@ -87,10 +87,16 @@ public:
 
     int getIx() const { return _ix; }         //!< Return the column pixel position
     int getIy() const { return _iy; }         //!< Return the row pixel position
-	lsst::afw::geom::Point2I getI() const { return lsst::afw::geom::Point2I(_ix, _iy); }
+    /// Return the coordinates of the highest pixel
+    lsst::afw::geom::Point2I getI() const { return getCentroid(true); }
+    /// Return the coordinates of the highest pixel
+    lsst::afw::geom::Point2I getCentroid(bool) const { return lsst::afw::geom::Point2I(_ix, _iy); }
     float getFx() const { return _fx; }       //!< Return the column centroid
     float getFy() const { return _fy; }       //!< Return the row centroid
-	lsst::afw::geom::Point2D getF() const { return lsst::afw::geom::Point2D(_fx, _fy); }
+    /// Return the peak's centroid
+    lsst::afw::geom::Point2D getF() const { return getCentroid(); }
+    /// Return the peak's centroid
+    lsst::afw::geom::Point2D getCentroid() const { return lsst::afw::geom::Point2D(_fx, _fy); }
     void setFx(float fx) { _fx = fx; }        //!< Set the column centroid
     void setFy(float fy) { _fy = fy; }        //!< Set the row centroid
 
