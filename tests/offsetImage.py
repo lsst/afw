@@ -112,7 +112,7 @@ class offsetImageTestCase(unittest.TestCase):
 
     def testOffsetGaussian(self):
         """Insert a Gaussian, offset, and check the residuals"""
-        size = 100
+        size = 50
         refIm = afwImage.ImageF(size, size)
         unshiftedIm = afwImage.ImageF(size, size)
 
@@ -125,19 +125,21 @@ class offsetImageTestCase(unittest.TestCase):
         #
         self.calcGaussian(refIm, xc, yc, amp, sigma1)
 
-        for dx in (-0.5, 0.0, 0.3):
-            for dy in (-2.3, -0.9, 0.0, 0.5, 1.9):
-                self.calcGaussian(unshiftedIm, xc - dx, yc - dy, amp, sigma1)
-                for algorithm, maxMean, maxLimFac in (
-#                     ("lanczos5", 1e-7, 1.5e-3),
-#                     ("bilinear", 1e-7, 3e-2),
-                    ("nearest", 1e-7, 3e-2),
+        for dx in (-55.5, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
+            0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 99.3):
+            for dy in (-3.7, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
+                0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 2.99999):
+                dOrigX, dOrigY, dFracX, dFracY = getOrigFracShift(dx, dy)
+                self.calcGaussian(unshiftedIm, xc - dFracX, yc - dFracY, amp, sigma1)
+
+                for algorithm, maxMean, maxLim in (
+                    ("lanczos5", 1e-8, 0.0015),
+                    ("bilinear", 1e-8, 0.03),
+                    ("nearest",  1e-8, 0.2),
                 ):
-                    #
-                    # Calculate an image with a Gaussian at (xc -dx, yc - dy) and then shift it to (xc, yc)
-                    #
                     im = afwImage.ImageF(size, size)
                     im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
+                    
 
                     if display:
                         ds9.mtv(im, frame=0)
@@ -149,17 +151,13 @@ class offsetImageTestCase(unittest.TestCase):
 
                     imArr = im.getArray()
                     imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
-                    imMean = imGoodVals.mean()
-                    imMax = imGoodVals.max()
-                    imMin = imGoodVals.min()
 
-                    if False:
-                        print "mean = %g, min = %g, max = %g" % (imMean, imMin, imMax)
-            
                     try:
-                        self.assertLess(abs(imMean), maxMean)
-                        self.assertLess(abs(imMin), maxLimFac*amp)
-                        self.assertLess(abs(imMax), maxLimFac*amp)
+                        imXY0 = tuple(im.getXY0())
+                        self.assertEqual(imXY0, (dOrigX, dOrigY))
+                        self.assertLess(abs(imGoodVals.mean()), maxMean*amp)
+                        self.assertLess(abs(imGoodVals.max()), maxLim*amp)
+                        self.assertLess(abs(imGoodVals.min()), maxLim*amp)
                     except:
                         print "failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy)
                         raise
@@ -176,6 +174,22 @@ class offsetImageTestCase(unittest.TestCase):
 #         self.assertTrue(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
 #         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
 #         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
+
+
+def getOrigFracShift(dx, dy):
+    """Return the predicted integer shift to XY0 and the fractional shift that offsetImage will use
+    
+    offsetImage preserves the origin if dx and dy both < 1 pixel; larger shifts are to the nearest pixel.
+    """
+    if (abs(dx) < 1) and (abs(dy) < 1):
+        return (0, 0, dx, dy)
+    
+    dOrigX = math.floor(dx + 0.5)
+    dOrigY = math.floor(dy + 0.5)
+    dFracX = dx - dOrigX
+    dFracY = dy - dOrigY
+    return (int(dOrigX), int(dOrigY), dFracX, dFracY)
+
 
 class transformImageTestCase(unittest.TestCase):
     """A test case for rotating images"""
