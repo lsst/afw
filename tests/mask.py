@@ -323,7 +323,7 @@ class MaskTestCase(unittest.TestCase):
 
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""
-        im = afwImage.ImageF(10, 20)
+        im = afwImage.MaskU(10, 20)
         im[-3:, -2:] = 0x4
         im[4,10] = 0x2
         sim = im[1:4, 6:10]
