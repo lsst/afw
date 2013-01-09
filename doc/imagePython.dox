@@ -9,7 +9,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 im = afwImage.ImageF(10, 20)
 
-bbox = afwGeom.BoxI(afwGeom.PointI(1, 2), afwGeom.ExtentI(4, 10))
+bbox = afwGeom.BoxI(afwGeom.PointI(1, 2), afwGeom.ExtentI(4, 6))
 sim = im.Factory(im, bbox)
 sim.set(100)
 del sim
@@ -23,8 +23,13 @@ This syntax gets boring fast.
 
 We accordingly added some syntactic sugar at the swig level. I can write the preceeding example as:
 \code
-im[1:5, 2:12] = 100
+im[1:5, 2:8] = 100
 \endcode
+_i.e._ create a subimage and assign to it.  afw's image slices are always shallow (but you can `clone` them
+as we shall see).
+
+**Note that the order is `[x, y]`**.  This is consistent with our C++ code (_e.g._ it's `PointI(x, y)`), but
+different from numpy's matrix-like `[row, column]`.
 
 This opens up various possiblities; the following all work:
 \code
@@ -49,15 +54,19 @@ works.
 
 \subsection afwImagePythonNumpy numpy
 
+You will **remember that the previous section used `[x, y]`** whereas numpy uses `[row, column]` which
+is *different*; you have been warned.
+
 You can achieve similar effects using \c numpy.  For example, after creating \c im as above,
 I can use \c getArray to return a \em view of the image (i.e. the numpy object shares
 memory with the C++ object), so:
 \code
 import numpy as np
 nim = im.getArray()
-nim[1:5, 2:12] = 100
+nim[1:5, 2:8] = 100
 \endcode
-will also set a sub-image's value.  You can do more complex operations using \c numpy syntax, e.g.
+will also set a sub-image's value (but a different sub-image from `im[1:5, 2:8]`).
+You can do more complex operations using \c numpy syntax, e.g.
 \code
 nim = im.getArray()
 nim[:] = 100 + np.sin(nim) - 2*nim
