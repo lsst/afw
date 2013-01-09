@@ -84,6 +84,9 @@ namespace math {
         virtual PTR(Kernel) clone() const;
 
         int getOrder() const;
+
+    protected:
+	virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
@@ -143,6 +146,9 @@ namespace math {
 
             virtual std::string toString(std::string const& ="") const;
         };
+
+    protected:
+	virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
@@ -202,6 +208,9 @@ namespace math {
 
             virtual std::string toString(std::string const& ="") const;
         };
+
+    protected:
+	virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**

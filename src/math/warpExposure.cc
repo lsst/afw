@@ -66,6 +66,47 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwCoord = lsst::afw::coord;
 namespace afwMath = lsst::afw::math;
 
+
+//
+// A helper function for the warping kernels which provides error-checking: 
+// the warping kernels are designed to work in two cases
+//    0 < x < 1  and ctrX=(size-1)/2
+//    -1 < x < 0  and ctrX=(size+1)/2
+// (and analogously for y).  Note that to get the second case, Kernel::setCtrX(1) must be
+// called before calling Kernel::setKernelParameter().  [see afw::math::offsetImage() for
+// an example]
+//
+// FIXME eventually the 3 warping kernels will inherit from a common base class WarpingKernel
+// and this routine can be eliminated by putting the code in WarpingKernel::setKernelParameter()
+//
+static inline void checkWarpingKernelParameter(const afwMath::SeparableKernel *p, unsigned int ind, double value)
+{
+    int ctr, size;
+
+    if (ind == 0) {
+	ctr = p->getCtrX();
+	size = p->getWidth();
+    }
+    else if (ind == 1) {
+	ctr = p->getCtrY();
+	size = p->getHeight();
+    }
+    else
+	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in WarpingKernel::setKernelParameter()");
+
+    if (ctr == (size-1)/2) {
+	if (value < -1e-6 || value > 1+1e-6)
+	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+    }
+    else if (ctr == (size+1)/2) {
+	if (value < -1-1e-6 || value > 1e-6)
+	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+    }
+    else
+	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in WarpingKernel::setKernelParameter()");
+}
+
+
 PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
     return PTR(afwMath::Kernel)(new afwMath::LanczosWarpingKernel(this->getOrder()));
 }
@@ -75,6 +116,12 @@ PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
 */
 int afwMath::LanczosWarpingKernel::getOrder() const {
     return this->getWidth() / 2;
+}
+
+void afwMath::LanczosWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
 }
 
 PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
@@ -105,6 +152,11 @@ afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operat
     return 0.5 + (1.0 - (2.0 * fabs(this->_params[0]))) * (0.5 - fabs(x));
 }
 
+void afwMath::BilinearWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
+}
 
 /**
  * \brief Return string representation.
@@ -130,6 +182,12 @@ PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
 afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (double x) const {
     // this expression is faster than using conditionals, but offers no sanity checking
     return static_cast<double>((fabs(this->_params[0]) < 0.5) == (fabs(x) < 0.5));
+}
+
+void afwMath::NearestWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
 }
 
 /**
