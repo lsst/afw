@@ -607,7 +607,7 @@ Mask<MaskPixelT>::Mask(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     std::string const & fileName,
-    CONST_PTR(daf::base::PropertySet) metadata_i,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
@@ -617,7 +617,7 @@ void Mask<MaskPixelT>::writeFits(
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::writeFits(
     fits::MemFileManager & manager,
-    CONST_PTR(daf::base::PropertySet) metadata_i,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
     std::string const & mode
 ) const {
     fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
