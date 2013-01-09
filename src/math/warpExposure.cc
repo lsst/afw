@@ -90,7 +90,18 @@ PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
  */
 afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const 
 {
-    // this expression is faster than using conditionals, but offers no sanity checking
+    //
+    // this->_params[0] = value of x where we want to interpolate the function
+    // x = integer value of x where we evaluate the function in the interpolation
+    // 
+    // The following weird-looking expression has no if/else statements, is roundoff-tolerant,
+    // and works in the following two cases:
+    //     0 < this->_params[0] < 1,  x \in {0,1}
+    //     -1 < this->_params[0] < 0,  x \in {-1,0}
+    //
+    // The checks in BilinearWarpingKernel::setKernelParameter() ensure that one of these
+    // conditions is satisfied
+    //
     return 0.5 + (1.0 - (2.0 * fabs(this->_params[0]))) * (0.5 - fabs(x));
 }
 
