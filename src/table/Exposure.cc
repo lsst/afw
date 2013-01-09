@@ -232,6 +232,14 @@ bool ExposureRecord::contains(geom::Point2D const & point, Wcs const & wcs) cons
 
 ExposureRecord::ExposureRecord(PTR(ExposureTable) const & table) : BaseRecord(table) {}
 
+void ExposureRecord::_assign(BaseRecord const & other) {
+    try {
+        ExposureRecord const & s = dynamic_cast<ExposureRecord const &>(other);
+        _psf = s._psf;
+        _wcs = s._wcs;
+    } catch (std::bad_cast&) {}
+}
+
 PTR(ExposureTable) ExposureTable::make(Schema const & schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(

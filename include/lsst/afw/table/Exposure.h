@@ -103,6 +103,9 @@ protected:
 
     ExposureRecord(PTR(ExposureTable) const & table);
 
+    virtual void _assign(BaseRecord const & other);
+
+private:
     PTR(Wcs) _wcs;
     PTR(Psf) _psf;
 };
