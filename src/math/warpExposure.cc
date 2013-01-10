@@ -66,6 +66,47 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwCoord = lsst::afw::coord;
 namespace afwMath = lsst::afw::math;
 
+
+//
+// A helper function for the warping kernels which provides error-checking: 
+// the warping kernels are designed to work in two cases
+//    0 < x < 1  and ctrX=(size-1)/2
+//    -1 < x < 0  and ctrX=(size+1)/2
+// (and analogously for y).  Note that to get the second case, Kernel::setCtrX(1) must be
+// called before calling Kernel::setKernelParameter().  [see afw::math::offsetImage() for
+// an example]
+//
+// FIXME eventually the 3 warping kernels will inherit from a common base class WarpingKernel
+// and this routine can be eliminated by putting the code in WarpingKernel::setKernelParameter()
+//
+static inline void checkWarpingKernelParameter(const afwMath::SeparableKernel *p, unsigned int ind, double value)
+{
+    int ctr, size;
+
+    if (ind == 0) {
+        ctr = p->getCtrX();
+        size = p->getWidth();
+    }
+    else if (ind == 1) {
+        ctr = p->getCtrY();
+        size = p->getHeight();
+    }
+    else
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in WarpingKernel::setKernelParameter()");
+
+    if (ctr == (size-1)/2) {
+        if (value < -1e-6 || value > 1+1e-6)
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+    }
+    else if (ctr == (size+1)/2) {
+        if (value < -1-1e-6 || value > 1e-6)
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+    }
+    else
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in WarpingKernel::setKernelParameter()");
+}
+
+
 PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
     return PTR(afwMath::Kernel)(new afwMath::LanczosWarpingKernel(this->getOrder()));
 }
@@ -77,15 +118,23 @@ int afwMath::LanczosWarpingKernel::getOrder() const {
     return this->getWidth() / 2;
 }
 
+void afwMath::LanczosWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
+}
+
 PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
     return PTR(afwMath::Kernel)(new afwMath::BilinearWarpingKernel());
 }
 
 /**
-* \brief Solve bilinear equation; the only permitted arguments are 0 or 1
-*
-* \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
-*/
+ * \brief Solve bilinear equation
+ *
+ * Only the following arguments will give reliably meaningful values:
+ * *  0.0 or 1.0 if the kernel center index is 0 in this axis
+ * * -1.0 or 0.0 if the kernel center index is 1 in this axis
+ */
 afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const 
 {
     //
@@ -100,43 +149,14 @@ afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operat
     // The checks in BilinearWarpingKernel::setKernelParameter() ensure that one of these
     // conditions is satisfied
     //
-    return 0.5 + (1-2*fabs(this->_params[0])) * (0.5-fabs(x));
+    return 0.5 + (1.0 - (2.0 * fabs(this->_params[0]))) * (0.5 - fabs(x));
 }
 
-
-//
-// Provides error-checking: the bilinear kernel is designed to work in two cases
-//    0 < x < 1  and ctrX=0
-//    -1 < x < 0  and ctrX=1
-// (and analogously for y).  Note that to get the second case, Kernel::setCtrX(1) must be
-// called before calling Kernel::setKernelParameter().  [see afw::math::offsetImage() for
-// an example]
-//
 void afwMath::BilinearWarpingKernel::setKernelParameter(unsigned int ind, double value) const
 {
-    int ctr;
-
-    if (ind == 0)
-	ctr = this->getCtrX();
-    else if (ind == 1)
-	ctr = this->getCtrY();
-    else
-	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in BilinearWarpingKernel::setKernelParameter()");
-
-    if (ctr == 0) {
-	if (value < -1e-6 || value > 1+1e-6)
-	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in BilinearWarpingKernel::setKernelParameter()");
-    }
-    else if (ctr == 1) {
-	if (value < -1-1e-6 || value > 1e-6)
-	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in BilinearWarpingKernel::setKernelParameter()");
-    }
-    else
-	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in BilinearWarpingKernel::setKernelParameter()");
-
+    checkWarpingKernelParameter(this, ind, value);
     SeparableKernel::setKernelParameter(ind, value);
 }
-
 
 /**
  * \brief Return string representation.
@@ -153,22 +173,21 @@ PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
 }
 
 /**
-* \brief Solve nearest neighbor equation; the only permitted arguments are 0 or 1
-*
-* \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
-*/
-afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (
-    double x
-) const {
-    if (x == 0.0) {
-        return this->_params[0] < 0.5 ? 1.0 : 0.0;
-    } else if (x == 1.0) {
-        return this->_params[0] < 0.5 ? 0.0 : 1.0;
-    } else {
-        std::ostringstream errStream;
-        errStream << "x = " << x << "; must be 0 or 1";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
-    }
+ * \brief Solve nearest neighbor equation
+ *
+ * Only the following arguments will give reliably meaningful values:
+ * *  0.0 or 1.0 if the kernel center index is 0 in this axis
+ * * -1.0 or 0.0 if the kernel center index is 1 in this axis
+ */
+afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (double x) const {
+    // this expression is faster than using conditionals, but offers no sanity checking
+    return static_cast<double>((fabs(this->_params[0]) < 0.5) == (fabs(x) < 0.5));
+}
+
+void afwMath::NearestWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
 }
 
 /**
