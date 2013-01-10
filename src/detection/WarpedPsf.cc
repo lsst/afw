@@ -148,6 +148,10 @@ Psf::Image::Ptr WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color con
     Point2D tp = t(p);
 
     Kernel::Ptr k = _undistorted_psf->getLocalKernel(tp, c);
+    if (!k) {
+	throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "undistored psf failed to return local kernel");
+    }
+
     PTR(Image) im = boost::make_shared<Image>(k->getWidth(), k->getHeight());
     k->computeImage(*im, true, tp.getX(), tp.getY());
 
