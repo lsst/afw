@@ -86,7 +86,7 @@ namespace math {
         int getOrder() const;
 
     protected:
-	virtual void setKernelParameter(unsigned int ind, double value) const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
@@ -148,7 +148,7 @@ namespace math {
         };
 
     protected:
-	virtual void setKernelParameter(unsigned int ind, double value) const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
@@ -210,7 +210,7 @@ namespace math {
         };
 
     protected:
-	virtual void setKernelParameter(unsigned int ind, double value) const;
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**

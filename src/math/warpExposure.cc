@@ -84,26 +84,26 @@ static inline void checkWarpingKernelParameter(const afwMath::SeparableKernel *p
     int ctr, size;
 
     if (ind == 0) {
-	ctr = p->getCtrX();
-	size = p->getWidth();
+        ctr = p->getCtrX();
+        size = p->getWidth();
     }
     else if (ind == 1) {
-	ctr = p->getCtrY();
-	size = p->getHeight();
+        ctr = p->getCtrY();
+        size = p->getHeight();
     }
     else
-	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in WarpingKernel::setKernelParameter()");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in WarpingKernel::setKernelParameter()");
 
     if (ctr == (size-1)/2) {
-	if (value < -1e-6 || value > 1+1e-6)
-	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+        if (value < -1e-6 || value > 1+1e-6)
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
     }
     else if (ctr == (size+1)/2) {
-	if (value < -1-1e-6 || value > 1e-6)
-	    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+        if (value < -1-1e-6 || value > 1e-6)
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
     }
     else
-	throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in WarpingKernel::setKernelParameter()");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in WarpingKernel::setKernelParameter()");
 }
 
 
