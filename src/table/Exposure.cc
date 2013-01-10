@@ -4,6 +4,8 @@
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/table/detail/Access.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/Psf.h"
 
@@ -58,6 +60,39 @@ struct PersistenceSchema : private boost::noncopyable {
     static PersistenceSchema const & get() {
         static PersistenceSchema const instance;
         return instance;
+    }
+
+    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
+    SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
+        std::vector<Schema> inSchemas;
+        inSchemas.push_back(PersistenceSchema::get().schema);
+        inSchemas.push_back(inputSchema);
+        return SchemaMapper::join(inSchemas).back(); // don't need front; it's an identity mapper
+    }
+
+    // Create a SchemaMapper that maps a BaseRecord with IDs for Psf and Wcs to an ExposureRecord
+    SchemaMapper makeReadMapper(Schema const & inputSchema) const {
+        return SchemaMapper::removeMinimalSchema(inputSchema, schema);
+    }
+
+    // Convert an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
+    template <typename OutputArchiveIsh>
+    void writeRecord(
+        ExposureRecord const & input, BaseRecord & output,
+        SchemaMapper const & mapper, OutputArchiveIsh & archive
+    ) const {
+        output.assign(input, mapper);
+        output.set(psf, archive.put(input.getPsf()));
+        output.set(wcs, archive.put(input.getWcs()));
+    }
+
+    void readRecord(
+        BaseRecord const & input, ExposureRecord & output,
+        SchemaMapper const & mapper, io::InputArchive const & archive
+    ) const {
+        output.assign(input, mapper);
+        output.setPsf(archive.get<Psf>(input.get(psf)));
+        output.setWcs(archive.get<Wcs>(input.get(wcs)));
     }
 
 private:
@@ -118,10 +153,7 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
             "Cannot use a ExposureFitsWriter on a non-Exposure table."
         );
     }
-    std::vector<Schema> inSchemas;
-    inSchemas.push_back(PersistenceSchema::get().schema);
-    inSchemas.push_back(inTable->getSchema());
-    _mapper = SchemaMapper::join(inSchemas).back(); // don't need front; it's an identity mapper
+    _mapper = PersistenceSchema::get().makeWriteMapper(inTable->getSchema());
     PTR(BaseTable) outTable = BaseTable::make(_mapper.getOutputSchema());
     io::FitsWriter::_writeTable(outTable, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
@@ -130,9 +162,7 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
 
 void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
     ExposureRecord const & record = static_cast<ExposureRecord const &>(r);
-    _record->assign(record, _mapper);
-    _record->set(PersistenceSchema::get().psf, _archive->put(record.getPsf()));
-    _record->set(PersistenceSchema::get().wcs, _archive->put(record.getWcs()));
+    PersistenceSchema::get().writeRecord(record, *_record, _mapper, *_archive);
     io::FitsWriter::_writeRecord(*_record);
 }
 
@@ -177,7 +207,7 @@ PTR(BaseTable) ExposureFitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     _inTable = BaseTable::make(schema);
-    _mapper = SchemaMapper::removeMinimalSchema(_inTable->getSchema(), PersistenceSchema::get().schema);
+    _mapper = PersistenceSchema::get().makeReadMapper(schema);
     PTR(ExposureTable) table = ExposureTable::make(_mapper.getOutputSchema());
     _startRecords(*table);
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
@@ -190,9 +220,8 @@ PTR(BaseRecord) ExposureFitsReader::_readRecord(PTR(BaseTable) const & t) {
     PTR(ExposureTable) table = boost::static_pointer_cast<ExposureTable>(t);
     PTR(BaseRecord) inRecord = io::FitsReader::_readRecord(_inTable);
     if (inRecord) {
-        record = table->copyRecord(*inRecord, _mapper);
-        record->setPsf(_archive->get<Psf>(inRecord->get(PersistenceSchema::get().psf)));
-        record->setWcs(_archive->get<Wcs>(inRecord->get(PersistenceSchema::get().wcs)));
+        record = table->makeRecord();
+        PersistenceSchema::get().readRecord(*inRecord, *record, _mapper, *_archive);
     }
     return record;
 }
@@ -277,6 +306,58 @@ PTR(io::FitsWriter)
 ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive) const {
     return boost::make_shared<ExposureFitsWriter>(fitsfile, archive);
 }
+
+//-----------------------------------------------------------------------------------------------------------
+//----- ExposureCatalogT member function implementations ----------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
+
+template <typename RecordT>
+void ExposureCatalogT<RecordT>::writeToArchive(io::OutputArchiveHandle & handle) const {
+    SchemaMapper mapper = PersistenceSchema::get().makeWriteMapper(this->getSchema());
+    BaseCatalog outputCat = handle.makeCatalog(mapper.getOutputSchema());
+    outputCat.reserve(this->size());
+    for (const_iterator i = this->begin(); i != this->end(); ++i) {
+        PersistenceSchema::get().writeRecord(*i, *outputCat.addNew(), mapper, handle);
+    }
+    handle.saveCatalog(outputCat);
+}
+
+template <typename RecordT>
+ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
+    io::InputArchive const & archive, BaseCatalog const & catalog
+) {
+    SchemaMapper mapper = PersistenceSchema::get().makeReadMapper(catalog.getSchema());
+    ExposureCatalogT<ExposureRecord> result(mapper.getOutputSchema());
+    result.reserve(catalog.size());
+    for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
+        PersistenceSchema::get().readRecord(*i, *result.addNew(), mapper, archive);
+    }
+    return result;
+}
+
+template <typename RecordT>
+ExposureCatalogT<RecordT>
+ExposureCatalogT<RecordT>::findContains(Coord const & coord) const {
+    ExposureCatalogT result(this->getTable());
+    for (const_iterator i = this->begin(); i != this->end(); ++i) {
+        if (i->contains(coord)) result.push_back(i);
+    }
+    return result;
+}
+
+template <typename RecordT>
+ExposureCatalogT<RecordT>
+ExposureCatalogT<RecordT>::findContains(geom::Point2D const & point, Wcs const & wcs) const {
+    ExposureCatalogT result(this->getTable());
+    for (const_iterator i = this->begin(); i != this->end(); ++i) {
+        if (i->contains(point, wcs)) result.push_back(i);
+    }
+    return result;
+}
+
+//-----------------------------------------------------------------------------------------------------------
+//----- Explicit instantiation ------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------
 
 template class CatalogT<ExposureRecord>;
 template class CatalogT<ExposureRecord const>;

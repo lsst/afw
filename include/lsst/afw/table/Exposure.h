@@ -29,7 +29,6 @@
 #include "lsst/afw/table/SortedCatalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
-#include "lsst/afw/table/io/OutputArchive.h"
 
 namespace lsst { namespace afw {
 
@@ -50,6 +49,13 @@ class ExposureRecord;
 class ExposureTable;
 
 template <typename RecordT> class ExposureCatalogT;
+
+namespace io {
+
+class OutputArchiveHandle;
+class InputArchive;
+
+} // namespace io
 
 /**
  *  @brief Record class used to store exposure metadata.
@@ -213,6 +219,9 @@ private:
 
 /**
  *  @brief Custom catalog class for ExposureRecord/Table.
+ *
+ *  We don't expect to subclass ExposureRecord/Table, so unlike other Catalogs we can (and do) define
+ *  some ExposureCatalogT member functions in Exposure.cc where the explicit instantiation is done.
  */
 template <typename RecordT>
 class ExposureCatalogT : public SortedCatalogT<RecordT> {
@@ -302,6 +311,23 @@ public:
     }
 
     /**
+     *  @brief Convenience output function for Persistables that contain an ExposureCatalog.
+     *
+     *  Unlike writeFits, this saves main catalog to one of the tables within the archive,
+     *  as part of a Persistable's set of catalogs, rather than saving it to a separate HDU
+     *  not managed by the archive.
+     */
+    void writeToArchive(io::OutputArchiveHandle & handle) const;
+
+    /**
+     *  @brief Convenience input function for Persistables that contain an ExposureCatalog.
+     *
+     *  Unlike the FITS read methods, this reader is not polymorphically aware - it always
+     *  tries to create an ExposureTable rather than infer the type of table from the data.
+     */
+    static ExposureCatalogT readFromArchive(io::InputArchive const & archive, BaseCatalog const & catalog);
+
+    /**
      * @brief Shallow copy a subset of another ExposureCatalog.  Mostly here for
      * use from python.
      */
@@ -315,13 +341,7 @@ public:
      *
      *  @sa ExposureRecord::contains
      */
-    ExposureCatalogT findContains(Coord const & coord) const {
-        ExposureCatalogT result(this->getTable());
-        for (const_iterator i = this->begin(); i != this->end(); ++i) {
-            if (i->contains(coord)) result.push_back(i);
-        }
-        return result;
-    }
+    ExposureCatalogT findContains(Coord const & coord) const;
 
     /**
      *  @brief Return a shallow subset of the catalog that with only those records that contain the
@@ -329,13 +349,7 @@ public:
      *
      *  @sa ExposureRecord::contains
      */
-    ExposureCatalogT findContains(geom::Point2D const & point, Wcs const & wcs) const {
-        ExposureCatalogT result(this->getTable());
-        for (const_iterator i = this->begin(); i != this->end(); ++i) {
-            if (i->contains(point, wcs)) result.push_back(i);
-        }
-        return result;
-    }
+    ExposureCatalogT findContains(geom::Point2D const & point, Wcs const & wcs) const;
 
 protected:
     explicit ExposureCatalogT(Base const & other) : Base(other) {}
