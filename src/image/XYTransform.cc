@@ -14,6 +14,11 @@ namespace afw {
 namespace image {
 
 
+// -------------------------------------------------------------------------------------------------
+//
+// XYTransform
+
+
 XYTransform::XYTransform() 
     : daf::base::Citizen(typeid(this))
 { }
@@ -105,6 +110,11 @@ afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) 
 {
     lsst::afw::coord::Coord::Ptr x = _src->pixelToSky(pixel);
     return _dst->skyToPixel(*x);
+}
+
+PTR(XYTransform) XYTransformFromWcsPair::invert() const
+{
+    return boost::make_shared<XYTransformFromWcsPair> (_src, _dst);   // swap arguments
 }
 
 

@@ -32,6 +32,10 @@ public:
     // note: should be a deep copy
     virtual Ptr clone() const = 0;
 
+    // in general, the XYTransform returned by this routine may share state with the original
+    // XYTransform; use invert()->clone() to make them independent
+    virtual PTR(XYTransform) invert() const = 0;
+
     //
     // Both the @pixel argument and the return value of these routines:
     //   - are in pixel units
@@ -83,12 +87,12 @@ public:
     virtual XYTransform::Ptr clone() const;
     virtual Point2D forwardTransform(Point2D const &pixel) const;
     virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual PTR(XYTransform) invert() const;
     
 protected:
     Wcs::Ptr _dst;
     Wcs::Ptr _src;
-};
-
+};  
 
 
 }}}
