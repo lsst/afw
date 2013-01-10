@@ -42,9 +42,9 @@ afwGeom::AffineTransform XYTransform::finiteDifference(Point2D const &p, Point2D
     double q1 = q.getY();
 
     double qx0 = qx.getX();
-    double qy0 = qx.getY();
+    double qx1 = qx.getY();
 
-    double qx1 = qy.getX();
+    double qy0 = qy.getX();
     double qy1 = qy.getY();
 
     Eigen::Matrix3d mp;
