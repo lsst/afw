@@ -79,11 +79,12 @@ struct PersistenceSchema : private boost::noncopyable {
     template <typename OutputArchiveIsh>
     void writeRecord(
         ExposureRecord const & input, BaseRecord & output,
-        SchemaMapper const & mapper, OutputArchiveIsh & archive
+        SchemaMapper const & mapper, OutputArchiveIsh & archive,
+        bool permissive
     ) const {
         output.assign(input, mapper);
-        output.set(psf, archive.put(input.getPsf()));
-        output.set(wcs, archive.put(input.getWcs()));
+        output.set(psf, archive.put(input.getPsf(), permissive));
+        output.set(wcs, archive.put(input.getWcs(), permissive));
     }
 
     void readRecord(
@@ -162,7 +163,7 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
 
 void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
     ExposureRecord const & record = static_cast<ExposureRecord const &>(r);
-    PersistenceSchema::get().writeRecord(record, *_record, _mapper, *_archive);
+    PersistenceSchema::get().writeRecord(record, *_record, _mapper, *_archive, false);
     io::FitsWriter::_writeRecord(*_record);
 }
 
@@ -312,12 +313,12 @@ ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) arch
 //-----------------------------------------------------------------------------------------------------------
 
 template <typename RecordT>
-void ExposureCatalogT<RecordT>::writeToArchive(io::OutputArchiveHandle & handle) const {
+void ExposureCatalogT<RecordT>::writeToArchive(io::OutputArchiveHandle & handle, bool permissive) const {
     SchemaMapper mapper = PersistenceSchema::get().makeWriteMapper(this->getSchema());
     BaseCatalog outputCat = handle.makeCatalog(mapper.getOutputSchema());
     outputCat.reserve(this->size());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
-        PersistenceSchema::get().writeRecord(*i, *outputCat.addNew(), mapper, handle);
+        PersistenceSchema::get().writeRecord(*i, *outputCat.addNew(), mapper, handle, permissive);
     }
     handle.saveCatalog(outputCat);
 }

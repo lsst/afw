@@ -317,7 +317,7 @@ public:
      *  as part of a Persistable's set of catalogs, rather than saving it to a separate HDU
      *  not managed by the archive.
      */
-    void writeToArchive(io::OutputArchiveHandle & handle) const;
+    void writeToArchive(io::OutputArchiveHandle & handle, bool ignoreUnpersistable=true) const;
 
     /**
      *  @brief Convenience input function for Persistables that contain an ExposureCatalog.
