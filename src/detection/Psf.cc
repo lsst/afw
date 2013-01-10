@@ -49,7 +49,7 @@ namespace detection {
 //   @src_base = index of copied output in src array
 //   @dst_ctr = location of special point in dst array after copy
 //
-static inline void setup_1d_resize(int ndst, int nsrc, int src_ctr, int &nout, int &dst_base, int &src_base, int &dst_ctr)
+static inline void setup1dResize(int ndst, int nsrc, int src_ctr, int &nout, int &dst_base, int &src_base, int &dst_ctr)
 {
     if (nsrc > ndst) {
 	nout = ndst;
@@ -78,8 +78,8 @@ afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwG
     int nx, dst_x0, src_x0, ctr_x0;
     int ny, dst_y0, src_y0, ctr_y0;
 
-    setup_1d_resize(dst.getWidth(), src.getWidth(), ctr.getX(), nx, dst_x0, src_x0, ctr_x0);
-    setup_1d_resize(dst.getHeight(), src.getHeight(), ctr.getY(), ny, dst_y0, src_y0, ctr_y0);
+    setup1dResize(dst.getWidth(), src.getWidth(), ctr.getX(), nx, dst_x0, src_x0, ctr_x0);
+    setup1dResize(dst.getHeight(), src.getHeight(), ctr.getY(), ny, dst_y0, src_y0, ctr_y0);
 
     lsst::afw::geom::Extent2I subimage_size(nx,ny);
 
