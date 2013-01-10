@@ -29,12 +29,11 @@ public:
     XYTransform();
     virtual ~XYTransform() { }
 
-    // note: should be a deep copy
+    // returns a deep copy
     virtual Ptr clone() const = 0;
 
-    // in general, the XYTransform returned by this routine may share state with the original
-    // XYTransform; use invert()->clone() to make them independent
-    virtual PTR(XYTransform) invert() const = 0;
+    // returns a "deep inverse" in this sense that the forward+inverse transforms do not share state
+    virtual PTR(XYTransform) invert() const;
 
     //
     // Both the @pixel argument and the return value of these routines:
@@ -83,16 +82,39 @@ public:
     XYTransformFromWcsPair(Wcs::Ptr dst, Wcs::Ptr src);
     virtual ~XYTransformFromWcsPair() { }
 
+    virtual PTR(XYTransform) invert() const;
+
     // The following methods are needed to devirtualize the XYTransform parent class
     virtual XYTransform::Ptr clone() const;
     virtual Point2D forwardTransform(Point2D const &pixel) const;
     virtual Point2D reverseTransform(Point2D const &pixel) const;
-    virtual PTR(XYTransform) invert() const;
     
 protected:
     Wcs::Ptr _dst;
     Wcs::Ptr _src;
 };  
+
+
+//
+// This guy is used to supply a default ->invert() method which works for any XYTransform
+// (but can be overridden if something more efficient exists)
+//
+class InvertedXYTransform : public XYTransform
+{
+public:
+    InvertedXYTransform(PTR(XYTransform) base);
+    virtual ~InvertedXYTransform() { }
+
+    virtual PTR(XYTransform) clone() const;
+    virtual PTR(XYTransform) invert() const;
+    virtual Point2D forwardTransform(Point2D const &pixel) const;
+    virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual lsst::afw::geom::AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
+    virtual lsst::afw::geom::AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
+
+protected:    
+    PTR(XYTransform) _base;
+};
 
 
 }}}
