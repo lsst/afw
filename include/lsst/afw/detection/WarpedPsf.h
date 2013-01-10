@@ -27,6 +27,9 @@ namespace detection {
 // transformation, since the afw convention is that PSF's are normalized to
 // have integral 1 anyway.
 //
+// Note: In order to plug into a WarpedPsf, the undistorted Psf only needs to define
+// the virtuals clone() and doGetLocalKernel().
+//
 class WarpedPsf : public Psf {
 public:
     typedef boost::shared_ptr<WarpedPsf> Ptr;
