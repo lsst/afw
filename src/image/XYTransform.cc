@@ -80,7 +80,16 @@ afwGeom::AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p
 }
 
 
+// default implementation; subclass may override
+PTR(XYTransform) XYTransform::invert() const
+{
+    return boost::make_shared<InvertedXYTransform> (this->clone());
+}
+
+
 // -------------------------------------------------------------------------------------------------
+//
+// XYTransformFromWcsPair
 
 
 XYTransformFromWcsPair::XYTransformFromWcsPair(Wcs::Ptr dst, Wcs::Ptr src)
@@ -114,7 +123,49 @@ afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) 
 
 PTR(XYTransform) XYTransformFromWcsPair::invert() const
 {
-    return boost::make_shared<XYTransformFromWcsPair> (_src, _dst);   // swap arguments
+    // clone and swap src,dst
+    return boost::make_shared<XYTransformFromWcsPair> (_src->clone(), _dst->clone());
+}
+
+
+// -------------------------------------------------------------------------------------------------
+//
+// InvertedXYTransform
+
+
+InvertedXYTransform::InvertedXYTransform(PTR(XYTransform) base)
+    : _base(base)
+{ }
+
+PTR(XYTransform) InvertedXYTransform::clone() const
+{
+    // deep copy
+    return boost::make_shared<InvertedXYTransform> (_base->clone());
+}
+
+PTR(XYTransform) InvertedXYTransform::invert() const
+{
+    return _base;
+}
+
+afwGeom::Point2D InvertedXYTransform::forwardTransform(Point2D const &pixel) const
+{
+    return _base->reverseTransform(pixel);
+}
+
+afwGeom::Point2D InvertedXYTransform::reverseTransform(Point2D const &pixel) const
+{
+    return _base->forwardTransform(pixel);
+}
+
+afwGeom::AffineTransform InvertedXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+{
+    return _base->linearizeReverseTransform(pixel);
+}
+
+afwGeom::AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+{
+    return _base->linearizeForwardTransform(pixel);
 }
 
 
