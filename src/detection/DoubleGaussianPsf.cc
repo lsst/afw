@@ -99,11 +99,11 @@ void DoubleGaussianPsf::write(OutputArchiveHandle & handle) const {
     static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();
-    (*record)[keys.width] = getKernel()->getWidth();
-    (*record)[keys.height] = getKernel()->getHeight();
-    (*record)[keys.sigma1] = getSigma1();
-    (*record)[keys.sigma2] = getSigma2();
-    (*record)[keys.b] = getB();
+    (*record).set(keys.width, getKernel()->getWidth());
+    (*record).set(keys.height, getKernel()->getHeight());
+    (*record).set(keys.sigma1, getSigma1());
+    (*record).set(keys.sigma2, getSigma2());
+    (*record).set(keys.b, getB());
     handle.saveCatalog(catalog);
 }
 
