@@ -89,11 +89,13 @@ public:
 
 };
 
-DoubleGaussianPsfFactory registration("DoubleGaussianPsf");
+std::string getDoubleGaussianPsfPersistenceName() { return "DoubleGaussianPsf"; }
+
+DoubleGaussianPsfFactory registration(getDoubleGaussianPsfPersistenceName());
 
 } // anonymous
 
-std::string DoubleGaussianPsf::getPersistenceName() const { return "DoubleGaussianPsf"; }
+std::string DoubleGaussianPsf::getPersistenceName() const { return getDoubleGaussianPsfPersistenceName(); }
 
 void DoubleGaussianPsf::write(OutputArchiveHandle & handle) const {
     static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();

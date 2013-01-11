@@ -430,7 +430,38 @@ void TanWcs::setDistortionMatrices(
  *  for all TanWcs objects.
  */
 
-std::string TanWcs::getPersistenceName() const { return "TanWcs"; }
+class TanWcsFactory : public table::io::PersistableFactory {
+public:
+
+    explicit TanWcsFactory(std::string const & name) :
+        table::io::PersistableFactory(name) {}
+
+    virtual PTR(table::io::Persistable) read(
+        InputArchive const & archive, 
+        CatalogVector const & catalogs
+    ) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
+        CONST_PTR(table::BaseRecord) sipRecord;
+        if (catalogs.size() > 1u) {
+            LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
+            LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+            LSST_ARCHIVE_ASSERT(catalogs.back().size() == 1u);
+            sipRecord = catalogs.back().begin();
+        }
+        PTR(TanWcs) result(new TanWcs(catalogs.front().front(), sipRecord));
+        return result;
+    }
+};
+
+namespace {
+
+std::string getTanWcsPersistenceName() { return "TanWcs"; }
+
+TanWcsFactory registration(getTanWcsPersistenceName());
+
+} // anonymous
+
+std::string TanWcs::getPersistenceName() const { return getTanWcsPersistenceName(); }
 
 void TanWcs::write(OutputArchiveHandle & handle) const {
     Wcs::write(handle);
@@ -532,34 +563,5 @@ TanWcs::TanWcs(
         _sipBp = mapBp;
     }
 }
-
-class TanWcsFactory : public table::io::PersistableFactory {
-public:
-
-    explicit TanWcsFactory(std::string const & name) :
-        table::io::PersistableFactory(name) {}
-
-    virtual PTR(table::io::Persistable) read(
-        InputArchive const & archive, 
-        CatalogVector const & catalogs
-    ) const {
-        LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
-        CONST_PTR(table::BaseRecord) sipRecord;
-        if (catalogs.size() > 1u) {
-            LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
-            LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-            LSST_ARCHIVE_ASSERT(catalogs.back().size() == 1u);
-            sipRecord = catalogs.back().begin();
-        }
-        PTR(TanWcs) result(new TanWcs(catalogs.front().front(), sipRecord));
-        return result;
-    }
-};
-
-namespace {
-
-TanWcsFactory registration("TanWcs");
-
-} // anonymous
 
 }}} // namespace lsst::afw::image

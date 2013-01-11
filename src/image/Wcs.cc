@@ -1067,11 +1067,13 @@ private:
     }
 };
 
-WcsFactory registration("Wcs");
+std::string getWcsPersistenceName() { return "Wcs"; }
+
+WcsFactory registration(getWcsPersistenceName());
 
 } // anonymous
 
-std::string Wcs::getPersistenceName() const { return "Wcs"; }
+std::string Wcs::getPersistenceName() const { return getWcsPersistenceName(); }
 
 void Wcs::write(OutputArchiveHandle & handle) const {
     WcsSchema const & keys = WcsSchema::get();
