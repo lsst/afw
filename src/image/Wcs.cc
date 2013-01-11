@@ -1019,7 +1019,7 @@ namespace lsst { namespace afw { namespace image {
 class WcsFactory : public table::io::PersistableFactory {
 public:
 
-    explicit WcsFactory(std::string const & name);
+    explicit WcsFactory(std::string const & name) : table::io::PersistableFactory(name) {}
 
     virtual PTR(table::io::Persistable) read(
         InputArchive const & archive,
@@ -1135,8 +1135,6 @@ WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) co
     PTR(Wcs) result(new Wcs(catalogs.front().front()));
     return result;
 }
-
-WcsFactory::WcsFactory(std::string const & name) : table::io::PersistableFactory(name) {}
 
 }}} // namespace lsst::afw::image
 
