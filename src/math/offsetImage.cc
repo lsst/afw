@@ -44,13 +44,12 @@ namespace math {
 /**
  * @brief Return an image offset by (dx, dy) using the specified algorithm
  *
- * @note in general, the output image will be offset by a fractional amount
- * and X0/Y0 will be set.  However, if the offset lies in (-1, 1) in both
- * row and column, we guarantee to perform the shift as requested, and
- * not modify X0/Y0.  This makes it possible for client code to use this
- * routine to e.g. center an image in a given pixel
+ * @note The image pixels are always offset by a fraction of a pixel and the image origin (XY0)
+ * picks is modified to handle the integer portion of the offset.
+ * In the special case that the offset in both x and y lies in the range (-1, 1) the origin is not changed.
+ * Otherwise the pixels are shifted by (-0.5, 0.5] pixels and the origin shifted accordingly.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if the algorithm's invalid
+ * @throw lsst::pex::exceptions::InvalidParameterException if the algorithm is invalid
  */
 template<typename ImageT>
 typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offset
@@ -86,44 +85,38 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 //    typename ImageT::Ptr convImage(new ImageT(buffImage, true)); // output image, a deep copy
     typename ImageT::Ptr convImage(new ImageT(buffImage->getDimensions())); // Convolved image
 
-    std::pair<int, double> deltaX = afwImage::positionToIndex(dx, true); // true => return the std::pair
-    std::pair<int, double> deltaY = afwImage::positionToIndex(dy, true);
-    //
-    // If the offset is in (-1, 1) use it as is, and don't allow an integral part
-    //
+    int dOrigX, dOrigY;
+    double fracX, fracY;
+    // If the offset in both axes is in (-1, 1) use it as is, and don't shift the origin
     if (dx > -1 && dx < 1 && dy > -1 && dy < 1) {
-        if(deltaX.first != 0) {
-            deltaX.second += deltaX.first;
-            deltaX.first = 0;
-        }
-        if (deltaY.first != 0) {
-            deltaY.second += deltaY.first;
-            deltaY.first = 0;
-        }
+        dOrigX = 0;
+        dOrigY = 0;
+        fracX = dx;
+        fracY = dy;
+    } else {
+        dOrigX = static_cast<int>(std::floor(dx + 0.5));
+        dOrigY = static_cast<int>(std::floor(dy + 0.5));
+        fracX = dx - dOrigX;
+        fracY = dy - dOrigY;
     }
-    //
-    // We won't do the integral part of the shift, but we will set [XY]0 correctly (but only after
-    // we've done the convolution as convolve also sets [XY]0)
-    //
-    // And now the fractional part.  N.b. the fraction parts
-    //
-    // We seem to have to pass -dx, -dy to setKernelParameters, for reasons RHL doesn't understand
-    dx = -deltaX.second;
-    dy = -deltaY.second;
+
+    // We seem to have to pass -fracX, -fracY to setKernelParameters, for reasons RHL doesn't understand
+    double dKerX = -fracX;
+    double dKerY = -fracY;
 
     //
     // If the shift is -ve, the generated shift kernel (e.g. Lanczos5) is quite asymmetric, with the
     // largest coefficients to the left of centre.  We therefore move the centre of calculated shift kernel
     // one to the right to center up the largest coefficients
     //
-    if (dx < 0) {
+    if (dKerX < 0) {
         offsetKernel->setCtrX(offsetKernel->getCtrX() + 1);
     }
-    if (dy < 0) {
+    if (dKerY < 0) {
         offsetKernel->setCtrY(offsetKernel->getCtrY() + 1);
     }
     
-    offsetKernel->setKernelParameters(std::make_pair(dx, dy));
+    offsetKernel->setKernelParameters(std::make_pair(dKerX, dKerY));
 
     convolve(*convImage, *buffImage, *offsetKernel, true, true);
 
@@ -136,7 +129,8 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
         outImage = convImage;
     }
 
-    outImage->setXY0(geom::Point2I(inImage.getX0() + deltaX.first, inImage.getY0() + deltaY.first));
+    // adjust the origin; do this after convolution since convolution also sets XY0
+    outImage->setXY0(geom::Point2I(inImage.getX0() + dOrigX, inImage.getY0() + dOrigY));
 
     return outImage;
 }
