@@ -236,9 +236,13 @@ public:
 
 namespace {
 
-AnalyticKernel::Factory registration("AnalyticKernel");
+std::string getAnalyticKernelPersistenceName() { return "AnalyticKernel"; }
+
+AnalyticKernel::Factory registration(getAnalyticKernelPersistenceName());
 
 } // anonymous
+
+std::string AnalyticKernel::getPersistenceName() const { return getAnalyticKernelPersistenceName(); }
 
 void AnalyticKernel::write(OutputArchiveHandle & handle) const {
     AnalyticKernelSchema const keys(_spatialFunctionList.size());

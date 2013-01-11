@@ -196,9 +196,13 @@ public:
 
 namespace {
 
-FixedKernel::Factory registration("FixedKernel");
+std::string getFixedKernelPersistenceName() { return "FixedKernel"; }
+
+FixedKernel::Factory registration(getFixedKernelPersistenceName());
 
 } // anonymous
+
+std::string FixedKernel::getPersistenceName() const { return getFixedKernelPersistenceName(); }
 
 void FixedKernel::write(OutputArchiveHandle & handle) const {
     FixedKernelSchema const keys(getDimensions());

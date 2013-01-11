@@ -534,9 +534,15 @@ public:
 
 namespace {
 
-LinearCombinationKernel::Factory registration("LinearCombinationKernel");
+std::string getLinearCombinationKernelPersistenceName() { return "LinearCombinationKernel"; }
+
+LinearCombinationKernel::Factory registration(getLinearCombinationKernelPersistenceName());
 
 } // anonymous
+
+std::string LinearCombinationKernel::getPersistenceName() const {
+    return getLinearCombinationKernelPersistenceName();
+}
 
 void LinearCombinationKernel::write(OutputArchiveHandle & handle) const {
     KernelSchema const keys1(0);

@@ -451,7 +451,7 @@ using boost::serialization::make_nvp;
 
     protected:
 
-        virtual std::string getPersistenceName() const { return "FixedKernel"; }
+        virtual std::string getPersistenceName() const;
 
         virtual void write(OutputArchiveHandle & handle) const;
 
@@ -529,7 +529,7 @@ using boost::serialization::make_nvp;
 
     protected:
 
-        virtual std::string getPersistenceName() const { return "AnalyticKernel"; }
+        virtual std::string getPersistenceName() const;
 
         virtual void write(OutputArchiveHandle & handle) const;
 
@@ -591,7 +591,7 @@ using boost::serialization::make_nvp;
 
     protected:
 
-        virtual std::string getPersistenceName() const { return "DeltaFunctionKernel"; }
+        virtual std::string getPersistenceName() const;
 
         virtual void write(OutputArchiveHandle & handle) const;
 
@@ -686,7 +686,7 @@ using boost::serialization::make_nvp;
 
     protected:
 
-        virtual std::string getPersistenceName() const { return "LinearCombinationKernel"; }
+        virtual std::string getPersistenceName() const;
 
         virtual void write(OutputArchiveHandle & handle) const;
 

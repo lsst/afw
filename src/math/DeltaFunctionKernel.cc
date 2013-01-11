@@ -154,9 +154,15 @@ public:
 
 namespace {
 
-DeltaFunctionKernel::Factory registration("DeltaFunctionKernel");
+std::string getDeltaFunctionKernelPersistenceName() { return "DeltaFunctionKernel"; }
+
+DeltaFunctionKernel::Factory registration(getDeltaFunctionKernelPersistenceName());
 
 } // anonymous
+
+std::string DeltaFunctionKernel::getPersistenceName() const {
+    return getDeltaFunctionKernelPersistenceName();
+}
 
 void DeltaFunctionKernel::write(OutputArchiveHandle & handle) const {
     DeltaFunctionKernelSchema const & keys = DeltaFunctionKernelSchema::get();
