@@ -476,11 +476,11 @@ TanWcs::TanWcs(
 ) : Wcs(mainRecord), _hasDistortion(sipRecord)
 {
     if (_hasDistortion) {
-        typedef afw::table::Array<double> T;
-        afw::table::Key<T> kA;
-        afw::table::Key<T> kB;
-        afw::table::Key<T> kAp;
-        afw::table::Key<T> kBp;
+        typedef afw::table::Array<double> Array;
+        afw::table::Key<Array> kA;
+        afw::table::Key<Array> kB;
+        afw::table::Key<Array> kAp;
+        afw::table::Key<Array> kBp;
         try {
             kA = sipRecord->getSchema()["A"];
             kB = sipRecord->getSchema()["B"];
