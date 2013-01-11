@@ -48,7 +48,7 @@ using boost::serialization::make_nvp;
 dafPersist::FormatterRegistration
 afwDetect::PsfFormatter::registration("Psf", typeid(afwDetect::Psf), createInstance);
 dafPersist::FormatterRegistration
-afwDetect::PsfFormatter::DoubleGaussianPsfRegistration(
+afwDetect::PsfFormatter::doubleGaussianPsfRegistration(
     "DoubleGaussianPsf", typeid(afwDetect::DoubleGaussianPsf), createInstance
 );
 
