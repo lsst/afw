@@ -90,7 +90,9 @@ afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwG
 }
 
 
-PTR(afwImage::Image<double>) Psf::recenterKernelImage(PTR(Image) im, const afwGeom::Point2I &ctr, const afwGeom::Point2D &xy, std::string const &warpAlgorithm, unsigned int warpBuffer)
+PTR(afwImage::Image<double>) 
+Psf::recenterKernelImage(PTR(Image) im, const afwGeom::Point2I &ctr,  const afwGeom::Point2D &xy, 
+                         std::string const &warpAlgorithm, unsigned int warpBuffer)
 {
     // "ir" : (integer, residual)
     std::pair<int,double> const ir_dx = afwImage::positionToIndex(xy.getX(), true);
