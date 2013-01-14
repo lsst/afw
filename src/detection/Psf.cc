@@ -38,31 +38,31 @@ namespace detection {
 //
 // Helper function for resizeKernelImage(); this is called twice for x,y directions
 //
-// Setup: we have a 1D array of data of legnth @nsrc, with special point ("center") at @src_ctr.
+// Setup: we have a 1D array of data of legnth @nsrc, with special point ("center") at @srcCtr.
 //
 // We want to copy this into an array of length @ndst; the lengths need not be the same so we may
 // need to zero-pad or truncate.
 //
 // Outputs:
 //   @nout = length of buffer to be copied
-//   @dst_base = index of copied output in dst array
-//   @src_base = index of copied output in src array
-//   @dst_ctr = location of special point in dst array after copy
+//   @dstBase = index of copied output in dst array
+//   @srcBase = index of copied output in src array
+//   @dstCtr = location of special point in dst array after copy
 //
 namespace {
-    void setup1dResize(int ndst, int nsrc, int src_ctr, int &nout, int &dst_base, int &src_base, int &dst_ctr)
+    void setup1dResize(int &nout, int &dstBase, int &srcBase, int &dstCtr, int ndst, int nsrc, int srcCtr)
     {
         if (nsrc > ndst) {
             nout = ndst;
-            dst_base = 0;
-            src_base = (nsrc-ndst)/2;
-            dst_ctr = src_ctr - src_base;
+            dstBase = 0;
+            srcBase = (nsrc-ndst)/2;
+            dstCtr = srcCtr - srcBase;
         }
         else {
             nout = nsrc;
-            dst_base = (ndst-nsrc)/2;
-            src_base = 0;
-            dst_ctr = src_ctr + dst_base;
+            dstBase = (ndst-nsrc)/2;
+            srcBase = 0;
+            dstCtr = srcCtr + dstBase;
         }
     }
 }
@@ -70,23 +70,23 @@ namespace {
 
 afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwGeom::Point2I &ctr)
 {
-    int nx, dst_x0, src_x0, ctr_x0;
-    int ny, dst_y0, src_y0, ctr_y0;
+    int nx, dstX0, srcX0, ctrX0;
+    int ny, dstY0, srcY0, ctrY0;
 
-    setup1dResize(dst.getWidth(), src.getWidth(), ctr.getX(), nx, dst_x0, src_x0, ctr_x0);
-    setup1dResize(dst.getHeight(), src.getHeight(), ctr.getY(), ny, dst_y0, src_y0, ctr_y0);
+    setup1dResize(nx, dstX0, srcX0, ctrX0, dst.getWidth(), src.getWidth(), ctr.getX());
+    setup1dResize(ny, dstY0, srcY0, ctrY0, dst.getHeight(), src.getHeight(), ctr.getY());
 
     afwGeom::Extent2I subimage_size(nx,ny);
 
-    Image sub_dst(dst, afwGeom::Box2I(afwGeom::Point2I(dst_x0,dst_y0),
+    Image sub_dst(dst, afwGeom::Box2I(afwGeom::Point2I(dstX0, dstY0),
 				      afwGeom::Extent2I(nx,ny)));
 
-    Image sub_src(src, afwGeom::Box2I(afwGeom::Point2I(src_x0,src_y0),
+    Image sub_src(src, afwGeom::Box2I(afwGeom::Point2I(srcX0, srcY0),
 				      afwGeom::Extent2I(nx,ny)));
 
     dst = 0.;
     sub_dst <<= sub_src;
-    return afwGeom::Point2I(ctr_x0,ctr_y0);
+    return afwGeom::Point2I(ctrX0, ctrY0);
 }
 
 
@@ -95,13 +95,13 @@ Psf::recenterKernelImage(PTR(Image) im, const afwGeom::Point2I &ctr,  const afwG
                          std::string const &warpAlgorithm, unsigned int warpBuffer)
 {
     // "ir" : (integer, residual)
-    std::pair<int,double> const ir_dx = afwImage::positionToIndex(xy.getX(), true);
-    std::pair<int,double> const ir_dy = afwImage::positionToIndex(xy.getY(), true);
+    std::pair<int,double> const irX = afwImage::positionToIndex(xy.getX(), true);
+    std::pair<int,double> const irY = afwImage::positionToIndex(xy.getY(), true);
     
-    if (ir_dx.second != 0.0 || ir_dy.second != 0.0)
-        im = afwMath::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
+    if (irX.second != 0.0 || irY.second != 0.0)
+        im = afwMath::offsetImage(*im, irX.second, irY.second, warpAlgorithm, warpBuffer);
 
-    im->setXY0(ir_dx.first - ctr.getX(), ir_dy.first - ctr.getY());
+    im->setXY0(irX.first - ctr.getX(), irY.first - ctr.getY());
     return im;
 }
 
