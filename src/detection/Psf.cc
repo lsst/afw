@@ -83,7 +83,7 @@ afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwG
     setup1dResize(dst.getWidth(), src.getWidth(), ctr.getX(), nx, dst_x0, src_x0, ctr_x0);
     setup1dResize(dst.getHeight(), src.getHeight(), ctr.getY(), ny, dst_y0, src_y0, ctr_y0);
 
-    lsst::afw::geom::Extent2I subimage_size(nx,ny);
+    afwGeom::Extent2I subimage_size(nx,ny);
 
     Image sub_dst(dst, afwGeom::Box2I(afwGeom::Point2I(dst_x0,dst_y0),
 				      afwGeom::Extent2I(nx,ny)));
@@ -114,11 +114,11 @@ afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwG
 PTR(afwImage::Image<double>) Psf::recenterKernelImage(PTR(Image) im, const afwGeom::Point2I &ctr, const afwGeom::Point2D &xy, std::string const &warpAlgorithm, unsigned int warpBuffer)
 {
     // "ir" : (integer, residual)
-    std::pair<int,double> const ir_dx = lsst::afw::image::positionToIndex(xy.getX(), true);
-    std::pair<int,double> const ir_dy = lsst::afw::image::positionToIndex(xy.getY(), true);
+    std::pair<int,double> const ir_dx = afwImage::positionToIndex(xy.getX(), true);
+    std::pair<int,double> const ir_dy = afwImage::positionToIndex(xy.getY(), true);
     
     if (ir_dx.second != 0.0 || ir_dy.second != 0.0)
-        im = lsst::afw::math::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
+        im = afwMath::offsetImage(*im, ir_dx.second, ir_dy.second, warpAlgorithm, warpBuffer);
 
     im->setXY0(ir_dx.first - ctr.getX(), ir_dy.first - ctr.getY());
     return im;
