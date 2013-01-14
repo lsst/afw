@@ -52,13 +52,6 @@ public:
 
     virtual Ptr clone() const = 0;
 
-    // static helper function for computeImage(); see documentation in Psf.cc
-    static lsst::afw::geom::Point2I resizeKernelImage(Image &dst, const Image &src, const lsst::afw::geom::Point2I &ctr);
-
-    // static helper function for computeImage(); see documentation in Psf.cc
-    static PTR(Image) recenterKernelImage(PTR(Image) im, const lsst::afw::geom::Point2I &ctr, const lsst::afw::geom::Point2D &xy,
-					     std::string const &warpAlgorithm = "lanczos5", unsigned int warpBuffer = 5);
-
     // accessors for distortion
     void setDetector(PTR(lsst::afw::cameraGeom::Detector) det) {
         _detector = det;
@@ -136,6 +129,34 @@ public:
 
         return true;
     }
+
+    /**
+     * Helper function for Psf::computeImage(): takes a kernel image @src, with central pixel @ctr 
+     * (presumably equal to kernel->getCtr()) and stuffs it into an output image @dst, which need not 
+     * have the same dimensions as @src.  Returns the central pixel for the output image.
+     *
+     * The image xy0 fields are ignored, since these are generally not meaningful for the output
+     * of Kernel::computeImage() anyway (in contrast to Psf::computeImage())
+     */
+    static lsst::afw::geom::Point2I resizeKernelImage(Image &dst, const Image &src, const lsst::afw::geom::Point2I &ctr);
+
+    /**
+     * Helper function for Psf::computeImage(): converts a kernel image (i.e. xy0 not meaningful; 
+     * center given by parameter @ctr) to a psf image (i.e. xy0 is meaningful)
+     *
+     * @warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear", or "lanczosN"
+     * @warpBuffer zero-pads the image before recentering (recommend 1 for bilinera, N for lanczosN)
+     *
+     * The point with integer coordinates @ctr in the source image corresponds to the point
+     * @xy in the destination image.  If @xy is not integer-valued then we will need to fractionally
+     * shift the image using interpolation (lanczos5 currently hardcoded)
+     *
+     * Note: if fractional recentering is performed, then a new image will be allocated and returned.
+     * If not, then the original image will be returned (after setting XY0)
+     */
+    static PTR(Image) recenterKernelImage(PTR(Image) im, const lsst::afw::geom::Point2I &ctr, const lsst::afw::geom::Point2D &xy,
+					     std::string const &warpAlgorithm = "lanczos5", unsigned int warpBuffer = 5);
+
 protected:
     PTR(lsst::afw::cameraGeom::Detector) _detector;
     
