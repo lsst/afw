@@ -49,19 +49,21 @@ namespace detection {
 //   @src_base = index of copied output in src array
 //   @dst_ctr = location of special point in dst array after copy
 //
-static inline void setup1dResize(int ndst, int nsrc, int src_ctr, int &nout, int &dst_base, int &src_base, int &dst_ctr)
-{
-    if (nsrc > ndst) {
-	nout = ndst;
-	dst_base = 0;
-	src_base = (nsrc-ndst)/2;
-	dst_ctr = src_ctr - src_base;
-    }
-    else {
-	nout = nsrc;
-	dst_base = (ndst-nsrc)/2;
-	src_base = 0;
-	dst_ctr = src_ctr + dst_base;
+namespace {
+    void setup1dResize(int ndst, int nsrc, int src_ctr, int &nout, int &dst_base, int &src_base, int &dst_ctr)
+    {
+        if (nsrc > ndst) {
+            nout = ndst;
+            dst_base = 0;
+            src_base = (nsrc-ndst)/2;
+            dst_ctr = src_ctr - src_base;
+        }
+        else {
+            nout = nsrc;
+            dst_base = (ndst-nsrc)/2;
+            src_base = 0;
+            dst_ctr = src_ctr + dst_base;
+        }
     }
 }
 
