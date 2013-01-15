@@ -41,6 +41,8 @@ std::string strip(std::string const & s) {
 // ---- FITS binary table format codes for various C++ types. -----------------------------------------------
 
 char getFormatCode(bool*) { return 'X'; }
+char getFormatCode(std::string*) { return 'A'; }
+char getFormatCode(boost::int8_t*) { return 'S'; }
 char getFormatCode(boost::uint8_t*) { return 'B'; }
 char getFormatCode(boost::int16_t*) { return 'I'; }
 char getFormatCode(boost::uint16_t*) { return 'U'; }
@@ -73,6 +75,7 @@ std::string makeColumnFormat(int size = 1) {
 template <typename T> struct FitsType;
 
 template <> struct FitsType<bool> { static int const CONSTANT = TLOGICAL; };
+template <> struct FitsType<char> { static int const CONSTANT = TSTRING; };
 template <> struct FitsType<unsigned char> { static int const CONSTANT = TBYTE; };
 template <> struct FitsType<short> { static int const CONSTANT = TSHORT; };
 template <> struct FitsType<unsigned short> { static int const CONSTANT = TUSHORT; };
@@ -80,7 +83,8 @@ template <> struct FitsType<int> { static int const CONSTANT = TINT; };
 template <> struct FitsType<unsigned int> { static int const CONSTANT = TUINT; };
 template <> struct FitsType<long> { static int const CONSTANT = TLONG; };
 template <> struct FitsType<unsigned long> { static int const CONSTANT = TULONG; };
-template <> struct FitsType<LONGLONG> { static int const CONSTANT = TLONGLONG; };
+template <> struct FitsType<long long> { static int const CONSTANT = TLONGLONG; };
+template <> struct FitsType<unsigned long long> { static int const CONSTANT = TLONGLONG; };
 template <> struct FitsType<float> { static int const CONSTANT = TFLOAT; };
 template <> struct FitsType<double> { static int const CONSTANT = TDOUBLE; };
 template <> struct FitsType<lsst::afw::geom::Angle> { static int const CONSTANT = TDOUBLE; };
@@ -98,9 +102,8 @@ template <> struct FitsBitPix<short> { static int const CONSTANT = SHORT_IMG; };
 template <> struct FitsBitPix<unsigned short> { static int const CONSTANT = USHORT_IMG; };
 template <> struct FitsBitPix<int> { static int const CONSTANT = LONG_IMG; }; // not a typo!
 template <> struct FitsBitPix<unsigned int> { static int const CONSTANT = ULONG_IMG; };
-template <> struct FitsBitPix<long> { static int const CONSTANT = LONG_IMG; };
-template <> struct FitsBitPix<unsigned long> { static int const CONSTANT = ULONG_IMG; };
-template <> struct FitsBitPix<LONGLONG> { static int const CONSTANT = LONGLONG_IMG; };
+template <> struct FitsBitPix<boost::int64_t> { static int const CONSTANT = LONGLONG_IMG; };
+template <> struct FitsBitPix<boost::uint64_t> { static int const CONSTANT = LONGLONG_IMG; };
 template <> struct FitsBitPix<float> { static int const CONSTANT = FLOAT_IMG; };
 template <> struct FitsBitPix<double> { static int const CONSTANT = DOUBLE_IMG; };
 
@@ -150,9 +153,22 @@ void MemFileManager::reset(std::size_t len) {
     _managed = true;
 }
 
+template <typename T> int getBitPix() {
+    return FitsBitPix<T>::CONSTANT;
+}
+
 // ----------------------------------------------------------------------------------------------------------
 // ---- Implementations for Fits class ----------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------
+
+std::string Fits::getFileName() const {
+    std::string fileName = "<unknown>";
+    fitsfile * fd = reinterpret_cast<fitsfile*>(fptr);
+    if (fd != 0 && fd->Fptr != 0 && fd->Fptr->filename != 0) {
+        fileName = fd->Fptr->filename;
+    }
+    return fileName;
+}
 
 int Fits::getHdu() {
     int n = 0;
@@ -161,14 +177,25 @@ int Fits::getHdu() {
 }
 
 void Fits::setHdu(int hdu) {
-    fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
+    if (hdu != 0) {
+        fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+    }
+    if (hdu == 0 && getHdu() == 1 && getImageDim() == 0) {
+        // want a silent failure here
+        int tmpStatus = status;
+        fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), 1, 0, &tmpStatus);
+    }
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
+    }
 }
 
 int Fits::countHdus() {
     int n = 0;
     fits_get_num_hdus(reinterpret_cast<fitsfile*>(fptr), &n, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Getting number of HDUs in file.");
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Getting number of HDUs in file.");
+    }
     return n;
 }
 
@@ -265,57 +292,65 @@ void writeKeyImpl(Fits & fits, char const * key, bool const & value, char const 
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value, std::string const & comment) {
     updateKeyImpl(*this, key.c_str(), value, comment.c_str());
-    if (behavior & AUTO_CHECK) 
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value, std::string const & comment) {
     writeKeyImpl(*this, key.c_str(), value, comment.c_str());
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::updateKey(std::string const & key, T const & value) {
     updateKeyImpl(*this, key.c_str(), value, 0);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::writeKey(std::string const & key, T const & value) {
     writeKeyImpl(*this, key.c_str(), value, 0);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s': '%s'") % key % value);
+    }
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value, std::string const & comment) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value, comment);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 template <typename T>
 void Fits::updateColumnKey(std::string const & prefix, int n, T const & value) {
     updateKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Updating key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 template <typename T>
 void Fits::writeColumnKey(std::string const & prefix, int n, T const & value) {
     writeKey((boost::format("%s%d") % prefix % (n + 1)).str(), value);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing key '%s%d': '%s'") % prefix % (n+1) % value);
+    }
 }
 
 // ---- Reading header keys ---------------------------------------------------------------------------------
@@ -354,7 +389,9 @@ void readKeyImpl(Fits & fits, char const * key, std::string & value) {
 template <typename T>
 void Fits::readKey(std::string const & key, T & value) {
     readKeyImpl(*this, key.c_str(), value);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % key);
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % key);
+    }
 }
 
 void Fits::forEachKey(HeaderIterationFunctor & functor) {
@@ -409,7 +446,9 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
             }
             ++i;
         }
-        if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, boost::format("Reading key '%s'") % keyStr);
+        }
         functor(keyStr, valueStr, commentStr);
     }
 }
@@ -572,8 +611,9 @@ void writeKeyFromProperty(
             )
         );
     }
-    if (fits.behavior & Fits::AUTO_CHECK)
+    if (fits.behavior & Fits::AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(fits, boost::format("Writing key '%s'") % key);
+    }
 }
 
 } // anonymous
@@ -599,9 +639,9 @@ void Fits::writeMetadata(daf::base::PropertySet const & metadata) {
         if (!isKeyIgnored(*i)) {
             if (pl) {
                 writeKeyFromProperty(*this, metadata, *i, pl->getComment(*i).c_str());
+            } else {
+                writeKeyFromProperty(*this, metadata, *i);
             }
-        } else {
-            if (pl) writeKeyFromProperty(*this, metadata, *i);
         }
     }
 }
@@ -612,7 +652,9 @@ void Fits::createTable() {
     char * ttype = 0;
     char * tform = 0;
     fits_create_tbl(reinterpret_cast<fitsfile*>(fptr), BINARY_TBL, 0, 0, &ttype, &tform, 0, 0, &status);
-    if (behavior & AUTO_CHECK) LSST_FITS_CHECK_STATUS(*this, "Creating binary table");
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, "Creating binary table");
+    }
 }
 
 template <typename T>
@@ -631,8 +673,9 @@ int Fits::addColumn(std::string const & ttype, int size) {
         const_cast<char*>(tform.c_str()),
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Adding column '%s' with size %d") % ttype % size);
+    }
     return nCols;
 }
 
@@ -640,8 +683,9 @@ template <typename T>
 int Fits::addColumn(std::string const & ttype, int size, std::string const & comment) {
     int nCols = addColumn<T>(ttype, size);
     updateColumnKey("TTYPE", nCols, ttype, comment);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Adding column '%s' with size %d") % ttype % size);
+    }
     return nCols;
 }
 
@@ -658,8 +702,9 @@ std::size_t Fits::addRows(std::size_t nRows) {
         nRows,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Adding %d rows to binary table") % nRows);
+    }
     return first;
 }
 
@@ -670,23 +715,44 @@ std::size_t Fits::countRows() {
         &r,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Checking how many rows are in table");
+    }
     return r;
 }
 
 template <typename T>
 void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value) {
     fits_write_col(
-        reinterpret_cast<fitsfile*>(fptr), 
-        FitsTableType<T>::CONSTANT, 
-        col + 1, row + 1, 
+        reinterpret_cast<fitsfile*>(fptr),
+        FitsTableType<T>::CONSTANT,
+        col + 1, row + 1,
         1, nElements,
         const_cast<T*>(value),
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Writing value at table cell (%d, %d)") % row % col);
+    }
+}
+
+void Fits::writeTableScalar(std::size_t row, int col, std::string const & value) {
+    // cfitsio doesn't let us specify the size of a string, it just looks for null terminator.
+    // Using std::string::c_str() guarantees that we have one.  But we can't store arbitrary
+    // data in a string field because cfitsio will also chop off anything after the first null
+    // terminator.
+    char const * tmp = value.c_str();
+    fits_write_col(
+        reinterpret_cast<fitsfile*>(fptr), 
+        TSTRING,
+        col + 1, row + 1,
+        1, 1,
+        const_cast<char const**>(&tmp),
+        &status
+    );
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Writing value at table cell (%d, %d)") % row % col);
+    }
 }
 
 template <typename T>
@@ -702,8 +768,33 @@ void Fits::readTableArray(std::size_t row, int col, int nElements, T * value) {
         &anynul,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
+    }
+}
+
+void Fits::readTableScalar(std::size_t row, int col, std::string & value) {
+    int anynul = false;
+    long size = getTableArraySize(col);
+    // We can't directly write into a std::string (may be changing in C++11).
+    std::vector<char> buf(size+1, 0);
+    // cfitsio wants a char** because they imagine we might want an array of strings,
+    // but we only want one element.
+    char * tmp = &buf.front();
+    fits_read_col(
+        reinterpret_cast<fitsfile*>(fptr), 
+        TSTRING, 
+        col + 1, row + 1, 
+        1, 1,
+        0,
+        &tmp,
+        &anynul,
+        &status
+    );
+    if (behavior & AUTO_CHECK) {
+        LSST_FITS_CHECK_STATUS(*this, boost::format("Reading value at table cell (%d, %d)") % row % col);
+    }
+    value = std::string(tmp);
 }
 
 long Fits::getTableArraySize(int col) {
@@ -718,8 +809,9 @@ long Fits::getTableArraySize(int col) {
         &width,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Looking up array size for column %d") % col);
+    }
     return result;
 }
 
@@ -734,8 +826,9 @@ long Fits::getTableArraySize(std::size_t row, int col) {
         &offset,
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Looking up array size for cell (%d, %d)") % row % col);
+    }
     return result;
 }
 
@@ -744,15 +837,17 @@ long Fits::getTableArraySize(std::size_t row, int col) {
 void Fits::createEmpty() {
     long naxes = 0;
     fits_create_img(reinterpret_cast<fitsfile*>(fptr), 8, 0, &naxes, &status);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Creating empty image HDU");    
+    }
 }
 
 template <typename T>
 void Fits::createImageImpl(int naxis, long * naxes) {
     fits_create_img(reinterpret_cast<fitsfile*>(fptr), FitsBitPix<T>::CONSTANT, naxis, naxes, &status);
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Creating new image HDU");
+    }
 }
 
 template <typename T>
@@ -764,8 +859,45 @@ void Fits::writeImageImpl(T const * data, int nElements) {
         const_cast<T*>(data),
         &status
     );
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, "Writing image");
+    }
+}
+
+template <typename T>
+void Fits::readImageImpl(int nAxis, T * data, long * begin, long * end, long * increment) {
+    fits_read_subset(
+        reinterpret_cast<fitsfile*>(fptr),
+        FitsType<T>::CONSTANT,
+        begin, end, increment, 0,
+        data, 0,
+        &status
+    );
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Reading image");
+}
+
+int Fits::getImageDim() {
+    int nAxis = 0;
+    fits_get_img_dim(reinterpret_cast<fitsfile*>(fptr), &nAxis, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting NAXIS");
+    return nAxis;
+}
+
+void Fits::getImageShapeImpl(int nAxis, long * nAxes) {
+    fits_get_img_size(reinterpret_cast<fitsfile*>(fptr), nAxis, nAxes, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting NAXES");
+}
+
+template <typename T>
+bool Fits::checkImageType() {
+    int bitpix = 0;
+    fits_get_img_equivtype(reinterpret_cast<fitsfile*>(fptr), &bitpix, &status);
+    if (behavior & AUTO_CHECK)
+        LSST_FITS_CHECK_STATUS(*this, "Getting image type");
+    return bitpix == FitsBitPix<T>::CONSTANT;
 }
 
 // ---- Manipulating files ----------------------------------------------------------------------------------
@@ -774,10 +906,6 @@ Fits::Fits(std::string const & filename, std::string const & mode, int behavior_
     : fptr(0), status(0), behavior(behavior_)
 {
     if (mode == "r" || mode == "rb") {
-        if (!boost::filesystem::exists(filename)) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                              (boost::format("File %s doesn't exist") % filename).str());
-        }
         fits_open_file(
             reinterpret_cast<fitsfile**>(&fptr),
             const_cast<char*>(filename.c_str()), 
@@ -813,8 +941,9 @@ Fits::Fits(std::string const & filename, std::string const & mode, int behavior_
             (boost::format("Invalid mode '%s' given when opening file '%s'") % mode % filename).str()
         );
     }
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(*this, boost::format("Opening file '%s' with mode '%s'") % filename % mode);
+    }
 }
 
 Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior_)
@@ -869,10 +998,11 @@ Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior_)
              % mode % manager._ptr).str()
         );
     }
-    if (behavior & AUTO_CHECK)
+    if (behavior & AUTO_CHECK) {
         LSST_FITS_CHECK_STATUS(
             *this, boost::format("Opening memory file at '%s' with mode '%s'") % manager._ptr % mode
         );
+    }
 }
 
 void Fits::closeFile() {
@@ -892,11 +1022,15 @@ void Fits::closeFile() {
 
 #define INSTANTIATE_IMAGE_OPS(r, data, T)                        \
     template void Fits::createImageImpl<T>(int, long *);         \
-    template void Fits::writeImageImpl(T const *, int);
+    template void Fits::writeImageImpl(T const *, int);          \
+    template void Fits::readImageImpl(int, T *, long *, long *, long *); \
+    template bool Fits::checkImageType<T>();                            \
+    template int getBitPix<T>();
 
 #define INSTANTIATE_TABLE_OPS(r, data, T)                               \
     template int Fits::addColumn<T>(std::string const & ttype, int size); \
-    template int Fits::addColumn<T>(std::string const & ttype, int size, std::string const & comment); \
+    template int Fits::addColumn<T>(std::string const & ttype, int size, std::string const & comment);
+#define INSTANTIATE_TABLE_ARRAY_OPS(r, data, T)                         \
     template void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * value); \
     template void Fits::readTableArray(std::size_t row, int col, int nElements, T * value);
 
@@ -908,16 +1042,21 @@ void Fits::closeFile() {
     (bool)(unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
     (float)(double)(std::complex<float>)(std::complex<double>)(std::string)
 
-#define COLUMN_TYPES                            \
-    (bool)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
+#define COLUMN_TYPES                                                    \
+    (bool)(std::string)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
     (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
 
-#define IMAGE_TYPES                                                       \
-    (unsigned char)(short)(unsigned short)(int)(unsigned int)(long)(unsigned long)(LONGLONG) \
+#define COLUMN_ARRAY_TYPES                                              \
+    (bool)(char)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
+    (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
+
+#define IMAGE_TYPES                                                     \
+    (unsigned char)(short)(unsigned short)(int)(unsigned int)(boost::int64_t)(boost::uint64_t) \
     (float)(double)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY_OPS, _, KEY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_OPS, _, COLUMN_TYPES)
+BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_TABLE_ARRAY_OPS, _, COLUMN_ARRAY_TYPES)
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_IMAGE_OPS, _, IMAGE_TYPES)
 
 }}} // namespace lsst::afw::fits

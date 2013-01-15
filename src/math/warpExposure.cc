@@ -466,8 +466,6 @@ namespace {
 
         pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
 
-        afwGeom::Box2I srcGoodBBox = warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
-
         // Set each pixel of destExposure's MaskedImage
         pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
 

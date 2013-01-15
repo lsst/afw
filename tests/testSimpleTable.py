@@ -132,13 +132,11 @@ class SimpleTableTestCase(unittest.TestCase):
         k10 = schema.addField("f10", type="ArrayF", size=4)
         k11 = schema.addField("f11", type="ArrayD", size=5)
         k12 = schema.addField("f12", type="CovF", size=3)
-        k13 = schema.addField("f13", type="CovD", size=4)
         k14 = schema.addField("f14", type="CovPointF")
-        k15 = schema.addField("f15", type="CovPointD")
         k16 = schema.addField("f16", type="CovMomentsF")
-        k17 = schema.addField("f17", type="CovMomentsD")
         k18 = schema.addField("f18", type="Angle")
         k19 = schema.addField("f19", type="Coord")
+        k20 = schema.addField("f20", type="String", size=4)
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
         self.assertEqual(record[k1], 0)
@@ -165,12 +163,9 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
         for k in (k10, k11): self.assertEqual(k.subfields, tuple(range(k.getSize())))
         self.checkArrayAccessors(record, k12, "f12", makeCov(k12.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k13, "f13", makeCov(k13.getSize(), dtype=numpy.float64))
         self.checkArrayAccessors(record, k14, "f14", makeCov(k14.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k15, "f15", makeCov(k15.getSize(), dtype=numpy.float64))
         self.checkArrayAccessors(record, k16, "f16", makeCov(k16.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k17, "f17", makeCov(k17.getSize(), dtype=numpy.float64))
-        for k in (k12, k13, k14, k15, k16, k17):
+        for k in (k12, k14, k16):
             n = 0
             for idx, subkey in zip(k.subfields, k.subkeys):
                 self.assertEqual(k[idx], subkey)
@@ -183,6 +178,7 @@ class SimpleTableTestCase(unittest.TestCase):
             lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
             )
         self.assertEqual(k19.subfields, ("ra", "dec"))
+        self.checkScalarAccessors(record, k20, "f20", "foo", "bar")
         k0a = lsst.afw.table.Key["D"]()
         k0b = lsst.afw.table.Key["Flag"]()
         lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0a)

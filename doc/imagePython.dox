@@ -1,0 +1,77 @@
+namespace lsst { namespace afw { namespace image {
+/**
+\page afwSecPyImage How to manipulate images from python
+\section afwSecPyImage How to manipulate images from python
+
+You can use the C++ APIs to manipulate images and bits of images from python, e.g.
+\code
+import lsst.afw.geom as afwGeom
+import lsst.afw.image as afwImage
+im = afwImage.ImageF(10, 20)
+
+bbox = afwGeom.BoxI(afwGeom.PointI(1, 2), afwGeom.ExtentI(4, 6))
+sim = im.Factory(im, bbox)
+sim.set(100)
+del sim
+\endcode
+sets a \c 4x10 portion of image \c im to 100 (I used \c im.Factory to avoid repeating \c afwImage.ImageF,
+rendering the code non-generic).  I can't simply say \c sim \c = \c 100 as that'd make \c sim an integer
+rather than setting the pixel values to 100.  I used an Image, but a Mask or a MaskedImage
+would work too (and I can create a sub-Exposure, although I can't assign to it).
+
+This syntax gets boring fast.
+
+We accordingly added some syntactic sugar at the swig level. I can write the preceeding example as:
+\code
+im[1:5, 2:8] = 100
+\endcode
+_i.e._ create a subimage and assign to it.  afw's image slices are always shallow (but you can `clone` them
+as we shall see).
+
+**Note that the order is `[x, y]`**.  This is consistent with our C++ code (_e.g._ it's `PointI(x, y)`), but
+different from numpy's matrix-like `[row, column]`.
+
+This opens up various possiblities; the following all work:
+\code
+im[-1, :] =  -5
+im[..., 18] =   -5	# the same as im[:, 18]
+im[4,  10]   =  10
+im[-3:, -2:] = 100
+im[-2, -2]   = -10
+sim = im[1:4, 6:10]
+sim[:] = -1
+im[0:4, 0:4] = im[2:6, 8:12]
+\endcode
+You might expect to be able to say \c print \c im[0,20] but you won't get what you expect (it's an image,
+not a pixel value); say  \c print \c float(im[0,20]) instead.
+
+The one remaining thing that you can't do it make a deep copy (the left-hand-side has to pre-exist), but
+fortunately
+\code
+im2 = im[0:3, 0:5].clone()
+\endcode
+works.
+
+\subsection afwImagePythonNumpy numpy
+
+You will **remember that the previous section used `[x, y]`** whereas numpy uses `[row, column]` which
+is *different*; you have been warned.
+
+You can achieve similar effects using \c numpy.  For example, after creating \c im as above,
+I can use \c getArray to return a \em view of the image (i.e. the numpy object shares
+memory with the C++ object), so:
+\code
+import numpy as np
+nim = im.getArray()
+nim[1:5, 2:8] = 100
+\endcode
+will also set a sub-image's value (but a different sub-image from `im[1:5, 2:8]`).
+You can do more complex operations using \c numpy syntax, e.g.
+\code
+nim = im.getArray()
+nim[:] = 100 + np.sin(nim) - 2*nim
+\endcode
+which is very convenient, although there's a good chance that you'll
+be creating temporaries the size of \c im.
+*/
+}}}

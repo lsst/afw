@@ -55,7 +55,6 @@ public:
     class Convolution; ///< Proxy return type for Ellipse::convolve().
 #endif
 
-    typedef Box2D Envelope; ///< Bounding box type.
     typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
 
     typedef boost::shared_ptr<Ellipse> Ptr;
@@ -138,7 +137,7 @@ public:
     GridTransform const getGridTransform() const;
 
     /// @brief Return the bounding box of the ellipse.
-    Envelope computeEnvelope() const;
+    Box2D computeBBox() const;
 
     /**
      *  @brief Set the parameters of this ellipse from another.

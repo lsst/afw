@@ -386,6 +386,40 @@
     }
 }
 
+%extend lsst::afw::table::BaseRecord {
+
+    std::string get(lsst::afw::table::Key< std::string > const & key) const {
+        return self->get(key);
+    }
+
+    std::string getString(lsst::afw::table::Key< std::string > const & key) const {
+        return self->get(key);
+    }
+
+    std::string __getitem__(lsst::afw::table::Key< std::string > const & key) const {
+        return self->get(key);
+    }
+
+    void set(lsst::afw::table::Key< std::string > const & key, std::string const & v) {
+        self->set(key, v);
+    }
+
+    void setString(lsst::afw::table::Key< std::string > const & key, std::string const & v) {
+        self->set(key, v);
+    }
+
+    void __setitem__(lsst::afw::table::Key< std::string > const & key, std::string const & v) {
+        self->set(key, v);
+    }
+}
+%extend lsst::afw::table::KeyBase< std::string > {
+    %pythoncode %{
+        subfields = None
+        subkeys = None
+        HAS_NAMED_SUBFIELDS = False
+    %}
+}
+
 %specializeScalar(boost::int32_t, I)
 %specializeScalar(boost::int64_t, L)
 %specializeScalar(float, F)
@@ -401,4 +435,3 @@
 %specializeArray(float, F)
 %specializeArray(double, D)
 %specializeCovariance(float, F)
-%specializeCovariance(double, D)

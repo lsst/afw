@@ -41,6 +41,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/fits.h"
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/image/fits/fits_io_mpl.h"
 
@@ -494,65 +495,48 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
 }
 
 /************************************************************************************************************/
-/**
- * Construct an Image from a FITS file
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- */
+
 template<typename PixelT>
-image::Image<PixelT>::Image(std::string const& fileName, ///< File to read
-                            int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
-                            geom::Box2I const& bbox,                           ///< Only read these pixels
-                            ImageOrigin const origin    ///< specify the coordinate system of the bbox
-                           ) :
-    image::ImageBase<PixelT>() {
-
-    typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short, 
-        short, 
-        int,
-        unsigned int,
-        float,
-        double,
-        boost::uint64_t
-    > fits_image_types;
-
-    // Strip off any instructions about extensions, compression, etc intended for cfitsio
-    std::string sysFileName = fileName.substr(0, fileName.find('['));
-    if (!boost::filesystem::exists(sysFileName)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
-                          (boost::format("File %s doesn't exist") % sysFileName).str());
-    }
-
-    if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
-    }
-
-    if (!fits_read_image<fits_image_types>(fileName, *this, *metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(image::FitsException,
-                          (boost::format("Failed to read %s HDU %d") % fileName % hdu).str());
+image::Image<PixelT>::Image(
+    std::string const & fileName,
+    int hdu,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const & bbox,
+    ImageOrigin origin
+) : image::ImageBase<PixelT>() {
+    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    try {
+        *this = Image(fitsfile, metadata, bbox, origin);
+    } catch(lsst::afw::fits::FitsError &e) {
+        fitsfile.status = 0;               // reset so we can read NAXIS
+        if (fitsfile.getImageDim() == 0) { // no pixels to read
+            LSST_EXCEPT_ADD(e, str(boost::format("HDU %d has NAXIS == 0") % hdu));
+        }
+        throw e;
     }
 }
-
-/**
- * Construct an Image from a FITS RAM file
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're nice and interpret 0 meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- */
 template<typename PixelT>
-image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer to the FITS file in memory
-                            size_t *ramFileLen,      ///< Pointer to the length of the FITS file in memory
-                            int const hdu,               ///< Desired HDU
-                            lsst::daf::base::PropertySet::Ptr metadata, ///< file metadata (may point to NULL)
-                            geom::Box2I const& bbox,                           ///< Only read these pixels
-                            ImageOrigin const origin    ///< specify the coordinate system of the bbox
-                           ) :
-    image::ImageBase<PixelT>() {
+image::Image<PixelT>::Image(
+    fits::MemFileManager & manager,
+    int const hdu,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const& bbox,
+    ImageOrigin const origin
+) : image::ImageBase<PixelT>() {
+    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fitsfile.setHdu(hdu);
+    *this = Image(fitsfile, metadata, bbox, origin);
+}
 
+template<typename PixelT>
+image::Image<PixelT>::Image(
+    fits::Fits & fitsfile,
+    PTR(daf::base::PropertySet) metadata,
+    geom::Box2I const& bbox,
+    ImageOrigin const origin
+) : image::ImageBase<PixelT>() {
+    
     typedef boost::mpl::vector<
         unsigned char, 
         unsigned short, 
@@ -565,75 +549,48 @@ image::Image<PixelT>::Image(char **ramFile,          ///< Pointer to a pointer t
     > fits_image_types;
 
     if (!metadata) {
-        metadata = lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList);
+        metadata.reset(new daf::base::PropertyList());
     }
-    if (!fits_read_ramImage<fits_image_types>(ramFile, ramFileLen, *this, *metadata, hdu, bbox, origin)) {
-        throw LSST_EXCEPT(image::FitsException,
-                          (boost::format("Failed to read FITS HDU %d") % hdu).str());
-    }
+
+    fits_read_image<fits_image_types>(fitsfile, *this, *metadata, bbox, origin);
 }
 
-/**
- * Write an Image to the specified file
- */
 template<typename PixelT>
 void image::Image<PixelT>::writeFits(
-    std::string const& fileName,                ///< File to write
-    CONST_PTR(lsst::daf::base::PropertySet) metadata_i, //!< metadata to write to header or NULL
-    std::string const& mode                     //!< "w" to write a new file; "a" to append
+    std::string const & fileName,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::string const & mode
 ) const {
-    using lsst::daf::base::PropertySet;
+    fits::Fits fitsfile(fileName, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata_i);
+}
 
-    if (mode == "pdu") {
-        image::fits_write_image(fileName, *this, metadata_i, mode);
-        return;
-    }
+template<typename PixelT>
+void image::Image<PixelT>::writeFits(
+    fits::MemFileManager & manager,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i,
+    std::string const & mode
+) const {
+    fits::Fits fitsfile(manager, mode, fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile, metadata_i);
+}
 
-    lsst::daf::base::PropertySet::Ptr metadata;
-    PropertySet::Ptr wcsAMetadata =
+template<typename PixelT>
+void image::Image<PixelT>::writeFits(
+    fits::Fits & fitsfile,
+    CONST_PTR(lsst::daf::base::PropertySet) metadata_i
+) const {
+    PTR(daf::base::PropertySet) metadata;
+    PTR(daf::base::PropertySet) wcsAMetadata =
         image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
                                                      this->getX0(), this->getY0());
-    
     if (metadata_i) {
         metadata = metadata_i->deepCopy();
         metadata->combine(wcsAMetadata);
     } else {
         metadata = wcsAMetadata;
     }
-
-    image::fits_write_image(fileName, *this, metadata, mode);
-}
-
-/**
- * Write an Image to the specified file
- */
-template<typename PixelT>
-void image::Image<PixelT>::writeFits(
-    char **ramFile,     ///< Pointer to a pointer to the FITS file in memory
-    size_t *ramFileLen, ///< Pointer to the length of the FITS file in memory
-    boost::shared_ptr<const lsst::daf::base::PropertySet> metadata_i, //!< metadata to write to header or NULL
-    std::string const& mode                     //!< "w" to write a new file; "a" to append
-) const {
-    using lsst::daf::base::PropertySet;
-
-    if (mode == "pdu") {
-        image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata_i, mode);
-        return;
-    }
-
-    lsst::daf::base::PropertySet::Ptr metadata;
-    PropertySet::Ptr wcsAMetadata =
-        image::detail::createTrivialWcsAsPropertySet(image::detail::wcsNameForXY0,
-                                                     this->getX0(), this->getY0());
-    
-    if (metadata_i) {
-        metadata = metadata_i->deepCopy();
-        metadata->combine(wcsAMetadata);
-    } else {
-        metadata = wcsAMetadata;
-    }
-
-    image::fits_write_ramImage(ramFile, ramFileLen, *this, metadata, mode);
+    image::fits_write_image(fitsfile, *this, metadata);
 }
 
 /************************************************************************************************************/

@@ -6,6 +6,7 @@
 The LSST applications framework provides the basic functionality needed
 by an image processing system.  In particular:
    - \ref afwSecImage : Representation of Images (and Masks)
+   - \ref afwSecPyImage : How to manipulate images from python
    - \ref afwSecDisplay : How to display images
    - \ref afwSecMath :  Mathematical functions such as convolution and image statistics
    - \ref afwSecDetection : Detection of sources in images

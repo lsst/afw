@@ -144,17 +144,17 @@ public:
             _iter(boost::make_zip_iterator(boost::make_tuple(img, msk, var))) {
         }
         /// Return (a reference to) the image part of the Pixel pointed at by the iterator
-        typename Ref<typename Image::Pixel>::type image() {
+        typename Ref<ImagePixelT>::type image() {
             return _iter->template get<0>()[0];
         }
 
         /// Return (a reference to) the mask part of the Pixel pointed at by the iterator
-        typename Ref<typename Mask::Pixel>::type mask() {
+        typename Ref<MaskPixelT>::type mask() {
             return _iter->template get<1>()[0];
         }
 
         /// Return (a reference to) the variance part of the Pixel pointed at by the iterator
-        typename Ref<typename Variance::Pixel>::type variance() {
+        typename Ref<VariancePixelT>::type variance() {
             return _iter->template get<2>()[0];
         }
 
@@ -322,15 +322,15 @@ public:
                              (*(X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())()))[0]);
             }
 
-            typename Ref<typename Image::Pixel>::type image() {
+            typename Ref<ImagePixelT>::type image() {
                 // Equivalent to "return (*_mil->_loc.template get<0>().x())[0];"
 
                 return (*(X_OR_Y<ImageLocator>(_mil->_loc.template get<0>())()))[0];
             }
-            typename Ref<typename Mask::Pixel>::type mask() {
+            typename Ref<MaskPixelT>::type mask() {
                 return (*(X_OR_Y<MaskLocator>(_mil->_loc.template get<1>())()))[0];
             }
-            typename Ref<typename Variance::Pixel>::type variance() {
+            typename Ref<VariancePixelT>::type variance() {
                 return (*(X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())()))[0];
             }
         protected:
@@ -453,41 +453,41 @@ public:
         // Use those templated classes to implement image/mask/variance
         //
         /// Return a reference to the %image at the offset set when we created the \c cached_location_t
-        typename Ref<typename Image::Pixel>::type image(cached_location_t const& cached_loc) {
+        typename Ref<ImagePixelT>::type image(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<0> >(cached_loc);
         }
         /// Return a reference to the %image at the current position of the locator
-        typename Ref<typename Image::Pixel>::type image() {
+        typename Ref<ImagePixelT>::type image() {
             return apply_IMV<boost::mpl::int_<0> >();
         }
         /// Return a reference to the %image offset by <tt>(x, y)</tt> from the current position of the locator
-        typename Ref<typename Image::Pixel>::type image(int x, int y) {
+        typename Ref<ImagePixelT>::type image(int x, int y) {
             return apply_IMV<boost::mpl::int_<0> >(x, y);
         }
 
         /// Return a reference to the mask at the offset set when we created the \c cached_location_t
-        typename Ref<typename Mask::Pixel>::type mask(cached_location_t const& cached_loc) {
+        typename Ref<MaskPixelT>::type mask(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<1> >(cached_loc);
         }
         /// Return a reference to the mask at the current position of the locator
-        typename Ref<typename Mask::Pixel>::type mask() {
+        typename Ref<MaskPixelT>::type mask() {
             return apply_IMV<boost::mpl::int_<1> >();
         }
         /// Return a reference to the mask offset by <tt>(x, y)</tt> from the current position of the locator
-        typename Ref<typename Mask::Pixel>::type mask(int x, int y) {
+        typename Ref<MaskPixelT>::type mask(int x, int y) {
             return apply_IMV<boost::mpl::int_<1> >(x, y);
         }
 
         /// Return a reference to the variance at the offset set when we created the \c cached_location_t
-        typename Ref<typename Variance::Pixel>::type variance(cached_location_t const& cached_loc) {
+        typename Ref<VariancePixelT>::type variance(cached_location_t const& cached_loc) {
             return apply_IMV<boost::mpl::int_<2> >(cached_loc);
         }
         /// Return a reference to the variance at the current position of the locator
-        typename Ref<typename Variance::Pixel>::type variance() {
+        typename Ref<VariancePixelT>::type variance() {
             return apply_IMV<boost::mpl::int_<2> >();
         }
         /// Return a reference to the variance offset by <tt>(x, y)</tt> from the current position of the locator
-        typename Ref<typename Variance::Pixel>::type variance(int x, int y) {
+        typename Ref<VariancePixelT>::type variance(int x, int y) {
             return apply_IMV<boost::mpl::int_<2> >(x, y);
         }
 
@@ -607,44 +607,98 @@ public:
 
     // Constructors
     explicit MaskedImage(
-        unsigned int width, unsigned int height, 
+        unsigned int width, unsigned int height,
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
     explicit MaskedImage(
-        geom::Extent2I const & dimensions=geom::Extent2I(), 
+        geom::Extent2I const & dimensions=geom::Extent2I(),
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
     explicit MaskedImage(
-        ImagePtr image, 
-        MaskPtr mask = MaskPtr(), 
+        ImagePtr image,
+        MaskPtr mask = MaskPtr(),
         VariancePtr variance = VariancePtr()
     );
     explicit MaskedImage(
-        geom::Box2I const & bbox, 
+        geom::Box2I const & bbox,
         MaskPlaneDict const& planeDict=MaskPlaneDict()
     );
-    explicit MaskedImage(
-        std::string const& baseName, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false, bool const needAllHdus=false
-    );
-    explicit MaskedImage(
-        char **ramFile, size_t *ramFileLen, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false, bool const needAllHdus=false
-    ); 
 
+    /**
+     *  @brief Construct a MaskedImage by reading a regular FITS file.
+     *
+     *  @param[in]      fileName      File to read.
+     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
+     *                                missing.  If false, silently initialize them to zero.
+     *
+     *  MaskedImages may also be read from three separate files, in which the fileName argument is
+     *  interpreted as the base file name and "_img.fits", "_msk.fits", and "_var.fits" are appended to it.
+     *  This format is deprecated and is only provided temporarily for backwards compatibility.
+     */
+    explicit MaskedImage(
+        std::string const & fileName, int hdu=0,
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
+        bool conformMasks=false, bool needAllHdus=false
+    );
+
+    /**
+     *  @brief Construct a MaskedImage by reading a FITS image in memory.
+     *
+     *  @param[in]      manager       An object that manages the memory buffer to read.
+     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
+     *                                missing.  If false, silently initialize them to zero.
+     */
+    explicit MaskedImage(
+        fits::MemFileManager & manager, int hdu=0,
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
+        bool conformMasks=false, bool needAllHdus=false
+    );
+
+    /**
+     *  @brief Construct a MaskedImage from an already-open FITS object.
+     *
+     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
+     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
+     *                                missing.  If false, silently initialize them to zero.
+     */
+    explicit MaskedImage(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
+        bool conformMasks=false, bool needAllHdus=false
+    );
 
     MaskedImage(
-        MaskedImage const& rhs, 
+        MaskedImage const& rhs,
         bool const deep=false
     );
     MaskedImage(
-        MaskedImage const & rhs, 
-        geom::Box2I const & bbox, 
-        ImageOrigin const origin=LOCAL, 
+        MaskedImage const & rhs,
+        geom::Box2I const & bbox,
+        ImageOrigin const origin=LOCAL,
         bool const deep=false
     );
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -654,7 +708,7 @@ public:
     template<typename OtherPixelT>
     MaskedImage(
         MaskedImage<OtherPixelT, MaskPixelT, VariancePixelT> const& rhs, //!< Input image
-        
+
         const bool deep     //!< Must be true; needed to disambiguate
     ) :
         lsst::daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
@@ -725,17 +779,65 @@ public:
     static std::string maskFileName(std::string const& baseName) { return baseName + "_msk.fits"; }
     static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
 
+    /**
+     *  @brief Write a MaskedImage to a regular FITS file.
+     *
+     *  @param[in] baseName      Name of the file to write.  When writing separate files, this is
+     *                           the "base" of the filename (e.g. foo reads foo_{img.msk.var}.fits).
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *  @param[in] writeMef      Whether to write to a single file (recommended) or three separate
+     *                           files (deprecated).  If baseName ends with ".fits", a single file
+     *                           will be written regardless of the value of writeMef.
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
+     *
+     *  In the MEF format, the primary data unit is ignored and all image planes are written to
+     *  extensions.
+     */
     void writeFits(
         std::string const& baseName,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w",
-        bool const writeMef=false
+        bool const writeMef=false,
+        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
+
+    /**
+     *  @brief Write a MaskedImage to a FITS RAM file.
+     *
+     *  @param[in] manager       Manager object for the memory block to write to.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
+     *
+     *  Only MEF format is supported.
+     */
     void writeFits(
-        char **ramFile, size_t *ramFileLen,
-        boost::shared_ptr<const lsst::daf::base::PropertySet> metadata = lsst::daf::base::PropertySet::Ptr(),
+        fits::MemFileManager & manager,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
         std::string const& mode="w",
-        bool const writeMef=true    //writeMef==false is not supported, it will throw an exception
+        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
+    ) const;
+
+    /**
+     *  @brief Write a MaskedImage to a FITS RAM file.
+     *
+     *  @param[in] fitsfile      A FITS file already open to the desired HDU.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] maskMetadata       Metadata to be written to the mask header.
+     *  @param[in] varianceMetadata   Metadata to be written to the variance header.
+     *
+     *  Only MEF format is supported.
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
     // Getters
@@ -743,7 +845,7 @@ public:
     ImagePtr getImage(bool const noThrow=false) const {
         if (!_image && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException, 
+                lsst::pex::exceptions::RuntimeErrorException,
                 "MaskedImage's Image is NULL"
             );
         }
@@ -753,7 +855,7 @@ public:
     MaskPtr getMask(bool const noThrow=false) const {
         if (!_mask && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException, 
+                lsst::pex::exceptions::RuntimeErrorException,
                 "MaskedImage's Mask is NULL"
             );
         }
@@ -764,7 +866,7 @@ public:
     VariancePtr getVariance(bool const noThrow=false) const {
         if (!_variance && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException, 
+                lsst::pex::exceptions::RuntimeErrorException,
                 "MaskedImage's Variance is NULL"
             );
         }

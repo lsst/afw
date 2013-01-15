@@ -27,6 +27,18 @@
 namespace lsst { namespace afw { namespace fits {
 
 /**
+ * @brief An exception thrown when problems are found when reading or writing FITS files.
+ */
+LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::Exception, lsst::afw::fits::FitsError)
+
+/**
+ * @brief An exception thrown when a FITS file has the wrong type.
+ */
+LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::FitsTypeError)
+
+#ifndef SWIG // only want SWIG to see the exceptions; everything else is too low-level for Python.
+
+/**
  *  @brief Base class for polymorphic functors used to iterator over FITS key headers.
  *
  *  Subclass this, and then pass an instance to Fits::forEachKey to iterate over all the
@@ -44,16 +56,6 @@ public:
     virtual ~HeaderIterationFunctor() {}
 
 };
-
-/**
- * @brief An exception thrown when problems are found when reading or writing FITS files.
- */
-LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::Exception, lsst::afw::fits::FitsError)
-
-/**
- * @brief An exception thrown when a FITS file has the wrong type.
- */
-LSST_EXCEPTION_TYPE(FitsTypeError, lsst::afw::fits::FitsError, lsst::afw::fits::FitsTypeError)
 
 /**
  *  @brief Return an error message reflecting FITS I/O errors.
@@ -95,10 +97,14 @@ inline std::string makeErrorMessage(void * fptr, int status, boost::format const
 #define LSST_FITS_CHECK_STATUS(fitsObj, ...)                            \
     if ((fitsObj).status != 0) throw LSST_FITS_EXCEPT(lsst::afw::fits::FitsError, fitsObj, __VA_ARGS__)
 
+/// Return the cfitsio integer BITPIX code for the given data type.
+template <typename T> int getBitPix();
+
 /**
  *  @brief Lifetime-management for memory that goes into FITS memory files.
  */
-struct MemFileManager : private boost::noncopyable {
+class MemFileManager : private boost::noncopyable {
+public:
 
     /**
      *  @brief Construct a MemFileManager with no initial memory buffer.
@@ -186,8 +192,10 @@ private:
  *  calls are all 1-indexed.
  */
 class Fits : private boost::noncopyable {
-    template <typename T> void createImageImpl(int naxis, long * naxes);
+    template <typename T> void createImageImpl(int nAxis, long * nAxes);
     template <typename T> void writeImageImpl(T const * data, int nElements);
+    template <typename T> void readImageImpl(int nAxis, T * data, long * begin, long * end, long * increment);
+    void getImageShapeImpl(int nAxis, long * nAxes);
 public:
 
     enum BehaviorFlags {
@@ -195,10 +203,20 @@ public:
         AUTO_CHECK = 0x02  // Call LSST_FITS_CHECK_STATUS after every cfitsio call
     };
 
+    /// @brief Return the file name associated with the FITS object or "<unknown>" if there is none.
+    std::string getFileName() const;
+
     /// @brief Return the current HDU (1-indexed; 1 is the Primary HDU).
     int getHdu();
 
-    /// @brief Set the current HDU (1-indexed; 1 is the Primary HDU).
+    /**
+     *  @brief Set the current HDU.
+     *
+     *  @param[in] hdu                 The HDU to move to (1-indexed; 1 is the Primary HDU).
+     *                                 The special value of 0 moves to the first extension
+     *                                 if the Primary HDU is empty (has NAXIS==0) and the
+     *                                 the Primary HDU is the current one.
+     */
     void setHdu(int hdu);
 
     /// @brief Return the number of HDUs in the file.
@@ -322,9 +340,8 @@ public:
      */
     template <typename PixelT, int N>
     void createImage(ndarray::Vector<int,N> const & shape) {
-        boost::scoped_array<long> naxes(new long[N]);
-        for (int i = 0; i < N; ++i) naxes[i] = shape[N-i-1];
-        createImageImpl<PixelT>(N, naxes.get());
+        ndarray::Vector<long,N> nAxes(shape.reverse());
+        createImageImpl<PixelT>(N, nAxes.elems);
     }
 
     /**
@@ -351,6 +368,54 @@ public:
         ndarray::Array<T const,N,N> contiguous = ndarray::dynamic_dimension_cast<2>(array);
         if (contiguous.empty()) contiguous = ndarray::copy(array);
         writeImageImpl(contiguous.getData(), contiguous.getNumElements());
+    }
+
+    /// @brief Return the number of dimensions in the current HDU.
+    int getImageDim();
+
+    /**
+     *  @brief Return the shape of the current (image) HDU.
+     *
+     *  The order of dimensions is reversed from the FITS ordering, reflecting the usual
+     *  (y,x) ndarray convention.
+     *
+     *  The template parameter must match the actual number of dimension in the image.
+     */
+    template <int N>
+    ndarray::Vector<int,N> getImageShape() {
+        ndarray::Vector<long,N> nAxes(1);
+        getImageShapeImpl(N, nAxes.elems);
+        ndarray::Vector<int,N> shape;
+        for (int i = 0; i < N; ++i) shape[i] = nAxes[N-i-1];
+        return shape;
+    }
+
+    /**
+     *  @brief Return true if the current HDU has the given pixel type..
+     *
+     *  This takes into account the BUNIT and BSCALE keywords, which can allow integer
+     *  images to be interpreted as floating point.
+     */
+    template <typename T>
+    bool checkImageType();
+
+    /**
+     *  @brief Read an array from a FITS image.
+     *
+     *  @param[out]  array    Array to be filled.  Must already be allocated to the desired shape.
+     *  @param[in]   offset   Indices of the first pixel to be read from the image.
+     */
+    template <typename T, int N>
+    void readImage(
+        ndarray::Array<T,N,N> const & array,
+        ndarray::Vector<int,N> const & offset
+    ) {
+        ndarray::Vector<long,N> begin(offset.reverse());
+        ndarray::Vector<long,N> end(begin);
+        end += array.getShape().reverse();
+        ndarray::Vector<long,N> increment(1);
+        begin += increment;  // first FITS pixel is 1, not 0
+        readImageImpl(N, array.getData(), begin.elems, end.elems, increment.elems);
     }
 
     /// @brief Create a new binary table extension.
@@ -388,6 +453,9 @@ public:
     template <typename T>
     void writeTableScalar(std::size_t row, int col, T value) { writeTableArray(row, col, 1, &value); }
 
+    /// @brief Write a string to a binary table.
+    void writeTableScalar(std::size_t row, int col, std::string const & value);
+
     /// @brief Read an array value from a binary table.
     template <typename T>
     void readTableArray(std::size_t row, int col, int nElements, T * value);
@@ -395,7 +463,10 @@ public:
     /// @brief Read an array scalar from a binary table.
     template <typename T>
     void readTableScalar(std::size_t row, int col, T & value) { readTableArray(row, col, 1, &value); }
-    
+
+    /// @brief Read a string from a binary table.
+    void readTableScalar(std::size_t row, int col, std::string & value);
+
     /// @brief Return the size of an array column.
     long getTableArraySize(int col);
 
@@ -420,6 +491,8 @@ public:
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
     int behavior; // bitwise OR of BehaviorFlags
 }; 
+
+#endif // !SWIG
 
 }}} /// namespace lsst::afw::fits
 

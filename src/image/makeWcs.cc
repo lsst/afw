@@ -47,7 +47,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     if (metadata->exists("CTYPE1")) {
         ctype1 = metadata->getAsString("CTYPE1");
     } else {
-        return boost::make_shared<afwImg::Wcs>();
+        return PTR(Wcs)();
     }
 
     afwImg::Wcs::Ptr wcs;

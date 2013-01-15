@@ -21,21 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
-  * @file
-  *
-  * @ingroup afw
-  *
-  * @brief Implementation of the Exposure Class for LSST.  Class declaration in
-  * Exposure.h.
-  *
-  * @author Nicole M. Silvestri, University of Washington
-  *
-  * Contact: nms@astro.washington.edu
-  *
-  * Created on: Mon Apr 23 13:01:15 2007
-  */
 
 #include <stdexcept>
 
@@ -54,6 +39,7 @@
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/fits.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
@@ -174,64 +160,43 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _info(new ExposureInfo(*src.getInfo()))
 {}
 
-/** @brief Construct an Image from FITS files.
- *
- * Take the Exposure's base input file name (as a std::string without
- * the _img.fits, _var.fits, or _msk.fits suffixes) and gets the MaskedImage of
- * the Exposure.  The method then uses the MaskedImage 'readFits' method to
- * read the MaskedImage of the Exposure and gets the Exposure's Wcs.
- *
- * @return the MaskedImage and the Wcs object with appropriate metadata of the
- * Exposure.
- *  
- * @note The method warns the user if the Exposure does not have a Wcs.
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're helpful and interpret 0 as meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- *
- * @throw an lsst::pex::exceptions::NotFound if the MaskedImage could not be
- * read or the base file name could not be found.
- */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    std::string const& baseName,    ///< Exposure's base input file name
-    int const hdu,                  ///< Desired HDU
-    afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,       ///< Coordinate system for bbox
-    bool conformMasks               //!< Make Mask conform to mask layout in file?
+    std::string const & fileName, int hdu, afwGeom::Box2I const& bbox,
+    ImageOrigin origin, bool conformMasks
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(),
     _info(new ExposureInfo())
 {
     lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
-
-    _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, origin, conformMasks);
-    
+    _maskedImage = MaskedImageT(fileName, hdu, metadata, bbox, origin, conformMasks);
     postFitsCtorInit(metadata);
 }
 
-/**
-This ctor is conceptually identical to the ctor which takes a FITS file base name,
-except that the FITS file resides in RAM.
-*/
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    char **ramFile,                    ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen,                ///< RAM buffer length
-    int const hdu,                  ///< Desired HDU
-    afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,       ///< Coordinate system for bbox
-    bool conformMasks               //!< Make Mask conform to mask layout in file?
+    fits::MemFileManager & manager, int hdu, afwGeom::Box2I const & bbox,
+    ImageOrigin origin, bool conformMasks
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(),
     _info(new ExposureInfo())
 {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
+    _maskedImage = MaskedImageT(manager, hdu, metadata, bbox, origin, conformMasks);
+    postFitsCtorInit(metadata);
+}
 
-    _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, origin, conformMasks);
-    
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    fits::Fits & fitsfile, afwGeom::Box2I const & bbox,
+    ImageOrigin origin, bool conformMasks
+) :
+    lsst::daf::base::Citizen(typeid(this))
+{
+    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
+    _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks);
     postFitsCtorInit(metadata);
 }
 
@@ -312,10 +277,10 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    std::string const & expOutFile ///< Exposure's base output file name
+    std::string const & fileName ///< Exposure's output file name
 ) const {
-    lsst::daf::base::PropertySet::Ptr outputMetadata = _info->getFitsMetadata(getXY0());
-    _maskedImage.writeFits(expOutFile, outputMetadata);
+    fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
 }
 
 /**
@@ -326,12 +291,18 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    char **ramFile,        ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen    ///< RAM buffer length
+    fits::MemFileManager & manager
+) const {
+    fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
+    fits::Fits & fitsfile
 ) const {
     lsst::daf::base::PropertySet::Ptr outputMetadata = _info->getFitsMetadata(getXY0());
-    _maskedImage.writeFits(ramFile, ramFileLen, outputMetadata, "a", true);
-    
+    _maskedImage.writeFits(fitsfile, outputMetadata);
 }
 
 // Explicit instantiations

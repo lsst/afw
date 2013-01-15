@@ -554,6 +554,37 @@ class MaskedImageTestCase(unittest.TestCase):
         self.mimage = factory(afwGeom.Extent2I(20, 20))
         self.assertEqual(self.mimage.get(10, 10), (0, 0x0, 0))
 
+    def testImageSlices(self):
+        """Test image slicing, which generate sub-images using Box2I under the covers"""
+        im = afwImage.MaskedImageF(10, 20)
+        im[4,10] = (10, 0x2, 100)
+        im[-3:, -2:] = 100
+        sim = im[1:4, 6:10]
+        nan = -666                      #  a real NaN != NaN so tests fail
+        sim[:] = (-1, 0x8, nan)
+        im[0:4, 0:4] = im[2:6, 8:12]
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0,  6), ( 0, 0x0,   0))
+        self.assertEqual(im.get(6, 17), ( 0, 0x0,   0))
+        self.assertEqual(im.get(7, 18), (100,0x0,   0))
+        self.assertEqual(im.get(9, 19), (100,0x0,   0))
+        self.assertEqual(im.get(1,  6), (-1, 0x8, nan))
+        self.assertEqual(im.get(3,  9), (-1, 0x8, nan))
+        self.assertEqual(im.get(4, 10), (10, 0x2, 100))
+        self.assertEqual(im.get(4,  9), ( 0, 0x0,   0))
+        self.assertEqual(im.get(2,  2), (10, 0x2, 100))
+        self.assertEqual(im.get(0,  0), (-1, 0x8, nan))
+
+    def testConversionToScalar(self):
+        """Test that even 1-pixel MaskedImages can't be converted to scalars"""
+        im = afwImage.MaskedImageF(10, 20)
+
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):

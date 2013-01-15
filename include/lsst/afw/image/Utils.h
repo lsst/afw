@@ -48,12 +48,17 @@
 
 namespace lsst { namespace afw { namespace image {
 
-/************************************************************************************************************/
+/**
+ *  @brief Return the metadata (header entries) from a FITS file.
+ *
+ *  @param[in]    fileName            File to read.
+ *  @param[in]    hdu                 HDU to read, 1-indexed.  The special value of 0 will read the
+ *                                    first non-empty HDU.
+ *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
+ *                                    (e.g. NAXIS).
+ */
+PTR(daf::base::PropertySet) readMetadata(std::string const & fileName, int hdu=0, bool strip=false);
 
-lsst::daf::base::PropertySet::Ptr readMetadata(std::string const& fileName, const int hdu=0, bool strip=false);
-lsst::daf::base::PropertySet::Ptr readMetadata(char **ramFile, size_t *ramFileLen, const int hdu=0, bool strip=false);
-
-/************************************************************************************************************/
 /**
  * Return a value indicating a bad pixel for the given Image type
  *
@@ -69,6 +74,6 @@ typename ImageT::SinglePixel badPixel(typename ImageT::Pixel bad=0 ///< The bad 
                         std::numeric_limits<SinglePixelT>::quiet_NaN() : bad);
 }
             
-}}}
+}}} // namespace lsst::afw::image
 
 #endif

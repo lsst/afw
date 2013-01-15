@@ -21,6 +21,7 @@ namespace detection {
 
 class PsfFormatter;
 class PsfFactoryBase;
+
 /**
  * Create a particular sort of Psf.
  *
@@ -62,9 +63,6 @@ public:
     CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const {
         return _detector;
     }
-    
-    /// Return true iff Psf is valid
-    operator bool() const { return getKernel().get() != NULL; }
 
     PTR(Image) computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true,
                             bool distort=true) const;
@@ -136,7 +134,7 @@ public:
      * have the same dimensions as @src.  Returns the central pixel for the output image.
      *
      * The image xy0 fields are ignored, since these are generally not meaningful for the output
-     * of Kernel::computeImage() anyway (in contrast to Psf::computeImage())
+     * of Kernel::computeImage() anyway (this is generally true throughout the kernel API).
      */
     static lsst::afw::geom::Point2I resizeKernelImage(Image &dst, const Image &src, 
                                                       const lsst::afw::geom::Point2I &ctr);
@@ -148,7 +146,9 @@ public:
      * @warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear", 
      * or "lanczosN"
      *
-     * @warpBuffer zero-pads the image before recentering (recommend 1 for bilinera, N for lanczosN)
+     * @warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear, 
+     * N for lanczosN (note that it would be cleaner to infer this value from the warping algorithm
+     * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage())
      *
      * The point with integer coordinates @ctr in the source image corresponds to the point
      * @xy in the destination image.  If @xy is not integer-valued then we will need to fractionally

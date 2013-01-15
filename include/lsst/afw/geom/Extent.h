@@ -249,16 +249,12 @@ public:
     explicit Extent(boost::tuple<T,T> const & xy) : 
         Super(EigenVector(xy.template get<0>(), xy.template get<1>())) {}
 
-    T getX() const { return this->_vector.x(); }
-    T getY() const { return this->_vector.y(); }
-    void setX(T x) { this->_vector.x() = x; }
-    void setY(T y) { this->_vector.y() = y; }
-
-    /// @brief Return a std::pair representation of the coordinate object.
-    std::pair<T,T> asPair() const { return std::make_pair(this->_vector.x(),this->_vector.y()); }
-
-    /// @brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T> asTuple() const { return boost::make_tuple(this->_vector.x(),this->_vector.y()); }
+#ifdef SWIG
+    T getX() const;
+    T getY() const;
+    void setX(T x);
+    void setY(T y);
+#endif
 
     void swap(Extent & other) { this->_swap(other); }
 };
@@ -297,17 +293,14 @@ public:
     explicit Extent(boost::tuple<T,T,T> const & xyz) : 
         Super(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
 
-    T getX() const { return this->_vector.x(); }
-    T getY() const { return this->_vector.y(); }
-    T getZ() const { return this->_vector.z(); }
-    void setX(T x) { this->_vector.x() = x; }
-    void setY(T y) { this->_vector.y() = y; }
-    void setZ(T z) { this->_vector.z() = z; }
-
-    /// @brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T,T> asTuple() const {
-        return boost::make_tuple(this->_vector.x(), this->_vector.y(), this->_vector.z());
-    }
+#ifdef SWIG
+    T getX() const;
+    T getY() const;
+    T getZ() const;
+    void setX(T x);
+    void setY(T y);
+    void setZ(T z);
+#endif
 
     void swap(Extent & other) { this->_swap(other); }
 };
@@ -318,8 +311,8 @@ template<typename U>
 Extent<T, 2>::Extent(Extent<U, 2> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
 };
 
 template<typename T>
@@ -327,8 +320,8 @@ template<typename U>
 Extent<T, 2>::Extent(Point<U, 2> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
 };
 
 // Constructor for any 3D type from 3I type
@@ -337,9 +330,9 @@ template<typename U>
 Extent<T, 3>::Extent(Extent<U, 3> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
-    setZ((T) other.getZ());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
+    this->setZ(static_cast<T>(other.getZ()));
 };
 
 // Constructor for any 3D type from 3I type
@@ -348,9 +341,9 @@ template<typename U>
 Extent<T, 3>::Extent(Point<U, 3> const & other) 
 {
     BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
-    setX((T) other.getX());
-    setY((T) other.getY());
-    setZ((T) other.getZ());
+    this->setX(static_cast<T>(other.getX()));
+    this->setY(static_cast<T>(other.getY()));
+    this->setZ(static_cast<T>(other.getZ()));
 };
 
 typedef Extent<int,2> ExtentI;

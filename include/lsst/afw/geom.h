@@ -37,5 +37,6 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/LinearTransform.h"
 #include "lsst/afw/geom/Box.h"
+#include "lsst/afw/geom/Span.h"
 
 #endif // LSST_GEOM_H
