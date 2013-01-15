@@ -278,16 +278,12 @@ public:
     template <typename OtherRecordT>
     SimpleCatalogT(SimpleCatalogT<OtherRecordT> const & other) : Base(other) {}
 
-    /**
-     *  @brief Read a FITS binary table.
-     *
-     *  We look in HDU 2 by default, because HDU one is the Primary HDU, and must
-     *  be an image HDU (even if its an empty image).
-     */
-    static SimpleCatalogT readFits(std::string const & filename, int hdu=2) {
+    /// @brief Read a FITS binary table.
+    static SimpleCatalogT readFits(std::string const & filename, int hdu=0) {
         return io::FitsReader::apply<SimpleCatalogT>(filename, hdu);
     }
-    static SimpleCatalogT readFits(fits::MemFileManager & manager, int hdu=2) {
+    /// @brief Read a FITS binary table.
+    static SimpleCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<SimpleCatalogT>(manager, hdu);
     }
 

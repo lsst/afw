@@ -20,7 +20,7 @@ is \c mtv. The simplest use is simply to setup afw and ds9, start ds9 and python
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.image as afwImage
 
-im = afwImageF("myFile.fits")
+im = afwImage.ImageF("myFile.fits")
 ds9.mtv(im)
 \endcode
 

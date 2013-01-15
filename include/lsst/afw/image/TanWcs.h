@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -19,7 +20,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_IMAGE_TANWCS_H
 #define LSST_AFW_IMAGE_TANWCS_H
 
@@ -28,7 +29,7 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/image/Wcs.h" 
+#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 
@@ -46,101 +47,151 @@ namespace afw {
     }
 namespace image {
 
-/// 
-/// @brief Implementation of the WCS standard for the special case of the Gnomonic 
-/// (tangent plane) projection.
-/// 
-/// This class treats the special case of tangent plane projection. It extends the Wcs standard by 
-/// optionally accounting for distortion in the image plane using the Simple Imaging Polynomial (SIP)
-/// convention.
-/// This convention is described in Shupe et al. (2005) (Astronomical Data Analysis Software and Systems
-/// XIV, Asp Conf. Series Vol XXX, Ed: Shopbell et al.), and descibed in some more detail in
-/// http://web.ipac.caltech.edu/staff/fmasci/home/wise/codeVdist.html
-/// 
-/// To convert from pixel coordintates to radec ("intermediate world coordinates"), first use the matrices
-/// _sipA and _sipB to calculate undistorted coorinates (i.e where on the chip the image would lie if
-/// the optics gave undistorted images), then pass these undistorted coorinates wcsp2s() to calculate radec.
-/// 
-/// For the reverse, radec -> pixels, convert the radec to undistorted coords, and then use the _sipAp and
-/// _sipBp matrices to add in the distortion terms.
-/// 
-    class TanWcs : public lsst::afw::image::Wcs
+/**
+ *  @brief Implementation of the WCS standard for the special case of the Gnomonic
+ *  (tangent plane) projection.
+ * 
+ *  This class treats the special case of tangent plane projection. It extends the Wcs standard by
+ *  optionally accounting for distortion in the image plane using the Simple Imaging Polynomial (SIP)
+ *  convention.
+ *  This convention is described in Shupe et al. (2005) (Astronomical Data Analysis Software and Systems
+ *  XIV, Asp Conf. Series Vol XXX, Ed: Shopbell et al.), and descibed in some more detail in
+ *  http://web.ipac.caltech.edu/staff/fmasci/home/wise/codeVdist.html
+ * 
+ *  To convert from pixel coordintates to radec ("intermediate world coordinates"), first use the matrices
+ *  _sipA and _sipB to calculate undistorted coorinates (i.e where on the chip the image would lie if
+ *  the optics gave undistorted images), then pass these undistorted coorinates wcsp2s() to calculate radec.
+ * 
+ *  For the reverse, radec -> pixels, convert the radec to undistorted coords, and then use the _sipAp and
+ *  _sipBp matrices to add in the distortion terms.
+ */
+class TanWcs : public lsst::afw::image::Wcs
 {
-    public:
-        typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;    
-        typedef boost::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;    
+public:
+    typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;
+    typedef boost::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;
 
-        //Constructors
-        TanWcs();
-        friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& metadata, bool);
-        TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
-               const Eigen::Matrix2d &CD, 
-               double equinox=2000, std::string raDecSys="FK5",
-               const std::string cunits1="deg", const std::string cunits2="deg"
-               );
+    /// Decode the SIP headers for a given matrix, if present.
+    static void decodeSipHeader(
+        daf::base::PropertySet const & fitsMetadata,
+        std::string const & which,
+        Eigen::MatrixXd & m
+    );
 
-        TanWcs(const lsst::afw::geom::Point2D crval, const lsst::afw::geom::Point2D crpix, 
-               const Eigen::Matrix2d &CD, 
-               Eigen::MatrixXd const & sipA, 
-               Eigen::MatrixXd const & sipB, 
-               Eigen::MatrixXd const & sipAp,
-               Eigen::MatrixXd const & sipBp,  
-               double equinox=2000, std::string raDecSys="FK5",
-               const std::string cunits1="deg", const std::string cunits2="deg"
-              );
+    /**
+     *  @brief Construct a tangent plane wcs without distortion terms
+     *
+     *  @param crval    The sky position of the reference point
+     *  @param crpix    The pixel position corresponding to crval in Lsst units
+     *  @param cd       Matrix describing transformations from pixel to sky positions
+     *  @param equinox  Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+     *  @param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+     *  @param cunits1  Units of sky position. One of deg, arcmin or arcsec
+     *  @param cunits2  Units of sky position. One of deg, arcmin or arcsec
+     */
+    TanWcs(
+        geom::Point2D const & crval, geom::Point2D const & crpix,
+        Eigen::Matrix2d const & cd,
+        double equinox=2000, std::string const & raDecSys="FK5",
+        std::string const & cunits1="deg", std::string const & cunits2="deg"
+    );
 
-        virtual ~TanWcs() {};
-        
-        virtual lsst::afw::image::Wcs::Ptr clone(void) const;
+    /**
+     *  @brief Construct a tangent plane wcs with distortion terms
+     *
+     *  @param crval    The sky position of the reference point
+     *  @param crpix    The pixel position corresponding to crval in Lsst units
+     *  @param cd       Matrix describing transformations from pixel to sky positions
+     *  @param sipA     Forward distortion matrix for axis 1
+     *  @param sipB     Forward distortion matrix for axis 2
+     *  @param sipAp    Reverse distortion matrix for axis 1
+     *  @param sipBp    Reverse distortion matrix for axis 2
+     *  @param equinox  Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
+     *  @param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
+     *  @param cunits1  Units of sky position. One of deg, arcmin or arcsec
+     *  @param cunits2  Units of sky position. One of deg, arcmin or arcsec
+     */
+    TanWcs(
+        geom::Point2D const & crval, geom::Point2D const & crpix,
+        Eigen::Matrix2d const & cd,
+        Eigen::MatrixXd const & sipA,
+        Eigen::MatrixXd const & sipB,
+        Eigen::MatrixXd const & sipAp,
+        Eigen::MatrixXd const & sipBp,
+        double equinox=2000, std::string const & raDecSys="FK5",
+        std::string const & cunits1="deg", std::string const & cunits2="deg"
+    );
 
-        // Returns the pixel scale, in Angle/pixel.
-		lsst::afw::geom::Angle pixelScale() const;
-        
-        // Applies the SIP AP and BP distortion (used in the skyToPixel direction)
-        lsst::afw::geom::Point2D distortPixel(const lsst::afw::geom::Point2D pixel) const;
-        // Applies the SIP A and B un-distortion (used in the pixelToSky direction)
-        lsst::afw::geom::Point2D undistortPixel(const lsst::afw::geom::Point2D pixel) const;
+    virtual ~TanWcs() {};
 
-        bool hasDistortion() const {    return _hasDistortion;};
-        lsst::daf::base::PropertyList::Ptr getFitsMetadata() const;        
-#if 0
-        //Rely on base class implementation for now.
-        lsst::afw::geom::AffineTransform linearizeAt(lsst::afw::geom::Point2D const & pix) const;
-#endif        
-        
+    /// Polymorphic deep-copy.
+    virtual PTR(Wcs) clone() const;
 
-        //Mutators
-       //Because the base class provides the option of creating a Wcs without distortion coefficients
-       //we supply a way of setting them here. This also help make code neater by breaking an
-       //enormous constructor (above) into two small pieces 
-       void setDistortionMatrices(Eigen::MatrixXd const & sipA, 
-                                  Eigen::MatrixXd const & sipB,
-                                  Eigen::MatrixXd const & sipAp,
-                                  Eigen::MatrixXd const & sipBp
-                                 );
+    /// Returns the pixel scale, in Angle/pixel.
+    geom::Angle pixelScale() const;
 
-    private:
+    /// Applies the SIP AP and BP distortion (used in the skyToPixel direction)
+    geom::Point2D distortPixel(geom::Point2D const & pixel) const;
 
-        virtual bool _isSubset(Wcs const &) const;
+    /// Applies the SIP A and B un-distortion (used in the pixelToSky direction)
+    geom::Point2D undistortPixel(geom::Point2D const & pixel) const;
 
-        //If you want to create a TanWcs object from a fits header, use makeWcs()
-        TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
-        
-        TanWcs(lsst::afw::image::TanWcs const & rhs);
+    bool hasDistortion() const { return _hasDistortion;};
 
-        TanWcs & operator = (const TanWcs &);        
+    PTR(daf::base::PropertyList) getFitsMetadata() const;
 
-        virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
-        virtual lsst::afw::geom::Point2D skyToPixelImpl(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
 
-        //Allow the formatter to access private goo
-        LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
+    /**
+     *  @brief Set the distortion matrices
+     *
+     *  @param sipA  Forward distortion matrix for 1st axis
+     *  @param sipB  Forward distortion matrix for 2nd axis
+     *  @param sipAp Reverse distortion matrix for 1st axis
+     *  @param sipBp Reverse distortion matrix for 2nd axis
+     *
+     *  Because the base class provides the option of creating a Wcs without distortion coefficients
+     *  we supply a way of setting them here. This also help make code neater by breaking an
+     *  enormous constructor (above) into two small pieces.
+     */
+    void setDistortionMatrices(
+        Eigen::MatrixXd const & sipA,
+        Eigen::MatrixXd const & sipB,
+        Eigen::MatrixXd const & sipAp,
+        Eigen::MatrixXd const & sipBp
+    );
 
-        bool _hasDistortion;
-        Eigen::MatrixXd _sipA, _sipB, _sipAp, _sipBp;
-    
-    };
+private:
 
-}}}
+    friend PTR(Wcs) makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
+
+    virtual bool _isSubset(Wcs const &) const;
+
+    // Create an empty, invalid TanWcs.  Only used by TanWcsFormatter.
+    TanWcs();
+
+    /*
+     *  Create a Wcs from a fits header.
+     *
+     *  Don't call this directly. Use makeWcs() instead, which will figure out which (if any)
+     *  sub-class of Wcs is appropriate.
+     */
+    TanWcs(CONST_PTR(daf::base::PropertySet) const & fitsMetadata);
+
+    TanWcs(TanWcs const & rhs);
+
+    TanWcs & operator = (const TanWcs &);
+
+    virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
+    virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
+
+    //Allow the formatter to access private goo
+    LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
+
+    bool _hasDistortion;
+    Eigen::MatrixXd _sipA, _sipB, _sipAp, _sipBp;
+
+};
+
+}}} // namespace lsst::afw::image
 
 #endif

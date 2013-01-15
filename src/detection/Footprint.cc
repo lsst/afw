@@ -40,6 +40,7 @@
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/utils/ieee.h"
 
 #include <boost/archive/text_iarchive.hpp>
@@ -56,22 +57,6 @@ using boost::serialization::make_nvp;
 namespace lsst {
 namespace afw {
 namespace detection {
-
-bool Span::operator<(const Span& b) const {
-	if (_y < b._y)
-		return true;
-	if (_y > b._y)
-		return false;
-	// y equal; check x0...
-	if (_x0 < b._x0)
-		return true;
-	if (_x0 > b._x0)
-		return false;
-	// x0 equal; check x1...
-	if (_x1 < b._x1)
-		return true;
-	return false;
-}
 
 // anonymous namespace
 namespace {
@@ -127,14 +112,6 @@ geom::Point2D transformPoint(double x, double y,
 
 
 } //end namespace
-
-/******************************************************************************/
-/**
- * Return a string-representation of a Span
- */
-std::string Span::toString() const {
-    return str(boost::format("%d: %d..%d") % _y % _x0 % _x1);
-}
 
 /*****************************************************************************/
 /// Counter for Footprint IDs
@@ -211,39 +188,18 @@ Footprint::Footprint(
     _bbox(geom::Box2I()),
     _region(region),
     _normalized(true)
-{    
-    geom::AffineTransform egt(ellipse.getGridTransform());    
-    geom::Box2D envelope(ellipse.computeEnvelope());
-    
-    if(ellipse.getCore().getArea() < 1e-4)        
-        return;
-
-    geom::Box2I bbox(envelope);
-
-
-    int const minY = bbox.getMinY();
-    int const minX = bbox.getMinX();
-    int const maxY = bbox.getMaxY();
-    int const maxX = bbox.getMaxX();
-
-
-    for (int y = minY; y <= maxY; ++y) {
-        int x = minX;
-        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() > 1.0) {
-            if (x >= maxX) {
-                if (++y >= maxY) 
-                    return;
-                x = minX;
-            } else {
-                ++x;
-            }
+{
+    geom::ellipses::PixelRegion pr(ellipse);
+    for (
+        geom::ellipses::PixelRegion::Iterator spanIter = pr.begin(), end = pr.end();
+        spanIter != end;
+        ++spanIter
+    ) {
+        if (!spanIter->isEmpty()) {
+            addSpan(*spanIter);
         }
-        int start = x;
-        while (egt(geom::Point2D(x,y)).asEigen().squaredNorm() <= 1.0 && x <= maxX) 
-            ++x;
-        addSpan(y, start, x-1);
     }
-    _normalized=true;
+    _normalized = true;
 }
 
 /**

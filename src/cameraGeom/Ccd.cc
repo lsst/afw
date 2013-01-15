@@ -41,39 +41,35 @@ void cameraGeom::Ccd::addAmp(afwGeom::Point2I pos,        ///< position of Amp i
                              cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
                             )
 {
-    cameraGeom::Amp::Ptr amp(new Amp(amp_c)); // the Amp with absolute coordinates
+    cameraGeom::Amp amp = amp_c;        // the Amp with absolute coordinates
     //
     // Correct Amp's coordinate system to be absolute within CCD
     //
-    {
-        afwGeom::Box2I ampPixels = amp->getAllPixels();
-        amp->shift(
-            pos.getX()*ampPixels.getWidth(), 
-            pos.getY()*ampPixels.getHeight()
-        );
-    }
-    getAllPixels().include(amp->getAllPixels());
-
-    //
-    // Now deal with the geometry after we trim everything except the dataSec
-    //
-    amp->setTrimmedGeom();
-    getAllTrimmedPixels().include(amp->getDataSec(true));
-    // insert new Amp, keeping the Amps sorted
-    _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
-    amp->setParent(getThisPtr());
-
-    afwGeom::Extent2I dim = getAllPixels(true).getDimensions() - afwGeom::Extent2I(1);
-    setCenterPixel(afwGeom::Point2D(dim[0]*0.5, dim[1]*0.5));
+    afwGeom::Box2I ampPixels = amp.getAllPixels();
+    amp.shift(pos.getX()*ampPixels.getWidth(), 
+              pos.getY()*ampPixels.getHeight());
+    
+    addAmp(amp);
 }
+
 /**
  * Add an Amp to the Ccd if the disk orientation has already been set up (via
- * setDisktoChipLayout)
+ * setElectronicToChipLayout)
  */
 void cameraGeom::Ccd::addAmp(
                              cameraGeom::Amp const& amp_c ///< The amplifier to add to the Ccd's manifest
                             )
 {
+    if (not _amps.empty()) {
+        if (isTrimmed() != amp_c.isTrimmed()) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              str(boost::format("For Amp %d isTrimmed==%d; "
+                                                "inserting into Ccd %d with isTrimmed==%d")
+                                  % amp_c.getId().getSerial() % amp_c.isTrimmed() 
+                                  % getId().getSerial() % isTrimmed()));
+        }
+    }
+
     cameraGeom::Amp::Ptr amp(new Amp(amp_c)); // the Amp with absolute coordinates
     getAllPixels().include(amp->getAllPixels());
 
@@ -85,6 +81,10 @@ void cameraGeom::Ccd::addAmp(
     // insert new Amp, keeping the Amps sorted
     _amps.insert(std::lower_bound(_amps.begin(), _amps.end(), amp, cameraGeom::detail::sortPtr<Amp>()), amp);
     amp->setParent(getThisPtr());
+
+    if (_amps.size() == 1) {
+        setTrimmed(amp->isTrimmed());
+    }
 
     afwGeom::Extent2I dim = getAllPixels(true).getDimensions() - afwGeom::Extent2I(1);
     setCenterPixel(afwGeom::Point2D(dim[0]*0.5, dim[1]*0.5));

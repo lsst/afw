@@ -195,21 +195,6 @@ class MaskedImageTestCase(unittest.TestCase):
         os.remove(afwImage.MaskedImageF.maskFileName(tmpFile))
         os.remove(afwImage.MaskedImageF.varianceFileName(tmpFile))
 
-    def testWcs(self):
-        """Test round-tripping an empty Wcs"""
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
-        wcs = afwImage.Wcs()
-
-        exp = afwImage.makeExposure(mi, wcs)
-
-        tmpFile = "foo.fits"
-        exp.writeFits(tmpFile)
-
-        exp2 = type(exp)(tmpFile)
-        self.assertFalse(exp2.getWcs())
-
-        os.remove(tmpFile)
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

@@ -64,6 +64,10 @@ namespace math {
     * The number of minima and maxima in the 1-dimensional Lanczos function is 2*order + 1.
     * The kernel has one pixel per function minimum or maximum; but as applied to warping,
     * the first or last pixel is always zero and can be omitted. Thus the kernel size is 2*order x 2*order.
+    *
+    * For more information about warping kernels see makeWarpingKernel
+    *
+    * @todo: make a new class WarpingKernel and make this a subclass.
     */
     class LanczosWarpingKernel : public SeparableKernel {
     public:
@@ -80,12 +84,19 @@ namespace math {
         virtual PTR(Kernel) clone() const;
 
         int getOrder() const;
+
+    protected:
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
     * \brief Bilinear warping: fast; good for undersampled data.
     *
     * The kernel size is 2 x 2.
+    *
+    * For more information about warping kernels see makeWarpingKernel
+    *
+    * @todo: make a new class WarpingKernel and make this a subclass.
     */
 #if defined(SWIG)
     #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
@@ -100,9 +111,6 @@ namespace math {
         virtual ~BilinearWarpingKernel() {}
 
         virtual PTR(Kernel) clone() const;
-
-  protected:
-	virtual void setKernelParameter(unsigned int ind, double value) const;
 
         /**
          * \brief 1-dimensional bilinear interpolation function.
@@ -138,12 +146,19 @@ namespace math {
 
             virtual std::string toString(std::string const& ="") const;
         };
+
+    protected:
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
     * \brief Nearest neighbor warping: fast; good for undersampled data.
     *
     * The kernel size is 2 x 2.
+    *
+    * For more information about warping kernels see makeWarpingKernel
+    *
+    * @todo: make a new class WarpingKernel and make this a subclass.
     */
 #if defined(SWIG)
     #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
@@ -177,7 +192,7 @@ namespace math {
              * \brief Construct a Nearest interpolation function
              */
             explicit NearestFunction1(
-                double fracPos)    ///< fractional position; must be >= 0 and < 1
+                double fracPos)    ///< fractional position
             :
                 Function1<Kernel::Pixel>(1)
             {
@@ -193,6 +208,9 @@ namespace math {
 
             virtual std::string toString(std::string const& ="") const;
         };
+
+    protected:
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
@@ -205,14 +223,19 @@ namespace math {
      * - lanczos#: return a LanczosWarpingKernel of order #, e.g. lanczos4
      * - nearest: return a NearestWarpingKernel
      *
-     * A warping kernel is a subclass of SeparableKernel with the following properties:
+     * A warping kernel is a subclass of SeparableKernel with the following properties
+     * (though for the sake of speed few, if any, of these are enforced):
+     * - Width and height are even. This is unusual for a kernel, but it is more efficient
+     *   because if the extra pixel was included it would always have value 0.
+     * - The center pixels should be adjacent to the kernel center.
+     *   Again, this avoids extra pixels that are sure to have value 0.
      * - It has two parameters: fractional x and fractional row position on the source %image.
-     *   The fractional position for each axis is in the range [0, 1):
-     *   - 0 if the position on the source along that axis is on the center of the pixel.
-     *   - 0.999... if the position on the source along that axis is almost on the center of the next pixel.
-     * - It almost always has even width and height (which is unusual for a kernel) and a center index of
-     *   (width/2, /height/2). This is because the kernel is used to map source positions that range from
-     *   centered on on pixel (width/2, height/2) to nearly centered on pixel (width/2 + 1, height/2 + 1).
+     *   The fractional position is the offset of the pixel position on the source
+     *   from the center of a nearby source pixel:
+     *   - The pixel whose center is just below or to the left of the source position:
+     *     0 <= fractional x and y < 0 and the kernel center is the default (size-1)/2.
+     *   - The pixel whose center is just above or to the right of the source position:
+     *     -1.0 < fractional x and y <= 0 and the kernel center must be set to (size+1)/2.
      */
     PTR(SeparableKernel) makeWarpingKernel(std::string name);
 

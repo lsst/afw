@@ -40,6 +40,7 @@ from .geomLib import (
     Point3D,
     Box2I,
     Box2D,
+    Span,
 )
 
 BoxI = Box2I

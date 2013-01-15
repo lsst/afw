@@ -296,18 +296,18 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             if (space != std::string::npos) {
                 radecsys.erase(space);
             }
-            snprintf(_wcsInfo->radesys, STRLEN, radecsys.c_str());
+            strncpy(_wcsInfo->radesys, radecsys.c_str(), STRLEN);
         } else if (access.toRead()->exists("EQUINOX") || access.toRead()->exists("EQUINOXa")) {
             std::string const EQUINOX = access.toRead()->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
             double const equinox = access.toRead()->getAsDouble(EQUINOX);
             if(equinox < 1984) {
-                snprintf(_wcsInfo->radesys, STRLEN, "FK4");
+                strncpy(_wcsInfo->radesys, "FK4", STRLEN);
             } else {
-                snprintf(_wcsInfo->radesys, STRLEN, "FK5");
+                strncpy(_wcsInfo->radesys, "FK5", STRLEN);
             }
         } else {
             //If Equinox doesn't exist, default to ICRS
-            snprintf(_wcsInfo->radesys, STRLEN, "ICRS");
+            strncpy(_wcsInfo->radesys, "ICRS", STRLEN);
         }
     }
 }
@@ -491,10 +491,6 @@ bool Wcs::_isSubset(Wcs const & rhs) const {
     CHECK_NULLS(_wcsInfo->cunit, rhs._wcsInfo->cunit);
     CHECK_NULLS(_wcsInfo->ctype, rhs._wcsInfo->ctype);
     return _nWcsInfo == rhs._nWcsInfo &&
-        _relax == rhs._relax &&
-        _wcsfixCtrl == rhs._wcsfixCtrl &&
-        _wcshdrCtrl == rhs._wcshdrCtrl &&
-        _nReject == rhs._nReject &&
         _coordSystem == rhs._coordSystem &&
         _wcsInfo->naxis == rhs._wcsInfo->naxis &&
         _wcsInfo->equinox == rhs._wcsInfo->equinox &&
@@ -512,43 +508,6 @@ bool Wcs::_isSubset(Wcs const & rhs) const {
         *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
 }
 
-///Assignment operator    
-Wcs & Wcs::operator = (const Wcs & rhs){
-    if (this != &rhs) {
-        if (_nWcsInfo > 0) {
-            wcsvfree(&_nWcsInfo, &_wcsInfo);
-        }
-        _nWcsInfo = 0;
-        _wcsInfo = NULL;
-        _relax = rhs._relax;
-        _wcsfixCtrl = rhs._wcsfixCtrl;
-        _wcshdrCtrl = rhs._wcshdrCtrl;
-        _nReject = rhs._nReject;
-
-        if (rhs._nWcsInfo > 0) {
-            // allocate wcs structs
-            _wcsInfo = static_cast<struct wcsprm *>(calloc(1, sizeof(struct wcsprm)));
-            if (_wcsInfo == NULL) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
-            }
-            _wcsInfo->flag = -1;
-            _nWcsInfo = 1;
-
-            _wcsInfo[0].flag = -1;
-            int status = wcscopy(1, rhs._wcsInfo, _wcsInfo);
-            if (status != 0) {
-                wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                    (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
-                     status % wcs_errmsg[status]).str());
-            }
-        }
-    }
-    
-    return *this;
-}
-
-
 Wcs::~Wcs() {
     if (_wcsInfo != NULL) {
         wcsvfree(&_nWcsInfo, &_wcsInfo);
@@ -560,46 +519,29 @@ Wcs::Ptr Wcs::clone(void) const {
     return Wcs::Ptr(new Wcs(*this));
 }
 
-
-bool Wcs::isInitialized() const {
-    return (_wcsInfo != NULL);
-}
-
 //
 // Accessors
 //
 
 ///Return crval. Note that this need not be the centre of the image
 CoordPtr Wcs::getSkyOrigin() const {
-
-    if(isInitialized()) {
-        return makeCorrectCoord(_wcsInfo->crval[0] * afwGeom::degrees,
-                                _wcsInfo->crval[1] * afwGeom::degrees);
-    } else {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
-    }
+    assert(_wcsInfo);
+    return makeCorrectCoord(_wcsInfo->crval[0] * afwGeom::degrees, _wcsInfo->crval[1] * afwGeom::degrees);
 }
 
 ///Return crpix in the lsst convention. Note that this need not be the centre of the image
 GeomPoint Wcs::getPixelOrigin() const {
-
-    if(isInitialized()) {
-        //Convert from fits units back to lsst units
-        double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
-        double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
-        return afwGeom::Point2D(p1, p2);
-    } else {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
+    //Convert from fits units back to lsst units
+    double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
+    double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
+    return afwGeom::Point2D(p1, p2);
 }
 
 
 ///Return the CD matrix
 Eigen::Matrix2d Wcs::getCDMatrix() const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
-    
+    assert(_wcsInfo);
     int const naxis = _wcsInfo->naxis;
 
     //If naxis != 2, I'm not sure if any of what follows is correct
@@ -617,10 +559,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
 }
 ///Flip CD matrix around the y-axis
 void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
-    
+    assert(_wcsInfo);
     
     int const naxis = _wcsInfo->naxis;
 
@@ -642,9 +581,8 @@ void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const 
 }
 
 void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
+
     while (nQuarter < 0 ) {
         nQuarter += 4;
     }
@@ -712,9 +650,7 @@ PropertyList::Ptr Wcs::getFitsMetadata() const {
 /// determinant is positive, then the image can be rotated to a position where increasing the right ascension
 /// and declination increases the horizontal and vertical pixel position. In this case the image is flipped.
 bool Wcs::isFlipped() const {
-    if (!isInitialized() ) {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
-    }
+    assert(_wcsInfo);
     double det = (_wcsInfo->cd[0] * _wcsInfo->cd[3]) - (_wcsInfo->cd[1] * _wcsInfo->cd[2]);
 
     if (det == 0) {
@@ -772,9 +708,7 @@ afwGeom::Angle Wcs::pixelScale() const {
 GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, longitude)
                               afwGeom::Angle sky2  // Dec (or latitude)
                              ) const {
-    if (!isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
 
     double skyTmp[2];
     double imgcrd[2];
@@ -825,9 +759,7 @@ GeomPoint Wcs::skyToPixel(afwGeom::Angle sky1, afwGeom::Angle sky2) const {
 }
 
 GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
 
     afwCoord::Coord::Ptr sky = convertCoordToSky(coord);
     double skyTmp[2];
@@ -873,9 +805,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
 void
 Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) const
 {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
     
     // wcslib assumes 1-indexed coordinates
     double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
@@ -911,9 +841,7 @@ CoordPtr Wcs::pixelToSky(GeomPoint const & pixel) const {
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
 CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
 
     afwGeom::Angle skyTmp[2];
     pixelToSkyImpl(pixel1, pixel2, skyTmp);
@@ -1096,14 +1024,12 @@ lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
 ///(which is bases on position in the sub-image). In order that the fits files we create make sense
 ///to other fits viewers, we change to the fits convention when writing out images.
 void Wcs::shiftReferencePixel(double dx, double dy) {
-    //If the _wcsInfo structure hasn't been initialised yet, then there's nothing to do
-    if(isInitialized()) {
-        _wcsInfo->crpix[0] += dx;
-        _wcsInfo->crpix[1] += dy;
+    assert(_wcsInfo);
+    _wcsInfo->crpix[0] += dx;
+    _wcsInfo->crpix[1] += dy;
 
-	// tells libwcs to invalidate cached data, since transformation has been modified
-	_wcsInfo->flag = 0;
-    }
+    // tells libwcs to invalidate cached data, since transformation has been modified
+    _wcsInfo->flag = 0;
 }
 
 /************************************************************************************************************/

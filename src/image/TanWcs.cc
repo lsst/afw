@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -19,7 +20,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <sstream>
 #include <cmath>
@@ -37,42 +38,27 @@
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/image/TanWcs.h"    
+#include "lsst/afw/image/TanWcs.h"
 
-namespace except = lsst::pex::exceptions; 
-namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
-
-typedef lsst::daf::base::PropertySet PropertySet;
-typedef lsst::afw::image::TanWcs TanWcs;
-typedef lsst::afw::geom::Point2D GeomPoint;
-typedef lsst::afw::coord::Coord Coord;
+namespace lsst { namespace afw { namespace image {
 
 const int lsstToFitsPixels = +1;
 const int fitsToLsstPixels = -1;
 
-
-static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
-                            std::string const& which,
-                            Eigen::MatrixXd *m);
-
-
-TanWcs::TanWcs() : 
+TanWcs::TanWcs() :
     Wcs(),
     _hasDistortion(false),
-    _sipA(), _sipB(), _sipAp(), _sipBp() {
+    _sipA(), _sipB(), _sipAp(), _sipBp()
+{}
+
+geom::Angle TanWcs::pixelScale() const {
+    // HACK -- assume "CD" elements are set (and are in degrees)
+    double* cd = _wcsInfo->m_cd;
+    assert(cd);
+    return sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])) * geom::degrees;
 }
 
-afwGeom::Angle TanWcs::pixelScale() const {
-	// HACK -- assume "CD" elements are set (and are in degrees)
-	double* cd = _wcsInfo->m_cd;
-	assert(cd);
-	return sqrt(fabs(cd[0]*cd[3] - cd[1]*cd[2])) * afwGeom::degrees;
-}
-
-///Create a Wcs from a fits header. Don't call this directly. Use makeWcs() instead, which will figure
-///out which (if any) sub-class of Wcs is appropriate
-TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata) : 
+TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
     Wcs(fitsMetadata),
     _hasDistortion(false),
     _sipA(), _sipB(), _sipAp(), _sipBp() {
@@ -85,23 +71,23 @@ TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata) :
     //Check that the header isn't empty
     if(fitsMetadata->nameCount() == 0) {
         std::string msg = "Fits metadata contains no cards";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
     }
-    
+
     //Check for tangent plane projection
     std::string ctype1 = fitsMetadata->getAsString("CTYPE1");
     std::string ctype2 = fitsMetadata->getAsString("CTYPE2");
 
     if((ctype1.substr(5, 3) != "TAN") || (ctype2.substr(5, 3) != "TAN") ) {
         std::string msg = "One or more axes isn't in TAN projection (ctype1 = \"" + ctype1 + "\", ctype2 = \"" + ctype2 + "\")";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
     }
 
     //Check for distorton terms. With two ctypes, there are 4 alternatives, only
-    //two of which are valid.. Both have distortion terms or both don't. 
+    //two of which are valid.. Both have distortion terms or both don't.
     int nSip = (((ctype1.substr(8, 4) == "-SIP") ? 1 : 0) +
 		((ctype2.substr(8, 4) == "-SIP") ? 1 : 0));
-    
+
     switch (nSip) {
         case 0:
             _hasDistortion = false;
@@ -109,65 +95,64 @@ TanWcs::TanWcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata) :
         case 1:
             {//Invalid case. Throw an exception
                 std::string msg = "Distortion key found for only one CTYPE";
-                throw LSST_EXCEPT(except::InvalidParameterException, msg);
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
             }
             break;  //Not necessary, but looks naked without it.
         case 2:
             _hasDistortion = true;
-            
+
             //Hide the distortion from wcslib
-            PTR(PropertySet) const& hackMetadata = fitsMetadata->deepCopy(); // A copy that we can hack up
+            //Make a copy that we can hack up
+            PTR(daf::base::PropertySet) const& hackMetadata = fitsMetadata->deepCopy();
             hackMetadata->set<std::string>("CTYPE1", ctype1.substr(0,8));
             hackMetadata->set<std::string>("CTYPE2", ctype2.substr(0,8));
-            
+
             //Save SIP information
-            decodeSipHeader(hackMetadata, "A", &_sipA);
-            decodeSipHeader(hackMetadata, "B", &_sipB);
-            decodeSipHeader(hackMetadata, "AP", &_sipAp);
-            decodeSipHeader(hackMetadata, "BP", &_sipBp);
+            decodeSipHeader(*hackMetadata, "A", _sipA);
+            decodeSipHeader(*hackMetadata, "B", _sipB);
+            decodeSipHeader(*hackMetadata, "AP", _sipAp);
+            decodeSipHeader(*hackMetadata, "BP", _sipBp);
 
             // this gets called in the Wcs (base class) constructor
             // We just changed fitsMetadata, so we have to re-init wcslib
             initWcsLibFromFits(hackMetadata);
-            
+
             break;
     }
-    
+
     //Check that the existence of forward sip matrices <=> existence of reverse matrices
     if (_hasDistortion) {
         if (_sipA.rows() <= 1 || _sipB.rows() <= 1) {
                 std::string msg = "Existence of forward distorton matrices suggested, but not found";
-                throw LSST_EXCEPT(except::InvalidParameterException, msg);
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
         }
 
         if (_sipAp.rows() <= 1 || _sipBp.rows() <= 1) {
                 std::string msg = "Forward distorton matrices present, but no reverse matrices";
-                throw LSST_EXCEPT(except::InvalidParameterException, msg);
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
         }
     }
-            
+
 }
 
-
-
-
-///@brief Decode the SIP headers for a given matrix, if present.
-static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
-                            std::string const& which,
-                            Eigen::MatrixXd *m) {
+void TanWcs::decodeSipHeader(
+    daf::base::PropertySet const & fitsMetadata,
+    std::string const& which,
+    Eigen::MatrixXd & m
+) {
     std::string header = which + "_ORDER";
-    if (!fitsMetadata->exists(header)) return;
-    int order = fitsMetadata->getAsInt(header);
-    m->resize(order + 1, order + 1);
+    if (!fitsMetadata.exists(header)) return;
+    int order = fitsMetadata.getAsInt(header);
+    m.resize(order + 1, order + 1);
     boost::format format("%1%_%2%_%3%");
     for (int i = 0; i <= order; ++i) {
         for (int j = 0; j <= order; ++j) {
             header = (format % which % i % j).str();
-            if (fitsMetadata->exists(header)) {
-                (*m)(i,j) = fitsMetadata->getAsDouble(header);
+            if (fitsMetadata.exists(header)) {
+                m(i,j) = fitsMetadata.getAsDouble(header);
             }
             else {
-                (*m)(i, j) = 0.0;
+                m(i, j) = 0.0;
             }
         }
     }
@@ -175,83 +160,57 @@ static void decodeSipHeader(CONST_PTR(lsst::daf::base::PropertySet) const& fitsM
 
 
 
-/// \brief Construct a tangent plane wcs without distortion terms    
-/// \param crval The sky position of the reference point
-/// \param crpix The pixel position corresponding to crval in Lsst units
-/// \param CD    Matrix describing transformations from pixel to sky positions
-/// \param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
-/// \param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
-/// \param cunits1 Units of sky position. One of deg, arcmin or arcsec
-/// \param cunits2 Units of sky position. One of deg, arcmin or arcsec
 TanWcs::TanWcs(
-        const lsst::afw::geom::Point2D crval,
-        const lsst::afw::geom::Point2D crpix,
-        const Eigen::Matrix2d &CD,
-        double equinox,
-        std::string raDecSys,
-        const std::string cunits1,
-        const std::string cunits2
-       ) :
-       Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
-       _hasDistortion(false),
-       _sipA(), _sipB(), _sipAp(), _sipBp() {
-       
-       //Nothing to do here
-}
+    geom::Point2D const & crval,
+    geom::Point2D const & crpix,
+    Eigen::Matrix2d const & cd,
+    double equinox,
+    std::string const & raDecSys,
+    std::string const & cunits1,
+    std::string const & cunits2
+) :
+    Wcs(crval, crpix, cd, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
+    _hasDistortion(false),
+    _sipA(), _sipB(), _sipAp(), _sipBp()
+{}
 
-
-/// \brief Construct a tangent plane wcs with distortion terms    
-/// \param crval The sky position of the reference point
-/// \param crpix The pixel position corresponding to crval
-/// \param CD    Matrix describing transformations from pixel to sky positions
-/// \param sipA Forward distortion matrix for axis 1
-/// \param sipB Forward distortion matrix for axis 2
-/// \param sipAp Reverse distortion matrix for axis 1
-/// \param sipBp Reverse distortion matrix for axis 2
-/// \param equinox Equinox of coordinate system, eg 2000 (Julian) or 1950 (Besselian)
-/// \param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
-/// \param cunits1 Units of sky position. One of deg, arcmin or arcsec
-/// \param cunits2 Units of sky position. One of deg, arcmin or arcsec
 TanWcs::TanWcs(
-        const lsst::afw::geom::Point2D crval,
-        const lsst::afw::geom::Point2D crpix,
-        const Eigen::Matrix2d &CD, 
-        Eigen::MatrixXd const & sipA, 
-        Eigen::MatrixXd const & sipB, 
-        Eigen::MatrixXd const & sipAp, 
-        Eigen::MatrixXd const & sipBp,  
-        double equinox, std::string raDecSys,
-        const std::string cunits1, const std::string cunits2
-           ) :
-           Wcs(crval, crpix, CD, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
-           _hasDistortion(true),
-           //Sip's set by a dedicated method that does error checking
-           _sipA(), _sipB(), _sipAp(), _sipBp() {
-
-    //Input checking is done constructor of base class, so don't need to do 
-    //any here.
+    geom::Point2D const &crval,
+    geom::Point2D const & crpix,
+    Eigen::Matrix2d const & cd,
+    Eigen::MatrixXd const & sipA,
+    Eigen::MatrixXd const & sipB,
+    Eigen::MatrixXd const & sipAp,
+    Eigen::MatrixXd const & sipBp,
+    double equinox, std::string const & raDecSys,
+    std::string const & cunits1, std::string const & cunits2
+) :
+    Wcs(crval, crpix, cd, "RA---TAN", "DEC--TAN", equinox, raDecSys, cunits1, cunits2),
+    _hasDistortion(true),
+    //Sip's set by a dedicated method that does error checking
+    _sipA(), _sipB(), _sipAp(), _sipBp()
+{
+    //Input checking is done constructor of base class, so don't need to do any here.
 
     //Set the distortion terms
     setDistortionMatrices(sipA, sipB, sipAp, sipBp);
 }
 
-
-///Copy constructor
-TanWcs::TanWcs(lsst::afw::image::TanWcs const & rhs) :
+TanWcs::TanWcs(TanWcs const & rhs) :
     Wcs(rhs),
     _hasDistortion(rhs._hasDistortion),
-    _sipA(rhs._sipA), 
+    _sipA(rhs._sipA),
     _sipB(rhs._sipB),
-    _sipAp(rhs._sipAp), 
+    _sipAp(rhs._sipAp),
     _sipBp(rhs._sipBp) {
-    
+
 }
 
 bool TanWcs::_isSubset(Wcs const & rhs) const {
     if (!Wcs::_isSubset(rhs)) {
         return false;
     }
-    // We only care about the derived-class part if we have a distortion; this could mean 
+    // We only care about the derived-class part if we have a distortion; this could mean
     // a TanWcs with no distortion may be equal to a plain Wcs, but that doesn't happen
     // in practice because have different wcslib data structures.
     if (this->hasDistortion()) {
@@ -265,65 +224,19 @@ bool TanWcs::_isSubset(Wcs const & rhs) const {
     return true;
 }
 
-///Assignment operator    
-TanWcs & TanWcs::operator = (const TanWcs & rhs){
-    if (this != &rhs) {
-        
-        if (_nWcsInfo > 0) {
-            wcsvfree(&_nWcsInfo, &_wcsInfo);
-        }
-        _nWcsInfo = 0;
-        _wcsInfo = NULL;
-        _relax = rhs._relax;
-        _wcsfixCtrl = rhs._wcsfixCtrl;
-        _wcshdrCtrl = rhs._wcshdrCtrl;
-        _nReject = rhs._nReject;
-
-        if (rhs._nWcsInfo > 0) {
-            // allocate wcs structs
-            _wcsInfo = static_cast<struct wcsprm *>(calloc(1, sizeof(struct wcsprm)));
-            if (_wcsInfo == NULL) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
-            }
-            _wcsInfo->flag = -1;
-            _nWcsInfo = 1;
-
-            _wcsInfo[0].flag = -1;
-            int status = wcscopy(1, rhs._wcsInfo, _wcsInfo);
-            if (status != 0) {
-                wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                    (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
-                     status % wcs_errmsg[status]).str());
-            }
-        }
-
-        _hasDistortion = false;        
-        if (rhs._hasDistortion) {
-            _hasDistortion = true;
-            _sipA = rhs._sipA;
-            _sipB = rhs._sipB;
-            _sipAp = rhs._sipAp;
-            _sipBp = rhs._sipBp;
-        }
-    }
-    
-    return *this;
-}
-
-/// \brief Clone a TanWcs.
-afwImage::Wcs::Ptr TanWcs::clone(void) const {
-    return afwImage::Wcs::Ptr(new TanWcs(*this));
+PTR(Wcs) TanWcs::clone(void) const {
+    return PTR(Wcs)(new TanWcs(*this));
 }
 
 //
 // Accessors
 //
-GeomPoint TanWcs::skyToPixelImpl(afwGeom::Angle sky1, // RA
-                                 afwGeom::Angle sky2  // Dec
-                                ) const {
+geom::Point2D TanWcs::skyToPixelImpl(
+    geom::Angle sky1, // RA
+    geom::Angle sky2  // Dec
+) const {
     if(_wcsInfo == NULL) {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
     double skyTmp[2];
@@ -340,30 +253,30 @@ GeomPoint TanWcs::skyToPixelImpl(afwGeom::Angle sky1, // RA
 
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
+        throw LSST_EXCEPT(pex::exceptions::RuntimeErrorException,
             (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
             status % sky1.asDegrees() % sky2.asDegrees() % wcs_errmsg[status]).str());
     }
 
-    
+
     //Correct for distortion. We follow the notation of Shupe et al. here, including
     //capitalisation
     if( _hasDistortion) {
-        GeomPoint pix = afwGeom::Point2D(pixTmp[0], pixTmp[1]);
-        GeomPoint dpix = distortPixel(pix);
+        geom::Point2D pix = geom::Point2D(pixTmp[0], pixTmp[1]);
+        geom::Point2D dpix = distortPixel(pix);
         pixTmp[0] = dpix[0];
         pixTmp[1] = dpix[1];
     }
 
     // wcslib assumes 1-indexed coords
-    double offset = lsst::afw::image::PixelZeroPos + fitsToLsstPixels;
-    return afwGeom::Point2D(pixTmp[0]+offset, pixTmp[1]+offset);
+    double offset = PixelZeroPos + fitsToLsstPixels;
+    return geom::Point2D(pixTmp[0]+offset, pixTmp[1]+offset);
 
 }
 
-GeomPoint TanWcs::undistortPixel(const lsst::afw::geom::Point2D pix) const {
+geom::Point2D TanWcs::undistortPixel(geom::Point2D const & pix) const {
     if (!_hasDistortion) {
-        return GeomPoint(pix);
+        return geom::Point2D(pix);
     }
     //If the following assertions aren't true then something has gone seriously wrong.
     assert(_sipB.rows() > 0 );
@@ -372,7 +285,7 @@ GeomPoint TanWcs::undistortPixel(const lsst::afw::geom::Point2D pix) const {
 
     double u = pix[0] - _wcsInfo->crpix[0];  //Relative pixel coords
     double v = pix[1] - _wcsInfo->crpix[1];
-        
+
     double f = 0;
     for(int i=0; i< _sipA.rows(); ++i) {
         for(int j=0; j< _sipA.cols(); ++j) {
@@ -391,27 +304,27 @@ GeomPoint TanWcs::undistortPixel(const lsst::afw::geom::Point2D pix) const {
         }
     }
 
-    return afwGeom::Point2D(pix[0] + f, pix[1] + g);
+    return geom::Point2D(pix[0] + f, pix[1] + g);
 }
 
-GeomPoint TanWcs::distortPixel(const lsst::afw::geom::Point2D pix) const {
+geom::Point2D TanWcs::distortPixel(geom::Point2D const & pix) const {
     if (!_hasDistortion) {
-        return GeomPoint(pix);
+        return geom::Point2D(pix);
     }
     //If the following assertions aren't true then something has gone seriously wrong.
     assert(_sipBp.rows() > 0 );
     assert(_sipAp.rows() == _sipAp.cols());
-    assert(_sipBp.rows() == _sipBp.cols());        
-        
+    assert(_sipBp.rows() == _sipBp.cols());
+
     double U = pix[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
     double V = pix[1] - _wcsInfo->crpix[1];
-    
+
     double F = 0;
     for(int i=0; i< _sipAp.rows(); ++i) {
         for(int j=0; j< _sipAp.cols(); ++j) {
             F += _sipAp(i,j)* pow(U, i) * pow(V, j);
         }
-    }    
+    }
 
     double G = 0;
     for(int i=0; i< _sipBp.rows(); ++i) {
@@ -419,7 +332,7 @@ GeomPoint TanWcs::distortPixel(const lsst::afw::geom::Point2D pix) const {
             G += _sipBp(i,j)* pow(U, i) * pow(V, j);
         }
     }
-    return afwGeom::Point2D(U + F + _wcsInfo->crpix[0],
+    return geom::Point2D(U + F + _wcsInfo->crpix[0],
                             V + G + _wcsInfo->crpix[1]);
 }
 
@@ -428,26 +341,26 @@ GeomPoint TanWcs::distortPixel(const lsst::afw::geom::Point2D pix) const {
  * Worker routine for pixelToSky
  */
 void
-TanWcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle sky[2]) const
+TanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const
 {
     if(_wcsInfo == NULL) {
         throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
     }
 
     // wcslib assumes 1-indexed coordinates
-    double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
-                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
+    double pixTmp[2] = { pixel1 - PixelZeroPos + lsstToFitsPixels,
+                         pixel2 - PixelZeroPos + lsstToFitsPixels};
     double imgcrd[2];
     double phi, theta;
-    
+
     //Correct pixel positions for distortion if necessary
     if( _hasDistortion) {
-        GeomPoint pix = afwGeom::Point2D(pixTmp[0], pixTmp[1]);
-        GeomPoint dpix = undistortPixel(pix);
+        geom::Point2D pix = geom::Point2D(pixTmp[0], pixTmp[1]);
+        geom::Point2D dpix = undistortPixel(pix);
         pixTmp[0] = dpix[0];
         pixTmp[1] = dpix[1];
     }
- 
+
     int status = 0;
 	double skyTmp[2];
     if (wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status) > 0) {
@@ -455,63 +368,26 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle sky[2]) cons
             (boost::format("Error: wcslib returned a status code of %d at pixel %s, %s: %s") %
             status % pixel1 % pixel2 % wcs_errmsg[status]).str());
     }
-	sky[0] = skyTmp[0] * afwGeom::degrees;
-	sky[1] = skyTmp[1] * afwGeom::degrees;
+	sky[0] = skyTmp[0] * geom::degrees;
+	sky[1] = skyTmp[1] * geom::degrees;
 }
 
 /************************************************************************************************************/
 
-lsst::daf::base::PropertyList::Ptr TanWcs::getFitsMetadata() const {
-    return lsst::afw::formatters::TanWcsFormatter::generatePropertySet(*this);       
+PTR(daf::base::PropertyList) TanWcs::getFitsMetadata() const {
+    return formatters::TanWcsFormatter::generatePropertySet(*this);
 }
-
-
-#if 0
-//Rely on base class implementation for now, because this implementation isn't working
-lsst::afw::afwGeom::AffineTransform TanWcs::linearizeAt(lsst::afw::geom::Point2D const & sky) const {
-    
-    Eigen::Matrix2d CD(2,2);
-    CD(0,0) = _wcsInfo->cd[0];
-    CD(0,1) = _wcsInfo->cd[1];
-    CD(1,0) = _wcsInfo->cd[2];
-    CD(1,1) = _wcsInfo->cd[3];
-    
-    GeomPoint const pix00 = skyToPixel(sky);
-    Eigen::Vector2d pix(pix00[0] - _wcsInfo->crpix[0], pix00[1] - _wcsInfo->crpix[1]);
-    
-    //iwc == Intermediate world coordinates (x,y) in Greisen & Calabretta
-    Eigen::Vector2d iwc = CD*pix;
-    double x2 = iwc[0]*iwc[0];
-    double y2 = iwc[1]*iwc[1];
-    
-    Eigen::Matrix2d m;
-    m(0,0) = CD(0,0)/(1+x2);
-    m(0,1) = CD(0,1)/(1+x2);
-    m(1,0) = CD(1,0)/(1+y2);
-    m(1,1) = CD(1,1)/(1+y2);
-    
-    cout << "TanWcs" << endl << m << endl;
-    Eigen::Vector2d sky00v;
-    sky00v << sky.getX(), sky.getY();
-    Eigen::Vector2d pix00v;
-    pix00v << pix00.getX(), pix00.getY();
-    return lsst::afw::afwGeom::AffineTransform(m, lsst::afw::afwGeom::Extent2D(sky00v - m * pix00v));
-}
-#endif
 
 //
 // Mutators
-//    
+//
 
-/// \brief Set the distortion matrices
-/// \param sipA Forward distortion matrix for 1st axis
-/// \param sipB Forward distortion matrix for 2nd axis
-/// \param sipAp Reverse distortion matrix for 1st axis
-/// \param sipBp Reverse distortion matrix for 2nd axis
-void TanWcs::setDistortionMatrices(Eigen::MatrixXd const & sipA, 
-                                   Eigen::MatrixXd const & sipB,
-                                   Eigen::MatrixXd const & sipAp,
-                                   Eigen::MatrixXd const & sipBp) {
+void TanWcs::setDistortionMatrices(
+    Eigen::MatrixXd const & sipA,
+    Eigen::MatrixXd const & sipB,
+    Eigen::MatrixXd const & sipAp,
+    Eigen::MatrixXd const & sipBp
+) {
 
     if (sipA.rows() != sipA.cols() ){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
@@ -533,7 +409,6 @@ void TanWcs::setDistortionMatrices(Eigen::MatrixXd const & sipA,
                           "Error: Matrix sipBp must be square");
     }
 
-            
     //Set the SIP terms
     _hasDistortion = true;
     _sipA = sipA;
@@ -542,4 +417,4 @@ void TanWcs::setDistortionMatrices(Eigen::MatrixXd const & sipA,
     _sipBp = sipBp;
 }
 
-
+}}} // namespace lsst::afw::image

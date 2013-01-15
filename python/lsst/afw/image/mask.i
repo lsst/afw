@@ -72,9 +72,6 @@
     }
     
     %pythoncode {
-    def Factory(self, *args):
-        """Return a Mask of this type"""
-        return NAME##TYPE(*args)
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"
     #
@@ -99,6 +96,8 @@
         return args[0]
     }
 }
+%defineClone(NAME##TYPE, lsst::afw::image::Mask, PIXEL_TYPE);
+%supportSlicing(lsst::afw::image::Mask, PIXEL_TYPE);
 %enddef
 
 /************************************************************************************************************/

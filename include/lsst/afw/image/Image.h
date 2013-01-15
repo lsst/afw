@@ -39,7 +39,7 @@
 
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
-#include "boost/shared_array.hpp"
+
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
@@ -55,6 +55,11 @@ namespace lsst { namespace afw {
 namespace formatters {
     template <typename PixelT> class ImageFormatter;
     template <typename PixelT> class DecoratedImageFormatter;
+}
+
+namespace fits {
+class Fits;
+class MemFileManager;
 }
 
 namespace image {
@@ -430,14 +435,60 @@ namespace image {
         explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=LOCAL, 
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
-        explicit Image(std::string const& fileName, const int hdu=0,
-                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                       geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin=LOCAL);
-        explicit Image(char **ramFile, size_t *ramFileLen, const int hdu=0,
-                       lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-                       geom::Box2I const& bbox=geom::Box2I(), 
-                       ImageOrigin const origin=LOCAL);
+
+        /**
+         *  @brief Construct an Image by reading a regular FITS file.
+         *
+         *  @param[in]      fileName    File to read.
+         *  @param[in]      hdu         HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+         *                              of 0 reads the Primary HDU unless it is empty, in which case it
+         *                              reads the first extension HDU.
+         *  @param[in,out]  metadata    Metadata read from the header (may be null).
+         *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
+         *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
+         *                              should take into account the xy0 saved with the image.
+         */
+        explicit Image(
+            std::string const & fileName, int hdu=0,
+            PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+            geom::Box2I const & bbox=geom::Box2I(), 
+            ImageOrigin origin=LOCAL
+        );
+
+        /**
+         *  @brief Construct an Image by reading a FITS image in memory.
+         *
+         *  @param[in]      manager     An object that manages the memory buffer to read.
+         *  @param[in]      hdu         HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+         *                              of 0 reads the Primary HDU unless it is empty, in which case it
+         *                              reads the first extension HDU.
+         *  @param[in,out]  metadata    Metadata read from the header (may be null).
+         *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
+         *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
+         *                              should take into account the xy0 saved with the image.
+         */
+        explicit Image(
+            fits::MemFileManager & manager, int hdu=0,
+            PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+            geom::Box2I const & bbox=geom::Box2I(), 
+            ImageOrigin origin=LOCAL
+        );
+
+        /**
+         *  @brief Construct an Image from an already-open FITS object.
+         *
+         *  @param[in]      fitsfile    A FITS object to read from, already at the desired HDU.
+         *  @param[in,out]  metadata    Metadata read from the header (may be null).
+         *  @param[in]      bbox        If non-empty, read only the pixels within the bounding box.
+         *  @param[in]      origin      Coordinate system of the bounding box; if PARENT, the bounding box
+         *                              should take into account the xy0 saved with the image.
+         */
+        explicit Image(
+            fits::Fits & fitsfile,
+            PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
+            geom::Box2I const & bbox=geom::Box2I(), 
+            ImageOrigin origin=LOCAL
+        );
 
         // generalised copy constructor
         template<typename OtherPixelT>
@@ -455,16 +506,43 @@ namespace image {
         Image& operator=(const PixelT rhs);
         Image& operator=(const Image& rhs);
 
-        //void readFits(std::string const& fileName, ...); // replaced by constructor
+        /**
+         *  @brief Write an image to a regular FITS file.
+         *
+         *  @param[in] fileName      Name of the file to write.
+         *  @param[in] metadata      Additional values to write to the header (may be null).
+         *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+         */
         void writeFits(
             std::string const& fileName,
-            boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
+            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
             std::string const& mode="w"
         ) const;
-        void writeFits(char **ramFile, size_t *ramFileLen,
-            boost::shared_ptr<lsst::daf::base::PropertySet const> metadata = lsst::daf::base::PropertySet::Ptr(),
+
+        /**
+         *  @brief Write an image to a FITS RAM file.
+         *
+         *  @param[in] manager       Manager object for the memory block to write to.
+         *  @param[in] metadata      Additional values to write to the header (may be null).
+         *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+         */
+        void writeFits(
+            fits::MemFileManager & manager,
+            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
             std::string const& mode="w"
         ) const;
+
+        /**
+         *  @brief Write an image to an open FITS file object.
+         *
+         *  @param[in] fitsfile      A FITS file already open to the desired HDU.
+         *  @param[in] metadata      Additional values to write to the header (may be null).
+         */
+        void writeFits(
+            fits::Fits & fitsfile,
+            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)()
+        ) const;
+
 
         void swap(Image &rhs);
         //
@@ -505,7 +583,7 @@ namespace image {
     template<typename PixelT>
     void swap(Image<PixelT>& a, Image<PixelT>& b);
 
-    /************************************************************************************************************/
+/************************************************************************************************************/
     /**
      * \brief A container for an Image and its associated metadata
      */
@@ -518,13 +596,13 @@ namespace image {
         /// shared_ptr to a const DecoratedImage
         typedef boost::shared_ptr<const DecoratedImage> ConstPtr;
         /// shared_ptr to the Image
-        typedef typename Image<PixelT>::Ptr ImagePtr;
+        typedef PTR(Image<PixelT>) ImagePtr;
         /// shared_ptr to the Image as const
-        typedef typename Image<PixelT>::ConstPtr ImageConstPtr;
+        typedef CONST_PTR(Image<PixelT>) ImageConstPtr;
 
         explicit DecoratedImage(const geom::Extent2I & dimensions=geom::Extent2I());
         explicit DecoratedImage(const geom::Box2I & bbox);
-        explicit DecoratedImage(typename Image<PixelT>::Ptr rhs);
+        explicit DecoratedImage(PTR(Image<PixelT>) rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(
             std::string const& fileName, 
@@ -535,8 +613,8 @@ namespace image {
 
         DecoratedImage& operator=(const DecoratedImage& image);
 
-        lsst::daf::base::PropertySet::Ptr getMetadata() const { return _metadata; }
-        void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _metadata = metadata; }
+        PTR(lsst::daf::base::PropertySet) getMetadata() const { return _metadata; }
+        void setMetadata(PTR(lsst::daf::base::PropertySet) metadata) { _metadata = metadata; }
 
         /// Return the number of columns in the %image
         int getWidth() const { return _image->getWidth(); }
@@ -553,13 +631,12 @@ namespace image {
 
         void swap(DecoratedImage &rhs);
         
-        //void readFits(std::string const& fileName, ...); // replaced by constructor
         void writeFits(
             std::string const& fileName,
-            lsst::daf::base::PropertySet::ConstPtr metadata = lsst::daf::base::PropertySet::Ptr(),
+            CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
             std::string const& mode="w"
         ) const;
-        
+
         /// Return a shared_ptr to the DecoratedImage's Image
         ImagePtr      getImage()       { return _image; }
         /// Return a shared_ptr to the DecoratedImage's Image as const
@@ -575,8 +652,8 @@ namespace image {
         void setGain(double gain) { _gain = gain; }
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
-        typename Image<PixelT>::Ptr _image;
-        daf::base::PropertySet::Ptr _metadata;
+        PTR(Image<PixelT>) _image;
+        PTR(lsst::daf::base::PropertySet) _metadata;
         
         double _gain;
 

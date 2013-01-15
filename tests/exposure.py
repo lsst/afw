@@ -47,6 +47,7 @@ import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
+import lsst.afw.fits
 
 try:
     type(VERBOSITY)
@@ -317,7 +318,7 @@ class ExposureTestCase(unittest.TestCase):
         def getExposure():
             afwImage.ExposureF(inFilePathSmallImage)
         
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, getExposure)
+        utilsTests.assertRaisesLsstCpp(self, lsst.afw.fits.FitsError, getExposure)
         
         # Make sure we can write without an exception
         mainExposure.getCalib().setExptime(10)
@@ -409,6 +410,26 @@ class ExposureTestCase(unittest.TestCase):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
         m = afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
         e = afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20))))
+
+    def testImageSlices(self):
+        """Test image slicing, which generate sub-images using Box2I under the covers"""
+        exp = afwImage.ExposureF(10, 20)
+        mi = exp.getMaskedImage()
+        mi[9, 19] = 10
+        # N.b. Exposures don't support setting/getting the pixels so can't replicate e.g. Image's slice tests
+        sexp = exp[1:4, 6:10]
+        self.assertEqual(sexp.getDimensions(), afwGeom.ExtentI(3, 4))
+        sexp = exp[..., -3:]
+        self.assertEqual(sexp.getDimensions(), afwGeom.ExtentI(exp.getWidth(), 3))
+        self.assertEqual(sexp.getMaskedImage().get(sexp.getWidth() - 1, sexp.getHeight() - 1),
+                          exp.getMaskedImage().get( exp.getWidth() - 1,  exp.getHeight() - 1))
+
+    def testConversionToScalar(self):
+        """Test that even 1-pixel Exposures can't be converted to scalars"""
+        im = afwImage.ExposureF(10, 20)
+
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

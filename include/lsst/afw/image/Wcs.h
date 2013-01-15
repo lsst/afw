@@ -103,11 +103,14 @@ class Wcs : public lsst::daf::base::Persistable,
             public lsst::daf::base::Citizen
 {
 public:
-    typedef boost::shared_ptr<lsst::afw::image::Wcs> Ptr;
-    typedef boost::shared_ptr<lsst::afw::image::Wcs const> ConstPtr;
-    
-    Wcs();
-    //Create a Wcs of the correct class using a fits header.
+    typedef boost::shared_ptr<Wcs> Ptr;
+    typedef boost::shared_ptr<Wcs const> ConstPtr;
+
+    /**
+     *  @brief Create a Wcs of the correct class using a fits header.
+     *
+     *  Set stripMetadata=true to remove processed keywords from the PropertySet.
+     */
     friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
                             bool stripMetadata);
 
@@ -124,61 +127,70 @@ public:
     bool operator==(Wcs const & other) const;
     bool operator!=(Wcs const & other) const { return !(*this == other); }
 
-    // Returns CRVAL
+    /// Returns CRVAL
     lsst::afw::coord::Coord::Ptr getSkyOrigin() const;
-    // Returns CRPIX
+    /// Returns CRPIX (corrected to LSST convention).
     lsst::afw::geom::Point2D getPixelOrigin() const;
-    // Returns CD matrix.  You would never have guessed that from the name.
+    /// Returns CD matrix.  You would never have guessed that from the name.
     Eigen::Matrix2d getCDMatrix() const;
     virtual void flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const;
     virtual void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const;
     
+    /// Return a PropertyList containing FITS header keywords that can be used to save the Wcs.x
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
     
-    // Return true iff Wcs is valid
-    operator bool() const { return _nWcsInfo != 0; }
-    
-    // Does the Wcs follow the convention of North=Up, East=Left or not
-    // [This actually just measures the sign of the determinant of the CD matrix
-    //  to determine the "handedness" of the coordinate system.]
+    /**
+     *  Does the Wcs follow the convention of North=Up, East=Left?
+     *
+     *  This actually just measures the sign of the determinant of the CD matrix
+     *  to determine the "handedness" of the coordinate system.
+     */
     bool isFlipped() const;
 
-    // Sky area covered by a pixel at position \c pix00 in units of square degrees.
+    /// Sky area covered by a pixel at position \c pix00 in units of square degrees.
     double pixArea(lsst::afw::geom::Point2D pix00) const;
     
-    // Returns the pixel scale [Angle/pixel]
-    lsst::afw::geom::Angle pixelScale() const;
-
-    bool isInitialized() const;
+    /// Returns the pixel scale [Angle/pixel]
+    geom::Angle pixelScale() const;
     
-    // Convert from raDec to pixel space. Formerly called raDecToXY() and
-    // xyToRaDec(), but the name now reflects their increased generality. They
-    // may be used, e.g. to convert xy to Galactic coordinates
-    lsst::afw::coord::Coord::Ptr pixelToSky(double pix1, double pix2) const;
-    lsst::afw::coord::Coord::Ptr pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
+    /// Convert from celestial coordinates to pixel coordinates.
+    PTR(coord::Coord) pixelToSky(double pix1, double pix2) const;
 
-    /// \note This routine is designed for the knowledgeable user in need of
-    /// performance; it's safer to call the version that returns a CoordPtr
+    /// Convert from celestial coordiantes to pixel coordinates.
+    PTR(coord::Coord) pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
+
+
+    /**
+     *  @brief Convert from celestial coordiantes to pixel coordinates.
+     *
+     *
+     *  @note This routine is designed for the knowledgeable user in need of
+     *  performance; it's safer to call the version that returns a PTR(Coord).
+     */
     void pixelToSky(
-        double pixel1, double pixel2, lsst::afw::geom::Angle& sky1, lsst::afw::geom::Angle& sky2
+        double pixel1, double pixel2, geom::Angle& sky1, geom::Angle& sky2
     ) const;
     
-    // ASSUMES the angles are in the appropriate coordinate system for this WCS.
-    lsst::afw::geom::Point2D skyToPixel(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
+    /**
+     *  @brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+     *
+     *  ASSUMES the angles are in the appropriate coordinate system for this WCS.
+     */
+    geom::Point2D skyToPixel(geom::Angle sky1, geom::Angle sky2) const;
 
     /// @brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
-    lsst::afw::geom::Point2D skyToPixel(lsst::afw::coord::Coord const & coord) const;
+    geom::Point2D skyToPixel(coord::Coord const & coord) const;
 
     /**
      *  @brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
      *
      *  Intermediate world coordinates are in DEGREES.
      */
-    lsst::afw::geom::Point2D skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord) const;
+    geom::Point2D skyToIntermediateWorldCoord(coord::Coord const & coord) const;
     
     virtual bool hasDistortion() const {    return false;};
     
-    lsst::afw::geom::LinearTransform getLinearTransform() const;
+    geom::LinearTransform getLinearTransform() const;
     
     /**
      * @brief Return the local linear approximation to Wcs::pixelToSky at a point given in sky coordinates.
@@ -195,9 +207,9 @@ public:
      * @param[in] coord   Position in sky coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
      */
-    lsst::afw::geom::AffineTransform linearizePixelToSky(
-        lsst::afw::coord::Coord const & coord,
-        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
+    geom::AffineTransform linearizePixelToSky(
+        coord::Coord const & coord,
+        geom::AngleUnit skyUnit = geom::degrees
     ) const;
     
     /**
@@ -215,9 +227,9 @@ public:
      * @param[in] pix     Position in pixel coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be skyUnits/pixel.
      */
-    lsst::afw::geom::AffineTransform linearizePixelToSky(
-        lsst::afw::geom::Point2D const & pix,
-        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
+    geom::AffineTransform linearizePixelToSky(
+        geom::Point2D const & pix,
+        geom::AngleUnit skyUnit = geom::degrees
     ) const;
 
     /**
@@ -235,9 +247,9 @@ public:
      * @param[in] coord   Position in sky coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
      */
-    lsst::afw::geom::AffineTransform linearizeSkyToPixel(
-        lsst::afw::coord::Coord const & coord,
-        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
+    geom::AffineTransform linearizeSkyToPixel(
+        coord::Coord const & coord,
+        geom::AngleUnit skyUnit = geom::degrees
     ) const;
 
     /**
@@ -255,9 +267,9 @@ public:
      * @param[in] pix     Position in pixel coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
      */        
-    lsst::afw::geom::AffineTransform linearizeSkyToPixel(
-        lsst::afw::geom::Point2D const & pix,
-        lsst::afw::geom::AngleUnit skyUnit = lsst::afw::geom::degrees
+    geom::AffineTransform linearizeSkyToPixel(
+        geom::Point2D const & pix,
+        geom::AngleUnit skyUnit = geom::degrees
     ) const;
 
     //Mutators
@@ -269,46 +281,49 @@ private:
     //Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
     
-    void initWcsLib(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
+    void initWcsLib(geom::Point2D const & crval, geom::Point2D const & crpix,
                     Eigen::Matrix2d const & CD, 
                     std::string const & ctype1, std::string const & ctype2,
                     double equinox, std::string const & raDecSys,
                     std::string const & cunits1, std::string const & cunits2
                    );
 
-    virtual void pixelToSkyImpl(double pixel1, double pixel2, lsst::afw::geom::Angle skyTmp[2]) const;
-    virtual lsst::afw::geom::Point2D skyToPixelImpl(lsst::afw::geom::Angle sky1, lsst::afw::geom::Angle sky2) const;
+    virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
+    virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
 protected:
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
 
+    // Default constructor, only used by WcsFormatter
+    Wcs();
+
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.
     Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
     
-    Wcs(lsst::afw::image::Wcs const & rhs);
+    Wcs(Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
     
-    afw::coord::Coord::Ptr makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const;
+    afw::coord::Coord::Ptr makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
 
     /**
      *  Given a Coord (as a shared pointer), return the sky position in the correct
      *  coordinate system for this Wcs.
      */
-    afw::coord::Coord::Ptr convertCoordToSky(lsst::afw::coord::Coord const & coord) const;
+    afw::coord::Coord::Ptr convertCoordToSky(coord::Coord const & coord) const;
     
-    virtual lsst::afw::geom::AffineTransform linearizePixelToSkyInternal(
-        lsst::afw::geom::Point2D const & pix,
-        lsst::afw::coord::Coord const & coord,
-        lsst::afw::geom::AngleUnit skyUnit
+    virtual geom::AffineTransform linearizePixelToSkyInternal(
+        geom::Point2D const & pix,
+        coord::Coord const & coord,
+        geom::AngleUnit skyUnit
     ) const;
 
-    virtual lsst::afw::geom::AffineTransform linearizeSkyToPixelInternal(
-        lsst::afw::geom::Point2D const & pix,
-        lsst::afw::coord::Coord const & coord,
-        lsst::afw::geom::AngleUnit skyUnit
+    virtual geom::AffineTransform linearizeSkyToPixelInternal(
+        geom::Point2D const & pix,
+        coord::Coord const & coord,
+        geom::AngleUnit skyUnit
     ) const;
 
     
@@ -322,7 +337,7 @@ protected:
     int _wcsfixCtrl; ///< Do potentially unsafe translations of non-standard unit strings? 0/1 = no/yes
     int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
     int _nReject;
-    lsst::afw::coord::CoordSystem _coordSystem;
+    coord::CoordSystem _coordSystem;
 };
 
 namespace detail {
@@ -337,7 +352,7 @@ Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool str
 /*
  Note, CD matrix elements must be in degrees/pixel.
  */
-Wcs::Ptr makeWcs(lsst::afw::coord::Coord const & crval, lsst::afw::geom::Point2D const & crpix,
+Wcs::Ptr makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {
