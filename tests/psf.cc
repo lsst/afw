@@ -118,6 +118,16 @@ static int testOnePsfOffset(int dst_nx, int dst_ny, int src_nx, int src_ny, int 
     int x0 = dst->getX0();
     int y0 = dst->getY0();
 
+    if (x0 > x || x0+dst_nx <= x) {
+        cerr << s << ": psf image does not include base point (x,y)\n";
+        return 1;
+    }
+
+    if (y0 > y || y0+dst_ny <= y) {
+        cerr << s << ": psf image does not include base point (x,y)\n";
+        return 1;
+    }        
+
 #if 0
     cerr << s << endl;
     cerr << "source image follows\n";
@@ -156,8 +166,13 @@ static int testPsfOffsets()
     n += testOnePsfOffset(5, 3, 5, 5, 2, 2);
     n += testOnePsfOffset(7, 5, 5, 5, 2, 2);
     n += testOnePsfOffset(5, 7, 5, 5, 2, 2);
-    n += testOnePsfOffset(8, 4, 3, 10, 3, 4);
-    n += testOnePsfOffset(4, 9, 3, 1, 0, 3);
+    n += testOnePsfOffset(8, 4, 3, 10, 2, 4);
+    n += testOnePsfOffset(4, 9, 3, 1, 0, 0);
+    n += testOnePsfOffset(1, 1, 3, 1, 0, 0);
+    n += testOnePsfOffset(12, 15, 10, 11, 3, 7);
+    n += testOnePsfOffset(5, 6, 12, 10, 1, 8);
+    n += testOnePsfOffset(6, 4, 10, 8, 9, 0);
+    n += testOnePsfOffset(3, 2, 7, 9, 3, 4);
     return n;
 }
 
