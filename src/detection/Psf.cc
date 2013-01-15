@@ -52,17 +52,49 @@ namespace detection {
 namespace {
     void setup1dResize(int &nout, int &dstBase, int &srcBase, int &dstCtr, int ndst, int nsrc, int srcCtr)
     {
-        if (nsrc > ndst) {
-            nout = ndst;
-            dstBase = 0;
-            srcBase = (nsrc-ndst)/2;
-            dstCtr = srcCtr - srcBase;
-        }
-        else {
+        if (nsrc < ndst) {
+            // extend by zero padding equally on both sides
             nout = nsrc;
             dstBase = (ndst-nsrc)/2;
             srcBase = 0;
             dstCtr = srcCtr + dstBase;
+            return;
+        }
+
+        nout = ndst;
+        dstBase = 0;
+        
+        int proposedSrcBase = srcCtr - ndst/2;
+
+        if (proposedSrcBase < 0) {
+            // truncate on right only
+            srcBase = 0;
+        }
+        else if (proposedSrcBase + ndst > nsrc) {
+            // truncate on left only
+            srcBase = nsrc - ndst;
+        }
+        else {
+            // truncate symmetrically around srcCtr
+            srcBase = proposedSrcBase;
+        }
+
+        dstCtr = srcCtr - srcBase;
+
+        //
+        // The following sequence of asserts might be a little paranoid, but
+        // this routine is only called on "heavyweight" code paths, so there's
+        // no cost to being exhaustive...
+        //
+
+        if (dstCtr < 0 || dstCtr >= ndst) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
+                              "internal error in setup1dResize(): dstCtr out-of-range");
+        }
+
+        if (srcBase < 0 || srcBase+ndst > nsrc) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
+                              "internal error in setup1dResize(): srcBase out-of-range");
         }
     }
 }
