@@ -92,15 +92,8 @@ namespace {
         // no cost to being exhaustive...
         //
 
-        if (dstCtr < 0 || dstCtr >= ndst) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
-                              "internal error in setup1dResize(): dstCtr out-of-range");
-        }
-
-        if (srcBase < 0 || srcBase+ndst > nsrc) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
-                              "internal error in setup1dResize(): srcBase out-of-range");
-        }
+        assert(dstCtr >= 0 && dstCtr < ndst);
+        assert(srcBase >= 0 && srcBase+ndst <= nsrc);
     }
 }
 
