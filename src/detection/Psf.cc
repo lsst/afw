@@ -52,6 +52,11 @@ namespace detection {
 namespace {
     void setup1dResize(int &nout, int &dstBase, int &srcBase, int &dstCtr, int ndst, int nsrc, int srcCtr)
     {
+        if (nsrc <= 0 || ndst <= 0 || srcCtr < 0 || srcCtr >= nsrc) {
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                              "invalid parameters to setup1dResize()");
+        }
+
         if (nsrc < ndst) {
             // extend by zero padding equally on both sides
             nout = nsrc;
