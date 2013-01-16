@@ -48,6 +48,12 @@ class TraceRadius;
 class LogDeterminantRadius;
 class LogTraceRadius;
 
+/**
+ * \brief The radius defined as the 4th root of the determinant of the quadrupole matrix.
+ *
+ * The determinant radius is equal to the standard radius for a circle, and
+ * \f$\pi R_{det}^2\f$ is the area of the ellipse.
+ */
 class DeterminantRadius {
 public:
 
@@ -103,6 +109,11 @@ private:
     double _value;
 };
 
+/**
+ * \brief The radius defined as \f$\sqrt{0.5(I_{xx} + I_{yy})}\f$
+ *
+ * The trace radius is equal to the standard radius for a circle
+ */
 class TraceRadius {
 public:
 
@@ -158,6 +169,9 @@ private:
     double _value;
 };
 
+/**
+ * \brief The natural logarithm of the DeterminantRadius
+ */
 class LogDeterminantRadius {
 public:
 
@@ -209,6 +223,9 @@ private:
     double _value;
 };
 
+/**
+ * \brief The natural logarithm of the TraceRadius
+ */
 class LogTraceRadius {
 public:
     
