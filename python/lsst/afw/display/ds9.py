@@ -34,6 +34,7 @@ except ImportError, e:
     print >> sys.stderr, "Cannot import xpa: %s" % e
 
 import displayLib
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
@@ -591,9 +592,12 @@ Possible values are:
         x                Draw an x
         *                Draw a *
         o                Draw a circle
-        @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
+        @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
+        An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
 Any other value is interpreted as a string to be drawn. Strings obey the fontFamily (which may be extended
 with other characteristics, e.g. "times bold italic".
+
+N.b. objects derived from BaseCore include Axes and Quadrupole.
 """
     if frame is None:
         frame = getDefaultFrame()
@@ -612,7 +616,20 @@ with other characteristics, e.g. "times bold italic".
     cmd = selectFrame(frame) + "; "
     r += 1
     c += 1                      # ds9 uses 1-based coordinates
-    if symb == '+':
+    if isinstance(symb, afwGeom.ellipses.BaseCore) or re.search(r"^@:", symb):
+        try:
+            mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
+        except TypeError:
+            pass
+        else:
+            if mat:
+                mxx, mxy, myy = [float(_) for _ in mat.groups()]
+                symb = afwGeom.ellipses.Quadrupole(mxx, myy, mxy)
+
+        symb = afwGeom.ellipses.Axes(symb)
+        cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, symb.getA(), symb.getB(),
+                                                                 math.degrees(symb.getTheta()), color)
+    elif symb == '+':
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c, r+size, c, r-size, color)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r, c+size, r, color)
     elif symb == 'x':
@@ -627,20 +644,6 @@ with other characteristics, e.g. "times bold italic".
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size30, r+size60, c-size30, r-size60, color)
     elif symb == 'o':
         cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
-    elif re.search(r"^@:", symb):
-        mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
-        mxx, mxy, myy = map(lambda x: float(x), mat.groups())
-
-        theta = (0.5*math.atan2(2*mxy, mxx - myy))
-        ct, st = math.cos(theta), math.sin(theta)
-        theta *= 180/math.pi
-        A = math.sqrt(mxx*ct*ct + mxy*2*ct*st + myy*st*st)
-        B = math.sqrt(mxx*st*st - mxy*2*ct*st + myy*ct*ct)
-        if A < B:
-            A, B = B, A
-            theta += 90
-
-        cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, A, B, theta, color)
     else:
         try:
             # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
