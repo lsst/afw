@@ -257,7 +257,7 @@ or (the old idiom):
 
             self._bufsize.append(size)  # don't call self.size() as ds9Cmd isn't defined yet
 
-        def set(self, size, silent=False):
+        def set(self, size, silent=True):
             """Set the ds9 buffer size to size"""
             if size < 0:
                 size = XPA_SZ_LINE - 5
@@ -294,13 +294,13 @@ or (the old idiom):
             if len(self._bufsize) > 1:
                 self._bufsize.pop()
 
-        def flush(self, silent=False):
+        def flush(self, silent=True):
             """Flush the pending commands"""
             ds9Cmd(flush=True, silent=silent)
 
     cmdBuffer = Buffer(0)
 
-def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None, get=False):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=True, frame=None, get=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -316,7 +316,7 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None, get=False
 
         # Work around xpa's habit of silently truncating long lines
         if cmdBuffer._lenCommands + len(cmd) > XPA_SZ_LINE - 5: # 5 to handle newlines and such like
-            ds9Cmd(flush=True)
+            ds9Cmd(flush=True, silent=silent)
 
         cmdBuffer._commands += ";" + cmd
         cmdBuffer._lenCommands += 1 + len(cmd)
@@ -569,7 +569,7 @@ def erase(frame=None):
 
     ds9Cmd("regions delete all", flush=True, frame=frame)
 
-def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica"):
+def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", silent=True):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
@@ -640,7 +640,7 @@ with other characteristics, e.g. "times bold italic".
         except Exception, e:
             print >> sys.stderr, ("Ds9 frame %d doesn't exist" % frame), e
 
-    ds9Cmd(cmd)
+    ds9Cmd(cmd, silent=silent)
 
 def line(points, frame=None, symbs=False, ctype=None):
     """Draw a set of symbols or connect the points, a list of (col,row)
