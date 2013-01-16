@@ -83,7 +83,7 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
 
     // warp it!
     afwMath::WarpingControl wc(interpolation_name);
-    afwMath::warpImage(*ret, im, t, wc);
+    afwMath::warpImage(*ret, im, t, wc, 0.0);
     return ret;
 }
 
