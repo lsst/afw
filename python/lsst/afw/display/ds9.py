@@ -731,7 +731,7 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
     if rowc != None:
         cmd += "pan to %g %g physical; " % (colc + 1, rowc + 1) # ds9 is 1-indexed. Grrr
 
-    ds9Cmd(cmd)
+    ds9Cmd(cmd, flush=True)
 
 def pan(colc=None, rowc=None, frame=None):
     """Pan to (rowc, colc); see also zoom"""
