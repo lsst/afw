@@ -35,6 +35,9 @@ or
 
 import unittest
 import numpy as np
+import random
+import math
+import itertools
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -129,15 +132,40 @@ class ImagePcaTestCase(unittest.TestCase):
     def testPca(self):
         """Test calculating PCA"""
 
-        width, height = 20, 10
+        random.seed(0)
+        width, height = 200, 100
+        numBases = 3
+        numInputs = 3
 
-        values = (100, 200, 300)
-        for val in values:
+        bases = []
+        for i in range(numBases):
+            im = afwImage.ImageF(width, height)
+            array = im.getArray()
+            x, y = np.indices(array.shape)
+            period = 5*(i+1)
+            fx = np.sin(2*math.pi/period*x + 2*math.pi/numBases*i)
+            fy = np.sin(2*math.pi/period*y + 2*math.pi/numBases*i)
+            array[x,y] = fx + fy
+            bases.append(im)
+
+        if display:
+            mos = displayUtils.Mosaic(background=-10)
+            ds9.mtv(mos.makeMosaic(bases), title="Basis functions", frame=1)
+
+        inputs = []
+        for i in range(numInputs):
             im = afwImage.ImageF(afwGeom.Extent2I(width, height))
-            im.set(val)
+            im.set(0)
+            for b in bases:
+                im.scaledPlus(random.random(), b)
 
+            inputs.append(im)
             self.ImageSet.addImage(im, 1.0)
-        
+
+        if display:
+            mos = displayUtils.Mosaic(background=-10)
+            ds9.mtv(mos.makeMosaic(inputs), title="Inputs", frame=2)
+
         self.ImageSet.analyze()
 
         eImages = []
@@ -146,7 +174,17 @@ class ImagePcaTestCase(unittest.TestCase):
 
         if display:
             mos = displayUtils.Mosaic(background=-10)
-            ds9.mtv(mos.makeMosaic(eImages), frame=1)
+            ds9.mtv(mos.makeMosaic(eImages), title="Eigenimages", frame=3)
+
+        self.assertEqual(len(eImages), numInputs)
+
+        # Test for orthogonality
+        for i1, i2 in itertools.combinations(range(len(eImages)), 2):
+            inner = afwImage.innerProduct(eImages[i1], eImages[i2])
+            norm1 = eImages[i1].getArray().sum()
+            norm2 = eImages[i2].getArray().sum()
+            inner /= norm1*norm2
+            self.assertAlmostEqual(inner, 0)
 
     def testPcaNaN(self):
         """Test calculating PCA when the images can contain NaNs"""
