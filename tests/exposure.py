@@ -404,7 +404,18 @@ class ExposureTestCase(unittest.TestCase):
         # det.setCenterPixel(afwGeom.Point2D(999.0, 437.8))
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[0], x0)
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[1], y0)
-
+    
+    def testDeepCopyMetadata(self):
+        """Make sure a deep copy of an Exposure has a deep copy of metadata (ticket #2568)
+        """
+        exp = afwImage.ExposureF(10, 10)
+        expMeta = exp.getMetadata()
+        expMeta.set("foo", 5)
+        expCopy = exp.Factory(exp, True)
+        expCopyMeta = expCopy.getMetadata()
+        expCopyMeta.set("foo", 6)
+        self.assertEqual(expCopyMeta.get("foo"), 6)
+        self.assertEqual(expMeta.get("foo"), 5) # this will fail if the bug is present        
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""

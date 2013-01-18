@@ -140,7 +140,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), deep),
-    _info(new ExposureInfo(*src.getInfo()))
+    _info(new ExposureInfo(*src.getInfo(), deep))
 {}
 
 /** @brief Construct a subExposure given an Exposure and a bounding box
@@ -157,7 +157,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, origin, deep),
-    _info(new ExposureInfo(*src.getInfo()))
+    _info(new ExposureInfo(*src.getInfo(), deep))
 {}
 
 template<typename ImageT, typename MaskT, typename VarianceT> 
