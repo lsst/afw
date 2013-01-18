@@ -34,6 +34,7 @@ namespace lsst { namespace afw {
 
 namespace image {
 class Wcs;
+class Calib;
 } // namespace image
 
 namespace detection {
@@ -43,6 +44,7 @@ class Psf;
 namespace table {
 
 typedef image::Wcs Wcs;
+typedef image::Calib Calib;
 typedef detection::Psf Psf;
 
 class ExposureRecord;
@@ -95,7 +97,7 @@ public:
     bool contains(geom::Point2D const & point, Wcs const & wcs) const;
 
     //@{
-    /// Get/Set the the attached Wcs or Psf.  No copies are made.
+    /// Get/Set the the attached Wcs, Psf, or Calib.  No copies are made.
     PTR(Wcs) getWcs() { return _wcs; }
     CONST_PTR(Wcs) getWcs() const { return _wcs; }
     void setWcs(PTR(Wcs) wcs) { _wcs = wcs; }
@@ -103,6 +105,10 @@ public:
     PTR(Psf) getPsf() { return _psf; }
     CONST_PTR(Psf) getPsf() const { return _psf; }
     void setPsf(PTR(Psf) psf) { _psf = psf; }
+
+    PTR(Calib) getCalib() { return _calib; }
+    CONST_PTR(Calib) getCalib() const { return _calib; }
+    void setCalib(PTR(Calib) calib) { _calib = calib; }
     //@}
 
 protected:
@@ -114,6 +120,7 @@ protected:
 private:
     PTR(Wcs) _wcs;
     PTR(Psf) _psf;
+    PTR(Calib) _calib;
 };
 
 /**

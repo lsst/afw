@@ -30,11 +30,13 @@
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/Calib.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/detection/DoubleGaussianPsf.h"
 %}
 
 %import "lsst/afw/image/wcs.i"
+%import "lsst/afw/image/Calib.i"
 %import "lsst/afw/detection/psf.i"
 
 // =============== ExposureTable and ExposureRecord =========================================================

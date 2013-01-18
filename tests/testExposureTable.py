@@ -39,6 +39,7 @@ import numpy
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.daf.base
 import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.coord
@@ -106,6 +107,10 @@ class ExposureTableTestCase(unittest.TestCase):
                 self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D( 3.0,  6.0)
                 )
             )
+        self.calib = lsst.afw.image.Calib()
+        self.calib.setFluxMag0(56.0, 2.2)
+        self.calib.setExptime(50.0)
+        self.calib.setMidTime(lsst.daf.base.DateTime.now())
         record0 = self.cat.addNew()
         record0.setId(1)
         record0.set(self.ka, numpy.pi)
@@ -113,6 +118,7 @@ class ExposureTableTestCase(unittest.TestCase):
         record0.setBBox(self.bbox0)
         record0.setPsf(self.psf)
         record0.setWcs(self.wcs)
+        record0.setCalib(self.calib)
         record1 = self.cat.addNew()
         record1.setId(2)
         record1.set(self.ka, 2.5)
@@ -124,6 +130,7 @@ class ExposureTableTestCase(unittest.TestCase):
         del self.cat
         del self.psf
         del self.wcs
+        del self.calib
 
     def testAccessors(self):
         record0 = self.cat[0]
@@ -136,6 +143,8 @@ class ExposureTableTestCase(unittest.TestCase):
         self.assertEqual(record1.getBBox(), self.bbox1)
         self.comparePsfs(record0.getPsf(), self.psf)
         self.assertEqual(record1.getPsf(), None)
+        self.assertEqual(record0.getCalib(), self.calib)
+        self.assertTrue(record1.getCalib() is None)
 
     def testPersistence(self):
         filename1 = "ExposureTable1.fits"
@@ -150,7 +159,9 @@ class ExposureTableTestCase(unittest.TestCase):
         self.assertEqual(self.cat[1].get(self.kb), cat1[1].get(self.kb))
         self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
         self.assertTrue(self.cat[1].getPsf() is None)
+        self.assertTrue(self.cat[1].getCalib() is None)
         self.assertEqual(self.cat[0].getWcs().getId(), self.cat[1].getWcs().getId()) # compare citizen IDs
+        self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
 
     def testGeometry(self):
         bigBox = lsst.afw.geom.Box2D(lsst.afw.geom.Box2I(self.bbox0))

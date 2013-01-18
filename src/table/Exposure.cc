@@ -7,6 +7,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/Calib.h"
 #include "lsst/afw/detection/Psf.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -56,6 +57,7 @@ struct PersistenceSchema : private boost::noncopyable {
     Schema schema;
     Key<int> wcs;
     Key<int> psf;
+    Key<int> calib;
 
     static PersistenceSchema const & get() {
         static PersistenceSchema const instance;
@@ -85,6 +87,7 @@ struct PersistenceSchema : private boost::noncopyable {
         output.assign(input, mapper);
         output.set(psf, archive.put(input.getPsf(), permissive));
         output.set(wcs, archive.put(input.getWcs(), permissive));
+        output.set(calib, archive.put(input.getCalib(), permissive));
     }
 
     void readRecord(
@@ -94,13 +97,15 @@ struct PersistenceSchema : private boost::noncopyable {
         output.assign(input, mapper);
         output.setPsf(archive.get<Psf>(input.get(psf)));
         output.setWcs(archive.get<Wcs>(input.get(wcs)));
+        output.setCalib(archive.get<Calib>(input.get(calib)));
     }
 
 private:
     PersistenceSchema() :
         schema(),
         wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
-        psf(schema.addField<int>("psf", "archive ID for Psf object"))
+        psf(schema.addField<int>("psf", "archive ID for Psf object")),
+        calib(schema.addField<int>("calib", "archive ID for Calib object"))
     {
         schema.getCitizen().markPersistent();
     }
@@ -267,6 +272,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
         ExposureRecord const & s = dynamic_cast<ExposureRecord const &>(other);
         _psf = s._psf;
         _wcs = s._wcs;
+        _calib = s._calib;
     } catch (std::bad_cast&) {}
 }
 
