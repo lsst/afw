@@ -62,6 +62,10 @@ public:
      *  are typically held by PTR.  But we expose the lower-level raw-pointer form
      *  so users aren't forced to clone objects before persisting them if they don't
      *  already have a PTR.
+     *
+     *  The implementation of 'put' does not provide any exception safety; if the object
+     *  being saved (or any nested object) throws an exception, the entire archive may
+     *  be in an inconsistent state and should not be saved.
      */
     int put(Persistable const * obj);
     int put(CONST_PTR(Persistable) obj) { return put(obj.get()); }

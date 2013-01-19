@@ -80,16 +80,9 @@ struct OutputArchive::Impl {
         MapItem item(obj, _nextId);
         std::pair<Map::iterator,bool> r = _map.insert(item);
         if (r.second) {
-            // insertion successful, which means it's a new object and we should tell it to save itself now
-            try {
-                ++_nextId;
-                OutputArchiveHandle handle(r.first->second, obj->getPersistenceName(), self);
-                obj->write(handle);
-            } catch (...) {
-                --_nextId;
-                _map.erase(r.first);
-                throw;
-            }
+            ++_nextId;
+            OutputArchiveHandle handle(r.first->second, obj->getPersistenceName(), self);
+            obj->write(handle);
         }
         assert(r.first->first == obj);
         // either way we return the ID of the object in the archive
