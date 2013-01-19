@@ -45,7 +45,7 @@ struct ArchiveIndexSchema : private boost::noncopyable {
     static int const MAX_NAME_LENGTH = 64;
 
     /// Return the singleton instance.
-    static ArchiveIndexSchema & get();
+    static ArchiveIndexSchema const & get();
 
 private:
     ArchiveIndexSchema();

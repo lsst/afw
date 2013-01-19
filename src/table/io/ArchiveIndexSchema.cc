@@ -6,7 +6,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
 
 int const ArchiveIndexSchema::MAX_NAME_LENGTH;
 
-ArchiveIndexSchema & ArchiveIndexSchema::get() {
+ArchiveIndexSchema const & ArchiveIndexSchema::get() {
     static ArchiveIndexSchema instance;
     return instance;
 }
