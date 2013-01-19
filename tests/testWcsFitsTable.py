@@ -33,27 +33,21 @@ import lsst.daf.base
 class WcsFitsTableTestCase(unittest.TestCase):
     """Test that we can read and write Wcs objects saved to FITS binary tables.
     """
-    
+
     def setUp(self):
         #metadata taken from CFHT data
         #v695856-e0/v695856-e0-c000-a00.sci.fits
 
         self.metadata = lsst.daf.base.PropertySet()
 
-        self.metadata.set("SIMPLE",                    "T") 
-        self.metadata.set("BITPIX",                  -32) 
-        self.metadata.set("NAXIS",                    2) 
-        self.metadata.set("NAXIS1",                 1024) 
-        self.metadata.set("NAXIS2",                 1153) 
-        self.metadata.set("RADECSYS", 'FK5')
-        self.metadata.set("EQUINOX",                2000.)
-
-        self.metadata.setDouble("CRVAL1",     215.604025685476)
-        self.metadata.setDouble("CRVAL2",     53.1595451514076)
-        self.metadata.setDouble("CRPIX1",     1109.99981456774)
-        self.metadata.setDouble("CRPIX2",     560.018167811613)
-        self.metadata.set("CTYPE1", 'RA---SIN')
-        self.metadata.set("CTYPE2", 'DEC--SIN')
+        self.metadata.set("SIMPLE", "T")
+        self.metadata.set("BITPIX", -32)
+        self.metadata.set("NAXIS", 2)
+        self.metadata.set("NAXIS1", 1024)
+        self.metadata.set("NAXIS2", 1153)
+        self.metadata.set("RADECSYS", "FK5")
+        self.metadata.set("EQUINOX", 2000.))
+        self.metadata.set("CTYPE2", "DEC--SIN")
 
         self.metadata.setDouble("CD1_1", 5.10808596133527E-05)
         self.metadata.setDouble("CD1_2", 1.85579539217196E-07)
@@ -150,7 +144,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
         self.assert_(wcsIn1.hasDistortion())
         self.assert_(wcsOut1.hasDistortion())
         self.assertEqual(wcsIn1, wcsOut1)
-        
+
 #####
 
 def suite():
