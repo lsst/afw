@@ -183,11 +183,17 @@ void math::Background::_set_gridcolums(int iX, std::vector<int> const& ypix)
         // take care of all future occurances, so we don't need to do this elsewhere
         std::vector<double> ycenTmp = cullNan(_ycen,     _grid[iX]);
         std::vector<double> gridTmp = cullNan(_grid[iX], _grid[iX]);
-        math::Interpolate intobj(ycenTmp, gridTmp, _bctrl.getInterpStyle());
+	if (ycenTmp.size() > 2 && gridTmp.size() > 2) {
+	    math::Interpolate intobj(ycenTmp, gridTmp, _bctrl.getInterpStyle());
         
-        for (int iY = 0; iY < _imgHeight; ++iY) {
-            _gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
-        }
+	    for (int iY = 0; iY < _imgHeight; ++iY) {
+		_gridcolumns[iX][iY] = intobj.interpolate(ypix[iY]);
+	    }
+	} else {
+	    for (int iY = 0; iY < _imgHeight; ++iY) {
+		_gridcolumns[iX][iY] = 0.0;
+	    }
+	}
     } else {
         // this is the constant interpolation
         // it should only be used sanely when nx,nySample are both 1,

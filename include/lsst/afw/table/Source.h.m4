@@ -58,19 +58,40 @@ m4def(`DECLARE_SLOT_DEFINERS',
 `/**
      * @brief Set the measurement used for the $1$2 slot using Keys.
      */
-    void define$1$2($2::MeasKey const & meas, $2::ErrKey const & err, Key<Flag> const & flag) {
+    void define$1$2(
+        $2::MeasKey const & meas,
+        $2::ErrKey const & err = $2::ErrKey(),
+        Key<Flag> const & flag = Key<Flag>()
+    ) {
         _slot$2$3 = KeyTuple<$2>(meas, err, flag);
+    }
+
+    /**
+     * @brief Set the measurement used for the $1$2 slot using Keys.
+     */
+    void define$1$2(
+        $2::MeasKey const & meas,
+        Key<Flag> const & flag
+    ) {
+        _slot$2$3 = KeyTuple<$2>(meas, $2::ErrKey(), flag);
     }
 
     /**
      *  @brief Set the measurement used for the $1$2 slot with a field name.
      *
      *  This requires that the measurement adhere to the convention of having
-     *  "<name>", "<name>.err", and "<name>.flags" fields.
+     *  "<name>", "<name>.err", and "<name>.flags" fields for all three fields
+     *  to be attached to slots.  Only the main measurement field is required.
      */
     void define$1$2(std::string const & name) {
         Schema schema = getSchema();
-        _slot$2$3 = KeyTuple<$2>(schema[name], schema[name]["err"], schema[name]["flags"]);
+        _slot$2$3.meas = schema[name];
+        try {
+            _slot$2$3.err = schema[name]["err"];
+        } catch (pex::exceptions::NotFoundException) {}
+        try {
+            _slot$2$3.flag = schema[name]["flags"];
+        } catch (pex::exceptions::NotFoundException) {}
     }
 
     /// @brief Return the name of the field used for the $1$2 slot.

@@ -170,6 +170,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
     if not ccdPol:
         raise("No valid CCD policy found")
     pixelSize = ccdPol.get("pixelSize")
+    offsetUnit = ccdPol.get('offsetUnit')
     
     nCol = ccdPol.get("nCol")
     nRow = ccdPol.get("nRow")
@@ -308,6 +309,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
         ccdInfo["width"], ccdInfo["height"] = nCol*eWidth, nRow*eHeight
         ccdInfo["trimmedWidth"], ccdInfo["trimmedHeight"] = nCol*width, nRow*height
         ccdInfo["pixelSize"] = pixelSize
+        ccdInfo["offsetUnit"] = offsetUnit
         ccdInfo["ampIdMin"] = ampSerial0
         ccdInfo["ampIdMax"] = ampSerial[0] - 1
 
@@ -321,7 +323,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
 """
 
     if raftInfo is None:
-        ccdInfo = None
+        ccdInfo = {}
     else:
         ccdInfo = {"ampSerial" : raftInfo.get("ampSerial", [0])}
 
@@ -369,9 +371,9 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 raise RuntimeError, msg
 
     for ccdPol in raftPol.getArray("Ccd"):
-        Col, Row = ccdPol.getArray("index")
-        xc, yc = ccdPol.getArray("offset")
-
+        Col, Row   = ccdPol.getArray("index")
+        xc, yc     = ccdPol.getArray("offset")
+        
         nQuarter = ccdPol.get("nQuarter")
         pitch, roll, yaw = [afwGeom.Angle(a, afwGeom.degrees) for a in ccdPol.getArray("orientation")]
 
@@ -385,6 +387,13 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdDescription=ccdPol, ccdId=ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
+        pixelSize = ccd.getPixelSize()
+
+        offsetUnit = ccdInfo["offsetUnit"]
+        if offsetUnit == 'pixels':
+            xc *= pixelSize
+            yc *= pixelSize
+        
         raft.addDetector(afwGeom.Point2I(Col, Row),
                          cameraGeom.FpPoint(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
@@ -473,11 +482,11 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
     distort = None
     if distortActive == "NullDistortion":
-	distort = cameraGeom.NullDistortion()
+        distort = cameraGeom.NullDistortion()
     elif distortActive == "RadialPolyDistortion":
-	coeffs = activePolicy.getArray('coeffs')
+        coeffs = activePolicy.getArray('coeffs')
         coefficientsDistort = activePolicy.get('coefficientsDistort')
-	distort = cameraGeom.RadialPolyDistortion(coeffs, coefficientsDistort)
+        distort = cameraGeom.RadialPolyDistortion(coeffs, coefficientsDistort)
     camera.setDistortion(distort)
 
 

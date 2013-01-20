@@ -88,6 +88,9 @@ class AngleTestCase(unittest.TestCase):
 
         self.assertEqual(math.sin(self.pi/2), 1.0) # automatic conversion to double
 
+    def testAbs(self):
+        self.assertEqual(abs(0.0*afwGeom.degrees - self.pi), self.pi)
+
     def testPi(self):
         self.assertEqual(afwGeom.PI, math.pi)
 
