@@ -46,7 +46,13 @@ class WcsFitsTableTestCase(unittest.TestCase):
         self.metadata.set("NAXIS1", 1024)
         self.metadata.set("NAXIS2", 1153)
         self.metadata.set("RADECSYS", "FK5")
-        self.metadata.set("EQUINOX", 2000.))
+        self.metadata.set("EQUINOX", 2000.)
+
+        self.metadata.setDouble("CRVAL1", 215.604025685476)
+        self.metadata.setDouble("CRVAL2", 53.1595451514076)
+        self.metadata.setDouble("CRPIX1", 1109.99981456774)
+        self.metadata.setDouble("CRPIX2", 560.018167811613)
+        self.metadata.set("CTYPE1", "RA---SIN")
         self.metadata.set("CTYPE2", "DEC--SIN")
 
         self.metadata.setDouble("CD1_1", 5.10808596133527E-05)
