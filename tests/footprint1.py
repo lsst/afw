@@ -44,6 +44,7 @@ import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.utils as displayUtils
 
 try:
     type(verbose)
@@ -295,8 +296,8 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getMinX(), x0 + dx)
         self.assertEqual(foot.getBBox().getMinX(), x0)
 
-    def testFootprintFromEllipse(self):
-        """Create a circular Footprint"""
+    def testFootprintFromCircle(self):
+        """Create an elliptical Footprint"""
 
 	ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
                                           afwGeom.Point2D(9,15))
@@ -311,6 +312,41 @@ class FootprintTestCase(unittest.TestCase):
 
         if False:
             ds9.mtv(idImage, frame=2)
+
+    def testFootprintFromEllipse(self):
+        """Create an elliptical Footprint"""
+
+        cen = afwGeom.Point2D(23, 25)
+        a, b, theta = 25, 15, 30
+	ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)),  cen)
+        foot = afwDetect.Footprint(
+                ellipse, 
+                afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
+
+        idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
+        idImage.set(0)
+        
+        foot.insertIntoImage(idImage, foot.getId())
+
+        if display:
+            ds9.mtv(idImage, frame=2)
+            displayUtils.drawFootprint(foot, frame=2)
+            shape = foot.getShape(cen)
+            shape.scale(2)              # <r^2> = 1/2 for a disk
+            ds9.dot(shape, *cen, frame=2, ctype=ds9.RED)
+
+            shape = foot.getShape()
+            shape.scale(2)              # <r^2> = 1/2 for a disk
+            ds9.dot(shape, *cen, frame=2, ctype=ds9.MAGENTA)
+
+        axes = afwGeom.ellipses.Axes(foot.getShape())
+        axes.scale(2)                   # <r^2> = 1/2 for a disk
+        
+        self.assertEqual(foot.getCentroid(), cen)
+        self.assertTrue(abs(a - axes.getA()) < 0.15, "a: %g v. %g" % (a, axes.getA()))
+        self.assertTrue(abs(b - axes.getB()) < 0.02, "b: %g v. %g" % (b, axes.getB()))
+        self.assertTrue(abs(theta - math.degrees(axes.getTheta())) < 0.2,
+                        "theta: %g v. %g" % (theta, math.degrees(axes.getTheta())))
 
     def testCopy(self):
         bbox = afwGeom.BoxI(afwGeom.PointI(0,2), afwGeom.PointI(5,6))
