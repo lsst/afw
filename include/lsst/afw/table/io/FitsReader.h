@@ -85,6 +85,12 @@ public:
     static ContainerT apply(SourceT & source, int hdu) {
         Fits fits(source, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
         fits.setHdu(hdu);
+        return apply<ContainerT>(fits);
+    }
+
+    /// @brief Low-level entry point for reading FITS files into arbitrary containers.
+    template <typename ContainerT>
+    static ContainerT apply(Fits & fits) {
         PTR(FitsReader) reader = make(&fits);
         return reader->template read<ContainerT>();
     }

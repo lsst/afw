@@ -36,6 +36,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 struct wcsprm;                          // defined in wcs.h
 
@@ -49,8 +50,11 @@ namespace afw {
     namespace formatters {
         class WcsFormatter;
     }
+    namespace table {
+        class BaseRecord;
+    }
 namespace image {
-    
+
 /// 
 /// @brief Implementation of the WCS standard for a any projection
 /// 
@@ -100,7 +104,9 @@ namespace image {
 /// present when reading a header (keywords CRPIX1a etc are also accepted)
 
 class Wcs : public lsst::daf::base::Persistable,
-            public lsst::daf::base::Citizen
+            public lsst::daf::base::Citizen,
+            public afw::table::io::PersistableFacade<Wcs>,
+            public afw::table::io::Persistable
 {
 public:
     typedef boost::shared_ptr<Wcs> Ptr;
@@ -276,6 +282,8 @@ public:
     void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
     void shiftReferencePixel(double dx, double dy);
 
+    /// @brief Whether the Wcs is persistable using afw::table::io archives.
+    virtual bool isPersistable() const;
         
 private:
     //Allow the formatter to access private goo
@@ -293,6 +301,12 @@ private:
 
 protected:
 
+    friend class WcsFactory;
+
+    // See afw::table::io::Persistable
+    virtual std::string getPersistenceName() const;
+    virtual void write(OutputArchiveHandle & handle) const;
+
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
 
@@ -302,6 +316,9 @@ protected:
     //If you want to create a Wcs from a fits header, use makeWcs(). 
     //This is protected because the derived classes need to be able to see it.
     Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
+
+    // Construct from a record; used by WcsFactory for afw::table::io persistence.
+    explicit Wcs(afw::table::BaseRecord const & record);
     
     Wcs(Wcs const & rhs);
     Wcs& operator= (const Wcs &);        

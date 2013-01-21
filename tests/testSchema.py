@@ -51,7 +51,7 @@ except NameError:
 
 class SchemaTestCase(unittest.TestCase):
 
-    def testSchema(self):
+    def _testSchema(self):
         schema = lsst.afw.table.Schema();
         ab_k = schema.addField("a.b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a.b.i", type=int, doc="int")
@@ -98,8 +98,8 @@ class SchemaTestCase(unittest.TestCase):
             self.assertEqual(n1, n2)
         keys2 = map(lambda x: x.key, schema4.asList())
         self.assertEqual(keys, keys2)
-        
-    def testInspection(self):
+
+    def _testInspection(self):
         schema = lsst.afw.table.Schema()
         keys = []
         keys.append(schema.addField("d", type=int))
@@ -117,7 +117,7 @@ class SchemaTestCase(unittest.TestCase):
         self.assertFalse(otherKey in schema)
         self.assertNotEqual(keys[0], keys[1])
 
-    def testKeyAccessors(self):
+    def _testKeyAccessors(self):
         schema = lsst.afw.table.Schema()
         arrayKey = schema.addField("a", type="ArrayF", doc="doc for array field", size=5)
         arrayElementKey = arrayKey[1]
@@ -131,7 +131,31 @@ class SchemaTestCase(unittest.TestCase):
         shapeKey = schema.addField("s", type="MomentsF", doc="doc for shape field")
         shapeElementKey = shapeKey.getIxx()
         self.assertEqual(lsst.afw.table.Key["F"], type(shapeElementKey))
-        
+
+    def testComparison(self):
+        schema1 = lsst.afw.table.Schema()
+        schema1.addField("a", type=float, doc="doc for a", units="units for a")
+        schema1.addField("b", type=int, doc="doc for b", units="units for b")
+        schema2 = lsst.afw.table.Schema()
+        schema2.addField("a", type=int, doc="doc for a", units="units for a")
+        schema2.addField("b", type=float, doc="doc for b", units="units for b")
+        cmp1 = schema1.compare(schema2, lsst.afw.table.Schema.IDENTICAL)
+        self.assertTrue(cmp1 & lsst.afw.table.Schema.EQUAL_NAMES)
+        self.assertTrue(cmp1 & lsst.afw.table.Schema.EQUAL_DOCS)
+        self.assertTrue(cmp1 & lsst.afw.table.Schema.EQUAL_UNITS)
+        self.assertFalse(cmp1 & lsst.afw.table.Schema.EQUAL_KEYS)
+        schema3 = lsst.afw.table.Schema(schema1)
+        schema3.addField("c", type=str, doc="doc for c", size=4)
+        self.assertFalse(schema1.compare(schema3))
+        self.assertFalse(schema1.contains(schema3))
+        self.assertTrue(schema3.contains(schema1))
+        schema1.addField("d", type=str, doc="no docs!", size=4)
+        cmp2 = schema1.compare(schema3, lsst.afw.table.Schema.IDENTICAL)
+        self.assertFalse(cmp2 & lsst.afw.table.Schema.EQUAL_NAMES)
+        self.assertFalse(cmp2 & lsst.afw.table.Schema.EQUAL_DOCS)
+        self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_KEYS)
+        self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_UNITS)
+        self.assertFalse(schema1.compare(schema3, lsst.afw.table.Schema.EQUAL_NAMES))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

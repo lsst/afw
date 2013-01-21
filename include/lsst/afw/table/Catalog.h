@@ -280,12 +280,17 @@ public:
         return cat;
     }
 
-    /// Write a FITS binary table
+    /// Write a FITS binary table to a regular file.
     void writeFits(std::string const & filename, std::string const & mode="w") const {
         io::FitsWriter::apply(filename, mode, *this);
     }
+    /// Write a FITS binary table to a RAM file.
     void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const {
         io::FitsWriter::apply(manager, mode, *this);
+    }
+    /// Write a FITS binary table to an open file object.
+    void writeFits(fits::Fits & fitsfile) const {
+        io::FitsWriter::apply(fitsfile, *this);
     }
 
     /// @brief Read a FITS binary table from a regular file.
@@ -295,6 +300,10 @@ public:
     /// @brief Read a FITS binary table from a RAM file.
     static CatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<CatalogT>(manager, hdu);
+    }
+    /// @brief Read a FITS binary table from a file object already at the correct extension.
+    static CatalogT readFits(fits::Fits & fitsfile) {
+        return io::FitsReader::apply<CatalogT>(fitsfile);
     }
 
     /**

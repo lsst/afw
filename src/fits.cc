@@ -176,17 +176,24 @@ int Fits::getHdu() {
     return n;
 }
 
-void Fits::setHdu(int hdu) {
-    if (hdu != 0) {
-        fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
-    }
-    if (hdu == 0 && getHdu() == 1 && getImageDim() == 0) {
-        // want a silent failure here
-        int tmpStatus = status;
-        fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), 1, 0, &tmpStatus);
-    }
-    if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
+void Fits::setHdu(int hdu, bool relative) {
+    if (relative) {
+        fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, boost::format("Incrementing HDU by %d") % hdu);
+        }
+    } else {
+        if (hdu != 0) {
+            fits_movabs_hdu(reinterpret_cast<fitsfile*>(fptr), hdu, 0, &status);
+        }
+        if (hdu == 0 && getHdu() == 1 && getImageDim() == 0) {
+            // want a silent failure here
+            int tmpStatus = status;
+            fits_movrel_hdu(reinterpret_cast<fitsfile*>(fptr), 1, 0, &tmpStatus);
+        }
+        if (behavior & AUTO_CHECK) {
+            LSST_FITS_CHECK_STATUS(*this, boost::format("Moving to HDU %d") % hdu);
+        }
     }
 }
 

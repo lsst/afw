@@ -39,6 +39,9 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 namespace lsst { namespace afw { namespace image {
 
@@ -415,6 +418,150 @@ void TanWcs::setDistortionMatrices(
     _sipB = sipB;
     _sipAp = sipAp;
     _sipBp = sipBp;
+}
+
+// -------------- Table-based Persistence -------------------------------------------------------------------
+
+/*
+ *  We use the Wcs base class persistence to write one table, and then add another containing
+ *  the SIP coefficients only if hasDistortion() is true.
+ *
+ *  The second table's schema depends on the SIP orders, so it will not necessarily be the same
+ *  for all TanWcs objects.
+ */
+
+class TanWcsFactory : public table::io::PersistableFactory {
+public:
+
+    explicit TanWcsFactory(std::string const & name) :
+        table::io::PersistableFactory(name) {}
+
+    virtual PTR(table::io::Persistable) read(
+        InputArchive const & archive, 
+        CatalogVector const & catalogs
+    ) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
+        CONST_PTR(table::BaseRecord) sipRecord;
+        if (catalogs.size() > 1u) {
+            LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
+            LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+            LSST_ARCHIVE_ASSERT(catalogs.back().size() == 1u);
+            sipRecord = catalogs.back().begin();
+        }
+        PTR(TanWcs) result(new TanWcs(catalogs.front().front(), sipRecord));
+        return result;
+    }
+};
+
+namespace {
+
+std::string getTanWcsPersistenceName() { return "TanWcs"; }
+
+TanWcsFactory registration(getTanWcsPersistenceName());
+
+} // anonymous
+
+std::string TanWcs::getPersistenceName() const { return getTanWcsPersistenceName(); }
+
+void TanWcs::write(OutputArchiveHandle & handle) const {
+    Wcs::write(handle);
+    if (hasDistortion()) {
+        afw::table::Schema schema;
+        afw::table::Key< afw::table::Array<double> > keyA(
+            schema.addField< afw::table::Array<double> >(
+                "A", "x forward transform coefficients (column-major)", _sipA.size()
+            )
+        );
+        afw::table::Key< afw::table::Array<double> > keyB(
+            schema.addField< afw::table::Array<double> >(
+                "B", "y forward transform coefficients (column-major)", _sipB.size()
+            )
+        );
+        afw::table::Key< afw::table::Array<double> > keyAp(
+            schema.addField< afw::table::Array<double> >(
+                "Ap", "x reverse transform coefficients (column-major)", _sipAp.size()
+            )
+        );
+        afw::table::Key< afw::table::Array<double> > keyBp(
+            schema.addField< afw::table::Array<double> >(
+                "Bp", "y reverse transform coefficients (column-major)", _sipBp.size()
+            )
+        );
+        afw::table::BaseCatalog catalog = handle.makeCatalog(schema);
+        PTR(afw::table::BaseRecord) record = catalog.addNew();
+        Eigen::Map<Eigen::MatrixXd> mapA((*record)[keyA].getData(), _sipA.rows(), _sipA.cols());
+        mapA = _sipA;
+        Eigen::Map<Eigen::MatrixXd> mapB((*record)[keyB].getData(), _sipB.rows(), _sipB.cols());
+        mapB = _sipB;
+        Eigen::Map<Eigen::MatrixXd> mapAp((*record)[keyAp].getData(), _sipAp.rows(), _sipAp.cols());
+        mapAp = _sipAp;
+        Eigen::Map<Eigen::MatrixXd> mapBp((*record)[keyBp].getData(), _sipBp.rows(), _sipBp.cols());
+        mapBp = _sipBp;
+        handle.saveCatalog(catalog);
+    }
+}
+
+TanWcs::TanWcs(
+    afw::table::BaseRecord const & mainRecord,
+    CONST_PTR(afw::table::BaseRecord) sipRecord
+) : Wcs(mainRecord), _hasDistortion(sipRecord)
+{
+    if (_hasDistortion) {
+        typedef afw::table::Array<double> Array;
+        afw::table::Key<Array> kA;
+        afw::table::Key<Array> kB;
+        afw::table::Key<Array> kAp;
+        afw::table::Key<Array> kBp;
+        try {
+            kA = sipRecord->getSchema()["A"];
+            kB = sipRecord->getSchema()["B"];
+            kAp = sipRecord->getSchema()["Ap"];
+            kBp = sipRecord->getSchema()["Bp"];
+        } catch (...) {
+            throw LSST_EXCEPT(
+                afw::table::io::MalformedArchiveError,
+                "Incorrect schema for TanWcs distortion terms"
+            );
+        }
+        // Adding 0.5 and truncating the result here guarantees we'll get the right answer
+        // for small ints even when round-off error is involved.
+        int nA = int(std::sqrt(kA.getSize() + 0.5));
+        int nB = int(std::sqrt(kB.getSize() + 0.5));
+        int nAp = int(std::sqrt(kAp.getSize() + 0.5));
+        int nBp = int(std::sqrt(kBp.getSize() + 0.5));
+        if (nA * nA != kA.getSize()) {
+            throw LSST_EXCEPT(
+                afw::table::io::MalformedArchiveError,
+                "Forward X SIP matrix is not square."
+            );
+        }
+        if (nB * nB != kB.getSize()) {
+            throw LSST_EXCEPT(
+                afw::table::io::MalformedArchiveError,
+                "Forward Y SIP matrix is not square."
+            );
+        }
+        if (nAp * nAp != kAp.getSize()) {
+            throw LSST_EXCEPT(
+                afw::table::io::MalformedArchiveError,
+                "Reverse X SIP matrix is not square."
+            );
+        }
+        if (nBp * nBp != kBp.getSize()) {
+            throw LSST_EXCEPT(
+                afw::table::io::MalformedArchiveError,
+                "Reverse Y SIP matrix is not square."
+            );
+        }
+        Eigen::Map<Eigen::MatrixXd const> mapA((*sipRecord)[kA].getData(), nA, nA);
+        _sipA = mapA;
+        Eigen::Map<Eigen::MatrixXd const> mapB((*sipRecord)[kB].getData(), nB, nB);
+        _sipB = mapB;
+        Eigen::Map<Eigen::MatrixXd const> mapAp((*sipRecord)[kAp].getData(), nAp, nAp);
+        _sipAp = mapAp;
+        Eigen::Map<Eigen::MatrixXd const> mapBp((*sipRecord)[kBp].getData(), nBp, nBp);
+        _sipBp = mapBp;
+    }
 }
 
 }}} // namespace lsst::afw::image

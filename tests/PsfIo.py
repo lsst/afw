@@ -10,9 +10,8 @@ or
 """
 
 import os, sys
-from math import *
+import numpy
 import unittest
-import eups
 import lsst.utils.tests as utilsTests
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPersist
@@ -58,83 +57,46 @@ def roundTripPsf(key, psf):
     storage2 = persistence.getRetrieveStorage("%sStorage" % (storageType), loc)
     storageList2.append(storage2)
     psfptr = persistence.unsafeRetrieve("Psf", storageList2, additionalData)
-    psf2 = afwDetect.Psf.swigConvert(psfptr)
+    psf2 = afwDetect.DoubleGaussianPsf.swigConvert(psfptr)
 
     return psf2
 
-class dgPsfTestCase(unittest.TestCase):
-    """A test case for dgPSFs"""
+class DoubleGaussianPsfTestCase(unittest.TestCase):
+    """A test case for DoubleGaussianPsf"""
+
+    def assertClose(self, a, b):
+        self.assert_(numpy.allclose(a, b), "%s != %s" % (a, b))
+
+    def comparePsfs(self, psf1, psf2):
+        self.assert_(isinstance(psf1, afwDetect.DoubleGaussianPsf))
+        self.assert_(isinstance(psf2, afwDetect.DoubleGaussianPsf))
+        self.assertEqual(psf1.getKernel().getWidth(), psf2.getKernel().getWidth())
+        self.assertEqual(psf1.getKernel().getHeight(), psf2.getKernel().getHeight())
+        self.assertEqual(psf1.getSigma1(), psf2.getSigma1())
+        self.assertEqual(psf1.getSigma2(), psf2.getSigma2())
+        self.assertEqual(psf1.getB(), psf2.getB())
+        
     def setUp(self):
         self.ksize = 25                      # size of desired kernel
         FWHM = 5
-        self.sigma1 = FWHM/(2*sqrt(2*log(2)))
+        self.sigma1 = FWHM/(2*numpy.sqrt(2*numpy.log(2)))
         self.sigma2 = 2*self.sigma1
         self.b = 0.1
-        self.psf = roundTripPsf(1,
-                                afwDetect.createPsf("DoubleGaussian",
-                                                    self.ksize, self.ksize, self.sigma1, self.sigma2, self.b))
 
-    def tearDown(self):
-        del self.psf
+    def testBoostPersistence(self):
+        psf1 = afwDetect.DoubleGaussianPsf(self.ksize, self.ksize, self.sigma1, self.sigma2, self.b)
+        psf2 = roundTripPsf(1, psf1)
+        psf3 = roundTripPsf(1, psf1)
+        self.comparePsfs(psf1, psf2)
+        self.comparePsfs(psf1, psf3)
 
-    def testKernel(self):
-        """Test the creation of the Psf's kernel"""
+    def testFitsPersistence(self):
+        psf1 = afwDetect.DoubleGaussianPsf(self.ksize, self.ksize, self.sigma1, self.sigma2, self.b)
+        filename = "tests/data/psf1-1.fits"
+        psf1.writeFits("tests/data/psf1-1.fits")
+        psf2 = afwDetect.DoubleGaussianPsf.readFits("tests/data/psf1-1.fits")
+        self.comparePsfs(psf1, psf2)
 
-        kIm = self.psf.computeImage()
-
-        if False:
-            ds9.mtv(kIm)        
-
-        self.assertTrue(kIm.getWidth() == self.ksize)
-        #
-        # Check that the image is as expected
-        #
-        dgPsf = afwDetect.createPsf("DoubleGaussian",
-                                    self.ksize, self.ksize, self.sigma1, self.sigma2, self.b)
-        dgIm = dgPsf.computeImage()
-        #
-        # Check that they're the same
-        #
-        diff = type(kIm)(kIm, True); diff -= dgIm
-        stats = afwMath.makeStatistics(diff, afwMath.MAX | afwMath.MIN)
-        self.assertEqual(stats.getValue(afwMath.MAX), 0.0)
-        self.assertEqual(stats.getValue(afwMath.MIN), 0.0)
-
-    def testComputeImage(self):
-        """Test returning a realisation of the Psf"""
-
-        xcen = self.psf.getKernel().getWidth()//2
-        ycen = self.psf.getKernel().getHeight()//2
-
-        stamps = []
-        trueCenters = []
-        for x, y in ([10, 10], [9.4999, 10.4999], [10.5001, 10.5001]):
-            fx, fy = x - int(x), y - int(y)
-            if fx >= 0.5:
-                fx -= 1.0
-            if fy >= 0.5:
-                fy -= 1.0
-
-            im = self.psf.computeImage(afwGeom.Point2D(x, y)).convertFloat()
-
-            stamps.append(im.Factory(im, True))
-            trueCenters.append([xcen + fx, ycen + fy])
-            
-        if display:
-            mos = displayUtils.Mosaic()     # control mosaics
-            ds9.mtv(mos.makeMosaic(stamps))
-
-            for i in range(len(trueCenters)):
-                bbox = mos.getBBox(i)
-
-                ds9.dot("+",
-                        bbox.getMinX() + xcen, bbox.getMinY() + ycen, ctype=ds9.RED, size=1)
-                ds9.dot("+",
-                        bbox.getMinX() + trueCenters[i][0], bbox.getMinY() + trueCenters[i][1])
-
-                ds9.dot("%.2f, %.2f" % (trueCenters[i][0], trueCenters[i][1]),
-                        bbox.getMinX() + xcen, bbox.getMinY() + 2)
-            
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -142,7 +104,7 @@ def suite():
     utilsTests.init()
 
     suites = []
-    suites += unittest.makeSuite(dgPsfTestCase)
+    suites += unittest.makeSuite(DoubleGaussianPsfTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

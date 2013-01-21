@@ -17,7 +17,7 @@
 
 #include "lsst/afw/detection/PsfFormatter.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/detection/detail/dgPsf.h"
+#include "lsst/afw/detection/DoubleGaussianPsf.h"
 #include "lsst/daf/persistence/FormatterImpl.h"
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/daf/persistence/BoostStorage.h"
@@ -27,7 +27,7 @@
 #include "lsst/pex/policy/Policy.h"
 
 BOOST_CLASS_EXPORT(lsst::afw::detection::Psf)
-BOOST_CLASS_EXPORT(lsst::afw::detection::dgPsf)
+BOOST_CLASS_EXPORT(lsst::afw::detection::DoubleGaussianPsf)
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {
@@ -48,7 +48,9 @@ using boost::serialization::make_nvp;
 dafPersist::FormatterRegistration
 afwDetect::PsfFormatter::registration("Psf", typeid(afwDetect::Psf), createInstance);
 dafPersist::FormatterRegistration
-afwDetect::PsfFormatter::dgPsfRegistration("dgPsf", typeid(afwDetect::dgPsf), createInstance);
+afwDetect::PsfFormatter::doubleGaussianPsfRegistration(
+    "DoubleGaussianPsf", typeid(afwDetect::DoubleGaussianPsf), createInstance
+);
 
 /** Constructor.
  * \param[in] policy Policy for configuring this Formatter

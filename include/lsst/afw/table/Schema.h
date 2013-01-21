@@ -46,6 +46,20 @@ class Schema {
 public:
 
     /**
+     *  @brief Bit flags used when comparing schemas.
+     *
+     *  All quantities are compared in insertion order, so if two schemas have the same
+     *  fields added in opposite order, they will not be considered equal.
+     */
+    enum ComparisonFlags {
+        EQUAL_KEYS         =0x01, ///< Keys have the same types offsets, and sizes.
+        EQUAL_NAMES        =0x02, ///< Fields have the same names (ordered).
+        EQUAL_DOCS         =0x04, ///< Fields have the same documentation (ordered).
+        EQUAL_UNITS        =0x08, ///< Fields have the same units (ordered).
+        IDENTICAL          =0x0F  ///< Everything is the same.
+    };
+
+    /**
      *  @brief Find a SchemaItem in the Schema by name.
      *
      *  Names corresponding to named subfields are accepted, and will
@@ -90,9 +104,6 @@ public:
      *  Returns an instance of Python's builtin set in Python.
      */
     std::set<std::string> getNames(bool topOnly=false) const;
-
-    /// @brief Return true if all of the keys in the given schema are also valid keys in this.
-    bool contains(Schema const & schema) const;
 
     /// @brief Return the raw size of a record in bytes.
     int getRecordSize() const { return _impl->getRecordSize(); }
@@ -170,12 +181,32 @@ public:
     /**
      *  @brief Equality comparison
      *
-     *  Schemas are considered equal if they sequence of keys are identical (same types
-     *  with the same offsets); names and descriptions of fields are not considered.
+     *  Schemas are considered equal according the standard equality operator if their sequence
+     *  of keys are identical (same types with the same offsets); names and descriptions of
+     *  fields are not considered.  For a more precise comparison, use compare() or contains().
      */
-    bool operator==(Schema const & other) const;
+    bool operator==(Schema const & other) const { return compare(other, EQUAL_KEYS); }
     bool operator!=(Schema const & other) const { return !this->operator==(other); }
     //@}
+
+    /**
+     *  @brief Do a detailed equality comparison of two schemas.
+     *
+     *  See ComparisonFlags for a description of the possible return values
+     *
+     *  @param[in] other   The other schema to compare to.
+     *  @param[in] flags   Which types of comparisions to perform.  Flag bits not present here
+     *                     will never be returned.
+     */
+    int compare(Schema const & other, int flags=EQUAL_KEYS) const;
+
+    /**
+     *  @brief Test whether the given schema is a subset of this.
+     *
+     *  This function behaves very similarly to compare(), but ignores fields that are present
+     *  in this but absent in other.
+     */
+    int contains(Schema const & other, int flags=EQUAL_KEYS) const;
 
     /// @brief Construct an empty Schema.
     explicit Schema();
@@ -218,6 +249,9 @@ public:
 
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
+
+    /// @brief Get the Citizen corresponding to this Schema (SchemaImpl is what inherits from Citizen).
+    daf::base::Citizen & getCitizen() { return *_impl; }
 
 private:
 

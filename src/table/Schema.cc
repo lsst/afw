@@ -34,11 +34,12 @@ std::string join(std::string const & a, std::string const & b) {
 }
 
 // Functor to compare two ItemVariants for Key equality.
-struct CompareItemKeyEquality {
+class ItemFunctors {
 
-    typedef bool result_type;
+    typedef detail::SchemaImpl::ItemVariant ItemVariant;
 
-    struct Helper : public boost::static_visitor<bool> {
+    // Compares keys - must be initialized with one ItemVariant and passed the other.
+    struct KeyHelper : public boost::static_visitor<bool> {
         
         template <typename T>
         bool operator()(SchemaItem<T> const & a) const {
@@ -46,16 +47,45 @@ struct CompareItemKeyEquality {
             return (b) && a.key == b->key;
         }
 
-        explicit Helper(detail::SchemaImpl::ItemVariant const * other_) : other(other_) {}
+        explicit KeyHelper(ItemVariant const * other_) : other(other_) {}
 
-        detail::SchemaImpl::ItemVariant const * other;
+        ItemVariant const * other;
     };
 
-    result_type operator()(
-        detail::SchemaImpl::ItemVariant const & a,
-        detail::SchemaImpl::ItemVariant const & b
-    ) const {
-        return boost::apply_visitor(Helper(&b), a);
+    // Extracts field name from an ItemVariant
+    struct NameHelper : public boost::static_visitor<std::string const &> {
+        template <typename T>
+        std::string const & operator()(SchemaItem<T> const & a) const { return a.field.getName(); }
+    };
+
+    // Extracts field doc from an ItemVariant
+    struct DocHelper : public boost::static_visitor<std::string const &> {
+        template <typename T>
+        std::string const & operator()(SchemaItem<T> const & a) const { return a.field.getDoc(); }
+    };
+
+    // Extracts field units from an ItemVariant
+    struct UnitsHelper : public boost::static_visitor<std::string const &> {
+        template <typename T>
+        std::string const & operator()(SchemaItem<T> const & a) const { return a.field.getUnits(); }
+    };
+
+public:
+
+    static bool compareKeys(ItemVariant const & a, ItemVariant const & b) {
+        return boost::apply_visitor(KeyHelper(&b), a);
+    }
+
+    static bool compareNames(ItemVariant const & a, ItemVariant const & b) {
+        return boost::apply_visitor(NameHelper(), a) == boost::apply_visitor(NameHelper(), b);
+    }
+
+    static bool compareDocs(ItemVariant const & a, ItemVariant const & b) {
+        return boost::apply_visitor(DocHelper(), a) == boost::apply_visitor(DocHelper(), b);
+    }
+
+    static bool compareUnits(ItemVariant const & a, ItemVariant const & b) {
+        return boost::apply_visitor(UnitsHelper(), a) == boost::apply_visitor(UnitsHelper(), b);
     }
 
 };
@@ -538,24 +568,28 @@ void Schema::replaceField(Key<T> const & key, Field<T> const & field) {
     _impl->replaceField(key, field);
 }
 
-bool Schema::contains(Schema const & other) const {
-    if (_impl == other._impl) return true;
-    if (_impl->getItems().size() < other._impl->getItems().size()) return false;
-    return std::equal(
-        other._impl->getItems().begin(), other._impl->getItems().end(),
-        _impl->getItems().begin(),
-        CompareItemKeyEquality()
-    );    
+int Schema::contains(Schema const & other, int flags) const {
+    if (_impl == other._impl) return flags;
+    if (_impl->getItems().size() < other._impl->getItems().size()) return 0;
+    int result = flags;
+    for (
+        Impl::ItemContainer::const_iterator i1 = _impl->getItems().begin(),
+            i2 = other._impl->getItems().begin();
+        i2 != other._impl->getItems().end();
+        ++i1, ++i2
+    ) {
+        if ((result & EQUAL_KEYS) && !ItemFunctors::compareKeys(*i1, *i2)) result &= ~EQUAL_KEYS;
+        if ((result & EQUAL_NAMES) && !ItemFunctors::compareNames(*i1, *i2)) result &= ~EQUAL_NAMES;
+        if ((result & EQUAL_DOCS) && !ItemFunctors::compareDocs(*i1, *i2)) result &= ~EQUAL_DOCS;
+        if ((result & EQUAL_UNITS) && !ItemFunctors::compareUnits(*i1, *i2)) result &= ~EQUAL_UNITS;
+        if (!result) break;
+    }
+    
+    return result;
 }
 
-bool Schema::operator==(Schema const & other) const {
-    if (_impl == other._impl) return true;
-    if (_impl->getItems().size() != other._impl->getItems().size()) return false;
-    return std::equal(
-        _impl->getItems().begin(), _impl->getItems().end(),
-        other._impl->getItems().begin(),
-        CompareItemKeyEquality()
-    );
+int Schema::compare(Schema const & other, int flags) const {
+    return _impl->getItems().size() == other._impl->getItems().size() ? contains(other, flags) : 0;
 }
 
 //----- Stringification -------------------------------------------------------------------------------------

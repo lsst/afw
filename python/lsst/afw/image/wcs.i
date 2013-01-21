@@ -23,15 +23,11 @@
  */
  
 /************************************************************************************************************/
-%{
-namespace lsst { namespace afw { namespace image {
-    extern Wcs NoWcs;
-}}}
-using lsst::afw::image::NoWcs;
-%}
 
-%shared_ptr(lsst::afw::image::Wcs);
-%shared_ptr(lsst::afw::image::TanWcs);
+%import "lsst/afw/table/io/ioLib.i"
+
+%declareTablePersistable(Wcs, lsst::afw::image::Wcs);
+%declareTablePersistable(TanWcs, lsst::afw::image::TanWcs);
 
 %ignore lsst::afw::image::NoWcs;
 
