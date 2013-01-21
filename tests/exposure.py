@@ -58,7 +58,7 @@ pexLog.Debug("lsst.afw.image", VERBOSITY)
 
 dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if not dataDir:
-    raise RuntimeError("Must set up afwdata to run these tests") 
+    raise RuntimeError("Must set up afwdata to run these tests")
 
 InputMaskedImageName = "871034p_1_MI"
 InputMaskedImageNameSmall = "small_MI"
@@ -104,7 +104,7 @@ class ExposureTestCase(unittest.TestCase):
         del self.smallExposure
         del self.wcs
 
-        del self.exposureBlank 
+        del self.exposureBlank
         del self.exposureMiOnly
         del self.exposureMiWcs
         del self.exposureCrWcs
@@ -120,11 +120,11 @@ class ExposureTestCase(unittest.TestCase):
         lsst::pex::exceptions::NotFound if the MaskedImage can not be
         obtained.
         """
-        maskedImageBlank = self.exposureBlank.getMaskedImage()        
+        maskedImageBlank = self.exposureBlank.getMaskedImage()
         blankWidth = maskedImageBlank.getWidth()
         blankHeight = maskedImageBlank.getHeight()
         if blankWidth != blankHeight != 0:
-            self.fail("%s = %s != 0" % (blankWidth, blankHeight))           
+            self.fail("%s = %s != 0" % (blankWidth, blankHeight))
         
         maskedImageMiOnly = self.exposureMiOnly.getMaskedImage()
         miOnlyWidth = maskedImageMiOnly.getWidth()
@@ -142,17 +142,17 @@ class ExposureTestCase(unittest.TestCase):
         self.assertAlmostEqual(miWcsWidth, self.width)
         self.assertAlmostEqual(miWcsHeight, self.height)
        
-        maskedImageCrWcs = self.exposureCrWcs.getMaskedImage()       
+        maskedImageCrWcs = self.exposureCrWcs.getMaskedImage()
         crWcsWidth = maskedImageCrWcs.getWidth()
         crWcsHeight = maskedImageCrWcs.getHeight()
         if crWcsWidth != crWcsHeight != 0:
-            self.fail("%s != %s != 0" % (crWcsWidth, crWcsHeight))   
+            self.fail("%s != %s != 0" % (crWcsWidth, crWcsHeight))
         
         maskedImageCrOnly = self.exposureCrOnly.getMaskedImage()
         crOnlyWidth = maskedImageCrOnly.getWidth()
         crOnlyHeight = maskedImageCrOnly.getHeight()
         if crOnlyWidth != crOnlyHeight != 0:
-            self.fail("%s != %s != 0" % (crOnlyWidth, crOnlyHeight)) 
+            self.fail("%s != %s != 0" % (crOnlyWidth, crOnlyHeight))
 
         # Check Exposure.getWidth() returns the MaskedImage's width
         self.assertEqual(crOnlyWidth, self.exposureCrOnly.getWidth())
@@ -185,7 +185,7 @@ class ExposureTestCase(unittest.TestCase):
         """
         Test that the MaskedImage and the WCS of an Exposure can be set.
         """
-        exposure = afwImage.ExposureF()       
+        exposure = afwImage.ExposureF()
 
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure.setMaskedImage(maskedImage)
@@ -199,7 +199,7 @@ class ExposureTestCase(unittest.TestCase):
         try:
             exposure.getWcs()
         except pexExcept.LsstCppException, e:
-            print "caught expected exception (getWcs): %s" % e   
+            print "caught expected exception (getWcs): %s" % e
             pass
         #
         # Test the Calib member.  The Calib tests are in color.py, here we just check that it's in Exposure
@@ -239,11 +239,11 @@ class ExposureTestCase(unittest.TestCase):
         """
         Test if an Exposure has a WCS or not.
         """
-        self.assertFalse(self.exposureBlank.hasWcs())       
+        self.assertFalse(self.exposureBlank.hasWcs())
 
-        self.assertFalse(self.exposureMiOnly.hasWcs())        
-        self.assertTrue(self.exposureMiWcs.hasWcs())        
-        self.assertTrue(self.exposureCrWcs.hasWcs())       
+        self.assertFalse(self.exposureMiOnly.hasWcs())
+        self.assertTrue(self.exposureMiWcs.hasWcs())
+        self.assertTrue(self.exposureCrWcs.hasWcs())
         self.assertFalse(self.exposureCrOnly.hasWcs())
        
     def testGetSubExposure(self):
@@ -276,7 +276,7 @@ class ExposureTestCase(unittest.TestCase):
 
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class only for the MaskedImage small_MI.
-        # small_MI (cols, rows) = (256, 256) 
+        # small_MI (cols, rows) = (256, 256)
 
         subRegion4 = afwGeom.Box2I(afwGeom.Point2I(250, 250), afwGeom.Extent2I(10, 10))
         def getSubRegion():
@@ -415,7 +415,7 @@ class ExposureTestCase(unittest.TestCase):
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
         self.assertEqual(expCopyMeta.get("foo"), 6)
-        self.assertEqual(expMeta.get("foo"), 5) # this will fail if the bug is present        
+        self.assertEqual(expMeta.get("foo"), 5) # this will fail if the bug is present
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
