@@ -665,7 +665,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     }
 
     if (!_variance || _variance->getWidth() == 0 || _variance->getHeight() == 0) {
-        _variance = VariancePtr(new Variance(_image->getDimensions()));
+        _variance = VariancePtr(new Variance(_image->getBBox(PARENT)));
         *_variance = 0;
     } else {
         if (_variance->getDimensions() != _image->getDimensions()) {
