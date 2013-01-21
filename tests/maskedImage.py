@@ -122,6 +122,17 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(maskedImage.get(0, 0), (im.get(0, 0), 0x0, 0.0))
 
+    def testMakeMaskedImageXY0(self):
+        """Test that makeMaskedImage sets XY0 correctly"""
+        im = afwImage.ImageF(200, 300)
+        xy0 = afwGeom.PointI(10, 20)
+        im.setXY0(*xy0)
+        mi = afwImage.makeMaskedImage(im)
+
+        self.assertEqual(mi.getImage().getXY0(),    xy0)
+        self.assertEqual(mi.getMask().getXY0(),     xy0)
+        self.assertEqual(mi.getVariance().getXY0(), xy0)
+
     def testCopyMaskedImage(self):
         """Test copy constructor"""
         #
