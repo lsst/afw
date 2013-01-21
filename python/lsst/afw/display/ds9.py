@@ -415,8 +415,9 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 sys.stdout.flush()
                 time.sleep(0.5)
             else:
-                print "                                     \r",
-                sys.stdout.flush()
+                if i > 0:
+                    print "                                     \r",
+                    sys.stdout.flush()
                 break
 
     ds9Cmd(selectFrame(frame))
