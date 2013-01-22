@@ -43,9 +43,6 @@ class Psf;
 
 namespace table {
 
-typedef image::Wcs Wcs;
-typedef detection::Psf Psf;
-
 class ExposureRecord;
 class ExposureTable;
 
@@ -93,17 +90,15 @@ public:
      *
      *  @throw LogicErrorException if the ExposureRecord has no Wcs.
      */
-    bool contains(geom::Point2D const & point, Wcs const & wcs) const;
+    bool contains(geom::Point2D const & point, image::Wcs const & wcs) const;
 
     //@{
     /// Get/Set the the attached Wcs, Psf, or Calib.  No copies are made.
-    PTR(Wcs) getWcs() { return _wcs; }
-    CONST_PTR(Wcs) getWcs() const { return _wcs; }
-    void setWcs(PTR(Wcs) wcs) { _wcs = wcs; }
+    CONST_PTR(image::Wcs) getWcs() const { return _wcs; }
+    void setWcs(CONST_PTR(image::Wcs) wcs) { _wcs = wcs; }
 
-    PTR(Psf) getPsf() { return _psf; }
-    CONST_PTR(Psf) getPsf() const { return _psf; }
-    void setPsf(PTR(Psf) psf) { _psf = psf; }
+    CONST_PTR(detection::Psf) getPsf() const { return _psf; }
+    void setPsf(CONST_PTR(detection::Psf) psf) { _psf = psf; }
 
     CONST_PTR(image::Calib) getCalib() const { return _calib; }
     void setCalib(CONST_PTR(image::Calib) calib) { _calib = calib; }
@@ -116,8 +111,8 @@ protected:
     virtual void _assign(BaseRecord const & other);
 
 private:
-    PTR(Wcs) _wcs;
-    PTR(Psf) _psf;
+    CONST_PTR(image::Wcs) _wcs;
+    CONST_PTR(detection::Psf) _psf;
     CONST_PTR(image::Calib) _calib;
 };
 
@@ -354,7 +349,7 @@ public:
      *
      *  @sa ExposureRecord::contains
      */
-    ExposureCatalogT findContains(geom::Point2D const & point, Wcs const & wcs) const;
+    ExposureCatalogT findContains(geom::Point2D const & point, image::Wcs const & wcs) const;
 
 protected:
     explicit ExposureCatalogT(Base const & other) : Base(other) {}

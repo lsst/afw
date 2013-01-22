@@ -82,7 +82,7 @@ public:
     ExposureCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 
     ExposureCatalogT findContains(Coord const & coord) const;
-    ExposureCatalogT findContains(geom::Point2D const & point, Wcs const & wcs) const;
+    ExposureCatalogT findContains(geom::Point2D const & point, image::Wcs const & wcs) const;
 };
 
 %pythondynamic;

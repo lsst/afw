@@ -95,8 +95,8 @@ struct PersistenceSchema : private boost::noncopyable {
         SchemaMapper const & mapper, io::InputArchive const & archive
     ) const {
         output.assign(input, mapper);
-        output.setPsf(archive.get<Psf>(input.get(psf)));
-        output.setWcs(archive.get<Wcs>(input.get(wcs)));
+        output.setPsf(archive.get<detection::Psf>(input.get(psf)));
+        output.setWcs(archive.get<image::Wcs>(input.get(wcs)));
         output.setCalib(archive.get<image::Calib>(input.get(calib)));
     }
 
@@ -261,7 +261,7 @@ bool ExposureRecord::contains(Coord const & coord) const {
     return geom::Box2D(getBBox()).contains(point);
 }
 
-bool ExposureRecord::contains(geom::Point2D const & point, Wcs const & wcs) const {
+bool ExposureRecord::contains(geom::Point2D const & point, image::Wcs const & wcs) const {
     return contains(*wcs.pixelToSky(point));
 }
 
@@ -354,7 +354,7 @@ ExposureCatalogT<RecordT>::findContains(Coord const & coord) const {
 
 template <typename RecordT>
 ExposureCatalogT<RecordT>
-ExposureCatalogT<RecordT>::findContains(geom::Point2D const & point, Wcs const & wcs) const {
+ExposureCatalogT<RecordT>::findContains(geom::Point2D const & point, image::Wcs const & wcs) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
         if (i->contains(point, wcs)) result.push_back(i);
