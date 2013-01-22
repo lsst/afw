@@ -29,7 +29,6 @@
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/SortedCatalog.h"
-#include "lsst/afw/table/io/FitsWriter.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -190,7 +189,7 @@ private:
     friend class io::FitsWriter;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
 
     PTR(IdFactory) _idFactory;        // generates IDs for new records
 };

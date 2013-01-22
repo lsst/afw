@@ -155,8 +155,8 @@ SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
 }
 
 PTR(io::FitsWriter)
-SimpleTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
-    return boost::make_shared<SimpleFitsWriter>(fits);
+SimpleTable::makeFitsWriter(fits::Fits * fitsfile) const {
+    return boost::make_shared<SimpleFitsWriter>(fitsfile);
 }
 
 template class CatalogT<SimpleRecord>;

@@ -442,8 +442,8 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter) SourceTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
-    return boost::make_shared<SourceFitsWriter>(fits);
+PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile) const {
+    return boost::make_shared<SourceFitsWriter>(fitsfile);
 }
 
 //-----------------------------------------------------------------------------------------------------------
