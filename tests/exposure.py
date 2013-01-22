@@ -56,8 +56,9 @@ except:
 
 pexLog.Debug("lsst.afw.image", VERBOSITY)
 
-dataDir = os.path.join(eups.productDir("afwdata"), "data")
-if not dataDir:
+try:
+    dataDir = os.path.join(eups.productDir("afwdata"), "data")
+except Exception:
     raise RuntimeError("Must set up afwdata to run these tests")
 
 InputMaskedImageName = "871034p_1_MI"
@@ -412,6 +413,19 @@ class ExposureTestCase(unittest.TestCase):
         expMeta = exp.getMetadata()
         expMeta.set("foo", 5)
         expCopy = exp.Factory(exp, True)
+        expCopyMeta = expCopy.getMetadata()
+        expCopyMeta.set("foo", 6)
+        self.assertEqual(expCopyMeta.get("foo"), 6)
+        self.assertEqual(expMeta.get("foo"), 5) # this will fail if the bug is present
+
+    def testDeepCopySubMetadata(self):
+        """Make sure a deep copy of a subregion of an Exposure has a deep copy of metadata (ticket #2568)
+        """
+        exp = afwImage.ExposureF(10, 10)
+        expMeta = exp.getMetadata()
+        expMeta.set("foo", 5)
+        bbox = afwGeom.Box2I(afwGeom.Point2I(1,0), afwGeom.Extent2I(5, 5))
+        expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
         self.assertEqual(expCopyMeta.get("foo"), 6)
