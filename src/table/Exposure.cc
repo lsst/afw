@@ -97,7 +97,7 @@ struct PersistenceSchema : private boost::noncopyable {
         output.assign(input, mapper);
         output.setPsf(archive.get<Psf>(input.get(psf)));
         output.setWcs(archive.get<Wcs>(input.get(wcs)));
-        output.setCalib(archive.get<Calib>(input.get(calib)));
+        output.setCalib(archive.get<image::Calib>(input.get(calib)));
     }
 
 private:

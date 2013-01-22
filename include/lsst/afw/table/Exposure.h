@@ -44,7 +44,6 @@ class Psf;
 namespace table {
 
 typedef image::Wcs Wcs;
-typedef image::Calib Calib;
 typedef detection::Psf Psf;
 
 class ExposureRecord;
@@ -106,9 +105,8 @@ public:
     CONST_PTR(Psf) getPsf() const { return _psf; }
     void setPsf(PTR(Psf) psf) { _psf = psf; }
 
-    PTR(Calib) getCalib() { return _calib; }
-    CONST_PTR(Calib) getCalib() const { return _calib; }
-    void setCalib(PTR(Calib) calib) { _calib = calib; }
+    CONST_PTR(image::Calib) getCalib() const { return _calib; }
+    void setCalib(CONST_PTR(image::Calib) calib) { _calib = calib; }
     //@}
 
 protected:
@@ -120,7 +118,7 @@ protected:
 private:
     PTR(Wcs) _wcs;
     PTR(Psf) _psf;
-    PTR(Calib) _calib;
+    CONST_PTR(image::Calib) _calib;
 };
 
 /**
