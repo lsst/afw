@@ -215,7 +215,7 @@ def ds9Version():
         v = ds9Cmd("about", get=True)
         return v.splitlines()[1].split()[1]
     except Exception, e:
-        print >> sys.stderr, "Error reading version: %s (%s)" % (v, e)
+        print >> sys.stderr, "Error reading version: %s" % e
         return "0.0.0"
 
 try:
