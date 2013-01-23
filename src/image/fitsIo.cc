@@ -319,7 +319,7 @@ void getKey(fitsfile* fd,
      // Hacked by NY
      status = 0;
      char cval[80];
-     while (keyValue[keyValue.size()-2] == '&') {
+     while (keyValue.size() > 1 && keyValue[keyValue.size()-2] == '&') {
 	 cval[0] = '\0';
 	 if (ffgcnt(fd, cval, &status)) {
 	     throw LSST_EXCEPT(FitsException, err_msg(fd, status));
