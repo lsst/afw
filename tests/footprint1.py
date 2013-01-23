@@ -299,7 +299,7 @@ class FootprintTestCase(unittest.TestCase):
     def testFootprintFromCircle(self):
         """Create an elliptical Footprint"""
 
-	ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
                                           afwGeom.Point2D(9,15))
         foot = afwDetect.Footprint(
                 ellipse, 
@@ -318,7 +318,7 @@ class FootprintTestCase(unittest.TestCase):
 
         cen = afwGeom.Point2D(23, 25)
         a, b, theta = 25, 15, 30
-	ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)),  cen)
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)),  cen)
         foot = afwDetect.Footprint(
                 ellipse, 
                 afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
