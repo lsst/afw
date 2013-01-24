@@ -132,9 +132,9 @@ public:
     }
 
     /**
-     * Helper function for Psf::computeImage(): takes a kernel image @src, with central pixel @ctr 
-     * (presumably equal to kernel->getCtr()) and stuffs it into an output image @dst, which need not 
-     * have the same dimensions as @src.  Returns the central pixel for the output image.
+     * Helper function for Psf::computeImage(): takes a kernel image \c src, with central pixel \c ctr 
+     * (presumably equal to kernel->getCtr()) and stuffs it into an output image \c dst, which need not 
+     * have the same dimensions as \c src.  Returns the central pixel for the output image.
      *
      * The image xy0 fields are ignored, since these are generally not meaningful for the output
      * of Kernel::computeImage() anyway (this is generally true throughout the kernel API).
@@ -144,17 +144,17 @@ public:
 
     /**
      * Helper function for Psf::computeImage(): converts a kernel image (i.e. xy0 not meaningful; 
-     * center given by parameter @ctr) to a psf image (i.e. xy0 is meaningful)
+     * center given by parameter \c ctr) to a psf image (i.e. xy0 is meaningful)
      *
-     * @warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear", 
+     * \c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear", 
      * or "lanczosN"
      *
-     * @warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear, 
+     * \c warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear, 
      * N for lanczosN (note that it would be cleaner to infer this value from the warping algorithm
      * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage())
      *
-     * The point with integer coordinates @ctr in the source image corresponds to the point
-     * @xy in the destination image.  If @xy is not integer-valued then we will need to fractionally
+     * The point with integer coordinates \c ctr in the source image corresponds to the point
+     * \c xy in the destination image.  If \c xy is not integer-valued then we will need to fractionally
      * shift the image using interpolation (lanczos5 currently hardcoded)
      *
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.
