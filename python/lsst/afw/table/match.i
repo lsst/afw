@@ -99,7 +99,9 @@ namespace lsst { namespace afw { namespace table {
 NAME##MatchVector matchRaDec(
     R1##Catalog const & cat1,
     R2##Catalog const & cat2,
-    Angle radius, bool closest=true
+    Angle radius,
+    bool closest=true,
+    bool unmatched=false
 );
 
 NAME##MatchVector unpackMatches(
@@ -120,23 +122,34 @@ namespace lsst { namespace afw { namespace table {
 
 SimpleMatchVector matchRaDec(
     SimpleCatalog const & cat,
-    Angle radius, bool symmetric=true
+    Angle radius,
+    bool symmetric=true,
+    bool closest=false,
+    bool unmatched=false
 );
 
 SourceMatchVector matchRaDec(
     SourceCatalog const & cat,
-    Angle radius, bool symmetric=true
+    Angle radius,
+    bool symmetric=true,
+    bool closest=false,
+    bool unmatched=false
 );
 
 SourceMatchVector matchXy(
     SourceCatalog const & cat1,
     SourceCatalog const & cat2,
-    double radius, bool closest=true
+    double radius,
+    bool closest=true,
+    bool unmatched=false
 );
 
 SourceMatchVector matchXy(
     SourceCatalog const & cat,
-    double radius, bool symmetric=true
+    double radius,
+    bool symmetric=true,
+    bool closest=false,
+    bool unmatched=false
 );
 
 }}} // namespace lsst::afw::table
@@ -154,8 +167,8 @@ SourceMatchVector matchXy(
         result.table.preallocate(len(matches))
         for match in matches:
             record = result.addNew()
-            record.set(outKey1, match.first.getId())
-            record.set(outKey2, match.second.getId())
+            record.set(outKey1, match.first.getId() if match.first else 0)
+            record.set(outKey2, match.second.getId() if match.second else 0)
             record.set(keyD, match.distance)
         return result
 %}

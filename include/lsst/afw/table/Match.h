@@ -69,17 +69,20 @@ typedef std::vector<SourceMatch> SourceMatchVector;
 /**
  * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
  * d, the distance between s1 and s2, in pixels, is at most @a radius. If cat1 and
- * cat2 are identical, then this call is equivalent to @c matchXy(cat1,radius,true).
+ * cat2 are identical, then this call is equivalent to @c matchXy(cat1,radius,true,closest,unmatched).
  * The match is performed in pixel space (2d cartesian).
  *
- * @param[in] cat1     first catalog
- * @param[in] cat2     second catalog
- * @param[in] radius   match radius (pixels)
- * @param[in] closest  if true then just return the closest match
+ * @param[in] cat1       first catalog
+ * @param[in] cat2       second catalog
+ * @param[in] radius     match radius (pixels)
+ * @param[in] closest    Return only the closest match for each entry in @a cat1
+ * @param[in] unmatched  Report unmatched entries s1/s2 in cat1/cat2 as tuples
+ *                       (s1,NULL,NaN)/(NULL,s2,NaN). s1 or s2 is considered unmatched when no
+ *                       tuples (s1,s2,d) exist s.t. d @< @a radius, even when @a closest is @c true.
  */
-SourceMatchVector matchXy(
-    SourceCatalog const &cat1, SourceCatalog const &cat2,
-    double radius, bool closest=true
+SourceMatchVector const matchXy(
+    SourceCatalog const &cat1, SourceCatalog const &cat2, double radius,
+    bool closest=true, bool unmatched=false
 );
 
 /**
@@ -89,17 +92,30 @@ SourceMatchVector matchXy(
  *
  * @param[in] cat          the catalog to self-match
  * @param[in] radius       match radius (pixels)
- * @param[in] symmetric    if cat to @c true symmetric matches are produced: i.e.
- *                         if (s1, s2, d) is reported, then so is (s2, s1, d).
+ * @param[in] symmetric    if set to @c true, symmetric matches are produced (see the
+ *                         documentation of the @a closest parameter for an exception).
+ *                         In other words, if (s1, s2, d) is reported, then so is (s2, s1, d).
+ *                         Otherwise, only one of the tuples is reported.
+ * @param[in] closest      if true, a match (s1, s2, d) is only reported if s2 is the closest
+ *                         match for s1. Assuming (s1, s2, d) was reported, (s2, s1, d)
+ *                         will be reported if and only if s1 is also the closest match for s2,
+ *                         regardless of what @a symmetric is set to.
+ * @param[in] unmatched    if true, each unmatched entry s is reported as (s, NULL, NaN).
+ *                         If @a symmetric is true, then (NULL, s, NaN) is reported as well.
+ *                         Note that s is considered unmatched when no tuples (s,t,d) exist
+ *                         s.t. d @< @a radius, even when @a closest is @c true.
  */
-SourceMatchVector matchXy(SourceCatalog const &cat, double radius, bool symmetric = true);
+SourceMatchVector const matchXy(
+    SourceCatalog const &cat, double radius,
+    bool symmetric=true, bool closest=false, bool unmatched=false
+);
 
 #ifndef SWIG // swig will be confused by the nested names below; repeated with typedefs in match.i
 
 /** 
  * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
  * d, the distance between s1 and s2, is at most @a radius. If cat1 and
- * cat2 are identical, then this call is equivalent to @c matchRaDec(cat1,radius,true).
+ * cat2 are identical, then this call is equivalent to @c matchRaDec(cat1,radius,true,closest,unmatched).
  * The match is performed in ra, dec space.
  *
  * @param[in] cat1     first catalog
@@ -110,13 +126,12 @@ SourceMatchVector matchXy(SourceCatalog const &cat, double radius, bool symmetri
  * This is instantiated for Simple-Simple, Simple-Source, and Source-Source catalog combinations.
  */
 template <typename Cat1, typename Cat2>
-std::vector< Match< typename Cat1::Record, typename Cat2::Record> > matchRaDec(
-    Cat1 const & cat1,
-    Cat2 const & cat2,
-    Angle radius, bool closest = true
+std::vector< Match<typename Cat1::Record, typename Cat2::Record> > const matchRaDec(
+    Cat1 const & cat1, Cat2 const & cat2, Angle radius,
+    bool closest=true, bool unmatched=false
 );
 
-/*
+/**
  * Compute all tuples (s1,s2,d) where s1 != s2, s1 and s2 both belong to @a cat,
  * and d, the distance between s1 and s2, is at most @a radius. The
  * match is performed in ra, dec space.
@@ -130,10 +145,9 @@ std::vector< Match< typename Cat1::Record, typename Cat2::Record> > matchRaDec(
  * This is instantiated for Simple and Source catalogs.
  */
 template <typename Cat>
-std::vector< Match< typename Cat::Record, typename Cat::Record> > matchRaDec(
-    Cat const & cat,
-    Angle radius,
-    bool symmetric = true
+std::vector< Match<typename Cat::Record, typename Cat::Record> > const matchRaDec(
+    Cat const & cat, Angle radius,
+    bool symmetric=true, bool closest=false, bool unmatched=false
 );
 
 /**

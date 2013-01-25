@@ -46,6 +46,7 @@ struct RecordPos {
     // significant ones.  BaseCatalog iterators yield temporary BaseRecord PTRs, so storing
     // their address was no longer an option.
     PTR(RecordT) src;
+    bool matched;
 };
 
 template <typename Record1, typename Record2>
@@ -54,11 +55,9 @@ bool operator<(RecordPos<Record1> const &s1, RecordPos<Record2> const &s2) {
 }
 
 struct CmpRecordPtr {
-
     bool operator()(PTR(SourceRecord) const s1, PTR(SourceRecord) const s2) {
         return s1->getY() < s2->getY();
     }
-
 };
 
 /**
@@ -91,6 +90,7 @@ size_t makeRecordPositions(
         positions[n].y   = std::sin(ra)*cosDec;
         positions[n].z   = std::sin(dec);
         positions[n].src = i;
+        positions[n].matched = false;
         ++n;
     }
     std::sort(positions, positions + n);
@@ -107,7 +107,7 @@ template size_t makeRecordPositions(SourceCatalog const &, RecordPos<SourceRecor
 template <typename Cat1, typename Cat2>
 bool doSelfMatchIfSame(
     std::vector< Match< typename Cat1::Record, typename Cat2::Record> > & result,
-    Cat1 const & cat1, Cat2 const & cat2, Angle radius
+    Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest, bool unmatched
 ) {
     // types are different, so the catalogs are never the same.
     return false;
@@ -116,24 +116,26 @@ bool doSelfMatchIfSame(
 template <typename Cat>
 bool doSelfMatchIfSame(
     std::vector< Match< typename Cat::Record, typename Cat::Record> > & result,
-    Cat const & cat1, Cat const & cat2, Angle radius
+    Cat const & cat1, Cat const & cat2, Angle radius, bool closest, bool unmatched
 ) {
     if (&cat1 == &cat2) {
-        result = matchRaDec(cat1, radius, true);
+        result = matchRaDec(cat1, radius, true, closest, unmatched);
         return true;
     }
     return false;
 }
 
+double const INVALID_MATCH_DISTANCE = std::numeric_limits<double>::quiet_NaN();
+
 } // anonymous
 
 template <typename Cat1, typename Cat2>
-std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
-matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
+std::vector< Match<typename Cat1::Record, typename Cat2::Record> > const
+matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest, bool unmatched) {
     typedef Match< typename Cat1::Record, typename Cat2::Record> MatchT;
     std::vector<MatchT> matches;
 
-    if (doSelfMatchIfSame(matches, cat1, cat2, radius)) return matches;
+    if (doSelfMatchIfSame(matches, cat1, cat2, radius, closest, unmatched)) return matches;
 
     if (radius < 0.0 || (radius > (45. * geom::degrees))) {
         throw LSST_EXCEPT(pex::exceptions::RangeErrorException, 
@@ -155,52 +157,73 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
     boost::scoped_array<Pos2> pos2(new Pos2[len2]);
     len1 = makeRecordPositions(cat1, pos1.get());
     len2 = makeRecordPositions(cat2, pos2.get());
-    
+
     for (size_t i = 0, start = 0; i < len1; ++i) {
-        double minDec = pos1[i].dec - radius.asRadians();
+        double const minDec = pos1[i].dec - radius.asRadians();
         while (start < len2 && pos2[start].dec < minDec) { ++start; }
         if (start == len2) {
+            if (unmatched) {
+                // this record and all remaining records in pos1 are unmatched.
+                for (; i < len1; ++i) {
+                    double d = INVALID_MATCH_DISTANCE;
+                    matches.push_back(MatchT(pos1[i].src, PTR(typename Cat2::Record)(), d));
+                }
+            }
             break;
         }
-        double maxDec = pos1[i].dec + radius.asRadians();
-        size_t closestIndex = -1;          // Index of closest match (if any)
-        double d2Include = d2Limit;     // Squared distance for inclusion of match
-        bool found = false;             // Found anything?
+        double const maxDec = pos1[i].dec + radius.asRadians();
+        size_t closestIndex = -1; // Index of closest match (if any)
+        double closestD2 = std::numeric_limits<double>::infinity(); // Closest match distance squared
+        bool found = false; // Found anything?
         for (size_t j = start; j < len2 && pos2[j].dec <= maxDec; ++j) {
             double dx = pos1[i].x - pos2[j].x;
             double dy = pos1[i].y - pos2[j].y;
             double dz = pos1[i].z - pos2[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
-            if (d2 < d2Include) {
+            if (d2 < d2Limit) {
+                found = true;
+                pos2[j].matched = true;
                 if (closest) {
-                    d2Include = d2;
-                    closestIndex = j;
-                    found = true;
+                    if (d2 < closestD2) {
+                        closestIndex = j;
+                        closestD2 = d2;
+                    }
                 } else {
-                    matches.push_back(
-                        MatchT(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
-                    );
+                    double d = Angle::fromUnitSphereDistanceSquared(d2).asRadians();
+                    matches.push_back(MatchT(pos1[i].src, pos2[j].src, d));
                 }
             }
         }
-        if (closest && found) {
-            matches.push_back(
-                MatchT(pos1[i].src, pos2[closestIndex].src, 
-                       geom::Angle::fromUnitSphereDistanceSquared(d2Include))
-            );
+        if (found) {
+            if (closest) {
+                double d = Angle::fromUnitSphereDistanceSquared(closestD2).asRadians();
+                matches.push_back(MatchT(pos1[i].src, pos2[closestIndex].src, d));
+            }
+        } else if (unmatched) {
+            double d = INVALID_MATCH_DISTANCE;
+            matches.push_back(MatchT(pos1[i].src, PTR(typename Cat2::Record)(), d));
+        }
+    }
+    if (unmatched) {
+        // report any unmatched entries from cat2
+        for (size_t i = 0; i < len2; ++i) {
+            if (!pos2[i].matched) {
+                double d = INVALID_MATCH_DISTANCE;
+                matches.push_back(MatchT(PTR(typename Cat1::Record)(), pos2[i].src, d));
+            }
         }
     }
     return matches;
 }
 
-template SimpleMatchVector matchRaDec(SimpleCatalog const &, SimpleCatalog const &, Angle, bool);
-template ReferenceMatchVector matchRaDec(SimpleCatalog const &, SourceCatalog const &, Angle, bool);
-template SourceMatchVector matchRaDec(SourceCatalog const &, SourceCatalog const &, Angle, bool);
+template SimpleMatchVector const matchRaDec(SimpleCatalog const &, SimpleCatalog const &, Angle, bool, bool);
+template ReferenceMatchVector const matchRaDec(SimpleCatalog const &, SourceCatalog const &, Angle, bool, bool);
+template SourceMatchVector const matchRaDec(SourceCatalog const &, SourceCatalog const &, Angle, bool, bool);
 
 
 template <typename Cat>
-std::vector< Match< typename Cat::Record, typename Cat::Record> >
-matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric) {
+std::vector< Match< typename Cat::Record, typename Cat::Record> > const
+matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric, bool closest, bool unmatched) {
     typedef Match<typename Cat::Record,typename Cat::Record> MatchT;
     std::vector<MatchT> matches;
 
@@ -220,42 +243,71 @@ matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric) {
     boost::scoped_array<Pos> pos(new Pos[len]);
     len = makeRecordPositions(cat, pos.get());
 
-    for (size_t i = 0; i < len; ++i) {
-        double maxDec = pos[i].dec + radius.asRadians();
-        for (size_t j = i + 1; j < len && pos[j].dec <= maxDec; ++j) {
+    for (size_t i = 0, start = 0; i < len; ++i) {
+        double const maxDec = pos[i].dec + radius.asRadians();
+        double const minDec = pos[i].dec - radius.asRadians();
+        while (start < i && pos[start].dec < minDec) { ++start; }
+        size_t closestIndex = -1; // Index of closest match (if any)
+        // Closest match distance squared
+        double closestD2 = std::numeric_limits<double>::infinity();
+        bool found = false; // Found anything?
+        for (size_t j = start; j < len && pos[j].dec <= maxDec; ++j) {
+            if (i == j) {
+                continue;
+            }
             double dx = pos[i].x - pos[j].x;
             double dy = pos[i].y - pos[j].y;
             double dz = pos[i].z - pos[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
             if (d2 < d2Limit) {
-                Angle d = Angle::fromUnitSphereDistanceSquared(d2);
-                matches.push_back(MatchT(pos[i].src, pos[j].src, d));
-                if (symmetric) {
-                    matches.push_back(MatchT(pos[j].src, pos[i].src, d));
+                found = true;
+                if (closest) {
+                    if (d2 < closestD2) {
+                        closestIndex = j;
+                        closestD2 = d2;
+                    }
+                } else if (symmetric || i < j) {
+                    double d = Angle::fromUnitSphereDistanceSquared(d2).asRadians();
+                    matches.push_back(MatchT(pos[i].src, pos[j].src, d));
                 }
+            }
+        }
+        if (found) {
+            if (closest) {
+                double d = Angle::fromUnitSphereDistanceSquared(closestD2).asRadians();
+                matches.push_back(MatchT(pos[i].src, pos[closestIndex].src, d));
+            }
+        } else if (unmatched) {
+            double d = INVALID_MATCH_DISTANCE;
+            matches.push_back(MatchT(pos[i].src, PTR(typename Cat::Record)(), d));
+            if (symmetric) {
+                matches.push_back(MatchT(PTR(typename Cat::Record)(), pos[i].src, d));
             }
         }
     }
     return matches;
 }
 
-template SimpleMatchVector matchRaDec(SimpleCatalog const &, Angle, bool);
-template SourceMatchVector matchRaDec(SourceCatalog const &, Angle, bool);
+template SimpleMatchVector const matchRaDec(SimpleCatalog const &, Angle, bool, bool, bool);
+template SourceMatchVector const matchRaDec(SourceCatalog const &, Angle, bool, bool, bool);
 
 
-SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
-                        double radius, bool closest) {
+SourceMatchVector const matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2, double radius,
+                                bool closest, bool unmatched) {
+    if (radius < 0.0) {
+        throw LSST_EXCEPT(pex::exceptions::RangeErrorException, "negative match radius");
+    }
     if (&cat1 == &cat2) {
-        return matchXy(cat1, radius);
+        return matchXy(cat1, radius, closest, unmatched);
     }
     // setup match parameters
     double const r2 = radius*radius;
-
-    // copy and sort array of pointers on y
+    // copy and sort sources on y
     size_t const len1 = cat1.size();
     size_t const len2 = cat2.size();
-    boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
-    boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
+    boost::scoped_array<PTR(SourceRecord) > pos1(new PTR(SourceRecord)[len1]);
+    boost::scoped_array<PTR(SourceRecord) > pos2(new PTR(SourceRecord)[len2]);
+    boost::scoped_array<bool> matched(new bool[len2]()); // value-initialized to false
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i, ++n) {
         pos1[n] = i;
@@ -264,82 +316,134 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     for (SourceCatalog::const_iterator i(cat2.begin()), e(cat2.end()); i != e; ++i, ++n) {
         pos2[n] = i;
     }
-
     std::sort(pos1.get(), pos1.get() + len1, CmpRecordPtr());
     std::sort(pos2.get(), pos2.get() + len2, CmpRecordPtr());
 
     SourceMatchVector matches;
     for (size_t i = 0, start = 0; i < len1; ++i) {
-        double y = pos1[i]->getY();
-        double minY = y - radius;
+        double const y = pos1[i]->getY();
+        double const minY = y - radius;
         while (start < len2 && pos2[start]->getY() < minY) { ++start; }
         if (start == len2) {
+            if (unmatched) {
+                // this source and all remaining sources in pos1 are unmatched - record this fact.
+                for (; i < len1; ++i) {
+                    double d = INVALID_MATCH_DISTANCE;
+                    matches.push_back(SourceMatch(pos1[i], PTR(SourceRecord)(), d));
+                }
+            }
             break;
         }
-        double x = pos1[i]->getX();
-        double maxY = y + radius;
-        double y2;
-        size_t closestIndex = -1;          // Index of closest match (if any)
-        double r2Include = r2;          // Squared radius for inclusion of match
-        bool found = false;             // Found anything?
-        for (size_t j = start; j < len2 && (y2 = pos2[j]->getY()) <= maxY; ++j) {
+        double const x = pos1[i]->getX();
+        double const maxY = y + radius;
+        size_t closestIndex = -1; // Index of closest match (if any)
+        // Closest match distance squared
+        double closestD2 = std::numeric_limits<double>::infinity();
+        bool found = false; // Found anything?
+        for (size_t j = start; j < len2 && pos2[j]->getY() <= maxY; ++j) {
             double dx = x - pos2[j]->getX();
-            double dy = y - y2;
+            double dy = y - pos2[j]->getY();
             double d2 = dx*dx + dy*dy;
-            if (d2 < r2Include) {
+            if (d2 < r2) {
+                found = true;
+                matched[j] = true;
                 if (closest) {
-                    r2Include = d2;
-                    closestIndex = j;
-                    found = true;
+                    if (d2 < closestD2) {
+                        closestIndex = j;
+                        closestD2 = d2;
+                    }
                 } else {
-                    matches.push_back(SourceMatch(pos1[i], pos2[j], std::sqrt(d2)));
+                    double d = std::sqrt(d2);
+                    matches.push_back(SourceMatch(pos1[i], pos2[j], d));
                 }
             }
         }
-        if (closest && found) {
-            matches.push_back(SourceMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
+        if (found) {
+            if (closest) {
+                double d = std::sqrt(closestD2);
+                matches.push_back(SourceMatch(pos1[i], pos2[closestIndex], d));
+            }
+        } else if (unmatched) {
+            double d = INVALID_MATCH_DISTANCE;
+            matches.push_back(SourceMatch(pos1[i], PTR(SourceRecord)(), d));
+        }
+    }
+    if (unmatched) {
+        // report any unmatched entries from cat2
+        for (size_t i = 0; i < len2; ++i) {
+            if (!matched[i]) {
+                double d = INVALID_MATCH_DISTANCE;
+                matches.push_back(SourceMatch(PTR(SourceRecord)(), pos2[i], d));
+            }
         }
     }
     return matches;
 }
 
-SourceMatchVector matchXy(
-    SourceCatalog const & cat, double radius, bool symmetric
-) {
+
+SourceMatchVector const matchXy(SourceCatalog const & cat, double radius,
+                                bool symmetric, bool closest, bool unmatched) {
+    if (radius < 0.0) {
+        throw LSST_EXCEPT(pex::exceptions::RangeErrorException, "negative match radius");
+    }
     // setup match parameters
     double const r2 = radius*radius;
-
     // copy and sort array of pointers on y
     size_t const len = cat.size();
-    boost::scoped_array<PTR(SourceRecord)> pos(new PTR(SourceRecord)[len]);
+    boost::scoped_array<PTR(SourceRecord) > pos(new PTR(SourceRecord)[len]);
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i, ++n) {
         pos[n] = i;
     }
-
     std::sort(pos.get(), pos.get() + len, CmpRecordPtr());
 
     SourceMatchVector matches;
-    for (size_t i = 0; i < len; ++i) {
-        double x = pos[i]->getX();
-        double y = pos[i]->getY();
-        double maxY = y + radius;
-        double y2;
-        for (size_t j = i + 1; j < len && (y2 = pos[j]->getY()) <= maxY; ++j) {
+    for (size_t i = 0, start = 0; i < len; ++i) {
+        double const x = pos[i]->getX();
+        double const y = pos[i]->getY();
+        double const maxY = y + radius;
+        double const minY = y - radius;
+        while (start < i && pos[start]->getY() < minY) { ++start; }
+        size_t closestIndex = -1; // Index of closest match (if any)
+        // Closest match distance squared
+        double closestD2 = std::numeric_limits<double>::infinity();
+        bool found = false; // Found anything?
+        for (size_t j = start; j < len && pos[j]->getY() <= maxY; ++j) {
+            if (i == j) {
+                continue;
+            }
             double dx = x - pos[j]->getX();
-            double dy = y - y2;
+            double dy = y - pos[j]->getY();
             double d2 = dx*dx + dy*dy;
             if (d2 < r2) {
-                double d = std::sqrt(d2);
-                matches.push_back(SourceMatch(pos[i], pos[j], d));
-                if (symmetric) {
-                    matches.push_back(SourceMatch(pos[j], pos[i], d));
+                found = true;
+                if (closest) {
+                    if (d2 < closestD2) {
+                        closestIndex = j;
+                        closestD2 = d2;
+                    }
+                } else if (symmetric || i < j) {
+                    double d = std::sqrt(d2);
+                    matches.push_back(SourceMatch(pos[i], pos[j], d));
                 }
+            }
+        }
+        if (found) {
+            if (closest) {
+                double d = std::sqrt(closestD2);
+                matches.push_back(SourceMatch(pos[i], pos[closestIndex], d));
+            }
+        } else if (unmatched) {
+            double d = INVALID_MATCH_DISTANCE;
+            matches.push_back(SourceMatch(pos[i], PTR(SourceRecord)(), d));
+            if (symmetric) {
+                matches.push_back(SourceMatch(PTR(SourceRecord)(), pos[i], d));
             }
         }
     }
     return matches;
 }
+
 
 template <typename Record1, typename Record2>
 BaseCatalog packMatches(
@@ -355,8 +459,8 @@ BaseCatalog packMatches(
     typedef typename std::vector< Match<Record1,Record2> >::const_iterator Iter;
     for (Iter i = matches.begin(); i != matches.end(); ++i) {
         PTR(BaseRecord) record = result.addNew();
-        record->set(outKey1, i->first->getId());
-        record->set(outKey2, i->second->getId());
+        record->set(outKey1, i->first ? i->first->getId() : 0);
+        record->set(outKey2, i->second ? i->second->getId() : 0);
         record->set(keyD, i->distance);
     }
     return result;
@@ -383,23 +487,29 @@ unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & seco
     result.resize(matches.size());
     typename std::vector<MatchT>::iterator j = result.begin();
     for (BaseCatalog::const_iterator i = matches.begin(); i != matches.end(); ++i, ++j) {
-        typename Cat1::const_iterator k1 = first.find(i->get(inKey1));
-        typename Cat2::const_iterator k2 = second.find(i->get(inKey2));
-        if (k1 != first.end()) {
-            j->first = k1;
-        } else {
-            tableLog.log(
-                pex::logging::Log::WARN,
-                boost::format("Persisted match record with ID %s not found in catalog 1.") % i->get(inKey1)
-            );
+        RecordId id = i->get(inKey1);
+        if (id != 0) {
+            typename Cat1::const_iterator k = first.find(id);
+            if (k != first.end()) {
+                j->first = k;
+            } else {
+                tableLog.log(
+                    pex::logging::Log::WARN,
+                    boost::format("Persisted match record with ID %s not found in catalog 1.") % id
+                );
+            }
         }
-        if (k2 != second.end()) {
-            j->second = k2;
-        } else {
-            tableLog.log(
-                pex::logging::Log::WARN,
-                boost::format("Persisted match record with ID %s not found in catalog 2.") % i->get(inKey2)
-            );
+        id = i->get(inKey2);
+        if (id != 0) {
+            typename Cat2::const_iterator k = second.find(id);
+            if (k != second.end()) {
+                j->second = k;
+            } else {
+                tableLog.log(
+                    pex::logging::Log::WARN,
+                    boost::format("Persisted match record with ID %s not found in catalog 2.") % id
+                );
+            }
         }
         j->distance = i->get(keyD);
     }

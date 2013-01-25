@@ -66,12 +66,12 @@ class SourceMatchTestCase(unittest.TestCase):
         nobj = 1000
         for i in range(nobj):
             s = self.ss1.addNew()
-            s.setId(i)
+            s.setId(i + 1)
             s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
 
             s = self.ss2.addNew()
-            s.setId(2*nobj + i)
+            s.setId(2*nobj + i + 1)
             s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
 
