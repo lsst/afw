@@ -26,6 +26,8 @@
  * This file does not include Simple- or Source- Record/Table/Catalog, or the matching functions.
  */
 
+%include "lsst/afw/table/Base.i"
+
 %{
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/image/Wcs.h"
