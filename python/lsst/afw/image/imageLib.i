@@ -272,7 +272,8 @@ namespace boost {
 
 %include "lsst/afw/image/ImageUtils.h"
 
-%include "wcs.i"
+%include "lsst/afw/image/Wcs.i"
+%include "lsst/afw/image/TanWcs.i"
 
 /************************************************************************************************************/
 

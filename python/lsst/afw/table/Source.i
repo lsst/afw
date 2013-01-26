@@ -32,7 +32,6 @@
 %{
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/image/Wcs.h"
-#include "lsst/afw/image/TanWcs.h"
 %}
 
 // We need to know about Footprints so that Sources can correctly hold
@@ -42,7 +41,7 @@
 %import "lsst/afw/detection/footprints.i"
 
 // Need to know about Wcs for SourceRecord::updateCoord
-%import "lsst/afw/image/wcs.i"
+%import "lsst/afw/image/Wcs.i"
 
 // =============== SourceTable and SourceRecord =============================================================
 
