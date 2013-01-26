@@ -49,16 +49,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %lsst_exceptions();
 
-%shared_ptr(lsst::afw::cameraGeom::Detector);
-%shared_ptr(lsst::afw::cameraGeom::Amp);
-%shared_ptr(lsst::afw::cameraGeom::ElectronicParams);
-%shared_ptr(lsst::afw::cameraGeom::DetectorMosaic);
-%shared_ptr(lsst::afw::cameraGeom::Ccd);
-%shared_ptr(lsst::afw::cameraGeom::Raft);
-%shared_ptr(lsst::afw::cameraGeom::Camera);
-%shared_ptr(lsst::afw::cameraGeom::Distortion);
-%shared_ptr(lsst::afw::cameraGeom::NullDistortion);
-%shared_ptr(lsst::afw::cameraGeom::RadialPolyDistortion);
+%include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
 
 %template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
@@ -88,18 +79,8 @@ radians = lsst.afw.geom.radians
 %include "lsst/afw/cameraGeom/Ccd.h"
 %include "lsst/afw/cameraGeom/Raft.h"
 %include "lsst/afw/cameraGeom/Camera.h"
-%include "lsst/afw/cameraGeom/Distortion.h"
 
-%define DistortInstantiate(PIXEL)
-%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::Image<PIXEL> >;
-%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::MaskedImage<PIXEL> >;
-%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::Image<PIXEL> >;
-%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::MaskedImage<PIXEL> >;
-%enddef
-
-DistortInstantiate(float);
-DistortInstantiate(double);
-
+%include "lsst/afw/cameraGeom/Distortion.i"
 
 %inline %{
     lsst::afw::cameraGeom::DetectorMosaic::Ptr
