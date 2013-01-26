@@ -20,7 +20,29 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%feature("autodoc", "1");
 %module(package="lsst.afw.table.io") ioLib
 
-%include "lsst/afw/table/io/Persistable.i"
+#pragma SWIG nowarn=362                 // operator=  ignored
+#pragma SWIG nowarn=389                 // operator[]  ignored
+#pragma SWIG nowarn=503                 // comparison operators ignored
+
+%include "boost_shared_ptr.i"
+%include "lsst/p_lsstSwig.i"
+%import "lsst/pex/exceptions/exceptionsLib.i"
+
+%lsst_exceptions();
+
+%{
+#include "lsst/afw/table/io/Persistable.h"
+%}
+
+%shared_ptr(lsst::afw::table::io::Persistable);
+
+%define %declareTablePersistable(NAME, T)
+%shared_ptr(lsst::afw::table::io::Persistable);
+%shared_ptr(lsst::afw::table::io::PersistableFacade< T >);
+%shared_ptr(T);
+%template(NAME ## PersistableFacade) lsst::afw::table::io::PersistableFacade< T >;
+%enddef
+
+%include "lsst/afw/table/io/Persistable.h"

@@ -25,7 +25,7 @@
 #include "lsst/afw/image/Calib.h"
 %}
 
-%import "lsst/afw/table/io/ioLib.i"
+%import "lsst/afw/table/io/Persistable.i"
 
 %declareTablePersistable(Calib, lsst::afw::image::Calib);
 

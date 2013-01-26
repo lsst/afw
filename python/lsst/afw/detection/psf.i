@@ -5,7 +5,7 @@
 #include "lsst/afw/detection/DoubleGaussianPsf.h"
 %}
 
-%import "lsst/afw/table/io/ioLib.i"
+%import "lsst/afw/table/io/Persistable.i"
 
 %declareTablePersistable(Psf, lsst::afw::detection::Psf);
 %declareTablePersistable(KernelPsf, lsst::afw::detection::KernelPsf);
