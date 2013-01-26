@@ -58,7 +58,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/FpPoint.i"
 %include "lsst/afw/cameraGeom/Orientation.i"
 %include "lsst/afw/cameraGeom/Detector.i"
-%include "lsst/afw/cameraGeom/Amp.h"
+%include "lsst/afw/cameraGeom/Amp.i"
 %include "lsst/afw/cameraGeom/DetectorMosaic.h"
 %include "lsst/afw/cameraGeom/Ccd.h"
 %include "lsst/afw/cameraGeom/Raft.h"
@@ -70,11 +70,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
     lsst::afw::cameraGeom::DetectorMosaic::Ptr
     cast_DetectorMosaic(lsst::afw::cameraGeom::Detector::Ptr detector) {
         return boost::shared_dynamic_cast<lsst::afw::cameraGeom::DetectorMosaic>(detector);
-    }
-
-    lsst::afw::cameraGeom::Amp::Ptr
-    cast_Amp(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Amp>(detector);
     }
 
     lsst::afw::cameraGeom::Ccd::Ptr
@@ -89,26 +84,5 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %}
 
-%define Instantiate(PIXEL_TYPE...)
-%template(prepareAmpData)
-    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Image<PIXEL_TYPE> >;
-%enddef
-
-Instantiate(boost::uint16_t);
-Instantiate(float);
-Instantiate(double);
-%template(prepareAmpData)
-    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Mask<boost::uint16_t> >;
-
 %definePythonIterator(lsst::afw::cameraGeom::Ccd);
 %definePythonIterator(lsst::afw::cameraGeom::DetectorMosaic);
-
-%pythoncode {
-class ReadoutCorner(object):
-    """A python object corresponding to Amp::ReadoutCorner"""
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return ["LLC", "LRC", "URC", "ULC"][self.value]
-}
