@@ -51,31 +51,21 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
 
-%template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
-
 %include "lsst/afw/cameraGeom/Id.i"
 %include "lsst/afw/cameraGeom/FpPoint.i"
 %include "lsst/afw/cameraGeom/Orientation.i"
 %include "lsst/afw/cameraGeom/Detector.i"
 %include "lsst/afw/cameraGeom/Amp.i"
 %include "lsst/afw/cameraGeom/DetectorMosaic.i"
-%include "lsst/afw/cameraGeom/Ccd.h"
+%include "lsst/afw/cameraGeom/Ccd.i"
 %include "lsst/afw/cameraGeom/Raft.h"
 %include "lsst/afw/cameraGeom/Camera.h"
 
 %include "lsst/afw/cameraGeom/Distortion.i"
 
 %inline %{
-    lsst::afw::cameraGeom::Ccd::Ptr
-    cast_Ccd(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Ccd>(detector);
-    }
-
     lsst::afw::cameraGeom::Raft::Ptr
     cast_Raft(lsst::afw::cameraGeom::Detector::Ptr detector) {
         return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Raft>(detector);
     }
-
 %}
-
-%definePythonIterator(lsst::afw::cameraGeom::Ccd);
