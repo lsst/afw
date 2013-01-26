@@ -271,6 +271,8 @@ private:
     lsst::afw::math::Kernel::Ptr _kernel; // Kernel that corresponds to the Psf
 };
 
+#ifndef SWIG
+
 /************************************************************************************************************/
 /**
  * A polymorphic base class for Psf factories
@@ -329,6 +331,8 @@ public:
         return typename PsfT::Ptr(new PsfT(kernel));
     }
 };
+
+#endif // !SWIG
 
 /************************************************************************************************************/
 /**

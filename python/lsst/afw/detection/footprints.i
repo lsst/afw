@@ -21,7 +21,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 %{
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Peak.h"
@@ -32,6 +32,8 @@
 #include "lsst/afw/detection/FootprintArray.cc"
 #include "ndarray.h"
 %}
+
+%warnfilter(302) Span;
 
 namespace lsst { namespace afw { namespace detection {
 typedef lsst::afw::geom::Span Span;

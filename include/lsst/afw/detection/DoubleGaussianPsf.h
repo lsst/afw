@@ -21,6 +21,8 @@ namespace lsst { namespace afw {
     }
 }}
 
+#ifndef SWIG
+
 namespace boost {
 namespace serialization {
     template <class Archive>
@@ -28,6 +30,8 @@ namespace serialization {
         Archive& ar, lsst::afw::detection::DoubleGaussianPsf const* p,
         unsigned int const file_version);
 }}
+
+#endif // !SWIG
 
 namespace lsst { namespace afw { namespace detection {
             

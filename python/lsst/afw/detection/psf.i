@@ -11,7 +11,6 @@
 %declareTablePersistable(KernelPsf, lsst::afw::detection::KernelPsf);
 %declareTablePersistable(DoubleGaussianPsf, lsst::afw::detection::DoubleGaussianPsf);
 
-%ignore PsfFactoryBase;
 %include "lsst/afw/detection/Psf.h"
 %include "lsst/afw/detection/DoubleGaussianPsf.h"
 
