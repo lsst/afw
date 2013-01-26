@@ -27,6 +27,9 @@
 #include "lsst/afw/image/Mask.h"
 %}
 
+%warnfilter(325) BilinearFunction1;
+%warnfilter(325) NearestFunction1;
+
 //
 // Additional kernel subclasses
 //
