@@ -54,17 +54,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
 
-%include "lsst/afw/cameraGeom/Id.h"
+%include "lsst/afw/cameraGeom/Id.i"
 
-%extend lsst::afw::cameraGeom::Id {
-    %pythoncode {
-        def __str__(self):
-            return "%d, %s" % (self.getSerial(), self.getName())
-
-        def __repr__(self):
-            return "Id(%s)" % (str(self))
-    }
-}
 %pythoncode {
 # See comment in Orientation.h
 import lsst.afw.geom			# needed for initialising Orientation
