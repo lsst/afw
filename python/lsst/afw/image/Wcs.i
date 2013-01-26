@@ -24,23 +24,21 @@
  
 /************************************************************************************************************/
 
+%{
+#include "lsst/afw/image/Wcs.h"
+%}
+
 %import "lsst/afw/table/io/Persistable.i"
 
 %declareTablePersistable(Wcs, lsst::afw::image::Wcs);
-%declareTablePersistable(TanWcs, lsst::afw::image::TanWcs);
 
 %ignore lsst::afw::image::NoWcs;
 
-%{
-#include "lsst/afw/image/Wcs.h"
-#include "lsst/afw/image/TanWcs.h"
-%}
+%newobject makeWcs;
 
 %include "lsst/afw/image/Wcs.h"
-%include "lsst/afw/image/TanWcs.h"
 
 %lsst_persistable(lsst::afw::image::Wcs);
-%lsst_persistable(lsst::afw::image::TanWcs);
 
 %inline %{
     #include <boost/make_shared.hpp>
@@ -76,21 +74,6 @@
              self.getFitsMetadata()
              return (unpickleWcs, (pickleMetadata(self.getFitsMetadata()),),)
     %}
- }
-
-
-%newobject makeWcs;
+}
 
 %useValueEquality(lsst::afw::image::Wcs);
-
-%inline %{
-    lsst::afw::image::TanWcs::Ptr
-    cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
-        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
-        
-        if(tanWcs.get() == NULL) {
-            throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
-        }
-        return tanWcs;
-    }
-%}
