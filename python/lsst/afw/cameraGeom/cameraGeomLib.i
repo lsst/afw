@@ -55,15 +55,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
 
 %include "lsst/afw/cameraGeom/Id.i"
-
-%pythoncode {
-# See comment in Orientation.h
-import lsst.afw.geom			# needed for initialising Orientation
-radians = lsst.afw.geom.radians
-}
-
 %include "lsst/afw/cameraGeom/FpPoint.i"
-%include "lsst/afw/cameraGeom/Orientation.h"
+%include "lsst/afw/cameraGeom/Orientation.i"
 %include "lsst/afw/cameraGeom/Detector.h"
 %include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/DetectorMosaic.h"
