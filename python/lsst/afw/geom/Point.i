@@ -42,3 +42,48 @@
 %template(Point ## N ## SUFFIX) lsst::afw::geom::Point<T,N>;
 %CoordinateBase_POSTINCLUDE(T, N, lsst::afw::geom::Point<T,N>);
 %enddef
+
+%Point_PREINCLUDE(int,2);
+%Point_PREINCLUDE(int,3);
+%Point_PREINCLUDE(double,2);
+%Point_PREINCLUDE(double,3);
+
+%include "lsst/afw/geom/Point.h"
+
+%Point_POSTINCLUDE(int,2,I);
+%Point_POSTINCLUDE(int,3,I);
+%Point_POSTINCLUDE(double,2,D);
+%Point_POSTINCLUDE(double,3,D);
+
+
+%extend lsst::afw::geom::Point<int,2> {
+    %template(Point2I) Point<double>;
+    %pythoncode {
+    def __reduce__(self):
+        return (Point2I, (self.getX(), self.getY()))
+    }
+};
+
+%extend lsst::afw::geom::Point<int,3> {
+    %template(Point3I) Point<double>;
+    %pythoncode {
+    def __reduce__(self):
+        return (Point3I, (self.getX(), self.getY(), self.getZ()))
+    }
+};
+
+%extend lsst::afw::geom::Point<double,2> {
+    %template(Point2D) Point<int>;
+    %pythoncode {
+    def __reduce__(self):
+        return (Point2D, (self.getX(), self.getY()))
+    }
+};
+
+%extend lsst::afw::geom::Point<double,3> {
+    %template(Point3D) Point<int>;
+    %pythoncode {
+    def __reduce__(self):
+        return (Point3D, (self.getX(), self.getY(), self.getZ()))
+    }
+};

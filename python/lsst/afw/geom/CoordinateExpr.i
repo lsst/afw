@@ -19,7 +19,8 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%include "CoordinateBase.i"
 
 %{
 #include "lsst/afw/geom/CoordinateExpr.h"
@@ -30,3 +31,8 @@
 %template(CoordinateExpr ## N) lsst::afw::geom::CoordinateExpr<N>;
 %CoordinateBase_POSTINCLUDE(bool, N, lsst::afw::geom::CoordinateExpr<N>);
 %enddef
+
+%include "lsst/afw/geom/CoordinateExpr.h"
+
+%CoordinateExpr_POSTINCLUDE(2);
+%CoordinateExpr_POSTINCLUDE(3);

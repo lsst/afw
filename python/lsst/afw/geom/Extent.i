@@ -48,3 +48,45 @@
 %template(Extent ## N ## SUFFIX) lsst::afw::geom::Extent<T,N>;
 %CoordinateBase_POSTINCLUDE(T, N, lsst::afw::geom::Extent<T,N>);
 %enddef
+
+%Extent_PREINCLUDE(int,2);
+%Extent_PREINCLUDE(int,3);
+%Extent_PREINCLUDE(double,2);
+%Extent_PREINCLUDE(double,3);
+
+%include "lsst/afw/geom/Extent.h"
+
+%Extent_POSTINCLUDE(int,2,I);
+%Extent_POSTINCLUDE(int,3,I);
+%Extent_POSTINCLUDE(double,2,D);
+%Extent_POSTINCLUDE(double,3,D);
+
+%extend lsst::afw::geom::Extent<double,2> {
+    %template(Extent2D) Extent<int>;
+    %pythoncode {
+    def __reduce__(self):
+        return (Extent2D, (self.getX(), self.getY()))
+    }
+};
+
+%extend lsst::afw::geom::Extent<double,3> {
+    %template(Extent3D) Extent<int>;
+    %pythoncode {
+    def __reduce__(self):
+        return (Extent3D, (self.getX(), self.getY(), self.getZ()))
+    }
+};
+
+%extend lsst::afw::geom::Extent<int,2> {
+    %pythoncode {
+    def __reduce__(self):
+        return (Extent2I, (self.getX(), self.getY()))
+    }
+};
+
+%extend lsst::afw::geom::Extent<int,3> {
+    %pythoncode {
+    def __reduce__(self):
+        return (Extent3I, (self.getX(), self.getY(), self.getZ()))
+    }
+};
