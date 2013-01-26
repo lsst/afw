@@ -149,7 +149,6 @@
 %imagePtr(double);
 
 %include "lsst/afw/image/Image.h"
-%include "lsst/afw/image/Mask.h"
 
 %image(Image, U, boost::uint16_t);
 %image(Image, L, boost::uint64_t);
