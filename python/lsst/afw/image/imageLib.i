@@ -281,78 +281,8 @@ namespace boost {
 %import "lsst/afw/cameraGeom/cameraGeomLib.i"
 #endif
 
-
-/************************************************************************************************************/
-
-%include "lsst/afw/image/Calib.i"
-
-%{
-#include "lsst/afw/detection.h"
-#include "lsst/afw/image/ExposureInfo.h"
-#include "lsst/afw/image/Exposure.h"
-%}
-
-// Must go Before the %include
-%define %exposurePtr(PIXEL_TYPE)
-%shared_ptr(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
-%enddef
-
-// Must go After the %include
-%define %exposure(TYPE, PIXEL_TYPE)
-%newobject makeExposure;
-%template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
-%template(makeExposure) lsst::afw::image::makeExposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
-%lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
-%boost_picklable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
-
-%supportSlicing(lsst::afw::image::Exposure,
-                PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
-%defineClone(Exposure##TYPE, lsst::afw::image::Exposure,
-             PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
-%enddef
-
-%exposurePtr(boost::uint16_t);
-%exposurePtr(boost::uint64_t);
-%exposurePtr(int);
-%exposurePtr(float);
-%exposurePtr(double);
-
-namespace lsst { namespace afw { namespace detection {
-    class Psf;
-}}}
-%shared_ptr(lsst::afw::detection::Psf);
-%shared_ptr(lsst::afw::image::ExposureInfo);
-
-%include "lsst/afw/image/ExposureInfo.h"
-
-%include "lsst/afw/image/Exposure.h"
-
-%exposure(U, boost::uint16_t);
-%exposure(L, boost::uint64_t);
-%exposure(I, int);
-%exposure(F, float);
-%exposure(D, double);
-
-
-%extend lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
-    %newobject convertF;
-    lsst::afw::image::Exposure<float,
-         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
-    {
-        return lsst::afw::image::Exposure<float,
-            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
-    }
-}
-
-%extend lsst::afw::image::Exposure<boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
-    %newobject convertD;
-    lsst::afw::image::Exposure<double,
-         lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD()
-    {
-        return lsst::afw::image::Exposure<double,
-            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(*self, true);
-    }
-}
+%include "lsst/afw/image/Wcs.i"
+%include "lsst/afw/image/TanWcs.i"
 
 /************************************************************************************************************/
 
@@ -368,3 +298,4 @@ namespace lsst { namespace afw { namespace detection {
 
 /************************************************************************************************************/
 
+%include "lsst/afw/image/Exposure.i"
