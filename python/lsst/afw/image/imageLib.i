@@ -49,7 +49,6 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/geom.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Color.h"
-#include "lsst/afw/image/Defect.h"
 #include "lsst/afw/fits.h" // just for exceptions
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
@@ -283,19 +282,6 @@ namespace boost {
 
 %include "lsst/afw/image/Wcs.i"
 %include "lsst/afw/image/TanWcs.i"
-
-/************************************************************************************************************/
-
 %include "lsst/afw/image/Color.h"
-
-/************************************************************************************************************/
-
-%shared_ptr(lsst::afw::image::DefectBase);
-
-%include "lsst/afw/image/Defect.h"
-
-%template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
-
-/************************************************************************************************************/
-
+%include "lsst/afw/image/Defect.i"
 %include "lsst/afw/image/Exposure.i"
