@@ -57,3 +57,5 @@
     }
 }
 %enddef
+
+%include "lsst/afw/geom/CoordinateBase.h"

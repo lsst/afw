@@ -19,11 +19,12 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
 
 %{
 #include "lsst/afw/geom/LinearTransform.h"
 %}
+
+%include "ndarray.i"
 
 %declareNumPyConverters(lsst::afw::geom::LinearTransform::ParameterVector);
 %declareNumPyConverters(lsst::afw::geom::LinearTransform::Matrix);
