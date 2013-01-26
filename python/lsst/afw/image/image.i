@@ -148,7 +148,6 @@
 %imagePtr(float);
 %imagePtr(double);
 
-%include "lsst/afw/image/Utils.h"
 %include "lsst/afw/image/Image.h"
 %include "lsst/afw/image/Mask.h"
 
