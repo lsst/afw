@@ -26,7 +26,6 @@
 #include <string>
 #include <cmath>
 #include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/image/Utils.h"
 
 /**
  * @file

@@ -26,7 +26,6 @@
 #include <string>
 #include "lsst/base.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Amp.h"
 #include "lsst/afw/cameraGeom/FpPoint.h"
