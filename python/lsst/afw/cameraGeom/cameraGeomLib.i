@@ -57,7 +57,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/Id.i"
 %include "lsst/afw/cameraGeom/FpPoint.i"
 %include "lsst/afw/cameraGeom/Orientation.i"
-%include "lsst/afw/cameraGeom/Detector.h"
+%include "lsst/afw/cameraGeom/Detector.i"
 %include "lsst/afw/cameraGeom/Amp.h"
 %include "lsst/afw/cameraGeom/DetectorMosaic.h"
 %include "lsst/afw/cameraGeom/Ccd.h"
