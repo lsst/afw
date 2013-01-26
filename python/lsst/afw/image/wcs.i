@@ -24,7 +24,7 @@
  
 /************************************************************************************************************/
 
-%import "lsst/afw/table/io/ioLib.i"
+%import "lsst/afw/table/io/Persistable.i"
 
 %declareTablePersistable(Wcs, lsst::afw::image::Wcs);
 %declareTablePersistable(TanWcs, lsst::afw::image::TanWcs);
