@@ -259,6 +259,7 @@ namespace boost {
 #endif
 
 %include "image.i"
+%include "ImagePca.i"
 %include "mask.i"
 %include "maskedImage.i"
 %include "imageSlice.i"
