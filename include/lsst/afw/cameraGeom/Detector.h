@@ -30,7 +30,6 @@
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
-#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom/Id.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 
