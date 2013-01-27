@@ -21,8 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#define CAMERA_GEOM_LIB_I
 
 %define cameraGeomLib_DOCSTRING
 "
@@ -45,11 +43,9 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
-#if defined(IMPORT_IMAGE_I)
 %import  "lsst/afw/image/image.i"
 %import  "lsst/afw/image/maskedImage.i"
 %import  "lsst/afw/image/Wcs.i"
-#endif
 %import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 %lsst_exceptions();

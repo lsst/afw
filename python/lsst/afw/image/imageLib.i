@@ -186,9 +186,7 @@ Basic routines to talk to lsst::afw::image classes
 
 /************************************************************************************************************/
 
-#if !defined(CAMERA_GEOM_LIB_I)
-%import "lsst/afw/cameraGeom/cameraGeomLib.i"
-#endif
+%import "lsst/afw/cameraGeom/Detector.i"
 
 %include "lsst/afw/image/Color.h"
 %include "lsst/afw/image/Defect.i"
