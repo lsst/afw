@@ -49,8 +49,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %import  "lsst/afw/image/image.i"
 %import  "lsst/afw/image/maskedImage.i"
 %import  "lsst/afw/image/Wcs.i"
-%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 #endif
+%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 %lsst_exceptions();
 
