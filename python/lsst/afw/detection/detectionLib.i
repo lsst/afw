@@ -74,9 +74,9 @@ Python interface to lsst::afw::detection classes
 
 %lsst_exceptions()
 
-%include "footprints.i"
-%include "psf.i"
-%include "footprintset.i"
+%include "Footprint.i"
+%include "Psf.i"
+%include "FootprintSet.i"
 
 %pythoncode %{
 from lsst.afw.geom import Span
