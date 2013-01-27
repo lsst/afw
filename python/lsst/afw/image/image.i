@@ -41,14 +41,6 @@ namespace boost {
 %ignore lsst::afw::image::Filter::operator int;
 %include "lsst/afw/image/Filter.h"
 
-#if defined(IMPORT_FUNCTION_I)
-%{
-#include "lsst/afw/math.h"
-%}
-%import "lsst/afw/math/function.i"
-#undef IMPORT_FUNCTION_I
-#endif
-
 %{
 #include "lsst/afw/image/Image.h"
 %}

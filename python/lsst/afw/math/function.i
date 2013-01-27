@@ -21,6 +21,8 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+
+%import "lsst/daf/base/baseLib.i" // for Citizen
  
 %{
 #include <vector>

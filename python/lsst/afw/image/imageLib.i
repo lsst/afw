@@ -161,6 +161,12 @@ Basic routines to talk to lsst::afw::image classes
         return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1))
 }
 
+%{
+#include "lsst/afw/math/Function.h"
+#include "lsst/afw/math/FunctionLibrary.h"
+%}
+%import "lsst/afw/math/function.i"
+
 %include "image.i"
 %include "ImagePca.i"
 %include "Utils.i"
