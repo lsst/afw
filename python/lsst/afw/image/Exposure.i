@@ -23,12 +23,7 @@
  */
 
 %include "lsst/afw/image/Calib.i"
-
 %include "lsst/afw/image/Wcs.i"
-
-#if !defined(CAMERA_GEOM_LIB_I)
-%import "lsst/afw/cameraGeom/cameraGeomLib.i"
-#endif
 
 %{
 #include "lsst/afw/detection/Psf.h"

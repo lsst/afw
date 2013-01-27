@@ -36,7 +36,6 @@ Python interface to lsst::afw::math::detail classes and functions
 #   include "lsst/pex/logging.h"
 #   include "lsst/pex/policy.h"
 #   include "lsst/afw/image.h"
-#   include "lsst/afw/cameraGeom.h"
 #   include "lsst/afw/geom.h"
 #   include "lsst/afw/math.h"
 %}
