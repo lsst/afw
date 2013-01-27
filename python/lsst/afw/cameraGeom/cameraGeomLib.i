@@ -59,6 +59,5 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/DetectorMosaic.i"
 %include "lsst/afw/cameraGeom/Ccd.i"
 %include "lsst/afw/cameraGeom/Raft.i"
-%include "lsst/afw/cameraGeom/Camera.h"
-
+%include "lsst/afw/cameraGeom/Camera.i"
 %include "lsst/afw/cameraGeom/Distortion.i"
