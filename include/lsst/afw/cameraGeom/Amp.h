@@ -27,15 +27,15 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/cameraGeom/Detector.h"
-#include "lsst/afw/image/Wcs.h"
 
-/**
- * @file
- *
- * Describe an amplifier
- */
 namespace lsst {
 namespace afw {
+namespace image {
+
+class Wcs;
+
+} // namespace image
+
 namespace cameraGeom {
 
 /**
@@ -112,7 +112,7 @@ public:
 
     void shift(int dx, int dy);
     void rotateBy90(lsst::afw::geom::Extent2I const& dimensions, int n90);
-    void prepareWcsData(lsst::afw::image::Wcs::Ptr wcs);
+    void prepareWcsData(PTR(lsst::afw::image::Wcs) wcs);
 
     /// Return Amp's electronic properties
     ElectronicParams::Ptr getElectronicParams() const { return _eParams; }

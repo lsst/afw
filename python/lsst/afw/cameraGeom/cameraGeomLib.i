@@ -36,16 +36,17 @@ Python bindings for classes describing the the geometry of a mosaic camera
 #include "lsst/pex/logging.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/cameraGeom.h"
+#include "lsst/afw/coord.h"
 %}
+
+%shared_ptr(lsst::afw::image::Wcs);
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
 %import  "lsst/afw/image/image.i"
 %import  "lsst/afw/image/maskedImage.i"
-%import  "lsst/afw/image/Wcs.i"
 %import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 %lsst_exceptions();
