@@ -29,6 +29,7 @@
 #include "lsst/afw/cameraGeom/Amp.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/cameraGeom/Ccd.h"
+#include "lsst/afw/image/Wcs.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
