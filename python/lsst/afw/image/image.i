@@ -21,10 +21,106 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%include "lsst/base.h"
+%import "lsst/daf/base/baseLib.i"
+%import "lsst/pex/policy/policyLib.i"
+%import "lsst/daf/persistence/persistenceLib.i"
+%import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/coord/coordLib.i"
+%import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions
+
+namespace boost {
+    namespace mpl { }
+}
+
+%include "lsst/afw/image/LsstImageTypes.h"
+
+%ignore lsst::afw::image::Filter::operator int;
+%include "lsst/afw/image/Filter.h"
+
+#if defined(IMPORT_FUNCTION_I)
+%{
+#include "lsst/afw/math.h"
+%}
+%import "lsst/afw/math/function.i"
+#undef IMPORT_FUNCTION_I
+#endif
+
 %{
 #include "lsst/afw/image/Image.h"
 %}
+
+/************************************************************************************************************/
+
+%template(pairIntInt)       std::pair<int, int>;
+%template(pairIntDouble)    std::pair<int, double>;
+%template(pairDoubleInt)    std::pair<double, int>;
+%template(pairDoubleDouble) std::pair<double, double>;
+%template(mapStringInt)     std::map<std::string, int>;
+
+/************************************************************************************************************/
+//
+// Various macros used when declaring image classes
+//
+
+%define %defineClone(PY_TYPE, TYPE, PIXEL_TYPES...)
+%extend TYPE<PIXEL_TYPES> {
+    %pythoncode {
+    def clone(self):
+        """Return a deep copy of self"""
+        return PY_TYPE(self, True)
+    #
+    # Call our ctor with the provided arguments
+    #
+    def Factory(self, *args):
+        """Return an object of this type"""
+        return PY_TYPE(*args)
+    }
+}
+%enddef
+
+%define %supportSlicing(TYPE, PIXEL_TYPES...)
+%extend TYPE<PIXEL_TYPES> {
+    %pythoncode {
+    #
+    # Support image slicing
+    #
+    def __getitem__(self, imageSlice):
+        """
+        __getitem__(self, imageSlice) -> NAME""" + """PIXEL_TYPES
+        """
+        return self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
+
+    def __setitem__(self, imageSlice, rhs):
+        """
+        __setitem__(self, imageSlice, value)
+        """
+        lhs = self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
+        try:
+            lhs <<= rhs
+        except TypeError:
+            lhs.set(rhs)
+
+    def __float__(self):
+        """Convert a 1x1 image to a floating scalar"""
+        if self.getDimensions() != lsst.afw.geom.geomLib.Extent2I(1, 1):
+            raise TypeError("Only single-pixel images may be converted to python scalars")
+
+        try:
+            return float(self.get(0, 0))
+        except AttributeError:
+            raise TypeError("Unable to extract a single pixel for type %s" % "TYPE")
+        except TypeError:
+            raise TypeError("Unable to convert a %s<%s> pixel to a scalar" % ("TYPE", "PIXEL_TYPES"))
+
+    def __int__(self):
+        """Convert a 1x1 image to a integral scalar"""
+        return int(float(self))
+    }
+}
+
+%enddef
 
 //
 // Must go Before the %include

@@ -70,10 +70,6 @@ Basic routines to talk to lsst::afw::image classes
     import_array();
 %}
 
-namespace boost {
-    namespace mpl { }
-}
-
 /************************************************************************************************************/
 
 %typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
@@ -82,17 +78,6 @@ namespace boost {
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
-
-%include "lsst/base.h"
-
-/******************************************************************************/
-
-%import "lsst/daf/base/baseLib.i"
-%import "lsst/pex/policy/policyLib.i"
-%import "lsst/daf/persistence/persistenceLib.i"
-%import "lsst/afw/geom/geomLib.i"
-%import "lsst/afw/coord/coordLib.i"
-%import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions
 
 %include "ndarray.i"
 
@@ -116,30 +101,6 @@ namespace boost {
 %declareNumPyConverters(ndarray::Array<double const,2,1>);
 
 %lsst_exceptions();
-
-/******************************************************************************/
-
-%template(pairIntInt)       std::pair<int, int>;
-%template(pairIntDouble)    std::pair<int, double>;
-%template(pairDoubleInt)    std::pair<double, int>;
-%template(pairDoubleDouble) std::pair<double, double>;
-%template(mapStringInt)     std::map<std::string, int>;
-
-%define %defineClone(PY_TYPE, TYPE, PIXEL_TYPES...)
-%extend TYPE<PIXEL_TYPES> {
-    %pythoncode {
-    def clone(self):
-        """Return a deep copy of self"""
-        return PY_TYPE(self, True)
-    #
-    # Call our ctor with the provided arguments
-    #
-    def Factory(self, *args):
-        """Return an object of this type"""
-        return PY_TYPE(*args)
-    }
-}
-%enddef
 
 /************************************************************************************************************/
 
@@ -200,70 +161,12 @@ namespace boost {
         return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1))
 }
 
-%define %supportSlicing(TYPE, PIXEL_TYPES...)
-%extend TYPE<PIXEL_TYPES> {
-    %pythoncode {
-    #
-    # Support image slicing
-    #
-    def __getitem__(self, imageSlice):
-        """
-        __getitem__(self, imageSlice) -> NAME""" + """PIXEL_TYPES
-        """
-        return self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
-
-    def __setitem__(self, imageSlice, rhs):
-        """
-        __setitem__(self, imageSlice, value)
-        """
-        lhs = self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
-        try:
-            lhs <<= rhs
-        except TypeError:
-            lhs.set(rhs)
-
-    def __float__(self):
-        """Convert a 1x1 image to a floating scalar"""
-        if self.getDimensions() != lsst.afw.geom.geomLib.Extent2I(1, 1):
-            raise TypeError("Only single-pixel images may be converted to python scalars")
-
-        try:
-            return float(self.get(0, 0))
-        except AttributeError:
-            raise TypeError("Unable to extract a single pixel for type %s" % "TYPE")
-        except TypeError:
-            raise TypeError("Unable to convert a %s<%s> pixel to a scalar" % ("TYPE", "PIXEL_TYPES"))
-
-    def __int__(self):
-        """Convert a 1x1 image to a integral scalar"""
-        return int(float(self))
-    }
-}
-
-%enddef
-
-/************************************************************************************************************/
-// Images, Masks, and MaskedImages
-%include "lsst/afw/image/LsstImageTypes.h"
-
-%ignore lsst::afw::image::Filter::operator int;
-%include "lsst/afw/image/Filter.h"
-
-#if defined(IMPORT_FUNCTION_I)
-%{
-#include "lsst/afw/math.h"
-%}
-%import "lsst/afw/math/function.i"
-#undef IMPORT_FUNCTION_I
-#endif
-
 %include "image.i"
 %include "ImagePca.i"
 %include "Utils.i"
 %include "mask.i"
 %include "maskedImage.i"
 %include "imageSlice.i"
-
 
 %apply double &OUTPUT { double & };
 %rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
@@ -280,8 +183,6 @@ namespace boost {
 %import "lsst/afw/cameraGeom/cameraGeomLib.i"
 #endif
 
-%include "lsst/afw/image/Wcs.i"
-%include "lsst/afw/image/TanWcs.i"
 %include "lsst/afw/image/Color.h"
 %include "lsst/afw/image/Defect.i"
 %include "lsst/afw/image/Exposure.i"
