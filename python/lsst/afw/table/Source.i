@@ -38,7 +38,7 @@
 // Footprints or HeavyFootprints.  (We get an assert(own) failure from swig --
 // something about how it handles ownership of shared ptrs.)  We
 // can't just pull in detectionLib.i because it depends on Source.i
-%import "lsst/afw/detection/footprints.i"
+%import "lsst/afw/detection/Footprint.i"
 
 // Need to know about Wcs for SourceRecord::updateCoord
 %import "lsst/afw/image/Wcs.i"

@@ -38,7 +38,7 @@
 
 %import "lsst/afw/image/Wcs.i"
 %import "lsst/afw/image/Calib.i"
-%import "lsst/afw/detection/psf.i"
+%import "lsst/afw/detection/Psf.i"
 
 // =============== ExposureTable and ExposureRecord =========================================================
 
