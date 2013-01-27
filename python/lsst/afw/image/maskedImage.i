@@ -21,6 +21,8 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+
+%module(package="lsst.afw.image") imageLib
  
 %{
 #   include "lsst/afw/image/MaskedImage.h"

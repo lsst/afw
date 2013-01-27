@@ -22,6 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%module(package="lsst.afw.image") imageLib
+
 %include "lsst/base.h"
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/pex/policy/policyLib.i"
