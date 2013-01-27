@@ -37,15 +37,21 @@ Basic routines to talk to ds9
 #   include "lsst/pex/policy.h"
 #   include "lsst/pex/logging.h"
 #   include "lsst/afw/geom.h"
-#   include "lsst/afw/cameraGeom.h"
-#   include "lsst/afw/image.h"
+#   include "lsst/afw/image/Image.h"
+#   include "lsst/afw/image/Mask.h"
+#   include "lsst/afw/image/MaskedImage.h"
+#   include "lsst/afw/image/Wcs.h"
+#   include "lsst/afw/fits.h"
 
 #   include "simpleFits.h"
 %}
 
 %include "lsst/p_lsstSwig.i"
 
-%import "lsst/afw/image/imageLib.i"
+%import "lsst/afw/image/image.i"
+%import "lsst/afw/image/mask.i"
+%import "lsst/afw/image/maskedImage.i"
+%import "lsst/afw/image/Wcs.i"
 
 %lsst_exceptions();
 
