@@ -43,7 +43,9 @@ Python interface to lsst::afw::math::detail classes and functions
 
 %include "lsst/p_lsstSwig.i"
 
-%import "lsst/afw/image/imageLib.i"
+%import "lsst/afw/image/image.i"
+%import "lsst/afw/image/mask.i"
+%import "lsst/afw/image/maskedImage.i"
 %import "lsst/afw/math/mathLib.i"
 
 %lsst_exceptions();
