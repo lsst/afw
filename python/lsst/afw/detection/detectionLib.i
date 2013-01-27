@@ -76,6 +76,7 @@ Python interface to lsst::afw::detection classes
 
 %include "Footprint.i"
 %include "Psf.i"
+%include "DoubleGaussianPsf.i"
 %include "FootprintSet.i"
 
 %pythoncode %{
