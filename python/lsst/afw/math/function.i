@@ -33,13 +33,13 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 %}
 
-%import "lsst/afw/table/io/ioLib.i"
+%import "lsst/afw/table/io/Persistable.i"
 
 // Must be used before %include
-%define %baseFunctionPtrs(CTYPE)
-%shared_ptr(lsst::afw::math::Function<CTYPE>);
-%shared_ptr(lsst::afw::math::Function1<CTYPE>);
-%shared_ptr(lsst::afw::math::Function2<CTYPE>);
+%define %baseFunctionPtrs(TYPE, CTYPE)
+%declareTablePersistable(Function##TYPE, lsst::afw::math::Function<CTYPE>);
+%declareTablePersistable(Function1##TYPE, lsst::afw::math::Function1<CTYPE>);
+%declareTablePersistable(Function2##TYPE, lsst::afw::math::Function2<CTYPE>);
 %shared_ptr(lsst::afw::math::BasePolynomialFunction2<CTYPE>);
 %enddef
 
@@ -52,9 +52,6 @@
 %template(Function##TYPE) lsst::afw::math::Function<CTYPE>;
 %template(Function1##TYPE) lsst::afw::math::Function1<CTYPE>;
 %template(Function2##TYPE) lsst::afw::math::Function2<CTYPE>;
-%declareTablePersistable(Function##TYPE, lsst::afw::math::Function<CTYPE>);
-%declareTablePersistable(Function1##TYPE, lsst::afw::math::Function1<CTYPE>);
-%declareTablePersistable(Function2##TYPE, lsst::afw::math::Function2<CTYPE>);
 %template(BasePolynomialFunction2##TYPE) lsst::afw::math::BasePolynomialFunction2<CTYPE>;
 %enddef
 
@@ -64,46 +61,46 @@
 //
 // Macros to define float or double versions of things
 //
-%define %definePointers(TYPE)
+%define %definePointers(TYPE, CTYPE)
     // Must be called BEFORE %include
-    %baseFunctionPtrs(TYPE);
+    %baseFunctionPtrs(TYPE, CTYPE);
 
-    %functionPtr(Chebyshev1Function, 1, TYPE);
-    %functionPtr(Chebyshev1Function, 2, TYPE);
-    %functionPtr(DoubleGaussianFunction, 2, TYPE);
-    %functionPtr(GaussianFunction, 1, TYPE);
-    %functionPtr(GaussianFunction, 2, TYPE);
-    %functionPtr(IntegerDeltaFunction, 2, TYPE);
-    %functionPtr(LanczosFunction, 1, TYPE);
-    %functionPtr(LanczosFunction, 2, TYPE);
-    %functionPtr(NullFunction, 1, TYPE);
-    %functionPtr(NullFunction, 2, TYPE);
-    %functionPtr(PolynomialFunction, 1, TYPE);
-    %functionPtr(PolynomialFunction, 2, TYPE);
+    %functionPtr(Chebyshev1Function, 1, CTYPE);
+    %functionPtr(Chebyshev1Function, 2, CTYPE);
+    %functionPtr(DoubleGaussianFunction, 2, CTYPE);
+    %functionPtr(GaussianFunction, 1, CTYPE);
+    %functionPtr(GaussianFunction, 2, CTYPE);
+    %functionPtr(IntegerDeltaFunction, 2, CTYPE);
+    %functionPtr(LanczosFunction, 1, CTYPE);
+    %functionPtr(LanczosFunction, 2, CTYPE);
+    %functionPtr(NullFunction, 1, CTYPE);
+    %functionPtr(NullFunction, 2, CTYPE);
+    %functionPtr(PolynomialFunction, 1, CTYPE);
+    %functionPtr(PolynomialFunction, 2, CTYPE);
 %enddef
 
-%define %defineTemplates(NAME, TYPE)
+%define %defineTemplates(TYPE, CTYPE)
     // Must be called AFTER %include
-    %baseFunctions(NAME, TYPE);
+    %baseFunctions(TYPE, CTYPE);
 
-    %function(Chebyshev1Function, 1, NAME, TYPE);
-    %function(Chebyshev1Function, 2, NAME, TYPE);
-    %function(DoubleGaussianFunction, 2, NAME, TYPE);
-    %function(GaussianFunction, 1, NAME, TYPE);
-    %function(GaussianFunction, 2, NAME, TYPE);
-    %function(IntegerDeltaFunction, 2, NAME, TYPE);
-    %function(LanczosFunction, 1, NAME, TYPE);
-    %function(LanczosFunction, 2, NAME, TYPE);
-    %function(NullFunction, 1, NAME, TYPE);
-    %function(NullFunction, 2, NAME, TYPE);
-    %function(PolynomialFunction, 1, NAME, TYPE);
-    %function(PolynomialFunction, 2, NAME, TYPE);
+    %function(Chebyshev1Function, 1, TYPE, CTYPE);
+    %function(Chebyshev1Function, 2, TYPE, CTYPE);
+    %function(DoubleGaussianFunction, 2, TYPE, CTYPE);
+    %function(GaussianFunction, 1, TYPE, CTYPE);
+    %function(GaussianFunction, 2, TYPE, CTYPE);
+    %function(IntegerDeltaFunction, 2, TYPE, CTYPE);
+    %function(LanczosFunction, 1, TYPE, CTYPE);
+    %function(LanczosFunction, 2, TYPE, CTYPE);
+    %function(NullFunction, 1, TYPE, CTYPE);
+    %function(NullFunction, 2, TYPE, CTYPE);
+    %function(PolynomialFunction, 1, TYPE, CTYPE);
+    %function(PolynomialFunction, 2, TYPE, CTYPE);
 %enddef
 
 /************************************************************************************************************/
 
-%definePointers(double);
-%definePointers(float);
+%definePointers(D, double);
+%definePointers(F, float);
 
 %include "lsst/afw/math/Function.h"
 %include "lsst/afw/math/FunctionLibrary.h"

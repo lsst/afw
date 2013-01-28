@@ -31,7 +31,7 @@
 %include "std_complex.i"
 %include "../boost_picklable.i"
 
-%import "lsst/afw/table/io/ioLib.i"
+%import "lsst/afw/table/io/Persistable.i"
 
 //
 // Kernel classes (every template of a class must have a unique name)
