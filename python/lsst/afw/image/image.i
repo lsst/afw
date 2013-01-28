@@ -26,7 +26,6 @@
 
 %include "lsst/base.h"
 %import "lsst/daf/base/baseLib.i"
-%import "lsst/pex/policy/policyLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions
 
@@ -35,9 +34,6 @@ namespace boost {
 }
 
 %include "lsst/afw/image/LsstImageTypes.h"
-
-%ignore lsst::afw::image::Filter::operator int;
-%include "lsst/afw/image/Filter.h"
 
 %{
 #include "lsst/afw/image/Image.h"
