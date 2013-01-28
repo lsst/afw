@@ -79,7 +79,7 @@ public:
     typedef boost::shared_ptr<XYTransformFromWcsPair const> ConstPtr;
     typedef lsst::afw::image::Wcs Wcs;
 
-    XYTransformFromWcsPair(Wcs::Ptr dst, Wcs::Ptr src);
+    XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src);
     virtual ~XYTransformFromWcsPair() { }
 
     virtual PTR(XYTransform) invert() const;
@@ -90,8 +90,8 @@ public:
     virtual Point2D reverseTransform(Point2D const &pixel) const;
     
 protected:
-    Wcs::Ptr _dst;
-    Wcs::Ptr _src;
+    CONST_PTR(Wcs) _dst;
+    CONST_PTR(Wcs) _src;
 };  
 
 
