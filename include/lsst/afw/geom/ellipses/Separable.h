@@ -36,6 +36,11 @@
 #include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
+#include "lsst/afw/geom/ellipses/radii.h"
+#include "lsst/afw/geom/ellipses/Distortion.h"
+#include "lsst/afw/geom/ellipses/ConformalShear.h"
+#include "lsst/afw/geom/ellipses/ReducedShear.h"
+
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
@@ -145,6 +150,21 @@ private:
     Ellipticity _ellipticity;
     Radius _radius;
 };
+
+typedef Separable<Distortion,DeterminantRadius> SeparableDistortionDeterminantRadius;
+typedef Separable<Distortion,TraceRadius> SeparableDistortionTraceRadius;
+typedef Separable<Distortion,LogDeterminantRadius> SeparableDistortionLogDeterminantRadius;
+typedef Separable<Distortion,LogTraceRadius> SeparableDistortionLogTraceRadius;
+
+typedef Separable<ConformalShear,DeterminantRadius> SeparableConformalShearDeterminantRadius;
+typedef Separable<ConformalShear,TraceRadius> SeparableConformalShearTraceRadius;
+typedef Separable<ConformalShear,LogDeterminantRadius> SeparableConformalShearLogDeterminantRadius;
+typedef Separable<ConformalShear,LogTraceRadius> SeparableConformalShearLogTraceRadius;
+
+typedef Separable<ReducedShear,DeterminantRadius> SeparableReducedShearDeterminantRadius;
+typedef Separable<ReducedShear,TraceRadius> SeparableReducedShearTraceRadius;
+typedef Separable<ReducedShear,LogDeterminantRadius> SeparableReducedShearLogDeterminantRadius;
+typedef Separable<ReducedShear,LogTraceRadius> SeparableReducedShearLogTraceRadius;
 
 }}}} // namespace lsst::afw::geom::ellipses
 
