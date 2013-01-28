@@ -27,7 +27,6 @@
 %include "lsst/base.h"
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/pex/policy/policyLib.i"
-%import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions
 

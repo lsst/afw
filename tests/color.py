@@ -302,7 +302,7 @@ class FilterTestCase(unittest.TestCase):
         return afwImage.FilterProperty(name, lambdaEff, force);
 
     def testListFilters(self):
-        self.assertEqual(afwImage.Filter_getNames(), self.filters)
+        self.assertEqual(tuple(afwImage.Filter_getNames()), self.filters)
 
     def testCtor(self):
         """Test that we can construct a Filter"""
