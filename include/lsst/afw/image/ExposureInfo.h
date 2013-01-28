@@ -28,15 +28,20 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 
 namespace lsst { namespace afw {
 
 namespace cameraGeom {
-    class Detector;
+class Detector;
 }
 
 namespace detection {
-    class Psf;
+class Psf;
+}
+
+namespace fits {
+class Fits;
 }
 
 namespace image {
@@ -153,21 +158,61 @@ public:
     // Destructor defined in source file because we need access to destructors of forward-declared components
     ~ExposureInfo();
 
+private:
+
+    template <typename ImageT, typename MaskT, typename VarianceT> friend class Exposure;
+
     /**
-     *  @brief Generate the metadata that saves some components of the ExposureInfo to a FITS header.
+     *  @brief A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
      *
-     *  FITS persistence is separated into getFitsMetadata() and writeFits() so that
-     *  the Primary FITS header can be at least mostly written before the main image HDUs
-     *  are written, while the additional ExposureInfo HDUs are written afterwards. This
-     *  is desirable in order to reduce the chance that we'll have to shift the images on
-     *  disk in order to make space for addition header entries.
+     *  FITS has to start with ExposureInfo (for header info), then go to Exposure (to write the templated
+     *  MaskedImage), and then go back to ExposureInfo (for table-persisted Psf and Wcs), and this
+     *  struct is used to allow data to be passed from step 1 to step 3.
+     */
+    struct FitsWriteData {
+        PTR(daf::base::PropertyList) metadata;
+        PTR(daf::base::PropertyList) imageMetadata;
+        PTR(daf::base::PropertyList) maskMetadata;
+        PTR(daf::base::PropertyList) varianceMetadata;
+        table::io::OutputArchive archive;
+    };
+
+    /**
+     *  @brief Start the process of writing an exposure to FITS.
      *
      *  @param[in]  xy0   The origin of the exposure associated with this object, used to
      *                    install a linear offset-only WCS in the FITS header.
+     *
+     *  @sa FitsWriteData
      */
-    PTR(daf::base::PropertySet) getFitsMetadata(geom::Point2I const & xy0=geom::Point2I()) const;
+    FitsWriteData _startWriteFits(geom::Point2I const & xy0=geom::Point2I()) const;
 
-private:
+    /**
+     *  @brief Write any additional non-image HDUs to a FITS file.
+     *
+     *  @param[in]  fitsfile   Open FITS object to write to.  Does not need to be positioned to any
+     *                         particular HDU.
+     *
+     *  The additional HDUs will be appended to the FITS file, and should line up with the HDU index
+     *  keys included in the result of getFitsMetadata() if this is called after writing the
+     *  MaskedImage HDUs.
+     *
+     *  @sa FitsWriteData
+     */
+    void _finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const;
+
+    /**
+     *  @brief Read from a FITS file and metadata.
+     *
+     *  This operates in-place on this instead of returning a new object, because it will usually
+     *  only be called by the exposure constructor, which starts by default-constructing the
+     *  ExposureInfo.
+     */
+    void _readFits(
+        fits::Fits & fitsfile,
+        PTR(daf::base::PropertySet) metadata,
+        PTR(daf::base::PropertySet) imageMetadata
+    );
 
     static PTR(detection::Psf) _clonePsf(CONST_PTR(detection::Psf) psf);
     static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
