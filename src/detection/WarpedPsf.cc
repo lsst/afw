@@ -91,9 +91,9 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
 // -------------------------------------------------------------------------------------------------
 
 
-WarpedPsf::WarpedPsf(Psf::Ptr undistorted_psf, CONST_PTR(XYTransform) distortion)
+WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion)
 {
-    _detector = undistorted_psf->getDetector();
+    // _detector = undistorted_psf->getDetector();
     _undistorted_psf = undistorted_psf;
     _distortion = distortion;
 }
@@ -148,7 +148,7 @@ Psf::Image::Ptr WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color con
     afwGeom::AffineTransform t = _distortion->linearizeReverseTransform(p);
     Point2D tp = t(p);
 
-    Kernel::Ptr k = _undistorted_psf->getLocalKernel(tp, c);
+    CONST_PTR(Kernel) k = _undistorted_psf->getLocalKernel(tp, c);
     if (!k) {
 	throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "undistored psf failed to return local kernel");
     }
