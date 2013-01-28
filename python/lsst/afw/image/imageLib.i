@@ -175,6 +175,7 @@ Basic routines to talk to lsst::afw::image classes
 %clear double &OUTPUT;
 
 %include "lsst/afw/image/ImageUtils.h"
+%include "lsst/afw/image/Filter.i"
 
 %include "lsst/afw/image/Wcs.i"
 %include "lsst/afw/image/TanWcs.i"

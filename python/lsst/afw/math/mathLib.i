@@ -64,6 +64,7 @@ Python interface to lsst::afw::math classes
 %template(vectorVectorD) std::vector<std::vector<double> >;
 %template(vectorVectorI) std::vector<std::vector<int> >;
 
+%import "lsst/pex/policy/policyLib.i"
 %import "lsst/afw/image/image.i"
 %import "lsst/afw/image/mask.i"
 %import "lsst/afw/image/maskedImage.i"
