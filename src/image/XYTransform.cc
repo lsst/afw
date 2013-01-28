@@ -92,7 +92,7 @@ PTR(XYTransform) XYTransform::invert() const
 // XYTransformFromWcsPair
 
 
-XYTransformFromWcsPair::XYTransformFromWcsPair(Wcs::Ptr dst, Wcs::Ptr src)
+XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
     : XYTransform(), _dst(dst), _src(src)
 { }
 
