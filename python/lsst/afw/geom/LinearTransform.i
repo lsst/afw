@@ -26,8 +26,6 @@
 #include "lsst/afw/geom/LinearTransform.h"
 %}
 
-%shared_ptr(lsst::afw::geom::LinearTransform);
-
 %rename(__mul__) lsst::afw::geom::LinearTransform::operator*;
 %ignore lsst::afw::geom::LinearTransform::operator[];
 %ignore lsst::afw::geom::LinearTransform::dTransform;
