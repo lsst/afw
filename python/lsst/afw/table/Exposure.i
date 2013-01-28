@@ -30,14 +30,21 @@
 
 %{
 #include "lsst/afw/table/Exposure.h"
-#include "lsst/afw/image/Wcs.h"
-#include "lsst/afw/image/Calib.h"
-#include "lsst/afw/detection/Psf.h"
 %}
 
-%import "lsst/afw/image/Wcs.i"
-%import "lsst/afw/image/Calib.i"
-%import "lsst/afw/detection/Psf.i"
+namespace lsst { namespace afw {
+namespace image {
+class Wcs;
+class Calib;
+} // namespace image
+namespace detection {
+class Psf;
+} // namespace detection
+}} // namespace lsst::afw
+
+%shared_ptr(lsst::afw::image::Wcs);
+%shared_ptr(lsst::afw::image::Calib);
+%shared_ptr(lsst::afw::detection::Psf);
 
 // =============== ExposureTable and ExposureRecord =========================================================
 
