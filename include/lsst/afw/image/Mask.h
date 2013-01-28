@@ -42,7 +42,6 @@
 #include "lsst/daf/base/Persistable.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 

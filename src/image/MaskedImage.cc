@@ -33,7 +33,7 @@
 #include "boost/lambda/lambda.hpp"
 #pragma clang diagnostic pop
 #include "boost/regex.hpp"
-#include "boost/filesystem/path.hpp"
+#include "boost/filesystem.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string/trim.hpp"
