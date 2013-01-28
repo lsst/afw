@@ -26,6 +26,11 @@
 #include "lsst/afw/cameraGeom/Amp.h"
 %}
 
+namespace lsst { namespace afw { namespace image {
+class Wcs;
+}}} // namespace lsst::afw::image
+%shared_ptr(lsst::afw::image::Wcs);
+
 %include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
 
 %include "lsst/afw/cameraGeom/Amp.h"

@@ -27,6 +27,7 @@
 %}
 
 %include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
+%include "lsst/afw/utils.i" // for %definePythonIterator
 
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
 
