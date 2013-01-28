@@ -19,14 +19,12 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%module(package="lsst.afw.geom") geomLib
 
 %{
 #include "lsst/afw/geom/AffineTransform.h"
 %}
-
-%declareNumPyConverters(lsst::afw::geom::AffineTransform::ParameterVector);
-%declareNumPyConverters(lsst::afw::geom::AffineTransform::Matrix);
 
 %shared_ptr(lsst::afw::geom::AffineTransform);
 

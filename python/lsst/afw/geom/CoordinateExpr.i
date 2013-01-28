@@ -20,6 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%module(package="lsst.afw.geom") geomLib
 %include "CoordinateBase.i"
 
 %{
