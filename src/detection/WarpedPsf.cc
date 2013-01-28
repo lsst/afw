@@ -91,8 +91,9 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
 // -------------------------------------------------------------------------------------------------
 
 
-WarpedPsf::WarpedPsf(Psf::Ptr undistorted_psf, XYTransform::Ptr distortion)
+WarpedPsf::WarpedPsf(Psf::Ptr undistorted_psf, CONST_PTR(XYTransform) distortion)
 {
+    _detector = undistorted_psf->getDetector();
     _undistorted_psf = undistorted_psf;
     _distortion = distortion;
 }
