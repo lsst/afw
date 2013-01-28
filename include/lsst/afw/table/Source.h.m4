@@ -223,8 +223,8 @@ public:
 
     typedef SourceTable Table;
     typedef SourceColumnViewT<SourceRecord> ColumnView;
-    typedef SimpleCatalogT<SourceRecord> Catalog;
-    typedef SimpleCatalogT<SourceRecord const> ConstCatalog;
+    typedef SortedCatalogT<SourceRecord> Catalog;
+    typedef SortedCatalogT<SourceRecord const> ConstCatalog;
 
     PTR(Footprint) getFootprint() const { return _footprint; }
 
@@ -288,8 +288,8 @@ public:
 
     typedef SourceRecord Record;
     typedef SourceColumnViewT<SourceRecord> ColumnView;
-    typedef SimpleCatalogT<Record> Catalog;
-    typedef SimpleCatalogT<Record const> ConstCatalog;
+    typedef SortedCatalogT<Record> Catalog;
+    typedef SortedCatalogT<Record const> ConstCatalog;
 
     /**
      *  @brief Construct a new table.
@@ -388,7 +388,7 @@ private:
     friend class io::FitsWriter;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
 
     boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux; // aliases for flux measurements
     KeyTuple<Centroid> _slotCentroid;  // alias for a centroid measurement
@@ -451,8 +451,8 @@ typedef SourceColumnViewT<SourceRecord> SourceColumnView;
 
 #ifndef SWIG
 
-typedef SimpleCatalogT<SourceRecord> SourceCatalog;
-typedef SimpleCatalogT<SourceRecord const> ConstSourceCatalog;
+typedef SortedCatalogT<SourceRecord> SourceCatalog;
+typedef SortedCatalogT<SourceRecord const> ConstSourceCatalog;
 
 DEFINE_FLUX_GETTERS(`Psf')
 DEFINE_FLUX_GETTERS(`Model')

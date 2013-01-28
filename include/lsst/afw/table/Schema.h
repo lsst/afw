@@ -208,6 +208,15 @@ public:
      */
     int contains(Schema const & other, int flags=EQUAL_KEYS) const;
 
+    /**
+     *  @brief Return true if the given item is in this schema.
+     *
+     *  The flags must include the EQUAL_KEYS bit, and if the item cannot be found by key no bits
+     *  will be set on return.
+     */
+    template <typename T>
+    int contains(SchemaItem<T> const & item, int flags=EQUAL_KEYS) const;
+
     /// @brief Construct an empty Schema.
     explicit Schema();
 
