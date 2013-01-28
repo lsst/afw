@@ -26,8 +26,7 @@
 #include "lsst/afw/cameraGeom/FpPoint.h"
 %}
 
-%import "lsst/afw/geom/Point.i"
-%import "lsst/afw/geom/Extent.i"
+%import "lsst/afw/geom/geom_fwd.i"
 
 %include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
 
