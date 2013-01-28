@@ -26,8 +26,10 @@
 
 %{
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/coord/Coord.h"
 %}
 
+%import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/table/io/Persistable.i"
 
 %declareTablePersistable(Wcs, lsst::afw::image::Wcs);
