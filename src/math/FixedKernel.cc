@@ -36,6 +36,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelSchema.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
@@ -143,3 +144,70 @@ std::string afwMath::FixedKernel::toString(std::string const& prefix) const {
     os << Kernel::toString(prefix + "\t");
     return os.str();
 }
+
+// ------ Persistence ---------------------------------------------------------------------------------------
+
+namespace lsst { namespace afw { namespace math {
+
+namespace {
+
+struct FixedKernelSchema : public Kernel::KernelSchema {
+    table::Key< table::Array<Kernel::Pixel> > image;
+
+    explicit FixedKernelSchema(geom::Extent2I const & dimensions) :
+        Kernel::KernelSchema(0),
+        image(
+            schema.addField< table::Array<Kernel::Pixel> >(
+                "image", "pixel values (row-major)", dimensions.getX() * dimensions.getY()
+            )
+        )
+    {}
+
+    explicit FixedKernelSchema(table::Schema const & schema_) :
+        Kernel::KernelSchema(schema_),
+        image(schema["image"])
+    {}
+};
+
+} // anonymous
+
+class FixedKernel::Factory : public afw::table::io::PersistableFactory {
+public:
+
+    virtual PTR(afw::table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        FixedKernelSchema const keys(catalogs.front().getSchema());
+        afw::table::BaseRecord const & record = catalogs.front().front();
+        geom::Extent2I dimensions(record.get(keys.dimensions));
+        geom::Point2I center(record.get(keys.center));
+        image::Image<Pixel> image(dimensions);
+        ndarray::flatten<1>(
+            ndarray::static_dimension_cast<2>(image.getArray())
+        ) = record[keys.image];
+        PTR(FixedKernel) result = boost::make_shared<FixedKernel>(image);
+        result->setCtr(center);
+        return result;
+    }
+
+    explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
+};
+
+namespace {
+
+std::string getFixedKernelPersistenceName() { return "FixedKernel"; }
+
+FixedKernel::Factory registration(getFixedKernelPersistenceName());
+
+} // anonymous
+
+std::string FixedKernel::getPersistenceName() const { return getFixedKernelPersistenceName(); }
+
+void FixedKernel::write(OutputArchiveHandle & handle) const {
+    FixedKernelSchema const keys(getDimensions());
+    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    (*record)[keys.image] = ndarray::flatten<1>(ndarray::copy(_image.getArray()));
+}
+
+}}} // namespace lsst::afw::math

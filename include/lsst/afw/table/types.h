@@ -32,17 +32,17 @@
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Arrays types: the types we allow for Array fields.
-#define AFW_TABLE_ARRAY_FIELD_TYPE_N 2
+#define AFW_TABLE_ARRAY_FIELD_TYPE_N 3
 #define AFW_TABLE_ARRAY_FIELD_TYPES             \
-    float, double
+    int, float, double
 #define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Field types: all the types we allow for fields.
-#define AFW_TABLE_FIELD_TYPE_N 18
+#define AFW_TABLE_FIELD_TYPE_N 19
 #define AFW_TABLE_FIELD_TYPES                                   \
     AFW_TABLE_SCALAR_FIELD_TYPES,                               \
     Flag, Coord, std::string,                                   \
-    Array<float>, Array<double>,                                \
+    Array<int>, Array<float>, Array<double>,                    \
     Point<int>, Point<float>, Point<double>,                    \
     Moments<float>, Moments<double>,                            \
     Covariance<float>,                      \

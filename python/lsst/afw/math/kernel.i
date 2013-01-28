@@ -31,13 +31,15 @@
 %include "std_complex.i"
 %include "../boost_picklable.i"
 
+%import "lsst/afw/table/io/ioLib.i"
+
 //
 // Kernel classes (every template of a class must have a unique name)
 //
 // These definitions must go Before you include Kernel.h; the %templates must go After
 //
 %define %kernelPtr(TYPE...)
-%shared_ptr(lsst::afw::math::TYPE);
+%declareTablePersistable(TYPE, lsst::afw::math::TYPE)
 %lsst_persistable(lsst::afw::math::TYPE)
 %boost_picklable(lsst::afw::math::TYPE)
 %enddef
