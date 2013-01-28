@@ -20,17 +20,11 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%module(package="lsst.afw.geom") geomLib
+
 %{
 #include "lsst/afw/geom/LinearTransform.h"
 %}
-
-%include "ndarray.i"
-
-%declareNumPyConverters(lsst::afw::geom::LinearTransform::ParameterVector);
-%declareNumPyConverters(lsst::afw::geom::LinearTransform::Matrix);
-%declareNumPyConverters(Eigen::Vector2d);
-%declareNumPyConverters(Eigen::Matrix2d);
-%declareNumPyConverters(Eigen::Matrix3d);
 
 %shared_ptr(lsst::afw::geom::LinearTransform);
 

@@ -19,7 +19,9 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%module(package="lsst.afw.geom") geomLib
+%include "CoordinateBase.i"
 
 %{
 #include "lsst/afw/geom/Extent.h"
