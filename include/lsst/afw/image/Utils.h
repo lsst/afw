@@ -40,11 +40,10 @@
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
 
-#include "lsst/afw/image/lsstGil.h"
+#include "lsst/base.h"
 #include "lsst/daf/base.h"
-#include "lsst/daf/base/Citizen.h"
-#include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
+#include "lsst/afw/image/lsstGil.h"
+
 
 namespace lsst { namespace afw { namespace image {
 

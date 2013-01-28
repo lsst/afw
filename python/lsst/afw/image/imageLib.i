@@ -52,6 +52,8 @@ Basic routines to talk to lsst::afw::image classes
 #include "ndarray/swig.h"
 #include "ndarray/swig/eigen.h"
 
+// Needed for %boost_picklable macro
+#include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"

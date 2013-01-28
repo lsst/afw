@@ -41,7 +41,6 @@
 
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"
-#include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 

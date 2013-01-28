@@ -46,6 +46,7 @@
 #include <lsst/daf/persistence/Formatter.h>
 #include <lsst/daf/persistence/Storage.h>
 #include <lsst/pex/policy/Policy.h>
+#include "lsst/afw/formatters/ImageFormatter.h"
 
 namespace lsst {
 namespace afw {
