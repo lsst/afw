@@ -26,10 +26,13 @@
 
 %{
 #include "lsst/afw/cameraGeom/Distortion.h"
-#include "lsst/afw/geom/ellipses.h"
 %}
 
-%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
+class Quadrupole;
+}}}} // namespace lsst::afw::geom::ellipses
+
+%shared_ptr(lsst::afw::geom::ellipses::Quadrupole);
 
 %include "lsst/afw/cameraGeom/Distortion.h"
 
