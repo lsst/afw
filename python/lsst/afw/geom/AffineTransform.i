@@ -26,8 +26,6 @@
 #include "lsst/afw/geom/AffineTransform.h"
 %}
 
-%shared_ptr(lsst::afw::geom::AffineTransform);
-
 %rename(__mul__) lsst::afw::geom::AffineTransform::operator*;
 %ignore lsst::afw::geom::AffineTransform::operator[];
 %ignore lsst::afw::geom::AffineTransform::dTransform;
