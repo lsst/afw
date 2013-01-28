@@ -46,7 +46,7 @@ public:
     // If p is the nominal pixel position, and p' is the true position on the sky, then our
     // convention for the transform is that p' = distortion.forwardTransform(p)
     //
-    WarpedPsf(Psf::Ptr undistorted_psf, CONST_PTR(XYTransform) distortion);
+    WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion);
 
 protected:
     //
@@ -78,7 +78,7 @@ protected:
     }
 
 protected:
-    Psf::Ptr _undistorted_psf;
+    CONST_PTR(Psf) _undistorted_psf;
     CONST_PTR(XYTransform) _distortion;
 
     Kernel::Ptr _doGetLocalKernel(Point2D const &p, Color const &c) const;
