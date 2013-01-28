@@ -119,6 +119,12 @@ public:
      *  part of the API; this is merely an optimization enabled by the implementation.
      */
     EigenVector const & asEigen() const { return _vector; }
+
+    /// \brief Return a std::pair representation of the coordinate object.
+    std::pair<T,T> asPair() const { return std::make_pair(_vector.x(),_vector.y()); }
+
+    /// \brief Return a boost::tuple representation of the coordinate object.
+    boost::tuple<T,T> asTuple() const { return boost::make_tuple(_vector.x(),_vector.y()); }
 #endif
 
     T const & getX() const { return _vector.x(); }
@@ -127,12 +133,6 @@ public:
     T & getY() { return _vector.y(); }
     void setX(T x) { _vector.x() = x; }
     void setY(T y) { _vector.y() = y; }
-
-    /// \brief Return a std::pair representation of the coordinate object.
-    std::pair<T,T> asPair() const { return std::make_pair(_vector.x(),_vector.y()); }
-
-    /// \brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T> asTuple() const { return boost::make_tuple(_vector.x(),_vector.y()); }
 
 protected:
 
@@ -168,6 +168,11 @@ public:
      */
     EigenVector const & asEigen() const { return _vector; }
 
+    /// \brief Return a boost::tuple representation of the coordinate object.
+    boost::tuple<T,T,T> asTuple() const {
+        return boost::make_tuple(_vector.x(), _vector.y(), _vector.z()); 
+    }
+
 #endif
 
     T const & getX() const { return _vector.x(); }
@@ -179,11 +184,6 @@ public:
     void setX(T x) { _vector.x() = x; }
     void setY(T y) { _vector.y() = y; }
     void setZ(T z) { _vector.z() = z; }
-
-    /// \brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T,T> asTuple() const {
-        return boost::make_tuple(_vector.x(), _vector.y(), _vector.z()); 
-    }
 
 protected:
 

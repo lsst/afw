@@ -22,8 +22,11 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.geom") geomLib
+%include "lsst/afw/geom/geom_fwd.i"
+
+%lsst_exceptions();
+
+//----- NumPy typemaps --------------------------------------------------------------------------------------
 
 %{
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
@@ -35,10 +38,6 @@
 %init %{
     import_array();
 %}
-
-%include "lsst/p_lsstSwig.i"
-
-%lsst_exceptions();
 
 %include "ndarray.i"
 
@@ -54,6 +53,9 @@
 %declareNumPyConverters(lsst::afw::geom::AffineTransform::ParameterVector);
 %declareNumPyConverters(lsst::afw::geom::AffineTransform::Matrix);
 
+//----- Wrapped classes and functions -----------------------------------------------------------------------
+
+%include "CoordinateBase.i"
 %include "CoordinateExpr.i"
 %include "Extent.i"
 %include "Point.i"

@@ -97,8 +97,10 @@ public:
 
     void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
 
+#ifndef SWIG
     /// Stream output; delegates to toString().
     friend std::ostream & operator<<(std::ostream & os, Span const & span) { return os << span.toString(); }
+#endif
 
     bool operator==(Span const & other) const {
         return other.getY() == getY() && other.getMinX() == getMinX() && other.getMaxX() == getMaxX();

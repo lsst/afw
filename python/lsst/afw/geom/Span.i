@@ -22,15 +22,15 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.geom") geomLib
+%include "lsst/afw/geom/geom_fwd.i"
 
 %{
 #include "lsst/afw/geom/Span.h"
 %}
-%shared_ptr(lsst::afw::geom::Span);
 
 %include "lsst/afw/geom/Span.h"
 
+%rename(__str__) lsst::afw::geom::Span::toString;
 %ignore lsst::afw::geom::Span::begin;
 %ignore lsst::afw::geom::Span::end;
 
@@ -54,8 +54,5 @@
     %pythoncode {
     def __len__(self):
         return self.getWidth()
-    def __str__(self):
-        """Print this Span"""
-        return self.toString()
     }
 }
