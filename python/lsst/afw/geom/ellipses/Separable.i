@@ -22,17 +22,16 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%module(package="lsst.afw.geom.ellipses") ellipsesLib
+
 %{
-#include "lsst/afw/geom/ellipses/radii.h"
-#include "lsst/afw/geom/ellipses/ConformalShear.h"
-#include "lsst/afw/geom/ellipses/ReducedShear.h"
-#include "lsst/afw/geom/ellipses/Distortion.h"
 #include "lsst/afw/geom/ellipses/Separable.h"
 %}
 
 %include "std_complex.i"
 
-%declareNumPyConverters(lsst::afw::geom::ellipses::EllipticityBase::Jacobian);
+%ignore operator double const &;
+%ignore operator double &;
 
 %rename(assign) lsst::afw::geom::ellipses::DeterminantRadius::operator=;
 %rename(assign) lsst::afw::geom::ellipses::TraceRadius::operator=;

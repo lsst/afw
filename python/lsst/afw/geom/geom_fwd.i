@@ -21,24 +21,27 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#ifndef LSST_AFW_GEOM_ELLIPSES_H
-#define LSST_AFW_GEOM_ELLIPSES_H
 
-/**
- *  \file
- *  \brief Public header class for ellipse library.
- */
+%module(package="lsst.afw.geom") geomLib
 
-#include "lsst/afw/geom/ellipses/BaseCore.h"
-#include "lsst/afw/geom/ellipses/Ellipse.h"
-#include "lsst/afw/geom/ellipses/Transformer.h"
-#include "lsst/afw/geom/ellipses/Convolution.h"
-#include "lsst/afw/geom/ellipses/GridTransform.h"
-#include "lsst/afw/geom/ellipses/Parametric.h"
-#include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/afw/geom/ellipses/Axes.h"
-#include "lsst/afw/geom/ellipses/Separable.h"
-#include "lsst/afw/geom/ellipses/PixelRegion.h"
+namespace lsst { namespace afw { namespace geom {
+template <typename T, int N> class Point;
+template <typename T, int N> class Extent;
+typedef Point<double,2> Point2D;
+typedef Extent<double,2> Extent2D;
+typedef Point<double,3> Point3D;
+typedef Extent<double,3> Extent3D;
+typedef Point<int,2> Point2I;
+typedef Extent<int,2> Extent2I;
+typedef Point<int,3> Point3I;
+typedef Extent<int,3> Extent3I;
+class Angle;
+class AngleUnit;
+class Span;
+class Box2I;
+class Box2D;
+class LinearTransform;
+class AffineTransform;
+}}} // namespace lsst::afw::geom
 
-#endif // !LSST_AFW_GEOM_ELLIPSES_H
+%shared_ptr(lsst::afw::geom::Span);

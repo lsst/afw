@@ -22,6 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%module(package="lsst.afw.geom.ellipses") ellipsesLib
+
 %{
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 %}

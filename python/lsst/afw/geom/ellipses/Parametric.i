@@ -21,24 +21,11 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#ifndef LSST_AFW_GEOM_ELLIPSES_H
-#define LSST_AFW_GEOM_ELLIPSES_H
 
-/**
- *  \file
- *  \brief Public header class for ellipse library.
- */
+%module(package="lsst.afw.geom.ellipses") ellipsesLib
 
-#include "lsst/afw/geom/ellipses/BaseCore.h"
-#include "lsst/afw/geom/ellipses/Ellipse.h"
-#include "lsst/afw/geom/ellipses/Transformer.h"
-#include "lsst/afw/geom/ellipses/Convolution.h"
-#include "lsst/afw/geom/ellipses/GridTransform.h"
+%{
 #include "lsst/afw/geom/ellipses/Parametric.h"
-#include "lsst/afw/geom/ellipses/Quadrupole.h"
-#include "lsst/afw/geom/ellipses/Axes.h"
-#include "lsst/afw/geom/ellipses/Separable.h"
-#include "lsst/afw/geom/ellipses/PixelRegion.h"
+%}
 
-#endif // !LSST_AFW_GEOM_ELLIPSES_H
+%include "lsst/afw/geom/ellipses/Parametric.h"
