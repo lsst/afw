@@ -26,7 +26,10 @@
 
 %{
 #include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/geom/ellipses.h"
 %}
+
+%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 %include "lsst/afw/cameraGeom/Distortion.h"
 
