@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 
-%module(package="lsst.afw.geom") geomLib
+%include "lsst/afw/geom/geom_fwd.i"
 
 %{
     #include <iostream>

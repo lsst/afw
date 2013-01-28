@@ -22,19 +22,34 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.geom") geomLib
+%define geomLib_DOCSTRING
+"
+Basic geometry classes for Euclidean coordinate systems.
+"
+%enddef
+
+%module(package="lsst.afw.geom", docstring=geomLib_DOCSTRING) geomLib
+
+%include "lsst/p_lsstSwig.i"
 
 namespace lsst { namespace afw { namespace geom {
+
 template <typename T, int N> class Point;
 template <typename T, int N> class Extent;
+
+typedef Point<double,2> PointD;
+typedef Extent<double,2> ExtentD;
 typedef Point<double,2> Point2D;
 typedef Extent<double,2> Extent2D;
 typedef Point<double,3> Point3D;
 typedef Extent<double,3> Extent3D;
+typedef Point<int,2> PointI;
+typedef Extent<int,2> ExtentI;
 typedef Point<int,2> Point2I;
 typedef Extent<int,2> Extent2I;
 typedef Point<int,3> Point3I;
 typedef Extent<int,3> Extent3I;
+
 class Angle;
 class AngleUnit;
 class Span;
@@ -42,6 +57,8 @@ class Box2I;
 class Box2D;
 class LinearTransform;
 class AffineTransform;
+
 }}} // namespace lsst::afw::geom
 
 %shared_ptr(lsst::afw::geom::Span);
+

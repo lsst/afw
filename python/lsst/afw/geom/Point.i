@@ -20,8 +20,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.geom") geomLib
-%include "CoordinateBase.i"
+%include "lsst/afw/geom/geom_fwd.i"
+%include "lsst/afw/geom/CoordinateBase.i"
 
 %{
 #include "lsst/afw/geom/Extent.h"

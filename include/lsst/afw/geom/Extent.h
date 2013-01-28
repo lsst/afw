@@ -242,14 +242,14 @@ public:
     /// @brief Construct from a two-element array.
     explicit Extent(T const xy[2]) : Super(EigenVector(xy[0], xy[1])) {}
 
+#ifndef SWIG
     /// @brief Construct from a std::pair.
     explicit Extent(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
     /// @brief Construct from boost::tuple.
     explicit Extent(boost::tuple<T,T> const & xy) : 
         Super(EigenVector(xy.template get<0>(), xy.template get<1>())) {}
-
-#ifdef SWIG
+#else
     T getX() const;
     T getY() const;
     void setX(T x);
@@ -289,11 +289,11 @@ public:
     /// @brief Construct from a two-element array.
     explicit Extent(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
+#ifndef SWIG
     /// @brief Construct from boost::tuple.
     explicit Extent(boost::tuple<T,T,T> const & xyz) : 
         Super(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
-
-#ifdef SWIG
+#else
     T getX() const;
     T getY() const;
     T getZ() const;
