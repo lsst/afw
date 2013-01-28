@@ -32,7 +32,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
-#include "lsst/afw/geom/ellipses.h"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -46,7 +45,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/utils.i" 
 %import  "lsst/afw/image/image.i"
 %import  "lsst/afw/image/maskedImage.i"
-%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 %lsst_exceptions();
 
