@@ -28,9 +28,7 @@
 #include "lsst/afw/cameraGeom/Distortion.h"
 %}
 
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
-class Quadrupole;
-}}}} // namespace lsst::afw::geom::ellipses
+%import "lsst/afw/geom/ellipses/ellipses_fwd.i"
 
 %shared_ptr(lsst::afw::geom::ellipses::Quadrupole);
 
