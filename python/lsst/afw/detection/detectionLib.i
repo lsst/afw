@@ -37,22 +37,17 @@ Python interface to lsst::afw::detection classes
 #pragma SWIG nowarn=362                 // operator=  ignored
 
 %{
-#include "lsst/daf/base.h"
-#include "lsst/pex/logging.h"
-#include "lsst/daf/persistence.h"
-#include "lsst/pex/policy.h"
-#include "lsst/afw/geom.h"
-#include "lsst/afw/geom/ellipses.h"
-#include "lsst/afw/cameraGeom.h"
-#include "lsst/afw/image.h"
-#include "lsst/afw/math/SpatialCell.h"
-#include "lsst/afw/math/Background.h"
-    
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/math.h"
+
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "ndarray/swig.h"
 #include "ndarray/swig/eigen.h"
 %}
+%include "ndarray.i"
 
 %init %{
     import_array();
@@ -66,11 +61,13 @@ Python interface to lsst::afw::detection classes
 %import  "lsst/afw/utils.i" 
 %include "lsst/daf/base/persistenceMacros.i"
 
-%import "lsst/afw/image/imageLib.i"
-%import "lsst/afw/geom/geomLib.i"
-%import "lsst/afw/geom/ellipses/ellipsesLib.i"
+%import "lsst/afw/geom/Span.i"
+%import "lsst/afw/image/Image.i"
+%import "lsst/afw/image/Mask.i"
+%import "lsst/afw/image/MaskedImage.i"
+%import "lsst/afw/cameraGeom/cameraGeom_fwd.i"
+%import "lsst/afw/geom/ellipses/ellipses_fwd.i"
 %import "lsst/afw/math/mathLib.i"
-%include "ndarray.i"
 
 %lsst_exceptions()
 
