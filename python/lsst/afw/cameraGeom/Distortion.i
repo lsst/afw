@@ -26,9 +26,14 @@
 
 %{
 #include "lsst/afw/cameraGeom/Distortion.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/fits.h"
 %}
 
 %import "lsst/afw/geom/ellipses/ellipses_fwd.i"
+%import "lsst/afw/image/image.i"
+%import "lsst/afw/image/maskedImage.i"
 
 %shared_ptr(lsst::afw::geom::ellipses::Quadrupole);
 

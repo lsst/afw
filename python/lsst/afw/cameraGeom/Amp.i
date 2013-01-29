@@ -26,12 +26,18 @@
 
 %{
 #include "lsst/afw/cameraGeom/Amp.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/fits.h"
 %}
 
 namespace lsst { namespace afw { namespace image {
 class Wcs;
 }}} // namespace lsst::afw::image
 %shared_ptr(lsst::afw::image::Wcs);
+
+%import "lsst/afw/image/image.i"
+%import "lsst/afw/image/maskedImage.i"
 
 %include "lsst/afw/cameraGeom/Amp.h"
 

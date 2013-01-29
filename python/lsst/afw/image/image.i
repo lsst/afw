@@ -40,14 +40,6 @@ namespace boost {
 %}
 
 /************************************************************************************************************/
-
-%template(pairIntInt)       std::pair<int, int>;
-%template(pairIntDouble)    std::pair<int, double>;
-%template(pairDoubleInt)    std::pair<double, int>;
-%template(pairDoubleDouble) std::pair<double, double>;
-%template(mapStringInt)     std::map<std::string, int>;
-
-/************************************************************************************************************/
 //
 // Various macros used when declaring image classes
 //
