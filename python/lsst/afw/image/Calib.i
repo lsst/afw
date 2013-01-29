@@ -34,5 +34,5 @@
 %declareTablePersistable(Calib, lsst::afw::image::Calib);
 
 %include "lsst/afw/image/Calib.h"
+
 %template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
-%template(pairVectorDVectorD) std::pair<std::vector<double>, std::vector<double> >;

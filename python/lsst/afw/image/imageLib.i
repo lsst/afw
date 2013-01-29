@@ -77,7 +77,9 @@
 %template(pairDoubleDouble) std::pair<double, double>;
 %template(mapStringInt)     std::map<std::string, int>;
 
-%template(vectorBBox) std::vector<lsst::afw::geom::Box2I>;         
+%template(vectorBBox) std::vector<lsst::afw::geom::Box2I>;
+%template(vectorD) std::vector<double>;
+%template(pairVectorDVectorD) std::pair<std::vector<double>, std::vector<double> >;
 
 //---------- ndarray and Eigen NumPy conversion typemaps ----------------------------------------------------
 
@@ -153,6 +155,7 @@
 %include "lsst/afw/image/Color.h"
 
 %include "lsst/afw/image/Defect.i"
+%include "lsst/afw/image/ExposureInfo.i"
 %include "lsst/afw/image/Exposure.i"
 
 //---------- Implementation for image slicing ---------------------------------------------------------------

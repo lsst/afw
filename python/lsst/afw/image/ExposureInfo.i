@@ -23,30 +23,20 @@
  */
 
 %include "lsst/afw/image/image_fwd.i"
-%include "lsst/afw/image/Wcs.i"
+%include "lsst/afw/image/MaskedImage.i"
 
 %{
-#include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/ExposureInfo.h"
 %}
 
-%import "lsst/afw/table/io/Persistable.i"
+%import "lsst/daf/base/baseLib.i"
+%import "lsst/afw/cameraGeom/cameraGeom_fwd.i"
 
-%declareTablePersistable(TanWcs, lsst::afw::image::TanWcs);
+namespace lsst { namespace afw { namespace detection {
+    class Psf;
+}}}
+%shared_ptr(lsst::afw::detection::Psf);
 
-%include "lsst/afw/image/TanWcs.h"
+%shared_ptr(lsst::afw::image::ExposureInfo);
 
-%lsst_persistable(lsst::afw::image::TanWcs);
-
-%useValueEquality(lsst::afw::image::Wcs);
-
-%inline %{
-    lsst::afw::image::TanWcs::Ptr
-    cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
-        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
-        
-        if(tanWcs.get() == NULL) {
-            throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
-        }
-        return tanWcs;
-    }
-%}
+%include "lsst/afw/image/ExposureInfo.h"
