@@ -21,27 +21,33 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#if !defined(LSST_AFW_COORD_UTILS_H)
-#define LSST_AFW_COORD_UTILS_H
-/**
- * @file
- * @brief Header to declare constants and enums for Coord and Observatory
- * @ingroup afw
- * @author Steve Bickerton
- *
- *
- */ 
 
-#include <cmath>
+%define coordLib_DOCSTRING
+"
+Python interface to lsst::afw::coord
+"
+%enddef
 
-namespace lsst {
-namespace afw {    
-namespace coord {
+%feature("autodoc", "1");
+%module(package="lsst.afw.coord", docstring=coordLib_DOCSTRING) coordLib
 
-    // FIXME -- remove this once ticket branch #1642 is done.
-    enum CoordUnit { DEGREES, RADIANS, HOURS };
+%include "lsst/p_lsstSwig.i"
 
-}}}
+namespace lsst { namespace afw { namespace coord {
 
-#endif
+class Coord;
+class Fk5Coord;
+class IcrsCoord;
+class GalacticCoord;
+class EclipticCoord;
+class TopocentricCoord;
+class Observatory;
+
+}}} // namespace lsst::afw::coord
+
+%shared_ptr(lsst::afw::coord::Coord);
+%shared_ptr(lsst::afw::coord::Fk5Coord);
+%shared_ptr(lsst::afw::coord::IcrsCoord);
+%shared_ptr(lsst::afw::coord::GalacticCoord);
+%shared_ptr(lsst::afw::coord::EclipticCoord);
+%shared_ptr(lsst::afw::coord::TopocentricCoord);

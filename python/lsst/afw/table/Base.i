@@ -34,7 +34,6 @@
 #include "ndarray/swig.h"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/coord.h"
 #include "lsst/afw/fits.h"
 
 #include "lsst/afw/table/BaseRecord.h"
@@ -101,7 +100,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/fits/fitsLib.i"
-%import "lsst/afw/coord/coordLib.i"
+%import "lsst/afw/coord/coord_fwd.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
 // =============== miscellaneous bits =======================================================================

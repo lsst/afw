@@ -21,13 +21,12 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%include "lsst/afw/coord/coord_fwd.i"
 
 %{
-#include "lsst/afw/coord/Utils.h"    
 #include "lsst/afw/coord/Observatory.h"
 %}
 
-%include "lsst/afw/coord/Utils.h"
 %include "lsst/afw/coord/Observatory.h"
 
