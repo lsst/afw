@@ -21,29 +21,20 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-%define coordLib_DOCSTRING
-"
-Python interface to lsst::afw::coord
-"
-%enddef
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.coord", docstring=coordLib_DOCSTRING) coordLib
-
-%include "lsst/p_lsstSwig.i"
+%include "lsst/afw/coord/coord_fwd.i"
 
 %lsst_exceptions();
 
 %include "std_pair.i"
 %template(pairSS) std::pair<std::string, std::string>;
 
+%import "lsst/afw/geom/Angle.i"
+
 %{
-#include <lsst/afw/geom/Angle.h>
+#include "lsst/afw/geom/Angle.h"
 %}
 %template(pairAngleAngle) std::pair<lsst::afw::geom::Angle, lsst::afw::geom::Angle>;
 
-%import "lsst/daf/base/baseLib.i"
-%import "lsst/afw/geom/geomLib.i"
-%include "observatory.i"
-%include "coord.i"
+%include "Observatory.i"
+%include "Coord.i"

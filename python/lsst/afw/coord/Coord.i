@@ -21,25 +21,18 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%include "lsst/afw/coord/coord_fwd.i" 
 
 %{
-#include "lsst/afw/image.h"    
-#include "lsst/afw/geom.h"
-#include "lsst/daf/base.h"    
-#include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/coord/Coord.h"
 %}
 
+namespace lsst { namespace daf { namespace base {
+class DateTime;
+}}} // namespace lsst::daf::base
 
-// The shared pointer declarations must precede the #inlude statement for Coord.h
-%shared_ptr(lsst::afw::coord::Coord);
-%shared_ptr(lsst::afw::coord::Fk5Coord);
-%shared_ptr(lsst::afw::coord::IcrsCoord);
-%shared_ptr(lsst::afw::coord::GalacticCoord);
-%shared_ptr(lsst::afw::coord::EclipticCoord);
-%shared_ptr(lsst::afw::coord::TopocentricCoord);
-
+%import "lsst/afw/geom/geom_fwd.i"
 
 %rename(__getitem__) lsst::afw::coord::Coord::operator[];
 
@@ -63,7 +56,6 @@
     // ie. it's not similar enough to use the same factory
 %}
 
-%include "lsst/afw/coord/Utils.h"
 %include "lsst/afw/coord/Coord.h"
 
 %define strCoord(TYPE)

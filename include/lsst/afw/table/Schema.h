@@ -8,6 +8,7 @@
 #include "boost/ref.hpp"
 
 #include "ndarray.h"
+#include "lsst/daf/base/PropertyList.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
 #include "lsst/afw/table/detail/SchemaImpl.h"
