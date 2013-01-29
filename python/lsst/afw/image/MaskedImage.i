@@ -23,7 +23,9 @@
  */
 
 %include "lsst/afw/image/image_fwd.i"
- 
+%include "lsst/afw/image/Image.i"
+%include "lsst/afw/image/Mask.i"
+
 %{
 #   include "lsst/afw/image/MaskedImage.h"
 %}
