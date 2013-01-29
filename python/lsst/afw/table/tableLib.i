@@ -19,25 +19,122 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-%define tableLib_DOCSTRING
-"
-Python interface to lsst::afw::table classes
-"
-%enddef
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.table", docstring=tableLib_DOCSTRING) tableLib
-
-#pragma SWIG nowarn=389                 // operator[]  ignored
-#pragma SWIG nowarn=503                 // comparison operators ignored
-#pragma SWIG nowarn=520                 // base class not similarly marked as smart pointer
-#pragma SWIG nowarn=401                 // nothing known about base class
-#pragma SWIG nowarn=302                 // redefine identifier (SourceSet<> -> SourceSet)
-
-%include "lsst/p_lsstSwig.i"
+%include "lsst/afw/table/table_fwd.i"
 
 %lsst_exceptions();
+
+//---------- Dependencies that don't need to be seen by downstream imports ----------------------------------
+
+%import "lsst/afw/fits/fitsLib.i"
+%import "lsst/daf/base/baseLib.i"
+%import "lsst/afw/coord/coord_fwd.i"
+%import "lsst/afw/geom/ellipses/ellipses_fwd.i"
+%import "lsst/afw/geom/geom_fwd.i"
+
+// Wcs, Calib neededed by SourceRecord, ExposureRecord, but we can't %import anything from imageLib
+// because that would cause tableLib to import imageLib, making a circular dependency.
+// Happily, forward declarations and %shared_ptr are all we need.
+namespace lsst { namespace afw { namespace image {
+class Wcs;
+class Calib;
+}}} // namespace lsst::afw::image
+%shared_ptr(lsst::afw::image::Wcs);
+%shared_ptr(lsst::afw::image::Calib);
+
+//---------- ndarray and Eigen NumPy conversion typemaps ----------------------------------------------------
+
+%{
+#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
+#include "numpy/arrayobject.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+#include "lsst/afw/geom/Angle.h"
+
+// This enables numpy array conversion for Angle, converting it to a regular array of double.
+namespace ndarray { namespace detail {
+template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<double> {};
+}}
+
+%}
+%include "ndarray.i"
+
+%init %{
+    import_array();
+%}
+
+%declareNumPyConverters(ndarray::Array<bool const,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::table::RecordId const,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t const,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t const,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t const,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t const,1,1>);
+%declareNumPyConverters(ndarray::Array<float,1>);
+%declareNumPyConverters(ndarray::Array<double,1>);
+%declareNumPyConverters(ndarray::Array<float const,1>);
+%declareNumPyConverters(ndarray::Array<double const,1>);
+%declareNumPyConverters(ndarray::Array<float,1,1>);
+%declareNumPyConverters(ndarray::Array<double,1,1>);
+%declareNumPyConverters(ndarray::Array<float const,1,1>);
+%declareNumPyConverters(ndarray::Array<double const,1,1>);
+%declareNumPyConverters(ndarray::Array<float,2>);
+%declareNumPyConverters(ndarray::Array<double,2>);
+%declareNumPyConverters(ndarray::Array<float const,2>);
+%declareNumPyConverters(ndarray::Array<double const,2>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle const,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::table::BitsColumn::IntT,1,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::table::BitsColumn::IntT const,1,1>);
+%declareNumPyConverters(Eigen::Matrix<float,2,2>);
+%declareNumPyConverters(Eigen::Matrix<double,2,2>);
+%declareNumPyConverters(Eigen::Matrix<float,3,3>);
+%declareNumPyConverters(Eigen::Matrix<double,3,3>);
+%declareNumPyConverters(Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic>);
+%declareNumPyConverters(Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>);
+
+//---------- STL Typemaps and Template Instantiations -------------------------------------------------------
+
+// We prefer to convert std::set<std::string> to a Python tuple, because SWIG's std::set wrapper
+// doesn't do many of the things a we want it do (pretty printing, comparison operators, ...),
+// and the expense of a deep copy shouldn't matter in this case.  And it's easier to just do
+// the conversion than get involved in the internals's of SWIG's set wrapper to fix it.
+
+%{
+    inline PyObject * convertNameSet(std::set<std::string> const & input) {
+        ndarray::PyPtr result(PyTuple_New(input.size()));
+        if (!result) return 0;
+        Py_ssize_t n = 0;
+        for (std::set<std::string>::const_iterator i = input.begin(); i != input.end(); ++i, ++n) {
+            PyObject * s = PyString_FromStringAndSize(i->data(), i->size());
+            if (!s) return 0;
+            PyTuple_SET_ITEM(result.get(), n, s);
+        }
+        Py_INCREF(result.get());
+        return result.get();
+    }
+
+%}
+
+%typemap(out) std::set<std::string> {
+    $result = convertNameSet($1);
+}
+
+%typemap(out)
+std::set<std::string> const &, std::set<std::string> &, std::set<std::string> const*, std::set<std::string>*
+{
+    // I'll never understand why swig passes pointers to reference typemaps, but it does.
+    $result = convertNameSet(*$1);
+}
+
+//---------- afw::table classes and functions ---------------------------------------------------------------
+
+%pythoncode %{
+from . import _syntax
+%}
 
 %include "Base.i"
 %include "Simple.i"

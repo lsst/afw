@@ -27,24 +27,19 @@
  * This file does not include Exposure- Record/Table/Catalog, or the matching functions.
  */
 
+%include "lsst/afw/table/table_fwd.i"
 %include "lsst/afw/table/Simple.i"
 
 %{
 #include "lsst/afw/table/Source.h"
-#include "lsst/afw/image/Wcs.h"
 %}
 
 namespace lsst { namespace afw {
 namespace detection {
 class Footprint;
 } // namespace detection
-namespace image {
-class Wcs;
-} // namespace image
 }} // namespace lsst::afw
-
 %shared_ptr(lsst::afw::detection::Footprint);
-%shared_ptr(lsst::afw::image::Wcs);
 
 // =============== SourceTable and SourceRecord =============================================================
 

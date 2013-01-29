@@ -26,6 +26,7 @@
  * and ReferenceMatch.
  */
 
+%include "lsst/afw/table/table_fwd.i"
 %include "lsst/afw/table/Source.i"
 
 %{
