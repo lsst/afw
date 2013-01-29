@@ -22,10 +22,10 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%include "lsst/afw/cameraGeom/cameraGeom_fwd.i"
+
 %{
 #include "lsst/afw/cameraGeom/Camera.h"
 %}
-
-%include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
 
 %include "lsst/afw/cameraGeom/Camera.h"
