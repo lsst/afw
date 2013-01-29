@@ -22,56 +22,54 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%define imageLib_DOCSTRING
-"
-Basic routines to talk to lsst::afw::image classes
-"
-%enddef
+%include "lsst/afw/image/image_fwd.i"
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.image", docstring=imageLib_DOCSTRING) imageLib
+%lsst_exceptions();
+
+//---------- Warning suppression ----------------------------------------------------------------------------
 
 // Suppress swig complaints
 #pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
 #pragma SWIG nowarn=362                 // operator=  ignored
 
-
 %{
-#include "boost/cstdint.hpp"
+#pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
+%}
 
-#include "lsst/daf/base.h"
-#include "lsst/pex/exceptions.h"
-#include "lsst/afw/cameraGeom.h"
-#include "lsst/afw/image.h"
-#include "lsst/afw/geom.h"
-#include "lsst/afw/image/Color.h"
-#include "lsst/afw/fits.h" // just for exceptions
+//---------- Dependencies that don't need to be seen by downstream imports ----------------------------------
 
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
-#include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
-
-// Needed for %boost_picklable macro
+// Pickle support, used by HSC pipeline's parallelization.
+// Could probably be reimplemented by using FITS memory fiels instead of boost::serialization;
+// see pickle support in afw::table.
+%include "../boost_picklable.i"
+%{
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
-
-#pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
-%include "../boost_picklable.i"
-
-%init %{
-    import_array();
+// For Image operators that accept Function objects.
+%{
+#include "lsst/afw/math/Function.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 %}
+%import "lsst/afw/math/function.i"
 
-/************************************************************************************************************/
+// Just need to get FITS exceptions, so we raise the right types when image I/O fails.
+%{
+#include "lsst/afw/fits.h"
+%}
+%import "lsst/afw/fits/fitsLib.i"
+
+//---------- STL Typemaps and Template Instantiations -------------------------------------------------------
+
+%import "lsst/afw/geom/geom_fwd.i"
 
 %include "std_pair.i"
 %include "std_map.i"
+%include "std_vector.i"
 
 %template(pairIntInt)       std::pair<int, int>;
 %template(pairIntDouble)    std::pair<int, double>;
@@ -79,14 +77,20 @@ Basic routines to talk to lsst::afw::image classes
 %template(pairDoubleDouble) std::pair<double, double>;
 %template(mapStringInt)     std::map<std::string, int>;
 
-/************************************************************************************************************/
+%template(vectorBBox) std::vector<lsst::afw::geom::Box2I>;         
 
-%typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
-    $1 = PyBool_Check($input) ? 1 : 0;
-}
+//---------- ndarray and Eigen NumPy conversion typemaps ----------------------------------------------------
 
-%include "lsst/p_lsstSwig.i"
-%include "lsst/daf/base/persistenceMacros.i"
+%{
+#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
+#include "numpy/arrayobject.h"
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+%}
+
+%init %{
+    import_array();
+%}
 
 %include "ndarray.i"
 
@@ -109,9 +113,49 @@ Basic routines to talk to lsst::afw::image classes
 %declareNumPyConverters(ndarray::Array<double,2,1>);
 %declareNumPyConverters(ndarray::Array<double const,2,1>);
 
-%lsst_exceptions();
+//---------- afw::image classes and functions ---------------------------------------------------------------
 
-/************************************************************************************************************/
+// Standard Swig typemap for bool is too permissive and confuses overloads.
+// Only consider a Python object bool if it is actually is bool object, not
+// something convertible to bool.
+%typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
+    $1 = PyBool_Check($input) ? 1 : 0;
+}
+
+%include "Image.i"
+%include "Mask.i"
+%include "MaskedImage.i"
+
+%{
+#include "lsst/afw/image/Utils.h"
+%}
+%include "lsst/afw/image/Utils.h"
+
+%{
+#include "lsst/afw/image/ImageUtils.h"
+%}
+%apply double &OUTPUT { double & };
+%rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
+%clear double &OUTPUT;
+%include "lsst/afw/image/ImageUtils.h"
+
+%include "ImagePca.i"
+%include "ImageSlice.i"
+
+%include "lsst/afw/image/Filter.i"
+%include "lsst/afw/image/Wcs.i"
+%include "lsst/afw/image/TanWcs.i"
+%include "lsst/afw/image/Calib.i"
+
+%{
+#include "lsst/afw/image/Color.h"
+%}
+%include "lsst/afw/image/Color.h"
+
+%include "lsst/afw/image/Defect.i"
+%include "lsst/afw/image/Exposure.i"
+
+//---------- Implementation for image slicing ---------------------------------------------------------------
 
 %pythoncode {
     def _getBBoxFromSliceTuple(img, imageSlice):
@@ -169,30 +213,3 @@ Basic routines to talk to lsst::afw::image classes
         x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
         return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1))
 }
-
-%{
-#include "lsst/afw/math/Function.h"
-#include "lsst/afw/math/FunctionLibrary.h"
-%}
-%import "lsst/afw/math/function.i"
-
-%include "image.i"
-%include "ImagePca.i"
-%include "Utils.i"
-%include "mask.i"
-%include "maskedImage.i"
-%include "imageSlice.i"
-
-%apply double &OUTPUT { double & };
-%rename(positionToIndexAndResidual) lsst::afw::image::positionToIndex(double &, double);
-%clear double &OUTPUT;
-
-%include "lsst/afw/image/ImageUtils.h"
-%include "lsst/afw/image/Filter.i"
-
-%include "lsst/afw/image/Wcs.i"
-%include "lsst/afw/image/TanWcs.i"
-%include "lsst/afw/image/Calib.i"
-%include "lsst/afw/image/Color.h"
-%include "lsst/afw/image/Defect.i"
-%include "lsst/afw/image/Exposure.i"
