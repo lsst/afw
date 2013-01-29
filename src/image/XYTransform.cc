@@ -89,6 +89,39 @@ PTR(XYTransform) XYTransform::invert() const
 
 // -------------------------------------------------------------------------------------------------
 //
+// IdentityXYTransform
+
+
+PTR(XYTransform) IdentityXYTransform::clone() const
+{
+    return boost::make_shared<IdentityXYTransform> ();
+}
+
+lsst::afw::geom::Point2D IdentityXYTransform::forwardTransform(Point2D const &pixel) const
+{
+    return pixel;
+}
+
+lsst::afw::geom::Point2D IdentityXYTransform::reverseTransform(Point2D const &pixel) const
+{
+    return pixel;
+}
+
+lsst::afw::geom::AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+{
+    // note: AffineTransform constructor called with no arguments gives the identity transform
+    return lsst::afw::geom::AffineTransform(); 
+}
+
+lsst::afw::geom::AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+{
+    // note: AffineTransform constructor called with no arguments gives the identity transform
+    return lsst::afw::geom::AffineTransform(); 
+}
+
+
+// -------------------------------------------------------------------------------------------------
+//
 // XYTransformFromWcsPair
 
 
