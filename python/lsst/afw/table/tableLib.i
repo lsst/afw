@@ -32,15 +32,22 @@
 %import "lsst/afw/geom/ellipses/ellipses_fwd.i"
 %import "lsst/afw/geom/geom_fwd.i"
 
-// Wcs, Calib neededed by SourceRecord, ExposureRecord, but we can't %import anything from imageLib
-// because that would cause tableLib to import imageLib, making a circular dependency.
+// Wcs, Calib, Psf, and Footprint are needed by SourceRecord, ExposureRecord, but we don't want to %import
+// them, for fear of circular dependencies.
 // Happily, forward declarations and %shared_ptr are all we need.
-namespace lsst { namespace afw { namespace image {
-class Wcs;
-class Calib;
-}}} // namespace lsst::afw::image
+namespace lsst { namespace afw {
+namespace image {
+    class Wcs;
+    class Calib;
+}
+namespace detection {
+    class Psf;
+    class Footprint;
+}}}
 %shared_ptr(lsst::afw::image::Wcs);
 %shared_ptr(lsst::afw::image::Calib);
+%shared_ptr(lsst::afw::detection::Psf);
+%shared_ptr(lsst::afw::detection::Footprint);
 
 //---------- ndarray and Eigen NumPy conversion typemaps ----------------------------------------------------
 

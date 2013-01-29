@@ -33,14 +33,6 @@
 #include "lsst/afw/table/Exposure.h"
 %}
 
-namespace lsst { namespace afw {
-namespace detection {
-class Psf;
-} // namespace detection
-}} // namespace lsst::afw
-
-%shared_ptr(lsst::afw::detection::Psf);
-
 // =============== ExposureTable and ExposureRecord =========================================================
 
 %shared_ptr(lsst::afw::table::ExposureTable)
