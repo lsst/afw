@@ -24,19 +24,20 @@
 
 %include "lsst/afw/image/image_fwd.i"
 
+%{
+#include "boost/cstdint.hpp"
+#include "lsst/daf/base.h"
+#include "lsst/afw/image/Image.h"
+%}
+
+%import "lsst/afw/geom/geom_fwd.i"
 %import "lsst/daf/base/baseLib.i"
-%import "lsst/afw/geom/geomLib.i"
-%import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions
 
 namespace boost {
     namespace mpl { }
 }
 
 %include "lsst/afw/image/LsstImageTypes.h"
-
-%{
-#include "lsst/afw/image/Image.h"
-%}
 
 /************************************************************************************************************/
 //
@@ -230,8 +231,6 @@ namespace boost {
 %image(Image, I, int);
 %image(Image, F, float);
 %image(Image, D, double);
-
-%template(vectorBBox) std::vector<lsst::afw::geom::BoxI>;         
 
 %extend lsst::afw::image::Image<boost::uint16_t> {
     %newobject convertF;

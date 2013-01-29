@@ -74,6 +74,8 @@ Python interface to lsst::afw::detection classes
 
 %lsst_exceptions()
 
+%template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
+
 %include "Footprint.i"
 %include "Psf.i"
 %include "DoubleGaussianPsf.i"

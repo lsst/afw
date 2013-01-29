@@ -47,9 +47,6 @@ typedef lsst::afw::geom::Span Span;
 
 %ignore lsst::afw::detection::FootprintFunctor::operator();
 
-// already in image.i.
-// %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
-
 %shared_ptr(lsst::afw::detection::Peak);
 %shared_ptr(lsst::afw::detection::Footprint);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
