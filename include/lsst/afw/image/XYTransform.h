@@ -63,6 +63,23 @@ public:
 
 
 //
+// IdentityXYTransform: Represents a trivial XYTransform satisfying f(x)=x.
+// 
+class IdentityXYTransform : public XYTransform
+{
+public:
+    IdentityXYTransform() { }
+    virtual ~IdentityXYTransform() { }
+    
+    virtual PTR(XYTransform) clone() const;
+    virtual Point2D forwardTransform(Point2D const &pixel) const;
+    virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual lsst::afw::geom::AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
+    virtual lsst::afw::geom::AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
+};
+
+
+//
 // XYTransformFromWcsPair: Represents an XYTransform obtained by putting two Wcs's "back to back".
 //
 // Eventually there will be an XYTransform subclass which represents a camera distortion.
