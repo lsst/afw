@@ -33,10 +33,7 @@ Python interface to lsst::afw::math classes
 
 %{
 #   include "lsst/daf/base.h"
-#   include "lsst/pex/logging.h"
-#   include "lsst/pex/policy.h"
 #   include "lsst/afw/image.h"
-#   include "lsst/afw/geom.h"
 #   include "lsst/afw/math.h"
 
 #   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
@@ -64,7 +61,11 @@ Python interface to lsst::afw::math classes
 %template(vectorVectorD) std::vector<std::vector<double> >;
 %template(vectorVectorI) std::vector<std::vector<int> >;
 
-%import "lsst/pex/policy/policyLib.i"
+namespace lsst { namespace pex { namespace policy {
+class Policy;
+}}} // namespace lsst::pex::policy
+%shared_ptr(lsst::pex::policy::Policy);
+
 %import "lsst/afw/image/Image.i"
 %import "lsst/afw/image/Mask.i"
 %import "lsst/afw/image/MaskedImage.i"

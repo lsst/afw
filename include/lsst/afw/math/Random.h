@@ -36,6 +36,7 @@
 
 #include "gsl/gsl_rng.h"
 
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/policy/Policy.h"
 
@@ -97,7 +98,7 @@ public:
     // -- Constructor --------
     explicit Random(Algorithm algorithm = MT19937, unsigned long seed = 1);
     explicit Random(std::string const & algorithm, unsigned long seed = 1);
-    explicit Random(lsst::pex::policy::Policy::Ptr const policy);
+    explicit Random(PTR(lsst::pex::policy::Policy) const policy);
     // Use compiler generated destructor and shallow copy constructor/assignment operator
 
     Random deepCopy() const;
