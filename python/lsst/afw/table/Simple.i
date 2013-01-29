@@ -27,6 +27,7 @@
  * This file does not include Source-, or Exposure- Record/Table/Catalog, or the matching functions.
  */
 
+%include "lsst/afw/table/table_fwd.i"
 %include "lsst/afw/table/Base.i"
 
 %{

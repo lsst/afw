@@ -28,26 +28,27 @@
  * functions.
  */
 
-%{
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
-#include "ndarray/swig.h"
-#include "lsst/pex/logging.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/fits.h"
+%include "lsst/afw/table/table_fwd.i"
 
+%{
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/Catalog.h"
-
-// This enables numpy array conversion for Angle, converting it to a regular array of double.
-namespace ndarray { namespace detail {
-template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<double> {};
-}}
-
 %}
+
+// =============== Warning suppression ======================================================================
+
+%warnfilter(389) lsst::afw::table::KeyBase::operator[];
+%warnfilter(389) lsst::afw::table::BaseRecord::operator[];
+%warnfilter(389) lsst::afw::table::BaseColumnView::operator[];
+%warnfilter(362) lsst::afw::table::SchemaMapper::operator=;
+
+// Can't figure out how to selectively squash operator<< warnings, because they're always friend functions.
+#pragma SWIG nowarn=503
+
+// =============== miscellaneous bits =======================================================================
 
 // Macro that provides a Python-side dynamic cast.
 // The BASE argument should be the root of the class hierarchy, not the immediate base class.
@@ -58,92 +59,6 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
     }
 }
 %enddef
-
-%include "ndarray.i"
-%init %{
-    import_array();
-%}
-
-%declareNumPyConverters(ndarray::Array<bool const,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::table::RecordId const,1>);
-%declareNumPyConverters(ndarray::Array<boost::int32_t const,1>);
-%declareNumPyConverters(ndarray::Array<boost::int64_t const,1>);
-%declareNumPyConverters(ndarray::Array<boost::int32_t,1>);
-%declareNumPyConverters(ndarray::Array<boost::int64_t,1>);
-%declareNumPyConverters(ndarray::Array<boost::int32_t,1,1>);
-%declareNumPyConverters(ndarray::Array<boost::int64_t,1,1>);
-%declareNumPyConverters(ndarray::Array<boost::int32_t const,1,1>);
-%declareNumPyConverters(ndarray::Array<boost::int64_t const,1,1>);
-%declareNumPyConverters(ndarray::Array<float,1>);
-%declareNumPyConverters(ndarray::Array<double,1>);
-%declareNumPyConverters(ndarray::Array<float const,1>);
-%declareNumPyConverters(ndarray::Array<double const,1>);
-%declareNumPyConverters(ndarray::Array<float,1,1>);
-%declareNumPyConverters(ndarray::Array<double,1,1>);
-%declareNumPyConverters(ndarray::Array<float const,1,1>);
-%declareNumPyConverters(ndarray::Array<double const,1,1>);
-%declareNumPyConverters(ndarray::Array<float,2>);
-%declareNumPyConverters(ndarray::Array<double,2>);
-%declareNumPyConverters(ndarray::Array<float const,2>);
-%declareNumPyConverters(ndarray::Array<double const,2>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle const,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::table::BitsColumn::IntT,1,1>);
-%declareNumPyConverters(ndarray::Array<lsst::afw::table::BitsColumn::IntT const,1,1>);
-%declareNumPyConverters(Eigen::Matrix<float,2,2>);
-%declareNumPyConverters(Eigen::Matrix<double,2,2>);
-%declareNumPyConverters(Eigen::Matrix<float,3,3>);
-%declareNumPyConverters(Eigen::Matrix<double,3,3>);
-%declareNumPyConverters(Eigen::Matrix<float,Eigen::Dynamic,Eigen::Dynamic>);
-%declareNumPyConverters(Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic>);
-
-%import "lsst/daf/base/baseLib.i"
-%import "lsst/afw/geom/geomLib.i"
-%import "lsst/afw/fits/fitsLib.i"
-%import "lsst/afw/coord/coord_fwd.i"
-%import "lsst/afw/geom/ellipses/ellipsesLib.i"
-
-// =============== miscellaneous bits =======================================================================
-
-%pythoncode %{
-from . import _syntax
-%}
-
-%include "lsst/afw/table/misc.h"
-
-// ---------------------------------------------------------------------------------------------------------
-
-// We prefer to convert std::set<std::string> to a Python tuple, because SWIG's std::set wrapper
-// doesn't do many of the things a we want it do (pretty printing, comparison operators, ...),
-// and the expense of a deep copy shouldn't matter in this case.  And it's easier to just do
-// the conversion than get involved in the internals's of SWIG's set wrapper to fix it.
-
-%{
-    inline PyObject * convertNameSet(std::set<std::string> const & input) {
-        ndarray::PyPtr result(PyTuple_New(input.size()));
-        if (!result) return 0;
-        Py_ssize_t n = 0;
-        for (std::set<std::string>::const_iterator i = input.begin(); i != input.end(); ++i, ++n) {
-            PyObject * s = PyString_FromStringAndSize(i->data(), i->size());
-            if (!s) return 0;
-            PyTuple_SET_ITEM(result.get(), n, s);
-        }
-        Py_INCREF(result.get());
-        return result.get();
-    }
-
-%}
-
-%typemap(out) std::set<std::string> {
-    $result = convertNameSet($1);
-}
-
-%typemap(out)
-std::set<std::string> const &, std::set<std::string> &, std::set<std::string> const*, std::set<std::string>*
-{
-    // I'll never understand why swig passes pointers to reference typemaps, but it does.
-    $result = convertNameSet(*$1);
-}
 
 // SWIG doesn't understand Schema::forEach, but the Schema interface provides no other
 // way of getting field names in definition order. This forEach functor records field names,
@@ -185,6 +100,11 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 }
 
 // =============== Schemas and their components =============================================================
+
+// Squash operator[] warnings.
+%warnfilter(389) lsst::afw::table::KeyBase;
+%warnfilter(389) lsst::afw::table::BaseRecord;
+%warnfilter(389) lsst::afw::table::BaseColumnView;
 
 %include "lsst/afw/table/FieldBase.h"
 %include "lsst/afw/table/Field.h"

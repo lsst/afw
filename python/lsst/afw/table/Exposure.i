@@ -26,6 +26,7 @@
  * This file does not include Simple- or Source- Record/Table/Catalog, or the matching functions.
  */
 
+%include "lsst/afw/table/table_fwd.i"
 %include "lsst/afw/table/Base.i"
 
 %{
@@ -33,17 +34,11 @@
 %}
 
 namespace lsst { namespace afw {
-namespace image {
-class Wcs;
-class Calib;
-} // namespace image
 namespace detection {
 class Psf;
 } // namespace detection
 }} // namespace lsst::afw
 
-%shared_ptr(lsst::afw::image::Wcs);
-%shared_ptr(lsst::afw::image::Calib);
 %shared_ptr(lsst::afw::detection::Psf);
 
 // =============== ExposureTable and ExposureRecord =========================================================

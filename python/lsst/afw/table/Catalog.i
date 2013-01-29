@@ -2,6 +2,8 @@
  * Wrappers for CatalogT, instantiation of BaseCatalog, and macros used in wrapping other catalogs.
  */
 
+%include "lsst/afw/table/table_fwd.i"
+
 %{
 #include "lsst/afw/table/Catalog.h"
 %}
