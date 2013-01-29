@@ -27,11 +27,9 @@
 %lsst_exceptions();
 
 %{
-#include "lsst/pex/logging.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/cameraGeom.h"
 %}
 
 %import  "lsst/afw/image/image.i"
@@ -41,6 +39,7 @@
 %include "lsst/afw/cameraGeom/FpPoint.i"
 %include "lsst/afw/cameraGeom/Orientation.i"
 %include "lsst/afw/cameraGeom/Detector.i"
+
 %include "lsst/afw/cameraGeom/Amp.i"
 %include "lsst/afw/cameraGeom/DetectorMosaic.i"
 %include "lsst/afw/cameraGeom/Ccd.i"

@@ -28,4 +28,6 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 %}
 
+%import "lsst/daf/base/baseLib.i"
+
 %include "lsst/afw/cameraGeom/Detector.h"
