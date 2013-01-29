@@ -22,6 +22,32 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%define cameraGeomLib_DOCSTRING
+"
+Python bindings for classes describing the the geometry of a mosaic camera
+"
+%enddef
+
+%feature("autodoc", "1");
+%module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
+
+%include "lsst/p_lsstSwig.i"
+
+namespace lsst { namespace afw { namespace cameraGeom {
+
+class Detector;
+class Amp;
+class ElectronicParams;
+class DetectorMosaic;
+class Ccd;
+class Raft;
+class Camera;
+class Distortion;
+class NullDistortion;
+class RadialPolyDistortion;
+
+}}} // namespace lsst::afw::cameraGeom
+
 %shared_ptr(lsst::afw::cameraGeom::Detector);
 %shared_ptr(lsst::afw::cameraGeom::Amp);
 %shared_ptr(lsst::afw::cameraGeom::ElectronicParams);

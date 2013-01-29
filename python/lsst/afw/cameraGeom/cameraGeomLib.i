@@ -22,14 +22,9 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%define cameraGeomLib_DOCSTRING
-"
-Python bindings for classes describing the the geometry of a mosaic camera
-"
-%enddef
+%include "lsst/afw/cameraGeom/cameraGeom_fwd.i"
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
+%lsst_exceptions();
 
 %{
 #include "lsst/pex/logging.h"
@@ -39,14 +34,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 #include "lsst/afw/cameraGeom.h"
 %}
 
-%include "lsst/p_lsstSwig.i"
-
 %import  "lsst/afw/image/image.i"
 %import  "lsst/afw/image/maskedImage.i"
-
-%lsst_exceptions();
-
-%include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
 
 %include "lsst/afw/cameraGeom/Id.i"
 %include "lsst/afw/cameraGeom/FpPoint.i"

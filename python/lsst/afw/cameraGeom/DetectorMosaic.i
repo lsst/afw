@@ -22,11 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%include "lsst/afw/cameraGeom/cameraGeom_fwd.i"
+
 %{
 #include "lsst/afw/cameraGeom/DetectorMosaic.h"
 %}
 
-%include "lsst/afw/cameraGeom/cameraGeomPtrs.i"
 %include "lsst/afw/utils.i" // for %definePythonIterator
 
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
