@@ -151,21 +151,6 @@ private:
     Radius _radius;
 };
 
-typedef Separable<Distortion,DeterminantRadius> SeparableDistortionDeterminantRadius;
-typedef Separable<Distortion,TraceRadius> SeparableDistortionTraceRadius;
-typedef Separable<Distortion,LogDeterminantRadius> SeparableDistortionLogDeterminantRadius;
-typedef Separable<Distortion,LogTraceRadius> SeparableDistortionLogTraceRadius;
-
-typedef Separable<ConformalShear,DeterminantRadius> SeparableConformalShearDeterminantRadius;
-typedef Separable<ConformalShear,TraceRadius> SeparableConformalShearTraceRadius;
-typedef Separable<ConformalShear,LogDeterminantRadius> SeparableConformalShearLogDeterminantRadius;
-typedef Separable<ConformalShear,LogTraceRadius> SeparableConformalShearLogTraceRadius;
-
-typedef Separable<ReducedShear,DeterminantRadius> SeparableReducedShearDeterminantRadius;
-typedef Separable<ReducedShear,TraceRadius> SeparableReducedShearTraceRadius;
-typedef Separable<ReducedShear,LogDeterminantRadius> SeparableReducedShearLogDeterminantRadius;
-typedef Separable<ReducedShear,LogTraceRadius> SeparableReducedShearLogTraceRadius;
-
 }}}} // namespace lsst::afw::geom::ellipses
 
 #endif // !LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED

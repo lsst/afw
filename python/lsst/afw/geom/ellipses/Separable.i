@@ -22,7 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.geom.ellipses") ellipsesLib
+%include "lsst/afw/geom/ellipses/ellipses_fwd.i"
+%include "lsst/afw/geom/ellipses/BaseCore.i"
 
 %{
 #include "lsst/afw/geom/ellipses/Separable.h"
@@ -103,20 +104,6 @@
 %ignore lsst::afw::geom::ellipses::Separable::readParameters;
 %rename(assign) lsst::afw::geom::ellipses::Separable::operator=;
 
-%define %Separable_PREINCLUDE(ELLIPTICITY, RADIUS)
-%shared_ptr(
-    lsst::afw::geom::ellipses::Separable<
-        lsst::afw::geom::ellipses::ELLIPTICITY, 
-        lsst::afw::geom::ellipses::RADIUS
-    > 
-);
-%rename(assign) lsst::afw::geom::ellipses::Separable<
-        lsst::afw::geom::ellipses::ELLIPTICITY,
-        lsst::afw::geom::ellipses::RADIUS
-    >::operator=;
-%enddef
-
-
 %define %Separable_POSTINCLUDE(ELLIPTICITY, RADIUS)
 %template(Separable ## ELLIPTICITY ## RADIUS) 
     lsst::afw::geom::ellipses::Separable<
@@ -124,22 +111,6 @@
         lsst::afw::geom::ellipses::RADIUS
     >;
 %enddef
-
-
-%Separable_PREINCLUDE(Distortion, DeterminantRadius);
-%Separable_PREINCLUDE(Distortion, TraceRadius);
-%Separable_PREINCLUDE(Distortion, LogDeterminantRadius);
-%Separable_PREINCLUDE(Distortion, LogTraceRadius);
-
-%Separable_PREINCLUDE(ConformalShear, DeterminantRadius);
-%Separable_PREINCLUDE(ConformalShear, TraceRadius);
-%Separable_PREINCLUDE(ConformalShear, LogDeterminantRadius);
-%Separable_PREINCLUDE(ConformalShear, LogTraceRadius);
-
-%Separable_PREINCLUDE(ReducedShear, DeterminantRadius);
-%Separable_PREINCLUDE(ReducedShear, TraceRadius);
-%Separable_PREINCLUDE(ReducedShear, LogDeterminantRadius);
-%Separable_PREINCLUDE(ReducedShear, LogTraceRadius);
 
 %include "lsst/afw/geom/ellipses/Separable.h"
 
