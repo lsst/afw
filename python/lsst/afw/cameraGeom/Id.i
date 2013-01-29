@@ -28,6 +28,11 @@
 #include "lsst/afw/cameraGeom/Id.h"
 %}
 
+%include "std_pair.i"
+
+%template(pairIntInt) std::pair<int, int>;
+%useValueEquality(lsst::afw::cameraGeom::Id);
+
 %include "lsst/afw/cameraGeom/Id.h"
 
 %extend lsst::afw::cameraGeom::Id {

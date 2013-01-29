@@ -70,6 +70,17 @@ Basic routines to talk to lsst::afw::image classes
 
 /************************************************************************************************************/
 
+%include "std_pair.i"
+%include "std_map.i"
+
+%template(pairIntInt)       std::pair<int, int>;
+%template(pairIntDouble)    std::pair<int, double>;
+%template(pairDoubleInt)    std::pair<double, int>;
+%template(pairDoubleDouble) std::pair<double, double>;
+%template(mapStringInt)     std::map<std::string, int>;
+
+/************************************************************************************************************/
+
 %typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
     $1 = PyBool_Check($input) ? 1 : 0;
 }
