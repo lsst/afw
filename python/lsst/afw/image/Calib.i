@@ -21,10 +21,14 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+
+%include "lsst/afw/image/image_fwd.i"
+
 %{
 #include "lsst/afw/image/Calib.h"
 %}
 
+%import "lsst/afw/cameraGeom/cameraGeom_fwd.i"
 %import "lsst/afw/table/io/Persistable.i"
 
 %declareTablePersistable(Calib, lsst::afw::image::Calib);

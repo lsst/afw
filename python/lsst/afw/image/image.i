@@ -22,9 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.image") imageLib
+%include "lsst/afw/image/image_fwd.i"
 
-%include "lsst/base.h"
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions

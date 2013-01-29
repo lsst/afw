@@ -22,12 +22,38 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%include "lsst/afw/image/image_fwd.i"
+%define imageLib_DOCSTRING
+"
+Basic routines to talk to lsst::afw::image classes
+"
+%enddef
 
-%{
-#include "lsst/afw/image/Defect.h"
-%}
+%feature("autodoc", "1");
+%module(package="lsst.afw.image", docstring=imageLib_DOCSTRING) imageLib
 
-%include "lsst/afw/image/Defect.h"
+// Suppress swig complaints
+#pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
+#pragma SWIG nowarn=362                 // operator=  ignored
 
-%template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
+%include "lsst/p_lsstSwig.i"
+%include "lsst/daf/base/persistenceMacros.i"
+%include "lsst/afw/image/LsstImageTypes.h"
+%include "lsst/base.h"
+
+namespace lsst { namespace afw { namespace image {
+
+class Filter;
+class FilterProperty;
+class Wcs;
+class TanWcs;
+class Color;
+class Calib;
+class Defect;
+class ExposureInfo;
+
+}}} // namespace lsst::afw::image
+
+%shared_ptr(lsst::afw::image::Wcs);
+%shared_ptr(lsst::afw::image::TanWcs);
+%shared_ptr(lsst::afw::image::Calib);
+%shared_ptr(lsst::afw::image::DefectBase);
