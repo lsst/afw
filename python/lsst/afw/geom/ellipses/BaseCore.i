@@ -22,7 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.geom.ellipses") ellipsesLib
+%include "lsst/afw/geom/ellipses/ellipses_fwd.i"
 
 %{
 #include "lsst/afw/geom/ellipses/BaseCore.h"
@@ -42,14 +42,11 @@
 %ignore lsst::afw::geom::ellipses::BaseCore::as;
 %rename(assign) lsst::afw::geom::ellipses::BaseCore::operator=;
 
-%shared_ptr(lsst::afw::geom::ellipses::BaseCore);
-
 %include "lsst/afw/geom/ellipses/BaseCore.h"
 
 %define %EllipseCore_PREINCLUDE(NAME)
 %feature(notabstract) lsst::afw::geom::ellipses::NAME;
 %implicitconv lsst::afw::geom::ellipses::NAME;
-%shared_ptr(lsst::afw::geom::ellipses::NAME);
 %ignore lsst::afw::geom::ellipses::NAME::writeParameters;
 %ignore lsst::afw::geom::ellipses::NAME::readParameters;
 %rename(assign) lsst::afw::geom::ellipses::NAME::operator=;

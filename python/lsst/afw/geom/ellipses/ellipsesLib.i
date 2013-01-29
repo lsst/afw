@@ -22,10 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.geom.ellipses") ellipsesLib
-
-%include "lsst/p_lsstSwig.i"
+%include "lsst/afw/geom/ellipses/ellipses_fwd.i"
 
 %lsst_exceptions();
 

@@ -22,8 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.geom.ellipses") ellipsesLib
-
+%include "lsst/afw/geom/ellipses/ellipses_fwd.i"
 %include "lsst/afw/geom/ellipses/BaseCore.i"
 
 %{
@@ -47,8 +46,6 @@
 %ignore lsst::afw::geom::ellipses::Ellipse::writeParameters;
 
 %rename(assign) lsst::afw::geom::ellipses::Ellipse::operator=;
-
-%shared_ptr(lsst::afw::geom::ellipses::Ellipse);
 
 %extend lsst::afw::geom::ellipses::Ellipse {
     %feature("shadow") _transform %{
