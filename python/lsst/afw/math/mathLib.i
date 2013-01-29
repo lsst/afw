@@ -32,10 +32,6 @@ Python interface to lsst::afw::math classes
 %module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
 
 %{
-#   include "lsst/daf/base.h"
-#   include "lsst/afw/image.h"
-#   include "lsst/afw/math.h"
-
 #   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 

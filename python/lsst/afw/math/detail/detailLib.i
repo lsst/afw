@@ -32,12 +32,9 @@ Python interface to lsst::afw::math::detail classes and functions
 %module(package="lsst.afw.math.detail", docstring=detailLib_DOCSTRING) detailLib
 
 %{
-#   include "lsst/daf/base.h"
-#   include "lsst/pex/logging.h"
-#   include "lsst/pex/policy.h"
-#   include "lsst/afw/image.h"
-#   include "lsst/afw/geom.h"
-#   include "lsst/afw/math.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
+#include "lsst/afw/image/MaskedImage.h"
 %}
 
 %include "lsst/p_lsstSwig.i"
@@ -45,7 +42,7 @@ Python interface to lsst::afw::math::detail classes and functions
 %import "lsst/afw/image/Image.i"
 %import "lsst/afw/image/Mask.i"
 %import "lsst/afw/image/MaskedImage.i"
-%import "lsst/afw/math/mathLib.i"
+%import "lsst/afw/math/kernel.i"
 
 %lsst_exceptions();
 
