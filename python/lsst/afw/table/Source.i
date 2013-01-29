@@ -34,13 +34,6 @@
 #include "lsst/afw/table/Source.h"
 %}
 
-namespace lsst { namespace afw {
-namespace detection {
-class Footprint;
-} // namespace detection
-}} // namespace lsst::afw
-%shared_ptr(lsst::afw::detection::Footprint);
-
 // =============== SourceTable and SourceRecord =============================================================
 
 %shared_ptr(lsst::afw::table::SourceTable)
