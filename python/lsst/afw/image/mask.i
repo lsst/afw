@@ -22,7 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%module(package="lsst.afw.image") imageLib
+%include "lsst/afw/image/image_fwd.i"
  
 %{
 #include "lsst/afw/image/Mask.h"

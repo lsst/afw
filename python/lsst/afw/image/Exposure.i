@@ -22,14 +22,15 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%include "lsst/afw/image/Calib.i"
-%include "lsst/afw/image/Wcs.i"
+%include "lsst/afw/image/image_fwd.i"
 
 %{
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Exposure.h"
 %}
+
+%import "lsst/afw/cameraGeom/cameraGeom_fwd.i"
 
 // Must go Before the %include
 %define %exposurePtr(PIXEL_TYPE)

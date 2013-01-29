@@ -192,11 +192,7 @@ Basic routines to talk to lsst::afw::image classes
 
 %include "lsst/afw/image/Wcs.i"
 %include "lsst/afw/image/TanWcs.i"
-
-/************************************************************************************************************/
-
-%import "lsst/afw/cameraGeom/Detector.i"
-
+%include "lsst/afw/image/Calib.i"
 %include "lsst/afw/image/Color.h"
 %include "lsst/afw/image/Defect.i"
 %include "lsst/afw/image/Exposure.i"
