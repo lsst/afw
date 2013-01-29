@@ -39,16 +39,12 @@ Various swigged-up C++ classes for testing
 %lsst_exceptions()
 
 %{
-#include "lsst/pex/logging.h"
-#include "lsst/pex/policy.h"
-#include "lsst/afw/geom.h"
-#include "lsst/afw/math.h"
-#include "lsst/afw/cameraGeom.h"
-#include "lsst/afw/image.h"
+#include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/SpatialCell.h"
 %}
 
-%import "lsst/afw/math/mathLib.i"
+%import "lsst/afw/math/spatialCell.i"
+%import "lsst/afw/image/MaskedImage.i"
 
 %shared_ptr(TestCandidate);
 %shared_ptr(TestCandidateVisitor);
