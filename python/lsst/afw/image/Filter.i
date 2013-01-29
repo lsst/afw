@@ -28,7 +28,6 @@
 #include "lsst/afw/image/Filter.h"
 %}
 
-%include "lsst/base.h"
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/pex/policy/policyLib.i"
 

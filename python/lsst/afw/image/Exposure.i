@@ -23,14 +23,11 @@
  */
 
 %include "lsst/afw/image/image_fwd.i"
+%include "lsst/afw/image/ExposureInfo.i"
 
 %{
-#include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Exposure.h"
 %}
-
-%import "lsst/afw/cameraGeom/cameraGeom_fwd.i"
 
 // Must go Before the %include
 %define %exposurePtr(PIXEL_TYPE)
@@ -57,14 +54,6 @@
 %exposurePtr(float);
 %exposurePtr(double);
 
-namespace lsst { namespace afw { namespace detection {
-    class Psf;
-}}}
-%shared_ptr(lsst::afw::detection::Psf);
-%shared_ptr(lsst::afw::image::ExposureInfo);
-
-%include "lsst/afw/image/ExposureInfo.h"
-
 %include "lsst/afw/image/Exposure.h"
 
 %exposure(U, boost::uint16_t);
@@ -72,7 +61,6 @@ namespace lsst { namespace afw { namespace detection {
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
-
 
 %extend lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %newobject convertF;
