@@ -39,6 +39,25 @@ static inline afwGeom::AffineTransform getLinear(const afwGeom::AffineTransform 
     return ret;
 }
 
+
+// TODO: make this routine externally callable and more generic using templates
+//  (also useful in e.g. math/offsetImage.cc)
+static inline PTR(Psf::Image) zeroPadImage(Psf::Image const &im, int pad)
+{
+    int nx = im.getWidth();
+    int ny = im.getHeight();
+
+    PTR(Psf::Image) out = boost::make_shared<Psf::Image> (nx+2*pad, ny+2*pad);
+    out->setXY0(im.getX0()-pad, im.getY0()-pad);
+
+    afwGeom::Box2I box(afwGeom::Point2I(pad,pad), afwGeom::Extent2I(nx,ny));
+    PTR(Psf::Image) subimage = boost::make_shared<Psf::Image> (*out, box);
+    *subimage <<= im;
+
+    return out;
+}
+
+
 //
 // This helper function is essentially an alternate interface to afw::math::warpImage()
 // in which the caller does not need to precompute the output bounding box.
@@ -55,7 +74,8 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
     // hmmm, are these the best choices?
     //
     static const char *interpolation_name = "lanczos5";
-    static const int interpolation_padding = 0;
+    static const int interpolation_dst_padding = 0;
+    static const int interpolation_src_padding = 5;
 
     // min/max coordinate values in input image
     int in_xlo = im.getX0();
@@ -72,18 +92,21 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
     //
     // bounding box for output image
     //
-    int out_xlo = floor(min4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) - interpolation_padding;
-    int out_ylo = floor(min4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) - interpolation_padding;
-    int out_xhi = ceil(max4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) + interpolation_padding;
-    int out_yhi = ceil(max4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) + interpolation_padding;
+    int out_xlo = floor(min4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) - interpolation_dst_padding;
+    int out_ylo = floor(min4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) - interpolation_dst_padding;
+    int out_xhi = ceil(max4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) + interpolation_dst_padding;
+    int out_yhi = ceil(max4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) + interpolation_dst_padding;
 
     // allocate output image
     Psf::Image::Ptr ret = boost::make_shared<Psf::Image>(out_xhi-out_xlo+1, out_yhi-out_ylo+1);
     ret->setXY0(afwGeom::Point2I(out_xlo,out_ylo));
 
+    // zero-pad input image
+    PTR(Psf::Image) im_padded = zeroPadImage(im, interpolation_src_padding);
+
     // warp it!
     afwMath::WarpingControl wc(interpolation_name);
-    afwMath::warpImage(*ret, im, t, wc, 0.0);
+    afwMath::warpImage(*ret, *im_padded, t, wc, 0.0);
     return ret;
 }
 
