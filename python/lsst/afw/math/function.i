@@ -22,7 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%import "lsst/daf/base/baseLib.i" // for Citizen
+%include "lsst/afw/math/math_fwd.i"
  
 %{
 #include <vector>
@@ -33,6 +33,7 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 %}
 
+%import "lsst/daf/base/baseLib.i" // for Citizen
 %import "lsst/afw/table/io/Persistable.i"
 
 // Must be used before %include

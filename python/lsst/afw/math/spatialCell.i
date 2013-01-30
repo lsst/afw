@@ -21,7 +21,9 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%include "lsst/afw/math/math_fwd.i"
+
 //
 // A couple of macros (%IMAGE and %MASKEDIMAGE) to provide MaskedImage's default arguments,
 // We'll use these to define meta-macros (e.g. %SpatialCellImageCandidatePtr)

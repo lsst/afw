@@ -21,7 +21,11 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%include "lsst/afw/math/math_fwd.i"
+%include "lsst/afw/math/function.i"
+%include "lsst/afw/math/kernel.i"
+
 /**
 * Define vectors of objects (not POTS=plain old types) that are required for functions.
 
