@@ -58,54 +58,6 @@ namespace afw {
 namespace detection {
 
 using geom::Span;
-/*!
- * \brief A range of pixels within one row of an Image
- */
-class Span {
-public:
-    typedef boost::shared_ptr<Span> Ptr;
-    typedef boost::shared_ptr<const Span> ConstPtr;
-
-    Span(int y,                         //!< Row that Span's in
-         int x0,                        //!< Starting column (inclusive)
-         int x1)                        //!< Ending column (inclusive)
-        : _y(y), _x0(x0), _x1(x1) {}    
-    ~Span() {}
-
-    int getX0() const { return _x0; }              ///< Return the starting x-value
-    int& getX0() { return _x0; }                   ///< Return the starting x-value
-    int getX1() const { return _x1; }              ///< Return the ending x-value
-    int& getX1() { return _x1; }                   ///< Return the ending x-value
-    int getY() const { return _y; }                ///< Return the y-value
-    int& getY()  { return _y; }                    ///< Return the y-value
-    int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
-
-	bool contains(int x) { return (x >= _x0) && (x <= _x1); }
-	bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
-
-    std::string toString() const;    
-
-    void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
-
-	/* Required to make Span "LessThanComparable" so they can be used
-	 * in sorting, binary search, etc.
-	 * http://www.sgi.com/tech/stl/LessThanComparable.html
-	 */
-	bool operator<(const Span& b) const;
-	
-    friend class Footprint;
-private:
-    Span() {}
-
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-        ar & make_nvp("y", _y) & make_nvp("x0", _x0) & make_nvp("x1", _x1);
-    }
-    int _y;                             //!< Row that Span's in
-    int _x0;                            //!< Starting column (inclusive)
-    int _x1;                            //!< Ending column (inclusive)
-};
 
 /************************************************************************************************************/
 /*!

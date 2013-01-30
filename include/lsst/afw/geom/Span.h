@@ -75,8 +75,11 @@ public:
     Iterator end() const { return Iterator(Point2I(_x1+1, _y)); }
 
     int getX0() const { return _x0; }         ///< Return the starting x-value
+    int& getX0() { return _x0; }              ///< Return the starting x-value
     int getX1() const { return _x1; }         ///< Return the ending x-value
+    int& getX1() { return _x1; }              ///< Return the ending x-value
     int getY()  const { return _y; }          ///< Return the y-value
+    int& getY() { return _y; }                ///< Return the y-value
     int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
     int getMinX() const { return _x0; }       ///< Minimum x-value.
     int getMaxX() const { return _x1; }       ///< Maximum x-value.
