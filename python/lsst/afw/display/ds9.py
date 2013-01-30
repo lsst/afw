@@ -34,6 +34,7 @@ except ImportError, e:
     print >> sys.stderr, "Cannot import xpa: %s" % e
 
 import displayLib
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
@@ -265,7 +266,7 @@ or (the old idiom):
 
             self._bufsize.append(size)  # don't call self.size() as ds9Cmd isn't defined yet
 
-        def set(self, size, silent=False):
+        def set(self, size, silent=True):
             """Set the ds9 buffer size to size"""
             if size < 0:
                 size = XPA_SZ_LINE - 5
@@ -302,13 +303,13 @@ or (the old idiom):
             if len(self._bufsize) > 1:
                 self._bufsize.pop()
 
-        def flush(self, silent=False):
+        def flush(self, silent=True):
             """Flush the pending commands"""
             ds9Cmd(flush=True, silent=silent)
 
     cmdBuffer = Buffer(0)
 
-def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None, get=False):
+def ds9Cmd(cmd=None, trap=True, flush=False, silent=True, frame=None, get=False):
     """Issue a ds9 command, raising errors as appropriate"""
 
     if getDefaultFrame() is None:
@@ -324,7 +325,7 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=False, frame=None, get=False
 
         # Work around xpa's habit of silently truncating long lines
         if cmdBuffer._lenCommands + len(cmd) > XPA_SZ_LINE - 5: # 5 to handle newlines and such like
-            ds9Cmd(flush=True)
+            ds9Cmd(flush=True, silent=silent)
 
         cmdBuffer._commands += ";" + cmd
         cmdBuffer._lenCommands += 1 + len(cmd)
@@ -427,8 +428,9 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 sys.stdout.flush()
                 time.sleep(0.5)
             else:
-                print "                                     \r",
-                sys.stdout.flush()
+                if i > 0:
+                    print "                                     \r",
+                    sys.stdout.flush()
                 break
 
     ds9Cmd(selectFrame(frame))
@@ -584,16 +586,19 @@ def erase(frame=None):
 
     ds9Cmd("regions delete all", flush=True, frame=frame)
 
-def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica"):
+def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", silent=True):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
         x                Draw an x
         *                Draw a *
         o                Draw a circle
-        @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)
+        @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
+        An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
 Any other value is interpreted as a string to be drawn. Strings obey the fontFamily (which may be extended
 with other characteristics, e.g. "times bold italic".
+
+N.b. objects derived from BaseCore include Axes and Quadrupole.
 """
     if frame is None:
         frame = getDefaultFrame()
@@ -612,7 +617,20 @@ with other characteristics, e.g. "times bold italic".
     cmd = selectFrame(frame) + "; "
     r += 1
     c += 1                      # ds9 uses 1-based coordinates
-    if symb == '+':
+    if isinstance(symb, afwGeom.ellipses.BaseCore) or re.search(r"^@:", symb):
+        try:
+            mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
+        except TypeError:
+            pass
+        else:
+            if mat:
+                mxx, mxy, myy = [float(_) for _ in mat.groups()]
+                symb = afwGeom.ellipses.Quadrupole(mxx, myy, mxy)
+
+        symb = afwGeom.ellipses.Axes(symb)
+        cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, symb.getA(), symb.getB(),
+                                                                 math.degrees(symb.getTheta()), color)
+    elif symb == '+':
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c, r+size, c, r-size, color)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r, c+size, r, color)
     elif symb == 'x':
@@ -627,20 +645,6 @@ with other characteristics, e.g. "times bold italic".
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size30, r+size60, c-size30, r-size60, color)
     elif symb == 'o':
         cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
-    elif re.search(r"^@:", symb):
-        mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
-        mxx, mxy, myy = map(lambda x: float(x), mat.groups())
-
-        theta = (0.5*math.atan2(2*mxy, mxx - myy))
-        ct, st = math.cos(theta), math.sin(theta)
-        theta *= 180/math.pi
-        A = math.sqrt(mxx*ct*ct + mxy*2*ct*st + myy*st*st)
-        B = math.sqrt(mxx*st*st - mxy*2*ct*st + myy*ct*ct)
-        if A < B:
-            A, B = B, A
-            theta += 90
-
-        cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, A, B, theta, color)
     else:
         try:
             # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
@@ -662,7 +666,7 @@ with other characteristics, e.g. "times bold italic".
         except Exception, e:
             print >> sys.stderr, ("Ds9 frame %d doesn't exist" % frame), e
 
-    ds9Cmd(cmd)
+    ds9Cmd(cmd, silent=silent)
 
 def line(points, frame=None, symbs=False, ctype=None):
     """Draw a set of symbols or connect the points, a list of (col,row)
@@ -728,7 +732,7 @@ def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
     if rowc != None:
         cmd += "pan to %g %g physical; " % (colc + 1, rowc + 1) # ds9 is 1-indexed. Grrr
 
-    ds9Cmd(cmd)
+    ds9Cmd(cmd, flush=True)
 
 def pan(colc=None, rowc=None, frame=None):
     """Pan to (rowc, colc); see also zoom"""

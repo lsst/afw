@@ -489,6 +489,62 @@ void Footprint::shift(
     _bbox.shift(geom::Extent2I(dx, dy));
 }
 
+/**
+ * Return the Footprint's centroid
+ *
+ * The centroid is calculated as the mean of the pixel centers
+ */
+geom::Point2D
+Footprint::getCentroid() const
+{
+    int n = 0;
+    double xc = 0, yc = 0;
+    for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter) {
+        Span::Ptr const span = *siter;
+        int const y = span->getY();
+        int const x0 = span->getX0();
+        int const x1 = span->getX1();
+        int const npix = x1 - x0 + 1;
+
+        n += npix;
+        xc += npix*0.5*(x1 + x0);
+        yc += npix*y;
+    }
+    assert(n == _area);
+
+    return geom::Point2D(xc/_area, yc/_area);
+}
+
+/**
+ * Return the Footprint's shape (interpreted as an ellipse)
+ *
+ * The shape is determined by measuring the moments of the pixel centers about its centroid (cf. getCentroid)
+ */
+geom::ellipses::Quadrupole
+Footprint::getShape() const
+{
+    geom::Point2D cen = getCentroid();
+    double const xc = cen.getX();
+    double const yc = cen.getY();
+
+    double sumxx = 0, sumxy = 0, sumyy = 0;
+    for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter) {
+        Span::Ptr const span = *siter;
+        int const y = span->getY();
+        int const x0 = span->getX0();
+        int const x1 = span->getX1();
+        int const npix = x1 - x0 + 1;
+
+        for (int x = x0; x <= x1; ++x) {
+            sumxx += (x - xc)*(x - xc);
+        }
+        sumxy += npix*(0.5*(x1 + x0) - xc)*(y - yc);
+        sumyy += npix*(y - yc)*(y - yc);
+    }
+
+    return geom::ellipses::Quadrupole(sumxx/_area, sumyy/_area, sumxy/_area);
+}
+
 namespace {
     /*
      * Set the pixels in idImage which are in Footprint by adding or replacing the specified value to the Image

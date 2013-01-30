@@ -141,6 +141,8 @@ public:
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
     int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
+    geom::Point2D getCentroid() const;
+    geom::ellipses::Quadrupole getShape() const;
 
     const Span& addSpan(const int y, const int x0, const int x1);
     const Span& addSpan(Span const& span);
