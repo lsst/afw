@@ -21,33 +21,45 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-%define mathLib_DOCSTRING
-"
-Python interface to lsst::afw::math classes
-"
-%enddef
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
+%include "lsst/afw/math/math_fwd.i"
+
+%lsst_exceptions();
+
+//---------- Warning suppression ----------------------------------------------------------------------------
 
 %{
 #   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
-// Enable ndarray's NumPy typemaps; types are declared in %included files.
+//---------- Dependencies that don't need to be seen by downstream imports ----------------------------------
+
+%import "lsst/afw/image/Image.i"
+%import "lsst/afw/image/Mask.i"
+%import "lsst/afw/image/MaskedImage.i"
+%import "lsst/afw/image/Exposure.i"
+
+namespace lsst { namespace pex { namespace policy {
+class Policy;
+}}} // namespace lsst::pex::policy
+%shared_ptr(lsst::pex::policy::Policy);
+
+//---------- ndarray and Eigen NumPy conversion typemaps ----------------------------------------------------
+
 %{
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_MATH_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "ndarray/swig.h"
 #include "ndarray/swig/eigen.h"
 %}
+
 %init %{
     import_array();
 %}
+
 %include "ndarray.i"
 
-%include "lsst/p_lsstSwig.i"
+//---------- STL Typemaps and Template Instantiations -------------------------------------------------------
 
 // vectors of plain old types; template vectors of more complex types in objectVectors.i
 %template(vectorF) std::vector<float>;
@@ -57,17 +69,7 @@ Python interface to lsst::afw::math classes
 %template(vectorVectorD) std::vector<std::vector<double> >;
 %template(vectorVectorI) std::vector<std::vector<int> >;
 
-namespace lsst { namespace pex { namespace policy {
-class Policy;
-}}} // namespace lsst::pex::policy
-%shared_ptr(lsst::pex::policy::Policy);
-
-%import "lsst/afw/image/Image.i"
-%import "lsst/afw/image/Mask.i"
-%import "lsst/afw/image/MaskedImage.i"
-%import "lsst/afw/image/Exposure.i"
-
-%lsst_exceptions();
+//---------- afw::math classes and functions ----------------------------------------------------------------
 
 %include "function.i"
 %include "kernel.i"
@@ -79,9 +81,8 @@ class Policy;
 %include "spatialCell.i"
 %include "random.i"
 %include "stack.i"
-%include "objectVectors.i" // must come last
-
 %include "LeastSquares.i"
+%include "objectVectors.i" // must come last
 
 %inline %{
     struct InitGsl {

@@ -19,7 +19,8 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
+%include "lsst/afw/math/math_fwd.i"
 
 %{
 #include "lsst/afw/math/minimize.h"

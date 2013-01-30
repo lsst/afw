@@ -23,3 +23,4 @@
 """Application Framework detection-related classes including Source
 """
 from detectionLib import *
+import lsst.afw.math as _math

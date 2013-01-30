@@ -21,18 +21,32 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-
-%include "lsst/afw/math/math_fwd.i"
-
-%{
-#include "lsst/afw/math/Stack.h"
-%}
-
-%include "lsst/afw/math/Stack.h"
-
-%define %declareStacks(PIXTYPE)
-%template(statisticsStack) lsst::afw::math::statisticsStack<PIXTYPE>;
+ 
+%define mathLib_DOCSTRING
+"
+Python interface to lsst::afw::math classes
+"
 %enddef
 
-%declareStacks(float)
-%declareStacks(double)
+%feature("autodoc", "1");
+%module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
+
+%include "lsst/p_lsstSwig.i"
+
+namespace lsst { namespace afw { namespace math {
+
+class Kernel;
+class AnalyticKernel;
+class DeltaFunctionKernel;
+class FixedKernel;
+class LinearCombinationKernel;
+class SeparableKernel;
+
+}}} // namespace lsst::afw::math
+
+%shared_ptr(lsst::afw::math::Kernel);
+%shared_ptr(lsst::afw::math::AnalyticKernel);
+%shared_ptr(lsst::afw::math::DeltaFunctionKernel);
+%shared_ptr(lsst::afw::math::FixedKernel);
+%shared_ptr(lsst::afw::math::LinearCombinationKernel);
+%shared_ptr(lsst::afw::math::SeparableKernel);
