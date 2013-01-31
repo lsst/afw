@@ -40,20 +40,20 @@ volatile bool isInstance =
 
 // Read-only singleton struct containing the schema and keys that a double-Gaussian Psf is mapped
 // to in record persistence.
-struct DoubleGaussianPsfSchema : private boost::noncopyable {
+struct DoubleGaussianPsfPersistenceHelper : private boost::noncopyable {
     afw::table::Schema schema;
     afw::table::Key< afw::table::Point<int> > dimensions;
     afw::table::Key<double> sigma1;
     afw::table::Key<double> sigma2;
     afw::table::Key<double> b;
 
-    static DoubleGaussianPsfSchema const & get() {
-        static DoubleGaussianPsfSchema instance;
+    static DoubleGaussianPsfPersistenceHelper const & get() {
+        static DoubleGaussianPsfPersistenceHelper instance;
         return instance;
     }
 
 private:
-    DoubleGaussianPsfSchema() :
+    DoubleGaussianPsfPersistenceHelper() :
         schema(),
         dimensions(
             schema.addField< afw::table::Point<int> >("dimensions", "width/height of kernel", "pixels")
@@ -71,7 +71,7 @@ public:
 
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
-        static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
+        static DoubleGaussianPsfPersistenceHelper const & keys = DoubleGaussianPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();
@@ -98,7 +98,7 @@ DoubleGaussianPsfFactory registration(getDoubleGaussianPsfPersistenceName());
 std::string DoubleGaussianPsf::getPersistenceName() const { return getDoubleGaussianPsfPersistenceName(); }
 
 void DoubleGaussianPsf::write(OutputArchiveHandle & handle) const {
-    static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
+    static DoubleGaussianPsfPersistenceHelper const & keys = DoubleGaussianPsfPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();
     (*record).set(keys.dimensions.getX(), getKernel()->getWidth());

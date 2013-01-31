@@ -12,18 +12,18 @@ namespace lsst { namespace afw { namespace math {
 namespace {
 
 // Singleton persistence schema for 2-d Gaussians
-struct GaussianFunction2Schema : private boost::noncopyable {
+struct GaussianFunction2PersistenceHelper : private boost::noncopyable {
     table::Schema schema;
     table::Key<double> sigma1;
     table::Key<double> sigma2;
     table::Key<double> angle;
 
-    static GaussianFunction2Schema const & get() {
-        static GaussianFunction2Schema instance;
+    static GaussianFunction2PersistenceHelper const & get() {
+        static GaussianFunction2PersistenceHelper instance;
         return instance;
     }
 private:
-    GaussianFunction2Schema() :
+    GaussianFunction2PersistenceHelper() :
         schema(),
         sigma1(schema.addField<double>("sigma1", "sigma along axis 1")),
         sigma2(schema.addField<double>("sigma2", "sigma along axis 2")),
@@ -34,18 +34,18 @@ private:
 };
 
 // Singleton persistence schema for 2-d circular DoubleGaussians
-struct DoubleGaussianFunction2Schema : private boost::noncopyable {
+struct DoubleGaussianFunction2PersistenceHelper : private boost::noncopyable {
     table::Schema schema;
     table::Key<double> sigma1;
     table::Key<double> sigma2;
     table::Key<double> ampl2;
 
-    static DoubleGaussianFunction2Schema const & get() {
-        static DoubleGaussianFunction2Schema instance;
+    static DoubleGaussianFunction2PersistenceHelper const & get() {
+        static DoubleGaussianFunction2PersistenceHelper instance;
         return instance;
     }
 private:
-    DoubleGaussianFunction2Schema() :
+    DoubleGaussianFunction2PersistenceHelper() :
         schema(),
         sigma1(schema.addField<double>("sigma1", "sigma of first Gaussian")),
         sigma2(schema.addField<double>("sigma2", "sigma of second Gaussian")),
@@ -56,11 +56,11 @@ private:
 };
 
 // Persistence schema for 2-d polynomials; not a singleton because it depends on the order.
-struct PolynomialFunction2Schema {
+struct PolynomialFunction2PersistenceHelper {
     table::Schema schema;
     table::Key< table::Array<double> > coefficients;
 
-    explicit PolynomialFunction2Schema(int nCoefficients) :
+    explicit PolynomialFunction2PersistenceHelper(int nCoefficients) :
         schema(),
         coefficients(
             schema.addField< table::Array<double> >(
@@ -71,7 +71,7 @@ struct PolynomialFunction2Schema {
         )
     {}
 
-    explicit PolynomialFunction2Schema(table::Schema const & schema_) :
+    explicit PolynomialFunction2PersistenceHelper(table::Schema const & schema_) :
         schema(schema_),
         coefficients(schema["coefficients"])
     {}
@@ -79,18 +79,18 @@ struct PolynomialFunction2Schema {
 };
 
 // Persistance schema for 2-d Chebyshevs; not a singleton because it depends on the order.
-struct Chebyshev1Function2Schema : public PolynomialFunction2Schema {
+struct Chebyshev1Function2PersistenceHelper : public PolynomialFunction2PersistenceHelper {
     table::Key< table::Point<double> > min;
     table::Key< table::Point<double> > max;
 
-    explicit Chebyshev1Function2Schema(int nCoefficients) :
-        PolynomialFunction2Schema(nCoefficients),
+    explicit Chebyshev1Function2PersistenceHelper(int nCoefficients) :
+        PolynomialFunction2PersistenceHelper(nCoefficients),
         min(schema.addField< table::Point<double> >("min", "minimum point for function's bbox")),
         max(schema.addField< table::Point<double> >("max", "maximum point for function's bbox"))
     {}
 
-    explicit Chebyshev1Function2Schema(table::Schema const & schema_) :
-        PolynomialFunction2Schema(schema_),
+    explicit Chebyshev1Function2PersistenceHelper(table::Schema const & schema_) :
+        PolynomialFunction2PersistenceHelper(schema_),
         min(schema["min"]),
         max(schema["max"])
     {}
@@ -105,7 +105,7 @@ public:
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        GaussianFunction2Schema const & keys = GaussianFunction2Schema::get();
+        GaussianFunction2PersistenceHelper const & keys = GaussianFunction2PersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema().contains(keys.schema));
         table::BaseRecord const & record = catalogs.front().front();
         return boost::make_shared< GaussianFunction2<ReturnT> >(
@@ -124,7 +124,7 @@ public:
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        DoubleGaussianFunction2Schema const & keys = DoubleGaussianFunction2Schema::get();
+        DoubleGaussianFunction2PersistenceHelper const & keys = DoubleGaussianFunction2PersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema().contains(keys.schema));
         table::BaseRecord const & record = catalogs.front().front();
         return boost::make_shared< DoubleGaussianFunction2<ReturnT> >(
@@ -143,7 +143,7 @@ public:
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        PolynomialFunction2Schema const keys(catalogs.front().getSchema());
+        PolynomialFunction2PersistenceHelper const keys(catalogs.front().getSchema());
         return boost::make_shared< PolynomialFunction2<ReturnT> >(
             keys.coefficients.extractVector(catalogs.front().front())
         );
@@ -160,7 +160,7 @@ public:
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        Chebyshev1Function2Schema keys(catalogs.front().getSchema());
+        Chebyshev1Function2PersistenceHelper keys(catalogs.front().getSchema());
         table::BaseRecord const & record = catalogs.front().front();
         geom::Box2D bbox(record.get(keys.min), record.get(keys.max));
         return boost::make_shared< Chebyshev1Function2<ReturnT> >(
@@ -212,7 +212,7 @@ std::string Chebyshev1Function2<ReturnT>::getPersistenceName() const {
 
 template <typename ReturnT>
 void GaussianFunction2<ReturnT>::write(table::io::OutputArchiveHandle & handle) const {
-    GaussianFunction2Schema const & keys = GaussianFunction2Schema::get();
+    GaussianFunction2PersistenceHelper const & keys = GaussianFunction2PersistenceHelper::get();
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(table::BaseRecord) record = catalog.addNew();
     record->set(keys.sigma1, this->getParameters()[0]);
@@ -223,7 +223,7 @@ void GaussianFunction2<ReturnT>::write(table::io::OutputArchiveHandle & handle) 
 
 template <typename ReturnT>
 void DoubleGaussianFunction2<ReturnT>::write(table::io::OutputArchiveHandle & handle) const {
-    DoubleGaussianFunction2Schema const & keys = DoubleGaussianFunction2Schema::get();
+    DoubleGaussianFunction2PersistenceHelper const & keys = DoubleGaussianFunction2PersistenceHelper::get();
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(table::BaseRecord) record = catalog.addNew();
     record->set(keys.sigma1, this->getParameters()[0]);
@@ -234,7 +234,7 @@ void DoubleGaussianFunction2<ReturnT>::write(table::io::OutputArchiveHandle & ha
 
 template <typename ReturnT>
 void PolynomialFunction2<ReturnT>::write(table::io::OutputArchiveHandle & handle) const {
-    PolynomialFunction2Schema const keys(this->getNParameters());
+    PolynomialFunction2PersistenceHelper const keys(this->getNParameters());
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     keys.coefficients.assignVector(*catalog.addNew(), this->getParameters());
     handle.saveCatalog(catalog);
@@ -242,7 +242,7 @@ void PolynomialFunction2<ReturnT>::write(table::io::OutputArchiveHandle & handle
 
 template <typename ReturnT>
 void Chebyshev1Function2<ReturnT>::write(table::io::OutputArchiveHandle & handle) const {
-    Chebyshev1Function2Schema const keys(this->getNParameters());
+    Chebyshev1Function2PersistenceHelper const keys(this->getNParameters());
     table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(table::BaseRecord) record = catalog.addNew();
     keys.coefficients.assignVector(*record, this->getParameters());

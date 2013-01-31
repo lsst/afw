@@ -34,7 +34,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/KernelSchema.h"
+#include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
@@ -108,18 +108,18 @@ namespace lsst { namespace afw { namespace math {
 
 namespace {
 
-struct DeltaFunctionKernelSchema : public Kernel::KernelSchema, private boost::noncopyable {
+struct DeltaFunctionKernelPersistenceHelper : public Kernel::PersistenceHelper, private boost::noncopyable {
     table::Key< table::Point<int> > pixel;
 
-    static DeltaFunctionKernelSchema const & get() {
-        static DeltaFunctionKernelSchema const instance;
+    static DeltaFunctionKernelPersistenceHelper const & get() {
+        static DeltaFunctionKernelPersistenceHelper const instance;
         return instance;
     }
 
 private:
 
-    explicit DeltaFunctionKernelSchema() :
-        Kernel::KernelSchema(0),
+    explicit DeltaFunctionKernelPersistenceHelper() :
+        Kernel::PersistenceHelper(0),
         pixel(schema.addField< table::Point<int> >("pixel", "position of nonzero pixel"))
     {
        schema.getCitizen().markPersistent();
@@ -136,7 +136,7 @@ public:
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        DeltaFunctionKernelSchema const & keys = DeltaFunctionKernelSchema::get();
+        DeltaFunctionKernelPersistenceHelper const & keys = DeltaFunctionKernelPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         afw::table::BaseRecord const & record = catalogs.front().front();
         geom::Extent2I dimensions(record.get(keys.dimensions));
@@ -165,7 +165,7 @@ std::string DeltaFunctionKernel::getPersistenceName() const {
 }
 
 void DeltaFunctionKernel::write(OutputArchiveHandle & handle) const {
-    DeltaFunctionKernelSchema const & keys = DeltaFunctionKernelSchema::get();
+    DeltaFunctionKernelPersistenceHelper const & keys = DeltaFunctionKernelPersistenceHelper::get();
     PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
     record->set(keys.pixel, _pixel);
 }

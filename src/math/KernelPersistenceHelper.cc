@@ -24,11 +24,11 @@
  
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/KernelSchema.h"
+#include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace lsst { namespace afw { namespace math {
 
-Kernel::KernelSchema::KernelSchema(int nSpatialFunctions) :
+Kernel::PersistenceHelper::PersistenceHelper(int nSpatialFunctions) :
     schema(),
     dimensions(schema.addField< afw::table::Point<int> >("dimensions", "dimensions of a Kernel's images")),
     center(schema.addField< afw::table::Point<int> >("center", "center point in a Kernel image"))
@@ -40,7 +40,7 @@ Kernel::KernelSchema::KernelSchema(int nSpatialFunctions) :
     }
 }
 
-Kernel::KernelSchema::KernelSchema(afw::table::Schema const & schema_) :
+Kernel::PersistenceHelper::PersistenceHelper(afw::table::Schema const & schema_) :
     schema(schema_),
     dimensions(schema["dimensions"]),
     center(schema["center"])
@@ -50,7 +50,7 @@ Kernel::KernelSchema::KernelSchema(afw::table::Schema const & schema_) :
     } catch (...) {}
 }
 
-PTR(afw::table::BaseRecord) Kernel::KernelSchema::write(
+PTR(afw::table::BaseRecord) Kernel::PersistenceHelper::write(
     afw::table::io::OutputArchiveHandle & handle,
     Kernel const & kernel
 ) const {
@@ -65,7 +65,7 @@ PTR(afw::table::BaseRecord) Kernel::KernelSchema::write(
     return record;
 }
 
-void Kernel::KernelSchema::writeSpatialFunctions(
+void Kernel::PersistenceHelper::writeSpatialFunctions(
     afw::table::io::OutputArchiveHandle & handle,
     afw::table::BaseRecord & record,
     std::vector<PTR(Kernel::SpatialFunction)> const & spatialFunctionList
@@ -76,7 +76,7 @@ void Kernel::KernelSchema::writeSpatialFunctions(
     }
 }
 
-std::vector<PTR(Kernel::SpatialFunction)> Kernel::KernelSchema::readSpatialFunctions(
+std::vector<PTR(Kernel::SpatialFunction)> Kernel::PersistenceHelper::readSpatialFunctions(
     afw::table::io::InputArchive const & archive,
     afw::table::BaseRecord const & record
 ) const {

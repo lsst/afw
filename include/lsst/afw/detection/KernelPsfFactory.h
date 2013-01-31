@@ -19,14 +19,14 @@ namespace lsst { namespace afw { namespace detection {
  *
  *  Implementations are in src/detection/Psf.cc.
  */
-struct KernelPsfSchema : private boost::noncopyable {
+struct KernelPsfPersistenceHelper : private boost::noncopyable {
     afw::table::Schema schema;
     afw::table::Key<int> kernel;
 
-    static KernelPsfSchema const & get();
+    static KernelPsfPersistenceHelper const & get();
 
 private:
-    KernelPsfSchema();
+    KernelPsfPersistenceHelper();
 };
 
 /**
@@ -42,7 +42,7 @@ public:
 
     virtual PTR(table::io::Persistable)
     read(table::io::InputArchive const & archive, table::io::CatalogVector const & catalogs) const {
-        static KernelPsfSchema const & keys = KernelPsfSchema::get();
+        static KernelPsfPersistenceHelper const & keys = KernelPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();

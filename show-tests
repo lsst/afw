@@ -1,0 +1,134 @@
+#!/bin/sh
+# Show (failed) tests
+
+testDir=.tests
+
+all=0
+list=0
+silent=0
+while [ X$1 != X"" ]; do
+    case $1 in
+     -a|--all)
+        all=1
+	list=1;;
+     -l|--list)
+        list=1;;
+     -h|--help)
+     cat >&2 <<EOF
+Usage:  show-test [options] [directory] [file [file ...]]
+Show failed tests
+
+Options:
+	-a, --all       List all tests, passed or failed.  Implies --list
+	-l, --list	List all failed tests
+	-h, --help	Print this message
+	-s, --silent	Don't print messages
+
+If directory is omitted, show-tests will look for the tests output
+directory, searching . then ./tests.  This means that running
+show-tests in a product's top-level directory should show all its
+failed tests.
+
+If files are specified, only those tests will be shown/listed.
+
+E.g.
+	show-tests		Shows all failed tests
+	show-tests -l		Lists all failed tests
+	show-tests -a		Lists all tests that were run
+	show-tests -l examples	Lists all failed examples
+	show-tests WCS_1.py	Shows the output of WCS_1.py if it failed
+EOF
+        exit;;
+     -s|--silent)
+	silent=1;;
+     *)
+        break;;
+    esac
+    shift
+done
+
+#
+# Find desired directory with test results
+#
+if [ -d "$1" ]; then
+    dir0=$1
+fi
+if [ -z $dir0 ]; then
+    dir0="."
+fi
+
+fullTdir=""
+for dir in . tests examples ..; do
+    if [ -d $dir0/$dir/$testDir ]; then
+	fullTdir=$dir0/$dir/$testDir
+	break
+    fi
+done
+
+if [ "$fullTdir" = "" ]; then
+    echo "No tests have been run in this directory (checked for .tests)" >&2
+    exit 1
+fi
+
+prettyTdir=$(dirname $fullTdir | perl -pe 's|^\./||') # for printing
+
+if [ -d $1 ]; then
+    shift;
+fi
+if [ X$1 = X ]; then
+    files=$fullTdir/*
+else
+    files=""
+    for f in "$@"; do
+	files="$files $fullTdir/$f.failed"
+    done
+fi
+
+first=1
+for f in $files; do
+    if [ ! -f $f ]; then		# glob must not have matched anything
+	if [ $silent = 0 ]; then
+	    echo All tests passed
+	fi
+	exit 0
+    fi
+    
+    bf=$(basename $f .failed)
+    if [ ! -f "$(dirname $fullTdir)/$bf" ]; then # an old failed test that no longer exists
+	continue
+    fi
+
+    case $f in
+	*.failed)
+	    status="Failed";;
+	*)
+	    if [ $all != 1 ]; then
+		continue
+	    fi
+	    status="Succeeded"
+	    ;;
+    esac
+
+    if [ $first = 1 ]; then
+	first=0
+    else
+	echo ""
+    fi
+
+    if [ $list = 1 ]; then
+	if [ $all = 1 ]; then
+	    printf "%-40s %s" $prettyTdir/$bf $status # no CR
+	else
+	    printf "%s" $prettyTdir/$bf		# no CR
+	fi
+    else
+	echo $bf:
+	cat $f
+    fi
+done
+
+if [ $list = 1 -a $first = 0 ]; then
+    echo ""
+fi
+exit 1
+

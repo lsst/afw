@@ -410,12 +410,12 @@ KernelPsfFactory<> registration("KernelPsf");
 
 } // anonymous
 
-KernelPsfSchema const & KernelPsfSchema::get() {
-    static KernelPsfSchema instance;
+KernelPsfPersistenceHelper const & KernelPsfPersistenceHelper::get() {
+    static KernelPsfPersistenceHelper instance;
     return instance;
 }
 
-KernelPsfSchema::KernelPsfSchema() :
+KernelPsfPersistenceHelper::KernelPsfPersistenceHelper() :
     schema(),
     kernel(schema.addField<int>("kernel", "archive ID of nested kernel object"))
 {
@@ -425,7 +425,7 @@ KernelPsfSchema::KernelPsfSchema() :
 std::string KernelPsf::getPersistenceName() const { return "KernelPsf"; }
 
 void KernelPsf::write(OutputArchiveHandle & handle) const {
-    static KernelPsfSchema const & keys = KernelPsfSchema::get();
+    static KernelPsfPersistenceHelper const & keys = KernelPsfPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     catalog.addNew()->set(keys.kernel, handle.put(_kernel));
     handle.saveCatalog(catalog);

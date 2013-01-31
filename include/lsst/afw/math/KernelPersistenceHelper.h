@@ -22,8 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-#ifndef LSST_AFW_MATH_KernelSchema_h_INCLUDED
-#define LSST_AFW_MATH_KernelSchema_h_INCLUDED
+#ifndef LSST_AFW_MATH_KernelPersistenceHelper_h_INCLUDED
+#define LSST_AFW_MATH_KernelPersistenceHelper_h_INCLUDED
 
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -33,14 +33,14 @@
 namespace lsst { namespace afw { namespace math {
 
 // Schema for use by Kernel subclasses in persistence.
-struct Kernel::KernelSchema {
+struct Kernel::PersistenceHelper {
     afw::table::Schema schema;
     afw::table::Key< afw::table::Point<int> > dimensions;
     afw::table::Key< afw::table::Point<int> > center;
     afw::table::Key< afw::table::Array<int> > spatialFunctions;
 
-    explicit KernelSchema(int nSpatialFunctions);
-    explicit KernelSchema(afw::table::Schema const & schema_);
+    explicit PersistenceHelper(int nSpatialFunctions);
+    explicit PersistenceHelper(afw::table::Schema const & schema_);
 
     PTR(afw::table::BaseRecord) write(
         afw::table::io::OutputArchiveHandle & handle,
@@ -61,4 +61,4 @@ struct Kernel::KernelSchema {
 
 }}}   // lsst:afw::math
 
-#endif // !LSST_AFW_MATH_KernelSchema_h_INCLUDED)
+#endif // !LSST_AFW_MATH_KernelPersistenceHelper_h_INCLUDED)

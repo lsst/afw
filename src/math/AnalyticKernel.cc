@@ -35,7 +35,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/KernelSchema.h"
+#include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
@@ -183,11 +183,11 @@ namespace lsst { namespace afw { namespace math {
 
 namespace {
 
-struct AnalyticKernelSchema : public Kernel::KernelSchema {
+struct AnalyticKernelPersistenceHelper : public Kernel::PersistenceHelper {
     table::Key<int> kernelFunction;
 
-    explicit AnalyticKernelSchema(int nSpatialFunctions) :
-        Kernel::KernelSchema(nSpatialFunctions),
+    explicit AnalyticKernelPersistenceHelper(int nSpatialFunctions) :
+        Kernel::PersistenceHelper(nSpatialFunctions),
         kernelFunction(
             schema.addField<int>(
                 "kernelfunction", "archive ID for analytic function used to produce kernel images"
@@ -195,8 +195,8 @@ struct AnalyticKernelSchema : public Kernel::KernelSchema {
         )
     {}
 
-    explicit AnalyticKernelSchema(table::Schema const & schema_) :
-        Kernel::KernelSchema(schema_),
+    explicit AnalyticKernelPersistenceHelper(table::Schema const & schema_) :
+        Kernel::PersistenceHelper(schema_),
         kernelFunction(schema["kernelfunction"])
     {}
 };
@@ -210,7 +210,7 @@ public:
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        AnalyticKernelSchema const keys(catalogs.front().getSchema());
+        AnalyticKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const & record = catalogs.front().front();
         geom::Extent2I dimensions(record.get(keys.dimensions));
         geom::Point2I center(record.get(keys.center));
@@ -245,7 +245,7 @@ AnalyticKernel::Factory registration(getAnalyticKernelPersistenceName());
 std::string AnalyticKernel::getPersistenceName() const { return getAnalyticKernelPersistenceName(); }
 
 void AnalyticKernel::write(OutputArchiveHandle & handle) const {
-    AnalyticKernelSchema const keys(_spatialFunctionList.size());
+    AnalyticKernelPersistenceHelper const keys(_spatialFunctionList.size());
     PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
     record->set(keys.kernelFunction, handle.put(_kernelFunctionPtr.get()));
 }

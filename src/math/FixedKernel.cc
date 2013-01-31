@@ -36,7 +36,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/KernelSchema.h"
+#include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
@@ -151,11 +151,11 @@ namespace lsst { namespace afw { namespace math {
 
 namespace {
 
-struct FixedKernelSchema : public Kernel::KernelSchema {
+struct FixedKernelPersistenceHelper : public Kernel::PersistenceHelper {
     table::Key< table::Array<Kernel::Pixel> > image;
 
-    explicit FixedKernelSchema(geom::Extent2I const & dimensions) :
-        Kernel::KernelSchema(0),
+    explicit FixedKernelPersistenceHelper(geom::Extent2I const & dimensions) :
+        Kernel::PersistenceHelper(0),
         image(
             schema.addField< table::Array<Kernel::Pixel> >(
                 "image", "pixel values (row-major)", dimensions.getX() * dimensions.getY()
@@ -163,8 +163,8 @@ struct FixedKernelSchema : public Kernel::KernelSchema {
         )
     {}
 
-    explicit FixedKernelSchema(table::Schema const & schema_) :
-        Kernel::KernelSchema(schema_),
+    explicit FixedKernelPersistenceHelper(table::Schema const & schema_) :
+        Kernel::PersistenceHelper(schema_),
         image(schema["image"])
     {}
 };
@@ -178,7 +178,7 @@ public:
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        FixedKernelSchema const keys(catalogs.front().getSchema());
+        FixedKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const & record = catalogs.front().front();
         geom::Extent2I dimensions(record.get(keys.dimensions));
         geom::Point2I center(record.get(keys.center));
@@ -205,7 +205,7 @@ FixedKernel::Factory registration(getFixedKernelPersistenceName());
 std::string FixedKernel::getPersistenceName() const { return getFixedKernelPersistenceName(); }
 
 void FixedKernel::write(OutputArchiveHandle & handle) const {
-    FixedKernelSchema const keys(getDimensions());
+    FixedKernelPersistenceHelper const keys(getDimensions());
     PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
     (*record)[keys.image] = ndarray::flatten<1>(ndarray::copy(_image.getArray()));
 }
