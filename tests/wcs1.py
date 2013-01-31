@@ -196,6 +196,26 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testCD(self):
         self.wcs.getCDMatrix()
 
+    def testCreateCDMatrix(self):
+        """Test that we make a correct CD matrix even if the header only has a PC matrix"""
+        md = dafBase.PropertySet()
+        md.set("NAXIS", 2)
+        md.set("CTYPE1", "RA---TAN")
+        md.set("CTYPE2", "DEC--TAN")
+        md.set("CRPIX1", 0)
+        md.set("CRPIX2", 0)
+        md.set("CRVAL1", 0)
+        md.set("CRVAL2", 0)
+        md.set("RADECSYS", "FK5")
+        md.set("EQUINOX", 2000.0)
+
+        wcs = afwImage.makeWcs(md)
+        self.assertTrue(numpy.all(wcs.getCDMatrix() == numpy.array([[1.0, 0.0], [0.0, 1.0]])))
+
+        md.set("PC1_1", 2)
+        wcs = afwImage.makeWcs(md)
+        self.assertTrue(numpy.all(wcs.getCDMatrix() == numpy.array([[2.0, 0.0], [0.0, 1.0]])))
+
     def testStripKeywords(self):
         """Test that we can strip WCS keywords from metadata when constructing a Wcs"""
         metadata = self.im.getMetadata()
