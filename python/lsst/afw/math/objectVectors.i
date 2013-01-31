@@ -42,3 +42,6 @@ that can alternatively be a vector of POTS, then:
 %template(Function2DList) std::vector<boost::shared_ptr<lsst::afw::math::Function2<double> > >;
 
 %template(KernelList) std::vector<boost::shared_ptr<lsst::afw::math::Kernel> >;
+
+%template(SpatialCellCandidateList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> >;
+%template(SpatialCellList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCell> >;

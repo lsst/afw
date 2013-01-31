@@ -41,6 +41,15 @@ class DeltaFunctionKernel;
 class FixedKernel;
 class LinearCombinationKernel;
 class SeparableKernel;
+class Background;
+class BackgroundMI;
+class StatisticsControl;
+class Statistics;
+class Random;
+class LeastSquares;
+class CandidateVisistor;
+class SpatialCellCandidate;
+class SpatialCell;
 
 }}} // namespace lsst::afw::math
 
@@ -50,3 +59,9 @@ class SeparableKernel;
 %shared_ptr(lsst::afw::math::FixedKernel);
 %shared_ptr(lsst::afw::math::LinearCombinationKernel);
 %shared_ptr(lsst::afw::math::SeparableKernel);
+%shared_ptr(lsst::afw::math::Background);
+%shared_ptr(lsst::afw::math::BackgroundMI);
+%shared_ptr(lsst::afw::math::StatisticsControl);
+%shared_ptr(lsst::afw::math::CandidateVisitor)
+%shared_ptr(lsst::afw::math::SpatialCellCandidate);
+%shared_ptr(lsst::afw::math::SpatialCell);
