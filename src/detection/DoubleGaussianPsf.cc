@@ -42,8 +42,7 @@ volatile bool isInstance =
 // to in record persistence.
 struct DoubleGaussianPsfSchema : private boost::noncopyable {
     afw::table::Schema schema;
-    afw::table::Key<int> width;
-    afw::table::Key<int> height;
+    afw::table::Key< afw::table::Point<int> > dimensions;
     afw::table::Key<double> sigma1;
     afw::table::Key<double> sigma2;
     afw::table::Key<double> b;
@@ -56,8 +55,9 @@ struct DoubleGaussianPsfSchema : private boost::noncopyable {
 private:
     DoubleGaussianPsfSchema() :
         schema(),
-        width(schema.addField<int>("width", "number of columns in realization of Psf", "pixels")),
-        height(schema.addField<int>("height", "number of rows in realization of Psf", "pixels")),
+        dimensions(
+            schema.addField< afw::table::Point<int> >("dimensions", "width/height of kernel", "pixels")
+        ),
         sigma1(schema.addField<double>("sigma1", "radius of inner Gaussian", "pixels")),
         sigma2(schema.addField<double>("sigma2", "radius of outer Gaussian", "pixels")),
         b(schema.addField<double>("b", "central amplitude of outer Gaussian (inner amplitude == 1)"))
@@ -77,8 +77,8 @@ public:
         table::BaseRecord const & record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
         return boost::make_shared<DoubleGaussianPsf>(
-            record.get(keys.width),
-            record.get(keys.height),
+            record.get(keys.dimensions.getX()),
+            record.get(keys.dimensions.getY()),
             record.get(keys.sigma1),
             record.get(keys.sigma2),
             record.get(keys.b)
@@ -101,8 +101,8 @@ void DoubleGaussianPsf::write(OutputArchiveHandle & handle) const {
     static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();
-    (*record).set(keys.width, getKernel()->getWidth());
-    (*record).set(keys.height, getKernel()->getHeight());
+    (*record).set(keys.dimensions.getX(), getKernel()->getWidth());
+    (*record).set(keys.dimensions.getY(), getKernel()->getHeight());
     (*record).set(keys.sigma1, getSigma1());
     (*record).set(keys.sigma2, getSigma2());
     (*record).set(keys.b, getB());
