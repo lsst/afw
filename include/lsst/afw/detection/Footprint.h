@@ -107,6 +107,8 @@ public:
 
     /// Return the Footprint's bounding box
     geom::Box2I getBBox() const { return _bbox; }
+    /// Return the Footprint's bounding box
+    geom::Box2I & getBBox() { return _bbox; }
     /// Return the corners of the MaskedImage the footprints live in
     geom::Box2I const & getRegion() const { return _region; }
 
@@ -165,6 +167,8 @@ private:
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
+Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
+                             bool left, bool right, bool up, bool down);
 
 std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
 

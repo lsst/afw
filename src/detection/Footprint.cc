@@ -1206,15 +1206,15 @@ Footprint::Ptr growFootprintSlow(
 
 /************************************************************************************************************/
 /**
- * Grow a Footprint by r pixels, returning a new Footprint
+ * Grow a Footprint by ngrow pixels, returning a new Footprint
  */
 Footprint::Ptr growFootprint(
-        Footprint const& foot,      //!< The Footprint to grow
-        int ngrow,                             //!< how much to grow foot
-        bool isotropic                         //!< Grow isotropically (as opposed to a Manhattan metric)
-                                               //!< @note Isotropic grows are significantly slower
-                                                 ) {
-
+        Footprint const& foot,          //!< The Footprint to grow
+        int ngrow,                      //!< how much to grow foot
+        bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
+                                        //!< @note Isotropic grows are significantly slower
+                            )
+{
     if (isotropic) {
         return growFootprintSlow(foot, ngrow);
     }
@@ -1294,8 +1294,52 @@ Footprint::Ptr growFootprint(
     return grown;
 }
 
+/**
+ * \note Deprecated interface; use the Footprint const& version
+ */
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic) {
     return growFootprint(*foot, ngrow, isotropic);
+}
+
+/**
+ * \brief Grow a Foorprint in at least one of the cardinal directions, returning a new Footprint
+ *
+ * Note that any left/right grow is done prior to the up/down grow, so any left/right grown pixels
+ * \em are subject to a further up/down grow (i.e. an initial single pixel Footprint will end up
+ * as a square, not a cross.
+ */
+PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
+                             int nGrow,            ///< How many pixels to grow it
+                             bool left,            ///< grow to the left
+                             bool right,           ///< grow to the right
+                             bool up,              ///< grow up
+                             bool down             ///< grow down
+                            )
+{
+	Footprint::Ptr grown(new Footprint(0, old.getRegion()));
+    
+    for (Footprint::SpanList::const_iterator siter = old.getSpans().begin();
+            siter != old.getSpans().end(); ++siter) {
+        CONST_PTR(Span) span = *siter;
+        int y=span->getY();
+        int x0 = (left) ? span->getX0() - nGrow : span->getX0();
+        int x1 = (right) ? span->getX1() + nGrow : span->getX1();
+        grown->addSpan(y, x0, x1);
+        if (up) {
+            for(int i=1; i <=nGrow; i++) {
+                grown->addSpan(y+i,span->getX0(), span->getX1());
+            }				
+        }
+        if (down) {
+            for(int i=1; i <=nGrow; i++) {
+                grown->addSpan(y-i, span->getX0(), span->getX1());
+            }
+        }
+    }
+
+    //normalize to remove overlapped spans and correct bbox
+    grown->normalize();
+    return grown;
 }
 
 /************************************************************************************************************/
