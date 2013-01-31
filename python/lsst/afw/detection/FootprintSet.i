@@ -1,10 +1,9 @@
 
+%include "lsst/afw/detection/detection_fwd.i"
 
 %{
 #include "lsst/afw/detection/FootprintSet.h"
 %}
-
-%import "lsst/afw/table/table_fwd.i"
 
 %shared_ptr(lsst::afw::detection::FootprintSet);
 
