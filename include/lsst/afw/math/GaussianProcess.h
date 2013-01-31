@@ -1,12 +1,14 @@
-//#include <Eigen/Dense>
+#include <Eigen/Dense>
 #include <time.h>
-#include "ndarray/eigen.h"
+//#include "ndarray/eigen.h"
 
-//using namespace Eigen;
+
 
 namespace lsst {
 namespace afw {
 namespace math {
+
+//using namespace Eigen;
 
 template <typename datatype>
 void merge_sort(datatype*,int*,int);
@@ -58,7 +60,7 @@ class gaussianprocess{
     
     double **ggl,**gglin;
     
-    Eigen::Matrix <dtyo,Dynamic,Dynamic> gg,ggin;
+    Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> gg,ggin;
     kd<dtyi> *kptr;
     
           

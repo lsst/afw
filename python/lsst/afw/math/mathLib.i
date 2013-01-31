@@ -83,6 +83,8 @@ Python interface to lsst::afw::math classes
 
 %include "LeastSquares.i"
 
+%include "GaussianProcess.i"
+
 %inline %{
     struct InitGsl {
         InitGsl() {

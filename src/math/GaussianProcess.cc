@@ -1,4 +1,4 @@
-#include "GaussianProcess.h"
+#include "lsst/afw/math/GaussianProcess.h"
 #include <iostream>
 
 namespace lsst{
@@ -208,7 +208,7 @@ Flannery 1992*/
 template <typename datatype>
 void merge_sort(datatype *insort, int *indices, int el){
   
-  int i,j,k;
+  int i,k;
   datatype nn;
   
   //printf("\nin sort\n");
@@ -448,7 +448,7 @@ void kd<datatype>::walk_up(int target, int dir, int root){
   
   if(dir==1){
     if(data[root][tree[target][0]]>=data[target][tree[target][0]]){
-      std::cout<<"tree FAILURE root "<<root<<" target "<<target<<" dir "<<dir;
+      std::cout<<"tree FAILURE root "<<root<<" target "<<target<<" dir "<<dir<<"\n";
       std::cout<<data[root][tree[target][0]]<<" >= "<<data[target][tree[target][0]]<<"\n";
     
     }
@@ -456,11 +456,12 @@ void kd<datatype>::walk_up(int target, int dir, int root){
   else{
       if(data[root][tree[target][0]]<data[target][tree[target][0]]){
       
-      std::cout<<"tree FAILURE root "<<root<<" target "<<target<<" dir "<<dir,data[root][tree[target][0]];
-      std::cout<<" < "<<data[target][tree[target][0]]<<"\n";
+      std::cout<<"tree FAILURE root "<<root<<"\n";
+      std::cout<<" target "<<target<<" dir "<<dir<<" \n";
+      std::cout<<data[root][tree[target][0]]<<" < "<<data[target][tree[target][0]]<<"\n";
       
-      //printf("tree FAILURE root %d target %d dir %d %d < %d\n",\
-      root,target,dir,data[root][tree[target][0]],data[target][tree[target][0]]);
+      //printf("tree FAILURE root %d target %d dir %d %d < %d\n",
+      //root,target,dir,data[root][tree[target][0]],data[target][tree[target][0]]);
     }
   }
   
@@ -558,7 +559,7 @@ void kd<datatype>::nn_srch(datatype *v, int n_nn, int *neighdex, double *dd){
   //the indexes of the neighbors will be stored in neighdex[];
   //the distances will be stored in dd[];
   
-  int i,j,k,l,start;
+  int i,start;
   
   neighcand=new int[n_nn];
   ddcand=new double[n_nn];
@@ -599,7 +600,7 @@ void kd<datatype>::nn_explore(datatype *v, int consider, int from){
   //this routine will look at the point denoted by 'consider'
   //and walk up/down the tree based on where it is coming from ('from')
   
-  int i,j,k,l,going;
+  int i,j,going;
   double dd;
   
   
@@ -699,7 +700,7 @@ INSTANTIATE_kd(int)
 
 template <typename dtyi, typename dtyo>
 gaussianprocess<dtyi,dtyo>::~gaussianprocess(){
-  int i,j;
+  int i;
   
   if(maxmin==1){
     for(i=0;i<room;i++){
@@ -718,7 +719,7 @@ gaussianprocess<dtyi,dtyo>::~gaussianprocess(){
     delete [] ddneigh;
     delete [] ggq;
     gg.resize(0,0);
-    ggq.resize(0,0);
+    
   }
   
 }
@@ -728,7 +729,7 @@ gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyi 
 double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
  //constructor if you have maxs and mins
   
-  int i,j,k,l;
+  int i,j;
   
   dim=dd;
   pts=pp;
@@ -774,7 +775,7 @@ gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyo 
 double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
  //constructor if you do not have maxs and mins
   
-  int i,j,k,l;
+  int i;
   
   dim=dd;
   pts=pp;
@@ -807,7 +808,7 @@ double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
 template <typename dtyi, typename dtyo>
 void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
   
-  Eigen::Matrix <dtyo,Dynamic,Dynamic> kgg,kggin;
+  Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> kgg,kggin;
   
   int *kneigh,i,j,k,*inn;
   double *ddneigh;
@@ -818,7 +819,7 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
   kggq=new dtyo[kk];
   
   inn=new int[pts];
-  rat=new int[pts];
+  rat=new dtyo[pts];
   
   kgg.resize(kk,kk);
   
@@ -882,7 +883,7 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
 template <typename dtyi, typename dtyo>
 dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi *vin, dtyo *sig2, int kk){
   
-  int i,j,k,l;
+  int i,j;
   dtyo fbar,mu;
   double before,after;
   
@@ -1003,7 +1004,8 @@ void gaussianprocess<dtyi,dtyo>::print_ggrow(int dex, dtyo *v){
 	template dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi*,dtyo*,int);\
 	template void gaussianprocess<dtyi,dtyo>::print_nn(int*);\
 	template void gaussianprocess<dtyi,dtyo>::set_lambda(dtyo);\
-	template void gaussianprocess<dtyi,dtyo>::print_ggrow(int,dtyo*);
+	template void gaussianprocess<dtyi,dtyo>::print_ggrow(int,dtyo*);\
+	template void gaussianprocess<dtyi,dtyo>::set_kp(int);
 
 INSTANTIATE_gaussianprocess(double,double);
 
