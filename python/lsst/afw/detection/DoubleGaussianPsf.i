@@ -1,5 +1,6 @@
 // -*- lsst-C++ -*-
 
+%include "lsst/afw/detection/detection_fwd.i"
 %include "lsst/afw/detection/Psf.i"
 
 %{
