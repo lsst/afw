@@ -313,9 +313,21 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             strncpy(_wcsInfo->radesys, "ICRS", STRLEN);
         }
     }
+    //
+    // If there are no CDi_j cards in the header, set CDi_j from PCi_j
+    // CDi_j == CDELTi*PCi_j
+    //
+    if ((_wcsInfo->altlin & 2) == 0) {  // no CDi_j cards were found in the header
+        double const *cdelt = _wcsInfo->cdelt;
+        double const *pc = _wcsInfo->pc;
+        double *cd = _wcsInfo->cd;
+
+        cd[0] = cdelt[0]*pc[0];         // 1_1
+        cd[1] = cdelt[0]*pc[1];         // 1_2
+        cd[2] = cdelt[1]*pc[2];         // 2_1
+        cd[3] = cdelt[1]*pc[3];         // 2_2
+    }
 }
-
-
 
 ///\brief Manually initialise a wcs struct using values passed by the constructor    
 ///\param crval The sky position of the reference point
