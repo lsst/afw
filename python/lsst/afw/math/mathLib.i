@@ -62,6 +62,8 @@ class Policy;
 //---------- STL Typemaps and Template Instantiations -------------------------------------------------------
 
 // vectors of plain old types; template vectors of more complex types in objectVectors.i
+%template(pairDD) std::pair<double,double>;
+%template(vectorPairDD) std::vector<std::pair<double,double> >;
 %template(vectorF) std::vector<float>;
 %template(vectorD) std::vector<double>;
 %template(vectorI) std::vector<int>;

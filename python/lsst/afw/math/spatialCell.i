@@ -92,12 +92,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 
 %include "lsst/afw/math/SpatialCell.h"
 
-%template(SpatialCellCandidateList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> >;
-%template(SpatialCellList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCell> >;
-
 %SpatialCellImageCandidates(F, float);
 %SpatialCellImageCandidates(D, double);
-
 
 %extend lsst::afw::math::SpatialCell {
     %pythoncode {
