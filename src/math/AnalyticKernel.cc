@@ -212,22 +212,20 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         AnalyticKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const & record = catalogs.front().front();
-        geom::Extent2I dimensions(record.get(keys.dimensions));
-        geom::Point2I center(record.get(keys.center));
         PTR(AnalyticKernel::KernelFunction) kernelFunction =
             archive.get<AnalyticKernel::KernelFunction>(record.get(keys.kernelFunction));
         PTR(AnalyticKernel) result;
         if (keys.spatialFunctions.isValid()) {
             result = boost::make_shared<AnalyticKernel>(
-                dimensions.getX(), dimensions.getY(), *kernelFunction,
+                record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()), *kernelFunction,
                 keys.readSpatialFunctions(archive, record)
             );
         } else {
             result = boost::make_shared<AnalyticKernel>(
-                dimensions.getX(), dimensions.getY(), *kernelFunction
+                record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()), *kernelFunction
             );
         }
-        result->setCtr(center);
+        result->setCtr(record.get(keys.center));
         return result;
     }
 

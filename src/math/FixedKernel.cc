@@ -180,14 +180,12 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         FixedKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const & record = catalogs.front().front();
-        geom::Extent2I dimensions(record.get(keys.dimensions));
-        geom::Point2I center(record.get(keys.center));
-        image::Image<Pixel> image(dimensions);
+        image::Image<Pixel> image(geom::Extent2I(record.get(keys.dimensions)));
         ndarray::flatten<1>(
             ndarray::static_dimension_cast<2>(image.getArray())
         ) = record[keys.image];
         PTR(FixedKernel) result = boost::make_shared<FixedKernel>(image);
-        result->setCtr(center);
+        result->setCtr(record.get(keys.center));
         return result;
     }
 

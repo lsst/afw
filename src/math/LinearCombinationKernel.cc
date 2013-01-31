@@ -398,98 +398,38 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
 
 // ------ Persistence ---------------------------------------------------------------------------------------
 
-/*
- *  Unlike other Kernels with spatial functions, for LinearCombinationKernel we save the spatial function
- *  Archive IDs in a separate catalog (rather than an array field), along with the IDs for the component
- *  kernels.  For spatially-invariant LinearCombinationKernels, we save the associated amplitude instead.
- *  This means the first Schema is just KernelPersistenceHelper with nSpatialFunctions=0, and all the stuff specific
- *  to LinearCombinationKernel goes in the second schema, in which we have one record per component.
- */
-
 namespace lsst { namespace afw { namespace math {
 
 namespace {
 
-struct LinearCombinationKernelPersistenceHelper : private boost::noncopyable {
-    table::Schema schema;
-    table::Key<int> kernel;
+struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelper {
+    table::Key< table::Array<double> > amplitudes;
+    table::Key< table::Array<int> > components;
 
-    KernelList makeKernelList(
-        table::io::InputArchive const & archive, table::BaseCatalog const & catalog
-    ) const {
-        KernelList result;
-        result.reserve(catalog.size());
-        for (table::BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-            result.push_back(archive.get<Kernel>(i->get(this->kernel)));
-        }
-        return result;
-    }
-
-protected:
-    LinearCombinationKernelPersistenceHelper() :
-        schema(),
-        kernel(schema.addField<int>("kernel", "archive ID of component kernel"))
-    {}
-};
-
-struct SpatiallyVaryingPersistenceHelper : public LinearCombinationKernelPersistenceHelper {
-    table::Key<int> spatialFunction;
-
-    static SpatiallyVaryingPersistenceHelper const & get() {
-        static SpatiallyVaryingPersistenceHelper const instance;
-        return instance;
-    }
-
-    std::vector<PTR(Kernel::SpatialFunction)> makeSpatialFunctionList(
-        table::io::InputArchive const & archive, table::BaseCatalog const & catalog
-    ) const {
-        std::vector<PTR(Kernel::SpatialFunction)> result;
-        result.reserve(catalog.size());
-        for (table::BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-            result.push_back(archive.get<Kernel::SpatialFunction>(i->get(spatialFunction)));
-        }
-        return result;
-    }
-
-private:
-
-    explicit SpatiallyVaryingPersistenceHelper() :
-        LinearCombinationKernelPersistenceHelper(),
-        spatialFunction(
-            schema.addField<int>(
-                "spatialfunction", "archive ID of the function for this component's amplitude"
-            )
+    LinearCombinationKernelPersistenceHelper(int nComponents, bool isSpatiallyVarying) :
+        Kernel::PersistenceHelper(isSpatiallyVarying ? nComponents : 0),
+        components(
+            schema.addField< table::Array<int> >("components", "archive IDs of component kernel",
+                                                 nComponents)
         )
     {
-        schema.getCitizen().markPersistent();
-    }
-};
-
-struct SpatiallyInvariantSchema : public LinearCombinationKernelPersistenceHelper {
-    table::Key<double> amplitude;
-
-    static SpatiallyInvariantSchema const & get() {
-        static SpatiallyInvariantSchema const instance;
-        return instance;
-    }
-
-    std::vector<double> makeKernelParameters(table::BaseCatalog const & catalog) const {
-        std::vector<double> result;
-        result.reserve(catalog.size());
-        for (table::BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-            result.push_back(i->get(amplitude));
+        if (!isSpatiallyVarying) {
+            amplitudes = schema.addField< table::Array<double> >("amplitudes", "amplitudes component kernel",
+                                                                 nComponents);
         }
-        return result;
     }
 
-private:
-
-    explicit SpatiallyInvariantSchema() :
-        LinearCombinationKernelPersistenceHelper(),
-        amplitude(schema.addField<double>("amplitude", "relative amplitude of component"))
+    LinearCombinationKernelPersistenceHelper(table::Schema const & schema_) :
+        Kernel::PersistenceHelper(schema_), components(schema["components"])
     {
-        schema.getCitizen().markPersistent();
+        if (!spatialFunctions.isValid()) {
+            amplitudes = schema["amplitudes"];
+            LSST_ARCHIVE_ASSERT(amplitudes.getSize() == components.getSize());
+        } else {
+            LSST_ARCHIVE_ASSERT(spatialFunctions.getSize() == components.getSize());
+        }
     }
+
 };
 
 } // anonymous
@@ -499,33 +439,28 @@ public:
 
     virtual PTR(afw::table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
-        LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
-        Kernel::PersistenceHelper const keys1(0);
-        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys1.schema);
-        afw::table::BaseRecord const & record1 = catalogs.front().front();
-        geom::Extent2I dimensions(record1.get(keys1.dimensions));
-        geom::Point2I center(record1.get(keys1.center));
-        afw::table::BaseCatalog const & catalog2 = catalogs.back();
+        LinearCombinationKernelPersistenceHelper const keys(catalogs.front().getSchema());
+        afw::table::BaseRecord const & record = catalogs.front().front();
+        geom::Extent2I dimensions(record.get(keys.dimensions));
+        std::vector<PTR(Kernel)> componentList(keys.components.getSize());        
+        for (std::size_t i = 0; i < componentList.size(); ++i) {
+            componentList[i] = archive.get<Kernel>(record[keys.components[i]]);
+        }
         PTR(LinearCombinationKernel) result;
-        if (catalog2.getSchema() == SpatiallyVaryingPersistenceHelper::get().schema) {
-            KernelList kernelList = SpatiallyVaryingPersistenceHelper::get().makeKernelList(archive, catalog2);
-            std::vector<PTR(Kernel::SpatialFunction)> spatialFunctionList
-                = SpatiallyVaryingPersistenceHelper::get().makeSpatialFunctionList(archive, catalog2);
-            result.reset(new LinearCombinationKernel(kernelList, spatialFunctionList));
-        } else if (catalog2.getSchema() == SpatiallyInvariantSchema::get().schema) {
-            KernelList kernelList = SpatiallyInvariantSchema::get().makeKernelList(archive, catalog2);
-            std::vector<double> kernelParameters
-                = SpatiallyInvariantSchema::get().makeKernelParameters(catalog2);
-            result.reset(new LinearCombinationKernel(kernelList, kernelParameters));
+        if (keys.spatialFunctions.isValid()) {
+            std::vector<SpatialFunctionPtr> spatialFunctionList = keys.readSpatialFunctions(archive, record);
+            result.reset(new LinearCombinationKernel(componentList, spatialFunctionList));
         } else {
-            throw LSST_EXCEPT(
-                afw::table::io::MalformedArchiveError,
-                "Invalid component schema for LinearCombinationKernel"
-            );
+            std::vector<double> kernelParameters(keys.amplitudes.getSize());
+            for (std::size_t i = 0; i < kernelParameters.size(); ++i) {
+                kernelParameters[i] = record[keys.amplitudes[i]];
+            }
+            result.reset(new LinearCombinationKernel(componentList, kernelParameters));
         }
         LSST_ARCHIVE_ASSERT(result->getDimensions() == dimensions);
-        result->setCtr(center);
+        result->setCtr(record.get(keys.center));
         return result;
     }
 
@@ -545,26 +480,19 @@ std::string LinearCombinationKernel::getPersistenceName() const {
 }
 
 void LinearCombinationKernel::write(OutputArchiveHandle & handle) const {
-    Kernel::PersistenceHelper const keys1(0);
-    keys1.write(handle, *this);
-    if (isSpatiallyVarying()) {
-        SpatiallyVaryingPersistenceHelper const & keys2 = SpatiallyVaryingPersistenceHelper::get();
-        afw::table::BaseCatalog catalog2 = handle.makeCatalog(keys2.schema);
-        for (int n = 0; n < getNBasisKernels(); ++n) {
-            PTR(afw::table::BaseRecord) record2 = catalog2.addNew();
-            record2->set(keys2.kernel, handle.put(_kernelList[n]));
-            record2->set(keys2.spatialFunction, handle.put(_spatialFunctionList[n]));
+    bool isVarying = isSpatiallyVarying();
+    LinearCombinationKernelPersistenceHelper const keys(getNBasisKernels(), isVarying);
+    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    if (isVarying) {
+        for (int n = 0; n < keys.components.getSize(); ++n) {
+            record->set(keys.components[n], handle.put(_kernelList[n]));
+            record->set(keys.spatialFunctions[n], handle.put(_spatialFunctionList[n]));
         }
-        handle.saveCatalog(catalog2);
     } else {
-        SpatiallyInvariantSchema const & keys2 = SpatiallyInvariantSchema::get();
-        afw::table::BaseCatalog catalog2 = handle.makeCatalog(keys2.schema);
-        for (int n = 0; n < getNBasisKernels(); ++n) {
-            PTR(afw::table::BaseRecord) record2 = catalog2.addNew();
-            record2->set(keys2.kernel, handle.put(_kernelList[n]));
-            record2->set(keys2.amplitude, _kernelParams[n]);
+        for (int n = 0; n < keys.components.getSize(); ++n) {
+            record->set(keys.components[n], handle.put(_kernelList[n]));
+            record->set(keys.amplitudes[n], _kernelParams[n]);
         }
-        handle.saveCatalog(catalog2);
     }
 }
 

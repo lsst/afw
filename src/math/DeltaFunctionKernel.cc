@@ -139,13 +139,11 @@ public:
         DeltaFunctionKernelPersistenceHelper const & keys = DeltaFunctionKernelPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         afw::table::BaseRecord const & record = catalogs.front().front();
-        geom::Extent2I dimensions(record.get(keys.dimensions));
-        geom::Point2I center(record.get(keys.center));
-        geom::Point2I pixel(record.get(keys.pixel));
         PTR(DeltaFunctionKernel) result(
-            new DeltaFunctionKernel(dimensions.getX(), dimensions.getY(), pixel)
+            new DeltaFunctionKernel(record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()),
+                                    record.get(keys.pixel))
         );
-        result->setCtr(center);
+        result->setCtr(record.get(keys.center));
         return result;
     }
 
