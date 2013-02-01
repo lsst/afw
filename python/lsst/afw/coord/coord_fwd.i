@@ -33,6 +33,8 @@ Python interface to lsst::afw::coord
 
 %include "lsst/p_lsstSwig.i"
 
+%lsst_exceptions();
+
 namespace lsst { namespace afw { namespace coord {
 
 class Coord;

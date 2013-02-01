@@ -27,6 +27,8 @@
 
 %include "lsst/p_lsstSwig.i"
 
+%lsst_exceptions();
+
 %include "lsst/afw/geom/ellipses_fwd.h"
 
 %shared_ptr(lsst::afw::geom::ellipses::BaseCore);

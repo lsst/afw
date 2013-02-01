@@ -33,6 +33,8 @@ Python interface to lsst::afw::math classes
 
 %include "lsst/p_lsstSwig.i"
 
+%lsst_exceptions();
+
 namespace lsst { namespace afw { namespace math {
 
 class Kernel;

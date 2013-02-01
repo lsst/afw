@@ -24,8 +24,6 @@
 
 %include "lsst/afw/geom/ellipses/ellipses_fwd.i"
 
-%lsst_exceptions();
-
 %{
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_ELLIPSES_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"

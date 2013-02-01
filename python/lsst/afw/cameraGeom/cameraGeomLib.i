@@ -24,8 +24,6 @@
 
 %include "lsst/afw/cameraGeom/cameraGeom_fwd.i"
 
-%lsst_exceptions();
-
 %include "lsst/afw/cameraGeom/Id.i"
 %include "lsst/afw/cameraGeom/FpPoint.i"
 %include "lsst/afw/cameraGeom/Orientation.i"

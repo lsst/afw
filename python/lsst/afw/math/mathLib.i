@@ -24,8 +24,6 @@
 
 %include "lsst/afw/math/math_fwd.i"
 
-%lsst_exceptions();
-
 //---------- Warning suppression ----------------------------------------------------------------------------
 
 %{

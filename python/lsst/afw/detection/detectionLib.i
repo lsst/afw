@@ -24,8 +24,6 @@
 
 %include "lsst/afw/detection/detection_fwd.i"
 
-%lsst_exceptions()
-
 //---------- Warning suppression ----------------------------------------------------------------------------
 
 // Suppress swig complaints

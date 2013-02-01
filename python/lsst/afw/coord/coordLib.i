@@ -24,8 +24,6 @@
 
 %include "lsst/afw/coord/coord_fwd.i"
 
-%lsst_exceptions();
-
 %include "std_pair.i"
 %template(pairSS) std::pair<std::string, std::string>;
 

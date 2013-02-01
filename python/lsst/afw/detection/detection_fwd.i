@@ -32,8 +32,9 @@ Python interface to lsst::afw::detection classes
 %module(package="lsst.afw.detection", docstring=detectionLib_DOCSTRING) detectionLib
 
 %include "lsst/p_lsstSwig.i"
-%include "lsst/base.h"
 %include "lsst/daf/base/persistenceMacros.i"
+
+%lsst_exceptions()
 
 namespace lsst { namespace afw { namespace detection {
 

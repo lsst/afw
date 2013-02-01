@@ -33,6 +33,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %include "lsst/p_lsstSwig.i"
 
+%lsst_exceptions();
+
 namespace lsst { namespace afw { namespace cameraGeom {
 
 class Detector;

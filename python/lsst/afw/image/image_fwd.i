@@ -31,14 +31,11 @@ Basic routines to talk to lsst::afw::image classes
 %feature("autodoc", "1");
 %module(package="lsst.afw.image", docstring=imageLib_DOCSTRING) imageLib
 
-// Suppress swig complaints
-#pragma SWIG nowarn=314                 // print is a python keyword (--> _print)
-#pragma SWIG nowarn=362                 // operator=  ignored
-
 %include "lsst/p_lsstSwig.i"
 %include "lsst/daf/base/persistenceMacros.i"
 %include "lsst/afw/image/LsstImageTypes.h"
-%include "lsst/base.h"
+
+%lsst_exceptions();
 
 namespace lsst { namespace afw { namespace image {
 

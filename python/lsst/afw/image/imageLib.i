@@ -24,8 +24,6 @@
 
 %include "lsst/afw/image/image_fwd.i"
 
-%lsst_exceptions();
-
 //---------- Warning suppression ----------------------------------------------------------------------------
 
 // Suppress swig complaints
@@ -116,13 +114,6 @@
 %declareNumPyConverters(ndarray::Array<double const,2,1>);
 
 //---------- afw::image classes and functions ---------------------------------------------------------------
-
-// Standard Swig typemap for bool is too permissive and confuses overloads.
-// Only consider a Python object bool if it is actually is bool object, not
-// something convertible to bool.
-%typemap(typecheck, precedence=SWIG_TYPECHECK_BOOL, noblock=1) bool {
-    $1 = PyBool_Check($input) ? 1 : 0;
-}
 
 %include "Image.i"
 %include "Mask.i"
