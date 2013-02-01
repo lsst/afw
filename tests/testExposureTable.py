@@ -196,6 +196,27 @@ class ExposureTableTestCase(unittest.TestCase):
         subset3 = self.cat.subsetContaining(crazyPoint)
         self.assertEqual(len(subset3), 0)
 
+    def testCoaddInputs(self):
+        coaddInputs = lsst.afw.image.CoaddInputs(
+            lsst.afw.table.ExposureTable.makeMinimalSchema(),
+            lsst.afw.table.ExposureTable.makeMinimalSchema()
+            )
+        coaddInputs.visits.addNew().setId(2)
+        coaddInputs.ccds.addNew().setId(3)
+        coaddInputs.ccds.addNew().setId(4)
+        exposureIn = lsst.afw.image.ExposureF(10, 10)
+        exposureIn.getInfo().setCoaddInputs(coaddInputs)
+        filename = "Exposure2.fits"
+        exposureIn.writeFits(filename)
+        exposureOut = lsst.afw.image.ExposureF(filename)
+        os.remove(filename)
+        coaddInputsOut = exposureOut.getInfo().getCoaddInputs()
+        self.assertEqual(len(coaddInputsOut.visits), 1)
+        self.assertEqual(len(coaddInputsOut.ccds), 2)
+        self.assertEqual(coaddInputsOut.visits[0].getId(), 2)
+        self.assertEqual(coaddInputsOut.ccds[0].getId(), 3)
+        self.assertEqual(coaddInputsOut.ccds[1].getId(), 4)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
