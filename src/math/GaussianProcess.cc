@@ -996,7 +996,7 @@ void gaussianprocess<dtyi,dtyo>::print_ggrow(int dex, dtyo *v){
   }
 }
 
-#define INSTANTIATE_gaussianprocess(dtyi,dtyo) \
+/*#define INSTANTIATE_gaussianprocess(dtyi,dtyo) \
 	template gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyo*,\
 	double(*)(dtyi*,dtyi*,int),dtyo(*)(dtyi*,dtyi*,int));\
         template gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyi*,dtyi*,dtyo*,\
@@ -1007,6 +1007,6 @@ void gaussianprocess<dtyi,dtyo>::print_ggrow(int dex, dtyo *v){
 	template void gaussianprocess<dtyi,dtyo>::print_ggrow(int,dtyo*);\
 	template void gaussianprocess<dtyi,dtyo>::set_kp(int);
 
-INSTANTIATE_gaussianprocess(double,double);
+INSTANTIATE_gaussianprocess(double,double);*/
 
 }}}
