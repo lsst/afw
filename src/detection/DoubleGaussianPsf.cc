@@ -40,24 +40,24 @@ volatile bool isInstance =
 
 // Read-only singleton struct containing the schema and keys that a double-Gaussian Psf is mapped
 // to in record persistence.
-struct DoubleGaussianPsfSchema : private boost::noncopyable {
+struct DoubleGaussianPsfPersistenceHelper : private boost::noncopyable {
     afw::table::Schema schema;
-    afw::table::Key<int> width;
-    afw::table::Key<int> height;
+    afw::table::Key< afw::table::Point<int> > dimensions;
     afw::table::Key<double> sigma1;
     afw::table::Key<double> sigma2;
     afw::table::Key<double> b;
 
-    static DoubleGaussianPsfSchema const & get() {
-        static DoubleGaussianPsfSchema instance;
+    static DoubleGaussianPsfPersistenceHelper const & get() {
+        static DoubleGaussianPsfPersistenceHelper instance;
         return instance;
     }
 
 private:
-    DoubleGaussianPsfSchema() :
+    DoubleGaussianPsfPersistenceHelper() :
         schema(),
-        width(schema.addField<int>("width", "number of columns in realization of Psf", "pixels")),
-        height(schema.addField<int>("height", "number of rows in realization of Psf", "pixels")),
+        dimensions(
+            schema.addField< afw::table::Point<int> >("dimensions", "width/height of kernel", "pixels")
+        ),
         sigma1(schema.addField<double>("sigma1", "radius of inner Gaussian", "pixels")),
         sigma2(schema.addField<double>("sigma2", "radius of outer Gaussian", "pixels")),
         b(schema.addField<double>("b", "central amplitude of outer Gaussian (inner amplitude == 1)"))
@@ -71,14 +71,14 @@ public:
 
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
-        static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
+        static DoubleGaussianPsfPersistenceHelper const & keys = DoubleGaussianPsfPersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
         return boost::make_shared<DoubleGaussianPsf>(
-            record.get(keys.width),
-            record.get(keys.height),
+            record.get(keys.dimensions.getX()),
+            record.get(keys.dimensions.getY()),
             record.get(keys.sigma1),
             record.get(keys.sigma2),
             record.get(keys.b)
@@ -98,11 +98,11 @@ DoubleGaussianPsfFactory registration(getDoubleGaussianPsfPersistenceName());
 std::string DoubleGaussianPsf::getPersistenceName() const { return getDoubleGaussianPsfPersistenceName(); }
 
 void DoubleGaussianPsf::write(OutputArchiveHandle & handle) const {
-    static DoubleGaussianPsfSchema const & keys = DoubleGaussianPsfSchema::get();
+    static DoubleGaussianPsfPersistenceHelper const & keys = DoubleGaussianPsfPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();
-    (*record).set(keys.width, getKernel()->getWidth());
-    (*record).set(keys.height, getKernel()->getHeight());
+    (*record).set(keys.dimensions.getX(), getKernel()->getWidth());
+    (*record).set(keys.dimensions.getY(), getKernel()->getHeight());
     (*record).set(keys.sigma1, getSigma1());
     (*record).set(keys.sigma2, getSigma2());
     (*record).set(keys.b, getB());

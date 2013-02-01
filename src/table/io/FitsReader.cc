@@ -65,16 +65,13 @@ struct FitsSchemaItem {
         char code = m[2].str()[0];
         // switch code over FITS codes that correspond to different element types
         switch (code) {
-        case 'J': // 32-bit integers - can only be scalars or Point fields.
+        case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
             if (size == 1) {
                 schema.addField<boost::int32_t>(name, doc, units);
             } else if (size == 2) {
                 schema.addField< Point<boost::int32_t> >(name, doc, units);
             } else {
-                throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    (boost::format("Unsupported FITS column type: '%s'.") % format).str()
-                );
+                schema.addField< Array<boost::int32_t> >(name, doc, units, size);
             }
             break;
         case 'K': // 64-bit integers - can only be scalars.

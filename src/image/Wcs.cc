@@ -1032,7 +1032,7 @@ namespace {
 
 // Read-only singleton struct containing the schema and keys that a simple Wcs is mapped
 // to in record persistence.
-struct WcsSchema : private boost::noncopyable {
+struct WcsPersistenceHelper : private boost::noncopyable {
     table::Schema schema;
     table::Key< table::Point<double> > crval;
     table::Key< table::Point<double> > crpix;
@@ -1044,13 +1044,13 @@ struct WcsSchema : private boost::noncopyable {
     table::Key<std::string> cunit1;
     table::Key<std::string> cunit2;
 
-    static WcsSchema const & get() {
-        static WcsSchema instance;
+    static WcsPersistenceHelper const & get() {
+        static WcsPersistenceHelper instance;
         return instance;
     };
 
 private:
-    WcsSchema() :
+    WcsPersistenceHelper() :
         schema(),
         crval(schema.addField< table::Point<double> >("crval", "celestial reference point")),
         crpix(schema.addField< table::Point<double> >("crpix", "pixel reference point")),
@@ -1076,7 +1076,7 @@ WcsFactory registration(getWcsPersistenceName());
 std::string Wcs::getPersistenceName() const { return getWcsPersistenceName(); }
 
 void Wcs::write(OutputArchiveHandle & handle) const {
-    WcsSchema const & keys = WcsSchema::get();
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();
     record->set(keys.crval, getSkyOrigin()->getPosition(afw::geom::degrees));
@@ -1110,7 +1110,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
     _nReject(0),
     _coordSystem(static_cast<afw::coord::CoordSystem>(-1))
 {
-    WcsSchema const & keys = WcsSchema::get();
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     if (!record.getSchema().contains(keys.schema)) {
         throw LSST_EXCEPT(
             afw::table::io::MalformedArchiveError,
@@ -1130,7 +1130,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
 
 PTR(table::io::Persistable)
 WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) const {
-    WcsSchema const & keys = WcsSchema::get();
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
     LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
     LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);

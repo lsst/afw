@@ -289,6 +289,14 @@ using boost::serialization::make_nvp;
             return os.str();
         }
 
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
+
     private:
         /**
         * @brief Update cached values
@@ -392,6 +400,14 @@ using boost::serialization::make_nvp;
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
+
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
 
     private:
         const double _multFac; ///< precomputed scale factor
@@ -607,6 +623,14 @@ using boost::serialization::make_nvp;
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
+
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
 
     private:
         mutable double _oldY;         ///< value of y for which _xCoeffs is valid
@@ -944,6 +968,14 @@ using boost::serialization::make_nvp;
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
+
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
 
     private:
         mutable double _oldYPrime;
