@@ -32,8 +32,9 @@ Created on: Mon Sep 10, 2007
 
 import os
 import os.path
-
 import unittest
+
+import numpy
 
 import eups
 import lsst.daf.base as dafBase
@@ -406,13 +407,65 @@ class ExposureTestCase(unittest.TestCase):
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[0], x0)
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[1], y0)
     
+    def testDeepCopyData(self):
+        """Make sure a deep copy of an Exposure has its own data (ticket #2625)
+        """
+        exp = afwImage.ExposureF(6, 7)
+        mi = exp.getMaskedImage()
+        mi.getImage().set(100)
+        mi.getMask().set(5)
+        mi.getVariance().set(200)
+        miArrays = mi.getArrays()
+
+        expCopy = exp.clone()
+        miCopy = expCopy.getMaskedImage()
+        miCopy.getImage().set(-50)
+        miCopy.getMask().set(2)
+        miCopy.getVariance().set(175)
+        miCopyArrays = miCopy.getArrays()
+
+        self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
+        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertTrue(numpy.allclose(miCopy.getVariance().getArray(), 175))
+
+        self.assertTrue(numpy.allclose(mi.getImage().getArray(), 100))
+        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
+        self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
+
+    
+    def testDeepCopySubData(self):
+        """Make sure a deep copy of a subregion of an Exposure has its own data (ticket #2625)
+        """
+        exp = afwImage.ExposureF(6, 7)
+        mi = exp.getMaskedImage()
+        mi.getImage().set(100)
+        mi.getMask().set(5)
+        mi.getVariance().set(200)
+        miArrays = mi.getArrays()
+
+        bbox = afwGeom.Box2I(afwGeom.Point2I(1,0), afwGeom.Extent2I(5, 4))
+        expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
+        miCopy = expCopy.getMaskedImage()
+        miCopy.getImage().set(-50)
+        miCopy.getMask().set(2)
+        miCopy.getVariance().set(175)
+        miCopyArrays = miCopy.getArrays()
+
+        self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
+        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertTrue(numpy.allclose(miCopy.getVariance().getArray(), 175))
+
+        self.assertTrue(numpy.allclose(mi.getImage().getArray(), 100))
+        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
+        self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
+    
     def testDeepCopyMetadata(self):
         """Make sure a deep copy of an Exposure has a deep copy of metadata (ticket #2568)
         """
         exp = afwImage.ExposureF(10, 10)
         expMeta = exp.getMetadata()
         expMeta.set("foo", 5)
-        expCopy = exp.Factory(exp, True)
+        expCopy = exp.clone()
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
         self.assertEqual(expCopyMeta.get("foo"), 6)
