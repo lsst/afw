@@ -97,15 +97,12 @@ namespace {
 class SimpleFitsReader : public io::FitsReader {
 public:
 
-    explicit SimpleFitsReader(Fits * fits) : io::FitsReader(fits) {}
+    explicit SimpleFitsReader(Fits * fits, PTR(io::InputArchive) archive) : io::FitsReader(fits, archive) {}
 
 protected:
 
     virtual PTR(BaseTable) _readTable();
 
-private:
-    int _spanCol;
-    int _peakCol;
 };
 
 PTR(BaseTable) SimpleFitsReader::_readTable() {
@@ -158,14 +155,14 @@ SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
 }
 
 PTR(io::FitsWriter)
-SimpleTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
-    return boost::make_shared<SimpleFitsWriter>(fits);
+SimpleTable::makeFitsWriter(fits::Fits * fitsfile) const {
+    return boost::make_shared<SimpleFitsWriter>(fitsfile);
 }
 
 template class CatalogT<SimpleRecord>;
 template class CatalogT<SimpleRecord const>;
 
-template class SimpleCatalogT<SimpleRecord>;
-template class SimpleCatalogT<SimpleRecord const>;
+template class SortedCatalogT<SimpleRecord>;
+template class SortedCatalogT<SimpleRecord const>;
 
 }}} // namespace lsst::afw::table

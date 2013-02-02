@@ -6,6 +6,7 @@
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/SchemaMapper.h"
+#include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/detail/Access.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -172,8 +173,8 @@ PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input, SchemaMapper con
     return output;
 }
 
-PTR(io::FitsWriter) BaseTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
-    return boost::make_shared<io::FitsWriter>(fits);
+PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile) const {
+    return boost::make_shared<io::FitsWriter>(fitsfile);
 }
 
 BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), _schema(schema) {

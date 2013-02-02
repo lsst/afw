@@ -1,3 +1,5 @@
+// -*- lsst-c++ -*-
+
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -19,28 +21,14 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-%define tableLib_DOCSTRING
-"
-Python interface to lsst::afw::table classes
-"
-%enddef
+%{
+#include "lsst/afw/image/Calib.h"
+%}
 
-%feature("autodoc", "1");
-%module(package="lsst.afw.table", docstring=tableLib_DOCSTRING) tableLib
+%import "lsst/afw/table/io/ioLib.i"
 
-#pragma SWIG nowarn=389                 // operator[]  ignored
-#pragma SWIG nowarn=503                 // comparison operators ignored
-#pragma SWIG nowarn=520                 // base class not similarly marked as smart pointer
-#pragma SWIG nowarn=401                 // nothing known about base class
-#pragma SWIG nowarn=302                 // redefine identifier (SourceSet<> -> SourceSet)
+%declareTablePersistable(Calib, lsst::afw::image::Calib);
 
-%lsst_exceptions();
-
-%include "lsst/p_lsstSwig.i"
-
-%include "Base.i"
-%include "Simple.i"
-%include "Source.i"
-%include "Match.i"
-%include "Exposure.i"
+%include "lsst/afw/image/Calib.h"
+%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
+%template(pairVectorDVectorD) std::pair<std::vector<double>, std::vector<double> >;
