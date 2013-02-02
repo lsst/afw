@@ -1,5 +1,6 @@
 #include "lsst/afw/math/GaussianProcess.h"
 #include <iostream>
+#include <math.h>
 
 namespace lsst{
 namespace afw{
@@ -137,6 +138,8 @@ void kd<datatype>::get_tree(int dex, int *v){
   v[2]=tree[dex][2];
   v[3]=tree[dex][3];
 }
+
+
 
 template <typename datatype>
 int merge_scanner(datatype *m, int *indices, int dex, int el){
@@ -553,6 +556,25 @@ int kd<datatype>::find_node(datatype *v){
   
 }
 
+template<typename dty>
+double EuclideanDistance(dty *v1, dty *v2, int d_dim){
+  int i;
+  double dd;
+  dd=0.0;
+  for(i=0;i<d_dim;i++){
+    dd+=double(v1[i]-v2[i])*double(v1[i]-v2[i]);
+  }
+  
+  return sqrt(dd);
+}
+
+template<typename dtyi, typename dtyo>
+dtyo ExpCovariogram(dtyi *v1, dtyi *v2, int d_dim){
+  double dd;
+  dd=EuclideanDistance(v1,v2,d_dim);
+  return dtyo(exp(-0.5*dd));
+}
+
 template<typename datatype>
 void kd<datatype>::nn_srch(datatype *v, int n_nn, int *neighdex, double *dd){
   //this will search the tree for the n_nn nearest neighbors of v[];
@@ -682,22 +704,6 @@ void kd<datatype>::nn_explore(datatype *v, int consider, int from){
 }
 
 
-
-#define INSTANTIATE_kd(dty) \
-	template kd<dty>::kd(int,int,dty**,double (*)(dty*,dty*,int)); \
-	template void merge_sort<dty>(dty*,int*,int); \
-	template int merge_scanner<dty>(dty*,int*,int,int);\
-	template void kd<dty>::test_scanner(); \
-	template void kd<dty>::test_sort(); \
-	template void kd<dty>::get_tree(int,int*);\
-	template void kd<dty>::black_box_test();\
-	template kd<dty>::~kd();\
-	template void kd<dty>::nn_srch(dty*,int,int*,double*);
-	
-
-INSTANTIATE_kd(double)
-INSTANTIATE_kd(int)
-
 template <typename dtyi, typename dtyo>
 gaussianprocess<dtyi,dtyo>::~gaussianprocess(){
   int i;
@@ -712,7 +718,7 @@ gaussianprocess<dtyi,dtyo>::~gaussianprocess(){
     
   }
   
-  delete kptr;
+  if(calleddummy==0)delete kptr;
   
   if(called_interp==1){
     delete [] neigh;
@@ -725,11 +731,19 @@ gaussianprocess<dtyi,dtyo>::~gaussianprocess(){
 }
 
 template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyi *mx, dtyi *mn, dtyo *ff,\
-double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
+gaussianprocess<dtyi,dtyo>::gaussianprocess(){
+  std::cout<<"Congratulations... you have called the Gaussian Process object\n";
+  calleddummy=1;
+}
+
+
+template <typename dtyi, typename dtyo>
+gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyi *mx, dtyi *mn, dtyo *ff){
  //constructor if you have maxs and mins
   
   int i,j;
+  
+  calleddummy=0;
   
   dim=dd;
   pts=pp;
@@ -747,8 +761,8 @@ double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
   max=mx;
   min=mn;
   
-  covariogram=cfn;
-  distance=dfn;
+  covariogram=ExpCovariogram;
+  distance=EuclideanDistance;
   
   called_interp=0;
 
@@ -771,11 +785,12 @@ double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
 }
 
 template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyo *ff,\
-double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
+gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyo *ff){
  //constructor if you do not have maxs and mins
   
   int i;
+  
+  calleddummy=0;
   
   dim=dd;
   pts=pp;
@@ -784,8 +799,8 @@ double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
   fn=ff;
   kriging_parameter=dtyo(1.0);
   
-  covariogram=cfn;
-  distance=dfn;
+  covariogram=ExpCovariogram;
+  distance=EuclideanDistance;
   
   called_interp=0;
   
@@ -804,6 +819,8 @@ double(*dfn)(dtyi*,dtyi*,int), dtyo(*cfn)(dtyi*,dtyi*,int)){
   lct=0.0;
   
 }
+
+
 
 template <typename dtyi, typename dtyo>
 void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
@@ -879,6 +896,7 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
   
   
 }
+
 
 template <typename dtyi, typename dtyo>
 dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi *vin, dtyo *sig2, int kk){
@@ -996,17 +1014,22 @@ void gaussianprocess<dtyi,dtyo>::print_ggrow(int dex, dtyo *v){
   }
 }
 
-/*#define INSTANTIATE_gaussianprocess(dtyi,dtyo) \
-	template gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyo*,\
-	double(*)(dtyi*,dtyi*,int),dtyo(*)(dtyi*,dtyi*,int));\
-        template gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyi*,dtyi*,dtyo*,\
-	double(*)(dtyi*,dtyi*,int),dtyo(*)(dtyi*,dtyi*,int)); \
-	template dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi*,dtyo*,int);\
-	template void gaussianprocess<dtyi,dtyo>::print_nn(int*);\
-	template void gaussianprocess<dtyi,dtyo>::set_lambda(dtyo);\
-	template void gaussianprocess<dtyi,dtyo>::print_ggrow(int,dtyo*);\
-	template void gaussianprocess<dtyi,dtyo>::set_kp(int);
-
-INSTANTIATE_gaussianprocess(double,double);*/
-
 }}}
+
+#define gp lsst::afw::math
+
+#define INSTANTIATEGP(dtyi,dtyo) \
+        template gp::gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyo*);\
+	template gp::gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyi*,dtyi*,dtyo*);\
+	template dtyo gp::gaussianprocess<dtyi,dtyo>::interpolate(dtyi*,dtyo*,int);\
+	template void gp::gaussianprocess<dtyi,dtyo>::print_nn(int*);\
+	template void gp::gaussianprocess<dtyi,dtyo>::set_lambda(dtyo);\
+	template void gp::gaussianprocess<dtyi,dtyo>::print_ggrow(int,dtyo*);\
+	template gp::gaussianprocess<dtyi,dtyo>::~gaussianprocess();\
+	template void gp::gaussianprocess<dtyi,dtyo>::set_kp(int);\
+	template gp::gaussianprocess<dtyi,dtyo>::gaussianprocess();
+
+
+INSTANTIATEGP(double,double);
+
+

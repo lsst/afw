@@ -10,6 +10,12 @@ namespace math {
 
 //using namespace Eigen;
 
+template <typename dty>
+double EuclideanDistance(dty*,dty*,int);
+
+template <typename dtyi, typename dtyo>
+dtyo ExpCovariogram(dtyi*,dtyi*,int);
+
 template <typename datatype>
 void merge_sort(datatype*,int*,int);
 
@@ -52,7 +58,7 @@ template <typename dtyi, typename dtyo>
 class gaussianprocess{
 
   private:
-    int pts,n_nn,maxmin,dim,room,called_interp,*neigh;
+    int pts,n_nn,maxmin,dim,room,called_interp,*neigh,calleddummy;
 
     double *ddneigh;
     dtyo *fn,*ggq,kriging_parameter,*lambda;
@@ -62,7 +68,6 @@ class gaussianprocess{
     
     Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> gg,ggin;
     kd<dtyi> *kptr;
-    
           
     double (*distance)(dtyi*,dtyi*,int);
     dtyo (*covariogram)(dtyi*,dtyi*,int);
@@ -74,20 +79,18 @@ class gaussianprocess{
   
      ~gaussianprocess();
       
-     gaussianprocess(int,int,dtyi**,dtyo*,double(*)(dtyi*,dtyi*,int),\
-     dtyo(*)(dtyi*,dtyi*,int));
+     gaussianprocess();
+     
+     gaussianprocess(int,int,dtyi**,dtyo*);
       
-     gaussianprocess(int,int,dtyi**,dtyi*,dtyi*,dtyo*,double(*)(dtyi*,dtyi*,int),\
-     dtyo(*)(dtyi*,dtyi*,int));
+     gaussianprocess(int,int,dtyi**,dtyi*,dtyi*,dtyo*);
      
      //note: code will remember whether or not you input with maxs and
      //mins
      
      dtyo interpolate(dtyi*,dtyo*,int);
     
-     void set_kp(int,dtyi**,dtyo*);
      void set_kp(int);
-     
      void print_nn(int*);
      void set_lambda(dtyo);
      void print_ggrow(int,dtyo*);
