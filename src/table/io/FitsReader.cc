@@ -69,7 +69,11 @@ struct FitsSchemaItem {
             if (size == 1) {
                 schema.addField<boost::int32_t>(name, doc, units);
             } else if (size == 2) {
-                schema.addField< Point<boost::int32_t> >(name, doc, units);
+                if (cls == "Array") {
+                    schema.addField< Array<boost::int32_t> >(name, doc, units, size);
+                } else {
+                    schema.addField< Point<boost::int32_t> >(name, doc, units);
+                }
             } else {
                 schema.addField< Array<boost::int32_t> >(name, doc, units, size);
             }
