@@ -110,6 +110,8 @@ public:
         return _map;
     }
 
+    Impl() : _index(ArchiveIndexSchema::get().schema) {}
+
     Impl(BaseCatalog const & index, CatalogVector const & catalogs) : _index(index), _catalogs(catalogs) {
         if (index.getSchema() != indexKeys.schema) {
             throw LSST_EXCEPT(
@@ -127,6 +129,8 @@ public:
 };
 
 // ----- InputArchive ---------------------------------------------------------------------------------------
+
+InputArchive::InputArchive() : _impl(new Impl()) {}
 
 InputArchive::InputArchive(PTR(Impl) impl) : _impl(impl) {}
 

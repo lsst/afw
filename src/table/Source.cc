@@ -230,10 +230,10 @@ namespace {
 class SourceFitsReader : public io::FitsReader {
 public:
 
-    explicit SourceFitsReader(Fits * fits) : io::FitsReader(fits), _spanCol(-1), _peakCol(-1),
-                                             _heavyPixCol(-1),
-                                             _heavyMaskCol(-1),
-                                             _heavyVarCol(-1) {}
+    explicit SourceFitsReader(Fits * fits, PTR(io::InputArchive) archive) :
+        io::FitsReader(fits, archive), _spanCol(-1), _peakCol(-1),
+        _heavyPixCol(-1), _heavyMaskCol(-1), _heavyVarCol(-1)
+        {}
 
 protected:
 
@@ -442,8 +442,8 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter) SourceTable::makeFitsWriter(io::FitsWriter::Fits * fits) const {
-    return boost::make_shared<SourceFitsWriter>(fits);
+PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile) const {
+    return boost::make_shared<SourceFitsWriter>(fitsfile);
 }
 
 //-----------------------------------------------------------------------------------------------------------
@@ -505,7 +505,7 @@ KeyTuple<Flux> addFluxFields(
 template class CatalogT<SourceRecord>;
 template class CatalogT<SourceRecord const>;
 
-template class SimpleCatalogT<SourceRecord>;
-template class SimpleCatalogT<SourceRecord const>;
+template class SortedCatalogT<SourceRecord>;
+template class SortedCatalogT<SourceRecord const>;
 
 }}} // namespace lsst::afw::table

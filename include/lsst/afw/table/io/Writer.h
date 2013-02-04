@@ -37,6 +37,7 @@ public:
         for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
             _writeRecord(*i);
         }
+        _finish();
     }
     
     virtual ~Writer() {}
@@ -48,6 +49,9 @@ protected:
 
     /// @brief Write an individual record.
     virtual void _writeRecord(BaseRecord const & record) = 0;
+
+    /// @brief Finish writing a catalog.
+    virtual void _finish() {}
 };
 
 }}}} // namespace lsst::afw::table::io
