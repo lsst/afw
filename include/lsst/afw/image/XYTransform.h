@@ -12,6 +12,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 
@@ -32,6 +33,7 @@ public:
     typedef boost::shared_ptr<lsst::afw::image::XYTransform> Ptr;
     typedef boost::shared_ptr<lsst::afw::image::XYTransform const> ConstPtr;
     typedef lsst::afw::geom::Point2D Point2D;
+    typedef lsst::afw::geom::ellipses::Quadrupole Quadrupole;
     typedef lsst::afw::geom::AffineTransform AffineTransform;
 
     XYTransform(bool in_fp_coordinate_system);
@@ -64,6 +66,10 @@ public:
     //
     virtual lsst::afw::geom::AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
     virtual lsst::afw::geom::AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
+
+    // apply distortion to an (infinitesimal) quadrupole
+    Quadrupole forwardTransform(Point2D const &pixel, Quadrupole const &q) const;
+    Quadrupole reverseTransform(Point2D const &pixel, Quadrupole const &q) const;
 
     // helper function which may be useful elsewhere; see XYTransform.cc
     static lsst::afw::geom::AffineTransform finiteDifference(Point2D const &p, Point2D const &q, Point2D const &qx, Point2D const &qy);

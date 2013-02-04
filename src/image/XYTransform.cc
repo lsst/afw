@@ -1,15 +1,10 @@
 #include "boost/make_shared.hpp"
-//#include "lsst/daf/base/PropertySet.h"
-//#include "lsst/daf/base/PropertyList.h"
-//#include "lsst/pex/exceptions.h"
-//#include "lsst/afw/geom/Point.h"
-//#include "lsst/afw/geom/AffineTransform.h"
-//#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/XYTransform.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwCG = lsst::afw::cameraGeom;
+namespace afwEll = lsst::afw::geom::ellipses;
 namespace pexEx = lsst::pex::exceptions;
 
 namespace lsst {
@@ -88,6 +83,19 @@ PTR(XYTransform) XYTransform::invert() const
 {
     return boost::make_shared<InvertedXYTransform> (this->clone());
 }
+
+afwEll::Quadrupole XYTransform::forwardTransform(Point2D const &pixel, Quadrupole const &q) const
+{
+    AffineTransform a = linearizeForwardTransform(pixel);
+    return q.transform(a.getLinear());
+}
+
+afwEll::Quadrupole XYTransform::reverseTransform(Point2D const &pixel, Quadrupole const &q) const
+{
+    AffineTransform a = linearizeReverseTransform(pixel);
+    return q.transform(a.getLinear());
+}
+
 
 
 // -------------------------------------------------------------------------------------------------
