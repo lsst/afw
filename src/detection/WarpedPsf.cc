@@ -1,4 +1,5 @@
 // #include <boost/make_shared.hpp>
+#include "pex/excptions.h"
 #include "lsst/afw/detection/WarpedPsf.h"
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/math/detail/SrcPosFunctor.h"
@@ -6,6 +7,7 @@
 namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
+namespace pexEx = lsst::pex::exceptions;
 
 typedef afwGeom::Point2D Point2D;
 
@@ -116,7 +118,11 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
 
 WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion)
 {
-    // _detector = undistorted_psf->getDetector();
+    if (undistorted_psf->in_fp_coordinate_system()) {
+        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                          "WarpedPsf constructor: distortion must not be in FP coordinate system");
+    }
+
     _undistorted_psf = undistorted_psf;
     _distortion = distortion;
 }
