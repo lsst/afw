@@ -29,6 +29,8 @@
 %{
 #   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
+// FIXME: should resolve these warnings some other way
+#pragma SWIG nowarn=509 // overloaded methods shadowed
 
 //---------- Dependencies that don't need to be seen by downstream imports ----------------------------------
 
