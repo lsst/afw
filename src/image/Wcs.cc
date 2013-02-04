@@ -251,6 +251,34 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         string msg = "Neither CRVAL2 not CRVAL2a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
+    /*
+     * According to Greisen and Calabretta (A&A 395, 1061–1075 (2002)) it's illegal to mix PCi_j and CDi_j
+     * headers; unfortunately Subaru puts both in its headers.  It actually uses PC001002 instead of PC1_2
+     * (dating to a proposed FITS standard from 1996) and at least sometimes fails to include CDELT[12],
+     * so the CD and PC matrices are inconsistent
+     *
+     * If we detect any part of a CD matrix, delete all PC matrices
+     */
+    if(access.toRead()->exists("CD1_1") || access.toRead()->exists("CD1_2") ||
+       access.toRead()->exists("CD2_1") || access.toRead()->exists("CD2_2")) {
+        for (int i = 1; i <= 2; ++i) {
+            for (int j = 1; j <= 2; ++j) {
+                std::string key = (boost::format("PC%i_%i") % j % i).str();
+                if (access.toRead()->exists(key)) {
+                    double const val = access.toRead()->getAsDouble(key);
+                    access.toWrite()->remove(key);
+                    access.toWrite()->add("X_" + key, val);
+                }
+
+                key = (boost::format("PC%03d%03d") % j % i).str();
+                if (access.toRead()->exists(key)) {
+                    double const val = access.toRead()->getAsDouble(key);
+                    access.toWrite()->remove(key);
+                    access.toWrite()->add("X_" + key, val);
+                }
+            }
+        }
+    }
 
     //Pass the header into wcslib's formatter to extract & setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
