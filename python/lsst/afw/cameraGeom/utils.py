@@ -28,6 +28,7 @@ Support for cameraGeom
 
 import math
 import os
+import re
 import sys
 import unittest
 try:
@@ -82,6 +83,61 @@ class GetCcdImage(object):
 
     def setTrimmed(self, doTrim):
         self.isTrimmed = doTrim
+
+class ButlerImage(GetCcdImage):
+    """A class to return an Image of a given Ccd based on its cameraGeometry"""
+    
+    def __init__(self, butler, type="raw", isTrimmed=True, defaultSize=afwGeom.ExtentI(2048, 4176),
+                 *args, **kwargs):
+        """Initialise"""
+        super(ButlerImage, self).__init__(*args)
+        self.isTrimmed = isTrimmed
+        self.type = type
+        self.butler = butler
+        self.kwargs = kwargs
+        self.isRaw = False
+        self.defaultSize = defaultSize
+
+    def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
+        """Return an image of the specified amp in the specified ccd"""
+
+        try:
+            im = self.butler.get(self.type, ccd=ccd.getId().getSerial(), **self.kwargs).getMaskedImage().getImage()
+        except Exception, e:
+            if ccd.getId().getSerial() in range(100, 104):
+                im = afwImage.ImageF(self.defaultSize[1], self.defaultSize[0])
+            else:
+                im = afwImage.ImageF(self.defaultSize)
+
+            if self.type == "raw":
+                im = im.convertF()
+
+            return im
+                
+        if self.type == "raw":
+            im = im.convertF()
+        else:
+            return im
+
+        trim = True
+        ccdImage = im.Factory(ccd.getAllPixels(trim))
+
+        for a in ccd:
+            if trim:
+                bias = im.Factory(im, a.getDiskBiasSec())
+
+                sim = im.Factory(im, a.getDiskDataSec())
+
+                sim -= afwMath.makeStatistics(bias, afwMath.MEANCLIP).getValue()
+
+            a.setTrimmed(True)
+
+            sub = ccdImage.Factory(ccdImage, a.getAllPixels(trim))
+
+            sub <<= a.prepareAmpData(sim)
+            sub /= a.getElectronicParams().getGain()
+
+        return ccdImage
 
 class SynthesizeCcdImage(GetCcdImage):
     """A class to return an Image of a given Ccd based on its cameraGeometry"""
@@ -540,19 +596,34 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
         showCcd(ccd, ccdImage=ccdImage, isTrimmed=isTrimmed)
     return ccdImage
 
-def trimExposure(ccdImage, ccd=None):
+def trimExposure(ccdImage, ccd=None, subtractBias=False):
     """Trim a raw CCD Exposure"""
 
     if not ccd:
         ccd = cameraGeom.cast_Ccd(ccdImage.getDetector())
     
     dim = ccd.getAllPixelsNoRotation(True).getDimensions()
-    trimmedImage = ccdImage.Factory(dim)
+    if subtractBias:
+        trimmedImage = afwImage.ExposureF(dim)
+    else:
+        trimmedImage = ccdImage.Factory(dim)
+
     for a in ccd:
         data = ccdImage.Factory(ccdImage, a.getDataSec(False), afwImage.LOCAL).getMaskedImage()
         tdata = trimmedImage.Factory(trimmedImage, a.getDataSec(True), afwImage.LOCAL).getMaskedImage()
-        tdata <<= data
+        if not subtractBias:
+            tdata <<= data
+        else:
+            tdata <<= data.convertF()
 
+            bias = ccdImage.Factory(ccdImage, a.getBiasSec(False), afwImage.LOCAL).getMaskedImage().convertF()
+            import numpy
+            print \
+                afwMath.makeStatistics(tdata, afwMath.MEDIAN).getValue(), \
+                afwMath.makeStatistics(tdata, afwMath.STDEVCLIP).getValue(), \
+                afwMath.makeStatistics(bias, afwMath.MEDIAN).getValue()
+            tdata -= afwMath.makeStatistics(bias, afwMath.MEDIAN).getValue()
+            
     ccd.setTrimmed(True)
     return trimmedImage
 
@@ -595,13 +666,14 @@ of the detectors"""
         nQuarter = ccd.getOrientation().getNQuarter()
     #    ccdDim = cameraGeom.rotateBBoxBy90(ccd.getAllPixels(isTrimmed), nQuarter,
     #           ccd.getAllPixels(isTrimmed).getDimensions()).getDimensions()
-        for a in ccd:
+        for a in cameraGeom.cast_Ccd(ccd):
             bbox = a.getAllPixels(isTrimmed)
     #        if nQuarter != 0:
     #            bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
 
-            displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49,
-                                  frame=frame, bin=bin)
+            if False:                   # draw amps
+                displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49,
+                                      frame=frame, bin=bin)
 
             if not isTrimmed:
                 for bbox, ctype in ((a.getBiasSec(), ds9.RED), (a.getDataSec(), ds9.BLUE)):
@@ -637,7 +709,8 @@ of the detectors"""
                 xc += ccdOrigin[0]
                 yc += ccdOrigin[1]
 
-            ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc/bin, yc/bin, frame=frame)
+            if False:         # draw amps
+                ds9.dot(str(ccd.findAmp(cen).getId().getSerial()), xc/bin, yc/bin, frame=frame)
 
         displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                               borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
@@ -657,7 +730,18 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
     for det in raft:
         ccd = cameraGeom.cast_Ccd(det)
         
+        if False and ccd.getId().getSerial() not in (70, 71, 78, 84, 90, 100, 101, 102, 103,): # XXXXXXXXXXXXXXXXXX
+            continue
+        if False and ccd.getId().getSerial() > 76:
+            continue
         bbox = ccd.getAllPixels(True)
+        if False and ccd.getId().getSerial() in range(100, 104):
+            w, h = ccd.getAllPixels(True).getDimensions()
+            xc, yc = ccd.getCenterPixel()
+            xc += h/2 if xc < 0 else -h/2
+            yc += h/2 if yc < 0 else -h/2
+            ccd.setCenterPixel(afwGeom.PointD(xc, yc))
+
         cen = ccd.getCenterPixel()
         origin = afwGeom.Point2I(cen)
         origin -= bbox.getDimensions()/2
@@ -705,7 +789,7 @@ If imageSource isn't None, create an image using the images specified by imageSo
                                     bbox.getHeight()/2 - raftCenter.getY())
 
             if True:
-                name = ccd.getId().getName()
+                name = ccd.getId().getSerial()
             else:
                 name = str(ccd.getCenter())
 
@@ -739,8 +823,8 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
 
     return cameraImage
 
-def showCamera(camera, imageSource=SynthesizeCcdImage(), imageFactory=afwImage.ImageU,
-               frame=None, overlay=True, bin=1):
+def showCamera(camera, imageSource=SynthesizeCcdImage(), imageFactory=afwImage.ImageF,
+               frame=None, overlay=True, bin=1, title=None):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and amplifier boundaries
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
@@ -755,7 +839,10 @@ of the detectors"""
         cameraImage = imageSource
 
     if cameraImage:
-        ds9.mtv(cameraImage, frame=frame, title=camera.getId().getName())
+        if not title:
+            title = camera.getId().getName()
+
+        ds9.mtv(cameraImage, frame=frame, title=title)
 
     with ds9.Buffering():
         for det in camera:
@@ -771,6 +858,8 @@ of the detectors"""
                      raftOrigin=center - afwGeom.Extent2D(raft.getAllPixels().getWidth()/2,
                                                              raft.getAllPixels().getHeight()/2), 
                      bin=bin)
+
+    return cameraImage
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
