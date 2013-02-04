@@ -69,7 +69,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
         self.persistence = dafPers.Persistence.getPersistence(policy)
 
         # Choose a file to manipulate
-        self.infile = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1_img.fits")
+        self.infile = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
 
         self.image = afwImage.ImageF(self.infile)
 
