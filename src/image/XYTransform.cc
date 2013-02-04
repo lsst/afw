@@ -1,14 +1,15 @@
 #include "boost/make_shared.hpp"
-#include "lsst/daf/base/PropertySet.h"
-#include "lsst/daf/base/PropertyList.h"
-#include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/image/Wcs.h"
+//#include "lsst/daf/base/PropertySet.h"
+//#include "lsst/daf/base/PropertyList.h"
+//#include "lsst/pex/exceptions.h"
+//#include "lsst/afw/geom/Point.h"
+//#include "lsst/afw/geom/AffineTransform.h"
+//#include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/XYTransform.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
+namespace afwCG = lsst::afw::cameraGeom;
 namespace pexEx = lsst::pex::exceptions;
 
 namespace lsst {
@@ -21,8 +22,8 @@ namespace image {
 // XYTransform
 
 
-XYTransform::XYTransform() 
-    : daf::base::Citizen(typeid(this))
+XYTransform::XYTransform(bool in_fp_coordinate_system) 
+    : daf::base::Citizen(typeid(this)), _in_fp_coordinate_system(in_fp_coordinate_system)
 { }
 
 
@@ -94,9 +95,13 @@ PTR(XYTransform) XYTransform::invert() const
 // IdentityXYTransform
 
 
+IdentityXYTransform::IdentityXYTransform(bool in_fp_coordinate_system)
+    : XYTransform(in_fp_coordinate_system)
+{ }
+
 PTR(XYTransform) IdentityXYTransform::clone() const
 {
-    return boost::make_shared<IdentityXYTransform> ();
+    return boost::make_shared<IdentityXYTransform> (_in_fp_coordinate_system);
 }
 
 lsst::afw::geom::Point2D IdentityXYTransform::forwardTransform(Point2D const &pixel) const
@@ -128,7 +133,7 @@ lsst::afw::geom::AffineTransform IdentityXYTransform::linearizeReverseTransform(
 
 
 XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
-    : XYTransform(), _dst(dst), _src(src)
+    : XYTransform(false), _dst(dst), _src(src)
 { }
 
 
@@ -169,7 +174,7 @@ PTR(XYTransform) XYTransformFromWcsPair::invert() const
 
 
 InvertedXYTransform::InvertedXYTransform(PTR(XYTransform) base)
-    : _base(base)
+    : XYTransform(base->in_fp_coordinate_system()), _base(base)
 { }
 
 PTR(XYTransform) InvertedXYTransform::clone() const
@@ -210,6 +215,7 @@ afwGeom::AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D 
 
 
 RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs, bool coefficientsDistort)
+    : XYTransform(true)
 {
     if (coeffs.size() == 0) {
         // constructor called with no arguments = identity transformation
@@ -432,6 +438,50 @@ afwGeom::AffineTransform RadialXYTransform::makeAffineTransform(double x, double
     ret[4] = -t*x;                                 // v0
     ret[5] = -t*y;                                 // v1
     return ret;
+}
+
+
+// -----------------------------------------------------------------------------------------------------------
+//
+// DetectorXYTransform
+
+
+DetectorXYTransform::DetectorXYTransform(CONST_PTR(XYTransform) fp_transform, CONST_PTR(Detector) detector)
+    : XYTransform(false), _fp_transform(fp_transform), _detector(detector)
+{
+    if (!fp_transform->in_fp_coordinate_system()) {
+        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                          "first argument to DetectorXYTransform constructor not in FP coordinate system");
+    }
+}
+
+PTR(XYTransform) DetectorXYTransform::clone() const
+{
+    // note: there is no detector->clone()
+    return boost::make_shared<DetectorXYTransform> (_fp_transform->clone(), _detector);
+}
+
+PTR(XYTransform) DetectorXYTransform::invert() const
+{
+    return boost::make_shared<DetectorXYTransform> (_fp_transform->invert(), _detector);
+}
+
+afwGeom::Point2D DetectorXYTransform::forwardTransform(Point2D const &p) const
+{
+    Point2D q;
+    q = _detector->getPositionFromPixel(p).getMm();
+    q = _fp_transform->forwardTransform(q);
+    q = _detector->getPixelFromPosition(afwCG::FpPoint(q));
+    return q;
+}
+
+afwGeom::Point2D DetectorXYTransform::reverseTransform(Point2D const &p) const
+{
+    Point2D q;
+    q = _detector->getPositionFromPixel(p).getMm();
+    q = _fp_transform->reverseTransform(q);
+    q = _detector->getPixelFromPosition(afwCG::FpPoint(q));
+    return q;
 }
 
 

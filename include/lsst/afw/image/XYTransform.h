@@ -7,6 +7,14 @@
 #ifndef LSST_AFW_IMAGE_XYTRANSFORM_H
 #define LSST_AFW_IMAGE_XYTRANSFORM_H
 
+#include <string>
+#include "boost/shared_ptr.hpp"
+#include "lsst/pex/exceptions.h"
+#include "lsst/daf/base.h"
+#include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/cameraGeom/Detector.h"
+
 namespace lsst {
 namespace afw {
 namespace image {
@@ -26,7 +34,7 @@ public:
     typedef lsst::afw::geom::Point2D Point2D;
     typedef lsst::afw::geom::AffineTransform AffineTransform;
 
-    XYTransform();
+    XYTransform(bool in_fp_coordinate_system);
     virtual ~XYTransform() { }
 
     // returns a deep copy
@@ -59,6 +67,11 @@ public:
 
     // helper function which may be useful elsewhere; see XYTransform.cc
     static lsst::afw::geom::AffineTransform finiteDifference(Point2D const &p, Point2D const &q, Point2D const &qx, Point2D const &qy);
+
+    bool in_fp_coordinate_system() const { return _in_fp_coordinate_system; }
+
+protected:
+    bool _in_fp_coordinate_system;
 };
 
 
@@ -68,7 +81,7 @@ public:
 class IdentityXYTransform : public XYTransform
 {
 public:
-    IdentityXYTransform() { }
+    IdentityXYTransform(bool in_fp_coordinate_system);
     virtual ~IdentityXYTransform() { }
     
     virtual PTR(XYTransform) clone() const;
@@ -134,6 +147,9 @@ protected:
 };
 
 
+//
+// Note: RadialXYTransform is always in the FP coordinate system
+//
 class RadialXYTransform : public XYTransform
 {
 public:
@@ -167,6 +183,25 @@ protected:
     std::vector<double> _coeffs;
     std::vector<double> _icoeffs;
     bool _coefficientsDistort;
+};
+
+
+class DetectorXYTransform : public XYTransform
+{
+public:
+    typedef lsst::afw::cameraGeom::Detector Detector;
+
+    DetectorXYTransform(CONST_PTR(XYTransform) fp_transform, CONST_PTR(Detector) detector);
+    virtual ~DetectorXYTransform() { }
+
+    virtual PTR(XYTransform) clone() const;
+    virtual PTR(XYTransform) invert() const;
+    virtual Point2D forwardTransform(Point2D const &pixel) const;
+    virtual Point2D reverseTransform(Point2D const &pixel) const;
+
+protected:
+    CONST_PTR(XYTransform) _fp_transform;
+    CONST_PTR(Detector) _detector;
 };
 
 
