@@ -134,6 +134,42 @@ protected:
 };
 
 
+class RadialXYTransform : public XYTransform
+{
+public:
+    RadialXYTransform(std::vector<double> const &coeffs, bool coefficientsDistort=true);
+    virtual ~RadialXYTransform() { }
+
+    virtual PTR(XYTransform) clone() const;
+    virtual PTR(XYTransform) invert() const;
+    virtual Point2D forwardTransform(Point2D const &pixel) const;
+    virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
+
+    //
+    // The following static member functions operate on polynomials represented by vector<double>.
+    //
+    // They are intended mainly as helpers for the virtual member functions above, but are declared
+    // public since there are also some unit tests which call them.
+    //
+    static std::vector<double>  polyInvert(std::vector<double> const &coeffs);
+    static double               polyEval(std::vector<double> const &coeffs, double x);
+    static Point2D              polyEval(std::vector<double> const &coeffs, Point2D const &p);
+    static double               polyEvalDeriv(std::vector<double> const &coeffs, double x);
+    static AffineTransform      polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p);
+    static double               polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, double x);
+    static Point2D              polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, Point2D const &p);
+    static AffineTransform      polyEvalInverseJacobian(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, Point2D const &p);
+    static AffineTransform      makeAffineTransform(double x, double y, double f, double g);
+
+protected:
+    std::vector<double> _coeffs;
+    std::vector<double> _icoeffs;
+    bool _coefficientsDistort;
+};
+
+
 }}}
 
 #endif
