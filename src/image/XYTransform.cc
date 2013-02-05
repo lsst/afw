@@ -22,59 +22,29 @@ XYTransform::XYTransform(bool in_fp_coordinate_system)
 { }
 
 
-//
-// Static helper method: returns the unique AffineTransform such that
-//   (p0,p1) -> q
-//   (p0+1,p1) -> qx
-//   (p0,p1+1) -> qy
-// where caller specifies p=(p0,p1) and q,qx,qy
-//
-// This implementation could be made faster, but it seems unlikely this will ever be a bottleneck
-//
-afwGeom::AffineTransform XYTransform::finiteDifference(Point2D const &p, Point2D const &q, Point2D const &qx, Point2D const &qy)
-{
-    double p0 = p.getX();
-    double p1 = p.getY();
-
-    double q0 = q.getX();
-    double q1 = q.getY();
-
-    double qx0 = qx.getX();
-    double qx1 = qx.getY();
-
-    double qy0 = qy.getX();
-    double qy1 = qy.getY();
-
-    Eigen::Matrix3d mp;
-    mp <<  p0,  p0+1,   p0,
-	   p1,    p1, p1+1,
-	  1.0,   1.0,  1.0;
-
-    Eigen::Matrix3d mq;
-    mq <<  q0,  qx0,  qy0,
-	   q1,  qx1,  qy1,
-	  1.0,  1.0,  1.0;
-
-    Eigen::Matrix3d m = mq * mp.inverse();
-    return AffineTransform(m);
-}
-
-
 // default implementation; subclass may override
 afwGeom::AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const
 {
-    return finiteDifference(p, this->forwardTransform(p), 
-			    this->forwardTransform(p + afwGeom::Extent2D(1,0)),
-			    this->forwardTransform(p + afwGeom::Extent2D(0,1)));
+    Point2D px = p + afwGeom::Extent2D(1,0);
+    Point2D py = p + afwGeom::Extent2D(0,1);
+
+    return afwGeom::makeAffineTransformFromTriple(p, px, py, 
+                                                  this->forwardTransform(p),
+                                                  this->forwardTransform(px), 
+                                                  this->forwardTransform(py));
 }
 
 
 // default implementation; subclass may override
 afwGeom::AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
 {
-    return finiteDifference(p, this->reverseTransform(p), 
-			    this->reverseTransform(p + afwGeom::Extent2D(1,0)),
-			    this->reverseTransform(p + afwGeom::Extent2D(0,1)));
+    Point2D px = p + afwGeom::Extent2D(1,0);
+    Point2D py = p + afwGeom::Extent2D(0,1);
+
+    return afwGeom::makeAffineTransformFromTriple(p, px, py, 
+                                                  this->reverseTransform(p),
+                                                  this->reverseTransform(px), 
+                                                  this->reverseTransform(py));
 }
 
 
