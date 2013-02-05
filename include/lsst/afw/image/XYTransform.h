@@ -71,9 +71,6 @@ public:
     Quadrupole forwardTransform(Point2D const &pixel, Quadrupole const &q) const;
     Quadrupole reverseTransform(Point2D const &pixel, Quadrupole const &q) const;
 
-    // helper function which may be useful elsewhere; see XYTransform.cc
-    static lsst::afw::geom::AffineTransform finiteDifference(Point2D const &p, Point2D const &q, Point2D const &qx, Point2D const &qy);
-
     bool in_fp_coordinate_system() const { return _in_fp_coordinate_system; }
 
 protected:
