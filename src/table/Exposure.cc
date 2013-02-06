@@ -27,7 +27,10 @@ class ExposureTableImpl;
 class ExposureRecordImpl : public ExposureRecord {
 public:
 
-    explicit ExposureRecordImpl(PTR(ExposureTable) const & table) : ExposureRecord(table) {}
+    explicit ExposureRecordImpl(PTR(ExposureTable) const & table) : ExposureRecord(table) {
+        // Want to make default bbox empty, not a single pixel at 0,0
+        this->set(ExposureTable::getBBoxMaxKey(), geom::Point2I(-1,-1));
+    }
 
 };
 
