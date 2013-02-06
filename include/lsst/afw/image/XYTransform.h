@@ -192,6 +192,7 @@ protected:
 class DetectorXYTransform : public XYTransform
 {
 public:
+    typedef lsst::afw::cameraGeom::FpPoint FpPoint;
     typedef lsst::afw::cameraGeom::Detector Detector;
 
     DetectorXYTransform(CONST_PTR(XYTransform) fp_transform, CONST_PTR(Detector) detector);
@@ -201,6 +202,8 @@ public:
     virtual PTR(XYTransform) invert() const;
     virtual Point2D forwardTransform(Point2D const &pixel) const;
     virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
 
 protected:
     CONST_PTR(XYTransform) _fp_transform;

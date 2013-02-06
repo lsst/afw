@@ -157,12 +157,15 @@ public:
 
     /// Return the Detector's center
     FpPoint getCenter() const { return _center; }
-    //
-    // Translate between physical positions in mm to pixels
-    //
+
+    /// Translate between physical positions in mm to pixels
     virtual lsst::afw::geom::Point2D getPixelFromPosition(FpPoint const& pos) const;
     virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
     virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
+
+    /// Local linearizations of the preceding coordinate-changing routines
+    virtual lsst::afw::geom::AffineTransform linearizePixelFromPosition(FpPoint const &pos) const;
+    virtual lsst::afw::geom::AffineTransform linearizePositionFromPixel(lsst::afw::geom::Point2D const &pix) const;
     
     virtual void shift(int dx, int dy);
     //
