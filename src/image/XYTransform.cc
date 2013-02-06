@@ -449,7 +449,7 @@ afwGeom::Point2D DetectorXYTransform::forwardTransform(Point2D const &p) const
     Point2D q;
     q = _detector->getPositionFromPixel(p).getMm();
     q = _fp_transform->forwardTransform(q);
-    q = _detector->getPixelFromPosition(afwCG::FpPoint(q));
+    q = _detector->getPixelFromPosition(FpPoint(q));
     return q;
 }
 
@@ -458,8 +458,26 @@ afwGeom::Point2D DetectorXYTransform::reverseTransform(Point2D const &p) const
     Point2D q;
     q = _detector->getPositionFromPixel(p).getMm();
     q = _fp_transform->reverseTransform(q);
-    q = _detector->getPixelFromPosition(afwCG::FpPoint(q));
+    q = _detector->getPixelFromPosition(FpPoint(q));
     return q;
+}
+
+afwGeom::AffineTransform DetectorXYTransform::linearizeForwardTransform(Point2D const &p) const
+{
+    AffineTransform a;
+    a = _detector->linearizePositionFromPixel(p);
+    a = _fp_transform->linearizeForwardTransform(a(p)) * a;
+    a = _detector->linearizePixelFromPosition(FpPoint(a(p))) * a;
+    return a;
+}
+
+afwGeom::AffineTransform DetectorXYTransform::linearizeReverseTransform(Point2D const &p) const
+{
+    AffineTransform a;
+    a = _detector->linearizePositionFromPixel(p);
+    a = _fp_transform->linearizeReverseTransform(a(p)) * a;
+    a = _detector->linearizePixelFromPosition(FpPoint(a(p))) * a;
+    return a;    
 }
 
 

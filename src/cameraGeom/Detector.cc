@@ -145,6 +145,32 @@ afwGeom::Point2D cameraGeom::Detector::getPixelFromPosition(
 }
 
 
+afwGeom::AffineTransform cameraGeom::Detector::linearizePixelFromPosition(cameraGeom::FpPoint const &q) const
+{
+    afwGeom::Point2D p = this->getPixelFromPosition(q);
+    afwGeom::Point2D px = p + afwGeom::Extent2D(1,0);
+    afwGeom::Point2D py = p + afwGeom::Extent2D(0,1);
+
+    afwGeom::Point2D qx = this->getPositionFromPixel(px).getMm();
+    afwGeom::Point2D qy = this->getPositionFromPixel(py).getMm();
+
+    return afwGeom::makeAffineTransformFromTriple(q.getMm(), qx, qy, p, px, py);
+}
+
+
+afwGeom::AffineTransform cameraGeom::Detector::linearizePositionFromPixel(afwGeom::Point2D const &p) const
+{
+    afwGeom::Point2D px = p + afwGeom::Extent2D(1,0);
+    afwGeom::Point2D py = p + afwGeom::Extent2D(0,1);
+
+    afwGeom::Point2D q = this->getPositionFromPixel(p).getMm();
+    afwGeom::Point2D qx = this->getPositionFromPixel(px).getMm();
+    afwGeom::Point2D qy = this->getPositionFromPixel(py).getMm();
+
+    return afwGeom::makeAffineTransformFromTriple(p, px, py, q, qx, qy);
+}
+
+
 /// Offset a Detector by the specified amount
 void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
                                  int dy  ///< How much to offset in y (pixels)
