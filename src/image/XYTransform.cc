@@ -56,6 +56,7 @@ PTR(XYTransform) XYTransform::invert() const
 
 afwEll::Quadrupole XYTransform::forwardTransform(Point2D const &pixel, Quadrupole const &q) const
 {
+    // Note: q.transform(L) returns (LQL^T)
     AffineTransform a = linearizeForwardTransform(pixel);
     return q.transform(a.getLinear());
 }
