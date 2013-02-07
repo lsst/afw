@@ -76,6 +76,7 @@ Python interface to lsst::afw::detection classes
 
 %include "footprints.i"
 %include "psf.i"
+%include "WarpedPsf.i"
 
  // The "tableLib.i" import has to go *after* the "footprints.i" because
  // "tableLib.i" imports "footprints.i".
