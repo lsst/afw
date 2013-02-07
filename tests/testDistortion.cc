@@ -186,12 +186,96 @@ static int testRadialAffineTransform()
 // -------------------------------------------------------------------------------------------------
 
 
+class ToyDetector : public Detector
+{
+public:
+    explicit ToyDetector(AffineTransform const &a)
+        : Detector(Id()), _a(a), _ainv(a.invert()) { }
+
+    virtual Point2D getPixelFromPosition(FpPoint const &pos) const
+    {
+        return _a(pos.getMm());
+    }
+
+    virtual FpPoint getPositionFromPixel(Point2D const &pix, bool const isTrimmed) const
+    {
+        return FpPoint(_ainv(pix));
+    }
+
+    static PTR(ToyDetector) makeRandom()
+    {
+        AffineTransform a;
+        a[0] = uni_double(rng) + 1.0;
+        a[1] = uni_double(rng);
+        a[2] = uni_double(rng);
+        a[3] = uni_double(rng) + 1.0;
+        a[4] = 100 * (uni_double(rng) - 0.5);
+        a[5] = 100 * (uni_double(rng) - 0.5);
+
+        return make_shared<ToyDetector> (a);
+    }
+
+protected:
+    AffineTransform _a, _ainv;
+};
+
+
+static int testDetectorTransform()
+{
+    PTR(Detector) det = ToyDetector::makeRandom();
+    int ret = 0;
+    
+    Point2D p = randpt();
+    FpPoint q = det->getPositionFromPixel(p);
+
+    if (dist(det->getPixelFromPosition(q),p) > 1.0e-10) {
+        cerr << "testDetectorTransform: round trip is not the identity";
+        ret++;
+    }
+
+    AffineTransform a = det->linearizePositionFromPixel(p);
+    AffineTransform b = det->linearizePixelFromPosition(q);
+    Point2D r = randpt();
+    
+    if (dist(det->getPositionFromPixel(r).getMm(), a(r)) > 1.0e-10) {
+        cerr << "testDetectorTransform: linearizePositionFromPixel() returned wrong result";
+        ret++;
+    }   
+
+    if (dist(det->getPixelFromPosition(FpPoint(r)), b(r)) > 1.0e-10) {
+        cerr << "testDetectorTransform: linearizePixelFromPosition() returned wrong result";
+        ret++;
+    }   
+
+    if (ret > 0)
+        cerr << "testDetectorTransform: " << ret << " failures\n";
+    else
+	cerr << "testDetectorTransform: pass\n";
+
+    return ret;
+}
+
+
+// -------------------------------------------------------------------------------------------------
+
+
+static double linearizationResidual(const XYTransform &tr, const Point2D &p, double step, bool forward)
+{
+    Point2D px = p + Extent2D(step,0);
+    Point2D py = p + Extent2D(0,step);
+
+    Point2D q = forward ? tr.forwardTransform(p) : tr.reverseTransform(p);
+    Point2D qx = forward ? tr.forwardTransform(px) : tr.reverseTransform(px);
+    Point2D qy = forward ? tr.forwardTransform(py) : tr.reverseTransform(py);
+
+    AffineTransform a = forward ? tr.linearizeForwardTransform(p) : tr.linearizeReverseTransform(p);
+    return dist(a(p),q) + dist(a(px),qx) + dist(a(py),qy);
+}
+
 //
-// tests some invariants of class XYTransform
+// Tests some invariants of class XYTransform
 //
-// XXX if !uses_default_linearization, should have some sort of sanity check on the jacobian..
-//
-static int testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_default_linearization)
+static int testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_default_linearization, bool uses_exact_derivatives)
 {
     int ret = 0;
     Point2D tp = tr.forwardTransform(p);
@@ -201,53 +285,41 @@ static int testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_de
         ret++;
     }
 
-    Point2D px = Point2D(p.getX()+1, p.getY());
-    Point2D py = Point2D(p.getX(), p.getY()+1);
-    Point2D tpx = tr.forwardTransform(px);
-    Point2D tpy = tr.forwardTransform(py);
-
     AffineTransform afwd = tr.linearizeForwardTransform(p);
-    
+    AffineTransform arev = tr.linearizeReverseTransform(tp);
+
     if (dist(afwd(p),tp) > 1.0e-10) {
 	cerr << "testXYTransform: linearizeForwardTransform doesn't map p to t(p)\n";
         ret++;
     }
-
-    if (uses_default_linearization && (dist(afwd(px),tpx) > 1.0e-10)) {
-	cerr << "testXYTransform: linearizeForwardTransform doesn't map p+x to t(p+x)\n";
-        ret++;
-    }
-
-    if (uses_default_linearization && (dist(afwd(py),tpy) > 1.0e-10)) {
-	cerr << "testXYTransform: linearizeForwardTransform doesn't map p+y to t(p+y)\n";
-        ret++;
-    }
-
-    AffineTransform arev = tr.linearizeReverseTransform(tp);
-    tpx = Point2D(tp.getX()+1, tp.getY());
-    tpy = Point2D(tp.getX(), tp.getY()+1);
-    px = tr.reverseTransform(tpx);
-    py = tr.reverseTransform(tpy);
     
     if (dist(arev(tp),p) > 1.0e-10) {
 	cerr << "testXYTransform: linearizeReverseTransform doesn't map t(p) to p\n";
         ret++;
     }
 
-    if (uses_default_linearization && (dist(arev(tpx),px) > 1.0e-10)) {
-	cerr << "testXYTransform: linearizeReverseTransform doesn't map t(p)+x to p+x\n";
+    if (uses_default_linearization && linearizationResidual(tr,p,1.0,true) > 1.0e-10) {
+	cerr << "testXYTransform: error in linearizeForwardTransform\n";
         ret++;
     }
 
-    if (uses_default_linearization && (dist(arev(tpy),py) > 1.0e-10)) {
-	cerr << "testXYTransform: linearizeReverseTransform doesn't map t(p)+y to p+y\n";
+    if (uses_default_linearization && linearizationResidual(tr,tp,1.0,false) > 1.0e-10) {
+	cerr << "testXYTransform: error in linearizeReverseTransform\n";
         ret++;
     }
 
-    AffineTransform id;
-    if (!uses_default_linearization && dist(arev*afwd,id) > 1.0e-10) {
+    if (uses_exact_derivatives && dist(arev,afwd.invert()) > 1.0e-10) {
         cerr << "testXYTransform: linearized fwd/reverse transforms are not inverses\n";
         ret++;
+    }
+
+    if (uses_exact_derivatives) {
+        cerr << "XXX The following sequence should be decreasing by a factor of ~100 each time (a factor ~10 would count as failure)\n";
+        cerr << "    XXX " << linearizationResidual(tr,p,10.0,true) << endl;
+        cerr << "    XXX " << linearizationResidual(tr,p,1.0,true) << endl;
+        cerr << "    XXX " << linearizationResidual(tr,p,0.1,true) << endl;
+        cerr << "    XXX " << linearizationResidual(tr,p,0.01,true) << endl;
+        cerr << "    XXX " << linearizationResidual(tr,p,0.001,true) << endl;
     }
 
     PTR(XYTransform) tr_inv = tr.invert();
@@ -349,11 +421,15 @@ static int testXYTransforms()
 {
     int ret = 0;
 
-    shared_ptr<XYTransform> t = ToyXYTransform::makeRandom();
-    ret += testXYTransform(*t, randpt(), true);
+    PTR(XYTransform) t = ToyXYTransform::makeRandom();
+    ret += testXYTransform(*t, randpt(), true, false);
 
     t = makeRandomRadialXYTransform();
-    ret += testXYTransform(*t, randpt(), false);
+    ret += testXYTransform(*t, randpt(), false, true);
+
+    PTR(Detector) d = ToyDetector::makeRandom();
+    t = make_shared<DetectorXYTransform> (t,d);
+    ret += testXYTransform(*t, randpt(), false, true);
 
     return ret;
 }
@@ -478,8 +554,6 @@ static int testWarping()
     Point2D p = randpt();
     Point2D q = distortion->reverseTransform(p);
 
-    cerr << "XXX p=" << p << " q=" << q << endl;
-
     // warped image
     PTR(Image<double>) im = warped_psf->computeImage(p, false);
     int nx = im->getWidth();
@@ -519,84 +593,10 @@ static int testWarping()
     // should not be the same...
     PTR(Image<double>) im3 = fill_gaussian(a, b, c, p.getX(), p.getY(), nx, ny, x0, y0);
 
-    cerr << "XXX here it is! " << compare(*im,*im2) << " " << compare(*im,*im3) << endl;
+    cerr << "XXX the first number should be a lot smaller than the second: " << compare(*im,*im2) << " " << compare(*im,*im3) << endl;
 
     return 0;
 }
-
-
-// -------------------------------------------------------------------------------------------------
-
-
-class ToyDetector : public Detector
-{
-public:
-    explicit ToyDetector(AffineTransform const &a)
-        : Detector(Id()), _a(a), _ainv(a.invert()) { }
-
-    virtual Point2D getPixelFromPosition(FpPoint const &pos) const
-    {
-        return _a(pos.getMm());
-    }
-
-    virtual FpPoint getPositionFromPixel(Point2D const &pix, bool const isTrimmed) const
-    {
-        return FpPoint(_ainv(pix));
-    }
-
-    static PTR(ToyDetector) makeRandom()
-    {
-        AffineTransform a;
-        a[0] = uni_double(rng) + 1.0;
-        a[1] = uni_double(rng);
-        a[2] = uni_double(rng);
-        a[3] = uni_double(rng) + 1.0;
-        a[4] = 100 * (uni_double(rng) - 0.5);
-        a[5] = 100 * (uni_double(rng) - 0.5);
-
-        return make_shared<ToyDetector> (a);
-    }
-
-protected:
-    AffineTransform _a, _ainv;
-};
-
-
-static int testDetectorTransform()
-{
-    PTR(Detector) det = ToyDetector::makeRandom();
-    int ret = 0;
-    
-    Point2D p = randpt();
-    FpPoint q = det->getPositionFromPixel(p);
-
-    if (dist(det->getPixelFromPosition(q),p) > 1.0e-10) {
-        cerr << "testDetectorTransform: round trip is not the identity";
-        ret++;
-    }
-
-    AffineTransform a = det->linearizePositionFromPixel(p);
-    AffineTransform b = det->linearizePixelFromPosition(q);
-    Point2D r = randpt();
-    
-    if (dist(det->getPositionFromPixel(r).getMm(), a(r)) > 1.0e-10) {
-        cerr << "testDetectorTransform: linearizePositionFromPixel() returned wrong result";
-        ret++;
-    }   
-
-    if (dist(det->getPixelFromPosition(FpPoint(r)), b(r)) > 1.0e-10) {
-        cerr << "testDetectorTransform: linearizePixelFromPosition() returned wrong result";
-        ret++;
-    }   
-
-    if (ret > 0)
-        cerr << "testDetectorTransform: " << ret << " failures\n";
-    else
-	cerr << "testDetectorTransform: pass\n";
-
-    return ret;
-}
-
 
 // -------------------------------------------------------------------------------------------------
 //
@@ -655,9 +655,9 @@ int main(int argc, char **argv)
     err += testMakeAffineTransformFromTriple();
     err += testRadialAffineTransform();
     err += testXYTransforms();
-    err += testWarping();
     err += testDetectorTransform();
     err += testQuadrupoleDistortion();
+    err += testWarping();
 
     return (err > 0);
 }
