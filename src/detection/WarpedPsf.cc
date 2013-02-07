@@ -124,6 +124,18 @@ WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) dist
 
     _undistorted_psf = undistorted_psf;
     _distortion = distortion;
+    if (!_undistorted_psf) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicErrorException,
+            "Undistorted Psf passed to WarpedPsf must not be None/NULL"
+        );
+    }
+    if (!_distortion) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicErrorException,
+            "XYTransform passed to WarpedPsf must not be None/NULL"
+        );
+    }
 }
 
 Psf::Ptr WarpedPsf::clone() const
