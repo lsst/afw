@@ -117,9 +117,6 @@ class ButlerImage(GetCcdImage):
             else:
                 im = afwImage.ImageF(self.defaultSize)
 
-            if self.type == "raw":
-                im = im.convertF()
-
             return im
                 
         if self.type == "raw":
