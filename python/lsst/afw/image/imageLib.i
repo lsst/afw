@@ -369,3 +369,4 @@ namespace lsst { namespace afw { namespace detection {
 
 /************************************************************************************************************/
 
+%include "lsst/afw/image/XYTransform.i"
