@@ -32,5 +32,7 @@
 %shared_ptr(lsst::afw::image::XYTransformFromWcsPair);
 %shared_ptr(lsst::afw::image::IdentityXYTransform);
 %shared_ptr(lsst::afw::image::InvertedXYTransform);
+%shared_ptr(lsst::afw::image::RadialXYTransform);
+%shared_ptr(lsst::afw::image::DetectorXYTransform);
 
 %include "lsst/afw/image/XYTransform.h"
