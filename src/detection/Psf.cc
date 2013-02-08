@@ -255,6 +255,10 @@ Psf::Image::Ptr Psf::doComputeImage(
     }
 #endif
 
+    //
+    // Psf::getLocalKernel() is preferable to Psf::getKernel() here, since we only need the
+    // kernel at a single point which is known in advance.
+    //
     afwMath::Kernel::ConstPtr kernel = getLocalKernel(ccdXYundist, color);
     if (!kernel) {
         throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
