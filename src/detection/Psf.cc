@@ -243,15 +243,6 @@ Psf::Image::Ptr Psf::doComputeImage(
 
         distort = false;
     }
-
-    afwMath::Kernel::ConstPtr kernel = getKernel(color);
-    if (!kernel) {
-        throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
-    }
-
-    int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
-    int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
-    afwGeom::Point2I ctr = kernel->getCtr();
     
     // if they want it distorted, assume they want the PSF as it would appear
     // at ccdXY.  We'll undistort ccdXY to figure out where that point started
@@ -264,6 +255,15 @@ Psf::Image::Ptr Psf::doComputeImage(
         ccdXYundist = ccdXY;
     }
 #endif
+
+    afwMath::Kernel::ConstPtr kernel = getLocalKernel(ccdXYundist, color);
+    if (!kernel) {
+        throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
+    }
+
+    int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
+    int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
+    afwGeom::Point2I ctr = kernel->getCtr();
     
     Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
         geom::Extent2I(width, height)
