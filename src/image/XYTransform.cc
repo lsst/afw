@@ -17,8 +17,8 @@ namespace image {
 // XYTransform
 
 
-XYTransform::XYTransform(bool in_fp_coordinate_system) 
-    : daf::base::Citizen(typeid(this)), _in_fp_coordinate_system(in_fp_coordinate_system)
+XYTransform::XYTransform(bool inFpCoordinateSystem) 
+    : daf::base::Citizen(typeid(this)), _inFpCoordinateSystem(inFpCoordinateSystem)
 { }
 
 
@@ -74,35 +74,35 @@ afwEll::Quadrupole XYTransform::reverseTransform(Point2D const &pixel, Quadrupol
 // IdentityXYTransform
 
 
-IdentityXYTransform::IdentityXYTransform(bool in_fp_coordinate_system)
-    : XYTransform(in_fp_coordinate_system)
+IdentityXYTransform::IdentityXYTransform(bool inFpCoordinateSystem)
+    : XYTransform(inFpCoordinateSystem)
 { }
 
 PTR(XYTransform) IdentityXYTransform::clone() const
 {
-    return boost::make_shared<IdentityXYTransform> (_in_fp_coordinate_system);
+    return boost::make_shared<IdentityXYTransform> (_inFpCoordinateSystem);
 }
 
-lsst::afw::geom::Point2D IdentityXYTransform::forwardTransform(Point2D const &pixel) const
+afwGeom::Point2D IdentityXYTransform::forwardTransform(Point2D const &pixel) const
 {
     return pixel;
 }
 
-lsst::afw::geom::Point2D IdentityXYTransform::reverseTransform(Point2D const &pixel) const
+afwGeom::Point2D IdentityXYTransform::reverseTransform(Point2D const &pixel) const
 {
     return pixel;
 }
 
-lsst::afw::geom::AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+afwGeom::AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &pixel) const
 {
     // note: AffineTransform constructor called with no arguments gives the identity transform
-    return lsst::afw::geom::AffineTransform(); 
+    return afwGeom::AffineTransform(); 
 }
 
-lsst::afw::geom::AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+afwGeom::AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &pixel) const
 {
     // note: AffineTransform constructor called with no arguments gives the identity transform
-    return lsst::afw::geom::AffineTransform(); 
+    return afwGeom::AffineTransform(); 
 }
 
 
@@ -116,7 +116,7 @@ XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs
 { }
 
 
-XYTransform::Ptr XYTransformFromWcsPair::clone() const
+PTR(XYTransform) XYTransformFromWcsPair::clone() const
 {
     return boost::make_shared<XYTransformFromWcsPair>(_dst->clone(), _src->clone());
 }
@@ -130,13 +130,13 @@ afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) 
     // are needed (e.g. I think we need to check by hand that both Wcs's use the same celestial coordinate
     // system)
     //
-    lsst::afw::coord::Coord::Ptr x = _src->pixelToSky(pixel);
+    PTR(lsst::afw::coord::Coord) x = _src->pixelToSky(pixel);
     return _dst->skyToPixel(*x);
 }
 
 afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
 {
-    lsst::afw::coord::Coord::Ptr x = _dst->pixelToSky(pixel);
+    PTR(lsst::afw::coord::Coord) x = _dst->pixelToSky(pixel);
     return _src->skyToPixel(*x);
 }
 
@@ -152,8 +152,8 @@ PTR(XYTransform) XYTransformFromWcsPair::invert() const
 // InvertedXYTransform
 
 
-InvertedXYTransform::InvertedXYTransform(PTR(XYTransform) base)
-    : XYTransform(base->in_fp_coordinate_system()), _base(base)
+InvertedXYTransform::InvertedXYTransform(CONST_PTR(XYTransform) base)
+    : XYTransform(base->inFpCoordinateSystem()), _base(base)
 { }
 
 PTR(XYTransform) InvertedXYTransform::clone() const
@@ -164,7 +164,7 @@ PTR(XYTransform) InvertedXYTransform::clone() const
 
 PTR(XYTransform) InvertedXYTransform::invert() const
 {
-    return _base;
+    return _base->clone();
 }
 
 afwGeom::Point2D InvertedXYTransform::forwardTransform(Point2D const &pixel) const
@@ -425,10 +425,10 @@ afwGeom::AffineTransform RadialXYTransform::makeAffineTransform(double x, double
 // DetectorXYTransform
 
 
-DetectorXYTransform::DetectorXYTransform(CONST_PTR(XYTransform) fp_transform, CONST_PTR(Detector) detector)
-    : XYTransform(false), _fp_transform(fp_transform), _detector(detector)
+DetectorXYTransform::DetectorXYTransform(CONST_PTR(XYTransform) fpTransform, CONST_PTR(Detector) detector)
+    : XYTransform(false), _fpTransform(fpTransform), _detector(detector)
 {
-    if (!fp_transform->in_fp_coordinate_system()) {
+    if (!fpTransform->inFpCoordinateSystem()) {
         throw LSST_EXCEPT(pexEx::InvalidParameterException, 
                           "first argument to DetectorXYTransform constructor not in FP coordinate system");
     }
@@ -437,19 +437,19 @@ DetectorXYTransform::DetectorXYTransform(CONST_PTR(XYTransform) fp_transform, CO
 PTR(XYTransform) DetectorXYTransform::clone() const
 {
     // note: there is no detector->clone()
-    return boost::make_shared<DetectorXYTransform> (_fp_transform->clone(), _detector);
+    return boost::make_shared<DetectorXYTransform> (_fpTransform->clone(), _detector);
 }
 
 PTR(XYTransform) DetectorXYTransform::invert() const
 {
-    return boost::make_shared<DetectorXYTransform> (_fp_transform->invert(), _detector);
+    return boost::make_shared<DetectorXYTransform> (_fpTransform->invert(), _detector);
 }
 
 afwGeom::Point2D DetectorXYTransform::forwardTransform(Point2D const &p) const
 {
     Point2D q;
     q = _detector->getPositionFromPixel(p).getMm();
-    q = _fp_transform->forwardTransform(q);
+    q = _fpTransform->forwardTransform(q);
     q = _detector->getPixelFromPosition(FpPoint(q));
     return q;
 }
@@ -458,7 +458,7 @@ afwGeom::Point2D DetectorXYTransform::reverseTransform(Point2D const &p) const
 {
     Point2D q;
     q = _detector->getPositionFromPixel(p).getMm();
-    q = _fp_transform->reverseTransform(q);
+    q = _fpTransform->reverseTransform(q);
     q = _detector->getPixelFromPosition(FpPoint(q));
     return q;
 }
@@ -467,7 +467,7 @@ afwGeom::AffineTransform DetectorXYTransform::linearizeForwardTransform(Point2D 
 {
     AffineTransform a;
     a = _detector->linearizePositionFromPixel(p);
-    a = _fp_transform->linearizeForwardTransform(a(p)) * a;
+    a = _fpTransform->linearizeForwardTransform(a(p)) * a;
     a = _detector->linearizePixelFromPosition(FpPoint(a(p))) * a;
     return a;
 }
@@ -476,7 +476,7 @@ afwGeom::AffineTransform DetectorXYTransform::linearizeReverseTransform(Point2D 
 {
     AffineTransform a;
     a = _detector->linearizePositionFromPixel(p);
-    a = _fp_transform->linearizeReverseTransform(a(p)) * a;
+    a = _fpTransform->linearizeReverseTransform(a(p)) * a;
     a = _detector->linearizePixelFromPosition(FpPoint(a(p))) * a;
     return a;    
 }

@@ -69,7 +69,7 @@ static inline PTR(Psf::Image) zeroPadImage(Psf::Image const &im, int pad)
 //
 // The input image is assumed zero-padded.
 //
-static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTransform const &t)
+static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, afwGeom::AffineTransform const &t)
 {
     //
     // hmmm, are these the best choices?
@@ -99,7 +99,7 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
     int out_yhi = ceil(max4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) + interpolation_dst_padding;
 
     // allocate output image
-    Psf::Image::Ptr ret = boost::make_shared<Psf::Image>(out_xhi-out_xlo+1, out_yhi-out_ylo+1);
+    PTR(Psf::Image) ret = boost::make_shared<Psf::Image>(out_xhi-out_xlo+1, out_yhi-out_ylo+1);
     ret->setXY0(afwGeom::Point2I(out_xlo,out_ylo));
 
     // zero-pad input image
@@ -117,7 +117,7 @@ static inline Psf::Image::Ptr warpAffine(Psf::Image const &im, afwGeom::AffineTr
 
 WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion)
 {
-    if (distortion->in_fp_coordinate_system()) {
+    if (distortion->inFpCoordinateSystem()) {
         throw LSST_EXCEPT(pexEx::InvalidParameterException, 
                           "WarpedPsf constructor: distortion must not be in FP coordinate system");
     }
@@ -126,12 +126,12 @@ WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) dist
     _distortion = distortion;
 }
 
-Psf::Ptr WarpedPsf::clone() const
+PTR(Psf) WarpedPsf::clone() const
 {
     return boost::make_shared<WarpedPsf>(_undistorted_psf->clone(), _distortion->clone());
 }
 
-Psf::Image::Ptr WarpedPsf::doComputeImage(Color const& color, Point2D const& ccdXY, Extent2I const& size, bool normalizePeak, bool distort) const
+PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccdXY, Extent2I const& size, bool normalizePeak, bool distort) const
 {
     Point2I ctr;
     PTR(Image) im = this->_make_warped_kernel_image(ccdXY, color, ctr);
@@ -153,7 +153,7 @@ Psf::Image::Ptr WarpedPsf::doComputeImage(Color const& color, Point2D const& ccd
     return recenterKernelImage(im, ctr, ccdXY);
 }
 
-afwMath::Kernel::Ptr WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const &c) const
+PTR(afwMath::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const &c) const
 {
     Point2I ctr;
     PTR(Image) im = this->_make_warped_kernel_image(p, c, ctr);
@@ -171,7 +171,7 @@ afwMath::Kernel::Ptr WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const 
 // the convention in the parent Psf class.  This convention seems fishy to me and I'll
 // revisit it later...
 //
-Psf::Image::Ptr WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color const &c, Point2I &ctr) const
+PTR(Psf::Image) WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color const &c, Point2I &ctr) const
 {
     afwGeom::AffineTransform t = _distortion->linearizeReverseTransform(p);
     Point2D tp = t(p);
@@ -191,7 +191,7 @@ Psf::Image::Ptr WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color con
     im->setXY0(Point2I(-k->getCtrX(), -k->getCtrY()));
 
     // Go to the warped coordinate system with 'p' at the origin
-    Psf::Image::Ptr ret = warpAffine(*im, getLinear(t.invert()));
+    PTR(Psf::Image) ret = warpAffine(*im, getLinear(t.invert()));
 
     // ret->xy0 is meaningful, but for consistency with the kernel API, we use a parallel Point2I instead
     ctr = Point2I(-ret->getX0(), -ret->getY0());

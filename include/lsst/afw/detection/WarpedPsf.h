@@ -32,9 +32,6 @@ namespace detection {
 //
 class WarpedPsf : public Psf {
 public:
-    typedef boost::shared_ptr<WarpedPsf> Ptr;
-    typedef boost::shared_ptr<const WarpedPsf> ConstPtr;
-
     typedef lsst::afw::image::Color Color;
     typedef lsst::afw::math::Kernel Kernel;
     typedef lsst::afw::geom::Point2I Point2I;
@@ -57,22 +54,22 @@ protected:
     // would be problematic; we would need to compute a "global" kernel size and center but these
     // are pixel-dependent.
     //
-    virtual Psf::Ptr clone() const;
+    virtual PTR(Psf) clone() const;
 
     //
     // API notes:
     //   (1) 'size' param can be Extent2I(0,0) if caller wants "native" size
     //   (2) 'distort' param ignored for now (this will eventually be removed in favor of a different API)
     //
-    virtual Image::Ptr doComputeImage(Color const& color, Point2D const& ccdXY, 
+    virtual PTR(Image) doComputeImage(Color const& color, Point2D const& ccdXY, 
 				      Extent2I const& size, bool normalizePeak, bool distort) const;
 
-    virtual Kernel::Ptr doGetLocalKernel(Point2D const &p, Color const &c)
+    virtual PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c)
     {
 	return this->_doGetLocalKernel(p, c);
     }
 
-    virtual Kernel::ConstPtr doGetLocalKernel(Point2D const &p, Color const &c) const
+    virtual CONST_PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) const
     {
 	return this->_doGetLocalKernel(p, c);
     }
@@ -81,10 +78,10 @@ protected:
     CONST_PTR(Psf) _undistorted_psf;
     CONST_PTR(XYTransform) _distortion;
 
-    Kernel::Ptr _doGetLocalKernel(Point2D const &p, Color const &c) const;
+    PTR(Kernel) _doGetLocalKernel(Point2D const &p, Color const &c) const;
     
     // the image returned by this member function is used in doComputeImage() and doGetLocalKernel()
-    Image::Ptr _make_warped_kernel_image(Point2D const &p, Color const &color, Point2I &ctr) const;
+    PTR(Image) _make_warped_kernel_image(Point2D const &p, Color const &color, Point2I &ctr) const;
 };
 
 
