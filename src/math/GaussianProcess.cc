@@ -2,9 +2,7 @@
 #include <iostream>
 #include <math.h>
 
-namespace lsst{
-namespace afw{
-namespace math{
+namespace gptest{
 
 template <typename datatype>
 kd<datatype>::~kd(){
@@ -572,7 +570,7 @@ template<typename dtyi, typename dtyo>
 dtyo ExpCovariogram(dtyi *v1, dtyi *v2, int d_dim){
   double dd;
   dd=EuclideanDistance(v1,v2,d_dim);
-  return dtyo(exp(-0.5*dd));
+  return dtyo(exp(-0.5*dd*dd/100.0));
 }
 
 template<typename datatype>
@@ -731,17 +729,21 @@ gaussianprocess<dtyi,dtyo>::~gaussianprocess(){
 }
 
 template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::gaussianprocess(){
+gaussianprocess<dtyi,dtyo>::gaussianprocess(float junk){
   std::cout<<"Congratulations... you have called the Gaussian Process object\n";
+  std::cout<<"you passed it with "<<junk<<"\n";
   calleddummy=1;
 }
 
-
+/*
 template <typename dtyi, typename dtyo>
 gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyi *mx, dtyi *mn, dtyo *ff){
  //constructor if you have maxs and mins
   
   int i,j;
+  
+  printf("WARNING this constructor is not actually ready\n");
+  exit(1);
   
   calleddummy=0;
   
@@ -784,11 +786,14 @@ gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyi 
   
 }
 
+*/
+
 template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyo *ff){
+gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, ndarray::Array<dtyi,2,2> datain, \
+ndarray::Array<dtyo,1,1> ff){
  //constructor if you do not have maxs and mins
   
-  int i;
+  int i,j;
   
   calleddummy=0;
   
@@ -796,7 +801,8 @@ gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyo 
   pts=pp;
   room=pts;
   
-  fn=ff;
+  fn=new dtyo[pts];
+  for(i=0;i<pts;i++)fn[i]=ff(i);
   kriging_parameter=dtyo(1.0);
   
   covariogram=ExpCovariogram;
@@ -809,7 +815,17 @@ gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyo 
     lambda[i]=dtyo(1.0e-5);
   }
   maxmin=0;
-  data=datain;
+  
+  //data=datain;
+  
+  data=new dtyi*[pts];
+  for(i=0;i<pts;i++){
+     data[i]=new dtyi[dim];
+     for(j=0;j<dim;j++){
+       data[i][j]=datain(i,j);
+     }
+  }
+  
    
   kptr=new kd<dtyi>(dim,pts,data,distance);
   
@@ -899,7 +915,7 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
 
 
 template <typename dtyi, typename dtyo>
-dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi *vin, dtyo *sig2, int kk){
+dtyo gaussianprocess<dtyi,dtyo>::interpolate(ndarray::Array<dtyi,1,1> vin, ndarray::Array<dtyo,1,1> sig2, int kk){
   
   int i,j;
   dtyo fbar,mu;
@@ -923,14 +939,18 @@ dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi *vin, dtyo *sig2, int kk){
      n_nn=kk;
   }
   
-  if(maxmin==1 && called_interp==0){
+  if(called_interp==0){
     vv=new dtyi[dim];
   }
   
   if(maxmin==1){
-    for(i=0;i<dim;i++)vv[i]=(vin[i]-min[i])/(max[i]-min[i]);
+    for(i=0;i<dim;i++)vv[i]=(vin(i)-min[i])/(max[i]-min[i]);
   }
-  else vv=vin;
+  else{
+    for(i=0;i<dim;i++){
+      vv[i]=vin(i);
+    }
+  }
   
   
   kptr->nn_srch(vv,n_nn,neigh,ddneigh);
@@ -964,16 +984,16 @@ dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi *vin, dtyo *sig2, int kk){
     }
   }
   
-  sig2[0]=covariogram(vv,vv,dim)+lambda[neigh[0]];
+  sig2(0)=covariogram(vv,vv,dim)+lambda[neigh[0]];
   
   for(i=0;i<n_nn;i++){
-    sig2[0]-=ggq[i]*ggin(i,i)*ggq[i];
+    sig2(0)-=ggq[i]*ggin(i,i)*ggq[i];
     for(j=i+1;j<n_nn;j++){
-      sig2[0]-=2.0*ggq[i]*ggin(i,j)*ggq[j];
+      sig2(0)-=2.0*ggq[i]*ggin(i,j)*ggq[j];
     }
   }
   
-  sig2[0]=sig2[0]*kriging_parameter;
+  sig2(0)=sig2(0)*kriging_parameter;
   
   called_interp=1;
   
@@ -983,14 +1003,14 @@ dtyo gaussianprocess<dtyi,dtyo>::interpolate(dtyi *vin, dtyo *sig2, int kk){
 }
 
 template <typename dtyi, typename dtyo>
-void gaussianprocess<dtyi,dtyo>::print_nn(int *v){
+void gaussianprocess<dtyi,dtyo>::print_nn(ndarray::Array<int,1,1> v){
   int i;
   if(called_interp==0){
     std::cout<<"You cannot call print_nn; you have not called interpolate at all\n";
     //printf("You cannot call print_nn; you haven't called interpolate at all\n");
   }
   else{
-    for(i=0;i<n_nn;i++)v[i]=neigh[i];
+    for(i=0;i<n_nn;i++)v(i)=neigh[i];
   }
 }
 
@@ -1003,32 +1023,21 @@ void gaussianprocess<dtyi,dtyo>::set_lambda(dtyo ll){
 }
 
 template <typename dtyi, typename dtyo>
-void gaussianprocess<dtyi,dtyo>::print_ggrow(int dex, dtyo *v){
+void gaussianprocess<dtyi,dtyo>::print_ggrow(int dex, ndarray::Array<dtyo,1,1> v){
   int i;
   if(called_interp==0){
     std::cout<<"You cannot call print gg_row; you have not called interpolate\n";
     //printf("You can't call print gg_row; you haven't called interpolate\n");
   }
   else{
-    for(i=0;i<n_nn;i++)v[i]=gg(dex,i);
+    for(i=0;i<n_nn;i++)v(i)=gg(dex,i);
   }
 }
 
-}}}
-
-#define gp lsst::afw::math
+}
 
 #define INSTANTIATEGP(dtyi,dtyo) \
-        template gp::gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyo*);\
-	template gp::gaussianprocess<dtyi,dtyo>::gaussianprocess(int,int,dtyi**,dtyi*,dtyi*,dtyo*);\
-	template dtyo gp::gaussianprocess<dtyi,dtyo>::interpolate(dtyi*,dtyo*,int);\
-	template void gp::gaussianprocess<dtyi,dtyo>::print_nn(int*);\
-	template void gp::gaussianprocess<dtyi,dtyo>::set_lambda(dtyo);\
-	template void gp::gaussianprocess<dtyi,dtyo>::print_ggrow(int,dtyo*);\
-	template gp::gaussianprocess<dtyi,dtyo>::~gaussianprocess();\
-	template void gp::gaussianprocess<dtyi,dtyo>::set_kp(int);\
-	template gp::gaussianprocess<dtyi,dtyo>::gaussianprocess();
-
+	template class gptest::gaussianprocess<dtyi,dtyo>;
 
 INSTANTIATEGP(double,double);
 

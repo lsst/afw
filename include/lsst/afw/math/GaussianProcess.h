@@ -1,12 +1,10 @@
 #include <Eigen/Dense>
 #include <time.h>
-//#include "ndarray/eigen.h"
+#include "ndarray/eigen.h"
 
 
 
-namespace lsst {
-namespace afw {
-namespace math {
+namespace gptest {
 
 //using namespace Eigen;
 
@@ -79,22 +77,24 @@ class gaussianprocess{
   
      ~gaussianprocess();
       
-     gaussianprocess();
+     gaussianprocess(float);
      
-     gaussianprocess(int,int,dtyi**,dtyo*);
+     gaussianprocess(int,int,ndarray::Array<dtyi,2,2>,ndarray::Array<dtyo,1,1>);
       
-     gaussianprocess(int,int,dtyi**,dtyi*,dtyi*,dtyo*);
+     /*gaussianprocess(int,int,\
+     ndarray::Array<dtyi,2,2>,ndarray::Array<dtyi,2,2>,ndarray::Array<dtyi,2,2>,dtyo*);
+     */
      
      //note: code will remember whether or not you input with maxs and
      //mins
      
-     dtyo interpolate(dtyi*,dtyo*,int);
+     dtyo interpolate(ndarray::Array<dtyi,1,1>,ndarray::Array<dtyo,1,1>,int);
     
      void set_kp(int);
-     void print_nn(int*);
+     void print_nn(ndarray::Array<int,1,1>);
      void set_lambda(dtyo);
-     void print_ggrow(int,dtyo*);
+     void print_ggrow(int,ndarray::Array<dtyo,1,1>);
 
 };
 
-}}}
+}
