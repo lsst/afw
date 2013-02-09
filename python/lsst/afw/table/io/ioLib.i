@@ -58,3 +58,19 @@ Python interface to lsst::afw::table::io classes
 %enddef
 
 %include "lsst/afw/table/io/Persistable.h"
+
+// =============== Utility code =============================================================================
+
+%inline %{
+
+// It's useful in test code to be able to compare Persistables for pointer equality,
+// but I don't think this is possible without actually wrapping a shared_ptr equality
+// comparison - the Swig 'this' objects only expose the address *of* the shared_ptr,
+// not the address *in* the shared_ptr.
+bool comparePersistablePtrs(
+    PTR(lsst::afw::table::io::Persistable) a, PTR(lsst::afw::table::io::Persistable) b
+) {
+    return a == b;
+}
+
+%}
