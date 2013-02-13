@@ -91,7 +91,13 @@ public:
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
     const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
-    PeakList & getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    /**
+     * Return the Peak%s contained in this Footprint
+     *
+     * The peaks are ordered by decreasing pixel intensity at the peak position (so the most negative
+     * peak appears last) 
+     */
+    PeakList & getPeaks() { return _peaks; }
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
     int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
