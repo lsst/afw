@@ -168,6 +168,20 @@ class ReadFitsTestCase(unittest.TestCase):
         for k, v in keys.items():
             self.assertEqual(jim.getMetadata().get(k), v)
 
+    def testLongStrings(self):
+        keyWord = 'ZZZ'
+        fitsName = 'zzz.fits'
+        longString = ' '.join(['This is a long string.'] * 8)
+
+        expOrig = afwImage.ExposureF(100,100)
+        mdOrig = expOrig.getMetadata()
+        mdOrig.set(keyWord, longString)
+        expOrig.writeFits(fitsName)
+
+        expNew = afwImage.ExposureF(fitsName)
+        self.assertEqual(expNew.getMetadata().get(keyWord), longString)
+        os.remove(fitsName)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
