@@ -22,7 +22,7 @@
 %declareNumPyConverters(ndarray::Array<int,1,1>);
 
 %define %declareGP(INTYPE,OUTTYPE,INSUFFIX,OUTSUFFIX)
-%template(GaussianPorcess##INSUFFIX##OUTSUFFIX) lsst::afw::math::GaussianProcess<INTYPE,OUTTYPE>;
+%template(GaussianProcess##INSUFFIX##OUTSUFFIX) lsst::afw::math::GaussianProcess<INTYPE,OUTTYPE>;
 //%template(GaussianProcess##INSUFFIX##OUTSUFFIX) gptest::GaussianProcess<INTYPE,OUTTYPE>;
 %enddef
 

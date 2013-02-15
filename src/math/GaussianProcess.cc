@@ -5,7 +5,9 @@
 
 using namespace std;
 
-namespace gptest{
+namespace lsst{
+namespace afw{
+namespace math{
 
 namespace GaussianProcessFunctions{
 
@@ -136,7 +138,7 @@ dtyo expCovariogram(dtyi *v1, dtyi *v2, int d_dim, double *hyp){
 }
 
 
-namespace GPfn = gptest::GaussianProcessFunctions;
+namespace GPfn = lsst::afw::math::GaussianProcessFunctions;
 
 template <typename datatype>
 KdTree<datatype>::~KdTree(){
@@ -1255,10 +1257,10 @@ void GaussianProcess<dtyi,dtyo>::getTimes(){
   std::cout<<"\n";
 }
 
-}
+}}}
 
 #define INSTANTIATEGP(dtyi,dtyo) \
-	template class gptest::GaussianProcess<dtyi,dtyo>;
+	template class lsst::afw::math::GaussianProcess<dtyi,dtyo>;
 
 INSTANTIATEGP(double,double);
 

@@ -2,7 +2,9 @@
 #include <time.h>
 #include "ndarray/eigen.h"
 
-namespace gptest {
+namespace lsst{
+namespace afw{
+namespace math{
 
 namespace GaussianProcessFunctions{
 
@@ -106,4 +108,4 @@ class GaussianProcess{
 
 };
 
-}
+}}}
