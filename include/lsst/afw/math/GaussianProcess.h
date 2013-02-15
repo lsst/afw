@@ -2,86 +2,91 @@
 #include <time.h>
 #include "ndarray/eigen.h"
 
-
-
 namespace gptest {
 
-//using namespace Eigen;
+namespace GaussianProcessFunctions{
 
 template <typename dty>
-double EuclideanDistance(dty*,dty*,int);
+double euclideanDistance(dty*,dty*,int);
 
 template <typename dtyi, typename dtyo>
-dtyo ExpCovariogram(dtyi*,dtyi*,int);
+dtyo expCovariogram(dtyi*,dtyi*,int);
+
+template<typename datatype>
+void mergeSort(datatype*,int*,int);
+
+template<typename datatype>
+int mergeScanner(datatype*,int*,int,int);
+
+}
 
 template <typename datatype>
-void merge_sort(datatype*,int*,int);
-
-template <typename datatype>
-int merge_scanner(datatype*,int*,int,int);
-
-template <typename datatype>
-class kd{
+class KdTree{
   private:
-    int **tree,pts,dim,room,roomstep,*inn,masterparent;
-    int *neighcand,neighfound,neighwant;
-    datatype **data,*tosort;
-    double *ddcand;
+    int **_tree,_pts,_dimensions,_room,_roomStep,*_inn,_masterParent;
+    int *_neighborCandidates,_neighborsFound,_neighborsWanted;
+    datatype *_toSort;
+    double *_neighborDistances;
     
-    void organize(int*,int,int,int);
-    int find_node(datatype*);
-    void nn_explore(datatype*,int,int);
-    void walk_up(int,int,int);
+    void _organize(int*,int,int,int);
+    int _findNode(datatype*);
+    void _lookForNeighbors(datatype*,int,int);
+    int _walkUpTree(int,int,int);
     
-   double (*distance)(datatype*,datatype*,int);
-    
-  public:
-    ~kd();
-    kd(int,int,datatype**,double(*)(datatype*,datatype*,int));
-    void nn_srch(datatype*,int,int*,double*);
+    double (*_distance)(datatype*,datatype*,int);
 
-    void add_pt(datatype*);
-    
-    void get_tree(int,int*);
-    void test_sort();
-    void test_scanner();
-    void black_box_test();
-    
+ public:
+    datatype **data;
+ 
+    ~KdTree();
+    KdTree(int,int,datatype**,double(*)(datatype*,datatype*,int));
+    void findNeighbors(datatype*,int,int*,double*);
+    void addPoint(datatype*);
 
-  
+    int getPoints();
+    void getTreeNode(int,int*);
+    void testSort();
+    void testScanner();
+    int testTree();
+     
 };
 
 
 template <typename dtyi, typename dtyo>
-class gaussianprocess{
+class GaussianProcess{
 
   private:
-    int pts,n_nn,maxmin,dim,room,called_interp,*neigh,calleddummy;
-
-    double *ddneigh;
-    dtyo *fn,*ggq,kriging_parameter,*lambda;
-    dtyi **data,*max,*min,*vv;
+    int _pts,_numberOfNeighbors,_useMaxMin,_dimensions,_room,_roomStep;
+    int _calledInterpolate,*_neighbors,_nHyperParameters;
     
-    double **ggl,**gglin;
+    typedef Eigen::Matrix<dtyo,Eigen::Dynamic,Eigen::Dynamic> matrixtype;
     
-    Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> gg,ggin;
-    kd<dtyi> *kptr;
+    double *_neighborDistances,*_hyperParameters;
+    dtyo *_function,*_covarianceTestPoint,_krigingParameter,_lambda;
+    dtyi **_data,*_max,*_min,*_vv;
+    
+    Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> _covariance,_covarianceInverse;
+    Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> _bb,_xx;
+    
+    Eigen::LLT<matrixtype> _llt;
+    
+    
+    KdTree<dtyi> *_kdTreePtr;
           
-    double (*distance)(dtyi*,dtyi*,int);
-    dtyo (*covariogram)(dtyi*,dtyi*,int);
+    double (*_distance)(dtyi*,dtyi*,int);
+    dtyo (*_covariogram)(dtyi*,dtyi*,int,double*);
       
   public:
   
-     double etime,ltime,ect,lct;
+     double interpolationTime,neighborSearchTime,inversionTime;
+     double iterationTime,varSolveTime;
+     int interpolationCount;
     
-  
-     ~gaussianprocess();
-      
-     gaussianprocess(float);
+     ~GaussianProcess();
      
-     gaussianprocess(int,int,ndarray::Array<dtyi,2,2>,ndarray::Array<dtyo,1,1>);
+     GaussianProcess(int,int,ndarray::Array<dtyi,2,2>,ndarray::Array<dtyo,1,1>);
       
-     /*gaussianprocess(int,int,\
+     /*GaussianProcess(int,int,\
      ndarray::Array<dtyi,2,2>,ndarray::Array<dtyi,2,2>,ndarray::Array<dtyi,2,2>,dtyo*);
      */
      
@@ -90,10 +95,14 @@ class gaussianprocess{
      
      dtyo interpolate(ndarray::Array<dtyi,1,1>,ndarray::Array<dtyo,1,1>,int);
     
-     void set_kp(int);
-     void print_nn(ndarray::Array<int,1,1>);
-     void set_lambda(dtyo);
-     void print_ggrow(int,ndarray::Array<dtyo,1,1>);
+     void addPoint(ndarray::Array<dtyi,1,1>,dtyo);
+     void setKrigingParameter(int);
+     void getNeighbors(ndarray::Array<int,1,1>);
+     void setLambda(dtyo);
+     void setHyperParameters(ndarray::Array<double,1,1>);
+     void getCovarianceRow(int,ndarray::Array<dtyo,1,1>);
+     int testKdTree();
+     void getTimes();
 
 };
 

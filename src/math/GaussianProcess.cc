@@ -1,146 +1,16 @@
 #include "lsst/afw/math/GaussianProcess.h"
+//#include "gptest/gptest.h"
 #include <iostream>
-#include <math.h>
+#include <cmath>
+
+using namespace std;
 
 namespace gptest{
 
-template <typename datatype>
-kd<datatype>::~kd(){
-  int i;
-  for(i=0;i<room;i++){
-    delete [] tree[i];
-  }
-  delete [] tree;
-}
+namespace GaussianProcessFunctions{
 
 template <typename datatype>
-kd<datatype>::kd(int dd, int pp, datatype **dt, \
-double(*dfn)(datatype*,datatype*,int)){
-  
-  int i;
-  
-  //buffers to use when first building the tree
-  tosort=new datatype[pp];
-  inn=new int[pp];
-  
- 
-  dim=dd;
-  pts=pp;
-  roomstep=5000;
-  room=pts;
-  distance=dfn;
-  data=dt;
-  
-  tree=new int*[pts];
-  for(i=0;i<pts;i++){
-    inn[i]=i;
-    tree[i]=new int[4];
-  }
-  
-  organize(inn,pts,-1,-1);
-  
-  delete [] tosort;
-  delete [] inn;
-  
-}
-
-template <typename datatype>
-void kd<datatype>::organize(int *use, int ct, int parent, int dir){
-  //*use is the list of data indices that we must organize
-  //ct is the number of indices available
-  //parent is the parent node of the daughter this call will generate
-  //dir denotes which side of the parent we have descended on
-  
-  int i,j,k,l,idim,daughter;
-  datatype mean,var,varbest;
-  
-  
-  
-  if(ct>1){
-  //below is code to choose the dimension on which the available points
-  //have the greates variance.  This will be the dimension on which
-  //the daughter node splits the data
-    for(i=0;i<dim;i++){
-      mean=0.0;
-      var=0.0;
-      for(j=0;j<ct;j++){
-        mean+=data[use[j]][i];
-        var+=data[use[j]][i]*data[use[j]][i];
-      }
-      mean=mean/double(ct);
-      var=var/double(ct)-mean*mean;
-      if(i==0 || var>varbest || (var==varbest && parent>=0 && i>tree[parent][0])){
-        idim=i;
-        varbest=var;
-      }
-    
-    }//for(i=0;i<dim;i++)
-  
-    for(i=0;i<ct;i++){
-      tosort[i]=data[use[i]][idim];
-    }
-  
-    merge_sort<datatype>(tosort,use,ct);
-    
-    
-    
-
-    k=ct/2;
-    l=ct/2;
-    while(k>0 && tosort[k]==tosort[k-1])k--;
-   
-    while(l<ct-1 && tosort[l]==tosort[ct/2])l++;
- 
-    if((ct/2-k)<(l-ct/2) || l==ct-1)j=k;
-    else j=l;;
-    
-    daughter=use[j];
-
-    if(parent>=0)tree[parent][dir]=daughter;
-    tree[daughter][0]=idim;
-    tree[daughter][3]=parent;
-
-    if(j<ct-1){
-      organize(&use[j+1],ct-j-1,daughter,2);
-    }
-    else tree[daughter][2]=-1;
-  
-    if(j>0){
-      organize(use,j,daughter,1);
-    }
-    else tree[daughter][1]=-1;
-    
-  }//if(ct>1)
-  else{
-    daughter=use[0];
-    if(parent>=0)tree[parent][dir]=daughter;
-    idim=tree[parent][0]+1;
-    if(idim>=dim)idim=0;
-    tree[daughter][0]=idim;
-    tree[daughter][1]=-1;
-    tree[daughter][2]=-1;
-    tree[daughter][3]=parent;
-    
-  }
-  
-  if(parent==-1){
-    masterparent=daughter;
-  }
-  
-}
-
-template <typename datatype>
-void kd<datatype>::get_tree(int dex, int *v){
-  v[0]=tree[dex][0];
-  v[1]=tree[dex][1];
-  v[2]=tree[dex][2];
-  v[3]=tree[dex][3];
-}
-
-
-
-template <typename datatype>
-int merge_scanner(datatype *m, int *indices, int dex, int el){
+int mergeScanner(datatype *m, int *indices, int dex, int el){
 /*this will take the matrix m and put everything in it with value
 greater than element m[dex] to the right of that element
 and everything less than m[dex] to the left; it then returns
@@ -207,7 +77,7 @@ Flannery 1992*/
 }
 
 template <typename datatype>
-void merge_sort(datatype *insort, int *indices, int el){
+void mergeSort(datatype *insort, int *indices, int el){
   
   int i,k;
   datatype nn;
@@ -229,22 +99,186 @@ void merge_sort(datatype *insort, int *indices, int el){
     }
   }
   else if(el>2){
-    i=merge_scanner<datatype>(insort,indices,el/2,el);
+    i=mergeScanner<datatype>(insort,indices,el/2,el);
   
     if(i>1){
-      merge_sort<datatype>(insort,indices,i);
+      mergeSort<datatype>(insort,indices,i);
     }
     
     if(i<el-2){
-      merge_sort<datatype>(&insort[i+1],&indices[i+1],el-i-1);
+      mergeSort<datatype>(&insort[i+1],&indices[i+1],el-i-1);
     }
   
   }
 
 }
 
+
+template<typename dty>
+double euclideanDistance(dty *v1, dty *v2, int d_dim){
+  int i;
+  double dd;
+  dd=0.0;
+  for(i=0;i<d_dim;i++){
+    dd+=double(v1[i]-v2[i])*double(v1[i]-v2[i]);
+  }
+  
+  return sqrt(dd);
+}
+
+template<typename dtyi, typename dtyo>
+dtyo expCovariogram(dtyi *v1, dtyi *v2, int d_dim, double *hyp){
+  double dd;
+  dd=euclideanDistance(v1,v2,d_dim);
+  return dtyo(exp(-0.5*dd*dd/hyp[0]));
+}
+
+}
+
+
+namespace GPfn = gptest::GaussianProcessFunctions;
+
 template <typename datatype>
-void kd<datatype>::test_scanner(){
+KdTree<datatype>::~KdTree(){
+  int i;
+  for(i=0;i<_room;i++){
+    delete [] data[i];
+    delete [] _tree[i];
+  }
+  delete [] data;
+  delete [] _tree;
+}
+
+template <typename datatype>
+KdTree<datatype>::KdTree(int dd, int pp, datatype **dt, \
+double(*dfn)(datatype*,datatype*,int)){
+  
+  int i,j;
+  
+  //buffers to use when first building the tree
+  _toSort=new datatype[pp];
+  _inn=new int[pp];
+  
+ 
+  _dimensions=dd;
+  _pts=pp;
+  _roomStep=5000;
+  _room=_pts;
+  _distance=dfn;
+  
+  data=new datatype*[_room];
+  for(i=0;i<_room;i++){
+    data[i]=new datatype[_dimensions];
+    for(j=0;j<_dimensions;j++)data[i][j]=dt[i][j];
+  }
+  
+  
+  _tree=new int*[_pts];
+  for(i=0;i<_pts;i++){
+    _inn[i]=i;
+    _tree[i]=new int[4];
+  }
+  
+  _organize(_inn,_pts,-1,-1);
+  
+  delete [] _toSort;
+  delete [] _inn;
+  
+}
+
+template <typename datatype>
+void KdTree<datatype>::_organize(int *use, int ct, int parent, int dir){
+  //*use is the list of data indices that we must organize
+  //ct is the number of indices available
+  //parent is the parent node of the daughter this call will generate
+  //dir denotes which side of the parent we have descended on
+  
+  int i,j,k,l,idim,daughter;
+  datatype mean,var,varbest;
+  
+  
+  
+  if(ct>1){
+  //below is code to choose the dimension on which the available points
+  //have the greates variance.  This will be the dimension on which
+  //the daughter node splits the data
+    for(i=0;i<_dimensions;i++){
+      mean=0.0;
+      var=0.0;
+      for(j=0;j<ct;j++){
+        mean+=data[use[j]][i];
+        var+=data[use[j]][i]*data[use[j]][i];
+      }
+      mean=mean/double(ct);
+      var=var/double(ct)-mean*mean;
+      if(i==0 || var>varbest || (var==varbest && parent>=0 && i>_tree[parent][0])){
+        idim=i;
+        varbest=var;
+      }
+    
+    }//for(i=0;i<_dimensions;i++)
+  
+    for(i=0;i<ct;i++){
+      _toSort[i]=data[use[i]][idim];
+    }
+  
+    GPfn::mergeSort<datatype>(_toSort,use,ct);
+    
+    k=ct/2;
+    l=ct/2;
+    while(k>0 && _toSort[k]==_toSort[k-1])k--;
+   
+    while(l<ct-1 && _toSort[l]==_toSort[ct/2])l++;
+ 
+    if((ct/2-k)<(l-ct/2) || l==ct-1)j=k;
+    else j=l;;
+    
+    daughter=use[j];
+
+    if(parent>=0)_tree[parent][dir]=daughter;
+    _tree[daughter][0]=idim;
+    _tree[daughter][3]=parent;
+
+    if(j<ct-1){
+      _organize(&use[j+1],ct-j-1,daughter,2);
+    }
+    else _tree[daughter][2]=-1;
+  
+    if(j>0){
+      _organize(use,j,daughter,1);
+    }
+    else _tree[daughter][1]=-1;
+    
+  }//if(ct>1)
+  else{
+    daughter=use[0];
+    if(parent>=0)_tree[parent][dir]=daughter;
+    idim=_tree[parent][0]+1;
+    if(idim>=_dimensions)idim=0;
+    _tree[daughter][0]=idim;
+    _tree[daughter][1]=-1;
+    _tree[daughter][2]=-1;
+    _tree[daughter][3]=parent;
+    
+  }
+  
+  if(parent==-1){
+    _masterParent=daughter;
+  }
+  
+}
+
+template <typename datatype>
+void KdTree<datatype>::getTreeNode(int dex, int *v){
+  v[0]=_tree[dex][0];
+  v[1]=_tree[dex][1];
+  v[2]=_tree[dex][2];
+  v[3]=_tree[dex][3];
+}
+
+
+template <typename datatype>
+void KdTree<datatype>::testScanner(){
    
    datatype *mm,*mmshld;
    int i,*innt,*innshld;
@@ -279,15 +313,15 @@ void kd<datatype>::test_scanner(){
    innshld[3]=5;
    innshld[4]=-2;
    
-   i=merge_scanner<datatype>(mm,innt,4,5);
+   i=GPfn::mergeScanner<datatype>(mm,innt,4,5);
    
    if(i!=1){
-     std::cout<<"FAILED merge_scanner i "<<i<<"\n";;
+     std::cout<<"FAILED _mergeScanner i "<<i<<"\n";;
    }
    
    for(i=0;i<5;i++){
      if(mm[i]!=mmshld[i] || innt[i]!=innshld[i]){
-      std::cout<<"FAILED merge_scanner "<<i<<"is "<<innt[i]<<" shld "<<innshld[i]<<"\n"; 
+      std::cout<<"FAILED _mergeScanner "<<i<<"is "<<innt[i]<<" shld "<<innshld[i]<<"\n"; 
      }
    }
    
@@ -316,15 +350,15 @@ void kd<datatype>::test_scanner(){
    innshld[3]=5;
    innshld[4]=3;
    
-   i=merge_scanner<datatype>(mm,innt,2,5);
+   i=GPfn::mergeScanner<datatype>(mm,innt,2,5);
    
    if(i!=0){
-     std::cout<<"FAILED homog merge_scanner i "<<i<<"\n";
+     std::cout<<"FAILED homog _mergeScanner i "<<i<<"\n";
    }
    
    for(i=0;i<5;i++){
      if(mm[i]!=mmshld[i] || innt[i]!=innshld[i]){
-       std::cout<<"FAILED homog merge_scanner "<<i<<" is "<<innt[i]<<" shld "<<innshld[i]<<"\n";
+       std::cout<<"FAILED homog _mergeScanner "<<i<<" is "<<innt[i]<<" shld "<<innshld[i]<<"\n";
      }
    }
    
@@ -352,15 +386,15 @@ void kd<datatype>::test_scanner(){
    innshld[3]=5;
    innshld[4]=-2;
    
-   i=merge_scanner<datatype>(mm,innt,1,5);
+   i=GPfn::mergeScanner<datatype>(mm,innt,1,5);
    
    if(i!=4){
-     std::cout<<"FAILED homog_b merge_scanner i "<<i<<"\n";
+     std::cout<<"FAILED homog_b _mergeScanner i "<<i<<"\n";
    }
    
    for(i=0;i<5;i++){
      if(mm[i]!=mmshld[i] || innt[i]!=innshld[i]){
-       std::cout<<"FAILED homog_b merge_scanner "<<i<<" is "<<innt[i]<<" shld "<<innshld[i]<<"\n";
+       std::cout<<"FAILED homog_b _mergeScanner "<<i<<" is "<<innt[i]<<" shld "<<innshld[i]<<"\n";
      }
    }
    
@@ -372,7 +406,7 @@ void kd<datatype>::test_scanner(){
 }
 
 template <typename datatype>
-void kd<datatype>::test_sort(){
+void KdTree<datatype>::testSort(){
   
   datatype *mm,*mmshld;
   int *innt,*innshld,i;
@@ -404,7 +438,7 @@ void kd<datatype>::test_sort(){
     innt[i]=i;
   }
   
-  merge_sort<datatype>(mm,innt,5);
+  GPfn::mergeSort<datatype>(mm,innt,5);
   
   for(i=0;i<5;i++){
     //printf("%e %e\n",mm[i],mmshld[i]);
@@ -425,7 +459,7 @@ void kd<datatype>::test_sort(){
   mmshld[3]=datatype(1.0);
   mmshld[4]=datatype(1.0);
   
-  merge_sort<datatype>(mm,innt,5);
+  GPfn::mergeSort<datatype>(mm,innt,5);
   for(i=0;i<5;i++){
     if(mm[i]!=mmshld[i]){
       std::cout<<"sort homog FAILED "<<i<<"\n";
@@ -440,103 +474,118 @@ void kd<datatype>::test_sort(){
 }
 
 template <typename datatype>
-void kd<datatype>::walk_up(int target, int dir, int root){
+int KdTree<datatype>::_walkUpTree(int target, int dir, int root){
   //target is the node that you are examining now
   //dir is where you came from
   //root is the ultimate point from which you started
   
-  int i;
+  int i,output;
+  
+  output=1;
   
   if(dir==1){
-    if(data[root][tree[target][0]]>=data[target][tree[target][0]]){
-      std::cout<<"tree FAILURE root "<<root<<" target "<<target<<" dir "<<dir<<"\n";
-      std::cout<<data[root][tree[target][0]]<<" >= "<<data[target][tree[target][0]]<<"\n";
-    
+    if(data[root][_tree[target][0]]>=data[target][_tree[target][0]]){
+      std::cout<<"_tree FAILURE root "<<root<<" target "<<target<<" dir "<<dir<<"\n";
+      std::cout<<data[root][_tree[target][0]]<<" >= "<<data[target][_tree[target][0]]<<"\n";
+      output=0;
+      return 0;
+      
     }
   }
   else{
-      if(data[root][tree[target][0]]<data[target][tree[target][0]]){
+      if(data[root][_tree[target][0]]<data[target][_tree[target][0]]){
       
-      std::cout<<"tree FAILURE root "<<root<<"\n";
+      std::cout<<"_tree FAILURE root "<<root<<"\n";
       std::cout<<" target "<<target<<" dir "<<dir<<" \n";
-      std::cout<<data[root][tree[target][0]]<<" < "<<data[target][tree[target][0]]<<"\n";
+      std::cout<<data[root][_tree[target][0]]<<" < "<<data[target][_tree[target][0]]<<"\n";
+      output=0;
+      return 0;
       
-      //printf("tree FAILURE root %d target %d dir %d %d < %d\n",
-      //root,target,dir,data[root][tree[target][0]],data[target][tree[target][0]]);
+      //printf("_tree FAILURE root %d target %d dir %d %d < %d\n",
+      //root,target,dir,data[root][_tree[target][0]],data[target][_tree[target][0]]);
     }
   }
   
-  if(tree[target][3]>=0){
-    if(tree[tree[target][3]][1]==target)i=1;
+  if(_tree[target][3]>=0){
+    if(_tree[_tree[target][3]][1]==target)i=1;
     else i=2;
     
-    walk_up(tree[target][3],i,root);
+    output=output*_walkUpTree(_tree[target][3],i,root);
   
   }
+  else{
+    output=output*target;
+    //so that it will presumably return _masterParent
+    //make sure everything is connected to _masterParent
+  }
+  return output;
   
 }
 
 template <typename datatype>
-void kd<datatype>::black_box_test(){
+int KdTree<datatype>::testTree(){
 
-  int i,j,*isparent;
+  int i,j,*isparent,output;
   
-  /*for(i=0;i<pts;i++){
-    for(j=0;j<dim;j++)printf("%d ",data[i][j]);
+  /*for(i=0;i<_pts;i++){
+    for(j=0;j<_dimensions;j++)printf("%d ",data[i][j]);
     printf("\n");
   }
   printf("\n\n");*/
   
   j=0;
-  for(i=0;i<pts;i++){
-    if(tree[i][3]<0)j++;
+  for(i=0;i<_pts;i++){
+    if(_tree[i][3]<0)j++;
   }
   if(j!=1){
-    std::cout<<"tree FAILURE "<<j<<" masterparents\n";
-    //printf("tree FAILURE %d masterparents\n");
+    std::cout<<"_tree FAILURE "<<j<<" _masterParents\n";
+    return 0;
+    //printf("_tree FAILURE %d _masterParents\n");
   }
   
-  isparent=new int[pts];
-  for(i=0;i<pts;i++)isparent[i]=0;
-  for(i=0;i<pts;i++){
-    isparent[tree[i][3]]++;
+  isparent=new int[_pts];
+  for(i=0;i<_pts;i++)isparent[i]=0;
+  for(i=0;i<_pts;i++){
+    isparent[_tree[i][3]]++;
   }
-  for(i=0;i<pts;i++){
+  for(i=0;i<_pts;i++){
     if(isparent[i]>2){ 
-      std::cout<<"tree FAILURE "<<i<<" is parent to "<<isparent[i]<<"\n";
-     //printf("tree FAILURE %d is parent to %d\n",i,isparent[i]);
+      std::cout<<"_tree FAILURE "<<i<<" is parent to "<<isparent[i]<<"\n";
+      return 0;
+     //printf("_tree FAILURE %d is parent to %d\n",i,isparent[i]);
     }
   }
   
   delete [] isparent;
   
-  for(i=0;i<pts;i++){
+  for(i=0;i<_pts;i++){
     
-    if(tree[i][3]>=0){
-      if(tree[tree[i][3]][1]==i)j=1;
+    if(_tree[i][3]>=0){
+      if(_tree[_tree[i][3]][1]==i)j=1;
       else j=2;
-      
-     
-      
-      walk_up(tree[i][3],j,i);
+
+      output=_walkUpTree(_tree[i][3],j,i);
+      if(output!=_masterParent)return 0;
     }
   
   }
   //printf("done with black box test\n");
-  std::cout<<"done with black box test of kd_tree\n";
+  std::cout<<"done with black box test of KdTree\n";
+  if(output!=_masterParent) return 0;
+  else return 1;
 }
 
 template <typename datatype>
-int kd<datatype>::find_node(datatype *v){
+int KdTree<datatype>::_findNode(datatype *v){
   //this routine finds the node that would be the parent of
   //v[] if you were going to add it to the tree
   
   int consider,next,dim;
   
-  dim=tree[masterparent][0];
+  dim=_tree[_masterParent][0];
   
-  if(v[dim]<data[masterparent][dim])consider=tree[masterparent][1];
-  else consider=tree[masterparent][2];
+  if(v[dim]<data[_masterParent][dim])consider=_tree[_masterParent][1];
+  else consider=_tree[_masterParent][2];
   
   next=consider;
   
@@ -544,9 +593,9 @@ int kd<datatype>::find_node(datatype *v){
     
     consider=next;
     
-    dim=tree[consider][0];
-    if(v[dim]<data[consider][dim])next=tree[consider][1];
-    else next=tree[consider][2];
+    dim=_tree[consider][0];
+    if(v[dim]<data[consider][dim])next=_tree[consider][1];
+    else next=_tree[consider][2];
   
   }
   
@@ -554,68 +603,142 @@ int kd<datatype>::find_node(datatype *v){
   
 }
 
-template<typename dty>
-double EuclideanDistance(dty *v1, dty *v2, int d_dim){
-  int i;
-  double dd;
-  dd=0.0;
-  for(i=0;i<d_dim;i++){
-    dd+=double(v1[i]-v2[i])*double(v1[i]-v2[i]);
+template <typename datatype>
+void KdTree<datatype>::addPoint(datatype *v){
+
+  int i,j,**tbuff,node,dim;
+  datatype **dbuff;
+  
+  node=_findNode(v);
+  dim=_tree[node][0]+1;
+  if(dim==_dimensions)dim=0;
+  
+  if(_pts==_room){
+    tbuff=new int*[_room];
+    dbuff=new datatype*[_room];
+    
+    for(i=0;i<_room;i++){
+      tbuff[i]=new int[4];
+      dbuff[i]=new datatype[_dimensions];
+      for(j=0;j<_dimensions;j++)dbuff[i][j]=data[i][j];
+      delete [] data[i];
+      for(j=0;j<4;j++)tbuff[i][j]=_tree[i][j];
+      delete [] _tree[i];
+    }
+    delete [] _tree;
+    delete [] data;
+    _room+=_roomStep;
+    _tree=new int*[_room];
+    data=new datatype*[_room];
+    for(i=0;i<_room;i++){
+      _tree[i]=new int[4];
+      data[i]=new datatype[_dimensions];
+    }
+    
+    for(i=0;i<_pts;i++){
+      for(j=0;j<_dimensions;j++)data[i][j]=dbuff[i][j];
+      delete [] dbuff[i];
+      for(j=0;j<4;j++)_tree[i][j]=tbuff[i][j];
+      delete [] tbuff[i];
+    }
+    delete [] dbuff;
+    delete [] tbuff;
   }
   
-  return sqrt(dd);
-}
-
-template<typename dtyi, typename dtyo>
-dtyo ExpCovariogram(dtyi *v1, dtyi *v2, int d_dim){
-  double dd;
-  dd=EuclideanDistance(v1,v2,d_dim);
-  return dtyo(exp(-0.5*dd*dd/100.0));
+  _tree[_pts][0]=dim;
+  _tree[_pts][3]=node;
+  i=_tree[node][0];
+  
+  if(data[node][i]>v[i]){
+    if(_tree[node][1]>=0){
+      std::cout<<"WARNING adding to a piece of tree that already exists 1\n";
+      std::cout<<"node "<<node<<" "<<_tree[node][1]<<" "<<data[node][i]<<" "<<v[i]<<"\n";
+      std::cout<<"pts "<<_pts<<"\n";
+    }
+    _tree[node][1]=_pts;
+  }
+  else{
+    if(_tree[node][2]>=0){
+      std::cout<<"WARNING adding to a piece of tree that already exists 2\n";
+      std::cout<<"node "<<node<<" "<<_tree[node][2]<<" "<<data[node][i]<<" "<<v[i]<<"\n"; 
+      std::cout<<"pts "<<_pts<<"\n";
+    }
+    _tree[node][2]=_pts;
+  }
+  _tree[_pts][1]=-1;
+  _tree[_pts][2]=-1;
+  for(i=0;i<_dimensions;i++){
+    data[_pts][i]=v[i];
+  }
+  
+  _pts++;
+  
 }
 
 template<typename datatype>
-void kd<datatype>::nn_srch(datatype *v, int n_nn, int *neighdex, double *dd){
+void KdTree<datatype>::findNeighbors(datatype *v, int n_nn, int *neighdex, double *dd){
   //this will search the tree for the n_nn nearest neighbors of v[];
   //the indexes of the neighbors will be stored in neighdex[];
   //the distances will be stored in dd[];
   
-  int i,start;
+  int i,start,order[3];
+  double dorder[3];
   
-  neighcand=new int[n_nn];
-  ddcand=new double[n_nn];
-  neighfound=0;
-  neighwant=n_nn;
+  _neighborCandidates=new int[n_nn];
+  _neighborDistances=new double[n_nn];
+  _neighborsFound=0;
+  _neighborsWanted=n_nn;
   
-  for(i=0;i<n_nn;i++)ddcand[i]=-1.0;
+  for(i=0;i<n_nn;i++)_neighborDistances[i]=-1.0;
   
-  start=find_node(v);
+  start=_findNode(v);
   
-  ddcand[0]=distance(data[start],v,dim);
-  neighcand[0]=start;
-  neighfound=1;
+  _neighborDistances[0]=_distance(data[start],v,_dimensions);
+  _neighborCandidates[0]=start;
+  _neighborsFound=1;
   
-  if(tree[start][3]>=0){
-    nn_explore(v,tree[start][3],start);
+  if(_tree[start][3]>=0)dorder[2]=_distance(data[_tree[start][3]],v,_dimensions);
+  else dorder[2]=-1.0;
+  order[2]=3;
+  
+  if(_tree[start][1]>=0)dorder[0]=_distance(data[_tree[start][1]],v,_dimensions);
+  else dorder[0]=-1.0;
+  order[0]=1;
+  
+  if(_tree[start][2]>=0)dorder[1]=_distance(data[_tree[start][2]],v,_dimensions);
+  else dorder[1]=-1.0;
+  order[1]=2;
+  
+  GPfn::mergeSort<double>(dorder,order,3);
+  
+  for(i=0;i<3;i++){
+    if(_tree[start][order[i]]>=0){
+      _lookForNeighbors(v,_tree[start][order[i]],start);
+    }
   }
-  if(tree[start][1]>=0){
-    nn_explore(v,tree[start][1],start);
+  
+  /*if(_tree[start][3]>=0){
+    _lookForNeighbors(v,_tree[start][3],start);
   }
-  if(tree[start][2]>=0){
-    nn_explore(v,tree[start][2],start);
+  if(_tree[start][1]>=0){
+    _lookForNeighbors(v,_tree[start][1],start);
   }
+  if(_tree[start][2]>=0){
+    _lookForNeighbors(v,_tree[start][2],start);
+  }*/
   
   for(i=0;i<n_nn;i++){
-    neighdex[i]=neighcand[i];
-    dd[i]=ddcand[i];
+    neighdex[i]=_neighborCandidates[i];
+    dd[i]=_neighborDistances[i];
   }
   
-  delete [] neighcand;
-  delete [] ddcand;
+  delete [] _neighborCandidates;
+  delete [] _neighborDistances;
   
 }
 
 template<typename datatype>
-void kd<datatype>::nn_explore(datatype *v, int consider, int from){
+void KdTree<datatype>::_lookForNeighbors(datatype *v, int consider, int from){
   //in the process of searching for nearest neighbors of v[]
   //this routine will look at the point denoted by 'consider'
   //and walk up/down the tree based on where it is coming from ('from')
@@ -625,74 +748,72 @@ void kd<datatype>::nn_explore(datatype *v, int consider, int from){
   
   
   
-  dd=distance(data[consider],v,dim);
+  dd=_distance(data[consider],v,_dimensions);
   
-  /*for(i=1;i<neighfound;i++){
-    if(ddcand[i]<ddcand[i-1]){
-      printf("NEIGHFOUND out of order\n");
+  /*for(i=1;i<_neighborsFound;i++){
+    if(_neighborDistances[i]<_neighborDistances[i-1]){
+      printf("_neighborsFound out of order\n");
       exit(1);
     }
   }*/
   
-  if(neighfound<neighwant || dd<ddcand[neighwant-1]){
-    for(i=0;i<neighfound && ddcand[i]<dd;i++);
-    j=i;
-  
+  if(_neighborsFound<_neighborsWanted || dd<_neighborDistances[_neighborsWanted-1]){
+    for(j=0;j<_neighborsFound && _neighborDistances[j]<dd;j++);
       
-    for(i=neighwant-1;i>j;i--){
-      ddcand[i]=ddcand[i-1];
-      neighcand[i]=neighcand[i-1];
+    for(i=_neighborsWanted-1;i>j;i--){
+      _neighborDistances[i]=_neighborDistances[i-1];
+      _neighborCandidates[i]=_neighborCandidates[i-1];
     }
     
-    ddcand[j]=dd;
-    neighcand[j]=consider;
+    _neighborDistances[j]=dd;
+    _neighborCandidates[j]=consider;
     
-    if(neighfound<neighwant)neighfound++;
+    if(_neighborsFound<_neighborsWanted)_neighborsFound++;
   }
   
-  if(tree[consider][3]==from){
+  if(_tree[consider][3]==from){
     //you came here from the parent
     
-    i=tree[consider][0];
+    i=_tree[consider][0];
     dd=v[i]-data[consider][i];
-    if((dd<=ddcand[neighfound-1] || neighfound<neighwant) \
-    && tree[consider][1]>=0){
-      nn_explore(v,tree[consider][1],consider);
+    if((dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted) \
+    && _tree[consider][1]>=0){
+      _lookForNeighbors(v,_tree[consider][1],consider);
     }
     
     dd=data[consider][i]-v[i];
-    if((dd<=ddcand[neighfound-1] || neighfound<neighwant) \
-    && tree[consider][2]>=0){
-      nn_explore(v,tree[consider][2],consider);
+    if((dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted) \
+    && _tree[consider][2]>=0){
+      _lookForNeighbors(v,_tree[consider][2],consider);
     }
   }
   else{
     //you came here from one of the branches
     
     //descend the other branch
-    if(tree[consider][1]==from){
+    if(_tree[consider][1]==from){
       going=2;
     }
     else{ 
       going=1;
     }
     
-    j=tree[consider][going];
+    j=_tree[consider][going];
     
     if(j>=0){
-      i=tree[consider][0];
+      i=_tree[consider][0];
       if(going==1)dd=v[i]-data[consider][i];
       else dd=data[consider][i]-v[i];
       
-      if(dd<=ddcand[neighfound-1] || neighfound<neighwant){
-        nn_explore(v,j,consider);
+      if(dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted){
+        _lookForNeighbors(v,j,consider);
       }
     }
     
     //ascend to the parent
-    if(tree[consider][3]>=0){
+    if(_tree[consider][3]>=0){
       
-      nn_explore(v,tree[consider][3],consider);
+      _lookForNeighbors(v,_tree[consider][3],consider);
       
     }
     
@@ -701,43 +822,36 @@ void kd<datatype>::nn_explore(datatype *v, int consider, int from){
 
 }
 
+template <typename datatype>
+int KdTree<datatype>::getPoints(){
+  return _pts;
+}
 
 template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::~gaussianprocess(){
-  int i;
+GaussianProcess<dtyi,dtyo>::~GaussianProcess(){
   
-  if(maxmin==1){
-    for(i=0;i<room;i++){
-      delete [] data[i];
-    }
-    delete [] data;
-    
-    if(called_interp==1)delete [] vv;
-    
+  if(_useMaxMin==1){    
+    if(_calledInterpolate==1)delete [] _vv;
   }
   
-  if(calleddummy==0)delete kptr;
+    delete _kdTreePtr;
+    delete _function;
   
-  if(called_interp==1){
-    delete [] neigh;
-    delete [] ddneigh;
-    delete [] ggq;
-    gg.resize(0,0);
+  
+  if(_calledInterpolate==1){
+    delete [] _neighbors;
+    delete [] _neighborDistances;
+    delete [] _covarianceTestPoint;
+    _covariance.resize(0,0);
     
   }
   
 }
 
-template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::gaussianprocess(float junk){
-  std::cout<<"Congratulations... you have called the Gaussian Process object\n";
-  std::cout<<"you passed it with "<<junk<<"\n";
-  calleddummy=1;
-}
 
 /*
 template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyi *mx, dtyi *mn, dtyo *ff){
+GaussianProcess<dtyi,dtyo>::GaussianProcess(int dd, int pp, dtyi **datain, dtyi *mx, dtyi *mn, dtyo *ff){
  //constructor if you have maxs and mins
   
   int i,j;
@@ -745,101 +859,109 @@ gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, dtyi **datain, dtyi 
   printf("WARNING this constructor is not actually ready\n");
   exit(1);
   
-  calleddummy=0;
-  
-  dim=dd;
-  pts=pp;
-  room=pts;
-  
-  fn=ff;
-  
-  kriging_parameter=dtyo(1.0);
-  
-  etime=0.0;
-  ltime=0.0;
-  ect=0.0;
-  lct=0.0;
-  
-  max=mx;
-  min=mn;
-  
-  covariogram=ExpCovariogram;
-  distance=EuclideanDistance;
-  
-  called_interp=0;
 
-  lambda=new dtyo[pts];
-  for(i=0;i<pts;i++){
-    lambda[i]=dtyo(1.0e-5);
-  }
   
-  maxmin=1;
-  data=new dtyi*[pts];
-  for(i=0;i<pts;i++){
-    data[i]=new dtyi[dim];
-    for(j=0;j<dim;j++){
-      data[i][j]=(datain[i][j]-min[j])/(max[j]-min[j]);
+  _dimensions=dd;
+  _pts=pp;
+  _room=_pts;
+  
+  _function=ff;
+  
+  _krigingParameter=dtyo(1.0);
+  
+
+
+  
+  _max=mx;
+  _min=mn;
+  
+  _covariogram=GPfn::expCovariogram;
+  _distance=GPfn::euclideanDistance;
+  
+  _calledInterpolate=0;
+
+ _lambda=dtyo(1.0e-5);
+  
+  
+  _useMaxMin=1;
+  _data=new dtyi*[_pts];
+  for(i=0;i<_pts;i++){
+    _data[i]=new dtyi[_dimensions];
+    for(j=0;j<_dimensions;j++){
+      _data[i][j]=(datain[i][j]-_min[j])/(_max[j]-_min[j]);
     }
   }
    
-  kptr=new kd<dtyi>(dim,pts,data,distance);
+  _kdTreePtr=new KdTree<dtyi>(_dimensions,_pts,_data,_distance);
   
 }
 
 */
 
 template <typename dtyi, typename dtyo>
-gaussianprocess<dtyi,dtyo>::gaussianprocess(int dd, int pp, ndarray::Array<dtyi,2,2> datain, \
+GaussianProcess<dtyi,dtyo>::GaussianProcess(int dd, int pp, ndarray::Array<dtyi,2,2> datain, \
 ndarray::Array<dtyo,1,1> ff){
  //constructor if you do not have maxs and mins
   
   int i,j;
   
-  calleddummy=0;
+
   
-  dim=dd;
-  pts=pp;
-  room=pts;
+  _dimensions=dd;
+  _pts=pp;
+  _room=_pts;
+  _roomStep=5000;
   
-  fn=new dtyo[pts];
-  for(i=0;i<pts;i++)fn[i]=ff(i);
-  kriging_parameter=dtyo(1.0);
+  _function=new dtyo[_pts];
+  for(i=0;i<_pts;i++)_function[i]=ff(i);
+  _krigingParameter=dtyo(1.0);
   
-  covariogram=ExpCovariogram;
-  distance=EuclideanDistance;
+  _covariogram=GPfn::expCovariogram;
+  _distance=GPfn::euclideanDistance;
   
-  called_interp=0;
+  _calledInterpolate=0;
   
-  lambda=new dtyo[pts];
-  for(i=0;i<pts;i++){
-    lambda[i]=dtyo(1.0e-5);
-  }
-  maxmin=0;
+  _lambda=dtyo(1.0e-5);
   
-  //data=datain;
+  _useMaxMin=0;
   
-  data=new dtyi*[pts];
-  for(i=0;i<pts;i++){
-     data[i]=new dtyi[dim];
-     for(j=0;j<dim;j++){
-       data[i][j]=datain(i,j);
+  
+  _data=new dtyi*[_pts];
+  for(i=0;i<_pts;i++){
+     _data[i]=new dtyi[_dimensions];
+     for(j=0;j<_dimensions;j++){
+       _data[i][j]=datain(i,j);
      }
   }
   
    
-  kptr=new kd<dtyi>(dim,pts,data,distance);
+  _kdTreePtr=new KdTree<dtyi>(_dimensions,_pts,_data,_distance);
   
-  etime=0.0;
-  ltime=0.0;
-  ect=0.0;
-  lct=0.0;
+  for(i=0;i<_pts;i++){
+    delete [] _data[i];
+  }
+  delete _data;
+  
+  _data=_kdTreePtr->data;
+  _pts=_kdTreePtr->getPoints();
+  
+  _nHyperParameters=1;
+  _hyperParameters=new double[1];
+  _hyperParameters[0]=1.0;
+  
+  interpolationTime=0.0;
+  interpolationCount=0;
+  neighborSearchTime=0.0;
+  inversionTime=0.0;
+  iterationTime=0.0;
+  varSolveTime=0.0;
   
 }
 
 
 
 template <typename dtyi, typename dtyo>
-void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
+void GaussianProcess<dtyi,dtyo>::setKrigingParameter(int kk){
   
   Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> kgg,kggin;
   
@@ -851,23 +973,23 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
   ddneigh=new double[kk+1];
   kggq=new dtyo[kk];
   
-  inn=new int[pts];
-  rat=new dtyo[pts];
+  inn=new int[_pts];
+  rat=new dtyo[_pts];
   
   kgg.resize(kk,kk);
   
-  for(i=0;i<pts;i++){
+  for(i=0;i<_pts;i++){
 
-    kptr->nn_srch(data[i],kk+1,kneigh,ddneigh);
+    _kdTreePtr->findNeighbors(_data[i],kk+1,kneigh,ddneigh);
     
     for(j=0;j<kk;j++){
-      kggq[j]=covariogram(data[i],data[kneigh[j+1]],dim);
+      kggq[j]=_covariogram(_data[i],_data[kneigh[j+1]],_dimensions,_hyperParameters);
       
-      kgg(j,j)=covariogram(data[kneigh[j+1]],data[kneigh[j+1]],dim)\
-      +lambda[kneigh[j+1]];
+      kgg(j,j)=_covariogram(_data[kneigh[j+1]],_data[kneigh[j+1]],_dimensions,_hyperParameters)\
+      +_lambda;
       
       for(k=j+1;k<kk;k++){
-        kgg(j,k)=covariogram(data[kneigh[j+1]],data[kneigh[k+1]],dim);
+        kgg(j,k)=_covariogram(_data[kneigh[j+1]],_data[kneigh[k+1]],_dimensions,_hyperParameters);
         kgg(k,j)=kgg(j,k);
       }
     }
@@ -876,18 +998,18 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
     
     fbar=dtyo(0.0);
     for(j=0;j<kk;j++){
-      fbar+=fn[kneigh[j+1]];
+      fbar+=_function[kneigh[j+1]];
     }
     fbar=fbar/dtyo(kk);
     
     mu=fbar;
     for(j=0;j<kk;j++){
       for(k=0;k<kk;k++){
-        mu+=kggq[j]*kggin(j,k)*(fn[kneigh[k+1]]-fbar);
+        mu+=kggq[j]*kggin(j,k)*(_function[kneigh[k+1]]-fbar);
       }
     }
     
-    sig2=covariogram(data[i],data[i],dim)+lambda[kneigh[1]];
+    sig2=_covariogram(_data[i],_data[i],_dimensions,_hyperParameters)+_lambda;
     
     for(j=0;j<kk;j++){
       sig2-=kggq[j]*kggin(j,j)*kggq[j];
@@ -896,13 +1018,13 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
       }
     }
     
-    rat[i]=(mu-fn[i])*(mu-fn[i])/sig2; 
+    rat[i]=(mu-_function[i])*(mu-_function[i])/sig2; 
     
   }
   
-  merge_sort<dtyo>(rat,inn,pts);
+  GPfn::mergeSort<dtyo>(rat,inn,_pts);
   
-  kriging_parameter=rat[68*pts/100];
+  _krigingParameter=rat[68*_pts/100];
   
   delete [] kneigh;
   delete [] ddneigh;
@@ -915,129 +1037,228 @@ void gaussianprocess<dtyi,dtyo>::set_kp(int kk){
 
 
 template <typename dtyi, typename dtyo>
-dtyo gaussianprocess<dtyi,dtyo>::interpolate(ndarray::Array<dtyi,1,1> vin, ndarray::Array<dtyo,1,1> sig2, int kk){
+dtyo GaussianProcess<dtyi,dtyo>::interpolate(ndarray::Array<dtyi,1,1> vin, ndarray::Array<dtyo,1,1> variance, int kk){
   
   int i,j;
   dtyo fbar,mu;
-  double before,after;
+  double before,after,aa,bb;
   
+  before=double(time(NULL));
   
-  if(called_interp==0 || kk!=n_nn){
-     if(called_interp==1){
-       delete [] ggq;
-       delete [] neigh;
-       delete [] ddneigh;
+  if(_calledInterpolate==0 || kk!=_numberOfNeighbors){
+     if(_calledInterpolate==1){
+       delete [] _covarianceTestPoint;
+       delete [] _neighbors;
+       delete [] _neighborDistances;
        
      }
      
-     ggq=new dtyo[kk];
-     gg.resize(kk,kk);
+     _covarianceTestPoint=new dtyo[kk];
+     _covariance.resize(kk,kk);
+     _bb.resize(kk,1);
+     _xx.resize(kk,1);
      
-     neigh=new int[kk];
-     ddneigh=new double[kk];
+     _neighbors=new int[kk];
+     _neighborDistances=new double[kk];
      
-     n_nn=kk;
+     _numberOfNeighbors=kk;
   }
   
-  if(called_interp==0){
-    vv=new dtyi[dim];
+  if(_calledInterpolate==0){
+    _vv=new dtyi[_dimensions];
   }
   
-  if(maxmin==1){
-    for(i=0;i<dim;i++)vv[i]=(vin(i)-min[i])/(max[i]-min[i]);
+  if(_useMaxMin==1){
+    for(i=0;i<_dimensions;i++)_vv[i]=(vin(i)-_min[i])/(_max[i]-_min[i]);
   }
   else{
-    for(i=0;i<dim;i++){
-      vv[i]=vin(i);
+    for(i=0;i<_dimensions;i++){
+      _vv[i]=vin(i);
     }
   }
   
+  bb=double(time(NULL));
+  _kdTreePtr->findNeighbors(_vv,_numberOfNeighbors,_neighbors,_neighborDistances);
+  aa=double(time(NULL));
   
-  kptr->nn_srch(vv,n_nn,neigh,ddneigh);
+  neighborSearchTime+=aa-bb;
   
+  bb=double(time(NULL));
   fbar=0.0;
-  for(i=0;i<n_nn;i++)fbar+=fn[neigh[i]];
-  fbar=fbar/double(n_nn);
-  
-  
-  
-  
-  for(i=0;i<n_nn;i++){
-    ggq[i]=covariogram(vv,data[neigh[i]],dim);
-    gg(i,i)=covariogram(data[neigh[i]],data[neigh[i]],dim)+lambda[neigh[i]];
-    for(j=i+1;j<n_nn;j++){
-      gg(i,j)=covariogram(data[neigh[i]],data[neigh[j]],dim);
-      gg(j,i)=gg(i,j);
-    }
-  }
-  
-  before=double(time(NULL));
-  ggin=gg.inverse();
-  after=double(time(NULL));
-  etime+=after-before;
-  ect+=1.0;
-  
-  mu=fbar;
-  for(i=0;i<n_nn;i++){
-    for(j=0;j<n_nn;j++){
-      mu+=ggq[i]*ggin(i,j)*(fn[neigh[j]]-fbar);
-    }
-  }
-  
-  sig2(0)=covariogram(vv,vv,dim)+lambda[neigh[0]];
-  
-  for(i=0;i<n_nn;i++){
-    sig2(0)-=ggq[i]*ggin(i,i)*ggq[i];
-    for(j=i+1;j<n_nn;j++){
-      sig2(0)-=2.0*ggq[i]*ggin(i,j)*ggq[j];
-    }
-  }
-  
-  sig2(0)=sig2(0)*kriging_parameter;
-  
-  called_interp=1;
-  
+  for(i=0;i<_numberOfNeighbors;i++)fbar+=_function[_neighbors[i]];
+  fbar=fbar/double(_numberOfNeighbors);
 
+  for(i=0;i<_numberOfNeighbors;i++){
+    _covarianceTestPoint[i]=_covariogram(_vv,_data[_neighbors[i]],_dimensions,_hyperParameters);
+    _covariance(i,i)=_covariogram(_data[_neighbors[i]],_data[_neighbors[i]],_dimensions,_hyperParameters)\
+    +_lambda;
+    for(j=i+1;j<_numberOfNeighbors;j++){
+      _covariance(i,j)=_covariogram(_data[_neighbors[i]],_data[_neighbors[j]],_dimensions,_hyperParameters);
+      _covariance(j,i)=_covariance(i,j);
+    }
+  }
+
+  aa=double(time(NULL));
+  iterationTime+=aa-bb;
+
+  bb=double(time(NULL));
+  _llt.compute(_covariance); 
+  //_covarianceInverse=_covariance.inverse();
+  for(i=0;i<_numberOfNeighbors;i++)_bb(i)=_function[_neighbors[i]]-fbar;
+  _xx=_llt.solve(_bb);
+  aa=double(time(NULL));
+  
+  inversionTime+=aa-bb;
+  
+  
+  bb=double(time(NULL));
+  mu=fbar;
+  /*for(i=0;i<_numberOfNeighbors;i++){
+    for(j=0;j<_numberOfNeighbors;j++){
+      mu+=_covarianceTestPoint[i]*_covarianceInverse(i,j)*(_function[_neighbors[j]]-fbar);
+    }
+  }*/
+
+  for(i=0;i<_numberOfNeighbors;i++)mu+=_covarianceTestPoint[i]*_xx(i);
+  
+  variance(0)=_covariogram(_vv,_vv,_dimensions,_hyperParameters)+_lambda;
+  
+  for(i=0;i<_numberOfNeighbors;i++)_bb(i)=_covarianceTestPoint[i];
+  aa=double(time(NULL));
+  iterationTime+=aa-bb;
+  
+  bb=double(time(NULL));
+  _xx=_llt.solve(_bb);
+  aa=double(time(NULL));
+  varSolveTime+=aa-bb;
+  
+  bb=double(time(NULL));
+  for(i=0;i<_numberOfNeighbors;i++){
+    variance(0)-=_covarianceTestPoint[i]*_xx(i);
+  } 
+  aa=double(time(NULL));
+  iterationTime+=aa-bb;
+  
+  /*for(i=0;i<_numberOfNeighbors;i++){
+    variance(0)-=_covarianceTestPoint[i]*_covarianceInverse(i,i)*_covarianceTestPoint[i];
+    for(j=i+1;j<_numberOfNeighbors;j++){
+      variance(0)-=2.0*_covarianceTestPoint[i]*_covarianceInverse(i,j)*_covarianceTestPoint[j];
+    }
+  }*/
+  
+  variance(0)=variance(0)*_krigingParameter;
+  
+  _calledInterpolate=1;
+  
+  after=double(time(NULL));
+  interpolationTime+=after-before;
+  interpolationCount++;
   
   return mu;
 }
 
 template <typename dtyi, typename dtyo>
-void gaussianprocess<dtyi,dtyo>::print_nn(ndarray::Array<int,1,1> v){
+void GaussianProcess<dtyi,dtyo>::getNeighbors(ndarray::Array<int,1,1> v){
   int i;
-  if(called_interp==0){
-    std::cout<<"You cannot call print_nn; you have not called interpolate at all\n";
+  if(_calledInterpolate==0){
+    std::cout<<"You cannot call getNeighbors; you have not called interpolate at all\n";
     //printf("You cannot call print_nn; you haven't called interpolate at all\n");
   }
   else{
-    for(i=0;i<n_nn;i++)v(i)=neigh[i];
+    for(i=0;i<_numberOfNeighbors;i++)v(i)=_neighbors[i];
   }
 }
 
 template <typename dtyi, typename dtyo>
-void gaussianprocess<dtyi,dtyo>::set_lambda(dtyo ll){
+void GaussianProcess<dtyi,dtyo>::setLambda(dtyo ll){
   int i;
-  for(i=0;i<pts;i++){
-   lambda[i]=ll;
-  }
+  _lambda=ll;
 }
 
 template <typename dtyi, typename dtyo>
-void gaussianprocess<dtyi,dtyo>::print_ggrow(int dex, ndarray::Array<dtyo,1,1> v){
+void GaussianProcess<dtyi,dtyo>::getCovarianceRow(int dex, ndarray::Array<dtyo,1,1> v){
   int i;
-  if(called_interp==0){
-    std::cout<<"You cannot call print gg_row; you have not called interpolate\n";
+  if(_calledInterpolate==0){
+    std::cout<<"You cannot call getCovarianceRow; you have not called interpolate\n";
     //printf("You can't call print gg_row; you haven't called interpolate\n");
   }
   else{
-    for(i=0;i<n_nn;i++)v(i)=gg(dex,i);
+    for(i=0;i<_numberOfNeighbors;i++)v(i)=_covariance(dex,i);
   }
+}
+
+template <typename dtyi, typename dtyo>
+void GaussianProcess<dtyi,dtyo>::addPoint(ndarray::Array<dtyi,1,1> vin, dtyo f){
+  int i;
+  dtyi *v;
+  dtyo *buff;
+  
+  v=new dtyi[_dimensions];
+  for(i=0;i<_dimensions;i++){
+    v[i]=vin(i);
+  }
+  
+  if(_pts==_room){
+    buff=new dtyo[_room];
+    for(i=0;i<_room;i++){
+      buff[i]=_function[i];
+    }
+    delete [] _function;
+    
+    _room+=_roomStep;
+    _function=new dtyo[_room];
+    for(i=0;i<_pts;i++){
+      _function[i]=buff[i];
+    }
+    delete [] buff;
+  }
+  _function[_pts]=f;
+  
+  _kdTreePtr->addPoint(v);
+  _pts=_kdTreePtr->getPoints();
+  _data=_kdTreePtr->data;
+  
+  delete [] v;
+}
+
+template <typename dtyi, typename dtyo>
+int GaussianProcess<dtyi,dtyo>::testKdTree(){
+
+  return _kdTreePtr->testTree();
+
+}
+
+template <typename dtyi, typename dtyo>
+void GaussianProcess<dtyi,dtyo>::setHyperParameters(ndarray::Array<double,1,1> hyin){
+  
+  int i;
+  for(i=0;i<_nHyperParameters;i++){
+    _hyperParameters[i]=hyin(i);
+  }
+  
+  
+}
+
+template <typename dtyi, typename dtyo>
+void GaussianProcess<dtyi,dtyo>::getTimes(){
+  std::cout<<"\n";
+  //std::cout<<"interpolate time "<<interpolationTime<<"\n";
+  //std::cout<<"search time "<<neighborSearchTime<<"\n";
+  //std::cout<<"inversion time "<<inversionTime<<"\n";
+  
+  printf("interpolate time %.4e\n",interpolationTime);
+  printf("search time %.4e\n",neighborSearchTime);
+  printf("inversion time %.4e\n",inversionTime);
+  printf("iteration time %4e\n",iterationTime);
+  printf("var solve time %.4e\n",varSolveTime);
+  
+  std::cout<<"\n";
 }
 
 }
 
 #define INSTANTIATEGP(dtyi,dtyo) \
-	template class gptest::gaussianprocess<dtyi,dtyo>;
+	template class gptest::GaussianProcess<dtyi,dtyo>;
 
 INSTANTIATEGP(double,double);
 

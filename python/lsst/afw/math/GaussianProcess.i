@@ -2,6 +2,7 @@
 
 %{
 #include "lsst/afw/math/GaussianProcess.h"
+//#include "/Users/noldor/physics/lsststackW2013/garage/gptest/include/gptest/gptest.h"
 %}
 
 // Enable ndarray's NumPy typemaps; types are declared in %included files.
@@ -21,10 +22,12 @@
 %declareNumPyConverters(ndarray::Array<int,1,1>);
 
 %define %declareGP(INTYPE,OUTTYPE,INSUFFIX,OUTSUFFIX)
-%template(gaussianprocess##INSUFFIX##OUTSUFFIX) gptest::gaussianprocess<INTYPE,OUTTYPE>;
+%template(GaussianPorcess##INSUFFIX##OUTSUFFIX) lsst::afw::math::GaussianProcess<INTYPE,OUTTYPE>;
+//%template(GaussianProcess##INSUFFIX##OUTSUFFIX) gptest::GaussianProcess<INTYPE,OUTTYPE>;
 %enddef
 
 %include "lsst/afw/math/GaussianProcess.h"
+//%include "/Users/noldor/physics/lsststackW2013/garage/gptest/include/gptest/gptest.h"
 
 
 %declareGP(double,double,D,D);
