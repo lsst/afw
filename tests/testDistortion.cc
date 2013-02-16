@@ -357,7 +357,7 @@ public:
 
     virtual ~ToyXYTransform() { }
 
-    virtual XYTransform::Ptr clone() const
+    virtual PTR(XYTransform) clone() const
     {
         return PTR(XYTransform) (new ToyXYTransform(_A,_B,_C,_D,_E,_F,_G,_H,_I,_J));
     }
