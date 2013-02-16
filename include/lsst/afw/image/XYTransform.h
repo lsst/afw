@@ -26,6 +26,11 @@ namespace image {
 // A virtual base class which represents a "pixel domain to pixel domain" transform (e.g. camera 
 // distortion).  By comparison, class Wcs represents a "pixel domain to celestial" transform.
 //
+// We allow XYTransforms to operate either in the pixel coordinate system of an individual
+// detector, or in the global focal plane coordinate system (with units mm rather than pixel
+// counts).  The flag XYTransform::_inFpCoordinateSystem distinguishes these two cases, so that
+// we can throw an exception if the transform is applied in the wrong coordinate system.
+//
 class XYTransform : public lsst::daf::base::Citizen
 {
 public:
@@ -132,7 +137,7 @@ protected:
 class InvertedXYTransform : public XYTransform
 {
 public:
-    InvertedXYTransform(PTR(XYTransform) base);
+    InvertedXYTransform(CONST_PTR(XYTransform) base);
     virtual ~InvertedXYTransform() { }
 
     virtual PTR(XYTransform) clone() const;
@@ -143,12 +148,15 @@ public:
     virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
 
 protected:    
-    PTR(XYTransform) _base;
+    CONST_PTR(XYTransform) _base;
 };
 
 
 //
-// Note: RadialXYTransform is always in the FP coordinate system
+// RadialXYTransform: represents a purely radial polynomial distortion, up to 6th order.
+//
+// Note: this transform is always in the focal plane coordinate system but can be
+// combined with DetectorXYTransform below to get the distortion for an individual detector.
 //
 class RadialXYTransform : public XYTransform
 {
@@ -186,6 +194,11 @@ protected:
 };
 
 
+//
+// DetectorXYTransform: given a "global" XYTransform in the focal plane coordinate system,
+// this class implements the coordinate transformation necessary to get the same XYTransform
+// in the coordinate system of an individual detector.
+//
 class DetectorXYTransform : public XYTransform
 {
 public:

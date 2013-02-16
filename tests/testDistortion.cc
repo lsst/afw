@@ -444,12 +444,12 @@ struct ToyPsf : public Psf
         return make_shared<FixedKernel> (*im);
     }
     
-    virtual Kernel::Ptr doGetLocalKernel(Point2D const &p, Color const &c) 
+    virtual PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) 
     { 
         return this->_doGetLocalKernel(p,c);
     }
 
-    virtual Kernel::ConstPtr doGetLocalKernel(Point2D const &p, Color const &c) const
+    virtual CONST_PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) const
     {
         return this->_doGetLocalKernel(p,c);
     }

@@ -164,7 +164,7 @@ PTR(XYTransform) InvertedXYTransform::clone() const
 
 PTR(XYTransform) InvertedXYTransform::invert() const
 {
-    return _base;
+    return _base->clone();
 }
 
 afwGeom::Point2D InvertedXYTransform::forwardTransform(Point2D const &pixel) const
