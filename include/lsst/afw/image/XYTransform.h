@@ -21,6 +21,7 @@ namespace afw {
 namespace image {
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // A virtual base class which represents a "pixel domain to pixel domain" transform (e.g. camera 
 // distortion).  By comparison, class Wcs represents a "pixel domain to celestial" transform.
