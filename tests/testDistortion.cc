@@ -1,3 +1,7 @@
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE DISTORTION
+#include <boost/test/unit_test.hpp>
+
 #include <boost/random.hpp>
 #include <boost/make_shared.hpp>
 
@@ -94,7 +98,7 @@ static shared_ptr<RadialXYTransform> makeRandomRadialXYTransform()
 // End-to-end test of afw::geom::makeAffineTransformFromTriple()
 
 
-static int testMakeAffineTransformFromTriple()
+BOOST_AUTO_TEST_CASE(affineTransformFromTriple)
 {
     Point2D p1 = randpt();
     Point2D p2 = randpt();
@@ -105,31 +109,11 @@ static int testMakeAffineTransformFromTriple()
     Point2D q3 = randpt();
 
     AffineTransform a = makeAffineTransformFromTriple(p1,p2,p3,q1,q2,q3);
-    int ret = 0;
 
-    if (dist(a(p1),q1) > 1.0e-10) {
-	cerr << "testMakeAffineTransformFromTriple: a(p1) != q1\n";
-	ret++;
-    }
-
-    if (dist(a(p2),q2) > 1.0e-10) {
-	cerr << "testMakeAffineTransformFromTriple: a(p2) != q2\n";
-	ret++;
-    }
-
-    if (dist(a(p3),q3) > 1.0e-10) {
-	cerr << "testMakeAffineTransformFromTriple: a(p3) != q3\n";
-	ret++;
-    }
-
-    if (ret > 0)
-        cerr << "testMakeAffineTransformFromTriple: " << ret << " failures\n";
-    else
-	cerr << "testMakeAffineTransformFromTriple: pass\n";
-
-    return ret;
+    BOOST_CHECK(dist(a(p1),q1) < 1.0e-10);
+    BOOST_CHECK(dist(a(p2),q2) < 1.0e-10);
+    BOOST_CHECK(dist(a(p3),q3) < 1.0e-10);
 }
-
 
 
 // -------------------------------------------------------------------------------------------------
@@ -137,7 +121,7 @@ static int testMakeAffineTransformFromTriple()
 // End-to-end test of static member function RadialXYTransform::makeAffineTransform()
 
 
-static int testRadialAffineTransform()
+BOOST_AUTO_TEST_CASE(radialAffineTransform)
 {
     Point2D p = randpt();
     double rnew = 50 * uni_double(rng);
@@ -148,38 +132,24 @@ static int testRadialAffineTransform()
     double x = p.getX();
     double y = p.getY();
     double r = sqrt(x*x + y*y);
-    int ret = 0;
     
     Point2D q = a(Point2D(x,y));
     Point2D q2 = Point2D(rnew*x/r, rnew*y/r);
 
-    if (dist(q,q2) > 1.0e-10) {
-        cerr << "testRadialAffineTransform: a(p) mismatch\n";
-        ret++;
-    }
+    // test base point of transform
+    BOOST_CHECK(dist(q,q2) < 1.0e-10);
 
     q = a(Point2D(2*x, 2*y));
     q2 = Point2D(rnew*x/r + rprime*x, rnew*y/r + rprime*y);
-    
-    if (dist(q,q2) > 1.0e-10) {
-        cerr << "testRadialAffineTransform: mismatch in radial direction\n";
-        ret++;
-    }
+
+    // test radial direction of transform
+    BOOST_CHECK(dist(q,q2) < 1.0e-10);
 
     q = a(Point2D(x+y, y-x));
     q2 = Point2D(rnew*(x+y)/r, rnew*(y-x)/r);
-    
-    if (dist(q,q2) > 1.0e-10) {
-        cerr << "testRadialAffineTransform: mismatch in tangential direction\n";
-        ret++;
-    }
 
-    if (ret > 0)
-        cerr << "testRadialAffineTransform: " << ret << " failures\n";
-    else
-	cerr << "testRadialAffineTransform: pass\n";
-
-    return ret;
+    // test tangential direction of transform
+    BOOST_CHECK(dist(q,q2) < 1.0e-10);
 }
 
 
@@ -220,39 +190,23 @@ protected:
 };
 
 
-static int testDetectorTransform()
+BOOST_AUTO_TEST_CASE(detectorTransform)
 {
     PTR(Detector) det = ToyDetector::makeRandom();
-    int ret = 0;
     
     Point2D p = randpt();
     FpPoint q = det->getPositionFromPixel(p);
 
-    if (dist(det->getPixelFromPosition(q),p) > 1.0e-10) {
-        cerr << "testDetectorTransform: round trip is not the identity";
-        ret++;
-    }
+    // test round trip
+    BOOST_CHECK(dist(det->getPixelFromPosition(q),p) < 1.0e-10);
 
     AffineTransform a = det->linearizePositionFromPixel(p);
     AffineTransform b = det->linearizePixelFromPosition(q);
     Point2D r = randpt();
     
-    if (dist(det->getPositionFromPixel(r).getMm(), a(r)) > 1.0e-10) {
-        cerr << "testDetectorTransform: linearizePositionFromPixel() returned wrong result";
-        ret++;
-    }   
-
-    if (dist(det->getPixelFromPosition(FpPoint(r)), b(r)) > 1.0e-10) {
-        cerr << "testDetectorTransform: linearizePixelFromPosition() returned wrong result";
-        ret++;
-    }   
-
-    if (ret > 0)
-        cerr << "testDetectorTransform: " << ret << " failures\n";
-    else
-	cerr << "testDetectorTransform: pass\n";
-
-    return ret;
+    // test linearization
+    BOOST_CHECK(dist(det->getPositionFromPixel(r).getMm(), a(r)) < 1.0e-10);
+    BOOST_CHECK(dist(det->getPixelFromPosition(FpPoint(r)), b(r)) < 1.0e-10);
 }
 
 
@@ -275,42 +229,27 @@ static double linearizationResidual(const XYTransform &tr, const Point2D &p, dou
 //
 // Tests some invariants of class XYTransform
 //
-static int testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_default_linearization, bool uses_exact_derivatives)
+static void testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_default_linearization, bool uses_exact_derivatives)
 {
-    int ret = 0;
     Point2D tp = tr.forwardTransform(p);
-
-    if (dist(p, tr.reverseTransform(tp)) > 1.0e-10) {
-	cerr << "testXYTransform: forwardTransform->reverseTransform is not the identity\n";
-        ret++;
-    }
-
     AffineTransform afwd = tr.linearizeForwardTransform(p);
     AffineTransform arev = tr.linearizeReverseTransform(tp);
 
-    if (dist(afwd(p),tp) > 1.0e-10) {
-	cerr << "testXYTransform: linearizeForwardTransform doesn't map p to t(p)\n";
-        ret++;
-    }
-    
-    if (dist(arev(tp),p) > 1.0e-10) {
-	cerr << "testXYTransform: linearizeReverseTransform doesn't map t(p) to p\n";
-        ret++;
+    // round trip
+    BOOST_CHECK(dist(p, tr.reverseTransform(tp)) < 1.0e-10);
+
+    // affine transforms should map p -> t(p)
+    BOOST_CHECK(dist(afwd(p),tp) < 1.0e-10);
+    BOOST_CHECK(dist(arev(tp),p) < 1.0e-10);
+
+    if (uses_default_linearization) {
+        BOOST_CHECK(linearizationResidual(tr,p,1.0,true) < 1.0e-10);
+        BOOST_CHECK(linearizationResidual(tr,tp,1.0,false) < 1.0e-10);
     }
 
-    if (uses_default_linearization && linearizationResidual(tr,p,1.0,true) > 1.0e-10) {
-	cerr << "testXYTransform: error in linearizeForwardTransform\n";
-        ret++;
-    }
-
-    if (uses_default_linearization && linearizationResidual(tr,tp,1.0,false) > 1.0e-10) {
-	cerr << "testXYTransform: error in linearizeReverseTransform\n";
-        ret++;
-    }
-
-    if (uses_exact_derivatives && dist(arev,afwd.invert()) > 1.0e-10) {
-        cerr << "testXYTransform: linearized fwd/reverse transforms are not inverses\n";
-        ret++;
+    if (uses_exact_derivatives) {
+        // forward/reverse transforms should be inverses
+        BOOST_CHECK(dist(arev,afwd.invert()) < 1.0e-10);
     }
 
     if (uses_exact_derivatives) {
@@ -324,22 +263,9 @@ static int testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_de
 
     PTR(XYTransform) tr_inv = tr.invert();
 
-    if (dist(afwd, tr_inv->linearizeReverseTransform(p)) > 1.0e-10) {
-        cerr << "testXYTransform: fwd transform disagrees with inverse->rev transform\n";
-        ret++;
-    }
-
-    if (dist(arev, tr_inv->linearizeForwardTransform(tp)) > 1.0e-10) {
-        cerr << "testXYTransform: rev transform disagrees with inverse->fwd transform\n";
-        ret++;
-    }
-
-    if (ret > 0)
-        cerr << "testXYTransform: " << ret << " failures\n";
-    else
-        cerr << "testXYTransform: pass\n";
-
-    return ret;
+    // consistency of inverse linearized transforms
+    BOOST_CHECK(dist(afwd, tr_inv->linearizeReverseTransform(p)) < 1.0e-10);
+    BOOST_CHECK(dist(arev, tr_inv->linearizeForwardTransform(tp)) < 1.0e-10);
 }
 
 
@@ -417,21 +343,20 @@ protected:
 };
 
 
-static int testXYTransforms()
+BOOST_AUTO_TEST_CASE(XYTransforms)
 {
-    int ret = 0;
-
+    cerr << "testing random ToyXYTransform...\n";
     PTR(XYTransform) t = ToyXYTransform::makeRandom();
-    ret += testXYTransform(*t, randpt(), true, false);
+    testXYTransform(*t, randpt(), true, false);
 
+    cerr << "testing random RadialXYTransform...\n";
     t = makeRandomRadialXYTransform();
-    ret += testXYTransform(*t, randpt(), false, true);
+    testXYTransform(*t, randpt(), false, true);
 
+    cerr << "testing random DetectorXYTransform...\n";
     PTR(Detector) d = ToyDetector::makeRandom();
     t = make_shared<DetectorXYTransform> (t,d);
-    ret += testXYTransform(*t, randpt(), false, true);
-
-    return ret;
+    testXYTransform(*t, randpt(), false, true);
 }
 
 
@@ -544,7 +469,7 @@ struct ToyPsf : public Psf
 };
 
 
-static int testWarping()
+BOOST_AUTO_TEST_CASE(warpedPsf)
 {
     PTR(XYTransform) distortion = ToyXYTransform::makeRandom();
 
@@ -594,9 +519,8 @@ static int testWarping()
     PTR(Image<double>) im3 = fill_gaussian(a, b, c, p.getX(), p.getY(), nx, ny, x0, y0);
 
     cerr << "XXX the first number should be a lot smaller than the second: " << compare(*im,*im2) << " " << compare(*im,*im3) << endl;
-
-    return 0;
 }
+
 
 // -------------------------------------------------------------------------------------------------
 //
@@ -612,10 +536,9 @@ static double contract(Quadrupole const &q, Extent2D const &x)
     return v.transpose() * q.getMatrix().inverse() * v;
 }
 
-static int testQuadrupoleDistortion()
+BOOST_AUTO_TEST_CASE(quadrupoleDistortion)
 {
     PTR(XYTransform) t = ToyXYTransform::makeRandom();
-    int ret = 0;
 
     Point2D p = randpt();
     Quadrupole q(uni_double(rng)+1.0, uni_double(rng)+1.0, uni_double(rng));
@@ -626,38 +549,6 @@ static int testQuadrupoleDistortion()
     Extent2D efwd = t->linearizeForwardTransform(p)(e);
     Extent2D erev = t->linearizeReverseTransform(p)(e);
 
-    if (fabs(contract(qfwd,efwd) - contract(q,e)) > 1.0e-10) {
-        cerr << "testQuadrupoleDistortion: error in forward direction";
-        ret++;
-    }
-
-    if (fabs(contract(qrev,erev) - contract(q,e)) > 1.0e-10) {
-        cerr << "testQuadrupoleDistortion: error in reverse direction";
-        ret++;
-    }
-
-    if (ret > 0)
-        cerr << "testQuadrupoleDistortion: " << ret << " failures\n";
-    else
-	cerr << "testQuadrupoleDistortion: pass\n";
-
-    return ret;
-}
-
-
-// -------------------------------------------------------------------------------------------------
-
-
-int main(int argc, char **argv)
-{
-    int err = 0;
-
-    err += testMakeAffineTransformFromTriple();
-    err += testRadialAffineTransform();
-    err += testXYTransforms();
-    err += testDetectorTransform();
-    err += testQuadrupoleDistortion();
-    err += testWarping();
-
-    return (err > 0);
+    BOOST_CHECK_CLOSE(contract(qfwd,efwd), contract(q,e), 1.0e-10);
+    BOOST_CHECK_CLOSE(contract(qrev,erev), contract(q,e), 1.0e-10);
 }
