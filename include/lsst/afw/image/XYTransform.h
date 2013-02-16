@@ -19,16 +19,17 @@ namespace afw {
 namespace image {
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// A virtual base class which represents a "pixel domain to pixel domain" transform (e.g. camera 
-// distortion).  By comparison, class Wcs represents a "pixel domain to celestial" transform.
-//
-// We allow XYTransforms to operate either in the pixel coordinate system of an individual
-// detector, or in the global focal plane coordinate system (with units mm rather than pixel
-// counts).  The flag XYTransform::_inFpCoordinateSystem distinguishes these two cases, so that
-// we can throw an exception if the transform is applied in the wrong coordinate system.
-//
+/**
+ * @brief XYTransform: virtual base class which represents a "pixel domain to pixel domain" transform
+ *
+ * An example would be a camera distortion.
+ * By comparison, class Wcs represents a "pixel domain to celestial" transform.
+ *
+ * We allow XYTransforms to operate either in the pixel coordinate system of an individual
+ * detector, or in the global focal plane coordinate system (with units mm rather than pixel
+ * counts).  The flag XYTransform::_inFpCoordinateSystem distinguishes these two cases, so that
+ * we can throw an exception if the transform is applied in the wrong coordinate system.
+ */
 class XYTransform : public lsst::daf::base::Citizen
 {
 public:
@@ -39,37 +40,41 @@ public:
     XYTransform(bool inFpCoordinateSystem);
     virtual ~XYTransform() { }
 
-    // returns a deep copy
+    /// returns a deep copy
     virtual PTR(XYTransform) clone() const = 0;
 
-    // returns a "deep inverse" in this sense that the forward+inverse transforms do not share state
+    /// returns a "deep inverse" in this sense that the forward+inverse transforms do not share state
     virtual PTR(XYTransform) invert() const;
 
-    //
-    // Both the @pixel argument and the return value of these routines:
-    //   - are in pixel units
-    //   - have XY0 offsets included (i.e. caller may need to add XY0 to @pixel 
-    //          and subtract XY0 from return value if necessary)
-    //
-    // These routines are responsible for throwing exceptions if the 'pixel' arg 
-    // is outside the domain of the transform.
-    //
+    /**
+     * @brief virtuals for forward and reverse transforms
+     *
+     * Both the @pixel argument and the return value of these routines:
+     *    - are in pixel units
+     *    - have XY0 offsets included (i.e. caller may need to add XY0 to @pixel 
+     *         and subtract XY0 from return value if necessary)
+     *
+     * These routines are responsible for throwing exceptions if the 'pixel' arg 
+     * is outside the domain of the transform.
+     */
     virtual Point2D forwardTransform(Point2D const &pixel) const = 0;
     virtual Point2D reverseTransform(Point2D const &pixel) const = 0;
     
-    //
-    // These guys are virtual but not pure virtual; there is a default implementation which
-    // calls forwardTransform() or reverseTransform() and takes finite differences with step 
-    // size equal to one pixel.
-    //
-    // The following should always be satisfied for an arbitrary Point2D p
-    // (and analogously for the reverse transform)
-    //    this->forwardTransform(p) == this->linearizeForwardTransform(p)(p);
-    //
+    /**
+     * @brief linearized forward and reversed transforms
+     *
+     * These guys are virtual but not pure virtual; there is a default implementation which
+     * calls forwardTransform() or reverseTransform() and takes finite differences with step 
+     * size equal to one pixel.
+     *
+     * The following should always be satisfied for an arbitrary Point2D p
+     * (and analogously for the reverse transform)
+     *    this->forwardTransform(p) == this->linearizeForwardTransform(p)(p);
+     */
     virtual AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
 
-    // apply distortion to an (infinitesimal) quadrupole
+    /// apply distortion to an (infinitesimal) quadrupole
     Quadrupole forwardTransform(Point2D const &pixel, Quadrupole const &q) const;
     Quadrupole reverseTransform(Point2D const &pixel, Quadrupole const &q) const;
 
@@ -80,9 +85,9 @@ protected:
 };
 
 
-//
-// IdentityXYTransform: Represents a trivial XYTransform satisfying f(x)=x.
-// 
+/**
+ * @brief IdentityXYTransform: Represents a trivial XYTransform satisfying f(x)=x.
+ */
 class IdentityXYTransform : public XYTransform
 {
 public:
@@ -97,16 +102,16 @@ public:
 };
 
 
-//
-// XYTransformFromWcsPair: Represents an XYTransform obtained by putting two Wcs's "back to back".
-//
-// Eventually there will be an XYTransform subclass which represents a camera distortion.
-// For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
-// with a SIP-distorted TanWcs and an undistorted Wcs.
-//
-// Note: this is very similar to class lsst::afw::math::detail::WcsSrcPosFunctor
-//   but watch out since the XY0 offset convention is different!!
-//
+/**
+ * @brief XYTransformFromWcsPair: Represents an XYTransform obtained by putting two Wcs's "back to back".
+ *
+ * Eventually there will be an XYTransform subclass which represents a camera distortion.
+ * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
+ * with a SIP-distorted TanWcs and an undistorted Wcs.
+ *
+ * Note: this is very similar to class lsst::afw::math::detail::WcsSrcPosFunctor
+ *   but watch out since the XY0 offset convention is different!!
+ */
 class XYTransformFromWcsPair : public XYTransform
 {
 public:
@@ -117,7 +122,7 @@ public:
 
     virtual PTR(XYTransform) invert() const;
 
-    // The following methods are needed to devirtualize the XYTransform parent class
+    /// The following methods are needed to devirtualize the XYTransform parent class
     virtual PTR(XYTransform) clone() const;
     virtual Point2D forwardTransform(Point2D const &pixel) const;
     virtual Point2D reverseTransform(Point2D const &pixel) const;
@@ -128,10 +133,10 @@ protected:
 };  
 
 
-//
-// This guy is used to supply a default ->invert() method which works for any XYTransform
-// (but can be overridden if something more efficient exists)
-//
+/**
+ * @brief This class supplies a default ->invert() method which works for any XYTransform
+ * (but can be overridden if something more efficient exists)
+ */
 class InvertedXYTransform : public XYTransform
 {
 public:
@@ -150,12 +155,12 @@ protected:
 };
 
 
-//
-// RadialXYTransform: represents a purely radial polynomial distortion, up to 6th order.
-//
-// Note: this transform is always in the focal plane coordinate system but can be
-// combined with DetectorXYTransform below to get the distortion for an individual detector.
-//
+/**
+ * @brief RadialXYTransform: represents a purely radial polynomial distortion, up to 6th order.
+ *
+ * Note: this transform is always in the focal plane coordinate system but can be
+ * combined with DetectorXYTransform below to get the distortion for an individual detector.
+ */
 class RadialXYTransform : public XYTransform
 {
 public:
@@ -169,12 +174,12 @@ public:
     virtual AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
 
-    //
-    // The following static member functions operate on polynomials represented by vector<double>.
-    //
-    // They are intended mainly as helpers for the virtual member functions above, but are declared
-    // public since there are also some unit tests which call them.
-    //
+    /**
+     * @brief These static member functions operate on polynomials represented by vector<double>.
+     *
+     * They are intended mainly as helpers for the virtual member functions above, but are declared
+     * public since there are also some unit tests which call them.
+     */
     static std::vector<double>  polyInvert(std::vector<double> const &coeffs);
     static double               polyEval(std::vector<double> const &coeffs, double x);
     static Point2D              polyEval(std::vector<double> const &coeffs, Point2D const &p);
@@ -203,11 +208,13 @@ protected:
 };
 
 
-//
-// DetectorXYTransform: given a "global" XYTransform in the focal plane coordinate system,
-// this class implements the coordinate transformation necessary to get the same XYTransform
-// in the coordinate system of an individual detector.
-//
+/**
+ * @brief DetectorXYTransform: converts an XYTransform in FP coordinate system to detector coords
+ *
+ * Given a "global" XYTransform in the focal plane coordinate system, this class implements the 
+ * coordinate transformation necessary to get the same XYTransform in the coordinate system of an 
+ * individual detector.
+ */
 class DetectorXYTransform : public XYTransform
 {
 public:
