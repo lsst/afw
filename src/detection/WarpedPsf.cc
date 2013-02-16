@@ -3,12 +3,9 @@
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/math/detail/SrcPosFunctor.h"
 
-namespace afwGeom = lsst::afw::geom;
-namespace afwMath = lsst::afw::math;
-namespace afwImage = lsst::afw::image;
 namespace pexEx = lsst::pex::exceptions;
 
-typedef afwGeom::Point2D Point2D;
+typedef lsst::afw::geom::Point2D Point2D;
 
 namespace lsst {
 namespace afw {
@@ -28,9 +25,9 @@ static inline double max4(double a, double b, double c, double d)
     return std::max(std::max(a,b), std::max(c,d));
 }
 
-static inline afwGeom::AffineTransform getLinear(const afwGeom::AffineTransform &a)
+static inline geom::AffineTransform getLinear(const geom::AffineTransform &a)
 {
-    afwGeom::AffineTransform ret;
+    geom::AffineTransform ret;
     ret[0] = a[0];
     ret[1] = a[1];
     ret[2] = a[2];
@@ -51,7 +48,7 @@ static inline PTR(Psf::Image) zeroPadImage(Psf::Image const &im, int pad)
     PTR(Psf::Image) out = boost::make_shared<Psf::Image> (nx+2*pad, ny+2*pad);
     out->setXY0(im.getX0()-pad, im.getY0()-pad);
 
-    afwGeom::Box2I box(afwGeom::Point2I(pad,pad), afwGeom::Extent2I(nx,ny));
+    geom::Box2I box(geom::Point2I(pad,pad), geom::Extent2I(nx,ny));
     PTR(Psf::Image) subimage = boost::make_shared<Psf::Image> (*out, box);
     *subimage <<= im;
 
@@ -69,7 +66,7 @@ static inline PTR(Psf::Image) zeroPadImage(Psf::Image const &im, int pad)
  *
  * The input image is assumed zero-padded.
  */
-static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, afwGeom::AffineTransform const &t)
+static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, geom::AffineTransform const &t)
 {
     //
     // hmmm, are these the best choices?
@@ -100,14 +97,14 @@ static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, afwGeom::AffineTr
 
     // allocate output image
     PTR(Psf::Image) ret = boost::make_shared<Psf::Image>(out_xhi-out_xlo+1, out_yhi-out_ylo+1);
-    ret->setXY0(afwGeom::Point2I(out_xlo,out_ylo));
+    ret->setXY0(geom::Point2I(out_xlo,out_ylo));
 
     // zero-pad input image
     PTR(Psf::Image) im_padded = zeroPadImage(im, src_padding);
 
     // warp it!
-    afwMath::WarpingControl wc(interpolation_name);
-    afwMath::warpImage(*ret, *im_padded, t, wc, 0.0);
+    math::WarpingControl wc(interpolation_name);
+    math::warpImage(*ret, *im_padded, t, wc, 0.0);
     return ret;
 }
 
@@ -168,11 +165,11 @@ PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccd
     return recenterKernelImage(im, ctr, ccdXY);
 }
 
-PTR(afwMath::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const &c) const
+PTR(math::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const &c) const
 {
     Point2I ctr;
     PTR(Image) im = this->_makeWarpedKernelImage(p, c, ctr);
-    PTR(afwMath::Kernel) ret = boost::make_shared<afwMath::FixedKernel>(*im);
+    PTR(math::Kernel) ret = boost::make_shared<math::FixedKernel>(*im);
     ret->setCtr(ctr);
     return ret;
 }
@@ -184,7 +181,7 @@ PTR(afwMath::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const 
 //
 PTR(Psf::Image) WarpedPsf::_makeWarpedKernelImage(Point2D const &p, Color const &c, Point2I &ctr) const
 {
-    afwGeom::AffineTransform t = _distortion->linearizeReverseTransform(p);
+    geom::AffineTransform t = _distortion->linearizeReverseTransform(p);
     Point2D tp = t(p);
 
     CONST_PTR(Kernel) k = _undistorted_psf->getLocalKernel(tp, c);

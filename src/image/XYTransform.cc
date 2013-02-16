@@ -1,10 +1,6 @@
 #include "boost/make_shared.hpp"
 #include "lsst/afw/image/XYTransform.h"
 
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
-namespace afwCG = lsst::afw::cameraGeom;
-namespace afwEll = lsst::afw::geom::ellipses;
 namespace pexEx = lsst::pex::exceptions;
 
 namespace lsst {
@@ -23,12 +19,12 @@ XYTransform::XYTransform(bool inFpCoordinateSystem)
 
 
 /// default implementation; subclass may override
-afwGeom::AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const
+geom::AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const
 {
-    Point2D px = p + afwGeom::Extent2D(1,0);
-    Point2D py = p + afwGeom::Extent2D(0,1);
+    Point2D px = p + geom::Extent2D(1,0);
+    Point2D py = p + geom::Extent2D(0,1);
 
-    return afwGeom::makeAffineTransformFromTriple(p, px, py, 
+    return geom::makeAffineTransformFromTriple(p, px, py, 
                                                   this->forwardTransform(p),
                                                   this->forwardTransform(px), 
                                                   this->forwardTransform(py));
@@ -36,12 +32,12 @@ afwGeom::AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p
 
 
 /// default implementation; subclass may override
-afwGeom::AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
+geom::AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
 {
-    Point2D px = p + afwGeom::Extent2D(1,0);
-    Point2D py = p + afwGeom::Extent2D(0,1);
+    Point2D px = p + geom::Extent2D(1,0);
+    Point2D py = p + geom::Extent2D(0,1);
 
-    return afwGeom::makeAffineTransformFromTriple(p, px, py, 
+    return geom::makeAffineTransformFromTriple(p, px, py, 
                                                   this->reverseTransform(p),
                                                   this->reverseTransform(px), 
                                                   this->reverseTransform(py));
@@ -54,14 +50,14 @@ PTR(XYTransform) XYTransform::invert() const
     return boost::make_shared<InvertedXYTransform> (this->clone());
 }
 
-afwEll::Quadrupole XYTransform::forwardTransform(Point2D const &pixel, Quadrupole const &q) const
+geom::ellipses::Quadrupole XYTransform::forwardTransform(Point2D const &pixel, Quadrupole const &q) const
 {
     // Note: q.transform(L) returns (LQL^T)
     AffineTransform a = linearizeForwardTransform(pixel);
     return q.transform(a.getLinear());
 }
 
-afwEll::Quadrupole XYTransform::reverseTransform(Point2D const &pixel, Quadrupole const &q) const
+geom::ellipses::Quadrupole XYTransform::reverseTransform(Point2D const &pixel, Quadrupole const &q) const
 {
     AffineTransform a = linearizeReverseTransform(pixel);
     return q.transform(a.getLinear());
@@ -83,26 +79,26 @@ PTR(XYTransform) IdentityXYTransform::clone() const
     return boost::make_shared<IdentityXYTransform> (_inFpCoordinateSystem);
 }
 
-afwGeom::Point2D IdentityXYTransform::forwardTransform(Point2D const &pixel) const
+geom::Point2D IdentityXYTransform::forwardTransform(Point2D const &pixel) const
 {
     return pixel;
 }
 
-afwGeom::Point2D IdentityXYTransform::reverseTransform(Point2D const &pixel) const
+geom::Point2D IdentityXYTransform::reverseTransform(Point2D const &pixel) const
 {
     return pixel;
 }
 
-afwGeom::AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+geom::AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &pixel) const
 {
     // note: AffineTransform constructor called with no arguments gives the identity transform
-    return afwGeom::AffineTransform(); 
+    return geom::AffineTransform(); 
 }
 
-afwGeom::AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+geom::AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &pixel) const
 {
     // note: AffineTransform constructor called with no arguments gives the identity transform
-    return afwGeom::AffineTransform(); 
+    return geom::AffineTransform(); 
 }
 
 
@@ -122,7 +118,7 @@ PTR(XYTransform) XYTransformFromWcsPair::clone() const
 }
 
 
-afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
+geom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
 {
     //
     // TODO there is an alternate version of pixelToSky() which is designated for the 
@@ -134,7 +130,7 @@ afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) 
     return _dst->skyToPixel(*x);
 }
 
-afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
+geom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
 {
     PTR(afw::coord::Coord) x = _dst->pixelToSky(pixel);
     return _src->skyToPixel(*x);
@@ -167,22 +163,22 @@ PTR(XYTransform) InvertedXYTransform::invert() const
     return _base->clone();
 }
 
-afwGeom::Point2D InvertedXYTransform::forwardTransform(Point2D const &pixel) const
+geom::Point2D InvertedXYTransform::forwardTransform(Point2D const &pixel) const
 {
     return _base->reverseTransform(pixel);
 }
 
-afwGeom::Point2D InvertedXYTransform::reverseTransform(Point2D const &pixel) const
+geom::Point2D InvertedXYTransform::reverseTransform(Point2D const &pixel) const
 {
     return _base->forwardTransform(pixel);
 }
 
-afwGeom::AffineTransform InvertedXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+geom::AffineTransform InvertedXYTransform::linearizeForwardTransform(Point2D const &pixel) const
 {
     return _base->linearizeReverseTransform(pixel);
 }
 
-afwGeom::AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+geom::AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &pixel) const
 {
     return _base->linearizeForwardTransform(pixel);
 }
@@ -225,23 +221,23 @@ PTR(XYTransform) RadialXYTransform::invert() const
     return boost::make_shared<RadialXYTransform> (_coeffs, !_coefficientsDistort);
 }
 
-afwGeom::Point2D RadialXYTransform::forwardTransform(Point2D const &p) const
+geom::Point2D RadialXYTransform::forwardTransform(Point2D const &p) const
 {
     return _coefficientsDistort ? polyEval(_coeffs,p) : polyEvalInverse(_coeffs,_icoeffs,p);
 }
 
-afwGeom::Point2D RadialXYTransform::reverseTransform(Point2D const &p) const
+geom::Point2D RadialXYTransform::reverseTransform(Point2D const &p) const
 {
     return _coefficientsDistort ? polyEvalInverse(_coeffs,_icoeffs,p) : polyEval(_coeffs,p);
 }
 
-afwGeom::AffineTransform RadialXYTransform::linearizeForwardTransform(Point2D const &p) const
+geom::AffineTransform RadialXYTransform::linearizeForwardTransform(Point2D const &p) const
 {
     return _coefficientsDistort ? polyEvalJacobian(_coeffs,p) 
         : polyEvalInverseJacobian(_coeffs,_icoeffs,p);
 }
 
-afwGeom::AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) const
+geom::AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) const
 {
     return _coefficientsDistort ? polyEvalInverseJacobian(_coeffs,_icoeffs,p) 
         : polyEvalJacobian(_coeffs,p);
@@ -311,7 +307,7 @@ double RadialXYTransform::polyEval(std::vector<double> const &coeffs, double x)
     return ret;
 }
 
-afwGeom::Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D const &p)
+geom::Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D const &p)
 {
     double x = p.getX();
     double y = p.getY();
@@ -341,7 +337,7 @@ double RadialXYTransform::polyEvalDeriv(std::vector<double> const &coeffs, doubl
     return ret;
 }
 
-afwGeom::AffineTransform 
+geom::AffineTransform 
 RadialXYTransform::polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p)
 {
     double x = p.getX();
@@ -373,7 +369,7 @@ double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
     }
 }
 
-afwGeom::Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, 
+geom::Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, 
                                                     std::vector<double> const &icoeffs, 
                                                     Point2D const &p)
 {
@@ -394,7 +390,7 @@ afwGeom::Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &c
     return Point2D(0,0);    
 }
 
-afwGeom::AffineTransform 
+geom::AffineTransform 
 RadialXYTransform::polyEvalInverseJacobian(std::vector<double> const &coeffs, 
                                            std::vector<double> const &icoeffs, 
                                            Point2D const &p)
@@ -407,7 +403,7 @@ RadialXYTransform::polyEvalInverseJacobian(std::vector<double> const &coeffs,
     return makeAffineTransform(x, y, rnew, rderiv);
 }
 
-afwGeom::AffineTransform 
+geom::AffineTransform 
 RadialXYTransform::makeAffineTransform(double x, double y, double rnew, double rderiv)
 {
     double r = sqrt(x*x + y*y);
@@ -464,7 +460,7 @@ PTR(XYTransform) DetectorXYTransform::invert() const
     return boost::make_shared<DetectorXYTransform> (_fpTransform->invert(), _detector);
 }
 
-afwGeom::Point2D DetectorXYTransform::forwardTransform(Point2D const &p) const
+geom::Point2D DetectorXYTransform::forwardTransform(Point2D const &p) const
 {
     Point2D q;
     q = _detector->getPositionFromPixel(p).getMm();
@@ -473,7 +469,7 @@ afwGeom::Point2D DetectorXYTransform::forwardTransform(Point2D const &p) const
     return q;
 }
 
-afwGeom::Point2D DetectorXYTransform::reverseTransform(Point2D const &p) const
+geom::Point2D DetectorXYTransform::reverseTransform(Point2D const &p) const
 {
     Point2D q;
     q = _detector->getPositionFromPixel(p).getMm();
@@ -482,7 +478,7 @@ afwGeom::Point2D DetectorXYTransform::reverseTransform(Point2D const &p) const
     return q;
 }
 
-afwGeom::AffineTransform DetectorXYTransform::linearizeForwardTransform(Point2D const &p) const
+geom::AffineTransform DetectorXYTransform::linearizeForwardTransform(Point2D const &p) const
 {
     AffineTransform a;
     a = _detector->linearizePositionFromPixel(p);
@@ -491,7 +487,7 @@ afwGeom::AffineTransform DetectorXYTransform::linearizeForwardTransform(Point2D 
     return a;
 }
 
-afwGeom::AffineTransform DetectorXYTransform::linearizeReverseTransform(Point2D const &p) const
+geom::AffineTransform DetectorXYTransform::linearizeReverseTransform(Point2D const &p) const
 {
     AffineTransform a;
     a = _detector->linearizePositionFromPixel(p);
