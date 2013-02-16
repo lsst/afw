@@ -125,10 +125,10 @@ PTR(XYTransform) XYTransformFromWcsPair::clone() const
 afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
 {
     //
-    // TODO there is an alternate version of pixelToSky() which is designated for the "knowledgeable user
-    // in need of performance".  This is probably better, but first I need to understand exactly which checks
-    // are needed (e.g. I think we need to check by hand that both Wcs's use the same celestial coordinate
-    // system)
+    // TODO there is an alternate version of pixelToSky() which is designated for the 
+    // "knowledgeable user in need of performance".  This is probably better, but first I need 
+    // to understand exactly which checks are needed (e.g. I think we need to check by hand 
+    // that both Wcs's use the same celestial coordinate system)
     //
     PTR(lsst::afw::coord::Coord) x = _src->pixelToSky(pixel);
     return _dst->skyToPixel(*x);
@@ -204,7 +204,8 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs, bool coe
     }
     else if ((coeffs.size() == 1) || (coeffs[0] != 0.0) || (coeffs[1] == 0.0)) {
         // Discontinuous or singular transformation; presumably unintentional so throw exception
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, "invalid parameters for radial distortion");
+        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                          "invalid parameters for radial distortion");
     }
     else {
         _coeffs = coeffs;
@@ -236,12 +237,14 @@ afwGeom::Point2D RadialXYTransform::reverseTransform(Point2D const &p) const
 
 afwGeom::AffineTransform RadialXYTransform::linearizeForwardTransform(Point2D const &p) const
 {
-    return _coefficientsDistort ? polyEvalJacobian(_coeffs,p) : polyEvalInverseJacobian(_coeffs,_icoeffs,p);
+    return _coefficientsDistort ? polyEvalJacobian(_coeffs,p) 
+        : polyEvalInverseJacobian(_coeffs,_icoeffs,p);
 }
 
 afwGeom::AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) const
 {
-    return _coefficientsDistort ? polyEvalInverseJacobian(_coeffs,_icoeffs,p) : polyEvalJacobian(_coeffs,p);
+    return _coefficientsDistort ? polyEvalInverseJacobian(_coeffs,_icoeffs,p) 
+        : polyEvalJacobian(_coeffs,p);
 }
 
 
@@ -264,7 +267,8 @@ std::vector<double> RadialXYTransform::polyInvert(std::vector<double> const &coe
     // Some sanity checks.  The formulas for the inversion below assume c0 == 0 and c1 != 0
     //
     if (coeffs.size() <= 1 || coeffs.size() > maxN || coeffs[0] != 0.0 || coeffs[1] == 0.0)
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, "invalid parameters in RadialXYTransform::polyInvert");
+        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                          "invalid parameters in RadialXYTransform::polyInvert");
 
     std::vector<double> c = coeffs;
     c.resize(maxN, 0.0);
@@ -318,8 +322,10 @@ afwGeom::Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, 
         return Point2D(rnew*x/r, rnew*y/r);
     }
 
-    if (coeffs.size() == 0 || coeffs[0] != 0.0)
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, "invalid parameters for radial distortion");
+    if (coeffs.size() == 0 || coeffs[0] != 0.0) {
+        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                          "invalid parameters for radial distortion");
+    }
 
     return Point2D(0,0);
 }
@@ -335,7 +341,8 @@ double RadialXYTransform::polyEvalDeriv(std::vector<double> const &coeffs, doubl
     return ret;
 }
 
-afwGeom::AffineTransform RadialXYTransform::polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p)
+afwGeom::AffineTransform 
+RadialXYTransform::polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p)
 {
     double x = p.getX();
     double y = p.getY();
@@ -345,7 +352,8 @@ afwGeom::AffineTransform RadialXYTransform::polyEvalJacobian(std::vector<double>
     return makeAffineTransform(x, y, rnew, rderiv);
 }
 
-double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, double x)
+double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, 
+                                          std::vector<double> const &icoeffs, double x)
 {
     static const int maxIter = 10;
     double tolerance = 1.0e-14 * x;
@@ -357,13 +365,17 @@ double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, std
         double dx = x - polyEval(coeffs,r);   // residual
         if (fabs(dx) <= tolerance)
             return r;
-        if (iter++ > maxIter)
-            throw LSST_EXCEPT(pexEx::RuntimeErrorException, "max iteration count exceeded in RadialXYTransform::polyEvalInverse");
+        if (iter++ > maxIter) {
+            throw LSST_EXCEPT(pexEx::RuntimeErrorException, 
+                              "max iteration count exceeded in RadialXYTransform::polyEvalInverse");
+        }
         r += dx / polyEvalDeriv(coeffs,r);   // Newton-Raphson iteration
     }
 }
 
-afwGeom::Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, Point2D const &p)
+afwGeom::Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, 
+                                                    std::vector<double> const &icoeffs, 
+                                                    Point2D const &p)
 {
     double x = p.getX();
     double y = p.getY();
@@ -374,13 +386,18 @@ afwGeom::Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &c
         return Point2D(rnew*x/r, rnew*y/r);
     }
 
-    if (coeffs.size() == 0 || coeffs[0] != 0.0)
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, "invalid parameters for radial distortion");
+    if (coeffs.size() == 0 || coeffs[0] != 0.0) {
+        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                          "invalid parameters for radial distortion");
+    }
 
     return Point2D(0,0);    
 }
 
-afwGeom::AffineTransform RadialXYTransform::polyEvalInverseJacobian(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, Point2D const &p)
+afwGeom::AffineTransform 
+RadialXYTransform::polyEvalInverseJacobian(std::vector<double> const &coeffs, 
+                                           std::vector<double> const &icoeffs, 
+                                           Point2D const &p)
 {
     double x = p.getX();
     double y = p.getY();
@@ -390,7 +407,8 @@ afwGeom::AffineTransform RadialXYTransform::polyEvalInverseJacobian(std::vector<
     return makeAffineTransform(x, y, rnew, rderiv);
 }
 
-afwGeom::AffineTransform RadialXYTransform::makeAffineTransform(double x, double y, double rnew, double rderiv)
+afwGeom::AffineTransform 
+RadialXYTransform::makeAffineTransform(double x, double y, double rnew, double rderiv)
 {
     double r = sqrt(x*x + y*y);
     
@@ -405,8 +423,8 @@ afwGeom::AffineTransform RadialXYTransform::makeAffineTransform(double x, double
     // nearly equal.  However, detailed analysis shows that this is actually OK.  The numerical
     // instability means that the roundoff error in t is O(10^{-17}) even though t is formally O(r).
     //
-    // Propagating through the formulas below, the AffineTransform is [rderiv*I + O(r) + O(10^{-17})]
-    // which is fine (assuming rderiv is nonzero as r->0).
+    // Propagating through the formulas below, the AffineTransform is 
+    // [rderiv*I + O(r) + O(10^{-17})] which is fine (assuming rderiv is nonzero as r->0).
     //
     double t = rderiv - rnew/r;
     
@@ -425,12 +443,13 @@ afwGeom::AffineTransform RadialXYTransform::makeAffineTransform(double x, double
 // DetectorXYTransform
 
 
-DetectorXYTransform::DetectorXYTransform(CONST_PTR(XYTransform) fpTransform, CONST_PTR(Detector) detector)
+DetectorXYTransform::DetectorXYTransform(CONST_PTR(XYTransform) fpTransform, 
+                                         CONST_PTR(Detector) detector)
     : XYTransform(false), _fpTransform(fpTransform), _detector(detector)
 {
     if (!fpTransform->inFpCoordinateSystem()) {
         throw LSST_EXCEPT(pexEx::InvalidParameterException, 
-                          "first argument to DetectorXYTransform constructor not in FP coordinate system");
+                          "DetectorXYTransform base must be in FP coordinate system");
     }
 }
 
