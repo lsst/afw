@@ -59,7 +59,7 @@ protected:
     //
     // API notes:
     //   (1) 'size' param can be Extent2I(0,0) if caller wants "native" size
-    //   (2) 'distort' param ignored for now (this will eventually be removed in favor of a different API)
+    //   (2) 'distort' param ignored for now (will eventually be removed in favor of different API)
     //
     virtual PTR(Image) doComputeImage(Color const& color, Point2D const& ccdXY, 
 				      Extent2I const& size, bool normalizePeak, bool distort) const;

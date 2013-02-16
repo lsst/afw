@@ -213,7 +213,8 @@ BOOST_AUTO_TEST_CASE(detectorTransform)
 // -------------------------------------------------------------------------------------------------
 
 
-static double linearizationResidual(const XYTransform &tr, const Point2D &p, double step, bool forward)
+static double linearizationResidual(const XYTransform &tr, const Point2D &p, 
+                                    double step, bool forward)
 {
     Point2D px = p + Extent2D(step,0);
     Point2D py = p + Extent2D(0,step);
@@ -229,7 +230,8 @@ static double linearizationResidual(const XYTransform &tr, const Point2D &p, dou
 //
 // Tests some invariants of class XYTransform
 //
-static void testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_default_linearization, bool uses_exact_derivatives)
+static void testXYTransform(const XYTransform &tr, const Point2D &p, 
+                            bool uses_default_linearization, bool uses_exact_derivatives)
 {
     Point2D tp = tr.forwardTransform(p);
     AffineTransform afwd = tr.linearizeForwardTransform(p);
@@ -283,7 +285,8 @@ static void testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_d
 class ToyXYTransform : public XYTransform
 {
 public:
-    ToyXYTransform(double A, double B, double C, double D, double E, double F, double G, double H, double I, double J)
+    ToyXYTransform(double A, double B, double C, double D, double E, 
+                   double F, double G, double H, double I, double J)
         : XYTransform(false), _A(A), _B(B), _C(C), _D(D), _E(E), _F(F), _G(G), _H(H), _I(I), _J(J)
     { }
 
@@ -324,7 +327,8 @@ public:
             ret = Point2D(ret.getX() - dx, ret.getY() - dy);
         }
 
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "max iterations exceeded");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, 
+                          "max iterations exceeded");
     }
     
     // factory function
@@ -382,7 +386,8 @@ BOOST_AUTO_TEST_CASE(XYTransforms)
 // Helper function which fills an image with a normalized 2D Gaussian of the form
 //   exp(-a(x-px)^2/2 - b(x-px)(y-py) - c(y-py)^2/2)
 //
-static PTR(Image<double>) fill_gaussian(double a, double b, double c, double px, double py, int nx, int ny, int x0, int y0)
+static PTR(Image<double>) fill_gaussian(double a, double b, double c, double px, double py, 
+                                        int nx, int ny, int x0, int y0)
 {
     // smallest eigenvalue
     double lambda = 0.5 * (a+c + sqrt((a-c)*(a-c) + b*b));
@@ -503,14 +508,16 @@ BOOST_AUTO_TEST_CASE(warpedPsf)
 
     Eigen::Matrix2d md;
     md << atr.getLinear()[0], atr.getLinear()[2],
-          atr.getLinear()[1], atr.getLinear()[3];   // LinearTransform uses transposed index convention
+          atr.getLinear()[1], atr.getLinear()[3];   // LinearTransform transposed index convention
 
     Eigen::Matrix2d m1 = md.transpose() * m0 * md;
 
     // this should be the same as the warped image, up to artifacts from warping/pixelization
-    PTR(Image<double>) im2 = fill_gaussian(m1(0,0), m1(0,1), m1(1,1), p.getX(), p.getY(), nx, ny, x0, y0);
+    PTR(Image<double>) im2 = fill_gaussian(m1(0,0), m1(0,1), m1(1,1), 
+                                           p.getX(), p.getY(), nx, ny, x0, y0);
 
-    // TODO: improve this test; the ideal thing would be to repeat with finer resolutions and more stringent threshold
+    // TODO: improve this test; the ideal thing would be to repeat with 
+    // finer resolutions and more stringent threshold
     BOOST_CHECK(compare(*im,*im2) < 0.005);
 }
 

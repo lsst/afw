@@ -75,8 +75,8 @@ static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, afwGeom::AffineTr
     // hmmm, are these the best choices?
     //
     static const char *interpolation_name = "lanczos5";
-    static const int interpolation_dst_padding = 0;
-    static const int interpolation_src_padding = 5;
+    static const int dst_padding = 0;
+    static const int src_padding = 5;
 
     // min/max coordinate values in input image
     int in_xlo = im.getX0();
@@ -93,17 +93,17 @@ static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, afwGeom::AffineTr
     //
     // bounding box for output image
     //
-    int out_xlo = floor(min4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) - interpolation_dst_padding;
-    int out_ylo = floor(min4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) - interpolation_dst_padding;
-    int out_xhi = ceil(max4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) + interpolation_dst_padding;
-    int out_yhi = ceil(max4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) + interpolation_dst_padding;
+    int out_xlo = floor(min4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) - dst_padding;
+    int out_ylo = floor(min4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) - dst_padding;
+    int out_xhi = ceil(max4(c00.getX(),c01.getX(),c10.getX(),c11.getX())) + dst_padding;
+    int out_yhi = ceil(max4(c00.getY(),c01.getY(),c10.getY(),c11.getY())) + dst_padding;
 
     // allocate output image
     PTR(Psf::Image) ret = boost::make_shared<Psf::Image>(out_xhi-out_xlo+1, out_yhi-out_ylo+1);
     ret->setXY0(afwGeom::Point2I(out_xlo,out_ylo));
 
     // zero-pad input image
-    PTR(Psf::Image) im_padded = zeroPadImage(im, interpolation_src_padding);
+    PTR(Psf::Image) im_padded = zeroPadImage(im, src_padding);
 
     // warp it!
     afwMath::WarpingControl wc(interpolation_name);
@@ -144,7 +144,9 @@ PTR(Psf) WarpedPsf::clone() const
     return boost::make_shared<WarpedPsf>(_undistorted_psf->clone(), _distortion->clone());
 }
 
-PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccdXY, Extent2I const& size, bool normalizePeak, bool distort) const
+PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccdXY, 
+                                          Extent2I const& size, bool normalizePeak, 
+                                          bool distort) const
 {
     Point2I ctr;
     PTR(Image) im = this->_make_warped_kernel_image(ccdXY, color, ctr);
@@ -184,14 +186,16 @@ PTR(afwMath::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const 
 // the convention in the parent Psf class.  This convention seems fishy to me and I'll
 // revisit it later...
 //
-PTR(Psf::Image) WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color const &c, Point2I &ctr) const
+PTR(Psf::Image) WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color const &c, 
+                                                     Point2I &ctr) const
 {
     afwGeom::AffineTransform t = _distortion->linearizeReverseTransform(p);
     Point2D tp = t(p);
 
     CONST_PTR(Kernel) k = _undistorted_psf->getLocalKernel(tp, c);
     if (!k) {
-	throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "undistored psf failed to return local kernel");
+	throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, 
+                          "undistored psf failed to return local kernel");
     }
 
     PTR(Image) im = boost::make_shared<Image>(k->getWidth(), k->getHeight());
@@ -206,7 +210,8 @@ PTR(Psf::Image) WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color con
     // Go to the warped coordinate system with 'p' at the origin
     PTR(Psf::Image) ret = warpAffine(*im, getLinear(t.invert()));
 
-    // ret->xy0 is meaningful, but for consistency with the kernel API, we use a parallel Point2I instead
+    // ret->xy0 is meaningful, but for consistency with the kernel API, 
+    // we use a parallel Point2I instead
     ctr = Point2I(-ret->getX0(), -ret->getY0());
 
     // 

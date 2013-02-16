@@ -1,7 +1,5 @@
 /*
  * XYTransform: Virtual base class representing an invertible transform of a pixelized image 
- *
- * TODO: serialization
  */
 
 #ifndef LSST_AFW_IMAGE_XYTRANSFORM_H
@@ -181,10 +179,21 @@ public:
     static double               polyEval(std::vector<double> const &coeffs, double x);
     static Point2D              polyEval(std::vector<double> const &coeffs, Point2D const &p);
     static double               polyEvalDeriv(std::vector<double> const &coeffs, double x);
-    static AffineTransform      polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p);
-    static double               polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, double x);
-    static Point2D              polyEvalInverse(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, Point2D const &p);
-    static AffineTransform      polyEvalInverseJacobian(std::vector<double> const &coeffs, std::vector<double> const &icoeffs, Point2D const &p);
+
+    static AffineTransform      polyEvalJacobian(std::vector<double> const &coeffs, 
+                                                 Point2D const &p);
+
+    static double               polyEvalInverse(std::vector<double> const &coeffs, 
+                                                std::vector<double> const &icoeffs, double x);
+
+    static Point2D              polyEvalInverse(std::vector<double> const &coeffs, 
+                                                std::vector<double> const &icoeffs, 
+                                                Point2D const &p);
+
+    static AffineTransform      polyEvalInverseJacobian(std::vector<double> const &coeffs, 
+                                                        std::vector<double> const &icoeffs, 
+                                                        Point2D const &p);
+
     static AffineTransform      makeAffineTransform(double x, double y, double f, double g);
 
 protected:
