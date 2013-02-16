@@ -30,12 +30,12 @@ namespace image {
  * counts).  The flag XYTransform::_inFpCoordinateSystem distinguishes these two cases, so that
  * we can throw an exception if the transform is applied in the wrong coordinate system.
  */
-class XYTransform : public lsst::daf::base::Citizen
+class XYTransform : public daf::base::Citizen
 {
 public:
-    typedef lsst::afw::geom::Point2D Point2D;
-    typedef lsst::afw::geom::ellipses::Quadrupole Quadrupole;
-    typedef lsst::afw::geom::AffineTransform AffineTransform;
+    typedef afw::geom::Point2D Point2D;
+    typedef afw::geom::ellipses::Quadrupole Quadrupole;
+    typedef afw::geom::AffineTransform AffineTransform;
 
     XYTransform(bool inFpCoordinateSystem);
     virtual ~XYTransform() { }
@@ -109,13 +109,13 @@ public:
  * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
  * with a SIP-distorted TanWcs and an undistorted Wcs.
  *
- * Note: this is very similar to class lsst::afw::math::detail::WcsSrcPosFunctor
+ * Note: this is very similar to class afw::math::detail::WcsSrcPosFunctor
  *   but watch out since the XY0 offset convention is different!!
  */
 class XYTransformFromWcsPair : public XYTransform
 {
 public:
-    typedef lsst::afw::image::Wcs Wcs;
+    typedef afw::image::Wcs Wcs;
 
     XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src);
     virtual ~XYTransformFromWcsPair() { }
@@ -218,8 +218,8 @@ protected:
 class DetectorXYTransform : public XYTransform
 {
 public:
-    typedef lsst::afw::cameraGeom::FpPoint FpPoint;
-    typedef lsst::afw::cameraGeom::Detector Detector;
+    typedef afw::cameraGeom::FpPoint FpPoint;
+    typedef afw::cameraGeom::Detector Detector;
 
     DetectorXYTransform(CONST_PTR(XYTransform) fpTransform, CONST_PTR(Detector) detector);
     virtual ~DetectorXYTransform() { }

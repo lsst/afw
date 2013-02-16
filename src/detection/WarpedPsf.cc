@@ -190,7 +190,7 @@ PTR(Psf::Image) WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color con
 
     CONST_PTR(Kernel) k = _undistorted_psf->getLocalKernel(tp, c);
     if (!k) {
-	throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, 
+	throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, 
                           "undistored psf failed to return local kernel");
     }
 
@@ -222,7 +222,7 @@ PTR(Psf::Image) WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color con
         }
     }
     if (imSum == 0.0) {
-	throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "psf image has sum 0");
+	throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "psf image has sum 0");
     }
     *ret /= imSum;
 
