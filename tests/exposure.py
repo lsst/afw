@@ -333,7 +333,6 @@ class ExposureTestCase(unittest.TestCase):
 
         readExposure = type(mainExposure)(outFile)
 
-        print outFile
         os.remove(outFile)
         #
         # Check the round-tripping
@@ -346,13 +345,13 @@ class ExposureTestCase(unittest.TestCase):
 
         psf = readExposure.getPsf()
         self.assert_(psf is not None)
-        psf = afwDetection.DoubleGaussianPsf.swigConvert(psf)
-        self.assert_(psf is not None)
-        self.assertEqual(psf.getKernel().getWidth(), self.psf.getKernel().getWidth())
-        self.assertEqual(psf.getKernel().getHeight(), self.psf.getKernel().getHeight())
-        self.assertEqual(psf.getSigma1(), self.psf.getSigma1())
-        self.assertEqual(psf.getSigma2(), self.psf.getSigma2())
-        self.assertEqual(psf.getB(), self.psf.getB())
+        dgPsf = afwDetection.DoubleGaussianPsf.swigConvert(psf)
+        self.assert_(dgPsf is not None)
+        self.assertEqual(dgPsf.getKernel().getWidth(), self.psf.getKernel().getWidth())
+        self.assertEqual(dgPsf.getKernel().getHeight(), self.psf.getKernel().getHeight())
+        self.assertEqual(dgPsf.getSigma1(), self.psf.getSigma1())
+        self.assertEqual(dgPsf.getSigma2(), self.psf.getSigma2())
+        self.assertEqual(dgPsf.getB(), self.psf.getB())
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure

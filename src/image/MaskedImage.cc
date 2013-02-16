@@ -533,6 +533,24 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     writeFits(fitsfile, metadata, imageMetadata, maskMetadata, varianceMetadata);
 }
 
+namespace {
+
+void processPlaneMetadata(
+    CONST_PTR(lsst::daf::base::PropertySet) metadata,
+    PTR(lsst::daf::base::PropertySet) & hdr,
+    char const * exttype
+) {
+    if (metadata) {
+        hdr = metadata->deepCopy();
+    } else {
+        hdr.reset(new lsst::daf::base::PropertyList());
+    }
+    hdr->set("INHERIT", true);
+    hdr->set("EXTTYPE", exttype);
+}
+
+} // anonymous
+
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     fits::Fits & fitsfile,
@@ -563,33 +581,14 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
     }
     fitsfile.writeMetadata(*hdr);
 
-    if (imageMetadata) {
-        hdr = imageMetadata->deepCopy();
-    } else {
-        hdr.reset(new daf::base::PropertyList());
-    }
-    hdr->set("INHERIT", true);
-    hdr->set("EXTTYPE", "IMAGE");
+    processPlaneMetadata(imageMetadata, hdr, "IMAGE");
     _image->writeFits(fitsfile, hdr);
 
-    if (maskMetadata) {
-        hdr = maskMetadata->deepCopy();
-    } else {
-        hdr.reset(new daf::base::PropertyList());
-    }
-    hdr->set("INHERIT", true);
-    hdr->set("EXTTYPE", "MASK");
+    processPlaneMetadata(maskMetadata, hdr, "MASK");
     _mask->writeFits(fitsfile, hdr);
-    
-    if (varianceMetadata) {
-        hdr = varianceMetadata->deepCopy();
-    } else {
-        hdr.reset(new lsst::daf::base::PropertyList());
-    }
-    hdr->set("INHERIT", true);
-    hdr->set("EXTTYPE", "VARIANCE");
-    _variance->writeFits(fitsfile, hdr);
 
+    processPlaneMetadata(varianceMetadata, hdr, "VARIANCE");
+    _variance->writeFits(fitsfile, hdr);
 }
 
 /************************************************************************************************************/

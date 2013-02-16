@@ -499,11 +499,11 @@ class DecoratedImageTestCase(unittest.TestCase):
         
         hdus = {}
         fileName = os.path.join(dataDir, "small_MI.fits")
-        hdus["img"] = 2 # an S16 fits file
-        hdus["msk"] = 3 # an U8 fits file
-        hdus["var"] = 4 # an F32 fits file
+        hdus["img"] = 2 # an S16 fits HDU
+        hdus["msk"] = 3 # an U8 fits HDU
+        hdus["var"] = 4 # an F32 fits HDU
 
-        imgU = afwImage.DecoratedImageF(fileName, hdus["img"]) # read as unsigned short
+        imgU = afwImage.DecoratedImageU(fileName, hdus["img"]) # read as unsigned short
         imgF = afwImage.DecoratedImageF(fileName, hdus["img"]) # read as float
 
         self.assertEqual(imgU.getHeight(), 256)

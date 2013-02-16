@@ -165,9 +165,15 @@ private:
     /**
      *  @brief A struct passed back and forth between Exposure and ExposureInfo when writing FITS files.
      *
-     *  FITS has to start with ExposureInfo (for header info), then go to Exposure (to write the templated
-     *  MaskedImage), and then go back to ExposureInfo (for table-persisted Psf and Wcs), and this
-     *  struct is used to allow data to be passed from step 1 to step 3.
+     *  An ExposureInfo is generally held by an Exposure, and we implement much of Exposure persistence
+     *  here in ExposureInfo.  FITS writing needs to take place in three steps:
+     *   1. Exposure calls ExposureInfo::_startWriteFits to generate the image headers in the form of
+     *      PropertyLists.  The headers  include archive IDs for the components of ExposureInfo, so we
+     *      have to put those in the archive at this time, and transfer the PropertyLists and archive
+     *      to the Exposure for the next step.
+     *   2. Exposure calls MaskedImage::writeFits to save the Image, Mask, and Variance HDUs along
+     *      with the headers.
+     *   3. Exposure calls ExposureInfo::_finishWriteFits to save the archive to additional table HDUs.
      */
     struct FitsWriteData {
         PTR(daf::base::PropertyList) metadata;

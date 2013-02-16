@@ -165,7 +165,9 @@ class WcsFitsTableTestCase(unittest.TestCase):
         expIn.setWcs(wcsIn)
         fileName = "wcs-table-test.fits"
         expIn.writeFits(fileName)
-        # manually mess up the headers, so we'd know if we were loading the Wcs from that.
+        # Manually mess up the headers, so we'd know if we were loading the Wcs from that;
+        # when there is a WCS in the header and a WCS in the FITS table, we should use the
+        # latter, because the former might just be an approximation.
         fits = pyfits.open(fileName)
         os.remove(fileName)
         fits[1].header.remove("CTYPE1")
