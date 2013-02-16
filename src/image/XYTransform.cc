@@ -22,7 +22,7 @@ XYTransform::XYTransform(bool inFpCoordinateSystem)
 { }
 
 
-// default implementation; subclass may override
+/// default implementation; subclass may override
 afwGeom::AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p) const
 {
     Point2D px = p + afwGeom::Extent2D(1,0);
@@ -35,7 +35,7 @@ afwGeom::AffineTransform XYTransform::linearizeForwardTransform(Point2D const &p
 }
 
 
-// default implementation; subclass may override
+/// default implementation; subclass may override
 afwGeom::AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
 {
     Point2D px = p + afwGeom::Extent2D(1,0);
@@ -48,7 +48,7 @@ afwGeom::AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p
 }
 
 
-// default implementation; subclass may override
+/// default implementation; subclass may override
 PTR(XYTransform) XYTransform::invert() const
 {
     return boost::make_shared<InvertedXYTransform> (this->clone());

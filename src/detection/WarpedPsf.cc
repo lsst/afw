@@ -59,16 +59,16 @@ static inline PTR(Psf::Image) zeroPadImage(Psf::Image const &im, int pad)
 }
 
 
-//
-// This helper function is essentially an alternate interface to afw::math::warpImage()
-// in which the caller does not need to precompute the output bounding box.
-//
-// We preserve the convention of warpImage() that the affine transform is inverted,
-// so that the output and input images are related by:
-//   out[p] = in[A^{-1}p]
-//
-// The input image is assumed zero-padded.
-//
+/**
+ * @brief Alternate interface to afw::math::warpImage()
+ * in which the caller does not need to precompute the output bounding box.
+ *
+ * We preserve the convention of warpImage() that the affine transform is inverted,
+ * so that the output and input images are related by:
+ *   out[p] = in[A^{-1}p]
+ *
+ * The input image is assumed zero-padded.
+ */
 static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, afwGeom::AffineTransform const &t)
 {
     //
@@ -177,10 +177,6 @@ PTR(afwMath::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const 
     return ret;
 }
 
-//
-// The image returned by this routine is a "kernel image", i.e. xy0 is not meaningful
-// but there is a distinguished central pixel which corresponds to the point "p" where
-// the PSF is evaluated.
 //
 // FIXME for now, the image returned by this routine is normalized to sum 1, following
 // the convention in the parent Psf class.  This convention seems fishy to me and I'll
