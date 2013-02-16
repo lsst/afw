@@ -239,33 +239,39 @@ static void testXYTransform(const XYTransform &tr, const Point2D &p, bool uses_d
     BOOST_CHECK(dist(p, tr.reverseTransform(tp)) < 1.0e-10);
 
     // affine transforms should map p -> t(p)
-    BOOST_CHECK(dist(afwd(p),tp) < 1.0e-10);
-    BOOST_CHECK(dist(arev(tp),p) < 1.0e-10);
+    BOOST_CHECK(dist(afwd(p),tp) < 1.0e-9);
+    BOOST_CHECK(dist(arev(tp),p) < 1.0e-9);
 
     if (uses_default_linearization) {
-        BOOST_CHECK(linearizationResidual(tr,p,1.0,true) < 1.0e-10);
-        BOOST_CHECK(linearizationResidual(tr,tp,1.0,false) < 1.0e-10);
+        BOOST_CHECK(linearizationResidual(tr,p,1.0,true) < 1.0e-9);
+        BOOST_CHECK(linearizationResidual(tr,tp,1.0,false) < 1.0e-9);
     }
 
     if (uses_exact_derivatives) {
         // forward/reverse transforms should be inverses
-        BOOST_CHECK(dist(arev,afwd.invert()) < 1.0e-10);
+        BOOST_CHECK(dist(arev,afwd.invert()) < 1.0e-9);
     }
 
     if (uses_exact_derivatives) {
-        cerr << "XXX The following sequence should be decreasing by a factor of ~100 each time (a factor ~10 would count as failure)\n";
-        cerr << "    XXX " << linearizationResidual(tr,p,10.0,true) << endl;
-        cerr << "    XXX " << linearizationResidual(tr,p,1.0,true) << endl;
-        cerr << "    XXX " << linearizationResidual(tr,p,0.1,true) << endl;
-        cerr << "    XXX " << linearizationResidual(tr,p,0.01,true) << endl;
-        cerr << "    XXX " << linearizationResidual(tr,p,0.001,true) << endl;
+        //
+        // The following sequence should be decreasing by a factor of ~100 each time 
+        // (a factor ~10 would count as failure)
+        //
+        double t0 = linearizationResidual(tr, p, 1.0, true);
+        double t1 = linearizationResidual(tr, p, 0.1, true);
+        double t2 = linearizationResidual(tr, p, 0.01, true);
+        double t3 = linearizationResidual(tr, p, 0.001, true);
+
+        BOOST_CHECK(t1 < 0.04*t0);
+        BOOST_CHECK(t2 < 0.04*t1);
+        BOOST_CHECK(t3 < 0.04*t2);
     }
 
     PTR(XYTransform) tr_inv = tr.invert();
 
     // consistency of inverse linearized transforms
-    BOOST_CHECK(dist(afwd, tr_inv->linearizeReverseTransform(p)) < 1.0e-10);
-    BOOST_CHECK(dist(arev, tr_inv->linearizeForwardTransform(tp)) < 1.0e-10);
+    BOOST_CHECK(dist(afwd, tr_inv->linearizeReverseTransform(p)) < 1.0e-9);
+    BOOST_CHECK(dist(arev, tr_inv->linearizeForwardTransform(tp)) < 1.0e-9);
 }
 
 
@@ -486,15 +492,6 @@ BOOST_AUTO_TEST_CASE(warpedPsf)
     int x0 = im->getX0();
     int y0 = im->getY0();
 
-#if 0
-    for (int i = 0; i < nx; i++) {
-        cerr << "row " << i << ":";
-        for (int j = 0; j < ny; j++)
-            cerr << " " << (*im)(i,j);
-        cerr << endl;
-    }
-#endif
-
     double a, b, c;
     unwarped_psf->evalABC(a, b, c, q);
 
@@ -510,15 +507,11 @@ BOOST_AUTO_TEST_CASE(warpedPsf)
 
     Eigen::Matrix2d m1 = md.transpose() * m0 * md;
 
-    // XXXXXX
-
     // this should be the same as the warped image, up to artifacts from warping/pixelization
     PTR(Image<double>) im2 = fill_gaussian(m1(0,0), m1(0,1), m1(1,1), p.getX(), p.getY(), nx, ny, x0, y0);
 
-    // should not be the same...
-    PTR(Image<double>) im3 = fill_gaussian(a, b, c, p.getX(), p.getY(), nx, ny, x0, y0);
-
-    cerr << "XXX the first number should be a lot smaller than the second: " << compare(*im,*im2) << " " << compare(*im,*im3) << endl;
+    // TODO: improve this test; the ideal thing would be to repeat with finer resolutions and more stringent threshold
+    BOOST_CHECK(compare(*im,*im2) < 0.005);
 }
 
 

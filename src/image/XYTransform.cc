@@ -152,7 +152,7 @@ PTR(XYTransform) XYTransformFromWcsPair::invert() const
 // InvertedXYTransform
 
 
-InvertedXYTransform::InvertedXYTransform(PTR(XYTransform) base)
+InvertedXYTransform::InvertedXYTransform(CONST_PTR(XYTransform) base)
     : XYTransform(base->inFpCoordinateSystem()), _base(base)
 { }
 
