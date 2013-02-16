@@ -32,12 +32,12 @@ namespace detection {
  */
 class WarpedPsf : public Psf {
 public:
-    typedef lsst::afw::image::Color Color;
-    typedef lsst::afw::math::Kernel Kernel;
-    typedef lsst::afw::geom::Point2I Point2I;
-    typedef lsst::afw::geom::Point2D Point2D;
-    typedef lsst::afw::geom::Extent2I Extent2I;
-    typedef lsst::afw::image::XYTransform XYTransform;
+    typedef afw::image::Color Color;
+    typedef afw::math::Kernel Kernel;
+    typedef afw::geom::Point2I Point2I;
+    typedef afw::geom::Point2D Point2D;
+    typedef afw::geom::Extent2I Extent2I;
+    typedef afw::image::XYTransform XYTransform;
 
     /**
      * @brief Construct WarpedPsf from unwarped psf and distortion.

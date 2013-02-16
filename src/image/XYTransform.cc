@@ -130,13 +130,13 @@ afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) 
     // to understand exactly which checks are needed (e.g. I think we need to check by hand 
     // that both Wcs's use the same celestial coordinate system)
     //
-    PTR(lsst::afw::coord::Coord) x = _src->pixelToSky(pixel);
+    PTR(afw::coord::Coord) x = _src->pixelToSky(pixel);
     return _dst->skyToPixel(*x);
 }
 
 afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
 {
-    PTR(lsst::afw::coord::Coord) x = _dst->pixelToSky(pixel);
+    PTR(afw::coord::Coord) x = _dst->pixelToSky(pixel);
     return _src->skyToPixel(*x);
 }
 
