@@ -149,7 +149,7 @@ PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccd
                                           bool distort) const
 {
     Point2I ctr;
-    PTR(Image) im = this->_make_warped_kernel_image(ccdXY, color, ctr);
+    PTR(Image) im = this->_makeWarpedKernelImage(ccdXY, color, ctr);
     
     int width = (size.getX() > 0) ? size.getX() : im->getWidth();
     int height = (size.getY() > 0) ? size.getY() : im->getHeight();
@@ -171,7 +171,7 @@ PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccd
 PTR(afwMath::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const &c) const
 {
     Point2I ctr;
-    PTR(Image) im = this->_make_warped_kernel_image(p, c, ctr);
+    PTR(Image) im = this->_makeWarpedKernelImage(p, c, ctr);
     PTR(afwMath::Kernel) ret = boost::make_shared<afwMath::FixedKernel>(*im);
     ret->setCtr(ctr);
     return ret;
@@ -182,8 +182,7 @@ PTR(afwMath::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const 
 // the convention in the parent Psf class.  This convention seems fishy to me and I'll
 // revisit it later...
 //
-PTR(Psf::Image) WarpedPsf::_make_warped_kernel_image(Point2D const &p, Color const &c, 
-                                                     Point2I &ctr) const
+PTR(Psf::Image) WarpedPsf::_makeWarpedKernelImage(Point2D const &p, Color const &c, Point2I &ctr) const
 {
     afwGeom::AffineTransform t = _distortion->linearizeReverseTransform(p);
     Point2D tp = t(p);

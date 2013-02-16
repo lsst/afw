@@ -87,7 +87,7 @@ protected:
      * but there is a distinguished central pixel which corresponds to the point "p" where
      * the PSF is evaluated.
      */
-    PTR(Image) _make_warped_kernel_image(Point2D const &p, Color const &color, Point2I &ctr) const;
+    PTR(Image) _makeWarpedKernelImage(Point2D const &p, Color const &color, Point2I &ctr) const;
 };
 
 
