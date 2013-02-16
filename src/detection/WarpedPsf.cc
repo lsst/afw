@@ -124,6 +124,7 @@ WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) dist
 
     _undistorted_psf = undistorted_psf;
     _distortion = distortion;
+
     if (!_undistorted_psf) {
         throw LSST_EXCEPT(
             pex::exceptions::LogicErrorException,
