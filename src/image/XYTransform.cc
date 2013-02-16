@@ -139,7 +139,7 @@ geom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) con
 PTR(XYTransform) XYTransformFromWcsPair::invert() const
 {
     // clone and swap src,dst
-    return boost::make_shared<XYTransformFromWcsPair> (_src->clone(), _dst->clone());
+    return boost::make_shared<XYTransformFromWcsPair> (_src, _dst);
 }
 
 
