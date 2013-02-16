@@ -456,7 +456,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         dataDir = eups.productDir("afwdata")
         if dataDir:
-            self.fileForMetadata = os.path.join(dataDir, "data", "small_MI_img.fits")
+            self.fileForMetadata = os.path.join(dataDir, "data", "small_MI.fits")
             self.trueMetadata = {"RELHUMID" : 10.69}
         else:
             self.fileForMetadata = None
@@ -497,13 +497,14 @@ class DecoratedImageTestCase(unittest.TestCase):
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
         
-        files = {}
-        files["img"] = os.path.join(dataDir, "small_MI_img.fits") # an S16 fits file
-        files["msk"] = os.path.join(dataDir, "small_MI_msk.fits") # an U8 fits file
-        files["var"] = os.path.join(dataDir, "small_MI_var.fits") # an F32 fits file
+        hdus = {}
+        fileName = os.path.join(dataDir, "small_MI.fits")
+        hdus["img"] = 2 # an S16 fits HDU
+        hdus["msk"] = 3 # an U8 fits HDU
+        hdus["var"] = 4 # an F32 fits HDU
 
-        imgU = afwImage.DecoratedImageF(files["img"]) # read as unsigned short
-        imgF = afwImage.DecoratedImageF(files["img"]) # read as float
+        imgU = afwImage.DecoratedImageU(fileName, hdus["img"]) # read as unsigned short
+        imgF = afwImage.DecoratedImageF(fileName, hdus["img"]) # read as float
 
         self.assertEqual(imgU.getHeight(), 256)
         self.assertEqual(imgF.getImage().getWidth(), 256)
@@ -518,8 +519,8 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read an F32 image
         #
-        varU = afwImage.DecoratedImageF(files["var"]) # read as unsigned short
-        varF = afwImage.DecoratedImageF(files["var"]) # read as float
+        varU = afwImage.DecoratedImageF(fileName, hdus["var"]) # read as unsigned short
+        varF = afwImage.DecoratedImageF(fileName, hdus["var"]) # read as float
 
         self.assertEqual(varU.getHeight(), 256)
         self.assertEqual(varF.getImage().getWidth(), 256)
@@ -527,7 +528,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read a char image
         #
-        maskImg = afwImage.DecoratedImageU(files["msk"]).getImage() # read a char file
+        maskImg = afwImage.DecoratedImageU(fileName, hdus["msk"]).getImage() # read a char file
 
         self.assertEqual(maskImg.getHeight(), 256)
         self.assertEqual(maskImg.getWidth(), 256)

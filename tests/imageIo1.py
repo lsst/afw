@@ -76,7 +76,7 @@ class ReadFitsTestCase(unittest.TestCase):
 
     def testF32(self):
         """Test reading F32 image"""
-        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI_var.fits"))
+        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI.fits"), 4)
         
         col, row, val = 32, 1, 39.11672
         self.assertAlmostEqual(im.get(col, row), val, 5)
@@ -104,8 +104,8 @@ class ReadFitsTestCase(unittest.TestCase):
 
     def testSubimage(self):
         """Test reading a subimage image"""
-        fileName, hdu = os.path.join(dataDir, "871034p_1_MI_var.fits"), 0
-        im = afwImage.ImageF(fileName)
+        fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 4
+        im = afwImage.ImageF(fileName, hdu)
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120), afwGeom.Extent2I(20, 15))
         sim = im.Factory(im, bbox, afwImage.LOCAL) 
