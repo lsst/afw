@@ -205,6 +205,10 @@ def getXpaAccessPoint():
     """Parse XPA_PORT and send return an identifier to send ds9 commands there, instead of "ds9"
     If you don't have XPA_PORT set, the usual xpans tricks will be played when we return "ds9".
     """
+    xpa_port = os.environ.get("XPA_ACCESS_POINT")
+    if xpa_port:
+        return xpa_port
+
     xpa_port = os.environ.get("XPA_PORT")
     if xpa_port:
         mat = re.search(r"^DS9:ds9\s+(\d+)\s+(\d+)", xpa_port)
@@ -220,6 +224,7 @@ def getXpaAccessPoint():
 def ds9Version():
     """Return the version of ds9 in use, as a string"""
     try:
+        v = "?"
         v = ds9Cmd("about", get=True)
         return v.splitlines()[1].split()[1]
     except Exception, e:
