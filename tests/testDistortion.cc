@@ -542,8 +542,8 @@ BOOST_AUTO_TEST_CASE(quadrupoleDistortion)
 
     Point2D p = randpt();
     Quadrupole q(uni_double(rng)+1.0, uni_double(rng)+1.0, uni_double(rng));
-    Quadrupole qfwd = t->forwardTransform(p,q);
-    Quadrupole qrev = t->reverseTransform(p,q);
+    Quadrupole qfwd = t->forwardTransformQuadrupole(p,q);
+    Quadrupole qrev = t->reverseTransformQuadrupole(p,q);
     
     Extent2D e(uni_double(rng)-0.5, uni_double(rng)-0.5);
     Extent2D efwd = t->linearizeForwardTransform(p)(e);

@@ -74,14 +74,14 @@ PTR(XYTransform) XYTransform::invert() const
     return boost::make_shared<InvertedXYTransform> (this->clone());
 }
 
-ellipses::Quadrupole XYTransform::forwardTransform(Point2D const &pixel, Quadrupole const &q) const
+ellipses::Quadrupole XYTransform::forwardTransformQuadrupole(Point2D const &pixel, Quadrupole const &q) const
 {
     // Note: q.transform(L) returns (LQL^T)
     AffineTransform a = linearizeForwardTransform(pixel);
     return q.transform(a.getLinear());
 }
 
-ellipses::Quadrupole XYTransform::reverseTransform(Point2D const &pixel, Quadrupole const &q) const
+ellipses::Quadrupole XYTransform::reverseTransformQuadrupole(Point2D const &pixel, Quadrupole const &q) const
 {
     AffineTransform a = linearizeReverseTransform(pixel);
     return q.transform(a.getLinear());

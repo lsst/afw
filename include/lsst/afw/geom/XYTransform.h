@@ -37,6 +37,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/ellipses.h"
 
+
 namespace lsst {
 namespace afw {
 namespace geom {
@@ -99,8 +100,8 @@ public:
     virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
 
     /// apply distortion to an (infinitesimal) quadrupole
-    Quadrupole forwardTransform(Point2D const &pixel, Quadrupole const &q) const;
-    Quadrupole reverseTransform(Point2D const &pixel, Quadrupole const &q) const;
+    Quadrupole forwardTransformQuadrupole(Point2D const &pixel, Quadrupole const &q) const;
+    Quadrupole reverseTransformQuadrupole(Point2D const &pixel, Quadrupole const &q) const;
 
     bool inFpCoordinateSystem() const { return _inFpCoordinateSystem; }
 
