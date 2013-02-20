@@ -148,6 +148,7 @@ tests/testEigenLib.py
 tests/testTableArchives
 tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageRamOut.fit
 tests/testSimpleTable
+tests/testDistortion
 tests/testSchema
 tests/testFitsTables
 testTable.fits
