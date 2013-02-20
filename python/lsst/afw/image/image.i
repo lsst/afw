@@ -25,7 +25,6 @@
 %{
 #   include "lsst/afw/image/Image.h"
 #   include "lsst/afw/image/ImagePca.h"
-#   include "lsst/afw/image/fits/fits_io.h"
 %}
 
 //
@@ -86,13 +85,6 @@
     }
 
     %pythoncode {
-
-    def Factory(self, *args):
-        """Return an Image class of this type
-        
-        A synonym for the attribute __class__
-        """
-        return NAME##TYPE(*args)
     #
     # Deal with incorrect swig wrappers for C++ "void operator op=()"
     #
@@ -135,8 +127,9 @@
         return args[0]
     }
 }
+%defineClone(NAME##TYPE, lsst::afw::image::Image, PIXEL_TYPE);
+%supportSlicing(lsst::afw::image::Image, PIXEL_TYPE);
 %enddef
-
 
 /************************************************************************************************************/
 
@@ -167,9 +160,6 @@
 %include "lsst/afw/image/Image.h"
 %include "lsst/afw/image/ImagePca.h"
 %include "lsst/afw/image/Mask.h"
-
-%include "lsst/afw/image/fits/fits_io.h"
-%template(fits_write_imageF) lsst::afw::image::fits_write_image<lsst::afw::image::Image<float> >;
 
 %image(Image, U, boost::uint16_t);
 %image(Image, L, boost::uint64_t);
@@ -219,6 +209,10 @@
 }
 
 %extend lsst::afw::image::Image<float> {
+    %newobject convertD;
+    lsst::afw::image::Image<double> convertD() {
+        return lsst::afw::image::Image<double>(*self, true);
+    }
     %newobject convertU;
     lsst::afw::image::Image<boost::uint16_t> convertU() {
         return lsst::afw::image::Image<boost::uint16_t>(*self, true);

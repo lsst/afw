@@ -23,9 +23,28 @@
  */
  
 %{
+#include "lsst/afw/math/Approximate.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/detail/Spline.h"
 %}
+// This one must go *before* the %import
+%define %declareApproximatePtr(PIXTYPE)
+%shared_ptr(lsst::afw::math::Approximate<PIXTYPE>);
+%enddef
 
+// This one must go *after* the %import
+%define %declareApproximate(PIXTYPE, SUFFIX)
+%template(Approximate##SUFFIX) lsst::afw::math::Approximate<PIXTYPE>;
+%template(makeApproximate) lsst::afw::math::makeApproximate<PIXTYPE>;
+%enddef
+
+/************************************************************************************************************/
+
+%declareApproximatePtr(float)
+%shared_ptr(lsst::afw::math::Interpolate);
+
+%include "lsst/afw/math/Approximate.h"
 %include "lsst/afw/math/Interpolate.h"
 %include "lsst/afw/math/detail/Spline.h"
+
+%declareApproximate(float, F);

@@ -32,22 +32,22 @@
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Arrays types: the types we allow for Array fields.
-#define AFW_TABLE_ARRAY_FIELD_TYPE_N 2
+#define AFW_TABLE_ARRAY_FIELD_TYPE_N 3
 #define AFW_TABLE_ARRAY_FIELD_TYPES             \
-    float, double
+    int, float, double
 #define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Field types: all the types we allow for fields.
-#define AFW_TABLE_FIELD_TYPE_N 20
+#define AFW_TABLE_FIELD_TYPE_N 19
 #define AFW_TABLE_FIELD_TYPES                                   \
     AFW_TABLE_SCALAR_FIELD_TYPES,                               \
-    Flag, Coord,  \
-    Array<float>, Array<double>,                                \
+    Flag, Coord, std::string,                                   \
+    Array<int>, Array<float>, Array<double>,                    \
     Point<int>, Point<float>, Point<double>,                    \
     Moments<float>, Moments<double>,                            \
-    Covariance<float>, Covariance<double>,                      \
-    Covariance< Point<float> >, Covariance< Point<double> >,    \
-    Covariance< Moments<float> >, Covariance< Moments<double> >
+    Covariance<float>,                      \
+    Covariance< Point<float> >,    \
+    Covariance< Moments<float> >
 #define AFW_TABLE_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_FIELD_TYPES BOOST_PP_RPAREN()
 
 namespace lsst { namespace afw { namespace table {

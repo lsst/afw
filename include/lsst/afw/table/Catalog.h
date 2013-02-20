@@ -280,33 +280,49 @@ public:
         return cat;
     }
 
-    /// Write a FITS binary table
+    /// Write a FITS binary table to a regular file.
     void writeFits(std::string const & filename, std::string const & mode="w") const {
         io::FitsWriter::apply(filename, mode, *this);
     }
+    /// Write a FITS binary table to a RAM file.
     void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const {
         io::FitsWriter::apply(manager, mode, *this);
     }
+    /// Write a FITS binary table to an open file object.
+    void writeFits(fits::Fits & fitsfile) const {
+        io::FitsWriter::apply(fitsfile, *this);
+    }
 
-    /**
-     *  @brief Read a FITS binary table.
-     *
-     *  We look in HDU 2 by default, because HDU one is the Primary HDU, and must
-     *  be an image HDU (even if its an empty image).
-     */
-    static CatalogT readFits(std::string const & filename, int hdu=2) {
+    /// @brief Read a FITS binary table from a regular file.
+    static CatalogT readFits(std::string const & filename, int hdu=0) {
         return io::FitsReader::apply<CatalogT>(filename, hdu);
     }
-    static CatalogT readFits(fits::MemFileManager & manager, int hdu=2) {
+    /// @brief Read a FITS binary table from a RAM file.
+    static CatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<CatalogT>(manager, hdu);
+    }
+    /// @brief Read a FITS binary table from a file object already at the correct extension.
+    static CatalogT readFits(fits::Fits & fitsfile) {
+        return io::FitsReader::apply<CatalogT>(fitsfile);
     }
 
     /**
      *  @brief Return a ColumnView of this catalog's records.
      *
      *  Will throw RuntimeErrorException if records are not contiguous.
+     *
+     *  Note that this is a 
      */
-    ColumnView getColumnView() const { return ColumnView::make(_table, begin(), end()); }
+    ColumnView getColumnView() const {
+        if (boost::is_const<RecordT>::value) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
+                "non-const views)."
+            );
+        }
+        return ColumnView::make(_table, begin(), end());
+    }
 
     /// @brief Return true if all records are contiguous.
     bool isContiguous() const { return ColumnView::isRangeContiguous(_table, begin(), end()); }
@@ -427,7 +443,7 @@ public:
      *
      *  If deep is true, new records will be created by calling copyRecord on the catalog's table.
      *  If deep is false, the new records will not be copied, but they must have been created
-     *  with the catalog's table (not that a table may be shared by multiple catalogs).
+     *  with the catalog's table (note that a table may be shared by multiple catalogs).
      *
      *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
      *  is true, table->preallocate will be used to ensure that the resulting records are
@@ -458,7 +474,7 @@ public:
     /// @brief Insert a range of records into the catalog by copying them with a SchemaMapper.
     template <typename InputIterator>
     void insert(SchemaMapper const & mapper, iterator pos, InputIterator first, InputIterator last) {
-        if (mapper.getOutputSchema() != _table->getSchema()) {
+        if (!_table->getSchema().contains(mapper.getOutputSchema())) {
             throw LSST_EXCEPT(
                 pex::exceptions::InvalidParameterException,
                 "SchemaMapper's output schema does not match catalog's schema"

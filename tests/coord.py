@@ -34,6 +34,7 @@ or
    >>> Coord.run()
 """
 
+import math
 import unittest
 import lsst.afw.geom             as afwGeom
 import lsst.afw.coord            as afwCoord
@@ -555,16 +556,42 @@ class CoordTestCase(unittest.TestCase):
             
             lon0, lat0, phi, arc, longExp, latExp, phi2Exp = trial
             c = afwCoord.Fk5Coord(lon0 * afwGeom.degrees, lat0 * afwGeom.degrees)
+            c1 = afwCoord.Fk5Coord(longExp * afwGeom.degrees, latExp * afwGeom.degrees)
+            offset = c.getOffsetFrom(c1)
             phi2 = c.offset(phi * afwGeom.degrees, arc * afwGeom.degrees)
             
             lon = c.getLongitude().asDegrees()
             lat = c.getLatitude().asDegrees()
 
             print "Offset: %.10f %.10f %.10f  %.10f %.10f %.10f" % (lon, lat, phi2, longExp, latExp, phi2Exp)
+            print ("Measured: %.10f %.10f %.10f %.10f" %
+                   (offset[0].asDegrees(), offset[1].asDegrees(), phi, arc))
             self.assertAlmostEqual(lon, longExp, 12)
             self.assertAlmostEqual(lat, latExp, 12)
             self.assertAlmostEqual(phi2.asDegrees(), phi2Exp, 12)
+            if arc != 180.0: # in that case, angle doesn't matter
+                self.assertAlmostEqual(offset[0].asDegrees() + 180.0, phi, 12)
+            self.assertAlmostEqual(offset[1].asDegrees(), arc, 12)
+
+    def testOffsetTangentPlane(self):
+        """Testing of offsets on a tangent plane (good for small angles)"""
         
+        c0 = afwCoord.Coord(0.0*afwGeom.degrees, 0.0*afwGeom.degrees)
+
+        for dRa in (0.0123, 0.0, -0.0321):
+            for dDec in (0.0543, 0.0, -0.0987):
+                c1 = afwCoord.Coord(dRa*afwGeom.degrees, dDec*afwGeom.degrees)
+                
+                offset = c0.getTangentPlaneOffset(c1)
+
+                # This more-or-less works for small angles because c0 is 0,0
+                expE = math.degrees(math.tan(math.radians(dRa)))
+                expN = math.degrees(math.tan(math.radians(dDec)))
+
+                print "TP: ", dRa, dDec, offset[0].asDegrees(), offset[1].asDegrees(), expE, expN
+
+                self.assertAlmostEqual(offset[0].asDegrees(), expE)
+                self.assertAlmostEqual(offset[1].asDegrees(), expN)
 
     def testVirtualGetName(self):
 

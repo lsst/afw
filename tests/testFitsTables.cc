@@ -67,6 +67,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key<Flag> e_g_d_flag1 = schema.addField<Flag>("e.g.d.flag1", "flag1 for e.g.d");
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e.g.d.flag2", "flag2 for e.g.d");
     Key< Point<float> > a_b_p = schema.addField< Point<float> >("a.b.p", "point", "pixels");
+    Key< std::string > a_s = schema.addField< std::string >("a.s", "string", 5);
 
     KeyTuple<Flux> flux = addFluxFields(schema, "flux", "flux doc");
     KeyTuple<Centroid> centroid = addCentroidFields(schema, "centroid", "centroid doc");
@@ -96,6 +97,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r1->set(e_g_d_flag1, false);
         r1->set(e_g_d_flag2, true);
         r1->set(a_b_p, lsst::afw::geom::Point2D(1.2, 0.5));
+        r1->set(a_s, "foo");
         vector.push_back(r1);
 
         PTR(SourceRecord) r2 = vector.getTable()->makeRecord();
@@ -106,6 +108,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r2->set(e_g_d_flag1, true);
         r2->set(e_g_d_flag2, false);
         r2->set(a_b_p, lsst::afw::geom::Point2D(-32.1, 63.2));
+        r2->set(a_s, "bar");
         PTR(Footprint) fp2 = boost::make_shared<Footprint>();
         fp2->addSpan(3, 2, 7);
         fp2->addSpan(4, 3, 5);
@@ -151,6 +154,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_CLOSE_FRACTION( a1.get(e_g_d), b1.get(e_g_d), 1E-16 );
         BOOST_CHECK_EQUAL( a1.get(e_g_d_flag1), b1.get(e_g_d_flag1) );
         BOOST_CHECK_EQUAL( a1.get(e_g_d_flag2), b1.get(e_g_d_flag2) );
+        BOOST_CHECK_EQUAL( a1.get(a_s), b1.get(a_s) );
         BOOST_CHECK_CLOSE_FRACTION( a1.get(a_b_p.getX()), b1.get(a_b_p.getX()), 1E-8 );
         BOOST_CHECK_CLOSE_FRACTION( a1.get(a_b_p.getY()), b1.get(a_b_p.getY()), 1E-8 );
         Footprint const & fp1a = *a1.getFootprint();
@@ -169,6 +173,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         BOOST_CHECK_CLOSE_FRACTION( a2.get(e_g_d), b2.get(e_g_d), 1E-16 );
         BOOST_CHECK_EQUAL( a2.get(e_g_d_flag1), b2.get(e_g_d_flag1) );
         BOOST_CHECK_EQUAL( a2.get(e_g_d_flag2), b2.get(e_g_d_flag2) );
+        BOOST_CHECK_EQUAL( a2.get(a_s), b2.get(a_s) );
         BOOST_CHECK_CLOSE_FRACTION( a2.get(a_b_p.getX()), b2.get(a_b_p.getX()), 1E-8 );
         BOOST_CHECK_CLOSE_FRACTION( a2.get(a_b_p.getY()), b2.get(a_b_p.getY()), 1E-8 );
         Footprint const & fp2a = *a2.getFootprint();
@@ -181,5 +186,18 @@ BOOST_AUTO_TEST_CASE(testFits) {
     }
 
     boost::filesystem::remove(filename);
+
+}
+
+BOOST_AUTO_TEST_CASE(ticket2164) {
+    using namespace lsst::afw::table;
+    Schema schema;
+    schema.addField<int>("i", "test int field");
+    schema.addField<double>("d", "test double field");
+    BaseCatalog cat(schema);
+    cat.addNew();
+    cat.addNew();
+    ConstBaseCatalog constCat(cat);
+    BOOST_CHECK_THROW( constCat.getColumnView(), lsst::pex::exceptions::LogicErrorException );
 
 }

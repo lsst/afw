@@ -55,7 +55,7 @@ private:
         createInstance(lsst::pex::policy::Policy::Ptr policy);
 
     static lsst::daf::persistence::FormatterRegistration registration;
-    static lsst::daf::persistence::FormatterRegistration dgPsfRegistration;
+    static lsst::daf::persistence::FormatterRegistration doubleGaussianPsfRegistration;
     static lsst::daf::persistence::FormatterRegistration pcaPsfRegistration;
 };
 

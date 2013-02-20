@@ -289,6 +289,14 @@ using boost::serialization::make_nvp;
             return os.str();
         }
 
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
+
     private:
         /**
         * @brief Update cached values
@@ -392,6 +400,14 @@ using boost::serialization::make_nvp;
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
+
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
 
     private:
         const double _multFac; ///< precomputed scale factor
@@ -608,6 +624,14 @@ using boost::serialization::make_nvp;
             return os.str();
         }
 
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
+
     private:
         mutable double _oldY;         ///< value of y for which _xCoeffs is valid
         mutable std::vector<double> _xCoeffs; ///< working vector
@@ -786,7 +810,7 @@ using boost::serialization::make_nvp;
      * where:
      * * Tn(x) is the nth Chebyshev function of the first kind:
      *      T0(x) = 1
-     *      T1(x) = 2
+     *      T1(x) = x
      *      Tn+1(x) = 2xTn(x) + Tn-1(x)
      * * x' is x offset and scaled to range [-1, 1] as x ranges over [minX, maxX]
      * * y' is y offset and scaled to range [-1, 1] as y ranges over [minY, maxY]
@@ -862,7 +886,7 @@ using boost::serialization::make_nvp;
          */
         virtual Chebyshev1Function2 truncate(
                 int truncOrder ///< order of truncated polynomial
-        ) {
+        ) const {
             if (truncOrder > this->_order) {
                 std::ostringstream os;
                 os << "truncated order=" << truncOrder << " must be <= original order=" << this->_order;
@@ -944,6 +968,14 @@ using boost::serialization::make_nvp;
             os << Function2<ReturnT>::toString(prefix);
             return os.str();
         }
+
+        virtual bool isPersistable() const { return true; }
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(afw::table::io::OutputArchiveHandle & handle) const;
 
     private:
         mutable double _oldYPrime;

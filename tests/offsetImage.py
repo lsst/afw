@@ -58,22 +58,22 @@ class offsetImageTestCase(unittest.TestCase):
         self.inImage = afwImage.ImageF(200, 100)
         self.background = 200
         self.inImage.set(self.background)
-        self.algorithm = "lanczos5"
 
     def tearDown(self):
         del self.inImage
 
     def testSetFluxConvervation(self):
         """Test that flux is preserved"""
+        
+        for algorithm in ("lanczos5", "bilinear", "nearest"):
+            outImage = afwMath.offsetImage(self.inImage, 0, 0, algorithm)
+            self.assertEqual(outImage.get(50, 50), self.background)
 
-        outImage = afwMath.offsetImage(self.inImage, 0, 0, self.algorithm)
-        self.assertEqual(outImage.get(50, 50), self.background)
+            outImage = afwMath.offsetImage(self.inImage, 0.5, 0, algorithm)
+            self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
 
-        outImage = afwMath.offsetImage(self.inImage, 0.5, 0, self.algorithm)
-        self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
-
-        outImage = afwMath.offsetImage(self.inImage, 0.5, 0.5, self.algorithm)
-        self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
+            outImage = afwMath.offsetImage(self.inImage, 0.5, 0.5, algorithm)
+            self.assertAlmostEqual(outImage.get(50, 50), self.background, 4)
 
     def testSetIntegerOffset(self):
         """Test that we can offset by positive and negative amounts"""
@@ -85,17 +85,18 @@ class offsetImageTestCase(unittest.TestCase):
             ds9.mtv(self.inImage, frame=frame)
             ds9.pan(50, 50, frame=frame)
             ds9.dot("+", 50, 50, frame=frame)
-
-        for delta in [-0.49, 0.51]:
-            for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
-                outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, self.algorithm)
+        
+        for algorithm in ("lanczos5", "bilinear", "nearest"):
+            for delta in [-0.49, 0.51]:
+                for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
+                    outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, algorithm)
                 
-                if False and display:
-                    frame += 1
-                    ds9.mtv(outImage, frame=frame)
-                    ds9.pan(50, 50, frame=frame)
-                    ds9.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0(),
-                            frame=frame)
+                    if False and display:
+                        frame += 1
+                        ds9.mtv(outImage, frame=frame)
+                        ds9.pan(50, 50, frame=frame)
+                        ds9.dot("+", 50 + dx + delta - outImage.getX0(), 50 + dy + delta - outImage.getY0(),
+                                frame=frame)
 
     def calcGaussian(self, im, x, y, amp, sigma1):
         """Insert a Gaussian into the image centered at (x, y)"""
@@ -111,45 +112,56 @@ class offsetImageTestCase(unittest.TestCase):
 
     def testOffsetGaussian(self):
         """Insert a Gaussian, offset, and check the residuals"""
-        size = 100
-        im = afwImage.ImageF(size, size)
+
+        size = 50
+        refIm = afwImage.ImageF(size, size)
+        unshiftedIm = afwImage.ImageF(size, size)
 
         xc, yc = size/2.0, size/2.0
 
         amp, sigma1 = 1.0, 3
-        #
-        # Calculate an image with a Gaussian at (xc -dx, yc - dy) and then shift it to (xc, yc)
-        #
-        dx, dy = 0.5, -0.5
-        self.calcGaussian(im, xc - dx, yc - dy, amp, sigma1)
-        im2 = afwMath.offsetImage(im, dx, dy, "lanczos5")
+
         #
         # Calculate Gaussian directly at (xc, yc)
         #
-        self.calcGaussian(im, xc, yc, amp, sigma1)
-        #
-        # See how they differ
-        #
-        if display:
-            ds9.mtv(im, frame=0)
+        self.calcGaussian(refIm, xc, yc, amp, sigma1)
 
-        im -= im2
+        for dx in (-55.5, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
+            0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 99.3):
+            for dy in (-3.7, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
+                0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 2.99999):
+                dOrigX, dOrigY, dFracX, dFracY = getOrigFracShift(dx, dy)
+                self.calcGaussian(unshiftedIm, xc - dFracX, yc - dFracY, amp, sigma1)
 
-        if display:
-            ds9.mtv(im, frame=1)
+                for algorithm, maxMean, maxLim in (
+                    ("lanczos5", 1e-8, 0.0015),
+                    ("bilinear", 1e-8, 0.03),
+                    ("nearest",  1e-8, 0.2),
+                ):
+                    im = afwImage.ImageF(size, size)
+                    im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
+                    
 
-        imArr = im.getArray()
-        imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
-        imMean = imGoodVals.mean()
-        imMax = imGoodVals.max()
-        imMin = imGoodVals.min()
+                    if display:
+                        ds9.mtv(im, frame=0)
 
-        if False:
-            print "mean = %g, min = %g, max = %g" % (imMean, imMin, imMax)
-            
-        self.assertTrue(abs(imMean) < 1e-7)
-        self.assertTrue(abs(imMin) < 1.2e-3*amp)
-        self.assertTrue(abs(imMax) < 1.2e-3*amp)
+                    im -= refIm
+
+                    if display:
+                        ds9.mtv(im, frame=1)
+
+                    imArr = im.getArray()
+                    imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
+
+                    try:
+                        imXY0 = tuple(im.getXY0())
+                        self.assertEqual(imXY0, (dOrigX, dOrigY))
+                        self.assertLess(abs(imGoodVals.mean()), maxMean*amp)
+                        self.assertLess(abs(imGoodVals.max()), maxLim*amp)
+                        self.assertLess(abs(imGoodVals.min()), maxLim*amp)
+                    except:
+                        print "failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy)
+                        raise
 
 # the following would be preferable if there was an easy way to NaN pixels
 #
@@ -163,6 +175,22 @@ class offsetImageTestCase(unittest.TestCase):
 #         self.assertTrue(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
 #         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
 #         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
+
+
+def getOrigFracShift(dx, dy):
+    """Return the predicted integer shift to XY0 and the fractional shift that offsetImage will use
+    
+    offsetImage preserves the origin if dx and dy both < 1 pixel; larger shifts are to the nearest pixel.
+    """
+    if (abs(dx) < 1) and (abs(dy) < 1):
+        return (0, 0, dx, dy)
+    
+    dOrigX = math.floor(dx + 0.5)
+    dOrigY = math.floor(dy + 0.5)
+    dFracX = dx - dOrigX
+    dFracY = dy - dOrigY
+    return (int(dOrigX), int(dOrigY), dFracX, dFracY)
+
 
 class transformImageTestCase(unittest.TestCase):
     """A test case for rotating images"""

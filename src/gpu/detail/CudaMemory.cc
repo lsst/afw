@@ -56,8 +56,8 @@ template<typename T>
 int GpuMemOwner<T>::TransferFromImageBase(const lsst::afw::image::ImageBase<T>& img)
 {
     const T* imgPtr=img.getArray().getData();
-    const int imgStride=img.getArray().getStrides()[0] ;
-    const int imgMemSize=imgStride * img.getHeight();
+    int const imgStride=img.getArray().getStrides()[0] ;
+    int const imgMemSize=imgStride * img.getHeight();
     Transfer(imgPtr,imgMemSize);
     return imgStride;
 }
@@ -65,8 +65,8 @@ int GpuMemOwner<T>::TransferFromImageBase(const lsst::afw::image::ImageBase<T>& 
 template<typename T>
 int GpuMemOwner<T>::AllocImageBaseBuffer(const lsst::afw::image::ImageBase<T>& img)
 {
-    const int imgStride=img.getArray().getStrides()[0] ;
-    const int imgMemSize=imgStride * img.getHeight();
+    int const imgStride=img.getArray().getStrides()[0] ;
+    int const imgMemSize=imgStride * img.getHeight();
     Alloc(imgMemSize);
     return imgStride;
 }
@@ -75,8 +75,8 @@ template<typename T>
 void GpuMemOwner<T>::CopyToImageBase(lsst::afw::image::ImageBase<T>& img) const
 {
     T* imgPtr=img.getArray().getData();
-    const int imgStride=img.getArray().getStrides()[0] ;
-    const int imgMemSize=imgStride * img.getHeight();
+    int const imgStride=img.getArray().getStrides()[0] ;
+    int const imgMemSize=imgStride * img.getHeight();
     assert(imgMemSize==size);
     CopyFromGpu(imgPtr);
 }

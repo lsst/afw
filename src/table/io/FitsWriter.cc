@@ -37,6 +37,19 @@ struct ProcessSchema {
         specialize(item, n); // delegate to other member functions that are specialized on field tag types
     }
 
+    void operator()(SchemaItem<std::string> const & item) const {
+        std::string name = item.field.getName();
+        std::replace(name.begin(), name.end(), '.', '_');
+        int n = fits->addColumn<std::string>(
+            name, item.field.getElementCount(),
+            item.field.getDoc()
+        );
+        if (!item.field.getDoc().empty()) {
+            fits->writeColumnKey("TDOC", n, item.field.getDoc());
+        }
+        specialize(item, n);
+    }
+
     void operator()(SchemaItem<Flag> const & item) const {
         std::string name = item.field.getName();
         std::replace(name.begin(), name.end(), '.', '_');
@@ -120,6 +133,12 @@ struct ProcessSchema {
         fits->writeColumnKey("TCCLS", n, "Covariance(Moments)", "Field template used by lsst.afw.table");
     }
 
+    void specialize(SchemaItem< std::string > const & item, int n) const {
+        if (!item.field.getUnits().empty())
+            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
+        fits->writeColumnKey("TCCLS", n, "String", "Field template used by lsst.afw.table");
+    }
+
     Fits * fits;
     mutable int nFlags;
 };
@@ -157,6 +176,11 @@ struct FitsWriter::ProcessRecords {
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         fits->writeTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        ++col;
+    }
+
+    void operator()(SchemaItem<std::string> const & item) const {
+        fits->writeTableScalar(row, col, record->get(item.key));
         ++col;
     }
     

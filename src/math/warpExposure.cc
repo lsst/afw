@@ -40,6 +40,7 @@
 #include <ctime>
 
 #include "boost/shared_ptr.hpp"
+#include "boost/pointer_cast.hpp"
 #include "boost/cstdint.hpp"
 #include "boost/regex.hpp"
 
@@ -65,8 +66,49 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwCoord = lsst::afw::coord;
 namespace afwMath = lsst::afw::math;
 
-afwMath::Kernel::Ptr afwMath::LanczosWarpingKernel::clone() const {
-    return afwMath::Kernel::Ptr(new afwMath::LanczosWarpingKernel(this->getOrder()));
+
+//
+// A helper function for the warping kernels which provides error-checking: 
+// the warping kernels are designed to work in two cases
+//    0 < x < 1  and ctrX=(size-1)/2
+//    -1 < x < 0  and ctrX=(size+1)/2
+// (and analogously for y).  Note that to get the second case, Kernel::setCtrX(1) must be
+// called before calling Kernel::setKernelParameter().  [see afw::math::offsetImage() for
+// an example]
+//
+// FIXME eventually the 3 warping kernels will inherit from a common base class WarpingKernel
+// and this routine can be eliminated by putting the code in WarpingKernel::setKernelParameter()
+//
+static inline void checkWarpingKernelParameter(const afwMath::SeparableKernel *p, unsigned int ind, double value)
+{
+    int ctr, size;
+
+    if (ind == 0) {
+        ctr = p->getCtrX();
+        size = p->getWidth();
+    }
+    else if (ind == 1) {
+        ctr = p->getCtrY();
+        size = p->getHeight();
+    }
+    else
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in WarpingKernel::setKernelParameter()");
+
+    if (ctr == (size-1)/2) {
+        if (value < -1e-6 || value > 1+1e-6)
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+    }
+    else if (ctr == (size+1)/2) {
+        if (value < -1-1e-6 || value > 1e-6)
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+    }
+    else
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in WarpingKernel::setKernelParameter()");
+}
+
+
+PTR(afwMath::Kernel) afwMath::LanczosWarpingKernel::clone() const {
+    return PTR(afwMath::Kernel)(new afwMath::LanczosWarpingKernel(this->getOrder()));
 }
 
 /**
@@ -76,35 +118,44 @@ int afwMath::LanczosWarpingKernel::getOrder() const {
     return this->getWidth() / 2;
 }
 
-afwMath::Kernel::Ptr afwMath::BilinearWarpingKernel::clone() const {
-    return afwMath::Kernel::Ptr(new afwMath::BilinearWarpingKernel());
+void afwMath::LanczosWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
+}
+
+PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
+    return PTR(afwMath::Kernel)(new afwMath::BilinearWarpingKernel());
 }
 
 /**
-* \brief Solve bilinear equation; the only permitted arguments are 0 or 1
-*
-* \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
-*/
-afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (
-    double x
-) const {
-#if 0 && !defined(NDEBUG)
-    if (x == 0.0) {
-        return 1.0 - this->_params[0];
-    } else if (x == 1.0) {
-        return this->_params[0];
-    } else {                            // the mere presence of this check slows the call by 3 times
-        std::ostringstream errStream;
-        errStream << "x = " << x << "; must be 0 or 1";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
-    }
-#else
-    if (x == 0.0) {
-        return 1.0 - this->_params[0];
-    } else {
-        return this->_params[0];
-    }
-#endif
+ * \brief Solve bilinear equation
+ *
+ * Only the following arguments will give reliably meaningful values:
+ * *  0.0 or 1.0 if the kernel center index is 0 in this axis
+ * * -1.0 or 0.0 if the kernel center index is 1 in this axis
+ */
+afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const 
+{
+    //
+    // this->_params[0] = value of x where we want to interpolate the function
+    // x = integer value of x where we evaluate the function in the interpolation
+    // 
+    // The following weird-looking expression has no if/else statements, is roundoff-tolerant,
+    // and works in the following two cases:
+    //     0 < this->_params[0] < 1,  x \in {0,1}
+    //     -1 < this->_params[0] < 0,  x \in {-1,0}
+    //
+    // The checks in BilinearWarpingKernel::setKernelParameter() ensure that one of these
+    // conditions is satisfied
+    //
+    return 0.5 + (1.0 - (2.0 * fabs(this->_params[0]))) * (0.5 - fabs(x));
+}
+
+void afwMath::BilinearWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
 }
 
 /**
@@ -117,27 +168,26 @@ std::string afwMath::BilinearWarpingKernel::BilinearFunction1::toString(std::str
     return os.str();
 }
 
-afwMath::Kernel::Ptr afwMath::NearestWarpingKernel::clone() const {
-    return afwMath::Kernel::Ptr(new afwMath::NearestWarpingKernel());
+PTR(afwMath::Kernel) afwMath::NearestWarpingKernel::clone() const {
+    return PTR(afwMath::Kernel)(new afwMath::NearestWarpingKernel());
 }
 
 /**
-* \brief Solve nearest neighbor equation; the only permitted arguments are 0 or 1
-*
-* \throw lsst::pex::exceptions::InvalidParameterException if argument is not 0 or 1
-*/
-afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (
-    double x
-) const {
-    if (x == 0.0) {
-        return this->_params[0] < 0.5 ? 1.0 : 0.0;
-    } else if (x == 1.0) {
-        return this->_params[0] < 0.5 ? 0.0 : 1.0;
-    } else {
-        std::ostringstream errStream;
-        errStream << "x = " << x << "; must be 0 or 1";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
-    }
+ * \brief Solve nearest neighbor equation
+ *
+ * Only the following arguments will give reliably meaningful values:
+ * *  0.0 or 1.0 if the kernel center index is 0 in this axis
+ * * -1.0 or 0.0 if the kernel center index is 1 in this axis
+ */
+afwMath::Kernel::Pixel afwMath::NearestWarpingKernel::NearestFunction1::operator() (double x) const {
+    // this expression is faster than using conditionals, but offers no sanity checking
+    return static_cast<double>((fabs(this->_params[0]) < 0.5) == (fabs(x) < 0.5));
+}
+
+void afwMath::NearestWarpingKernel::setKernelParameter(unsigned int ind, double value) const
+{
+    checkWarpingKernelParameter(this, ind, value);
+    SeparableKernel::setKernelParameter(ind, value);
 }
 
 /**
@@ -168,6 +218,91 @@ boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::stri
             "unknown warping kernel name: \"" + name + "\"");
     }
 }
+
+PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getWarpingKernel() const {
+    if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
+        _warpingKernelPtr->computeCache(_cacheSize);
+    }
+    return _warpingKernelPtr;
+};
+
+void afwMath::WarpingControl::setWarpingKernelName(
+    std::string const &warpingKernelName
+) {
+    PTR(SeparableKernel) warpingKernelPtr(makeWarpingKernel(warpingKernelName));
+    setWarpingKernel(*warpingKernelPtr);
+}
+
+void afwMath::WarpingControl::setWarpingKernel(
+    SeparableKernel const &warpingKernel
+) {
+    if (_maskWarpingKernelPtr) {
+        _testWarpingKernels(warpingKernel, *_maskWarpingKernelPtr);
+    }
+    PTR(SeparableKernel) warpingKernelPtr(boost::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
+    _testDevicePreference(_devicePreference, warpingKernelPtr);
+    _warpingKernelPtr = warpingKernelPtr;
+}
+
+
+PTR(afwMath::SeparableKernel) afwMath::WarpingControl::getMaskWarpingKernel() const {
+    if (_maskWarpingKernelPtr) { // lazily update kernel cache
+        if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
+            _maskWarpingKernelPtr->computeCache(_cacheSize);
+        }
+    }
+    return _maskWarpingKernelPtr;
+}
+
+void afwMath::WarpingControl::setMaskWarpingKernelName(
+    std::string const &maskWarpingKernelName
+) {
+    if (!maskWarpingKernelName.empty()) {
+        PTR(SeparableKernel) maskWarpingKernelPtr(makeWarpingKernel(maskWarpingKernelName));
+        setMaskWarpingKernel(*maskWarpingKernelPtr);
+    } else {
+        _maskWarpingKernelPtr.reset();
+    }
+}
+
+void afwMath::WarpingControl::setMaskWarpingKernel(
+    SeparableKernel const & maskWarpingKernel
+) {
+    _testWarpingKernels(*_warpingKernelPtr, maskWarpingKernel);
+    _maskWarpingKernelPtr = boost::static_pointer_cast<SeparableKernel>(maskWarpingKernel.clone());
+}
+
+
+void afwMath::WarpingControl::_testWarpingKernels(
+    SeparableKernel const &warpingKernel,
+    SeparableKernel const &maskWarpingKernel
+) const {
+    lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
+        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(warpingKernel.getCtr()),
+        warpingKernel.getDimensions()
+    );
+    lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
+        lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(maskWarpingKernel.getCtr()),
+        maskWarpingKernel.getDimensions()
+    );
+    if (!kernelBBox.contains(maskKernelBBox)) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "warping kernel is smaller than mask warping kernel");
+    }
+}
+
+void afwMath::WarpingControl::_testDevicePreference(
+    lsst::afw::gpu::DevicePreference const &devicePreference,
+    CONST_PTR(SeparableKernel) const &warpingKernelPtr
+) const {
+    CONST_PTR(LanczosWarpingKernel) const lanczosKernelPtr =
+        boost::dynamic_pointer_cast<const LanczosWarpingKernel>(warpingKernelPtr);
+    if (devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            "devicePreference = USE_GPU, but warping kernel not Lanczos");
+    }
+}
+
 
 
 template<typename DestExposureT, typename SrcExposureT>
@@ -259,7 +394,23 @@ namespace {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 "destImage is srcImage; cannot warp in place");
         }
-        afwMath::SeparableKernel::Ptr warpingKernelPtr = control.getWarpingKernel();
+        if (destImage.getBBox(afwImage::LOCAL).isEmpty()) {
+            return 0;
+        }
+        // if src image is too small then don't try to warp
+        try {
+            PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
+            warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
+        } catch(...) {
+            for (int y = 0, height = destImage.getHeight(); y < height; ++y) {
+                for (typename DestImageT::x_iterator destPtr = destImage.row_begin(y), end = destImage.row_end(y);
+                    destPtr != end; ++destPtr) {
+                    *destPtr = padValue;
+                }
+            }
+            return 0;
+        }
+        PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
         int interpLength = control.getInterpLength();
         lsst::afw::gpu::DevicePreference devPref = control.getDevicePreference();
 
@@ -272,11 +423,15 @@ namespace {
                     throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can process only Lanczos kernels");
                 }
             } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
+                PTR(afwMath::SeparableKernel) maskWarpingKernelPtr = control.getWarpingKernel();
+                if (control.getMaskWarpingKernel() )
+                     maskWarpingKernelPtr = control.getMaskWarpingKernel();
                 if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                     try {
                         std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernelPtr,
-                                                                computeSrcPos,  interpLength, padValue, false);
+                                           afwMath::detail::warpImageGPU(destImage, srcImage, 
+                                                             *lanczosKernelPtr, *maskWarpingKernelPtr, 
+                                                             computeSrcPos,  interpLength, padValue, false);
                         if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
                     }
                     catch(lsst::afw::gpu::GpuMemoryException) { }
@@ -284,7 +439,8 @@ namespace {
                     catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
                 } else if (devPref != lsst::afw::gpu::USE_CPU) {
                     std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage, *lanczosKernelPtr,
+                                           afwMath::detail::warpImageGPU(destImage, srcImage, 
+                                                                      *lanczosKernelPtr, *maskWarpingKernelPtr,
                                                                       computeSrcPos, interpLength, padValue,
                                                                       devPref == lsst::afw::gpu::USE_GPU);
                     if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
@@ -309,8 +465,6 @@ namespace {
         int const destHeight = destImage.getHeight();
 
         pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
-
-        afwGeom::Box2I srcGoodBBox = warpingKernelPtr->shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
 
         // Set each pixel of destExposure's MaskedImage
         pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");

@@ -121,8 +121,10 @@ public:
     EigenVector const & asEigen() const { return _vector; }
 #endif
 
-    T getX() const { return _vector.x(); }
-    T getY() const { return _vector.y(); }
+    T const & getX() const { return _vector.x(); }
+    T const & getY() const { return _vector.y(); }
+    T & getX() { return _vector.x(); }
+    T & getY() { return _vector.y(); }
     void setX(T x) { _vector.x() = x; }
     void setY(T y) { _vector.y() = y; }
 
@@ -168,9 +170,12 @@ public:
 
 #endif
 
-    T getX() const { return _vector.x(); }
-    T getY() const { return _vector.y(); }
-    T getZ() const { return _vector.z(); }
+    T const & getX() const { return _vector.x(); }
+    T const & getY() const { return _vector.y(); }
+    T const & getZ() const { return _vector.z(); }
+    T & getX() { return _vector.x(); }
+    T & getY() { return _vector.y(); }
+    T & getZ() { return _vector.z(); }
     void setX(T x) { _vector.x() = x; }
     void setY(T y) { _vector.y() = y; }
     void setZ(T z) { _vector.z() = z; }

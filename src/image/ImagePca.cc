@@ -129,41 +129,6 @@ namespace {
             return a.first > b.first;   // N.b. sort on greater
         }
     };
-/*
- * Some metafunctions to extract an Image::Ptr from a MaskedImage::Ptr (or return the original Image::Ptr)
- *
- * GetImage is the public interface (it forwards the tag --- just for the sake of the UI); the real work
- * is in GetImage_ which defines a typedef for the Image and a static function, getImage
- *
- * E.g.
- * In the function
- *
- * template<typename ImageT>
- * void func(typename ImageT::Ptr image) {
- *    typename GetImage<ImageT>::type::Ptr im = GetImage<ImageT>::getImage(image);
- * }
- *
- * "im" is an Image::Ptr irrespective of whether ImageT is Masked or not.
- */
-    template<typename ImageT, typename TagT>
-    struct GetImage_ {
-        typedef ImageT type;
-        static typename type::Ptr getImage(typename ImageT::Ptr image) {
-            return image;
-        }
-    };
-
-    template<typename ImageT>
-    struct GetImage_<ImageT, typename image::detail::MaskedImage_tag> {
-        typedef typename ImageT::Image type;
-        static typename type::Ptr getImage(typename ImageT::Ptr image) {
-            return image->getImage();
-        }
-    };
-
-    template<typename ImageT>
-    struct GetImage : public GetImage_<ImageT, typename ImageT::image_category> {
-    };
 }
 
 template <typename ImageT>
@@ -172,8 +137,7 @@ void ImagePca<ImageT>::analyze()
     int const nImage = _imageList.size();
 
     if (nImage == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
-                          "Please provide at least one Image for me to analyze");
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException, "No images provided for PCA analysis");
     }
     /*
      * Eigen doesn't like 1x1 matrices, but we don't really need it to handle a single matrix...
@@ -255,83 +219,6 @@ void ImagePca<ImageT>::analyze()
             double const weight = Q(jj, ii)*(_constantWeight ? flux_bar/getFlux(jj) : 1);
             eImage->scaledPlus(weight, *_imageList[jj]);
         }
-        /*
-         * Normalise eigenImages to have a maximum of 1.0.  For n > 0 they
-         * (should) have mean == 0, so we can't use that to normalize
-         */
-        lsst::afw::math::Statistics stats =
-            lsst::afw::math::makeStatistics(*eImage, (lsst::afw::math::MIN | lsst::afw::math::MAX));
-        double const min = stats.getValue(lsst::afw::math::MIN);
-        double const max = stats.getValue(lsst::afw::math::MAX);
-
-        double const extreme = (fabs(min) > max) ? min :max;
-        if (extreme != 0.0) {
-            *eImage /= extreme;
-        }
-#define FIX_BKGD_LEVEL 1
-#if FIX_BKGD_LEVEL
-/*
- * Estimate and subtract the mean background level from the i > 0
- * eigen images; if we don't do that then PSF variation can get mixed
- * with subtle variations in the background and potentially amplify
- * them disasterously.
- *
- * It is not at all clear that doing this is a good idea; it'd be
- * better to get the sky level right in the first place.
- */
-        if(i > 0) {                 /* not the zeroth KL component */
-#if 0                               // use the median of non-detected pixels
-            afw::math::StatisticsControl sctrl;
-            sctrl.setAndMask(Mask<>::getPlaneBitMask("DETECTED"));
-
-            double const med = afwMath::makeStatistics(*eImage.getImage(), afwMath::MEDIAN, sctrl).getValue();
-            //std::cout << "Eigen image " << i << "  median " << med << std::endl;
-#else                               // use the median of the edge pixels, in a region of with border
-            // If ImageT is a MaskedImage, unpack the Image
-            typename GetImage<ImageT>::type::Ptr eImageIm = GetImage<ImageT>::getImage(eImage);
-
-            int border = 3;
-            int const height = eImage->getHeight();
-            int const width = eImage->getWidth();
-            if (width < 2*border || height < 2*border) {
-                continue;               // not enough pixels
-            }
-            int const nEdge = width*height - (width - 2*border)*(height - 2*border);
-            std::vector<double> edgePixels(nEdge);
-
-            std::vector<double>::iterator bi = edgePixels.begin();
-
-            typedef typename GetImage<ImageT>::type::x_iterator imIter;
-            int y = 0;
-            for(; y != border; ++y) {   // Bottom border of eImage
-                for (imIter ptr = eImageIm->row_begin(y), end = eImageIm->row_end(y); ptr != end; ++ptr, ++bi) {
-                    *bi = *ptr;
-                }
-            }
-            for(; y != height - border; ++y) {   // Left and right borders of eImage
-                for (imIter ptr = eImageIm->row_begin(y),
-                         end = eImageIm->x_at(border, y); ptr != end; ++ptr, ++bi) {
-                    *bi = *ptr;
-                }
-                for (imIter ptr = eImageIm->x_at(width - border, y),
-                         end = eImageIm->row_end(y); ptr != end; ++ptr, ++bi) {
-                    *bi = *ptr;
-                }
-            }
-            for(; y != height; ++y) {   // Top border of eImage
-                for (imIter ptr = eImageIm->row_begin(y), end = eImageIm->row_end(y); ptr != end; ++ptr, ++bi) {
-                    *bi = *ptr;
-                }
-            }
-            assert(distance(edgePixels.begin(), bi) == nEdge);
-            
-            double const med = afwMath::makeStatistics(edgePixels, afwMath::MEDIAN).getValue();
-            //std::cout << "vector " << i << "  median " << med << std::endl;
-#endif 
-            *eImageIm -= med;
-        }
-#endif
-
         _eigenImages.push_back(eImage);
     }
 }

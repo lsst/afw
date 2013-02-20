@@ -57,53 +57,7 @@ namespace lsst {
 namespace afw { 
 namespace detection {
 
-/*!
- * \brief A range of pixels within one row of an Image
- */
-class Span {
-public:
-    typedef boost::shared_ptr<Span> Ptr;
-    typedef boost::shared_ptr<const Span> ConstPtr;
-
-    Span(int y,                         //!< Row that Span's in
-         int x0,                        //!< Starting column (inclusive)
-         int x1)                        //!< Ending column (inclusive)
-        : _y(y), _x0(x0), _x1(x1) {}
-    ~Span() {}
-
-    int getX0() const { return _x0; }         ///< Return the starting x-value
-    int getX1() const { return _x1; }         ///< Return the ending x-value
-    int getY()  const { return _y; }          ///< Return the y-value
-    int getWidth() const { return _x1 - _x0 + 1; } ///< Return the number of pixels
-
-    bool contains(int x) { return (x >= _x0) && (x <= _x1); }
-    bool contains(int x, int y) { return (x >= _x0) && (x <= _x1) && (y == _y); }
-
-    std::string toString() const;
-
-    void shift(int dx, int dy) { _x0 += dx; _x1 += dx; _y += dy; }
-
-    /* Required to make Span "LessThanComparable" so they can be used
-     * in sorting, binary search, etc.
-     * http://www.sgi.com/tech/stl/LessThanComparable.html
-     */
-    bool operator<(const Span& b) const;
-
-    friend class Footprint;
-private:
-    Span() {}
-
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-        ar & make_nvp("y", _y) & make_nvp("x0", _x0) & make_nvp("x1", _x1);
-    }
-    int _y;                             //!< Row that Span's in
-    int _x0;                            //!< Starting column (inclusive)
-    int _x1;                            //!< Ending column (inclusive)
-};
-
-
+using geom::Span;
 
 /************************************************************************************************************/
 /*!
@@ -137,7 +91,13 @@ public:
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
     const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
-    PeakList & getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    /**
+     * Return the Peak%s contained in this Footprint
+     *
+     * The peaks are ordered by decreasing pixel intensity at the peak position (so the most negative
+     * peak appears last) 
+     */
+    PeakList & getPeaks() { return _peaks; }
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
     int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
@@ -153,6 +113,8 @@ public:
 
     /// Return the Footprint's bounding box
     geom::Box2I getBBox() const { return _bbox; }
+    /// Return the Footprint's bounding box
+    geom::Box2I & getBBox() { return _bbox; }
     /// Return the corners of the MaskedImage the footprints live in
     geom::Box2I const & getRegion() const { return _region; }
 
@@ -211,6 +173,8 @@ private:
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
+Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
+                             bool left, bool right, bool up, bool down);
 
 std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
 

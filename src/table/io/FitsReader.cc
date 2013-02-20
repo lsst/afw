@@ -65,16 +65,17 @@ struct FitsSchemaItem {
         char code = m[2].str()[0];
         // switch code over FITS codes that correspond to different element types
         switch (code) {
-        case 'J': // 32-bit integers - can only be scalars or Point fields.
+        case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
             if (size == 1) {
                 schema.addField<boost::int32_t>(name, doc, units);
             } else if (size == 2) {
-                schema.addField< Point<boost::int32_t> >(name, doc, units);
+                if (cls == "Array") {
+                    schema.addField< Array<boost::int32_t> >(name, doc, units, size);
+                } else {
+                    schema.addField< Point<boost::int32_t> >(name, doc, units);
+                }
             } else {
-                throw LSST_EXCEPT(
-                    afw::fits::FitsError,
-                    (boost::format("Unsupported FITS column type: '%s'.") % format).str()
-                );
+                schema.addField< Array<boost::int32_t> >(name, doc, units, size);
             }
             break;
         case 'K': // 64-bit integers - can only be scalars.
@@ -91,6 +92,9 @@ struct FitsSchemaItem {
             break;
         case 'D':
             addFloatField<double>(schema, size);
+            break;
+        case 'A': // strings
+            schema.addField<std::string>(name, doc, units, size);
             break;
         default:
             // We throw if we encounter a column type we can't handle.
@@ -113,7 +117,7 @@ struct FitsSchemaItem {
             } else if (cls == "Array") {
                 schema.addField< Array<U> >(name, doc, units, 1);
             } else if (cls == "Covariance") {
-                schema.addField< Covariance<U> >(name, doc, units, 1);
+                schema.addField< Covariance<float> >(name, doc, units, 1);
             } else {
                 schema.addField<U>(name, doc, units);
             }
@@ -133,12 +137,12 @@ struct FitsSchemaItem {
                 return;
             }
             if (cls == "Covariance(Point)") {
-                schema.addField< Covariance< Point<U> > >(name, doc, units);
+                schema.addField< Covariance< Point<float> > >(name, doc, units);
                 return;
             }
         } else if (size == 6) {
             if (cls == "Covariance(Moments)") {
-                schema.addField< Covariance< Moments<U> > >(name, doc, units);
+                schema.addField< Covariance< Moments<float> > >(name, doc, units);
                 return;
             }
         }
@@ -151,7 +155,7 @@ struct FitsSchemaItem {
                     "Covariance field has invalid size."
                 );
             }
-            schema.addField< Covariance<U> >(name, doc, units, n);
+            schema.addField< Covariance<float> >(name, doc, units, n);
         } else {
             schema.addField< Array<U> >(name, doc, units, size);
         }
@@ -347,6 +351,14 @@ struct FitsReader::ProcessRecords {
     void operator()(SchemaItem<T> const & item) const {
         if (col == flagCol) ++col;
         fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        ++col;
+    }
+
+    void operator()(SchemaItem<std::string> const & item) const {
+        if (col == flagCol) ++col;
+        std::string s;
+        fits->readTableScalar(row, col, s);
+        record->set(item.key, s);
         ++col;
     }
 

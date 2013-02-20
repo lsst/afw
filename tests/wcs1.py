@@ -52,6 +52,66 @@ InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
 InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class WcsTestCase(unittest.TestCase):
+    def testCD_PC(self):
+        """Test that we can read a FITS file with both CD and PC keys (like early Suprimecam files)"""
+        
+        md = dafBase.PropertyList()
+        for k, v in (
+            ("EQUINOX", 2000.0),
+            ("RADESYS", 'FK5'),
+            ("CRPIX1" , 5353.0),
+            ("CRPIX2" , -35.0),
+            ("CD1_1"  , 0.0),
+            ("CD1_2"  , -5.611E-05),
+            ("CD2_1"  , -5.611E-05),
+            ("CD2_2"  , -0.0),
+            ("CRVAL1" , 4.5789875),
+            ("CRVAL2" , 16.30004444),
+            ("CUNIT1" , 'deg'),
+            ("CUNIT2" , 'deg'),
+            ("CTYPE1" , 'RA---TAN'),
+            ("CTYPE2" , 'DEC--TAN'),
+            ("CDELT1" , -5.611E-05),
+            ("CDELT2" , 5.611E-05),
+            ):
+            md.set(k, v)
+
+        wcs = afwImage.makeWcs(md)
+
+        x, y = 1000, 2000
+        ra, dec = 4.459815023498577, 16.544199850984768
+
+        sky = wcs.pixelToSky(x, y)
+        for i, v in enumerate([ra, dec]):
+            self.assertEqual(sky[i].asDegrees(), v)
+
+        for badPC in (False, True):
+            if verbose:
+                print "Checking PC coefficients: badPC =", badPC
+            for k, v in (
+                ("PC001001",  0.0),
+                ("PC001002", -1.0 if badPC else 1.0),
+                ("PC002001",  1.0 if badPC else -1.0),
+                ("PC002002",  0.0),
+                ):
+                md.set(k, v)
+
+            # Check Greisen and Calabretta A&A 395 1061 (2002), Eq. 3
+            if not badPC:
+                for i in (1, 2,):
+                    for j in (1, 2,):
+                        self.assertEqual(md.get("CD%d_%d" % (i, j)), 
+                                         md.get("CDELT%d" % i)*md.get("PC00%d00%d" % (i, j)))
+
+            wcs = afwImage.makeWcs(md)
+            sky = wcs.pixelToSky(x, y)
+            for i, v in enumerate([ra, dec]):
+                self.assertEqual(sky[i].asDegrees(), v)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 class WCSRotateFlip(unittest.TestCase):
     """A test case for the methods to rotate and flip a wcs under similar operations to the image pixels"""
     def setUp(self):
@@ -105,27 +165,6 @@ class WCSTestCaseSDSS(unittest.TestCase):
         del self.wcs
         del self.im
 
-    def testValidWcs(self):
-        """Test operator bool() (== isValid)"""
-        pass
-
-    def testInvalidWcs(self):
-        """Test operator bool() (== isValid)
-        This test has been improved by deleting some essential
-        metadata (in this case, CRPIX1, and CRPIX2) from the
-        MaskedImage's metadata and using that.
-        """
-        wcs = afwImage.Wcs()
-        self.assertFalse(wcs)
-
-        # Using MaskedImage with corrupt metadata
-        infile = afwImage.MaskedImageF_imageFileName(InputCorruptFilePath)
-        decoratedImage = afwImage.DecoratedImageF(infile)
-        metadata = decoratedImage.getMetadata()
-
-        
-        self.assertRaises(exceptions.LsstCppException, afwImage.makeWcs, metadata)
-
     def testCrpix(self):
         metadata = self.im.getMetadata()
         crpix0 = metadata.getAsDouble("CRPIX1")
@@ -150,8 +189,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
         xy = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(xy)
         
-        self.assertAlmostEqual(raDec[0], raDec2[0])
-        self.assertAlmostEqual(raDec[1], raDec2[1])
+        self.assertAlmostEqual(raDec[0].asDegrees(), raDec2[0].asDegrees())
+        self.assertAlmostEqual(raDec[1].asDegrees(), raDec2[1].asDegrees())
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
@@ -428,8 +467,6 @@ class TestWcsCompare(unittest.TestCase):
         self.assertNotEqual(sipWcsCopy, plainWcsCopy)
         self.assertNotEqual(distortedWcsCopy, sipWcsCopy)
         self.assertNotEqual(sipWcsCopy, distortedWcsCopy)
-        
-
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -438,6 +475,7 @@ def suite():
     utilsTests.init()
 
     suites = []
+    suites += unittest.makeSuite(WcsTestCase)
     suites += unittest.makeSuite(WCSTestCaseSDSS)
     suites += unittest.makeSuite(TestWcsCompare)
 #    suites += unittest.makeSuite(WCSTestCaseCFHT)

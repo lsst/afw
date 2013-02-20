@@ -37,6 +37,7 @@ import numpy
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.detection as afwDetect
+import lsst.afw.geom as afwGeom
 
 try:
     type(verbose)
@@ -71,11 +72,15 @@ class PeakTestCase(unittest.TestCase):
         self.assertEqual(peak.getFx(), x)
         self.assertEqual(peak.getFy(), y)
 
+        self.assertEqual(peak.getF(),        afwGeom.PointD(x, y))
+        self.assertEqual(peak.getCentroid(), afwGeom.PointD(x, y))
+        self.assertEqual(peak.getI(),            afwGeom.PointI(x, y))
+        self.assertEqual(peak.getCentroid(True), afwGeom.PointI(x, y))
+
     def testCentroidFloat(self):
         for x, y in [(5, 6), (10.5, -10.5)]:
             peak = afwDetect.Peak(x, y)
-            self.assertEqual(peak.getFx(), x)
-            self.assertEqual(peak.getFy(), y)
+            self.assertEqual(peak.getCentroid(), afwGeom.PointD(x, y))
 
             self.assertEqual(peak.getIx(), int(x) if x > 0 else -int(-x) - 1)
             self.assertEqual(peak.getIy(), int(y) if y > 0 else -int(-y) - 1)

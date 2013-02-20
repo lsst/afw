@@ -645,6 +645,41 @@ class CameraGeomTestCase(unittest.TestCase):
             cameraGeomUtils.showCcd(ccd, outImage)
             ds9.incrDefaultFrame()
 
+    def testAddTrimmedAmp(self):
+        """Test that building a Ccd from trimmed Amps leads to a trimmed Ccd"""
+
+        dataSec = afwGeom.BoxI(afwGeom.PointI(1, 0), afwGeom.ExtentI(10, 20))
+        biasSec = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(1, 1))
+        allPixelsInAmp = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(11, 21))
+        eParams = cameraGeom.ElectronicParams(1.0, 1.0, 65000)
+
+        ccd = cameraGeom.Ccd(cameraGeom.Id(0))
+        self.assertFalse(ccd.isTrimmed())
+
+        for i in range(2):
+            amp = cameraGeom.Amp(cameraGeom.Id(i, "", i, 0),
+                                 allPixelsInAmp, biasSec, dataSec, eParams)
+            amp.setTrimmed(True)
+
+            if i%2 == 0:                # check both APIs
+                ccd.addAmp(afwGeom.PointI(i, 0), amp)
+            else:
+                ccd.addAmp(amp)
+            self.assertTrue(ccd.isTrimmed())
+
+        # should fail to add non-trimmed Amp to a trimmed Ccd
+        i += 1
+        amp = cameraGeom.Amp(cameraGeom.Id(i, "", i, 0),
+                             allPixelsInAmp, biasSec, dataSec, eParams)
+        self.assertFalse(amp.isTrimmed())
+
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, ccd.addAmp, amp)
+
+        # should fail to add trimmed Amp to a non-trimmed Ccd
+        ccd.setTrimmed(False)
+        amp.setTrimmed(True)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, ccd.addAmp, amp)
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

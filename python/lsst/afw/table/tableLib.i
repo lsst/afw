@@ -46,6 +46,7 @@ Python interface to lsst::afw::table classes
 #include "lsst/pex/logging.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/cameraGeom.h"
+#include "lsst/afw/fits.h"
 // Instead of pulling in all of detection.h we just grab specific things.
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
@@ -79,19 +80,27 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %declareNumPyConverters(ndarray::Array<lsst::afw::table::RecordId const,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t const,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t const,1>);
+%declareNumPyConverters(ndarray::Array<boost::int32_t,1>);
+%declareNumPyConverters(ndarray::Array<boost::int64_t,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t const,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t const,1,1>);
+%declareNumPyConverters(ndarray::Array<float,1>);
+%declareNumPyConverters(ndarray::Array<double,1>);
 %declareNumPyConverters(ndarray::Array<float const,1>);
 %declareNumPyConverters(ndarray::Array<double const,1>);
 %declareNumPyConverters(ndarray::Array<float,1,1>);
 %declareNumPyConverters(ndarray::Array<double,1,1>);
 %declareNumPyConverters(ndarray::Array<float const,1,1>);
 %declareNumPyConverters(ndarray::Array<double const,1,1>);
+%declareNumPyConverters(ndarray::Array<float,2>);
+%declareNumPyConverters(ndarray::Array<double,2>);
 %declareNumPyConverters(ndarray::Array<float const,2>);
 %declareNumPyConverters(ndarray::Array<double const,2>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle,1>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle const,1>);
+%declareNumPyConverters(ndarray::Array<lsst::afw::table::BitsColumn::IntT,1,1>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::table::BitsColumn::IntT const,1,1>);
 %declareNumPyConverters(Eigen::Matrix<float,2,2>);
 %declareNumPyConverters(Eigen::Matrix<double,2,2>);
@@ -104,6 +113,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/fits/fitsLib.i"
 %import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 
@@ -125,30 +135,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %ignore lsst::afw::table::IdFactory::operator=;
 
 %pythoncode %{
-from ..geom import Angle, Point2D, Point2I
-from ..geom.ellipses import Quadrupole
-from ..coord import Coord, IcrsCoord
 from . import _syntax
-import numpy
-Field = {}
-Key = {}
-SchemaItem = {}
-_suffixes = {}
-aliases = {
-    int: "I4",
-    long: "I8",
-    float: "F8",
-    numpy.int32: "I4",
-    numpy.int64: "I8",
-    numpy.float32: "F4",
-    numpy.float64: "F8",
-    Angle: "Angle",
-    Coord: "Coord",
-    IcrsCoord: "Coord",
-    Point2I: "Point<I4>",
-    Point2D: "Point<F8>",
-    Quadrupole: "Moments<F8>",
-}
 %}
 
 %include "lsst/afw/table/misc.h"
@@ -312,11 +299,11 @@ def find(self, k):
 def addField(self, field, type=None, doc="", units="", size=None):
     if type is None:
         try:
-            prefix, suffix = __builtins__.type(field).__name__.split("_")
+            prefix, suffix = __builtins__['type'](field).__name__.split("_")
         except Exception:
-            raise TypeError("First argument to Schema.find must be a Field if 'type' is not given.")
+            raise TypeError("First argument to Schema.addField must be a Field if 'type' is not given.")
         if prefix != "Field":
-            raise TypeError("First argument to Schema.find must be a Field if 'type' is not given.")
+            raise TypeError("First argument to Schema.addField must be a Field if 'type' is not given.")
         attr = "_addField_" + suffix
         method = getattr(self, attr)
         return method(field)
@@ -512,6 +499,7 @@ aliases = {
     int: "I",
     long: "L",
     float: "D",
+    str: "String",
     numpy.int32: "I",
     numpy.int64: "L",
     numpy.float32: "F",
@@ -570,6 +558,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(boost::int64_t, L)
 %declareFieldType(float, F)
 %declareFieldType(double, D)
+%declareFieldType(std::string, String)
 %declareFieldType(lsst::afw::table::Flag, Flag)
 %declareFieldType(lsst::afw::geom::Angle, Angle)
 %declareFieldType(lsst::afw::coord::Coord, Coord)
@@ -585,13 +574,10 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Array<double>, ArrayD)
 
 %declareFieldType(lsst::afw::table::Covariance<float>, CovF)
-%declareFieldType(lsst::afw::table::Covariance<double>, CovD)
 
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<double> >, CovPointD)
 
 %declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF)
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<double> >, CovMomentsD)
 
 %include "specializations.i"
 
@@ -629,15 +615,15 @@ namespace lsst { namespace afw { namespace table {
      };
      struct Centroid {
          typedef Key< Point<double> > MeasKey;
-         typedef Key< Covariance< Point<double> > > ErrKey;
+         typedef Key< Covariance< Point<float> > > ErrKey;
          typedef lsst::afw::geom::Point<double,2> MeasValue;
-         typedef Eigen::Matrix<double,2,2> ErrValue;
+         typedef Eigen::Matrix<float,2,2> ErrValue;
      };
      struct Shape {
          typedef Key< Moments<double> > MeasKey;
-         typedef Key< Covariance< Moments<double> > > ErrKey;
+         typedef Key< Covariance< Moments<float> > > ErrKey;
          typedef lsst::afw::geom::ellipses::Quadrupole MeasValue;
-         typedef Eigen::Matrix<double,3,3> ErrValue;
+         typedef Eigen::Matrix<float,3,3> ErrValue;
      };
 }}}
 

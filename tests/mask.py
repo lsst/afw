@@ -95,9 +95,9 @@ class MaskTestCase(unittest.TestCase):
         dataDir = os.path.join(eups.productDir("afwdata"), "data")
         if dataDir:
             if True:
-                self.maskFile = os.path.join(dataDir, "small_MI_msk.fits")
+                self.maskFile = os.path.join(dataDir, "small_MI.fits")
             else:
-                self.maskFile = os.path.join(dataDir, "871034p_1_MI_msk.fits")
+                self.maskFile = os.path.join(dataDir, "871034p_1_MI.fits")
         else:
             self.maskFile = None
 
@@ -209,7 +209,7 @@ class MaskTestCase(unittest.TestCase):
             return
 
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
-        mask = self.Mask(self.maskFile) # will shift any unrecognised mask planes into unused slots
+        mask = self.Mask(self.maskFile, 3) # will shift any unrecognised mask planes into unused slots
 
         self.assertEqual(mask.get(32, 1), 0)
         self.assertEqual(mask.get(50, 50), 0)
@@ -220,7 +220,7 @@ class MaskTestCase(unittest.TestCase):
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
         
-        hdu = 0
+        hdu = 3
         mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
 
         if False:
@@ -237,7 +237,7 @@ class MaskTestCase(unittest.TestCase):
             return
 
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
-        mask = self.Mask(self.maskFile)
+        mask = self.Mask(self.maskFile, 3)
 
         self.assertEqual(mask.get(32, 1), 0)
         self.assertEqual(mask.get(50, 50), 0)
@@ -320,6 +320,29 @@ class MaskTestCase(unittest.TestCase):
         self.assertTrue(FOO in mpd.keys()) # n.b. there's a bug in swig 2.1.15; mpd[XXX] corrupts memory
                                            # if XXX isn't a valid key
         self.assertEqual(mpd[FOO], val)
+
+    def testImageSlices(self):
+        """Test image slicing, which generate sub-images using Box2I under the covers"""
+        im = afwImage.MaskU(10, 20)
+        im[-3:, -2:] = 0x4
+        im[4,10] = 0x2
+        sim = im[1:4, 6:10]
+        sim[:] = 0x8
+        im[0:4, 0:4] = im[2:6, 8:12]
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0,  6),   0)
+        self.assertEqual(im.get(6, 17),   0)
+        self.assertEqual(im.get(7, 18), 0x4)
+        self.assertEqual(im.get(9, 19), 0x4)
+        self.assertEqual(im.get(1,  6), 0x8)
+        self.assertEqual(im.get(3,  9), 0x8)
+        self.assertEqual(im.get(4, 10), 0x2)
+        self.assertEqual(im.get(4,  9),   0)
+        self.assertEqual(im.get(2,  2), 0x2)
+        self.assertEqual(im.get(0,  0), 0x8)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

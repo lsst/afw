@@ -72,9 +72,9 @@ class SourceTableTestCase(unittest.TestCase):
         record.set(self.fluxKey, numpy.random.randn())
         record.set(self.fluxErrKey, numpy.random.randn())
         record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
-        record.set(self.centroidErrKey, makeCov(2, float))
+        record.set(self.centroidErrKey, makeCov(2, numpy.float32))
         record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
-        record.set(self.shapeErrKey, makeCov(3, float))
+        record.set(self.shapeErrKey, makeCov(3, numpy.float32))
         record.set(self.fluxFlagKey, numpy.random.randn() > 0)
         record.set(self.centroidFlagKey, numpy.random.randn() > 0)
         record.set(self.shapeFlagKey, numpy.random.randn() > 0)
@@ -85,10 +85,10 @@ class SourceTableTestCase(unittest.TestCase):
         self.fluxErrKey = self.schema.addField("a.err", type="D")
         self.fluxFlagKey = self.schema.addField("a.flags", type="Flag")
         self.centroidKey = self.schema.addField("b", type="PointD")
-        self.centroidErrKey = self.schema.addField("b.err", type="CovPointD")
+        self.centroidErrKey = self.schema.addField("b.err", type="CovPointF")
         self.centroidFlagKey = self.schema.addField("b.flags", type="Flag")
         self.shapeKey = self.schema.addField("c", type="MomentsD")
-        self.shapeErrKey = self.schema.addField("c.err", type="CovMomentsD")
+        self.shapeErrKey = self.schema.addField("c.err", type="CovMomentsF")
         self.shapeFlagKey = self.schema.addField("c.flags", type="Flag")
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
@@ -151,15 +151,16 @@ class SourceTableTestCase(unittest.TestCase):
 
     def testPickle(self):
         p = pickle.dumps(self.catalog)
-        catalog = pickle.loads(p)
+        new = pickle.loads(p)
 
-        self.assertEqual(self.catalog.schema.getNames(), catalog.schema.getNames())
-        self.assertEqual(len(self.catalog), len(catalog))
-        for r1, r2 in zip(self.catalog, catalog):
+        self.assertEqual(self.catalog.schema.getNames(), new.schema.getNames())
+        self.assertEqual(len(self.catalog), len(new))
+        for r1, r2 in zip(self.catalog, new):
             for field in ("a", "a.err", "id"): # Columns that are easy to test
                 k1 = self.catalog.schema.find(field).getKey()
-                k2 = catalog.schema.find(field).getKey()
+                k2 = new.schema.find(field).getKey()
                 self.assertTrue(r1[k1] == r2[k2])
+
 
     def testCoordUpdate(self):
         wcs = makeWcs()

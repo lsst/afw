@@ -48,18 +48,20 @@ class PickleTestCase(unittest.TestCase):
 
     def tearDown(self):
         del self.data
-        
+
+    def assertPickled(self, new):
+        """Assert that the pickled data is the same as the original
+
+        Subclasses should override this method if the particular data
+        doesn't support the == operator.
+        """
+        self.assertTrue(new == self.data)
+
     def testPickle(self):
         """Test round-trip pickle"""
         pickled = pickle.dumps(self.data)
         newData = pickle.loads(pickled)
-
-        # handle linear transforms specially
-        if isinstance(self.data, afwGeom.LinearTransform) or isinstance(self.data, afwGeom.AffineTransform):
-            self.assertTrue( (newData.getMatrix() == self.data.getMatrix()).all() )
-        # otherwise just assert
-        else:
-            self.assertTrue(newData == self.data)
+        self.assertPickled(newData)
 
 
 class AngleTestCase(PickleTestCase):
@@ -71,7 +73,13 @@ class CoordTestCase(PickleTestCase):
         ra = 10.0*afwGeom.degrees
         dec = 1.0*afwGeom.degrees
         epoch = 2000.0
-        self.data = afwCoord.makeCoord(afwCoord.FK5, ra, dec, epoch)
+        self.data = [afwCoord.Coord(ra, dec, epoch),
+                     afwCoord.Fk5Coord(ra, dec, epoch),
+                     afwCoord.IcrsCoord(ra, dec),
+                     afwCoord.GalacticCoord(ra, dec),
+                     afwCoord.EclipticCoord(ra, dec),
+                     # TopocentricCoord is not currently picklable
+                     ]
 
 class QuadrupoleTestCase(PickleTestCase):
     def setUp(self):
@@ -133,12 +141,18 @@ class AffineTransformTestCase(PickleTestCase):
         dx, dy = 1.1, 3.3
         trans = afwGeom.Extent2D(dx, dy)
         self.data = afwGeom.AffineTransform(linear, trans)
+
+    def assertPickled(self, new):
+        self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
         
 class LinearTransformTestCase(PickleTestCase):
     def setUp(self):
         scale = 2.0
         self.data = afwGeom.LinearTransform().makeScaling(scale)
-        
+
+    def assertPickled(self, new):
+        self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
+
 class WcsPickleTestCase(PickleTestCase):
     def setUp(self):
         hdr = dafBase.PropertyList()

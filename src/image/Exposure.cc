@@ -21,21 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
-  * @file
-  *
-  * @ingroup afw
-  *
-  * @brief Implementation of the Exposure Class for LSST.  Class declaration in
-  * Exposure.h.
-  *
-  * @author Nicole M. Silvestri, University of Washington
-  *
-  * Contact: nms@astro.washington.edu
-  *
-  * Created on: Mon Apr 23 13:01:15 2007
-  */
 
 #include <stdexcept>
 
@@ -54,6 +39,7 @@
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/fits.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
@@ -103,13 +89,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(width, height),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
@@ -121,13 +102,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(dimensions),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
@@ -139,13 +115,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(bbox),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 /** @brief Construct an Exposure from a MaskedImage
   */               
@@ -156,14 +127,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(maskedImage),
-    _wcs(_cloneWcs(wcs)),
-    _detector(),
-    _filter(),
-    _calib(new afwImage::Calib()),
-    _psf(PTR(lsst::afw::detection::Psf)())
-{
-    setMetadata(lsst::daf::base::PropertySet::Ptr(new lsst::daf::base::PropertyList()));
-}
+    _info(new ExposureInfo(wcs))
+{}
 
 
 /** @brief Copy an Exposure
@@ -175,18 +140,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), deep),
-    _wcs(_cloneWcs(src.getWcs())),
-    _detector(src._detector),
-    _filter(src._filter),
-    _calib(_cloneCalib(src.getCalib())),
-    _psf(_clonePsf(src.getPsf()))
-{
-/*
-  * N.b. You'll need to update the subExposure cctor and the generalised cctor in Exposure.h
-  * when you add new data members --- this note is here as you'll be making the same changes here!
-  */
-    setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
-}
+    _info(new ExposureInfo(*src.getInfo(), deep))
+{}
 
 /** @brief Construct a subExposure given an Exposure and a bounding box
   *
@@ -202,138 +157,61 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 ) :
     lsst::daf::base::Citizen(typeid(this)),
     _maskedImage(src.getMaskedImage(), bbox, origin, deep),
-    _wcs(_cloneWcs(src.getWcs())),
-    _detector(src._detector),
-    _filter(src._filter),
-    _calib(_cloneCalib(src.getCalib())),
-    _psf(_clonePsf(src.getPsf()))
-{
-    setMetadata(deep ? src.getMetadata()->deepCopy() : src.getMetadata());
-}
+    _info(new ExposureInfo(*src.getInfo(), deep))
+{}
 
-/** @brief Construct an Image from FITS files.
- *
- * Take the Exposure's base input file name (as a std::string without
- * the _img.fits, _var.fits, or _msk.fits suffixes) and gets the MaskedImage of
- * the Exposure.  The method then uses the MaskedImage 'readFits' method to
- * read the MaskedImage of the Exposure and gets the Exposure's Wcs.
- *
- * @return the MaskedImage and the Wcs object with appropriate metadata of the
- * Exposure.
- *  
- * @note The method warns the user if the Exposure does not have a Wcs.
- *
- * @note We use FITS numbering, so the first HDU is HDU 1, not 0 (although we're helpful and interpret 0 as meaning
- * the first HDU, i.e. HDU 1).  I.e. if you have a PDU, the numbering is thus [PDU, HDU2, HDU3, ...]
- *
- * @throw an lsst::pex::exceptions::NotFound if the MaskedImage could not be
- * read or the base file name could not be found.
- */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    std::string const& baseName,    ///< Exposure's base input file name
-    int const hdu,                  ///< Desired HDU
-    afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,       ///< Coordinate system for bbox
-    bool conformMasks               //!< Make Mask conform to mask layout in file?
+    std::string const & fileName, afwGeom::Box2I const& bbox,
+    ImageOrigin origin, bool conformMasks
+) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _maskedImage(),
+    _info(new ExposureInfo())
+{
+    fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    _readFits(fitsfile, bbox, origin, conformMasks);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    fits::MemFileManager & manager, afwGeom::Box2I const & bbox,
+    ImageOrigin origin, bool conformMasks
+) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _maskedImage(),
+    _info(new ExposureInfo())
+{
+    fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    _readFits(fitsfile, bbox, origin, conformMasks);
+}
+
+template<typename ImageT, typename MaskT, typename VarianceT> 
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    fits::Fits & fitsfile, afwGeom::Box2I const & bbox,
+    ImageOrigin origin, bool conformMasks
 ) :
     lsst::daf::base::Citizen(typeid(this))
 {
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertyList());
-
-    _maskedImage = MaskedImageT(baseName, hdu, metadata, bbox, origin, conformMasks);
-    
-    postFitsCtorInit(metadata);
+    _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
-/**
-This ctor is conceptually identical to the ctor which takes a FITS file base name,
-except that the FITS file resides in RAM.
-*/
 template<typename ImageT, typename MaskT, typename VarianceT> 
-afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
-    char **ramFile,                    ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen,                ///< RAM buffer length
-    int const hdu,                  ///< Desired HDU
-    afwGeom::Box2I const& bbox,               //!< Only read these pixels
-    ImageOrigin const origin,       ///< Coordinate system for bbox
-    bool conformMasks               //!< Make Mask conform to mask layout in file?
-) :
-    lsst::daf::base::Citizen(typeid(this))
-{
-    lsst::daf::base::PropertySet::Ptr metadata(new lsst::daf::base::PropertySet());
-
-    _maskedImage = MaskedImageT(ramFile, ramFileLen, hdu, metadata, bbox, origin, conformMasks);
-    
-    postFitsCtorInit(metadata);
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::_readFits(
+    fits::Fits & fitsfile, afwGeom::Box2I const & bbox,
+    ImageOrigin origin, bool conformMasks
+) {
+    PTR(daf::base::PropertySet) metadata(new lsst::daf::base::PropertyList());
+    PTR(daf::base::PropertySet) imageMetadata(new lsst::daf::base::PropertyList());
+    _maskedImage = MaskedImageT(fitsfile, metadata, bbox, origin, conformMasks, false, imageMetadata);
+    _info->_readFits(fitsfile, metadata, imageMetadata);
 }
+
 
 /** Destructor
  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
 afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
-
-/**
-Finish initialization after constructing from a FITS file
-*/
-template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::postFitsCtorInit(
-    lsst::daf::base::PropertySet::Ptr metadata
-) {
-    // true: strip keywords that are related to the created WCS from the input
-    // metadata
-    _wcs = afwImage::makeWcs(metadata, true);
-    /*
-     * Filter
-     */
-    _filter = Filter(metadata, true);
-    afwImage::detail::stripFilterKeywords(metadata);
-    /*
-     * Calib
-     */
-    _calib = PTR(afwImage::Calib)(new afwImage::Calib(metadata));
-    afwImage::detail::stripCalibKeywords(metadata);
-    /*
-     * Set the remaining parts of the metadata
-     */
-    setMetadata(metadata);
-}
-
-/**
- * Clone a Psf; defined here so that we don't have to expose the insides of Psf in Exposure.h
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(afwDetection::Psf) afwImage::Exposure<ImageT, MaskT, VarianceT>::_clonePsf(
-    CONST_PTR(afwDetection::Psf) psf      // the Psf to clone
-) {
-    if (psf)
-        return psf->clone();
-    return PTR(afwDetection::Psf)();
-}
-
-/**
- * Clone a Calib; defined here so that we don't have to expose the insides of Calib in Exposure.h
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(afwImage::Calib) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneCalib(
-    CONST_PTR(afwImage::Calib) calib    // the Calib to clone
-) {
-    if (calib)
-        return PTR(afwImage::Calib)(new afwImage::Calib(*calib));
-    return PTR(afwImage::Calib)();
-}
-
-/**
- * Clone a Wcs; defined here so that we don't have to expose the insides of Wcs in Exposure.h
- */
-template<typename ImageT, typename MaskT, typename VarianceT> 
-PTR(afwImage::Wcs) afwImage::Exposure<ImageT, MaskT, VarianceT>::_cloneWcs(
-    CONST_PTR(afwImage::Wcs) wcs    // the Wcs to clone
-) {
-    if (wcs)
-        return wcs->clone();
-    return PTR(afwImage::Wcs)();
-}
 
 // SET METHODS
 
@@ -347,8 +225,8 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &
 template<typename ImageT, typename MaskT, typename VarianceT> 
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const& origin) {
     afwGeom::Point2I old(_maskedImage.getXY0());
-    if (_wcs)
-        _wcs->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
+    if (_info->hasWcs())
+        _info->getWcs()->shiftReferencePixel(origin.getX() - old.getX(), origin.getY() - old.getY());
     _maskedImage.setXY0(origin);
 }
 
@@ -356,111 +234,25 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const
 // Write FITS
 
 template<typename ImageT, typename MaskT, typename VarianceT> 
-lsst::daf::base::PropertySet::Ptr afwImage::Exposure<ImageT, MaskT, VarianceT>::generateOutputMetadata() const {
-    using lsst::daf::base::PropertySet;
-    
-    //Create fits header
-    PropertySet::Ptr outputMetadata = getMetadata()->deepCopy();
-    afwImage::MaskedImage<ImageT> mi = getMaskedImage();
-
-    //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
-    //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
-    //image coordinates. When saving an image we convert from pixel to index coordinates.
-    //In the case where this image is a parent image, the reference pixels are unchanged
-    //by this transformation
-    if (_wcs) {
-        afwImage::Wcs::Ptr newWcs = _wcs->clone(); //Create a copy
-        newWcs->shiftReferencePixel(-1*mi.getX0(), -1*mi.getY0() );
-
-        // Copy wcsMetadata over to fits header
-        PropertySet::Ptr wcsMetadata = newWcs->getFitsMetadata();
-        outputMetadata->combine(wcsMetadata);
-    }
-    
-    //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
-    //indicate the origin (the position of the bottom left corner) of the sub-image with 
-    //respect to the origin of the parent image.
-    //This is stored in the fits header using the LTV convention used by STScI 
-    //(see \S2.6.2 of HST Data Handbook for STIS, version 5.0
-    // http://www.stsci.edu/hst/stis/documents/handbooks/currentDHB/ch2_stis_data7.html#429287). 
-    //This is not a fits standard keyword, but is recognised by ds9
-    //LTV keywords use the opposite convention to the LSST, in that they represent
-    //the position of the origin of the parent image relative to the origin of the sub-image.
-    // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
-  
-    outputMetadata->set("LTV1", -1*mi.getX0());
-    outputMetadata->set("LTV2", -1*mi.getY0());
-
-    outputMetadata->set("FILTER", _filter.getName());
-    if (_detector) {
-        outputMetadata->set("DETNAME", _detector->getId().getName());
-        outputMetadata->set("DETSER", _detector->getId().getSerial());
-    }
-    /**
-     * We need to define these keywords properly! XXX
-     */
-    outputMetadata->set("TIME-MID", _calib->getMidTime().toString());
-    outputMetadata->set("EXPTIME", _calib->getExptime());
-    outputMetadata->set("FLUXMAG0", _calib->getFluxMag0().first);
-    outputMetadata->set("FLUXMAG0ERR", _calib->getFluxMag0().second);
-    
-    return outputMetadata;
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(std::string const & fileName) const {
+    fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
 }
 
-/** @brief Write the Exposure's Image files.  Update the fits image header card
-  * to reflect the Wcs information.
-  *
-  * Member takes the Exposure's base output file name (as a std::string without
-  * the _img.fits, _var.fits, or _msk.fits suffixes) and uses the MaskedImage
-  * Class to write the MaskedImage files, _img.fits, _var.fits, and _msk.fits to
-  * disk.  Method also uses the metadata information to update the Exposure's
-  * fits header cards.
-  *
-  * @note LSST and Fits use a different convention for Wcs coordinates.
-  * Fits measures crpix relative to the bottom left hand corner of the image
-  * saved in that file (what ds9 calls image coordinates). Lsst measures it 
-  * relative to the bottom left hand corner of the parent image (what 
-  * ds9 calls the physical coordinates). This may cause confusion when you
-  * write an image to disk and discover that the values of crpix in the header
-  * are not what you expect.
-  *
-  * exposure = afwImage.ExposureF(filename) 
-  * fitsHeader = afwImage.readMetadata(filename)
-  * 
-  * exposure.getWcs().getPixelOrigin() ---> (128,128)
-  * fitsHeader.get("CRPIX1") --> 108
-  *
-  * This is expected. If you look at the value of
-  * fitsHeader.get("LTV1") --> -20
-  * you will find that CRPIX - LTV == getPixelOrigin.
-  *
-  * This implementation means that if you open the image in ds9 (say)
-  * the wcs translations for a given pixel are correct
-  *
-  * @note The MaskedImage Class will throw an pex Exception if the base
-  * filename is not found.
-  */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    const std::string &expOutFile ///< Exposure's base output file name
-) const {
-    lsst::daf::base::PropertySet::Ptr outputMetadata = generateOutputMetadata();
-    _maskedImage.writeFits(expOutFile, outputMetadata);
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager & manager) const {
+    fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    writeFits(fitsfile);
 }
 
-/**
- See writeFits(string) for a basic description of this function.
- *
- * This function differs from the string version in that rather than writing a FITS file to disk
- * it writes a FITS file to a RAM buffer.
- */
 template<typename ImageT, typename MaskT, typename VarianceT> 
-void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(
-    char **ramFile,        ///< RAM buffer to receive RAM FITS file
-    size_t *ramFileLen    ///< RAM buffer length
-) const {
-    lsst::daf::base::PropertySet::Ptr outputMetadata = generateOutputMetadata();
-    _maskedImage.writeFits(ramFile, ramFileLen, outputMetadata, "a", true);
+void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits & fitsfile) const {
+    ExposureInfo::FitsWriteData data = _info->_startWriteFits(getXY0());
+    _maskedImage.writeFits(
+        fitsfile, data.metadata,
+        data.imageMetadata, data.maskMetadata, data.varianceMetadata
+    );
+    _info->_finishWriteFits(fitsfile, data);
 }
 
 // Explicit instantiations

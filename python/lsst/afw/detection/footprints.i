@@ -33,7 +33,13 @@
 #include "ndarray.h"
 %}
 
+namespace lsst { namespace afw { namespace detection {
+typedef lsst::afw::geom::Span Span;
+}}}
+
 %include "lsst/afw/image/LsstImageTypes.h"
+%include "std_pair.i"
+%template(pairBB) std::pair<bool, bool>;
 
 %shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
 
@@ -44,7 +50,6 @@
 
 %shared_ptr(lsst::afw::detection::Peak);
 %shared_ptr(lsst::afw::detection::Footprint);
-%shared_ptr(lsst::afw::detection::Span);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
 %declareNumPyConverters(ndarray::Array<unsigned short,1,1>);
@@ -87,7 +92,7 @@
 }
 
 %template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
-%template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Span> >;
+%template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::geom::Span> >;
 %template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
 
 %define %heavyFootprints(NAME, PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
@@ -149,14 +154,6 @@
 %imageOperations(D, double);
 %maskOperations(lsst::afw::image::MaskPixel);
 %template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
-
-%extend lsst::afw::detection::Span {
-    %pythoncode {
-    def __str__(self):
-        """Print this Span"""
-        return self.toString()
-    }
-}
 
 // because stupid SWIG's %template doesn't work on these functions
 %define %footprintArrayTemplates(T)

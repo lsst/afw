@@ -116,6 +116,15 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(self.image1.get0(3,4), self.val1)
         self.assertEqual(self.image1.get(0,0), self.val1)
 
+    def testAllocateLargeImages(self):
+        """Try to allocate a Very large image"""
+        bbox = afwGeom.BoxI(afwGeom.PointI(-1<<30, -1<<30), afwGeom.PointI(1<<30, 1<<30))
+
+        def tst():
+            im = afwImage.ImageF(bbox)
+
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
+
     def testAddImages(self):
         self.image2 += self.image1
         self.image1 += self.val1
@@ -248,9 +257,11 @@ class ImageTestCase(unittest.TestCase):
     def testGeneralisedCopyConstructors(self):
         imageU = self.image1.convertU() # these are generalised (templated) copy constructors in C++
         imageF = imageU.convertF()
+        imageD = imageF.convertD()
 
         self.assertEqual(imageU.get(0, 0), self.val1)
         self.assertEqual(imageF.get(0, 0), self.val1)
+        self.assertEqual(imageD.get(0, 0), self.val1)
             
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
@@ -358,8 +369,79 @@ class ImageTestCase(unittest.TestCase):
         self.image1 = factory(dims)
         self.assertEqual(self.image1.get(10, 10), 0)
 
+    def testImageSlices(self):
+        """Test image slicing, which generate sub-images using Box2I under the covers"""
+        im = afwImage.ImageF(10, 20)
+        im[-1, :] =  -5
+        im[..., 18] =   -5              # equivalent to im[:, 18]
+        im[4,  10]   =  10
+        im[-3:, -2:] = 100
+        im[-2, -2]   = -10
+        sim = im[1:4, 6:10]
+        sim[:] = -1
+        im[0:4, 0:4] = im[2:6, 8:12]
 
+        if display:
+            ds9.mtv(im)
 
+        self.assertEqual(im.get(0,  6),  0)
+        self.assertEqual(im.get(9, 15), -5)
+        self.assertEqual(im.get(5, 18), -5)
+        self.assertEqual(im.get(6, 17),  0)
+        self.assertEqual(im.get(7, 18),100)
+        self.assertEqual(im.get(9, 19),100)
+        self.assertEqual(im.get(8, 18),-10)
+        self.assertEqual(im.get(1,  6), -1)
+        self.assertEqual(im.get(3,  9), -1)
+        self.assertEqual(im.get(4, 10), 10)
+        self.assertEqual(im.get(4,  9),  0)
+        self.assertEqual(im.get(2,  2), 10)
+        self.assertEqual(im.get(0,  0), -1)
+
+    def testImageSliceFromBox(self):
+        """Test using a Box2I to index an Image"""
+        im = afwImage.ImageF(10, 20)
+        bbox = afwGeom.BoxI(afwGeom.PointI(1, 3), afwGeom.PointI(6, 9))
+        im[bbox] = -1
+
+        if display:
+            ds9.mtv(im)
+
+        self.assertEqual(im.get(0,  6),  0)
+        self.assertEqual(im.get(1,  6), -1)
+        self.assertEqual(im.get(3,  9), -1)
+
+    def testConversionToScalar(self):
+        """Test that 1-pixel images can be converted to scalars"""
+        self.assertEqual(int(afwImage.ImageI(1, 1)), 0.0)
+        self.assertEqual(float(afwImage.ImageI(1, 1)), 0.0)
+
+        im = afwImage.ImageF(10, 20)
+        im.set(666)
+
+        self.assertEqual(float(im[0,0]), 666)
+        self.assertEqual(int(im[0,0]), 666)
+
+        self.assertRaises(TypeError, int, im) # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
+
+    def testClone(self):
+        """Test that clone works properly"""
+        im = afwImage.ImageF(10, 20)
+        im[0, 0] = 100
+        
+        im2 = im.clone()                # check that clone with no arguments makes a deep copy
+        self.assertEqual(im.getDimensions(), im2.getDimensions())
+        self.assertEqual(im.get(0,0), im2.get(0,0))
+        im2[0, 0] += 100
+        self.assertNotEqual(im.get(0,0), im2.get(0,0)) # so it's a deep copy
+
+        im2 = im[0:3, 0:5].clone()  # check that we can slice-then-clone
+        self.assertEqual(im2.getDimensions(), afwGeom.ExtentI(3, 5))
+        self.assertEqual(im.get(0,0), im2.get(0,0))
+        im2[0,0] += 10
+        self.assertNotEqual(float(im[0,0]), float(im2[0,0])) # equivalent to im.get(0, 0) etc.
+        
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DecoratedImageTestCase(unittest.TestCase):
@@ -372,9 +454,9 @@ class DecoratedImageTestCase(unittest.TestCase):
             )
         self.dimage1.getImage().set(self.val1)
 
-        dataDir = os.path.join(eups.productDir("afwdata"), "data")
+        dataDir = eups.productDir("afwdata")
         if dataDir:
-            self.fileForMetadata = os.path.join(dataDir, "small_MI_img.fits")
+            self.fileForMetadata = os.path.join(dataDir, "data", "small_MI.fits")
             self.trueMetadata = {"RELHUMID" : 10.69}
         else:
             self.fileForMetadata = None
@@ -408,18 +490,21 @@ class DecoratedImageTestCase(unittest.TestCase):
     def testReadFits(self):
         """Test reading FITS files"""
         
-        dataDir = os.path.join(eups.productDir("afwdata"), "data")
-        if not dataDir:
+        dataDir = eups.productDir("afwdata")
+        if dataDir:
+            dataDir = os.path.join(dataDir, "data")
+        else:
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
         
-        files = {}
-        files["img"] = os.path.join(dataDir, "small_MI_img.fits") # an S16 fits file
-        files["msk"] = os.path.join(dataDir, "small_MI_msk.fits") # an U8 fits file
-        files["var"] = os.path.join(dataDir, "small_MI_var.fits") # an F32 fits file
+        hdus = {}
+        fileName = os.path.join(dataDir, "small_MI.fits")
+        hdus["img"] = 2 # an S16 fits HDU
+        hdus["msk"] = 3 # an U8 fits HDU
+        hdus["var"] = 4 # an F32 fits HDU
 
-        imgU = afwImage.DecoratedImageF(files["img"]) # read as unsigned short
-        imgF = afwImage.DecoratedImageF(files["img"]) # read as float
+        imgU = afwImage.DecoratedImageU(fileName, hdus["img"]) # read as unsigned short
+        imgF = afwImage.DecoratedImageF(fileName, hdus["img"]) # read as float
 
         self.assertEqual(imgU.getHeight(), 256)
         self.assertEqual(imgF.getImage().getWidth(), 256)
@@ -434,8 +519,8 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read an F32 image
         #
-        varU = afwImage.DecoratedImageF(files["var"]) # read as unsigned short
-        varF = afwImage.DecoratedImageF(files["var"]) # read as float
+        varU = afwImage.DecoratedImageF(fileName, hdus["var"]) # read as unsigned short
+        varF = afwImage.DecoratedImageF(fileName, hdus["var"]) # read as float
 
         self.assertEqual(varU.getHeight(), 256)
         self.assertEqual(varF.getImage().getWidth(), 256)
@@ -443,7 +528,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read a char image
         #
-        maskImg = afwImage.DecoratedImageU(files["msk"]).getImage() # read a char file
+        maskImg = afwImage.DecoratedImageU(fileName, hdus["msk"]).getImage() # read a char file
 
         self.assertEqual(maskImg.getHeight(), 256)
         self.assertEqual(maskImg.getWidth(), 256)
@@ -522,7 +607,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         image.set(2, 2, 100)
 
         bbox    = afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
-        subImage = image.Factory(image, bbox, afwImage.LOCAL)
+        subImage = image.Factory(image, bbox)
         subImageF = subImage.convertFloat()
         
         if display:
@@ -530,7 +615,7 @@ class DecoratedImageTestCase(unittest.TestCase):
             ds9.mtv(subImageF, frame=1, title="converted subImage")
 
         self.assertEqual(subImage.get(1, 1), subImageF.get(1, 1))
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):

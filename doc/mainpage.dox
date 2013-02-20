@@ -6,6 +6,7 @@
 The LSST applications framework provides the basic functionality needed
 by an image processing system.  In particular:
    - \ref afwSecImage : Representation of Images (and Masks)
+   - \ref afwSecPyImage : How to manipulate images from python
    - \ref afwSecDisplay : How to display images
    - \ref afwSecMath :  Mathematical functions such as convolution and image statistics
    - \ref afwSecDetection : Detection of sources in images
@@ -279,9 +280,10 @@ namespace lsst { namespace afw { namespace math {
 \page afwSecMath Mathematical Operations
 \section afwSecMath Mathematical Operations
 
- - Statistics
+ - Statistics.
 Annotated examples are available for \link StatisticsExample Statistics\endlink.
- - Background estimation of images
+ - Background estimation of images.
+Annotated examples are available for \link BackgroundExample Background Estimation\endlink.
  - Interpolate
  - Convolution of images is handled by convolve()
  - Warping Images is handled by warpImage()

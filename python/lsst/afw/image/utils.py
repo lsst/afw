@@ -78,7 +78,9 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
                 afwImage.Filter.defineAlias(p.get("name"), a)
             
 class CalibNoThrow(object):
-    """A class intended to be used with python's with statement:
+    """A class intended to be used with python's with statement, to return NaNs for negative fluxes
+    instead of raising exceptions (exceptions may be raised for other purposes).
+
 E.g.
      with CalibNoThrow():
          ax.plot([exposure.getCalib().getMagnitude(a) for a in candAmps], zGood[:,k], 'b+')

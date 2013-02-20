@@ -1,0 +1,204 @@
+// -*- lsst-c++ -*-
+
+namespace lsst { namespace afw { namespace table { namespace io {
+
+/**
+ *  @page afwTablePersistence Table-Based Persistence
+ *
+ *  @section afwTablePersistenceOverview Overview
+ *
+ *  The classes in afw::table::io provide an interface for persisting arbitrary objects
+ *  to afw::table Catalog objects, and through that interface a way to save them to
+ *  FITS binrary tables.  The interface consists of four main classes:
+ *
+ *   - *Persistable* is a base class for all objects that can be persisted to tables.
+ *  It contains virtual member functions for writing the object to an OutputArchive,
+ *  and concrete member functions that write individual objects directly to FITS files.
+ *
+ *   - *PersistableFactory* is a base class for factory objects that can reconstruct
+ *  Persistable%s.  These are held in a singleton registry and associated with a
+ *  particular string, so we can save this string and use it to locate the correct
+ *  factory at load time.
+ *
+ *   - *OutputArchive* is a concrete class that represents a collection of Persistable%s
+ *  that have been converted to table form.  It maps Persistable pointers to unique
+ *  integer IDs, making it possible to persist multiple shared_ptrs without duplication.
+ *
+ *   - *InputArchive* is a concrete class that represents a collection of Persistable%s
+ *  that have been loaded from their table form.  It maps unique IDs to Persistable
+ *  pointers, allowing shared_ptr relationships to be reconstructed correctly.
+ *
+ *  There are also a few smaller, "helper" classes:
+ *
+ *   - *PersistableFacade* is a 
+ *  <a href=http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern>CRTP</a>
+ *  base class for Persistables that adds static member functions for reading from FITS
+ *  and returning a derived type.
+ *
+ *   - *OutputArchiveHandle* is a lightweight proxy class used by Persistable::write
+ *  to save itself to an OutputArchive.
+ *
+ *   - *ArchiveIndexSchema* is a singleton class that holds the schema and keys for the
+ *  index catalog that describes an archive.  It also serves as a useful example of how
+ *  to handle key and schema objects for Persistable subclasses whose size is fixed.
+ *
+ *   - *CatalogVector* is a trivial subclass of std::vector<BaseCatalog> that's really
+ *  just a forward-declarable typedef.
+ *
+ *  @section afwTablePersistenceHowTo Implementing a Persistable Subclass
+ *
+ *  Persistable itself doesn't have any pure virtual member functions (instead, it has
+ *  default implementations that throw exceptions), so it's generally safe to make
+ *  an existing class inherit from Persistable even if you don't implement Persistence.
+ *  If you do actually want to implement table-based persistence, there are a few steps
+ *  to follow:
+ *
+ *   - The base class of the class hierarchy should inherit from Persistable.
+ *
+ *   - All classes should inherit from PersistableFacade<T>, and this should be the
+ *  *first* in the list of base classes (or at least ahead of Persistable or any other
+ *  class that inherits from it).  It is not necessary to do this at every level, but
+ *  it can save users from having to do dynamic casts themselves, e.g.:
+ *  @code
+ *  PTR(TanWcs) wcs = TanWcs::readFits(...);
+ *  @endcode
+ *  rather than
+ *  @code
+ *  PTR(TanWcs) wcs = boost::dynamic_pointer_cast<TanWcs>(Wcs::readFits(...));
+ *  @endcode
+ *
+ *   - All concrete classes should reimplement Persistable::isPersistable(),
+ *  Persistable::write, and Persistable::getPersistenceName().
+ *
+ *   - All concrete classes should have a corresponding subclass of PersistableFactory,
+ *  and should have exactly one instance of this factory subclass in a static-scope variable.
+ *  Usually both of these will be within an anonymous namespace in a source file.
+ *
+ *  Here's a complete example for an abstract base class @c Base and derived class @c Derived,
+ *  starting with the header file:
+ *  @code
+ *  #include "lsst/afw/table/io/Persistable.h"
+ *  using namespace lsst::afw::table::io;  // just for brevity; not actually recommended
+ *
+ *  class Base : public PersistableFacade<Base>, public Persistable {
+ *      // no new code needed here, unless the base class is also concrete
+ *      // (see Wcs for an example of that).
+ *  };
+ *
+ *  class Derived : public PersistableFacade<Derived>, public Base {
+ *  public:
+ *      // some data members, just to give us interesting stuff to save
+ *      double var1;
+ *      std::vector< std::pair<int,float> > var2;
+ *      PTR(Persistable) var3;
+ *
+ *      virtual bool isPersistable() const { return true; }
+ *
+ *  protected:
+ *      virtual std::string getPersistenceName() const { return "Derived"; }
+ *      virtual void write(OutputArchiveHandle & handle) const;
+ *  };
+ *  @endcode
+ *
+ *  We'll save this in two catalogs - one will contain var1 and an archive ID that refers to var3,
+ *  and will always have exactly one record.  The second will contain var2, with as many records
+ *  as there are elements in the vector.
+ *
+ *  Here's the source file:
+ *  @code
+ *  #include "BaseAndDerived.h" # the example header above
+ *  // Some the additional includes - together, these pull in almost all of afw::table, so we don't
+ *  // want to include them in the header.
+ *  #include "lsst/afw/table/io/OutputArchive.h"
+ *  #include "lsst/afw/table/io/InputArchive.h"
+ *  #include "lsst/afw/table/io/CatalogVector.h"
+ *  namespace {
+ *
+ *  // singleton class to hold schema and keys, since those are fixed at compile-time in this case
+ *  struct DerivedSchema : private boost::noncopyable {
+ *      Schema schema1;
+ *      Schema schema2;
+ *      Key<double> var1;
+ *      Key<int> var3;
+ *      Key<int> var2first;
+ *      Key<float> var2second;
+ *
+ *      static DerivedSchema const & get() {
+ *          static DerivedSchema instance;
+ *          return instance;
+ *      }
+ *  private:
+ *      DerivedSchema() : schema1(), schema2(),
+ *          var1(schema1.addKey<double>("var1", "var1")),
+ *          var3(schema1.addKey<int>("var3", "archive ID for var3")),
+ *          var2first(schema2.addKey<int>("var2first", "var2[...].first")),
+ *          var2second(schema2.addKey<float>("var2second", "var2[...].second"))
+ *      {
+ *          schema1.getCitizen().markPersistent();
+ *          schema2.getCitizen().markPersistent();
+ *      }
+ *  };
+ *
+ *  class DerivedFactory : public PersistableFactory {
+ *  public:
+ *      virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const {
+ *          DerivedSchema const & keys = DerivedSchema::get()
+ *          assert(catalogs.size() == 2u);
+ *          BaseCatalog const & cat1 = catalogs.front();
+ *          assert(cat1.getSchema() == keys.schema1);
+ *          BaseCatalog const & cat2 = catalogs.back();
+ *          assert(cat2.getSchema() == keys.schema2);
+ *          PTR(Derived) result(new Derived);
+ *          result->var1 = cat1.front().get(keys.var1);
+ *          int var3id = cat1.front().get(keys.var3)
+ *          result->var3 = archive.get(var3id);
+ *          for (auto i = cat2.begin(); i != cat2.end(); ++i) {
+ *               result->var2.push_back(std::make_pair(i->get(keys.var2first), i->get(keys.var2second)));
+ *          }
+ *          return result;
+ *      }
+ *      DerivedFactory(std::string const & name) : PersistableFactory(name) {}
+ *  };
+ *
+ *  DerivedFactory registration("Derived");
+ *
+ *  } // anonymous
+ *
+ *  void Derived::write(OutputArchiveHandle & handle) const {
+ *      DerivedSchema const & keys = DerivedSchema::get()
+ *      int var3id = handle.put(var3); // save the nested thing and get an ID we can save instead
+ *      BaseCatalog catalog1 = handle.makeCatalog(keys.schema1);
+ *      BaseCatalog catalog2 = handle.makeCatalog(keys.schema2);
+ *      PTR(BaseRecord) record1 = catalog1.addNew();
+ *      record1->set(keys.var1, var1);
+ *      record1->set(keys.var3, var3id);
+ *      for (auto i = var2.begin(); i != var2.end(); ++i) {
+ *          PTR(BaseRecord) record2 = catalog2.addNew();
+ *          record2->set(keys.var2first, i->first);
+ *          record2->set(keys.var2second, i->second);
+ *      }
+ *      handle.saveCatalog(catalog1);
+ *      handle.saveCatalog(catalog2);
+ *  }
+ *  @endcode
+ *
+ *  @section afwTablePersistenceFormat Archive Catalog Format
+ *
+ *  Archives contain a sequence of afw::table::BaseCatalog objects, which map simply to FITS binary
+ *  tables on disk.  While these catalogs contain additional metadata, which are also written to
+ *  FITS headers, the only needed header entries actually used in unpersisting an archive is the
+ *  'AR_NCAT' key, which gives the total number of catalogs in the archive.  Other keywords are
+ *  merely checked for consistency.
+ *
+ *  The first catalog is an index into the others, with a schema described more completely in the
+ *  ArchiveIndexSchema class.  The schemas in subsequent catalogs are defined by the actual persisted
+ *  objects.  Multiple objects can be present in the same catalog (in blocks of rows) if they share
+ *  the same schema (usually, but not always, because they have the same type).
+ *
+ *  Because the schemas are fully documented in the headers, the archive catalog format is largely
+ *  self-describing.  This means it can be inefficient for archives that contain a small number of
+ *  distinct objects rather than a large number of similar objects, especially because the FITS
+ *  standard specifies a minimum size for FITS headers, resulting in a lot of wasted space.
+ */
+ 
+}}}} // namespace lsst::afw::table::io

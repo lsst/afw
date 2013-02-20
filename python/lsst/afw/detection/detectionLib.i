@@ -46,6 +46,7 @@ Python interface to lsst::afw::detection classes
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math/SpatialCell.h"
+#include "lsst/afw/math/Background.h"
     
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
@@ -75,6 +76,7 @@ Python interface to lsst::afw::detection classes
 
 %include "footprints.i"
 %include "psf.i"
+%include "WarpedPsf.i"
 
  // The "tableLib.i" import has to go *after* the "footprints.i" because
  // "tableLib.i" imports "footprints.i".
@@ -82,4 +84,6 @@ Python interface to lsst::afw::detection classes
 %import "lsst/afw/table/tableLib.i"
 %include "footprintset.i"
 
-
+%pythoncode %{
+from lsst.afw.geom import Span
+%}

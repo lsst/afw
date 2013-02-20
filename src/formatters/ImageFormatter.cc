@@ -125,14 +125,8 @@ ImageFormatter<ImagePixelT>::~ImageFormatter(void)
 }
 
 namespace {
-    namespace dafBase = lsst::daf::base;
-    namespace afwImage = lsst::afw::image;
-    
-    void checkCast(dafBase::Persistable const* persistable) {
-        afwImage::Image<float> const* ip = dynamic_cast<afwImage::Image<float> const*>(persistable);
-        std::cout << "IP = " << ip << " " << typeid(persistable).name()
-                  << " " << typeid(ip).name() << std::endl;
-    }
+namespace dafBase = lsst::daf::base;
+namespace afwImage = lsst::afw::image;
 }
 
 template <typename ImagePixelT>
@@ -140,7 +134,6 @@ void ImageFormatter<ImagePixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr) {
-    checkCast(persistable);
 
     execTrace("ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);

@@ -41,6 +41,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelPersistenceHelper.h"
 #include "lsst/afw/geom.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -133,8 +134,8 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::clone() const {
-    Kernel::Ptr retPtr;
+PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::clone() const {
+    PTR(Kernel) retPtr;
     if (this->isSpatiallyVarying()) {
         retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_spatialFunctionList));
     } else {
@@ -208,7 +209,7 @@ double afwMath::LinearCombinationKernel::computeImage(
     
     image = 0.0;
     double imSum = 0.0;
-    std::vector<afwImage::Image<Pixel>::Ptr>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<PTR(afwImage::Image<Pixel>)>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
     std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
     std::vector<double>::const_iterator kParIter = _kernelParams.begin();
     for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
@@ -285,13 +286,13 @@ std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() cons
 *
 * @return a shared pointer to new kernel, or empty pointer if refactoring not possible
 */
-afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
+PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
     if (!this->isSpatiallyVarying()) {
-        return Kernel::Ptr();
+        return PTR(Kernel)();
     }
     Kernel::SpatialFunctionPtr const firstSpFuncPtr = this->_spatialFunctionList[0];
     if (!firstSpFuncPtr->isLinearCombination()) {
-        return Kernel::Ptr();
+        return PTR(Kernel)();
     }
     
     typedef lsst::afw::image::Image<Kernel::Pixel> KernelImage;
@@ -313,7 +314,7 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
     afwMath::KernelList::const_iterator const kEnd = _kernelList.end();
     for ( ; kIter != kEnd; ++kIter, ++spFuncPtrIter) {
         if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
-            return Kernel::Ptr();
+            return PTR(Kernel)();
         }
     
         (**kIter).computeImage(kernelImage, false);
@@ -331,7 +332,7 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
     KernelImageList::iterator newKImPtrIter = newKernelImagePtrList.begin();
     KernelImageList::iterator const newKImPtrEnd = newKernelImagePtrList.end();
     for ( ; newKImPtrIter != newKImPtrEnd; ++newKImPtrIter) {
-        newKernelList.push_back(Kernel::Ptr(new afwMath::FixedKernel(**newKImPtrIter)));
+        newKernelList.push_back(PTR(Kernel)(new afwMath::FixedKernel(**newKImPtrIter)));
     }
     std::vector<SpatialFunctionPtr> newSpFunctionPtrList;
     for (int i = 0; i < nSpatialParameters; ++i) {
@@ -341,7 +342,7 @@ afwMath::Kernel::Ptr afwMath::LinearCombinationKernel::refactor() const {
         newSpFunctionPtr->setParameters(newSpParameters);
         newSpFunctionPtrList.push_back(newSpFunctionPtr);
     }
-    LinearCombinationKernel::Ptr refactoredKernel(
+    PTR(LinearCombinationKernel) refactoredKernel(
         new LinearCombinationKernel(newKernelList, newSpFunctionPtrList));
     refactoredKernel->setCtr(this->getCtr());
     return refactoredKernel;
@@ -384,13 +385,115 @@ void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelLi
     _isDeltaFunctionBasis = true;
     for (KernelList::const_iterator kIter = kernelList.begin(), kEnd = kernelList.end();
         kIter != kEnd; ++kIter) {
-        Kernel::Ptr basisKernelPtr = (*kIter)->clone();
+        PTR(Kernel) basisKernelPtr = (*kIter)->clone();
         if (dynamic_cast<afwMath::DeltaFunctionKernel const *>(&(*basisKernelPtr)) == 0) {
             _isDeltaFunctionBasis = false;
         }
         _kernelList.push_back(basisKernelPtr);
-        afwImage::Image<Pixel>::Ptr kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
+        PTR(afwImage::Image<Pixel>) kernelImagePtr(new afwImage::Image<Pixel>(this->getDimensions()));
         _kernelSumList.push_back(basisKernelPtr->computeImage(*kernelImagePtr, false));
         _kernelImagePtrList.push_back(kernelImagePtr);
     }
 }
+
+// ------ Persistence ---------------------------------------------------------------------------------------
+
+namespace lsst { namespace afw { namespace math {
+
+namespace {
+
+struct LinearCombinationKernelPersistenceHelper : public Kernel::PersistenceHelper {
+    table::Key< table::Array<double> > amplitudes;
+    table::Key< table::Array<int> > components;
+
+    LinearCombinationKernelPersistenceHelper(int nComponents, bool isSpatiallyVarying) :
+        Kernel::PersistenceHelper(isSpatiallyVarying ? nComponents : 0),
+        components(
+            schema.addField< table::Array<int> >("components", "archive IDs of component kernel",
+                                                 nComponents)
+        )
+    {
+        if (!isSpatiallyVarying) {
+            amplitudes = schema.addField< table::Array<double> >("amplitudes", "amplitudes component kernel",
+                                                                 nComponents);
+        }
+    }
+
+    LinearCombinationKernelPersistenceHelper(table::Schema const & schema_) :
+        Kernel::PersistenceHelper(schema_), components(schema["components"])
+    {
+        if (!spatialFunctions.isValid()) {
+            amplitudes = schema["amplitudes"];
+            LSST_ARCHIVE_ASSERT(amplitudes.getSize() == components.getSize());
+        } else {
+            LSST_ARCHIVE_ASSERT(spatialFunctions.getSize() == components.getSize());
+        }
+    }
+
+};
+
+} // anonymous
+
+class LinearCombinationKernel::Factory : public afw::table::io::PersistableFactory {
+public:
+
+    virtual PTR(afw::table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        LinearCombinationKernelPersistenceHelper const keys(catalogs.front().getSchema());
+        afw::table::BaseRecord const & record = catalogs.front().front();
+        geom::Extent2I dimensions(record.get(keys.dimensions));
+        std::vector<PTR(Kernel)> componentList(keys.components.getSize());        
+        for (std::size_t i = 0; i < componentList.size(); ++i) {
+            componentList[i] = archive.get<Kernel>(record[keys.components[i]]);
+        }
+        PTR(LinearCombinationKernel) result;
+        if (keys.spatialFunctions.isValid()) {
+            std::vector<SpatialFunctionPtr> spatialFunctionList = keys.readSpatialFunctions(archive, record);
+            result.reset(new LinearCombinationKernel(componentList, spatialFunctionList));
+        } else {
+            std::vector<double> kernelParameters(keys.amplitudes.getSize());
+            for (std::size_t i = 0; i < kernelParameters.size(); ++i) {
+                kernelParameters[i] = record[keys.amplitudes[i]];
+            }
+            result.reset(new LinearCombinationKernel(componentList, kernelParameters));
+        }
+        LSST_ARCHIVE_ASSERT(result->getDimensions() == dimensions);
+        result->setCtr(record.get(keys.center));
+        return result;
+    }
+
+    explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
+};
+
+namespace {
+
+std::string getLinearCombinationKernelPersistenceName() { return "LinearCombinationKernel"; }
+
+LinearCombinationKernel::Factory registration(getLinearCombinationKernelPersistenceName());
+
+} // anonymous
+
+std::string LinearCombinationKernel::getPersistenceName() const {
+    return getLinearCombinationKernelPersistenceName();
+}
+
+void LinearCombinationKernel::write(OutputArchiveHandle & handle) const {
+    bool isVarying = isSpatiallyVarying();
+    LinearCombinationKernelPersistenceHelper const keys(getNBasisKernels(), isVarying);
+    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    if (isVarying) {
+        for (int n = 0; n < keys.components.getSize(); ++n) {
+            record->set(keys.components[n], handle.put(_kernelList[n]));
+            record->set(keys.spatialFunctions[n], handle.put(_spatialFunctionList[n]));
+        }
+    } else {
+        for (int n = 0; n < keys.components.getSize(); ++n) {
+            record->set(keys.components[n], handle.put(_kernelList[n]));
+            record->set(keys.amplitudes[n], _kernelParams[n]);
+        }
+    }
+}
+
+}}} // namespace lsst::afw::math

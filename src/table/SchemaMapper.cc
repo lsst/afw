@@ -49,19 +49,24 @@ struct MapMinimalSchema {
     template <typename U>
     void operator()(SchemaItem<U> const & item) const {
         Key<U> outputKey;
-        try {
-            SchemaItem<U> inputItem = _mapper->getInputSchema().find(item.key);
-            outputKey = _mapper->addMapping(item.key);
-        } catch (pex::exceptions::NotFoundException &) {
+        if (_doMap) {
+            try {
+                SchemaItem<U> inputItem = _mapper->getInputSchema().find(item.key);
+                outputKey = _mapper->addMapping(item.key);
+            } catch (pex::exceptions::NotFoundException &) {
+                outputKey = _mapper->addOutputField(item.field);
+            }
+        } else {
             outputKey = _mapper->addOutputField(item.field);
         }
         assert(outputKey == item.key);
     }
 
-    explicit MapMinimalSchema(SchemaMapper * mapper) : _mapper(mapper) {}
+    explicit MapMinimalSchema(SchemaMapper * mapper, bool doMap) : _mapper(mapper), _doMap(doMap) {}
 
 private:
     SchemaMapper * _mapper;
+    bool _doMap;
 };
 
 } // anonymous
@@ -116,14 +121,14 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
     }
 }
 
-void SchemaMapper::addMinimalSchema(Schema const & minimal) {
+void SchemaMapper::addMinimalSchema(Schema const & minimal, bool doMap) {
     if (getOutputSchema().getFieldCount() > 0) {
         throw LSST_EXCEPT(
             pex::exceptions::LogicErrorException,
             "Must add minimal schema to mapper before adding any other fields"
         );
     }
-    MapMinimalSchema f(this);
+    MapMinimalSchema f(this, doMap);
     minimal.forEach(f);
 }
 

@@ -20,7 +20,8 @@
     void __setitem__(lsst::afw::table::Key< U > const & key, U value) { (*self)[key] = value; }
 }
 %extend lsst::afw::table::BaseColumnView {
-    ndarray::Array<U const,1> __getitem__(Key<U> const & key) const { return (*self)[key]; }
+    ndarray::Array<U,1> __getitem__(Key<U> const & key) const { return (*self)[key]; }
+    void __setitem__(Key<U> const & key, ndarray::Array<U const,1> const & v) const { (*self)[key] = v; }
 }
 %enddef
 
@@ -136,15 +137,21 @@
 
     void __setitem__(
         lsst::afw::table::Key< Array< U > > const & key,
-        ndarray::Array<U const,1> const & v
+        ndarray::Array<U,1> const & v
     ) {
         (*self)[key] = v;
     }
 
 }
 %extend lsst::afw::table::BaseColumnView {
-    ndarray::Array<U const,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
+    ndarray::Array<U,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
         return (*self)[key];
+    }
+    void __setitem__(
+        Key< lsst::afw::table::Array<U> > const & key,
+        ndarray::Array<U const,2> const & v
+    ) const {
+        (*self)[key] = v;
     }
 }
 %enddef
@@ -379,6 +386,40 @@
     }
 }
 
+%extend lsst::afw::table::BaseRecord {
+
+    std::string get(lsst::afw::table::Key< std::string > const & key) const {
+        return self->get(key);
+    }
+
+    std::string getString(lsst::afw::table::Key< std::string > const & key) const {
+        return self->get(key);
+    }
+
+    std::string __getitem__(lsst::afw::table::Key< std::string > const & key) const {
+        return self->get(key);
+    }
+
+    void set(lsst::afw::table::Key< std::string > const & key, std::string const & v) {
+        self->set(key, v);
+    }
+
+    void setString(lsst::afw::table::Key< std::string > const & key, std::string const & v) {
+        self->set(key, v);
+    }
+
+    void __setitem__(lsst::afw::table::Key< std::string > const & key, std::string const & v) {
+        self->set(key, v);
+    }
+}
+%extend lsst::afw::table::KeyBase< std::string > {
+    %pythoncode %{
+        subfields = None
+        subkeys = None
+        HAS_NAMED_SUBFIELDS = False
+    %}
+}
+
 %specializeScalar(boost::int32_t, I)
 %specializeScalar(boost::int64_t, L)
 %specializeScalar(float, F)
@@ -394,4 +435,3 @@
 %specializeArray(float, F)
 %specializeArray(double, D)
 %specializeCovariance(float, F)
-%specializeCovariance(double, D)

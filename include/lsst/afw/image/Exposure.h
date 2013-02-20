@@ -21,24 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
-  * @file
-  *
-  * @brief Declaration of the templated Exposure Class for LSST.
-  *
-  * Create an Exposure from a lsst::afw::image::MaskedImage.
-  *
-  * @ingroup afw
-  *
-  * @author Nicole M. Silvestri, University of Washington
-  *
-  * Contact: nms@astro.washington.edu
-  *
-  * Created on: Mon Apr 23 1:01:14 2007
-  *
-  * @version 
-  */
 
 #ifndef LSST_AFW_IMAGE_EXPOSURE_H
 #define LSST_AFW_IMAGE_EXPOSURE_H
@@ -50,27 +32,15 @@
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/image/Filter.h"
+#include "lsst/afw/image/ExposureInfo.h"
 
-namespace lsst {
-namespace afw {
-
-namespace cameraGeom {
-    class Detector;
-}
-
-namespace detection {
-    class Psf;
-}
+namespace lsst { namespace afw {
 
 namespace formatters {
     template<typename ImageT, typename MaskT, typename VarianceT> class ExposureFormatter;
 }
 
 namespace image {
-
-    class Calib;
-    class Wcs;
 
 /// A class to contain the data, WCS, and other information needed to describe an %image of the sky
 template<typename ImageT, typename MaskT=lsst::afw::image::MaskPixel,
@@ -81,10 +51,10 @@ public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
     typedef boost::shared_ptr<Exposure> Ptr;
     typedef boost::shared_ptr<Exposure const> ConstPtr;
-    
+
     // Class Constructors and Destructor
     explicit Exposure(
-        unsigned int width, unsigned int height, 
+        unsigned int width, unsigned int height,
         CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)()
     );
 
@@ -101,32 +71,57 @@ public:
     explicit Exposure(MaskedImageT & maskedImage,
                       CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)());
 
+    /**
+     *  @brief Construct an Exposure by reading a regular FITS file.
+     *
+     *  @param[in]      fileName      File to read.
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     */
     explicit Exposure(
-        std::string const &baseName, 
-        int const hdu=0, 
-        geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const origin=LOCAL,
-        bool const conformMasks=false
+        std::string const & fileName, geom::Box2I const& bbox=geom::Box2I(),
+        ImageOrigin origin=LOCAL, bool conformMasks=false
     );
-    
+
+    /**
+     *  @brief Construct an Exposure by reading a FITS image in memory.
+     *
+     *  @param[in]      manager       An object that manages the memory buffer to read.
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     */
     explicit Exposure(
-        char **ramFile,
-        size_t *ramFileLen,
-        int const hdu=0, 
-        geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const origin=LOCAL, 
-        bool const conformMasks=false
+        fits::MemFileManager & manager, geom::Box2I const & bbox=geom::Box2I(),
+        ImageOrigin origin=LOCAL, bool conformMasks=false
     );
-    
+
+    /**
+     *  @brief Construct an Exposure from an already-open FITS object.
+     *
+     *  @param[in]      fitsfile      A FITS object to read from.  Current HDU is ignored.
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     */
+    explicit Exposure(
+        fits::Fits & fitsfile, geom::Box2I const & bbox=geom::Box2I(),
+        ImageOrigin origin=LOCAL, bool conformMasks=false
+    );
+
     Exposure(
-        Exposure const &src, 
+        Exposure const &src,
         bool const deep=false
     );
 
     Exposure(
-        Exposure const &src, 
-        lsst::afw::geom::Box2I const& bbox, 
-        ImageOrigin const origin=LOCAL, 
+        Exposure const &src,
+        lsst::afw::geom::Box2I const& bbox,
+        ImageOrigin const origin=LOCAL,
         bool const deep=false
     );
 
@@ -140,21 +135,15 @@ public:
     ) :
         lsst::daf::base::Citizen(typeid(this)),
         _maskedImage(rhs.getMaskedImage(), deep),
-        _wcs(_cloneWcs(rhs.getWcs())),
-        _detector(rhs.getDetector()),
-        _filter(rhs.getFilter()),
-        _calib(_cloneCalib(rhs.getCalib())),
-        _psf(_clonePsf(rhs.getPsf()))
+        _info(new ExposureInfo(*rhs.getInfo(), deep))
     {
         if (not deep) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "Exposure's converting copy constructor must make a deep copy");
         }
-
-        setMetadata(deep ? rhs.getMetadata()->deepCopy() : rhs.getMetadata());
     }
 
-    virtual ~Exposure(); 
+    virtual ~Exposure();
 
     // Get Members
     /// Return the MaskedImage
@@ -162,14 +151,16 @@ public:
     /// Return the MaskedImage
     MaskedImageT getMaskedImage() const { return _maskedImage; }
 
-    CONST_PTR(Wcs) getWcs() const { return _wcs; }
+    CONST_PTR(Wcs) getWcs() const { return _info->getWcs(); }
+    PTR(Wcs) getWcs() { return _info->getWcs(); }
+
     /// Return the Exposure's Detector information
-    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _detector; }
+    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const { return _info->getDetector(); }
     /// Return the Exposure's filter
-    Filter getFilter() const { return _filter; }
+    Filter getFilter() const { return _info->getFilter(); }
     /// Return flexible metadata
-    lsst::daf::base::PropertySet::Ptr getMetadata() const { return _metadata; }
-    void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _metadata = metadata; }
+    lsst::daf::base::PropertySet::Ptr getMetadata() const { return _info->getMetadata(); }
+    void setMetadata(lsst::daf::base::PropertySet::Ptr metadata) { _info->setMetadata(metadata); }
 
     /// Return the Exposure's width
     int getWidth() const { return _maskedImage.getWidth(); }
@@ -177,7 +168,7 @@ public:
     int getHeight() const { return _maskedImage.getHeight(); }
     /// Return the Exposure's size
     geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
-    
+
     /**
      * Return the Exposure's row-origin
      *
@@ -215,54 +206,81 @@ public:
 
     // Set Members
     void setMaskedImage(MaskedImageT &maskedImage);
-    void setWcs(PTR(Wcs) wcs) { _wcs = wcs; }
+    void setWcs(PTR(Wcs) wcs) { _info->setWcs(wcs); }
     /// Set the Exposure's Detector information
-    void setDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) detector) { _detector = detector; }
+    void setDetector(CONST_PTR(lsst::afw::cameraGeom::Detector) detector) { _info->setDetector(detector); }
     /// Set the Exposure's filter
-    void setFilter(Filter const& filter) { _filter = filter; }
+    void setFilter(Filter const& filter) { _info->setFilter(filter); }
     /// Set the Exposure's Calib object
-    void setCalib(PTR(Calib) calib) { _calib = calib; }
+    void setCalib(PTR(Calib) calib) { _info->setCalib(calib); }
     /// Return the Exposure's Calib object
-    PTR(Calib) getCalib() { return _calib; }
+    PTR(Calib) getCalib() { return _info->getCalib(); }
     /// Return the Exposure's Calib object
-    CONST_PTR(Calib) getCalib() const { return _calib; }
+    CONST_PTR(Calib) getCalib() const { return _info->getCalib(); }
     /// Set the Exposure's Psf
-    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _psf = _clonePsf(psf); }
+    void setPsf(CONST_PTR(lsst::afw::detection::Psf) psf) { _info->setPsf(psf); }
 
     /// Return the Exposure's Psf object
-    PTR(lsst::afw::detection::Psf) getPsf() { return _psf; }
+    PTR(lsst::afw::detection::Psf) getPsf() { return _info->getPsf(); }
     /// Return the Exposure's Psf object
-    CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _psf; }
+    CONST_PTR(lsst::afw::detection::Psf) getPsf() const { return _info->getPsf(); }
     
     /// Does this Exposure have a Psf?
-    bool hasPsf() const { return static_cast<bool>(_psf); }
+    bool hasPsf() const { return _info->hasPsf(); }
 
     /// Does this Exposure have a Wcs?
-    bool hasWcs() const { return static_cast<bool>(_wcs); }
-    
-    // FITS
-    void writeFits(std::string const &expOutFile) const;
-    void writeFits(char **ramFile, size_t *ramFileLen) const;
-    
+    bool hasWcs() const { return _info->hasWcs(); }
+
+    /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
+    PTR(ExposureInfo) getInfo() { return _info; }
+
+    /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
+    CONST_PTR(ExposureInfo) getInfo() const { return _info; }
+
+    /**
+     *  @brief Write an Exposure to a regular multi-extension FITS file.
+     *
+     *  @param[in] fileName      Name of the file to write.
+     *
+     *  As with MaskedImage persistence, an empty primary HDU will be created and all images planes
+     *  will be saved to extension HDUs.  Most metadata will be saved only to the header of the
+     *  main image HDU, but the WCS will be saved to the header of the mask and variance as well.
+     *  If present, the Psf will be written to one or more additional HDUs.
+     *
+     *  Note that the LSST pixel origin differs from the FITS convention by one, so the values
+     *  of CRPIX and LTV saved in the file are not the same as those in the C++ objects in memory,
+     *  but are rather modified so they are interpreted by external tools (like ds9).
+     */
+    void writeFits(std::string const & fileName) const;
+
+    /**
+     *  @brief Write an Exposure to a multi-extension FITS file in memory.
+     *
+     *  @param[in] manager       Manager for the memory to write to.
+     *
+     *  @sa writeFits
+     */
+    void writeFits(fits::MemFileManager & manager) const;
+
+    /**
+     *  @brief Write an Exposure to an already-open FITS file object.
+     *
+     *  @param[in] fitsfile       FITS object to write.
+     *
+     *  @sa writeFits
+     */
+    void writeFits(fits::Fits & fitsfile) const;
+
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
-    
-    /// Finish initialization after constructing from a FITS file
-    void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
 
-    lsst::daf::base::PropertySet::Ptr generateOutputMetadata() const;    //Used by writeFits()
+    void _readFits(
+        fits::Fits & fitsfile, geom::Box2I const & bbox,
+        ImageOrigin origin, bool conformMasks
+    );
 
-    MaskedImageT _maskedImage;             
-    PTR(Wcs) _wcs;
-    CONST_PTR(lsst::afw::cameraGeom::Detector) _detector;
-    Filter _filter;
-    PTR(Calib) _calib;
-    PTR(lsst::afw::detection::Psf) _psf;
-    lsst::daf::base::PropertySet::Ptr _metadata;
-
-    static PTR(lsst::afw::detection::Psf) _clonePsf(CONST_PTR(lsst::afw::detection::Psf) psf);
-    static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
-    static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
+    MaskedImageT _maskedImage;
+    PTR(ExposureInfo) _info;
 };
 
 /**

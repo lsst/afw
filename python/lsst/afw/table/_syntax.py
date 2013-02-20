@@ -1,3 +1,24 @@
+# 
+# LSST Data Management System
+# Copyright 2008, 2009, 2010, 2011, 2012 LSST Corporation.
+# 
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the LSST License Statement and 
+# the GNU General Public License along with this program.  If not, 
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
 """
 Special Python syntactic sugar for Catalogs and Records.
 
@@ -41,7 +62,7 @@ def Schema_extract(self, *patterns, **kwds):
                    as positional arguments.  Note that this will be compared with re.match,
                    not re.search.
 
-      sub -------- A replacement string (see re.MatchObject.expand) used to set the
+      sub -------- A replacement string template (see re.MatchObject.expand) used to set the
                    dictionary keys of any fields matched by regex.  The field name in the
                    SchemaItem is not modified.
 
@@ -138,7 +159,7 @@ def BaseColumnView_extract(self, *patterns, **kwds):
     (i.e. non-triangular packed) arrays with dimension (N,M,M), where N is the number of
     records and M is the dimension of the covariance matrix.  Fields with named subfields
     (e.g. points) are always split into separate dictionary items, as is done in
-    BaseRecord.extract(..., split=True).
+    BaseRecord.extract(..., split=True).  String fields are silently ignored.
 
     Additional optional arguments may be passed as keywords:
 
@@ -202,6 +223,8 @@ def BaseColumnView_extract(self, *patterns, **kwds):
                 if i != j:
                     unpacked[:,j,i] = array
             d[name] = unpacked
+        elif key.getTypeString() == "String":
+            del d[name]
         else:
             d[name] = processArray(self.get(schemaItem.key))
     return d

@@ -495,7 +495,7 @@ class KernelTestCase(unittest.TestCase):
         kim2 = afwImage.ImageD(kernel2.getDimensions())
         kernel2.computeImage(kim2, True)
 
-        self.assertTrue(numpy.alltrue(kim.getArray() == kim2.getArray()))
+        self.assertTrue(numpy.allclose(kim.getArray(), kim2.getArray()))
 
     def testSVLinearCombinationKernelFixed(self):
         """Test a spatially varying LinearCombinationKernel

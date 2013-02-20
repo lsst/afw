@@ -113,3 +113,21 @@ std::ostream& geom::operator<<(std::ostream& os, lsst::afw::geom::AffineTransfor
     os.flags(flags);
     return os;
 }
+
+
+geom::AffineTransform geom::makeAffineTransformFromTriple(geom::Point2D const &p1, geom::Point2D const &p2, geom::Point2D const &p3,
+                                                          geom::Point2D const &q1, geom::Point2D const &q2, geom::Point2D const &q3)
+{
+    Eigen::Matrix3d mp;
+    mp << p1.getX(), p2.getX(), p3.getX(),
+          p1.getY(), p2.getY(), p3.getY(),
+          1.0, 1.0, 1.0;
+
+    Eigen::Matrix3d mq;
+    mq << q1.getX(), q2.getX(), q3.getX(),
+          q1.getY(), q2.getY(), q3.getY(),
+          1.0, 1.0, 1.0;
+
+    Eigen::Matrix3d m = mq * mp.inverse();
+    return AffineTransform(m);
+}

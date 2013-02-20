@@ -23,37 +23,20 @@
 #
 
 import optparse
-import os
-
-import eups
 
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.geom as afwGeom
 import lsst.daf.base as dafBase
 import lsst.pex.logging
 
 def main():
-    DefDataDir = eups.productDir("afwdata") or ""
-    
-    DefOriginalExposurePath = os.path.join(DefDataDir, "data", "med")
-    DefWcsImageOrExposurePath = os.path.join(DefDataDir, "data", "medswarp1lanczos4.fits")
-    DefOutputExposurePath = "warpedExposure"
     DefKernel = "lanczos4"
-    DefVerbosity = 6 # change to 0 once this all works to hide all messages
+    DefVerbosity = 1
     
-    usage = """usage: %%prog [options] [originalExposure [warpedWcsImageOrExposure [outputExposure]]]
+    usage = """usage: %%prog [options] srcExposure refExposure destExposure
 
-    Computes outputExposure = originalExposure warped to match warpedWcsExposure's WCS and size
-
-    Note:
-    - exposure arguments are paths to Exposure fits files;
-      they must NOT include the final _img.fits|_var.fits|_msk.fits
-      if warpedWcsImageOrExposure ends in .fits then it specifies an image
-    - default originalExposure = %s
-    - default warpedWcsImageOrExposure = %s
-    - default outputExposure = %s
-    """ % (DefOriginalExposurePath, DefWcsImageOrExposurePath, DefOutputExposurePath)
+Computes destExposure = srcExposure warped to match refExposure's WCS and bounding box,
+where exposure arguments are paths to Exposure fits files"""
     
     parser = optparse.OptionParser(usage)
     parser.add_option("-k", "--kernel",
@@ -68,40 +51,31 @@ def main():
     
     kernelName = opt.kernel.lower()
     
-    def getArg(ind, defValue):
-        if ind < len(args):
-            return args[ind]
-        return defValue
+    if len(args) != 3:
+        parser.error("You must supply three arguments")
     
-    originalExposurePath = getArg(0, DefOriginalExposurePath)
-    warpedWcsImageOrExposurePath = getArg(1, DefWcsImageOrExposurePath)
-    outputExposurePath = getArg(2, DefOutputExposurePath)
-    print "Remapping masked image  ", originalExposurePath
-    print "to match wcs and size of", warpedWcsImageOrExposurePath
+    srcExposurePath = args[0]
+    refExposurePath = args[1]
+    destExposurePath = args[2]
+    print "Remapping exposure      :", srcExposurePath
+    print "to match wcs and bbox of:", refExposurePath
     print "using", kernelName, "kernel"
     
     warpingControl = afwMath.WarpingControl(kernelName)
     
-    originalExposure = afwImage.ExposureF(originalExposurePath)
+    srcExposure = afwImage.ExposureF(srcExposurePath)
     
-    if warpedWcsImageOrExposurePath.lower().endswith(".fits"):
-        # user specified an image, not an exposure
-        warpedDI = afwImage.DecoratedImageF(warpedWcsImageOrExposurePath)
-        warpedWcs = afwImage.makeWcs(warpedDI.getMetadata())
-        warpedMI = afwImage.MaskedImageF(afwGeom.Extent2I(warpedDI.getWidth(), warpedDI.getHeight()))
-        warpedExposure = afwImage.ExposureF(warpedMI, warpedWcs)
-    else:
-        warpedExposure = afwImage.ExposureF(warpedWcsImageOrExposurePath)
+    destExposure = afwImage.ExposureF(refExposurePath)
     
     if opt.verbosity > 0:
         print "Verbosity =", opt.verbosity
         lsst.pex.logging.Trace_setVerbosity("lsst.afw.math", opt.verbosity)
     
-    numGoodPixels = afwMath.warpExposure(warpedExposure, originalExposure, warpingControl)
+    numGoodPixels = afwMath.warpExposure(destExposure, srcExposure, warpingControl)
     print "Warped exposure has %s good pixels" % (numGoodPixels)
     
-    print "Writing warped exposure to %s" % (outputExposurePath,)
-    warpedExposure.writeFits(outputExposurePath)
+    print "Writing warped exposure to %s" % (destExposurePath,)
+    destExposure.writeFits(destExposurePath)
 
 if __name__ == "__main__":
     memId0 = dafBase.Citizen_getNextMemId()

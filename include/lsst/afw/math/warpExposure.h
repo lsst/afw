@@ -43,6 +43,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/gpu/DevicePreference.h"
+#include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/math/Function.h"
@@ -63,6 +64,10 @@ namespace math {
     * The number of minima and maxima in the 1-dimensional Lanczos function is 2*order + 1.
     * The kernel has one pixel per function minimum or maximum; but as applied to warping,
     * the first or last pixel is always zero and can be omitted. Thus the kernel size is 2*order x 2*order.
+    *
+    * For more information about warping kernels see makeWarpingKernel
+    *
+    * @todo: make a new class WarpingKernel and make this a subclass.
     */
     class LanczosWarpingKernel : public SeparableKernel {
     public:
@@ -76,15 +81,22 @@ namespace math {
 
         virtual ~LanczosWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         int getOrder() const;
+
+    protected:
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
     * \brief Bilinear warping: fast; good for undersampled data.
     *
     * The kernel size is 2 x 2.
+    *
+    * For more information about warping kernels see makeWarpingKernel
+    *
+    * @todo: make a new class WarpingKernel and make this a subclass.
     */
 #if defined(SWIG)
     #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
@@ -98,7 +110,7 @@ namespace math {
 
         virtual ~BilinearWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         /**
          * \brief 1-dimensional bilinear interpolation function.
@@ -107,9 +119,12 @@ namespace math {
          * (which is why it defined in the BilinearWarpingKernel class instead of
          * being made available as a standalone function).
          */
+#if defined(SWIG)
+    #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
+#endif
         class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
+            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
              * \brief Construct a Bilinear interpolation function
@@ -131,12 +146,19 @@ namespace math {
 
             virtual std::string toString(std::string const& ="") const;
         };
+
+    protected:
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
     * \brief Nearest neighbor warping: fast; good for undersampled data.
     *
     * The kernel size is 2 x 2.
+    *
+    * For more information about warping kernels see makeWarpingKernel
+    *
+    * @todo: make a new class WarpingKernel and make this a subclass.
     */
 #if defined(SWIG)
     #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
@@ -150,7 +172,7 @@ namespace math {
 
         virtual ~NearestWarpingKernel() {}
 
-        virtual Kernel::Ptr clone() const;
+        virtual PTR(Kernel) clone() const;
 
         /**
          * \brief 1-dimensional nearest neighbor interpolation function.
@@ -159,15 +181,18 @@ namespace math {
          * (which is why it defined in the NearestWarpingKernel class instead of
          * being made available as a standalone function).
          */
+#if defined(SWIG)
+    #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
+#endif
         class NearestFunction1: public Function1<Kernel::Pixel> {
         public:
-            typedef Function1<Kernel::Pixel>::Ptr Function1Ptr;
+            typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
 
             /**
              * \brief Construct a Nearest interpolation function
              */
             explicit NearestFunction1(
-                double fracPos)    ///< fractional position; must be >= 0 and < 1
+                double fracPos)    ///< fractional position
             :
                 Function1<Kernel::Pixel>(1)
             {
@@ -183,6 +208,9 @@ namespace math {
 
             virtual std::string toString(std::string const& ="") const;
         };
+
+    protected:
+        virtual void setKernelParameter(unsigned int ind, double value) const;
     };
 
     /**
@@ -195,16 +223,21 @@ namespace math {
      * - lanczos#: return a LanczosWarpingKernel of order #, e.g. lanczos4
      * - nearest: return a NearestWarpingKernel
      *
-     * A warping kernel is a subclass of SeparableKernel with the following properties:
+     * A warping kernel is a subclass of SeparableKernel with the following properties
+     * (though for the sake of speed few, if any, of these are enforced):
+     * - Width and height are even. This is unusual for a kernel, but it is more efficient
+     *   because if the extra pixel was included it would always have value 0.
+     * - The center pixels should be adjacent to the kernel center.
+     *   Again, this avoids extra pixels that are sure to have value 0.
      * - It has two parameters: fractional x and fractional row position on the source %image.
-     *   The fractional position for each axis is in the range [0, 1):
-     *   - 0 if the position on the source along that axis is on the center of the pixel.
-     *   - 0.999... if the position on the source along that axis is almost on the center of the next pixel.
-     * - It almost always has even width and height (which is unusual for a kernel) and a center index of
-     *   (width/2, /height/2). This is because the kernel is used to map source positions that range from
-     *   centered on on pixel (width/2, height/2) to nearly centered on pixel (width/2 + 1, height/2 + 1).
+     *   The fractional position is the offset of the pixel position on the source
+     *   from the center of a nearby source pixel:
+     *   - The pixel whose center is just below or to the left of the source position:
+     *     0 <= fractional x and y < 0 and the kernel center is the default (size-1)/2.
+     *   - The pixel whose center is just above or to the right of the source position:
+     *     -1.0 < fractional x and y <= 0 and the kernel center must be set to (size+1)/2.
      */
-    SeparableKernel::Ptr makeWarpingKernel(std::string name);
+    PTR(SeparableKernel) makeWarpingKernel(std::string name);
 
     /**
      * \brief Parameters to control convolution
@@ -233,48 +266,27 @@ namespace math {
             std::string const &warpingKernelName,   ///< name of warping kernel;
                 ///< used as the argument to makeWarpingKernel
             std::string const &maskWarpingKernelName = "",  ///< name of warping kernel used for
-                ///< the mask plane; if "" then the regular warping kernel is used. 
+                ///< the mask plane; if "" then the regular warping kernel is used.
                 ///< Intended so one can use a bilinear kernel or other compact kernel for the mask plane
                 ///< to avoid smearing mask bits too far. The theory is that bad pixels are already
                 ///< interpolated over, so we don't need to worry about bad values spreading very far.
             int cacheSize = 0,      ///< cache size for warping kernel; no cache if 0
                 ///< (used as the argument to the warping kernels' computeCache method)
             int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated
-            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
+            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE,
                 ///< use GPU acceleration?
+            lsst::afw::image::MaskPixel growFullMask = 0
+                ///< mask bits to grow to full width of image/variance kernel
         ) :
             _warpingKernelPtr(makeWarpingKernel(warpingKernelName)),
             _maskWarpingKernelPtr(),
             _cacheSize(cacheSize),
             _interpLength(interpLength),
-            _devicePreference(devicePreference)
+            _devicePreference(devicePreference),
+            _growFullMask(growFullMask)
         {
-            if (!maskWarpingKernelName.empty()) {
-                _maskWarpingKernelPtr = makeWarpingKernel(maskWarpingKernelName);
-
-                // test that border of mask kernel <= border of kernel:
-                // compute bounding boxes with 0,0 at kernel center
-                // and make sure kernel bbox includes mask kernel bbox
-                lsst::afw::geom::Box2I kernelBBox = lsst::afw::geom::Box2I(
-                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_warpingKernelPtr->getCtr()),
-                    _warpingKernelPtr->getDimensions()
-                );
-                lsst::afw::geom::Box2I maskKernelBBox = lsst::afw::geom::Box2I(
-                    lsst::afw::geom::Point2I(0, 0) - lsst::afw::geom::Extent2I(_maskWarpingKernelPtr->getCtr()),
-                    _maskWarpingKernelPtr->getDimensions()
-                );
-                if (!kernelBBox.contains(maskKernelBBox)) {
-                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "warping kernel is smaller than mask warping kernel");
-                }
-                
-                if (_devicePreference == lsst::afw::gpu::USE_GPU) {
-                    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                        "devicePreference == USE_GPU and maskWarpingKernel specified; not yet supported");
-                } else {
-                    _devicePreference = lsst::afw::gpu::USE_CPU;
-                }
-            }
+            setMaskWarpingKernelName(maskWarpingKernelName);
+            _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }
 
         /**
@@ -293,22 +305,20 @@ namespace math {
             _maskWarpingKernelPtr(),
             _cacheSize(warpingKernel.getCacheSize()),
             _interpLength(interpLength),
-            _devicePreference(devicePreference)
-        { }
+            _devicePreference(devicePreference),
+            _growFullMask(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE"))
+        {
+            _testDevicePreference(_devicePreference, _warpingKernelPtr);
+        }
 
-        
+
         virtual ~WarpingControl() {};
-
-        /**
-         * @brief return true if there is a mask kernel
-         */
-        bool hasMaskKernel() const { return bool(_maskWarpingKernelPtr); }
 
         /**
          * @brief get the cache size for the interpolation kernel(s)
          */
         int getCacheSize() const { return _cacheSize; };
-        
+
         /**
          * @brief set the cache size for the interpolation kernel(s)
          *
@@ -325,7 +335,7 @@ namespace math {
          * @brief get the interpolation length (pixels)
          */
         int getInterpLength() const { return _interpLength; };
-        
+
         /**
          * @brief set the interpolation length
          *
@@ -342,44 +352,107 @@ namespace math {
          * @brief get the GPU device preference
          */
         lsst::afw::gpu::DevicePreference getDevicePreference() const { return _devicePreference; };
-        
+
         /**
          * @brief set the GPU device preference
          */
         void setDevicePreference(
             lsst::afw::gpu::DevicePreference devicePreference  ///< device preference
-        ) { _devicePreference = devicePreference; }
+        ) {
+            _testDevicePreference(devicePreference, _warpingKernelPtr);
+            _devicePreference = devicePreference;
+        }
         
         /**
-         * @brief get the warping kernel (as a shared pointer)
+         * @brief get the warping kernel
          */
-        SeparableKernel::Ptr getWarpingKernel() const {
-            if (_warpingKernelPtr->getCacheSize() != _cacheSize) {
-                _warpingKernelPtr->computeCache(_cacheSize);
-            }
-            return _warpingKernelPtr;
-        };
+        PTR(SeparableKernel) getWarpingKernel() const;
+        
+        /**
+         * @brief set the warping kernel by name
+         */
+        void setWarpingKernelName(
+            std::string const &warpingKernelName    ///< name of warping kernel
+        );
 
         /**
-         * @brief get the mask warping kernel (as a shared pointer), or a null pointer if none
+         * @brief set the warping kernel
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if new kernel pointer is empty.
          */
-        SeparableKernel::Ptr getMaskWarpingKernel() const {
-            if (_maskWarpingKernelPtr) {
-                if (_maskWarpingKernelPtr->getCacheSize() != _cacheSize) {
-                    _maskWarpingKernelPtr->computeCache(_cacheSize);
-                }
-            }
-            return _maskWarpingKernelPtr;
-        }
+        void setWarpingKernel(
+            SeparableKernel const &warpingKernel   ///< warping kernel
+        );
+
+        /**
+         * @brief get the mask warping kernel
+         */
+        PTR(SeparableKernel) getMaskWarpingKernel() const;
+
+        /**
+         * @brief return true if there is a mask kernel
+         */
+        bool hasMaskWarpingKernel() const { return static_cast<bool>(_maskWarpingKernelPtr); }
+        
+        /**
+         * @brief set or clear the mask warping kernel by name
+         */
+        void setMaskWarpingKernelName(
+            std::string const &maskWarpingKernelName
+                ///< name of mask warping kernel; use "" to clear the kernel
+        );
+
+        /**
+         * @brief set the mask warping kernel
+         *
+         * @note To clear the mask warping kernel use setMaskWarpingKernelName("").
+         */
+        void setMaskWarpingKernel(
+            SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
+        );
+
+        /**
+         * @brief get mask bits to grow to full width of image/variance kernel
+         */
+        lsst::afw::image::MaskPixel getGrowFullMask() const { return _growFullMask; };
+
+        /**
+         * @brief set mask bits to grow to full width of image/variance kernel
+         */
+        void setGrowFullMask(
+            lsst::afw::image::MaskPixel growFullMask  ///< device preference
+        ) { _growFullMask = growFullMask; }
 
     private:
-        SeparableKernel::Ptr _warpingKernelPtr;
-        SeparableKernel::Ptr _maskWarpingKernelPtr;
+        /**
+         * @brief Throw an exception if the two kernels are not compatible in shape
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if the two kernels
+         * are not compatible in shape
+         */
+        void _testWarpingKernels(
+            SeparableKernel const &warpingKernel,       ///< warping kernel
+            SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
+        ) const;
+        
+        /**
+         * @brief test if GPU device preference and main warping kernel are compatible
+         *
+         * @throw lsst::pex::exceptions::InvalidParameterException if the parameters are incompatible
+         */
+        void _testDevicePreference(
+            lsst::afw::gpu::DevicePreference const &devicePreference,   ///< GPU device preference
+            CONST_PTR(SeparableKernel) const &warpingKernelPtr          ///< warping kernel
+        ) const;
+
+        PTR(SeparableKernel) _warpingKernelPtr;
+        PTR(SeparableKernel) _maskWarpingKernelPtr;
         int _cacheSize;
         int _interpLength;
         lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
+        lsst::afw::image::MaskPixel _growFullMask;
     };
-    
+
 
     /**
      * \brief Warp (remap) one exposure to another.
@@ -413,7 +486,7 @@ namespace math {
         SrcExposureT const &srcExposure,    ///< Source exposure
         SeparableKernel &warpingKernel,     ///< Warping kernel; determines warping algorithm
         int const interpLength=0,           ///< Distance over which WCS can be linearily interpolated
-        typename DestExposureT::MaskedImageT::SinglePixel padValue = 
+        typename DestExposureT::MaskedImageT::SinglePixel padValue =
             lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
             typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category()),
             ///< use this value for undefined (edge) pixels

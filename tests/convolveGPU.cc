@@ -39,8 +39,10 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <math.h>
-#include <time.h>
+#include <cmath>
+#include <ctime>
+
+#include "lsst/utils/ieee.h"
 
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
@@ -94,8 +96,8 @@ double CvRmsd(afwImage::Image<T1>& imgA, afwImage::Image<T2>& imgB)
         for (int y = 0; y < dimY; y++) {
             const double valA = imgA(x, y);
             const double valB = imgB(x, y);
-            if (isnan(valA) && isnan(valB)) continue;
-            if (isinf(valA) && isinf(valB)) continue;
+            if (lsst::utils::isnan(valA) && lsst::utils::isnan(valB)) continue;
+            if (lsst::utils::isinf(valA) && lsst::utils::isinf(valB)) continue;
 
             cnt++;
             avgSum += (valA + valB) / 2;
@@ -135,8 +137,8 @@ double DiffCnt(afwImage::Mask<T>& imgA, afwImage::Mask<T>& imgB)
 
 string NumToStr(double num)
 {
-    if (isnan(num))       return string("NAN!!!");
-    else if (isinf(num))  return string("INF!!!");
+    if (lsst::utils::isnan(num))       return string("NAN!!!");
+    else if (lsst::utils::isinf(num))  return string("INF!!!");
     else {
         stringstream ss;
         ss << num;
@@ -251,7 +253,7 @@ afwMath::LinearCombinationKernel::Ptr  ConstructLinearCombinationKernel(
 
 string GetInputFileName(int argc, char **argv)
 {
-    string imgBaseFileName;
+    string imgFileName;
     if (argc < 2) {
         string afwdata = getenv("AFWDATA_DIR");
         if (afwdata.empty()) {
@@ -262,16 +264,16 @@ string GetInputFileName(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         else {
-            imgBaseFileName = afwdata + "/data/med";
-            //imgBaseFileName = afwdata + "/data/medsub";
-            //imgBaseFileName = afwdata + "/data/871034p_1_MI";
-            cout << "Using image: " << imgBaseFileName << endl;
+            imgFileName = afwdata + "/data/medexp.fits";
+            //imgFileName = afwdata + "/data/medsub.fits";
+            //imgFileName = afwdata + "/data/871034p_1_MI.fits";
+            cout << "Using image: " << imgFileName << endl;
         }
     }
     else {
-        imgBaseFileName = string(argv[1]);
+        imgFileName = string(argv[1]);
     }
-    return imgBaseFileName;
+    return imgFileName;
 }
 
 afwMath::FixedKernel::Ptr ConstructKernel(
@@ -300,8 +302,8 @@ string Sel(bool b, const char* onTrue, const char* onFalse)
 
 bool IsErrorAcceptable(double val, double limit)
 {
-    if (isnan(val)) return false;
-    if (isinf(val)) return false;
+    if (lsst::utils::isnan(val)) return false;
+    if (lsst::utils::isinf(val)) return false;
     return val < limit;
 }
 
@@ -402,15 +404,15 @@ bool TestConvGpu(
     return isSuccess;
 }
 
-bool GpuTestAccuracy(string imgBaseFileName)
+bool GpuTestAccuracy(string imgFileName)
 {
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     afwGeom::Box2I inputBBox(afwGeom::Point2I(52, 574), afwGeom::Extent2I(76, 80));
 
-    afwImage::MaskedImage<float>    inImgFlt(imgBaseFileName);
-    afwImage::MaskedImage<double>   inImgDbl(imgBaseFileName);
+    afwImage::MaskedImage<float>    inImgFlt(imgFileName);
+    afwImage::MaskedImage<double>   inImgDbl(imgFileName);
     const int sizeX = inImgFlt.getWidth();
     const int sizeY = inImgFlt.getHeight();
 
@@ -481,12 +483,12 @@ bool GpuTestAccuracy(string imgBaseFileName)
     return isSuccess;
 }
 
-bool GpuTestExceptions(const string imgBaseFileName)
+bool GpuTestExceptions(const string imgFileName)
 {
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
-    afwImage::MaskedImage<double> inImg(imgBaseFileName);
+    afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;
@@ -627,12 +629,12 @@ bool GpuTestExceptions(const string imgBaseFileName)
     return isSuccess;
 }
 
-bool CpuTestExceptions(const string imgBaseFileName)
+bool CpuTestExceptions(const string imgFileName)
 {
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
-    afwImage::MaskedImage<double> inImg(imgBaseFileName);
+    afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;

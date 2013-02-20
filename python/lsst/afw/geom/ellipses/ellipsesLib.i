@@ -32,6 +32,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %module(package="lsst.afw.geom.ellipses", docstring=ellipsesLib_DOCSTRING) ellipsesLib
 
 %{
+#include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_ELLIPSES_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
@@ -44,33 +45,6 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %}
 
 %include "lsst/p_lsstSwig.i"
-
-
-
-%pythoncode %{
-import lsst.utils
-
-def version(HeadURL = r"$HeadURL$"):
-    """Return a version given a HeadURL string. If a different version is setup, return that too"""
-
-    version_svn = lsst.utils.guessSvnVersion(HeadURL)
-
-    try:
-        import eups
-    except ImportError:
-        return version_svn
-    else:
-        try:
-            version_eups = eups.getSetupVersion("afw")
-        except AttributeError:
-            return version_svn
-
-    if version_eups == version_svn:
-        return version_svn
-    else:
-        return "%s (setup: %s)" % (version_svn, version_eups)
-
-%}
 
 %lsst_exceptions();
 
@@ -247,3 +221,4 @@ def version(HeadURL = r"$HeadURL$"):
 %include "lsst/afw/geom/ellipses/Parametric.h"
 %include "lsst/afw/geom/ellipses.h" // just for Separable typedefs
 
+%include "PixelRegion.i"

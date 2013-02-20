@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         // test methods for public stats objects in bgCtrl
         bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
         bgCtrl.getStatisticsControl()->setNumIter(3);
-        math::Background back = math::makeBackground(img, bgCtrl);
-        double const TESTVAL = back.getPixel(xcen, ycen);
+        PTR(math::Background) back = math::makeBackground(img, bgCtrl);
+        double const TESTVAL = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
         
-        image::Image<float>::Ptr bImage = back.getImage<float>();
+        image::Image<float>::Ptr bImage = back->getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
         
         BOOST_CHECK_EQUAL(TESTVAL, pixVal);
@@ -116,14 +116,14 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
             float stdevSubimg = reqStdev / sqrt(width*height/(bctrl.getNxSample()*bctrl.getNySample()));
 
             // run the background constructor and call the getPixel() and getImage() functions.
-            math::Background backobj = math::makeBackground(*img, bctrl);
+            PTR(math::Background) backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
-            float testval = static_cast<float>(backobj.getPixel(width/2, height/2));
+            float testval = boost::shared_dynamic_cast<math::BackgroundMI>(backobj)->getPixel(width/2, height/2);
             BOOST_REQUIRE( fabs(testval - reqMean) < 2.0*stdevSubimg );
 
             // test getImage() by checking the center pixel
-            image::Image<float>::Ptr bimg = backobj.getImage<float>();
+            image::Image<float>::Ptr bimg = backobj->getImage<float>();
             float testImgval = static_cast<float>(*(bimg->xy_at(width/2, height/2)));
             BOOST_REQUIRE( fabs(testImgval - reqMean) < 2.0*stdevSubimg );
             
@@ -160,7 +160,8 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         bctrl.setNySample(6);
         bctrl.getStatisticsControl()->setNumSigmaClip(20.0); //something large enough to avoid clipping entirely
         bctrl.getStatisticsControl()->setNumIter(1);
-        math::Background backobj = math::Background(rampimg, bctrl);
+        PTR(math::BackgroundMI) backobj =
+            boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(rampimg, bctrl));
 
         // test the values at the corners and in the middle
         int ntest = 3;
@@ -168,15 +169,14 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
             int xpix = i*(nX - 1)/(ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j*(nY - 1)/(ntest - 1);
-                double testval = backobj.getPixel(xpix, ypix);
+                double testval = backobj->getPixel(xpix, ypix);
                 double realval = *rampimg.xy_at(xpix, ypix);
-                BOOST_CHECK_CLOSE( testval, realval, 1.0e-10 );
+                BOOST_CHECK_CLOSE(testval/realval, 1.0, 2.5e-5);
             }
-        }
-                    
+        }                    
     }
-
 }
+
 BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     {
@@ -203,22 +203,16 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         bctrl.setNySample(24);
         bctrl.getStatisticsControl()->setNumSigmaClip(10.0);
         bctrl.getStatisticsControl()->setNumIter(1);
-        math::Background backobj = math::Background(parabimg, bctrl);
+        PTR(math::BackgroundMI) backobj =
+            boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(parabimg, bctrl));
 
-        // debug
-        //bimg = backobj.getImageD()
-        //ds9.mtv(parabimg)
-        //ds9.mtv(bimg, frame=1)
-        //parabimg.writeFits("a.fits")
-        //bimg.writeFits("b.fits")
-
-        // check the values at the corners and int he middle
+        // check the values at the corners and in the middle
         int const ntest = 3;
         for (int i = 0; i < ntest; ++i) {
             int xpix = i*(nX - 1)/(ntest - 1);
             for (int j = 0; j < ntest; ++j) {
                 int ypix = j*(nY - 1)/(ntest - 1);
-                double testval = backobj.getPixel(xpix, ypix);
+                double testval = backobj->getPixel(xpix, ypix);
                 double realval = *parabimg.xy_at(xpix, ypix);
                 //print xpix, ypix, testval, realval
                 // quadratic terms skew the averages of the subimages and the clipped mean for

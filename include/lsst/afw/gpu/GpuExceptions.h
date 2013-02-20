@@ -34,6 +34,8 @@
  * @ingroup afw
  */
 
+#include "lsst/pex/exceptions.h"
+
 namespace lsst {
 namespace afw {
 namespace gpu {

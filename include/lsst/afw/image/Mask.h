@@ -107,20 +107,81 @@ public:
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
     explicit Mask(geom::Box2I const & bbox, MaskPixelT initialValue,
                   MaskPlaneDict const& planeDefs = MaskPlaneDict());
+
+    /**
+     *  @brief Construct a Mask by reading a regular FITS file.
+     *
+     *  @param[in]      fileName      File to read.
+     *  @param[in]      hdu           HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *
+     *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+     *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+     *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
+     *  on-disk version.
+     */
     explicit Mask(
-        std::string const& fileName, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const = LOCAL, 
-        bool const conformMasks=false
-    );                      
+        std::string const & fileName, int hdu=0,
+        PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
+        geom::Box2I const & bbox = geom::Box2I(),
+        ImageOrigin origin = LOCAL,
+        bool conformMasks = false
+    );
+
+    /**
+     *  @brief Construct a Mask by reading a FITS image in memory.
+     *
+     *  @param[in]      manager       An object that manages the memory buffer to read.
+     *  @param[in]      hdu           HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
+     *                                of 0 reads the Primary HDU unless it is empty, in which case it
+     *                                reads the first extension HDU.
+     *  @param[in,out]  metadata      Metadata read from the header (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *
+     *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+     *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+     *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
+     *  on-disk version.
+     */
     explicit Mask(
-        char **ramFile, size_t *ramFileLen, int const hdu=0,
-        lsst::daf::base::PropertySet::Ptr metadata=lsst::daf::base::PropertySet::Ptr(),
-        geom::Box2I const& bbox=geom::Box2I(), 
-        ImageOrigin const = LOCAL, 
-        bool const conformMasks=false
-    );     
+        fits::MemFileManager & manager, int hdu=0,
+        PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
+        geom::Box2I const & bbox = geom::Box2I(),
+        ImageOrigin origin = LOCAL,
+        bool conformMasks = false
+    );
+
+    /**
+     *  @brief Construct a Mask from an already-open FITS object.
+     *
+     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
+     *  @param[in,out]  metadata      Metadata read from the header (may be null).
+     *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
+     *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
+     *                                should take into account the xy0 saved with the image.
+     *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
+     *
+     *  The meaning of the bitplanes is given in the header.  If conformMasks is false (default),
+     *  the bitvalues will be changed to match those in Mask's plane dictionary.  If it's true, the
+     *  bitvalues will be left alone, but Mask's dictionary will be modified to match the
+     *  on-disk version.
+     */
+    explicit Mask(
+        fits::Fits & fitsfile,
+        PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
+        geom::Box2I const & bbox = geom::Box2I(),
+        ImageOrigin origin = LOCAL,
+        bool conformMasks = false
+    );
 
     // generalised copy constructor
     template<typename OtherPixelT>
@@ -163,26 +224,49 @@ public:
                                                                    CheckIndices const&) const;
     bool operator()(int x, int y, int plane, CheckIndices const&) const;
 
-    // I/O and FITS metadata
-    
-    //void readFits(const std::string& fileName, bool conformMasks=false, int hdu=0); // replaced by constructor
+    /**
+     *  @brief Write a mask to a regular FITS file.
+     *
+     *  @param[in] fileName      Name of the file to write.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     */
     void writeFits(
         std::string const& fileName,
         CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
+
+    /**
+     *  @brief Write a mask to a FITS RAM file.
+     *
+     *  @param[in] manager       Manager object for the memory block to write to.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     */
     void writeFits(
-        char **ramFile, size_t *ramFileLen,
+        fits::MemFileManager & manager,
         CONST_PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         std::string const& mode="w"
     ) const;
-    
+
+    /**
+     *  @brief Write a mask to an open FITS file object.
+     *
+     *  @param[in] fitsfile      A FITS file already open to the desired HDU.
+     *  @param[in] metadata      Additional values to write to the header (may be null).
+     */
+    void writeFits(
+        fits::Fits & fitsfile,
+        CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)()
+    ) const;
+
     // Mask Plane ops
     
     void clearAllMaskPlanes();
     void clearMaskPlane(int plane);
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
-    static MaskPlaneDict parseMaskPlaneMetadata(lsst::daf::base::PropertySet::Ptr const);
+    static MaskPlaneDict parseMaskPlaneMetadata(CONST_PTR(lsst::daf::base::PropertySet));
     //
     // Operations on the mask plane dictionary
     //
@@ -199,7 +283,7 @@ public:
     MaskPlaneDict const& getMaskPlaneDict() const;
     void printMaskPlanes() const;
 
-    static void addMaskPlanesToMetadata(lsst::daf::base::PropertySet::Ptr);
+    static void addMaskPlanesToMetadata(PTR(lsst::daf::base::PropertySet));
     //
     // This one isn't static, it fixes up a given Mask's planes
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);

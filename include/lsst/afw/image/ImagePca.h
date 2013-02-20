@@ -51,7 +51,8 @@ namespace image {
 
         typedef std::vector<typename ImageT::Ptr> ImageList;
 
-        ImagePca(bool constantWeight=true);
+        explicit ImagePca(bool constantWeight=true);
+        virtual ~ImagePca() {}
 
         void addImage(typename ImageT::Ptr img, double flux=0.0);
         ImageList getImageList() const;
@@ -60,8 +61,8 @@ namespace image {
         geom::Extent2I const getDimensions() const { return _dimensions; }
 
         typename ImageT::Ptr getMean() const;
-        void analyze();
-        double updateBadPixels(unsigned long mask, int const ncomp);
+        virtual void analyze();
+        virtual double updateBadPixels(unsigned long mask, int const ncomp);
         
         /// Return Eigen values
         std::vector<double> const& getEigenValues() const { return _eigenValues; }
@@ -75,7 +76,6 @@ namespace image {
         std::vector<double> _fluxList;  // fluxes of images
         geom::Extent2I _dimensions;      // width/height of images on _imageList
 
-        //int _border;                  // how many pixels to ignore around regions
         bool _constantWeight;           // should all stars have the same weight?
         
         std::vector<double> _eigenValues; // Eigen values

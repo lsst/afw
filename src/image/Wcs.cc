@@ -42,6 +42,9 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/geom/Angle.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
@@ -56,6 +59,7 @@ typedef lsst::daf::base::PropertyList PropertyList;
 typedef lsst::afw::image::Wcs Wcs;
 typedef lsst::afw::geom::Point2D GeomPoint;
 typedef lsst::afw::coord::Coord::Ptr CoordPtr;
+typedef lsst::afw::image::XYTransformFromWcsPair XYTransformFromWcsPair;
 
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
@@ -211,22 +215,45 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
     // Scamp produces PVi_xx header cards that are inconsistent with WCS Paper 2
     // and cause WCSLib to choke.  Aggressively, rename all PV keywords to X_PV
     for (int j=1; j<3; j++) {
         for (int i=0; i<=99; i++) {
             std::string key = (boost::format("PV%i_%i") % j % i).str();
-            //printf("looking for key: \"%s\"\n", key.c_str());
-            if (!access.toRead()->exists(key))
+            if (!access.toRead()->exists(key)) {
                 break;
+            }
             double val = access.toRead()->getAsDouble(key);
-            //printf("  found with val %g\n", val);
             access.toWrite()->remove(key);
             access.toWrite()->add("X_"+key, val);
         }
     }
-    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
+    // Early SuprimeCam headers have both CD and PC cards which is illegal.  Worse,
+    // they don't agree with each other (see notes in #2258)
+    //
+    // We'll arbitrarily strip the PC cards
+    {
+        bool hasCD = false;
+        for (int j = 1; j != 3 && !hasCD; ++j) {
+            for (int i = 1; i != 3; ++i) {
+                std::string key = str(boost::format("CD%d_%d") % j % i);
+                if (access.toRead()->exists(key)) {
+                    hasCD = true;
+                    break;
+                }
+            }
+        }
+        if (hasCD) {
+            for (int j = 1; j != 3; ++j) {
+                for (int i = 1; i != 3; ++i) {
+                    std::string key = str(boost::format("PC%03d%03d") % j % i);
+                    if (access.toRead()->exists(key)) {
+                        access.toWrite()->remove(key);
+                    }
+                }
+            }
+        }
+    }
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
     //is almost certain their absence indicates a problem.   
@@ -287,6 +314,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     char *hdrString = const_cast<char*>(metadataStr.c_str());
     //printf("wcspih string:\n%s\n", hdrString);
     
+    nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead()); // we may have dropped some
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
     if (pihStatus != 0) {
@@ -324,18 +352,18 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             if (space != std::string::npos) {
                 radecsys.erase(space);
             }
-            snprintf(_wcsInfo->radesys, STRLEN, radecsys.c_str());
+            strncpy(_wcsInfo->radesys, radecsys.c_str(), STRLEN);
         } else if (access.toRead()->exists("EQUINOX") || access.toRead()->exists("EQUINOXa")) {
             std::string const EQUINOX = access.toRead()->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
             double const equinox = access.toRead()->getAsDouble(EQUINOX);
             if(equinox < 1984) {
-                snprintf(_wcsInfo->radesys, STRLEN, "FK4");
+                strncpy(_wcsInfo->radesys, "FK4", STRLEN);
             } else {
-                snprintf(_wcsInfo->radesys, STRLEN, "FK5");
+                strncpy(_wcsInfo->radesys, "FK5", STRLEN);
             }
         } else {
             //If Equinox doesn't exist, default to ICRS
-            snprintf(_wcsInfo->radesys, STRLEN, "ICRS");
+            strncpy(_wcsInfo->radesys, "ICRS", STRLEN);
         }
     }
     //
@@ -498,71 +526,55 @@ bool Wcs::operator==(Wcs const & other) const {
     return this->_isSubset(other) && other._isSubset(*this);
 }
 
+// convenience functions and a macro for implementing isSubset
+namespace {
+
+inline bool compareArrays(double const * a, double const * b, int n) {
+    for (int i = 0; i < n; ++i) if (a[i] != b[i]) return false;
+    return true;
+}
+
+template <typename T>
+inline bool compareStringArrays(T a, T b, int n) {
+    for (int i = 0; i < n; ++i) if (strcmp(a[i], b[i]) != 0) return false;
+    return true;
+}
+
+#define CHECK_NULLS(a, b)                       \
+    do {                                        \
+        if ((a) == NULL) {                      \
+            if ((b) == NULL) return true;       \
+            return false;                       \
+        }                                       \
+        if ((b) == NULL) return false;          \
+    } while (false)
+
+} // anonymous
+
 bool Wcs::_isSubset(Wcs const & rhs) const {
+    CHECK_NULLS(_wcsInfo, rhs._wcsInfo);
+    CHECK_NULLS(_wcsInfo->crval, rhs._wcsInfo->crval);
+    CHECK_NULLS(_wcsInfo->cd, rhs._wcsInfo->cd);
+    CHECK_NULLS(_wcsInfo->crpix, rhs._wcsInfo->crpix);
+    CHECK_NULLS(_wcsInfo->cunit, rhs._wcsInfo->cunit);
+    CHECK_NULLS(_wcsInfo->ctype, rhs._wcsInfo->ctype);
     return _nWcsInfo == rhs._nWcsInfo &&
-        _relax == rhs._relax &&
-        _wcsfixCtrl == rhs._wcsfixCtrl &&
-        _wcshdrCtrl == rhs._wcshdrCtrl &&
-        _nReject == rhs._nReject &&
         _coordSystem == rhs._coordSystem &&
         _wcsInfo->naxis == rhs._wcsInfo->naxis &&
         _wcsInfo->equinox == rhs._wcsInfo->equinox &&
-        _wcsInfo->crpix[0] == rhs._wcsInfo->crpix[0] &&
-        _wcsInfo->crpix[1] == rhs._wcsInfo->crpix[1] &&
-        _wcsInfo->cd[0] == rhs._wcsInfo->cd[0] &&
-        _wcsInfo->cd[1] == rhs._wcsInfo->cd[1] &&
-        _wcsInfo->cd[2] == rhs._wcsInfo->cd[2] &&
-        _wcsInfo->cd[3] == rhs._wcsInfo->cd[3] &&
-        _wcsInfo->crval[0] == rhs._wcsInfo->crval[0] &&
-        _wcsInfo->crval[1] == rhs._wcsInfo->crval[1] &&
-        strcmp(_wcsInfo->cunit[0], rhs._wcsInfo->cunit[0]) == 0 &&
-        strcmp(_wcsInfo->cunit[1], rhs._wcsInfo->cunit[1]) == 0 &&
-        strcmp(_wcsInfo->ctype[0], rhs._wcsInfo->ctype[0]) == 0 &&
-        strcmp(_wcsInfo->ctype[1], rhs._wcsInfo->ctype[1]) == 0 &&
         _wcsInfo->altlin == rhs._wcsInfo->altlin &&
+        compareArrays(_wcsInfo->crval, rhs._wcsInfo->crval, 2) &&
+        compareArrays(_wcsInfo->crpix, rhs._wcsInfo->crpix, 2) &&
+        compareArrays(_wcsInfo->cd, rhs._wcsInfo->cd, 4) &&
+        compareStringArrays(_wcsInfo->cunit, rhs._wcsInfo->cunit, 2) &&
+        compareStringArrays(_wcsInfo->ctype, rhs._wcsInfo->ctype, 2) &&
         skyToPixel(_wcsInfo->crval[0] * afwGeom::degrees,
                    _wcsInfo->crval[1] * afwGeom::degrees) ==
         rhs.skyToPixel(_wcsInfo->crval[0] * afwGeom::degrees,
                        _wcsInfo->crval[1] * afwGeom::degrees) &&
-        *pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]) == *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
+        *pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]) ==
+        *rhs.pixelToSky(_wcsInfo->crpix[0], _wcsInfo->crpix[1]);
 }
-
-///Assignment operator    
-Wcs & Wcs::operator = (const Wcs & rhs){
-    if (this != &rhs) {
-        if (_nWcsInfo > 0) {
-            wcsvfree(&_nWcsInfo, &_wcsInfo);
-        }
-        _nWcsInfo = 0;
-        _wcsInfo = NULL;
-        _relax = rhs._relax;
-        _wcsfixCtrl = rhs._wcsfixCtrl;
-        _wcshdrCtrl = rhs._wcshdrCtrl;
-        _nReject = rhs._nReject;
-
-        if (rhs._nWcsInfo > 0) {
-            // allocate wcs structs
-            _wcsInfo = static_cast<struct wcsprm *>(calloc(1, sizeof(struct wcsprm)));
-            if (_wcsInfo == NULL) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
-            }
-            _wcsInfo->flag = -1;
-            _nWcsInfo = 1;
-
-            _wcsInfo[0].flag = -1;
-            int status = wcscopy(1, rhs._wcsInfo, _wcsInfo);
-            if (status != 0) {
-                wcsvfree(&_nWcsInfo, &_wcsInfo);
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                    (boost::format("Failed to copy WCS info; wcscopy status = %d. %s") %
-                     status % wcs_errmsg[status]).str());
-            }
-        }
-    }
-    
-    return *this;
-}
-
 
 Wcs::~Wcs() {
     if (_wcsInfo != NULL) {
@@ -575,46 +587,29 @@ Wcs::Ptr Wcs::clone(void) const {
     return Wcs::Ptr(new Wcs(*this));
 }
 
-
-bool Wcs::isInitialized() const {
-    return (_wcsInfo != NULL);
-}
-
 //
 // Accessors
 //
 
 ///Return crval. Note that this need not be the centre of the image
 CoordPtr Wcs::getSkyOrigin() const {
-
-    if(isInitialized()) {
-        return makeCorrectCoord(_wcsInfo->crval[0] * afwGeom::degrees,
-                                _wcsInfo->crval[1] * afwGeom::degrees);
-    } else {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
-    }
+    assert(_wcsInfo);
+    return makeCorrectCoord(_wcsInfo->crval[0] * afwGeom::degrees, _wcsInfo->crval[1] * afwGeom::degrees);
 }
 
 ///Return crpix in the lsst convention. Note that this need not be the centre of the image
 GeomPoint Wcs::getPixelOrigin() const {
-
-    if(isInitialized()) {
-        //Convert from fits units back to lsst units
-        double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
-        double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
-        return afwGeom::Point2D(p1, p2);
-    } else {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
+    //Convert from fits units back to lsst units
+    double p1 = _wcsInfo->crpix[0] + fitsToLsstPixels;
+    double p2 = _wcsInfo->crpix[1] + fitsToLsstPixels;
+    return afwGeom::Point2D(p1, p2);
 }
 
 
 ///Return the CD matrix
 Eigen::Matrix2d Wcs::getCDMatrix() const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
-    
+    assert(_wcsInfo);
     int const naxis = _wcsInfo->naxis;
 
     //If naxis != 2, I'm not sure if any of what follows is correct
@@ -632,10 +627,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
 }
 ///Flip CD matrix around the y-axis
 void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
-    
+    assert(_wcsInfo);
     
     int const naxis = _wcsInfo->naxis;
 
@@ -651,12 +643,14 @@ void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const 
         _wcsInfo->cd[3] = -_wcsInfo->cd[3];
         _wcsInfo->crpix[1] = -_wcsInfo->crpix[1]+dimensions.getY();
     }
+
+    // tells libwcs to invalidate cached data, since transformation has been modified
+    _wcsInfo->flag = 0;
 }
 
 void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
+
     while (nQuarter < 0 ) {
         nQuarter += 4;
     }
@@ -700,6 +694,9 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
             _wcsInfo->crpix[1] = -crpx + dimensions.getX();
             break;
     }
+
+    // tells libwcs to invalidate cached data, since transformation has been modified
+    _wcsInfo->flag = 0;
 }
 ///Return the Wcs as a fits header
 PropertyList::Ptr Wcs::getFitsMetadata() const {
@@ -721,9 +718,7 @@ PropertyList::Ptr Wcs::getFitsMetadata() const {
 /// determinant is positive, then the image can be rotated to a position where increasing the right ascension
 /// and declination increases the horizontal and vertical pixel position. In this case the image is flipped.
 bool Wcs::isFlipped() const {
-    if (!isInitialized() ) {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs structure is not initialised"));
-    }
+    assert(_wcsInfo);
     double det = (_wcsInfo->cd[0] * _wcsInfo->cd[3]) - (_wcsInfo->cd[1] * _wcsInfo->cd[2]);
 
     if (det == 0) {
@@ -781,9 +776,7 @@ afwGeom::Angle Wcs::pixelScale() const {
 GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, longitude)
                               afwGeom::Angle sky2  // Dec (or latitude)
                              ) const {
-    if (!isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
 
     double skyTmp[2];
     double imgcrd[2];
@@ -803,8 +796,8 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
+            status % sky1.asDegrees() % sky2.asDegrees() % wcs_errmsg[status]).str());
     }
 
     // wcslib assumes 1-indexed coords
@@ -834,9 +827,7 @@ GeomPoint Wcs::skyToPixel(afwGeom::Angle sky1, afwGeom::Angle sky2) const {
 }
 
 GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
 
     afwCoord::Coord::Ptr sky = convertCoordToSky(coord);
     double skyTmp[2];
@@ -864,8 +855,8 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
+            status % skyTmp[0] % skyTmp[1] % wcs_errmsg[status]).str());
     }
     /*
      printf("->iwc (%.3f, %.3f)\n", imgcrd[0], imgcrd[1]);
@@ -882,9 +873,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
 void
 Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) const
 {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
     
     // wcslib assumes 1-indexed coordinates
     double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
@@ -897,8 +886,8 @@ Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) cons
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, sky, &status);
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
-                          (boost::format("Error: wcslib returned a status code of %d. %s") %
-                           status % wcs_errmsg[status]).str());
+            (boost::format("Error: wcslib returned a status code of %d at pixel %s, %s: %s") %
+            status % pixel1 % pixel2 % wcs_errmsg[status]).str());
     }
     // FIXME -- _wcsInfo.lat, _wcsInfo.lng ?
     skyTmp[0] = sky[0] * afwGeom::degrees;
@@ -920,9 +909,7 @@ CoordPtr Wcs::pixelToSky(GeomPoint const & pixel) const {
 ///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
 ///be RA--TAN and DEC-TAN. 
 CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
-    if(! isInitialized()) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
-    }
+    assert(_wcsInfo);
 
     afwGeom::Angle skyTmp[2];
     pixelToSkyImpl(pixel1, pixel2, skyTmp);
@@ -1033,14 +1020,15 @@ lsst::afw::geom::AffineTransform Wcs::linearizePixelToSkyInternal(
     //
     const double side = 10;             // length of the square's sides in pixels
     GeomPoint const sky00 = coord.getPosition(skyUnit);
-    GeomPoint const dsky10 = coord.getOffsetFrom(*pixelToSky(pix00 + afwGeom::Extent2D(side, 0)), skyUnit);
-    GeomPoint const dsky01 = coord.getOffsetFrom(*pixelToSky(pix00 + afwGeom::Extent2D(0, side)), skyUnit);
+    typedef std::pair<lsst::afw::geom::Angle, lsst::afw::geom::Angle> AngleAngle;
+    AngleAngle const dsky10 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + afwGeom::Extent2D(side, 0)));
+    AngleAngle const dsky01 = coord.getTangentPlaneOffset(*pixelToSky(pix00 + afwGeom::Extent2D(0, side)));
 
     Eigen::Matrix2d m;
-    m(0, 0) = dsky10.getX()/side;
-    m(0, 1) = dsky01.getX()/side;
-    m(1, 0) = dsky10.getY()/side;
-    m(1, 1) = dsky01.getY()/side;
+    m(0, 0) = dsky10.first.asAngularUnits(skyUnit)/side;
+    m(0, 1) = dsky01.first.asAngularUnits(skyUnit)/side;
+    m(1, 0) = dsky10.second.asAngularUnits(skyUnit)/side;
+    m(1, 1) = dsky01.second.asAngularUnits(skyUnit)/side;
 
     Eigen::Vector2d sky00v;
     sky00v << sky00.getX(), sky00.getY();
@@ -1089,9 +1077,135 @@ lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
     return lsst::afw::geom::LinearTransform(getCDMatrix());
 }
 
+// -------- table-based persistence -------------------------------------------------------------------------
 
+namespace lsst { namespace afw { namespace image {
 
+class WcsFactory : public table::io::PersistableFactory {
+public:
 
+    explicit WcsFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+
+    virtual PTR(table::io::Persistable) read(
+        InputArchive const & archive,
+        CatalogVector const & catalogs
+    ) const;
+
+};
+
+namespace {
+
+// Read-only singleton struct containing the schema and keys that a simple Wcs is mapped
+// to in record persistence.
+struct WcsPersistenceHelper : private boost::noncopyable {
+    table::Schema schema;
+    table::Key< table::Point<double> > crval;
+    table::Key< table::Point<double> > crpix;
+    table::Key< table::Array<double> > cd;
+    table::Key<std::string> ctype1;
+    table::Key<std::string> ctype2;
+    table::Key<double> equinox;
+    table::Key<std::string> radesys;
+    table::Key<std::string> cunit1;
+    table::Key<std::string> cunit2;
+
+    static WcsPersistenceHelper const & get() {
+        static WcsPersistenceHelper instance;
+        return instance;
+    };
+
+private:
+    WcsPersistenceHelper() :
+        schema(),
+        crval(schema.addField< table::Point<double> >("crval", "celestial reference point")),
+        crpix(schema.addField< table::Point<double> >("crpix", "pixel reference point")),
+        cd(schema.addField< table::Array<double> >(
+               "cd", "linear transform matrix, ordered (1_1, 2_1, 1_2, 2_2)", 4)),
+        ctype1(schema.addField< std::string >("ctype1", "coordinate type", 72)),
+        ctype2(schema.addField< std::string >("ctype2", "coordinate type", 72)),
+        equinox(schema.addField< double >("equinox", "equinox of coordinates")),
+        radesys(schema.addField< std::string >("radesys", "coordinate system for equinox", 72)),
+        cunit1(schema.addField< std::string >("cunit1", "coordinate units", 72)),
+        cunit2(schema.addField< std::string >("cunit2", "coordinate units", 72))
+    {
+        schema.getCitizen().markPersistent();
+    }
+};
+
+std::string getWcsPersistenceName() { return "Wcs"; }
+
+WcsFactory registration(getWcsPersistenceName());
+
+} // anonymous
+
+std::string Wcs::getPersistenceName() const { return getWcsPersistenceName(); }
+
+void Wcs::write(OutputArchiveHandle & handle) const {
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
+    afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+    PTR(afw::table::BaseRecord) record = catalog.addNew();
+    record->set(keys.crval, getSkyOrigin()->getPosition(afw::geom::degrees));
+    record->set(keys.crpix, getPixelOrigin());
+    Eigen::Matrix2d cdIn = getCDMatrix();
+    Eigen::Map<Eigen::Matrix2d> cdOut((*record)[keys.cd].getData());
+    cdOut = cdIn;
+    record->set(keys.ctype1, std::string(_wcsInfo[0].ctype[0]));
+    record->set(keys.ctype2, std::string(_wcsInfo[0].ctype[1]));
+    record->set(keys.equinox, _wcsInfo[0].equinox);
+    record->set(keys.radesys, std::string(_wcsInfo[0].radesys));
+    record->set(keys.cunit1, std::string(_wcsInfo[0].cunit[0]));
+    record->set(keys.cunit2, std::string(_wcsInfo[0].cunit[1]));
+    handle.saveCatalog(catalog);
+}
+
+bool Wcs::isPersistable() const {
+    if (_wcsInfo[0].naxis != 2) return false;
+    if (std::strcmp(_wcsInfo[0].cunit[0], "deg") != 0) return false;
+    if (std::strcmp(_wcsInfo[0].cunit[1], "deg") != 0) return false;
+    return true;
+}
+
+Wcs::Wcs(afw::table::BaseRecord const & record) :
+    daf::base::Citizen(typeid(this)),
+    _wcsInfo(NULL),
+    _nWcsInfo(0),
+    _relax(0),
+    _wcsfixCtrl(0),
+    _wcshdrCtrl(0),
+    _nReject(0),
+    _coordSystem(static_cast<afw::coord::CoordSystem>(-1))
+{
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
+    if (!record.getSchema().contains(keys.schema)) {
+        throw LSST_EXCEPT(
+            afw::table::io::MalformedArchiveError,
+            "Incorrect schema for Wcs persistence"
+        );
+    }
+    _setWcslibParams();
+    Eigen::Matrix2d cd = Eigen::Map<Eigen::Matrix2d const>(record[keys.cd].getData());
+    initWcsLib(
+        record.get(keys.crval), record.get(keys.crpix), cd,
+        record.get(keys.ctype1), record.get(keys.ctype2),
+        record.get(keys.equinox), record.get(keys.radesys),
+        record.get(keys.cunit1), record.get(keys.cunit2)
+    );
+    _initWcs();
+}
+
+PTR(table::io::Persistable)
+WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) const {
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
+    LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
+    LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+    LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+    PTR(Wcs) result(new Wcs(catalogs.front().front()));
+    return result;
+}
+
+}}} // namespace lsst::afw::image
+
+// ----------------------------------------------------------------------------------------------------------
 
 //
 //Mutators
@@ -1104,11 +1218,12 @@ lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
 ///(which is bases on position in the sub-image). In order that the fits files we create make sense
 ///to other fits viewers, we change to the fits convention when writing out images.
 void Wcs::shiftReferencePixel(double dx, double dy) {
-    //If the _wcsInfo structure hasn't been initialised yet, then there's nothing to do
-    if(isInitialized()) {
-        _wcsInfo->crpix[0] += dx;
-        _wcsInfo->crpix[1] += dy;
-    }
+    assert(_wcsInfo);
+    _wcsInfo->crpix[0] += dx;
+    _wcsInfo->crpix[1] += dy;
+
+    // tells libwcs to invalidate cached data, since transformation has been modified
+    _wcsInfo->flag = 0;
 }
 
 /************************************************************************************************************/
@@ -1187,7 +1302,8 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            
  * Strip keywords from the input metadata that are related to the generated Wcs
  *
  * It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
- * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12] and LTV[12],
+ * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12], LTV[12], and
+ * PC00[12]00[12]
  * but there may be others
  */
 int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
@@ -1200,6 +1316,10 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     paramNames.push_back("CDELT2");
     paramNames.push_back("LTV1");
     paramNames.push_back("LTV2");
+    paramNames.push_back("PC001001");
+    paramNames.push_back("PC001002");
+    paramNames.push_back("PC002001");
+    paramNames.push_back("PC002002");
     for (std::vector<std::string>::const_iterator ptr = paramNames.begin(); ptr != paramNames.end(); ++ptr) {
         metadata->remove(*ptr);
     }
@@ -1207,4 +1327,47 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     return 0;                           // would be ncard if remove returned a status
 }
 
+
 }}}}
+
+
+
+// -------------------------------------------------------------------------------------------------
+//
+// XYTransformFromWcsPair
+
+
+XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
+    : XYTransform(false), _dst(dst), _src(src)
+{ }
+
+
+PTR(afwGeom::XYTransform) XYTransformFromWcsPair::clone() const
+{
+    return boost::make_shared<XYTransformFromWcsPair>(_dst->clone(), _src->clone());
+}
+
+
+afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
+{
+    //
+    // TODO there is an alternate version of pixelToSky() which is designated for the 
+    // "knowledgeable user in need of performance".  This is probably better, but first I need 
+    // to understand exactly which checks are needed (e.g. I think we need to check by hand 
+    // that both Wcs's use the same celestial coordinate system)
+    //
+    PTR(afw::coord::Coord) x = _src->pixelToSky(pixel);
+    return _dst->skyToPixel(*x);
+}
+
+afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
+{
+    PTR(afw::coord::Coord) x = _dst->pixelToSky(pixel);
+    return _src->skyToPixel(*x);
+}
+
+PTR(afwGeom::XYTransform) XYTransformFromWcsPair::invert() const
+{
+    // just swap src, dst
+    return boost::make_shared<XYTransformFromWcsPair> (_src, _dst);
+}
