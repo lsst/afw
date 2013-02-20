@@ -214,22 +214,45 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
     // Scamp produces PVi_xx header cards that are inconsistent with WCS Paper 2
     // and cause WCSLib to choke.  Aggressively, rename all PV keywords to X_PV
     for (int j=1; j<3; j++) {
         for (int i=0; i<=99; i++) {
             std::string key = (boost::format("PV%i_%i") % j % i).str();
-            //printf("looking for key: \"%s\"\n", key.c_str());
-            if (!access.toRead()->exists(key))
+            if (!access.toRead()->exists(key)) {
                 break;
+            }
             double val = access.toRead()->getAsDouble(key);
-            //printf("  found with val %g\n", val);
             access.toWrite()->remove(key);
             access.toWrite()->add("X_"+key, val);
         }
     }
-    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
+    // Early SuprimeCam headers have both CD and PC cards which is illegal.  Worse,
+    // they don't agree with each other (see notes in #2258)
+    //
+    // We'll arbitrarily strip the PC cards
+    {
+        bool hasCD = false;
+        for (int j = 1; j != 3 && !hasCD; ++j) {
+            for (int i = 1; i != 3; ++i) {
+                std::string key = str(boost::format("CD%d_%d") % j % i);
+                if (access.toRead()->exists(key)) {
+                    hasCD = true;
+                    break;
+                }
+            }
+        }
+        if (hasCD) {
+            for (int j = 1; j != 3; ++j) {
+                for (int i = 1; i != 3; ++i) {
+                    std::string key = str(boost::format("PC%03d%03d") % j % i);
+                    if (access.toRead()->exists(key)) {
+                        access.toWrite()->remove(key);
+                    }
+                }
+            }
+        }
+    }
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
     //is almost certain their absence indicates a problem.   
@@ -262,6 +285,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     char *hdrString = const_cast<char*>(metadataStr.c_str());
     //printf("wcspih string:\n%s\n", hdrString);
     
+    nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead()); // we may have dropped some
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
     if (pihStatus != 0) {
@@ -1237,7 +1261,8 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            
  * Strip keywords from the input metadata that are related to the generated Wcs
  *
  * It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
- * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12] and LTV[12],
+ * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12], LTV[12], and
+ * PC00[12]00[12]
  * but there may be others
  */
 int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
@@ -1250,6 +1275,10 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     paramNames.push_back("CDELT2");
     paramNames.push_back("LTV1");
     paramNames.push_back("LTV2");
+    paramNames.push_back("PC001001");
+    paramNames.push_back("PC001002");
+    paramNames.push_back("PC002001");
+    paramNames.push_back("PC002002");
     for (std::vector<std::string>::const_iterator ptr = paramNames.begin(); ptr != paramNames.end(); ++ptr) {
         metadata->remove(*ptr);
     }
