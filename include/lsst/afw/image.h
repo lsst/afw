@@ -39,7 +39,6 @@
 #include "lsst/afw/image/ImagePca.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/ImageSlice.h"
-#include "lsst/afw/image/XYTransform.h"
 #include "lsst/afw/fits.h" // stuff here is forward-declared in headers in afw::image, but
                            // since we need it in SWIG (and that's the only place anyone
                            // should really be including image.h) we include it here.

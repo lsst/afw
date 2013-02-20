@@ -232,6 +232,33 @@ namespace detail {
             lsst::afw::geom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
     );
 }
+
+
+/**
+ * @brief DetectorXYTransform: converts an XYTransform in FP coordinate system to detector coords
+ *
+ * Given a "global" XYTransform in the focal plane coordinate system, this class implements the 
+ * coordinate transformation necessary to get the same XYTransform in the coordinate system of an 
+ * individual detector.
+ */
+class DetectorXYTransform : public afw::geom::XYTransform
+{
+public:
+    DetectorXYTransform(CONST_PTR(afw::geom::XYTransform) fpTransform, CONST_PTR(Detector) detector);
+    virtual ~DetectorXYTransform() { }
+
+    virtual PTR(afw::geom::XYTransform) clone() const;
+    virtual PTR(afw::geom::XYTransform) invert() const;
+    virtual Point2D forwardTransform(Point2D const &pixel) const;
+    virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
+
+protected:
+    CONST_PTR(XYTransform) _fpTransform;
+    CONST_PTR(Detector) _detector;
+};
+
     
 }}}
 

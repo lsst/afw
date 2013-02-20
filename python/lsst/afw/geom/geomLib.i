@@ -38,6 +38,7 @@ Python interface to lsst::afw::geom classes
 #pragma SWIG nowarn=503                 // comparison operators ignored
 
 %{
+#include "lsst/daf/base.h"
 #include "lsst/afw/geom.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
@@ -50,6 +51,7 @@ Python interface to lsst::afw::geom classes
 %}
 
 %include "lsst/p_lsstSwig.i"
+%import "lsst/daf/base/baseLib.i"
 
 %lsst_exceptions();
 
@@ -160,3 +162,4 @@ Python interface to lsst::afw::geom classes
 %include "Box.i"
 %include "Angle.i"
 %include "Span.i"
+%include "XYTransform.i"

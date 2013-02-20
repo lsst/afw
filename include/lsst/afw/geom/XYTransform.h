@@ -1,9 +1,34 @@
-/*
- * XYTransform: Virtual base class representing an invertible transform of a pixelized image 
+// -*- lsst-c++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_IMAGE_XYTRANSFORM_H
-#define LSST_AFW_IMAGE_XYTRANSFORM_H
+/**
+ * \file
+ * @brief Class representing an invertible transform of a pixelized image 
+ */
+
+#ifndef LSST_AFW_GEOM_XYTRANSFORM_H
+#define LSST_AFW_GEOM_XYTRANSFORM_H
 
 #include <string>
 #include "boost/shared_ptr.hpp"
@@ -11,12 +36,10 @@
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/ellipses.h"
-#include "lsst/afw/image/Wcs.h"
-#include "lsst/afw/cameraGeom/Detector.h"
 
 namespace lsst {
 namespace afw {
-namespace image {
+namespace geom {
 
 
 /**
@@ -103,37 +126,6 @@ public:
 
 
 /**
- * @brief XYTransformFromWcsPair: Represents an XYTransform obtained by putting two Wcs's "back to back".
- *
- * Eventually there will be an XYTransform subclass which represents a camera distortion.
- * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
- * with a SIP-distorted TanWcs and an undistorted Wcs.
- *
- * Note: this is very similar to class afw::math::detail::WcsSrcPosFunctor
- *   but watch out since the XY0 offset convention is different!!
- */
-class XYTransformFromWcsPair : public XYTransform
-{
-public:
-    typedef afw::image::Wcs Wcs;
-
-    XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src);
-    virtual ~XYTransformFromWcsPair() { }
-
-    virtual PTR(XYTransform) invert() const;
-
-    /// The following methods are needed to devirtualize the XYTransform parent class
-    virtual PTR(XYTransform) clone() const;
-    virtual Point2D forwardTransform(Point2D const &pixel) const;
-    virtual Point2D reverseTransform(Point2D const &pixel) const;
-    
-protected:
-    CONST_PTR(Wcs) _dst;
-    CONST_PTR(Wcs) _src;
-};  
-
-
-/**
  * @brief This class supplies a default ->invert() method which works for any XYTransform
  * (but can be overridden if something more efficient exists)
  */
@@ -205,35 +197,6 @@ protected:
     std::vector<double> _coeffs;
     std::vector<double> _icoeffs;
     bool _coefficientsDistort;
-};
-
-
-/**
- * @brief DetectorXYTransform: converts an XYTransform in FP coordinate system to detector coords
- *
- * Given a "global" XYTransform in the focal plane coordinate system, this class implements the 
- * coordinate transformation necessary to get the same XYTransform in the coordinate system of an 
- * individual detector.
- */
-class DetectorXYTransform : public XYTransform
-{
-public:
-    typedef afw::cameraGeom::FpPoint FpPoint;
-    typedef afw::cameraGeom::Detector Detector;
-
-    DetectorXYTransform(CONST_PTR(XYTransform) fpTransform, CONST_PTR(Detector) detector);
-    virtual ~DetectorXYTransform() { }
-
-    virtual PTR(XYTransform) clone() const;
-    virtual PTR(XYTransform) invert() const;
-    virtual Point2D forwardTransform(Point2D const &pixel) const;
-    virtual Point2D reverseTransform(Point2D const &pixel) const;
-    virtual AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
-    virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
-
-protected:
-    CONST_PTR(XYTransform) _fpTransform;
-    CONST_PTR(Detector) _detector;
 };
 
 

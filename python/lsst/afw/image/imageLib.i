@@ -368,5 +368,3 @@ namespace lsst { namespace afw { namespace detection {
 %template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
 
 /************************************************************************************************************/
-
-%include "lsst/afw/image/XYTransform.i"

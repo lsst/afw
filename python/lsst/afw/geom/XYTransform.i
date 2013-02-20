@@ -25,14 +25,13 @@
 /************************************************************************************************************/
 
 %{
-#include "lsst/afw/image/XYTransform.h"
+#include "lsst/afw/geom/XYTransform.h"
 %}
 
-%shared_ptr(lsst::afw::image::XYTransform);
-%shared_ptr(lsst::afw::image::XYTransformFromWcsPair);
-%shared_ptr(lsst::afw::image::IdentityXYTransform);
-%shared_ptr(lsst::afw::image::InvertedXYTransform);
-%shared_ptr(lsst::afw::image::RadialXYTransform);
-%shared_ptr(lsst::afw::image::DetectorXYTransform);
+%shared_ptr(lsst::afw::geom::XYTransform);
+%shared_ptr(lsst::afw::geom::IdentityXYTransform);
+%shared_ptr(lsst::afw::geom::InvertedXYTransform);
+%shared_ptr(lsst::afw::geom::RadialXYTransform);
+%shared_ptr(lsst::afw::geom::DetectorXYTransform);
 
-%include "lsst/afw/image/XYTransform.h"
+%include "lsst/afw/geom/XYTransform.h"
