@@ -40,7 +40,7 @@ Python interface to lsst::afw::geom classes
 %{
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/ellipses/Quadrupole.h"
+#include "lsst/afw/geom/ellipses.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "ndarray/swig.h"
