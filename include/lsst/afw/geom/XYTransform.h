@@ -51,7 +51,8 @@ namespace geom {
  * We allow XYTransforms to operate either in the pixel coordinate system of an individual
  * detector, or in the global focal plane coordinate system (with units mm rather than pixel
  * counts).  The flag XYTransform::_inFpCoordinateSystem distinguishes these two cases, so that
- * we can throw an exception if the transform is applied in the wrong coordinate system.
+ * we can throw an exception if the transform is applied in the wrong coordinate system.  This
+ * way of keeping track of the coordinate system is sort of clunky and will be improved later.
  */
 class XYTransform : public daf::base::Citizen
 {
