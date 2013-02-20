@@ -34,6 +34,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
+#include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/image.h"
@@ -42,6 +43,9 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
+
+%import "lsst/afw/geom/geomLib.i"
+
 #if defined(IMPORT_IMAGE_I)
 %import  "lsst/afw/image/imageLib.i"
 %import  "lsst/afw/geom/ellipses/ellipsesLib.i"
@@ -79,6 +83,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 import lsst.afw.geom			# needed for initialising Orientation
 radians = lsst.afw.geom.radians
 }
+
+%shared_ptr(lsst::afw::cameraGeom::DetectorXYTransform);
 
 %include "lsst/afw/cameraGeom/FpPoint.h"
 %include "lsst/afw/cameraGeom/Orientation.h"
@@ -147,3 +153,4 @@ class ReadoutCorner(object):
     def __repr__(self):
         return ["LLC", "LRC", "URC", "ULC"][self.value]
 }
+

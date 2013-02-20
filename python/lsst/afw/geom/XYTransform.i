@@ -1,3 +1,5 @@
+// -*- lsst-c++ -*-
+
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -20,21 +22,16 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::detection
- */
-#ifndef LSST_AFW_DETECTION_H
-#define LSST_AFW_DETECTION_H
+/************************************************************************************************************/
 
-#include "lsst/afw/detection/Threshold.h"
-#include "lsst/afw/detection/FootprintFunctor.h"
-#include "lsst/afw/detection/FootprintSet.h"
-#include "lsst/afw/detection/FootprintArray.h"
-#include "lsst/afw/detection/Footprint.h"
-#include "lsst/afw/detection/Peak.h"
-#include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/detection/DoubleGaussianPsf.h"
-#include "lsst/afw/detection/WarpedPsf.h"
+%{
+#include "lsst/afw/geom/XYTransform.h"
+%}
 
-#endif
+%shared_ptr(lsst::afw::geom::XYTransform);
+%shared_ptr(lsst::afw::geom::IdentityXYTransform);
+%shared_ptr(lsst::afw::geom::InvertedXYTransform);
+%shared_ptr(lsst::afw::geom::RadialXYTransform);
+%shared_ptr(lsst::afw::geom::DetectorXYTransform);
+
+%include "lsst/afw/geom/XYTransform.h"

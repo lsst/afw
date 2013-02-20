@@ -251,6 +251,14 @@ private:
 
 std::ostream & operator<<(std::ostream & os, lsst::afw::geom::AffineTransform const & transform);
 
+
+//
+// Returns the unique AffineTransform A such that A(p_i)=q_i for i=1,2,3
+//
+AffineTransform makeAffineTransformFromTriple(Point2D const &p1, Point2D const &p2, Point2D const &p3,
+                                              Point2D const &q1, Point2D const &q2, Point2D const &q3);
+
+
 }}}
 
 #endif // !LSST_AFW_MATH_AFFINE_TRANSFORM_H

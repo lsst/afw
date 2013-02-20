@@ -32,12 +32,16 @@
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
-namespace cameraGeom = lsst::afw::cameraGeom;
+namespace pexEx = lsst::pex::exceptions;
+
+namespace lsst {
+namespace afw {
+namespace cameraGeom {
 
 
 /************************************************************************************************************/
 /// Test for equality of two Ids; ignore serial if < 0 and name if == ""
-bool cameraGeom::Id::operator==(Id const& rhs) const {
+bool Id::operator==(Id const& rhs) const {
     if (_serial >= 0 && rhs._serial >= 0) {
         bool const serialEq = (_serial == rhs._serial);
         if (serialEq) {
@@ -53,7 +57,7 @@ bool cameraGeom::Id::operator==(Id const& rhs) const {
 }
 
 /// Test for ordering of two Ids; ignore serial if < 0 and name if == ""
-bool cameraGeom::Id::operator<(Id const& rhs) const {
+bool Id::operator<(Id const& rhs) const {
     if (_serial >= 0 && rhs._serial >= 0) {
         if (_serial == rhs._serial) {
             if (_name != "" && rhs._name != "") {
@@ -72,15 +76,14 @@ bool cameraGeom::Id::operator<(Id const& rhs) const {
  * it into its parent (e.g. Raft)
  */
 afwGeom::BoxI
-cameraGeom::Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/overclock have been removed?
-                                            ) const
+Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/overclock have been removed?
+                                 ) const
 {
     afwGeom::BoxI allPixels = (_hasTrimmablePixels && isTrimmed) ? _trimmedAllPixels : _allPixels;
 
     int const n90 = _orientation.getNQuarter();
     if (n90 != 0) {
-        allPixels = cameraGeom::detail::rotateBBoxBy90(allPixels, -n90,
-                                                       getAllPixels(false).getDimensions());
+        allPixels = detail::rotateBBoxBy90(allPixels, -n90, getAllPixels(false).getDimensions());
     }
 
     return allPixels;
@@ -90,19 +93,19 @@ cameraGeom::Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/ov
 /**
  * Return size in mm of this Detector
  */
-cameraGeom::FpExtent cameraGeom::Detector::getSize() const {
+FpExtent Detector::getSize() const {
     bool const isTrimmed = true;
 
-    return cameraGeom::FpExtent(afwGeom::Extent2D(getAllPixels(isTrimmed).getWidth()*_pixelSize,
+    return FpExtent(afwGeom::Extent2D(getAllPixels(isTrimmed).getWidth()*_pixelSize,
                                                   getAllPixels(isTrimmed).getHeight()*_pixelSize));
 }
 
 /**
  * Return the offset from the mosaic centre, in mm, given a pixel position
  */
-cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
+FpPoint Detector::getPositionFromPixel(
         lsst::afw::geom::Point2D const& pix    ///< Pixel coordinates wrt bottom left of Detector
-                                                               ) const
+                                       ) const
 {
     return getPositionFromPixel(pix, isTrimmed());
 }    
@@ -110,10 +113,10 @@ cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
 /**
  * Return the offset from the mosaic centre, in mm, given a pixel position
  */
-cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
+FpPoint Detector::getPositionFromPixel(
         lsst::afw::geom::Point2D const& pix,     ///< Pixel coordinates wrt bottom left of Detector
-        bool const isTrimmed            ///< Is this detector trimmed?
-                                                           ) const
+        bool const isTrimmed                     ///< Is this detector trimmed?
+                                       ) const
 {
 #if 0
     afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
@@ -130,9 +133,9 @@ cameraGeom::FpPoint cameraGeom::Detector::getPositionFromPixel(
 /**
  * Return the pixel position given an offset from the mosaic centre in mm
  */
-afwGeom::Point2D cameraGeom::Detector::getPixelFromPosition(
+afwGeom::Point2D Detector::getPixelFromPosition(
              FpPoint const &pos     ///< Offset from mosaic centre, mm
-                                                           ) const
+                                                ) const
 {
 #if 0
     afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
@@ -145,10 +148,36 @@ afwGeom::Point2D cameraGeom::Detector::getPixelFromPosition(
 }
 
 
+afwGeom::AffineTransform Detector::linearizePixelFromPosition(FpPoint const &q) const
+{
+    afwGeom::Point2D p = this->getPixelFromPosition(q);
+    afwGeom::Point2D px = p + afwGeom::Extent2D(1,0);
+    afwGeom::Point2D py = p + afwGeom::Extent2D(0,1);
+
+    afwGeom::Point2D qx = this->getPositionFromPixel(px).getMm();
+    afwGeom::Point2D qy = this->getPositionFromPixel(py).getMm();
+
+    return afwGeom::makeAffineTransformFromTriple(q.getMm(), qx, qy, p, px, py);
+}
+
+
+afwGeom::AffineTransform Detector::linearizePositionFromPixel(afwGeom::Point2D const &p) const
+{
+    afwGeom::Point2D px = p + afwGeom::Extent2D(1,0);
+    afwGeom::Point2D py = p + afwGeom::Extent2D(0,1);
+
+    afwGeom::Point2D q = this->getPositionFromPixel(p).getMm();
+    afwGeom::Point2D qx = this->getPositionFromPixel(px).getMm();
+    afwGeom::Point2D qy = this->getPositionFromPixel(py).getMm();
+
+    return afwGeom::makeAffineTransformFromTriple(p, px, py, q, qx, qy);
+}
+
+
 /// Offset a Detector by the specified amount
-void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
-                                 int dy  ///< How much to offset in y (pixels)
-                                ) {
+void Detector::shift(int dx, ///< How much to offset in x (pixels)
+                     int dy  ///< How much to offset in y (pixels)
+                     ) {
     afwGeom::Extent2I offset(dx, dy);
     _centerPixel.shift(afwGeom::Extent2D(dx, dy));
     
@@ -168,7 +197,7 @@ void cameraGeom::Detector::shift(int dx, ///< How much to offset in x (pixels)
  */
 afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
         lsst::afw::geom::Box2I const& bbox,          ///< The BBox to rotate
-        int n90,                             ///< number of anti-clockwise 90degree turns
+        int n90,                                     ///< number of anti-clockwise 90degree turns
         lsst::afw::geom::Extent2I const& dimensions  ///< The size of the parent 
                                              )
 {
@@ -283,19 +312,19 @@ afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
 ///
 /// Set the Detector's Orientation
 ///
-void cameraGeom::Detector::setOrientation(
-        lsst::afw::cameraGeom::Orientation const& orientation // the detector's new Orientation
-                                         )
+void Detector::setOrientation(
+       Orientation const& orientation // the detector's new Orientation
+                              )
 {
     int const n90 = orientation.getNQuarter() - _orientation.getNQuarter();
     _orientation = orientation;
     //
     // Now update the private members
     //
-    _allPixels = cameraGeom::detail::rotateBBoxBy90(
+    _allPixels = detail::rotateBBoxBy90(
         _allPixels, n90, getAllPixels(false).getDimensions()
     );
-    _trimmedAllPixels = cameraGeom::detail::rotateBBoxBy90(
+    _trimmedAllPixels = detail::rotateBBoxBy90(
         _trimmedAllPixels, n90, getAllPixels(true).getDimensions()
     );
     if (n90 == 1 || n90 == 3) {
@@ -304,11 +333,11 @@ void cameraGeom::Detector::setOrientation(
 }
 
 
-void cameraGeom::Detector::setDistortion(CONST_PTR(Distortion) distortion) {
+void Detector::setDistortion(CONST_PTR(Distortion) distortion) {
     _distortion = distortion;
 }
 
-CONST_PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() const {
+CONST_PTR(Distortion) Detector::getDistortion() const {
     
     // if we have a distortion ... return it
     if (_distortion) {
@@ -326,3 +355,69 @@ CONST_PTR(cameraGeom::Distortion) cameraGeom::Detector::getDistortion() const {
     
     return CONST_PTR(Distortion)(); //new Distortion());
 }
+
+
+
+// -----------------------------------------------------------------------------------------------------------
+//
+// DetectorXYTransform
+
+
+DetectorXYTransform::DetectorXYTransform(CONST_PTR(XYTransform) fpTransform, 
+                                         CONST_PTR(Detector) detector)
+    : XYTransform(false), _fpTransform(fpTransform), _detector(detector)
+{
+    if (!fpTransform->inFpCoordinateSystem()) {
+        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                          "DetectorXYTransform base must be in FP coordinate system");
+    }
+}
+
+PTR(geom::XYTransform) DetectorXYTransform::clone() const
+{
+    // note: there is no detector->clone()
+    return boost::make_shared<DetectorXYTransform> (_fpTransform->clone(), _detector);
+}
+
+PTR(geom::XYTransform) DetectorXYTransform::invert() const
+{
+    return boost::make_shared<DetectorXYTransform> (_fpTransform->invert(), _detector);
+}
+
+geom::Point2D DetectorXYTransform::forwardTransform(Point2D const &p) const
+{
+    Point2D q;
+    q = _detector->getPositionFromPixel(p).getMm();
+    q = _fpTransform->forwardTransform(q);
+    q = _detector->getPixelFromPosition(FpPoint(q));
+    return q;
+}
+
+geom::Point2D DetectorXYTransform::reverseTransform(Point2D const &p) const
+{
+    Point2D q;
+    q = _detector->getPositionFromPixel(p).getMm();
+    q = _fpTransform->reverseTransform(q);
+    q = _detector->getPixelFromPosition(FpPoint(q));
+    return q;
+}
+
+geom::AffineTransform DetectorXYTransform::linearizeForwardTransform(Point2D const &p) const
+{
+    AffineTransform a;
+    a = _detector->linearizePositionFromPixel(p);
+    a = _fpTransform->linearizeForwardTransform(a(p)) * a;
+    a = _detector->linearizePixelFromPosition(FpPoint(a(p))) * a;
+    return a;
+}
+
+geom::AffineTransform DetectorXYTransform::linearizeReverseTransform(Point2D const &p) const
+{
+    AffineTransform a;
+    a = _detector->linearizePositionFromPixel(p);
+    a = _fpTransform->linearizeReverseTransform(a(p)) * a;
+    a = _detector->linearizePixelFromPosition(FpPoint(a(p))) * a;
+    return a;    
+}
+
+}}}

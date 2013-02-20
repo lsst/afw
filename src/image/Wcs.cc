@@ -59,6 +59,7 @@ typedef lsst::daf::base::PropertyList PropertyList;
 typedef lsst::afw::image::Wcs Wcs;
 typedef lsst::afw::geom::Point2D GeomPoint;
 typedef lsst::afw::coord::Coord::Ptr CoordPtr;
+typedef lsst::afw::image::XYTransformFromWcsPair XYTransformFromWcsPair;
 
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
@@ -1286,4 +1287,47 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     return 0;                           // would be ncard if remove returned a status
 }
 
+
 }}}}
+
+
+
+// -------------------------------------------------------------------------------------------------
+//
+// XYTransformFromWcsPair
+
+
+XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
+    : XYTransform(false), _dst(dst), _src(src)
+{ }
+
+
+PTR(afwGeom::XYTransform) XYTransformFromWcsPair::clone() const
+{
+    return boost::make_shared<XYTransformFromWcsPair>(_dst->clone(), _src->clone());
+}
+
+
+afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
+{
+    //
+    // TODO there is an alternate version of pixelToSky() which is designated for the 
+    // "knowledgeable user in need of performance".  This is probably better, but first I need 
+    // to understand exactly which checks are needed (e.g. I think we need to check by hand 
+    // that both Wcs's use the same celestial coordinate system)
+    //
+    PTR(afw::coord::Coord) x = _src->pixelToSky(pixel);
+    return _dst->skyToPixel(*x);
+}
+
+afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
+{
+    PTR(afw::coord::Coord) x = _dst->pixelToSky(pixel);
+    return _src->skyToPixel(*x);
+}
+
+PTR(afwGeom::XYTransform) XYTransformFromWcsPair::invert() const
+{
+    // just swap src, dst
+    return boost::make_shared<XYTransformFromWcsPair> (_src, _dst);
+}

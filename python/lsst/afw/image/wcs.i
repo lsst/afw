@@ -36,6 +36,8 @@
 #include "lsst/afw/image/TanWcs.h"
 %}
 
+%shared_ptr(lsst::afw::image::XYTransformFromWcsPair);
+
 %include "lsst/afw/image/Wcs.h"
 %include "lsst/afw/image/TanWcs.h"
 
@@ -94,3 +96,4 @@
         return tanWcs;
     }
 %}
+
