@@ -32,15 +32,19 @@
 
 #include <string>
 #include "boost/shared_ptr.hpp"
-#include "lsst/pex/exceptions.h"
+#include "lsst/base.h"
 #include "lsst/daf/base.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/geom/ellipses.h"
 
 
 namespace lsst {
 namespace afw {
 namespace geom {
+
+namespace ellipses {
+    class Quadrupole;
+}
 
 
 /**

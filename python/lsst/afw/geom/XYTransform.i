@@ -33,5 +33,6 @@
 %shared_ptr(lsst::afw::geom::InvertedXYTransform);
 %shared_ptr(lsst::afw::geom::RadialXYTransform);
 %shared_ptr(lsst::afw::geom::DetectorXYTransform);
+%shared_ptr(lsst::afw::geom::ellipses::Quadrupole);
 
 %include "lsst/afw/geom/XYTransform.h"

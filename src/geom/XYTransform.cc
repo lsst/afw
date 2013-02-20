@@ -22,8 +22,9 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "lsst/afw/geom/XYTransform.h"
 #include "boost/make_shared.hpp"
+#include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/geom/XYTransform.h"
 
 namespace pexEx = lsst::pex::exceptions;
 
