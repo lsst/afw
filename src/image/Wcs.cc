@@ -228,32 +228,6 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             access.toWrite()->add("X_"+key, val);
         }
     }
-    // Early SuprimeCam headers have both CD and PC cards which is illegal.  Worse,
-    // they don't agree with each other (see notes in #2258)
-    //
-    // We'll arbitrarily strip the PC cards
-    {
-        bool hasCD = false;
-        for (int j = 1; j != 3 && !hasCD; ++j) {
-            for (int i = 1; i != 3; ++i) {
-                std::string key = str(boost::format("CD%d_%d") % j % i);
-                if (access.toRead()->exists(key)) {
-                    hasCD = true;
-                    break;
-                }
-            }
-        }
-        if (hasCD) {
-            for (int j = 1; j != 3; ++j) {
-                for (int i = 1; i != 3; ++i) {
-                    std::string key = str(boost::format("PC%03d%03d") % j % i);
-                    if (access.toRead()->exists(key)) {
-                        access.toWrite()->remove(key);
-                    }
-                }
-            }
-        }
-    }
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
     //is almost certain their absence indicates a problem.   
