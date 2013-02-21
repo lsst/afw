@@ -87,7 +87,7 @@ class GetCcdImage(object):
 class ButlerImage(GetCcdImage):
     """A class to return an Image of a given Ccd based on its cameraGeometry"""
     
-    def __init__(self, butler, type="raw", isTrimmed=True,
+    def __init__(self, butler=None, type="raw", isTrimmed=True,
                  gravity=None, background=np.nan, *args, **kwargs):
         """Initialise
         gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
@@ -106,10 +106,15 @@ class ButlerImage(GetCcdImage):
     def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
         """Return an image of the specified amp in the specified ccd"""
 
-        try:
-            im = self.butler.get(self.type, ccd=ccd.getId().getSerial(),
-                                 **self.kwargs).getMaskedImage().getImage()
-        except Exception, e:
+        im = None
+        if self.butler is not None:
+            try:
+                im = self.butler.get(self.type, ccd=ccd.getId().getSerial(),
+                                     **self.kwargs).getMaskedImage().getImage()
+            except Exception, e:
+                pass
+
+        if im is None:
             return afwImage.ImageF(*ccd.getAllPixels(True).getDimensions())
                 
         if self.type == "raw":
@@ -136,34 +141,6 @@ class ButlerImage(GetCcdImage):
             sub /= a.getElectronicParams().getGain()
 
         return ccdImage
-
-class SynthesizeCcdImage(GetCcdImage):
-    """A class to return an Image of a given Ccd based on its cameraGeometry"""
-    
-    def __init__(self, isTrimmed=True, *args):
-        """Initialise"""
-        super(SynthesizeCcdImage, self).__init__(*args)
-        self.isTrimmed = isTrimmed
-        self.isRaw = True               # we're always pretending to generate data straight from the DAQ
-
-    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
-        """Return an image of the specified amp in the specified ccd"""
-        
-        if self.isTrimmed:
-            bbox = amp.getElectronicDataSec()
-        else:
-            bbox = amp.getElectronicAllPixels()
-        im = imageFactory(bbox.getDimensions())
-        xy0 = afwGeom.Extent2I(bbox.getMin())
-        im += int(amp.getElectronicParams().getReadNoise())
-        bbox = afwGeom.Box2I(amp.getElectronicDataSec())
-        bbox.shift(-xy0)
-        sim = imageFactory(im, bbox, afwImage.LOCAL)
-        sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
-        #Since the image is in electronic coordinates, we need only mark at
-        #the origin of the dataSec.
-        imageFactory(im, afwGeom.Box2I(bbox.getMin(), afwGeom.Extent2I(3, 3)), afwImage.LOCAL).set(0)
-        return amp.prepareAmpData(im)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -549,12 +526,12 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeAmpImageFromCcd(amp, imageSource=SynthesizeCcdImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
+def makeAmpImageFromCcd(amp, imageSource=ButlerImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
     """Make an Image of an Amp"""
 
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
-def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
+def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
                      isTrimmed=None, correctGain = False, imageFactory=afwImage.ImageU, bin=1,
                      display=False):
     """Make an Image of a Ccd (or just a single amp)
@@ -708,7 +685,7 @@ of the detectors"""
         displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                               borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
 
-def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
+def makeImageFromRaft(raft, imageSource=ButlerImage(), raftCenter=None,
                       imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Raft"""
 
@@ -759,7 +736,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
 
     return raftImage
 
-def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
+def showRaft(raft, imageSource=ButlerImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
     """Show a Raft on ds9.
 
 If imageSource isn't None, create an image using the images specified by imageSource"""
@@ -828,7 +805,7 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
 
     return cameraImage
 
-def showCamera(camera, imageSource=SynthesizeCcdImage(), imageFactory=afwImage.ImageF,
+def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF,
                 bin=1, border=5, frame=None, overlay=True, title="", ctype=ds9.GREEN, names=False):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
 
