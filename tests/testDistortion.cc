@@ -190,23 +190,51 @@ protected:
 };
 
 
-BOOST_AUTO_TEST_CASE(detectorTransform)
-{
-    PTR(Detector) det = ToyDetector::makeRandom();
-    
+static void testDetector(const Detector &d)
+{    
     Point2D p = randpt();
-    FpPoint q = det->getPositionFromPixel(p);
+    FpPoint q = d.getPositionFromPixel(p);
 
     // test round trip
-    BOOST_CHECK(dist(det->getPixelFromPosition(q),p) < 1.0e-10);
+    BOOST_CHECK(dist(d.getPixelFromPosition(q),p) < 1.0e-10);
 
-    AffineTransform a = det->linearizePositionFromPixel(p);
-    AffineTransform b = det->linearizePixelFromPosition(q);
+    AffineTransform a = d.linearizePositionFromPixel(p);
+    AffineTransform b = d.linearizePixelFromPosition(q);
     Point2D r = randpt();
     
     // test linearization
-    BOOST_CHECK(dist(det->getPositionFromPixel(r).getMm(), a(r)) < 1.0e-10);
-    BOOST_CHECK(dist(det->getPixelFromPosition(FpPoint(r)), b(r)) < 1.0e-10);
+    BOOST_CHECK(dist(d.getPositionFromPixel(r).getMm(), a(r)) < 1.0e-9);
+    BOOST_CHECK(dist(d.getPixelFromPosition(FpPoint(r)), b(r)) < 1.0e-9);
+}
+
+
+static PTR(Detector) makeRandomDetector()
+{
+    double pixelSize = uni_double(rng);
+    PTR(Detector) d = make_shared<Detector> (Id(0), false, pixelSize);
+
+    Orientation rot(0, Angle(0), Angle(0), Angle(2*M_PI*uni_double(rng)));
+    d->setOrientation(rot);
+
+    // according to weird centering logic in class Detector, this is how you set the central pixel
+    d->getAllPixels() = Box2I(Point2I(-1,-1), Point2I(uni_int(rng), uni_int(rng)));
+
+    // set FP center
+    Point2D ctr = randpt();
+    d->setCenter(FpPoint(ctr.getX(), ctr.getY()));
+
+    return d;
+}
+
+BOOST_AUTO_TEST_CASE(detectorTransform)
+{
+    cerr << "testing random ToyDetector...\n";
+    PTR(Detector) det = ToyDetector::makeRandom();
+    testDetector(*det);
+
+    cerr << "testing random Detector....\n";
+    det = makeRandomDetector();
+    testDetector(*det);
 }
 
 
