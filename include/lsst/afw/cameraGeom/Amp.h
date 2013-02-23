@@ -24,6 +24,7 @@
 #define LSST_AFW_CAMERAGEOM_AMP_H
 
 #include <string>
+#include <limits>
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/image/Utils.h"
@@ -38,6 +39,34 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
+
+struct Linearity {
+    /// How to correct for non-linearity
+    enum LinearityType {
+        PROPORTIONAL                    ///< Correction is proportional to flux
+    };
+    /**
+     * An object to describe an amp's non-linear behaviour
+     *
+     * \note
+     * This is default constructible solely so that we don't have to change
+     * all camera .paf files -- for now, we'll set the coefficients in a camera's mapper.
+     * This is not a good solution, and should be changed when we move away from using
+     * .paf files to initialise Cameras
+     */
+    explicit Linearity(LinearityType type_ = PROPORTIONAL, ///< Type of correction to apply
+                       int threshold_=0,    ///< DN where non-linear response commences
+                       /// Maximum DN where non-linearity correction is believable
+                       int maxCorrectable_=std::numeric_limits<int>::max(),
+                       float coefficient_ = 0.0 ///< Coefficient for linearity correction
+                      ) : type(type_), threshold(threshold_), maxCorrectable(maxCorrectable_),
+                          coefficient(coefficient_) {}
+
+    LinearityType type;                 // Type of correction to apply
+    int threshold;                      // DN where non-linear response commences
+    int maxCorrectable;                 // Maximum DN where non-linearity correction is believable
+    float coefficient;                  // Coefficient for linearity correction
+};
 
 /**
  * The electronic behaviour of an Amp
@@ -86,10 +115,17 @@ public:
     float getSaturationLevel() const {
         return _saturationLevel;
     }
+    /// Set the description of the Amp's non-linearity
+    void setLinearity(Linearity const &linearity ///< How to correct for non-linearity
+                     ) { _linearity = linearity; }
+    /// Return the description of the Amp's non-linearity
+    Linearity getLinearity() const { return _linearity; }
+
 private:
     float _gain;                        // Amplifier's gain
     float _readNoise;                   // Amplifier's read noise (units? ADU)
     float _saturationLevel;             // Amplifier's saturation level. N.b. float in case we scale data
+    Linearity _linearity;               // Amplifier's non-linearity
 };
     
 /**
