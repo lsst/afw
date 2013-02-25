@@ -1,3 +1,36 @@
+// -*- LSST-C++ -*-
+
+/* 
+ * LSST Data Management System
+ * Copyright 2008, 2009, 2010 LSST Corporation.
+ * 
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the LSST License Statement and 
+ * the GNU General Public License along with this program.  If not, 
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+
+/**
+ * @file GaussianProcess.cc
+ *
+ * @ingroup afw
+ *
+ * @author Scott Daniel
+ * Contact: scott.f.daniel@gmail.com
+*/
+
 #include "lsst/afw/math/GaussianProcess.h"
 //#include "gptest/gptest.h"
 #include <iostream>
@@ -11,17 +44,39 @@ namespace math{
 
 namespace GaussianProcessFunctions{
 
+/** 
+ * This namespace contains some functions that need to be `global'
+ * so that both GaussianProcess and KdTree can access them
+*/
+
+/**
+ *@brief Rearrange the elements of a list to facilitate merge sorting
+ *
+ * mergeScanner will take the matrix m and put everything in it with value
+ * greater than element m[dex] to the right of that element
+ * and everything less than m[dex] to the left; it then returns
+ * the new index of that anchored element (which you now *know* is in
+ * the right spot
+ 
+ * It is part of an implemenation of the merge sort algorithm described
+ * in Numerical Recipes (2nd edition); Press, Teukolsky, Vetterling, and Flannery
+ * 1992
+*/
+
 template <typename datatype>
 int mergeScanner(datatype *m, int *indices, int dex, int el){
-/*this will take the matrix m and put everything in it with value
-greater than element m[dex] to the right of that element
-and everything less than m[dex] to the left; it then returns
-the new index of that anchored element (which you now *know* is in
-the right spot*/
-
-/*this is an implemenation of the merge sort algorithm described in
-Numerical Recipes (2nd edition); Press, Teukolsky, Vetterling, and
-Flannery 1992*/
+  /**
+    * @param m is a list of numbers to be sorted
+    *
+    * @param indices is a list of ints which keeps track of the sorted numbers original
+    * positions
+    * 
+    * @param dex denotes the value about which everything is to be sorted
+    * (i.e. values less than m[dex] will get put to the left of it;
+    * values greater than m[dex] will get put to the right)
+    *
+    * @param el denotes how many elements are in m[] and indices[]
+  */
   
   int i,j,k,newdex;
   datatype nn;
@@ -40,8 +95,7 @@ Flannery 1992*/
   m[dex]=nn;
   indices[dex]=j;
   
-  //now what was m[dex] is in the right place
-  
+  //now that m[dex] is in the right place
   
   i=0;
   j=el-1;
@@ -78,15 +132,28 @@ Flannery 1992*/
   
 }
 
+/**
+ * @brief Sort a list of numbers using a merge sort algorithm
+ *
+ * mergeSort is the `outer' method which implements the merge sort
+ * algorithm from Numerical Recipes.  It relies on mergeScanner
+ * to be complete
+*/
+
 template <typename datatype>
 void mergeSort(datatype *insort, int *indices, int el){
   
+  /**
+   * @param insort is the list of numbers to be sorted
+   *
+   * @param indices Keeps track of their original order (in case there is another
+   * list that needs to be correlated with the list of sorted values)
+   *
+   * @param el is the number of values being sorted
+  */
+  
   int i,k;
   datatype nn;
-  
-  //printf("\nin sort\n");
-  //for(i=0;i<el;i++)printf("%e\n",insort[i]);
-  //printf("\n");
   
   if(el==2){
     if(insort[0]>=insort[1]){
@@ -115,9 +182,24 @@ void mergeSort(datatype *insort, int *indices, int el){
 
 }
 
+/**
+ * @brief Return the Euclidean distance between two points in arbitrary-dimensional space
+ *
+ * This is left as a method in case future developers want to enable the possibility that
+ * KdTree will define nearest neighbors by some other distance
+*/
 
 template<typename dty>
 double euclideanDistance(dty *v1, dty *v2, int d_dim){
+ /**
+  * @param v1 the first point
+  *
+  * @param v2 the second point
+  *
+  * @param d_dim the number of dimensions in the parameter space
+ */
+
+
   int i;
   double dd;
   dd=0.0;
@@ -125,14 +207,79 @@ double euclideanDistance(dty *v1, dty *v2, int d_dim){
     dd+=double(v1[i]-v2[i])*double(v1[i]-v2[i]);
   }
   
-  return sqrt(dd);
+  return ::sqrt(dd);
 }
+
+/**
+ * @brief The squared exponential covariogram for GaussianProcess
+ *
+ * Takes two points in parameter space and returns the covariogram relation
+ * between them
+*/
 
 template<typename dtyi, typename dtyo>
 dtyo expCovariogram(dtyi *v1, dtyi *v2, int d_dim, double *hyp){
+ /**
+  * @param v1 the first point
+  *
+  * @param v2 the second point
+  *
+  * @param d_dim the number of dimensions in parameter space
+  *
+  * @param hyp a list of hyperparameters governing the shape of the covariogram
+  *
+  * in this case, there is only one hyperparameter: the characteristic length scale squared
+ */
+
+
   double dd;
   dd=euclideanDistance(v1,v2,d_dim);
-  return dtyo(exp(-0.5*dd*dd/hyp[0]));
+  return dtyo(::exp(-0.5*dd*dd/hyp[0]));
+}
+
+/**
+ * @brief The covariogram of a neural network with infinite hidden layers
+ *
+ * See Chapter 4 of Rasmussen and Williams (2006)
+ * http://gaussianprocess.org/gpml/
+ * equation (4.29)
+*/
+template<typename dtyi, typename dtyo>
+dtyo neuralNetCovariogram(dtyi *v1, dtyi *v2, int d_dim, double *hyp){
+ /**
+  * @param v1 the first point
+  *
+  * @param v2 the second point
+  *
+  * @param d_dim the number of dimensions in parameter space
+  *
+  * @param hyp a list of hyperparameters governing the shape of the covariogram
+  *
+  * in this case, there are two hyper parameters as defined by Rasmussen and Williams
+  * (they call them \sigma^2 and \sigma^2_0)
+ */
+
+  int i;
+  double num,denom1,denom2,arg;
+  
+  num=2.0*hyp[0];
+  denom1=1.0+2.0*hyp[0];
+  denom2=1.0+2.0*hyp[0];
+  for(i=0;i<d_dim;i++){
+    num+=2.0*v1[i]*hyp[1]*v2[i];
+    denom1+=2.0*v1[i]*hyp[1]*v1[i];
+    denom2+=2.0*v2[i]*hyp[1]*v2[i];
+  }
+  arg=num/::sqrt(denom1*denom2);
+  
+  if(arg>1.0 || arg<-1.0){
+    std::cout<<"WARNING in neural network covariogram "<<arg<<" cannot be outside of [-1,1]\n";
+    exit(1);
+  }
+  
+  return dtyo(2.0*(::asin(arg))/3.141592654);
+  
+  
 }
 
 }
@@ -151,9 +298,23 @@ KdTree<datatype>::~KdTree(){
   delete [] _tree;
 }
 
+/**
+ * @brief Build a KD Tree to store the data for GaussianProcess
+*/
+
 template <typename datatype>
 KdTree<datatype>::KdTree(int dd, int pp, datatype **dt, \
 double(*dfn)(datatype*,datatype*,int)){
+  
+  /**
+   * @param dd the number of dimensions of parameter space
+   *
+   * @param pp the number of data points being read in
+   *
+   * @param dt an array, the rows of which are the data points (dt[i][j] is the jth component of the ith data point)
+   *
+   * @param dfn a function defining the distance by which KdTree will define ``nearest neighbors''
+  */
   
   int i,j;
   
@@ -188,12 +349,22 @@ double(*dfn)(datatype*,datatype*,int)){
   
 }
 
+/**
+ * @brief Find the daughter point of a node in the tree and segregate the points around it
+*/
+
 template <typename datatype>
 void KdTree<datatype>::_organize(int *use, int ct, int parent, int dir){
-  //*use is the list of data indices that we must organize
-  //ct is the number of indices available
-  //parent is the parent node of the daughter this call will generate
-  //dir denotes which side of the parent we have descended on
+  
+  /**
+   * @param use the indices of the data points being considered as possible daughters
+   *
+   * @param ct the number of possible daughters
+   *
+   * @param parent the index of the parent whose daughter we are chosing
+   *
+   * @param dir which side of the parent are we on?  dir==1 means that we are on the left side; dir==2 means the right side.
+  */
   
   int i,j,k,l,idim,daughter;
   datatype mean,var,varbest;
@@ -270,6 +441,9 @@ void KdTree<datatype>::_organize(int *use, int ct, int parent, int dir){
   
 }
 
+/**
+* @brief Return the _tree information for a given data point
+*/
 template <typename datatype>
 void KdTree<datatype>::getTreeNode(int dex, int *v){
   v[0]=_tree[dex][0];
@@ -278,202 +452,9 @@ void KdTree<datatype>::getTreeNode(int dex, int *v){
   v[3]=_tree[dex][3];
 }
 
-
-template <typename datatype>
-void KdTree<datatype>::testScanner(){
-   
-   datatype *mm,*mmshld;
-   int i,*innt,*innshld;
-   
-   mm=new datatype[5];
-   innt=new int[5];
-   
-   mmshld=new datatype[5];
-   innshld=new int[5];
-   
-   mm[0]=datatype(2.0);
-   mm[1]=datatype(4.0);
-   mm[2]=datatype(-2.0);
-   mm[3]=datatype(3.0);
-   mm[4]=datatype(2.0);
-   
-   innt[0]=1;
-   innt[1]=-2;
-   innt[2]=4;
-   innt[3]=5;
-   innt[4]=3;
-   
-   mmshld[0]=datatype(-2.0);
-   mmshld[1]=datatype(2.0);
-   mmshld[2]=datatype(2.0);
-   mmshld[3]=datatype(3.0);
-   mmshld[4]=datatype(4.0);
-
-   innshld[0]=4;
-   innshld[1]=3;
-   innshld[2]=1;
-   innshld[3]=5;
-   innshld[4]=-2;
-   
-   i=GPfn::mergeScanner<datatype>(mm,innt,4,5);
-   
-   if(i!=1){
-     std::cout<<"FAILED _mergeScanner i "<<i<<"\n";;
-   }
-   
-   for(i=0;i<5;i++){
-     if(mm[i]!=mmshld[i] || innt[i]!=innshld[i]){
-      std::cout<<"FAILED _mergeScanner "<<i<<"is "<<innt[i]<<" shld "<<innshld[i]<<"\n"; 
-     }
-   }
-   
-   
-   mm[0]=datatype(2.0);
-   mm[1]=datatype(2.0);
-   mm[2]=datatype(2.0);
-   mm[3]=datatype(2.0);
-   mm[4]=datatype(2.0);
-   
-   innt[0]=1;
-   innt[1]=-2;
-   innt[2]=4;
-   innt[3]=5;
-   innt[4]=3;
-   
-   mmshld[0]=datatype(2.0);
-   mmshld[1]=datatype(2.0);
-   mmshld[2]=datatype(2.0);
-   mmshld[3]=datatype(2.0);
-   mmshld[4]=datatype(2.0);
-
-   innshld[0]=4;
-   innshld[1]=-2;
-   innshld[2]=1;
-   innshld[3]=5;
-   innshld[4]=3;
-   
-   i=GPfn::mergeScanner<datatype>(mm,innt,2,5);
-   
-   if(i!=0){
-     std::cout<<"FAILED homog _mergeScanner i "<<i<<"\n";
-   }
-   
-   for(i=0;i<5;i++){
-     if(mm[i]!=mmshld[i] || innt[i]!=innshld[i]){
-       std::cout<<"FAILED homog _mergeScanner "<<i<<" is "<<innt[i]<<" shld "<<innshld[i]<<"\n";
-     }
-   }
-   
-    mm[0]=datatype(2.0);
-   mm[1]=datatype(3.0);
-   mm[2]=datatype(2.0);
-   mm[3]=datatype(2.0);
-   mm[4]=datatype(2.0);
-   
-   innt[0]=1;
-   innt[1]=-2;
-   innt[2]=4;
-   innt[3]=5;
-   innt[4]=3;
-   
-   mmshld[0]=datatype(2.0);
-   mmshld[1]=datatype(2.0);
-   mmshld[2]=datatype(2.0);
-   mmshld[3]=datatype(2.0);
-   mmshld[4]=datatype(3.0);
-
-   innshld[0]=1;
-   innshld[1]=3;
-   innshld[2]=4;
-   innshld[3]=5;
-   innshld[4]=-2;
-   
-   i=GPfn::mergeScanner<datatype>(mm,innt,1,5);
-   
-   if(i!=4){
-     std::cout<<"FAILED homog_b _mergeScanner i "<<i<<"\n";
-   }
-   
-   for(i=0;i<5;i++){
-     if(mm[i]!=mmshld[i] || innt[i]!=innshld[i]){
-       std::cout<<"FAILED homog_b _mergeScanner "<<i<<" is "<<innt[i]<<" shld "<<innshld[i]<<"\n";
-     }
-   }
-   
-   delete [] mm;
-   delete [] innt;
-   delete [] mmshld;
-   delete [] innshld;
-   
-}
-
-template <typename datatype>
-void KdTree<datatype>::testSort(){
-  
-  datatype *mm,*mmshld;
-  int *innt,*innshld,i;
-  
-  mm=new datatype[5];
-  innt=new int[5];
-  mmshld=new datatype[5];
-  innshld=new int[5];
-  
-  mm[0]=datatype(3.0);
-  mm[1]=datatype(1.0);
-  mm[2]=datatype(-3.0);
-  mm[3]=datatype(-2.0);
-  mm[4]=datatype(2.0);
-  
-  mmshld[0]=datatype(-3.0);
-  mmshld[1]=datatype(-2.0);
-  mmshld[2]=datatype(1.0);
-  mmshld[3]=datatype(2.0);
-  mmshld[4]=datatype(3.0);
-  
-  innshld[0]=2;
-  innshld[1]=3;
-  innshld[2]=1;
-  innshld[3]=4;
-  innshld[4]=0;
-  
-  for(i=0;i<5;i++){
-    innt[i]=i;
-  }
-  
-  GPfn::mergeSort<datatype>(mm,innt,5);
-  
-  for(i=0;i<5;i++){
-    //printf("%e %e\n",mm[i],mmshld[i]);
-    if(mm[i]!=mmshld[i] || innt[i]!=innshld[i]){
-      std::cout<<"sort FAILED "<<i<<" is "<<innt[i]<<" shld "<<innshld[i]<<"\n";
-    }
-  }
-  
-  mm[0]=datatype(1.0);
-  mm[1]=datatype(1.0);
-  mm[2]=datatype(1.0);
-  mm[3]=datatype(1.0);
-  mm[4]=datatype(-1.0);
-  
-  mmshld[0]=datatype(-1.0);
-  mmshld[1]=datatype(1.0);
-  mmshld[2]=datatype(1.0);
-  mmshld[3]=datatype(1.0);
-  mmshld[4]=datatype(1.0);
-  
-  GPfn::mergeSort<datatype>(mm,innt,5);
-  for(i=0;i<5;i++){
-    if(mm[i]!=mmshld[i]){
-      std::cout<<"sort homog FAILED "<<i<<"\n";
-    }
-  }
-  
-  delete [] mm;
-  delete [] innt;
-  delete [] mmshld;
-  delete [] innshld;
-  
-}
+/**
+ * @brief A method to make sure that every data point in the tree is in the correct relation to its parents
+*/
 
 template <typename datatype>
 int KdTree<datatype>::_walkUpTree(int target, int dir, int root){
@@ -502,9 +483,7 @@ int KdTree<datatype>::_walkUpTree(int target, int dir, int root){
       std::cout<<data[root][_tree[target][0]]<<" < "<<data[target][_tree[target][0]]<<"\n";
       output=0;
       return 0;
-      
-      //printf("_tree FAILURE root %d target %d dir %d %d < %d\n",
-      //root,target,dir,data[root][_tree[target][0]],data[target][_tree[target][0]]);
+
     }
   }
   
@@ -517,23 +496,20 @@ int KdTree<datatype>::_walkUpTree(int target, int dir, int root){
   }
   else{
     output=output*target;
-    //so that it will presumably return _masterParent
+    //so that it will return _masterParent
     //make sure everything is connected to _masterParent
   }
   return output;
   
 }
 
+/**
+ * @brief Make sure that the tree is properly constructed.  Returns 1 of it is.
+*/
 template <typename datatype>
 int KdTree<datatype>::testTree(){
 
   int i,j,*isparent,output;
-  
-  /*for(i=0;i<_pts;i++){
-    for(j=0;j<_dimensions;j++)printf("%d ",data[i][j]);
-    printf("\n");
-  }
-  printf("\n\n");*/
   
   j=0;
   for(i=0;i<_pts;i++){
@@ -542,7 +518,6 @@ int KdTree<datatype>::testTree(){
   if(j!=1){
     std::cout<<"_tree FAILURE "<<j<<" _masterParents\n";
     return 0;
-    //printf("_tree FAILURE %d _masterParents\n");
   }
   
   isparent=new int[_pts];
@@ -554,7 +529,6 @@ int KdTree<datatype>::testTree(){
     if(isparent[i]>2){ 
       std::cout<<"_tree FAILURE "<<i<<" is parent to "<<isparent[i]<<"\n";
       return 0;
-     //printf("_tree FAILURE %d is parent to %d\n",i,isparent[i]);
     }
   }
   
@@ -571,16 +545,21 @@ int KdTree<datatype>::testTree(){
     }
   
   }
-  //printf("done with black box test\n");
-  std::cout<<"done with black box test of KdTree\n";
+  std::cout<<"done with test of KdTree\n";
   if(output!=_masterParent) return 0;
   else return 1;
 }
 
+/**
+ * @brief Find the point already in the tree that would be the parent of a point not in the tree
+*/
 template <typename datatype>
 int KdTree<datatype>::_findNode(datatype *v){
-  //this routine finds the node that would be the parent of
-  //v[] if you were going to add it to the tree
+  
+  /**
+   * @param v the points whose prospective parent you want to find
+  */
+
   
   int consider,next,dim;
   
@@ -605,8 +584,15 @@ int KdTree<datatype>::_findNode(datatype *v){
   
 }
 
+/**
+ * @brief Add a point to the tree.  Allot more space in _tree and data if needed.
+*/
 template <typename datatype>
 void KdTree<datatype>::addPoint(datatype *v){
+ 
+  /**
+   * @param v the point you are adding to the tree
+  */
 
   int i,j,**tbuff,node,dim;
   datatype **dbuff;
@@ -677,11 +663,24 @@ void KdTree<datatype>::addPoint(datatype *v){
   
 }
 
+/**
+ * @brief Find the nearest neighbors of a point
+*/
 template<typename datatype>
 void KdTree<datatype>::findNeighbors(datatype *v, int n_nn, int *neighdex, double *dd){
-  //this will search the tree for the n_nn nearest neighbors of v[];
-  //the indexes of the neighbors will be stored in neighdex[];
-  //the distances will be stored in dd[];
+  /**
+   * @param v the point whose neighbors you want to find
+   *
+   * @param n_nn the number of nearest neighbors you want to find
+   *
+   * @param neighdex this is where the indices of the nearest neighbor points will be stored
+   *
+   * @param dd this is where the distances to the nearest neighbors will be stored
+   *
+   * neighbors will be returned in ascending order of distance
+   *
+   * note that distance is defined by the function which was passed into the constructor
+  */
   
   int i,start,order[3];
   double dorder[3];
@@ -713,6 +712,9 @@ void KdTree<datatype>::findNeighbors(datatype *v, int n_nn, int *neighdex, doubl
   
   GPfn::mergeSort<double>(dorder,order,3);
   
+  //search the branches in ascending order of distance from the test point
+  //the idea being that if we look at branches that are closer first, we will
+  //be more likely to rule out points quicker, speeding the search
   for(i=0;i<3;i++){
     if(_tree[start][order[i]]>=0){
       _lookForNeighbors(v,_tree[start][order[i]],start);
@@ -739,25 +741,27 @@ void KdTree<datatype>::findNeighbors(datatype *v, int n_nn, int *neighdex, doubl
   
 }
 
+/**
+ * @brief This method actually looks for the neighbors, determining whether or not to descend branches of the tree
+*/
 template<typename datatype>
 void KdTree<datatype>::_lookForNeighbors(datatype *v, int consider, int from){
-  //in the process of searching for nearest neighbors of v[]
-  //this routine will look at the point denoted by 'consider'
-  //and walk up/down the tree based on where it is coming from ('from')
+  /**
+   * @param v the point whose neighbors you are looking for
+   *
+   * @param consider the index of the data point you are considering as a possible nearest neighbor
+   *
+   * @param from the index of the point you last considered as a nearest neighbor (so the search does not backtrack along the tree)
+   *
+   * The class KdTree keeps track of how many neighbors you want and how many neighbors you have found and what their
+   * distances from v are in the class member variables _neighborsWanted, _neighborsFound, _neighborCandidates,
+   * and _neighborDistances
+  */
   
   int i,j,going;
   double dd;
   
-  
-  
   dd=_distance(data[consider],v,_dimensions);
-  
-  /*for(i=1;i<_neighborsFound;i++){
-    if(_neighborDistances[i]<_neighborDistances[i-1]){
-      printf("_neighborsFound out of order\n");
-      exit(1);
-    }
-  }*/
   
   if(_neighborsFound<_neighborsWanted || dd<_neighborDistances[_neighborsWanted-1]){
     for(j=0;j<_neighborsFound && _neighborDistances[j]<dd;j++);
@@ -824,6 +828,9 @@ void KdTree<datatype>::_lookForNeighbors(datatype *v, int consider, int from){
 
 }
 
+/**
+ * @brief return the number of data points stored in the tree
+*/
 template <typename datatype>
 int KdTree<datatype>::getPoints(){
   return _pts;
@@ -839,76 +846,117 @@ GaussianProcess<dtyi,dtyo>::~GaussianProcess(){
     delete _kdTreePtr;
     delete _function;
   
-  
   if(_calledInterpolate==1){
     delete [] _neighbors;
     delete [] _neighborDistances;
     delete [] _covarianceTestPoint;
     _covariance.resize(0,0);
-    
   }
   
 }
 
+/**
+ * @brief This is the constructor you call if you want the positions of your data points normalized by the span of each dimension
+*/
 
-/*
 template <typename dtyi, typename dtyo>
-GaussianProcess<dtyi,dtyo>::GaussianProcess(int dd, int pp, dtyi **datain, dtyi *mx, dtyi *mn, dtyo *ff){
- //constructor if you have maxs and mins
+GaussianProcess<dtyi,dtyo>::GaussianProcess(int dd, int pp, ndarray::Array<dtyi,2,2> datain,\
+ndarray::Array<dtyi,1,1> mn, ndarray::Array<dtyi,1,1> mx, ndarray::Array<dtyo,1,1> ff){
+ 
+ /**
+  * @param dd the number of dimensions of your data points
+  *
+  * @param pp the number of data points you are inputting
+  *
+  * @param datain an ndarray containing the data points; the ith row of datain is the ith data point
+  *
+  * @param mn a one-dimensional ndarray containing the minimum values of each dimension (for normalizing the positions of data points)
+  *
+  * @param mx a one-dimensional ndarray containing the maximum values of each dimension (for normalizing the positions of data points)
+  *
+  * @param ff a one-dimensional ndarray containing the values of the scalar function associated with each data point.  
+  * This is the function you are interpolating
+ */
   
   int i,j;
-  
-  printf("WARNING this constructor is not actually ready\n");
-  exit(1);
-  
-
   
   _dimensions=dd;
   _pts=pp;
   _room=_pts;
-  
-  _function=ff;
+  _roomStep=5000;
   
   _krigingParameter=dtyo(1.0);
-  
-
-
-  
-  _max=mx;
-  _min=mn;
-  
+    
   _covariogram=GPfn::expCovariogram;
   _distance=GPfn::euclideanDistance;
   
   _calledInterpolate=0;
 
  _lambda=dtyo(1.0e-5);
-  
+ _krigingParameter=dtyo(1.0);
+ 
+ _max=new dtyi[_dimensions];
+ _min=new dtyi[_dimensions];
+ for(i=0;i<_dimensions;i++){
+   _max[i]=mx(i);
+   _min[i]=mn(i);
+ }
   
   _useMaxMin=1;
   _data=new dtyi*[_pts];
   for(i=0;i<_pts;i++){
     _data[i]=new dtyi[_dimensions];
     for(j=0;j<_dimensions;j++){
-      _data[i][j]=(datain[i][j]-_min[j])/(_max[j]-_min[j]);
+      _data[i][j]=(datain(i,j)-_min[j])/(_max[j]-_min[j]); //note the normalization by _max-_min in each dimension
     }
   }
    
   _kdTreePtr=new KdTree<dtyi>(_dimensions,_pts,_data,_distance);
   
+  for(i=0;i<_pts;i++)delete [] _data[i];
+  delete [] _data;
+  _data=_kdTreePtr->data;
+  _pts=_kdTreePtr->getPoints();
+  
+  _function=new dtyo[_pts];
+  for(i=0;i<_pts;i++)_function[i]=ff(i);
+  
+  _typeOfCovariogram=squaredExp;
+  _nHyperParameters=1;
+  _hyperParameters=new double[1];
+  _hyperParameters[0]=1.0;
+  
+  interpolationTime=0.0;
+  interpolationCount=0;
+  neighborSearchTime=0.0;
+  inversionTime=0.0;
+  iterationTime=0.0;
+  varSolveTime=0.0;
+  
+
 }
 
+/**
+ @brief This is the constructor you call if you do not wish to normalize the positions of your data points
 */
 
 template <typename dtyi, typename dtyo>
 GaussianProcess<dtyi,dtyo>::GaussianProcess(int dd, int pp, ndarray::Array<dtyi,2,2> datain, \
 ndarray::Array<dtyo,1,1> ff){
- //constructor if you do not have maxs and mins
-  
+ 
+   /**
+  * @param dd the number of dimensions of your data points
+  *
+  * @param pp the number of data points you are inputting
+  *
+  * @param datain an ndarray containing the data points; the ith row of datain is the ith data point
+  *
+  * @param ff a one-dimensional ndarray containing the values of the scalar function associated with each data point.  
+  * This is the function you are interpolating
+ */
+    
   int i,j;
-  
 
-  
   _dimensions=dd;
   _pts=pp;
   _room=_pts;
@@ -936,7 +984,6 @@ ndarray::Array<dtyo,1,1> ff){
      }
   }
   
-   
   _kdTreePtr=new KdTree<dtyi>(_dimensions,_pts,_data,_distance);
   
   for(i=0;i<_pts;i++){
@@ -947,6 +994,7 @@ ndarray::Array<dtyo,1,1> ff){
   _data=_kdTreePtr->data;
   _pts=_kdTreePtr->getPoints();
   
+  _typeOfCovariogram=squaredExp;
   _nHyperParameters=1;
   _hyperParameters=new double[1];
   _hyperParameters[0]=1.0;
@@ -960,94 +1008,50 @@ ndarray::Array<dtyo,1,1> ff){
   
 }
 
-
+/**
+ * @brief Assign a value to the Kriging paramter
+*/
 
 template <typename dtyi, typename dtyo>
-void GaussianProcess<dtyi,dtyo>::setKrigingParameter(int kk){
+void GaussianProcess<dtyi,dtyo>::setKrigingParameter(dtyo kk){
   
-  Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> kgg,kggin;
+  /**
+   * @param kk the value assigned to the Kriging parameters
+   *
+  */
   
-  int *kneigh,i,j,k,*inn;
-  double *ddneigh;
-  dtyo *kggq,mu,sig2,fbar,*rat;
-
-  kneigh=new int[kk+1];
-  ddneigh=new double[kk+1];
-  kggq=new dtyo[kk];
-  
-  inn=new int[_pts];
-  rat=new dtyo[_pts];
-  
-  kgg.resize(kk,kk);
-  
-  for(i=0;i<_pts;i++){
-
-    _kdTreePtr->findNeighbors(_data[i],kk+1,kneigh,ddneigh);
-    
-    for(j=0;j<kk;j++){
-      kggq[j]=_covariogram(_data[i],_data[kneigh[j+1]],_dimensions,_hyperParameters);
-      
-      kgg(j,j)=_covariogram(_data[kneigh[j+1]],_data[kneigh[j+1]],_dimensions,_hyperParameters)\
-      +_lambda;
-      
-      for(k=j+1;k<kk;k++){
-        kgg(j,k)=_covariogram(_data[kneigh[j+1]],_data[kneigh[k+1]],_dimensions,_hyperParameters);
-        kgg(k,j)=kgg(j,k);
-      }
-    }
-     
-    kggin=kgg.inverse();
-    
-    fbar=dtyo(0.0);
-    for(j=0;j<kk;j++){
-      fbar+=_function[kneigh[j+1]];
-    }
-    fbar=fbar/dtyo(kk);
-    
-    mu=fbar;
-    for(j=0;j<kk;j++){
-      for(k=0;k<kk;k++){
-        mu+=kggq[j]*kggin(j,k)*(_function[kneigh[k+1]]-fbar);
-      }
-    }
-    
-    sig2=_covariogram(_data[i],_data[i],_dimensions,_hyperParameters)+_lambda;
-    
-    for(j=0;j<kk;j++){
-      sig2-=kggq[j]*kggin(j,j)*kggq[j];
-      for(k=j+1;k<kk;k++){
-         sig2-=2.0*kggq[j]*kggin(j,k)*kggq[k];
-      }
-    }
-    
-    rat[i]=(mu-_function[i])*(mu-_function[i])/sig2; 
-    
-  }
-  
-  GPfn::mergeSort<dtyo>(rat,inn,_pts);
-  
-  _krigingParameter=rat[68*_pts/100];
-  
-  delete [] kneigh;
-  delete [] ddneigh;
-  delete [] kggq;
-  delete [] inn;
-  delete [] rat;
+  _krigingParameter=kk;
   
   
 }
 
+/**
+ @brief Interpolate the function value at one point using a specified number of nearest neighbors
+*/
 
 template <typename dtyi, typename dtyo>
 dtyo GaussianProcess<dtyi,dtyo>::interpolate(ndarray::Array<dtyi,1,1> vin, ndarray::Array<dtyo,1,1> variance, int kk){
+  
+  /**
+   * @param vin a one-dimensional ndarray representing the point at which you want to interpolate the function
+   *
+   * @param variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussina process will be stored in the zeroth element
+   *
+   * @param kk the number of nearest neighbors to be used in the interpolation
+   *
+   * the interpolated value of the function will be returned at the end of this method
+  */
   
   int i,j;
   dtyo fbar,mu;
   double before,after,aa,bb;
   
-  before=double(time(NULL));
+  before=double(::time(NULL));
   
   if(_calledInterpolate==0 || kk!=_numberOfNeighbors){
+  //if this is not the first time you have called this method, the code must make sure that the
+  //arrays it uses are large enough to accommodate the number of nearest neighbors you asked for
+  
      if(_calledInterpolate==1){
        delete [] _covarianceTestPoint;
        delete [] _neighbors;
@@ -1071,6 +1075,9 @@ dtyo GaussianProcess<dtyi,dtyo>::interpolate(ndarray::Array<dtyi,1,1> vin, ndarr
   }
   
   if(_useMaxMin==1){
+    //if you constructed this Gaussian process with minimum and maximum values for the dimensions of your parameter space,
+    //the point you are interpolating must be scaled to match the data so that the selected nearest neighbors are appropriate
+    
     for(i=0;i<_dimensions;i++)_vv[i]=(vin(i)-_min[i])/(_max[i]-_min[i]);
   }
   else{
@@ -1079,13 +1086,13 @@ dtyo GaussianProcess<dtyi,dtyo>::interpolate(ndarray::Array<dtyi,1,1> vin, ndarr
     }
   }
   
-  bb=double(time(NULL));
+  bb=double(::time(NULL));
   _kdTreePtr->findNeighbors(_vv,_numberOfNeighbors,_neighbors,_neighborDistances);
-  aa=double(time(NULL));
+  aa=double(::time(NULL));
   
   neighborSearchTime+=aa-bb;
   
-  bb=double(time(NULL));
+  bb=double(::time(NULL));
   fbar=0.0;
   for(i=0;i<_numberOfNeighbors;i++)fbar+=_function[_neighbors[i]];
   fbar=fbar/double(_numberOfNeighbors);
@@ -1099,66 +1106,69 @@ dtyo GaussianProcess<dtyi,dtyo>::interpolate(ndarray::Array<dtyi,1,1> vin, ndarr
       _covariance(j,i)=_covariance(i,j);
     }
   }
-
-  aa=double(time(NULL));
+  
+  /*if(_typeOfCovariogram==neuralNetwork){
+    printf("time to write lambda %e\n",_lambda);
+    for(i=0;i<_numberOfNeighbors;i++){
+      printf("%le\n",_covariance(0,i));
+    }
+    exit(1);
+  }*/
+  
+  aa=double(::time(NULL));
   iterationTime+=aa-bb;
 
-  bb=double(time(NULL));
+  bb=double(::time(NULL));
+  
+  //use Eigen's llt solver in place of matrix inversion (for speed purposes)
   _llt.compute(_covariance); 
-  //_covarianceInverse=_covariance.inverse();
-  for(i=0;i<_numberOfNeighbors;i++)_bb(i)=_function[_neighbors[i]]-fbar;
+  
+  for(i=0;i<_numberOfNeighbors;i++)_bb(i,0)=_function[_neighbors[i]]-fbar;
   _xx=_llt.solve(_bb);
-  aa=double(time(NULL));
+  aa=double(::time(NULL));
   
   inversionTime+=aa-bb;
   
   
-  bb=double(time(NULL));
+  bb=double(::time(NULL));
   mu=fbar;
-  /*for(i=0;i<_numberOfNeighbors;i++){
-    for(j=0;j<_numberOfNeighbors;j++){
-      mu+=_covarianceTestPoint[i]*_covarianceInverse(i,j)*(_function[_neighbors[j]]-fbar);
-    }
-  }*/
 
-  for(i=0;i<_numberOfNeighbors;i++)mu+=_covarianceTestPoint[i]*_xx(i);
+  for(i=0;i<_numberOfNeighbors;i++){
+    mu+=_covarianceTestPoint[i]*_xx(i,0);
+  }
   
   variance(0)=_covariogram(_vv,_vv,_dimensions,_hyperParameters)+_lambda;
   
   for(i=0;i<_numberOfNeighbors;i++)_bb(i)=_covarianceTestPoint[i];
-  aa=double(time(NULL));
+  aa=double(::time(NULL));
   iterationTime+=aa-bb;
   
-  bb=double(time(NULL));
+  bb=double(::time(NULL));
   _xx=_llt.solve(_bb);
-  aa=double(time(NULL));
+  aa=double(::time(NULL));
   varSolveTime+=aa-bb;
   
-  bb=double(time(NULL));
+  bb=double(::time(NULL));
   for(i=0;i<_numberOfNeighbors;i++){
-    variance(0)-=_covarianceTestPoint[i]*_xx(i);
+    variance(0)-=_covarianceTestPoint[i]*_xx(i,0);
   } 
-  aa=double(time(NULL));
+  aa=double(::time(NULL));
   iterationTime+=aa-bb;
-  
-  /*for(i=0;i<_numberOfNeighbors;i++){
-    variance(0)-=_covarianceTestPoint[i]*_covarianceInverse(i,i)*_covarianceTestPoint[i];
-    for(j=i+1;j<_numberOfNeighbors;j++){
-      variance(0)-=2.0*_covarianceTestPoint[i]*_covarianceInverse(i,j)*_covarianceTestPoint[j];
-    }
-  }*/
   
   variance(0)=variance(0)*_krigingParameter;
   
   _calledInterpolate=1;
   
-  after=double(time(NULL));
+  after=double(::time(NULL));
   interpolationTime+=after-before;
   interpolationCount++;
   
   return mu;
 }
 
+/**
+ * @brief Output the indices of data points curently stored in the _neighbors array
+*/
 template <typename dtyi, typename dtyo>
 void GaussianProcess<dtyi,dtyo>::getNeighbors(ndarray::Array<int,1,1> v){
   int i;
@@ -1171,14 +1181,34 @@ void GaussianProcess<dtyi,dtyo>::getNeighbors(ndarray::Array<int,1,1> v){
   }
 }
 
+/**
+ * @brief set the value of the hyperparameter _lambda
+ *
+ * _lambda is a parameter meant to represent the characteristic variance
+ * of the function you are interpolating.  Currently, it is a scalar such that
+ * all data points must have the same characteristic variance.  Future iterations
+ * of the code may want to promote _lambda to an array so that different data points
+ * can have different variances.
+*/
 template <typename dtyi, typename dtyo>
 void GaussianProcess<dtyi,dtyo>::setLambda(dtyo ll){
-  int i;
+
   _lambda=ll;
+
 }
+
+/**
+ * @brief Output a specified row of the last computed covariance matrix
+*/
 
 template <typename dtyi, typename dtyo>
 void GaussianProcess<dtyi,dtyo>::getCovarianceRow(int dex, ndarray::Array<dtyo,1,1> v){
+  /**
+   * @param dex the row that you want
+   *
+   * @param v a one-dimensiona ndarray where the row will be stored
+  */
+
   int i;
   if(_calledInterpolate==0){
     std::cout<<"You cannot call getCovarianceRow; you have not called interpolate\n";
@@ -1189,8 +1219,18 @@ void GaussianProcess<dtyi,dtyo>::getCovarianceRow(int dex, ndarray::Array<dtyo,1
   }
 }
 
+/**
+ * @brief Add a point to the pool of data used by GaussianProcess for interpolation
+*/
 template <typename dtyi, typename dtyo>
 void GaussianProcess<dtyi,dtyo>::addPoint(ndarray::Array<dtyi,1,1> vin, dtyo f){
+
+ /**
+  * @param vin a one-dimensional ndarray storing the point in parameter space that you are adding
+  *
+  * @param f the value of the function at that point
+ */
+
   int i;
   dtyi *v;
   dtyo *buff;
@@ -1198,6 +1238,10 @@ void GaussianProcess<dtyi,dtyo>::addPoint(ndarray::Array<dtyi,1,1> vin, dtyo f){
   v=new dtyi[_dimensions];
   for(i=0;i<_dimensions;i++){
     v[i]=vin(i);
+    if(_useMaxMin==1){
+      v[i]=(v[i]-_min[i])/(_max[i]-_min[i]);
+    }
+    
   }
   
   if(_pts==_room){
@@ -1223,6 +1267,10 @@ void GaussianProcess<dtyi,dtyo>::addPoint(ndarray::Array<dtyi,1,1> vin, dtyo f){
   delete [] v;
 }
 
+/**
+ * @brief Run KdTree::testTree to make sure that the KD Tree is properly constructed.  Returns 1 if it is.
+*/
+
 template <typename dtyi, typename dtyo>
 int GaussianProcess<dtyi,dtyo>::testKdTree(){
 
@@ -1230,8 +1278,19 @@ int GaussianProcess<dtyi,dtyo>::testKdTree(){
 
 }
 
+/**
+ * @brief Set the values of the hyperparameters governing the covariogram.  The method knows how many there should be.
+*/
+
 template <typename dtyi, typename dtyo>
 void GaussianProcess<dtyi,dtyo>::setHyperParameters(ndarray::Array<double,1,1> hyin){
+  
+  /**
+   * @param hyin a one-dimensional ndarray containing the hyperparameter values to be set.
+   * 
+   * The number of parameters in hyin should correspond to the number of parameters associated with the chosen type
+   * of covariogram
+  */
   
   int i;
   for(i=0;i<_nHyperParameters;i++){
@@ -1241,21 +1300,454 @@ void GaussianProcess<dtyi,dtyo>::setHyperParameters(ndarray::Array<double,1,1> h
   
 }
 
+/**
+ * @brief Print the the time spent on neighbor searches, interpolation, matrix inversion, iterating over matrix indices, and finding variances
+*/
 template <typename dtyi, typename dtyo>
 void GaussianProcess<dtyi,dtyo>::getTimes(){
   std::cout<<"\n";
-  //std::cout<<"interpolate time "<<interpolationTime<<"\n";
-  //std::cout<<"search time "<<neighborSearchTime<<"\n";
-  //std::cout<<"inversion time "<<inversionTime<<"\n";
+  std::cout<<"interpolate time "<<interpolationTime<<"\n";
+  std::cout<<"search time "<<neighborSearchTime<<"\n";
+  std::cout<<"inversion time "<<inversionTime<<"\n";
+  std::cout<<"var solve time "<<varSolveTime<<"\n";
+  std::cout<<"iteration time "<<iterationTime<<"\n";
+  std::cout<<"called interpolate "<<interpolationCount<<" times\n";
   
-  printf("interpolate time %.4e\n",interpolationTime);
-  printf("search time %.4e\n",neighborSearchTime);
-  printf("inversion time %.4e\n",inversionTime);
-  printf("iteration time %4e\n",iterationTime);
-  printf("var solve time %.4e\n",varSolveTime);
+ // printf("interpolate time %.4e\n",interpolationTime);
+ // printf("search time %.4e\n",neighborSearchTime);
+  //printf("inversion time %.4e\n",inversionTime);
+ // printf("iteration time %4e\n",iterationTime);
+ // printf("var solve time %.4e\n",varSolveTime);
   
   std::cout<<"\n";
 }
+
+/**
+ * @brief Reset the times being tracked inside interpolate
+*/
+template <typename dtyi, typename dtyo>
+void GaussianProcess<dtyi,dtyo>::resetTimes(){
+  interpolationTime=0.0;
+  neighborSearchTime=0.0;
+  inversionTime=0.0;
+  varSolveTime=0.0;
+  iterationTime=0.0;
+  interpolationCount=0;
+}
+
+/**
+* @brief Select the type of covariogram from those enumerated in GaussianProcess.h
+*/
+template <typename dtyi, typename dtyo>
+void GaussianProcess<dtyi,dtyo>::setCovariogramType(int ii){
+  
+  /**
+   * @param ii The type of covariogram you want to use
+   *
+   * At this point, supported types are
+   *
+   * GaussianProcess::squaredExp -- the squared exponent covariogram
+   *
+   * GaussianProcess::neuralNetwork -- the covariogram of a neural network with infinite hidden layers
+   * see Rasmussen and Williams (2006), http://gaussianprocess.org/gpml/    equation 4.29 
+   *
+   * If you give it an unkown option, the code will just set the squared exponent covariogram
+   *
+   * This method automatically sets the size of _hyperParameters to whatever is appropriate
+  */
+  
+  int i;
+  
+  delete [] _hyperParameters;
+  switch(ii){
+    case squaredExp:
+      _nHyperParameters=1;
+      _covariogram=GPfn::expCovariogram;
+    break;
+    case neuralNetwork:
+     _nHyperParameters=2;
+     _covariogram=GPfn::neuralNetCovariogram;
+    break;
+    default:
+     std::cout<<"I do not know that kind; I will set the squared exponent\n";
+     _nHyperParameters=1;
+     _covariogram=GPfn::expCovariogram;
+  
+  }
+  
+  _hyperParameters=new double[_nHyperParameters];
+  for(i=0;i<_nHyperParameters;i++){
+    _hyperParameters[i]=1.0;
+  }
+  
+  _typeOfCovariogram=ii;
+  
+}
+
+/**
+ * @brief Interpolate a list of query points using all of the input data (rather than nearest neighbors)
+*/
+template<typename dtyi, typename dtyo>
+void GaussianProcess<dtyi,dtyo>::batchInterpolate(ndarray::Array<dtyi,2,2> queries, ndarray::Array<dtyo,1,1> mu, \
+ndarray:: Array<dtyo,1,1> variance, int nQueries){
+  
+  /**
+   * @param queries a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
+   *
+   * @param mu a 1-dimensional ndarray where the interpolated function values will be stored
+   *
+   * @param variance a 2-dimensional ndarray where the corresponding variances in the function value will be stored
+   *
+   * @param nQueries the number of points being interpolated
+   *
+   * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
+   * Be wary of using it in the case where _pts is very large.
+   *
+   * This version of the method will also return variances for all of the query points.  That is a very time consuming
+   * calculation relative to just returning estimates for the function.  Consider calling the version of this method
+   * that does not calculate variances (below).  The difference in speed is an order of magnitude in the case of
+   * 189 data points and 1 million queries.
+   *
+  */
+  
+  int i,j,ii;
+  double aa,bb;
+  dtyi *v1;
+  dtyo fbar;
+  Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
+  Eigen::Matrix <dtyi,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
+  
+  interpolationTime=0.0;
+  varSolveTime=0.0;
+  
+  bb=double(::time(NULL));
+  v1=new dtyi[_dimensions];
+  
+  batchbb.resize(_pts,1);
+  batchxx.resize(_pts,1);
+  batchCovariance.resize(_pts,_pts);
+  queryCovariance.resize(_pts,1);
+ 
+  
+  for(i=0;i<_pts;i++){
+    batchCovariance(i,i)=_covariogram(_data[i],_data[i],_dimensions,_hyperParameters)+_lambda;
+    for(j=i+1;j<_pts;j++){
+      batchCovariance(i,j)=_covariogram(_data[i],_data[j],_dimensions,_hyperParameters);
+      batchCovariance(j,i)=batchCovariance(i,j);
+    }
+  }
+  
+  _llt.compute(batchCovariance);  
+  
+  fbar=0.0;
+  for(i=0;i<_pts;i++){
+    fbar+=_function[i];
+  }
+  fbar=fbar/dtyo(_pts);
+  
+  //std::cout<<"fbar "<<fbar<<"\n";
+  
+  for(i=0;i<_pts;i++){
+    batchbb(i,0)=_function[i]-fbar;
+  }
+  batchxx=_llt.solve(batchbb);
+  
+  for(ii=0;ii<nQueries;ii++){
+    for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+    if(_useMaxMin==1){
+      for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+    } 
+    mu(ii)=fbar;
+    for(i=0;i<_pts;i++){
+      mu(ii)+=batchxx(i)*_covariogram(v1,_data[i],_dimensions,_hyperParameters);
+    /* if(ii==0){
+       std::cout<<"mu "<<mu(ii)<<" xx "<<batchxx(i)<<" cov "<<_covariogram(v1,_data[i],_dimensions,_hyperParameters)<<"\n";
+     }*/
+    }
+  }
+  aa=double(::time(NULL));
+  interpolationTime+=aa-bb;
+  
+  //std::cout<<"done with interpolation\n";
+  
+  bb=double(::time(NULL));
+  for(ii=0;ii<nQueries;ii++){
+    //std::cout<<"i "<<ii<<"\n";
+    for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+    if(_useMaxMin==1){
+      for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+    }
+    
+    for(i=0;i<_pts;i++){
+      batchbb(i,0)=_covariogram(v1,_data[i],_dimensions,_hyperParameters);
+      queryCovariance(i,0)=batchbb(i,0);
+    }
+    batchxx=_llt.solve(batchbb);
+    
+    variance(ii)=_covariogram(v1,v1,_dimensions,_hyperParameters)+_lambda;
+    
+    for(i=0;i<_pts;i++){
+      variance(ii)-=queryCovariance(i,0)*batchxx(i);
+    }
+    
+    variance(ii)=variance(ii)*_krigingParameter;
+      
+  }
+  aa=double(::time(NULL));
+  varSolveTime+=aa-bb;
+  
+  delete [] v1;
+
+}
+
+/**
+ * @brief Interpolate a list of points using all of the data. Do not return variances for the interpolation.
+*/
+template<typename dtyi, typename dtyo>
+void GaussianProcess<dtyi,dtyo>::batchInterpolate(ndarray::Array<dtyi,2,2> queries, ndarray::Array<dtyo,1,1> mu,\
+ int nQueries){
+
+  /**
+   * @param queries a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
+   *
+   * @param mu a 1-dimensional ndarray where the interpolated function values will be stored
+   *
+   * @param nQueries the number of points being interpolated
+   *
+   * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
+   * Be wary of using it in the case where _pts is very large.
+   *
+   * This version of the method does not return variances.  It is an order of magnitude faster than the version of the method
+   * that does return variances (timing done on a case with 189 data points and 1 million query points).
+   *
+  */
+
+  int i,j,ii;
+  double aa,bb;
+  dtyi *v1;
+  dtyo fbar;
+  Eigen::Matrix <dtyo,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
+  Eigen::Matrix <dtyi,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
+  
+  interpolationTime=0.0;
+  varSolveTime=0.0;
+  
+  bb=double(::time(NULL));
+  v1=new dtyi[_dimensions];
+  
+  batchbb.resize(_pts,1);
+  batchxx.resize(_pts,1);
+  batchCovariance.resize(_pts,_pts);
+  queryCovariance.resize(_pts,1);
+ 
+  
+  for(i=0;i<_pts;i++){
+    batchCovariance(i,i)=_covariogram(_data[i],_data[i],_dimensions,_hyperParameters)+_lambda;
+    for(j=i+1;j<_pts;j++){
+      batchCovariance(i,j)=_covariogram(_data[i],_data[j],_dimensions,_hyperParameters);
+      batchCovariance(j,i)=batchCovariance(i,j);
+    }
+  }
+  
+  _llt.compute(batchCovariance);  
+  
+  fbar=0.0;
+  for(i=0;i<_pts;i++){
+    fbar+=_function[i];
+  }
+  fbar=fbar/dtyo(_pts);
+  
+  //std::cout<<"fbar "<<fbar<<"\n";
+  
+  for(i=0;i<_pts;i++){
+    batchbb(i,0)=_function[i]-fbar;
+  }
+  batchxx=_llt.solve(batchbb);
+  
+  for(ii=0;ii<nQueries;ii++){
+    for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+    if(_useMaxMin==1){
+      for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+    }
+    
+    mu(ii)=fbar;
+    for(i=0;i<_pts;i++){
+      mu(ii)+=batchxx(i)*_covariogram(v1,_data[i],_dimensions,_hyperParameters);
+    /* if(ii==0){
+       std::cout<<"mu "<<mu(ii)<<" xx "<<batchxx(i)<<" cov "<<_covariogram(v1,_data[i],_dimensions,_hyperParameters)<<"\n";
+     }*/
+    }
+  }
+  aa=double(::time(NULL));
+  interpolationTime+=aa-bb;
+  
+  //std::cout<<"done with interpolation\n";
+ 
+  
+  delete [] v1;
+
+}
+/**
+* @brief This method will interpolate the function on a data point for purposes of optimizing hyper parameters
+*/
+template <typename dtyi, typename dtyo>
+dtyo GaussianProcess<dtyi,dtyo>::selfInterpolate(int dex, ndarray::Array<dtyo,1,1> variance, int kk){
+  
+  /**
+   * @param dex the index of the point you wish to self interpolate
+   *
+   * @param variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussina process will be stored in the zeroth element
+   *
+   * @param kk the number of nearest neighbors to be used in the interpolation
+   *
+   * The interpolated value of the function will be returned at the end of this method
+   *
+   * This method ignores the point on which you are interpolating when requesting nearest neighbors
+   *
+  */
+  
+  int i,j;
+  dtyo fbar,mu;
+  double before,after,aa,bb,*selfDistances;
+  int *selfNeighbors;
+  
+  before=double(::time(NULL));
+  
+  if(_calledInterpolate==0 || kk!=_numberOfNeighbors){
+  //if this is not the first time you have called this method, the code must make sure that the
+  //arrays it uses are large enough to accommodate the number of nearest neighbors you asked for
+  
+     if(_calledInterpolate==1){
+       delete [] _covarianceTestPoint;
+       delete [] _neighbors;
+       delete [] _neighborDistances;
+       
+     }
+     
+     _covarianceTestPoint=new dtyo[kk];
+     _covariance.resize(kk,kk);
+     _bb.resize(kk,1);
+     _xx.resize(kk,1);
+     
+     _neighbors=new int[kk];
+     _neighborDistances=new double[kk];
+     
+     _numberOfNeighbors=kk;
+  }
+  
+  selfNeighbors=new int[_numberOfNeighbors+1];
+  selfDistances=new double[_numberOfNeighbors+1];
+  
+  if(_calledInterpolate==0){
+    _vv=new dtyi[_dimensions];
+  }
+  
+  //we don't use _useMaxMin because _data has already been normalized
+    for(i=0;i<_dimensions;i++){
+      _vv[i]=_data[dex][i];
+    }
+  
+  
+  bb=double(::time(NULL));
+  _kdTreePtr->findNeighbors(_vv,_numberOfNeighbors+1,selfNeighbors,selfDistances);
+  aa=double(::time(NULL));
+  
+  if(selfNeighbors[0]!=dex){
+    std::cout<<"WARNING selfdist "<<selfDistances[0]<<" "<<selfDistances[1]<<"\n";
+    std::cout<<"dex "<<dex<<" "<<selfNeighbors[0]<<"\n";
+    exit(1);
+  }
+  
+  //SelfNeighbors[0] will be the point itself (it is its own nearest neighbor)
+  //We discard that for the interpolation calculation
+  //
+  //If you do not wish to do this, simply call the usual ::interpolate() method instead of
+  //::selfInterpolate()
+  for(i=0;i<_numberOfNeighbors;i++){
+    _neighbors[i]=selfNeighbors[i+1];
+    _neighborDistances[i]=selfDistances[i+1];
+  }
+  
+  neighborSearchTime+=aa-bb;
+  
+  bb=double(::time(NULL));
+  fbar=0.0;
+  for(i=0;i<_numberOfNeighbors;i++)fbar+=_function[_neighbors[i]];
+  fbar=fbar/double(_numberOfNeighbors);
+
+  for(i=0;i<_numberOfNeighbors;i++){
+    _covarianceTestPoint[i]=_covariogram(_vv,_data[_neighbors[i]],_dimensions,_hyperParameters);
+    _covariance(i,i)=_covariogram(_data[_neighbors[i]],_data[_neighbors[i]],_dimensions,_hyperParameters)\
+    +_lambda;
+    for(j=i+1;j<_numberOfNeighbors;j++){
+      _covariance(i,j)=_covariogram(_data[_neighbors[i]],_data[_neighbors[j]],_dimensions,_hyperParameters);
+      _covariance(j,i)=_covariance(i,j);
+    }
+  }
+  
+  /*if(_typeOfCovariogram==neuralNetwork){
+    printf("time to write lambda %e\n",_lambda);
+    for(i=0;i<_numberOfNeighbors;i++){
+      printf("%le\n",_covariance(0,i));
+    }
+    exit(1);
+  }*/
+  
+  aa=double(::time(NULL));
+  iterationTime+=aa-bb;
+
+  bb=double(::time(NULL));
+  
+  //use Eigen's llt solver in place of matrix inversion (for speed purposes)
+  _llt.compute(_covariance); 
+  
+  
+  for(i=0;i<_numberOfNeighbors;i++)_bb(i,0)=_function[_neighbors[i]]-fbar;
+  _xx=_llt.solve(_bb);
+  aa=double(::time(NULL));
+  
+  inversionTime+=aa-bb;
+  
+  
+  bb=double(::time(NULL));
+  mu=fbar;
+
+  for(i=0;i<_numberOfNeighbors;i++){
+    mu+=_covarianceTestPoint[i]*_xx(i,0);
+  }
+  
+  variance(0)=_covariogram(_vv,_vv,_dimensions,_hyperParameters)+_lambda;
+  
+  for(i=0;i<_numberOfNeighbors;i++)_bb(i)=_covarianceTestPoint[i];
+  aa=double(::time(NULL));
+  iterationTime+=aa-bb;
+  
+  bb=double(::time(NULL));
+  _xx=_llt.solve(_bb);
+  aa=double(::time(NULL));
+  varSolveTime+=aa-bb;
+  
+  bb=double(::time(NULL));
+  for(i=0;i<_numberOfNeighbors;i++){
+    variance(0)-=_covarianceTestPoint[i]*_xx(i,0);
+  } 
+  aa=double(::time(NULL));
+  iterationTime+=aa-bb;
+  
+  variance(0)=variance(0)*_krigingParameter;
+  
+  _calledInterpolate=1;
+  
+  after=double(::time(NULL));
+  interpolationTime+=after-before;
+  interpolationCount++;
+  
+  delete [] selfNeighbors;
+  delete [] selfDistances;
+  
+  return mu;
+}
+
 
 }}}
 
