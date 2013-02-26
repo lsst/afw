@@ -8,6 +8,11 @@ PTR(daf::base::PropertySet) readMetadata(std::string const& fileName, int hdu, b
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     fitsfile.setHdu(hdu);
     fitsfile.readMetadata(*metadata, strip);
+    if (fitsfile.getHdu() != 1 && metadata->get<bool>("INHERIT", false)) {
+        if (strip) metadata->remove("INHERIT");
+        fitsfile.setHdu(1);
+        fitsfile.readMetadata(*metadata, strip);
+    }
     return metadata;
 }
 
