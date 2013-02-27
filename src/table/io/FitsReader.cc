@@ -67,7 +67,11 @@ struct FitsSchemaItem {
         switch (code) {
         case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
             if (size == 1) {
-                schema.addField<boost::int32_t>(name, doc, units);
+                if (cls == "Array") {
+                    schema.addField< Array<boost::int32_t> >(name, doc, units, size);
+                } else { 
+                    schema.addField<boost::int32_t>(name, doc, units);
+                }
             } else if (size == 2) {
                 if (cls == "Array") {
                     schema.addField< Array<boost::int32_t> >(name, doc, units, size);
