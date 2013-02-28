@@ -130,9 +130,11 @@ public:
     geom::Angle pixelScale() const;
 
     /// Applies the SIP AP and BP distortion (used in the skyToPixel direction)
+    // NOTE that this accepts and returns FITS-style 1-indexed pixel coords, NOT LSST style 0-indexed
     geom::Point2D distortPixel(geom::Point2D const & pixel) const;
 
     /// Applies the SIP A and B un-distortion (used in the pixelToSky direction)
+    // NOTE that this accepts and returns FITS-style 1-indexed pixel coords, NOT LSST style 0-indexed
     geom::Point2D undistortPixel(geom::Point2D const & pixel) const;
 
     bool hasDistortion() const { return _hasDistortion;};
