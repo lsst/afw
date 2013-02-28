@@ -125,16 +125,15 @@ FpPoint Detector::getPositionFromPixel(
         bool const isTrimmed                     ///< Is this detector trimmed?
                                        ) const
 {
-#if 0
-    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
-#else
-    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
-                                          0.5*(getAllPixels(true).getHeight() - 1));
-#endif
-    afwGeom::Extent2D pixWrtCenter = afwGeom::Extent2D(pix - detectorCenterPixel);
-    pixWrtCenter *= getPixelSize();
-    return _center + FpPoint(pixWrtCenter);
-}    
+    double cosYaw = _orientation.getCosYaw();
+    double sinYaw = _orientation.getSinYaw();
+
+    afwGeom::Extent2D offset = afwGeom::Extent2D(cosYaw * pix.getX() - sinYaw * pix.getY(),
+                                                 sinYaw * pix.getX() + cosYaw * pix.getY());
+    offset -= afwGeom::Extent2D(getCenterPixel());
+    offset *= getPixelSize();
+    return _center + FpPoint(offset);
+}
 
 
 /**
@@ -144,14 +143,13 @@ afwGeom::Point2D Detector::getPixelFromPosition(
              FpPoint const &pos     ///< Offset from mosaic centre, mm
                                                 ) const
 {
-#if 0
-    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
-#else
-    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
-                                          0.5*(getAllPixels(true).getHeight() - 1));
-#endif
-    FpPoint posWrtCenter = pos - getCenter();
-    return posWrtCenter.getPixels(getPixelSize()) + detectorCenterPixel;
+    double cosYaw = _orientation.getCosYaw();
+    double sinYaw = _orientation.getSinYaw();
+
+    afwGeom::Extent2D offset((pos - getCenter()).getPixels(getPixelSize()));
+    offset += afwGeom::Extent2D(getCenterPixel());
+    return afwGeom::Point2D(cosYaw * offset.getX() + sinYaw * offset.getY(),
+                            -sinYaw * offset.getX() + cosYaw * offset.getY());
 }
 
 
