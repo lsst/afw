@@ -729,6 +729,13 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
     int stat[1];
     int status = 0;
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
+    if (status == 9) {
+        throw LSST_EXCEPT(except::DomainErrorException,
+            (boost::format("sky coordinates %s, %s degrees is not valid for this WCS")
+             % sky1.asDegrees() % sky2.asDegrees()
+             ).str()
+        );
+    }
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
             (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
