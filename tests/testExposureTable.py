@@ -190,7 +190,11 @@ class ExposureTableTestCase(unittest.TestCase):
                 self.assertEqual(inside, record.contains(p1, self.wcs))
                 self.assertEqual(inside, record in subset1)
                 self.assertEqual(inside, record in subset2)
-            
+
+        crazyPoint = lsst.afw.coord.IcrsCoord(crval2.getLongitude() + numpy.pi * lsst.afw.geom.radians,
+                                              crval2.getLatitude())
+        subset3 = self.cat.subsetContaining(crazyPoint)
+        self.assertEqual(len(subset3), 0)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
