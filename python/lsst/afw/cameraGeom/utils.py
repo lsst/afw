@@ -115,7 +115,7 @@ class ButlerImage(GetCcdImage):
                 pass
 
         if im is None:
-            return afwImage.ImageF(*ccd.getAllPixels(True).getDimensions())
+            return afwImage.ImageF(*ccd.getAllPixels(self.isTrimmed).getDimensions())
                 
         if self.type == "raw":
             im = im.convertF()
