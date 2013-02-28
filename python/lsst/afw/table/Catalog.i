@@ -1,12 +1,12 @@
+/*
+ * Wrappers for CatalogT, instantiation of BaseCatalog, and macros used in wrapping other catalogs.
+ */
+
 %{
 #include "lsst/afw/table/Catalog.h"
-#include "lsst/afw/table/Simple.h"
-#include "lsst/afw/table/Source.h"
 %}
 
 %include "cdata.i"
-
-%pythondynamic;  // We want to add attributes in Python for the classes wrapped here.
 
 namespace lsst { namespace afw {
 
@@ -236,45 +236,11 @@ def unpickleCatalog(cls, data, size):
     return cls.readFits(manager)
 %}
 
-template <typename RecordT>
-class SimpleCatalogT : public CatalogT<RecordT> {
-public:
+}}} // namespace lsst::afw::table
 
-    typedef typename RecordT::Table Table;
-
-    explicit SimpleCatalogT(PTR(Table) const & table);
-
-    explicit SimpleCatalogT(Schema const & table);
-
-    SimpleCatalogT(SimpleCatalogT const & other);
-
-    %feature(
-        "autodoc", 
-        "Constructors:  __init__(self, table) -> empty catalog with the given table\n"
-        "               __init__(self, schema) -> empty catalog with a new table with the given schema\n"
-        "               __init__(self, catalog) -> shallow copy of the given catalog\n"
-    ) SimpleCatalogT;
-
-    static SimpleCatalogT readFits(std::string const & filename, int hdu=2);
-    static SimpleCatalogT readFits(fits::MemFileManager & manager, int hdu=2);
-
-    bool isSorted() const;
-    void sort();
-
-    SimpleCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
-};
-
-%extend SimpleCatalogT {
-    PTR(RecordT) find(RecordId id) {
-        lsst::afw::table::SimpleCatalogT< RecordT >::iterator i = self->find(id);
-        if (i == self->end()) {
-            return PTR(RecordT)();
-        }
-        return i;
-    }
-}
-
+// Macro that should be used to instantiate a Catalog type.
 %define %declareCatalog(TMPL, PREFIX)
+%pythondynamic;
 %template (PREFIX ## Catalog) TMPL< PREFIX ## Record >;
 typedef TMPL< PREFIX ## Record > PREFIX ## Catalog;
 %extend TMPL< PREFIX ## Record > {
@@ -296,17 +262,5 @@ PREFIX ## ColumnView.Record = PREFIX ## Record
 PREFIX ## ColumnView.Table = PREFIX ## Table
 PREFIX ## ColumnView.Catalog = PREFIX ## Catalog
 %}
+%pythonnondynamic;
 %enddef
-
-
-%template (SimpleCatalogBase) CatalogT<SimpleRecord>;
-%template (SourceCatalogBase) CatalogT<SourceRecord>;
-
-
-%declareCatalog(CatalogT, Base)
-%declareCatalog(SimpleCatalogT, Simple);
-%declareCatalog(SimpleCatalogT, Source);
-
-}}} // namespace lsst::afw::table
-
-%pythonnondynamic;  // Re-enable attribute restriction

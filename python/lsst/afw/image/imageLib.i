@@ -50,7 +50,6 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/image/Defect.h"
-#include "lsst/afw/image/Calib.h"
 #include "lsst/afw/fits.h" // just for exceptions
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
@@ -282,10 +281,7 @@ namespace boost {
 
 /************************************************************************************************************/
 
-%shared_ptr(lsst::afw::image::Calib);
-%include "lsst/afw/image/Calib.h"
-%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
-%template(pairVectorDVectorD) std::pair<std::vector<double>, std::vector<double> >;
+%include "lsst/afw/image/Calib.i"
 
 %{
 #include "lsst/afw/detection.h"

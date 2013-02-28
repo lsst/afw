@@ -75,8 +75,9 @@ struct OutputArchive::Impl {
         iter->insert(iter->end(), catalog.begin(), catalog.end(), false);
     }
 
-    int put(Persistable const * obj, PTR(Impl) const & self) {
+    int put(Persistable const * obj, PTR(Impl) const & self, bool permissive) {
         if (!obj) return 0;
+        if (permissive && !obj->isPersistable()) return 0;
         MapItem item(obj, _nextId);
         std::pair<Map::iterator,bool> r = _map.insert(item);
         if (r.second) {
@@ -129,12 +130,12 @@ OutputArchive & OutputArchive::operator=(OutputArchive const & other) {
 
 OutputArchive::~OutputArchive() {}
 
-int OutputArchive::put(Persistable const * obj) {
+int OutputArchive::put(Persistable const * obj, bool permissive) {
     if (!_impl.unique()) { // copy on write
         PTR(Impl) tmp(new Impl(*_impl));
         _impl.swap(tmp);
     }
-    return _impl->put(obj, _impl);
+    return _impl->put(obj, _impl, permissive);
 }
 
 BaseCatalog const & OutputArchive::getIndexCatalog() const {
@@ -169,10 +170,10 @@ void OutputArchiveHandle::saveCatalog(BaseCatalog const & catalog) {
     ++_catPersistable;
 }
 
-int OutputArchiveHandle::put(Persistable const * obj) {
+int OutputArchiveHandle::put(Persistable const * obj, bool permissive) {
     // Handle doesn't worry about copy-on-write, because Handles should only exist
     // while an OutputArchive::put() call is active.
-    return _impl->put(obj, _impl);
+    return _impl->put(obj, _impl, permissive);
 }
 
 OutputArchiveHandle::OutputArchiveHandle(int id, std::string const & name, PTR(OutputArchive::Impl) impl) :

@@ -22,7 +22,7 @@ struct IndexSortCompare {
             return true;
         }
         if (a.get(indexKeys.id) == b.get(indexKeys.id)) {
-            return a.get(indexKeys.catPersistable) < a.get(indexKeys.catPersistable);
+            return a.get(indexKeys.catPersistable) < b.get(indexKeys.catPersistable);
         }
         return false;
     }
@@ -110,6 +110,8 @@ public:
         return _map;
     }
 
+    Impl() : _index(ArchiveIndexSchema::get().schema) {}
+
     Impl(BaseCatalog const & index, CatalogVector const & catalogs) : _index(index), _catalogs(catalogs) {
         if (index.getSchema() != indexKeys.schema) {
             throw LSST_EXCEPT(
@@ -127,6 +129,8 @@ public:
 };
 
 // ----- InputArchive ---------------------------------------------------------------------------------------
+
+InputArchive::InputArchive() : _impl(new Impl()) {}
 
 InputArchive::InputArchive(PTR(Impl) impl) : _impl(impl) {}
 

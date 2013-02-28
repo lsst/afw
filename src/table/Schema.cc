@@ -40,7 +40,7 @@ class ItemFunctors {
 
     // Compares keys - must be initialized with one ItemVariant and passed the other.
     struct KeyHelper : public boost::static_visitor<bool> {
-        
+
         template <typename T>
         bool operator()(SchemaItem<T> const & a) const {
             SchemaItem<T> const * b = boost::get< SchemaItem<T> >(other);
@@ -112,7 +112,7 @@ inline int findNamedSubfield(
     SchemaItem<T> const & item,
     std::string const & name,
     boost::mpl::true_ * // whether a match is possible based on the type of T; computed by caller
-) { 
+) {
     if (name.size() <= item.field.getName().size()) return -1;
 
     if ( // compare invocation is equivalent to "name.startswith(item.field.getName())" in Python
@@ -128,7 +128,7 @@ inline int findNamedSubfield(
             }
         }
     }
-    return -1;   
+    return -1;
 }
 
 // This is an overload of findNamedSubfield that always fails; it's called when we
@@ -138,15 +138,15 @@ inline int findNamedSubfield(
     SchemaItem<T> const & item,
     std::string const & name,
     boost::mpl::false_ * // whether a match is possible based on the type of T; computed by caller
-) { 
-    return -1;   
+) {
+    return -1;
 }
 
 // Given a SchemaItem and a subfield index, make a new SchemaItem that corresponds to that
 // subfield and put it in the result smart pointer.
 template <typename T, typename U>
 inline void makeSubfieldItem(
-    SchemaItem<T> const & item, int index, 
+    SchemaItem<T> const & item, int index,
     boost::scoped_ptr< SchemaItem<U> > & result,
     boost::mpl::true_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {
@@ -165,7 +165,7 @@ inline void makeSubfieldItem(
 // An overload of makeSubfieldItem that always fails because we know T and U aren't compatible.
 template <typename T, typename U>
 inline void makeSubfieldItem(
-    SchemaItem<T> const & item, int index, 
+    SchemaItem<T> const & item, int index,
     boost::scoped_ptr< SchemaItem<U> > & result,
     boost::mpl::false_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {}
@@ -176,7 +176,7 @@ inline void makeSubfieldItem(
 // field in its own right.
 template <typename U>
 struct ExtractItemByName : public boost::static_visitor<> {
-    
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         // We want to find out if 'item' has a subfield whose fully-qualified name matches our
@@ -247,7 +247,7 @@ inline int findKeySubfield(
     SchemaItem<T> const & item,
     Key<U> const & key,
     boost::mpl::true_ * // whether a match is possible based on the types of T and U; computed by caller
-) { 
+) {
     int n = (key.getOffset() - item.key.getOffset()) / sizeof(U);
     if (n >= 0 && n < item.key.getElementCount()) {
         return n;
@@ -262,17 +262,17 @@ inline int findKeySubfield(
     SchemaItem<T> const & item,
     Key<U> const & key,
     boost::mpl::false_ * // whether a match is possible based on the types of T and U; computed by caller
-) { 
-    return -1;   
+) {
+    return -1;
 }
 
 // This is a Variant visitation functor used to extract subfield items by key.
 template <typename U>
 struct ExtractItemByKey : public boost::static_visitor<> {
-    
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
-        // We want to find out if 'item' has a subfield whose  matches our key data member.  
+        // We want to find out if 'item' has a subfield whose  matches our key data member.
         // But we also know that the subfield needs to have type U.
         // This typedef is boost::mpl::true_ if the above is true, and boost::mpl::false_ otherwise.
         typedef typename boost::mpl::and_<
@@ -329,7 +329,7 @@ SchemaItem<Flag> SchemaImpl::find(Key<Flag> const & key) const {
         } catch (boost::bad_get & err) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::NotFoundException,
-                (boost::format("Flag field with offset %d and bit %d not found.") 
+                (boost::format("Flag field with offset %d and bit %d not found.")
                  % key.getOffset() % key.getBit()).str()
             );
         }
@@ -337,7 +337,7 @@ SchemaItem<Flag> SchemaImpl::find(Key<Flag> const & key) const {
     // Flag keys are never subfields, so we require an exact match.
     throw LSST_EXCEPT(
         lsst::pex::exceptions::NotFoundException,
-        (boost::format("Flag field with offset %d and bit %d not found.") 
+        (boost::format("Flag field with offset %d and bit %d not found.")
          % key.getOffset() % key.getBit()).str()
     );
 }
@@ -355,15 +355,20 @@ template <typename T>
 inline int findKey(
     SchemaImpl::OffsetMap const & offsets,
     SchemaImpl::FlagMap const & flags,
-    Key<T> const & key
+    Key<T> const & key,
+    bool throwIfMissing = true
 ) {
     SchemaImpl::OffsetMap::const_iterator i = offsets.find(key.getOffset());
     if (i == offsets.end()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::NotFoundException,
-            (boost::format("Key of type %s with offset %d not found in Schema") 
-             % Field<T>::getTypeString() % key.getOffset()).str()
-        );
+        if (throwIfMissing) {
+            throw LSST_EXCEPT(
+                pex::exceptions::NotFoundException,
+                (boost::format("Key of type %s with offset %d not found in Schema")
+                 % Field<T>::getTypeString() % key.getOffset()).str()
+            );
+        } else {
+            return -1;
+        }
     }
     return i->second;
 }
@@ -372,20 +377,25 @@ inline int findKey(
 inline int findKey(
     SchemaImpl::OffsetMap const & offsets,
     SchemaImpl::FlagMap const & flags,
-    Key<Flag> const & key
+    Key<Flag> const & key,
+    bool throwIfMissing = true
 ) {
     SchemaImpl::FlagMap::const_iterator i = flags.find(std::make_pair(key.getOffset(), key.getBit()));
     if (i == flags.end()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::NotFoundException,
-            (boost::format("Key of type Flag with offset %d and bit %d not found in Schema") 
-             % key.getOffset() % key.getBit()).str()
-        );
+        if (throwIfMissing) {
+            throw LSST_EXCEPT(
+                pex::exceptions::NotFoundException,
+                (boost::format("Key of type Flag with offset %d and bit %d not found in Schema")
+                 % key.getOffset() % key.getBit()).str()
+            );
+        } else {
+            return -1;
+        }
     }
     return i->second;
 }
 
-} // anonymous    
+} // anonymous
 
 template <typename T>
 void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
@@ -420,6 +430,35 @@ void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
 }
 
 //----- Other SchemaImpl things -----------------------------------------------------------------------------
+
+template <typename T>
+int SchemaImpl::contains(SchemaItem<T> const & item, int flags) const {
+    if (!(flags & Schema::EQUAL_KEYS)) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicErrorException,
+            "Can only check whether item is in schema if flags & EQUAL_KEYS"
+        );
+    }
+    SchemaItem<T> const * cmpItem = 0;
+    int index = findKey(_offsets, _flags, item.key, false);
+    if (index >= 0) {
+        cmpItem = boost::get< SchemaItem<T> >(&_items[index]);
+        if (!cmpItem) {
+            if ((flags & Schema::EQUAL_NAMES) && cmpItem->field.getName() != item.field.getName()) {
+                flags &= ~Schema::EQUAL_NAMES;
+            }
+            if ((flags & Schema::EQUAL_DOCS) && cmpItem->field.getDoc() != item.field.getDoc()) {
+                flags &= ~Schema::EQUAL_DOCS;
+            }
+            if ((flags & Schema::EQUAL_UNITS) && cmpItem->field.getUnits() != item.field.getUnits()) {
+                flags &= ~Schema::EQUAL_UNITS;
+            }
+        }
+    } else {
+        flags = 0;
+    }
+    return flags;
+}
 
 std::set<std::string> SchemaImpl::getNames(bool topOnly) const {
     std::set<std::string> result;
@@ -584,12 +623,17 @@ int Schema::contains(Schema const & other, int flags) const {
         if ((result & EQUAL_UNITS) && !ItemFunctors::compareUnits(*i1, *i2)) result &= ~EQUAL_UNITS;
         if (!result) break;
     }
-    
+
     return result;
 }
 
 int Schema::compare(Schema const & other, int flags) const {
     return _impl->getItems().size() == other._impl->getItems().size() ? contains(other, flags) : 0;
+}
+
+template <typename T>
+int Schema::contains(SchemaItem<T> const & item, int flags) const {
+    return _impl->contains(item, flags);
 }
 
 //----- Stringification -------------------------------------------------------------------------------------
@@ -598,9 +642,9 @@ namespace {
 
 // Schema::forEach functor used for stringificationx
 struct Stream {
-    
+
     typedef void result_type;
-   
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         *os << "    (" << item.field << ", " << item.key << "),\n";
@@ -648,6 +692,7 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const {
     template Key< elem > Schema::addField(Field< elem > const &);            \
     template SchemaItem< elem > Schema::find(std::string const & ) const; \
     template SchemaItem< elem > Schema::find(Key< elem > const & ) const; \
+    template int Schema::contains(SchemaItem< elem > const &, int) const;   \
     template void Schema::replaceField(Key< elem > const &, Field< elem > const &); \
     template SchemaItem< elem > SubSchema::find(std::string const & ) const; \
 
