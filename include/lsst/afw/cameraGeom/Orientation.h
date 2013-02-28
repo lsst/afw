@@ -46,6 +46,9 @@ namespace cameraGeom {
 #endif
 /**
  * Describe a detector's orientation with respect to the nominal position
+ *
+ * Only the yaw angle is used when computing the mapping between detector and focal plane coordinates.
+ * All rotations are about the origin of the trimmed detector coordinate system, NOT the center.
  */
 class Orientation {
 public:
