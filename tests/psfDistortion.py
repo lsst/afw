@@ -151,7 +151,6 @@ class PsfDistortionTestCase(unittest.TestCase):
         pixelSize = 0.01 # mm
         allPixels = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(self.nx, self.ny))
         detector = cameraUtils.makeDefaultCcd(allPixels, pixelSize=pixelSize)
-        detector.setCenterPixel(afwGeom.Point2D(self.nx/2, self.ny/2))
         # try the upper right corner of chip 0 on suprimecam
         cenPixX, cenPixY = 5000.0, 4000.0
         detector.setCenter(cameraGeom.FpPoint(cenPixX*pixelSize, cenPixY*pixelSize))
