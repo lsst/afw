@@ -61,7 +61,10 @@ def copyCatalog(catalog, target, sourceSchema=None, targetPrefix=None, sourcePre
 
     for rFrom, rTo in zip(catalog, target):
         for kFrom, kTo in zip(sourceKeys, targetKeys):
-            rTo.set(kTo, rFrom.get(kFrom))
+            try:
+                rTo.set(kTo, rFrom.get(kFrom))
+            except:
+                print "Error setting: %s %s %s %s" % (type(rFrom), type(rTo), type(kFrom), type(kTo))
 
     return target
 
@@ -93,6 +96,9 @@ def matchesToCatalog(matches, matchMeta):
 
 def matchesFromCatalog(catalog, sourceSlotConfig=None, prefix=""):
     """Generate a list of ReferenceMatches from a Catalog of "unpacked matches" """
+    if catalog is None:
+        # There are none
+        return []
     refSchema = copySchema(catalog.schema, afwTable.SimpleTable.makeMinimalSchema(), sourcePrefix="ref.")
     refCatalog = afwTable.SimpleCatalog(refSchema)
     copyCatalog(catalog, refCatalog, sourcePrefix="ref.")
