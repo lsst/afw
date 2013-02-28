@@ -385,20 +385,6 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(raft.getAllPixels().getWidth(), raftInfo["width"])
         self.assertEqual(raft.getAllPixels().getHeight(), raftInfo["height"])
 
-        for x, y, serial, cen in [(  0,   0,  5, (-1.01, -2.02)),
-                                  (150, 250, 21, (-1.01,  0.0 )),
-                                  (250, 250, 29, ( 1.01,  0.0 )),
-                                  (300, 500, 42, ( 1.01,  2.02))]:
-            det = raft.findDetectorPixel(afwGeom.Point2D(x, y))
-            ccd = cameraGeom.cast_Ccd(det)
-            if False:
-                print x, y, det.getId().getName(), \
-                      ccd.findAmp(afwGeom.Point2I(150, 152), True).getId().getSerial()
-            if False:                   # XXX
-                self.assertEqual(ccd.findAmp(afwGeom.PointI(150, 152), True).getId().getSerial(), serial)
-            for i in range(2):
-                self.assertAlmostEqual(ccd.getCenter().getMm()[i], cen[i])
-
         name = "C:0,2"
         self.assertEqual(raft.findDetector(cameraGeom.Id(name)).getId().getName(), name)
 
@@ -449,25 +435,12 @@ class CameraGeomTestCase(unittest.TestCase):
         self.assertEqual(camera.getAllPixels().getWidth(), cameraInfo["width"])
         self.assertEqual(camera.getAllPixels().getHeight(), cameraInfo["height"])
 
-        for rx, ry, cx, cy, serial, cen in [(0, 0,     0,   0,    4, (-3.12, -2.02)),
-                                            (0,   0,   150, 250, 20, (-3.12,  0.00)),
-                                            (600, 300, 0,   0,   52, ( 1.10,  -2.02)),
-                                            (600, 300, 150, 250, 68, ( 1.10,  0.00)),
-                                            ]:
-            raft = cameraGeom.cast_Raft(camera.findDetectorPixel(afwGeom.PointD(rx, ry)))
-
-            ccd = cameraGeom.cast_Ccd(raft.findDetectorPixel(afwGeom.Point2D(cx, cy)))
-            if False:
-                self.assertEqual(ccd.findAmp(afwGeom.PointI(153, 152), True).getId().getSerial(), serial)
-            for i in range(2):
-                self.assertAlmostEqual(ccd.getCenter().getMm()[i], cen[i])
-
         name = "R:1,0"
         self.assertEqual(camera.findDetector(cameraGeom.Id(name)).getId().getName(), name)
 
         self.assertEqual(camera.getSize().getMm()[0], cameraInfo["widthMm"])
         self.assertEqual(camera.getSize().getMm()[1], cameraInfo["heightMm"])
-        ps = raft.getPixelSize()
+
         #
         # Test mapping pixel <--> mm
         #
@@ -549,26 +522,6 @@ class CameraGeomTestCase(unittest.TestCase):
                         displayUtils.drawBBox(d.getBBox(), ctype=ds9.YELLOW, borderWidth=1.0)
 
                 ds9.incrDefaultFrame()
-
-    def testParent(self):
-        """Test that we can find our parent"""
-
-        cameraInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
-        camera = cameraGeomUtils.makeCamera(self.geomPolicy, cameraInfo=cameraInfo)
-
-        for rx, ry, cx, cy, serial in [(0, 0,     0,   0,   4),
-                                       (0,   0,   150, 250, 20),
-                                       (600, 300, 0,   0,   52),
-                                       (600, 300, 150, 250, 68),
-                                       ]:
-            raft = cameraGeom.cast_Raft(camera.findDetectorPixel(afwGeom.Point2D(rx, ry)))
-            ccd = cameraGeom.cast_Ccd(raft.findDetectorPixel(afwGeom.Point2D(cx, cy)))
-
-            amp = ccd[0]
-            self.assertEqual(ccd.getId(),    amp.getParent().getId())
-            self.assertEqual(raft.getId(),   ccd.getParent().getId())
-            self.assertEqual(camera.getId(), ccd.getParent().getParent().getId())
-            self.assertEqual(None,           ccd.getParent().getParent().getParent())        
 
     def testAssembleCcd(self):
         """Test if we can build a Ccd out of Amps"""

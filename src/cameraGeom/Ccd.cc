@@ -85,9 +85,6 @@ void cameraGeom::Ccd::addAmp(
     if (_amps.size() == 1) {
         setTrimmed(amp->isTrimmed());
     }
-
-    afwGeom::Extent2I dim = getAllPixels(true).getDimensions() - afwGeom::Extent2I(1);
-    setCenterPixel(afwGeom::Point2D(dim[0]*0.5, dim[1]*0.5));
 }
 
 /**
