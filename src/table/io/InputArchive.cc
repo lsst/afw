@@ -22,7 +22,7 @@ struct IndexSortCompare {
             return true;
         }
         if (a.get(indexKeys.id) == b.get(indexKeys.id)) {
-            return a.get(indexKeys.catPersistable) < a.get(indexKeys.catPersistable);
+            return a.get(indexKeys.catPersistable) < b.get(indexKeys.catPersistable);
         }
         return false;
     }

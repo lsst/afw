@@ -36,6 +36,7 @@ or
 import os, re
 import unittest
 
+import numpy
 import eups
 
 import lsst.utils.tests as utilsTests
@@ -89,7 +90,21 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(image.get(32, 1), 3728)
         self.assertEqual(mask.get(0, 0), 2) # == BAD
-            
+
+    def testFitsReadImage(self):
+        """Check if we can read a single-HDU image as a MaskedImage, setting the mask and variance
+        planes to zero."""
+        filename = os.path.join(dataDir, "data", "small_img.fits")
+        image = afwImage.ImageF(filename)
+        maskedImage = afwImage.MaskedImageF(filename)
+        exposure = afwImage.ExposureF(filename)
+        self.assertEqual(image.get(0,0), maskedImage.getImage().get(0,0))
+        self.assertEqual(image.get(0,0), exposure.getMaskedImage().getImage().get(0,0))
+        self.assert_(numpy.all(maskedImage.getMask().getArray() == 0))
+        self.assert_(numpy.all(exposure.getMaskedImage().getMask().getArray() == 0))
+        self.assert_(numpy.all(maskedImage.getVariance().getArray() == 0.0))
+        self.assert_(numpy.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
+
     def testFitsReadConform(self):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
