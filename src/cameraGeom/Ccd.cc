@@ -87,39 +87,6 @@ void cameraGeom::Ccd::addAmp(
     }
 }
 
-/**
- * Return the offset from the Focal Plane centre, in mm, given a pixel position wrt Detector's xy0
- */
-cameraGeom::FpPoint cameraGeom::Ccd::getPositionFromPixel(
-        afwGeom::Point2D const& pix     ///< Pixel coordinates
-                                                      ) const
-{
-    return this->getPositionFromPixel(pix, isTrimmed());
-}
-
-/**
- * Return the offset from the Focal Plane centre, in mm, given a pixel position wrt Detector's xy0
- */
-cameraGeom::FpPoint cameraGeom::Ccd::getPositionFromPixel(
-        afwGeom::Point2D const& pix,    ///< Pixel coordinates
-        bool const isTrimmed            ///< Is this detector trimmed?
-                                                      ) const
-{
-    // This is the answer if we're trimmed
-    FpPoint pos = cameraGeom::Detector::getPositionFromPixel(pix, isTrimmed);
-    if (isTrimmed) {
-        return pos;
-    } 
-
-    // If we're not trimmed, get the offset of dataSec xy0 and adjust pos
-    double pixelSize = getPixelSize();
-
-    afwGeom::PointI pixI(pix[0], pix[1]);
-    cameraGeom::Amp::ConstPtr amp = findAmp(pixI);
-    afwGeom::Extent2I off(amp->getDataSec(false).getMin() - amp->getDataSec(true).getMin());
-    return pos - FpPoint(afwGeom::Extent2D(off)*pixelSize);
-}    
-
 namespace {
     struct findById {
         findById(cameraGeom::Id id) : _id(id) {}
