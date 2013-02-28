@@ -111,20 +111,8 @@ FpExtent Detector::getSize() const {
  * Return the offset from the mosaic centre, in mm, given a pixel position
  */
 FpPoint Detector::getPositionFromPixel(
-        lsst::afw::geom::Point2D const& pix    ///< Pixel coordinates wrt bottom left of Detector
-                                       ) const
-{
-    return getPositionFromPixel(pix, isTrimmed());
-}    
-
-/**
- * Return the offset from the mosaic centre, in mm, given a pixel position
- */
-FpPoint Detector::getPositionFromPixel(
-        lsst::afw::geom::Point2D const& pix,     ///< Pixel coordinates wrt bottom left of Detector
-        bool const isTrimmed                     ///< Is this detector trimmed?
-                                       ) const
-{
+    lsst::afw::geom::Point2D const& pix     ///< Pixel coordinates wrt bottom left of Detector
+) const {
     double cosYaw = _orientation.getCosYaw();
     double sinYaw = _orientation.getSinYaw();
 
@@ -140,9 +128,8 @@ FpPoint Detector::getPositionFromPixel(
  * Return the pixel position given an offset from the mosaic centre in mm
  */
 afwGeom::Point2D Detector::getPixelFromPosition(
-             FpPoint const &pos     ///< Offset from mosaic centre, mm
-                                                ) const
-{
+    FpPoint const &pos     ///< Offset from mosaic centre, mm
+) const {
     double cosYaw = _orientation.getCosYaw();
     double sinYaw = _orientation.getSinYaw();
 

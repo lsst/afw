@@ -320,7 +320,6 @@ class CameraGeomTestCase(unittest.TestCase):
         
         self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.SENSOR)
         self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
-        self.assertEqual(ccd.getPositionFromPixel(pix, False).getMm(), posll.getMm())
         #
         # Trim the CCD and try again
         #
