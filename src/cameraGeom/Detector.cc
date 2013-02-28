@@ -90,6 +90,13 @@ Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/overclock have
 }
 
 /************************************************************************************************************/
+
+afwGeom::Point2D Detector::getCenterPixel() const {
+    return afwGeom::Point2D(0.5*(getAllPixels(true).getWidth() - 1),
+                            0.5*(getAllPixels(true).getHeight() - 1));
+}
+
+/************************************************************************************************************/
 /**
  * Return size in mm of this Detector
  */
@@ -179,7 +186,6 @@ void Detector::shift(int dx, ///< How much to offset in x (pixels)
                      int dy  ///< How much to offset in y (pixels)
                      ) {
     afwGeom::Extent2I offset(dx, dy);
-    _centerPixel.shift(afwGeom::Extent2D(dx, dy));
     
     _allPixels.shift(offset);
     _trimmedAllPixels.shift(offset);
