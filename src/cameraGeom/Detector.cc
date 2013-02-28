@@ -128,20 +128,12 @@ FpPoint Detector::getPositionFromPixel(
     double cosYaw = _orientation.getCosYaw();
     double sinYaw = _orientation.getSinYaw();
 
-#if 0
-    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
-#else
-    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
-                                          0.5*(getAllPixels(true).getHeight() - 1));
-#endif
-    afwGeom::Extent2D pixWrtCenter = afwGeom::Extent2D(pix - detectorCenterPixel);
-    pixWrtCenter *= getPixelSize();
-
-    pixWrtCenter = afwGeom::Extent2D(cosYaw * pixWrtCenter.getX() - sinYaw * pixWrtCenter.getY(),
-                                     sinYaw * pixWrtCenter.getX() + cosYaw * pixWrtCenter.getY());
-   
-    return _center + FpPoint(pixWrtCenter);
-}    
+    afwGeom::Extent2D offset = afwGeom::Extent2D(cosYaw * pix.getX() - sinYaw * pix.getY(),
+                                                 sinYaw * pix.getX() + cosYaw * pix.getY());
+    offset -= afwGeom::Extent2D(getCenterPixel());
+    offset *= getPixelSize();
+    return _center + FpPoint(offset);
+}
 
 
 /**
@@ -154,18 +146,10 @@ afwGeom::Point2D Detector::getPixelFromPosition(
     double cosYaw = _orientation.getCosYaw();
     double sinYaw = _orientation.getSinYaw();
 
-#if 0
-    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
-#else
-    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
-                                          0.5*(getAllPixels(true).getHeight() - 1));
-#endif
-    FpPoint posWrtCenter = pos - getCenter();
-
-    posWrtCenter = FpPoint( cosYaw * posWrtCenter.getMm().getX() + sinYaw * posWrtCenter.getMm().getY(),
-                           -sinYaw * posWrtCenter.getMm().getX() + cosYaw * posWrtCenter.getMm().getY());
-
-    return posWrtCenter.getPixels(getPixelSize()) + detectorCenterPixel;
+    afwGeom::Extent2D offset((pos - getCenter()).getPixels(getPixelSize()));
+    offset += afwGeom::Extent2D(getCenterPixel());
+    return afwGeom::Point2D(cosYaw * offset.getX() + sinYaw * offset.getY(),
+                            -sinYaw * offset.getX() + cosYaw * offset.getY());
 }
 
 
