@@ -260,8 +260,14 @@ bool ExposureRecord::contains(Coord const & coord) const {
             "ExposureRecord does not have a Wcs; cannot call contains()"
         );
     }
-    geom::Point2D point = getWcs()->skyToPixel(coord);
-    return geom::Box2D(getBBox()).contains(point);
+    try {
+        geom::Point2D point = getWcs()->skyToPixel(coord);
+        return geom::Box2D(getBBox()).contains(point);
+    } catch (pex::exceptions::DomainErrorException &) {
+        // Wcs can throw if the given coordinate is outside the region
+        // where the Wcs is valid.
+        return false;
+    }
 }
 
 bool ExposureRecord::contains(geom::Point2D const & point, image::Wcs const & wcs) const {
