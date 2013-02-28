@@ -347,7 +347,7 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
 
 template <typename RecordT>
 ExposureCatalogT<RecordT>
-ExposureCatalogT<RecordT>::findContains(Coord const & coord) const {
+ExposureCatalogT<RecordT>::subsetContaining(Coord const & coord) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
         if (i->contains(coord)) result.push_back(i);
@@ -357,7 +357,7 @@ ExposureCatalogT<RecordT>::findContains(Coord const & coord) const {
 
 template <typename RecordT>
 ExposureCatalogT<RecordT>
-ExposureCatalogT<RecordT>::findContains(geom::Point2D const & point, image::Wcs const & wcs) const {
+ExposureCatalogT<RecordT>::subsetContaining(geom::Point2D const & point, image::Wcs const & wcs) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
         if (i->contains(point, wcs)) result.push_back(i);

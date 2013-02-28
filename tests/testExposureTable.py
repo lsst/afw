@@ -181,8 +181,8 @@ class ExposureTableTestCase(unittest.TestCase):
             p1 = lsst.afw.geom.Point2D(x1, y1)
             c = self.wcs.pixelToSky(x1, y1)
             p2 = wcs2.skyToPixel(c)
-            subset1 = self.cat.findContains(c)
-            subset2 = self.cat.findContains(p2, wcs2)
+            subset1 = self.cat.subsetContaining(c)
+            subset2 = self.cat.subsetContaining(p2, wcs2)
             for record in self.cat:
                 inside = lsst.afw.geom.Box2D(record.getBBox()).contains(p1)
                 self.assertEqual(inside, record.contains(c))

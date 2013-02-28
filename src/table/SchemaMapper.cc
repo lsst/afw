@@ -69,7 +69,7 @@ private:
     bool _doMap;
 };
 
-// Schema::forEach functor that copies all fields from an schema to a schema mapper without mapping them.
+// Schema::forEach functor that copies all fields from an schema to a schema mapper and maps them.
 struct AddMapped {
 
     template <typename T>
@@ -230,6 +230,13 @@ std::vector<SchemaMapper> SchemaMapper::join(
     std::vector<std::string> const & prefixes
 ) {
     std::size_t const size = inputs.size();
+    if (!prefixes.empty() && prefixes.size() != inputs.size()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LengthErrorException,
+            (boost::format("prefix vector size (%d) must be the same as input vector size (%d)")
+             % prefixes.size() % inputs.size()).str()
+        );
+    }
     std::vector<SchemaMapper> result;
     for (std::size_t i = 0; i < size; ++i) {
         result.push_back(SchemaMapper(inputs[i]));

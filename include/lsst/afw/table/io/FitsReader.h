@@ -41,7 +41,7 @@ public:
     class Factory {
     public:
 
-        /// Create a new FITS reader from a cfitsio pointer holder.
+        /// Create a new FITS reader from a cfitsio pointer holder and (optional) input archive.
         virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive) const = 0;
 
         virtual ~Factory() {}
@@ -52,7 +52,7 @@ public:
     };
 
     /**
-     *  @brief Subclass for Factory that constructs a FitsReader whose constructor takes a single Fits*.
+     *  @brief Subclass for Factory that constructs a FitsReader.
      *
      *  Subclasses should use this by providing a the appropriate constructor and then declaring
      *  a static data member or namespace-scope FactoryT instance templated over the subclass type.
@@ -62,7 +62,7 @@ public:
     class FactoryT : public Factory {
     public:
 
-        /// Create a new FITS reader from a cfitsio pointer holder.
+        /// Create a new FITS reader from a cfitsio pointer holder and (optional) input archive.
         virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive) const {
             return boost::make_shared<ReaderT>(fits, archive);
         }

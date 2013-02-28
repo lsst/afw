@@ -147,7 +147,7 @@ public:
 
     /**
      *  @brief Return true if the given schema is a valid ExposureTable schema.
-     *  
+     *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
@@ -202,7 +202,7 @@ private:
 
         MinimalSchema();
     };
-    
+
     // Return the singleton minimal schema.
     static MinimalSchema & getMinimalSchema();
 
@@ -336,20 +336,20 @@ public:
     }
 
     /**
-     *  @brief Return a shallow subset of the catalog that with only those records that contain the
+     *  @brief Return a shallow subset of the catalog with only those records that contain the
      *         given point.
      *
      *  @sa ExposureRecord::contains
      */
-    ExposureCatalogT findContains(Coord const & coord) const;
+    ExposureCatalogT subsetContaining(Coord const & coord) const;
 
     /**
-     *  @brief Return a shallow subset of the catalog that with only those records that contain the
+     *  @brief Return a shallow subset of the catalog with only those records that contain the
      *         given point.
      *
      *  @sa ExposureRecord::contains
      */
-    ExposureCatalogT findContains(geom::Point2D const & point, image::Wcs const & wcs) const;
+    ExposureCatalogT subsetContaining(geom::Point2D const & point, image::Wcs const & wcs) const;
 
 protected:
     explicit ExposureCatalogT(Base const & other) : Base(other) {}

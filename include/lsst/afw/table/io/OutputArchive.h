@@ -71,7 +71,7 @@ public:
      *  be in an inconsistent state and should not be saved.
      */
     int put(Persistable const * obj, bool permissive=false);
-    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get()); }
+    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get(), permissive); }
     //@}
 
     /**
@@ -134,7 +134,7 @@ public:
      *  @copydoc OutputArchive::put.
      */
     int put(Persistable const * obj, bool permissive=false);
-    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get()); }
+    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get(), permissive); }
     //@}
 
     ~OutputArchiveHandle();
