@@ -29,6 +29,8 @@ void Persistable::writeFits(fits::MemFileManager & manager, std::string const & 
 
 std::string Persistable::getPersistenceName() const { return std::string(); }
 
+std::string Persistable::getPythonModule() const { return std::string(); }
+
 void Persistable::write(OutputArchiveHandle &) const {
     assert(!isPersistable());
     throw LSST_EXCEPT(

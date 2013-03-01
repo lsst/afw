@@ -121,6 +121,16 @@ protected:
     virtual std::string getPersistenceName() const;
 
     /**
+     *  @brief Return the fully-qualified Python module that should be imported to guarantee that its
+     *         factory is registered.
+     *
+     *  Must be less than ArchiveIndexSchema::MAX_MODULE_LENGTH characters.
+     *
+     *  Will be ignored if empty.
+     */
+    virtual std::string getPythonModule() const;
+
+    /**
      *  @brief Write the object to one or more catalogs.
      *
      *  The handle object passed to this function provides an interface for adding new catalogs
