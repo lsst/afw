@@ -58,3 +58,39 @@ Python interface to lsst::afw::table::io classes
 %enddef
 
 %include "lsst/afw/table/io/Persistable.h"
+
+// =============== ModuleImporter ===========================================================================
+
+%{
+#include "lsst/afw/table/io/ModuleImporter.h"
+
+namespace lsst { namespace afw { namespace table { namespace io {
+namespace {
+class PythonModuleImporter : public ModuleImporter {
+public:
+    static ModuleImporter const * get() {
+        static PythonModuleImporter const instance;
+        return &instance;
+    }
+private:
+    PythonModuleImporter() {}
+protected:
+    virtual bool _import(std::string const & name) const;
+};
+
+bool PythonModuleImporter::_import(std::string const & name) const {
+    PyObject * mod = PyImport_ImportModule(name.c_str());
+    if (mod) {
+        Py_DECREF(mod);
+        return true;
+    }
+    return false;
+}
+
+} // anonymous
+}}}} // namespace lsst::afw::table::io
+%}
+
+%init %{
+    lsst::afw::table::io::ModuleImporter::install(lsst::afw::table::io::PythonModuleImporter::get());
+%}
