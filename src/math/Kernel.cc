@@ -351,3 +351,5 @@ void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) co
         this->setKernelParameter(ii, (*(*funcIter))(x,y));
     }
 }
+
+std::string afwMath::Kernel::getPythonModule() const { return "lsst.afw.math"; }

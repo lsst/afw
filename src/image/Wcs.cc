@@ -1114,6 +1114,8 @@ WcsFactory registration(getWcsPersistenceName());
 
 std::string Wcs::getPersistenceName() const { return getWcsPersistenceName(); }
 
+std::string Wcs::getPythonModule() const { return "lsst.afw.image"; }
+
 void Wcs::write(OutputArchiveHandle & handle) const {
     WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
