@@ -140,11 +140,15 @@ private:
 
     friend class OutputArchive::Impl;
 
-    OutputArchiveHandle(int id, std::string const & name, PTR(OutputArchive::Impl) impl);
+    OutputArchiveHandle(
+        int id, std::string const & name, std::string const & module,
+        PTR(OutputArchive::Impl) impl
+    );
 
     int _id;
     int _catPersistable;
     std::string _name;
+    std::string _module;
     PTR(OutputArchive::Impl) _impl;
 };
 

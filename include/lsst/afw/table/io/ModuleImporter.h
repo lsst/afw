@@ -5,8 +5,8 @@
 /**
  *  @file lsst/afw/table/io/ModuleImporter.h
  *
- *  Mechanism for safely importing Python modules from C++; should only be included by
- *  ModuleImporter.cc and the ioLib.i Swig file.
+ *  Mechanism for safely importing Python modules from C++; should not be included
+ *  except by its own implementation file, the ioLib.i file, and Persistable.cc.
  */
 
 #include <string>
