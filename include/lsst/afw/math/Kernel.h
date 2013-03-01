@@ -381,6 +381,9 @@ using boost::serialization::make_nvp;
         struct PersistenceHelper;
 
     protected:
+
+        virtual std::string getPythonModule() const;
+
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
         void setKernelParametersFromSpatialModel(double x, double y) const;

@@ -167,6 +167,8 @@ public:
 
 protected:
     PTR(lsst::afw::cameraGeom::Detector) _detector;
+
+    virtual std::string getPythonModule() const;
     
     virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
                                       lsst::afw::geom::Point2D const& ccdXY,
