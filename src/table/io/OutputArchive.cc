@@ -45,6 +45,7 @@ struct OutputArchive::Impl {
             PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
             iter->getTable()->setMetadata(metadata);
             metadata->set("EXTTYPE", "ARCHIVE_DATA");
+            metadata->set("EXTNAME", "ARCHIVE_DATA");
             metadata->set("AR_CATN", catArchive, "# of this catalog relative to the start of this archive");
         }
         return BaseCatalog(iter->getTable());
@@ -106,6 +107,7 @@ struct OutputArchive::Impl {
     Impl() : _nextId(1), _map(), _index(ArchiveIndexSchema::get().schema) {
         PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
         metadata->set("EXTTYPE", "ARCHIVE_INDEX");
+        metadata->set("EXTNAME", "ARCHIVE_INDEX");
         metadata->set("AR_CATN", 0, "# of this catalog relative to the start of this archive");
         _index.getTable()->setMetadata(metadata);
     }

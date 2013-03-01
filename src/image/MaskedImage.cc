@@ -151,7 +151,10 @@ void checkExtType(
                                expected % fitsfile.getFileName() % fitsfile.getHdu() % exttype).str());
         }
         metadata->remove("EXTTYPE");
-    } catch(lsst::pex::exceptions::NotFoundException) {}
+    } catch (lsst::pex::exceptions::NotFoundException) {}
+    try {
+        metadata->remove("EXTNAME");
+    } catch (lsst::pex::exceptions::NotFoundException) {}
 }
 
 void ensureMetadata(PTR(lsst::daf::base::PropertySet) & metadata) {
@@ -547,6 +550,7 @@ void processPlaneMetadata(
     }
     hdr->set("INHERIT", true);
     hdr->set("EXTTYPE", exttype);
+    hdr->set("EXTNAME", exttype);
 }
 
 } // anonymous
