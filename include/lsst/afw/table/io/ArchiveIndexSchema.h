@@ -24,7 +24,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  data catalog, and contains the range of rows used by that object in the catalog
  *  (in the 'row0' and 'nrows' fields).  The 'cat.archive' field indicates which
  *  catalog in the archive the index entry refers to (where 0 is the index itself,
- *  and 1 is the first data catlaog), and 'cat.persistable' refers to which catalog
+ *  and 1 is the first data catalog), and 'cat.persistable' refers to which catalog
  *  the index entry refers to from the perspective of the saved object.
  *
  *  An object may thus have more than one row in the index, but the 'id' and 'name'
@@ -41,8 +41,10 @@ struct ArchiveIndexSchema : private boost::noncopyable {
     Key<int> row0;
     Key<int> nRows;  // 'nrows' in schema
     Key<std::string> name;
+    Key<std::string> module;
 
     static int const MAX_NAME_LENGTH = 64;
+    static int const MAX_MODULE_LENGTH = 64;
 
     /// Return the singleton instance.
     static ArchiveIndexSchema const & get();

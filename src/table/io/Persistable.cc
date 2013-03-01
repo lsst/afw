@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "lsst/base/ModuleImporter.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
@@ -28,6 +29,8 @@ void Persistable::writeFits(fits::MemFileManager & manager, std::string const & 
 }
 
 std::string Persistable::getPersistenceName() const { return std::string(); }
+
+std::string Persistable::getPythonModule() const { return std::string(); }
 
 void Persistable::write(OutputArchiveHandle &) const {
     assert(!isPersistable());
@@ -71,13 +74,38 @@ PersistableFactory::PersistableFactory(std::string const & name) {
     getRegistry()[name] = this;
 }
 
-PersistableFactory const & PersistableFactory::lookup(std::string const & name) {
+PersistableFactory const & PersistableFactory::lookup(std::string const & name, std::string const & module) {
     RegistryMap::const_iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
-        throw LSST_EXCEPT(
-            pex::exceptions::NotFoundException,
-            (boost::format("PeristableFactory with name '%s' not found.") % name).str()
-        );
+        if (!module.empty()) {
+            bool success = base::ModuleImporter::import(module);
+            if (!success) {
+                throw LSST_EXCEPT(
+                    pex::exceptions::NotFoundException,
+                    (boost::format("PersistableFactory with name '%s' not found, and import of module "
+                                   "'%s' failed (possibly because Python calls were not available from C++).")
+                     % name % module).str()
+                );
+            }
+            i = getRegistry().find(name);
+            if (i == getRegistry().end()) {
+                throw LSST_EXCEPT(
+                    pex::exceptions::LogicErrorException,
+                    (boost::format("PersistableFactory with name '%s' not found even after successful import "
+                                   "of module '%s'.  Please report this as a bug in the persistence "
+                                   "implementation for this object.")
+                     % name % module).str()
+                );
+            }
+        } else {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                (boost::format("PersistableFactory with name '%s' not found, and no Python module to import "
+                               "was provided.  Please report this as a bug in the persistence implementation "
+                               "for this object.")
+                 % name).str()
+            );
+        }
     }
     return *i->second;
 }

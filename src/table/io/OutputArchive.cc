@@ -50,10 +50,15 @@ struct OutputArchive::Impl {
         return BaseCatalog(iter->getTable());
     }
 
-    void saveCatalog(BaseCatalog const & catalog, int id, std::string const & name, int catPersistable) {
+    void saveCatalog(
+        BaseCatalog const & catalog, int id,
+        std::string const & name, std::string const & module, 
+        int catPersistable
+    ) {
         PTR(BaseRecord) indexRecord = _index.addNew();
         indexRecord->set(indexKeys.id, id);
         indexRecord->set(indexKeys.name, name);
+        indexRecord->set(indexKeys.module, module);
         indexRecord->set(indexKeys.catPersistable, catPersistable);
         indexRecord->set(indexKeys.nRows, catalog.size());
         int catArchive = 1;
@@ -82,7 +87,9 @@ struct OutputArchive::Impl {
         std::pair<Map::iterator,bool> r = _map.insert(item);
         if (r.second) {
             ++_nextId;
-            OutputArchiveHandle handle(r.first->second, obj->getPersistenceName(), self);
+            OutputArchiveHandle handle(
+                r.first->second, obj->getPersistenceName(), obj->getPythonModule(), self
+            );
             obj->write(handle);
         }
         assert(r.first->first == obj);
@@ -166,7 +173,7 @@ BaseCatalog OutputArchiveHandle::makeCatalog(Schema const & schema) {
 }
 
 void OutputArchiveHandle::saveCatalog(BaseCatalog const & catalog) {
-    _impl->saveCatalog(catalog, _id, _name, _catPersistable);
+    _impl->saveCatalog(catalog, _id, _name, _module, _catPersistable);
     ++_catPersistable;
 }
 
@@ -176,8 +183,10 @@ int OutputArchiveHandle::put(Persistable const * obj, bool permissive) {
     return _impl->put(obj, _impl, permissive);
 }
 
-OutputArchiveHandle::OutputArchiveHandle(int id, std::string const & name, PTR(OutputArchive::Impl) impl) :
-    _id(id), _catPersistable(0), _name(name), _impl(impl)
+OutputArchiveHandle::OutputArchiveHandle(
+    int id, std::string const & name, std::string const & module,
+    PTR(OutputArchive::Impl) impl) :
+    _id(id), _catPersistable(0), _name(name), _module(module), _impl(impl)
 {}
 
 OutputArchiveHandle::~OutputArchiveHandle() {}
