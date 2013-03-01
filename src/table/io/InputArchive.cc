@@ -88,6 +88,13 @@ public:
             try {
                 PersistableFactory const & factory = PersistableFactory::lookup(name);
                 r.first->second = factory.read(self, factoryArgs);
+            } catch (pex::exceptions::NotFoundException & err) {
+                std::cerr << "Persistable factory with name '" << name
+                          << "' not found; its Python module may not have been imported. "
+                          << "Attempting to skip this object, but that may cause other objects "
+                          << "to fail to load.  Please see https://dev.lsstcorp.org/trac/ticket/2696 "
+                          << "for more information.";
+                return PTR(Persistable)();
             } catch (pex::exceptions::Exception & err) {
                 LSST_EXCEPT_ADD(
                     err, (boost::format("loading object with id=%d, name='%s'") % id % name).str()
