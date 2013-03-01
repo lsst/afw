@@ -212,7 +212,8 @@ public:
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
-            pass
+            if name == "_columns":
+                raise
         try:
             return getattr(self.table, name)
         except AttributeError:
