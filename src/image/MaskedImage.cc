@@ -212,9 +212,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
     } catch(lsst::pex::exceptions::NotFoundException) {}
 
-    ++hdu;
-    fitsfile.setHdu(hdu);
     try {
+        ++hdu;
+        fitsfile.setHdu(hdu);
         _mask.reset(new Mask(fitsfile, metadata, bbox, origin, conformMasks));
     } catch(fits::FitsError &e) {
         if (needAllHdus) {
@@ -233,9 +233,9 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
     } catch(lsst::pex::exceptions::NotFoundException) {}
 
-    ++hdu;
-    fitsfile.setHdu(hdu);
     try {
+        ++hdu;
+        fitsfile.setHdu(hdu);
         _variance.reset(new Variance(fitsfile, metadata, bbox, origin));
     } catch(fits::FitsError &e) {
         if (needAllHdus) {
