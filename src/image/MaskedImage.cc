@@ -187,10 +187,11 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     _image.reset(new Image(fitsfile, imageMetadata, bbox, origin));
     checkExtType(fitsfile, imageMetadata, "IMAGE");
 
-    fitsfile.setHdu(++hdu);
-    ensureMetadata(maskMetadata);
     try {
+        fitsfile.setHdu(++hdu);
+        ensureMetadata(maskMetadata);
         _mask.reset(new Mask(fitsfile, maskMetadata, bbox, origin, conformMasks));
+        checkExtType(fitsfile, maskMetadata, "MASK");
     } catch(fits::FitsError &e) {
         if (needAllHdus) {
             LSST_EXCEPT_ADD(e, "Reading Mask");
@@ -198,12 +199,12 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
         _mask.reset(new Mask(_image->getBBox(PARENT)));
     }
-    checkExtType(fitsfile, maskMetadata, "MASK");
 
-    fitsfile.setHdu(++hdu);
-    ensureMetadata(varianceMetadata);
     try {
+        fitsfile.setHdu(++hdu);
+        ensureMetadata(varianceMetadata);
         _variance.reset(new Variance(fitsfile, varianceMetadata, bbox, origin));
+        checkExtType(fitsfile, varianceMetadata, "VARIANCE");
     } catch(fits::FitsError &e) {
         if (needAllHdus) {
             LSST_EXCEPT_ADD(e, "Reading Variance");
@@ -211,7 +212,6 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
         }
         _variance.reset(new Variance(_image->getBBox(PARENT)));
     }
-    checkExtType(fitsfile, varianceMetadata, "VARIANCE");
 }
 
 /**

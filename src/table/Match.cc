@@ -252,18 +252,28 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     double const r2 = radius*radius;
 
     // copy and sort array of pointers on y
-    size_t const len1 = cat1.size();
-    size_t const len2 = cat2.size();
+    size_t len1 = cat1.size();
+    size_t len2 = cat2.size();
     boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
     boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
     size_t n = 0;
-    for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i, ++n) {
+    for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i) {
+        if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
+            continue;
+        }
         pos1[n] = i;
+        ++n;
     }
+    len1 = n;
     n = 0;
-    for (SourceCatalog::const_iterator i(cat2.begin()), e(cat2.end()); i != e; ++i, ++n) {
+    for (SourceCatalog::const_iterator i(cat2.begin()), e(cat2.end()); i != e; ++i) {
+        if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
+            continue;
+        }
         pos2[n] = i;
+        ++n;
     }
+    len2 = n;
 
     std::sort(pos1.get(), pos1.get() + len1, CmpRecordPtr());
     std::sort(pos2.get(), pos2.get() + len2, CmpRecordPtr());
@@ -310,12 +320,17 @@ SourceMatchVector matchXy(
     double const r2 = radius*radius;
 
     // copy and sort array of pointers on y
-    size_t const len = cat.size();
+    size_t len = cat.size();
     boost::scoped_array<PTR(SourceRecord)> pos(new PTR(SourceRecord)[len]);
     size_t n = 0;
-    for (SourceCatalog::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i, ++n) {
+    for (SourceCatalog::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i) {
+        if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
+            continue;
+        }
         pos[n] = i;
+        ++n;
     }
+    len = n;
 
     std::sort(pos.get(), pos.get() + len, CmpRecordPtr());
 

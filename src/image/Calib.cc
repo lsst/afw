@@ -30,6 +30,7 @@
 #include <cmath>
 
 #include "boost/format.hpp"
+#include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/pex/exceptions.h"
@@ -102,7 +103,12 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
 
     key = "EXPTIME";
     if (metadata->exists(key)) {
-        exptime = metadata->getAsDouble(key);
+        try {
+            exptime = metadata->getAsDouble(key);
+        } catch (daf::base::TypeMismatchException & err) {
+            std::string exptimeStr = metadata->getAsString(key);
+            exptime = boost::lexical_cast<double>(exptimeStr);
+        }
     }
 
     key = "FLUXMAG0";
