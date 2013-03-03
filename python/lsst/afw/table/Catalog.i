@@ -241,7 +241,7 @@ def unpickleCatalog(cls, data, size):
 
 // Macro that should be used to instantiate a Catalog type.
 %define %declareCatalog(TMPL, PREFIX)
-%pythondynamic;
+%pythondynamic TMPL< PREFIX ## Record >;
 %template (PREFIX ## Catalog) TMPL< PREFIX ## Record >;
 typedef TMPL< PREFIX ## Record > PREFIX ## Catalog;
 %extend TMPL< PREFIX ## Record > {
@@ -263,5 +263,4 @@ PREFIX ## ColumnView.Record = PREFIX ## Record
 PREFIX ## ColumnView.Table = PREFIX ## Table
 PREFIX ## ColumnView.Catalog = PREFIX ## Catalog
 %}
-%pythonnondynamic;
 %enddef

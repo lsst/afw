@@ -35,9 +35,9 @@ Python interface to lsst::afw::table classes
 #pragma SWIG nowarn=401                 // nothing known about base class
 #pragma SWIG nowarn=302                 // redefine identifier (SourceSet<> -> SourceSet)
 
-%lsst_exceptions();
-
 %include "lsst/p_lsstSwig.i"
+
+%lsst_exceptions()
 
 %include "Base.i"
 %include "Simple.i"
