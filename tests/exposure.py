@@ -521,6 +521,24 @@ class ExposureTestCase(unittest.TestCase):
         self.assertRaises(TypeError, float, im) # only single pixel images may be converted
         self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
 
+    def testReadMetadata(self):
+        filename = "testExposureMetadata.fits"
+        self.exposureCrWcs.getMetadata().set("FRAZZLE", True)
+        # This will write the main metadata (inc. FRAZZLE) to the primary HDU, and the
+        # WCS to subsequent HDUs, along with INHERIT=T.
+        self.exposureCrWcs.writeFits(filename)
+        # This should read the first non-empty HDU (i.e. it skips the primary), but
+        # goes back and reads it if it finds INHERIT=T.  That should let us read
+        # frazzle and the Wcs from the PropertySet returned by readMetadata.
+        md = afwImage.readMetadata(filename)
+        wcs = afwImage.makeWcs(md, True)
+        self.assertEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
+        self.assertEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
+        self.assert_(numpy.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
+        frazzle = md.get("FRAZZLE")
+        self.assert_(frazzle is True)
+        os.remove(filename)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
