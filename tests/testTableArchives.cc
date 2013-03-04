@@ -26,6 +26,8 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Kernel.h"
 
+#include "lsst/afw/image/Exposure.h"
+
 namespace lsst { namespace afw { namespace table { namespace io {
 
 namespace {
@@ -628,4 +630,15 @@ BOOST_AUTO_TEST_CASE(LinearCombinationKernel2) {
         BOOST_CHECK_EQUAL(s1, s2);
         BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
     }
+}
+
+BOOST_AUTO_TEST_CASE(ArchiveImporter) {
+    // From pure-C++ code, we shouldn't be able to read the PSF from this file, because it's defined
+    // in a Python module that hasn't been loaded.  But we should get a warning and the PSF
+    // will be set to null.
+    std::cerr << "--------------------------------------------------------------------------------------\n";
+    std::cerr << "The following warning is expected, and is an indication the test has passed.\n";
+    std::cerr << "--------------------------------------------------------------------------------------\n";
+    lsst::afw::image::Exposure<float> exposure("tests/data/archiveImportTest.fits");
+    BOOST_CHECK(!exposure.getPsf());
 }

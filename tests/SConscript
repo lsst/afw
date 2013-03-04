@@ -26,5 +26,6 @@ else:
     )
     
     scripts.BasicSConscript.tests(args=testArgs)
+    env.Depends("tests/PsfIo.py", "tests/testTableArchivesLib.py")
 
 env.Clean(targets["tests"], "#testTable.fits")
