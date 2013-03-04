@@ -21,6 +21,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Log.h"
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
@@ -203,9 +205,21 @@ void ExposureInfo::_readFits(
         // because the former might be an approximation to something we can't represent
         // using the FITS WCS standard but can represent with binary tables.
         int psfId = metadata->get<int>("PSF_ID", 0);
-        _psf = archive.get<detection::Psf>(psfId);
+        try {
+            _psf = archive.get<detection::Psf>(psfId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read PSF; setting to null: %s") % err.what()
+            );
+        }
         int wcsId = metadata->get<int>("WCS_ID", 0);
-        _wcs = archive.get<Wcs>(wcsId);        
+        try {
+            _wcs = archive.get<Wcs>(wcsId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read WCS; setting to null: %s") % err.what()
+            );
+        }
     }
 
     _metadata = metadata;
