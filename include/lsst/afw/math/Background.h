@@ -380,6 +380,7 @@ private:
     mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
 
     void _set_gridcolumns(Interpolate::Style const interpStyle,
+                          UndersampleStyle const undersampleStyle,
                           int const iX, std::vector<int> const& ypix) const;
 #if !defined(SWIG) && defined(LSST_makeBackground_getImage)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, , LSST_makeBackground_getImage_types)

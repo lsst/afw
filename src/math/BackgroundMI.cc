@@ -104,7 +104,8 @@ BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose
 }
 
 void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
-                                  int const iX, std::vector<int> const& ypix) const
+                                    UndersampleStyle const undersampleStyle,
+                                    int const iX, std::vector<int> const& ypix) const
 {
     image::MaskedImage<InternalPixelT>::Image &im = *_statsImage->getImage();
 
@@ -120,15 +121,34 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
     std::vector<double> ycenTmp, gridTmp;
     cullNan(_ycen, _grid, ycenTmp, gridTmp);
     
+    PTR(Interpolate) intobj;
     try {
-        PTR(Interpolate) intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
-        
-        for (int iY = 0; iY < _imgHeight; ++iY) {
-            _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
+        intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
+    } catch(pex::exceptions::OutOfRangeException &e) {
+        switch (undersampleStyle) {
+          case THROW_EXCEPTION:
+            LSST_EXCEPT_ADD(e, "setting _gridcolumns");
+            throw;
+          case REDUCE_INTERP_ORDER:
+            {
+                int nySample = 2;
+                return _set_gridcolumns(lookupMaxInterpStyle(nySample), undersampleStyle, iX, ypix);
+            }
+          case INCREASE_NXNYSAMPLE:
+            LSST_EXCEPT_ADD(e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
+            throw;
+          default:
+            LSST_EXCEPT_ADD(e, str(boost::format("The selected BackgroundControl "
+                                                 "UndersampleStyle %d is not defined.") % undersampleStyle));
+            throw;
         }
     } catch(ex::Exception &e) {
         LSST_EXCEPT_ADD(e, "setting _gridcolumns");
         throw;
+    }
+        
+    for (int iY = 0; iY < _imgHeight; ++iY) {
+        _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
     }
 }
 
@@ -247,7 +267,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
 
     _gridcolumns.resize(_imgWidth);
     for (int iX = 0; iX < _nxSample; ++iX) {
-        _set_gridcolumns(interpStyle, iX, ypix);
+        _set_gridcolumns(interpStyle, undersampleStyle, iX, ypix);
     }
 
     // create a shared_ptr to put the background image in and return to caller
