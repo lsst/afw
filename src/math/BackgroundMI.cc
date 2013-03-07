@@ -128,7 +128,7 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
         }
     } catch(ex::Exception &e) {
         LSST_EXCEPT_ADD(e, "setting _gridcolumns");
-        throw e;
+        throw;
     }
 }
 
@@ -176,7 +176,7 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
         return static_cast<double>(intobj->interpolate(x));
     } catch(ex::Exception &e) {
         LSST_EXCEPT_ADD(e, "in getPixel()");
-        throw e;
+        throw;
     }
 }
 /*
@@ -282,7 +282,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
             }
         } catch(ex::Exception &e) {
             LSST_EXCEPT_ADD(e, "Interpolating in x");
-            throw e;
+            throw;
         }
     }
 
