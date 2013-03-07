@@ -200,7 +200,7 @@ InterpolateGsl::InterpolateGsl(std::vector<double> const &x, ///< the x-values o
     
     _interp = ::gsl_interp_alloc(_interpType, _y.size());
     if (!_interp) {
-        throw LSST_EXCEPT(pex::exceptions::MemoryException,
+        throw LSST_EXCEPT(pex::exceptions::OutOfRangeException,
                           str(boost::format("Failed to initialise spline for type %s, length %d")
                               % _interpType->name % _y.size()));
 
