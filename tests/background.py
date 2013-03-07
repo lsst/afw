@@ -504,7 +504,27 @@ class BackgroundTestCase(unittest.TestCase):
 
         # Check that the non-string API works too
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
+
+    def testBadAreaFailsSpline(self):
+        """Check that a NaN in the stats image doesn't cause spline interpolation to fail (#2734)"""
         
+        image = afwImage.ImageF(15, 9)
+        image[-3:, -3:] = np.nan
+
+        binSize = 3
+        nx = image.getWidth()//binSize
+        ny = image.getHeight()//binSize
+
+        sctrl = afwMath.StatisticsControl()
+        bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
+
+        bkgd = afwMath.makeBackground(image, bctrl)
+        if display:
+            ds9.mtv(image)
+            ds9.mtv(afwMath.cast_BackgroundMI(bkgd).getStatsImage(), frame=1)
+
+        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+            
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
