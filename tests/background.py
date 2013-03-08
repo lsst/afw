@@ -505,6 +505,60 @@ class BackgroundTestCase(unittest.TestCase):
         # Check that the non-string API works too
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
         
+    def testBackgroundFromStatsImage(self):
+        """Check that we can rebuild a Background from a BackgroundMI.getStatsImage()"""
+
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        bkgd = afwMath.cast_BackgroundMI(afwMath.makeBackground(self.image, bgCtrl))
+
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+        bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
+        self.assertEqual(np.mean(bkgdImage.getArray()), self.val)
+        self.assertEqual(interpStyle, bkgd.getAsUsedInterpStyle())
+        self.assertEqual(undersampleStyle, bkgd.getAsUsedUndersampleStyle())
+        #
+        # OK, we have our background.  Make a copy
+        #
+        bkgd2 = afwMath.BackgroundMI(self.image.getBBox(), bkgd.getStatsImage())
+        del bkgd; bkgd = None           # we should be handling the memory correctly, but let's check
+        bkgdImage2 = bkgd2.getImageF(interpStyle)
+
+        self.assertEqual(np.mean(bkgdImage2.getArray()), self.val)
+        
+    def testBackgroundListIO(self):
+        """Test I/O for lists of Backgrounds"""
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+
+        backgrounds0 = []
+        backImage = afwImage.ImageF(self.image.getDimensions())
+        for i in range(2):
+            bkgd = afwMath.makeBackground(self.image, bgCtrl)
+            backImage += bkgd.getImageF(interpStyle, undersampleStyle)
+
+            backgrounds0.append(bkgd)
+
+        fileName = "backgroundList.fits"
+        try:
+            afwMath.writeBackgroundListAsFits(fileName, backgrounds0)
+
+            backgrounds = afwMath.readBackgroundListFromFits(fileName)
+        finally:
+            if os.path.exists(fileName):
+                os.unlink(fileName)
+
+        img = afwMath.computeImageFromBackgroundList(backgrounds)
+        #
+        # Check that the read-back image is identical to that generated from the backgroundList
+        # round-tripped to disk
+        #
+        backImage -= img
+        
+        self.assertEqual(np.min(backImage.getArray()), 0.0)
+        self.assertEqual(np.max(backImage.getArray()), 0.0)
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 

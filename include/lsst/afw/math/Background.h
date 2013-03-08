@@ -32,6 +32,7 @@
 #include <boost/preprocessor/seq.hpp>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/geom/Box.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Interpolate.h"
 
@@ -197,7 +198,7 @@ public:
     void setStatisticsProperty(std::string prop) { _prop = stringToStatisticsProperty(prop); }
     
 private:
-    Interpolate::Style _style;                       // style of interpolation to use
+    Interpolate::Style _style;          // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
@@ -213,6 +214,8 @@ class Background {
 protected:
     template<typename ImageT>
     explicit Background(ImageT const& img, BackgroundControl const& bgCtrl);
+
+    explicit Background(geom::Box2I const imageBBox, int const nx, int const ny);
     /// dtor
     virtual ~Background() { }
 public:
@@ -258,12 +261,18 @@ public:
         return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
     }
     /**
-     * Return the Interpolate::Style that we actually used
+     * Return the Interpolate::Style that we actually used in the last call to getImage()
      *
-     * Interpolate can fallback to a lower order if there aren't enough samples
+     * N.b. Interpolate can fallback to a lower order if there aren't enough samples
      */
     Interpolate::Style getAsUsedInterpStyle() const {
         return _asUsedInterpStyle;
+    }
+    /**
+     * Return the UndersampleStyle that we actually used in the last call to getImage()
+     */
+    UndersampleStyle getAsUsedUndersampleStyle() const {
+        return _asUsedUndersampleStyle;
     }
     /**
      * \brief Method to return an approximation to the background
@@ -275,13 +284,16 @@ public:
         InternalPixelT disambiguate = 0;
         return _getApproximate(actrl, undersampleStyle, disambiguate);
     }
+    /**
+     * Return the input image's bounding box
+     */
+    geom::Box2I getImageBBox() const { return _imgBBox; }
+
 protected:
-    int _imgWidth;                      ///< Width of input image
-    int _imgHeight;                     ///< Height of input image
-    int _nxSample;                      ///< number of sub-image squares in x-dimension
-    int _nySample;                      ///< number of sub-image squares in y-dimension
-    BackgroundControl _bctrl;           ///< control info set by user.
-    mutable Interpolate::Style _asUsedInterpStyle; ///< the style we actually used
+    geom::Box2I _imgBBox;                             ///< size and origin of input image
+    BackgroundControl _bctrl;                         ///< control info set by user.
+    mutable Interpolate::Style _asUsedInterpStyle;    ///< the style we actually used
+    mutable UndersampleStyle _asUsedUndersampleStyle; ///< the undersampleStyle we actually used
 
     std::vector<double> _xcen;          ///< x center pix coords of sub images
     std::vector<double> _ycen;          ///< y center ...
@@ -322,6 +334,7 @@ protected:
 private:
     Background(Background const&);
     Background& operator=(Background const&);    
+    void setCenOrigSize(int const width, int const height, int const nxSample, int const nySample);
 };
     
 /**
@@ -353,6 +366,8 @@ public:
     template<typename ImageT>
     explicit BackgroundMI(ImageT const& img,
                         BackgroundControl const& bgCtrl);
+    explicit BackgroundMI(geom::Box2I const imageDimensions,
+                          image::MaskedImage<InternalPixelT> const& statsImage);
     
     virtual void operator+=(float const delta);
     virtual void operator-=(float const delta);
