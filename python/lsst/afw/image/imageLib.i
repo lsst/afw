@@ -323,6 +323,7 @@ namespace lsst { namespace afw { namespace detection {
 
 %import "lsst/afw/table/Exposure.i"
 
+%include "lsst/afw/image/CoaddInputs.h"
 %include "lsst/afw/image/ExposureInfo.h"
 
 %include "lsst/afw/image/Exposure.h"
