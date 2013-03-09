@@ -131,8 +131,7 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
             throw;
           case REDUCE_INTERP_ORDER:
             {
-                int nySample = 2;
-                return _set_gridcolumns(lookupMaxInterpStyle(nySample), undersampleStyle, iX, ypix);
+                return _set_gridcolumns(lookupMaxInterpStyle(gridTmp.size()), undersampleStyle, iX, ypix);
             }
           case INCREASE_NXNYSAMPLE:
             LSST_EXCEPT_ADD(e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
