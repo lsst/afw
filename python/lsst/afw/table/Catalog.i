@@ -212,7 +212,11 @@ public:
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
-            pass
+            # self._columns is created the when self.columns is accessed -
+            # looking for it in self.columns below would trigger infinite
+            # recursion.
+            if name == "_columns":
+                raise
         try:
             return getattr(self.table, name)
         except AttributeError:
@@ -240,7 +244,7 @@ def unpickleCatalog(cls, data, size):
 
 // Macro that should be used to instantiate a Catalog type.
 %define %declareCatalog(TMPL, PREFIX)
-%pythondynamic;
+%pythondynamic TMPL< PREFIX ## Record >;
 %template (PREFIX ## Catalog) TMPL< PREFIX ## Record >;
 typedef TMPL< PREFIX ## Record > PREFIX ## Catalog;
 %extend TMPL< PREFIX ## Record > {
@@ -262,5 +266,4 @@ PREFIX ## ColumnView.Record = PREFIX ## Record
 PREFIX ## ColumnView.Table = PREFIX ## Table
 PREFIX ## ColumnView.Catalog = PREFIX ## Catalog
 %}
-%pythonnondynamic;
 %enddef

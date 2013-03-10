@@ -47,8 +47,7 @@ public:
 }}} // namespace lsst::afw::table
 
 %define %declareSortedCatalog(TMPL, PREFIX)
-%pythondynamic;
+%pythondynamic CatalogT< PREFIX ## Record >;
 %template (_ ## PREFIX ## CatalogBase) CatalogT< PREFIX ## Record >;
-%pythonnondynamic;
 %declareCatalog(TMPL, PREFIX)
 %enddef
