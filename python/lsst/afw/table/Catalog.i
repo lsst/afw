@@ -212,6 +212,9 @@ public:
         try:
             return object.__getattribute__(self, name)
         except AttributeError:
+            # self._columns is created the when self.columns is accessed -
+            # looking for it in self.columns below would trigger infinite
+            # recursion.
             if name == "_columns":
                 raise
         try:
