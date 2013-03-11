@@ -527,29 +527,32 @@ class BackgroundTestCase(unittest.TestCase):
         self.assertEqual(np.mean(bkgdImage2.getArray()), self.val)
         
     def testBackgroundListIO(self):
-        """Test I/O for lists of Backgrounds"""
+        """Test I/O for BackgroundLists"""
         bgCtrl = afwMath.BackgroundControl(10, 10)
         interpStyle = afwMath.Interpolate.AKIMA_SPLINE
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
 
-        backgrounds0 = []
+        backgroundList = afwMath.BackgroundList()
         backImage = afwImage.ImageF(self.image.getDimensions())
         for i in range(2):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
-            backImage += bkgd.getImageF(interpStyle, undersampleStyle)
+            if i == 0:
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+            else:
+                backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
-            backgrounds0.append(bkgd)
+            backImage += bkgd.getImageF(interpStyle, undersampleStyle)
 
         fileName = "backgroundList.fits"
         try:
-            afwMath.writeBackgroundListAsFits(fileName, backgrounds0)
+            backgroundList.writeFits(fileName)
 
-            backgrounds = afwMath.readBackgroundListFromFits(fileName)
+            backgrounds = afwMath.BackgroundList.readFits(fileName)
         finally:
             if os.path.exists(fileName):
                 os.unlink(fileName)
 
-        img = afwMath.computeImageFromBackgroundList(backgrounds)
+        img = backgrounds.getImage()
         #
         # Check that the read-back image is identical to that generated from the backgroundList
         # round-tripped to disk

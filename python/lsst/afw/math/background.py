@@ -22,88 +22,99 @@
 import sys
 import lsst.daf.base as dafBase
 import lsst.pex.exceptions as pexExcept
-#import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.fits.fitsLib import FitsError
 import mathLib as afwMath
 
-# __all__ = ["Warper", "WarperConfig"]
+class BackgroundList(list):
+    """A list-like class to contain a list of (afwMath.Background, interpStyle, undersampleStyle) tuples
 
-def writeBackgroundListAsFits(fileName, backgroundList, metadata=None):
-    """Save a set off Backgrounds to a file
-    @param fileName         FITS file to write
-    @param backgroundList   List of afwMath.Background objects to save
-    @param metadata (optional)  Extra metadata to write to the file
+In deference to the deprecated-but-not-yet-removed Background.getImage() API, we also accept a single
+afwMath.Background and extract the interpStyle and undersampleStyle from the as-used values
     """
-
-    for i, bkgd in enumerate(backgroundList):
-        statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
-
-        md = metadata.deepCopy() if metadata else dafBase.PropertyList()
-        md.set("INTERPSTYLE", bkgd.getAsUsedInterpStyle())
-        md.set("UNDERSAMPLESTYLE", bkgd.getAsUsedUndersampleStyle())
-        bbox = bkgd.getImageBBox()
-        md.set("BKGD_X0", bbox.getMinX())
-        md.set("BKGD_Y0", bbox.getMinY())
-        md.set("BKGD_WIDTH", bbox.getWidth())
-        md.set("BKGD_HEIGHT", bbox.getHeight())
-
-        statsImage.getImage().writeFits(   fileName, md, "w" if i == 0 else "a")
-        statsImage.getMask().writeFits(    fileName, md, "a")
-        statsImage.getVariance().writeFits(fileName, md, "a")
-
-def readBackgroundListFromFits(fileName):
-    """Read a set of Backgrounds from a file and return a list of (Background, interpStyle, undersampleStyle)
-    @param fileName         FITS file to read
-
-    See also computeImageFromBackgroundList
-    """
-
-    backgroundList = []
     
-    hdu = 0
-    while True:
-        hdu += 1
+    def __init__(self, *args):
+        list.__init__(self, *args)
 
-        md = dafBase.PropertyList()
-        try:
-            img = afwImage.ImageF(fileName, hdu, md); hdu += 1
-        except pexExcept.LsstCppException, e:
-            if isinstance(e.args[0], FitsError):
-                break
-            raise
-        
-        msk = afwImage.MaskU( fileName, hdu);     hdu += 1
-        var = afwImage.ImageF(fileName, hdu)
+    def writeFits(self, fileName):
+        """Save our list of Backgrounds to a file
+        @param fileName         FITS file to write
+        """
 
-        statsImage = afwImage.makeMaskedImage(img, msk, var)
+        for i, bkgd in enumerate(self):
+            try:
+                bkgd, interpStyle, undersampleStyle = bkgd
+            except TypeError:
+                interpStyle = bkgd.getAsUsedInterpStyle()
+                undersampleStyle = bkgd.getAsUsedUndersampleStyle()
 
-        x0 = md.get("BKGD_X0")
-        y0 = md.get("BKGD_Y0")
-        width  = md.get("BKGD_WIDTH")
-        height = md.get("BKGD_HEIGHT")
-        imageBBox = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(width, height))
+            statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
 
-        interpStyle =      md.get("INTERPSTYLE")
-        undersampleStyle = md.get("UNDERSAMPLESTYLE")
+            md = dafBase.PropertyList()
+            md.set("INTERPSTYLE", interpStyle)
+            md.set("UNDERSAMPLESTYLE", undersampleStyle)
+            bbox = bkgd.getImageBBox()
+            md.set("BKGD_X0", bbox.getMinX())
+            md.set("BKGD_Y0", bbox.getMinY())
+            md.set("BKGD_WIDTH", bbox.getWidth())
+            md.set("BKGD_HEIGHT", bbox.getHeight())
 
-        bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
+            statsImage.getImage().writeFits(   fileName, md, "w" if i == 0 else "a")
+            statsImage.getMask().writeFits(    fileName, md, "a")
+            statsImage.getVariance().writeFits(fileName, md, "a")
 
-        backgroundList.append((bkgd, interpStyle, undersampleStyle,))
+    @staticmethod
+    def readFits(fileName):
+        """Read a our list of Backgrounds from a file
+        @param fileName         FITS file to read
 
-    return backgroundList
+        See also getImage()
+        """
 
-def computeImageFromBackgroundList(backgroundList):
-    """
-    Compute an return a full-resolution image given a list of (Background, interpStyle, undersampleStyle)
-    """
+        self = BackgroundList()
 
-    bkgdImage = None
-    for bkgd, interpStyle, undersampleStyle in backgroundList:
-        if not bkgdImage:
-            bkgdImage =  bkgd.getImageF(interpStyle, undersampleStyle)
-        else:
-            bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
+        hdu = 0
+        while True:
+            hdu += 1
 
-    return bkgdImage
+            md = dafBase.PropertyList()
+            try:
+                img = afwImage.ImageF(fileName, hdu, md); hdu += 1
+            except pexExcept.LsstCppException, e:
+                if isinstance(e.args[0], FitsError):
+                    break
+                raise
+
+            msk = afwImage.MaskU( fileName, hdu);     hdu += 1
+            var = afwImage.ImageF(fileName, hdu)
+
+            statsImage = afwImage.makeMaskedImage(img, msk, var)
+
+            x0 = md.get("BKGD_X0")
+            y0 = md.get("BKGD_Y0")
+            width  = md.get("BKGD_WIDTH")
+            height = md.get("BKGD_HEIGHT")
+            imageBBox = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(width, height))
+
+            interpStyle =      md.get("INTERPSTYLE")
+            undersampleStyle = md.get("UNDERSAMPLESTYLE")
+
+            bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
+            self.append((bkgd, interpStyle, undersampleStyle,))
+
+        return self
+
+    def getImage(self):
+        """
+        Compute and return a full-resolution image from our list of (Background, interpStyle, undersampleStyle)
+        """
+
+        bkgdImage = None
+        for bkgd, interpStyle, undersampleStyle in self:
+            if not bkgdImage:
+                bkgdImage =  bkgd.getImageF(interpStyle, undersampleStyle)
+            else:
+                bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
+
+        return bkgdImage
