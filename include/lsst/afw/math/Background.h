@@ -387,12 +387,12 @@ public:
     /**
      * \brief Return the image of statistical quantities extracted from the image
      */
-    CONST_PTR(lsst::afw::image::MaskedImage<InternalPixelT>) getStatsImage() const {
+    lsst::afw::image::MaskedImage<InternalPixelT> getStatsImage() const {
         return _statsImage;
     }
 
 private:
-    PTR(lsst::afw::image::MaskedImage<InternalPixelT>) _statsImage; // statistical properties for the grid of subimages
+    lsst::afw::image::MaskedImage<InternalPixelT> _statsImage; // statistical properties for the grid of subimages
     mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
 
     void _set_gridcolumns(Interpolate::Style const interpStyle,

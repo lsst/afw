@@ -80,17 +80,17 @@ template<typename ImageT>
 BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
                              BackgroundControl const& bgCtrl ///< Control how the BackgroundMI is estimated
                             ) :
-    Background(img, bgCtrl), _statsImage(PTR(image::MaskedImage<InternalPixelT>)())
+    Background(img, bgCtrl), _statsImage(image::MaskedImage<InternalPixelT>())
 {
     // =============================================================
     // Loop over the cells in the image, computing statistical properties
     // of each cell in turn and using them to set _statsImage
     int const nxSample = bgCtrl.getNxSample();
     int const nySample = bgCtrl.getNySample();
-    _statsImage.reset(new image::MaskedImage<InternalPixelT>(nxSample, nySample));
+    _statsImage = image::MaskedImage<InternalPixelT>(nxSample, nySample);
 
-    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage->getImage();
-    image::MaskedImage<InternalPixelT>::Variance &var = *_statsImage->getVariance();
+    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage.getImage();
+    image::MaskedImage<InternalPixelT>::Variance &var = *_statsImage.getVariance();
 
     for (int iX = 0; iX < nxSample; ++iX) {
         for (int iY = 0; iY < nySample; ++iY) {
@@ -107,11 +107,11 @@ BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose
 /**
  * Recreate a BackgroundMI from the statsImage and the original Image's BBox
  */
-BackgroundMI::BackgroundMI(geom::Box2I const imageBBox,
+BackgroundMI::BackgroundMI(geom::Box2I const imageBBox,                         ///< unbinned Image's BBox
                            image::MaskedImage<InternalPixelT> const& statsImage ///< Internal stats image
                           ) :
     Background(imageBBox, statsImage.getWidth(), statsImage.getHeight()),
-    _statsImage(PTR(image::MaskedImage<InternalPixelT>)(new image::MaskedImage<InternalPixelT>(statsImage)))
+    _statsImage(statsImage)
 {
 }
 
@@ -120,13 +120,13 @@ BackgroundMI::BackgroundMI(geom::Box2I const imageBBox,
 void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
                                   int const iX, std::vector<int> const& ypix) const
 {
-    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage->getImage();
+    image::MaskedImage<InternalPixelT>::Image &im = *_statsImage.getImage();
 
     int const height = _imgBBox.getHeight();
     _gridcolumns[iX].resize(height);
 
     // Set _grid as a transitional measure
-    std::vector<double> _grid(_statsImage->getHeight());
+    std::vector<double> _grid(_statsImage.getHeight());
     std::copy(im.col_begin(iX), im.col_end(iX), _grid.begin());
     
     // remove nan from the grid values before computing columns
@@ -153,7 +153,7 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
 void BackgroundMI::operator+=(float const delta ///< Value to add
                                   )
 {
-    *_statsImage += delta;
+    _statsImage += delta;
 }
 
 /**
@@ -162,7 +162,7 @@ void BackgroundMI::operator+=(float const delta ///< Value to add
 void BackgroundMI::operator-=(float const delta ///< Value to subtract
                                   )
 {
-    *_statsImage -= delta;
+    _statsImage -= delta;
 }
 
 /**
@@ -181,7 +181,7 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
     (void)getImage<double>(interpStyle);        // setup the splines
 
     // build an interpobj along the row y and get the x'th value
-    int const nxSample = _statsImage->getWidth();
+    int const nxSample = _statsImage.getWidth();
     std::vector<double> bg_x(nxSample);
     for (int iX = 0; iX < nxSample; iX++) {
         bg_x[iX] = _gridcolumns[iX][y];
@@ -204,8 +204,8 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         UndersampleStyle const undersampleStyle // Behaviour if there are too few points
                                                 ) const
 {
-    int const nxSample = _statsImage->getWidth();
-    int const nySample = _statsImage->getHeight();
+    int const nxSample = _statsImage.getWidth();
+    int const nySample = _statsImage.getHeight();
     Interpolate::Style interpStyle = interpStyle_; // not const -- may be modified if REDUCE_INTERP_ORDER
 
     /*
@@ -321,7 +321,7 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
         UndersampleStyle const undersampleStyle                   /* Behaviour if there are too few points */
                                     ) const
 {
-    return makeApproximate(_xcen, _ycen, *_statsImage, _imgBBox, actrl);
+    return makeApproximate(_xcen, _ycen, _statsImage, _imgBBox, actrl);
 }
 
 /*
