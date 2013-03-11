@@ -29,6 +29,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/image/CoaddInputs.h"
 
 namespace lsst { namespace afw {
 
@@ -130,6 +131,15 @@ public:
     /// Set the exposure's point-spread function
     void setPsf(CONST_PTR(detection::Psf) psf) { _psf = _clonePsf(psf); }
 
+    /// Does this exposure have coadd provenance catalogs?
+    bool hasCoaddInputs() const { return static_cast<bool>(_coaddInputs); }
+
+    /// Set the exposure's coadd provenance catalogs.
+    void setCoaddInputs(PTR(CoaddInputs) coaddInputs) { _coaddInputs = coaddInputs; }
+
+    /// Return a pair of catalogs that record the inputs, if this Exposure is a coadd (otherwise null).
+    PTR(CoaddInputs) getCoaddInputs() const { return _coaddInputs; }
+
     /**
      *  @brief Construct an ExposureInfo from its various components.
      *
@@ -143,7 +153,8 @@ public:
         CONST_PTR(Calib) const & calib = CONST_PTR(Calib)(),
         CONST_PTR(cameraGeom::Detector) const & detector = CONST_PTR(cameraGeom::Detector)(),
         Filter const & filter = Filter(),
-        PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)()
+        PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)(),
+        PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)()
     );
 
     /// Copy constructor; deep-copies all components except the metadata.
@@ -230,8 +241,9 @@ private:
     CONST_PTR(cameraGeom::Detector) _detector;
     Filter _filter;
     PTR(daf::base::PropertySet) _metadata;
+    PTR(CoaddInputs) _coaddInputs;
 };
 
 }}} // lsst::afw::image
 
-#endif // LSST_AFW_IMAGE_EXPOSURE_H
+#endif // !LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED

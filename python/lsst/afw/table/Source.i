@@ -31,18 +31,17 @@
 
 %{
 #include "lsst/afw/table/Source.h"
-#include "lsst/afw/image/Wcs.h"
-#include "lsst/afw/image/TanWcs.h"
 %}
 
-// We need to know about Footprints so that Sources can correctly hold
-// Footprints or HeavyFootprints.  (We get an assert(own) failure from swig --
-// something about how it handles ownership of shared ptrs.)  We
-// can't just pull in detectionLib.i because it depends on Source.i
-%import "lsst/afw/detection/footprints.i"
-
-// Need to know about Wcs for SourceRecord::updateCoord
-%import "lsst/afw/image/wcs.i"
+namespace lsst { namespace afw { namespace image {
+class Wcs;
+}
+namespace detection {
+class Footprint;
+}
+}}
+%shared_ptr(lsst::afw::image::Wcs);
+%shared_ptr(lsst::afw::detection::Footprint);
 
 // =============== SourceTable and SourceRecord =============================================================
 

@@ -318,8 +318,12 @@ namespace lsst { namespace afw { namespace detection {
     class Psf;
 }}}
 %shared_ptr(lsst::afw::detection::Psf);
+%shared_ptr(lsst::afw::image::CoaddInputs);
 %shared_ptr(lsst::afw::image::ExposureInfo);
 
+%import "lsst/afw/table/Exposure.i"
+
+%include "lsst/afw/image/CoaddInputs.h"
 %include "lsst/afw/image/ExposureInfo.h"
 
 %include "lsst/afw/image/Exposure.h"
