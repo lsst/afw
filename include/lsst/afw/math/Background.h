@@ -31,6 +31,7 @@
  */
 #include <boost/preprocessor/seq.hpp>
 #include "boost/shared_ptr.hpp"
+#include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/math/Statistics.h"
@@ -210,7 +211,7 @@ private:
  * @class Background
  * @brief A virtual base class to evaluate %image background levels
  */
-class Background {
+class Background : public daf::base::Citizen {
 protected:
     template<typename ImageT>
     explicit Background(ImageT const& img, BackgroundControl const& bgCtrl);

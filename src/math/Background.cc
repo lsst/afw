@@ -59,6 +59,7 @@ template<typename ImageT>
 Background::Background(ImageT const& img,              ///< ImageT (or MaskedImage) whose properties we want
                        BackgroundControl const& bgCtrl ///< Control how the Background is estimated
                       ) :
+    lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(img.getBBox()),
     _bctrl(bgCtrl),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
@@ -79,6 +80,7 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
 
 Background::Background(geom::Box2I const imageBBox, int const nx, int const ny
                       ) :
+    lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(imageBBox),
     _bctrl(nx, ny),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
