@@ -204,6 +204,8 @@ using boost::serialization::make_nvp;
         std::vector<double> _params;
         mutable bool _isCacheValid;
 
+        virtual std::string getPythonModule() const { return "lsst.afw.math"; }
+
         /* Default constructor: intended only for serialization */
         explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}   
 

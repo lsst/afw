@@ -34,6 +34,10 @@ ArchiveIndexSchema::ArchiveIndexSchema() :
           )),
     name(schema.addField<std::string>(
              "name", "unique name for the persistable object's class", MAX_NAME_LENGTH
+         )),
+    module(schema.addField<std::string>(
+             "module", "Python module that should be imported to register the object's factory",
+             MAX_MODULE_LENGTH
          ))
 {
     schema.getCitizen().markPersistent();

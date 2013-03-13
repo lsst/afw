@@ -121,6 +121,16 @@ protected:
     virtual std::string getPersistenceName() const;
 
     /**
+     *  @brief Return the fully-qualified Python module that should be imported to guarantee that its
+     *         factory is registered.
+     *
+     *  Must be less than ArchiveIndexSchema::MAX_MODULE_LENGTH characters.
+     *
+     *  Will be ignored if empty.
+     */
+    virtual std::string getPythonModule() const;
+
+    /**
      *  @brief Write the object to one or more catalogs.
      *
      *  The handle object passed to this function provides an interface for adding new catalogs
@@ -231,15 +241,23 @@ public:
      *  as a pointer to the object will be put in a singleton registry.
      *
      *  The name must be globally unique with respect to *all* Persistables and be the
-     *  same as Persistable::getPersistenceName().
+     *  same as Persistable::getPersistenceName(); the Python module that a Persistable
+     *  may also declare is not used to resolve names, but rather just to import the
+     *  module that may install the necessary factory in the registry.
      */
     explicit PersistableFactory(std::string const & name);
 
     /// @brief Construct a new object from the given InputArchive and vector of catalogs.
     virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const = 0;
 
-    /// @brief Return the factory that has been registered with the given name.
-    static PersistableFactory const & lookup(std::string const & name);
+    /**
+     *  @brief Return the factory that has been registered with the given name.
+     *
+     *  If the lookup fails and module is not an empty string, we will attempt to import a Python
+     *  module with that name (this will only work when the C++ is being called from Python) and
+     *  try again.
+     */
+    static PersistableFactory const & lookup(std::string const & name, std::string const & module="");
 
     virtual ~PersistableFactory() {}
 };

@@ -398,6 +398,8 @@ Psf::Ptr createPsf(std::string const& name,             ///< desired variety
     return Psf::lookup(name).create(kernel);
 }
 
+std::string Psf::getPythonModule() const { return "lsst.afw.detection"; }
+
 //
 // We need to make an instance here so as to register it
 //

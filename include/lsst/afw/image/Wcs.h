@@ -306,6 +306,7 @@ protected:
 
     // See afw::table::io::Persistable
     virtual std::string getPersistenceName() const;
+    virtual std::string getPythonModule() const;
     virtual void write(OutputArchiveHandle & handle) const;
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).

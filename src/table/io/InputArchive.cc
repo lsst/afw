@@ -45,6 +45,7 @@ public:
             // iterate over records in index with this ID; we know they're sorted by ID and then
             // by catPersistable, so we can just append to factoryArgs.
             std::string name;
+            std::string module;
             for (
                 BaseCatalog::iterator indexIter = _index.find(id, indexKeys.id);
                 indexIter != _index.end() && indexIter->get(indexKeys.id) == id; 
@@ -60,6 +61,16 @@ public:
                         ) % indexIter->get(indexKeys.id) % indexIter->get(indexKeys.name) % name).str()
                     );
                 }
+                if (module.empty()) {
+                    module = indexIter->get(indexKeys.module);
+                } else if (module != indexIter->get(indexKeys.module)) {
+                    throw LSST_EXCEPT(
+                        MalformedArchiveError,
+                        (boost::format(
+                            "Inconsistent module in index for ID %d; got '%s', expected '%s'"
+                        ) % indexIter->get(indexKeys.id) % indexIter->get(indexKeys.module) % module).str()
+                    );
+                }
                 std::size_t catN = indexIter->get(indexKeys.catArchive)-1;
                 if (catN >= _catalogs.size()) {
                     throw LSST_EXCEPT(
@@ -67,7 +78,7 @@ public:
                         (boost::format(
                             "Invalid catalog number in index for ID %d; got '%d', max is '%d'"
                         ) % indexIter->get(indexKeys.id) % catN % _catalogs.size()).str()
-                    );                    
+                    );
                 }
                 BaseCatalog & fullCatalog = _catalogs[catN];
                 std::size_t i1 = indexIter->get(indexKeys.row0);
@@ -86,7 +97,7 @@ public:
                 );
             }
             try {
-                PersistableFactory const & factory = PersistableFactory::lookup(name);
+                PersistableFactory const & factory = PersistableFactory::lookup(name, module);
                 r.first->second = factory.read(self, factoryArgs);
             } catch (pex::exceptions::Exception & err) {
                 LSST_EXCEPT_ADD(

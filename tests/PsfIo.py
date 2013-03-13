@@ -97,6 +97,13 @@ class DoubleGaussianPsfTestCase(unittest.TestCase):
         psf2 = afwDetect.DoubleGaussianPsf.readFits("tests/data/psf1-1.fits")
         self.comparePsfs(psf1, psf2)
 
+    def testArchiveImports(self):
+        # This file was saved with a Psf defined in testTableArchivesLib, so we'll only be able
+        # to load it if the module-importer mechanism works.
+        filename = "tests/data/archiveImportTest.fits"
+        exposure = afwImage.ExposureF(filename)
+        self.assert_(exposure.getPsf() is not None)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
