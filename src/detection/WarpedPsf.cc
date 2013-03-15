@@ -165,20 +165,11 @@ PTR(Psf) WarpedPsf::clone() const
 }
 
 PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccdXY, 
-                                          Extent2I const& size, bool normalizePeak, 
+                                          bool normalizePeak, 
                                           bool distort) const
 {
     Point2I ctr;
     PTR(Image) im = this->_makeWarpedKernelImage(ccdXY, color, ctr);
-    
-    int width = (size.getX() > 0) ? size.getX() : im->getWidth();
-    int height = (size.getY() > 0) ? size.getY() : im->getHeight();
-
-    if ((width != im->getWidth()) || (height != im->getHeight())) {
-	PTR(Image) im2 = boost::make_shared<Image> (width, height);
-	ctr = resizeKernelImage(*im2, *im, ctr);
-	im = im2;
-    }
 
     if (normalizePeak) {
 	double centralPixelValue = (*im)(ctr.getX(), ctr.getY());

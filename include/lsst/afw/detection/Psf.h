@@ -87,20 +87,14 @@ public:
      *
      *  @note The real work is done in the virtual function, Psf::doComputeImage
      */
-    PTR(Image) computeImage(geom::Extent2I const& size, bool normalizePeak=true, bool distort=true) const;
-
-    PTR(Image) computeImage(geom::Point2D const& ccdXY, bool normalizePeak, bool distort=true) const;
-
     PTR(Image) computeImage(
-        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
-        geom::Extent2I const& size=geom::Extent2I(0, 0),
+        geom::Point2D const& ccdXY=geom::Point2D(),
         bool normalizePeak=true, bool distort=true
     ) const;
 
     PTR(Image) computeImage(
         image::Color const& color,
         geom::Point2D const& ccdXY=geom::Point2D(0, 0),
-        geom::Extent2I const& size=geom::Extent2I(0, 0),
         bool normalizePeak=true, bool distort=true
     ) const;
     //@}
@@ -131,16 +125,6 @@ public:
     image::Color getAverageColor() const {
         return image::Color();
     }
-
-    /**
-     * Helper function for Psf::computeImage(): takes a kernel image \c src, with central pixel \c ctr
-     * (presumably equal to kernel->getCtr()) and stuffs it into an output image \c dst, which need not
-     * have the same dimensions as \c src.  Returns the central pixel for the output image.
-     *
-     * The image xy0 fields are ignored, since these are generally not meaningful for the output
-     * of Kernel::computeImage() anyway (this is generally true throughout the kernel API).
-     */
-    static geom::Point2I resizeKernelImage(Image &dst, const Image &src, geom::Point2I const &ctr);
 
     /**
      * Helper function for Psf::computeImage(): converts a kernel image (i.e. xy0 not meaningful;
@@ -178,7 +162,6 @@ protected:
     virtual PTR(Image) doComputeImage(
         image::Color const& color,
         geom::Point2D const& ccdXY,
-        geom::Extent2I const& size,
         bool normalizePeak,
         bool distort
     ) const;

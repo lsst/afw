@@ -86,27 +86,6 @@ void setup1dResize(int &nout, int &dstBase, int &srcBase, int &dstCtr, int ndst,
 
 //-------- Psf member function implementations --------------------------------------------------------------
 
-geom::Point2I Psf::resizeKernelImage(Image &dst, Image const &src, geom::Point2I const &ctr) {
-    int nx, dstX0, srcX0, ctrX0;
-    int ny, dstY0, srcY0, ctrY0;
-
-    setup1dResize(nx, dstX0, srcX0, ctrX0, dst.getWidth(), src.getWidth(), ctr.getX());
-    setup1dResize(ny, dstY0, srcY0, ctrY0, dst.getHeight(), src.getHeight(), ctr.getY());
-
-    geom::Extent2I subimage_size(nx,ny);
-
-    Image sub_dst(dst, geom::Box2I(geom::Point2I(dstX0, dstY0),
-				      geom::Extent2I(nx,ny)));
-
-    Image sub_src(src, geom::Box2I(geom::Point2I(srcX0, srcY0),
-				      geom::Extent2I(nx,ny)));
-
-    dst = 0.;
-    sub_dst <<= sub_src;
-    return geom::Point2I(ctrX0, ctrY0);
-}
-
-
 PTR(image::Image<double>) 
 Psf::recenterKernelImage(PTR(Image) im, const geom::Point2I &ctr,  const geom::Point2D &xy, 
                          std::string const &warpAlgorithm, unsigned int warpBuffer)
@@ -122,35 +101,19 @@ Psf::recenterKernelImage(PTR(Image) im, const geom::Point2I &ctr,  const geom::P
     return im;
 }
 
-PTR(Psf::Image) Psf::computeImage(geom::Extent2I const& size, bool normalizePeak, bool distort) const {
-    image::Color color;
-    geom::Point2D const ccdXY = geom::Point2D(0, 0);
-    return doComputeImage(color, ccdXY, size, normalizePeak, distort);
-}
-
 PTR(Psf::Image) Psf::computeImage(geom::Point2D const& ccdXY, bool normalizePeak, bool distort) const {
     image::Color color;
-    geom::Extent2I const& size=geom::Extent2I(0, 0);
-    return doComputeImage(color, ccdXY, size, normalizePeak, distort);
+    return doComputeImage(color, ccdXY, normalizePeak, distort);
 }
 
 PTR(Psf::Image) Psf::computeImage(
-    geom::Point2D const& ccdXY, geom::Extent2I const& size,  bool normalizePeak, bool distort
+    image::Color const & color, geom::Point2D const& ccdXY, bool normalizePeak, bool distort
 ) const {
-    image::Color color;
-    return doComputeImage(color, ccdXY, size, normalizePeak, distort);
-}
-
-PTR(Psf::Image) Psf::computeImage(
-    image::Color const& color, geom::Point2D const& ccdXY, geom::Extent2I const& size,
-    bool normalizePeak, bool distort
-) const {
-    return doComputeImage(color, ccdXY, size, normalizePeak, distort);
+    return doComputeImage(color, ccdXY, normalizePeak, distort);
 }
 
 PTR(Psf::Image) Psf::doComputeImage(
-    image::Color const& color, geom::Point2D const& ccdXY, geom::Extent2I const& size,
-    bool normalizePeak, bool distort
+    image::Color const& color, geom::Point2D const& ccdXY, bool normalizePeak, bool distort
 ) const {
     if (distort) {
         if (!_detector) {
@@ -181,25 +144,12 @@ PTR(Psf::Image) Psf::doComputeImage(
         throw LSST_EXCEPT(pex::exceptions::NotFoundException, "Psf is unable to return a kernel");
     }
 
-    int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
-    int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
+    int width =  kernel->getWidth();
+    int height = kernel->getHeight();
     geom::Point2I ctr = kernel->getCtr();
     
-    PTR(Psf::Image) im = boost::make_shared<Psf::Image>(
-        geom::Extent2I(width, height)
-    );
-    try {
-        kernel->computeImage(*im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
-    } catch(pex::exceptions::InvalidParameterException &e) {
-
-        // OK, they didn't like the size of *im.  Compute a "native" image (i.e. the size of the Kernel)
-        geom::Extent2I kwid = kernel->getDimensions();
-        Psf::Image::Ptr native_im = boost::make_shared<Psf::Image>(kwid);
-        kernel->computeImage(*native_im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
-
-        // copy the native image into the requested one
-	ctr = resizeKernelImage(*im, *native_im, ctr);
-    }
+    PTR(Psf::Image) im = boost::make_shared<Psf::Image>(geom::Extent2I(width, height));
+    kernel->computeImage(*im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
     
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?

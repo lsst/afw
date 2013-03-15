@@ -78,43 +78,14 @@ class dgPsfTestCase(unittest.TestCase):
 
         color = afwImage.Color(1.0)
         ccdXY = afwGeom.Point2D(0, 0)
-        dimen = afwGeom.Extent2I(self.ksize, self.ksize)
 
         kIm = self.psf.computeImage(ccdXY)
         self.assertTrue(kIm.getWidth() == self.ksize)
         self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.MAX).getValue(), 1.0)
 
-        kIm = self.psf.computeImage(dimen)
-        self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.MAX).getValue(), 1.0)
-
-        kIm = self.psf.computeImage(ccdXY, dimen)
-        self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.MAX).getValue(), 1.0)
-
         kIm = self.psf.computeImage(ccdXY, False)
 
         self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.SUM).getValue(), 1.0)
-
-    def testComputeImage3(self):
-        """Test the computation of the PSF's image at a point for non-native sizes"""
-        #
-        # First an analytic Kernel
-        #
-        ksize = 15
-        aPsf = afwDetect.KernelPsf(afwMath.AnalyticKernel(ksize, ksize, afwMath.GaussianFunction2D(1, 1)))
-        #
-        # Then an image-based Kernel
-        #
-        iPsf = afwDetect.KernelPsf(afwMath.FixedKernel(aPsf.computeImage()))
-
-        for dy in range(-1, 2):
-            for dx in range(-1, 2):
-                dimen = afwGeom.Extent2I(ksize + 2*dx, ksize + 2*dy)
-
-                aIm = aPsf.computeImage(dimen)
-                self.assertTrue(aIm.getDimensions() == dimen)
-
-                iIm = iPsf.computeImage(dimen)
-                self.assertTrue(iIm.getDimensions() == dimen)
 
     def testKernel(self):
         """Test the creation of the dgPsf's kernel"""
