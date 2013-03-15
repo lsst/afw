@@ -17,24 +17,11 @@
 #include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/math/offsetImage.h"
 
-/************************************************************************************************************/
+namespace lsst { namespace afw { namespace detection {
 
-namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
-namespace afwImage = lsst::afw::image;
-namespace afwGeom = lsst::afw::geom;
-namespace afwMath = lsst::afw::math;
-namespace cameraGeom = lsst::afw::cameraGeom;
+//-------- Static helper functions for Psf::computeImage() --------------------------------------------------
 
-namespace lsst {
-namespace afw {
-namespace detection {
-
-
-/************************************************************************************************************/
-//
-// Static helper functions for Psf::computeImage()
-//
+namespace {
 
 //
 // Helper function for resizeKernelImage(); this is called twice for x,y directions
@@ -50,204 +37,137 @@ namespace detection {
 //   @srcBase = index of copied output in src array
 //   @dstCtr = location of special point in dst array after copy
 //
-namespace {
-    void setup1dResize(int &nout, int &dstBase, int &srcBase, int &dstCtr, int ndst, int nsrc, int srcCtr)
-    {
-        if (nsrc <= 0 || ndst <= 0 || srcCtr < 0 || srcCtr >= nsrc) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                              "invalid parameters to setup1dResize()");
-        }
-
-        if (nsrc < ndst) {
-            // extend by zero padding equally on both sides
-            nout = nsrc;
-            dstBase = (ndst-nsrc)/2;
-            srcBase = 0;
-            dstCtr = srcCtr + dstBase;
-            return;
-        }
-
-        nout = ndst;
-        dstBase = 0;
-        
-        int proposedSrcBase = srcCtr - ndst/2;
-
-        if (proposedSrcBase < 0) {
-            // truncate on right only
-            srcBase = 0;
-        }
-        else if (proposedSrcBase + ndst > nsrc) {
-            // truncate on left only
-            srcBase = nsrc - ndst;
-        }
-        else {
-            // truncate symmetrically around srcCtr
-            srcBase = proposedSrcBase;
-        }
-
-        dstCtr = srcCtr - srcBase;
-
-        //
-        // The following sequence of asserts might be a little paranoid, but
-        // this routine is only called on "heavyweight" code paths, so there's
-        // no cost to being exhaustive...
-        //
-
-        assert(dstCtr >= 0 && dstCtr < ndst);
-        assert(srcBase >= 0 && srcBase+ndst <= nsrc);
+void setup1dResize(int &nout, int &dstBase, int &srcBase, int &dstCtr, int ndst, int nsrc, int srcCtr) {
+    if (nsrc <= 0 || ndst <= 0 || srcCtr < 0 || srcCtr >= nsrc) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException,
+                          "invalid parameters to setup1dResize()");
     }
+
+    if (nsrc < ndst) {
+        // extend by zero padding equally on both sides
+        nout = nsrc;
+        dstBase = (ndst-nsrc)/2;
+        srcBase = 0;
+        dstCtr = srcCtr + dstBase;
+        return;
+    }
+
+    nout = ndst;
+    dstBase = 0;
+        
+    int proposedSrcBase = srcCtr - ndst/2;
+
+    if (proposedSrcBase < 0) {
+        // truncate on right only
+        srcBase = 0;
+    }
+    else if (proposedSrcBase + ndst > nsrc) {
+        // truncate on left only
+        srcBase = nsrc - ndst;
+    }
+    else {
+        // truncate symmetrically around srcCtr
+        srcBase = proposedSrcBase;
+    }
+
+    dstCtr = srcCtr - srcBase;
+
+    //
+    // The following sequence of asserts might be a little paranoid, but
+    // this routine is only called on "heavyweight" code paths, so there's
+    // no cost to being exhaustive...
+    //
+
+    assert(dstCtr >= 0 && dstCtr < ndst);
+    assert(srcBase >= 0 && srcBase+ndst <= nsrc);
 }
 
+} // anonymous
 
-afwGeom::Point2I Psf::resizeKernelImage(Image &dst, const Image &src, const afwGeom::Point2I &ctr)
-{
+//-------- Psf member function implementations --------------------------------------------------------------
+
+geom::Point2I Psf::resizeKernelImage(Image &dst, Image const &src, geom::Point2I const &ctr) {
     int nx, dstX0, srcX0, ctrX0;
     int ny, dstY0, srcY0, ctrY0;
 
     setup1dResize(nx, dstX0, srcX0, ctrX0, dst.getWidth(), src.getWidth(), ctr.getX());
     setup1dResize(ny, dstY0, srcY0, ctrY0, dst.getHeight(), src.getHeight(), ctr.getY());
 
-    afwGeom::Extent2I subimage_size(nx,ny);
+    geom::Extent2I subimage_size(nx,ny);
 
-    Image sub_dst(dst, afwGeom::Box2I(afwGeom::Point2I(dstX0, dstY0),
-				      afwGeom::Extent2I(nx,ny)));
+    Image sub_dst(dst, geom::Box2I(geom::Point2I(dstX0, dstY0),
+				      geom::Extent2I(nx,ny)));
 
-    Image sub_src(src, afwGeom::Box2I(afwGeom::Point2I(srcX0, srcY0),
-				      afwGeom::Extent2I(nx,ny)));
+    Image sub_src(src, geom::Box2I(geom::Point2I(srcX0, srcY0),
+				      geom::Extent2I(nx,ny)));
 
     dst = 0.;
     sub_dst <<= sub_src;
-    return afwGeom::Point2I(ctrX0, ctrY0);
+    return geom::Point2I(ctrX0, ctrY0);
 }
 
 
-PTR(afwImage::Image<double>) 
-Psf::recenterKernelImage(PTR(Image) im, const afwGeom::Point2I &ctr,  const afwGeom::Point2D &xy, 
+PTR(image::Image<double>) 
+Psf::recenterKernelImage(PTR(Image) im, const geom::Point2I &ctr,  const geom::Point2D &xy, 
                          std::string const &warpAlgorithm, unsigned int warpBuffer)
 {
     // "ir" : (integer, residual)
-    std::pair<int,double> const irX = afwImage::positionToIndex(xy.getX(), true);
-    std::pair<int,double> const irY = afwImage::positionToIndex(xy.getY(), true);
+    std::pair<int,double> const irX = image::positionToIndex(xy.getX(), true);
+    std::pair<int,double> const irY = image::positionToIndex(xy.getY(), true);
     
     if (irX.second != 0.0 || irY.second != 0.0)
-        im = afwMath::offsetImage(*im, irX.second, irY.second, warpAlgorithm, warpBuffer);
+        im = math::offsetImage(*im, irX.second, irY.second, warpAlgorithm, warpBuffer);
 
     im->setXY0(irX.first - ctr.getX(), irY.first - ctr.getY());
     return im;
 }
 
-
-
-/************************************************************************************************************/
-/** Return an Image of the PSF
- *
- * Evaluates the PSF at the specified point, and for neutrally coloured source
- *
- * \note The real work is done in the virtual function, Psf::doComputeImage
- */
-Psf::Image::Ptr Psf::computeImage(
-        afwGeom::Extent2I const& size, ///< Desired size of Image (overriding natural size of Kernel)
-        bool normalizePeak,            ///< normalize the image to have a maximum value of 1.0
-        bool distort                   ///< generate an image that includes the known camera distortion
-                                    ) const
-{
-    lsst::afw::image::Color color;
-    afwGeom::Point2D const ccdXY = lsst::afw::geom::Point2D(0, 0);
-
+PTR(Psf::Image) Psf::computeImage(geom::Extent2I const& size, bool normalizePeak, bool distort) const {
+    image::Color color;
+    geom::Point2D const ccdXY = geom::Point2D(0, 0);
     return doComputeImage(color, ccdXY, size, normalizePeak, distort);
 }
 
-/** Return an Image of the PSF
- *
- * Evaluates the PSF at the specified point, and for neutrally coloured source
- *
- * \note The real work is done in the virtual function, Psf::doComputeImage
- */
-Psf::Image::Ptr Psf::computeImage(
-        afwGeom::Point2D const& ccdXY,  ///< Position in image where PSF should be created
-        bool normalizePeak,             ///< normalize the image to have a maximum value of 1.0
-        bool distort                    ///< generate an image that includes the known camera distortion
-                                    ) const
-{
-    lsst::afw::image::Color color;
-    afwGeom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0);
-
+PTR(Psf::Image) Psf::computeImage(geom::Point2D const& ccdXY, bool normalizePeak, bool distort) const {
+    image::Color color;
+    geom::Extent2I const& size=geom::Extent2I(0, 0);
     return doComputeImage(color, ccdXY, size, normalizePeak, distort);
 }
 
-/** Return an Image of the PSF
- *
- * Unless otherwise specified, the image is of the "natural" size, and correct for the point (0,0);
- * a neutrally coloured source is assumed
- *
- * \note The real work is done in the virtual function, Psf::doComputeImage
- */
-Psf::Image::Ptr Psf::computeImage(
-        afwGeom::Point2D const& ccdXY,  ///< Position in image where PSF should be created
-        afwGeom::Extent2I const& size,  ///< Desired size of Image (overriding natural size of Kernel)
-        bool normalizePeak,             ///< normalize the image to have a maximum value of 1.0
-        bool distort                    ///< generate an image that includes the known camera distortion
-                                    ) const
-{
-    lsst::afw::image::Color color;
-    return doComputeImage(color, ccdXY, size, normalizePeak, distort);
-
-}
-
-/** Return an Image of the PSF
- *
- * Unless otherwise specified, the image is of the "natural" size, and correct for the point (0,0)
- *
- * \note The real work is done in the virtual function, Psf::doComputeImage
- */
-Psf::Image::Ptr Psf::computeImage(
-        lsst::afw::image::Color const& color, ///< Colour of source whose PSF is desired
-        afwGeom::Point2D const& ccdXY,        ///< Position in image where PSF should be created
-        afwGeom::Extent2I const& size,        ///< Desired size of Image (overriding natural size of Kernel)
-        bool normalizePeak,                   ///< normalize the image to have a maximum value of 1.0
-        bool distort                          ///< generate an image that includes the known camera distortion
-                            ) const
-{
+PTR(Psf::Image) Psf::computeImage(
+    geom::Point2D const& ccdXY, geom::Extent2I const& size,  bool normalizePeak, bool distort
+) const {
+    image::Color color;
     return doComputeImage(color, ccdXY, size, normalizePeak, distort);
 }
 
-/************************************************************************************************************/
-/**
- * Return an Image of the the Psf at the point (x, y), setting the peak pixel (if centered) to 1.0
- *
- * The specified position is a floating point number, and the resulting image will
- * have a Psf with the correct fractional position, with the centre within pixel (width/2, height/2)
- * Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
- * and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at middle)
- *
- * The image's (X0, Y0) will be set correctly to reflect this 
- *
- * @note If a fractional position is specified, the calculated central pixel value may be less than 1.0
- */
-Psf::Image::Ptr Psf::doComputeImage(
-        lsst::afw::image::Color const& color,  ///< Colour of source
-        lsst::afw::geom::Point2D const& ccdXY, ///< Position in parent (CCD) image
-        lsst::afw::geom::Extent2I const& size, ///< Size of PSF image
-        bool normalizePeak,                    ///< normalize the image to have a maximum value of 1.0
-        bool distort                           ///< generate an image that includes the known camera distortion
-                                           ) const
-{
+PTR(Psf::Image) Psf::computeImage(
+    image::Color const& color, geom::Point2D const& ccdXY, geom::Extent2I const& size,
+    bool normalizePeak, bool distort
+) const {
+    return doComputeImage(color, ccdXY, size, normalizePeak, distort);
+}
+
+PTR(Psf::Image) Psf::doComputeImage(
+    image::Color const& color, geom::Point2D const& ccdXY, geom::Extent2I const& size,
+    bool normalizePeak, bool distort
+) const {
     if (distort) {
         if (!_detector) {
             distort = false;
         }
     }
     if (distort and !_detector->getDistortion()) {
-        pexLog::Debug("afw.detection.Psf").debug<5>(
-                          "Requested a distorted image but Detector.getDistortion() is NULL");
-
+        pex::logging::Debug("afw.detection.Psf").debug<5>(
+            "Requested a distorted image but Detector.getDistortion() is NULL"
+        );
         distort = false;
     }
     
     // if they want it distorted, assume they want the PSF as it would appear
     // at ccdXY.  We'll undistort ccdXY to figure out where that point started
     // ... that's where it's really being distorted from!
-    afwGeom::Point2D ccdXYundist = ccdXY;
+    geom::Point2D ccdXYundist = ccdXY;
 #if 0
     if (distort) {
         ccdXYundist = _detector->getDistortion()->undistort(ccdXY, *_detector);
@@ -256,24 +176,24 @@ Psf::Image::Ptr Psf::doComputeImage(
     }
 #endif
 
-    afwMath::Kernel::ConstPtr kernel = getLocalKernel(ccdXYundist, color);
+    PTR(math::Kernel const) kernel = getLocalKernel(ccdXYundist, color);
     if (!kernel) {
-        throw LSST_EXCEPT(pexExcept::NotFoundException, "Psf is unable to return a kernel");
+        throw LSST_EXCEPT(pex::exceptions::NotFoundException, "Psf is unable to return a kernel");
     }
 
     int width =  (size.getX() > 0) ? size.getX() : kernel->getWidth();
     int height = (size.getY() > 0) ? size.getY() : kernel->getHeight();
-    afwGeom::Point2I ctr = kernel->getCtr();
+    geom::Point2I ctr = kernel->getCtr();
     
-    Psf::Image::Ptr im = boost::make_shared<Psf::Image>(
+    PTR(Psf::Image) im = boost::make_shared<Psf::Image>(
         geom::Extent2I(width, height)
     );
     try {
         kernel->computeImage(*im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
-    } catch(lsst::pex::exceptions::InvalidParameterException &e) {
+    } catch(pex::exceptions::InvalidParameterException &e) {
 
         // OK, they didn't like the size of *im.  Compute a "native" image (i.e. the size of the Kernel)
-        afwGeom::Extent2I kwid = kernel->getDimensions();
+        geom::Extent2I kwid = kernel->getDimensions();
         Psf::Image::Ptr native_im = boost::make_shared<Psf::Image>(kwid);
         kernel->computeImage(*native_im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
 
@@ -302,7 +222,7 @@ Psf::Image::Ptr Psf::doComputeImage(
         edge += lanc;
         Psf::Image::SinglePixel padValue(0.0);
         Psf::Image::Ptr overSizeImg = distortion->distort(ccdXYundist, *im, *_detector, padValue);
-        afwGeom::Box2I bbox(afwGeom::Point2I(edge, edge), afwGeom::Extent2I(width-2*edge, height-2*edge));
+        geom::Box2I bbox(geom::Point2I(edge, edge), geom::Extent2I(width-2*edge, height-2*edge));
         
         return Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
 #else
@@ -310,10 +230,10 @@ Psf::Image::Ptr Psf::doComputeImage(
         // distort as though we're where ccdXY was before it got distorted
         Psf::Image::Ptr imDist = distortion->distort(ccdXYundist, *im, *_detector, padValue);
         // distort() keeps *im centered at ccdXYundist, so now shift to ccdXY
-        afwGeom::Point2D shift = ccdXY - afwGeom::Extent2D(ccdXYundist);
+        geom::Point2D shift = ccdXY - geom::Extent2D(ccdXYundist);
         std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
         unsigned int const warpBuffer = 0; // Buffer to use in warping
-        Psf::Image::Ptr psfIm = afwMath::offsetImage(*imDist, shift.getX(), shift.getY(),
+        Psf::Image::Ptr psfIm = math::offsetImage(*imDist, shift.getX(), shift.getY(),
                                                      warpAlgorithm, warpBuffer);
         return psfIm;
 #endif
@@ -322,12 +242,10 @@ Psf::Image::Ptr Psf::doComputeImage(
     }
 }
 
+//-------- Psf and KernelPsf Persistence --------------------------------------------------------------------
+
 std::string Psf::getPythonModule() const { return "lsst.afw.detection"; }
 
-//
-// We need to make an instance here so as to register it
-//
-// \cond
 namespace {
 
 KernelPsfFactory<> registration("KernelPsf");
@@ -355,6 +273,4 @@ void KernelPsf::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(catalog);
 }
 
-// \endcond
-}}}
-
+}}} // namespace lsst::afw::detection

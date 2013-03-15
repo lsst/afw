@@ -1,92 +1,126 @@
 // -*- LSST-C++ -*-
-#if !defined(LSST_AFW_DETECTION_PSF_H)
-#define LSST_AFW_DETECTION_PSF_H
-//!
-// Describe an image's PSF
-//
+/*
+ * LSST Data Management System
+ * Copyright 2008-2013 LSST Corporation.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+#ifndef LSST_AFW_DETECTION_Psf_h_INCLUDED
+#define LSST_AFW_DETECTION_Psf_h_INCLUDED
+
 #include <string>
 #include <typeinfo>
+
 #include "boost/shared_ptr.hpp"
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst {
-namespace afw {
+namespace lsst { namespace afw {
+
 namespace cameraGeom {
-    class Detector;
-}
+class Detector;
+} // namespace cameraGeom
+
 namespace detection {
 
 class PsfFormatter;
 
-/*!
- * \brief Represent an image's Point Spread Function
- *
- * \note A polymorphic base class for Psf%s
- */
-class Psf : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable,
+/// A polymorphic base class for representing an image's Point Spread Function
+class Psf : public daf::base::Citizen, public daf::base::Persistable,
             public afw::table::io::PersistableFacade<Psf>, public afw::table::io::Persistable
- {
+{
 public:
-    typedef boost::shared_ptr<Psf> Ptr;            ///< shared_ptr to a Psf
-    typedef boost::shared_ptr<const Psf> ConstPtr; ///< shared_ptr to a const Psf
+    typedef boost::shared_ptr<Psf> Ptr;            ///< @deprecated shared_ptr to a Psf
+    typedef boost::shared_ptr<const Psf> ConstPtr; ///< @deprecated shared_ptr to a const Psf
 
-    typedef lsst::afw::math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
-    typedef lsst::afw::image::Image<Pixel> Image; ///< Image type returned by computeImage
+    typedef math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
+    typedef image::Image<Pixel> Image; ///< Image type returned by computeImage
 
-    /// ctor
-    Psf() : lsst::daf::base::Citizen(typeid(this)), _detector() {}
     virtual ~Psf() {}
 
-    virtual Ptr clone() const = 0;
+    /// Polymorphic deep-copy.
+    virtual PTR(Psf) clone() const = 0;
 
     // accessors for distortion
     void setDetector(PTR(lsst::afw::cameraGeom::Detector) det) {
         _detector = det;
     }
-    PTR(lsst::afw::cameraGeom::Detector) getDetector() {
+    PTR(cameraGeom::Detector) getDetector() {
         return _detector;
     }
-    CONST_PTR(lsst::afw::cameraGeom::Detector) getDetector() const {
+    PTR(cameraGeom::Detector const) getDetector() const {
         return _detector;
     }
 
-    PTR(Image) computeImage(lsst::afw::geom::Extent2I const& size, bool normalizePeak=true,
-                            bool distort=true) const;
+    //@{
+    /**
+     *  @brief Return an Image of the PSF
+     *
+     * The specified position is a floating point number, and the resulting image will
+     * have a Psf with the correct fractional position, with the centre within pixel (width/2, height/2)
+     * Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
+     * and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at middle)
+     *
+     * The image's (X0, Y0) will be set correctly to reflect this 
+     *
+     * @note If a fractional position is specified, the calculated central pixel value may be less than 1.
+     *  Evaluates the PSF at the specified point and [optional] color
+     *
+     *  @note The real work is done in the virtual function, Psf::doComputeImage
+     */
+    PTR(Image) computeImage(geom::Extent2I const& size, bool normalizePeak=true, bool distort=true) const;
 
-    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY, bool normalizePeak,
-                            bool distort=true) const;
+    PTR(Image) computeImage(geom::Point2D const& ccdXY, bool normalizePeak, bool distort=true) const;
 
-    PTR(Image) computeImage(lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
-                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
-                            bool normalizePeak=true,
-                            bool distort=true) const;
+    PTR(Image) computeImage(
+        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
+        geom::Extent2I const& size=geom::Extent2I(0, 0),
+        bool normalizePeak=true, bool distort=true
+    ) const;
 
-    PTR(Image) computeImage(lsst::afw::image::Color const& color,
-                            lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
-                            lsst::afw::geom::Extent2I const& size=lsst::afw::geom::Extent2I(0, 0),
-                            bool normalizePeak=true,
-                            bool distort=true) const;
+    PTR(Image) computeImage(
+        image::Color const& color,
+        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
+        geom::Extent2I const& size=geom::Extent2I(0, 0),
+        bool normalizePeak=true, bool distort=true
+    ) const;
+    //@}
 
-    lsst::afw::math::Kernel::Ptr getKernel(lsst::afw::image::Color const&
-                                           color=lsst::afw::image::Color()) {
+    PTR(math::Kernel) getKernel(image::Color const& color=image::Color()) {
         return doGetKernel(color);
     }
-    lsst::afw::math::Kernel::ConstPtr getKernel(lsst::afw::image::Color const&
-                                                color=lsst::afw::image::Color()) const {
+    PTR(math::Kernel const) getKernel(image::Color const& color=image::Color()) const {
         return doGetKernel(color);
     }
-    lsst::afw::math::Kernel::Ptr getLocalKernel(
-        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
-        lsst::afw::image::Color const& color=lsst::afw::image::Color()) {
+    PTR(math::Kernel) getLocalKernel(
+        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
+        image::Color const& color=image::Color()
+    ) {
         return doGetLocalKernel(ccdXY, color);
     }
-    lsst::afw::math::Kernel::ConstPtr getLocalKernel(
-        lsst::afw::geom::Point2D const& ccdXY=lsst::afw::geom::Point2D(0, 0),
-        lsst::afw::image::Color const& color=lsst::afw::image::Color()) const {
+    PTR(math::Kernel const) getLocalKernel(
+        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
+        image::Color const& color=image::Color()
+    ) const {
         return doGetLocalKernel(ccdXY, color);
     }
     /**
@@ -94,29 +128,28 @@ public:
      *
      * \note this the Color used to return a Psf if you don't specify a Color
      */
-    lsst::afw::image::Color getAverageColor() const {
-        return lsst::afw::image::Color();
+    image::Color getAverageColor() const {
+        return image::Color();
     }
 
     /**
-     * Helper function for Psf::computeImage(): takes a kernel image \c src, with central pixel \c ctr 
-     * (presumably equal to kernel->getCtr()) and stuffs it into an output image \c dst, which need not 
+     * Helper function for Psf::computeImage(): takes a kernel image \c src, with central pixel \c ctr
+     * (presumably equal to kernel->getCtr()) and stuffs it into an output image \c dst, which need not
      * have the same dimensions as \c src.  Returns the central pixel for the output image.
      *
      * The image xy0 fields are ignored, since these are generally not meaningful for the output
      * of Kernel::computeImage() anyway (this is generally true throughout the kernel API).
      */
-    static lsst::afw::geom::Point2I resizeKernelImage(Image &dst, const Image &src, 
-                                                      const lsst::afw::geom::Point2I &ctr);
+    static geom::Point2I resizeKernelImage(Image &dst, const Image &src, geom::Point2I const &ctr);
 
     /**
-     * Helper function for Psf::computeImage(): converts a kernel image (i.e. xy0 not meaningful; 
+     * Helper function for Psf::computeImage(): converts a kernel image (i.e. xy0 not meaningful;
      * center given by parameter \c ctr) to a psf image (i.e. xy0 is meaningful)
      *
-     * \c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear", 
+     * \c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear",
      * or "lanczosN"
      *
-     * \c warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear, 
+     * \c warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear,
      * N for lanczosN (note that it would be cleaner to infer this value from the warping algorithm
      * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage())
      *
@@ -127,84 +160,82 @@ public:
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.
      * If not, then the original image will be returned (after setting XY0)
      */
-    static PTR(Image) recenterKernelImage(PTR(Image) im, const lsst::afw::geom::Point2I &ctr, 
-                                          const lsst::afw::geom::Point2D &xy,
-                                          std::string const &warpAlgorithm = "lanczos5", 
-                                          unsigned int warpBuffer = 5);
+    static PTR(Image) recenterKernelImage(
+        PTR(Image) im, geom::Point2I const &ctr,
+        geom::Point2D const &xy,
+        std::string const &warpAlgorithm = "lanczos5",
+        unsigned int warpBuffer = 5
+    );
 
 protected:
-    PTR(lsst::afw::cameraGeom::Detector) _detector;
+
+    Psf() : daf::base::Citizen(typeid(this)), _detector() {}
+
+    PTR(cameraGeom::Detector) _detector;
 
     virtual std::string getPythonModule() const;
-    
-    virtual Image::Ptr doComputeImage(lsst::afw::image::Color const& color,
-                                      lsst::afw::geom::Point2D const& ccdXY,
-                                      lsst::afw::geom::Extent2I const& size,
-                                      bool normalizePeak,
-                                      bool distort
-                                     ) const;
 
-    virtual lsst::afw::math::Kernel::Ptr doGetKernel(lsst::afw::image::Color const&) {
-        return lsst::afw::math::Kernel::Ptr();
-    }
-        
-    virtual lsst::afw::math::Kernel::ConstPtr doGetKernel(lsst::afw::image::Color const&) const {
-        return lsst::afw::math::Kernel::Ptr();
-    }
-        
-    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const&,
-                                                          lsst::afw::image::Color const&) {
-        return lsst::afw::math::Kernel::Ptr();
-    }
-        
-    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const&,
-                                                               lsst::afw::image::Color const&) const {
-        return lsst::afw::math::Kernel::Ptr();
+    virtual PTR(Image) doComputeImage(
+        image::Color const& color,
+        geom::Point2D const& ccdXY,
+        geom::Extent2I const& size,
+        bool normalizePeak,
+        bool distort
+    ) const;
+
+    virtual PTR(math::Kernel) doGetKernel(image::Color const&) {
+        return PTR(math::Kernel)();
     }
 
-        
+    virtual PTR(math::Kernel const) doGetKernel(image::Color const&) const {
+        return PTR(math::Kernel const)();
+    }
+
+    virtual PTR(math::Kernel) doGetLocalKernel(geom::Point2D const&, image::Color const&) {
+        return PTR(math::Kernel)();
+    }
+
+    virtual PTR(math::Kernel const) doGetLocalKernel(geom::Point2D const&, image::Color const&) const {
+        return PTR(math::Kernel const)();
+    }
+
 private:
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };
 
-/************************************************************************************************************/
 /**
  * A Psf built from a Kernel
  */
 class KernelPsf : public afw::table::io::PersistableFacade<KernelPsf>, public Psf {
 public:
-    KernelPsf(
-        lsst::afw::math::Kernel::Ptr kernel=lsst::afw::math::Kernel::Ptr() ///< This PSF's Kernel
-             ) : Psf(), _kernel(kernel) {}
+    KernelPsf(PTR(math::Kernel) kernel=PTR(math::Kernel)()) : Psf(), _kernel(kernel) {}
 
 protected:
     /**
      * Return the Psf's kernel
      */
-    virtual lsst::afw::math::Kernel::Ptr
-    doGetKernel(lsst::afw::image::Color const&) {
+    virtual PTR(math::Kernel)
+    doGetKernel(image::Color const&) {
         return _kernel;
     }
     /**
      * Return the Psf's kernel
      */
-    virtual lsst::afw::math::Kernel::ConstPtr
-    doGetKernel(lsst::afw::image::Color const&) const {
-        return lsst::afw::math::Kernel::ConstPtr(_kernel);
+    virtual PTR(math::Kernel const)
+    doGetKernel(image::Color const&) const {
+        return PTR(math::Kernel const)(_kernel);
     }
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::Ptr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
-                                                          lsst::afw::image::Color const&) {
-        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
+    virtual PTR(math::Kernel) doGetLocalKernel(geom::Point2D const& pos, image::Color const&) {
+        return boost::make_shared<math::FixedKernel>(*_kernel, pos);
     }
     /**
      * Return the Psf's kernel instantiated at a point
      */
-    virtual lsst::afw::math::Kernel::ConstPtr doGetLocalKernel(lsst::afw::geom::Point2D const& pos,
-                                                               lsst::afw::image::Color const&) const {
-        return boost::make_shared<lsst::afw::math::FixedKernel>(*_kernel, pos);
+    virtual PTR(math::Kernel const) doGetLocalKernel(geom::Point2D const& pos, image::Color const&) const {
+        return boost::make_shared<math::FixedKernel>(*_kernel, pos);
     }
 
     /// Clone a KernelPsf
@@ -219,11 +250,12 @@ protected:
 
     virtual void write(OutputArchiveHandle & handle) const;
 
-    void setKernel(lsst::afw::math::Kernel::Ptr kernel) { _kernel = kernel; }
-    
+    void setKernel(PTR(math::Kernel) kernel) { _kernel = kernel; }
+
 private:
-    lsst::afw::math::Kernel::Ptr _kernel; // Kernel that corresponds to the Psf
+    PTR(math::Kernel) _kernel;
 };
 
-}}}
-#endif
+}}} // namespace lsst::afw::detection
+
+#endif // !LSST_AFW_DETECTION_Psf_h_INCLUDED

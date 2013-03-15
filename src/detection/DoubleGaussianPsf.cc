@@ -1,5 +1,28 @@
 // -*- LSST-C++ -*-
+/*
+ * LSST Data Management System
+ * Copyright 2008-2013 LSST Corporation.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+
 #include <cmath>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/DoubleGaussianPsf.h"
 #include "lsst/afw/math/FunctionLibrary.h"
@@ -8,11 +31,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
 
-namespace afwMath = lsst::afw::math;
-
-namespace lsst {
-namespace afw {
-namespace detection {
+namespace lsst { namespace afw { namespace detection {
 
 DoubleGaussianPsf::DoubleGaussianPsf(int width, int height, double sigma1, double sigma2, double b) :
     KernelPsf(), _sigma1(sigma1), _sigma2(sigma2), _b(b)
@@ -27,8 +46,9 @@ DoubleGaussianPsf::DoubleGaussianPsf(int width, int height, double sigma1, doubl
     }
     
     if (width > 0) {
-        afwMath::DoubleGaussianFunction2<double> dg(sigma1, sigma2, b);
-        setKernel(afwMath::Kernel::Ptr(new afwMath::AnalyticKernel(width, height, dg)));
+        math::DoubleGaussianFunction2<double> dg(sigma1, sigma2, b);
+        PTR(math::Kernel) kernel(new math::AnalyticKernel(width, height, dg));
+        setKernel(kernel);
     }
 }
 
