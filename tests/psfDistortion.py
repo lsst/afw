@@ -144,7 +144,7 @@ class PsfDistortionTestCase(unittest.TestCase):
 	# set the psf
 	kwid = 55
 	psfSigma = 4.5
-	psf = afwDet.createPsf("DoubleGaussian", kwid, kwid, psfSigma, psfSigma, 0.0)
+	psf = afwDet.DoubleGaussianPsf(kwid, kwid, psfSigma, psfSigma, 0.0)
 
         
 	# create a detector which is offset from the boresight

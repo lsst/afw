@@ -402,7 +402,7 @@ class ExposureTestCase(unittest.TestCase):
         exposureU.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         exposureU.setFilter(afwImage.Filter("g"))
         exposureU.getCalib().setExptime(666)
-        exposureU.setPsf(afwDetection.createPsf("DoubleGaussian", 11, 11, 1))
+        exposureU.setPsf(afwDetection.DoubleGaussianPsf(11, 11, 1))
 
         exposureF = exposureU.convertF()
         self.cmpExposure(exposureF, exposureU)

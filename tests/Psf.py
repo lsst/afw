@@ -40,8 +40,7 @@ class dgPsfTestCase(unittest.TestCase):
     def setUp(self):
         FWHM = 5
         self.ksize = 25                      # size of desired kernel
-        self.psf = afwDetect.createPsf("DoubleGaussian", self.ksize, self.ksize,
-                                       FWHM/(2*sqrt(2*log(2))), 1, 0.1)
+        self.psf = afwDetect.DoubleGaussianPsf(self.ksize, self.ksize, FWHM/(2*sqrt(2*log(2))), 1, 0.1)
 
     def tearDown(self):
         del self.psf
@@ -101,12 +100,11 @@ class dgPsfTestCase(unittest.TestCase):
         # First an analytic Kernel
         #
         ksize = 15
-        aPsf = afwDetect.createPsf("Kernel",
-                                   afwMath.AnalyticKernel(ksize, ksize, afwMath.GaussianFunction2D(1, 1)))
+        aPsf = afwDetect.KernelPsf(afwMath.AnalyticKernel(ksize, ksize, afwMath.GaussianFunction2D(1, 1)))
         #
         # Then an image-based Kernel
         #
-        iPsf = afwDetect.createPsf("Kernel", afwMath.FixedKernel(aPsf.computeImage()))
+        iPsf = afwDetect.KernelPsf(afwMath.FixedKernel(aPsf.computeImage()))
 
         for dy in range(-1, 2):
             for dx in range(-1, 2):
@@ -143,17 +141,17 @@ class dgPsfTestCase(unittest.TestCase):
     def testInvalidDgPsf(self):
         """Test parameters of dgPsfs, both valid and not"""
         sigma1, sigma2, b = 1, 0, 0                     # sigma2 may be 0 iff b == 0
-        afwDetect.createPsf("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
+        afwDetect.DoubleGaussianPsf(self.ksize, self.ksize, sigma1, sigma2, b)
 
         def badSigma1():
             sigma1 = 0
-            afwDetect.createPsf("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
+            afwDetect.DoubleGaussianPsf(self.ksize, self.ksize, sigma1, sigma2, b)
 
         utilsTests.assertRaisesLsstCpp(self, pexExceptions.DomainErrorException, badSigma1)
 
         def badSigma2():
             sigma2, b = 0, 1
-            afwDetect.createPsf("DoubleGaussian", self.ksize, self.ksize, sigma1, sigma2, b)
+            afwDetect.DoubleGaussianPsf(self.ksize, self.ksize, sigma1, sigma2, b)
 
         utilsTests.assertRaisesLsstCpp(self, pexExceptions.DomainErrorException, badSigma2)
 
@@ -201,7 +199,7 @@ class dgPsfTestCase(unittest.TestCase):
         #
         # Make a PSF from that kernel
         #
-        kPsf = afwDetect.createPsf("Kernel",
+        kPsf = afwDetect.KernelPsf(
                                    afwMath.AnalyticKernel(ksize, ksize,
                                                           afwMath.GaussianFunction2D(sigma1, sigma1)))
 
@@ -209,7 +207,7 @@ class dgPsfTestCase(unittest.TestCase):
         #
         # And now via the dgPsf model
         #
-        dgPsf = afwDetect.createPsf("DoubleGaussian", ksize, ksize, sigma1)
+        dgPsf = afwDetect.DoubleGaussianPsf(ksize, ksize, sigma1)
         dgIm = dgPsf.computeImage(afwGeom.Point2D(x, y))
         #
         # Check that they're the same

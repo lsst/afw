@@ -34,10 +34,6 @@ DoubleGaussianPsf::DoubleGaussianPsf(int width, int height, double sigma1, doubl
 
 namespace {
 
-// We need to make an instance here so as to register it
-volatile bool isInstance =
-    Psf::registerMe<DoubleGaussianPsf, boost::tuple<int, int, double, double, double> >("DoubleGaussian");
-
 // Read-only singleton struct containing the schema and keys that a double-Gaussian Psf is mapped
 // to in record persistence.
 struct DoubleGaussianPsfPersistenceHelper : private boost::noncopyable {

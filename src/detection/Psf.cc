@@ -322,82 +322,6 @@ Psf::Image::Ptr Psf::doComputeImage(
     }
 }
 
-/************************************************************************************************************/
-/*
- * Register a factory object by name;  if the factory's NULL, return the named factory
- */
-PsfFactoryBase& Psf::_registry(std::string const& name, PsfFactoryBase* factory) {
-    static std::map<std::string const, PsfFactoryBase *> psfRegistry;
-
-    std::map<std::string const, PsfFactoryBase *>::iterator el = psfRegistry.find(name);
-
-    if (el == psfRegistry.end()) {      // failed to find name
-        if (factory) {
-            psfRegistry[name] = factory;
-        } else {
-            throw LSST_EXCEPT(pexExcept::NotFoundException,
-                              "Unable to lookup Psf variety \"" + name + "\"");
-        }
-    } else {
-        if (!factory) {
-            factory = (*el).second;
-        } else {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-                              "Psf variety \"" + name + "\" is already declared");
-        }
-    }
-
-    return *factory;
-}
-
-/**
- * Declare a PsfFactory for a variety "name"
- *
- * @throws lsst::pex::exceptions::InvalidParameterException if name is already declared
- */
-void Psf::declare(std::string name,          ///< name of variety
-                  PsfFactoryBase* factory ///< Factory to make this sort of Psf
-                 ) {
-    (void)_registry(name, factory);
-}
-
-/**
- * Return the named PsfFactory
- *
- * @throws lsst::pex::exceptions::NotFoundException if name can't be found
- */
-PsfFactoryBase& Psf::lookup(std::string name ///< desired variety
-                                 ) {
-    return _registry(name, NULL);
-}
-
-/************************************************************************************************************/
-/**
- * Return a Psf of the requested variety
- *
- * @throws std::runtime_error if name can't be found
- */
-Psf::Ptr createPsf(std::string const& name,       ///< desired variety
-                   int width,                     ///< Number of columns in realisations of Psf
-                   int height,                    ///< Number of rows in realisations of Psf
-                   double p0,                     ///< Psf's 1st parameter
-                   double p1,                     ///< Psf's 2nd parameter
-                   double p2                      ///< Psf's 3rd parameter
-            ) {
-    return Psf::lookup(name).create(width, height, p0, p1, p2);
-}
-
-/**
- * Return a Psf of the requested variety
- *
- * @throws std::runtime_error if name can't be found
- */
-Psf::Ptr createPsf(std::string const& name,             ///< desired variety
-                   afwMath::Kernel::Ptr kernel          ///< Kernel specifying the Psf
-                  ) {
-    return Psf::lookup(name).create(kernel);
-}
-
 std::string Psf::getPythonModule() const { return "lsst.afw.detection"; }
 
 //
@@ -405,8 +329,6 @@ std::string Psf::getPythonModule() const { return "lsst.afw.detection"; }
 //
 // \cond
 namespace {
-
-volatile bool isInstance = Psf::registerMe<KernelPsf, afwMath::Kernel::Ptr>("Kernel");
 
 KernelPsfFactory<> registration("KernelPsf");
 

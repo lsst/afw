@@ -45,8 +45,8 @@ public:
     DoubleGaussianPsf(int width,                         ///< Number of columns in realisations of Psf
           int height,                        ///< Number of rows in realisations of Psf
           double sigma1,                     ///< Width of inner Gaussian
-          double sigma2,                     ///< Width of outer Gaussian
-          double b                   ///< Central amplitude of outer Gaussian (inner amplitude == 1)
+          double sigma2=0.0,                     ///< Width of outer Gaussian
+          double b=0.0                   ///< Central amplitude of outer Gaussian (inner amplitude == 1)
     );
 
     virtual PTR(Psf) clone() const {
