@@ -165,8 +165,7 @@ PTR(Psf) WarpedPsf::clone() const
 }
 
 PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccdXY, 
-                                          bool normalizePeak, 
-                                          bool distort) const
+                                          bool normalizePeak) const
 {
     Point2I ctr;
     PTR(Image) im = this->_makeWarpedKernelImage(ccdXY, color, ctr);

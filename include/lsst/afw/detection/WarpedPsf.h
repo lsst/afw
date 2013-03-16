@@ -85,8 +85,7 @@ protected:
      *
      * Note 1: 'distort' param ignored for now (will eventually be removed in favor of different API)
      */
-    virtual PTR(Image) doComputeImage(Color const& color, Point2D const& ccdXY, 
-				      bool normalizePeak, bool distort) const;
+    virtual PTR(Image) doComputeImage(Color const& color, Point2D const& ccdXY, bool normalizePeak) const;
 
     virtual PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c)
     {

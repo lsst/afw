@@ -13,8 +13,6 @@
 #include "lsst/pex/logging.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/detection/KernelPsfFactory.h"
-#include "lsst/afw/cameraGeom/Detector.h"
-#include "lsst/afw/cameraGeom/Distortion.h"
 #include "lsst/afw/math/offsetImage.h"
 
 namespace lsst { namespace afw { namespace detection {
@@ -101,45 +99,22 @@ Psf::recenterKernelImage(PTR(Image) im, const geom::Point2I &ctr,  const geom::P
     return im;
 }
 
-PTR(Psf::Image) Psf::computeImage(geom::Point2D const& ccdXY, bool normalizePeak, bool distort) const {
+PTR(Psf::Image) Psf::computeImage(geom::Point2D const& ccdXY, bool normalizePeak) const {
     image::Color color;
-    return doComputeImage(color, ccdXY, normalizePeak, distort);
+    return doComputeImage(color, ccdXY, normalizePeak);
 }
 
 PTR(Psf::Image) Psf::computeImage(
-    image::Color const & color, geom::Point2D const& ccdXY, bool normalizePeak, bool distort
+    image::Color const & color, geom::Point2D const& ccdXY, bool normalizePeak
 ) const {
-    return doComputeImage(color, ccdXY, normalizePeak, distort);
+    return doComputeImage(color, ccdXY, normalizePeak);
 }
 
 PTR(Psf::Image) Psf::doComputeImage(
-    image::Color const& color, geom::Point2D const& ccdXY, bool normalizePeak, bool distort
+    image::Color const& color, geom::Point2D const& ccdXY, bool normalizePeak
 ) const {
-    if (distort) {
-        if (!_detector) {
-            distort = false;
-        }
-    }
-    if (distort and !_detector->getDistortion()) {
-        pex::logging::Debug("afw.detection.Psf").debug<5>(
-            "Requested a distorted image but Detector.getDistortion() is NULL"
-        );
-        distort = false;
-    }
-    
-    // if they want it distorted, assume they want the PSF as it would appear
-    // at ccdXY.  We'll undistort ccdXY to figure out where that point started
-    // ... that's where it's really being distorted from!
-    geom::Point2D ccdXYundist = ccdXY;
-#if 0
-    if (distort) {
-        ccdXYundist = _detector->getDistortion()->undistort(ccdXY, *_detector);
-    } else {
-        ccdXYundist = ccdXY;
-    }
-#endif
 
-    PTR(math::Kernel const) kernel = getLocalKernel(ccdXYundist, color);
+    PTR(math::Kernel const) kernel = getLocalKernel(ccdXY, color);
     if (!kernel) {
         throw LSST_EXCEPT(pex::exceptions::NotFoundException, "Psf is unable to return a kernel");
     }
@@ -149,7 +124,7 @@ PTR(Psf::Image) Psf::doComputeImage(
     geom::Point2I ctr = kernel->getCtr();
     
     PTR(Psf::Image) im = boost::make_shared<Psf::Image>(geom::Extent2I(width, height));
-    kernel->computeImage(*im, !normalizePeak, ccdXYundist.getX(), ccdXYundist.getY());
+    kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
     
     //
     // Do we want to normalize to the center being 1.0 (when centered in a pixel)?
@@ -159,37 +134,7 @@ PTR(Psf::Image) Psf::doComputeImage(
         *im /= centralPixelValue;
     }
     
-    im = recenterKernelImage(im, ctr, ccdXYundist);
-            
-    // distort the image according to the camera distortion
-    if (distort) {        
-        cameraGeom::Distortion::ConstPtr distortion = _detector->getDistortion();
-
-#if 1
-        int lanc = distortion->getLanczosOrder();
-        int edge = abs(0.5*((height > width) ? height : width) *
-                       (1.0 - distortion->computeMaxShear(*_detector)));
-        edge += lanc;
-        Psf::Image::SinglePixel padValue(0.0);
-        Psf::Image::Ptr overSizeImg = distortion->distort(ccdXYundist, *im, *_detector, padValue);
-        geom::Box2I bbox(geom::Point2I(edge, edge), geom::Extent2I(width-2*edge, height-2*edge));
-        
-        return Psf::Image::Ptr(new Psf::Image(*overSizeImg, bbox));
-#else
-        Psf::Image::SinglePixel padValue(0.0);
-        // distort as though we're where ccdXY was before it got distorted
-        Psf::Image::Ptr imDist = distortion->distort(ccdXYundist, *im, *_detector, padValue);
-        // distort() keeps *im centered at ccdXYundist, so now shift to ccdXY
-        geom::Point2D shift = ccdXY - geom::Extent2D(ccdXYundist);
-        std::string const warpAlgorithm = "lanczos5"; // Algorithm to use in warping
-        unsigned int const warpBuffer = 0; // Buffer to use in warping
-        Psf::Image::Ptr psfIm = math::offsetImage(*imDist, shift.getX(), shift.getY(),
-                                                     warpAlgorithm, warpBuffer);
-        return psfIm;
-#endif
-    } else {
-        return im;
-    }
+    return recenterKernelImage(im, ctr, ccdXY);
 }
 
 //-------- Psf and KernelPsf Persistence --------------------------------------------------------------------

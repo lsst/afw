@@ -34,13 +34,7 @@
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace lsst { namespace afw {
-
-namespace cameraGeom {
-class Detector;
-} // namespace cameraGeom
-
-namespace detection {
+namespace lsst { namespace afw { namespace detection {
 
 class PsfFormatter;
 
@@ -60,17 +54,6 @@ public:
     /// Polymorphic deep-copy.
     virtual PTR(Psf) clone() const = 0;
 
-    // accessors for distortion
-    void setDetector(PTR(lsst::afw::cameraGeom::Detector) det) {
-        _detector = det;
-    }
-    PTR(cameraGeom::Detector) getDetector() {
-        return _detector;
-    }
-    PTR(cameraGeom::Detector const) getDetector() const {
-        return _detector;
-    }
-
     //@{
     /**
      *  @brief Return an Image of the PSF
@@ -87,15 +70,12 @@ public:
      *
      *  @note The real work is done in the virtual function, Psf::doComputeImage
      */
-    PTR(Image) computeImage(
-        geom::Point2D const& ccdXY=geom::Point2D(),
-        bool normalizePeak=true, bool distort=true
-    ) const;
+    PTR(Image) computeImage(geom::Point2D const& ccdXY=geom::Point2D(), bool normalizePeak=true) const;
 
     PTR(Image) computeImage(
         image::Color const& color,
         geom::Point2D const& ccdXY=geom::Point2D(0, 0),
-        bool normalizePeak=true, bool distort=true
+        bool normalizePeak=true
     ) const;
     //@}
 
@@ -145,17 +125,14 @@ public:
 
 protected:
 
-    Psf() : daf::base::Citizen(typeid(this)), _detector() {}
-
-    PTR(cameraGeom::Detector) _detector;
+    Psf() : daf::base::Citizen(typeid(this)) {}
 
     virtual std::string getPythonModule() const;
 
     virtual PTR(Image) doComputeImage(
         image::Color const& color,
         geom::Point2D const& ccdXY,
-        bool normalizePeak,
-        bool distort
+        bool normalizePeak
     ) const;
 
     virtual PTR(math::Kernel const) doGetKernel(image::Color const&) const {
