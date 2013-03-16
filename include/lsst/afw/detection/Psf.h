@@ -99,18 +99,10 @@ public:
     ) const;
     //@}
 
-    PTR(math::Kernel) getKernel(image::Color const& color=image::Color()) {
-        return doGetKernel(color);
-    }
     PTR(math::Kernel const) getKernel(image::Color const& color=image::Color()) const {
         return doGetKernel(color);
     }
-    PTR(math::Kernel) getLocalKernel(
-        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
-        image::Color const& color=image::Color()
-    ) {
-        return doGetLocalKernel(ccdXY, color);
-    }
+
     PTR(math::Kernel const) getLocalKernel(
         geom::Point2D const& ccdXY=geom::Point2D(0, 0),
         image::Color const& color=image::Color()
@@ -166,16 +158,8 @@ protected:
         bool distort
     ) const;
 
-    virtual PTR(math::Kernel) doGetKernel(image::Color const&) {
-        return PTR(math::Kernel)();
-    }
-
     virtual PTR(math::Kernel const) doGetKernel(image::Color const&) const {
         return PTR(math::Kernel const)();
-    }
-
-    virtual PTR(math::Kernel) doGetLocalKernel(geom::Point2D const&, image::Color const&) {
-        return PTR(math::Kernel)();
     }
 
     virtual PTR(math::Kernel const) doGetLocalKernel(geom::Point2D const&, image::Color const&) const {
@@ -197,22 +181,9 @@ protected:
     /**
      * Return the Psf's kernel
      */
-    virtual PTR(math::Kernel)
-    doGetKernel(image::Color const&) {
-        return _kernel;
-    }
-    /**
-     * Return the Psf's kernel
-     */
     virtual PTR(math::Kernel const)
     doGetKernel(image::Color const&) const {
         return PTR(math::Kernel const)(_kernel);
-    }
-    /**
-     * Return the Psf's kernel instantiated at a point
-     */
-    virtual PTR(math::Kernel) doGetLocalKernel(geom::Point2D const& pos, image::Color const&) {
-        return boost::make_shared<math::FixedKernel>(*_kernel, pos);
     }
     /**
      * Return the Psf's kernel instantiated at a point
