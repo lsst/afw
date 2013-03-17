@@ -27,30 +27,17 @@
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/math/detail/SrcPosFunctor.h"
 
-namespace pexEx = lsst::pex::exceptions;
+namespace lsst { namespace afw { namespace detection {
 
-typedef lsst::afw::geom::Point2D Point2D;
-
-namespace lsst {
-namespace afw {
-namespace detection {
-
-
-// -------------------------------------------------------------------------------------------------
-
-
-static inline double min4(double a, double b, double c, double d)
-{
+static inline double min4(double a, double b, double c, double d) {
     return std::min(std::min(a,b), std::min(c,d));
 }
 
-static inline double max4(double a, double b, double c, double d)
-{
+static inline double max4(double a, double b, double c, double d) {
     return std::max(std::max(a,b), std::max(c,d));
 }
 
-static inline geom::AffineTransform getLinear(const geom::AffineTransform &a)
-{
+static inline geom::AffineTransform getLinear(const geom::AffineTransform &a) {
     geom::AffineTransform ret;
     ret[0] = a[0];
     ret[1] = a[1];
@@ -60,7 +47,6 @@ static inline geom::AffineTransform getLinear(const geom::AffineTransform &a)
     ret[5] = 0.0;
     return ret;
 }
-
 
 // TODO: make this routine externally callable and more generic using templates
 //  (also useful in e.g. math/offsetImage.cc)
@@ -78,7 +64,6 @@ static inline PTR(Psf::Image) zeroPadImage(Psf::Image const &im, int pad)
 
     return out;
 }
-
 
 /**
  * @brief Alternate interface to afw::math::warpImage()
@@ -106,10 +91,10 @@ static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, geom::AffineTrans
     int in_yhi = im.getY0() + im.getHeight() - 1;
 
     // corners of output image
-    Point2D c00 = t(Point2D(in_xlo,in_ylo));
-    Point2D c01 = t(Point2D(in_xlo,in_yhi));
-    Point2D c10 = t(Point2D(in_xhi,in_ylo));
-    Point2D c11 = t(Point2D(in_xhi,in_yhi));
+    geom::Point2D c00 = t(geom::Point2D(in_xlo,in_ylo));
+    geom::Point2D c01 = t(geom::Point2D(in_xlo,in_yhi));
+    geom::Point2D c10 = t(geom::Point2D(in_xhi,in_ylo));
+    geom::Point2D c11 = t(geom::Point2D(in_xhi,in_yhi));
 
     //
     // bounding box for output image
@@ -132,14 +117,9 @@ static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, geom::AffineTrans
     return ret;
 }
 
-
-// -------------------------------------------------------------------------------------------------
-
-
-WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion)
-{
+WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion) {
     if (distortion->inFpCoordinateSystem()) {
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, 
                           "WarpedPsf constructor: distortion must not be in FP coordinate system");
     }
 
@@ -159,85 +139,43 @@ WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) dist
     }
 }
 
-PTR(Psf) WarpedPsf::clone() const
-{
+PTR(Psf) WarpedPsf::clone() const {
     return boost::make_shared<WarpedPsf>(_undistorted_psf->clone(), _distortion->clone());
 }
 
-PTR(Psf::Image) WarpedPsf::doComputeImage(Color const& color, Point2D const& ccdXY, 
-                                          bool normalizePeak) const
-{
-    Point2I ctr;
-    PTR(Image) im = this->_makeWarpedKernelImage(ccdXY, color, ctr);
+PTR(Psf::Image) WarpedPsf::doComputeKernelImage(
+    image::Color const & color, geom::Point2D const & ccdXY, bool normalizePeak
+) const {
+    geom::AffineTransform t = _distortion->linearizeReverseTransform(ccdXY);
+    geom::Point2D tp = t(ccdXY);
 
-    if (normalizePeak) {
-	double centralPixelValue = (*im)(ctr.getX(), ctr.getY());
-	*im /= centralPixelValue;
-    }
-
-    return recenterKernelImage(im, ctr, ccdXY);
-}
-
-PTR(math::Kernel) WarpedPsf::_doGetLocalKernel(Point2D const &p, Color const &c) const
-{
-    Point2I ctr;
-    PTR(Image) im = this->_makeWarpedKernelImage(p, c, ctr);
-    PTR(math::Kernel) ret = boost::make_shared<math::FixedKernel>(*im);
-    ret->setCtr(ctr);
-    return ret;
-}
-
-//
-// FIXME for now, the image returned by this routine is normalized to sum 1, following
-// the convention in the parent Psf class.  This convention seems fishy to me and I'll
-// revisit it later...
-//
-PTR(Psf::Image) WarpedPsf::_makeWarpedKernelImage(Point2D const &p, Color const &c, Point2I &ctr) const
-{
-    geom::AffineTransform t = _distortion->linearizeReverseTransform(p);
-    Point2D tp = t(p);
-
-    CONST_PTR(Kernel) k = _undistorted_psf->getLocalKernel(tp, c);
-    if (!k) {
-	throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, 
-                          "undistored psf failed to return local kernel");
-    }
-
-    PTR(Image) im = boost::make_shared<Image>(k->getWidth(), k->getHeight());
-    k->computeImage(*im, true, tp.getX(), tp.getY());
-
-    //
-    // im->xy0 is undefined (im is a "kernel image"); set it appropriately
-    // for a coordinate system with 'tp' at the origin
-    //
-    im->setXY0(Point2I(-k->getCtrX(), -k->getCtrY()));
+    PTR(Image) im = _undistorted_psf->computeKernelImage(tp, normalizePeak);
 
     // Go to the warped coordinate system with 'p' at the origin
     PTR(Psf::Image) ret = warpAffine(*im, getLinear(t.invert()));
 
-    // ret->xy0 is meaningful, but for consistency with the kernel API, 
-    // we use a parallel Point2I instead
-    ctr = Point2I(-ret->getX0(), -ret->getY0());
-
-    // 
-    // Normalize the output image to sum 1
-    // FIXME defining a member function Image::getSum() would be convenient here and in other places
-    //
-    double imSum = 0.0;
-    for (int y = 0; y != ret->getHeight(); ++y) {
-	Image::x_iterator imEnd = ret->row_end(y);
-	for (Image::x_iterator imPtr = ret->row_begin(y); imPtr != imEnd; imPtr++) {
-            imSum += *imPtr;
+    double normFactor = 1.0;
+    if (normalizePeak) {
+        // n.b. Image::operator() doesn't take into account xy0, so we have to do that manually
+        normFactor = (*ret)(-im->getX0(), -im->getY0());
+    } else {
+        // 
+        // Normalize the output image to sum 1
+        // FIXME defining a member function Image::getSum() would be convenient here and in other places
+        //
+        normFactor = 0.0;
+        for (int y = 0; y != ret->getHeight(); ++y) {
+            Image::x_iterator imEnd = ret->row_end(y);
+            for (Image::x_iterator imPtr = ret->row_begin(y); imPtr != imEnd; imPtr++) {
+                normFactor += *imPtr;
+            }
+        }
+        if (normFactor == 0.0) {
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "psf image has sum 0");
         }
     }
-    if (imSum == 0.0) {
-	throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "psf image has sum 0");
-    }
-    *ret /= imSum;
-
+    *ret /= normFactor;
     return ret;
 }
 
-
-}}}
-
+}}} // namepace lsst::afw::detection

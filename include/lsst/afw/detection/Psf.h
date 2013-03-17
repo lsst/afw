@@ -63,7 +63,7 @@ public:
      * Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
      * and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at middle)
      *
-     * The image's (X0, Y0) will be set correctly to reflect this 
+     * The image's (X0, Y0) will be set correctly to reflect this
      *
      * @note If a fractional position is specified, the calculated central pixel value may be less than 1.
      *  Evaluates the PSF at the specified point and [optional] color
@@ -79,16 +79,29 @@ public:
     ) const;
     //@}
 
-    PTR(math::Kernel const) getKernel(image::Color const& color=image::Color()) const {
-        return doGetKernel(color);
-    }
+    //@{
+    /**
+     *  @brief Evaluate the image of the PSF at a point, with the center of the PSF in the middle
+     *         of the center pixel.
+     *
+     *  This is similar to the image returned by a Kernel, but with the image's xy0 set such that
+     *  the center is at (0,0).
+     */
+    PTR(Image) computeKernelImage(
+        geom::Point2D const & ccdXY=geom::Point2D(), bool normalizePeak=true
+    ) const;
+
+    PTR(Image) computeKernelImage(
+        image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D(), bool normalizePeak=true
+    ) const;
+    //@}
+
+    PTR(math::Kernel const) getLocalKernel(geom::Point2D const & ccdXY=geom::Point2D()) const;
 
     PTR(math::Kernel const) getLocalKernel(
-        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
-        image::Color const& color=image::Color()
-    ) const {
-        return doGetLocalKernel(ccdXY, color);
-    }
+        image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D()
+    ) const;
+
     /**
      * Return the average Color of the stars used to construct the Psf
      *
@@ -99,25 +112,25 @@ public:
     }
 
     /**
-     * Helper function for Psf::computeImage(): converts a kernel image (i.e. xy0 not meaningful;
-     * center given by parameter \c ctr) to a psf image (i.e. xy0 is meaningful)
+     * Helper function for Psf::computeImage(): converts a kernel image (centered at (0,0) when xy0
+     * is taken into account) to an image centered at xy when xy0 is taken into account.
      *
      * \c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear",
      * or "lanczosN"
      *
      * \c warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear,
      * N for lanczosN (note that it would be cleaner to infer this value from the warping algorithm
-     * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage())
+     * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage()).
      *
-     * The point with integer coordinates \c ctr in the source image corresponds to the point
-     * \c xy in the destination image.  If \c xy is not integer-valued then we will need to fractionally
-     * shift the image using interpolation (lanczos5 currently hardcoded)
+     * The point with integer coordinates \c (0,0) in the source image (with xy0 taken into account)
+     * corresponds to the point \c xy in the destination image.  If \c xy is not integer-valued then
+     * we will need to fractionally shift the image using interpolation.
      *
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.
-     * If not, then the original image will be returned (after setting XY0)
+     * If not, then the original image will be returned (after setting XY0).
      */
     static PTR(Image) recenterKernelImage(
-        PTR(Image) im, geom::Point2I const &ctr,
+        PTR(Image) im,
         geom::Point2D const &xy,
         std::string const &warpAlgorithm = "lanczos5",
         unsigned int warpBuffer = 5
@@ -134,6 +147,12 @@ protected:
         geom::Point2D const& ccdXY,
         bool normalizePeak
     ) const;
+
+    virtual PTR(Image) doComputeKernelImage(
+        image::Color const& color,
+        geom::Point2D const& ccdXY,
+        bool normalizePeak
+    ) const = 0;
 
     virtual PTR(math::Kernel const) doGetKernel(image::Color const&) const {
         return PTR(math::Kernel const)();
@@ -154,20 +173,9 @@ class KernelPsf : public afw::table::io::PersistableFacade<KernelPsf>, public Ps
 public:
     KernelPsf(PTR(math::Kernel) kernel=PTR(math::Kernel)()) : Psf(), _kernel(kernel) {}
 
+    PTR(math::Kernel const) getKernel() const { return _kernel; }
+
 protected:
-    /**
-     * Return the Psf's kernel
-     */
-    virtual PTR(math::Kernel const)
-    doGetKernel(image::Color const&) const {
-        return PTR(math::Kernel const)(_kernel);
-    }
-    /**
-     * Return the Psf's kernel instantiated at a point
-     */
-    virtual PTR(math::Kernel const) doGetLocalKernel(geom::Point2D const& pos, image::Color const&) const {
-        return boost::make_shared<math::FixedKernel>(*_kernel, pos);
-    }
 
     /// Clone a KernelPsf
     virtual Ptr clone() const { return boost::make_shared<KernelPsf>(*this); }
@@ -176,6 +184,12 @@ protected:
     virtual bool isPersistable() const { return _kernel->isPersistable(); }
 
 protected:
+
+    virtual PTR(Image) doComputeKernelImage(
+        image::Color const & color,
+        geom::Point2D const & ccdXY,
+        bool normalizePeak
+    ) const;
 
     virtual std::string getPersistenceName() const;
 

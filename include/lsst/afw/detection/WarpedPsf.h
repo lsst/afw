@@ -73,35 +73,16 @@ public:
     WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion);
 
 protected:
-    /**
-     * @brief Note: we currently don't define doGetKernel()
-     * Defining doGetKernel() would be problematic; we would need to compute a "global" kernel
-     * size and center but these are pixel-dependent.
-     */
+
     virtual PTR(Psf) clone() const;
 
-    /**
-     * @brief Returns distorted image.
-     *
-     * Note 1: 'distort' param ignored for now (will eventually be removed in favor of different API)
-     */
-    virtual PTR(Image) doComputeImage(Color const& color, Point2D const& ccdXY, bool normalizePeak) const;
-
-    virtual PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c)
-    {
-	return this->_doGetLocalKernel(p, c);
-    }
-
-    virtual CONST_PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) const
-    {
-	return this->_doGetLocalKernel(p, c);
-    }
+    virtual PTR(Image) doComputeKernelImage(
+        image::Color const & color, geom::Point2D const & ccdXY, bool normalizePeak
+    ) const;
 
 protected:
     CONST_PTR(Psf) _undistorted_psf;
     CONST_PTR(XYTransform) _distortion;
-
-    PTR(Kernel) _doGetLocalKernel(Point2D const &p, Color const &c) const;
 
     /**
      * @brief This helper function is used in doComputeImage() and doGetLocalKernel().

@@ -61,6 +61,14 @@ public:
 
 protected:
 
+    virtual PTR(Image) doComputeKernelImage(
+        lsst::afw::image::Color const & color,
+        lsst::afw::geom::Point2D const & ccdXY,
+        bool normalizePeak
+    ) const {
+        return PTR(Image)();
+    }
+
     virtual std::string getPersistenceName() const { return "DummyPsf"; }
 
     virtual std::string getPythonModule() const { return "testTableArchivesLib"; }

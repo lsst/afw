@@ -20,17 +20,18 @@ namespace lsst { namespace afw { namespace detection {
 //-------- Psf member function implementations --------------------------------------------------------------
 
 PTR(image::Image<double>) 
-Psf::recenterKernelImage(PTR(Image) im, const geom::Point2I &ctr,  const geom::Point2D &xy, 
-                         std::string const &warpAlgorithm, unsigned int warpBuffer)
-{
+Psf::recenterKernelImage(
+    PTR(Image) im, geom::Point2D const & xy, std::string const &warpAlgorithm, unsigned int warpBuffer
+) {
     // "ir" : (integer, residual)
     std::pair<int,double> const irX = image::positionToIndex(xy.getX(), true);
     std::pair<int,double> const irY = image::positionToIndex(xy.getY(), true);
     
-    if (irX.second != 0.0 || irY.second != 0.0)
+    if (irX.second != 0.0 || irY.second != 0.0) {
         im = math::offsetImage(*im, irX.second, irY.second, warpAlgorithm, warpBuffer);
+    }
 
-    im->setXY0(irX.first - ctr.getX(), irY.first - ctr.getY());
+    im->setXY0(irX.first + im->getX0(), irY.first + im->getY0());
     return im;
 }
 
@@ -45,31 +46,50 @@ PTR(Psf::Image) Psf::computeImage(
     return doComputeImage(color, ccdXY, normalizePeak);
 }
 
+PTR(Psf::Image) Psf::computeKernelImage(
+    geom::Point2D const & ccdXY, bool normalizePeak
+) const {
+    image::Color color;
+    return doComputeKernelImage(color, ccdXY, normalizePeak);
+}
+
+PTR(Psf::Image) Psf::computeKernelImage(
+    image::Color const & color, geom::Point2D const& ccdXY, bool normalizePeak
+) const {
+    return doComputeKernelImage(color, ccdXY, normalizePeak);
+}
+
+PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D const & ccdXY) const {
+    image::Color color;
+    return getLocalKernel(color, ccdXY);
+}
+
+PTR(math::Kernel const) Psf::getLocalKernel(image::Color const & color, geom::Point2D const& ccdXY) const {
+    PTR(Image) image = computeKernelImage(color, ccdXY, false);
+    return boost::make_shared<math::FixedKernel>(*image);
+}
+
 PTR(Psf::Image) Psf::doComputeImage(
     image::Color const& color, geom::Point2D const& ccdXY, bool normalizePeak
 ) const {
+    PTR(Psf::Image) im = doComputeKernelImage(color, ccdXY, normalizePeak);    
+    return recenterKernelImage(im, ccdXY);
+}
 
-    PTR(math::Kernel const) kernel = getLocalKernel(ccdXY, color);
-    if (!kernel) {
-        throw LSST_EXCEPT(pex::exceptions::NotFoundException, "Psf is unable to return a kernel");
-    }
+//-------- KernelPsf member function implementations --------------------------------------------------------
 
-    int width =  kernel->getWidth();
-    int height = kernel->getHeight();
-    geom::Point2I ctr = kernel->getCtr();
-    
-    PTR(Psf::Image) im = boost::make_shared<Psf::Image>(geom::Extent2I(width, height));
-    kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
-    
-    //
-    // Do we want to normalize to the center being 1.0 (when centered in a pixel)?
-    //
+PTR(Psf::Image) KernelPsf::doComputeKernelImage(
+    image::Color const& color, geom::Point2D const& ccdXY, bool normalizePeak
+) const {
+    PTR(Psf::Image) im = boost::make_shared<Psf::Image>(_kernel->getDimensions());
+    geom::Point2I ctr = _kernel->getCtr();
+    _kernel->computeImage(*im, !normalizePeak, ccdXY.getX(), ccdXY.getY());
     if (normalizePeak) {
 	double const centralPixelValue = (*im)(ctr.getX(),ctr.getY());
         *im /= centralPixelValue;
     }
-    
-    return recenterKernelImage(im, ctr, ccdXY);
+    im->setXY0(geom::Point2I(-ctr.getX(), -ctr.getY()));
+    return im;
 }
 
 //-------- Psf and KernelPsf Persistence --------------------------------------------------------------------

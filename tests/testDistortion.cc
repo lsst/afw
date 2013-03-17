@@ -444,25 +444,15 @@ struct ToyPsf : public Psf
         c = 0.1 * (1.0 + _E*x + _F*y);
     }
     
-    PTR(Kernel) _doGetLocalKernel(Point2D const &p, Color const &color) const
-    {
+    virtual PTR(Image) doComputeKernelImage(
+        Color const &color, Point2D const &ccdXY, bool normalizePeak
+    ) const {
         static const int nside = 100;
 
         double a, b, c;
-        this->evalABC(a,b,c,p);
+        this->evalABC(a, b, c, ccdXY);
 
-        PTR(Image) im = fill_gaussian(a, b, c, 0, 0, 2*nside+1, 2*nside+1, -nside, -nside);
-        return make_shared<FixedKernel> (*im);
-    }
-    
-    virtual PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) 
-    { 
-        return this->_doGetLocalKernel(p,c);
-    }
-
-    virtual CONST_PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) const
-    {
-        return this->_doGetLocalKernel(p,c);
+        return fill_gaussian(a, b, c, 0, 0, 2*nside+1, 2*nside+1, -nside, -nside);
     }
     
     // factory function
@@ -477,6 +467,7 @@ struct ToyPsf : public Psf
 
         return make_shared<ToyPsf> (A,B,C,D,E,F);
     }
+
 };
 
 

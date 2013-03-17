@@ -229,7 +229,6 @@ class ExposureTestCase(unittest.TestCase):
         self.assertFalse(exposure.hasPsf())
         exposure.setPsf(self.psf)
         self.assertTrue(exposure.hasPsf())
-        self.assertEqual(exposure.getPsf().getKernel().getDimensions(), afwGeom.Extent2I(w, h))
 
         exposure.setPsf(afwDetection.DoubleGaussianPsf(w, h, 4.0, 8.0, 0.2)) # we can reset the Psf
          
