@@ -70,13 +70,9 @@ public:
      *
      *  @note The real work is done in the virtual function, Psf::doComputeImage
      */
-    PTR(Image) computeImage(geom::Point2D const& ccdXY=geom::Point2D(), bool normalizePeak=true) const;
+    PTR(Image) computeImage(geom::Point2D const& ccdXY=geom::Point2D()) const;
 
-    PTR(Image) computeImage(
-        image::Color const& color,
-        geom::Point2D const& ccdXY=geom::Point2D(0, 0),
-        bool normalizePeak=true
-    ) const;
+    PTR(Image) computeImage(image::Color const& color, geom::Point2D const& ccdXY=geom::Point2D()) const;
     //@}
 
     //@{
@@ -87,12 +83,10 @@ public:
      *  This is similar to the image returned by a Kernel, but with the image's xy0 set such that
      *  the center is at (0,0).
      */
-    PTR(Image) computeKernelImage(
-        geom::Point2D const & ccdXY=geom::Point2D(), bool normalizePeak=true
-    ) const;
+    PTR(Image) computeKernelImage(geom::Point2D const & ccdXY=geom::Point2D()) const;
 
     PTR(Image) computeKernelImage(
-        image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D(), bool normalizePeak=true
+        image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D()
     ) const;
     //@}
 
@@ -144,14 +138,12 @@ protected:
 
     virtual PTR(Image) doComputeImage(
         image::Color const& color,
-        geom::Point2D const& ccdXY,
-        bool normalizePeak
+        geom::Point2D const& ccdXY
     ) const;
 
     virtual PTR(Image) doComputeKernelImage(
         image::Color const& color,
-        geom::Point2D const& ccdXY,
-        bool normalizePeak
+        geom::Point2D const& ccdXY
     ) const = 0;
 
 private:
@@ -179,8 +171,7 @@ protected:
 
     virtual PTR(Image) doComputeKernelImage(
         image::Color const & color,
-        geom::Point2D const & ccdXY,
-        bool normalizePeak
+        geom::Point2D const & ccdXY
     ) const;
 
     virtual std::string getPersistenceName() const;

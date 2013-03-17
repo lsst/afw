@@ -76,9 +76,7 @@ protected:
 
     virtual PTR(Psf) clone() const;
 
-    virtual PTR(Image) doComputeKernelImage(
-        image::Color const & color, geom::Point2D const & ccdXY, bool normalizePeak
-    ) const;
+    virtual PTR(Image) doComputeKernelImage(image::Color const & color, geom::Point2D const & ccdXY) const;
 
 protected:
     CONST_PTR(Psf) _undistorted_psf;

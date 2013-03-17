@@ -444,9 +444,7 @@ struct ToyPsf : public Psf
         c = 0.1 * (1.0 + _E*x + _F*y);
     }
     
-    virtual PTR(Image) doComputeKernelImage(
-        Color const &color, Point2D const &ccdXY, bool normalizePeak
-    ) const {
+    virtual PTR(Image) doComputeKernelImage(Color const &color, Point2D const &ccdXY) const {
         static const int nside = 100;
 
         double a, b, c;
@@ -482,7 +480,7 @@ BOOST_AUTO_TEST_CASE(warpedPsf)
     Point2D q = distortion->reverseTransform(p);
 
     // warped image
-    PTR(Image<double>) im = warped_psf->computeImage(p, false);
+    PTR(Image<double>) im = warped_psf->computeImage(p);
     int nx = im->getWidth();
     int ny = im->getHeight();
     int x0 = im->getX0();

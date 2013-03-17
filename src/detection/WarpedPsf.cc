@@ -144,35 +144,30 @@ PTR(Psf) WarpedPsf::clone() const {
 }
 
 PTR(Psf::Image) WarpedPsf::doComputeKernelImage(
-    image::Color const & color, geom::Point2D const & ccdXY, bool normalizePeak
+    image::Color const & color, geom::Point2D const & ccdXY
 ) const {
     geom::AffineTransform t = _distortion->linearizeReverseTransform(ccdXY);
     geom::Point2D tp = t(ccdXY);
 
-    PTR(Image) im = _undistorted_psf->computeKernelImage(tp, normalizePeak);
+    PTR(Image) im = _undistorted_psf->computeKernelImage(tp);
 
     // Go to the warped coordinate system with 'p' at the origin
     PTR(Psf::Image) ret = warpAffine(*im, getLinear(t.invert()));
 
     double normFactor = 1.0;
-    if (normalizePeak) {
-        // n.b. Image::operator() doesn't take into account xy0, so we have to do that manually
-        normFactor = (*ret)(-im->getX0(), -im->getY0());
-    } else {
-        // 
-        // Normalize the output image to sum 1
-        // FIXME defining a member function Image::getSum() would be convenient here and in other places
-        //
-        normFactor = 0.0;
-        for (int y = 0; y != ret->getHeight(); ++y) {
-            Image::x_iterator imEnd = ret->row_end(y);
-            for (Image::x_iterator imPtr = ret->row_begin(y); imPtr != imEnd; imPtr++) {
-                normFactor += *imPtr;
-            }
+    // 
+    // Normalize the output image to sum 1
+    // FIXME defining a member function Image::getSum() would be convenient here and in other places
+    //
+    normFactor = 0.0;
+    for (int y = 0; y != ret->getHeight(); ++y) {
+        Image::x_iterator imEnd = ret->row_end(y);
+        for (Image::x_iterator imPtr = ret->row_begin(y); imPtr != imEnd; imPtr++) {
+            normFactor += *imPtr;
         }
-        if (normFactor == 0.0) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "psf image has sum 0");
-        }
+    }
+    if (normFactor == 0.0) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "psf image has sum 0");
     }
     *ret /= normFactor;
     return ret;

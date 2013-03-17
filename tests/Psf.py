@@ -55,22 +55,8 @@ class dgPsfTestCase(unittest.TestCase):
             ds9.mtv(kIm)        
 
         self.assertTrue(kIm.getWidth() == self.ksize)
-        #
-        # Check that the image is as expected. 
-        #
         xcen, ycen = self.ksize/2, self.ksize/2
-        I0 = kIm.get(xcen, ycen)
-        self.assertAlmostEqual(kIm.get(xcen + 1, ycen + 1),
-                               I0*self.psf.computeImage().get(xcen + 1, ycen + 1))
-        #
-        # Is image normalised to a peak value of unity?
-        #
-        self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.MAX).getValue(), 1.0)
-        #
-        # Now create a normalised version
-        #
-        kIm = self.psf.computeImage(ccdXY, False)
-
+        kIm = self.psf.computeImage(ccdXY)
         self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.SUM).getValue(), 1.0)
 
     def testComputeImage2(self):
@@ -78,13 +64,8 @@ class dgPsfTestCase(unittest.TestCase):
 
         color = afwImage.Color(1.0)
         ccdXY = afwGeom.Point2D(0, 0)
-
         kIm = self.psf.computeImage(ccdXY)
         self.assertTrue(kIm.getWidth() == self.ksize)
-        self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.MAX).getValue(), 1.0)
-
-        kIm = self.psf.computeImage(ccdXY, False)
-
         self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.SUM).getValue(), 1.0)
 
     def testKernel(self):
@@ -94,20 +75,10 @@ class dgPsfTestCase(unittest.TestCase):
         self.psf.getKernel().computeImage(kIm, False)
 
         self.assertTrue(kIm.getWidth() == self.ksize)
-        #
-        # Check that the image is as expected. 
-        #
-        xcen, ycen = self.ksize/2, self.ksize/2
-        I0 = kIm.get(xcen, ycen)
-        self.assertAlmostEqual(kIm.get(xcen + 1, ycen + 1),
-                               I0*self.psf.computeImage().get(xcen + 1, ycen + 1))
-        #
-        # Is image normalised?
-        #
         self.assertAlmostEqual(afwMath.makeStatistics(kIm, afwMath.SUM).getValue(), 1.0)
 
         if False:
-            ds9.mtv(kIm)        
+            ds9.mtv(kIm)
 
     def testInvalidDgPsf(self):
         """Test parameters of dgPsfs, both valid and not"""
