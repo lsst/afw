@@ -154,14 +154,6 @@ protected:
         bool normalizePeak
     ) const = 0;
 
-    virtual PTR(math::Kernel const) doGetKernel(image::Color const&) const {
-        return PTR(math::Kernel const)();
-    }
-
-    virtual PTR(math::Kernel const) doGetLocalKernel(geom::Point2D const&, image::Color const&) const {
-        return PTR(math::Kernel const)();
-    }
-
 private:
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };
