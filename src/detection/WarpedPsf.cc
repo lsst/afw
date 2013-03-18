@@ -117,15 +117,15 @@ static inline PTR(Psf::Image) warpAffine(Psf::Image const &im, geom::AffineTrans
     return ret;
 }
 
-WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) distortion) {
+WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistortedPsf, CONST_PTR(XYTransform) distortion) {
     if (distortion->inFpCoordinateSystem()) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, 
                           "WarpedPsf constructor: distortion must not be in FP coordinate system");
     }
 
-    _undistorted_psf = undistorted_psf;
+    _undistortedPsf = undistortedPsf;
     _distortion = distortion;
-    if (!_undistorted_psf) {
+    if (!_undistortedPsf) {
         throw LSST_EXCEPT(
             pex::exceptions::LogicErrorException,
             "Undistorted Psf passed to WarpedPsf must not be None/NULL"
@@ -139,17 +139,21 @@ WarpedPsf::WarpedPsf(CONST_PTR(Psf) undistorted_psf, CONST_PTR(XYTransform) dist
     }
 }
 
+geom::Point2D WarpedPsf::getAveragePosition() const {
+    return _distortion->forwardTransform(_undistortedPsf->getAveragePosition());
+}
+
 PTR(Psf) WarpedPsf::clone() const {
-    return boost::make_shared<WarpedPsf>(_undistorted_psf->clone(), _distortion->clone());
+    return boost::make_shared<WarpedPsf>(_undistortedPsf->clone(), _distortion->clone());
 }
 
 PTR(Psf::Image) WarpedPsf::doComputeKernelImage(
-    geom::Point2D const & ccdXY, image::Color const & color
+    geom::Point2D const & position, image::Color const & color
 ) const {
-    geom::AffineTransform t = _distortion->linearizeReverseTransform(ccdXY);
-    geom::Point2D tp = t(ccdXY);
+    geom::AffineTransform t = _distortion->linearizeReverseTransform(position);
+    geom::Point2D tp = t(position);
 
-    PTR(Image) im = _undistorted_psf->computeKernelImage(tp, color);
+    PTR(Image) im = _undistortedPsf->computeKernelImage(tp, color);
 
     // Go to the warped coordinate system with 'p' at the origin
     PTR(Psf::Image) ret = warpAffine(*im, getLinear(t.invert()));

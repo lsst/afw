@@ -22,6 +22,7 @@ namespace lsst { namespace afw { namespace detection {
 struct KernelPsfPersistenceHelper : private boost::noncopyable {
     afw::table::Schema schema;
     afw::table::Key<int> kernel;
+    afw::table::Key<afw::table::Point<double> > averagePosition;
 
     static KernelPsfPersistenceHelper const & get();
 
@@ -47,7 +48,12 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
-        return PTR(T)(new T(archive.get<math::Kernel>(record.get(keys.kernel))));
+        return PTR(T)(
+            new T(
+                archive.get<math::Kernel>(record.get(keys.kernel)),
+                record.get(keys.averagePosition)
+            )
+        );
     }
 
     KernelPsfFactory(std::string const & name) : table::io::PersistableFactory(name) {}

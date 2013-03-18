@@ -24,6 +24,7 @@
 #define LSST_AFW_DETECTION_Psf_h_INCLUDED
 
 #include <string>
+#include <limits>
 #include <typeinfo>
 
 #include "boost/shared_ptr.hpp"
@@ -42,6 +43,9 @@ class PsfFormatter;
 class Psf : public daf::base::Citizen, public daf::base::Persistable,
             public afw::table::io::PersistableFacade<Psf>, public afw::table::io::Persistable
 {
+    static geom::Point2D makeNullPoint() {
+        return geom::Point2D(std::numeric_limits<double>::quiet_NaN());
+    }
 public:
     typedef boost::shared_ptr<Psf> Ptr;            ///< @deprecated shared_ptr to a Psf
     typedef boost::shared_ptr<const Psf> ConstPtr; ///< @deprecated shared_ptr to a const Psf
@@ -54,7 +58,7 @@ public:
         COPY=0,     ///< The image will be copied before returning; caller will own it.
         INTERNAL=1  /**< An internal image will be returned without copying.  The caller must not modify
                      *   it, and it may be invalidated the next time a Psf member function is called with
-                     *   different color and/or ccdXY.
+                     *   different color and/or position.
                      */
     };
 
@@ -79,7 +83,7 @@ public:
      *  @note The real work is done in the virtual function, Psf::doComputeImage
      */
     PTR(Image) computeImage(
-        geom::Point2D const & ccdXY=geom::Point2D(),
+        geom::Point2D position=makeNullPoint(),
         image::Color color=image::Color(),
         ImageOwnerEnum owner=COPY
     ) const;
@@ -92,7 +96,7 @@ public:
      *  the center is at (0,0).
      */
     PTR(Image) computeKernelImage(
-        geom::Point2D const & ccdXY=geom::Point2D(),
+        geom::Point2D position=makeNullPoint(),
         image::Color color=image::Color(),
         ImageOwnerEnum owner=COPY
     ) const;
@@ -105,7 +109,7 @@ public:
      *  want to call it with the same arguments just used to call computeImage or computeKernelImage).
      */
     double computePeak(
-        geom::Point2D const & ccdXY=geom::Point2D(),
+        geom::Point2D position=makeNullPoint(),
         image::Color color=image::Color()
     ) const;
 
@@ -113,20 +117,27 @@ public:
      *  @brief Return a FixedKernel corresponding to the Psf image at the given point.
      */
     PTR(math::Kernel const) getLocalKernel(
-        geom::Point2D const & ccdXY=geom::Point2D(),
+        geom::Point2D position=makeNullPoint(),
         image::Color color=image::Color()
     ) const;
 
     /**
      *  @brief Return the average Color of the stars used to construct the Psf
      *
-     *  This is alos the Color used to return a Psf if you don't specify a Color.
+     *  This is also the Color used to return an image if you don't specify a Color.
      */
     image::Color getAverageColor() const { return image::Color(); }
 
     /**
+     *  @brief Return the average position of the stars used to construct the Psf.
+     *
+     *  This is also the position used to return an image if you don't specify a position.
+     */
+    virtual geom::Point2D getAveragePosition() const;
+
+    /**
      * Helper function for Psf::computeImage(): converts a kernel image (centered at (0,0) when xy0
-     * is taken into account) to an image centered at xy when xy0 is taken into account.
+     * is taken into account) to an image centered at position when xy0 is taken into account.
      *
      * \c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear",
      * or "lanczosN"
@@ -136,16 +147,16 @@ public:
      * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage()).
      *
      * The point with integer coordinates \c (0,0) in the source image (with xy0 taken into account)
-     * corresponds to the point \c xy in the destination image.  If \c xy is not integer-valued then
-     * we will need to fractionally shift the image using interpolation.
+     * corresponds to the point \c position in the destination image.  If \c position is not
+     * integer-valued then we will need to fractionally shift the image using interpolation.
      *
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.
      * If not, then the original image will be returned (after setting XY0).
      */
     static PTR(Image) recenterKernelImage(
         PTR(Image) im,
-        geom::Point2D const &xy,
-        std::string const &warpAlgorithm = "lanczos5",
+        geom::Point2D const & position,
+        std::string const & warpAlgorithm = "lanczos5",
         unsigned int warpBuffer = 5
     );
 
@@ -155,7 +166,7 @@ protected:
      *  Main constructor for subclasses.
      *
      *  @param[in] isFixed  Should be true for Psf for which doComputeKernelImage always returns
-     *                      the same image, regardless of color or ccdXY arguments.
+     *                      the same image, regardless of color or position arguments.
      */
     explicit Psf(bool isFixed=false);
 
@@ -169,16 +180,20 @@ private:
      *  to implement them, not call them; they should call the corresponding compute*Image member
      *  functions instead so as to let the Psf base class handle caching properly.
      */
-    virtual PTR(Image) doComputeImage(geom::Point2D const& ccdXY, image::Color const& color) const;
-    virtual PTR(Image) doComputeKernelImage(geom::Point2D const& ccdXY, image::Color const& color) const = 0;
+    virtual PTR(Image) doComputeImage(
+        geom::Point2D const & position, image::Color const& color
+    ) const;
+    virtual PTR(Image) doComputeKernelImage(
+        geom::Point2D const & position, image::Color const & color
+    ) const = 0;
 
     bool const _isFixed;
     mutable PTR(Image) _cachedImage;
     mutable PTR(Image) _cachedKernelImage;
     mutable image::Color _cachedImageColor;
     mutable image::Color _cachedKernelImageColor;
-    mutable geom::Point2D _cachedImageCcdXY;
-    mutable geom::Point2D _cachedKernelImageCcdXY;
+    mutable geom::Point2D _cachedImagePosition;
+    mutable geom::Point2D _cachedKernelImagePosition;
 
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };
@@ -190,7 +205,7 @@ class KernelPsf : public afw::table::io::PersistableFacade<KernelPsf>, public Ps
 public:
 
     /// Construct a KernelPsf with a clone of the given kernel.
-    explicit KernelPsf(math::Kernel const & kernel);
+    explicit KernelPsf(math::Kernel const & kernel, geom::Point2D const & averagePosition=geom::Point2D());
 
     /// Return the Kernel used to define this Psf.
     PTR(math::Kernel const) getKernel() const { return _kernel; }
@@ -198,7 +213,10 @@ public:
 protected:
 
     /// Construct a KernelPsf with the given kernel; it should not be modified afterwards.
-    explicit KernelPsf(PTR(math::Kernel) kernel);
+    explicit KernelPsf(PTR(math::Kernel) kernel, geom::Point2D const & averagePosition=geom::Point2D());
+
+    /// Return average position of stars; used as default position.
+    virtual geom::Point2D getAveragePosition() const;
 
     /// Polymorphic deep copy.
     virtual PTR(Psf) clone() const;
@@ -218,11 +236,12 @@ protected:
 private:
 
     virtual PTR(Image) doComputeKernelImage(
-        geom::Point2D const & ccdXY,
+        geom::Point2D const & position,
         image::Color const & color
     ) const;
 
     PTR(math::Kernel) _kernel;
+    geom::Point2D _averagePosition;
 };
 
 }}} // namespace lsst::afw::detection
