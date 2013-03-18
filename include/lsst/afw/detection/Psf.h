@@ -49,6 +49,15 @@ public:
     typedef math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
     typedef image::Image<Pixel> Image; ///< Image type returned by computeImage
 
+    /// Enum passed to computeImage and computeKernelImage to determine image ownership.
+    enum ImageOwnerEnum {
+        COPY=0,     ///< The image will be copied before returning; caller will own it.
+        INTERNAL=1  /**< An internal image will be returned without copying.  The caller must not modify
+                     *   it, and it may be invalidated the next time a Psf member function is called with
+                     *   different color and/or ccdXY.
+                     */
+    };
+
     virtual ~Psf() {}
 
     /// Polymorphic deep-copy.
@@ -70,9 +79,16 @@ public:
      *
      *  @note The real work is done in the virtual function, Psf::doComputeImage
      */
-    PTR(Image) computeImage(geom::Point2D const& ccdXY=geom::Point2D()) const;
+    PTR(Image) computeImage(
+        geom::Point2D const& ccdXY=geom::Point2D(),
+        ImageOwnerEnum owner=COPY
+    ) const;
 
-    PTR(Image) computeImage(image::Color const& color, geom::Point2D const& ccdXY=geom::Point2D()) const;
+    PTR(Image) computeImage(
+        image::Color const& color,
+        geom::Point2D const& ccdXY=geom::Point2D(),
+        ImageOwnerEnum owner=COPY
+    ) const;
     //@}
 
     //@{
@@ -83,10 +99,15 @@ public:
      *  This is similar to the image returned by a Kernel, but with the image's xy0 set such that
      *  the center is at (0,0).
      */
-    PTR(Image) computeKernelImage(geom::Point2D const & ccdXY=geom::Point2D()) const;
+    PTR(Image) computeKernelImage(
+        geom::Point2D const & ccdXY=geom::Point2D(),
+        ImageOwnerEnum owner=COPY
+    ) const;
 
     PTR(Image) computeKernelImage(
-        image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D()
+        image::Color const & color,
+        geom::Point2D const & ccdXY=geom::Point2D(),
+        ImageOwnerEnum owner=COPY
     ) const;
     //@}
 
@@ -131,22 +152,36 @@ public:
     );
 
 protected:
+ 
+    /**
+     *  Main constructor for subclasses.
+     *
+     *  @param[in] isFixed  Should be true for Psf for which doComputeKernelImage always returns
+     *                      the same image, regardless of color or ccdXY arguments.
+     */
+    explicit Psf(bool isFixed=false);
 
-    Psf() : daf::base::Citizen(typeid(this)) {}
-
+    /// Python module for used for persistence; derived classes not in afw::detection must reimplement.
     virtual std::string getPythonModule() const;
 
-    virtual PTR(Image) doComputeImage(
-        image::Color const& color,
-        geom::Point2D const& ccdXY
-    ) const;
-
-    virtual PTR(Image) doComputeKernelImage(
-        image::Color const& color,
-        geom::Point2D const& ccdXY
-    ) const = 0;
-
 private:
+
+    /*
+     *  These virtual member functions are private, not protected, because we only want derived classes
+     *  to implement them, not call them; they should call the corresponding compute*Image member
+     *  functions instead so as to let the Psf base class handle caching properly.
+     */
+    virtual PTR(Image) doComputeImage(image::Color const& color, geom::Point2D const& ccdXY) const;
+    virtual PTR(Image) doComputeKernelImage(image::Color const& color, geom::Point2D const& ccdXY) const = 0;
+
+    bool const _isFixed;
+    mutable PTR(Image) _cachedImage;
+    mutable PTR(Image) _cachedKernelImage;
+    mutable image::Color _cachedImageColor;
+    mutable image::Color _cachedKernelImageColor;
+    mutable geom::Point2D _cachedImageCcdXY;
+    mutable geom::Point2D _cachedKernelImageCcdXY;
+
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };
 

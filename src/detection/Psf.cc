@@ -19,6 +19,20 @@ namespace lsst { namespace afw { namespace detection {
 
 //-------- Psf member function implementations --------------------------------------------------------------
 
+namespace {
+
+// Comparison function that determines when we used the cached image instead of recomputing it.
+// We'll probably want a tolerance for colors someday too, but they're just a placeholder right now
+// so it's not worth the effort.
+bool comparePsfEvalPoints(geom::Point2D const & a, geom::Point2D const & b) {
+    // n.b. desired tolerance is actually sqrt(eps), so tolerance squared is eps.
+    return (a - b).computeSquaredNorm() < std::numeric_limits<double>::epsilon();
+}
+
+} // anonymous
+
+Psf::Psf(bool isFixed) : daf::base::Citizen(typeid(this)), _isFixed(isFixed) {}
+
 PTR(image::Image<double>)
 Psf::recenterKernelImage(
     PTR(Image) im, geom::Point2D const & xy, std::string const &warpAlgorithm, unsigned int warpBuffer
@@ -35,22 +49,59 @@ Psf::recenterKernelImage(
     return im;
 }
 
-PTR(Psf::Image) Psf::computeImage(geom::Point2D const& ccdXY) const {
+PTR(Psf::Image) Psf::computeImage(
+    geom::Point2D const& ccdXY, ImageOwnerEnum owner
+) const {
     image::Color color;
-    return doComputeImage(color, ccdXY);
+    return computeImage(color, ccdXY, owner);
 }
 
-PTR(Psf::Image) Psf::computeImage(image::Color const & color, geom::Point2D const& ccdXY) const {
-    return doComputeImage(color, ccdXY);
+PTR(Psf::Image) Psf::computeImage(
+    image::Color const & color, geom::Point2D const& ccdXY, ImageOwnerEnum owner
+) const {
+    PTR(Psf::Image) result;
+    if (_cachedImage && color == _cachedImageColor
+        && comparePsfEvalPoints(ccdXY, _cachedImageCcdXY)
+    ) {
+        result = _cachedImage;
+    } else {
+        result = doComputeImage(color, ccdXY);
+        _cachedImage = result;
+        _cachedImageColor = color;
+        _cachedImageCcdXY = ccdXY;
+    }
+    if (owner == COPY) {
+        result = boost::make_shared<Image>(*result, true);
+    }
+    return result;
 }
 
-PTR(Psf::Image) Psf::computeKernelImage(geom::Point2D const & ccdXY) const {
+PTR(Psf::Image) Psf::computeKernelImage(
+    geom::Point2D const & ccdXY, ImageOwnerEnum owner
+) const {
     image::Color color;
-    return doComputeKernelImage(color, ccdXY);
+    return computeKernelImage(color, ccdXY, owner);
 }
 
-PTR(Psf::Image) Psf::computeKernelImage(image::Color const & color, geom::Point2D const& ccdXY) const {
-    return doComputeKernelImage(color, ccdXY);
+PTR(Psf::Image) Psf::computeKernelImage(
+    image::Color const & color, geom::Point2D const& ccdXY, ImageOwnerEnum owner
+) const {
+    PTR(Psf::Image) result;
+    if (_cachedKernelImage
+        && (_isFixed ||
+            (color == _cachedKernelImageColor && comparePsfEvalPoints(ccdXY, _cachedKernelImageCcdXY)))
+    ) {
+        result = _cachedKernelImage;
+    } else {
+        result = doComputeKernelImage(color, ccdXY);
+        _cachedKernelImage = result;
+        _cachedKernelImageColor = color;
+        _cachedKernelImageCcdXY = ccdXY;
+    }
+    if (owner == COPY) {
+        result = boost::make_shared<Image>(*result, true);
+    }
+    return result;
 }
 
 PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D const & ccdXY) const {
@@ -59,12 +110,13 @@ PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D const & ccdXY) const {
 }
 
 PTR(math::Kernel const) Psf::getLocalKernel(image::Color const & color, geom::Point2D const& ccdXY) const {
-    PTR(Image) image = computeKernelImage(color, ccdXY);
+    // FixedKernel ctor will deep copy image, so we can use INTERNAL.
+    PTR(Image) image = computeKernelImage(color, ccdXY, INTERNAL);
     return boost::make_shared<math::FixedKernel>(*image);
 }
 
 PTR(Psf::Image) Psf::doComputeImage(image::Color const& color, geom::Point2D const& ccdXY) const {
-    PTR(Psf::Image) im = doComputeKernelImage(color, ccdXY);
+    PTR(Psf::Image) im = computeKernelImage(color, ccdXY, COPY);
     return recenterKernelImage(im, ccdXY);
 }
 
