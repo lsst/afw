@@ -144,12 +144,12 @@ PTR(Psf) WarpedPsf::clone() const {
 }
 
 PTR(Psf::Image) WarpedPsf::doComputeKernelImage(
-    image::Color const & color, geom::Point2D const & ccdXY
+    geom::Point2D const & ccdXY, image::Color const & color
 ) const {
     geom::AffineTransform t = _distortion->linearizeReverseTransform(ccdXY);
     geom::Point2D tp = t(ccdXY);
 
-    PTR(Image) im = _undistorted_psf->computeKernelImage(tp);
+    PTR(Image) im = _undistorted_psf->computeKernelImage(tp, color);
 
     // Go to the warped coordinate system with 'p' at the origin
     PTR(Psf::Image) ret = warpAffine(*im, getLinear(t.invert()));

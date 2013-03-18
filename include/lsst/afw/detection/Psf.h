@@ -63,7 +63,6 @@ public:
     /// Polymorphic deep-copy.
     virtual PTR(Psf) clone() const = 0;
 
-    //@{
     /**
      *  @brief Return an Image of the PSF
      *
@@ -80,18 +79,11 @@ public:
      *  @note The real work is done in the virtual function, Psf::doComputeImage
      */
     PTR(Image) computeImage(
-        geom::Point2D const& ccdXY=geom::Point2D(),
+        geom::Point2D const & ccdXY=geom::Point2D(),
+        image::Color color=image::Color(),
         ImageOwnerEnum owner=COPY
     ) const;
 
-    PTR(Image) computeImage(
-        image::Color const& color,
-        geom::Point2D const& ccdXY=geom::Point2D(),
-        ImageOwnerEnum owner=COPY
-    ) const;
-    //@}
-
-    //@{
     /**
      *  @brief Evaluate the image of the PSF at a point, with the center of the PSF in the middle
      *         of the center pixel.
@@ -101,17 +93,10 @@ public:
      */
     PTR(Image) computeKernelImage(
         geom::Point2D const & ccdXY=geom::Point2D(),
+        image::Color color=image::Color(),
         ImageOwnerEnum owner=COPY
     ) const;
 
-    PTR(Image) computeKernelImage(
-        image::Color const & color,
-        geom::Point2D const & ccdXY=geom::Point2D(),
-        ImageOwnerEnum owner=COPY
-    ) const;
-    //@}
-
-    //@{
     /**
      *  @brief  Return the peak value of the Kernel image at the given point.
      *
@@ -119,24 +104,25 @@ public:
      *  be expensive (but be careful not to accidentally call it with no arguments when you actually
      *  want to call it with the same arguments just used to call computeImage or computeKernelImage).
      */
-    double computePeak(geom::Point2D const & ccdXY=geom::Point2D()) const;
-    double computePeak(image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D()) const;
-    //@}
-
-    PTR(math::Kernel const) getLocalKernel(geom::Point2D const & ccdXY=geom::Point2D()) const;
-
-    PTR(math::Kernel const) getLocalKernel(
-        image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D()
+    double computePeak(
+        geom::Point2D const & ccdXY=geom::Point2D(),
+        image::Color color=image::Color()
     ) const;
 
     /**
-     * Return the average Color of the stars used to construct the Psf
-     *
-     * \note this the Color used to return a Psf if you don't specify a Color
+     *  @brief Return a FixedKernel corresponding to the Psf image at the given point.
      */
-    image::Color getAverageColor() const {
-        return image::Color();
-    }
+    PTR(math::Kernel const) getLocalKernel(
+        geom::Point2D const & ccdXY=geom::Point2D(),
+        image::Color color=image::Color()
+    ) const;
+
+    /**
+     *  @brief Return the average Color of the stars used to construct the Psf
+     *
+     *  This is alos the Color used to return a Psf if you don't specify a Color.
+     */
+    image::Color getAverageColor() const { return image::Color(); }
 
     /**
      * Helper function for Psf::computeImage(): converts a kernel image (centered at (0,0) when xy0
@@ -183,8 +169,8 @@ private:
      *  to implement them, not call them; they should call the corresponding compute*Image member
      *  functions instead so as to let the Psf base class handle caching properly.
      */
-    virtual PTR(Image) doComputeImage(image::Color const& color, geom::Point2D const& ccdXY) const;
-    virtual PTR(Image) doComputeKernelImage(image::Color const& color, geom::Point2D const& ccdXY) const = 0;
+    virtual PTR(Image) doComputeImage(geom::Point2D const& ccdXY, image::Color const& color) const;
+    virtual PTR(Image) doComputeKernelImage(geom::Point2D const& ccdXY, image::Color const& color) const = 0;
 
     bool const _isFixed;
     mutable PTR(Image) _cachedImage;
@@ -232,8 +218,8 @@ protected:
 private:
 
     virtual PTR(Image) doComputeKernelImage(
-        image::Color const & color,
-        geom::Point2D const & ccdXY
+        geom::Point2D const & ccdXY,
+        image::Color const & color
     ) const;
 
     PTR(math::Kernel) _kernel;

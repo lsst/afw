@@ -62,8 +62,8 @@ public:
 protected:
 
     virtual PTR(Image) doComputeKernelImage(
-        lsst::afw::image::Color const & color,
-        lsst::afw::geom::Point2D const & ccdXY
+        lsst::afw::geom::Point2D const & ccdXY,
+        lsst::afw::image::Color const & color
     ) const {
         return PTR(Image)();
     }

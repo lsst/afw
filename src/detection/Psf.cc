@@ -50,22 +50,16 @@ Psf::recenterKernelImage(
 }
 
 PTR(Psf::Image) Psf::computeImage(
-    geom::Point2D const& ccdXY, ImageOwnerEnum owner
+    geom::Point2D const& ccdXY, image::Color color, ImageOwnerEnum owner
 ) const {
-    image::Color color;
-    return computeImage(color, ccdXY, owner);
-}
-
-PTR(Psf::Image) Psf::computeImage(
-    image::Color const & color, geom::Point2D const& ccdXY, ImageOwnerEnum owner
-) const {
+    if (color.isIndeterminate()) color = getAverageColor();
     PTR(Psf::Image) result;
     if (_cachedImage && color == _cachedImageColor
         && comparePsfEvalPoints(ccdXY, _cachedImageCcdXY)
     ) {
         result = _cachedImage;
     } else {
-        result = doComputeImage(color, ccdXY);
+        result = doComputeImage(ccdXY, color);
         _cachedImage = result;
         _cachedImageColor = color;
         _cachedImageCcdXY = ccdXY;
@@ -77,15 +71,9 @@ PTR(Psf::Image) Psf::computeImage(
 }
 
 PTR(Psf::Image) Psf::computeKernelImage(
-    geom::Point2D const & ccdXY, ImageOwnerEnum owner
+    geom::Point2D const& ccdXY, image::Color color, ImageOwnerEnum owner
 ) const {
-    image::Color color;
-    return computeKernelImage(color, ccdXY, owner);
-}
-
-PTR(Psf::Image) Psf::computeKernelImage(
-    image::Color const & color, geom::Point2D const& ccdXY, ImageOwnerEnum owner
-) const {
+    if (color.isIndeterminate()) color = getAverageColor();
     PTR(Psf::Image) result;
     if (_cachedKernelImage
         && (_isFixed ||
@@ -93,7 +81,7 @@ PTR(Psf::Image) Psf::computeKernelImage(
     ) {
         result = _cachedKernelImage;
     } else {
-        result = doComputeKernelImage(color, ccdXY);
+        result = doComputeKernelImage(ccdXY, color);
         _cachedKernelImage = result;
         _cachedKernelImageColor = color;
         _cachedKernelImageCcdXY = ccdXY;
@@ -104,36 +92,27 @@ PTR(Psf::Image) Psf::computeKernelImage(
     return result;
 }
 
-PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D const & ccdXY) const {
-    image::Color color;
-    return getLocalKernel(color, ccdXY);
-}
-
-PTR(math::Kernel const) Psf::getLocalKernel(image::Color const & color, geom::Point2D const& ccdXY) const {
+PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D const& ccdXY, image::Color color) const {
+    if (color.isIndeterminate()) color = getAverageColor();
     // FixedKernel ctor will deep copy image, so we can use INTERNAL.
-    PTR(Image) image = computeKernelImage(color, ccdXY, INTERNAL);
+    PTR(Image) image = computeKernelImage(ccdXY, color, INTERNAL);
     return boost::make_shared<math::FixedKernel>(*image);
 }
 
-double Psf::computePeak(geom::Point2D const & ccdXY) const {
-    image::Color color;
-    return computePeak(color, ccdXY);
-}
-
-double Psf::computePeak(image::Color const & color, geom::Point2D const & ccdXY) const {
-    PTR(Image) image = computeKernelImage(color, ccdXY, INTERNAL);
+double Psf::computePeak(geom::Point2D const & ccdXY, image::Color color) const {
+    PTR(Image) image = computeKernelImage(ccdXY, color, INTERNAL);
     return (*image)(-image->getX0(), -image->getY0());
 }
 
-PTR(Psf::Image) Psf::doComputeImage(image::Color const& color, geom::Point2D const& ccdXY) const {
-    PTR(Psf::Image) im = computeKernelImage(color, ccdXY, COPY);
+PTR(Psf::Image) Psf::doComputeImage(geom::Point2D const& ccdXY, image::Color const& color) const {
+    PTR(Psf::Image) im = computeKernelImage(ccdXY, color, COPY);
     return recenterKernelImage(im, ccdXY);
 }
 
 //-------- KernelPsf member function implementations --------------------------------------------------------
 
 PTR(Psf::Image) KernelPsf::doComputeKernelImage(
-    image::Color const& color, geom::Point2D const& ccdXY
+    geom::Point2D const& ccdXY, image::Color const& color
 ) const {
     PTR(Psf::Image) im = boost::make_shared<Psf::Image>(_kernel->getDimensions());
     geom::Point2I ctr = _kernel->getCtr();

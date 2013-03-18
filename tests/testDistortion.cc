@@ -444,7 +444,7 @@ struct ToyPsf : public Psf
         c = 0.1 * (1.0 + _E*x + _F*y);
     }
     
-    virtual PTR(Image) doComputeKernelImage(Color const &color, Point2D const &ccdXY) const {
+    virtual PTR(Image) doComputeKernelImage(Point2D const &ccdXY, Color const &) const {
         static const int nside = 100;
 
         double a, b, c;
