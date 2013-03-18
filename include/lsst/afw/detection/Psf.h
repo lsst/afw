@@ -210,11 +210,6 @@ public:
     /// Return the Kernel used to define this Psf.
     PTR(math::Kernel const) getKernel() const { return _kernel; }
 
-protected:
-
-    /// Construct a KernelPsf with the given kernel; it should not be modified afterwards.
-    explicit KernelPsf(PTR(math::Kernel) kernel, geom::Point2D const & averagePosition=geom::Point2D());
-
     /// Return average position of stars; used as default position.
     virtual geom::Point2D getAveragePosition() const;
 
@@ -223,6 +218,11 @@ protected:
 
     /// Whether this object is persistable; just delegates to the kernel.
     virtual bool isPersistable() const;
+
+protected:
+
+    /// Construct a KernelPsf with the given kernel; it should not be modified afterwards.
+    explicit KernelPsf(PTR(math::Kernel) kernel, geom::Point2D const & averagePosition=geom::Point2D());
 
     /// Name to use persist this object as (should be overridden by derived classes).
     virtual std::string getPersistenceName() const;

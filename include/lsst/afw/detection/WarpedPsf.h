@@ -72,11 +72,11 @@ public:
      */
     WarpedPsf(CONST_PTR(Psf) undistortedPsf, CONST_PTR(XYTransform) distortion);
 
-protected:
-
     virtual geom::Point2D getAveragePosition() const;
 
     virtual PTR(Psf) clone() const;
+
+protected:
 
     virtual PTR(Image) doComputeKernelImage(geom::Point2D const & position, image::Color const & color) const;
 
