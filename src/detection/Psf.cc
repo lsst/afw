@@ -132,6 +132,14 @@ PTR(Psf::Image) KernelPsf::doComputeKernelImage(
     return im;
 }
 
+KernelPsf::KernelPsf(math::Kernel const & kernel) :
+    Psf(!kernel.isSpatiallyVarying()), _kernel(kernel.clone()) {}
+
+KernelPsf::KernelPsf(PTR(math::Kernel) kernel) :
+    Psf(!kernel->isSpatiallyVarying()), _kernel(kernel) {}
+
+PTR(Psf) KernelPsf::clone() const { return boost::make_shared<KernelPsf>(*this); }
+
 //-------- Psf and KernelPsf Persistence --------------------------------------------------------------------
 
 std::string Psf::getPythonModule() const { return "lsst.afw.detection"; }
@@ -153,6 +161,8 @@ KernelPsfPersistenceHelper::KernelPsfPersistenceHelper() :
 {
     schema.getCitizen().markPersistent();
 }
+
+bool KernelPsf::isPersistable() const { return _kernel->isPersistable(); }
 
 std::string KernelPsf::getPersistenceName() const { return "KernelPsf"; }
 

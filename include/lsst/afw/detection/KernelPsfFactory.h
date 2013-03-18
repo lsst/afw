@@ -47,7 +47,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         table::BaseRecord const & record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
-        return boost::make_shared<T>(archive.get<math::Kernel>(record.get(keys.kernel)));
+        return PTR(T)(new T(archive.get<math::Kernel>(record.get(keys.kernel))));
     }
 
     KernelPsfFactory(std::string const & name) : table::io::PersistableFactory(name) {}

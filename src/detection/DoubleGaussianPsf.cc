@@ -33,25 +33,6 @@
 
 namespace lsst { namespace afw { namespace detection {
 
-DoubleGaussianPsf::DoubleGaussianPsf(int width, int height, double sigma1, double sigma2, double b) :
-    KernelPsf(), _sigma1(sigma1), _sigma2(sigma2), _b(b)
-{
-    if (b == 0.0 && sigma2 == 0.0) {
-        sigma2 = 1.0;                  // avoid 0/0 at centre of Psf
-    }
-
-    if (sigma1 <= 0 || sigma2 <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
-                          (boost::format("sigma may not be 0: %g, %g") % sigma1 % sigma2).str());
-    }
-    
-    if (width > 0) {
-        math::DoubleGaussianFunction2<double> dg(sigma1, sigma2, b);
-        PTR(math::Kernel) kernel(new math::AnalyticKernel(width, height, dg));
-        setKernel(kernel);
-    }
-}
-
 namespace {
 
 // Read-only singleton struct containing the schema and keys that a double-Gaussian Psf is mapped
@@ -102,14 +83,35 @@ public:
     }
 
     DoubleGaussianPsfFactory(std::string const & name) : table::io::PersistableFactory(name) {}
-
 };
+
+// Helper function for ctor: need to construct the kernel to pass to KernelPsf, because we
+// can't change it after construction.
+PTR(math::Kernel) makeDoubleGaussianKernel(
+    int width, int height, double sigma1, double & sigma2, double b
+) {
+    if (b == 0.0 && sigma2 == 0.0) {
+        sigma2 = 1.0;                  // avoid 0/0 at centre of Psf
+    }
+    if (sigma1 <= 0 || sigma2 <= 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+                          (boost::format("sigma may not be 0: %g, %g") % sigma1 % sigma2).str());
+    }
+    math::DoubleGaussianFunction2<double> dg(sigma1, sigma2, b);
+    PTR(math::Kernel) kernel(new math::AnalyticKernel(width, height, dg));
+    return kernel;
+}
 
 std::string getDoubleGaussianPsfPersistenceName() { return "DoubleGaussianPsf"; }
 
 DoubleGaussianPsfFactory registration(getDoubleGaussianPsfPersistenceName());
 
 } // anonymous
+
+DoubleGaussianPsf::DoubleGaussianPsf(int width, int height, double sigma1, double sigma2, double b) :
+    KernelPsf(makeDoubleGaussianKernel(width, height, sigma1, sigma2, b)),
+    _sigma1(sigma1), _sigma2(sigma2), _b(b)
+{}
 
 std::string DoubleGaussianPsf::getPersistenceName() const { return getDoubleGaussianPsfPersistenceName(); }
 

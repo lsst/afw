@@ -190,32 +190,40 @@ private:
  */
 class KernelPsf : public afw::table::io::PersistableFacade<KernelPsf>, public Psf {
 public:
-    KernelPsf(PTR(math::Kernel) kernel=PTR(math::Kernel)()) : Psf(), _kernel(kernel) {}
 
+    /// Construct a KernelPsf with a clone of the given kernel.
+    explicit KernelPsf(math::Kernel const & kernel);
+
+    /// Return the Kernel used to define this Psf.
     PTR(math::Kernel const) getKernel() const { return _kernel; }
 
 protected:
 
-    /// Clone a KernelPsf
-    virtual Ptr clone() const { return boost::make_shared<KernelPsf>(*this); }
+    /// Construct a KernelPsf with the given kernel; it should not be modified afterwards.
+    explicit KernelPsf(PTR(math::Kernel) kernel);
+
+    /// Polymorphic deep copy.
+    virtual PTR(Psf) clone() const;
 
     /// Whether this object is persistable; just delegates to the kernel.
-    virtual bool isPersistable() const { return _kernel->isPersistable(); }
+    virtual bool isPersistable() const;
 
-protected:
+    /// Name to use persist this object as (should be overridden by derived classes).
+    virtual std::string getPersistenceName() const;
+
+    /// Output persistence implementation (should be overridden by derived classes if they add data members).
+    virtual void write(OutputArchiveHandle & handle) const;
+
+    // For access to protected ctor; avoids unnecessary copies when loading
+    template <typename T> friend class KernelPsfFactory;
+
+private:
 
     virtual PTR(Image) doComputeKernelImage(
         image::Color const & color,
         geom::Point2D const & ccdXY
     ) const;
 
-    virtual std::string getPersistenceName() const;
-
-    virtual void write(OutputArchiveHandle & handle) const;
-
-    void setKernel(PTR(math::Kernel) kernel) { _kernel = kernel; }
-
-private:
     PTR(math::Kernel) _kernel;
 };
 
