@@ -111,6 +111,18 @@ public:
     ) const;
     //@}
 
+    //@{
+    /**
+     *  @brief  Return the peak value of the Kernel image at the given point.
+     *
+     *  This calls computeKernelImage internally, but because this will usually be cached, it shouldn't
+     *  be expensive (but be careful not to accidentally call it with no arguments when you actually
+     *  want to call it with the same arguments just used to call computeImage or computeKernelImage).
+     */
+    double computePeak(geom::Point2D const & ccdXY=geom::Point2D()) const;
+    double computePeak(image::Color const & color, geom::Point2D const & ccdXY=geom::Point2D()) const;
+    //@}
+
     PTR(math::Kernel const) getLocalKernel(geom::Point2D const & ccdXY=geom::Point2D()) const;
 
     PTR(math::Kernel const) getLocalKernel(

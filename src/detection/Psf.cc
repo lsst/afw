@@ -115,6 +115,16 @@ PTR(math::Kernel const) Psf::getLocalKernel(image::Color const & color, geom::Po
     return boost::make_shared<math::FixedKernel>(*image);
 }
 
+double Psf::computePeak(geom::Point2D const & ccdXY) const {
+    image::Color color;
+    return computePeak(color, ccdXY);
+}
+
+double Psf::computePeak(image::Color const & color, geom::Point2D const & ccdXY) const {
+    PTR(Image) image = computeKernelImage(color, ccdXY, INTERNAL);
+    return (*image)(-image->getX0(), -image->getY0());
+}
+
 PTR(Psf::Image) Psf::doComputeImage(image::Color const& color, geom::Point2D const& ccdXY) const {
     PTR(Psf::Image) im = computeKernelImage(color, ccdXY, COPY);
     return recenterKernelImage(im, ccdXY);
