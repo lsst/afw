@@ -37,7 +37,7 @@ private:
  *  it can be implemented simply by reimplementing getPersistenceName() and registering
  *  a specialization of KernelPsfFactory.
  */
-template <typename T=KernelPsf>
+template <typename T=KernelPsf, typename K=afw::math::Kernel>
 class KernelPsfFactory : public table::io::PersistableFactory {
 public:
 
@@ -50,7 +50,7 @@ public:
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
         return PTR(T)(
             new T(
-                archive.get<math::Kernel>(record.get(keys.kernel)),
+                archive.get<K>(record.get(keys.kernel)),
                 record.get(keys.averagePosition)
             )
         );

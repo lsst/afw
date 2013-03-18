@@ -231,7 +231,7 @@ protected:
     virtual void write(OutputArchiveHandle & handle) const;
 
     // For access to protected ctor; avoids unnecessary copies when loading
-    template <typename T> friend class KernelPsfFactory;
+    template <typename T, typename K> friend class KernelPsfFactory;
 
 private:
 
