@@ -2,7 +2,9 @@
 
 %{
 #include "lsst/afw/math/GaussianProcess.h"
+#include "lsst/afw/math/detail/GaussianProcessFunctions.h"
 //#include "/Users/noldor/physics/lsststackW2013/garage/gptest/include/gptest/gptest.h"
+//#include "/Users/noldor/physics/lsststackW2013/garage/gptest/include/gptest/detail/GaussianProcessFunctions.h"
 %}
 
 // Enable ndarray's NumPy typemaps; types are declared in %included files.
@@ -20,14 +22,17 @@
 %declareNumPyConverters(ndarray::Array<double,2,2>);
 %declareNumPyConverters(ndarray::Array<double,1,1>);
 %declareNumPyConverters(ndarray::Array<int,1,1>);
+%declareNumPyConverters(ndarray::Array<int,2,2>);
 
-%define %declareGP(INTYPE,OUTTYPE,INSUFFIX,OUTSUFFIX)
-%template(GaussianProcess##INSUFFIX##OUTSUFFIX) lsst::afw::math::GaussianProcess<INTYPE,OUTTYPE>;
-//%template(GaussianProcess##INSUFFIX##OUTSUFFIX) gptest::GaussianProcess<INTYPE,OUTTYPE>;
+%define %declareGP(TYPE,SUFFIX)
+%template(GaussianProcess##SUFFIX) lsst::afw::math::GaussianProcess<TYPE>;
+//%template(GaussianProcess##SUFFIX) gptest::GaussianProcess<TYPE>;
 %enddef
 
 %include "lsst/afw/math/GaussianProcess.h"
+%include "lsst/afw/math/detail/GaussianProcessFunctions.h"
 //%include "/Users/noldor/physics/lsststackW2013/garage/gptest/include/gptest/gptest.h"
+//%include "/Users/noldor/physics/lsststackW2013/garage/gptest/include/gptest/detail/GaussianProcessFunctions.h"
 
 
-%declareGP(double,double,D,D);
+%declareGP(double,D);

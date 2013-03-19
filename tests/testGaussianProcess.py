@@ -36,7 +36,7 @@ class GaussianProcessTestCase(unittest.TestCase):
      for j in range(10):
        data[i][j]=float(fff[i][j])
   
-    gg=gp.GaussianProcessDD(dd,pp,data,fn)
+    gg=gp.GaussianProcessD(dd,pp,data,fn)
     gg.setLambda(0.001)
     gg.setHyperParameters(hh);
     #print "build the gp"
@@ -100,7 +100,7 @@ class GaussianProcessTestCase(unittest.TestCase):
       if z==0 or err>worstfbarerr:
         worstfbarerr=err
     
-    print "\nthe errors for squared exponent covariogram\n"
+    print "\nThe errors for squared exponent covariogram\n"
     print "worst mu error ",worstmuerr
     print "worst sig2 error ",worstsigerr
     print "worst fbar error ",worstfbarerr
@@ -195,7 +195,6 @@ class GaussianProcessTestCase(unittest.TestCase):
     dd=10
     kk=50
     tol=1.0e-4
-
     data=np.zeros((pp,dd),dtype=float)
     fn=np.zeros((pp),dtype=float)
     test=np.zeros((dd),dtype=float)
@@ -205,7 +204,7 @@ class GaussianProcessTestCase(unittest.TestCase):
     hh=np.zeros((2),dtype=float);
     mins=np.zeros((dd),dtype=float)
     maxs=np.zeros((dd),dtype=float)
-    
+   
     hh[0]=0.555
     hh[1]=0.112
 
@@ -215,12 +214,11 @@ class GaussianProcessTestCase(unittest.TestCase):
     fff=[]
     for i in range(len(ff)):
       fff.append(ff[i].split())
-
     for i in range(len(fff)):
      fn[i]=float(fff[i][10])
      for j in range(10):
        data[i][j]=float(fff[i][j])
-  
+ 
     for i in range(pp):
       for j in range(dd):
         if (i==0) or (data[i][j]<mins[j]):
@@ -230,12 +228,12 @@ class GaussianProcessTestCase(unittest.TestCase):
   
     mins[2]=0.0
     maxs[2]=10.0
-    gg=gp.GaussianProcessDD(dd,pp,data,mins,maxs,fn)
+    gg=gp.GaussianProcessD(dd,pp,data,mins,maxs,fn)
     gg.setLambda(0.0045)
     gg.setCovariogramType(gg.neuralNetwork)
     gg.setHyperParameters(hh);
     #print "build the gp"
-    
+   
     s=open("tests/data/gp_minmax_solutions.sav")
     ss=s.readlines()
     s.close()
@@ -275,7 +273,7 @@ class GaussianProcessTestCase(unittest.TestCase):
       err=(sigma[0]-sigshld)
       if sigshld != 0.0:
         err=err/sigshld
-	
+
       if err<0.0:
         err=-1.0*err
       if z==0 or err>worstsigerr:
@@ -294,7 +292,6 @@ class GaussianProcessTestCase(unittest.TestCase):
         err=-1.0*err
       if z==0 or err>worstfbarerr:
         worstfbarerr=err
-
     print "\nThe errors for Gaussian process using min-max normalization\n"
     print "worst mu error ",worstmuerr
     print "worst sig2 error ",worstsigerr
@@ -334,7 +331,7 @@ class GaussianProcessTestCase(unittest.TestCase):
      for j in range(10):
        data[i][j]=float(fff[i][j])
   
-    gg=gp.GaussianProcessDD(dd,pp,data,fn)
+    gg=gp.GaussianProcessD(dd,pp,data,fn)
     gg.setLambda(0.002)
     gg.setHyperParameters(hh)
     #print "build the gp"
@@ -419,7 +416,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         data[i][j]=float(fff[j])
       fn[i]=float(fff[dd])
     
-    gg=gp.GaussianProcessDD(dd,pp,data,fn)
+    gg=gp.GaussianProcessD(dd,pp,data,fn)
     i=gg.testKdTree()
     self.assertEqual(i,1)
 
@@ -440,7 +437,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         data[i][j]=float(s[j])
       fn[i]=float(s[dd])
     
-    gg=gp.GaussianProcessDD(dd,pp,data,fn)
+    gg=gp.GaussianProcessD(dd,pp,data,fn)
     gg.setLambda(0.0032)
     hh=np.zeros((1),dtype=float)
     hh[0]=2.0
@@ -486,6 +483,16 @@ class GaussianProcessTestCase(unittest.TestCase):
       if err>worstvarerr:
         worstvarerr=err
 
+    gg.batchInterpolate(queries,mu,ntest)   
+    for i in range(ntest):
+      err=mu[i]-mushld[i]
+      if mushld[i] != 0.0:
+        err=err/mushld[i]
+      if err<0.0:
+        err=-1.0*err
+      if err>worstmuerr:
+        worstmuerr=err
+
     self.assertTrue(worstmuerr<tol)
     self.assertTrue(worstvarerr<tol)
     
@@ -511,7 +518,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         data[i][j]=float(s[j])
       fn[i]=float(s[dd])
     
-    gg=gp.GaussianProcessDD(dd,pp,data,fn)
+    gg=gp.GaussianProcessD(dd,pp,data,fn)
     gg.setKrigingParameter(30.0)
     gg.setLambda(0.00002)
     
@@ -558,7 +565,7 @@ class GaussianProcessTestCase(unittest.TestCase):
       if i==0 or err>worstsigerr:
         worstsigerr=err
     
-    print "The errors for self interpolation\n"
+    print "\nThe errors for self interpolation\n"
     print "worst mu error ",worstmuerr
     print "worst sig2 error ",worstsigerr
     self.assertTrue(worstmuerr<tol)
