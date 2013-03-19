@@ -88,7 +88,7 @@ int d_dim,ndarray::Array<double,1,1> const &hyp);
  * @param [in] hyp a list of hyperparameters governing the shape of the covariogram
  *
  * in this case, there are two hyper parameters as defined by Rasmussen and Williams
- * (they call them \sigma^2 and \sigma^2_0)
+ * (they call them sigma^2 and sigma^2_0)
  *
 */
 template <typename T>

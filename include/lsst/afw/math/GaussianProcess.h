@@ -333,7 +333,7 @@ class GaussianProcess{
      *
      * @param [in]  f the value of the function at that point
     */
-    void addPoint(ndarray::Array<T,1,1> const &v,T f);
+    void addPoint(ndarray::Array<T,1,1> const &vin,T f);
      
     /**
      * @brief Assign a value to the Kriging paramter
@@ -396,7 +396,7 @@ class GaussianProcess{
      *
      * @param [in] dex the row that you want
      *
-     * @param [out] v a one-dimensiona ndarray to store the row
+     * @param [out] v a one-dimensional ndarray to store the row
     */
     void getCovarianceRow(int,ndarray::Array<T,1,1>);
      
