@@ -98,8 +98,21 @@ PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D position, image::Color
 
 double Psf::computePeak(geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
+    if (color.isIndeterminate()) color = getAverageColor();
     PTR(Image) image = computeKernelImage(position, color, INTERNAL);
     return (*image)(-image->getX0(), -image->getY0());
+}
+
+double Psf::computeApertureFlux(double radius, geom::Point2D position, image::Color color) const {
+    if (isPointNull(position)) position = getAveragePosition();
+    if (color.isIndeterminate()) color = getAverageColor();
+    return doComputeApertureFlux(radius, position, color);
+}
+
+geom::ellipses::Quadrupole Psf::computeShape(geom::Point2D position, image::Color color) const {
+    if (isPointNull(position)) position = getAveragePosition();
+    if (color.isIndeterminate()) color = getAverageColor();
+    return doComputeShape(position, color);
 }
 
 PTR(Psf::Image) Psf::doComputeImage(geom::Point2D const & position, image::Color const & color) const {
@@ -108,7 +121,5 @@ PTR(Psf::Image) Psf::doComputeImage(geom::Point2D const & position, image::Color
 }
 
 geom::Point2D Psf::getAveragePosition() const { return geom::Point2D(); }
-
-std::string Psf::getPythonModule() const { return "lsst.afw.detection"; }
 
 }}} // namespace lsst::afw::detection

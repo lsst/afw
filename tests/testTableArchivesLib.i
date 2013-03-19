@@ -70,6 +70,21 @@ protected:
         return PTR(Image)();
     }
 
+    virtual double doComputeApertureFlux(
+        double radius,
+        lsst::afw::geom::Point2D const & ccdXY,
+        lsst::afw::image::Color const & color
+    ) const {
+        return 0.0;
+    }
+
+    virtual lsst::afw::geom::ellipses::Quadrupole doComputeShape(
+        lsst::afw::geom::Point2D const & ccdXY,
+        lsst::afw::image::Color const & color
+    ) const {
+        return lsst::afw::geom::ellipses::Quadrupole();
+    }
+
     virtual std::string getPersistenceName() const { return "DummyPsf"; }
 
     virtual std::string getPythonModule() const { return "testTableArchivesLib"; }

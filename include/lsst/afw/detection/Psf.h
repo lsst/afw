@@ -31,6 +31,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
+#include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/table/io/Persistable.h"
@@ -114,6 +115,29 @@ public:
     ) const;
 
     /**
+     *  @brief Compute the "flux" of the Psf model within a circular aperture of the given radius.
+     *
+     *  The flux is relative to a Psf image that has been normalized to unit integral, and the radius
+     *  is in pixels.
+     */
+    double computeApertureFlux(
+        double radius,
+        geom::Point2D position=makeNullPoint(),
+        image::Color color=image::Color()
+    ) const;
+
+    /**
+     *  @brief Compute the ellipse corresponding to the second moments of the Psf.
+     *
+     *  The algorithm used to compute the moments is up to the derived class, and hence this
+     *  method should not be used when a particular algorithm or weight function is required.
+     */
+    geom::ellipses::Quadrupole computeShape(
+        geom::Point2D position=makeNullPoint(),
+        image::Color color=image::Color()
+    ) const;
+
+    /**
      *  @brief Return a FixedKernel corresponding to the Psf image at the given point.
      */
     PTR(math::Kernel const) getLocalKernel(
@@ -170,9 +194,6 @@ protected:
      */
     explicit Psf(bool isFixed=false);
 
-    /// Python module for used for persistence; derived classes not in afw::detection must reimplement.
-    virtual std::string getPythonModule() const;
-
 private:
 
     /*
@@ -184,6 +205,12 @@ private:
         geom::Point2D const & position, image::Color const& color
     ) const;
     virtual PTR(Image) doComputeKernelImage(
+        geom::Point2D const & position, image::Color const & color
+    ) const = 0;
+    virtual double doComputeApertureFlux(
+        double radius, geom::Point2D const & position, image::Color const & color
+    ) const = 0;
+    virtual geom::ellipses::Quadrupole doComputeShape(
         geom::Point2D const & position, image::Color const & color
     ) const = 0;
 
