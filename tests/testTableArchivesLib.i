@@ -57,6 +57,8 @@ public:
 
     virtual bool isPersistable() const { return true; }
 
+    double getValue() const { return _x; }
+
     explicit DummyPsf(double x) : _x(x) {}
 
 protected:
@@ -137,3 +139,5 @@ void DummyPsf::write(OutputArchiveHandle & handle) const {
 }
 
 %}
+
+%lsst_persistable(DummyPsf);

@@ -49,6 +49,7 @@ import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.afw.fits
+from testTableArchivesLib import DummyPsf
 
 try:
     type(VERBOSITY)
@@ -88,7 +89,7 @@ class ExposureTestCase(unittest.TestCase):
         self.width =  maskedImage.getWidth()
         self.height = maskedImage.getHeight()
         self.wcs = afwImage.makeWcs(maskedImageMD)
-        self.psf = afwDetection.DoubleGaussianPsf(11, 11, 3.0, 6.0, 0.1)
+        self.psf = DummyPsf(2.0)
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -230,7 +231,7 @@ class ExposureTestCase(unittest.TestCase):
         exposure.setPsf(self.psf)
         self.assertTrue(exposure.hasPsf())
 
-        exposure.setPsf(afwDetection.DoubleGaussianPsf(w, h, 4.0, 8.0, 0.2)) # we can reset the Psf
+        exposure.setPsf(DummyPsf(1.0)) # we can reset the Psf
          
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
@@ -346,13 +347,9 @@ class ExposureTestCase(unittest.TestCase):
 
         psf = readExposure.getPsf()
         self.assert_(psf is not None)
-        dgPsf = afwDetection.DoubleGaussianPsf.swigConvert(psf)
-        self.assert_(dgPsf is not None)
-        self.assertEqual(dgPsf.getKernel().getWidth(), self.psf.getKernel().getWidth())
-        self.assertEqual(dgPsf.getKernel().getHeight(), self.psf.getKernel().getHeight())
-        self.assertEqual(dgPsf.getSigma1(), self.psf.getSigma1())
-        self.assertEqual(dgPsf.getSigma2(), self.psf.getSigma2())
-        self.assertEqual(dgPsf.getB(), self.psf.getB())
+        dummyPsf = DummyPsf.swigConvert(psf)
+        self.assert_(dummyPsf is not None)
+        self.assertEqual(dummyPsf.getValue(), self.psf.getValue())
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
@@ -389,9 +386,9 @@ class ExposureTestCase(unittest.TestCase):
         if not e1.getPsf():
             self.assertFalse(e2.getPsf())
         else:
-            psfIm = e1.getPsf().computeImage()
-            psfIm -= e2.getPsf().computeImage()
-            self.assertEqual(afwMath.makeStatistics(psfIm, afwMath.STDEV).getValue(), 0.0)
+            psf1 = DummyPsf.swigConvert(e1.getPsf())
+            psf2 = DummyPsf.swigConvert(e2.getPsf())
+            self.assertEqual(psf1.getValue(), psf2.getValue())
 
     def testCopyExposure(self):
         """Copy an Exposure (maybe changing type)"""
@@ -401,7 +398,7 @@ class ExposureTestCase(unittest.TestCase):
         exposureU.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
         exposureU.setFilter(afwImage.Filter("g"))
         exposureU.getCalib().setExptime(666)
-        exposureU.setPsf(afwDetection.DoubleGaussianPsf(11, 11, 1))
+        exposureU.setPsf(DummyPsf(4.0))
 
         exposureF = exposureU.convertF()
         self.cmpExposure(exposureF, exposureU)

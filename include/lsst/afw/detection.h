@@ -34,7 +34,5 @@
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/detection/DoubleGaussianPsf.h"
-#include "lsst/afw/detection/WarpedPsf.h"
 
 #endif

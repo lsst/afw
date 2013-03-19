@@ -1,26 +1,13 @@
 // -*- LSST-C++ -*-
-/*!
- * \brief Implementation of Psf code
- *
- * \file
- *
- * \ingroup algorithms
- */
 #include <limits>
 #include <typeinfo>
 #include <cmath>
 
-#include "boost/pointer_cast.hpp"
-
 #include "lsst/utils/ieee.h"
-#include "lsst/pex/logging.h"
 #include "lsst/afw/detection/Psf.h"
-#include "lsst/afw/detection/KernelPsfFactory.h"
 #include "lsst/afw/math/offsetImage.h"
 
 namespace lsst { namespace afw { namespace detection {
-
-//-------- Psf member function implementations --------------------------------------------------------------
 
 namespace {
 
@@ -122,64 +109,6 @@ PTR(Psf::Image) Psf::doComputeImage(geom::Point2D const & position, image::Color
 
 geom::Point2D Psf::getAveragePosition() const { return geom::Point2D(); }
 
-//-------- KernelPsf member function implementations --------------------------------------------------------
-
-PTR(Psf::Image) KernelPsf::doComputeKernelImage(
-    geom::Point2D const & position, image::Color const& color
-) const {
-    PTR(Psf::Image) im = boost::make_shared<Psf::Image>(_kernel->getDimensions());
-    geom::Point2I ctr = _kernel->getCtr();
-    _kernel->computeImage(*im, true, position.getX(), position.getY());
-    im->setXY0(geom::Point2I(-ctr.getX(), -ctr.getY()));
-    return im;
-}
-
-KernelPsf::KernelPsf(math::Kernel const & kernel, geom::Point2D const & averagePosition) :
-    Psf(!kernel.isSpatiallyVarying()), _kernel(kernel.clone()), _averagePosition(averagePosition) {}
-
-KernelPsf::KernelPsf(PTR(math::Kernel) kernel, geom::Point2D const & averagePosition) :
-    Psf(!kernel->isSpatiallyVarying()), _kernel(kernel), _averagePosition(averagePosition) {}
-
-PTR(Psf) KernelPsf::clone() const { return boost::make_shared<KernelPsf>(*this); }
-
-geom::Point2D KernelPsf::getAveragePosition() const { return _averagePosition; }
-
-//-------- Psf and KernelPsf Persistence --------------------------------------------------------------------
-
 std::string Psf::getPythonModule() const { return "lsst.afw.detection"; }
-
-namespace {
-
-KernelPsfFactory<> registration("KernelPsf");
-
-} // anonymous
-
-KernelPsfPersistenceHelper const & KernelPsfPersistenceHelper::get() {
-    static KernelPsfPersistenceHelper instance;
-    return instance;
-}
-
-KernelPsfPersistenceHelper::KernelPsfPersistenceHelper() :
-    schema(),
-    kernel(schema.addField<int>("kernel", "archive ID of nested kernel object")),
-    averagePosition(schema.addField< table::Point<double> >(
-                        "averagePosition", "average position of stars used to make the PSF"
-                    ))
-{
-    schema.getCitizen().markPersistent();
-}
-
-bool KernelPsf::isPersistable() const { return _kernel->isPersistable(); }
-
-std::string KernelPsf::getPersistenceName() const { return "KernelPsf"; }
-
-void KernelPsf::write(OutputArchiveHandle & handle) const {
-    static KernelPsfPersistenceHelper const & keys = KernelPsfPersistenceHelper::get();
-    afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
-    PTR(afw::table::BaseRecord) record = catalog.addNew();
-    record->set(keys.kernel, handle.put(_kernel));
-    record->set(keys.averagePosition, _averagePosition);
-    handle.saveCatalog(catalog);
-}
 
 }}} // namespace lsst::afw::detection

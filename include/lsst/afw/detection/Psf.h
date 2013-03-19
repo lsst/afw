@@ -198,52 +198,6 @@ private:
     LSST_PERSIST_FORMATTER(PsfFormatter)
 };
 
-/**
- * A Psf built from a Kernel
- */
-class KernelPsf : public afw::table::io::PersistableFacade<KernelPsf>, public Psf {
-public:
-
-    /// Construct a KernelPsf with a clone of the given kernel.
-    explicit KernelPsf(math::Kernel const & kernel, geom::Point2D const & averagePosition=geom::Point2D());
-
-    /// Return the Kernel used to define this Psf.
-    PTR(math::Kernel const) getKernel() const { return _kernel; }
-
-    /// Return average position of stars; used as default position.
-    virtual geom::Point2D getAveragePosition() const;
-
-    /// Polymorphic deep copy.
-    virtual PTR(Psf) clone() const;
-
-    /// Whether this object is persistable; just delegates to the kernel.
-    virtual bool isPersistable() const;
-
-protected:
-
-    /// Construct a KernelPsf with the given kernel; it should not be modified afterwards.
-    explicit KernelPsf(PTR(math::Kernel) kernel, geom::Point2D const & averagePosition=geom::Point2D());
-
-    /// Name to use persist this object as (should be overridden by derived classes).
-    virtual std::string getPersistenceName() const;
-
-    /// Output persistence implementation (should be overridden by derived classes if they add data members).
-    virtual void write(OutputArchiveHandle & handle) const;
-
-    // For access to protected ctor; avoids unnecessary copies when loading
-    template <typename T, typename K> friend class KernelPsfFactory;
-
-private:
-
-    virtual PTR(Image) doComputeKernelImage(
-        geom::Point2D const & position,
-        image::Color const & color
-    ) const;
-
-    PTR(math::Kernel) _kernel;
-    geom::Point2D _averagePosition;
-};
-
 }}} // namespace lsst::afw::detection
 
 #endif // !LSST_AFW_DETECTION_Psf_h_INCLUDED
