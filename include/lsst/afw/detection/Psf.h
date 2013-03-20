@@ -25,11 +25,9 @@
 
 #include <string>
 #include <limits>
-#include <typeinfo>
 
 #include "boost/shared_ptr.hpp"
 
-#include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/math/Kernel.h"
@@ -40,7 +38,25 @@ namespace lsst { namespace afw { namespace detection {
 
 class PsfFormatter;
 
-/// A polymorphic base class for representing an image's Point Spread Function
+/**
+ *  @brief A polymorphic base class for representing an image's Point Spread Function
+ *
+ *  Most of a Psf's functionality involves its evaluation at a position and color, either
+ *  or both of which may be unspecified (which will result in evaluation at some average
+ *  position or color).  Unlike the closely-related Kernel class, there is no requirement
+ *  that a Psf have a well-defined spatial function or any parameters.  Psfs are not
+ *  necessarily continuous, and the dimensions of image of the Psf at a point may not be
+ *  fixed.
+ *
+ *  Psfs are immutable - derived classes should have no non-const methods, and hence
+ *  should be fully-defined after construction.  This allows shared_ptrs to Psfs to be
+ *  passed around and shared between objects without concern for whether they will be
+ *  unexpectedly modified.
+ *
+ *  In most cases, Psf derived classes should inherit from meas::algorithms::ImagePsf
+ *  or meas::algorithms::KernelPsf, as these will provide default implementions for
+ *  several member functions.
+ */
 class Psf : public daf::base::Citizen, public daf::base::Persistable,
             public afw::table::io::PersistableFacade<Psf>, public afw::table::io::Persistable
 {
@@ -65,23 +81,40 @@ public:
 
     virtual ~Psf() {}
 
-    /// Polymorphic deep-copy.
+    /**
+     *  @brief Polymorphic deep-copy.
+     *
+     *  Because Psfs are immutable, clones should generally be unnecessary, but they may
+     *  be useful in allowing Psfs to maintain separate caches for their most recently
+     *  returned images.
+     */
     virtual PTR(Psf) clone() const = 0;
 
     /**
-     *  @brief Return an Image of the PSF
+     *  @brief Return an Image of the PSF, in a form that can be compared directly with star images.
      *
-     * The specified position is a floating point number, and the resulting image will
-     * have a Psf with the correct fractional position, with the centre within pixel (width/2, height/2)
-     * Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
-     * and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at middle)
+     *  The specified position is a floating point number, and the resulting image will have a Psf
+     *  with the correct fractional position, with the centre within pixel (width/2, height/2)
+     *  Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
+     *  and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at
+     *  the middle).
      *
-     * The image's (X0, Y0) will be set correctly to reflect this
+     *  The image's (X0, Y0) will be set correctly to reflect this, such that the returned image can
+     *  be directly compared to a star at the given position.
      *
-     * @note If a fractional position is specified, the calculated central pixel value may be less than 1.
-     *  Evaluates the PSF at the specified point and [optional] color
+     *  The returned image is normalized to sum to unity.
      *
-     *  @note The real work is done in the virtual function, Psf::doComputeImage
+     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
+     *  @param[in]  owner        Whether to copy the return value or return an internal image that
+     *                           must be handled with care (see ImageOwnerEnum).
+     *
+     *  The Psf class caches the most recent return value of computeImage, so repeated calls
+     *  with the same arguments will be highly optimized.
+     *
+     *  @note The real work is done in the virtual private member function Psf::doComputeImage;
+     *        computeImage only handles caching and default arguments.
      */
     PTR(Image) computeImage(
         geom::Point2D position=makeNullPoint(),
@@ -90,11 +123,28 @@ public:
     ) const;
 
     /**
-     *  @brief Evaluate the image of the PSF at a point, with the center of the PSF in the middle
-     *         of the center pixel.
+     *  @brief Return an Image of the PSF, in a form suitable for convolution.
+     *
+     *  While the position need not be an integer, the center of the PSF image returned by
+     *  computeKernelImage will in the center of the center pixel of the image, which will be
+     *  (0,0) when the Image's xy0 is taken into account.
      *
      *  This is similar to the image returned by a Kernel, but with the image's xy0 set such that
-     *  the center is at (0,0).
+     *  the center is at (0,0) (but see #2620, which proposes using the same convention for Kernel).
+     *
+     *  The returned image is normalized to sum to unity.
+     *
+     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
+     *  @param[in]  owner        Whether to copy the return value or return an internal image that
+     *                           must be handled with care (see ImageOwnerEnum).
+     *
+     *  The Psf class caches the most recent return value of computeKernelImage, so repeated calls
+     *  with the same arguments will be highly optimized.
+     *
+     *  @note The real work is done in the virtual private member function Psf::doComputeKernelImage;
+     *        computeKernelImage only handles caching and default arguments.
      */
     PTR(Image) computeKernelImage(
         geom::Point2D position=makeNullPoint(),
@@ -103,7 +153,11 @@ public:
     ) const;
 
     /**
-     *  @brief  Return the peak value of the Kernel image at the given point.
+     *  @brief  Return the peak value of the PSF image.
+     *
+     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
      *
      *  This calls computeKernelImage internally, but because this will usually be cached, it shouldn't
      *  be expensive (but be careful not to accidentally call it with no arguments when you actually
@@ -117,6 +171,11 @@ public:
     /**
      *  @brief Compute the "flux" of the Psf model within a circular aperture of the given radius.
      *
+     *  @param[in]  radius       Radius of the aperture to measure.
+     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
+     *
      *  The flux is relative to a Psf image that has been normalized to unit integral, and the radius
      *  is in pixels.
      */
@@ -129,6 +188,10 @@ public:
     /**
      *  @brief Compute the ellipse corresponding to the second moments of the Psf.
      *
+     *  @param[in]  position     Position to evaluate the PSF at; defaults to getAveragePosition().
+     *  @param[in]  color        Color of the source for which to evaluate the PSF; defaults to
+     *                           getAverageColor().
+     *
      *  The algorithm used to compute the moments is up to the derived class, and hence this
      *  method should not be used when a particular algorithm or weight function is required.
      */
@@ -139,6 +202,9 @@ public:
 
     /**
      *  @brief Return a FixedKernel corresponding to the Psf image at the given point.
+     *
+     *  This is implemented by calling computeKernelImage, and is simply provided for
+     *  convenience.
      */
     PTR(math::Kernel const) getLocalKernel(
         geom::Point2D position=makeNullPoint(),
@@ -160,18 +226,18 @@ public:
     virtual geom::Point2D getAveragePosition() const;
 
     /**
-     * Helper function for Psf::computeImage(): converts a kernel image (centered at (0,0) when xy0
+     * Helper function for Psf::doComputeImage(): converts a kernel image (centered at (0,0) when xy0
      * is taken into account) to an image centered at position when xy0 is taken into account.
      *
-     * \c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear",
+     * @c warpAlgorithm is passed to afw::math::makeWarpingKernel() and can be "nearest", "bilinear",
      * or "lanczosN"
      *
-     * \c warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear,
+     * @c warpBuffer zero-pads the image before recentering.  Recommended value is 1 for bilinear,
      * N for lanczosN (note that it would be cleaner to infer this value from the warping algorithm
      * but this would require mild API changes; same issue occurs in e.g. afw::math::offsetImage()).
      *
-     * The point with integer coordinates \c (0,0) in the source image (with xy0 taken into account)
-     * corresponds to the point \c position in the destination image.  If \c position is not
+     * The point with integer coordinates @c (0,0) in the source image (with xy0 taken into account)
+     * corresponds to the point @c position in the destination image.  If @c position is not
      * integer-valued then we will need to fractionally shift the image using interpolation.
      *
      * Note: if fractional recentering is performed, then a new image will be allocated and returned.
@@ -196,10 +262,13 @@ protected:
 
 private:
 
-    /*
+    //@{
+    /**
      *  These virtual member functions are private, not protected, because we only want derived classes
      *  to implement them, not call them; they should call the corresponding compute*Image member
      *  functions instead so as to let the Psf base class handle caching properly.
+     *
+     *  Derived classes are responsible for ensuring that returned images sum to one.
      */
     virtual PTR(Image) doComputeImage(
         geom::Point2D const & position, image::Color const& color
@@ -213,6 +282,7 @@ private:
     virtual geom::ellipses::Quadrupole doComputeShape(
         geom::Point2D const & position, image::Color const & color
     ) const = 0;
+    //@}
 
     bool const _isFixed;
     mutable PTR(Image) _cachedImage;
