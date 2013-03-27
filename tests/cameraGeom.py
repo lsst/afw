@@ -87,7 +87,7 @@ def trimCcd(ccd, ccdImage=""):
     """Trim a Ccd and maybe the image of the untrimmed Ccd"""
     
     if ccdImage == "":
-        ccdImage = cameraGeomUtils.makeImageFromCcd(ccd, natural=True)
+        ccdImage = cameraGeomUtils.makeImageFromCcd(ccd)
 
     if ccd.isTrimmed():
         return ccdImage
