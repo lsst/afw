@@ -108,6 +108,9 @@ public:
     /// Return a set of field names (used to implement SubSchema::getNames).
     std::set<std::string> getNames(bool topOnly, std::string const & prefix) const;
 
+    template <typename T>
+    int contains(SchemaItem<T> const & item, int flags) const;
+
     /// Add a field to the schema (used to implement Schema::addField).
     template <typename T>
     Key<T> addField(Field<T> const & field);

@@ -21,23 +21,18 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Log.h"
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/table/io/InputArchive.h"
 
 namespace lsst { namespace afw { namespace image {
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
-
-PTR(detection::Psf) ExposureInfo::_clonePsf(CONST_PTR(detection::Psf) psf) {
-    if (psf)
-        return psf->clone();
-    return PTR(detection::Psf)();
-}
 
 PTR(Calib) ExposureInfo::_cloneCalib(CONST_PTR(Calib) calib) {
     if (calib)
@@ -57,9 +52,10 @@ ExposureInfo::ExposureInfo(
     CONST_PTR(Calib) const & calib,
     CONST_PTR(cameraGeom::Detector) const & detector,
     Filter const & filter,
-    PTR(daf::base::PropertySet) const & metadata
+    PTR(daf::base::PropertySet) const & metadata,
+    PTR(CoaddInputs) const & coaddInputs
 ) : _wcs(_cloneWcs(wcs)),
-    _psf(_clonePsf(psf)),
+    _psf(boost::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
     _filter(filter),
@@ -68,7 +64,7 @@ ExposureInfo::ExposureInfo(
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
     _wcs(_cloneWcs(other._wcs)),
-    _psf(_clonePsf(other._psf)),
+    _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
@@ -77,7 +73,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _wcs(_cloneWcs(other._wcs)),
-    _psf(_clonePsf(other._psf)),
+    _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
@@ -89,7 +85,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
 ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
     if (&other != this) {
         _wcs = _cloneWcs(other._wcs);
-        _psf = _clonePsf(other._psf);
+        _psf = other._psf;
         _calib = _cloneCalib(other._calib);
         _detector = other._detector;
         _filter = other._filter;
@@ -115,6 +111,10 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     // In the future, we might not have exactly three image HDUs, but we always do right now,
     // so 1=primary, 2=image, 3=mask, 4=variance, 5+=archive
     data.metadata->set("AR_HDU", 5, "HDU containing the archive used to store ancillary objects");
+    if (hasCoaddInputs()) {
+        int coaddInputsId = data.archive.put(getCoaddInputs());
+        data.metadata->set("COADD_INPUTS_ID", coaddInputsId, "archive ID for coadd inputs catalogs");
+    }
     if (hasPsf() && getPsf()->isPersistable()) {
         int psfId = data.archive.put(getPsf());
         data.metadata->set("PSF_ID", psfId, "archive ID for the Exposure's main Psf");
@@ -203,9 +203,29 @@ void ExposureInfo::_readFits(
         // because the former might be an approximation to something we can't represent
         // using the FITS WCS standard but can represent with binary tables.
         int psfId = metadata->get<int>("PSF_ID", 0);
-        _psf = archive.get<detection::Psf>(psfId);
+        try {
+            _psf = archive.get<detection::Psf>(psfId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read PSF; setting to null: %s") % err.what()
+            );
+        }
         int wcsId = metadata->get<int>("WCS_ID", 0);
-        _wcs = archive.get<Wcs>(wcsId);        
+        try {
+            _wcs = archive.get<Wcs>(wcsId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read WCS; setting to null: %s") % err.what()
+            );
+        }
+        int coaddInputsId = metadata->get<int>("COADD_INPUTS_ID", 0);
+        try {
+            _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read CoaddInputs; setting to null: %s") % err.what()
+            );
+        }
     }
 
     _metadata = metadata;

@@ -59,38 +59,18 @@ Python interface to lsst::afw::table::io classes
 
 %include "lsst/afw/table/io/Persistable.h"
 
-// =============== ModuleImporter ===========================================================================
+// =============== Utility code =============================================================================
 
-%{
-#include "lsst/afw/table/io/ModuleImporter.h"
+%inline %{
 
-namespace lsst { namespace afw { namespace table { namespace io {
-namespace {
-class PythonModuleImporter : public ModuleImporter {
-public:
-    static ModuleImporter const * get() {
-        static PythonModuleImporter const instance;
-        return &instance;
-    }
-private:
-    PythonModuleImporter() {}
-protected:
-    virtual bool _import(std::string const & name) const;
-};
-
-bool PythonModuleImporter::_import(std::string const & name) const {
-    PyObject * mod = PyImport_ImportModule(name.c_str());
-    if (mod) {
-        Py_DECREF(mod);
-        return true;
-    }
-    return false;
+// It's useful in test code to be able to compare Persistables for pointer equality,
+// but I don't think this is possible without actually wrapping a shared_ptr equality
+// comparison - the Swig 'this' objects only expose the address *of* the shared_ptr,
+// not the address *in* the shared_ptr.
+bool comparePersistablePtrs(
+    PTR(lsst::afw::table::io::Persistable) a, PTR(lsst::afw::table::io::Persistable) b
+) {
+    return a == b;
 }
 
-} // anonymous
-}}}} // namespace lsst::afw::table::io
-%}
-
-%init %{
-    lsst::afw::table::io::ModuleImporter::install(lsst::afw::table::io::PythonModuleImporter::get());
 %}

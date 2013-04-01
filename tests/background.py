@@ -504,7 +504,46 @@ class BackgroundTestCase(unittest.TestCase):
 
         # Check that the non-string API works too
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
+
+    def testBadAreaFailsSpline(self):
+        """Check that a NaN in the stats image doesn't cause spline interpolation to fail (#2734)"""
         
+        image = afwImage.ImageF(15, 9)
+        for y in range(image.getHeight()):
+            for x in range(image.getWidth()):
+                image.set(x, y, 1 + 2*y) # n.b. linear, which is what the interpolation will fall back to
+
+        # Set the right corner to NaN.  This will mean that we have too few points for a spline interpolator
+        binSize = 3
+        image[-binSize:, -binSize:] = np.nan
+
+        nx = image.getWidth()//binSize
+        ny = image.getHeight()//binSize
+
+        sctrl = afwMath.StatisticsControl()
+        bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
+
+        bkgd = afwMath.makeBackground(image, bctrl)
+        if display:
+            ds9.mtv(image)
+            ds9.mtv(afwMath.cast_BackgroundMI(bkgd).getStatsImage(), frame=1)
+        #
+        # Should throw if we don't permit REDUCE_INTERP_ORDER
+        #
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.OutOfRangeException,
+                                       bkgd.getImageF, afwMath.Interpolate.NATURAL_SPLINE)
+        #
+        # The interpolation should fall back to linear for the right part of the image
+        # where the NaNs don't permit spline interpolation (n.b. this happens to be exact)
+        #
+        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+            
+        if display:
+            ds9.mtv(bkgdImage, frame=2)
+
+        image -= bkgdImage
+        self.assertEqual(afwMath.makeStatistics(image, afwMath.MEAN).getValue(), 0.0)
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 

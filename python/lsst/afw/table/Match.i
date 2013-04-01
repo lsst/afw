@@ -21,8 +21,14 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+/*
+ * Wrappers for the Match object and matching functions, including instantiation of SimpleMatch, SourceMatch,
+ * and ReferenceMatch.
+ */
+
+%include "lsst/afw/table/Source.i"
+
 %{
-#include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Match.h"
 %}
 

@@ -37,6 +37,9 @@
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
 
 namespace lsst { namespace afw { namespace image {
 /**
@@ -471,7 +474,74 @@ std::pair<std::vector<double>, std::vector<double> > Calib::getMagnitude(std::ve
     return std::make_pair(mag, magErr);
 }
    
+namespace {
 
+class CalibSchema : private boost::noncopyable {
+public:
+    table::Schema schema;
+    table::Key<boost::int64_t> midTime;
+    table::Key<double> expTime;
+    table::Key<double> fluxMag0;
+    table::Key<double> fluxMag0Sigma;
+    
+    static CalibSchema const & get() {
+        static CalibSchema instance;
+        return instance;
+    }
 
+private:
+    CalibSchema() :
+        schema(),
+        midTime(schema.addField<boost::int64_t>(
+                    "midtime", "middle of the time of the exposure relative to Unix epoch", "nanoseconds"
+                )),
+        expTime(schema.addField<double>("exptime", "exposure time", "seconds")),
+        fluxMag0(schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "dn")),
+        fluxMag0Sigma(schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "dn"))
+    {
+        schema.getCitizen().markPersistent();
+    }
+};
+
+class CalibFactory : public table::io::PersistableFactory {
+public:
+
+    virtual PTR(table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        CalibSchema const & keys = CalibSchema::get();
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
+        table::BaseRecord const & record = catalogs.front().front();
+        PTR(Calib) result(new Calib());
+        result->setMidTime(daf::base::DateTime(static_cast<long long>(record.get(keys.midTime))));
+        result->setExptime(record.get(keys.expTime));
+        result->setFluxMag0(record.get(keys.fluxMag0), record.get(keys.fluxMag0Sigma));
+        return result;
+    }
+
+    explicit CalibFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+
+};
+
+std::string getCalibPersistenceName() { return "Calib"; }
+
+CalibFactory registration(getCalibPersistenceName());
+
+} // anonymous
+
+std::string Calib::getPersistenceName() const { return getCalibPersistenceName(); }
+
+void Calib::write(OutputArchiveHandle & handle) const {
+    CalibSchema const & keys = CalibSchema::get();
+    table::BaseCatalog cat = handle.makeCatalog(keys.schema);
+    PTR(table::BaseRecord) record = cat.addNew();
+    record->set(keys.midTime, getMidTime().nsecs());
+    record->set(keys.expTime, getExptime());
+    std::pair<double,double> fluxMag0 = getFluxMag0();
+    record->set(keys.fluxMag0, fluxMag0.first);
+    record->set(keys.fluxMag0Sigma, fluxMag0.second);
+    handle.saveCatalog(cat);
+}
 
 }}}  // lsst::afw::image

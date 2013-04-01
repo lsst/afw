@@ -8,5 +8,7 @@ EXCLUDE += src/math/FunctionLibrary.cc
 EXCLUDE += src/table
 EXCLUDE += src/geom
 EXCLUDE += src/geom/ellipses
+EXCLUDE += src/detection/Psf.cc
+EXCLUDE += src/detection/DoubleGaussianPsf.cc
 EXCLUDE += src/fits.cc
 EXCLUDE_SYMBOLS += _swig_property

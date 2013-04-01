@@ -73,9 +73,9 @@ public:
     /**
      * @brief virtuals for forward and reverse transforms
      *
-     * Both the @pixel argument and the return value of these routines:
+     * Both the pixel argument and the return value of these routines:
      *    - are in pixel units
-     *    - have XY0 offsets included (i.e. caller may need to add XY0 to @pixel 
+     *    - have XY0 offsets included (i.e. caller may need to add XY0 to pixel 
      *         and subtract XY0 from return value if necessary)
      *
      * These routines are responsible for throwing exceptions if the 'pixel' arg 

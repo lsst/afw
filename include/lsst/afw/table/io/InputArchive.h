@@ -30,9 +30,10 @@ public:
 
     typedef std::map<int,PTR(Persistable)> Map;
 
-    /**
-     *  @brief Construct an archive from catalogs.
-     */
+    /// Construct an empty InputArchive that contains no objects.
+    InputArchive();
+
+    /// @brief Construct an archive from catalogs.
     InputArchive(BaseCatalog const & index, CatalogVector const & dataCatalogs);
 
     /// Copy-constructor.  Does not deep-copy loaded Persistables.

@@ -131,7 +131,7 @@ class InterpolateTestCase(unittest.TestCase):
 
         interp = afwMath.makeInterpolate([0], [1], afwMath.Interpolate.CONSTANT)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.MemoryException,
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeException,
                                        lambda : afwMath.makeInterpolate([0], [1],
                                                                         afwMath.Interpolate.LINEAR))
 
