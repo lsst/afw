@@ -48,6 +48,14 @@ class PsfFormatter;
  *  necessarily continuous, and the dimensions of image of the Psf at a point may not be
  *  fixed.
  *
+ *  Psfs have two methods for getting at image at a point:
+ *   - the image returned by computeImage() is in the same coordinate system as the pixelized image
+ *   - the image returned by computeKernelImage() is in an offset coordinate system with the point
+ *     P at (0,0); this implies that the image (x0,y0) will be negative
+ *
+ *  Because P does not need to have integer coordinates, these two images are fractionally offset
+ *  from each other and we use interpolation to get (1) from (2).
+
  *  Psfs are immutable - derived classes should have no non-const methods, and hence
  *  should be fully-defined after construction.  This allows shared_ptrs to Psfs to be
  *  passed around and shared between objects without concern for whether they will be
@@ -94,13 +102,7 @@ public:
      *  @brief Return an Image of the PSF, in a form that can be compared directly with star images.
      *
      *  The specified position is a floating point number, and the resulting image will have a Psf
-     *  with the correct fractional position, with the centre within pixel (width/2, height/2)
-     *  Specifically, fractional positions in [0, 0.5] will appear above/to the right of the center,
-     *  and fractional positions in (0.5, 1] will appear below/to the left (0.9999 is almost back at
-     *  the middle).
-     *
-     *  The image's (X0, Y0) will be set correctly to reflect this, such that the returned image can
-     *  be directly compared to a star at the given position.
+     *  centered on that point when the returned image's xy0 is taken into account.
      *
      *  The returned image is normalized to sum to unity.
      *
