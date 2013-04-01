@@ -76,7 +76,6 @@ Python interface to lsst::afw::detection classes
 
 %include "footprints.i"
 %include "psf.i"
-%include "WarpedPsf.i"
 %include "footprintset.i"
 
 %pythoncode %{

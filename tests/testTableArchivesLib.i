@@ -57,9 +57,33 @@ public:
 
     virtual bool isPersistable() const { return true; }
 
+    double getValue() const { return _x; }
+
     explicit DummyPsf(double x) : _x(x) {}
 
 protected:
+
+    virtual PTR(Image) doComputeKernelImage(
+        lsst::afw::geom::Point2D const & ccdXY,
+        lsst::afw::image::Color const & color
+    ) const {
+        return PTR(Image)();
+    }
+
+    virtual double doComputeApertureFlux(
+        double radius,
+        lsst::afw::geom::Point2D const & ccdXY,
+        lsst::afw::image::Color const & color
+    ) const {
+        return 0.0;
+    }
+
+    virtual lsst::afw::geom::ellipses::Quadrupole doComputeShape(
+        lsst::afw::geom::Point2D const & ccdXY,
+        lsst::afw::image::Color const & color
+    ) const {
+        return lsst::afw::geom::ellipses::Quadrupole();
+    }
 
     virtual std::string getPersistenceName() const { return "DummyPsf"; }
 
@@ -130,3 +154,5 @@ void DummyPsf::write(OutputArchiveHandle & handle) const {
 }
 
 %}
+
+%lsst_persistable(DummyPsf);

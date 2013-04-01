@@ -29,9 +29,25 @@ class Color {
 public :
     explicit Color(double g_r=std::numeric_limits<double>::quiet_NaN()) : _g_r(g_r) {}
 
-    operator bool() const {
-        return !lsst::utils::isnan(_g_r);
+    /// Whether the color is the special value that indicates that it is unspecified.
+    bool isIndeterminate() const { return utils::isnan(_g_r); }
+
+    //@{
+    /**
+     *  Equality comparison for colors
+     *
+     *  Just a placeholder like everything else, but we explicitly let indeterminate colors compare
+     *  as equal.
+     *
+     *  In the future, we'll probably want some way of doing fuzzy comparisons on colors, but then
+     *  we'd have to define some kind of "color difference" matric, and it's not worthwhile doing
+     *  that yet.
+     */
+    bool operator==(Color const & other) const {
+        return (isIndeterminate() && other.isIndeterminate()) || other._g_r == _g_r;
     }
+    bool operator!=(Color const & other) const { return !operator==(other); }
+    //@}
 
     /** Return the effective wavelength for this object in the given filter
      */

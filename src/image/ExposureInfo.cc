@@ -34,12 +34,6 @@ namespace lsst { namespace afw { namespace image {
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
-PTR(detection::Psf) ExposureInfo::_clonePsf(CONST_PTR(detection::Psf) psf) {
-    if (psf)
-        return psf->clone();
-    return PTR(detection::Psf)();
-}
-
 PTR(Calib) ExposureInfo::_cloneCalib(CONST_PTR(Calib) calib) {
     if (calib)
         return PTR(Calib)(new Calib(*calib));
@@ -61,7 +55,7 @@ ExposureInfo::ExposureInfo(
     PTR(daf::base::PropertySet) const & metadata,
     PTR(CoaddInputs) const & coaddInputs
 ) : _wcs(_cloneWcs(wcs)),
-    _psf(_clonePsf(psf)),
+    _psf(boost::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
     _filter(filter),
@@ -70,7 +64,7 @@ ExposureInfo::ExposureInfo(
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
     _wcs(_cloneWcs(other._wcs)),
-    _psf(_clonePsf(other._psf)),
+    _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
@@ -79,7 +73,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _wcs(_cloneWcs(other._wcs)),
-    _psf(_clonePsf(other._psf)),
+    _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
@@ -91,7 +85,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
 ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
     if (&other != this) {
         _wcs = _cloneWcs(other._wcs);
-        _psf = _clonePsf(other._psf);
+        _psf = other._psf;
         _calib = _cloneCalib(other._calib);
         _detector = other._detector;
         _filter = other._filter;

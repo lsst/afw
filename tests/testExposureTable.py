@@ -45,6 +45,7 @@ import lsst.afw.geom
 import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
+from testTableArchivesLib import DummyPsf
 
 try:
     type(display)
@@ -78,15 +79,11 @@ class ExposureTableTestCase(unittest.TestCase):
         return lsst.afw.image.makeWcs(metadata)
 
     def comparePsfs(self, psf1, psf2):
-        psf1 = lsst.afw.detection.DoubleGaussianPsf.swigConvert(psf1)
-        psf2 = lsst.afw.detection.DoubleGaussianPsf.swigConvert(psf2)
+        psf1 = DummyPsf.swigConvert(psf1)
+        psf2 = DummyPsf.swigConvert(psf2)
         self.assert_(psf1 is not None)
         self.assert_(psf2 is not None)
-        self.assertEqual(psf1.getKernel().getWidth(), psf2.getKernel().getWidth())
-        self.assertEqual(psf1.getKernel().getHeight(), psf2.getKernel().getHeight())
-        self.assertEqual(psf1.getSigma1(), psf2.getSigma1())
-        self.assertEqual(psf1.getSigma2(), psf2.getSigma2())
-        self.assertEqual(psf1.getB(), psf2.getB())
+        self.assertEqual(psf1.getValue(), psf2.getValue())
 
     def setUp(self):
         schema = lsst.afw.table.ExposureTable.makeMinimalSchema()
@@ -94,7 +91,7 @@ class ExposureTableTestCase(unittest.TestCase):
         self.kb = schema.addField("b", type=int, doc="doc for b")
         self.cat = lsst.afw.table.ExposureCatalog(schema)
         self.wcs = self.createWcs()
-        self.psf = lsst.afw.detection.DoubleGaussianPsf(17, 17, 3, 6, 0.1)
+        self.psf = DummyPsf(2.0)
         self.bbox0 = lsst.afw.geom.Box2I(
             lsst.afw.geom.Box2D(
                 self.wcs.getPixelOrigin() - lsst.afw.geom.Extent2D( 5.0,  4.0),
