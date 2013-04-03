@@ -544,6 +544,85 @@ class BackgroundTestCase(unittest.TestCase):
         image -= bkgdImage
         self.assertEqual(afwMath.makeStatistics(image, afwMath.MEAN).getValue(), 0.0)
 
+    def testBackgroundFromStatsImage(self):
+        """Check that we can rebuild a Background from a BackgroundMI.getStatsImage()"""
+
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        bkgd = afwMath.cast_BackgroundMI(afwMath.makeBackground(self.image, bgCtrl))
+
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+        bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
+        self.assertEqual(np.mean(bkgdImage.getArray()), self.val)
+        self.assertEqual(interpStyle, bkgd.getAsUsedInterpStyle())
+        self.assertEqual(undersampleStyle, bkgd.getAsUsedUndersampleStyle())
+        #
+        # OK, we have our background.  Make a copy
+        #
+        bkgd2 = afwMath.BackgroundMI(self.image.getBBox(), bkgd.getStatsImage())
+        del bkgd; bkgd = None           # we should be handling the memory correctly, but let's check
+        bkgdImage2 = bkgd2.getImageF(interpStyle)
+
+        self.assertEqual(np.mean(bkgdImage2.getArray()), self.val)
+        
+    def testBackgroundList(self):
+        """Test that a BackgroundLists behaves like a list"""
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+
+        backgroundList = afwMath.BackgroundList()
+        backImage = afwImage.ImageF(self.image.getDimensions())
+        for i in range(2):
+            bkgd = afwMath.makeBackground(self.image, bgCtrl)
+            if i == 0:
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+            else:
+                backgroundList.append(bkgd) # Relies on having called getImage; deprecated
+
+        self.assertEqual(len(backgroundList), 2) # check that len() works
+        for a in backgroundList:                 # check that we can iterate
+            pass
+        self.assertEqual(len(backgroundList[0]), 3) # check that we can index
+        self.assertEqual(len(backgroundList[1]), 3) # check that we always have a tuple (bkgd, interp, under)
+
+
+    def testBackgroundListIO(self):
+        """Test I/O for BackgroundLists"""
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+
+        backgroundList = afwMath.BackgroundList()
+        backImage = afwImage.ImageF(self.image.getDimensions())
+        for i in range(2):
+            bkgd = afwMath.makeBackground(self.image, bgCtrl)
+            if i == 0:
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+            else:
+                backgroundList.append(bkgd) # Relies on having called getImage; deprecated
+
+            backImage += bkgd.getImageF(interpStyle, undersampleStyle)
+
+        fileName = "backgroundList.fits"
+        try:
+            backgroundList.writeFits(fileName)
+
+            backgrounds = afwMath.BackgroundList.readFits(fileName)
+        finally:
+            if os.path.exists(fileName):
+                os.unlink(fileName)
+
+        img = backgrounds.getImage()
+        #
+        # Check that the read-back image is identical to that generated from the backgroundList
+        # round-tripped to disk
+        #
+        backImage -= img
+        
+        self.assertEqual(np.min(backImage.getArray()), 0.0)
+        self.assertEqual(np.max(backImage.getArray()), 0.0)
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 

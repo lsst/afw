@@ -56,40 +56,91 @@ namespace math {
  * method is called
  */
 template<typename ImageT>
-Background::Background(ImageT const& img, ///< ImageT (or MaskedImage) whose properties we want
-                             BackgroundControl const& bgCtrl ///< Control how the Background is estimated
-                            ) :
-    _imgWidth(img.getWidth()), _imgHeight(img.getHeight()),
-    _nxSample(bgCtrl.getNxSample()), _nySample(bgCtrl.getNySample()),
+Background::Background(ImageT const& img,              ///< ImageT (or MaskedImage) whose properties we want
+                       BackgroundControl const& bgCtrl ///< Control how the Background is estimated
+                      ) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _imgBBox(img.getBBox()),
     _bctrl(bgCtrl),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
-    _xcen(_nxSample),  _ycen(_nySample),
-    _xorig(_nxSample), _yorig(_nySample),
-    _xsize(_nxSample), _ysize(_nySample)
+    _asUsedUndersampleStyle(THROW_EXCEPTION),
+    _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
 {
-    if (_imgWidth*_imgHeight == 0) {
+    if (_imgBBox.isEmpty()) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
     }
 
     // Check that an int's large enough to hold the number of pixels
-    assert(_imgWidth*static_cast<double>(_imgHeight) < std::numeric_limits<int>::max());
+    if (_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) > std::numeric_limits<int>::max()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+                          str(boost::format("Image %dx%d has more pixels than fit in an int (%d)")
+                              % _imgBBox.getWidth() % _imgBBox.getHeight() % std::numeric_limits<int>::max()));
+    }
+
+    _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), bgCtrl.getNxSample(), bgCtrl.getNySample());
+}
+
+/************************************************************************************************************/
+/**
+ * Create a Background without any values in it
+ *
+ * \note This ctor is mostly used to create a Background given its sample values, and that (in turn)
+ * is mostly used to implement persistence.
+ */
+Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image to be created by getImage()
+                       int const nx,                ///< Number of samples in x-direction
+                       int const ny                 ///< Number of samples in y-direction
+                      ) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _imgBBox(imageBBox),
+    _bctrl(nx, ny),
+    _asUsedInterpStyle(Interpolate::UNKNOWN),
+    _asUsedUndersampleStyle(THROW_EXCEPTION),
+    _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
+{
+    if (_imgBBox.isEmpty()) {
+        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
+    }
+
+    // Check that an int's large enough to hold the number of pixels
+    if (_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) > std::numeric_limits<int>::max()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+                          str(boost::format("Image %dx%d has more pixels than fit in an int (%d)")
+                              % _imgBBox.getWidth() % _imgBBox.getHeight() % std::numeric_limits<int>::max()));
+    }
+
+    _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), nx, ny);
+}
+    
+/************************************************************************************************************/
+/**
+ * Compute the centers, origins, and sizes of the patches used to compute image statistics
+ * when estimating the Background
+ */
+void
+Background::_setCenOrigSize(int const width, int const height,
+                            int const nxSample, int const nySample)
+{
+    _xcen.resize( nxSample);  _ycen.resize(nySample);
+    _xorig.resize(nxSample); _yorig.resize(nySample);
+    _xsize.resize(nxSample), _ysize.resize(nySample);
 
     // Compute the centers and origins for the cells
-    for (int iX = 0; iX < _nxSample; ++iX) {
-        const int endx = std::min(((iX+1)*_imgWidth + _nxSample/2) / _nxSample, _imgWidth);
+    for (int iX = 0; iX < nxSample; ++iX) {
+        const int endx = std::min(((iX+1)*width + nxSample/2)/nxSample, width);
         _xorig[iX] = (iX == 0) ? 0 : _xorig[iX-1] + _xsize[iX-1];
         _xsize[iX] = endx - _xorig[iX];
         _xcen [iX] = _xorig[iX] + (0.5 * _xsize[iX]) - 0.5;
     }
 
-    for (int iY = 0; iY < _nySample; ++iY) {
-        const int endy = std::min(((iY+1)*_imgHeight + _nySample/2) / _nySample, _imgHeight);
+    for (int iY = 0; iY < nySample; ++iY) {
+        const int endy = std::min(((iY+1)*height + nySample/2)/nySample, height);
         _yorig[iY] = (iY == 0) ? 0 : _yorig[iY-1] + _ysize[iY-1];
         _ysize[iY] = endy - _yorig[iY];
         _ycen [iY] = _yorig[iY] + (0.5 * _ysize[iY]) - 0.5;
     }
 }
-
+    
 /************************************************************************************************************/
 /**
  * @brief Conversion function to switch a string to an UndersampleStyle
