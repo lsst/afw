@@ -104,7 +104,8 @@ BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose
 }
 
 void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
-                                  int const iX, std::vector<int> const& ypix) const
+                                    UndersampleStyle const undersampleStyle,
+                                    int const iX, std::vector<int> const& ypix) const
 {
     image::MaskedImage<InternalPixelT>::Image &im = *_statsImage->getImage();
 
@@ -120,22 +121,33 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
     std::vector<double> ycenTmp, gridTmp;
     cullNan(_ycen, _grid, ycenTmp, gridTmp);
     
+    PTR(Interpolate) intobj;
     try {
-	PTR(Interpolate) intobj;
-	if (ycenTmp.size() == 1) {
-	    intobj = makeInterpolate(ycenTmp, gridTmp, Interpolate::CONSTANT);
-	} else if (ycenTmp.size() == 2) {
-	    intobj = makeInterpolate(ycenTmp, gridTmp, Interpolate::LINEAR);
-	} else if (ycenTmp.size() >= 3) {
-	    intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
-	}
-        
-        for (int iY = 0; iY < _imgHeight; ++iY) {
-            _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
+        intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
+    } catch(pex::exceptions::OutOfRangeException &e) {
+        switch (undersampleStyle) {
+          case THROW_EXCEPTION:
+            LSST_EXCEPT_ADD(e, "setting _gridcolumns");
+            throw;
+          case REDUCE_INTERP_ORDER:
+            {
+                return _set_gridcolumns(lookupMaxInterpStyle(gridTmp.size()), undersampleStyle, iX, ypix);
+            }
+          case INCREASE_NXNYSAMPLE:
+            LSST_EXCEPT_ADD(e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
+            throw;
+          default:
+            LSST_EXCEPT_ADD(e, str(boost::format("The selected BackgroundControl "
+                                                 "UndersampleStyle %d is not defined.") % undersampleStyle));
+            throw;
         }
     } catch(ex::Exception &e) {
         LSST_EXCEPT_ADD(e, "setting _gridcolumns");
-        throw e;
+        throw;
+    }
+        
+    for (int iY = 0; iY < _imgHeight; ++iY) {
+        _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
     }
 }
 
@@ -183,7 +195,7 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
         return static_cast<double>(intobj->interpolate(x));
     } catch(ex::Exception &e) {
         LSST_EXCEPT_ADD(e, "in getPixel()");
-        throw e;
+        throw;
     }
 }
 /*
@@ -254,7 +266,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
 
     _gridcolumns.resize(_imgWidth);
     for (int iX = 0; iX < _nxSample; ++iX) {
-        _set_gridcolumns(interpStyle, iX, ypix);
+        _set_gridcolumns(interpStyle, undersampleStyle, iX, ypix);
     }
 
     // create a shared_ptr to put the background image in and return to caller
@@ -289,7 +301,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
             }
         } catch(ex::Exception &e) {
             LSST_EXCEPT_ADD(e, "Interpolating in x");
-            throw e;
+            throw;
         }
     }
 

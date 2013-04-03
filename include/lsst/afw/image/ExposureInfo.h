@@ -1,8 +1,8 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,14 +10,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -29,6 +29,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/image/CoaddInputs.h"
 
 namespace lsst { namespace afw {
 
@@ -63,12 +64,13 @@ class Wcs;
  *   - Metadata is held by non-const pointer, and you can get a non-const pointer via a const
  *     member function accessor (i.e. constness is not propagated).
  *
- *  The setters for Wcs, Calib, and Psf all clone their input arguments (this is a departure
- *  from the previous behavior for Calib and Wcs, but not Psf, but it's safer w.r.t. aliasing
- *  and it matches the old (and current) behavior of the Exposure and ExposureInfo constructors,
- *  which clone their arguments.  The setter for Detector does *not* clone its input argument,
- *  because while it technically isn't, we can safely consider a Detector to be immutable once
- *  it's attached to an ExposureInfo.
+ *  The setters for Wcs and Calib clone their input arguments (this is a departure from the
+ *  previous behavior for Calib and Wcs but it's safer w.r.t. aliasing and it matches the old
+ *  (and current) behavior of the Exposure and ExposureInfo constructors, which clone their
+ *  arguments.  The setter for Psf and constructors do not clone the Psf, as Psfs are immutable
+ *  and hence we don't need to ensure strict ownership.  The setter for Detector does *not*
+ *  clone its input argument, because while it technically isn't, we can safely consider a
+ *  Detector to be immutable once it's attached to an ExposureInfo.
  */
 class ExposureInfo {
 public:
@@ -122,13 +124,23 @@ public:
     bool hasPsf() const { return static_cast<bool>(_psf); }
 
     /// Return the exposure's point-spread function
-    PTR(detection::Psf) getPsf() { return _psf; }
-
-    /// Return the exposure's point-spread function
-    CONST_PTR(detection::Psf) getPsf() const { return _psf; }
+    PTR(detection::Psf) getPsf() const { return _psf; }
 
     /// Set the exposure's point-spread function
-    void setPsf(CONST_PTR(detection::Psf) psf) { _psf = _clonePsf(psf); }
+    void setPsf(CONST_PTR(detection::Psf) psf) {
+        // Psfs are immutable, so this is always safe; it'd be better to always just pass around
+        // const or non-const pointers, instead of both, but this is more backwards-compatible.
+        _psf = boost::const_pointer_cast<detection::Psf>(psf);
+    }
+
+    /// Does this exposure have coadd provenance catalogs?
+    bool hasCoaddInputs() const { return static_cast<bool>(_coaddInputs); }
+
+    /// Set the exposure's coadd provenance catalogs.
+    void setCoaddInputs(PTR(CoaddInputs) coaddInputs) { _coaddInputs = coaddInputs; }
+
+    /// Return a pair of catalogs that record the inputs, if this Exposure is a coadd (otherwise null).
+    PTR(CoaddInputs) getCoaddInputs() const { return _coaddInputs; }
 
     /**
      *  @brief Construct an ExposureInfo from its various components.
@@ -143,7 +155,8 @@ public:
         CONST_PTR(Calib) const & calib = CONST_PTR(Calib)(),
         CONST_PTR(cameraGeom::Detector) const & detector = CONST_PTR(cameraGeom::Detector)(),
         Filter const & filter = Filter(),
-        PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)()
+        PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)(),
+        PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)()
     );
 
     /// Copy constructor; deep-copies all components except the metadata.
@@ -220,7 +233,6 @@ private:
         PTR(daf::base::PropertySet) imageMetadata
     );
 
-    static PTR(detection::Psf) _clonePsf(CONST_PTR(detection::Psf) psf);
     static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
     static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
 
@@ -230,8 +242,9 @@ private:
     CONST_PTR(cameraGeom::Detector) _detector;
     Filter _filter;
     PTR(daf::base::PropertySet) _metadata;
+    PTR(CoaddInputs) _coaddInputs;
 };
 
 }}} // lsst::afw::image
 
-#endif // LSST_AFW_IMAGE_EXPOSURE_H
+#endif // !LSST_AFW_IMAGE_ExposureInfo_h_INCLUDED

@@ -9,13 +9,26 @@
 #include "ndarray/Manager.h"
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/Schema.h"
-#include "lsst/afw/table/io/FitsWriter.h"
 
-namespace lsst { namespace afw { namespace table {
+namespace lsst { namespace afw {
+
+namespace fits {
+
+class Fits;
+
+} // namespace fits
+
+namespace table {
 
 class BaseRecord;
 class BaseColumnView;
 class SchemaMapper;
+
+namespace io {
+
+class FitsWriter;
+
+} // namespace io
 
 /**
  *  @brief Base class for all tables.
@@ -216,7 +229,7 @@ private:
     void operator=(BaseTable const & other);
 
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     Schema _schema;                 // schema that defines the table's fields

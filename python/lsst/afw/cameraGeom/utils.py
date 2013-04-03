@@ -87,7 +87,7 @@ class GetCcdImage(object):
 class ButlerImage(GetCcdImage):
     """A class to return an Image of a given Ccd based on its cameraGeometry"""
     
-    def __init__(self, butler, type="raw", isTrimmed=True, defaultSize=afwGeom.ExtentI(2048, 4176),
+    def __init__(self, butler=None, type="raw", isTrimmed=True,
                  gravity=None, background=np.nan, *args, **kwargs):
         """Initialise
         gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
@@ -102,22 +102,20 @@ class ButlerImage(GetCcdImage):
         self.isRaw = False
         self.gravity = gravity
         self.background = background
-        self.defaultSize = defaultSize
 
     def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
         """Return an image of the specified amp in the specified ccd"""
 
-        try:
-            im = self.butler.get(self.type, ccd=ccd.getId().getSerial(),
-                                 **self.kwargs).getMaskedImage().getImage()
+        im = None
+        if self.butler is not None:
+            try:
+                im = self.butler.get(self.type, ccd=ccd.getId().getSerial(),
+                                     **self.kwargs).getMaskedImage().getImage()
+            except Exception, e:
+                pass
 
-        except Exception, e:
-            if ccd.getId().getSerial() in range(100, 104):
-                im = afwImage.ImageF(self.defaultSize[1], self.defaultSize[0])
-            else:
-                im = afwImage.ImageF(self.defaultSize)
-
-            return im
+        if im is None:
+            return afwImage.ImageF(*ccd.getAllPixels(self.isTrimmed).getDimensions())
                 
         if self.type == "raw":
             im = im.convertF()
@@ -143,34 +141,6 @@ class ButlerImage(GetCcdImage):
             sub /= a.getElectronicParams().getGain()
 
         return ccdImage
-
-class SynthesizeCcdImage(GetCcdImage):
-    """A class to return an Image of a given Ccd based on its cameraGeometry"""
-    
-    def __init__(self, isTrimmed=True, *args):
-        """Initialise"""
-        super(SynthesizeCcdImage, self).__init__(*args)
-        self.isTrimmed = isTrimmed
-        self.isRaw = True               # we're always pretending to generate data straight from the DAQ
-
-    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
-        """Return an image of the specified amp in the specified ccd"""
-        
-        if self.isTrimmed:
-            bbox = amp.getElectronicDataSec()
-        else:
-            bbox = amp.getElectronicAllPixels()
-        im = imageFactory(bbox.getDimensions())
-        xy0 = afwGeom.Extent2I(bbox.getMin())
-        im += int(amp.getElectronicParams().getReadNoise())
-        bbox = afwGeom.Box2I(amp.getElectronicDataSec())
-        bbox.shift(-xy0)
-        sim = imageFactory(im, bbox, afwImage.LOCAL)
-        sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
-        #Since the image is in electronic coordinates, we need only mark at
-        #the origin of the dataSec.
-        imageFactory(im, afwGeom.Box2I(bbox.getMin(), afwGeom.Extent2I(3, 3)), afwImage.LOCAL).set(0)
-        return amp.prepareAmpData(im)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -565,12 +535,12 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeAmpImageFromCcd(amp, imageSource=SynthesizeCcdImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
+def makeAmpImageFromCcd(amp, imageSource=ButlerImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
     """Make an Image of an Amp"""
 
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
-def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
+def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
                      isTrimmed=None, correctGain = False, imageFactory=afwImage.ImageU, bin=1,
                      display=False):
     """Make an Image of a Ccd (or just a single amp)
@@ -724,7 +694,7 @@ of the detectors"""
         displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                               borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
 
-def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
+def makeImageFromRaft(raft, imageSource=ButlerImage(), raftCenter=None,
                       imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Raft"""
 
@@ -775,7 +745,7 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
 
     return raftImage
 
-def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
+def showRaft(raft, imageSource=ButlerImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
     """Show a Raft on ds9.
 
 If imageSource isn't None, create an image using the images specified by imageSource"""
@@ -844,7 +814,7 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
 
     return cameraImage
 
-def showCamera(camera, imageSource=SynthesizeCcdImage(), imageFactory=afwImage.ImageF,
+def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF,
                 bin=1, border=5, frame=None, overlay=True, title="", ctype=ds9.GREEN, names=False):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
 
@@ -866,7 +836,7 @@ of the detectors"""
 
             bbox = afwGeom.BoxI()
             for x, y in ((0.0,0.0), (0.0, height - 1), (width - 1, height - 1), (width - 1, 0.0), (0.0, 0.0)):
-                position = ccd.getPositionFromPixel(afwGeom.Point2D(x,y)).getMm()
+                position = ccd.getPositionFromPixel(afwGeom.Point2D(x,y)).getPixels(ccd.getPixelSize())
                 bbox.include(afwGeom.PointI(int(position.getX()//bin), int(position.getY()//bin)))
 
             cameraBbox.include(bbox)
@@ -885,7 +855,6 @@ of the detectors"""
 
             serialNo = ccd.getId().getSerial()
             ccdImage = cameraImage.Factory(cameraImage, ccdBboxes[serialNo], afwImage.PARENT)
-
             dataImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
 
             if ccdImage.getDimensions() == dataImage.getDimensions():
@@ -907,8 +876,9 @@ of the detectors"""
                 else:
                     assert bin > 1
                     x0, y0 = 0, 0       # rounding error in binning
-                    
-                subCcdImage = ccdImage.Factory(ccdImage, afwGeom.BoxI(afwGeom.PointI(x0, y0), dataImage.getDimensions()))
+
+                subCcdImage = ccdImage.Factory(ccdImage,
+                                               afwGeom.BoxI(afwGeom.PointI(x0, y0), dataImage.getDimensions()))
                 subCcdImage <<= dataImage
                 del subCcdImage
     #

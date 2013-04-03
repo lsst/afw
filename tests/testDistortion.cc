@@ -5,7 +5,9 @@
 #include <boost/random.hpp>
 #include <boost/make_shared.hpp>
 
-#include "lsst/afw.h"
+#include "lsst/afw/geom/XYTransform.h"
+#include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/cameraGeom.h"
 
 using namespace std;
 using namespace boost;
@@ -395,158 +397,6 @@ BOOST_AUTO_TEST_CASE(XYTransforms)
     PTR(Detector) d = ToyDetector::makeRandom();
     t = make_shared<DetectorXYTransform> (t,d);
     testXYTransform(*t, randpt(), false, true);
-}
-
-
-// -------------------------------------------------------------------------------------------------
-//
-// ToyPsf: general PDF of the form
-//   exp(-ax^2/2 - bxy - cy^2/2)
-//
-// where
-//   a = 0.1 (1 + Ax + By)
-//   b = 0.1 (Cx + Dy)
-//   c = 0.1 (1 + Ex + Fy)
-//
-
-
-//
-// Helper function which fills an image with a normalized 2D Gaussian of the form
-//   exp(-a(x-px)^2/2 - b(x-px)(y-py) - c(y-py)^2/2)
-//
-static PTR(Image<double>) fill_gaussian(double a, double b, double c, double px, double py, 
-                                        int nx, int ny, int x0, int y0)
-{
-    // smallest eigenvalue
-    double lambda = 0.5 * (a+c + sqrt((a-c)*(a-c) + b*b));
-
-    // approximate size of box needed to hold kernel
-    double width = sqrt(20/lambda);
-
-    assert(lambda > 1.0e-10);
-    assert(x0-px <= -width && x0-px+nx-1 >= width);
-    assert(y0-py <= -width && y0-py+ny-1 >= width);
-
-    PTR(Image<double>) im = make_shared<Image<double> >(nx, ny);
-    im->setXY0(x0, y0);
-
-    double imSum = 0.0;
-
-    for (int i = 0; i < nx; i++) {
-        for (int j = 0; j < ny; j++) {
-            double x = i+x0-px;
-            double y = j+y0-py;
-            double t = exp(-0.5*a*x*x - b*x*y - 0.5*c*y*y);
-            (*im)(i,j) = t;
-            imSum += t;
-        }
-    }
-
-    (*im) /= imSum;
-    return im;
-}
-
-
-struct ToyPsf : public Psf
-{    
-    double _A, _B, _C, _D, _E, _F;
-
-    ToyPsf(double A, double B, double C, double D, double E, double F)
-        : _A(A), _B(B), _C(C), _D(D), _E(E), _F(F) 
-    { }
-
-    virtual ~ToyPsf() { }
-    
-    virtual PTR(Psf) clone() const 
-    { 
-        return make_shared<ToyPsf>(_A,_B,_C,_D,_E,_F); 
-    }
-
-    void evalABC(double &a, double &b, double &c, Point2D const &p) const
-    {
-        double x = p.getX();
-        double y = p.getY();
-
-        a = 0.1 * (1.0 + _A*x + _B*y);
-        b = 0.1 * (_C*x + _D*y);
-        c = 0.1 * (1.0 + _E*x + _F*y);
-    }
-    
-    PTR(Kernel) _doGetLocalKernel(Point2D const &p, Color const &color) const
-    {
-        static const int nside = 100;
-
-        double a, b, c;
-        this->evalABC(a,b,c,p);
-
-        PTR(Image) im = fill_gaussian(a, b, c, 0, 0, 2*nside+1, 2*nside+1, -nside, -nside);
-        return make_shared<FixedKernel> (*im);
-    }
-    
-    virtual PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) 
-    { 
-        return this->_doGetLocalKernel(p,c);
-    }
-
-    virtual CONST_PTR(Kernel) doGetLocalKernel(Point2D const &p, Color const &c) const
-    {
-        return this->_doGetLocalKernel(p,c);
-    }
-    
-    // factory function
-    static shared_ptr<ToyPsf> makeRandom()
-    {
-        double A = 0.005 * (uni_double(rng)-0.5);
-        double B = 0.005 * (uni_double(rng)-0.5);
-        double C = 0.005 * (uni_double(rng)-0.5);
-        double D = 0.005 * (uni_double(rng)-0.5);
-        double E = 0.005 * (uni_double(rng)-0.5);
-        double F = 0.005 * (uni_double(rng)-0.5);
-
-        return make_shared<ToyPsf> (A,B,C,D,E,F);
-    }
-};
-
-
-BOOST_AUTO_TEST_CASE(warpedPsf)
-{
-    PTR(XYTransform) distortion = ToyXYTransform::makeRandom();
-
-    PTR(ToyPsf) unwarped_psf = ToyPsf::makeRandom();
-    PTR(WarpedPsf) warped_psf = make_shared<WarpedPsf> (unwarped_psf, distortion);
-
-    Point2D p = randpt();
-    Point2D q = distortion->reverseTransform(p);
-
-    // warped image
-    PTR(Image<double>) im = warped_psf->computeImage(p, false);
-    int nx = im->getWidth();
-    int ny = im->getHeight();
-    int x0 = im->getX0();
-    int y0 = im->getY0();
-
-    double a, b, c;
-    unwarped_psf->evalABC(a, b, c, q);
-
-    Eigen::Matrix2d m0;
-    m0 << a, b,
-          b, c;
-    
-    AffineTransform atr = distortion->linearizeReverseTransform(p);
-
-    Eigen::Matrix2d md;
-    md << atr.getLinear()[0], atr.getLinear()[2],
-          atr.getLinear()[1], atr.getLinear()[3];   // LinearTransform transposed index convention
-
-    Eigen::Matrix2d m1 = md.transpose() * m0 * md;
-
-    // this should be the same as the warped image, up to artifacts from warping/pixelization
-    PTR(Image<double>) im2 = fill_gaussian(m1(0,0), m1(0,1), m1(1,1), 
-                                           p.getX(), p.getY(), nx, ny, x0, y0);
-
-    // TODO: improve this test; the ideal thing would be to repeat with 
-    // finer resolutions and more stringent threshold
-    BOOST_CHECK(compare(*im,*im2) < 0.005);
 }
 
 

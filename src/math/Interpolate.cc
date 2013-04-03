@@ -39,7 +39,6 @@
 #include "lsst/afw/math/Interpolate.h"
 
 namespace lsst {
-namespace ex = pex::exceptions;
 namespace afw {
 namespace math {
 
@@ -51,13 +50,13 @@ namespace {
              std::vector<double> const &y)
     {
         if (x.size() != y.size()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterException,
                               str(boost::format("Dimensions of x and y must match; %ul != %ul")
                                   % x.size() % y.size()));
         }
         unsigned int const len = x.size();
         if (len == 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(pex::exceptions::InvalidParameterException,
                               "You must provide at least 1 point");
         } else if (len == 1) {
             return std::make_pair(x, y);
@@ -151,7 +150,7 @@ styleToGslInterpType(Interpolate::Style const style)
 {
     switch (style) {
       case Interpolate::CONSTANT:
-        throw LSST_EXCEPT(ex::InvalidParameterException, "CONSTANT interpolation not supported.");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "CONSTANT interpolation not supported.");
       case Interpolate::LINEAR:
         return ::gsl_interp_linear;
       case Interpolate::CUBIC_SPLINE:
@@ -165,10 +164,10 @@ styleToGslInterpType(Interpolate::Style const style)
       case Interpolate::AKIMA_SPLINE_PERIODIC:
         return ::gsl_interp_akima_periodic;
       case Interpolate::UNKNOWN:
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException,
                           "I am unable to make an interpolator of type UNKNOWN");
       case Interpolate::NUM_STYLES:
-        throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException,
+        throw LSST_EXCEPT(pex::exceptions::LogicErrorException,
                           str(boost::format("You can't get here: style == %") % style));
     }
 }
@@ -196,14 +195,14 @@ InterpolateGsl::InterpolateGsl(std::vector<double> const &x, ///< the x-values o
 {
     _acc = ::gsl_interp_accel_alloc();
     if (!_acc) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "gsl_interp_accel_alloc failed");
+        throw LSST_EXCEPT(pex::exceptions::MemoryException, "gsl_interp_accel_alloc failed");
     }
     
     _interp = ::gsl_interp_alloc(_interpType, _y.size());
     if (!_interp) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
-                          (boost::format("Failed to initialise spline for type %s, length %d")
-                           % _interpType->name % _y.size()).str());
+        throw LSST_EXCEPT(pex::exceptions::OutOfRangeException,
+                          str(boost::format("Failed to initialise spline for type %s, length %d")
+                              % _interpType->name % _y.size()));
 
     }
     // Note, "x" and "y" are vector<double>; gsl_inter_init requires double[].
@@ -212,7 +211,7 @@ InterpolateGsl::InterpolateGsl(std::vector<double> const &x, ///< the x-values o
     // those of you reading along.
     int const status = ::gsl_interp_init(_interp, &x[0], &y[0], _y.size());
     if (status != 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(pex::exceptions::RuntimeErrorException,
                           str(boost::format("gsl_interp_init failed: %s [%d]")
                               % ::gsl_strerror(status) % status));
     }
@@ -233,7 +232,7 @@ double InterpolateGsl::interpolate(double const xInterp) const
         // (GSL only provides first and second derivative functions)
         /* could also just fail via:
          throw LSST_EXCEPT(
-         lsst::pex::exceptions::InvalidParameterException,
+         pex::exceptions::InvalidParameterException,
          (boost::format("Interpolation point %f outside range [%f, %f]")
          % x % _x.front() % _x.back()).str()
          );
@@ -277,7 +276,7 @@ Interpolate::Style stringToInterpStyle(std::string const &style ///< desired typ
     }
     
     if ( gslInterpTypeStrings.find(style) == gslInterpTypeStrings.end()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Interp style not found: "+style);
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "Interp style not found: "+style);
     }
     return gslInterpTypeStrings[style];
 }
@@ -288,7 +287,7 @@ Interpolate::Style stringToInterpStyle(std::string const &style ///< desired typ
 Interpolate::Style lookupMaxInterpStyle(int const n ///< Number of points
                                        ) {
     if (n < 1) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "n must be greater than 0");
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "n must be greater than 0");
     } else if (n > 4) {
         return Interpolate::AKIMA_SPLINE;
     } else {
@@ -326,7 +325,7 @@ int lookupMinInterpPoints(Interpolate::Style const style ///< The style in quest
     if (style >= 0 && style < Interpolate::NUM_STYLES) {
         return minPoints[style];
     } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
+        throw LSST_EXCEPT(pex::exceptions::OutOfRangeException,
                           str(boost::format("Style %d is out of range 0..%d")
                               % style % (Interpolate::NUM_STYLES - 1)));
     }

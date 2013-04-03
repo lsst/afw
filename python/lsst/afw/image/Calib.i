@@ -21,13 +21,14 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/************************************************************************************************************/
-
 %{
-#include "lsst/afw/detection/WarpedPsf.h"
+#include "lsst/afw/image/Calib.h"
 %}
 
-%shared_ptr(lsst::afw::detection::WarpedPsf);
+%import "lsst/afw/table/io/ioLib.i"
 
-%include "lsst/afw/detection/WarpedPsf.h"
+%declareTablePersistable(Calib, lsst::afw::image::Calib);
+
+%include "lsst/afw/image/Calib.h"
+%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
+%template(pairVectorDVectorD) std::pair<std::vector<double>, std::vector<double> >;

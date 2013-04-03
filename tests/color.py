@@ -286,10 +286,10 @@ class ColorTestCase(unittest.TestCase):
 
         self.assertEqual(c.getLambdaEff(f), 1000*g_r) # XXX Not a real implementation!
 
-    def testBool(self):
-        """Test that a default-constructed Color tests False, but ones with a g-r value test True"""
-        self.assertFalse(afwImage.Color())
-        self.assertTrue(afwImage.Color(1.2))
+    def testIsIndeterminate(self):
+        """Test that a default-constructed Color tests True, but ones with a g-r value test False"""
+        self.assertTrue(afwImage.Color().isIndeterminate())
+        self.assertFalse(afwImage.Color(1.2).isIndeterminate())
 
 class FilterTestCase(unittest.TestCase):
     """A test case for Filter"""

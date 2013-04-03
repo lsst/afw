@@ -2,7 +2,7 @@
 
 #include <map>
 
-#include "lsst/afw/table/io/ModuleImporter.h"
+#include "lsst/base/ModuleImporter.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
@@ -78,11 +78,11 @@ PersistableFactory const & PersistableFactory::lookup(std::string const & name, 
     RegistryMap::const_iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         if (!module.empty()) {
-            bool success = ModuleImporter::import(module);
+            bool success = base::ModuleImporter::import(module);
             if (!success) {
                 throw LSST_EXCEPT(
                     pex::exceptions::NotFoundException,
-                    (boost::format("PeristableFactory with name '%s' not found, and import of module "
+                    (boost::format("PersistableFactory with name '%s' not found, and import of module "
                                    "'%s' failed (possibly because Python calls were not available from C++).")
                      % name % module).str()
                 );
@@ -91,7 +91,7 @@ PersistableFactory const & PersistableFactory::lookup(std::string const & name, 
             if (i == getRegistry().end()) {
                 throw LSST_EXCEPT(
                     pex::exceptions::LogicErrorException,
-                    (boost::format("PeristableFactory with name '%s' not found even after successful import "
+                    (boost::format("PersistableFactory with name '%s' not found even after successful import "
                                    "of module '%s'.  Please report this as a bug in the persistence "
                                    "implementation for this object.")
                      % name % module).str()
@@ -100,7 +100,7 @@ PersistableFactory const & PersistableFactory::lookup(std::string const & name, 
         } else {
             throw LSST_EXCEPT(
                 pex::exceptions::LogicErrorException,
-                (boost::format("PeristableFactory with name '%s' not found, and no Python module to import "
+                (boost::format("PersistableFactory with name '%s' not found, and no Python module to import "
                                "was provided.  Please report this as a bug in the persistence implementation "
                                "for this object.")
                  % name).str()
