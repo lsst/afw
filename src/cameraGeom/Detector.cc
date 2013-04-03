@@ -186,7 +186,7 @@ void Detector::shift(int dx, ///< How much to offset in x (pixels)
  *
  * If dimensions is 0, rotate the bbox about its LLC
  */
-afwGeom::Box2I lsst::afw::cameraGeom::detail::rotateBBoxBy90(
+afwGeom::Box2I detail::rotateBBoxBy90(
         lsst::afw::geom::Box2I const& bbox,          ///< The BBox to rotate
         int n90,                                     ///< number of anti-clockwise 90degree turns
         lsst::afw::geom::Extent2I const& dimensions  ///< The size of the parent 

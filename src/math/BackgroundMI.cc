@@ -121,7 +121,14 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
     cullNan(_ycen, _grid, ycenTmp, gridTmp);
     
     try {
-        PTR(Interpolate) intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
+	PTR(Interpolate) intobj;
+	if (ycenTmp.size() == 1) {
+	    intobj = makeInterpolate(ycenTmp, gridTmp, Interpolate::CONSTANT);
+	} else if (ycenTmp.size() == 2) {
+	    intobj = makeInterpolate(ycenTmp, gridTmp, Interpolate::LINEAR);
+	} else if (ycenTmp.size() >= 3) {
+	    intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
+	}
         
         for (int iY = 0; iY < _imgHeight; ++iY) {
             _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
