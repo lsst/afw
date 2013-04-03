@@ -286,7 +286,7 @@ public:
         return _getApproximate(actrl, undersampleStyle, disambiguate);
     }
     /**
-     * Return the input image's bounding box
+     * Return the input image's (PARENT) bounding box
      */
     geom::Box2I getImageBBox() const { return _imgBBox; }
 
@@ -335,7 +335,7 @@ protected:
 private:
     Background(Background const&);
     Background& operator=(Background const&);    
-    void setCenOrigSize(int const width, int const height, int const nxSample, int const nySample);
+    void _setCenOrigSize(int const width, int const height, int const nxSample, int const nySample);
 };
     
 /**
@@ -393,10 +393,10 @@ public:
 
 private:
     lsst::afw::image::MaskedImage<InternalPixelT> _statsImage; // statistical properties for the grid of subimages
-    mutable std::vector<std::vector<double> > _gridcolumns; // interpolated columns for the bicubic spline
+    mutable std::vector<std::vector<double> > _gridColumns; // interpolated columns for the bicubic spline
 
-    void _set_gridcolumns(Interpolate::Style const interpStyle,
-                          int const iX, std::vector<int> const& ypix) const;
+    void _setGridColumns(Interpolate::Style const interpStyle,
+                         int const iX, std::vector<int> const& ypix) const;
 #if !defined(SWIG) && defined(LSST_makeBackground_getImage)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getImage, , LSST_makeBackground_getImage_types)
     BOOST_PP_SEQ_FOR_EACH(LSST_makeBackground_getApproximate, , LSST_makeBackground_getApproximate_types)

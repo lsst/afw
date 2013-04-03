@@ -66,19 +66,30 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
     _asUsedUndersampleStyle(THROW_EXCEPTION),
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
 {
-    if (all(_imgBBox.getDimensions().eq(0))) {
+    if (_imgBBox.isEmpty()) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
     }
 
     // Check that an int's large enough to hold the number of pixels
-    assert(_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) < std::numeric_limits<int>::max());
+    if (_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) > std::numeric_limits<int>::max()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+                          str(boost::format("Image %dx%d has more pixels than fit in an int (%d)")
+                              % _imgBBox.getWidth() % _imgBBox.getHeight() % std::numeric_limits<int>::max()));
+    }
 
-    setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), bgCtrl.getNxSample(), bgCtrl.getNySample());
+    _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), bgCtrl.getNxSample(), bgCtrl.getNySample());
 }
 
 /************************************************************************************************************/
-
-Background::Background(geom::Box2I const imageBBox, int const nx, int const ny
+/**
+ * Create a Background without any values in it
+ *
+ * \note This ctor is mostly used to create a Background given its sample values, and that (in turn)
+ * is mostly used to implement persistence.
+ */
+Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image to be created by getImage()
+                       int const nx,                ///< Number of samples in x-direction
+                       int const ny                 ///< Number of samples in y-direction
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(imageBBox),
@@ -87,21 +98,28 @@ Background::Background(geom::Box2I const imageBBox, int const nx, int const ny
     _asUsedUndersampleStyle(THROW_EXCEPTION),
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
 {
-    if (all(_imgBBox.getDimensions().eq(0))) {
+    if (_imgBBox.isEmpty()) {
         throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
     }
 
     // Check that an int's large enough to hold the number of pixels
-    assert(_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) < std::numeric_limits<int>::max());
+    if (_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) > std::numeric_limits<int>::max()) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+                          str(boost::format("Image %dx%d has more pixels than fit in an int (%d)")
+                              % _imgBBox.getWidth() % _imgBBox.getHeight() % std::numeric_limits<int>::max()));
+    }
 
-    setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), nx, ny);
+    _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), nx, ny);
 }
     
 /************************************************************************************************************/
-
+/**
+ * Compute the centers, origins, and sizes of the patches used to compute image statistics
+ * when estimating the Background
+ */
 void
-Background::setCenOrigSize(int const width, int const height,
-                           int const nxSample, int const nySample)
+Background::_setCenOrigSize(int const width, int const height,
+                            int const nxSample, int const nySample)
 {
     _xcen.resize( nxSample);  _ycen.resize(nySample);
     _xorig.resize(nxSample); _yorig.resize(nySample);

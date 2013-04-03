@@ -27,7 +27,7 @@ import lsst.afw.image as afwImage
 from lsst.afw.fits.fitsLib import FitsError
 import mathLib as afwMath
 
-class BackgroundList(list):
+class BackgroundList(object):
     """A list-like class to contain a list of (afwMath.Background, interpStyle, undersampleStyle) tuples
 
 In deference to the deprecated-but-not-yet-removed Background.getImage() API, we also accept a single
@@ -35,7 +35,36 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
     """
     
     def __init__(self, *args):
-        list.__init__(self, *args)
+        self._backgrounds = []
+        for a in args:
+            self.append(a)
+
+    def __getitem__(self, *args):
+        """Return an item"""
+        #
+        # Set any previously-unknown Styles (they are set by bkgd.getImage())
+        #
+        for i, val in enumerate(self._backgrounds):
+            bkgd, interpStyle, undersampleStyle = val
+            if interpStyle is None or undersampleStyle is None:
+                interpStyle = bkgd.getAsUsedInterpStyle()
+                undersampleStyle = bkgd.getAsUsedUndersampleStyle()
+                self._backgrounds[i] = (bkgd, interpStyle, undersampleStyle)
+        #
+        # And return what they wanted
+        #
+        return self._backgrounds.__getitem__(*args)
+
+    def __len__(self, *args):
+        return self._backgrounds.__len__(*args)
+
+    def append(self, val):
+        try:
+            bkgd, interpStyle, undersampleStyle = val
+        except TypeError:
+            val = (val, None, None)
+        
+        self._backgrounds.append(val)
 
     def writeFits(self, fileName):
         """Save our list of Backgrounds to a file
@@ -43,11 +72,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         """
 
         for i, bkgd in enumerate(self):
-            try:
-                bkgd, interpStyle, undersampleStyle = bkgd
-            except TypeError:
-                interpStyle = bkgd.getAsUsedInterpStyle()
-                undersampleStyle = bkgd.getAsUsedUndersampleStyle()
+            bkgd, interpStyle, undersampleStyle = bkgd
 
             statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
 

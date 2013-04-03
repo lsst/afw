@@ -526,6 +526,28 @@ class BackgroundTestCase(unittest.TestCase):
 
         self.assertEqual(np.mean(bkgdImage2.getArray()), self.val)
         
+    def testBackgroundList(self):
+        """Test that a BackgroundLists behaves like a list"""
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+
+        backgroundList = afwMath.BackgroundList()
+        backImage = afwImage.ImageF(self.image.getDimensions())
+        for i in range(2):
+            bkgd = afwMath.makeBackground(self.image, bgCtrl)
+            if i == 0:
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+            else:
+                backgroundList.append(bkgd) # Relies on having called getImage; deprecated
+
+        self.assertEqual(len(backgroundList), 2) # check that len() works
+        for a in backgroundList:                 # check that we can iterate
+            pass
+        self.assertEqual(len(backgroundList[0]), 3) # check that we can index
+        self.assertEqual(len(backgroundList[1]), 3) # check that we always have a tuple (bkgd, interp, under)
+
+
     def testBackgroundListIO(self):
         """Test I/O for BackgroundLists"""
         bgCtrl = afwMath.BackgroundControl(10, 10)

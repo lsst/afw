@@ -117,20 +117,20 @@ BackgroundMI::BackgroundMI(geom::Box2I const imageBBox,                         
 
 /************************************************************************************************************/
  
-void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
+void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
                                   int const iX, std::vector<int> const& ypix) const
 {
     image::MaskedImage<InternalPixelT>::Image &im = *_statsImage.getImage();
 
     int const height = _imgBBox.getHeight();
-    _gridcolumns[iX].resize(height);
+    _gridColumns[iX].resize(height);
 
     // Set _grid as a transitional measure
     std::vector<double> _grid(_statsImage.getHeight());
     std::copy(im.col_begin(iX), im.col_end(iX), _grid.begin());
     
     // remove nan from the grid values before computing columns
-    // if we do it here (ie. in set_gridcolumns), it should
+    // if we do it here (ie. in set_gridColumns), it should
     // take care of all future occurrences, so we don't need to do this elsewhere
     std::vector<double> ycenTmp, gridTmp;
     cullNan(_ycen, _grid, ycenTmp, gridTmp);
@@ -139,10 +139,10 @@ void BackgroundMI::_set_gridcolumns(Interpolate::Style const interpStyle,
         PTR(Interpolate) intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
         
         for (int iY = 0; iY < height; ++iY) {
-            _gridcolumns[iX][iY] = intobj->interpolate(ypix[iY]);
+            _gridColumns[iX][iY] = intobj->interpolate(ypix[iY]);
         }
     } catch(ex::Exception &e) {
-        LSST_EXCEPT_ADD(e, "setting _gridcolumns");
+        LSST_EXCEPT_ADD(e, "setting _gridColumns");
         throw e;
     }
 }
@@ -178,13 +178,13 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
                             int const y ///< y-pixel coordinate (row)
                            ) const
 {
-    (void)getImage<double>(interpStyle);        // setup the splines
+    (void)getImage<double>(interpStyle);        // setup the interpolation
 
     // build an interpobj along the row y and get the x'th value
     int const nxSample = _statsImage.getWidth();
     std::vector<double> bg_x(nxSample);
     for (int iX = 0; iX < nxSample; iX++) {
-        bg_x[iX] = _gridcolumns[iX][y];
+        bg_x[iX] = _gridColumns[iX][y];
     }
 
     try {
@@ -213,7 +213,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
      *
      * N.b. The undersampleStyle may actually be overridden for some columns of the statsImage if they
      * have too few good values.  This doesn't prevent you reproducing the results of getImage() by
-     * calling getImage(getInterpStyle(), getUndersampleStyle()) [or 
+     * calling getImage(getInterpStyle(), getUndersampleStyle())
      */
     _asUsedInterpStyle = interpStyle;
     _asUsedUndersampleStyle = undersampleStyle;
@@ -257,43 +257,39 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
                                             "UndersampleStyle %d is not defined.") % undersampleStyle));
     }
        
-    /*********************************************************************************************************/
-    // Check that an int's large enough to hold the number of pixels
+    // =============================================================
+    // --> We'll store nxSample fully-interpolated columns to interpolate the rows over
+    // make a vector containing the y pixel coords for the column
     int const width = _imgBBox.getWidth();
     int const height = _imgBBox.getHeight();
 
-    assert(height*static_cast<double>(width) < std::numeric_limits<int>::max());
-
-    // =============================================================
-    // --> We'll store nxSample fully-interpolated columns to spline the rows over
-    // make a vector containing the y pixel coords for the column
     std::vector<int> ypix(height);
     for (int iY = 0; iY < height; ++iY) {
         ypix[iY] = iY;
     }
 
-    _gridcolumns.resize(width);
+    _gridColumns.resize(width);
     for (int iX = 0; iX < nxSample; ++iX) {
-        _set_gridcolumns(interpStyle, iX, ypix);
+        _setGridColumns(interpStyle, iX, ypix);
     }
 
     // create a shared_ptr to put the background image in and return to caller
     PTR(image::Image<PixelT>) bg =
         PTR(image::Image<PixelT>)(new typename image::Image<PixelT>(_imgBBox.getDimensions()));
 
-    // need a vector of all x pixel coords to spline over
+    // need a vector of all x pixel coords to interpolate over
     std::vector<int> xpix(bg->getWidth());
     for (int iX = 0; iX < bg->getWidth(); ++iX) { xpix[iX] = iX; }
     
     // go through row by row
-    // - spline on the gridcolumns that were pre-computed by the constructor
+    // - interpolate on the gridcolumns that were pre-computed by the constructor
     // - copy the values to an ImageT to return to the caller.
     for (int iY = 0; iY < bg->getHeight(); ++iY) {
 
         // build an interp object for this row
         std::vector<double> bg_x(nxSample);
         for (int iX = 0; iX < nxSample; iX++) {
-            bg_x[iX] = static_cast<double>(_gridcolumns[iX][iY]);
+            bg_x[iX] = static_cast<double>(_gridColumns[iX][iY]);
         }
         
         try {
