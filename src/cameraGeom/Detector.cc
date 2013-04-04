@@ -90,6 +90,13 @@ Detector::getAllPixelsNoRotation(bool isTrimmed ///< Has the bias/overclock have
 }
 
 /************************************************************************************************************/
+
+afwGeom::Point2D Detector::getCenterPixel() const {
+    return afwGeom::Point2D(0.5*(getAllPixels(true).getWidth() - 1),
+                            0.5*(getAllPixels(true).getHeight() - 1));
+}
+
+/************************************************************************************************************/
 /**
  * Return size in mm of this Detector
  */
@@ -104,47 +111,32 @@ FpExtent Detector::getSize() const {
  * Return the offset from the mosaic centre, in mm, given a pixel position
  */
 FpPoint Detector::getPositionFromPixel(
-        lsst::afw::geom::Point2D const& pix    ///< Pixel coordinates wrt bottom left of Detector
-                                       ) const
-{
-    return getPositionFromPixel(pix, isTrimmed());
-}    
+    lsst::afw::geom::Point2D const& pix     ///< Pixel coordinates wrt bottom left of Detector
+) const {
+    double cosYaw = _orientation.getCosYaw();
+    double sinYaw = _orientation.getSinYaw();
 
-/**
- * Return the offset from the mosaic centre, in mm, given a pixel position
- */
-FpPoint Detector::getPositionFromPixel(
-        lsst::afw::geom::Point2D const& pix,     ///< Pixel coordinates wrt bottom left of Detector
-        bool const isTrimmed                     ///< Is this detector trimmed?
-                                       ) const
-{
-#if 0
-    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
-#else
-    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
-                                          0.5*(getAllPixels(true).getHeight() - 1));
-#endif
-    afwGeom::Extent2D pixWrtCenter = afwGeom::Extent2D(pix - detectorCenterPixel);
-    pixWrtCenter *= getPixelSize();
-    return _center + FpPoint(pixWrtCenter);
-}    
+    afwGeom::Extent2D offset = afwGeom::Extent2D(cosYaw * pix.getX() - sinYaw * pix.getY(),
+                                                 sinYaw * pix.getX() + cosYaw * pix.getY());
+    offset -= afwGeom::Extent2D(getCenterPixel());
+    offset *= getPixelSize();
+    return _center + FpPoint(offset);
+}
 
 
 /**
  * Return the pixel position given an offset from the mosaic centre in mm
  */
 afwGeom::Point2D Detector::getPixelFromPosition(
-             FpPoint const &pos     ///< Offset from mosaic centre, mm
-                                                ) const
-{
-#if 0
-    afwGeom::Extent2D detectorCenterPixel(getCenterPixel());
-#else
-    afwGeom::Extent2D detectorCenterPixel(0.5*(getAllPixels(true).getWidth() - 1),
-                                          0.5*(getAllPixels(true).getHeight() - 1));
-#endif
-    FpPoint posWrtCenter = pos - getCenter();
-    return posWrtCenter.getPixels(getPixelSize()) + detectorCenterPixel;
+    FpPoint const &pos     ///< Offset from mosaic centre, mm
+) const {
+    double cosYaw = _orientation.getCosYaw();
+    double sinYaw = _orientation.getSinYaw();
+
+    afwGeom::Extent2D offset((pos - getCenter()).getPixels(getPixelSize()));
+    offset += afwGeom::Extent2D(getCenterPixel());
+    return afwGeom::Point2D(cosYaw * offset.getX() + sinYaw * offset.getY(),
+                            -sinYaw * offset.getX() + cosYaw * offset.getY());
 }
 
 
@@ -179,7 +171,6 @@ void Detector::shift(int dx, ///< How much to offset in x (pixels)
                      int dy  ///< How much to offset in y (pixels)
                      ) {
     afwGeom::Extent2I offset(dx, dy);
-    _centerPixel.shift(afwGeom::Extent2D(dx, dy));
     
     _allPixels.shift(offset);
     _trimmedAllPixels.shift(offset);

@@ -169,7 +169,7 @@ public:
         return _a(pos.getMm());
     }
 
-    virtual FpPoint getPositionFromPixel(Point2D const &pix, bool const isTrimmed) const
+    virtual FpPoint getPositionFromPixel(Point2D const &pix) const
     {
         return FpPoint(_ainv(pix));
     }

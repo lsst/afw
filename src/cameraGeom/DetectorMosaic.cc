@@ -133,18 +133,6 @@ void cameraGeom::DetectorMosaic::addDetector(
     }
     */
     //
-    // If this is the first detector, set the center pixel.  We couldn't do this earlier as
-    // we didn't know the detector size
-    //
-    if (_detectors.size() == 0) {
-        setCenterPixel(
-            geom::Point2D(
-                0.5*_nDetector.first*det->getAllPixels(isTrimmed).getWidth(),
-                0.5*_nDetector.second*det->getAllPixels(isTrimmed).getHeight()
-            )
-        );
-    }
-    //
     // Correct Detector's coordinate system to be absolute within DetectorMosaic
     //
     afwGeom::Box2I detPixels = det->getAllPixels(isTrimmed);
@@ -160,9 +148,7 @@ void cameraGeom::DetectorMosaic::addDetector(
         iX*detPixels.getWidth() + detPixels.getWidth()/2,
         iY*detPixels.getHeight() + detPixels.getHeight()/2
     );
-    centerPixel -= afwGeom::Extent2D(getCenterPixel());
     det->setCenter(center);
-    det->setCenterPixel(centerPixel);
 
     // insert new Detector, keeping the Detectors sorted
     _detectors.insert(
@@ -187,23 +173,6 @@ namespace {
         }
     private:
         cameraGeom::Id _id;
-    };
-
-    struct findByPixel {
-        findByPixel(afwGeom::Point2D point) :
-            _point(point) {}
-        
-        bool operator()(cameraGeom::Detector::Ptr det) const {
-            // Position wrt center of detector
-            afwGeom::Extent2D centerPixel(det->getCenterPixel());
-            afwGeom::Point2D relPoint = _point - centerPixel;
-            // Position wrt LLC of detector
-            afwGeom::PointI relPointPix(relPoint);
-            relPointPix += det->getAllPixels(true).getDimensions()/2;
-            return det->getAllPixels(true).contains(relPointPix);
-        }
-    private:
-        afwGeom::Point2D _point;
     };
 
     struct findByMm {
@@ -252,30 +221,6 @@ cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetector(
     if (result == _detectors.end()) {
         throw LSST_EXCEPT(pexExcept::OutOfRangeException,
                           (boost::format("Unable to find Detector with serial %||") % id).str());
-    }
-    return *result;
-}
-
-/**
- * Find an Detector given a pixel position
- */
-cameraGeom::Detector::Ptr cameraGeom::DetectorMosaic::findDetectorPixel(
-        afwGeom::Point2D const& pixel,   ///< the desired pixel
-        bool const fromCenter            ///< pixel is measured wrt the detector center, not LL corner
-) const {
-    if (!fromCenter) {
-        afwGeom::Extent2I dim = getAllPixels().getDimensions();
-        return findDetectorPixel(pixel - afwGeom::Extent2D(dim[0]/2, dim[1]/2),
-                                 true);
-    }
-
-    DetectorSet::const_iterator result =
-        std::find_if(_detectors.begin(), _detectors.end(), findByPixel(pixel));
-    if (result == _detectors.end()) {
-        throw LSST_EXCEPT(pexExcept::OutOfRangeException,
-                          (boost::format("Unable to find Detector containing pixel (%d, %d)") %
-                           (pixel.getX() + getCenterPixel()[0]) %
-                           (pixel.getY() + getCenterPixel()[1])).str());
     }
     return *result;
 }

@@ -81,7 +81,6 @@ public:
     // Find a Detector given an Id or pixel position
     //
     Detector::Ptr findDetector(Id const id) const;
-    Detector::Ptr findDetectorPixel(lsst::afw::geom::Point2D const& pixel, bool const fromCenter=false) const;
     Detector::Ptr findDetectorMm(lsst::afw::cameraGeom::FpPoint const& posMm) const;
     //
     // Translate between physical positions in mm to pixels
