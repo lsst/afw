@@ -176,6 +176,29 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
     }
 }
 
+template <typename T>
+Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & name) {
+    _edit();
+    typename Impl::KeyPairMap::iterator i = std::find_if(
+        _impl->_map.begin(),
+        _impl->_map.end(),
+        KeyPairCompareEqual<T>(inputKey)
+    );
+    if (i != _impl->_map.end()) {
+        Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
+        Field<T> oldField = _impl->_output.find(outputKey).field;
+        Field<T> newField(name, oldField.getDoc(), oldField.getUnits(), oldField);
+        _impl->_output.replaceField(outputKey, newField);
+        return outputKey;
+    } else {
+        Field<T> oldField = _impl->_input.find(inputKey).field;
+        Field<T> newField(name, oldField.getDoc(), oldField.getUnits(), oldField);
+        Key<T> outputKey = _impl->_output.addField(newField);
+        _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
+        return outputKey;
+    }
+}
+
 void SchemaMapper::addMinimalSchema(Schema const & minimal, bool doMap) {
     if (getOutputSchema().getFieldCount() > 0) {
         throw LSST_EXCEPT(
@@ -263,6 +286,7 @@ std::vector<SchemaMapper> SchemaMapper::join(
     template Key< elem > SchemaMapper::addOutputField(Field< elem > const &);      \
     template Key< elem > SchemaMapper::addMapping(Key< elem > const &);       \
     template Key< elem > SchemaMapper::addMapping(Key< elem > const &, Field< elem > const &); \
+    template Key< elem > SchemaMapper::addMapping(Key< elem > const &, std::string const &); \
     template bool SchemaMapper::isMapped(Key< elem > const &) const;    \
     template Key< elem > SchemaMapper::getMapping(Key< elem > const &) const;
 
