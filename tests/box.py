@@ -98,6 +98,19 @@ class Box2ITestCase(unittest.TestCase):
                 self.assertEqual(box.getMin(), pmin + dim + geom.Extent2I(1))
                 self.assertEqual(box.getDimensions(),
                                  geom.Extent2I(abs(dim.getX()),abs(dim.getY())))
+
+    def testOverflowDetection(self):
+        try:
+            box = geom.Box2I(geom.Point2I(2147483645, 149), geom.Extent2I(8,8))
+        except lsst.pex.exceptions.LsstCppException as err:
+            self.assert_(isinstance(err.args[0], lsst.pex.exceptions.OverflowErrorException))
+        else:
+            # On some platforms, sizeof(int) may be > 4, so this test doesn't overflow.
+            # In that case, we just verify that there was in fact no overflow.
+            # It's hard to construct a more platform-independent test because Python doesn't
+            # provide an easy way to get sizeof(int); note that sys.maxint is usually sizeof(long).
+            self.assert_(box.getWidth() > 0)
+
     def testSwap(self):
         x00, y00, x01, y01 = (0,1,2,3)
         x10, y10, x11, y11 = (4,5,6,7)
@@ -135,6 +148,9 @@ class Box2ITestCase(unittest.TestCase):
             self.assert_(geom.Box2D(intBoxBig))
             self.assertEqual(geom.Box2I(fpBoxBig, geom.Box2I.EXPAND), intBoxBig)
             self.assertEqual(geom.Box2I(fpBoxSmall, geom.Box2I.SHRINK), intBoxSmall)
+        self.assert_(geom.Box2I(geom.Box2D()).isEmpty())
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, geom.Box2I,
+                                       geom.Box2D(geom.Point2D(), geom.Point2D(float("inf"), float("inf"))))
 
     def testAccessors(self):
         xmin, xmax, ymin, ymax = [int(i) for i in numpy.random.randint(low=-5, high=5, size=4)]
