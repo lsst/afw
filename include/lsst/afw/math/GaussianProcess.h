@@ -35,10 +35,118 @@
 
 #include <Eigen/Dense>
 #include "ndarray/eigen.h"
+#include "boost/shared_ptr.hpp"
+#include "lsst/daf/base/Citizen.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
+
+/**
+  * @class Covariogram
+  *
+  * @brief The parent class of covariogram functions for use in Gaussian Process interpolation
+  *
+  * Each instantiation of a Covariogram will store its own hyper parameters
+  *
+  * @ingroup afw
+*/
+template <typename T>
+class Covariogram : public lsst::daf::base::Citizen {
+public:
+   virtual ~Covariogram();
+   
+   /**
+    * @brief construct a Covariogram assigning default values to the hyper parameters
+   */
+   explicit Covariogram():lsst::daf::base::Citizen(typeid(this)){};
+   
+  /**
+    * @brief construct a Covariogram assigning values to the hyper parameters
+    *
+    * @param [in] input an array containing the desired values of the hyper parameters
+  */
+   explicit Covariogram(ndarray::Array<T,1,1> const &input)
+   : lsst::daf::base::Citizen(typeid(this)){};
+   
+   /**
+     * @brief set the values of the hyper parameters   
+     *
+     * @param [in] input an array containing the values of the desired hyper parameters
+   */
+   virtual void setHyperParameters(ndarray::Array<T,1,1> const &input);
+   
+  /**
+    * @brief Actually evaluate the covariogram function relating two points you want to interpolate from
+    *
+    * @param [in] p1 the first point
+    *
+    * @param [in] p2 the second point
+  */
+   virtual T operator() (ndarray::Array<const T,1,1> const &p1,
+                         ndarray::Array<const T,1,1> const &p2
+			 ) const;
+   /**
+     * @brief print a brief description of the specific covariogram, its hyper parameters, and their present
+     * values
+   */
+   virtual void explainHyperParameters();
+
+protected:
+    int _nHyperParameters;
+    ndarray::Array<T,1,1> _hyperParameters;
+};
+
+/**
+ * @class SquaredExpCovariogram
+ *
+ * @brief a Covariogram that falls off as the negative exponent of the square of the distance between the points
+*/
+template <typename T>
+class SquaredExpCovariogram : public Covariogram<T>{
+
+public:
+    virtual ~SquaredExpCovariogram();
+  
+    explicit SquaredExpCovariogram();
+  
+    explicit SquaredExpCovariogram(ndarray::Array<T,1,1> const &);
+  
+  
+    virtual T operator() (ndarray::Array<const T,1,1> const &,
+                          ndarray::Array<const T,1,1> const &
+			  ) const;
+    
+    virtual void explainHyperParameters();
+  
+  
+};
+
+/**
+  * @class NeuralNetCovariogram
+  *
+  * @brief a Covariogram that recreates a neural network with infinite hidden layers
+  *
+  * see Rasmussen and Williams (2006) http://www.gaussianprocess.org/gpml/ 
+  * equation 4.29
+*/
+template <typename T>
+class NeuralNetCovariogram : public Covariogram<T>{
+
+public:
+    virtual ~NeuralNetCovariogram();
+
+    explicit NeuralNetCovariogram();
+ 
+    explicit NeuralNetCovariogram(ndarray::Array<T,1,1> const &);
+
+    virtual T operator() (ndarray::Array<const T,1,1> const &,
+                          ndarray::Array<const T,1,1> const &
+                          ) const;
+    
+    virtual void explainHyperParameters();
+
+};
 
 /**
  *@class KdTree
@@ -86,34 +194,43 @@ class KdTree{
     *
     * @param [in] dfn a function defining the distance by which KdTree will define ``nearest neighbors''
    */
-    KdTree(int dd,int pp,ndarray::Array<T,2,2> const &dt,\
-    double(*dfn)(ndarray::Array<T,1,1> const &,ndarray::Array<T,1,1> const &,int));
+    KdTree(int dd,
+           int pp,
+	   ndarray::Array<T,2,2> const &dt,
+           double(*dfn)(ndarray::Array<const T,1,1> const &,
+	                ndarray::Array<const T,1,1> const &,
+			int
+			)
+	    );
     
     /**
      * @brief Find the nearest neighbors of a point
-     *
-     * @param [in] v the point whose neighbors you want to find
-     *
-     * @param [in] n_nn the number of nearest neighbors you want to find
      *
      * @param [in,out] neighdex this is where the indices of the nearest neighbor points will be stored
      *
      * @param [in,out] dd this is where the distances to the nearest neighbors will be stored
      *
+     * @param [in] v the point whose neighbos you want to find
+     *
+     * @param [in] n_nn the number of nearest neighbors you want to find
+     *
      * neighbors will be returned in ascending order of distance
      *
      * note that distance is defined by the function which was passed into the constructor
-  
     */
-    void findNeighbors(ndarray::Array<T,1,1> const &v,int n_nn,\
-    ndarray::Array<int,1,1> neighdex,ndarray::Array<double,1,1> dd);
+    void findNeighbors(ndarray::Array<int,1,1> neighdex, 
+                       ndarray::Array<double,1,1> dd,
+                       ndarray::Array<const T,1,1> const &v, 
+		       int n_nn
+		       );
+    
     
     /**
      * @brief Add a point to the tree.  Allot more space in _tree and data if needed.
      *
      * @param [in] v the point you are adding to the tree
    */
-    void addPoint(ndarray::Array<T,1,1> const &v);
+    void addPoint(ndarray::Array<const T,1,1> const &v);
 
     /**
      * @brief return the number of data points stored in the tree
@@ -152,14 +269,18 @@ class KdTree{
      *
      * @param [in] dir which side of the parent are we on?  dir==1 means that we are on the left side; dir==2 means the right side.
     */
-    void _organize(ndarray::Array<int,1,1> const &use,int ct,int parent,int dir);
+    void _organize(ndarray::Array<int,1,1> const &use,
+                   int ct,
+		   int parent,
+		   int dir
+		   );
        
     /**
       * @brief Find the point already in the tree that would be the parent of a point not in the tree
       *
       * @param [in] v the points whose prospective parent you want to find
     */
-    int _findNode(ndarray::Array<T,1,1> const &v);
+    int _findNode(ndarray::Array<const T,1,1> const &v);
     
    /**
     * @brief This method actually looks for the neighbors, determining whether or not to descend branches of the tree
@@ -174,20 +295,34 @@ class KdTree{
     * distances from v are in the class member variables _neighborsWanted, _neighborsFound, _neighborCandidates,
     * and _neighborDistances
    */
-    void _lookForNeighbors(ndarray::Array<T,1,1> const &v,int consider,int from);
+    void _lookForNeighbors(ndarray::Array<const T,1,1> const &v,
+                           int consider,
+			   int from
+			   );
     
     /**
      * @brief A method to make sure that every data point in the tree is in the correct relation to its parents
+     *
+     * @param [in] target is the index of the node you are looking at
+     *
+     * @param [in] dir is the direction (1,2) of the branch you ascended from root
+     *
+     * @param [in] root is the node you started walking up from
     */
-    int _walkUpTree(int,int,int);
+    int _walkUpTree(int target,
+                   int dir,
+		   int root
+		   );
     
-    double (*_distance)(ndarray::Array<T,1,1> const &,\
-    ndarray::Array<T,1,1> const &,int);
+    double (*_distance)(ndarray::Array<const T,1,1> const &,\
+    ndarray::Array<const T,1,1> const &,int);
     
 };
 
 
 /**
+ * @class GaussianProcess
+ *
  * @brief Stores values of a function sampled on an image and allows you to interpolate the function to unsampled points
  *
  * @ingroup afw
@@ -208,18 +343,16 @@ class KdTree{
 template <typename T>
 class GaussianProcess{
 
- public:
+public:
   
     double interpolationTime,neighborSearchTime,inversionTime;
     double iterationTime,varSolveTime;
     int interpolationCount;
-     
-    enum{squaredExp,neuralNetwork};
     
     ~GaussianProcess();
     
     /**
-     @brief This is the constructor you call if you do not wish to normalize the positions of your data points
+      * @brief This is the constructor you call if you do not wish to normalize the positions of your data points
       *
       * @param [in] dd the number of dimensions of your data points
       *
@@ -230,7 +363,12 @@ class GaussianProcess{
       * @param [in] ff a one-dimensional ndarray containing the values of the scalar function associated with each data point.  
       * This is the function you are interpolating
     */
-    GaussianProcess(int dd,int pp,ndarray::Array<T,2,2> const &datain,ndarray::Array<T,1,1> const &ff);
+    GaussianProcess(int dd,
+                    int pp,
+		    ndarray::Array<T,2,2> const &datain,
+		    ndarray::Array<T,1,1> const &ff,
+                    boost::shared_ptr< Covariogram<T> > const &covarin
+		    );
      
     /**
      * @brief This is the constructor you call if you want the positions of your data points normalized by the span of each dimension
@@ -250,9 +388,14 @@ class GaussianProcess{
      *
      *Note: the member variable _useMaxMin will allow the code to remember which constructor you invoked
     */
-    GaussianProcess(int dd,int pp,\
-    ndarray::Array<T,2,2> const &datain,ndarray::Array<T,1,1> const &mn,ndarray::Array<T,1,1> const &mx,\
-    ndarray::Array<T,1,1> const &ff);
+    GaussianProcess(int dd,
+                    int pp,
+                    ndarray::Array<T,2,2> const &datain,
+		    ndarray::Array<T,1,1> const &mn,
+		    ndarray::Array<T,1,1> const &mx,
+                    ndarray::Array<T,1,1> const &ff,
+                    boost::shared_ptr< Covariogram<T> > const &covarin
+		    );
      
     /**
      @brief Interpolate the function value at one point using a specified number of nearest neighbors
@@ -267,7 +410,10 @@ class GaussianProcess{
      *
      *Note: the member variable _useMaxMin will allow the code to remember which constructor you invoked
     */
-    T interpolate(ndarray::Array<T,1,1> const &vin,ndarray::Array<T,1,1> variance,int kk);
+    T interpolate(ndarray::Array<T,1,1> variance,
+                  ndarray::Array<T,1,1> const &vin,
+		  int kk
+		  );
      
     /**
      * @brief This method will interpolate the function on a data point for purposes of optimizing hyper parameters
@@ -342,6 +488,8 @@ class GaussianProcess{
      *
     */
     void setKrigingParameter(T);
+
+    void setCovariogram(boost::shared_ptr< Covariogram<T> > const &covar);
    
     /**
      * @brief set the value of the hyperparameter _lambda
@@ -354,36 +502,8 @@ class GaussianProcess{
      * of the code may want to promote _lambda to an array so that different data points
      * can have different variances.
     */
-    void setLambda(T ll); 
-      
-    /**
-     * @brief Set the values of the hyperparameters governing the covariogram.  The method knows how many there should be.  
-     *
-     * @param [in] hyin a one-dimensional ndarray containing the hyperparameter values to be set.
-     * 
-     * The number of parameters in hyin should correspond to the number of parameters associated with the chosen type
-     * of covariogram
-    */
-    void setHyperParameters(ndarray::Array<double,1,1> const &hyin);
-    
-    /**
-     * @brief Select the type of covariogram from those enumerated in above
-     *
-     * @param [in] ii The type of covariogram you want to use
-     *
-     * At this point, supported types are
-     *
-     * GaussianProcess::squaredExp -- the squared exponent covariogram
-     *
-     * GaussianProcess::neuralNetwork -- the covariogram of a neural network with infinite hidden layers
-     * see Rasmussen and Williams (2006), http://gaussianprocess.org/gpml/    equation 4.29 
-     *
-     * If you give it an unkown option, the code will just set the squared exponent covariogram
-     *
-     * This method automatically sets the size of _hyperParameters to whatever is appropriate
-    */
-    void setCovariogramType(int ii);
-    
+    void setLambda(T lambda); 
+        
     /**
      * @brief Output the indices of data points curently stored in the _neighbors array
      *
@@ -419,32 +539,34 @@ class GaussianProcess{
      
  private:
     int _pts,_numberOfNeighbors,_useMaxMin,_dimensions,_room,_roomStep;
-    int _calledInterpolate,_nHyperParameters,_typeOfCovariogram;
+    int _calledInterpolate;
     
     ndarray::Array<int,1,1> _neighbors;
     ndarray::Array<double,1,1>_neighborDistances;
     
-    typedef Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> matrixtype;
+    typedef Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> MatrixType;
     
 
     T _krigingParameter,_lambda;
 
     ndarray::Array<T,1,1> _function,_covarianceTestPoint;
     ndarray::Array<T,1,1> _vv,_max,_min;
-    ndarray::Array<double,1,1> _hyperParameters;
     ndarray::Array<T,2,2> _data;
     
     Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> _covariance,_covarianceInverse;
     Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> _bb,_xx;
     
-    Eigen::LLT<matrixtype> _llt;
+    Eigen::LDLT<MatrixType> _ldlt;
     
     KdTree<T> *_kdTreePtr;
           
-    double (*_distance)(ndarray::Array<T,1,1> const &,ndarray::Array<T,1,1> const &,int);
+    double (*_distance)(ndarray::Array<const T,1,1> const &, 
+                        ndarray::Array<const T,1,1> const &,
+			int
+			);
     
-    T (*_covariogram)(ndarray::Array<T,1,1> const &,ndarray::Array<T,1,1> const & \
-    ,int,ndarray::Array<double,1,1> const &);
+    boost::shared_ptr< Covariogram<T> > _covariogram;
+
 
 };
 

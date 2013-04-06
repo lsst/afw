@@ -30,6 +30,7 @@
 #ifndef LSST_AFW_MATH_H
 #define LSST_AFW_MATH_H
 
+#include "lsst/afw/math/GaussianProcess.h"
 #include "lsst/afw/math/Background.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"

@@ -30,12 +30,15 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-namespace GaussianProcess {
+namespace gaussianProcess {
 
 
 
 template<typename T>
-double euclideanDistance(ndarray::Array<T,1,1> const &v1, ndarray::Array<T,1,1> const &v2, int d_dim){
+double euclideanDistance(ndarray::Array<const T,1,1> const &v1, 
+                         ndarray::Array<const T,1,1> const &v2, 
+			 int d_dim)
+{
 
   int i;
   double dd;
@@ -46,50 +49,6 @@ double euclideanDistance(ndarray::Array<T,1,1> const &v1, ndarray::Array<T,1,1> 
   
   return ::sqrt(dd);
 }
-
-
-
-template<typename T>
-T expCovariogram(ndarray::Array<T,1,1> const &v1, ndarray::Array<T,1,1> const &v2, int d_dim,\
-ndarray::Array<double,1,1> const &hyp){
-
-  double dd;  
-  dd=euclideanDistance(v1,v2,d_dim);
-  return T(::exp(-0.5*dd*dd/hyp[0]));
-}
-
-
-template<typename T>
-T neuralNetCovariogram(ndarray::Array<T,1,1> const &v1, ndarray::Array<T,1,1> const &v2,\
- int d_dim, ndarray::Array<double,1,1> const &hyp){
-
-
-  int i;
-  double num,denom1,denom2,arg;
-  
-  num=2.0*hyp[0];
-  denom1=1.0+2.0*hyp[0];
-  denom2=1.0+2.0*hyp[0];
-  for(i=0;i<d_dim;i++){
-    num+=2.0*v1[i]*hyp[1]*v2[i];
-    denom1+=2.0*v1[i]*hyp[1]*v1[i];
-    denom2+=2.0*v2[i]*hyp[1]*v2[i];
-  }
-  arg=num/::sqrt(denom1*denom2);
-  
-  if(arg>1.0 || arg<-1.0){
-    std::cout<<"WARNING in neural network covariogram "<<arg<<" cannot be outside of [-1,1]\n";
-    exit(1);
-  }
-  
-  return T(2.0*(::asin(arg))/3.141592654);
-  
-  
-}
-
-
-
-
 
 template <typename T>
 void mergeSort(ndarray::Array<T,1,1> const &insort, ndarray::Array<int,1,1> const &indices, int el){
@@ -186,18 +145,14 @@ int mergeScanner(ndarray::Array<T,1,1> const &m, ndarray::Array<int,1,1> const &
 
 }}}}}
 
-#define gpn lsst::afw::math::detail::GaussianProcess
+#define gpn lsst::afw::math::detail::gaussianProcess
 
 #define INSTANTIATEDETAIL(T) \
-	template void \
-	gpn::mergeSort<T>(ndarray::Array<T,1,1> const &,\
-	ndarray::Array<int,1,1> const &, int el); \
-	template T gpn::expCovariogram<T>(ndarray::Array<T,1,1> const &,\
-	ndarray::Array<T,1,1> const &, int, ndarray::Array<double,1,1> const &);\
-	template T gpn::neuralNetCovariogram<T>(ndarray::Array<T,1,1> const &, \
-	ndarray::Array<T,1,1> const &, int, ndarray::Array<double,1,1> const &); \
-	template T gpn::euclideanDistance<T>(ndarray::Array<T,1,1> const &,\
-	ndarray::Array<T,1,1> const &, int);
+        template void \
+        gpn::mergeSort<T>(ndarray::Array<T,1,1> const &,\
+                          ndarray::Array<int,1,1> const &, int el); \
+        template T gpn::euclideanDistance<T>(ndarray::Array<const T,1,1> const &,\
+                                             ndarray::Array<const T,1,1> const &, int);
 
 INSTANTIATEDETAIL(double);
 

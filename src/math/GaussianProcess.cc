@@ -39,18 +39,26 @@
 
 using namespace std;
 
+
 namespace lsst {
 namespace afw {
 namespace math {
 
-namespace GPfn = lsst::afw::math::detail::GaussianProcess;
+namespace GPfn = lsst::afw::math::detail::gaussianProcess;
 
 template <typename T>
 KdTree<T>::~KdTree(){}
 
 template <typename T>
-KdTree<T>::KdTree(int dd, int pp, ndarray::Array<T,2,2> const &dt, \
-double(*dfn)(ndarray::Array<T,1,1> const &,ndarray::Array<T,1,1> const &,int)){
+KdTree<T>::KdTree(int dd, 
+                  int pp, 
+		  ndarray::Array<T,2,2> const &dt,
+                  double(*dfn)(ndarray::Array<const T,1,1> const &,
+		               ndarray::Array<const T,1,1> const &,
+			       int
+			       )
+	         )
+{
   
 
   int i;
@@ -80,10 +88,12 @@ double(*dfn)(ndarray::Array<T,1,1> const &,ndarray::Array<T,1,1> const &,int)){
 }
 
 template<typename T>
-void KdTree<T>::findNeighbors(ndarray::Array<T,1,1> const &v, int n_nn, ndarray::Array<int,1,1> neighdex, \
-ndarray::Array<double,1,1> dd){
-
-  
+void KdTree<T>::findNeighbors(ndarray::Array<int,1,1> neighdex,
+                              ndarray::Array<double,1,1> dd,
+                              ndarray::Array<const T,1,1> const &v,
+                              int n_nn
+                              )
+{  
   int i,start;
  
   ndarray::Array<int,1,1> order;
@@ -148,7 +158,7 @@ ndarray::Array<double,1,1> dd){
 }
 
 template <typename T>
-void KdTree<T>::addPoint(ndarray::Array<T,1,1> const &v){
+void KdTree<T>::addPoint(ndarray::Array<const T,1,1> const &v){
 
   int i,j,node,dim;
   
@@ -269,7 +279,12 @@ int KdTree<T>::testTree(){
 }
 
 template <typename T>
-void KdTree<T>::_organize(ndarray::Array<int,1,1> const &use, int ct, int parent, int dir){
+void KdTree<T>::_organize(ndarray::Array<int,1,1> const &use, 
+                          int ct, 
+                          int parent, 
+                          int dir
+                          )
+{
     
   int i,j,k,l,idim,daughter;
   T mean,var,varbest;
@@ -346,7 +361,7 @@ void KdTree<T>::_organize(ndarray::Array<int,1,1> const &use, int ct, int parent
 }
 
 template <typename T>
-int KdTree<T>::_findNode(ndarray::Array<T,1,1> const &v){
+int KdTree<T>::_findNode(ndarray::Array<const T,1,1> const &v){
   
   int consider,next,dim;
   
@@ -372,7 +387,10 @@ int KdTree<T>::_findNode(ndarray::Array<T,1,1> const &v){
 }
 
 template<typename T>
-void KdTree<T>::_lookForNeighbors(ndarray::Array<T,1,1> const &v, int consider, int from){
+void KdTree<T>::_lookForNeighbors(ndarray::Array<const T,1,1> const &v, 
+                                  int consider, 
+				  int from)
+{
 
   int i,j,going;
   double dd;
@@ -445,7 +463,11 @@ void KdTree<T>::_lookForNeighbors(ndarray::Array<T,1,1> const &v, int consider, 
 }
 
 template <typename T>
-int KdTree<T>::_walkUpTree(int target, int dir, int root){
+int KdTree<T>::_walkUpTree(int target, 
+                           int dir, 
+			   int root
+			   )
+{
   //target is the node that you are examining now
   //dir is where you came from
   //root is the ultimate point from which you started
@@ -498,16 +520,19 @@ GaussianProcess<T>::~GaussianProcess(){
 }
 
 template <typename T>
-GaussianProcess<T>::GaussianProcess(int dd, int pp, ndarray::Array<T,2,2> const &datain, \
-ndarray::Array<T,1,1> const &ff){
- 
+GaussianProcess<T>::GaussianProcess(int dd, 
+                                    int pp, 
+				    ndarray::Array<T,2,2> const &datain, 
+                                    ndarray::Array<T,1,1> const &ff,
+                                    boost::shared_ptr< Covariogram<T> > const &covarin)
 
-    
+{
   int i,j;
   ndarray::Array<int,2,2> ndtest;
   
   ndtest=allocate(ndarray::makeVector(3,3));
   
+  _covariogram=covarin;
   _dimensions=dd;
   _pts=pp;
   _room=_pts;
@@ -517,7 +542,7 @@ ndarray::Array<T,1,1> const &ff){
   _function.deep()=ff;
   _krigingParameter=T(1.0);
   
-  _covariogram=GPfn::expCovariogram;
+  
   _distance=GPfn::euclideanDistance;
   
   _calledInterpolate=0;
@@ -542,11 +567,6 @@ ndarray::Array<T,1,1> const &ff){
   _data=_kdTreePtr->data;
   _pts=_kdTreePtr->getPoints();
   
-  _typeOfCovariogram=squaredExp;
-  _nHyperParameters=1;
-  _hyperParameters=allocate(ndarray::makeVector(1));
-  _hyperParameters[0]=1.0;
-  
   interpolationTime=0.0;
   interpolationCount=0;
   neighborSearchTime=0.0;
@@ -557,11 +577,19 @@ ndarray::Array<T,1,1> const &ff){
 }
 
 template <typename T>
-GaussianProcess<T>::GaussianProcess(int dd, int pp, ndarray::Array<T,2,2> const &datain,\
-ndarray::Array<T,1,1> const &mn, ndarray::Array<T,1,1> const &mx, ndarray::Array<T,1,1> const &ff){
+GaussianProcess<T>::GaussianProcess(int dd, 
+                                    int pp, 
+				    ndarray::Array<T,2,2> const &datain,
+                                    ndarray::Array<T,1,1> const &mn, 
+				    ndarray::Array<T,1,1> const &mx, 
+				    ndarray::Array<T,1,1> const &ff,
+                                    boost::shared_ptr< Covariogram<T> > const &covarin
+				    )
+{
 
   int i,j;
   
+  _covariogram=covarin;
   _dimensions=dd;
   _pts=pp;
   _room=_pts;
@@ -569,7 +597,7 @@ ndarray::Array<T,1,1> const &mn, ndarray::Array<T,1,1> const &mx, ndarray::Array
   
   _krigingParameter=T(1.0);
     
-  _covariogram=GPfn::expCovariogram;
+
   _distance=GPfn::euclideanDistance;
   
   _calledInterpolate=0;
@@ -604,11 +632,6 @@ ndarray::Array<T,1,1> const &mn, ndarray::Array<T,1,1> const &mx, ndarray::Array
   _function=allocate(ndarray::makeVector(_pts));
   _function.deep()=ff;
   
-  _typeOfCovariogram=squaredExp;
-  _nHyperParameters=1;
-  _hyperParameters=allocate(ndarray::makeVector(1));
-  _hyperParameters[0]=1.0;
-  
   interpolationTime=0.0;
   interpolationCount=0;
   neighborSearchTime=0.0;
@@ -620,7 +643,11 @@ ndarray::Array<T,1,1> const &mn, ndarray::Array<T,1,1> const &mx, ndarray::Array
 }
 
 template <typename T>
-T GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> const &vin, ndarray::Array<T,1,1> variance, int kk){
+T GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> variance, 
+                                  ndarray::Array<T,1,1> const &vin,
+                                  int kk
+				  )
+{
 
   int i,j;
   T fbar,mu;
@@ -662,7 +689,8 @@ T GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> const &vin, ndarray::Arr
   }
   
   bb=double(::time(NULL));
-  _kdTreePtr->findNeighbors(_vv,_numberOfNeighbors,_neighbors,_neighborDistances);
+  _kdTreePtr->findNeighbors(_neighbors, _neighborDistances, _vv,
+                            _numberOfNeighbors);
   aa=double(::time(NULL));
   
   neighborSearchTime+=aa-bb;
@@ -673,11 +701,11 @@ T GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> const &vin, ndarray::Arr
   fbar=fbar/double(_numberOfNeighbors);
 
   for(i=0;i<_numberOfNeighbors;i++){
-    _covarianceTestPoint[i]=_covariogram(_vv,_data[_neighbors[i]],_dimensions,_hyperParameters);
-    _covariance(i,i)=_covariogram(_data[_neighbors[i]],_data[_neighbors[i]],_dimensions,_hyperParameters)\
+    _covarianceTestPoint[i]=(*_covariogram)(_vv,_data[_neighbors[i]]);
+    _covariance(i,i)=(*_covariogram)(_data[_neighbors[i]],_data[_neighbors[i]])\
     +_lambda;
     for(j=i+1;j<_numberOfNeighbors;j++){
-      _covariance(i,j)=_covariogram(_data[_neighbors[i]],_data[_neighbors[j]],_dimensions,_hyperParameters);
+      _covariance(i,j)=(*_covariogram)(_data[_neighbors[i]],_data[_neighbors[j]]);
       _covariance(j,i)=_covariance(i,j);
     }
   }
@@ -687,11 +715,11 @@ T GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> const &vin, ndarray::Arr
 
   bb=double(::time(NULL));
   
-  //use Eigen's llt solver in place of matrix inversion (for speed purposes)
-  _llt.compute(_covariance); 
+  //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
+  _ldlt.compute(_covariance); 
   
   for(i=0;i<_numberOfNeighbors;i++)_bb(i,0)=_function[_neighbors[i]]-fbar;
-  _xx=_llt.solve(_bb);
+  _xx=_ldlt.solve(_bb);
   aa=double(::time(NULL));
   
   inversionTime+=aa-bb;
@@ -703,11 +731,11 @@ T GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> const &vin, ndarray::Arr
     mu+=_covarianceTestPoint[i]*_xx(i,0);
   }
   
-  variance(0)=_covariogram(_vv,_vv,_dimensions,_hyperParameters)+_lambda;
+  variance(0)=(*_covariogram)(_vv,_vv)+_lambda;
   
   for(i=0;i<_numberOfNeighbors;i++)_bb(i)=_covarianceTestPoint[i];
 
-  _xx=_llt.solve(_bb);
+  _xx=_ldlt.solve(_bb);
   aa=double(::time(NULL));
   varSolveTime+=aa-bb;
   
@@ -772,8 +800,8 @@ T GaussianProcess<T>::selfInterpolate(int dex, ndarray::Array<T,1,1> variance, i
   
   
   bb=double(::time(NULL));
-  _kdTreePtr->findNeighbors(_vv,_numberOfNeighbors+1,selfNeighbors,selfDistances);
-
+  _kdTreePtr->findNeighbors(selfNeighbors, selfDistances, _vv, 
+                            _numberOfNeighbors+1);
   
   if(selfNeighbors[0]!=dex){
     std::cout<<"WARNING selfdist "<<selfDistances[0]<<" "<<selfDistances[1]<<"\n";
@@ -799,11 +827,11 @@ T GaussianProcess<T>::selfInterpolate(int dex, ndarray::Array<T,1,1> variance, i
   fbar=fbar/double(_numberOfNeighbors);
 
   for(i=0;i<_numberOfNeighbors;i++){
-    _covarianceTestPoint[i]=_covariogram(_vv,_data[_neighbors[i]],_dimensions,_hyperParameters);
-    _covariance(i,i)=_covariogram(_data[_neighbors[i]],_data[_neighbors[i]],_dimensions,_hyperParameters)\
+    _covarianceTestPoint[i]=(*_covariogram)(_vv,_data[_neighbors[i]]);
+    _covariance(i,i)=(*_covariogram)(_data[_neighbors[i]],_data[_neighbors[i]])\
     +_lambda;
     for(j=i+1;j<_numberOfNeighbors;j++){
-      _covariance(i,j)=_covariogram(_data[_neighbors[i]],_data[_neighbors[j]],_dimensions,_hyperParameters);
+      _covariance(i,j)=(*_covariogram)(_data[_neighbors[i]],_data[_neighbors[j]]);
       _covariance(j,i)=_covariance(i,j);
     }
   }
@@ -813,12 +841,12 @@ T GaussianProcess<T>::selfInterpolate(int dex, ndarray::Array<T,1,1> variance, i
 
   bb=double(::time(NULL));
   
-  //use Eigen's llt solver in place of matrix inversion (for speed purposes)
-  _llt.compute(_covariance); 
+  //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
+  _ldlt.compute(_covariance); 
   
   
   for(i=0;i<_numberOfNeighbors;i++)_bb(i,0)=_function[_neighbors[i]]-fbar;
-  _xx=_llt.solve(_bb);
+  _xx=_ldlt.solve(_bb);
   aa=double(::time(NULL));
   
   inversionTime+=aa-bb;
@@ -831,14 +859,14 @@ T GaussianProcess<T>::selfInterpolate(int dex, ndarray::Array<T,1,1> variance, i
     mu+=_covarianceTestPoint[i]*_xx(i,0);
   }
   
-  variance(0)=_covariogram(_vv,_vv,_dimensions,_hyperParameters)+_lambda;
+  variance(0)=(*_covariogram)(_vv,_vv)+_lambda;
   
   for(i=0;i<_numberOfNeighbors;i++)_bb(i)=_covarianceTestPoint[i];
   aa=double(::time(NULL));
   iterationTime+=aa-bb;
   
   bb=double(::time(NULL));
-  _xx=_llt.solve(_bb);
+  _xx=_ldlt.solve(_bb);
   aa=double(::time(NULL));
   varSolveTime+=aa-bb;
   
@@ -884,14 +912,14 @@ ndarray:: Array<T,1,1> variance, int nQueries){
   
   for(i=0;i<_pts;i++){
     
-    batchCovariance(i,i)=_covariogram(_data[i],_data[i],_dimensions,_hyperParameters)+_lambda;
+    batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
     for(j=i+1;j<_pts;j++){
-      batchCovariance(i,j)=_covariogram(_data[i],_data[j],_dimensions,_hyperParameters);
+      batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
       batchCovariance(j,i)=batchCovariance(i,j);
     }
   }
   
-  _llt.compute(batchCovariance);  
+  _ldlt.compute(batchCovariance);  
   
   fbar=0.0;
   for(i=0;i<_pts;i++){
@@ -904,7 +932,7 @@ ndarray:: Array<T,1,1> variance, int nQueries){
   for(i=0;i<_pts;i++){
     batchbb(i,0)=_function[i]-fbar;
   }
-  batchxx=_llt.solve(batchbb);
+  batchxx=_ldlt.solve(batchbb);
   aa=double(::time(NULL));
   inversionTime+=aa-bb;
   
@@ -916,10 +944,7 @@ ndarray:: Array<T,1,1> variance, int nQueries){
     } 
     mu(ii)=fbar;
     for(i=0;i<_pts;i++){
-      mu(ii)+=batchxx(i)*_covariogram(v1,_data[i],_dimensions,_hyperParameters);
-    /* if(ii==0){
-       std::cout<<"mu "<<mu(ii)<<" xx "<<batchxx(i)<<" cov "<<_covariogram(v1,_data[i],_dimensions,_hyperParameters)<<"\n";
-     }*/
+      mu(ii)+=batchxx(i)*(*_covariogram)(v1,_data[i]);
     }
   }
   bb=double(::time(NULL));
@@ -937,12 +962,12 @@ ndarray:: Array<T,1,1> variance, int nQueries){
     }
     
     for(i=0;i<_pts;i++){
-      batchbb(i,0)=_covariogram(v1,_data[i],_dimensions,_hyperParameters);
+      batchbb(i,0)=(*_covariogram)(v1,_data[i]);
       queryCovariance(i,0)=batchbb(i,0);
     }
-    batchxx=_llt.solve(batchbb);
+    batchxx=_ldlt.solve(batchbb);
     
-    variance(ii)=_covariogram(v1,v1,_dimensions,_hyperParameters)+_lambda;
+    variance(ii)=(*_covariogram)(v1,v1)+_lambda;
     
     for(i=0;i<_pts;i++){
       variance(ii)-=queryCovariance(i,0)*batchxx(i);
@@ -982,14 +1007,14 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,2,2> const &queries, 
  
   
   for(i=0;i<_pts;i++){
-    batchCovariance(i,i)=_covariogram(_data[i],_data[i],_dimensions,_hyperParameters)+_lambda;
+    batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
     for(j=i+1;j<_pts;j++){
-      batchCovariance(i,j)=_covariogram(_data[i],_data[j],_dimensions,_hyperParameters);
+      batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
       batchCovariance(j,i)=batchCovariance(i,j);
     }
   }
   
-  _llt.compute(batchCovariance);  
+  _ldlt.compute(batchCovariance);  
 
   fbar=0.0;
   for(i=0;i<_pts;i++){
@@ -1002,7 +1027,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,2,2> const &queries, 
   for(i=0;i<_pts;i++){
     batchbb(i,0)=_function[i]-fbar;
   }
-  batchxx=_llt.solve(batchbb);
+  batchxx=_ldlt.solve(batchbb);
   aa=double(::time(NULL));
   inversionTime+=aa-bb;
   
@@ -1015,10 +1040,7 @@ void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,2,2> const &queries, 
     
     mu(ii)=fbar;
     for(i=0;i<_pts;i++){
-      mu(ii)+=batchxx(i)*_covariogram(v1,_data[i],_dimensions,_hyperParameters);
-    /* if(ii==0){
-       std::cout<<"mu "<<mu(ii)<<" xx "<<batchxx(i)<<" cov "<<_covariogram(v1,_data[i],_dimensions,_hyperParameters)<<"\n";
-     }*/
+      mu(ii)+=batchxx(i)*(*_covariogram)(v1,_data[i]);
     }
   }
   after=double(::time(NULL));
@@ -1073,54 +1095,22 @@ void GaussianProcess<T>::setKrigingParameter(T kk){
   
 }
 
-
 template <typename T>
-void GaussianProcess<T>::setLambda(T ll){
-
-  _lambda=ll;
-
+void GaussianProcess<T>::setCovariogram(boost::shared_ptr< Covariogram<T> > const &covar){
+   _covariogram=covar;
 }
 
 template <typename T>
-void GaussianProcess<T>::setHyperParameters(ndarray::Array<double,1,1> const &hyin){
+void GaussianProcess<T>::setLambda(T lambda){
 
-  int i;
-  for(i=0;i<_nHyperParameters;i++){
-    _hyperParameters[i]=hyin[i];
-  }
-  
+  _lambda=lambda;
+
 }
 
 
-template <typename T>
-void GaussianProcess<T>::setCovariogramType(int ii){
-  
-  int i;
-  
-  switch(ii){
-    case squaredExp:
-      _nHyperParameters=1;
-      _covariogram=GPfn::expCovariogram;
-    break;
-    case neuralNetwork:
-     _nHyperParameters=2;
-     _covariogram=GPfn::neuralNetCovariogram;
-    break;
-    default:
-     std::cout<<"I do not know that kind; I will set the squared exponent\n";
-     _nHyperParameters=1;
-     _covariogram=GPfn::expCovariogram;
-  
-  }
-  
-  _hyperParameters=allocate(ndarray::makeVector(_nHyperParameters));
-  for(i=0;i<_nHyperParameters;i++){
-    _hyperParameters[i]=1.0;
-  }
-  
-  _typeOfCovariogram=ii;
-  
-}
+
+
+
 
 template <typename T>
 void GaussianProcess<T>::getNeighbors(ndarray::Array<int,1,1> v){
@@ -1196,12 +1186,159 @@ void GaussianProcess<T>::waste(ndarray::Array<T,2,2> const &aa){
   
 }
 
-}}}
+template <typename T>
+Covariogram<T>::~Covariogram(){};
 
+/*template <typename T>
+Covariogram<T>::Covariogram()
+{
+   lsst::daf::base::Citizen(typeid(this));
+  _nHyperParameters=0;
+}
+
+template <typename T>
+Covariogram<T>::Covariogram(ndarray::Array<T,1,1> const &input)
+{
+   lsst::daf::base::Citizen(typeid(this));
+  _nHyperParameters=0;
+}*/
+
+template <typename T>
+void Covariogram<T>::setHyperParameters(ndarray::Array<T,1,1> const &input)
+{
+    int i;
+    
+    for(i=0;i<_nHyperParameters;i++)_hyperParameters[i]=input[i];
+}
+
+template <typename T>
+T Covariogram<T>::operator()(ndarray::Array<const T,1,1> const &p1,
+                             ndarray::Array<const T,1,1> const &p2) const
+{
+    std::cout<<"by the way, you are calling the wrong operator\n";
+    exit(1);
+    return T(1.0);
+}
+
+template <typename T>
+void Covariogram<T>::explainHyperParameters(){
+    std::cout<<"\nThis is a base class Covariogram; it won't work\n";
+}
+
+template <typename T>
+SquaredExpCovariogram<T>::~SquaredExpCovariogram(){}
+
+template <typename T>
+SquaredExpCovariogram<T>::SquaredExpCovariogram()
+{
+    Covariogram<T>::_nHyperParameters=1;
+    Covariogram<T>::_hyperParameters=allocate(
+                  ndarray::makeVector(Covariogram<T>::_nHyperParameters));
+    Covariogram<T>::_hyperParameters[0]=1.0;
+}
+
+template <typename T>
+SquaredExpCovariogram<T>::SquaredExpCovariogram(
+                       ndarray::Array<T,1,1> const &initParams)
+{
+    Covariogram<T>::_nHyperParameters=1;
+    Covariogram<T>::_hyperParameters=
+               allocate(ndarray::makeVector(Covariogram<T>::_nHyperParameters));
+    Covariogram<T>::_hyperParameters[0]=initParams[0];
+}
+
+template <typename T>
+T SquaredExpCovariogram<T>::operator()(
+                            ndarray::Array<const T,1,1> const &p1,
+                            ndarray::Array<const T,1,1> const &p2
+                            ) const
+{
+    int i;
+    T d;
+
+    d=0.0;
+    for(i=0;i<p1.template getSize<0>();i++){
+        d+=(p1[i]-p2[i])*(p1[i]-p2[i]);
+    }
+    d=d/Covariogram<T>::_hyperParameters[0];
+    return T(exp(-0.5*d));
+}
+
+template <typename T>
+void SquaredExpCovariogram<T>::explainHyperParameters(){
+    std::cout<<"\nThis is the squared exponential covariogram\n";
+    std::cout<<"_nHyperParameters is "<<Covariogram<T>::_nHyperParameters<<"\n";
+    std::cout<<"The 0th hyper parameter is the squared length scale ell^2\n";
+    std::cout<<"as in C(p1,p2) = exp[-0.5 * (|p1-p2|^2 / ell^2\n";
+    std::cout<<"Current value is \n"<<Covariogram<T>::_hyperParameters[0];
+}
+
+template <typename T>
+NeuralNetCovariogram<T>::~NeuralNetCovariogram(){}
+
+template <typename T>
+NeuralNetCovariogram<T>::NeuralNetCovariogram(){
+    
+    Covariogram<T>::_nHyperParameters=2;
+    Covariogram<T>::_hyperParameters=allocate(ndarray::makeVector(2));
+    Covariogram<T>::_hyperParameters[0]=1.0;
+    Covariogram<T>::_hyperParameters[1]=1.0;
+}
+
+template <typename T>
+NeuralNetCovariogram<T>::NeuralNetCovariogram(ndarray::Array<T,1,1> const &initparams)
+{
+    int i;
+    Covariogram<T>::_nHyperParameters=2;
+    Covariogram<T>::_hyperParameters=allocate(ndarray::makeVector(2));
+    for(i=0;i<2;i++){
+      Covariogram<T>::_hyperParameters[i]=initparams[i];
+    }
+}
+
+template <typename T>
+T NeuralNetCovariogram<T>::operator()(ndarray::Array<const T,1,1> const &p1,
+                                      ndarray::Array<const T,1,1> const &p2
+                                      ) const
+{
+    int i,dim;
+    double num,denom1,denom2,arg;    
+
+    dim=p1.template getSize<0>();
+    
+    num=2.0*Covariogram<T>::_hyperParameters[0];
+    denom1=1.0+2.0*Covariogram<T>::_hyperParameters[0];
+    denom2=1.0+2.0*Covariogram<T>::_hyperParameters[0];
+    for(i=0;i<dim;i++){
+        num+=2.0*p1[i]*p2[i]*Covariogram<T>::_hyperParameters[1];
+        denom1+=2.0*p1[i]*p1[i]*Covariogram<T>::_hyperParameters[1];
+        denom2+=2.0*p2[i]*p2[i]*Covariogram<T>::_hyperParameters[1];
+    }
+    arg=num/::sqrt(denom1*denom2);
+    return T(2.0*(::asin(arg))/3.141592654);
+
+}
+
+template <typename T>
+void NeuralNetCovariogram<T>::explainHyperParameters()
+{
+    std::cout<<"\nThis is the covariogram of a neural network with infinite hidden layers\n";
+    std::cout<<"See Rasmussen and Williams (2006) http://www.gaussianprocess.org/gpml/  equation 4.29\n";
+    std::cout<<"There are 2 _hyperParameters\n";
+    std::cout<<"The 0th hyper parameter is sigma_0 from the reference above; current value - "<<
+               Covariogram<T>::_hyperParameters[0]<<"\n";
+    std::cout<<"The 1st hyper paramter is sigma from the reference above; current value - "<<
+               Covariogram<T>::_hyperParameters[1]<<"\n";
+}
+
+}}}
 #define gpn lsst::afw::math
 
 #define INSTANTIATEGP(T) \
-	template class gpn::GaussianProcess<T>;
+        template class gpn::GaussianProcess<T>; \
+        template class gpn::Covariogram<T>; \
+        template class gpn::SquaredExpCovariogram<T>;\
+        template class gpn::NeuralNetCovariogram<T>;
 
 INSTANTIATEGP(double);
 

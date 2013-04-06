@@ -28,7 +28,7 @@ namespace lsst {
 namespace afw {
 namespace math {
 namespace detail {
-namespace GaussianProcess {
+namespace gaussianProcess {
 
 /** 
  * This namespace contains some functions that need to be `global'
@@ -49,52 +49,10 @@ namespace GaussianProcess {
  *
 */
 template <typename T>
-double euclideanDistance(ndarray::Array<T,1,1> const &v1,ndarray::Array<T,1,1> const &v2,int d_dim);
-
-/**
- * @brief The squared exponential covariogram for GaussianProcess
- *
- * Takes two points in parameter space and returns the covariogram relation
- * between them
- *
- * @param [in] v1 the first point
- *
- * @param [in] v2 the second point
- *
- * @param [in] d_dim the number of dimensions in parameter space
- *
- * @param [in] hyp a list of hyperparameters governing the shape of the covariogram
- *
- * in this case, there is only one hyperparameter: the characteristic length scale squared
- *
-*/
-template <typename T>
-T expCovariogram(ndarray::Array<T,1,1> const &v1,ndarray::Array<T,1,1> const &v2,\
-int d_dim,ndarray::Array<double,1,1> const &hyp);
-
-/**
- * @brief The covariogram of a neural network with infinite hidden layers
- *
- * See Chapter 4 of Rasmussen and Williams (2006)
- * http://gaussianprocess.org/gpml/
- * equation (4.29)
- *
- * @param [in] v1 the first point
- *
- * @param [in] v2 the second point
- *
- * @param [in] d_dim the number of dimensions in parameter space
- *
- * @param [in] hyp a list of hyperparameters governing the shape of the covariogram
- *
- * in this case, there are two hyper parameters as defined by Rasmussen and Williams
- * (they call them sigma^2 and sigma^2_0)
- *
-*/
-template <typename T>
-T neuralNetCovariogram(ndarray::Array<T,1,1> const &v1,ndarray::Array<T,1,1> const &v2,int d_dim,\
-ndarray::Array<double,1,1> const &hyp);
-
+double euclideanDistance(ndarray::Array<const T,1,1> const &v1,
+                         ndarray::Array<const T,1,1> const &v2,
+			 int d_dim
+			 );
 /**
  * @brief Sort a list of numbers using a merge sort algorithm
  *
