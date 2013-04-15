@@ -21,7 +21,6 @@
 %shared_ptr(lsst::afw::math::Covariogram<TYPE>);
 %shared_ptr(lsst::afw::math::SquaredExpCovariogram<TYPE>);
 %shared_ptr(lsst::afw::math::NeuralNetCovariogram<TYPE>);
-%shared_ptr(lsst::afw::math::GaussianProcess<TYPE>);
 %enddef
 
 %declareNumPyConverters(ndarray::Array<double,2,2>);

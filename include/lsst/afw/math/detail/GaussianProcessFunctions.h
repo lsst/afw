@@ -22,6 +22,9 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#ifndef LSST_AFW_MATH_DETAIL_GAUSSIAN_PROCESS_FUNCTIONS_H
+#define LSST_AFW_MATH_DETAIL_GAUSSIAN_PROCESS_FUNCTION_H
+
 #include "ndarray/eigen.h"
 
 namespace lsst {
@@ -102,3 +105,4 @@ int dex,int el);
 
 }}}}}
 
+#endif //#ifndef LSST_AFW_MATH_DETAIL_GAUSSIAN_PROCESS_FUNCTIONS_H

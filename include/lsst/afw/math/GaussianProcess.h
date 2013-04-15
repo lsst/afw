@@ -33,6 +33,9 @@
  * Created in February 2013
 */
 
+#ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H
+#define LSST_AFW_MATH_GAUSSIAN_PROCESS_H
+
 #include <Eigen/Dense>
 #include "ndarray/eigen.h"
 #include "boost/shared_ptr.hpp"
@@ -571,3 +574,5 @@ public:
 };
 
 }}}
+
+#endif //#ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H
