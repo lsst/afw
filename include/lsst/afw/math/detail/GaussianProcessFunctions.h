@@ -39,24 +39,6 @@ namespace gaussianProcess {
 */
 
 /**
- * @brief Return the Euclidean distance between two points in arbitrary-dimensional space
- *
- * This is left as a method in case future developers want to enable the possibility that
- * KdTree will define nearest neighbors by some other distance
- *
- * @param [in] v1 the first point
- *
- * @param [in] v2 the second point
- *
- * @param [in] d_dim the number of dimensions in the parameter space
- *
-*/
-template <typename T>
-double euclideanDistance(ndarray::Array<const T,1,1> const &v1,
-                         ndarray::Array<const T,1,1> const &v2,
-			 int d_dim
-			 );
-/**
  * @brief Sort a list of numbers using a merge sort algorithm
  *
  * mergeSort is the `outer' method which implements the merge sort

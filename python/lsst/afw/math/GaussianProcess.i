@@ -29,6 +29,7 @@
 %declareNumPyConverters(ndarray::Array<int,2,2>);
 
 %define %declareGP(TYPE,SUFFIX)
+%template(KdTree##SUFFIX) lsst::afw::math::KdTree<TYPE>;
 %template(GaussianProcess##SUFFIX) lsst::afw::math::GaussianProcess<TYPE>;
 %template(Covariogram##SUFFIX) lsst::afw::math::Covariogram<TYPE>;
 %template(SquaredExpCovariogram##SUFFIX) lsst::afw::math::SquaredExpCovariogram<TYPE>;

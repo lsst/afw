@@ -32,24 +32,6 @@ namespace math {
 namespace detail {
 namespace gaussianProcess {
 
-
-
-template<typename T>
-double euclideanDistance(ndarray::Array<const T,1,1> const &v1, 
-                         ndarray::Array<const T,1,1> const &v2, 
-			 int d_dim)
-{
-
-  int i;
-  double dd;
-  dd=0.0;
-  for(i=0;i<d_dim;i++){
-    dd+=double(v1[i]-v2[i])*double(v1[i]-v2[i]);
-  }
-  
-  return ::sqrt(dd);
-}
-
 template <typename T>
 void mergeSort(ndarray::Array<T,1,1> const &insort, ndarray::Array<int,1,1> const &indices, int el){
 
@@ -150,9 +132,7 @@ int mergeScanner(ndarray::Array<T,1,1> const &m, ndarray::Array<int,1,1> const &
 #define INSTANTIATEDETAIL(T) \
         template void \
         gpn::mergeSort<T>(ndarray::Array<T,1,1> const &,\
-                          ndarray::Array<int,1,1> const &, int el); \
-        template T gpn::euclideanDistance<T>(ndarray::Array<const T,1,1> const &,\
-                                             ndarray::Array<const T,1,1> const &, int);
-
+                          ndarray::Array<int,1,1> const &, int el); 
+        
 INSTANTIATEDETAIL(double);
 
