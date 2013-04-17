@@ -46,7 +46,7 @@ namespace afw {
 namespace math {
 
 /**
-  * @class GaussianProcess Timer
+  * @class GaussianProcessTimer
   *
   * @brief This is a structure for keeping track of how long the interpolation methods spend on different parts of the interpolation
   *
@@ -88,7 +88,7 @@ struct GaussianProcessTimer{
   * @ingroup afw
 */
 template <typename T>
-class Covariogram : public lsst::daf::base::Citizen {
+class Covariogram : public lsst::daf::base::Citizen, private boost::noncopyable {
 public:
    virtual ~Covariogram();
    
@@ -127,7 +127,7 @@ public:
      * @brief print a brief description of the specific covariogram, its hyper parameters, and their present
      * values
    */
-   virtual void explainHyperParameters();
+   virtual void explainHyperParameters() const;
 
 protected:
     int _nHyperParameters;
@@ -154,7 +154,7 @@ public:
                           ndarray::Array<const T,1,1> const &
 			  ) const;
     
-    virtual void explainHyperParameters();
+    virtual void explainHyperParameters() const;
   
   
 };
@@ -181,7 +181,7 @@ public:
                           ndarray::Array<const T,1,1> const &
                           ) const;
     
-    virtual void explainHyperParameters();
+    virtual void explainHyperParameters() const;
 
 };
 
@@ -215,7 +215,7 @@ public:
 */
 
 template <typename T>
-class KdTree{
+class KdTree : private boost::noncopyable{
 
 
  public:
@@ -265,7 +265,7 @@ class KdTree{
      *
      * @param [in] dex -- the index of the point you want to remove from the tree
     */
-    void remove(int dex);
+    void removePoint(int dex);
     
     /**
      * @brief return the number of data points stored in the tree
@@ -413,7 +413,7 @@ class KdTree{
 */
 
 template <typename T>
-class GaussianProcess{
+class GaussianProcess : private boost::noncopyable{
 
 public:
   
@@ -463,13 +463,13 @@ public:
     /**
      * @brief this is the constructor to use in the case of a vector of input functions and an unbounded/unnormalized parameter space
      *
-     * @params [in] datain -- contains the data points, as in other constructors
+     * @param [in] datain -- contains the data points, as in other constructors
      *
-     * @params [in] ff -- contains the functions.  Each row of ff corresponds to a datapoint. 
+     * @param [in] ff -- contains the functions.  Each row of ff corresponds to a datapoint. 
      *  Each column corresponds to a function (ff[i][j] is the jth function associated with
      *  the ith data point)
      *
-     * @params [in] covarin -- is the input covariogram
+     * @param [in] covarin -- is the input covariogram
     */                
     GaussianProcess(
 		    ndarray::Array<T,2,2> const &datain,
@@ -479,17 +479,17 @@ public:
     /**
      * @brief this is the constructor to use in the case of a vector of input functions using minima and maxima in parameter space
      *
-     * @params [in] datain -- contains the data points, as in other constructors
+     * @param [in] datain -- contains the data points, as in other constructors
      *
-     * @params [in] mn -- contains the minimum allowed values of the parameters in parameter space
+     * @param [in] mn -- contains the minimum allowed values of the parameters in parameter space
      *
-     * @params [in] mx -- contains the maximum allowed values of the parameters in parameter space
+     * @param [in] mx -- contains the maximum allowed values of the parameters in parameter space
      *
-     * @params [in] ff -- contains the functions.  Each row of ff corresponds to a datapoint. 
+     * @param [in] ff -- contains the functions.  Each row of ff corresponds to a datapoint. 
      *  Each column corresponds to a function (ff[i][j] is the jth function associated with
      *  the ith data point)
      *
-     * @params [in] covarin -- is the input covariogram
+     * @param [in] covarin -- is the input covariogram
     */                    
     GaussianProcess(
                     ndarray::Array<T,2,2> const &datain,

@@ -27,7 +27,7 @@ import unittest
 import warnings
 import sys
 import numpy as np
-import gptest as gp
+import lsst.afw.math as gp
 import lsst.utils.tests as utilsTests
 
 class GaussianProcessTestCase(unittest.TestCase):
@@ -386,7 +386,7 @@ class GaussianProcessTestCase(unittest.TestCase):
     self.assertEqual(i,1)
     
     kds = gp.KdTreeD(data)
-    kds.remove(2)
+    kds.removePoint(2)
     i = kds.testTree()
     self.assertEqual(i,1)
     
@@ -400,8 +400,8 @@ class GaussianProcessTestCase(unittest.TestCase):
                 worstErr=dd
     self.assertTrue(worstErr<tol)
     
-    kd.remove(2)
-    kds.remove(10)
+    kd.removePoint(2)
+    kds.removePoint(10)
     i=kds.testTree()
     self.assertEqual(i,1)
     for i in range(99):
@@ -413,8 +413,8 @@ class GaussianProcessTestCase(unittest.TestCase):
                 worstErr=dd
     self.assertTrue(worstErr<tol)
     
-    kd.remove(10)
-    kds.remove(21)
+    kd.removePoint(10)
+    kds.removePoint(21)
     i=kds.testTree()
     self.assertEqual(i,1)
     for i in range(98):

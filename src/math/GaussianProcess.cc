@@ -528,7 +528,7 @@ int KdTree<T>::_walkUpTree(int target,
 }
 
 template <typename T>
-void KdTree<T>::remove(int target){
+void KdTree<T>::removePoint(int target){
 
   int nl,nr,i,j,k,side;
   int root;
@@ -1785,7 +1785,7 @@ void GaussianProcess<T>::removePoint(int dex){
   
   int i,j;
   
-  _kdTreePtr->remove(dex);
+  _kdTreePtr->removePoint(dex);
   
   for(i=dex;i<_pts;i++){
       for(j=0;j<_nFunctions;j++){
@@ -1857,7 +1857,7 @@ T Covariogram<T>::operator()(ndarray::Array<const T,1,1> const &p1,
 }
 
 template <typename T>
-void Covariogram<T>::explainHyperParameters(){
+void Covariogram<T>::explainHyperParameters() const{
     std::cout<<"\nThis is a base class Covariogram; it won't work\n";
 }
 
@@ -1900,7 +1900,7 @@ T SquaredExpCovariogram<T>::operator()(
 }
 
 template <typename T>
-void SquaredExpCovariogram<T>::explainHyperParameters(){
+void SquaredExpCovariogram<T>::explainHyperParameters() const{
     std::cout<<"\nThis is the squared exponential covariogram\n";
     std::cout<<"_nHyperParameters is "<<Covariogram<T>::_nHyperParameters<<"\n";
     std::cout<<"The 0th hyper parameter is the squared length scale ell^2\n";
@@ -1955,7 +1955,7 @@ T NeuralNetCovariogram<T>::operator()(ndarray::Array<const T,1,1> const &p1,
 }
 
 template <typename T>
-void NeuralNetCovariogram<T>::explainHyperParameters()
+void NeuralNetCovariogram<T>::explainHyperParameters() const
 {
     std::cout<<"\nThis is the covariogram of a neural network with infinite hidden layers\n";
     std::cout<<"See Rasmussen and Williams (2006) http://www.gaussianprocess.org/gpml/  equation 4.29\n";
