@@ -234,11 +234,11 @@ class KdTree : private boost::noncopyable{
     /**
      * @brief Find the nearest neighbors of a point
      *
-     * @param [in,out] neighdex -- this is where the indices of the nearest neighbor points will be stored
+     * @param [out] neighdex -- this is where the indices of the nearest neighbor points will be stored
      *
-     * @param [in,out] dd -- this is where the distances to the nearest neighbors will be stored
+     * @param [out] dd -- this is where the distances to the nearest neighbors will be stored
      *
-     * @param [in] v -- the point whose neighbos you want to find
+     * @param [in] v -- the point whose neighbors you want to find
      *
      * @param [in] n_nn -- the number of nearest neighbors you want to find
      *
@@ -274,7 +274,7 @@ class KdTree : private boost::noncopyable{
    /**
      * @brief Return the _tree information for a given data point
      *
-     * @param [in,out] v -- the array in which to store the entry from _tree
+     * @param [out] v -- the array in which to store the entry from _tree
      *
      * @param [in] dex -- the index of the node whose information you are requesting
    */
@@ -527,7 +527,7 @@ public:
     /**
      * @brief This method will interpolate the function on a data point for purposes of optimizing hyper parameters
      *
-     * @param [out] variance -- a one-dimensional ndarray.  The value of the variance predicted by the Gaussina process will be stored in the zeroth element
+     * @param [out] variance -- a one-dimensional ndarray.  The value of the variance predicted by the Gaussian process will be stored in the zeroth element
      *
      * @param [in] dex -- the index of the point you wish to self interpolate
      *
@@ -562,11 +562,11 @@ public:
      * @brief Interpolate a list of query points using all of the input data (rather than nearest neighbors)
      *
      *
-     * @param [out] mu a 1-dimensional ndarray where the interpolated function values will be stored
+     * @param [out] mu -- a 1-dimensional ndarray where the interpolated function values will be stored
      *
-     * @param [out] variance a 2-dimensional ndarray where the corresponding variances in the function value will be stored
+     * @param [out] variance -- a 1-dimensional ndarray where the corresponding variances in the function value will be stored
      *
-     * @param [in] queries a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
+     * @param [in] queries -- a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
      *
      * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
      * Be wary of using it in the case where _pts is very large.
@@ -584,9 +584,9 @@ public:
     /**
      * @brief Interpolate a list of points using all of the data. Do not return variances for the interpolation.
      *
-     * @param [out] mu a 1-dimensional ndarray where the interpolated function values will be stored
+     * @param [out] mu -- a 1-dimensional ndarray where the interpolated function values will be stored
      *
-     * @param [in] queries a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
+     * @param [in] queries -- a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
      *
      * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
      * Be wary of using it in the case where _pts is very large.
@@ -615,9 +615,9 @@ public:
     /**
      * @brief Add a point to the pool of data used by GaussianProcess for interpolation
      *
-     * @param [in] vin a one-dimensional ndarray storing the point in parameter space that you are adding
+     * @param [in] vin -- a one-dimensional ndarray storing the point in parameter space that you are adding
      *
-     * @param [in]  f the value of the function at that point
+     * @param [in]  f -- the value of the function at that point
      *
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree, which will slow down nearest neighbor
      * searches
@@ -645,7 +645,7 @@ public:
     /**
      * @brief Assign a value to the Kriging paramter
      *
-     * @param [in] kk the value assigned to the Kriging parameters
+     * @param [in] kk -- the value assigned to the Kriging parameters
      *
     */
     void setKrigingParameter(T kk);
@@ -661,7 +661,7 @@ public:
     /**
      * @brief set the value of the hyperparameter _lambda
      *
-     * @param [in] lambda the value you want assigned to _lambda
+     * @param [in] lambda -- the value you want assigned to _lambda
      *
      * _lambda is a parameter meant to represent the characteristic variance
      * of the function you are interpolating.  Currently, it is a scalar such that
