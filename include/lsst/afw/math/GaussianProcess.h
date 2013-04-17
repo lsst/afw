@@ -249,8 +249,7 @@ class KdTree : private boost::noncopyable{
     void findNeighbors(ndarray::Array<int,1,1> neighdex, 
                        ndarray::Array<double,1,1> dd,
                        ndarray::Array<const T,1,1> const &v, 
-		       int n_nn
-		       );
+		       int n_nn) const;
     
     
     /**
@@ -270,7 +269,7 @@ class KdTree : private boost::noncopyable{
     /**
      * @brief return the number of data points stored in the tree
     */
-    int getPoints();
+    int getPoints() const;
     
    /**
      * @brief Return the _tree information for a given data point
@@ -279,23 +278,23 @@ class KdTree : private boost::noncopyable{
      *
      * @param [in] dex -- the index of the node whose information you are requesting
    */
-    void getTreeNode(ndarray::Array<int,1,1> const &v,int dex);
+    void getTreeNode(ndarray::Array<int,1,1> const &v,int dex) const;
     
    /**
      * @brief Make sure that the tree is properly constructed.  Returns 1 of it is.  Return zero if not.
    */
-    int testTree();
+    int testTree() const;
      
  private:
     ndarray::Array<int,2,2> _tree;
     ndarray::Array<int,1,1> _inn;
    
     int _pts,_dimensions,_room,_roomStep,_masterParent;
-    int _neighborsFound,_neighborsWanted;
+    mutable int _neighborsFound,_neighborsWanted;
     ndarray::Array<T,1,1> _toSort;
     
-    ndarray::Array<double,1,1> _neighborDistances;
-    ndarray::Array<int,1,1> _neighborCandidates;
+    mutable ndarray::Array<double,1,1> _neighborDistances;
+    mutable ndarray::Array<int,1,1> _neighborCandidates;
        
     /**
      * @brief Find the daughter point of a node in the tree and segregate the points around it
@@ -311,15 +310,14 @@ class KdTree : private boost::noncopyable{
     void _organize(ndarray::Array<int,1,1> const &use,
                    int ct,
 		   int parent,
-		   int dir
-		   );
+		   int dir);
        
     /**
       * @brief Find the point already in the tree that would be the parent of a point not in the tree
       *
       * @param [in] v -- the points whose prospective parent you want to find
     */
-    int _findNode(ndarray::Array<const T,1,1> const &v);
+    int _findNode(ndarray::Array<const T,1,1> const &v) const;
     
    /**
     * @brief This method actually looks for the neighbors, determining whether or not to descend branches of the tree
@@ -337,8 +335,7 @@ class KdTree : private boost::noncopyable{
    */
     void _lookForNeighbors(ndarray::Array<const T,1,1> const &v,
                            int consider,
-			   int from
-			   );
+			   int from) const;
     
     /**
      * @brief A method to make sure that every data point in the tree is in the correct relation to its parents
@@ -351,8 +348,7 @@ class KdTree : private boost::noncopyable{
     */
     int _walkUpTree(int target,
                    int dir,
-		   int root
-		   );
+		   int root) const;
     
     /**
       * @brief A method which counts the number of nodes descended from a given node (used by remove(int))
@@ -361,7 +357,7 @@ class KdTree : private boost::noncopyable{
       *
       * @param [in,out] *ct -- keeps track of how many nodes you have encountered as you descend the tree
     */
-    void _count(int where,int *ct);
+    void _count(int where,int *ct) const;
     
     /**
      * @brief Descend the tree from a node which has been removed, reassigning severed nodes as you go
@@ -381,7 +377,7 @@ class KdTree : private boost::noncopyable{
      * @brief calculate the Euclidean distance between the points p1 and p2
     */
     double _distance(ndarray::Array<const T,1,1> const &p1,
-                     ndarray::Array<const T,1,1> const &p2);
+                     ndarray::Array<const T,1,1> const &p2) const;
     
  
     
@@ -431,11 +427,9 @@ public:
       *
       * @param [in] covarin -- is the input covariogram
     */
-    GaussianProcess(
-		    ndarray::Array<T,2,2> const &datain,
+    GaussianProcess(ndarray::Array<T,2,2> const &datain,
 		    ndarray::Array<T,1,1> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin
-		    );
+                    boost::shared_ptr< Covariogram<T> > const &covarin);
      
     /**
      * @brief This is the constructor you call if you want the positions of your data points normalized by the span of each dimension
@@ -453,13 +447,11 @@ public:
      *
      *Note: the member variable _useMaxMin will allow the code to remember which constructor you invoked
     */
-    GaussianProcess(
-                    ndarray::Array<T,2,2> const &datain,
+    GaussianProcess(ndarray::Array<T,2,2> const &datain,
 		    ndarray::Array<T,1,1> const &mn,
 		    ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,1,1> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin
-		    );
+                    boost::shared_ptr< Covariogram<T> > const &covarin);
     /**
      * @brief this is the constructor to use in the case of a vector of input functions and an unbounded/unnormalized parameter space
      *
@@ -471,11 +463,9 @@ public:
      *
      * @param [in] covarin -- is the input covariogram
     */                
-    GaussianProcess(
-		    ndarray::Array<T,2,2> const &datain,
+    GaussianProcess(ndarray::Array<T,2,2> const &datain,
 		    ndarray::Array<T,2,2> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin
-		    );
+                    boost::shared_ptr< Covariogram<T> > const &covarin);
     /**
      * @brief this is the constructor to use in the case of a vector of input functions using minima and maxima in parameter space
      *
@@ -491,13 +481,11 @@ public:
      *
      * @param [in] covarin -- is the input covariogram
     */                    
-    GaussianProcess(
-                    ndarray::Array<T,2,2> const &datain,
+    GaussianProcess(ndarray::Array<T,2,2> const &datain,
 		    ndarray::Array<T,1,1> const &mn,
 		    ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,2,2> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin
-		    );
+                    boost::shared_ptr< Covariogram<T> > const &covarin);
      
     /**
      @brief Interpolate the function value at one point using a specified number of nearest neighbors
@@ -515,16 +503,17 @@ public:
     */
     T interpolate(ndarray::Array<T,1,1> variance,
                   ndarray::Array<T,1,1> const &vin,
-		  int numberOfNeighbors
-		  );
+		  int numberOfNeighbors) const;
     /**
      @brief This is the version of GaussianProcess::interpolate for a vector of functions.
      *
-     * @param [out] mu will store the vector of interpolated function values
+     * @param [out] mu -- will store the vector of interpolated function values
      *
-     * @param [out] variance will store the vector of interpolated variances on mu
+     * @param [out] variance -- will store the vector of interpolated variances on mu
      *
-     * @param numberOfNeighbors is the number of nearest neighbor points to use in the interpolation
+     * @param [in] vin -- the point at which you wish to interpolate the functions
+     *
+     * @param [in] numberOfNeighbors -- is the number of nearest neighbor points to use in the interpolation
      *
      * note: Because the variance currently only depends on the covariance function and the covariance
      * function currently does not include any terms relating different elements of mu to each other,
@@ -533,35 +522,41 @@ public:
     void interpolate(ndarray::Array<T,1,1> mu,
                      ndarray::Array<T,1,1> variance,
                      ndarray::Array<T,1,1> const &vin,
-                     int numberOfNeighbors
-                     );
+                     int numberOfNeighbors) const;
     
     /**
      * @brief This method will interpolate the function on a data point for purposes of optimizing hyper parameters
      *
-     * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussina process will be stored in the zeroth element
+     * @param [out] variance -- a one-dimensional ndarray.  The value of the variance predicted by the Gaussina process will be stored in the zeroth element
      *
-     * @param [in] dex the index of the point you wish to self interpolate
+     * @param [in] dex -- the index of the point you wish to self interpolate
      *
-     * @param [in] numberOfNeighbors the number of nearest neighbors to be used in the interpolation
+     * @param [in] numberOfNeighbors -- the number of nearest neighbors to be used in the interpolation
      *
      * The interpolated value of the function will be returned at the end of this method
      *
      * This method ignores the point on which you are interpolating when requesting nearest neighbors
      *
     */
-    T selfInterpolate(ndarray::Array<T,1,1> variance, int dex,
-                      int numberOfNeighbors);
+    T selfInterpolate(ndarray::Array<T,1,1> variance, 
+                      int dex,
+                      int numberOfNeighbors) const;
    
     /**
      * @brief The version of selfInterpolate called for a vector of functions
      *
-     * @param [in] mu -- this is where the interpolated function values will be stored
+     * @param [out] mu -- this is where the interpolated function values will be stored
      *
-     * See the other selfInterpolate method for definitions of the other parameters
+     * @param [out] variance -- the variance on mu will be stored here
+     *
+     * @param [in] dex -- the index of the point you wish to interpolate
+     *
+     * @param [in] numberOfNeighbors -- the number of nearest neighbors to use in the interpolation
     */
-    void selfInterpolate(ndarray::Array<T,1,1> mu,ndarray::Array<T,1,1> variance,
-                         int dex, int numberOfNeighbors);
+    void selfInterpolate(ndarray::Array<T,1,1> mu,
+                         ndarray::Array<T,1,1> variance,
+                         int dex, 
+                         int numberOfNeighbors) const;
 
     /**
      * @brief Interpolate a list of query points using all of the input data (rather than nearest neighbors)
@@ -582,7 +577,9 @@ public:
      * 189 data points and 1 million queries.
      *
     */
-    void batchInterpolate(ndarray::Array<T,1,1> mu,ndarray::Array<T,1,1> variance,ndarray::Array<T,2,2> const &queries);
+    void batchInterpolate(ndarray::Array<T,1,1> mu,
+                          ndarray::Array<T,1,1> variance,
+                          ndarray::Array<T,2,2> const &queries) const;
      
     /**
      * @brief Interpolate a list of points using all of the data. Do not return variances for the interpolation.
@@ -598,17 +595,21 @@ public:
      * that does return variances (timing done on a case with 189 data points and 1 million query points).
      *
     */
-    void batchInterpolate(ndarray::Array<T,1,1> mu,ndarray::Array<T,2,2> const &queries);
+    void batchInterpolate(ndarray::Array<T,1,1> mu,
+                          ndarray::Array<T,2,2> const &queries) const;
     
     /**
      * @brief This is the version of batchInterpolate (with variances) that is called for a vector of functions
     */
-    void batchInterpolate(ndarray::Array<T,2,2> mu,ndarray::Array<T,2,2> variance,ndarray::Array<T,2,2> const &queries);
+    void batchInterpolate(ndarray::Array<T,2,2> mu,
+                          ndarray::Array<T,2,2> variance,
+                          ndarray::Array<T,2,2> const &queries) const;
 
     /**
      * @brief This is the version of batchInterpolate (without variances) that is called for a vector of functions
     */
-    void batchInterpolate(ndarray::Array<T,2,2> mu,ndarray::Array<T,2,2> const &queries);
+    void batchInterpolate(ndarray::Array<T,2,2> mu,
+                          ndarray::Array<T,2,2> const &queries) const;
 
 
     /**
@@ -660,7 +661,7 @@ public:
     /**
      * @brief set the value of the hyperparameter _lambda
      *
-     * @param [in] ll the value you want assigned to _lambda
+     * @param [in] lambda the value you want assigned to _lambda
      *
      * _lambda is a parameter meant to represent the characteristic variance
      * of the function you are interpolating.  Currently, it is a scalar such that
@@ -683,7 +684,7 @@ public:
      *
      * print ticktock.eigenTime
     */
-    GaussianProcessTimer& getTimes();
+    GaussianProcessTimer& getTimes() const;
      
    
      
@@ -699,7 +700,7 @@ public:
     KdTree<T> *_kdTreePtr;
     
     boost::shared_ptr< Covariogram<T> > _covariogram;
-    GaussianProcessTimer _timer;
+    mutable GaussianProcessTimer _timer;
 
 };
 

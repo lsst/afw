@@ -77,27 +77,27 @@ KdTree<T>::KdTree(ndarray::Array<T,2,2> const &dt)
 
   int i;
   
-  _pts=dt.template getSize<0>();
-  _dimensions=dt.template getSize<1>();
+    _pts=dt.template getSize<0>();
+    _dimensions=dt.template getSize<1>();
   
-  //buffers to use when first building the tree
-  _toSort=allocate(ndarray::makeVector(_pts));
-  _inn=allocate(ndarray::makeVector(_pts));
+    //buffers to use when first building the tree
+    _toSort=allocate(ndarray::makeVector(_pts));
+    _inn=allocate(ndarray::makeVector(_pts));
 
-  _roomStep=5000;
-  _room=_pts;
+    _roomStep=5000;
+    _room=_pts;
   
-  data=allocate(ndarray::makeVector(_room,_dimensions));
+    data=allocate(ndarray::makeVector(_room,_dimensions));
   
-  data.deep()=dt;
+    data.deep()=dt;
   
-  _tree=allocate(ndarray::makeVector(_room,4));
+    _tree=allocate(ndarray::makeVector(_room,4));
  
-  for(i=0;i<_pts;i++){
-    _inn[i]=i;
-  }
+    for(i=0;i<_pts;i++){
+      _inn[i]=i;
+    }
   
-  _organize(_inn,_pts,-1,-1);
+    _organize(_inn,_pts,-1,-1);
   
 }
 
@@ -105,191 +105,177 @@ template<typename T>
 void KdTree<T>::findNeighbors(ndarray::Array<int,1,1> neighdex,
                               ndarray::Array<double,1,1> dd,
                               ndarray::Array<const T,1,1> const &v,
-                              int n_nn
-                              )
+                              int n_nn) const
 {  
   int i,start;
  
-  ndarray::Array<int,1,1> order;
-  ndarray::Array<double,1,1> dorder;  
+    ndarray::Array<int,1,1> order;
+    ndarray::Array<double,1,1> dorder;  
   
-  order=allocate(ndarray::makeVector(3));
-  dorder=allocate(ndarray::makeVector(3));
+    order=allocate(ndarray::makeVector(3));
+    dorder=allocate(ndarray::makeVector(3));
   
-  _neighborCandidates=allocate(ndarray::makeVector(n_nn));
-  _neighborDistances=allocate(ndarray::makeVector(n_nn));
-  _neighborsFound=0;
-  _neighborsWanted=n_nn;
+    _neighborCandidates=allocate(ndarray::makeVector(n_nn));
+    _neighborDistances=allocate(ndarray::makeVector(n_nn));
+    _neighborsFound=0;
+    _neighborsWanted=n_nn;
   
-  for(i=0;i<n_nn;i++)_neighborDistances[i]=-1.0;
+    for(i=0;i<n_nn;i++)_neighborDistances[i]=-1.0;
   
-  start=_findNode(v);
+    start=_findNode(v);
 
-  _neighborDistances[0]=_distance(v,data[start]);
-  _neighborCandidates[0]=start;
-  _neighborsFound=1;
+    _neighborDistances[0]=_distance(v,data[start]);
+    _neighborCandidates[0]=start;
+    _neighborsFound=1;
  
   
-  if(_tree[start][3]>=0){
-    dorder[2]=_distance(v,data[_tree[start][3]]);
-  
-  }
-  else dorder[2]=-1.0;
-  order[2]=3;
-  
-  if(_tree[start][1]>=0){
-    dorder[0]=_distance(v,data[_tree[start][1]]);
-  
-  }
-  else dorder[0]=-1.0;
-  order[0]=1;
-  
-  if(_tree[start][2]>=0){
-    dorder[1]=_distance(v,data[_tree[start][2]]);
-  
-  }
-  else dorder[1]=-1.0;
-  order[1]=2;
-  
-  GPfn::mergeSort<double>(dorder,order,3);
-  
-  //search the branches in ascending order of distance from the test point
-  //the idea being that if we look at branches that are closer first, we will
-  //be more likely to rule out points quicker, speeding the search
-  for(i=0;i<3;i++){
-    if(_tree[start][order[i]]>=0){
-      _lookForNeighbors(v,_tree[start][order[i]],start);
+    if(_tree[start][3]>=0){
+        dorder[2]=_distance(v,data[_tree[start][3]]);
     }
-  }
+    else dorder[2]=-1.0;
+    order[2]=3;
   
-  for(i=0;i<n_nn;i++){
-    neighdex[i]=_neighborCandidates[i];
-    dd[i]=_neighborDistances[i];
-  }
+    if(_tree[start][1]>=0){
+        dorder[0]=_distance(v,data[_tree[start][1]]);
+    }
+    else dorder[0]=-1.0;
+    order[0]=1;
   
- 
+    if(_tree[start][2]>=0){
+        dorder[1]=_distance(v,data[_tree[start][2]]);
+    }  
+    else dorder[1]=-1.0;
+    order[1]=2;
   
+   GPfn::mergeSort<double>(dorder,order,3);
+  
+    //search the branches in ascending order of distance from the test point
+    //the idea being that if we look at branches that are closer first, we will
+    //be more likely to rule out points quicker, speeding the search
+    for(i=0;i<3;i++){
+        if(_tree[start][order[i]]>=0){
+            _lookForNeighbors(v,_tree[start][order[i]],start);
+        }
+    }
+  
+    for(i=0;i<n_nn;i++){
+        neighdex[i]=_neighborCandidates[i];
+        dd[i]=_neighborDistances[i];
+    }
 }
 
 template <typename T>
-void KdTree<T>::addPoint(ndarray::Array<const T,1,1> const &v){
+void KdTree<T>::addPoint(ndarray::Array<const T,1,1> const &v)
+{
 
-  int i,j,node,dim;
+    int i,j,node,dim;
   
-  node=_findNode(v);
-  dim=_tree[node][0]+1;
-  if(dim==_dimensions)dim=0;
+    node=_findNode(v);
+    dim=_tree[node][0]+1;
+    if(dim==_dimensions)dim=0;
   
-  if(_pts==_room){
+    if(_pts==_room){
     
-    ndarray::Array<T,2,2> dbuff=allocate(ndarray::makeVector(_pts,_dimensions));
-  
-    
-    ndarray::Array<int,2,2> tbuff=allocate(ndarray::makeVector(_pts,4));
-  
-   
-   dbuff.deep()=data;
-   tbuff.deep()=_tree;
+      ndarray::Array<T,2,2> dbuff=allocate(ndarray::makeVector(_pts,_dimensions));
+      ndarray::Array<int,2,2> tbuff=allocate(ndarray::makeVector(_pts,4));
 
-    _room+=_roomStep;
+     dbuff.deep()=data;
+     tbuff.deep()=_tree;
+
+      _room+=_roomStep;
    
-    _tree=allocate(ndarray::makeVector(_room,4)); 
-    data=allocate(ndarray::makeVector(_room,_dimensions));
+      _tree=allocate(ndarray::makeVector(_room,4)); 
+      data=allocate(ndarray::makeVector(_room,_dimensions));
     
     
+      for(i=0;i<_pts;i++){
+          for(j=0;j<_dimensions;j++)data[i][j]=dbuff[i][j];
+          for(j=0;j<4;j++)_tree[i][j]=tbuff[i][j];
+      }
+    }
+  
+    _tree[_pts][0]=dim;
+    _tree[_pts][3]=node;
+    i=_tree[node][0];
+  
+    if(data[node][i]>v[i]){
+        if(_tree[node][1]>=0){
+            std::cout<<"WARNING adding to a piece of tree that already exists 1\n";
+            std::cout<<"node "<<node<<" "<<_tree[node][1]<<" "<<data[node][i]<<" "<<v[i]<<"\n";
+            std::cout<<"pts "<<_pts<<"\n";
+        }
+        _tree[node][1]=_pts;
+    }
+    else{
+        if(_tree[node][2]>=0){
+            std::cout<<"WARNING adding to a piece of tree that already exists 2\n";
+            std::cout<<"node "<<node<<" "<<_tree[node][2]<<" "<<data[node][i]<<" "<<v[i]<<"\n"; 
+            std::cout<<"pts "<<_pts<<"\n";
+        }
+        _tree[node][2]=_pts;
+    }
+    _tree[_pts][1]=-1;
+    _tree[_pts][2]=-1;
+    for(i=0;i<_dimensions;i++){
+        data[_pts][i]=v[i];
+    }
+  
+    _pts++;
+}
+
+template <typename T>
+int KdTree<T>::getPoints() const
+{
+    return _pts;
+}
+
+template <typename T>
+void KdTree<T>::getTreeNode(ndarray::Array<int,1,1> const &v, int dex) const
+{
+    v[0]=_tree[dex][0];
+    v[1]=_tree[dex][1];
+    v[2]=_tree[dex][2];
+    v[3]=_tree[dex][3];
+}
+
+template <typename T>
+int KdTree<T>::testTree() const{
+
+    int i,j,*isparent,output;
+  
+    j=0;
     for(i=0;i<_pts;i++){
-      for(j=0;j<_dimensions;j++)data[i][j]=dbuff[i][j];
-      for(j=0;j<4;j++)_tree[i][j]=tbuff[i][j];
-   
+        if(_tree[i][3]<0)j++;
     }
-
-  }
-  
-  _tree[_pts][0]=dim;
-  _tree[_pts][3]=node;
-  i=_tree[node][0];
-  
-  if(data[node][i]>v[i]){
-    if(_tree[node][1]>=0){
-      std::cout<<"WARNING adding to a piece of tree that already exists 1\n";
-      std::cout<<"node "<<node<<" "<<_tree[node][1]<<" "<<data[node][i]<<" "<<v[i]<<"\n";
-      std::cout<<"pts "<<_pts<<"\n";
-    }
-    _tree[node][1]=_pts;
-  }
-  else{
-    if(_tree[node][2]>=0){
-      std::cout<<"WARNING adding to a piece of tree that already exists 2\n";
-      std::cout<<"node "<<node<<" "<<_tree[node][2]<<" "<<data[node][i]<<" "<<v[i]<<"\n"; 
-      std::cout<<"pts "<<_pts<<"\n";
-    }
-    _tree[node][2]=_pts;
-  }
-  _tree[_pts][1]=-1;
-  _tree[_pts][2]=-1;
-  for(i=0;i<_dimensions;i++){
-    data[_pts][i]=v[i];
-  }
-  
-  _pts++;
-  
-}
-
-template <typename T>
-int KdTree<T>::getPoints(){
-  return _pts;
-}
-
-template <typename T>
-void KdTree<T>::getTreeNode(ndarray::Array<int,1,1> const &v, int dex){
-  v[0]=_tree[dex][0];
-  v[1]=_tree[dex][1];
-  v[2]=_tree[dex][2];
-  v[3]=_tree[dex][3];
-}
-
-template <typename T>
-int KdTree<T>::testTree(){
-
-  int i,j,*isparent,output;
-  
-  j=0;
-  for(i=0;i<_pts;i++){
-    if(_tree[i][3]<0)j++;
-  }
-  if(j!=1){
-    std::cout<<"_tree FAILURE "<<j<<" _masterParents\n";
-    return 0;
-  }
-  
-  isparent=new int[_pts];
-  for(i=0;i<_pts;i++)isparent[i]=0;
-  for(i=0;i<_pts;i++){
-    isparent[_tree[i][3]]++;
-  }
-  for(i=0;i<_pts;i++){
-    if(isparent[i]>2){ 
-      std::cout<<"_tree FAILURE "<<i<<" is parent to "<<isparent[i]<<"\n";
-      return 0;
-    }
-  }
-  
-  delete [] isparent;
-  
-  for(i=0;i<_pts;i++){
-    
-    if(_tree[i][3]>=0){
-      if(_tree[_tree[i][3]][1]==i)j=1;
-      else j=2;
-
-      output=_walkUpTree(_tree[i][3],j,i);
-      if(output!=_masterParent)return 0;
+    if(j!=1){
+        std::cout<<"_tree FAILURE "<<j<<" _masterParents\n";
+        return 0;
     }
   
-  }
-  //std::cout<<"done with test of KdTree\n";
-  if(output!=_masterParent) return 0;
-  else return 1;
+    isparent=new int[_pts];
+    for(i=0;i<_pts;i++)isparent[i]=0;
+    for(i=0;i<_pts;i++){
+        isparent[_tree[i][3]]++;
+    }
+    for(i=0;i<_pts;i++){
+        if(isparent[i]>2){ 
+            std::cout<<"_tree FAILURE "<<i<<" is parent to "<<isparent[i]<<"\n";
+            return 0;
+        }
+    }
+  
+    delete [] isparent;
+  
+    for(i=0;i<_pts;i++){
+        if(_tree[i][3]>=0){
+            if(_tree[_tree[i][3]][1]==i)j=1;
+            else j=2;
+            output=_walkUpTree(_tree[i][3],j,i);
+            if(output!=_masterParent)return 0;
+        }
+    }  
+    if(output!=_masterParent) return 0;
+    else return 1;
 }
 
 template <typename T>
@@ -300,394 +286,376 @@ void KdTree<T>::_organize(ndarray::Array<int,1,1> const &use,
                           )
 {
     
-  int i,j,k,l,idim,daughter;
-  T mean,var,varbest;
+    int i,j,k,l,idim,daughter;
+    T mean,var,varbest;
    
-  if(ct>1){
-  //below is code to choose the dimension on which the available points
-  //have the greates variance.  This will be the dimension on which
-  //the daughter node splits the data
-    for(i=0;i<_dimensions;i++){
-      mean=0.0;
-      var=0.0;
-      for(j=0;j<ct;j++){
-        mean+=data[use[j]][i];
-        var+=data[use[j]][i]*data[use[j]][i];
-      }
-      mean=mean/double(ct);
-      var=var/double(ct)-mean*mean;
-      if(i==0 || var>varbest || (var==varbest && parent>=0 && i>_tree[parent][0])){
-        idim=i;
-        varbest=var;
-      }
-    
-    }//for(i=0;i<_dimensions;i++)
+    if(ct>1){
+      //below is code to choose the dimension on which the available points
+      //have the greates variance.  This will be the dimension on which
+      //the daughter node splits the data
+        for(i=0;i<_dimensions;i++){
+            mean=0.0;
+            var=0.0;
+            for(j=0;j<ct;j++){
+                mean+=data[use[j]][i];
+                var+=data[use[j]][i]*data[use[j]][i];
+            }
+            mean=mean/double(ct);
+            var=var/double(ct)-mean*mean;
+            if(i==0 || var>varbest || (var==varbest && parent>=0 && i>_tree[parent][0])){
+                idim=i;
+                varbest=var;
+            }    
+        }//for(i=0;i<_dimensions;i++)
   
-    for(i=0;i<ct;i++){
-      _toSort[i]=data[use[i]][idim];
-    }
+        for(i=0;i<ct;i++){
+            _toSort[i]=data[use[i]][idim];
+        }
   
-    GPfn::mergeSort<T>(_toSort,use,ct);
+        GPfn::mergeSort<T>(_toSort,use,ct);
     
-    k=ct/2;
-    l=ct/2;
-    while(k>0 && _toSort[k]==_toSort[k-1])k--;
+        k=ct/2;
+        l=ct/2;
+        while(k>0 && _toSort[k]==_toSort[k-1])k--;
    
-    while(l<ct-1 && _toSort[l]==_toSort[ct/2])l++;
+        while(l<ct-1 && _toSort[l]==_toSort[ct/2])l++;
  
-    if((ct/2-k)<(l-ct/2) || l==ct-1)j=k;
-    else j=l;;
+        if((ct/2-k)<(l-ct/2) || l==ct-1)j=k;
+        else j=l;;
     
-    daughter=use[j];
+        daughter=use[j];
 
-    if(parent>=0)_tree[parent][dir]=daughter;
-    _tree[daughter][0]=idim;
-    _tree[daughter][3]=parent;
+        if(parent>=0)_tree[parent][dir]=daughter;
+        _tree[daughter][0]=idim;
+        _tree[daughter][3]=parent;
 
-    if(j<ct-1){
-      //_organize(&use[j+1],ct-j-1,daughter,2);
-      _organize(use[ndarray::view(j+1,use.getSize<0>())],ct-j-1,daughter,2);
-    }
-    else _tree[daughter][2]=-1;
+        if(j<ct-1){
+            _organize(use[ndarray::view(j+1,use.getSize<0>())],ct-j-1,daughter,2);
+        }
+        else _tree[daughter][2]=-1;
   
-    if(j>0){
-      _organize(use,j,daughter,1);
-    }
-    else _tree[daughter][1]=-1;
+        if(j>0){
+            _organize(use,j,daughter,1);
+        }
+        else _tree[daughter][1]=-1;
     
-  }//if(ct>1)
-  else{
-    daughter=use[0];
-    if(parent>=0)_tree[parent][dir]=daughter;
-    idim=_tree[parent][0]+1;
-    if(idim>=_dimensions)idim=0;
-    _tree[daughter][0]=idim;
-    _tree[daughter][1]=-1;
-    _tree[daughter][2]=-1;
-    _tree[daughter][3]=parent;
+    }//if(ct>1)
+    else{
+        daughter=use[0];
+        if(parent>=0)_tree[parent][dir]=daughter;
+        idim=_tree[parent][0]+1;
+        if(idim>=_dimensions)idim=0;
+        _tree[daughter][0]=idim;
+        _tree[daughter][1]=-1;
+        _tree[daughter][2]=-1;
+        _tree[daughter][3]=parent;
     
-  }
+    }
   
-  if(parent==-1){
-    _masterParent=daughter;
-  }
-  
+    if(parent==-1){
+        _masterParent=daughter;
+    }
 }
 
 template <typename T>
-int KdTree<T>::_findNode(ndarray::Array<const T,1,1> const &v){
+int KdTree<T>::_findNode(ndarray::Array<const T,1,1> const &v) const
+{
+    int consider,next,dim;
   
-  int consider,next,dim;
+    dim=_tree[_masterParent][0];
   
-  dim=_tree[_masterParent][0];
+    if(v[dim]<data[_masterParent][dim])consider=_tree[_masterParent][1];
+    else consider=_tree[_masterParent][2];
   
-  if(v[dim]<data[_masterParent][dim])consider=_tree[_masterParent][1];
-  else consider=_tree[_masterParent][2];
+    next=consider;
   
-  next=consider;
-  
-  while(next>=0){
+    while(next>=0){
     
-    consider=next;
+        consider=next;
     
-    dim=_tree[consider][0];
-    if(v[dim]<data[consider][dim])next=_tree[consider][1];
-    else next=_tree[consider][2];
+        dim=_tree[consider][0];
+        if(v[dim]<data[consider][dim])next=_tree[consider][1];
+        else next=_tree[consider][2];
   
-  }
+    }
   
-  return consider;
-  
+    return consider;
 }
 
 template<typename T>
 void KdTree<T>::_lookForNeighbors(ndarray::Array<const T,1,1> const &v, 
                                   int consider, 
-				  int from)
+				  int from) const
 {
 
-  int i,j,going;
-  double dd;
+    int i,j,going;
+    double dd;
 
-  dd=_distance(v,data[consider]);
+    dd=_distance(v,data[consider]);
   
-  if(_neighborsFound<_neighborsWanted || dd<_neighborDistances[_neighborsWanted-1]){
-    for(j=0;j<_neighborsFound && _neighborDistances[j]<dd;j++);
+    if(_neighborsFound<_neighborsWanted || dd<_neighborDistances[_neighborsWanted-1]){
+        for(j=0;j<_neighborsFound && _neighborDistances[j]<dd;j++);
       
-    for(i=_neighborsWanted-1;i>j;i--){
-      _neighborDistances[i]=_neighborDistances[i-1];
-      _neighborCandidates[i]=_neighborCandidates[i-1];
+        for(i=_neighborsWanted-1;i>j;i--){
+            _neighborDistances[i]=_neighborDistances[i-1];
+            _neighborCandidates[i]=_neighborCandidates[i-1];
+        }
+    
+        _neighborDistances[j]=dd;
+        _neighborCandidates[j]=consider;
+    
+        if(_neighborsFound<_neighborsWanted)_neighborsFound++;
     }
-    
-    _neighborDistances[j]=dd;
-    _neighborCandidates[j]=consider;
-    
-    if(_neighborsFound<_neighborsWanted)_neighborsFound++;
-  }
   
-  if(_tree[consider][3]==from){
+    if(_tree[consider][3]==from){
     //you came here from the parent
     
-    i=_tree[consider][0];
-    dd=v[i]-data[consider][i];
-    if((dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted) \
-    && _tree[consider][1]>=0){
-      _lookForNeighbors(v,_tree[consider][1],consider);
-    }
+        i=_tree[consider][0];
+        dd=v[i]-data[consider][i];
+        if((dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted) 
+            && _tree[consider][1]>=0){
+              
+              _lookForNeighbors(v,_tree[consider][1],consider);
+        }
     
-    dd=data[consider][i]-v[i];
-    if((dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted) \
-    && _tree[consider][2]>=0){
-      _lookForNeighbors(v,_tree[consider][2],consider);
+        dd=data[consider][i]-v[i];
+        if((dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted) \
+            && _tree[consider][2]>=0){
+      
+            _lookForNeighbors(v,_tree[consider][2],consider);
+        }
     }
-  }
-  else{
+    else{
     //you came here from one of the branches
     
-    //descend the other branch
-    if(_tree[consider][1]==from){
-      going=2;
-    }
-    else{ 
-      going=1;
-    }
+        //descend the other branch
+        if(_tree[consider][1]==from){
+            going=2;
+        }
+        else{ 
+            going=1;
+        }
     
-    j=_tree[consider][going];
+        j=_tree[consider][going];
     
-    if(j>=0){
-      i=_tree[consider][0];
-      if(going==1)dd=v[i]-data[consider][i];
-      else dd=data[consider][i]-v[i];
+        if(j>=0){
+            i=_tree[consider][0];
+            if(going==1)dd=v[i]-data[consider][i];
+            else dd=data[consider][i]-v[i];
       
-      if(dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted){
-        _lookForNeighbors(v,j,consider);
-      }
-    }
+            if(dd<=_neighborDistances[_neighborsFound-1] || _neighborsFound<_neighborsWanted){
+                  _lookForNeighbors(v,j,consider);
+            }
+        }
     
-    //ascend to the parent
-    if(_tree[consider][3]>=0){
-      
-      _lookForNeighbors(v,_tree[consider][3],consider);
-      
+        //ascend to the parent
+        if(_tree[consider][3]>=0){
+              _lookForNeighbors(v,_tree[consider][3],consider);
+        }
     }
-    
-  }
- 
-
 }
 
 template <typename T>
 int KdTree<T>::_walkUpTree(int target, 
                            int dir, 
-			   int root
-			   )
+			   int root) const
 {
   //target is the node that you are examining now
   //dir is where you came from
   //root is the ultimate point from which you started
   
-  int i,output;
+    int i,output;
   
-  output=1;
+    output=1;
   
-  if(dir==1){
-    if(data[root][_tree[target][0]]>=data[target][_tree[target][0]]){
-      std::cout<<"_tree FAILURE root "<<root<<" target "<<target<<" dir "<<dir<<"\n";
-      std::cout<<data[root][_tree[target][0]]<<" >= "<<data[target][_tree[target][0]]<<"\n";
-      output=0;
-      return 0;
+    if(dir==1){
+        if(data[root][_tree[target][0]]>=data[target][_tree[target][0]]){
+            std::cout<<"_tree FAILURE root "<<root<<" target "<<target<<" dir "<<dir<<"\n";
+            std::cout<<data[root][_tree[target][0]]<<" >= "<<data[target][_tree[target][0]]<<"\n";
+            output=0;
+            return 0;
       
-    }
-  }
-  else{
-      if(data[root][_tree[target][0]]<data[target][_tree[target][0]]){
-      
-      std::cout<<"_tree FAILURE root "<<root<<"\n";
-      std::cout<<" target "<<target<<" dir "<<dir<<" \n";
-      std::cout<<data[root][_tree[target][0]]<<" < "<<data[target][_tree[target][0]]<<"\n";
-      output=0;
-      return 0;
-
-    }
-  }
-  
-  if(_tree[target][3]>=0){
-    if(_tree[_tree[target][3]][1]==target)i=1;
-    else i=2;
-    
-    output=output*_walkUpTree(_tree[target][3],i,root);
-  
-  }
-  else{
-    output=output*target;
-    //so that it will return _masterParent
-    //make sure everything is connected to _masterParent
-  }
-  return output;
-  
-}
-
-template <typename T>
-void KdTree<T>::removePoint(int target){
-
-  int nl,nr,i,j,k,side;
-  int root;
-  
-  
-  nl=0;
-  nr=0;
-  //printf("about to subtract %d\n",target);
-  
-  if(_tree[target][1]>=0){
-     nl++;
-    _count(_tree[target][1],&nl);
-  }
-  //printf("got nl %d\n",nl);
-  
-  if(_tree[target][2]>=0){
-     nr++;
-    _count(_tree[target][2],&nr);
-  }
- 
-  //printf("got nr %d\n",nr);
-  
-  if(nl==0 && nr==0){
-
-    k=_tree[target][3];
-      
-      if(_tree[k][1]==target)_tree[k][1]=-1;
-      else if(_tree[k][2]==target)_tree[k][2]=-1;
-    
-  }//if target is terminal
-  else if((nl==0 && nr>0) || (nr==0 && nl>0)){
-    //printf("lopsided case\n");
-    if(nl==0)side=2;
-    else side=1;
-    
-    k=_tree[target][3];
-    if(k>=0){//printf("k is non-negative\n");
-     if(_tree[k][1]==target){
-       _tree[k][1]=_tree[target][side];
-       _tree[_tree[k][1]][3]=k;
-     }
-     else{
-       _tree[k][2]=_tree[target][side];
-       _tree[_tree[k][2]][3]=k;
-     }
+        }
     }
     else{
-      //printf("ah... the masterparent\n");
-      _masterParent=_tree[target][side];
-      _tree[_tree[target][side]][3]=-1;
-      //printf("assigned the indices\n");
-      //printf("continue?");
-      //scanf("%d",&i);
+        if(data[root][_tree[target][0]]<data[target][_tree[target][0]]){
+      
+            std::cout<<"_tree FAILURE root "<<root<<"\n";
+            std::cout<<" target "<<target<<" dir "<<dir<<" \n";
+            std::cout<<data[root][_tree[target][0]]<<" < "<<data[target][_tree[target][0]]<<"\n";
+            output=0;
+            return 0;
+
+        }
     }
-    
   
-  }//if only one side is populated
-  else{
-     //printf("hardest case master parent %d\n",masterparent);
-     if(nl>nr)side=1;
-     else side=2;
-     
-      k=_tree[target][3];
-      if(k<0){
-        _masterParent=_tree[target][side];
-	_tree[_masterParent][3]=-1;
+    if(_tree[target][3]>=0){
+        if(_tree[_tree[target][3]][1]==target)i=1;
+        else i=2;
+    
+        output=output*_walkUpTree(_tree[target][3],i,root);
+  
+    }
+    else{
+        output=output*target;
+        //so that it will return _masterParent
+        //make sure everything is connected to _masterParent
+      }
+    return output;
+  
+}
+
+template <typename T>
+void KdTree<T>::removePoint(int target)
+{
+
+    int nl,nr,i,j,k,side;
+    int root;
+
+    nl=0;
+    nr=0;
+    //printf("about to subtract %d\n",target);
+  
+    if(_tree[target][1]>=0){
+        nl++;
+        _count(_tree[target][1],&nl);
+    }
+    //printf("got nl %d\n",nl);
+  
+    if(_tree[target][2]>=0){
+        nr++;
+        _count(_tree[target][2],&nr);
+    }  
+ 
+    if(nl==0 && nr==0){
+
+        k=_tree[target][3];
+      
+          if(_tree[k][1]==target)_tree[k][1]=-1;
+          else if(_tree[k][2]==target)_tree[k][2]=-1;
+    
+    }//if target is terminal
+    else if((nl==0 && nr>0) || (nr==0 && nl>0)){
+         //printf("lopsided case\n");
+         if(nl==0)side=2;
+         else side=1;
+    
+         k=_tree[target][3];
+         if(k>=0){//printf("k is non-negative\n");
+          if(_tree[k][1]==target){
+              _tree[k][1]=_tree[target][side];
+              _tree[_tree[k][1]][3]=k;
+          }
+          else{
+              _tree[k][2]=_tree[target][side];
+              _tree[_tree[k][2]][3]=k;
+          }
       }
       else{
-        if(_tree[k][1]==target){
-         _tree[k][1]=_tree[target][side];
-          _tree[_tree[k][1]][3]=k;
-        }
-        else{
-           _tree[k][2]=_tree[target][side];
-           _tree[_tree[k][2]][3]=k;
-         }
+        _masterParent=_tree[target][side];
+        _tree[_tree[target][side]][3]=-1;
       }
+    }//if only one side is populated
+    else{
+        //printf("hardest case master parent %d\n",masterparent);
+        if(nl>nr)side=1;
+        else side=2;
      
-     //printf("side is %d\n",side);
-     //printf("parent was %d\n",tree[target][3]);
+         k=_tree[target][3];
+         if(k<0){
+            _masterParent=_tree[target][side];
+	    _tree[_masterParent][3]=-1;
+          }
+          else{
+              if(_tree[k][1]==target){
+              _tree[k][1]=_tree[target][side];
+              _tree[_tree[k][1]][3]=k;
+              }
+              else{
+                   _tree[k][2]=_tree[target][side];
+                   _tree[_tree[k][2]][3]=k;
+              } 
+          }
      
-     root=_tree[target][3-side];
+         //printf("side is %d\n",side);
+         //printf("parent was %d\n",tree[target][3]);
      
-     _descend(root);
+         root=_tree[target][3-side];
      
-
-  }//if both sides are populated
+         _descend(root);
+    }//if both sides are populated
   
     if(target<_pts-1){
-      for(i=target+1;i<_pts;i++){
-        for(j=0;j<4;j++)_tree[i-1][j]=_tree[i][j];
-        for(j=0;j<_dimensions;j++)data[i-1][j]=data[i][j];
-     }
+         for(i=target+1;i<_pts;i++){
+             for(j=0;j<4;j++)_tree[i-1][j]=_tree[i][j];
+             for(j=0;j<_dimensions;j++)data[i-1][j]=data[i][j];
+        }
     
-      for(i=0;i<_pts;i++){
-        for(j=1;j<4;j++)if(_tree[i][j]>target)_tree[i][j]--;
-      }
+        for(i=0;i<_pts;i++){
+             for(j=1;j<4;j++)if(_tree[i][j]>target)_tree[i][j]--;
+        }
     
-      if(_masterParent>target)_masterParent--;
+        if(_masterParent>target)_masterParent--;
     }
-  _pts--;
-  //printf("done subtracting %d\n",_pts);
+    _pts--;
+    //printf("done subtracting %d\n",_pts);
   
 }
 
 template <typename T>
-void KdTree<T>::_count(int where, int *ct){
+void KdTree<T>::_count(int where, int *ct) const
+{
 //a way to count the number of vital elements on a given branch
 
-  if(_tree[where][1]>=0){
-    ct[0]++;
-    _count(_tree[where][1],ct);
-  }
-  if(_tree[where][2]>=0){
-    ct[0]++;
-    _count(_tree[where][2],ct);
-  }
+    if(_tree[where][1]>=0){
+        ct[0]++;
+        _count(_tree[where][1],ct);
+    }
+    if(_tree[where][2]>=0){
+        ct[0]++;
+        _count(_tree[where][2],ct);
+    }
 }
 
 template <typename T>
-void KdTree<T>::_reassign(int target){
+void KdTree<T>::_reassign(int target)
+{
    
-   int where,dir,k;
+    int where,dir,k;
    
-   where=_masterParent;
-   if(data[target][_tree[where][0]]<data[where][_tree[where][0]])dir=1;
-   else dir=2;
+    where=_masterParent;
+    if(data[target][_tree[where][0]]<data[where][_tree[where][0]])dir=1;
+    else dir=2;
    
-   k=_tree[where][dir];
-   while(k>=0){
-     where=k;
-     if(data[target][_tree[where][0]]<data[where][_tree[where][0]])dir=1;
-     else dir=2;
-     k=_tree[where][dir];
-   }
+    k=_tree[where][dir];
+    while(k>=0){
+        where=k;
+        if(data[target][_tree[where][0]]<data[where][_tree[where][0]])dir=1;
+        else dir=2;
+        k=_tree[where][dir];
+    }
    
-   _tree[where][dir]=target;
-   _tree[target][3]=where;
-   _tree[target][1]=-1;
-   _tree[target][2]=-1;
-   _tree[target][0]=_tree[where][0]+1;
-   if(_tree[target][0]==_dimensions)_tree[target][0]=0;
-   
-
+    _tree[where][dir]=target;
+    _tree[target][3]=where;
+    _tree[target][1]=-1;
+    _tree[target][2]=-1;
+    _tree[target][0]=_tree[where][0]+1;
+    if(_tree[target][0]==_dimensions)_tree[target][0]=0;
 }
 
 template <typename T>
-void KdTree<T>::_descend(int root){
+void KdTree<T>::_descend(int root)
+{
 
-  if(_tree[root][1]>=0)_descend(_tree[root][1]);
-  if(_tree[root][2]>=0)_descend(_tree[root][2]);
+    if(_tree[root][1]>=0)_descend(_tree[root][1]);
+    if(_tree[root][2]>=0)_descend(_tree[root][2]);
   
-  _reassign(root);  
-    
-
+    _reassign(root);  
 }
 
 template <typename T>
-double KdTree<T>::_distance(ndarray::Array<const T,1,1> const &p1, ndarray::Array<const T,1,1> const &p2)
+double KdTree<T>::_distance(ndarray::Array<const T,1,1> const &p1, 
+                            ndarray::Array<const T,1,1> const &p2) const
 {
 
     int i,dd;
@@ -706,53 +674,49 @@ GaussianProcess<T>::~GaussianProcess(){
 }
 
 template <typename T>
-GaussianProcess<T>::GaussianProcess( 
-				    ndarray::Array<T,2,2> const &datain, 
+GaussianProcess<T>::GaussianProcess(ndarray::Array<T,2,2> const &datain, 
                                     ndarray::Array<T,1,1> const &ff,
                                     boost::shared_ptr< Covariogram<T> > const &covarin)
 
 {
-  int i,j;
-  ndarray::Array<int,2,2> ndtest;
+    int i,j;
+    ndarray::Array<int,2,2> ndtest;
   
-  ndtest=allocate(ndarray::makeVector(3,3));
+    ndtest=allocate(ndarray::makeVector(3,3));
   
-  _covariogram=covarin;
-  //_dimensions=dd;
-  //_pts=pp;
+    _covariogram=covarin;
+
+    _pts=datain.template getSize<0>();
+    _dimensions=datain.template getSize<1>();
   
-  _pts=datain.template getSize<0>();
-  _dimensions=datain.template getSize<1>();
+    _room=_pts;
+    _roomStep=5000;
   
-  _room=_pts;
-  _roomStep=5000;
+    _nFunctions=1;
+    _function=allocate(ndarray::makeVector(_pts,1));
+    for(i=0;i<_pts;i++)_function[i][0]=ff[i];
+    _krigingParameter=T(1.0);
   
-  _nFunctions=1;
-  _function=allocate(ndarray::makeVector(_pts,1));
-  for(i=0;i<_pts;i++)_function[i][0]=ff[i];
-  _krigingParameter=T(1.0);
+    _lambda=T(1.0e-5);
   
-  _lambda=T(1.0e-5);
-  
-  _useMaxMin=0;
+    _useMaxMin=0;
     
-  _data=allocate(ndarray::makeVector(_pts,_dimensions));
+    _data=allocate(ndarray::makeVector(_pts,_dimensions));
   
-  for(i=0;i<_pts;i++){
-     for(j=0;j<_dimensions;j++){
-       _data[i][j]=datain[i][j];
-     }
-  }
+    for(i=0;i<_pts;i++){
+        for(j=0;j<_dimensions;j++){
+           _data[i][j]=datain[i][j];
+        }
+    }
   
-  _kdTreePtr=new KdTree<T>(_data);
-  _data=_kdTreePtr->data;
-  _pts=_kdTreePtr->getPoints();
+    _kdTreePtr=new KdTree<T>(_data);
+    _data=_kdTreePtr->data;
+    _pts=_kdTreePtr->getPoints();
   
 }
 
 template <typename T>
-GaussianProcess<T>::GaussianProcess( 
-				    ndarray::Array<T,2,2> const &datain,
+GaussianProcess<T>::GaussianProcess(ndarray::Array<T,2,2> const &datain,
                                     ndarray::Array<T,1,1> const &mn, 
 				    ndarray::Array<T,1,1> const &mx, 
 				    ndarray::Array<T,1,1> const &ff,
@@ -760,94 +724,86 @@ GaussianProcess<T>::GaussianProcess(
 				    )
 {
 
-  int i,j;
+    int i,j;
   
-  _covariogram=covarin;
- // _dimensions=dd;
- // _pts=pp;
- 
- _pts=datain.template getSize<0>();
- _dimensions=datain.template getSize<1>();
- 
-  _room=_pts;
-  _roomStep=5000;
-  
-  _krigingParameter=T(1.0);
+    _covariogram=covarin;
 
- _lambda=T(1.0e-5);
- _krigingParameter=T(1.0);
+   _pts=datain.template getSize<0>();
+   _dimensions=datain.template getSize<1>();
+ 
+    _room=_pts;
+    _roomStep=5000;
+  
+    _krigingParameter=T(1.0);
+
+    _lambda=T(1.0e-5);
+    _krigingParameter=T(1.0);
    
- _max=allocate(ndarray::makeVector(_dimensions));
- _min=allocate(ndarray::makeVector(_dimensions)); 
- _max.deep()=mx;
-  _min.deep()=mn;  
- _useMaxMin=1;
- _data=allocate(ndarray::makeVector(_pts,_dimensions));  
-  for(i=0;i<_pts;i++){
-   
-    for(j=0;j<_dimensions;j++){
-      _data[i][j]=(datain[i][j]-_min[j])/(_max[j]-_min[j]); //note the normalization by _max-_min in each dimension
+    _max=allocate(ndarray::makeVector(_dimensions));
+    _min=allocate(ndarray::makeVector(_dimensions)); 
+    _max.deep()=mx;
+    _min.deep()=mn;  
+    _useMaxMin=1;
+    _data=allocate(ndarray::makeVector(_pts,_dimensions));  
+    for(i=0;i<_pts;i++){
+        for(j=0;j<_dimensions;j++){
+            _data[i][j]=(datain[i][j]-_min[j])/(_max[j]-_min[j]); 
+            //note the normalization by _max-_min in each dimension
+        }
     }
-  }
    
-  _kdTreePtr=new KdTree<T>(_data);
-  _data=_kdTreePtr->data;
-  _pts=_kdTreePtr->getPoints();  
-  _nFunctions=1;
-  _function=allocate(ndarray::makeVector(_pts,1));
-  for(i=0;i<_pts;i++)_function[i][0]=ff[i];
-
+    _kdTreePtr=new KdTree<T>(_data);
+    _data=_kdTreePtr->data;
+    _pts=_kdTreePtr->getPoints();  
+    _nFunctions=1;
+    _function=allocate(ndarray::makeVector(_pts,1));
+    for(i=0;i<_pts;i++)_function[i][0]=ff[i];
 }
 
 template <typename T>
-GaussianProcess<T>::GaussianProcess( 
-				    ndarray::Array<T,2,2> const &datain, 
+GaussianProcess<T>::GaussianProcess(ndarray::Array<T,2,2> const &datain, 
                                     ndarray::Array<T,2,2> const &ff,
                                     boost::shared_ptr< Covariogram<T> > const &covarin)
 
 {
-  int i,j;
-  ndarray::Array<int,2,2> ndtest;
+    int i,j;
+    ndarray::Array<int,2,2> ndtest;
   
-  ndtest=allocate(ndarray::makeVector(3,3));
+    ndtest=allocate(ndarray::makeVector(3,3));
   
-  _covariogram=covarin;
-  //_dimensions=dd;
-  //_pts=pp;
+    _covariogram=covarin;
   
-  _pts=datain.template getSize<0>();
-  _dimensions=datain.template getSize<1>();
+    _pts=datain.template getSize<0>();
+    _dimensions=datain.template getSize<1>();
   
-  _room=_pts;
-  _roomStep=5000;
+    _room=_pts;
+    _roomStep=5000;
   
-  _nFunctions=ff.template getSize<1>();
-  _function=allocate(ndarray::makeVector(_pts,_nFunctions));
-  _function.deep()=ff;
+    _nFunctions=ff.template getSize<1>();
+    _function=allocate(ndarray::makeVector(_pts,_nFunctions));
+    _function.deep()=ff;
   
-  _krigingParameter=T(1.0);
+    _krigingParameter=T(1.0);
 
-  _lambda=T(1.0e-5);
+    _lambda=T(1.0e-5);
   
-  _useMaxMin=0;
+    _useMaxMin=0;
     
-  _data=allocate(ndarray::makeVector(_pts,_dimensions));
+    _data=allocate(ndarray::makeVector(_pts,_dimensions));
   
-  for(i=0;i<_pts;i++){
-     for(j=0;j<_dimensions;j++){
-       _data[i][j]=datain[i][j];
-     }
-  }
+    for(i=0;i<_pts;i++){
+        for(j=0;j<_dimensions;j++){
+            _data[i][j]=datain[i][j];
+        }
+    }
   
-  _kdTreePtr=new KdTree<T>(_data);
-  _data=_kdTreePtr->data;
-  _pts=_kdTreePtr->getPoints();
-  
+    _kdTreePtr=new KdTree<T>(_data);
+    _data=_kdTreePtr->data;
+    _pts=_kdTreePtr->getPoints(); 
 }
 
 template <typename T>
-GaussianProcess<T>::GaussianProcess( 
-				    ndarray::Array<T,2,2> const &datain,
+GaussianProcess<T>::GaussianProcess(ndarray::Array<T,2,2> const &datain,
                                     ndarray::Array<T,1,1> const &mn, 
 				    ndarray::Array<T,1,1> const &mx, 
 				    ndarray::Array<T,2,2> const &ff,
@@ -855,969 +811,944 @@ GaussianProcess<T>::GaussianProcess(
 				    )
 {
 
-  int i,j;
+    int i,j;
   
-  _covariogram=covarin;
- // _dimensions=dd;
- // _pts=pp;
+    _covariogram=covarin;
  
- _pts=datain.template getSize<0>();
- _dimensions=datain.template getSize<1>();
+    _pts=datain.template getSize<0>();
+    _dimensions=datain.template getSize<1>();
  
-  _room=_pts;
-  _roomStep=5000;
+    _room=_pts;
+    _roomStep=5000;
   
-  _krigingParameter=T(1.0);
+    _krigingParameter=T(1.0);
 
- _lambda=T(1.0e-5);
- _krigingParameter=T(1.0);
+    _lambda=T(1.0e-5);
+    _krigingParameter=T(1.0);
    
- _max=allocate(ndarray::makeVector(_dimensions));
- _min=allocate(ndarray::makeVector(_dimensions)); 
- _max.deep()=mx;
-  _min.deep()=mn;  
- _useMaxMin=1;
- _data=allocate(ndarray::makeVector(_pts,_dimensions));  
-  for(i=0;i<_pts;i++){
-   
-    for(j=0;j<_dimensions;j++){
-      _data[i][j]=(datain[i][j]-_min[j])/(_max[j]-_min[j]); //note the normalization by _max-_min in each dimension
+    _max=allocate(ndarray::makeVector(_dimensions));
+    _min=allocate(ndarray::makeVector(_dimensions)); 
+    _max.deep()=mx;
+    _min.deep()=mn;  
+    _useMaxMin=1;
+    _data=allocate(ndarray::makeVector(_pts,_dimensions));  
+    for(i=0;i<_pts;i++){
+        for(j=0;j<_dimensions;j++){
+            _data[i][j]=(datain[i][j]-_min[j])/(_max[j]-_min[j]); 
+            //note the normalization by _max-_min in each dimension
+        }
     }
-  }
    
-  _kdTreePtr=new KdTree<T>(_data);
-  _data=_kdTreePtr->data;
-  _pts=_kdTreePtr->getPoints();  
-  _nFunctions=ff.template getSize<1>();
-  _function=allocate(ndarray::makeVector(_pts,_nFunctions));
-  //for(i=0;i<_pts;i++)_function[i][0]=ff[i];
-  _function.deep()=ff;
-
+    _kdTreePtr=new KdTree<T>(_data);
+    _data=_kdTreePtr->data;
+    _pts=_kdTreePtr->getPoints();  
+    _nFunctions=ff.template getSize<1>();
+    _function=allocate(ndarray::makeVector(_pts,_nFunctions));
+    _function.deep()=ff;
 }
-
 
 
 template <typename T>
 T GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> variance, 
                                   ndarray::Array<T,1,1> const &vin,
-                                  int numberOfNeighbors
-				  )
+                                  int numberOfNeighbors) const
 {
 
-  int i,j;
-  T fbar,mu;
-  double before,after,af,bef;
+    int i,j;
+    T fbar,mu;
+    double before,after,af,bef;
   
-  ndarray::Array<T,1,1> covarianceTestPoint;
-  ndarray::Array<int,1,1> neighbors;
-  ndarray::Array<double,1,1> neighborDistances,vv;
+    ndarray::Array<T,1,1> covarianceTestPoint;
+    ndarray::Array<int,1,1> neighbors;
+    ndarray::Array<double,1,1> neighborDistances,vv;
   
-  Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
+    Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
   
-  _timer.interpolationCount++;
+    _timer.interpolationCount++;
   
-  before=double(::time(NULL));
+    before=double(::time(NULL));
 
-   bb.resize(numberOfNeighbors,1);
-   xx.resize(numberOfNeighbors,1);
-   covariance.resize(numberOfNeighbors,numberOfNeighbors);
-   covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
-   neighbors=allocate(ndarray::makeVector(numberOfNeighbors));;
-   neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
+     bb.resize(numberOfNeighbors,1);
+     xx.resize(numberOfNeighbors,1);
+     covariance.resize(numberOfNeighbors,numberOfNeighbors);
+     covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
+     neighbors=allocate(ndarray::makeVector(numberOfNeighbors));;
+     neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
      
-   vv=allocate(ndarray::makeVector(_dimensions));
+     vv=allocate(ndarray::makeVector(_dimensions));
   
   
-  if(_useMaxMin==1){
-    //if you constructed this Gaussian process with minimum and maximum values for the dimensions of your parameter space,
-    //the point you are interpolating must be scaled to match the data so that the selected nearest neighbors are appropriate
+    if(_useMaxMin==1){
+        //if you constructed this Gaussian process with minimum and maximum values for the dimensions of your parameter space,
+        //the point you are interpolating must be scaled to match the data so that the selected nearest neighbors are appropriate
     
-    for(i=0;i<_dimensions;i++)vv[i]=(vin[i]-_min[i])/(_max[i]-_min[i]);
-  }
-  else{
-    vv=vin;
-  }
-  
-  bef=double(::time(NULL));
-  _kdTreePtr->findNeighbors(neighbors, neighborDistances, vv,
-                            numberOfNeighbors);
-  af=double(::time(NULL));
-  _timer.searchTime+=af-bef;
-  
-  fbar=0.0;
-  for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][0];
-  fbar=fbar/double(numberOfNeighbors);
-
-  for(i=0;i<numberOfNeighbors;i++){
-    covarianceTestPoint[i]=(*_covariogram)(vv,_data[neighbors[i]]);
-    covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])\
-    +_lambda;
-    for(j=i+1;j<numberOfNeighbors;j++){
-      covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
-      covariance(j,i)=covariance(i,j);
+        for(i=0;i<_dimensions;i++)vv[i]=(vin[i]-_min[i])/(_max[i]-_min[i]);
     }
-  }
-  bef=double(::time(NULL));
-  _timer.iterationTime+=bef-af;
+    else{
+        vv=vin;
+    }
   
-  //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
-  ldlt.compute(covariance); 
+    bef=double(::time(NULL));
+    _kdTreePtr->findNeighbors(neighbors, neighborDistances, vv,
+                              numberOfNeighbors);
+    af=double(::time(NULL));
+    _timer.searchTime+=af-bef;
+  
+    fbar=0.0;
+    for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][0];
+    fbar=fbar/double(numberOfNeighbors);
+
+    for(i=0;i<numberOfNeighbors;i++){
+        covarianceTestPoint[i]=(*_covariogram)(vv,_data[neighbors[i]]);
+        
+        covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])
+                        +_lambda;
+    
+        for(j=i+1;j<numberOfNeighbors;j++){
+            covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
+            covariance(j,i)=covariance(i,j);
+        }
+    }
+    bef=double(::time(NULL));
+    _timer.iterationTime+=bef-af;
+  
+    //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
+    ldlt.compute(covariance); 
  
-  for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][0]-fbar;
-  xx=ldlt.solve(bb);
-  af=double(::time(NULL));
-  _timer.eigenTime+=af-bef;
+    for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][0]-fbar;
+    xx=ldlt.solve(bb);
+    af=double(::time(NULL));
+    _timer.eigenTime+=af-bef;
   
-  mu=fbar;
+    mu=fbar;
 
-  for(i=0;i<numberOfNeighbors;i++){
-    mu+=covarianceTestPoint[i]*xx(i,0);
-  }
-  bef=double(::time(NULL));
-  _timer.iterationTime+=bef-af;
+    for(i=0;i<numberOfNeighbors;i++){
+        mu+=covarianceTestPoint[i]*xx(i,0);
+    }
+    bef=double(::time(NULL));
+    _timer.iterationTime+=bef-af;
   
   
-  variance(0)=(*_covariogram)(vv,vv)+_lambda;
+    variance(0)=(*_covariogram)(vv,vv)+_lambda;
   
-  for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
+    for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
 
-  xx=ldlt.solve(bb);
+    xx=ldlt.solve(bb);
   
-  for(i=0;i<numberOfNeighbors;i++){
-    variance(0)-=covarianceTestPoint[i]*xx(i,0);
-  } 
+    for(i=0;i<numberOfNeighbors;i++){
+        variance(0)-=covarianceTestPoint[i]*xx(i,0);
+    } 
+
+    variance(0)=variance(0)*_krigingParameter;
+    after=double(::time(NULL));
+    _timer.varianceTime+=after-bef;
+    _timer.totalTime+=after-before;
   
-  
-  variance(0)=variance(0)*_krigingParameter;
-  after=double(::time(NULL));
-  _timer.varianceTime+=after-bef;
-  _timer.totalTime+=after-before;
-  
-  return mu;
+    return mu;
 }
 
 template <typename T>
-void GaussianProcess<T>::interpolate(
-                                  ndarray::Array<T,1,1> mu,
-                                  ndarray::Array<T,1,1> variance, 
-                                  ndarray::Array<T,1,1> const &vin,
-                                  int numberOfNeighbors
-				  )
+void GaussianProcess<T>::interpolate(ndarray::Array<T,1,1> mu,
+                                     ndarray::Array<T,1,1> variance, 
+                                     ndarray::Array<T,1,1> const &vin,
+                                     int numberOfNeighbors) const
 {
 
-  int i,j,ii;
-  T fbar;
-  double before,after,af,bef;
+    int i,j,ii;
+    T fbar;
+    double before,after,af,bef;
   
-  ndarray::Array<T,1,1> covarianceTestPoint;
-  ndarray::Array<int,1,1> neighbors;
-  ndarray::Array<double,1,1> neighborDistances,vv;
+    ndarray::Array<T,1,1> covarianceTestPoint;
+    ndarray::Array<int,1,1> neighbors;
+    ndarray::Array<double,1,1> neighborDistances,vv;
   
-  Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
+    Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
   
-  _timer.interpolationCount++;
-  before=double(::time(NULL));
+    _timer.interpolationCount++;
+    before=double(::time(NULL));
   
-   bb.resize(numberOfNeighbors,1);
-   xx.resize(numberOfNeighbors,1);
-   covariance.resize(numberOfNeighbors,numberOfNeighbors);
-   covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
-   neighbors=allocate(ndarray::makeVector(numberOfNeighbors));;
-   neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
+     bb.resize(numberOfNeighbors,1);
+     xx.resize(numberOfNeighbors,1);
+     covariance.resize(numberOfNeighbors,numberOfNeighbors);
+     covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
+     neighbors=allocate(ndarray::makeVector(numberOfNeighbors));;
+     neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
      
-   vv=allocate(ndarray::makeVector(_dimensions));
+     vv=allocate(ndarray::makeVector(_dimensions));
   
   
-  if(_useMaxMin==1){
-    //if you constructed this Gaussian process with minimum and maximum values for the dimensions of your parameter space,
-    //the point you are interpolating must be scaled to match the data so that the selected nearest neighbors are appropriate
+    if(_useMaxMin==1){
+        //if you constructed this Gaussian process with minimum and maximum values for the dimensions of your parameter space,
+        //the point you are interpolating must be scaled to match the data so that the selected nearest neighbors are appropriate
     
-    for(i=0;i<_dimensions;i++)vv[i]=(vin[i]-_min[i])/(_max[i]-_min[i]);
-  }
-  else{
-    vv=vin;
-  }
-  
-  bef=double(::time(NULL));
-  _kdTreePtr->findNeighbors(neighbors, neighborDistances, vv,
-                            numberOfNeighbors);
-  
-  af=double(::time(NULL));
-  _timer.searchTime+=af-bef;
-  
-  for(i=0;i<numberOfNeighbors;i++){
-    covarianceTestPoint[i]=(*_covariogram)(vv,_data[neighbors[i]]);
-    covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])\
-    +_lambda;
-    for(j=i+1;j<numberOfNeighbors;j++){
-      covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
-      covariance(j,i)=covariance(i,j);
+        for(i=0;i<_dimensions;i++)vv[i]=(vin[i]-_min[i])/(_max[i]-_min[i]);
     }
-  }
-  bef=double(::time(NULL));
-  _timer.iterationTime+=bef-af;
+    else{
+        vv=vin;
+    }
   
-  //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
-  ldlt.compute(covariance); 
-  af=double(::time(NULL));
-  _timer.eigenTime+=af-bef;
+    bef=double(::time(NULL));
+    _kdTreePtr->findNeighbors(neighbors, neighborDistances, vv,
+                              numberOfNeighbors);
+  
+    af=double(::time(NULL));
+    _timer.searchTime+=af-bef;
+  
+    for(i=0;i<numberOfNeighbors;i++){
+        covarianceTestPoint[i]=(*_covariogram)(vv,_data[neighbors[i]]);
+    
+        covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])
+                        +_lambda;
+    
+        for(j=i+1;j<numberOfNeighbors;j++){
+            covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
+            covariance(j,i)=covariance(i,j);
+        }
+    }
+    bef=double(::time(NULL));
+    _timer.iterationTime+=bef-af;
+  
+    //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
+    ldlt.compute(covariance); 
+    af=double(::time(NULL));
+    _timer.eigenTime+=af-bef;
   
     for(ii=0;ii<_nFunctions;ii++){
   
-      fbar=0.0;
-      for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][ii];
-      fbar=fbar/double(numberOfNeighbors);
+          fbar=0.0;
+          for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][ii];
+          fbar=fbar/double(numberOfNeighbors);
       
-      for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][ii]-fbar;
-      xx=ldlt.solve(bb);
+          for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][ii]-fbar;
+          xx=ldlt.solve(bb);
       
-      mu[ii]=fbar;
+          mu[ii]=fbar;
 
-      for(i=0;i<numberOfNeighbors;i++){
-        mu[ii]+=covarianceTestPoint[i]*xx(i,0);
-      }
+          for(i=0;i<numberOfNeighbors;i++){
+            mu[ii]+=covarianceTestPoint[i]*xx(i,0);
+          }
   
      
-  }//ii=0 through _nFunctions
-  bef=double(::time(NULL));
-  _timer.eigenTime+=bef-af;
+    }//ii=0 through _nFunctions
+    bef=double(::time(NULL));
+    _timer.eigenTime+=bef-af;
   
-   variance[0]=(*_covariogram)(vv,vv)+_lambda;
+    variance[0]=(*_covariogram)(vv,vv)+_lambda;
   
-   for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
+    for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
 
-   xx=ldlt.solve(bb);
-  
-  
-
-   for(i=0;i<numberOfNeighbors;i++){
-     variance[0]-=covarianceTestPoint[i]*xx(i,0);
-   } 
-   
-  
-  
-   variance[0]=variance[0]*_krigingParameter;
-  
-  
-  for(i=1;i<_nFunctions;i++)variance[i]=variance[0];
-  after=double(::time(NULL));
-  _timer.varianceTime+=after-bef;
-  _timer.totalTime+=after-before;
-}
-
-
-template <typename T>
-T GaussianProcess<T>::selfInterpolate(ndarray::Array<T,1,1> variance, int dex, int numberOfNeighbors){
-  
-  int i,j;
-  T fbar,mu;
-  double before,after,af,bef;
-
-  ndarray::Array<T,1,1> covarianceTestPoint;
-  ndarray::Array<int,1,1> selfNeighbors;
-  ndarray::Array<double,1,1> selfDistances;
-  ndarray::Array<int,1,1> neighbors;
-  ndarray::Array<double,1,1> neighborDistances;
-  
-  Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
-  
-  _timer.interpolationCount++;
-  
-  before=double(::time(NULL));
-  
-  bb.resize(numberOfNeighbors,1);
-  xx.resize(numberOfNeighbors,1);
-  covariance.resize(numberOfNeighbors,numberOfNeighbors);
-  covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
-  neighbors=allocate(ndarray::makeVector(numberOfNeighbors));
-  neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
-     
-  selfNeighbors=allocate(ndarray::makeVector(numberOfNeighbors+1));
-  selfDistances=allocate(ndarray::makeVector(numberOfNeighbors+1));
-  
-  //we don't use _useMaxMin because _data has already been normalized
-  
-  bef=double(::time(NULL));
-  _kdTreePtr->findNeighbors(selfNeighbors, selfDistances, _data[dex], 
-                            numberOfNeighbors+1);
-  af=double(::time(NULL));
-  _timer.searchTime=af-bef;
-  
-  if(selfNeighbors[0]!=dex){
-    std::cout<<"WARNING selfdist "<<selfDistances[0]<<" "<<selfDistances[1]<<"\n";
-    std::cout<<"dex "<<dex<<" "<<selfNeighbors[0]<<"\n";
-    exit(1);
-  }
-  
-  //SelfNeighbors[0] will be the point itself (it is its own nearest neighbor)
-  //We discard that for the interpolation calculation
-  //
-  //If you do not wish to do this, simply call the usual ::interpolate() method instead of
-  //::selfInterpolate()
-  for(i=0;i<numberOfNeighbors;i++){
-    neighbors[i]=selfNeighbors[i+1];
-    neighborDistances[i]=selfDistances[i+1];
-  }
-
-  fbar=0.0;
-  for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][0];
-  fbar=fbar/double(numberOfNeighbors);
-
-  for(i=0;i<numberOfNeighbors;i++){
-    covarianceTestPoint[i]=(*_covariogram)(_data[dex],_data[neighbors[i]]);
-    covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])
-    +_lambda;
-    for(j=i+1;j<numberOfNeighbors;j++){
-      covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
-      covariance(j,i)=covariance(i,j);
-    }
-  }
-  bef=double(::time(NULL));
-  _timer.iterationTime+=bef-af;
-
-  
-  //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
-  ldlt.compute(covariance); 
-  
-  
-  for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][0]-fbar;
-  xx=ldlt.solve(bb);
-  af=double(::time(NULL));
-  _timer.eigenTime+=af-bef;
-  
-  mu=fbar;
-
-  for(i=0;i<numberOfNeighbors;i++){
-    mu+=covarianceTestPoint[i]*xx(i,0);
-  }
-  
-  bef=double(::time(NULL));
-  variance(0)=(*_covariogram)(_data[dex],_data[dex])+_lambda;
-  
-  for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
-  
-  
- 
-  xx=ldlt.solve(bb);
-  
-  for(i=0;i<numberOfNeighbors;i++){
-    variance(0)-=covarianceTestPoint[i]*xx(i,0);
-  } 
- 
-  
-  variance(0)=variance(0)*_krigingParameter;
-  after=double(::time(NULL));
-  _timer.varianceTime+=after-bef;
-  _timer.totalTime+=after-before;
-  
-  return mu;
-}
-
-template <typename T>
-void GaussianProcess<T>::selfInterpolate(
-                                         ndarray::Array<T,1,1> mu, 
-                                         ndarray::Array<T,1,1> variance, int dex, int numberOfNeighbors){
-  
-  int i,j,ii;
-  T fbar;
-  double before,after,af,bef;
-
-  ndarray::Array<T,1,1> covarianceTestPoint;
-  ndarray::Array<int,1,1> selfNeighbors;
-  ndarray::Array<double,1,1> selfDistances;
-  ndarray::Array<int,1,1> neighbors;
-  ndarray::Array<double,1,1> neighborDistances;
-  
-  Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
-  
-  _timer.interpolationCount++;
-  before=double(::time(NULL));
-
-  bb.resize(numberOfNeighbors,1);
-  xx.resize(numberOfNeighbors,1);
-  covariance.resize(numberOfNeighbors,numberOfNeighbors);
-  covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
-  neighbors=allocate(ndarray::makeVector(numberOfNeighbors));
-  neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
-     
-  selfNeighbors=allocate(ndarray::makeVector(numberOfNeighbors+1));
-  selfDistances=allocate(ndarray::makeVector(numberOfNeighbors+1));
-  
-  //we don't use _useMaxMin because _data has already been normalized
-  
-  bef=double(::time(NULL));
-   _kdTreePtr->findNeighbors(selfNeighbors, selfDistances, _data[dex], 
-                            numberOfNeighbors+1);
-  
-  af=double(::time(NULL));
-  _timer.searchTime+=af-bef;
-  
-  if(selfNeighbors[0]!=dex){
-    std::cout<<"WARNING selfdist "<<selfDistances[0]<<" "<<selfDistances[1]<<"\n";
-    std::cout<<"dex "<<dex<<" "<<selfNeighbors[0]<<"\n";
-    exit(1);
-  }
-  
-  //SelfNeighbors[0] will be the point itself (it is its own nearest neighbor)
-  //We discard that for the interpolation calculation
-  //
-  //If you do not wish to do this, simply call the usual ::interpolate() method instead of
-  //::selfInterpolate()
-  for(i=0;i<numberOfNeighbors;i++){
-    neighbors[i]=selfNeighbors[i+1];
-    neighborDistances[i]=selfDistances[i+1];
-  }
-
-
-
-  for(i=0;i<numberOfNeighbors;i++){
-    covarianceTestPoint[i]=(*_covariogram)(_data[dex],_data[neighbors[i]]);
-    covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])
-    +_lambda;
-    for(j=i+1;j<numberOfNeighbors;j++){
-      covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
-      covariance(j,i)=covariance(i,j);
-    }
-  }
-  bef=double(::time(NULL));
-  _timer.iterationTime+=bef-af;  
-
-  
-  //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
-  ldlt.compute(covariance); 
-  
-  for(ii=0;ii<_nFunctions;ii++){
-  
-    fbar=0.0;
-    for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][ii];
-    fbar=fbar/double(numberOfNeighbors);
-  
-    for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][ii]-fbar;
     xx=ldlt.solve(bb);
- 
-    mu[ii]=fbar;
 
     for(i=0;i<numberOfNeighbors;i++){
-      mu[ii]+=covarianceTestPoint[i]*xx(i,0);
-    }
-  }//ii=0 through _nFunctions
-  
-  af=double(::time(NULL));
-  _timer.eigenTime+=af-bef;
-  
-  variance[0]=(*_covariogram)(_data[dex],_data[dex])+_lambda;
-  
-  for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
-
-  xx=ldlt.solve(bb);
-
-  
-  for(i=0;i<numberOfNeighbors;i++){
-    variance[0]-=covarianceTestPoint[i]*xx(i,0);
-  } 
-  
-  variance[0]=variance[0]*_krigingParameter;
-  
-  
-  for(i=1;i<_nFunctions;i++)variance[i]=variance[0];
-  
-  after=double(::time(NULL));
-  _timer.varianceTime+=after-af;
-  _timer.totalTime+=after-before;
-}
-
-
-template<typename T>
-void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,1,1> mu, \
-ndarray:: Array<T,1,1> variance, ndarray::Array<T,2,2> const &queries){
-    
-  int i,j,ii,nQueries;
-  double af,bef,before,after;
-  T fbar;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
-  
-  ndarray::Array<T,1,1> v1; 
-
-  before=double(::time(NULL));
-  
-  nQueries=queries.template getSize<0>();
-  
-  _timer.interpolationCount+=nQueries;
-  
-  v1=allocate(ndarray::makeVector(_dimensions));
-  batchbb.resize(_pts,1);
-  batchxx.resize(_pts,1);
-  batchCovariance.resize(_pts,_pts);
-  queryCovariance.resize(_pts,1);
- 
-  
-  for(i=0;i<_pts;i++){
-    
-    batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
-    for(j=i+1;j<_pts;j++){
-      batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
-      batchCovariance(j,i)=batchCovariance(i,j);
-    }
-  }
-  af=double(::time(NULL));
-  _timer.iterationTime+=af-before;
-  
-  ldlt.compute(batchCovariance);  
-  
-  
-  fbar=0.0;
-  for(i=0;i<_pts;i++){
-    fbar+=_function[i][0];
-  }
-  fbar=fbar/T(_pts);
-  
-  //std::cout<<"fbar "<<fbar<<"\n";
-  
-  for(i=0;i<_pts;i++){
-    batchbb(i,0)=_function[i][0]-fbar;
-  }
-  batchxx=ldlt.solve(batchbb);
-  bef=double(::time(NULL));
-  _timer.eigenTime+=bef-af;
-  
-  
-  for(ii=0;ii<nQueries;ii++){
-    for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
-    if(_useMaxMin==1){
-      for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+        variance[0]-=covarianceTestPoint[i]*xx(i,0);
     } 
-    mu(ii)=fbar;
-    for(i=0;i<_pts;i++){
-      mu(ii)+=batchxx(i)*(*_covariogram)(v1,_data[i]);
-    }
-  }
-  af=double(::time(NULL));
-  _timer.iterationTime+=af-bef;
-  
-  //std::cout<<"done with interpolation\n";
-  
-  for(ii=0;ii<nQueries;ii++){
-    //std::cout<<"i "<<ii<<"\n";
-    for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
-    if(_useMaxMin==1){
-      for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
-    }
-    
-    for(i=0;i<_pts;i++){
-      batchbb(i,0)=(*_covariogram)(v1,_data[i]);
-      queryCovariance(i,0)=batchbb(i,0);
-    }
-    batchxx=ldlt.solve(batchbb);
-    
-    variance(ii)=(*_covariogram)(v1,v1)+_lambda;
-    
-    for(i=0;i<_pts;i++){
-      variance(ii)-=queryCovariance(i,0)*batchxx(i);
-    }
-    
-    variance(ii)=variance(ii)*_krigingParameter;
-      
-  }
-  after=double(::time(NULL));
-  _timer.varianceTime+=after-af;
-  _timer.totalTime+=after-before;
-
-
-}
-
-template<typename T>
-void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,2,2> mu, \
-ndarray:: Array<T,2,2> variance, ndarray::Array<T,2,2> const &queries){
-    
-  int i,j,ii,nQueries,ifn;
-  double af,bef,before,after;
-  T fbar;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
-  
-  ndarray::Array<T,1,1> v1; 
-
-  before=double(::time(NULL));
-  
-  nQueries=queries.template getSize<0>();
-  
-  _timer.interpolationCount+=nQueries;
-  
-  v1=allocate(ndarray::makeVector(_dimensions));
-  batchbb.resize(_pts,1);
-  batchxx.resize(_pts,1);
-  batchCovariance.resize(_pts,_pts);
-  queryCovariance.resize(_pts,1);
-  
-  for(i=0;i<_pts;i++){
-    
-    batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
-    for(j=i+1;j<_pts;j++){
-      batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
-      batchCovariance(j,i)=batchCovariance(i,j);
-    }
-  }
-  
-  af=double(::time(NULL));
-  _timer.iterationTime+=af-before;
-  
-  ldlt.compute(batchCovariance);  
-  
-  bef=double(::time(NULL));
-  _timer.eigenTime+=bef-af;
-  
-  for(ifn=0;ifn<_nFunctions;ifn++){
-      fbar=0.0;
-      for(i=0;i<_pts;i++){
-        fbar+=_function[i][ifn];
-      }
-      fbar=fbar/T(_pts);
-  
-      //std::cout<<"fbar "<<fbar<<"\n";
-      
-      bef=double(::time(NULL));
-      for(i=0;i<_pts;i++){
-        batchbb(i,0)=_function[i][ifn]-fbar;
-      }
-      batchxx=ldlt.solve(batchbb);
-      af=double(::time(NULL));
-      _timer.eigenTime+=af-bef;
-      
-      bef=double(::time(NULL));
-      for(ii=0;ii<nQueries;ii++){
-        for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
-        if(_useMaxMin==1){
-          for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
-        } 
-        mu[ii][ifn]=fbar;
-        for(i=0;i<_pts;i++){
-          mu[ii][ifn]+=batchxx(i)*(*_covariogram)(v1,_data[i]);
-        }
-      }
-      af=double(::time(NULL));
-      _timer.iterationTime+=af-bef;
-
-  }//ifn=0 to _nFunctions
+    variance[0]=variance[0]*_krigingParameter;
   
   
-  //std::cout<<"done with interpolation\n";
-  
-  bef=double(::time(NULL));
-  for(ii=0;ii<nQueries;ii++){
-    //std::cout<<"i "<<ii<<"\n";
-    for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
-    if(_useMaxMin==1){
-      for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
-    }
-    
-    for(i=0;i<_pts;i++){
-      batchbb(i,0)=(*_covariogram)(v1,_data[i]);
-      queryCovariance(i,0)=batchbb(i,0);
-    }
-    batchxx=ldlt.solve(batchbb);
-    
-    variance[ii][0]=(*_covariogram)(v1,v1)+_lambda;
-    
-    for(i=0;i<_pts;i++){
-      variance[ii][0]-=queryCovariance(i,0)*batchxx(i);
-    }
-    
-    variance[ii][0]=variance[ii][0]*_krigingParameter;
-    for(i=1;i<_nFunctions;i++)variance[ii][i]=variance[ii][0];
-      
-  }
-  after=double(::time(NULL));
-  _timer.varianceTime+=after-bef;
-  _timer.totalTime+=after-before;
-
-}
-
-template<typename T>
-void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,1,1> mu, ndarray::Array<T,2,2> const &queries){
-
-  int i,j,ii,nQueries;
-  double af,bef,before,after;
-
-  T fbar;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
-  
-  ndarray::Array<T,1,1> v1;
-
-  before=double(::time(NULL));
-  
-  nQueries=queries.template getSize<0>();
-  
-  _timer.interpolationCount+=nQueries;
-  
-  v1=allocate(ndarray::makeVector(_dimensions));
-  
-  batchbb.resize(_pts,1);
-  batchxx.resize(_pts,1);
-  batchCovariance.resize(_pts,_pts);
-  queryCovariance.resize(_pts,1);
- 
-  
-  for(i=0;i<_pts;i++){
-    batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
-    for(j=i+1;j<_pts;j++){
-      batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
-      batchCovariance(j,i)=batchCovariance(i,j);
-    }
-  }
-  af=double(::time(NULL));
-  _timer.iterationTime+=af-before;
-  
-  ldlt.compute(batchCovariance);  
-
-  fbar=0.0;
-  for(i=0;i<_pts;i++){
-    fbar+=_function[i][0];
-  }
-  fbar=fbar/T(_pts);
-  
-  //std::cout<<"fbar "<<fbar<<"\n";
-  
-  for(i=0;i<_pts;i++){
-    batchbb(i,0)=_function[i][0]-fbar;
-  }
-  batchxx=ldlt.solve(batchbb);
-  bef=double(::time(NULL));
-  _timer.eigenTime+=bef-af;
-
-  for(ii=0;ii<nQueries;ii++){
-    for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
-    if(_useMaxMin==1){
-      for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
-    }
-    
-    mu(ii)=fbar;
-    for(i=0;i<_pts;i++){
-      mu(ii)+=batchxx(i)*(*_covariogram)(v1,_data[i]);
-    }
-  }
-  after=double(::time(NULL));
-  _timer.iterationTime+=after-bef;
-  _timer.totalTime+=after-before;
-
-  
-  //std::cout<<"done with interpolation\n";
-}
-
-template<typename T>
-void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,2,2> mu, ndarray::Array<T,2,2> const &queries){
-
-  int i,j,ii,nQueries,ifn;
-  double af,bef,before,after;
-
-  T fbar;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
-  Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
-  Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
-  
-  ndarray::Array<T,1,1> v1;
- 
-  before=double(::time(NULL));
- 
-  nQueries=queries.template getSize<0>();
-  
-  _timer.interpolationCount+=nQueries;
-  
-  v1=allocate(ndarray::makeVector(_dimensions));
-  
-  batchbb.resize(_pts,1);
-  batchxx.resize(_pts,1);
-  batchCovariance.resize(_pts,_pts);
-  queryCovariance.resize(_pts,1);
- 
-  
-  for(i=0;i<_pts;i++){
-    batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
-    for(j=i+1;j<_pts;j++){
-      batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
-      batchCovariance(j,i)=batchCovariance(i,j);
-    }
-  }
-  
-  af=double(::time(NULL));
-  _timer.iterationTime+=af-before;
-  
-  ldlt.compute(batchCovariance);  
-  
-  bef=double(::time(NULL));
-  _timer.eigenTime+=bef-af;
-  
-  for(ifn=0;ifn<_nFunctions;ifn++){
-      fbar=0.0;
-      for(i=0;i<_pts;i++){
-        fbar+=_function[i][ifn];
-      }
-      fbar=fbar/T(_pts);
-  
-      //std::cout<<"fbar "<<fbar<<"\n";
-      bef=double(::time(NULL));
-      for(i=0;i<_pts;i++){
-        batchbb(i,0)=_function[i][ifn]-fbar;
-      }
-      batchxx=ldlt.solve(batchbb);
-      af=double(::time(NULL));
-      _timer.eigenTime+=af-bef;
-  
-     
-      for(ii=0;ii<nQueries;ii++){
-        for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
-        if(_useMaxMin==1){
-          for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
-        }
-    
-        mu[ii][ifn]=fbar;
-        for(i=0;i<_pts;i++){
-          mu[ii][ifn]+=batchxx(i)*(*_covariogram)(v1,_data[i]);
-        }
-      }
-      bef=double(::time(NULL));
-      _timer.iterationTime+=bef-af;
-      
-  }//ifn=0 through _nFunctions
-  
-  after=double(::time(NULL));
-  _timer.totalTime+=after-before;
-  
-  //std::cout<<"done with interpolation\n";
+    for(i=1;i<_nFunctions;i++)variance[i]=variance[0];
+    after=double(::time(NULL));
+    _timer.varianceTime+=after-bef;
+    _timer.totalTime+=after-before;
 }
 
 
 template <typename T>
-void GaussianProcess<T>::addPoint(ndarray::Array<T,1,1> const &vin, T f){
+T GaussianProcess<T>::selfInterpolate(ndarray::Array<T,1,1> variance, 
+                                      int dex, 
+                                      int numberOfNeighbors) const
+{
+  
+    int i,j;
+    T fbar,mu;
+    double before,after,af,bef;
 
-  int i,j;
+    ndarray::Array<T,1,1> covarianceTestPoint;
+    ndarray::Array<int,1,1> selfNeighbors;
+    ndarray::Array<double,1,1> selfDistances;
+    ndarray::Array<int,1,1> neighbors;
+    ndarray::Array<double,1,1> neighborDistances;
+   
+    Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
   
-  if(_nFunctions!=1){
-    std::cout<<"_nFunctions is "<<_nFunctions<<"\n";
-    std::cout<<"you should call addPoint passing an ndarray for f\n";
-    return;
-  }
+    _timer.interpolationCount++;
+   
+    before=double(::time(NULL));
   
-  ndarray::Array<T,1,1> v;
-  v=allocate(ndarray::makeVector(_dimensions));
- 
-  for(i=0;i<_dimensions;i++){
-    v[i]=vin[i];
-    if(_useMaxMin==1){
-      v[i]=(v[i]-_min[i])/(_max[i]-_min[i]);
+    bb.resize(numberOfNeighbors,1);
+    xx.resize(numberOfNeighbors,1);
+    covariance.resize(numberOfNeighbors,numberOfNeighbors);
+    covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
+    neighbors=allocate(ndarray::makeVector(numberOfNeighbors));
+    neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
+     
+    selfNeighbors=allocate(ndarray::makeVector(numberOfNeighbors+1));
+    selfDistances=allocate(ndarray::makeVector(numberOfNeighbors+1));
+  
+    //we don't use _useMaxMin because _data has already been normalized
+  
+    bef=double(::time(NULL));
+    _kdTreePtr->findNeighbors(selfNeighbors, selfDistances, _data[dex], 
+                              numberOfNeighbors+1);
+    af=double(::time(NULL));
+    _timer.searchTime=af-bef;
+  
+    if(selfNeighbors[0]!=dex){
+        std::cout<<"WARNING selfdist "<<selfDistances[0]<<" "<<selfDistances[1]<<"\n";
+        std::cout<<"dex "<<dex<<" "<<selfNeighbors[0]<<"\n";
+        exit(1);
     }
-    
-  }
   
-  if(_pts==_room){
-    ndarray::Array<T,2,2> buff;
-    buff=allocate(ndarray::makeVector(_pts,_nFunctions));
-    buff.deep()=_function;
+    //SelfNeighbors[0] will be the point itself (it is its own nearest neighbor)
+    //We discard that for the interpolation calculation
+    //
+    //If you do not wish to do this, simply call the usual ::interpolate() method instead of
+    //::selfInterpolate()
+    for(i=0;i<numberOfNeighbors;i++){
+        neighbors[i]=selfNeighbors[i+1];
+        neighborDistances[i]=selfDistances[i+1];
+    }
+
+    fbar=0.0;
+    for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][0];
+    fbar=fbar/double(numberOfNeighbors);
+
+    for(i=0;i<numberOfNeighbors;i++){
+        covarianceTestPoint[i]=(*_covariogram)(_data[dex],_data[neighbors[i]]);
     
-    _room+=_roomStep;
-    _function=allocate(ndarray::makeVector(_room,_nFunctions));
+        covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])
+                         +_lambda;
+                         
+      for(j=i+1;j<numberOfNeighbors;j++){
+          covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
+          covariance(j,i)=covariance(i,j);
+        }
+    }
+    bef=double(::time(NULL));
+    _timer.iterationTime+=bef-af;
+
+    //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
+    ldlt.compute(covariance); 
+  
+  
+    for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][0]-fbar;
+    xx=ldlt.solve(bb);
+    af=double(::time(NULL));
+    _timer.eigenTime+=af-bef;
+  
+    mu=fbar;
+
+    for(i=0;i<numberOfNeighbors;i++){
+        mu+=covarianceTestPoint[i]*xx(i,0);
+    }
+  
+    bef=double(::time(NULL));
+    variance(0)=(*_covariogram)(_data[dex],_data[dex])+_lambda;
+  
+    for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
+
+    xx=ldlt.solve(bb);
+  
+    for(i=0;i<numberOfNeighbors;i++){
+        variance(0)-=covarianceTestPoint[i]*xx(i,0);
+    } 
+ 
+    variance(0)=variance(0)*_krigingParameter;
+    after=double(::time(NULL));
+    _timer.varianceTime+=after-bef;
+    _timer.totalTime+=after-before;
+  
+    return mu;
+}
+
+template <typename T>
+void GaussianProcess<T>::selfInterpolate(ndarray::Array<T,1,1> mu, 
+                                         ndarray::Array<T,1,1> variance, 
+                                         int dex, 
+                                         int numberOfNeighbors) const{
+  
+    int i,j,ii;
+    T fbar;
+    double before,after,af,bef;
+
+    ndarray::Array<T,1,1> covarianceTestPoint;
+    ndarray::Array<int,1,1> selfNeighbors;
+    ndarray::Array<double,1,1> selfDistances;
+    ndarray::Array<int,1,1> neighbors;
+    ndarray::Array<double,1,1> neighborDistances;
+  
+    Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> covariance,bb,xx;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
+  
+    _timer.interpolationCount++;
+    before=double(::time(NULL));
+
+    bb.resize(numberOfNeighbors,1);
+    xx.resize(numberOfNeighbors,1);
+    covariance.resize(numberOfNeighbors,numberOfNeighbors);
+    covarianceTestPoint=allocate(ndarray::makeVector(numberOfNeighbors));
+    neighbors=allocate(ndarray::makeVector(numberOfNeighbors));
+    neighborDistances=allocate(ndarray::makeVector(numberOfNeighbors));
+     
+    selfNeighbors=allocate(ndarray::makeVector(numberOfNeighbors+1));
+    selfDistances=allocate(ndarray::makeVector(numberOfNeighbors+1));
+  
+    //we don't use _useMaxMin because _data has already been normalized
+  
+    bef=double(::time(NULL));
+    _kdTreePtr->findNeighbors(selfNeighbors, selfDistances, _data[dex], 
+                              numberOfNeighbors+1);
+  
+    af=double(::time(NULL));
+    _timer.searchTime+=af-bef;
+  
+    if(selfNeighbors[0]!=dex){
+        std::cout<<"WARNING selfdist "<<selfDistances[0]<<" "<<selfDistances[1]<<"\n";
+        std::cout<<"dex "<<dex<<" "<<selfNeighbors[0]<<"\n";
+        exit(1);
+    }
+  
+    //SelfNeighbors[0] will be the point itself (it is its own nearest neighbor)
+    //We discard that for the interpolation calculation
+    //
+    //If you do not wish to do this, simply call the usual ::interpolate() method instead of
+    //::selfInterpolate()
+    for(i=0;i<numberOfNeighbors;i++){
+        neighbors[i]=selfNeighbors[i+1];
+        neighborDistances[i]=selfDistances[i+1];
+    }
+
+
+
+    for(i=0;i<numberOfNeighbors;i++){
+        covarianceTestPoint[i]=(*_covariogram)(_data[dex],_data[neighbors[i]]);
+    
+        covariance(i,i)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[i]])
+                         +_lambda;
+                         
+        for(j=i+1;j<numberOfNeighbors;j++){
+            covariance(i,j)=(*_covariogram)(_data[neighbors[i]],_data[neighbors[j]]);
+            covariance(j,i)=covariance(i,j);
+        }
+    }
+    bef=double(::time(NULL));
+    _timer.iterationTime+=bef-af;  
+
+  
+    //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
+    ldlt.compute(covariance); 
+  
+    for(ii=0;ii<_nFunctions;ii++){
+  
+        fbar=0.0;
+        for(i=0;i<numberOfNeighbors;i++)fbar+=_function[neighbors[i]][ii];
+        fbar=fbar/double(numberOfNeighbors);
+  
+        for(i=0;i<numberOfNeighbors;i++)bb(i,0)=_function[neighbors[i]][ii]-fbar;
+        xx=ldlt.solve(bb);
+ 
+        mu[ii]=fbar;
+
+        for(i=0;i<numberOfNeighbors;i++){
+            mu[ii]+=covarianceTestPoint[i]*xx(i,0);
+        }
+    }//ii=0 through _nFunctions
+  
+    af=double(::time(NULL));
+    _timer.eigenTime+=af-bef;
+  
+    variance[0]=(*_covariogram)(_data[dex],_data[dex])+_lambda;
+  
+    for(i=0;i<numberOfNeighbors;i++)bb(i)=covarianceTestPoint[i];
+
+    xx=ldlt.solve(bb);
+
+    for(i=0;i<numberOfNeighbors;i++){
+        variance[0]-=covarianceTestPoint[i]*xx(i,0);
+    } 
+  
+    variance[0]=variance[0]*_krigingParameter;
+
+    for(i=1;i<_nFunctions;i++)variance[i]=variance[0];
+  
+    after=double(::time(NULL));
+    _timer.varianceTime+=after-af;
+    _timer.totalTime+=after-before;
+}
+
+
+template<typename T>
+void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,1,1> mu, 
+                                          ndarray:: Array<T,1,1> variance, 
+                                          ndarray::Array<T,2,2> const &queries) const
+{
+    
+    int i,j,ii,nQueries;
+    double af,bef,before,after;
+    T fbar;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
+  
+    ndarray::Array<T,1,1> v1; 
+
+    before=double(::time(NULL));
+  
+    nQueries=queries.template getSize<0>();
+  
+    _timer.interpolationCount+=nQueries;
+  
+    v1=allocate(ndarray::makeVector(_dimensions));
+    batchbb.resize(_pts,1);
+    batchxx.resize(_pts,1);
+    batchCovariance.resize(_pts,_pts);
+    queryCovariance.resize(_pts,1);
+ 
+  
     for(i=0;i<_pts;i++){
-      for(j=0;j<_nFunctions;j++){
-         _function[i][j]=buff[i][j];
-      }
+    
+        batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
+        for(j=i+1;j<_pts;j++){
+            batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
+            batchCovariance(j,i)=batchCovariance(i,j);
+        }
     }
- 
-  }
-  _function[_pts][0]=f;
+    af=double(::time(NULL));
+    _timer.iterationTime+=af-before;
   
-  _kdTreePtr->addPoint(v);
-  _pts=_kdTreePtr->getPoints();
-  _data=_kdTreePtr->data;
-  
+    ldlt.compute(batchCovariance);  
 
+    fbar=0.0;
+    for(i=0;i<_pts;i++){
+        fbar+=_function[i][0];
+    }
+    fbar=fbar/T(_pts);
+  
+    //std::cout<<"fbar "<<fbar<<"\n";
+  
+    for(i=0;i<_pts;i++){
+        batchbb(i,0)=_function[i][0]-fbar;
+    }
+    batchxx=ldlt.solve(batchbb);
+    bef=double(::time(NULL));
+    _timer.eigenTime+=bef-af;
+  
+  
+    for(ii=0;ii<nQueries;ii++){
+        for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+        if(_useMaxMin==1){
+            for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+        } 
+        mu(ii)=fbar;
+        for(i=0;i<_pts;i++){
+            mu(ii)+=batchxx(i)*(*_covariogram)(v1,_data[i]);
+        }
+    }
+    af=double(::time(NULL));
+    _timer.iterationTime+=af-bef;
+    
+    for(ii=0;ii<nQueries;ii++){
+        for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+        if(_useMaxMin==1){
+            for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+        }
+    
+        for(i=0;i<_pts;i++){
+            batchbb(i,0)=(*_covariogram)(v1,_data[i]);
+            queryCovariance(i,0)=batchbb(i,0);
+        }
+        batchxx=ldlt.solve(batchbb);
+    
+        variance[ii]=(*_covariogram)(v1,v1)+_lambda;
+    
+        for(i=0;i<_pts;i++){
+            variance[ii]-=queryCovariance(i,0)*batchxx(i);
+        }
+    
+        variance[ii]=variance[ii]*_krigingParameter;
+      
+    }
+    after=double(::time(NULL));
+    _timer.varianceTime+=after-af;
+    _timer.totalTime+=after-before;
+}
+
+template<typename T>
+void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,2,2> mu,
+                                          ndarray:: Array<T,2,2> variance, 
+                                          ndarray::Array<T,2,2> const &queries) const
+{
+    
+    int i,j,ii,nQueries,ifn;
+    double af,bef,before,after;
+    T fbar;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
+  
+    ndarray::Array<T,1,1> v1; 
+
+    before=double(::time(NULL));
+  
+    nQueries=queries.template getSize<0>();
+  
+    _timer.interpolationCount+=nQueries;
+  
+    v1=allocate(ndarray::makeVector(_dimensions));
+    batchbb.resize(_pts,1);
+    batchxx.resize(_pts,1);
+    batchCovariance.resize(_pts,_pts);
+    queryCovariance.resize(_pts,1);
+  
+    for(i=0;i<_pts;i++){
+        batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
+        for(j=i+1;j<_pts;j++){
+            batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
+            batchCovariance(j,i)=batchCovariance(i,j);
+        }
+    }
+  
+    af=double(::time(NULL));
+    _timer.iterationTime+=af-before;
+  
+    ldlt.compute(batchCovariance);  
+  
+    bef=double(::time(NULL));
+    _timer.eigenTime+=bef-af;
+  
+    for(ifn=0;ifn<_nFunctions;ifn++){
+        fbar=0.0;
+        for(i=0;i<_pts;i++){
+            fbar+=_function[i][ifn];
+        }
+        fbar=fbar/T(_pts);
+        bef=double(::time(NULL));
+        for(i=0;i<_pts;i++){
+            batchbb(i,0)=_function[i][ifn]-fbar;
+        }
+        batchxx=ldlt.solve(batchbb);
+        af=double(::time(NULL));
+        _timer.eigenTime+=af-bef;
+      
+        bef=double(::time(NULL));
+        for(ii=0;ii<nQueries;ii++){
+            for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+            if(_useMaxMin==1){
+                for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+            } 
+            mu[ii][ifn]=fbar;
+            for(i=0;i<_pts;i++){
+                mu[ii][ifn]+=batchxx(i)*(*_covariogram)(v1,_data[i]);
+            }
+        }
+        af=double(::time(NULL));
+        _timer.iterationTime+=af-bef;
+
+    }//ifn=0 to _nFunctions
+  
+    bef=double(::time(NULL));
+    for(ii=0;ii<nQueries;ii++){
+        for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+        if(_useMaxMin==1){
+            for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+        }
+    
+        for(i=0;i<_pts;i++){
+            batchbb(i,0)=(*_covariogram)(v1,_data[i]);
+            queryCovariance(i,0)=batchbb(i,0);
+        }
+        batchxx=ldlt.solve(batchbb);
+    
+        variance[ii][0]=(*_covariogram)(v1,v1)+_lambda;
+    
+        for(i=0;i<_pts;i++){
+              variance[ii][0]-=queryCovariance(i,0)*batchxx(i);
+        }
+    
+        variance[ii][0]=variance[ii][0]*_krigingParameter;
+        for(i=1;i<_nFunctions;i++)variance[ii][i]=variance[ii][0];
+      
+    }
+    after=double(::time(NULL));
+    _timer.varianceTime+=after-bef;
+    _timer.totalTime+=after-before;
+}
+
+template<typename T>
+void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,1,1> mu, 
+                                          ndarray::Array<T,2,2> const &queries) const
+{
+
+    int i,j,ii,nQueries;
+    double af,bef,before,after;
+
+    T fbar;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
+  
+    ndarray::Array<T,1,1> v1;
+
+    before=double(::time(NULL));
+  
+    nQueries=queries.template getSize<0>();
+  
+    _timer.interpolationCount+=nQueries;
+  
+    v1=allocate(ndarray::makeVector(_dimensions));
+  
+    batchbb.resize(_pts,1);
+    batchxx.resize(_pts,1);
+    batchCovariance.resize(_pts,_pts);
+    queryCovariance.resize(_pts,1);
+ 
+  
+    for(i=0;i<_pts;i++){
+        batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
+        for(j=i+1;j<_pts;j++){
+            batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
+            batchCovariance(j,i)=batchCovariance(i,j);
+        }
+    }
+    af=double(::time(NULL));
+    _timer.iterationTime+=af-before;
+  
+    ldlt.compute(batchCovariance);  
+
+    fbar=0.0;
+    for(i=0;i<_pts;i++){
+        fbar+=_function[i][0];
+    }
+    fbar=fbar/T(_pts);
+  
+    for(i=0;i<_pts;i++){
+        batchbb(i,0)=_function[i][0]-fbar;
+    }
+    batchxx=ldlt.solve(batchbb);
+    bef=double(::time(NULL));
+    _timer.eigenTime+=bef-af;
+
+    for(ii=0;ii<nQueries;ii++){
+        for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+        if(_useMaxMin==1){
+            for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+        }
+    
+        mu(ii)=fbar;
+        for(i=0;i<_pts;i++){
+            mu(ii)+=batchxx(i)*(*_covariogram)(v1,_data[i]);
+        }
+    }
+    after=double(::time(NULL));
+    _timer.iterationTime+=after-bef;
+    _timer.totalTime+=after-before;
+
+}
+
+template<typename T>
+void GaussianProcess<T>::batchInterpolate(ndarray::Array<T,2,2> mu,
+                                          ndarray::Array<T,2,2> const &queries) const
+{
+
+    int i,j,ii,nQueries,ifn;
+    double af,bef,before,after;
+
+    T fbar;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> batchCovariance,batchbb,batchxx;
+    Eigen::Matrix <T,Eigen::Dynamic,Eigen::Dynamic> queryCovariance;
+    Eigen::LDLT<Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic> > ldlt;
+  
+    ndarray::Array<T,1,1> v1;
+ 
+    before=double(::time(NULL));
+ 
+    nQueries=queries.template getSize<0>();
+  
+    _timer.interpolationCount+=nQueries;
+  
+    v1=allocate(ndarray::makeVector(_dimensions));
+  
+    batchbb.resize(_pts,1);
+    batchxx.resize(_pts,1);
+    batchCovariance.resize(_pts,_pts);
+    queryCovariance.resize(_pts,1);
+ 
+  
+    for(i=0;i<_pts;i++){
+        batchCovariance(i,i)=(*_covariogram)(_data[i],_data[i])+_lambda;
+        for(j=i+1;j<_pts;j++){
+            batchCovariance(i,j)=(*_covariogram)(_data[i],_data[j]);
+            batchCovariance(j,i)=batchCovariance(i,j);
+        }
+    }
+  
+    af=double(::time(NULL));
+    _timer.iterationTime+=af-before;
+  
+    ldlt.compute(batchCovariance);  
+  
+    bef=double(::time(NULL));
+    _timer.eigenTime+=bef-af;
+  
+    for(ifn=0;ifn<_nFunctions;ifn++){
+        fbar=0.0;
+        for(i=0;i<_pts;i++){
+            fbar+=_function[i][ifn];
+        }
+        fbar=fbar/T(_pts);
+  
+        //std::cout<<"fbar "<<fbar<<"\n";
+        bef=double(::time(NULL));
+        for(i=0;i<_pts;i++){
+            batchbb(i,0)=_function[i][ifn]-fbar;
+        }
+        batchxx=ldlt.solve(batchbb);
+        af=double(::time(NULL));
+        _timer.eigenTime+=af-bef;
+  
+     
+        for(ii=0;ii<nQueries;ii++){
+            for(i=0;i<_dimensions;i++)v1[i]=queries(ii,i);
+            if(_useMaxMin==1){
+                for(i=0;i<_dimensions;i++)v1[i]=(v1[i]-_min[i])/(_max[i]-_min[i]);
+            }
+    
+            mu[ii][ifn]=fbar;
+            for(i=0;i<_pts;i++){
+                 mu[ii][ifn]+=batchxx(i)*(*_covariogram)(v1,_data[i]);
+            }
+        }
+        bef=double(::time(NULL));
+        _timer.iterationTime+=bef-af;
+      
+    }//ifn=0 through _nFunctions
+  
+    after=double(::time(NULL));
+    _timer.totalTime+=after-before;
+
+}
+
+
+template <typename T>
+void GaussianProcess<T>::addPoint(ndarray::Array<T,1,1> const &vin, T f)
+{
+
+    int i,j;
+  
+    if(_nFunctions!=1){
+        std::cout<<"_nFunctions is "<<_nFunctions<<"\n";
+        std::cout<<"you should call addPoint passing an ndarray for f\n";
+        return;
+    }
+  
+    ndarray::Array<T,1,1> v;
+    v=allocate(ndarray::makeVector(_dimensions));
+ 
+    for(i=0;i<_dimensions;i++){
+        v[i]=vin[i];
+        if(_useMaxMin==1){
+            v[i]=(v[i]-_min[i])/(_max[i]-_min[i]);
+        }
+    }
+  
+    if(_pts==_room){
+        ndarray::Array<T,2,2> buff;
+        buff=allocate(ndarray::makeVector(_pts,_nFunctions));
+        buff.deep()=_function;
+    
+        _room+=_roomStep;
+        _function=allocate(ndarray::makeVector(_room,_nFunctions));
+        for(i=0;i<_pts;i++){
+            for(j=0;j<_nFunctions;j++){
+                _function[i][j]=buff[i][j];
+            }
+        }
+ 
+    }
+    _function[_pts][0]=f;
+  
+    _kdTreePtr->addPoint(v);
+    _pts=_kdTreePtr->getPoints();
+    _data=_kdTreePtr->data;
 }
 
 template <typename T>
 void GaussianProcess<T>::addPoint(ndarray::Array<T,1,1> const &vin, 
-                                  ndarray::Array<T,1,1> const &f){
+                                  ndarray::Array<T,1,1> const &f)
+{
 
-  int i,j;
+    int i,j;
   
-  ndarray::Array<T,1,1> v;
-  v=allocate(ndarray::makeVector(_dimensions));
+    ndarray::Array<T,1,1> v;
+    v=allocate(ndarray::makeVector(_dimensions));
  
-  for(i=0;i<_dimensions;i++){
-    v[i]=vin[i];
-    if(_useMaxMin==1){
-      v[i]=(v[i]-_min[i])/(_max[i]-_min[i]);
+    for(i=0;i<_dimensions;i++){
+        v[i]=vin[i];
+        if(_useMaxMin==1){
+            v[i]=(v[i]-_min[i])/(_max[i]-_min[i]);
+        }
     }
-    
-  }
   
-  if(_pts==_room){
-    ndarray::Array<T,2,2> buff;
-    buff=allocate(ndarray::makeVector(_pts,_nFunctions));
-    buff.deep()=_function;
+    if(_pts==_room){
+        ndarray::Array<T,2,2> buff;
+        buff=allocate(ndarray::makeVector(_pts,_nFunctions));
+        buff.deep()=_function;
     
-    _room+=_roomStep;
-    _function=allocate(ndarray::makeVector(_room,_nFunctions));
-    for(i=0;i<_pts;i++){
-      for(j=0;j<_nFunctions;j++){
-         _function[i][j]=buff[i][j];
-      }
-    }
+        _room+=_roomStep;
+        _function=allocate(ndarray::makeVector(_room,_nFunctions));
+        for(i=0;i<_pts;i++){
+            for(j=0;j<_nFunctions;j++){
+                 _function[i][j]=buff[i][j];
+            }
+        }
  
-  }
-  for(i=0;i<_nFunctions;i++)_function[_pts][i]=f[i];
+    }
+    for(i=0;i<_nFunctions;i++)_function[_pts][i]=f[i];
   
-  _kdTreePtr->addPoint(v);
-  _pts=_kdTreePtr->getPoints();
-  _data=_kdTreePtr->data;
-  
-
+    _kdTreePtr->addPoint(v);
+    _pts=_kdTreePtr->getPoints();
+    _data=_kdTreePtr->data;
 }
 
 template <typename T>
-void GaussianProcess<T>::removePoint(int dex){
+void GaussianProcess<T>::removePoint(int dex)
+{
   
-  int i,j;
+    int i,j;
   
-  _kdTreePtr->removePoint(dex);
+    _kdTreePtr->removePoint(dex);
   
-  for(i=dex;i<_pts;i++){
-      for(j=0;j<_nFunctions;j++){
-          _function[i][j]=_function[i+1][j];  
-      }
-  }
-  _pts=_kdTreePtr->getPoints();
+    for(i=dex;i<_pts;i++){
+        for(j=0;j<_nFunctions;j++){
+             _function[i][j]=_function[i+1][j];  
+        }
+    }
+    _pts=_kdTreePtr->getPoints();
 }
 
 template <typename T>
-void GaussianProcess<T>::setKrigingParameter(T kk){
-  
-  _krigingParameter=kk;
-  
+void GaussianProcess<T>::setKrigingParameter(T kk)
+{
+    _krigingParameter=kk;
 }
 
 template <typename T>
 void GaussianProcess<T>::setCovariogram(boost::shared_ptr< Covariogram<T> > const &covar){
-   _covariogram=covar;
+     _covariogram=covar;
 }
 
 template <typename T>
 void GaussianProcess<T>::setLambda(T lambda){
-
-  _lambda=lambda;
-
+    _lambda=lambda;
 }
 
 
 template <typename T>
-GaussianProcessTimer& GaussianProcess<T>::getTimes(){
-  return _timer;
+GaussianProcessTimer& GaussianProcess<T>::getTimes() const
+{
+    return _timer;
 }
 
 
@@ -1825,25 +1756,10 @@ GaussianProcessTimer& GaussianProcess<T>::getTimes(){
 template <typename T>
 Covariogram<T>::~Covariogram(){};
 
-/*template <typename T>
-Covariogram<T>::Covariogram()
-{
-   lsst::daf::base::Citizen(typeid(this));
-  _nHyperParameters=0;
-}
-
-template <typename T>
-Covariogram<T>::Covariogram(ndarray::Array<T,1,1> const &input)
-{
-   lsst::daf::base::Citizen(typeid(this));
-  _nHyperParameters=0;
-}*/
-
 template <typename T>
 void Covariogram<T>::setHyperParameters(ndarray::Array<T,1,1> const &input)
 {
-    int i;
-    
+    int i;    
     for(i=0;i<_nHyperParameters;i++)_hyperParameters[i]=input[i];
 }
 
@@ -1868,8 +1784,7 @@ template <typename T>
 SquaredExpCovariogram<T>::SquaredExpCovariogram()
 {
     Covariogram<T>::_nHyperParameters=1;
-    Covariogram<T>::_hyperParameters=allocate(
-                  ndarray::makeVector(Covariogram<T>::_nHyperParameters));
+    Covariogram<T>::_hyperParameters=allocate(ndarray::makeVector(Covariogram<T>::_nHyperParameters));
     Covariogram<T>::_hyperParameters[0]=1.0;
 }
 
@@ -1878,16 +1793,13 @@ SquaredExpCovariogram<T>::SquaredExpCovariogram(
                        ndarray::Array<T,1,1> const &initParams)
 {
     Covariogram<T>::_nHyperParameters=1;
-    Covariogram<T>::_hyperParameters=
-               allocate(ndarray::makeVector(Covariogram<T>::_nHyperParameters));
+    Covariogram<T>::_hyperParameters=allocate(ndarray::makeVector(Covariogram<T>::_nHyperParameters));
     Covariogram<T>::_hyperParameters[0]=initParams[0];
 }
 
 template <typename T>
-T SquaredExpCovariogram<T>::operator()(
-                            ndarray::Array<const T,1,1> const &p1,
-                            ndarray::Array<const T,1,1> const &p2
-                            ) const
+T SquaredExpCovariogram<T>::operator()(ndarray::Array<const T,1,1> const &p1,
+                                       ndarray::Array<const T,1,1> const &p2) const
 {
     int i;
     T d;
