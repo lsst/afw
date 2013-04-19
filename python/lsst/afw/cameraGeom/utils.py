@@ -175,6 +175,18 @@ def getGeomPolicy(cameraGeomPolicy):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def makeLinearityFromPolicy(linPol):
+    """Make and return a Linearity object from a suitable policy"""
+    if linPol.get("type") != "PROPORTIONAL":
+        raise RuntimeError("Linearity type must be PROPORTIONAL for now")
+
+    return cameraGeom.Linearity(cameraGeom.Linearity.PROPORTIONAL,
+                                linPol.get("threshold"),
+                                linPol.get("maxCorrectable"),
+                                linPol.get("coefficient")
+                                )
+
+
 def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}, ccdDescription=None):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
@@ -328,6 +340,25 @@ in particular that it has an entry ampSerial which is a single-element list, the
         # Actually add amp to the Ccd
         #
         ccd.addAmp(amp)
+    #
+    # Read any linearity information
+    #
+    # Start by looking for our CCD, then (failing that) for the default, with CCD serial number -1, 
+    #
+    pol = [pol for pol in geomPolicy.get("Linearity").getArray("Ccd") if
+           pol.get("serial") == ccdId.getSerial()]
+    if not pol:
+        pol = [pol for pol in geomPolicy.get("Linearity").getArray("Ccd") if pol.get("serial") == -1]
+    #
+    # If we have a policy, set the linearity parameters
+    #
+    if pol:
+        pol = pol[0]
+        for amp in ccd:
+            for linPol in pol.getArray("Amp"):
+                if amp.getId().getSerial() == linPol.get("serial"):
+                    lin = makeLinearityFromPolicy(linPol)
+                    amp.getElectronicParams().setLinearity(lin)
     #
     # Information for the test code
     #
