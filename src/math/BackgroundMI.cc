@@ -89,7 +89,19 @@ namespace {
  * Estimate the statistical properties of the Image in a grid of cells;  we'll later call
  * getImage() to interpolate those values, creating an image the same size as the original
  *
- * @note The old and deprecated API specified the interpolation style as part of the BackgroundControl
+ * \note If there are heavily masked or Nan regions in the image we may not be able to estimate
+ * all the cells in the "statsImage".  Interpolation will still work, but if you want to prevent
+ * the code wildly extrapolating, it may be better to set the values directly; e.g.
+ * \code
+ * defaultValue = 10
+ * statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+ * sim = statsImage.getImage().getArray()
+ * sim[np.isnan(sim)] = defaultValue # replace NaN by defaultValue
+ * bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+ * \endcode
+ * There is a ticket (#2825) to allow getImage to specify a default value to use when interpolation fails
+ *
+ * \deprecated The old and deprecated API specified the interpolation style as part of the BackgroundControl
  * object passed to this ctor.  This is still supported, but the work isn't done until the getImage()
  * method is called
  */
