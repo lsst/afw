@@ -52,15 +52,32 @@ namespace {
     // without the nans basic idea is that 'x' is the values, and 'y' is the ref (where nan checking happens)
     //    cullNan(x, y, x', y')
     void cullNan(std::vector<double> const &values, std::vector<double> const &refs,
-                 std::vector<double> &culledValues, std::vector<double> &culledRefs
+                 std::vector<double> &culledValues, std::vector<double> &culledRefs,
+                 double const defaultValue=std::numeric_limits<double>::quiet_NaN()
                 ) {
-        culledValues.reserve(refs.size());
-        culledRefs.reserve(refs.size());
+        if (culledValues.capacity() == 0) {
+            culledValues.reserve(refs.size());
+        } else {
+            culledValues.clear();
+        }
+        if (culledRefs.capacity() == 0) {
+            culledRefs.reserve(refs.size());
+        } else {
+            culledRefs.clear();
+        }
+
+        bool const haveDefault = !lsst::utils::isnan(defaultValue);
+
         for (std::vector<double>::const_iterator pVal = values.begin(), pRef = refs.begin();
              pRef != refs.end(); ++pRef, ++pVal) {
             if (!lsst::utils::isnan(*pRef)) {
-                culledRefs.push_back(*pRef);
                 culledValues.push_back(*pVal);
+                culledRefs.push_back(*pRef);
+            } else if(haveDefault) {
+                culledValues.push_back(*pVal);
+                culledRefs.push_back(defaultValue);
+            } else {
+                ;                       // drop a NaN
             }
         }
     }
@@ -144,7 +161,16 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
             throw;
           case REDUCE_INTERP_ORDER:
             {
-                return _setGridColumns(lookupMaxInterpStyle(gridTmp.size()), undersampleStyle, iX, ypix);
+                if (gridTmp.empty()) {
+                    // Set the column to NaN.  We'll deal with this properly when interpolating in x
+                    ycenTmp.push_back(0);
+                    gridTmp.push_back(std::numeric_limits<double>::quiet_NaN());
+
+                    intobj = makeInterpolate(ycenTmp, gridTmp, Interpolate::CONSTANT);
+                    break;
+                } else {
+                    return _setGridColumns(lookupMaxInterpStyle(gridTmp.size()), undersampleStyle, iX, ypix);
+                }
             }
           case INCREASE_NXNYSAMPLE:
             LSST_EXCEPT_ADD(e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
@@ -203,9 +229,11 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
     for (int iX = 0; iX < nxSample; iX++) {
         bg_x[iX] = _gridColumns[iX][y];
     }
+    std::vector<double> xcenTmp, bgTmp;
+    cullNan(_xcen, bg_x, xcenTmp, bgTmp);
 
     try {
-        PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
+        PTR(Interpolate) intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
         return static_cast<double>(intobj->interpolate(x));
     } catch(ex::Exception &e) {
         LSST_EXCEPT_ADD(e, "in getPixel()");
@@ -301,6 +329,14 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     // go through row by row
     // - interpolate on the gridcolumns that were pre-computed by the constructor
     // - copy the values to an ImageT to return to the caller.
+    std::vector<double> xcenTmp, bgTmp;
+
+    // N.b. There's no API to set defaultValue to other than NaN (due to issues with persistence
+    // that I don't feel like fixing;  #2825).  If we want to address this, this is the place
+    // to start, but note that NaN is treated specially -- it means, "Interpolate" so to allow
+    // us to put a NaN into the outputs some changes will be needed
+    double defaultValue = std::numeric_limits<double>::quiet_NaN();
+
     for (int iY = 0; iY < bg->getHeight(); ++iY) {
 
         // build an interp object for this row
@@ -308,10 +344,11 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         for (int iX = 0; iX < nxSample; iX++) {
             bg_x[iX] = static_cast<double>(_gridColumns[iX][iY]);
         }
+        cullNan(_xcen, bg_x, xcenTmp, bgTmp, defaultValue);
         
         try {
-            PTR(Interpolate) intobj = makeInterpolate(_xcen, bg_x, interpStyle);
-            // fill the image with interpolated objects.
+            PTR(Interpolate) intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
+            // fill the image with interpolated values
             int iX = 0;
             for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
                      end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
