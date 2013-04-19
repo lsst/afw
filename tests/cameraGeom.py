@@ -635,6 +635,16 @@ class CameraGeomTestCase(unittest.TestCase):
         amp.setTrimmed(True)
         utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, ccd.addAmp, amp)
         
+    def testLinearity(self):
+        """Test if we can set Linearity parameters"""
+
+        for ccdNum, threshold in [(-1, 0), (1234, 10),]:
+            ccdId = cameraGeom.Id(ccdNum, "")
+            ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId)
+            amp = list(ccd)[0]
+            lin = amp.getElectronicParams().getLinearity()
+            self.assertEqual(lin.threshold, threshold)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
