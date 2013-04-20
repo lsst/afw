@@ -177,8 +177,7 @@ def getGeomPolicy(cameraGeomPolicy):
 
 def makeLinearityFromPolicy(linPol):
     """Make and return a Linearity object from a suitable policy"""
-    if linPol.get("type") != "PROPORTIONAL":
-        raise RuntimeError("Linearity type must be PROPORTIONAL for now")
+    assert linPol.get("type") == "PROPORTIONAL", "Checked in CameraGeomDictionary.paf"
 
     return cameraGeom.Linearity(cameraGeom.Linearity.PROPORTIONAL,
                                 linPol.get("threshold"),
@@ -345,20 +344,32 @@ in particular that it has an entry ampSerial which is a single-element list, the
     #
     # Start by looking for our CCD, then (failing that) for the default, with CCD serial number -1, 
     #
-    pol = [pol for pol in geomPolicy.get("Linearity").getArray("Ccd") if
-           pol.get("serial") == ccdId.getSerial()]
-    if not pol:
-        pol = [pol for pol in geomPolicy.get("Linearity").getArray("Ccd") if pol.get("serial") == -1]
+    def findLinearity(serial):
+        pol = [pol for pol in geomPolicy.get("Linearity").getArray("Ccd") if pol.get("serial") == serial]
+        if not pol:
+            return None
+        
+        if len(pol) != 1:
+            raise RuntimeError("Found more than one Linearity for serial %d" % (serial))
+        return pol[0]
+
+    linearityPolicy = findLinearity(ccdId.getSerial())
+    if not linearityPolicy:
+        linearityPolicy = findLinearity(-1)
     #
     # If we have a policy, set the linearity parameters
     #
-    if pol:
-        pol = pol[0]
+    if linearityPolicy:
+        linPols = {}
+        for policy in linearityPolicy.getArray("Amp"):
+            linPols[policy.get("serial")] = policy
+
         for amp in ccd:
-            for linPol in pol.getArray("Amp"):
-                if amp.getId().getSerial() == linPol.get("serial"):
-                    lin = makeLinearityFromPolicy(linPol)
-                    amp.getElectronicParams().setLinearity(lin)
+            try:
+                lin = makeLinearityFromPolicy(linPols[amp.getId().getSerial()])
+            except KeyError:
+                continue
+            amp.getElectronicParams().setLinearity(lin)
     #
     # Information for the test code
     #

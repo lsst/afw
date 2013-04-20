@@ -584,9 +584,13 @@ definitions: {
                                         }
                                         type: {
                                             type: string
-                                            description: "Type of non-linearity"
+                                            description: "Type of non-linearity correction to be applied"
                                             minOccurs: 0
                                             maxOccurs: 1
+                                            allowed: {
+                                                value: "PROPORTIONAL"
+                                                description: "Correction is linearily proportional to the signal"
+                                            }
                                             default: "PROPORTIONAL"
                                         }
                                         threshold: {
@@ -594,7 +598,7 @@ definitions: {
                                             description: "DN for onset of non-linearity"
                                             minOccurs: 0
                                             maxOccurs: 1
-                                            default: 0
+                                            default: 999999
                                         }
                                         maxCorrectable: {
                                             type: int
