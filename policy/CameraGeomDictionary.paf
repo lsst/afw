@@ -551,4 +551,76 @@ definitions: {
             }
         }
     }
+    #
+    # Linearity for a Ccd
+    #
+    Linearity: {
+        type: Policy
+        dictionary: {
+            target: "LinearityList"
+            definitions: {
+                Ccd: {
+                    type: policy
+                    dictionary: {
+                        target: Ccd
+                        definitions: {
+                            serial: {
+                                type: int
+                                description: "Detector's serial number"
+                                minOccurs: 0
+                                maxOccurs: 1
+                                default: -1
+                            }
+                            Amp: {
+                                type: policy
+                                dictionary: {
+                                    target: Amp
+                                    definitions: {
+                                        serial: {
+                                            type: int
+                                            description: "Serial number for this Amp"
+                                            minOccurs: 1
+                                            maxOccurs: 1
+                                        }
+                                        type: {
+                                            type: string
+                                            description: "Type of non-linearity correction to be applied"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            allowed: {
+                                                value: "PROPORTIONAL"
+                                                description: "Correction is linearily proportional to the signal"
+                                            }
+                                            default: "PROPORTIONAL"
+                                        }
+                                        threshold: {
+                                            type: int
+                                            description: "DN for onset of non-linearity"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            default: 999999
+                                        }
+                                        maxCorrectable: {
+                                            type: int
+                                            description: "Maximum DN that can be corrected"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            default: 999999
+                                        }
+                                        coefficient: {
+                                            type: double
+                                            description: "Linearity coefficient (meaning implied by type)"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            default: 0.0
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

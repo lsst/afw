@@ -175,6 +175,17 @@ def getGeomPolicy(cameraGeomPolicy):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def makeLinearityFromPolicy(linPol):
+    """Make and return a Linearity object from a suitable policy"""
+    assert linPol.get("type") == "PROPORTIONAL", "Checked in CameraGeomDictionary.paf"
+
+    return cameraGeom.Linearity(cameraGeom.Linearity.PROPORTIONAL,
+                                linPol.get("threshold"),
+                                linPol.get("maxCorrectable"),
+                                linPol.get("coefficient")
+                                )
+
+
 def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}, ccdDescription=None):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
@@ -328,6 +339,37 @@ in particular that it has an entry ampSerial which is a single-element list, the
         # Actually add amp to the Ccd
         #
         ccd.addAmp(amp)
+    #
+    # Read any linearity information
+    #
+    # Start by looking for our CCD, then (failing that) for the default, with CCD serial number -1, 
+    #
+    def findLinearity(serial):
+        pol = [pol for pol in geomPolicy.get("Linearity").getArray("Ccd") if pol.get("serial") == serial]
+        if not pol:
+            return None
+        
+        if len(pol) != 1:
+            raise RuntimeError("Found more than one Linearity for serial %d" % (serial))
+        return pol[0]
+
+    linearityPolicy = findLinearity(ccdId.getSerial())
+    if not linearityPolicy:
+        linearityPolicy = findLinearity(-1)
+    #
+    # If we have a policy, set the linearity parameters
+    #
+    if linearityPolicy:
+        linPols = {}
+        for policy in linearityPolicy.getArray("Amp"):
+            linPols[policy.get("serial")] = policy
+
+        for amp in ccd:
+            try:
+                lin = makeLinearityFromPolicy(linPols[amp.getId().getSerial()])
+            except KeyError:
+                continue
+            amp.getElectronicParams().setLinearity(lin)
     #
     # Information for the test code
     #
