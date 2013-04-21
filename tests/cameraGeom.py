@@ -266,7 +266,7 @@ class CameraGeomTestCase(unittest.TestCase):
         corr = afwGeom.Extent2D(corrI.getX(), corrI.getY())
         pix += corr
         
-        self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.SENSOR)
+        self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.AMP)
         self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
         #
         # Trim the CCD and try again

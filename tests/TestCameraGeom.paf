@@ -127,7 +127,7 @@ Ccd: {
         flipLR: false
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 0 0                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
     Amp: {
@@ -136,7 +136,7 @@ Ccd: {
         flipLR: false
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 0 1                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
     Amp: {
@@ -145,7 +145,7 @@ Ccd: {
         flipLR: false
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 0 2                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
     Amp: {
@@ -154,7 +154,7 @@ Ccd: {
         flipLR: false
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 0 3                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
     Amp: {
@@ -163,7 +163,7 @@ Ccd: {
         flipLR: true 
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 1 0                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
     Amp: {
@@ -172,7 +172,7 @@ Ccd: {
         flipLR: true
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 1 1                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
     Amp: {
@@ -181,7 +181,7 @@ Ccd: {
         flipLR: true
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 1 2                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
     Amp: {
@@ -190,7 +190,7 @@ Ccd: {
         flipLR: true
         nQuarter: 0
         hdu: 0
-        diskCoordSys: "sensor"
+        diskCoordSys: "amp"
         index: 1 3                      # Location of Amp in CCD thought of as a grid of amplifiers
     }
 }
