@@ -124,7 +124,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def assertImagesAreEqual(self, outImage, compImage):
         """Assert that two images have all pixels equal"""
-        if False:                        # Incorrect old test
+        if True:                        # Incorrect old test
             self.assertTrue(not (outImage.getArray() - compImage.getArray()).all())
         else:
             self.assertTrue((outImage.getArray() == compImage.getArray()).all())
