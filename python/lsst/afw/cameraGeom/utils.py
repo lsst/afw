@@ -845,7 +845,7 @@ of the detectors"""
     cameraBbox.include(afwGeom.PointI(-border, -border))
     cameraBbox.grow(afwGeom.ExtentI(   border,  border))
 
-    cameraImage = afwImage.ImageF(cameraBbox)
+    cameraImage = imageFactory(cameraBbox)
     cameraImage.set(imageSource.background if imageSource else np.nan)
 
     for raft in camera:
