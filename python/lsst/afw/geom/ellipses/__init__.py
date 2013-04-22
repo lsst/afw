@@ -34,7 +34,11 @@ Separable = {
     (ConformalShear, DeterminantRadius):SeparableConformalShearDeterminantRadius,
     (ConformalShear, TraceRadius):SeparableConformalShearTraceRadius,
     (ConformalShear, LogDeterminantRadius):SeparableConformalShearLogDeterminantRadius,
-    (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius
+    (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius,
+    (ReducedShear, DeterminantRadius):SeparableReducedShearDeterminantRadius,
+    (ReducedShear, TraceRadius):SeparableReducedShearTraceRadius,
+    (ReducedShear, LogDeterminantRadius):SeparableReducedShearLogDeterminantRadius,
+    (ReducedShear, LogTraceRadius):SeparableReducedShearLogTraceRadius,
 }
 
 EllipseCore.cast = lambda self: globals()[self.getName()].cast(self)
