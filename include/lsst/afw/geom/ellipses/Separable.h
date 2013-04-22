@@ -48,9 +48,6 @@ template <typename Ellipticity_, typename Radius_>
 class Separable : public EllipseCore {
 public:
 
-    typedef boost::shared_ptr<Separable> Ptr;
-    typedef boost::shared_ptr<Separable const> ConstPtr;
-
     enum ParameterEnum { E1=0, E2=1, RADIUS=2 }; ///< Definitions for elements of a core vector.
 
     typedef Ellipticity_ Ellipticity;
@@ -71,7 +68,7 @@ public:
     Ellipticity & getEllipticity() { return _ellipticity; }
 
     /// @brief Deep copy the ellipse core.
-    Ptr clone() const { return boost::static_pointer_cast<Separable>(_clone()); }
+    PTR(Separable) clone() const { return boost::static_pointer_cast<Separable>(_clone()); }
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const;
@@ -127,7 +124,7 @@ public:
 #endif
 protected:
 
-    virtual EllipseCore::Ptr _clone() const { return boost::make_shared<Separable>(*this); }
+    virtual PTR(EllipseCore) _clone() const { return boost::make_shared<Separable>(*this); }
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);

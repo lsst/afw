@@ -45,9 +45,6 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 class Quadrupole : public EllipseCore {
 public:
 
-    typedef boost::shared_ptr<Quadrupole> Ptr;
-    typedef boost::shared_ptr<Quadrupole const> ConstPtr;
-
     enum ParameterEnum { IXX=0, IYY=1, IXY=2 }; ///< Definitions for elements of a core vector.
 
     /// Matrix type for the matrix representation of Quadrupole parameters.
@@ -63,7 +60,7 @@ public:
     void setIxy(double ixy) { _matrix(0, 1) = _matrix(1, 0) = ixy; }
 
     /// @brief Deep copy the ellipse core.
-    Ptr clone() const { return boost::static_pointer_cast<Quadrupole>(_clone()); }
+    PTR(Quadrupole) clone() const { return boost::static_pointer_cast<Quadrupole>(_clone()); }
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const;
@@ -120,7 +117,7 @@ public:
 #endif
 protected:
 
-    virtual EllipseCore::Ptr _clone() const { return boost::make_shared<Quadrupole>(*this); }
+    virtual PTR(EllipseCore) _clone() const { return boost::make_shared<Quadrupole>(*this); }
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);

@@ -32,7 +32,7 @@
  *  @note Do not include directly; use the main ellipse header file.
  */
 
-
+#include "lsst/base.h"
 #include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/AffineTransform.h"
@@ -57,9 +57,6 @@ public:
 
     typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
 
-    typedef boost::shared_ptr<Ellipse> Ptr;
-    typedef boost::shared_ptr<Ellipse const> ConstPtr;
-
     enum ParameterEnum { X=3, Y=4 }; ///< Definitions for elements of an ellipse vector.
 
     /// @brief Return the center point.
@@ -78,10 +75,10 @@ public:
     EllipseCore & getCore() { return *_core; }
 
     /// @brief Return the ellipse core.
-    EllipseCore::ConstPtr getCorePtr() const { return _core; }
+    PTR(EllipseCore const) getCorePtr() const { return _core; }
 
     /// @brief Return the ellipse core.
-    EllipseCore::Ptr getCorePtr() { return _core; }
+    PTR(EllipseCore) getCorePtr() { return _core; }
 
     /// @brief Set the ellipse core; the type of the core is not changed.
     void setCore(EllipseCore const & core) { *_core = core; }
@@ -167,7 +164,7 @@ public:
     explicit Ellipse(EllipseCore const & core, Point2D const & center = Point2D()) :
         _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(EllipseCore::ConstPtr const & core, Point2D const & center = Point2D()) :
+    explicit Ellipse(PTR(EllipseCore const) const & core, Point2D const & center = Point2D()) :
         _core(core->clone()), _center(center) {}
 
 #ifndef SWIG
@@ -179,7 +176,7 @@ public:
         _core(other.getCore().clone()), _center(other.getCenter()) {}
 
 private:
-    EllipseCore::Ptr _core;
+    PTR(EllipseCore) _core;
     Point2D _center;
 };
 

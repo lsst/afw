@@ -27,8 +27,8 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-EllipseCore::Ptr EllipseCore::Transformer::copy() const {
-    EllipseCore::Ptr r(input.clone());
+PTR(EllipseCore) EllipseCore::Transformer::copy() const {
+    PTR(EllipseCore) r(input.clone());
     apply(*r);
     return r;
 }
@@ -47,7 +47,7 @@ void EllipseCore::Transformer::apply(EllipseCore & result) const {
 
 EllipseCore::Transformer::DerivativeMatrix
 EllipseCore::Transformer::d() const {
-    EllipseCore::Ptr output(input.clone());
+    PTR(EllipseCore) output(input.clone());
     Eigen::Matrix2d m;
     Jacobian rhs = input._dAssignToQuadrupole(m(0,0), m(1,1), m(0,1));
     m(1,0) = m(0,1);
@@ -69,7 +69,7 @@ EllipseCore::Transformer::d() const {
 
 EllipseCore::Transformer::TransformDerivativeMatrix
 EllipseCore::Transformer::dTransform() const {
-    EllipseCore::Ptr output(input.clone());
+    PTR(EllipseCore) output(input.clone());
     Eigen::Matrix2d m;
     input._assignToQuadrupole(m(0,0), m(1,1), m(0,1));
     Eigen::Matrix<double,3,4> mid = Eigen::Matrix<double,3,4>::Zero();
@@ -95,12 +95,11 @@ EllipseCore::Transformer::dTransform() const {
     return lhs * mid;
 }
 
-Ellipse::Ptr Ellipse::Transformer::copy() const {
-    Ellipse::Ptr r = boost::make_shared<Ellipse>(
+Ellipse Ellipse::Transformer::copy() const {
+    return Ellipse(
         input.getCore().transform(transform.getLinear()).copy(),
         transform(input.getCenter())
     );
-    return r;
 }
 
 void Ellipse::Transformer::inPlace() {

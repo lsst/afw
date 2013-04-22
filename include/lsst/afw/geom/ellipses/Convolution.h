@@ -52,7 +52,7 @@ public:
         self(self), other(other) {}
 
     /// @brief Return a new convolved ellipse core.
-    EllipseCore::Ptr copy() const;
+    PTR(EllipseCore) copy() const;
 
     /// @brief Convolve the ellipse core in-place.
     void inPlace();
@@ -81,7 +81,7 @@ public:
         self(self), other(other) {}
 
     /// @brief Return a new convolved ellipse.
-    Ellipse::Ptr copy() const;
+    Ellipse copy() const;
 
     /// @brief Convolve the ellipse in-place.
     void inPlace();

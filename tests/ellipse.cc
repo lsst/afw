@@ -260,7 +260,7 @@ struct TransformerTest {
 
         Eigen::Matrix<double,5,1> operator()(Eigen::Matrix<double,6,1> const & x) {
             transform.setParameterVector(x);
-            return ellipse.transform(transform).copy()->getParameterVector();
+            return ellipse.transform(transform).copy().getParameterVector();
         }
 
         Functor2(Ellipse const & ellipse_, AffineTransform const & transform_) :

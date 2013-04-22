@@ -162,7 +162,7 @@
             return $action(self)
     %}
 
-    lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr _transform(
+    PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>) _transform(
             lsst::afw::geom::LinearTransform const & t
     ) {
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(
@@ -172,7 +172,7 @@
     void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
        self->transform(t).inPlace();
     }
-    lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr _convolve(
+    PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>) _convolve(
             lsst::afw::geom::ellipses::EllipseCore const & other
     ) {
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(
@@ -183,8 +183,8 @@
         return self->getGridTransform();
     }
 
-    static lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr cast(
-        lsst::afw::geom::ellipses::EllipseCore::Ptr const & p
+    static PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>) cast(
+        PTR(lsst::afw::geom::ellipses::EllipseCore) const & p
     ) {
         return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
     }

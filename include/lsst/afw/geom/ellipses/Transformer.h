@@ -58,7 +58,7 @@ public:
         input(input_), transform(transform_) {}
 
     /// @brief Return a new transformed ellipse core.
-    EllipseCore::Ptr copy() const;
+    PTR(EllipseCore) copy() const;
 
     /// @brief %Transform the ellipse core in-place.
     void inPlace();
@@ -97,7 +97,7 @@ public:
         input(input_), transform(transform_) {}
 
     /// @brief Return a new transformed ellipse.
-    Ellipse::Ptr copy() const;
+    Ellipse copy() const;
 
     /// @brief %Transform the ellipse in-place.
     void inPlace();

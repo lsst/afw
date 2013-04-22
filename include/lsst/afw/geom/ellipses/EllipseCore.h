@@ -37,6 +37,7 @@
 #include <memory>
 #include "Eigen/Core"
 
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/LinearTransform.h"
 
@@ -60,31 +61,28 @@ public:
     template <typename Output> struct Converter;
 #endif
 
-    typedef boost::shared_ptr<EllipseCore> Ptr;
-    typedef boost::shared_ptr<EllipseCore const> ConstPtr;
-
     typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
     typedef Eigen::Matrix3d Jacobian; ///< Parameter Jacobian matrix type.
 
-    static Ptr make(std::string const & name);
+    static PTR(EllipseCore) make(std::string const & name);
 
-    static Ptr make(std::string const & name, ParameterVector const & parameters);
+    static PTR(EllipseCore) make(std::string const & name, ParameterVector const & parameters);
 
-    static Ptr make(std::string const & name, double v1, double v2, double v3);
+    static PTR(EllipseCore) make(std::string const & name, double v1, double v2, double v3);
 
-    static Ptr make(std::string const & name, EllipseCore const & other);
+    static PTR(EllipseCore) make(std::string const & name, EllipseCore const & other);
 
 #ifndef SWIG
-    static Ptr make(std::string const & name, Transformer const & other);
+    static PTR(EllipseCore) make(std::string const & name, Transformer const & other);
 
-    static Ptr make(std::string const & name, Convolution const & other);
+    static PTR(EllipseCore) make(std::string const & name, Convolution const & other);
 #endif
 
     /// @brief Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
 
     /// @brief Deep-copy the Core.
-    Ptr clone() const { return _clone(); }
+    PTR(EllipseCore) clone() const { return _clone(); }
 
     /**
      *  @brief Put the parameters into a "standard form", and throw InvalidParameterException
@@ -192,14 +190,14 @@ protected:
 #ifndef SWIG
     friend class Parametric;
 
-    static void registerSubclass(Ptr const & example);
+    static void registerSubclass(PTR(EllipseCore) const & example);
 
     template <typename T>
     struct Registrar {
         Registrar() { registerSubclass(boost::make_shared<T>()); }
     };
 
-    virtual EllipseCore::Ptr _clone() const = 0;
+    virtual PTR(EllipseCore) _clone() const = 0;
 
     static void _assignQuadrupoleToAxes(
         double ixx, double iyy, double ixy, 

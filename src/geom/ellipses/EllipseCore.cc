@@ -41,7 +41,7 @@ RegistryMap & getRegistry() {
     return instance;
 }
 
-EllipseCore::Ptr getRegistryCopy(std::string const & name) {
+PTR(EllipseCore) getRegistryCopy(std::string const & name) {
     RegistryMap::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
@@ -54,43 +54,43 @@ EllipseCore::Ptr getRegistryCopy(std::string const & name) {
 
 } // anonymous
 
-EllipseCore::Ptr EllipseCore::make(std::string const & name) {
-    EllipseCore::Ptr result = getRegistryCopy(name);
+PTR(EllipseCore) EllipseCore::make(std::string const & name) {
+    PTR(EllipseCore) result = getRegistryCopy(name);
     *result = Quadrupole();
     return result;
 }
 
-EllipseCore::Ptr EllipseCore::make(std::string const & name, ParameterVector const & parameters) {
-    EllipseCore::Ptr result = getRegistryCopy(name);
+PTR(EllipseCore) EllipseCore::make(std::string const & name, ParameterVector const & parameters) {
+    PTR(EllipseCore) result = getRegistryCopy(name);
     result->setParameterVector(parameters);
     return result;
 }
 
-EllipseCore::Ptr EllipseCore::make(std::string const & name, double v1, double v2, double v3) {
-    EllipseCore::Ptr result = getRegistryCopy(name);
+PTR(EllipseCore) EllipseCore::make(std::string const & name, double v1, double v2, double v3) {
+    PTR(EllipseCore) result = getRegistryCopy(name);
     result->setParameterVector(ParameterVector(v1, v2, v3));
     return result;
 }
 
-EllipseCore::Ptr EllipseCore::make(std::string const & name, EllipseCore const & other) {
-    EllipseCore::Ptr result = getRegistryCopy(name);
+PTR(EllipseCore) EllipseCore::make(std::string const & name, EllipseCore const & other) {
+    PTR(EllipseCore) result = getRegistryCopy(name);
     *result = other;
     return result;
 }
 
-EllipseCore::Ptr EllipseCore::make(std::string const & name, Transformer const & other) {
-    EllipseCore::Ptr result = getRegistryCopy(name);
+PTR(EllipseCore) EllipseCore::make(std::string const & name, Transformer const & other) {
+    PTR(EllipseCore) result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-EllipseCore::Ptr EllipseCore::make(std::string const & name, Convolution const & other) {
-    EllipseCore::Ptr result = getRegistryCopy(name);
+PTR(EllipseCore) EllipseCore::make(std::string const & name, Convolution const & other) {
+    PTR(EllipseCore) result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-void EllipseCore::registerSubclass(EllipseCore::Ptr const & example) {
+void EllipseCore::registerSubclass(PTR(EllipseCore) const & example) {
     getRegistry()[example->getName()] = example;
 }
 

@@ -26,8 +26,8 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-EllipseCore::Ptr EllipseCore::Convolution::copy() const {
-    EllipseCore::Ptr r(self.clone());
+PTR(EllipseCore) EllipseCore::Convolution::copy() const {
+    PTR(EllipseCore) r(self.clone());
     apply(*r);
     return r;
 }
@@ -42,7 +42,7 @@ EllipseCore::Convolution::d() const {
     double ixx2, iyy2, ixy2;
     Jacobian rhs = self._dAssignToQuadrupole(ixx1, iyy1, ixy1);
     other._assignToQuadrupole(ixx2, iyy2, ixy2);
-    EllipseCore::Ptr convolved(self.clone());
+    PTR(EllipseCore) convolved(self.clone());
     Jacobian lhs = convolved->_dAssignFromQuadrupole(ixx1 + ixx2, iyy1 + iyy2, ixy1 + ixy2);
     return lhs * rhs;
 }
@@ -55,8 +55,8 @@ void EllipseCore::Convolution::apply(EllipseCore & result) const {
     result._assignFromQuadrupole(ixx1 + ixx2, iyy1 + iyy2, ixy1 + ixy2);
 }
 
-Ellipse::Ptr Ellipse::Convolution::copy() const {
-    return boost::make_shared<Ellipse>(
+Ellipse Ellipse::Convolution::copy() const {
+    return Ellipse(
         self.getCore().convolve(other.getCore()).copy(),
         PointD(self.getCenter() + Extent2D(other.getCenter()))
     );

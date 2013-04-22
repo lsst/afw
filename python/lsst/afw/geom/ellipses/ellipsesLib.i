@@ -97,7 +97,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
             return $action(self)
     %}
 
-    lsst::afw::geom::ellipses::NAME::Ptr _transform(
+    PTR(lsst::afw::geom::ellipses::NAME) _transform(
         lsst::afw::geom::LinearTransform const & t
     ) {
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
@@ -107,7 +107,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
        self->transform(t).inPlace();
     }
-    lsst::afw::geom::ellipses::NAME::Ptr _convolve(
+    PTR(lsst::afw::geom::ellipses::NAME) _convolve(
         lsst::afw::geom::ellipses::EllipseCore const & other
     ) {
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
@@ -118,8 +118,8 @@ Python interface to lsst::afw::geom::ellipses classes and functions
         return self->getGridTransform();
     }
 
-    static lsst::afw::geom::ellipses::NAME::Ptr cast(
-        lsst::afw::geom::ellipses::EllipseCore::Ptr const & p
+    static PTR(lsst::afw::geom::ellipses::NAME) cast(
+        PTR(lsst::afw::geom::ellipses::EllipseCore) const & p
     ) {
        return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::NAME>(p);
     }
