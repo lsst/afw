@@ -301,7 +301,7 @@ class FootprintTestCase(unittest.TestCase):
     def testFootprintFromCircle(self):
         """Create an elliptical Footprint"""
 
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6), 
                                           afwGeom.Point2D(9,15))
         foot = afwDetect.Footprint(
                 ellipse, 
@@ -319,8 +319,8 @@ class FootprintTestCase(unittest.TestCase):
         """Create an elliptical Footprint"""
 
         cen = afwGeom.Point2D(23, 25)
-        a, b, theta = 25, 15, 30
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)),  cen)
+        a, b, theta = 25, 15, 30*afwGeom.degrees
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, theta),  cen)
         foot = afwDetect.Footprint(
                 ellipse, 
                 afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
@@ -347,8 +347,8 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(foot.getCentroid(), cen)
         self.assertTrue(abs(a - axes.getA()) < 0.15, "a: %g v. %g" % (a, axes.getA()))
         self.assertTrue(abs(b - axes.getB()) < 0.02, "b: %g v. %g" % (b, axes.getB()))
-        self.assertTrue(abs(theta - math.degrees(axes.getTheta())) < 0.2,
-                        "theta: %g v. %g" % (theta, math.degrees(axes.getTheta())))
+        self.assertTrue(abs((theta - axes.getTheta()).asDegrees()) < 0.2,
+                        "theta: %g v. %g" % (theta, axes.getTheta().asDegrees()))
 
     def testCopy(self):
         bbox = afwGeom.BoxI(afwGeom.PointI(0,2), afwGeom.PointI(5,6))

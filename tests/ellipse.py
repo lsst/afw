@@ -48,7 +48,7 @@ class EllipseTestCase(unittest.TestCase):
 
     def setUp(self):
         self.cores = [
-            lsst.afw.geom.ellipses.Axes(4, 3, 1),
+            lsst.afw.geom.ellipses.Axes(4, 3, 1*lsst.afw.geom.radians),
             lsst.afw.geom.ellipses.Quadrupole(5, 3, -1)
             ]
         self.classes = [lsst.afw.geom.ellipses.Axes, lsst.afw.geom.ellipses.Quadrupole]
@@ -88,7 +88,7 @@ class EllipseTestCase(unittest.TestCase):
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
             self.assertEqual(lsst.afw.geom.Point2D, type(ellipse.getCenter()))
-            newcore = lsst.afw.geom.ellipses.Axes(1,2,3)
+            newcore = lsst.afw.geom.ellipses.Axes(1,2,3*lsst.afw.geom.radians)
             newcore.normalize()
             core.assign(newcore)
             ellipse.setCore(core)

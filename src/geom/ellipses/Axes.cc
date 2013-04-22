@@ -46,13 +46,13 @@ void Axes::normalize() {
 void Axes::readParameters(double const * iter) {
     setA(*iter++);
     setB(*iter++);
-    setTheta(*iter++);
+    setTheta((*iter++) * radians);
 }
 
 void Axes::writeParameters(double * iter) const {
     *iter++ = getA();
     *iter++ = getB();
-    *iter++ = getTheta();
+    *iter++ = getTheta().asRadians();
 }
 
 void Axes::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {

@@ -28,6 +28,8 @@
 #include "Eigen/Core"
 #include <complex>
 
+#include "lsst/afw/geom/Angle.h"
+
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 namespace detail {
@@ -73,7 +75,7 @@ public:
     double getE() const { return std::sqrt(std::norm(_complex)); }
     void setE(double e) { _complex *= e / getE(); }
 
-    double getTheta() const { return 0.5 * std::arg(_complex); }
+    Angle getTheta() const { return 0.5 * std::arg(_complex) * radians; }
 
 protected:
 

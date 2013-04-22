@@ -44,7 +44,7 @@ computeJacobian(Function f, Eigen::Matrix<double,Function::N,1> const & initial)
 template <typename TestCase>
 void invokeCoreTest(bool no_circles) {
     TestCase::apply(Quadrupole(1.5,2.0,-0.75));
-    TestCase::apply(Axes(2.5,1.3,-0.75));
+    TestCase::apply(Axes(2.5,1.3,-0.75*radians));
     TestCase::apply(SeparableDistortionDeterminantRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableDistortionTraceRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableDistortionLogDeterminantRadius(0.4,-0.25,2.3));
@@ -62,7 +62,7 @@ void invokeCoreTest(bool no_circles) {
     
     if (no_circles) return;
     TestCase::apply(Quadrupole(200.0,200.0,0.0));
-    TestCase::apply(Axes(40,40,0.0));
+    TestCase::apply(Axes(40,40));
     TestCase::apply(SeparableDistortionDeterminantRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableDistortionTraceRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableDistortionLogDeterminantRadius(0.0, 0.0, 2.3));
@@ -417,12 +417,12 @@ BOOST_AUTO_TEST_CASE(CoreConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Normalization) {
-    afwEllipses::Ellipse a1(afwEllipses::Axes(1.0, 1.5, 0.0));
-    afwEllipses::Ellipse a2(afwEllipses::Axes(0.0, 0.0, 0.0));
+    afwEllipses::Ellipse a1(afwEllipses::Axes(1.0, 1.5));
+    afwEllipses::Ellipse a2(afwEllipses::Axes(0.0, 0.0));
     a2 = a1;
     BOOST_CHECK_EQUAL(a2.getCore().getParameterVector(), a1.getCore().getParameterVector());
-    afwEllipses::Ellipse a3(afwEllipses::Axes(1.0, 1.0, 0.5));
-    afwEllipses::Ellipse a4(afwEllipses::Axes(0.0, 0.0, 0.0));
+    afwEllipses::Ellipse a3(afwEllipses::Axes(1.0, 1.0, 0.5*afwGeom::radians));
+    afwEllipses::Ellipse a4(afwEllipses::Axes(0.0, 0.0));
     a3 = a4;
     BOOST_CHECK_EQUAL(a3.getCore().getParameterVector(), a4.getCore().getParameterVector());    
 }

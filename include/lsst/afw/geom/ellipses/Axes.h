@@ -32,6 +32,7 @@
  *  \note Do not include directly; use the main ellipse header file.
  */
 
+#include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
@@ -56,8 +57,8 @@ public:
     double const getB() const { return _vector[B]; }
     void setB(double b) { _vector[B] = b; }
 
-    double const getTheta() const { return _vector[THETA]; }
-    void setTheta(double theta) { _vector[THETA] = theta; }
+    Angle const getTheta() const { return _vector[THETA] * radians; }
+    void setTheta(Angle theta) { _vector[THETA] = theta.asRadians(); }
 
     /// @brief Deep copy the ellipse core.
     Ptr clone() const { return boost::static_pointer_cast<Axes>(_clone()); }
@@ -82,8 +83,8 @@ public:
     Axes & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
 
     /// @brief Construct from parameter values
-    explicit Axes(double a=1.0, double b=1.0, double theta=0.0, bool normalize=false) :
-        _vector(a, b, theta) { if (normalize) this->normalize(); }
+    explicit Axes(double a=1.0, double b=1.0, Angle theta=0.0*radians, bool normalize=false) :
+        _vector(a, b, theta.asRadians()) { if (normalize) this->normalize(); }
 
     /// @brief Construct from a parameter vector.
     explicit Axes(BaseCore::ParameterVector const & vector, bool normalize=false) :

@@ -88,7 +88,7 @@ class QuadrupoleTestCase(PickleTestCase):
 
 class AxesTestCase(PickleTestCase):
     def setUp(self):
-        a, b, theta = 1.0, 1.0, 0.0
+        a, b, theta = 1.0, 1.0, 0.0*afwGeom.radians
         self.data = geomEllip.Axes(a, b, theta)
         
 class Point2DTestCase(PickleTestCase):
