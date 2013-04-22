@@ -77,6 +77,17 @@ class EllipseTestCase(unittest.TestCase):
                 self.assertClose(conv.getTraceRadius(), traceRadius * 3)
                 self.assertClose(conv.getArea(), area * 9)
 
+    def testConversion(self):
+        for core, cls in zip(self.cores, self.classes):
+            axes = core.as_("Axes")
+            quadrupole = core.as_(lsst.afw.geom.ellipses.Quadrupole)
+            self.assert_(lsst.afw.geom.ellipses.Axes.cast(axes) is not None)
+            self.assertEqual(type(quadrupole), lsst.afw.geom.ellipses.Quadrupole)
+            orig1 = axes.as_(cls)
+            orig2 = core.as_(core.getName())
+            self.assertClose(core.getParameterVector(), orig1.getParameterVector())
+            self.assertClose(core.getParameterVector(), orig2.getParameterVector())
+
     def testAccessors(self):
         for core in self.cores:
             vec = numpy.random.randn(3) * 1E-3 + core.getParameterVector()

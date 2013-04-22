@@ -58,7 +58,7 @@ public:
     void setTheta(Angle theta) { _vector[THETA] = theta.asRadians(); }
     //@}
 
-    /// @brief Polymorphic deep copy.
+    /// Polymorphic deep copy.
     PTR(Axes) clone() const { return boost::static_pointer_cast<Axes>(_clone()); }
 
     /// Return a string that identifies this parametrization ("Axes").
@@ -74,10 +74,10 @@ public:
      */
     virtual void normalize();
 
-    /// @brief Standard assignment.
+    /// Standard assignment.
     Axes & operator=(Axes const & other) { _vector = other._vector; return *this; }
 
-    /// @brief Converting assignment.
+    /// Converting assignment.
     Axes & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
     /**
@@ -89,7 +89,7 @@ public:
     Axes(double a, double b, Angle theta=0.0*radians, bool normalize=false) :
         _vector(a, b, theta.asRadians()) { if (normalize) this->normalize(); }
 
-    /// @brief Construct a circle with the given radius.
+    /// Construct a circle with the given radius.
     explicit Axes(double radius=1.0) : _vector(radius, radius, 0.0) {}
 
     /**
@@ -100,19 +100,19 @@ public:
     explicit Axes(EllipseCore::ParameterVector const & vector, bool normalize=false) :
         _vector(vector) { if (normalize) this->normalize(); }
 
-    /// @brief Copy constructor.
+    /// Copy constructor.
     Axes(Axes const & other) : _vector(other._vector) {}
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Axes(EllipseCore const & other) { *this = other; }
 
 #ifndef SWIG
-    /// @brief Implicit construction from a Transformer expression temporary.
+    /// Implicit construction from a Transformer expression temporary.
     Axes(EllipseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
-    /// @brief Implicit construction from a Convolution expression temporary.
+    /// Implicit construction from a Convolution expression temporary.
     Axes(EllipseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }

@@ -21,7 +21,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 %define ellipsesLib_DOCSTRING
 "
 Python interface to lsst::afw::geom::ellipses classes and functions
@@ -68,6 +68,24 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %shared_ptr(lsst::afw::geom::ellipses::EllipseCore);
 
 %include "lsst/afw/geom/ellipses/EllipseCore.h"
+
+%extend lsst::afw::geom::ellipses::EllipseCore {
+
+    %feature("shadow") as_ %{
+        def as_(self, cls):
+            """Return a new EllipseCore equivalent to self, with type specified
+            by the given string name or type object.
+            """
+            if isinstance(cls, basestring):
+                return $action(self, cls)
+            return cls(self)
+    %}
+
+    PTR(lsst::afw::geom::ellipses::EllipseCore) as_(std::string const & name) {
+        return self->as(name);
+    }
+
+}
 
 %define %EllipseCore_PREINCLUDE(NAME)
 %feature(notabstract) lsst::afw::geom::ellipses::NAME;
@@ -194,7 +212,6 @@ Python interface to lsst::afw::geom::ellipses classes and functions
         def getCore(self):
             return $action(self).cast()
     %}
-
 
     lsst::afw::geom::ellipses::Ellipse _transform(lsst::afw::geom::AffineTransform const & t) {
         return self->transform(t);

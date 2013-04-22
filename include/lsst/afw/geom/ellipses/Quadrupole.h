@@ -65,7 +65,7 @@ public:
     void setIxy(double ixy) { _matrix(0, 1) = _matrix(1, 0) = ixy; }
     //@}
 
-    /// @brief Polymorphic deep copy.
+    /// Polymorphic deep copy.
     PTR(Quadrupole) clone() const { return boost::static_pointer_cast<Quadrupole>(_clone()); }
 
     /// Return a string that identifies this parametrization ("Quadrupole").
@@ -84,42 +84,42 @@ public:
      */
     virtual void normalize();
 
-    /// @brief Return a 2x2 symmetric matrix of the parameters.
+    /// Return a 2x2 symmetric matrix of the parameters.
     Matrix const & getMatrix() const { return _matrix; }
 
-    /// @brief Return the determinant of the matrix representation.
+    /// Return the determinant of the matrix representation.
     double getDeterminant() const { return getIxx() * getIyy() - getIxy() * getIxy(); }
 
-    /// @brief Standard assignment.
+    /// Standard assignment.
     Quadrupole & operator=(Quadrupole const & other) { _matrix = other._matrix; return *this; }
 
-    /// @brief Converting assignment.
+    /// Converting assignment.
     Quadrupole & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
-    /// @brief Construct a circle with the given second moments (Ixx=Iyy=Irr, Ixy=0).
+    /// Construct a circle with the given second moments (Ixx=Iyy=Irr, Ixy=0).
     explicit Quadrupole(double irr=1.0);
 
-    /// @brief Construct from the three matrix elements specified explicitly.
+    /// Construct from the three matrix elements specified explicitly.
     Quadrupole(double ixx, double iyy, double ixy, bool normalize=false);
 
-    /// @brief Construct from a parameter vector, ordered (Ixx, Iyy, Ixy).
+    /// Construct from a parameter vector, ordered (Ixx, Iyy, Ixy).
     explicit Quadrupole(EllipseCore::ParameterVector const & vector, bool normalize=false);
 
-    /// @brief Construct from a 2x2 matrix.
+    /// Construct from a 2x2 matrix.
     explicit Quadrupole(Matrix const & matrix, bool normalize=true);
 
-    /// @brief Copy constructor.
+    /// Copy constructor.
     Quadrupole(Quadrupole const & other) : _matrix(other._matrix) {}
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Quadrupole(EllipseCore const & other) { *this = other; }
 #ifndef SWIG
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Quadrupole(EllipseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Quadrupole(EllipseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }

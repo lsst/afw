@@ -50,7 +50,6 @@ public:
     class Transformer;
     class GridTransform;
     class Convolution;
-    template <typename Output> struct Converter;
 #endif
 
     typedef Eigen::Vector3d ParameterVector;  ///< Type used by getParameterVector and setParameterVector
@@ -73,21 +72,21 @@ public:
      */
     static PTR(EllipseCore) make(std::string const & name, double v1, double v2, double v3);
 
-    /// @brief Construct an EllipseCore by converting to the parametrization defined by the given name.
+    /// Construct an EllipseCore by converting to the parametrization defined by the given name.
     static PTR(EllipseCore) make(std::string const & name, EllipseCore const & other);
 
 #ifndef SWIG
-    /// @brief Construct an EllipseCore from a Transformer expression temporary.
+    /// Construct an EllipseCore from a Transformer expression temporary.
     static PTR(EllipseCore) make(std::string const & name, Transformer const & other);
 
-    /// @brief Construct an EllipseCore from a Convolution expression temporary.
+    /// Construct an EllipseCore from a Convolution expression temporary.
     static PTR(EllipseCore) make(std::string const & name, Convolution const & other);
 #endif
 
-    /// @brief Return a string that identifies this parametrization.
+    /// Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
 
-    /// @brief Polymorphic deep-copy.
+    /// Polymorphic deep-copy.
     PTR(EllipseCore) clone() const { return _clone(); }
 
     /**
@@ -99,13 +98,13 @@ public:
      */
     virtual void normalize() = 0;
 
-    /// @brief Grow the EllipseCore in-place by adding 'buffer' to its semimajor and semiminor axes
+    /// Grow the EllipseCore in-place by adding 'buffer' to its semimajor and semiminor axes
     void grow(double buffer);
 
-    /// @brief Scale the EllipseCore in-place by multiplying its semimajor and semiminor axes by 'factor'.
+    /// Scale the EllipseCore in-place by multiplying its semimajor and semiminor axes by 'factor'.
     void scale(double factor);
 
-    /// @brief Return the area of the EllipseCore.
+    /// Return the area of the EllipseCore.
     double getArea() const;
 
     /**
@@ -125,7 +124,7 @@ public:
 
     //@{
     /**
-     *  @name Coordinate transforms
+     *  @brief Coordinate transforms
      *
      *  These member functions transform the ellipse by the given LinearTransform.
      *  The transform can be done in-place by calling inPlace() on the returned
@@ -136,6 +135,8 @@ public:
      *  @code
      *  Quadrupole q = Axes(3.0, 2.0).transform(LinearTransform::makeRotation(2.3*radians));
      *  @endcode
+     *
+     *  In Python, an EllipseCore of the same type as this is returned.
      */
     Transformer transform(LinearTransform const & transform);
     Transformer const transform(LinearTransform const & transform) const;
@@ -146,12 +147,14 @@ public:
      *
      *  The returned temporary expression object is implicitly convertible to LinearTransform
      *  and also supports differentiation.
+     *
+     *  In Python, a LinearTransform object is returned directly.
      */
     GridTransform const getGridTransform() const;
 
     //@{
     /**
-     *  @name Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
+     *  @brief Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
      *
      *  As with transform, the convolution can be done in-place by calling inPlace() on
      *  the returned expression object, or returned as a new shared_ptr by calling copy().
@@ -161,18 +164,20 @@ public:
      *  @code
      *  Quadrupole q = Axes(3.0, 2.0).convolve(Axes(1.0));
      *  @endcode
+     *
+     *  In Python, an EllipseCore of the same type as this is returned.
      */
     Convolution convolve(EllipseCore const & other);
     Convolution const convolve(EllipseCore const & other) const;
     //@}
 
-    /// @brief Return the size of the bounding box for the ellipse core.
+    /// Return the size of the bounding box for the ellipse core.
     Extent2D computeDimensions() const;
 
-    /// @brief Return the parameters of the EllipseCore as a vector.
+    /// Return the parameters of the EllipseCore as a vector.
     ParameterVector const getParameterVector() const;
 
-    /// @brief Set the parameters of the EllipseCore from a vector.
+    /// Set the parameters of the EllipseCore from a vector.
     void setParameterVector(ParameterVector const & vector);
 
     /**
@@ -195,16 +200,31 @@ public:
      *  @brief Set the parameters of this ellipse core from another.
      *
      *  This does not change the parametrization of the EllipseCore being assigned to.
+     *
+     *  Exposed as EllipseCore.assign in Python.
      */
     EllipseCore & operator=(EllipseCore const & other);
 
-    /// @brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
+    /// Assign other to this and return the derivative of the conversion, d(this)/d(other).
     Jacobian dAssign(EllipseCore const & other);
 
+    /// Return a new EllipseCore equivalent to this with type specified as a template parameter.
+#ifndef SWIG
+    template <typename Output>
+    Output as() const {
+        Output r;
+        r = *this;
+        return r;
+    }
+#endif
+
     /**
-     *  @brief Convert this to the core type specified as a template parameter.
+     *  @brief Return a new PTR(EllipseCore) equivalent to this with type specified by a string name.
+     *
+     *  Wrapped as "as_" in Python, because "as" is a Python keyword.  In Python, the type classes
+     *  of EllipseCore subclasses may be passed instead of the name.
      */
-    template <typename Output> Converter<Output> as() const;
+    PTR(EllipseCore) as(std::string const & name) const { return EllipseCore::make(name, *this); }
 
     virtual ~EllipseCore() {}
 
@@ -258,24 +278,6 @@ protected:
 
 #endif
 };
-
-#ifndef SWIG
-template <typename Output>
-struct EllipseCore::Converter {
-    EllipseCore const & input;
-
-    explicit Converter(EllipseCore const & input_) : input(input_) {}
-
-    operator Output() const { return Output(input); }
-    boost::shared_ptr<Output> copy() const { return boost::shared_ptr<Output>(new Output(input)); }
-};
-
-template <typename Output>
-inline EllipseCore::Converter<Output> EllipseCore::as() const {
-    return Converter<Output>(*this);
-}
-
-#endif
 
 }}}} // namespace lsst::afw::geom::ellipses
 
