@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,26 +10,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #ifndef LSST_AFW_GEOM_ELLIPSES_EllipseCore_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_EllipseCore_h_INCLUDED
-
-/**
- *  @file
- *  @brief Forward declarations, typedefs, and definitions for EllipseCore.
- *
- *  @note Do not include directly; use the main ellipse header file.
- */
 
 #include "boost/shared_ptr.hpp"
 #include "boost/make_shared.hpp"
@@ -46,11 +38,11 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 class Parametric;
 
 /**
- *  @brief A base class for parametrizations of the "core" of an ellipse - the ellipticity and size.
+ *  @brief A base class for parametrizations of the 3 numbers that define a translation-free ellipse.
  *
- *  A subclass of EllipseCore provides a particular interpretation of the three pointing point values that
- *  define an ellipse's size and ellipticity (including position angle).  All core subclasses
- *  are implicitly convertible and can be assigned to from any other core.
+ *  A subclass of EllipseCore provides a particular interpretation of the three values that
+ *  define an ellipse's size and ellipticity (including position angle).  All EllipseCore subclasses
+ *  are implicitly convertible and can be assigned to from any other EllipseCore.
  */
 class EllipseCore {
 public:
@@ -61,52 +53,69 @@ public:
     template <typename Output> struct Converter;
 #endif
 
-    typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
-    typedef Eigen::Matrix3d Jacobian; ///< Parameter Jacobian matrix type.
+    typedef Eigen::Vector3d ParameterVector;  ///< Type used by getParameterVector and setParameterVector
+    typedef Eigen::Matrix3d Jacobian; ///< Matrix type used in derivatives of parametrization conversions
 
+    /// Construct a unit-circle EllipseCore with the parametrization specified by the given name.
     static PTR(EllipseCore) make(std::string const & name);
 
+    /**
+     *  @brief Construct an EllipseCore with parameters defined by the given vector.
+     *
+     *  The interpretation of the vector is specific to the EllipseCore subclass indicated by the given name.
+     */
     static PTR(EllipseCore) make(std::string const & name, ParameterVector const & parameters);
 
+    /**
+     *  @brief Construct an EllipseCore with parameters defined by the given values.
+     *
+     *  The interpretation of the vector is specific to the EllipseCore subclass indicated by the given name.
+     */
     static PTR(EllipseCore) make(std::string const & name, double v1, double v2, double v3);
 
+    /// @brief Construct an EllipseCore by converting to the parametrization defined by the given name.
     static PTR(EllipseCore) make(std::string const & name, EllipseCore const & other);
 
 #ifndef SWIG
+    /// @brief Construct an EllipseCore from a Transformer expression temporary.
     static PTR(EllipseCore) make(std::string const & name, Transformer const & other);
 
+    /// @brief Construct an EllipseCore from a Convolution expression temporary.
     static PTR(EllipseCore) make(std::string const & name, Convolution const & other);
 #endif
 
     /// @brief Return a string that identifies this parametrization.
     virtual std::string getName() const = 0;
 
-    /// @brief Deep-copy the Core.
+    /// @brief Polymorphic deep-copy.
     PTR(EllipseCore) clone() const { return _clone(); }
 
     /**
-     *  @brief Put the parameters into a "standard form", and throw InvalidParameterException
-     *         if they cannot be normalized.
+     *  @brief Put the parameters into a "standard form".
+     *
+     *  See the documentation for each EllipseCore subclass for information on what normalization means.
+     *
+     *  @throw InvalidParameterException if they cannot be normalized.
      */
     virtual void normalize() = 0;
 
-    /// @brief Increase the major and minor radii of the ellipse core by the given buffer.
+    /// @brief Grow the EllipseCore in-place by adding 'buffer' to its semimajor and semiminor axes
     void grow(double buffer);
 
-    /// @brief Scale the size of the ellipse core by the given factor.
+    /// @brief Scale the EllipseCore in-place by multiplying its semimajor and semiminor axes by 'factor'.
     void scale(double factor);
 
-    /// @brief Return the area of the ellipse core.
+    /// @brief Return the area of the EllipseCore.
     double getArea() const;
 
     /**
      *  @brief Return the radius defined as the 4th root of the determinant of the quadrupole matrix.
      *
      *  The determinant radius is equal to the standard radius for a circle,
-     *  and its square times pi is the area of the ellipse. 
+     *  and its square times pi is the area of the ellipse.
      */
     double getDeterminantRadius() const;
-    
+
     /**
      *  @brief Return the radius defined as the square root of one half the trace of the quadrupole matrix.
      *
@@ -114,14 +123,20 @@ public:
      */
     double getTraceRadius() const;
 
+    //@{
     /**
      *  @name Coordinate transforms
-     *  
+     *
      *  These member functions transform the ellipse by the given LinearTransform.
      *  The transform can be done in-place by calling inPlace() on the returned
      *  expression object, or returned as a new shared_ptr by calling copy().
+     *
+     *  The expression object is also implicitly convertible to any EllipseCore, so
+     *  you can transform and convert in a single step:
+     *  @code
+     *  Quadrupole q = Axes(3.0, 2.0).transform(LinearTransform::makeRotation(2.3*radians));
+     *  @endcode
      */
-    //@{
     Transformer transform(LinearTransform const & transform);
     Transformer const transform(LinearTransform const & transform) const;
     //@}
@@ -129,15 +144,24 @@ public:
     /**
      *  @brief Return the transform that maps the ellipse to the unit circle.
      *
-     *  The returned proxy object is implicitly convertible to LinearTransform
+     *  The returned temporary expression object is implicitly convertible to LinearTransform
      *  and also supports differentiation.
      */
     GridTransform const getGridTransform() const;
 
+    //@{
     /**
      *  @name Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
+     *
+     *  As with transform, the convolution can be done in-place by calling inPlace() on
+     *  the returned expression object, or returned as a new shared_ptr by calling copy().
+     *
+     *  The expression object is also implicitly convertible to any EllipseCore, so
+     *  you can convolve and convert in a single step:
+     *  @code
+     *  Quadrupole q = Axes(3.0, 2.0).convolve(Axes(1.0));
+     *  @endcode
      */
-    //@{
     Convolution convolve(EllipseCore const & other);
     Convolution const convolve(EllipseCore const & other) const;
     //@}
@@ -145,30 +169,32 @@ public:
     /// @brief Return the size of the bounding box for the ellipse core.
     Extent2D computeDimensions() const;
 
-    /// @brief Return the core parameters as a vector.
+    /// @brief Return the parameters of the EllipseCore as a vector.
     ParameterVector const getParameterVector() const;
 
-    /// @brief Set the core parameters from a vector.
+    /// @brief Set the parameters of the EllipseCore from a vector.
     void setParameterVector(ParameterVector const & vector);
 
     /**
-     *  @brief Compare two ellipse cores for equality.
+     *  @brief Compare two EllipseCores for equality.
      *
-     *  Ellipse cores are only equal if they have the same type.
+     *  EllipseCores are only equal if they have the same type and exactly the same parameters;
+     *  there is no special handling for approximate floating-point equality.
      */
     bool operator==(EllipseCore const & other) const;
 
     /**
      *  @brief Compare two ellipse cores for inequality.
      *
-     *  Ellipses are only equal if they have the same type.
+     *  EllipseCores are only equal if they have the same type and exactly the same parameters;
+     *  there is no special handling for approximate floating-point equality.
      */
     bool operator!=(EllipseCore const & other) const { return !operator==(other); }
 
     /**
      *  @brief Set the parameters of this ellipse core from another.
      *
-     *  This does not change the parametrization of the ellipse core.
+     *  This does not change the parametrization of the EllipseCore being assigned to.
      */
     EllipseCore & operator=(EllipseCore const & other);
 
@@ -199,12 +225,12 @@ protected:
     virtual void writeParameters(double * iter) const = 0;
 
     static void _assignQuadrupoleToAxes(
-        double ixx, double iyy, double ixy, 
+        double ixx, double iyy, double ixy,
         double & a, double & b, double & theta
     );
 
     static Jacobian _dAssignQuadrupoleToAxes(
-        double ixx, double iyy, double ixy, 
+        double ixx, double iyy, double ixy,
         double & a, double & b, double & theta
     );
 

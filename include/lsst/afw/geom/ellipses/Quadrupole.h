@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,26 +10,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #ifndef LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Quadrupole_h_INCLUDED
-
-/**
- *  \file
- *  @brief Definitions and inlines for Quadrupole.
- *
- *  \note Do not include directly; use the main ellipse header file.
- */
 
 #include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
@@ -41,15 +33,28 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
  *  @brief An ellipse core with quadrupole moments as parameters.
+ *
+ *  The quadrupole representation is best thought of as the "covariance matrix" representation
+ *  of an ellipse, with parameters corresponding to the three unique elements of the covariance
+ *  matrix for an elliptically-symmetric distribution.
+ *
+ *  The mapping between the quadrupole and other Ellipse does not put any restriction on the
+ *  meaning of the ellipse, even though the quadrupole parametrization's naems strongly suggests
+ *  a connection with the second moments.  For instance, if you start with an EllipseCore that
+ *  corresponds to the half-light radius of an elliptical galaxy model, converting it to a
+ *  Quadrupole does not (and cannot) turn this into a measure of its moments - it remains just
+ *  another way of parametrizing the half-light radius ellipse.
  */
 class Quadrupole : public EllipseCore {
 public:
 
-    enum ParameterEnum { IXX=0, IYY=1, IXY=2 }; ///< Definitions for elements of a core vector.
+    enum ParameterEnum { IXX=0, IYY=1, IXY=2 }; ///< Enum used to index the elements of a parameter vector.
 
     /// Matrix type for the matrix representation of Quadrupole parameters.
     typedef Eigen::Matrix<double,2,2,Eigen::DontAlign> Matrix;
 
+    //@{
+    /// Basic getters and setters for distinct matrix elements
     double const getIxx() const { return _matrix(0, 0); }
     void setIxx(double ixx) { _matrix(0, 0) = ixx; }
 
@@ -58,16 +63,24 @@ public:
 
     double const getIxy() const { return _matrix(1, 0); }
     void setIxy(double ixy) { _matrix(0, 1) = _matrix(1, 0) = ixy; }
+    //@}
 
-    /// @brief Deep copy the ellipse core.
+    /// @brief Polymorphic deep copy.
     PTR(Quadrupole) clone() const { return boost::static_pointer_cast<Quadrupole>(_clone()); }
 
-    /// Return a string that identifies this parametrization.
+    /// Return a string that identifies this parametrization ("Quadrupole").
     virtual std::string getName() const;
 
     /**
-     *  @brief Put the parameters into a "standard form", and throw InvalidEllipseParameters
-     *         if they cannot be normalized.
+     *  @brief Check parameters and put them into standard form.
+     *
+     *  In the case of Quadrupole, parameters will never be modified, but they will be checked
+     *  for the followig conditions:
+     *   - The [0,1] and [1,0] elements of the matrix must be identical.
+     *   - Both Ixx and Iyy must be >= 0
+     *   - The determinant of the matrix must not be negative.
+     *
+     *  @throw lsst::pex::exceptions::InvalidParameterException if the above conditions are not met.
      */
     virtual void normalize();
 
@@ -86,10 +99,10 @@ public:
     /// @brief Construct a circle with the given second moments (Ixx=Iyy=Irr, Ixy=0).
     explicit Quadrupole(double irr=1.0);
 
-    /// @brief Construct from parameter values.
+    /// @brief Construct from the three matrix elements specified explicitly.
     Quadrupole(double ixx, double iyy, double ixy, bool normalize=false);
 
-    /// @brief Construct from a parameter vector.
+    /// @brief Construct from a parameter vector, ordered (Ixx, Iyy, Ixy).
     explicit Quadrupole(EllipseCore::ParameterVector const & vector, bool normalize=false);
 
     /// @brief Construct from a 2x2 matrix.

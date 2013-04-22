@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,26 +10,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #ifndef LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Axes_h_INCLUDED
-
-/**
- *  \file
- *  @brief Definitions and inlines for Axes.
- *
- *  \note Do not include directly; use the main ellipse header file.
- */
 
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/geom/ellipses/EllipseCore.h"
@@ -41,13 +33,21 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
+ *  @brief An EllipeCore for the semimajor/semiminor axis and position angle parametrization.
+ *
+ *  The parameters of an Axes are:
+ *   - @f$a@f$ - the semimajor axis of the ellipse (largest radius)
+ *   - @f$b@f$ - the semiminor axis of the ellipse (smallest radius)
+ *   - @f$\theta@f$ - angle of the semimajor axis, measured counterclockwise from the x-axis.  In
+ *                    radians when the Angle class cannot be used.
  */
 class Axes : public EllipseCore {
 public:
 
-    enum ParameterEnum { A=0, B=1, THETA=2 }; ///< Definitions for elements of a core vector.
+    enum ParameterEnum { A=0, B=1, THETA=2 }; ///< Enum used to index the elements of a parameter vector.
 
+    //@{
+    /// Basic getters and setters for parameters; see Axes class documentation for more information.
     double const getA() const { return _vector[A]; }
     void setA(double a) { _vector[A] = a; }
 
@@ -56,16 +56,21 @@ public:
 
     Angle const getTheta() const { return _vector[THETA] * radians; }
     void setTheta(Angle theta) { _vector[THETA] = theta.asRadians(); }
+    //@}
 
-    /// @brief Deep copy the ellipse core.
+    /// @brief Polymorphic deep copy.
     PTR(Axes) clone() const { return boost::static_pointer_cast<Axes>(_clone()); }
 
-    /// Return a string that identifies this parametrization.
+    /// Return a string that identifies this parametrization ("Axes").
     virtual std::string getName() const;
 
     /**
-     *  @brief Put the parameters into a "standard form", if possible, and throw InvalidEllipseParameters
-     *         if they cannot be normalized.
+     *  @brief Check parameters and put them into standard form.
+     *
+     *  This will swap @f$a@f$ and @f$b@f$ and adjust @f$\theta@f$ appropriately if @f$b > a@f$, and ensure
+     *  that @f$-\pi/2 \lt \theta \le \pi/2@f$.
+     *
+     *  @throw lsst::pex::exception::InvalidParamterException if @f$a<0@f$ or @f$b<0@f$.
      */
     virtual void normalize();
 
@@ -75,14 +80,23 @@ public:
     /// @brief Converting assignment.
     Axes & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
-    /// @brief Construct a circle with the given radius.
-    explicit Axes(double radius=1.0) : _vector(radius, radius, 0.0) {}
-
-    /// @brief Construct from parameter values
+    /**
+     *  @brief Construct from parameter values, and optionally normalize.
+     *
+     *  For more precise parameter value definitions, see the Axes class documentation.
+     *  For more information about normalization, see normalize().
+     */
     Axes(double a, double b, Angle theta=0.0*radians, bool normalize=false) :
         _vector(a, b, theta.asRadians()) { if (normalize) this->normalize(); }
 
-    /// @brief Construct from a parameter vector.
+    /// @brief Construct a circle with the given radius.
+    explicit Axes(double radius=1.0) : _vector(radius, radius, 0.0) {}
+
+    /**
+     *  @brief Construct from a parameter vector of (a, b, theta).
+     *
+     *  @copydetails Axes::Axes
+     */
     explicit Axes(EllipseCore::ParameterVector const & vector, bool normalize=false) :
         _vector(vector) { if (normalize) this->normalize(); }
 
@@ -93,12 +107,12 @@ public:
     Axes(EllipseCore const & other) { *this = other; }
 
 #ifndef SWIG
-    /// @brief Converting copy constructor.
+    /// @brief Implicit construction from a Transformer expression temporary.
     Axes(EllipseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
-    /// @brief Converting copy constructor.
+    /// @brief Implicit construction from a Convolution expression temporary.
     Axes(EllipseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
