@@ -82,8 +82,11 @@ public:
     /// @brief Converting assignment.
     Axes & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
+    /// @brief Construct a circle with the given radius.
+    explicit Axes(double radius=1.0) : _vector(radius, radius, 0.0) {}
+
     /// @brief Construct from parameter values
-    explicit Axes(double a=1.0, double b=1.0, Angle theta=0.0*radians, bool normalize=false) :
+    Axes(double a, double b, Angle theta=0.0*radians, bool normalize=false) :
         _vector(a, b, theta.asRadians()) { if (normalize) this->normalize(); }
 
     /// @brief Construct from a parameter vector.

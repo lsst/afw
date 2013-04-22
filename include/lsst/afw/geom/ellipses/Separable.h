@@ -92,8 +92,11 @@ public:
     /// @brief Converting assignment.
     Separable & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
+    /// @brief Construct a circle with the given radius.
+    explicit Separable(double radius=1.0);
+
     /// @brief Construct from parameter values.
-    explicit Separable(double e1=0.0, double e2=0.0, double radius=Radius(), bool normalize=true);
+    Separable(double e1, double e2, double radius=Radius(), bool normalize=true);
 
     /// @brief Construct from parameter values.
     explicit Separable(std::complex<double> const & complex, 

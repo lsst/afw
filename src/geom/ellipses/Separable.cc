@@ -66,6 +66,11 @@ Separable<Ellipticity_,Radius_>::operator=(Separable<Ellipticity_,Radius_> const
 }
 
 template <typename Ellipticity_, typename Radius_>
+Separable<Ellipticity_,Radius_>::Separable(double radius) :
+    _ellipticity(0.0, 0.0), _radius(radius)
+{}
+
+template <typename Ellipticity_, typename Radius_>
 Separable<Ellipticity_,Radius_>::Separable(double e1, double e2, double radius, bool normalize) :
     _ellipticity(e1, e2), _radius(radius)
 {

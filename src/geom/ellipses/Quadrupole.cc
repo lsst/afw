@@ -51,6 +51,12 @@ void Quadrupole::writeParameters(double * iter) const {
     *iter++ = getIxy();
 }
 
+Quadrupole::Quadrupole(double irr) {
+    setIxx(irr);
+    setIyy(irr);
+    setIxy(0.0);
+}
+
 Quadrupole::Quadrupole(double ixx, double iyy, double ixy, bool normalize) {
     setIxx(ixx);
     setIyy(iyy);

@@ -90,8 +90,11 @@ public:
     /// @brief Converting assignment.
     Quadrupole & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
+    /// @brief Construct a circle with the given second moments (Ixx=Iyy=Irr, Ixy=0).
+    explicit Quadrupole(double irr=1.0);
+
     /// @brief Construct from parameter values.
-    explicit Quadrupole(double ixx=1.0, double iyy=1.0, double ixy=0.0, bool normalize=false);
+    Quadrupole(double ixx, double iyy, double ixy, bool normalize=false);
 
     /// @brief Construct from a parameter vector.
     explicit Quadrupole(EllipseCore::ParameterVector const & vector, bool normalize=false);
