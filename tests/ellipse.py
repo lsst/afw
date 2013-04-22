@@ -77,7 +77,6 @@ class EllipseTestCase(unittest.TestCase):
                 self.assertClose(conv.getTraceRadius(), traceRadius * 3)
                 self.assertClose(conv.getArea(), area * 9)
 
-
     def testAccessors(self):
         for core in self.cores:
             vec = numpy.random.randn(3) * 1E-3 + core.getParameterVector()
@@ -98,6 +97,11 @@ class EllipseTestCase(unittest.TestCase):
             self.assert_((lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector()
                           == ellipse.getParameterVector()).all())
             self.assert_(ellipse is not lsst.afw.geom.ellipses.Ellipse(ellipse))
+        matrix = self.cores[1].getMatrix()
+        self.assertEqual(matrix[0,0], self.cores[1].getIxx())
+        self.assertEqual(matrix[1,1], self.cores[1].getIyy())
+        self.assertEqual(matrix[0,1], self.cores[1].getIxy())
+        self.assertEqual(matrix[1,0], self.cores[1].getIxy())
 
     def testTransform(self):
         for core in self.cores:

@@ -61,6 +61,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %ignore lsst::afw::geom::ellipses::EllipseCore::as;
 %rename(assign) lsst::afw::geom::ellipses::EllipseCore::operator=;
 
+%declareNumPyConverters(lsst::afw::geom::ellipses::Quadrupole::Matrix);
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::Jacobian);
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::ParameterVector);
 
