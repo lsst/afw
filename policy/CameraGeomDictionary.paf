@@ -579,8 +579,9 @@ definitions: {
                                         serial: {
                                             type: int
                                             description: "Serial number for this Amp"
-                                            minOccurs: 1
+                                            minOccurs: 0
                                             maxOccurs: 1
+                                            default: -1
                                         }
                                         type: {
                                             type: string
