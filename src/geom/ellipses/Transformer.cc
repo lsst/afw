@@ -27,17 +27,17 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-BaseCore::Ptr BaseCore::Transformer::copy() const {
-    BaseCore::Ptr r(input.clone());
+EllipseCore::Ptr EllipseCore::Transformer::copy() const {
+    EllipseCore::Ptr r(input.clone());
     apply(*r);
     return r;
 }
 
-void BaseCore::Transformer::inPlace() {
+void EllipseCore::Transformer::inPlace() {
     apply(input);
 }
 
-void BaseCore::Transformer::apply(BaseCore & result) const {
+void EllipseCore::Transformer::apply(EllipseCore & result) const {
     Eigen::Matrix2d m;
     input._assignToQuadrupole(m(0,0), m(1,1), m(0,1));
     m(1,0) = m(0,1);
@@ -45,9 +45,9 @@ void BaseCore::Transformer::apply(BaseCore & result) const {
     result._assignFromQuadrupole(m(0,0), m(1,1), m(0,1));
 }
 
-BaseCore::Transformer::DerivativeMatrix
-BaseCore::Transformer::d() const {
-    BaseCore::Ptr output(input.clone());
+EllipseCore::Transformer::DerivativeMatrix
+EllipseCore::Transformer::d() const {
+    EllipseCore::Ptr output(input.clone());
     Eigen::Matrix2d m;
     Jacobian rhs = input._dAssignToQuadrupole(m(0,0), m(1,1), m(0,1));
     m(1,0) = m(0,1);
@@ -67,9 +67,9 @@ BaseCore::Transformer::d() const {
     return lhs * mid * rhs;
 }
 
-BaseCore::Transformer::TransformDerivativeMatrix
-BaseCore::Transformer::dTransform() const {
-    BaseCore::Ptr output(input.clone());
+EllipseCore::Transformer::TransformDerivativeMatrix
+EllipseCore::Transformer::dTransform() const {
+    EllipseCore::Ptr output(input.clone());
     Eigen::Matrix2d m;
     input._assignToQuadrupole(m(0,0), m(1,1), m(0,1));
     Eigen::Matrix<double,3,4> mid = Eigen::Matrix<double,3,4>::Zero();

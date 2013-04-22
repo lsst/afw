@@ -33,14 +33,14 @@
  */
 
 
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/AffineTransform.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 /**
- *  @brief An ellipse defined by an arbitrary BaseCore and a center point.
+ *  @brief An ellipse defined by an arbitrary EllipseCore and a center point.
  *
  *  An ellipse is composed of its center coordinate and its Core - a parametrization of the
  *  ellipticity and size of the ellipse.  Setting the core of an ellipse never changes the 
@@ -72,19 +72,19 @@ public:
     void setCenter(Point2D const & center) { _center = center; }
 
     /// @brief Return the ellipse core.
-    BaseCore const & getCore() const { return *_core; }
+    EllipseCore const & getCore() const { return *_core; }
 
     /// @brief Return the ellipse core.
-    BaseCore & getCore() { return *_core; }
+    EllipseCore & getCore() { return *_core; }
 
     /// @brief Return the ellipse core.
-    BaseCore::ConstPtr getCorePtr() const { return _core; }
+    EllipseCore::ConstPtr getCorePtr() const { return _core; }
 
     /// @brief Return the ellipse core.
-    BaseCore::Ptr getCorePtr() { return _core; }
+    EllipseCore::Ptr getCorePtr() { return _core; }
 
     /// @brief Set the ellipse core; the type of the core is not changed.
-    void setCore(BaseCore const & core) { *_core = core; }
+    void setCore(EllipseCore const & core) { *_core = core; }
 
     /// @brief Put the parameters in a standard form.
     void normalize() { _core->normalize(); }
@@ -164,10 +164,10 @@ public:
 
     virtual ~Ellipse() {}
 
-    explicit Ellipse(BaseCore const & core, Point2D const & center = Point2D()) :
+    explicit Ellipse(EllipseCore const & core, Point2D const & center = Point2D()) :
         _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(BaseCore::ConstPtr const & core, Point2D const & center = Point2D()) :
+    explicit Ellipse(EllipseCore::ConstPtr const & core, Point2D const & center = Point2D()) :
         _core(core->clone()), _center(center) {}
 
 #ifndef SWIG
@@ -179,7 +179,7 @@ public:
         _core(other.getCore().clone()), _center(other.getCenter()) {}
 
 private:
-    BaseCore::Ptr _core;
+    EllipseCore::Ptr _core;
     Point2D _center;
 };
 

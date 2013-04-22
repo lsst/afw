@@ -595,11 +595,11 @@ Possible values are:
         *                Draw a *
         o                Draw a circle
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
-        An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
+        An object derived from afwGeom.ellipses.EllipseCore Draw the ellipse (argument size is ignored)
 Any other value is interpreted as a string to be drawn. Strings obey the fontFamily (which may be extended
 with other characteristics, e.g. "times bold italic".
 
-N.b. objects derived from BaseCore include Axes and Quadrupole.
+N.b. objects derived from EllipseCore include Axes and Quadrupole.
 """
     if frame is None:
         frame = getDefaultFrame()
@@ -618,7 +618,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
     cmd = selectFrame(frame) + "; "
     r += 1
     c += 1                      # ds9 uses 1-based coordinates
-    if isinstance(symb, afwGeom.ellipses.BaseCore) or re.search(r"^@:", symb):
+    if isinstance(symb, afwGeom.ellipses.EllipseCore) or re.search(r"^@:", symb):
         try:
             mat = re.search(r"^@:([^,]+),([^,]+),([^,]+)", symb)
         except TypeError:

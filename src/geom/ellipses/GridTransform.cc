@@ -30,21 +30,21 @@
 namespace lsst { namespace afw { namespace geom {
 namespace ellipses {
 
-BaseCore::GridTransform::GridTransform(BaseCore const & input) :
+EllipseCore::GridTransform::GridTransform(EllipseCore const & input) :
     _input(input),
     _eig(Quadrupole(input).getMatrix())
 {}
 
-LinearTransform::Matrix BaseCore::GridTransform::getMatrix() const {
+LinearTransform::Matrix EllipseCore::GridTransform::getMatrix() const {
     return _eig.operatorInverseSqrt();
 }
 
-BaseCore::GridTransform::operator LinearTransform () const {
+EllipseCore::GridTransform::operator LinearTransform () const {
     return LinearTransform(_eig.operatorInverseSqrt());
 }
 
-BaseCore::GridTransform::DerivativeMatrix
-BaseCore::GridTransform::d() const {
+EllipseCore::GridTransform::DerivativeMatrix
+EllipseCore::GridTransform::d() const {
     /*
        Grid transform is easiest to differentiate in the ReducedShear/DeterminantRadius parametrization.
        But we actually differentiate the inverse of the transform, and then use
@@ -93,11 +93,11 @@ BaseCore::GridTransform::d() const {
     return mid * rhs;
 }
 
-double BaseCore::GridTransform::getDeterminant() const {
+double EllipseCore::GridTransform::getDeterminant() const {
     return sqrt(1.0 / _eig.eigenvalues().prod());
 }
 
-LinearTransform BaseCore::GridTransform::invert() const {
+LinearTransform EllipseCore::GridTransform::invert() const {
     return LinearTransform(_eig.operatorSqrt());
 }
 

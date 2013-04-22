@@ -27,7 +27,7 @@
 
 /**
  *  @file
- *  @brief Definitions for Ellipse::GridTransform and BaseCore::GridTransform.
+ *  @brief Definitions for Ellipse::GridTransform and EllipseCore::GridTransform.
  *
  *  @note Do not include directly; use the main ellipse header file.
  */
@@ -43,14 +43,14 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  *  @brief A temporary-only expression object representing a LinearTransform that
  *         maps the ellipse core to a unit circle.
  */
-class BaseCore::GridTransform {
+class EllipseCore::GridTransform {
 public:
 
     /// Matrix type for derivative with respect to ellipse parameters.
     typedef Eigen::Matrix<double,4,3> DerivativeMatrix;
 
     /// @brief Standard constructor.
-    explicit GridTransform(BaseCore const & input);
+    explicit GridTransform(EllipseCore const & input);
     
     /// @brief Convert the proxy to a LinearTransform.
     operator LinearTransform () const;
@@ -69,7 +69,7 @@ public:
 
 private:
 
-    BaseCore const & _input; ///< \internal input core to be transformed
+    EllipseCore const & _input; ///< \internal input core to be transformed
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix2d> _eig;
 };
 
@@ -104,11 +104,11 @@ public:
 private:
 
     Ellipse const & _input; ///< \internal input ellipse to be transformed
-    BaseCore::GridTransform _coreGt;
+    EllipseCore::GridTransform _coreGt;
 };
 
-inline BaseCore::GridTransform const BaseCore::getGridTransform() const{
-    return BaseCore::GridTransform(*this);
+inline EllipseCore::GridTransform const EllipseCore::getGridTransform() const{
+    return EllipseCore::GridTransform(*this);
 }
 
 inline Ellipse::GridTransform const Ellipse::getGridTransform() const {

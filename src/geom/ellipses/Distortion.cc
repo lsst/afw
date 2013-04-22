@@ -24,7 +24,7 @@
 #include "lsst/afw/geom/ellipses/Distortion.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 

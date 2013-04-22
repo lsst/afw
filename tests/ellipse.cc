@@ -17,7 +17,7 @@ inline bool approx(double a, double b, double tol=1E-8) {
     return std::fabs(a - b) <= tol;
 }
 
-inline bool approx(BaseCore const & a, BaseCore const & b, double tol=1E-8) {
+inline bool approx(EllipseCore const & a, EllipseCore const & b, double tol=1E-8) {
     return a.getParameterVector().isApprox(b.getParameterVector(), tol);
 }
 
@@ -162,7 +162,7 @@ struct CoreConversionTest {
         static int const M = 3;
         static int const N = 3;
 
-        BaseCore::ParameterVector operator()(BaseCore::ParameterVector const & x) {
+        EllipseCore::ParameterVector operator()(EllipseCore::ParameterVector const & x) {
             T1 c1(x);
             T2 c2(c1);
             return c2.getParameterVector();
@@ -182,13 +182,13 @@ struct CoreConversionTest {
         T2 other(core);
         copy = other;
         BOOST_CHECK(approx(core, copy, 1E-12));
-        BaseCore::Jacobian a1 = copy.dAssign(other);
-        BaseCore::Jacobian a2 = other.dAssign(copy);
+        EllipseCore::Jacobian a1 = copy.dAssign(other);
+        EllipseCore::Jacobian a2 = other.dAssign(copy);
         if (copy.getName() != "Axes" && other.getName() != "Axes") {
             Functor<T2,T1> f1;
             Functor<T1,T2> f2;
-            BaseCore::Jacobian b1 = computeJacobian(f1, other.getParameterVector());
-            BaseCore::Jacobian b2 = computeJacobian(f2, copy.getParameterVector());
+            EllipseCore::Jacobian b1 = computeJacobian(f1, other.getParameterVector());
+            EllipseCore::Jacobian b2 = computeJacobian(f2, copy.getParameterVector());
             if (!(a1 - b1).isMuchSmallerThan(1.0, 1E-4)) {
                 std::cerr << copy.getName() << ", " << other.getName() << "\n";
                 std::cerr << (a1 - b1) << "\n\n";
@@ -361,7 +361,7 @@ struct ConvolutionTest {
         static int const M = 3;
         static int const N = 3;
 
-        BaseCore::ParameterVector operator()(BaseCore::ParameterVector const & x) {
+        EllipseCore::ParameterVector operator()(EllipseCore::ParameterVector const & x) {
             T c1(x);
             c1.convolve(other).inPlace();
             return c1.getParameterVector();
@@ -379,8 +379,8 @@ struct ConvolutionTest {
         T input(core);
         T output = input.convolve(other);
         Functor<T> f(other);
-        BaseCore::Convolution::DerivativeMatrix d_analytic = input.convolve(other).d();
-        BaseCore::Convolution::DerivativeMatrix d_numeric 
+        EllipseCore::Convolution::DerivativeMatrix d_analytic = input.convolve(other).d();
+        EllipseCore::Convolution::DerivativeMatrix d_numeric 
             = computeJacobian(f, input.getParameterVector());
         BOOST_CHECK_MESSAGE(
             d_analytic.isApprox(d_numeric,1E-4),

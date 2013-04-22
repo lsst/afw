@@ -53,20 +53,20 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 
 %pythondynamic lsst::afw::geom::ellipses::Ellipse;
 
-%ignore lsst::afw::geom::ellipses::BaseCore::transform;
-%ignore lsst::afw::geom::ellipses::BaseCore::convolve;
-%ignore lsst::afw::geom::ellipses::BaseCore::getGridTransform;
-%ignore lsst::afw::geom::ellipses::BaseCore::readParameters;
-%ignore lsst::afw::geom::ellipses::BaseCore::writeParameters;
-%ignore lsst::afw::geom::ellipses::BaseCore::as;
-%rename(assign) lsst::afw::geom::ellipses::BaseCore::operator=;
+%ignore lsst::afw::geom::ellipses::EllipseCore::transform;
+%ignore lsst::afw::geom::ellipses::EllipseCore::convolve;
+%ignore lsst::afw::geom::ellipses::EllipseCore::getGridTransform;
+%ignore lsst::afw::geom::ellipses::EllipseCore::readParameters;
+%ignore lsst::afw::geom::ellipses::EllipseCore::writeParameters;
+%ignore lsst::afw::geom::ellipses::EllipseCore::as;
+%rename(assign) lsst::afw::geom::ellipses::EllipseCore::operator=;
 
-%declareNumPyConverters(lsst::afw::geom::ellipses::BaseCore::Jacobian);
-%declareNumPyConverters(lsst::afw::geom::ellipses::BaseCore::ParameterVector);
+%declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::Jacobian);
+%declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::ParameterVector);
 
-%shared_ptr(lsst::afw::geom::ellipses::BaseCore);
+%shared_ptr(lsst::afw::geom::ellipses::EllipseCore);
 
-%include "lsst/afw/geom/ellipses/BaseCore.h"
+%include "lsst/afw/geom/ellipses/EllipseCore.h"
 
 %define %EllipseCore_PREINCLUDE(NAME)
 %feature(notabstract) lsst::afw::geom::ellipses::NAME;
@@ -108,7 +108,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
        self->transform(t).inPlace();
     }
     lsst::afw::geom::ellipses::NAME::Ptr _convolve(
-        lsst::afw::geom::ellipses::BaseCore const & other
+        lsst::afw::geom::ellipses::EllipseCore const & other
     ) {
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
             self->convolve(other).copy()
@@ -119,7 +119,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     }
 
     static lsst::afw::geom::ellipses::NAME::Ptr cast(
-        lsst::afw::geom::ellipses::BaseCore::Ptr const & p
+        lsst::afw::geom::ellipses::EllipseCore::Ptr const & p
     ) {
        return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::NAME>(p);
     }

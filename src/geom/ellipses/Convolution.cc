@@ -26,28 +26,28 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-BaseCore::Ptr BaseCore::Convolution::copy() const {
-    BaseCore::Ptr r(self.clone());
+EllipseCore::Ptr EllipseCore::Convolution::copy() const {
+    EllipseCore::Ptr r(self.clone());
     apply(*r);
     return r;
 }
 
-void BaseCore::Convolution::inPlace() {
+void EllipseCore::Convolution::inPlace() {
     apply(self);
 }
 
-BaseCore::Convolution::DerivativeMatrix
-BaseCore::Convolution::d() const {
+EllipseCore::Convolution::DerivativeMatrix
+EllipseCore::Convolution::d() const {
     double ixx1, iyy1, ixy1;
     double ixx2, iyy2, ixy2;
     Jacobian rhs = self._dAssignToQuadrupole(ixx1, iyy1, ixy1);
     other._assignToQuadrupole(ixx2, iyy2, ixy2);
-    BaseCore::Ptr convolved(self.clone());
+    EllipseCore::Ptr convolved(self.clone());
     Jacobian lhs = convolved->_dAssignFromQuadrupole(ixx1 + ixx2, iyy1 + iyy2, ixy1 + ixy2);
     return lhs * rhs;
 }
 
-void BaseCore::Convolution::apply(BaseCore & result) const {
+void EllipseCore::Convolution::apply(EllipseCore & result) const {
     double ixx1, iyy1, ixy1;
     double ixx2, iyy2, ixy2;
     self._assignToQuadrupole(ixx1, iyy1, ixy1);

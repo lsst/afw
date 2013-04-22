@@ -30,7 +30,7 @@
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Registrar< Separable<Ellipticity_,Radius_> > Separable<Ellipticity_,Radius_>::registrar;
+EllipseCore::Registrar< Separable<Ellipticity_,Radius_> > Separable<Ellipticity_,Radius_>::registrar;
 
 template <typename Ellipticity_, typename Radius_>
 std::string Separable<Ellipticity_,Radius_>::getName() const {
@@ -88,7 +88,7 @@ Separable<Ellipticity_,Radius_>::Separable(Ellipticity const & ellipticity, doub
 }
 
 template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(BaseCore::ParameterVector const & vector, bool normalize) :
+Separable<Ellipticity_,Radius_>::Separable(EllipseCore::ParameterVector const & vector, bool normalize) :
     _ellipticity(vector[0], vector[1]), _radius(vector[2])
 {
     if (normalize) this->normalize();
@@ -101,12 +101,12 @@ void Separable<Ellipticity_,Radius_>::_assignToQuadrupole(double & ixx, double &
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian 
+EllipseCore::Jacobian 
 Separable<Ellipticity_,Radius_>::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
     Distortion distortion;
-    BaseCore::Jacobian rhs = Jacobian::Identity();
+    EllipseCore::Jacobian rhs = Jacobian::Identity();
     rhs.block<2,2>(0,0) = distortion.dAssign(_ellipticity);
-    BaseCore::Jacobian lhs = _radius.dAssignToQuadrupole(distortion, ixx, iyy, ixy);
+    EllipseCore::Jacobian lhs = _radius.dAssignToQuadrupole(distortion, ixx, iyy, ixy);
     return lhs * rhs;
 }
 
@@ -114,15 +114,15 @@ template <typename Ellipticity_, typename Radius_>
 void Separable<Ellipticity_,Radius_>::_assignToAxes(double & a, double & b, double & theta) const {
     double ixx, iyy, ixy;
     this->_assignToQuadrupole(ixx, iyy, ixy);
-    BaseCore::_assignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
+    EllipseCore::_assignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian
+EllipseCore::Jacobian
 Separable<Ellipticity_,Radius_>::_dAssignToAxes(double & a, double & b, double & theta) const {
     double ixx, iyy, ixy;
-    BaseCore::Jacobian rhs = this->_dAssignToQuadrupole(ixx, iyy, ixy);
-    BaseCore::Jacobian lhs = BaseCore::_dAssignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
+    EllipseCore::Jacobian rhs = this->_dAssignToQuadrupole(ixx, iyy, ixy);
+    EllipseCore::Jacobian lhs = EllipseCore::_dAssignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
     return lhs * rhs;
 }
 
@@ -134,11 +134,11 @@ void Separable<Ellipticity_,Radius_>::_assignFromQuadrupole(double ixx, double i
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian
+EllipseCore::Jacobian
 Separable<Ellipticity_,Radius_>::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
     Distortion distortion;
-    BaseCore::Jacobian rhs = _radius.dAssignFromQuadrupole(ixx, iyy, ixy, distortion);
-    BaseCore::Jacobian lhs = BaseCore::Jacobian::Identity();
+    EllipseCore::Jacobian rhs = _radius.dAssignFromQuadrupole(ixx, iyy, ixy, distortion);
+    EllipseCore::Jacobian lhs = EllipseCore::Jacobian::Identity();
     lhs.block<2,2>(0,0) = _ellipticity.dAssign(distortion);
     return lhs * rhs;
 }
@@ -146,15 +146,15 @@ Separable<Ellipticity_,Radius_>::_dAssignFromQuadrupole(double ixx, double iyy, 
 template <typename Ellipticity_, typename Radius_>
 void Separable<Ellipticity_,Radius_>::_assignFromAxes(double a, double b, double theta) {
     double ixx, iyy, ixy;
-    BaseCore::_assignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
+    EllipseCore::_assignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
     this->_assignFromQuadrupole(ixx, iyy, ixy);
 }
 
 template <typename Ellipticity_, typename Radius_>
-BaseCore::Jacobian Separable<Ellipticity_,Radius_>::_dAssignFromAxes(double a, double b, double theta) {
+EllipseCore::Jacobian Separable<Ellipticity_,Radius_>::_dAssignFromAxes(double a, double b, double theta) {
     double ixx, iyy, ixy;
-    BaseCore::Jacobian rhs = BaseCore::_dAssignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
-    BaseCore::Jacobian lhs = this->_dAssignFromQuadrupole(ixx, iyy, ixy);
+    EllipseCore::Jacobian rhs = EllipseCore::_dAssignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
+    EllipseCore::Jacobian lhs = this->_dAssignFromQuadrupole(ixx, iyy, ixy);
     return lhs * rhs;
 }
 

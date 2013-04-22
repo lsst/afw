@@ -26,7 +26,7 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-BaseCore::Registrar<Axes> Axes::registrar;
+EllipseCore::Registrar<Axes> Axes::registrar;
 
 std::string Axes::getName() const { return "Axes"; }
 
@@ -56,11 +56,11 @@ void Axes::writeParameters(double * iter) const {
 }
 
 void Axes::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
-    BaseCore::_assignAxesToQuadrupole(_vector[A], _vector[B], _vector[THETA], ixx, iyy, ixy);
+    EllipseCore::_assignAxesToQuadrupole(_vector[A], _vector[B], _vector[THETA], ixx, iyy, ixy);
 }
 
-BaseCore::Jacobian Axes::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
-    return BaseCore::_dAssignAxesToQuadrupole(_vector[A], _vector[B], _vector[THETA], ixx, iyy, ixy);
+EllipseCore::Jacobian Axes::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+    return EllipseCore::_dAssignAxesToQuadrupole(_vector[A], _vector[B], _vector[THETA], ixx, iyy, ixy);
 }
 
 void Axes::_assignToAxes(double & a, double & b, double & theta) const {
@@ -69,7 +69,7 @@ void Axes::_assignToAxes(double & a, double & b, double & theta) const {
     theta = _vector[THETA];
 }
 
-BaseCore::Jacobian Axes::_dAssignToAxes(double & a, double & b, double & theta) const {
+EllipseCore::Jacobian Axes::_dAssignToAxes(double & a, double & b, double & theta) const {
     a = _vector[A];
     b = _vector[B];
     theta = _vector[THETA];
@@ -77,12 +77,12 @@ BaseCore::Jacobian Axes::_dAssignToAxes(double & a, double & b, double & theta) 
 }
 
 void Axes::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
-    BaseCore::_assignQuadrupoleToAxes(ixx, iyy, ixy, _vector[A], _vector[B], _vector[THETA]);
+    EllipseCore::_assignQuadrupoleToAxes(ixx, iyy, ixy, _vector[A], _vector[B], _vector[THETA]);
     normalize();
 }
 
-BaseCore::Jacobian Axes::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
-    return BaseCore::_dAssignQuadrupoleToAxes(ixx, iyy, ixy, _vector[A], _vector[B], _vector[THETA]);
+EllipseCore::Jacobian Axes::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
+    return EllipseCore::_dAssignQuadrupoleToAxes(ixx, iyy, ixy, _vector[A], _vector[B], _vector[THETA]);
     normalize();
 }
 
@@ -92,7 +92,7 @@ void Axes::_assignFromAxes(double a, double b, double theta) {
     _vector[THETA] = theta;
 }
 
-BaseCore::Jacobian Axes::_dAssignFromAxes(double a, double b, double theta) {
+EllipseCore::Jacobian Axes::_dAssignFromAxes(double a, double b, double theta) {
     _vector[A] = a;
     _vector[B] = b;
     _vector[THETA] = theta;

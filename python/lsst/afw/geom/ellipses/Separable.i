@@ -173,7 +173,7 @@
        self->transform(t).inPlace();
     }
     lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr _convolve(
-            lsst::afw::geom::ellipses::BaseCore const & other
+            lsst::afw::geom::ellipses::EllipseCore const & other
     ) {
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(
             self->convolve(other).copy()
@@ -184,7 +184,7 @@
     }
 
     static lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr cast(
-        lsst::afw::geom::ellipses::BaseCore::Ptr const & p
+        lsst::afw::geom::ellipses::EllipseCore::Ptr const & p
     ) {
         return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
     }

@@ -27,7 +27,7 @@
 
 /**
  *  @file
- *  @brief Definitions for BaseEllipse::Convolution and BaseCore::Convolution.
+ *  @brief Definitions for BaseEllipse::Convolution and EllipseCore::Convolution.
  *
  *  @note Do not include directly; use the main ellipse header file.
  */
@@ -41,18 +41,18 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 /**
  *  @brief A temporary-only expression object for ellipse core convolution.
  */
-class BaseCore::Convolution {
+class EllipseCore::Convolution {
 public:
 
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix3d DerivativeMatrix; 
 
     /// @brief Standard constructor.
-    Convolution(BaseCore & self, BaseCore const & other) :
+    Convolution(EllipseCore & self, EllipseCore const & other) :
         self(self), other(other) {}
 
     /// @brief Return a new convolved ellipse core.
-    BaseCore::Ptr copy() const;
+    EllipseCore::Ptr copy() const;
 
     /// @brief Convolve the ellipse core in-place.
     void inPlace();
@@ -60,10 +60,10 @@ public:
     /// @brief Return the derivative of convolved core with respect to self.
     DerivativeMatrix d() const;
     
-    void apply(BaseCore & result) const;
+    void apply(EllipseCore & result) const;
  
-    BaseCore & self;
-    BaseCore const & other;
+    EllipseCore & self;
+    EllipseCore const & other;
 
 };
 
@@ -94,12 +94,12 @@ public:
 
 };
 
-inline BaseCore::Convolution BaseCore::convolve(BaseCore const & other) {
-    return BaseCore::Convolution(*this, other);
+inline EllipseCore::Convolution EllipseCore::convolve(EllipseCore const & other) {
+    return EllipseCore::Convolution(*this, other);
 }
 
-inline BaseCore::Convolution const BaseCore::convolve(BaseCore const & other) const {
-    return BaseCore::Convolution(const_cast<BaseCore &>(*this), other);
+inline EllipseCore::Convolution const EllipseCore::convolve(EllipseCore const & other) const {
+    return EllipseCore::Convolution(const_cast<EllipseCore &>(*this), other);
 }
 
 inline Ellipse::Convolution Ellipse::convolve(Ellipse const & other) {

@@ -26,7 +26,7 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-BaseCore::Registrar<Quadrupole> Quadrupole::registrar;
+EllipseCore::Registrar<Quadrupole> Quadrupole::registrar;
 
 std::string Quadrupole::getName() const { return "Quadrupole"; }
 
@@ -58,7 +58,7 @@ Quadrupole::Quadrupole(double ixx, double iyy, double ixy, bool normalize) {
     if (normalize) this->normalize();
 }
 
-Quadrupole::Quadrupole(BaseCore::ParameterVector const & vector, bool normalize) {
+Quadrupole::Quadrupole(EllipseCore::ParameterVector const & vector, bool normalize) {
     setIxx(vector[IXX]);
     setIyy(vector[IYY]);
     setIxy(vector[IXY]);
@@ -75,7 +75,7 @@ void Quadrupole::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) c
     ixy = getIxy();
 }
 
-BaseCore::Jacobian Quadrupole::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+EllipseCore::Jacobian Quadrupole::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
     ixx = getIxx();
     iyy = getIyy();
     ixy = getIxy();
@@ -83,11 +83,11 @@ BaseCore::Jacobian Quadrupole::_dAssignToQuadrupole(double & ixx, double & iyy, 
 }
 
 void Quadrupole::_assignToAxes(double & a, double & b, double & theta) const {
-    BaseCore::_assignQuadrupoleToAxes(getIxx(), getIyy(), getIxy(), a, b, theta);
+    EllipseCore::_assignQuadrupoleToAxes(getIxx(), getIyy(), getIxy(), a, b, theta);
 }
 
-BaseCore::Jacobian Quadrupole::_dAssignToAxes(double & a, double & b, double & theta) const {
-    return BaseCore::_dAssignQuadrupoleToAxes(getIxx(), getIyy(), getIxy(), a, b, theta);
+EllipseCore::Jacobian Quadrupole::_dAssignToAxes(double & a, double & b, double & theta) const {
+    return EllipseCore::_dAssignQuadrupoleToAxes(getIxx(), getIyy(), getIxy(), a, b, theta);
 }
 
 void Quadrupole::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
@@ -96,7 +96,7 @@ void Quadrupole::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
     setIxy(ixy);
 }
 
-BaseCore::Jacobian Quadrupole::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
+EllipseCore::Jacobian Quadrupole::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
     setIxx(ixx);
     setIyy(iyy);
     setIxy(ixy);
@@ -104,12 +104,12 @@ BaseCore::Jacobian Quadrupole::_dAssignFromQuadrupole(double ixx, double iyy, do
 }
 
 void Quadrupole::_assignFromAxes(double a, double b, double theta) {
-    BaseCore::_assignAxesToQuadrupole(a, b, theta, _matrix(0,0), _matrix(1,1), _matrix(0,1));
+    EllipseCore::_assignAxesToQuadrupole(a, b, theta, _matrix(0,0), _matrix(1,1), _matrix(0,1));
     _matrix(1,0) = _matrix(0,1);
 }
 
-BaseCore::Jacobian Quadrupole::_dAssignFromAxes(double a, double b, double theta) {
-    Jacobian r = BaseCore::_dAssignAxesToQuadrupole(a, b, theta, _matrix(0,0), _matrix(1,1), _matrix(0,1));
+EllipseCore::Jacobian Quadrupole::_dAssignFromAxes(double a, double b, double theta) {
+    Jacobian r = EllipseCore::_dAssignAxesToQuadrupole(a, b, theta, _matrix(0,0), _matrix(1,1), _matrix(0,1));
     _matrix(1,0) = _matrix(0,1);
     return r;
 }

@@ -27,7 +27,7 @@
 
 /**
  *  @file
- *  @brief Definitions for Ellipse::Transformer and BaseCore::Transformer.
+ *  @brief Definitions for Ellipse::Transformer and EllipseCore::Transformer.
  *
  *  @note Do not include directly; use the main ellipse header file.
  */
@@ -44,7 +44,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  *  in-place and new-object transformations, derivatives of the transformations,
  *  and implicit conversion to a shared_ptr to a new transformed core.
  */
-class BaseCore::Transformer {
+class EllipseCore::Transformer {
 public:
 
     /// Matrix type for derivative with respect to input ellipse parameters.
@@ -54,16 +54,16 @@ public:
     typedef Eigen::Matrix<double,3,4> TransformDerivativeMatrix;
 
     /// @brief Standard constructor.
-    Transformer(BaseCore & input_, LinearTransform const & transform_) :
+    Transformer(EllipseCore & input_, LinearTransform const & transform_) :
         input(input_), transform(transform_) {}
 
     /// @brief Return a new transformed ellipse core.
-    BaseCore::Ptr copy() const;
+    EllipseCore::Ptr copy() const;
 
     /// @brief %Transform the ellipse core in-place.
     void inPlace();
 
-    void apply(BaseCore & result) const;
+    void apply(EllipseCore & result) const;
 
     /// @brief Return the derivative of transformed core with respect to input core.
     DerivativeMatrix d() const;
@@ -71,7 +71,7 @@ public:
     /// @brief Return the derivative of transformed core with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
-    BaseCore & input; ///< input core to be transformed
+    EllipseCore & input; ///< input core to be transformed
     LinearTransform const & transform; ///< transform object
 
 };
@@ -114,12 +114,12 @@ public:
     AffineTransform const & transform; ///< transform object
 };
 
-inline BaseCore::Transformer BaseCore::transform(LinearTransform const & transform) {
-    return BaseCore::Transformer(*this,transform);
+inline EllipseCore::Transformer EllipseCore::transform(LinearTransform const & transform) {
+    return EllipseCore::Transformer(*this,transform);
 }
 
-inline BaseCore::Transformer const BaseCore::transform(LinearTransform const & transform) const {
-    return BaseCore::Transformer(const_cast<BaseCore &>(*this),transform);
+inline EllipseCore::Transformer const EllipseCore::transform(LinearTransform const & transform) const {
+    return EllipseCore::Transformer(const_cast<EllipseCore &>(*this),transform);
 }
 
 inline Ellipse::Transformer Ellipse::transform(AffineTransform const & transform) {

@@ -21,7 +21,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/Angle.h"
@@ -34,14 +34,14 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 namespace {
 
-typedef std::map< std::string, boost::shared_ptr<BaseCore> > RegistryMap;
+typedef std::map< std::string, boost::shared_ptr<EllipseCore> > RegistryMap;
 
 RegistryMap & getRegistry() {
     static RegistryMap instance;
     return instance;
 }
 
-BaseCore::Ptr getRegistryCopy(std::string const & name) {
+EllipseCore::Ptr getRegistryCopy(std::string const & name) {
     RegistryMap::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
@@ -54,47 +54,47 @@ BaseCore::Ptr getRegistryCopy(std::string const & name) {
 
 } // anonymous
 
-BaseCore::Ptr BaseCore::make(std::string const & name) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+EllipseCore::Ptr EllipseCore::make(std::string const & name) {
+    EllipseCore::Ptr result = getRegistryCopy(name);
     *result = Quadrupole();
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, ParameterVector const & parameters) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+EllipseCore::Ptr EllipseCore::make(std::string const & name, ParameterVector const & parameters) {
+    EllipseCore::Ptr result = getRegistryCopy(name);
     result->setParameterVector(parameters);
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, double v1, double v2, double v3) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+EllipseCore::Ptr EllipseCore::make(std::string const & name, double v1, double v2, double v3) {
+    EllipseCore::Ptr result = getRegistryCopy(name);
     result->setParameterVector(ParameterVector(v1, v2, v3));
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, BaseCore const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+EllipseCore::Ptr EllipseCore::make(std::string const & name, EllipseCore const & other) {
+    EllipseCore::Ptr result = getRegistryCopy(name);
     *result = other;
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, Transformer const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+EllipseCore::Ptr EllipseCore::make(std::string const & name, Transformer const & other) {
+    EllipseCore::Ptr result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-BaseCore::Ptr BaseCore::make(std::string const & name, Convolution const & other) {
-    BaseCore::Ptr result = getRegistryCopy(name);
+EllipseCore::Ptr EllipseCore::make(std::string const & name, Convolution const & other) {
+    EllipseCore::Ptr result = getRegistryCopy(name);
     other.apply(*result);
     return result;
 }
 
-void BaseCore::registerSubclass(BaseCore::Ptr const & example) {
+void EllipseCore::registerSubclass(EllipseCore::Ptr const & example) {
     getRegistry()[example->getName()] = example;
 }
 
-void BaseCore::grow(double buffer) {
+void EllipseCore::grow(double buffer) {
     double a, b, theta;
     _assignToAxes(a, b, theta);
     a += buffer;
@@ -102,7 +102,7 @@ void BaseCore::grow(double buffer) {
     _assignFromAxes(a, b, theta);
 }
 
-void BaseCore::scale(double factor) {
+void EllipseCore::scale(double factor) {
     double a, b, theta;
     _assignToAxes(a, b, theta);
     a *= factor;
@@ -110,25 +110,25 @@ void BaseCore::scale(double factor) {
     _assignFromAxes(a, b, theta);
 }
 
-double BaseCore::getArea() const {
+double EllipseCore::getArea() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
     return a * b * afwGeom::PI;
 }
 
-double BaseCore::getDeterminantRadius() const {
+double EllipseCore::getDeterminantRadius() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
     return std::sqrt(a * b);
 }
 
-double BaseCore::getTraceRadius() const {
+double EllipseCore::getTraceRadius() const {
     double ixx, iyy, ixy;
     _assignToQuadrupole(ixx, iyy, ixy);
     return std::sqrt(0.5 * (ixx + iyy));
 }
 
-Extent2D BaseCore::computeDimensions() const {
+Extent2D EllipseCore::computeDimensions() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
     double c = std::cos(theta);
@@ -142,21 +142,21 @@ Extent2D BaseCore::computeDimensions() const {
     return dimensions;
 }
 
-BaseCore::ParameterVector const BaseCore::getParameterVector() const {
+EllipseCore::ParameterVector const EllipseCore::getParameterVector() const {
     ParameterVector r;
     writeParameters(r.data());
     return r;
 }
 
-void BaseCore::setParameterVector(ParameterVector const & p) {
+void EllipseCore::setParameterVector(ParameterVector const & p) {
     readParameters(p.data());
 }
 
-bool BaseCore::operator==(BaseCore const & other) const {
+bool EllipseCore::operator==(EllipseCore const & other) const {
     return getParameterVector() == other.getParameterVector() && getName() == other.getName();
 }
 
-BaseCore & BaseCore::operator=(BaseCore const & other) {
+EllipseCore & EllipseCore::operator=(EllipseCore const & other) {
     if (&other != this) {
         // We use Axes instead of Quadrupole here because it allows us to copy Axes without
         // implicitly normalizing them.
@@ -167,7 +167,7 @@ BaseCore & BaseCore::operator=(BaseCore const & other) {
     return *this;
 }
 
-BaseCore::Jacobian BaseCore::dAssign(BaseCore const & other) {
+EllipseCore::Jacobian EllipseCore::dAssign(EllipseCore const & other) {
     if (getName() == other.getName()) {
         this->operator=(other);
         return Jacobian::Identity();
@@ -182,7 +182,7 @@ BaseCore::Jacobian BaseCore::dAssign(BaseCore const & other) {
     return lhs * rhs;
 }
 
-void BaseCore::_assignQuadrupoleToAxes(
+void EllipseCore::_assignQuadrupoleToAxes(
     double ixx, double iyy, double ixy, 
     double & a, double & b, double & theta
 ) {
@@ -194,7 +194,7 @@ void BaseCore::_assignQuadrupoleToAxes(
     theta = 0.5*std::atan2(2.0*ixy, xx_m_yy);
 }
 
-BaseCore::Jacobian BaseCore::_dAssignQuadrupoleToAxes(
+EllipseCore::Jacobian EllipseCore::_dAssignQuadrupoleToAxes(
     double ixx, double iyy, double ixy, 
     double & a, double & b, double & theta
 ) {
@@ -221,7 +221,7 @@ BaseCore::Jacobian BaseCore::_dAssignQuadrupoleToAxes(
     return m;
 }
 
-void BaseCore::_assignAxesToQuadrupole(
+void EllipseCore::_assignAxesToQuadrupole(
     double a, double b, double theta,
     double & ixx, double & iyy, double & ixy
 ) {
@@ -236,7 +236,7 @@ void BaseCore::_assignAxesToQuadrupole(
     iyy = s*a + c*b;
 }
 
-BaseCore::Jacobian BaseCore::_dAssignAxesToQuadrupole(
+EllipseCore::Jacobian EllipseCore::_dAssignAxesToQuadrupole(
     double a, double b, double theta,
     double & ixx, double & iyy, double & ixy
 ) {

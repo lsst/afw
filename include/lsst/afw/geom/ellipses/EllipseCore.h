@@ -22,12 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#ifndef LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
-#define LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
+#ifndef LSST_AFW_GEOM_ELLIPSES_EllipseCore_h_INCLUDED
+#define LSST_AFW_GEOM_ELLIPSES_EllipseCore_h_INCLUDED
 
 /**
  *  @file
- *  @brief Forward declarations, typedefs, and definitions for BaseCore.
+ *  @brief Forward declarations, typedefs, and definitions for EllipseCore.
  *
  *  @note Do not include directly; use the main ellipse header file.
  */
@@ -47,11 +47,11 @@ class Parametric;
 /**
  *  @brief A base class for parametrizations of the "core" of an ellipse - the ellipticity and size.
  *
- *  A subclass of BaseCore provides a particular interpretation of the three pointing point values that
+ *  A subclass of EllipseCore provides a particular interpretation of the three pointing point values that
  *  define an ellipse's size and ellipticity (including position angle).  All core subclasses
  *  are implicitly convertible and can be assigned to from any other core.
  */
-class BaseCore {
+class EllipseCore {
 public:
 #ifndef SWIG
     class Transformer;
@@ -60,8 +60,8 @@ public:
     template <typename Output> struct Converter;
 #endif
 
-    typedef boost::shared_ptr<BaseCore> Ptr;
-    typedef boost::shared_ptr<BaseCore const> ConstPtr;
+    typedef boost::shared_ptr<EllipseCore> Ptr;
+    typedef boost::shared_ptr<EllipseCore const> ConstPtr;
 
     typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
     typedef Eigen::Matrix3d Jacobian; ///< Parameter Jacobian matrix type.
@@ -72,7 +72,7 @@ public:
 
     static Ptr make(std::string const & name, double v1, double v2, double v3);
 
-    static Ptr make(std::string const & name, BaseCore const & other);
+    static Ptr make(std::string const & name, EllipseCore const & other);
 
 #ifndef SWIG
     static Ptr make(std::string const & name, Transformer const & other);
@@ -140,8 +140,8 @@ public:
      *  @name Convolve two bivariate Gaussians defined by their 1-sigma ellipses.
      */
     //@{
-    Convolution convolve(BaseCore const & other);
-    Convolution const convolve(BaseCore const & other) const;
+    Convolution convolve(EllipseCore const & other);
+    Convolution const convolve(EllipseCore const & other) const;
     //@}
 
     /// @brief Return the size of the bounding box for the ellipse core.
@@ -162,31 +162,31 @@ public:
      *
      *  Ellipse cores are only equal if they have the same type.
      */
-    bool operator==(BaseCore const & other) const;
+    bool operator==(EllipseCore const & other) const;
 
     /**
      *  @brief Compare two ellipse cores for inequality.
      *
      *  Ellipses are only equal if they have the same type.
      */
-    bool operator!=(BaseCore const & other) const { return !operator==(other); }
+    bool operator!=(EllipseCore const & other) const { return !operator==(other); }
 
     /**
      *  @brief Set the parameters of this ellipse core from another.
      *
      *  This does not change the parametrization of the ellipse core.
      */
-    BaseCore & operator=(BaseCore const & other);
+    EllipseCore & operator=(EllipseCore const & other);
 
     /// @brief Assign other to this and return the derivative of the conversion, d(this)/d(other).
-    Jacobian dAssign(BaseCore const & other);
+    Jacobian dAssign(EllipseCore const & other);
 
     /**
      *  @brief Convert this to the core type specified as a template parameter.
      */
     template <typename Output> Converter<Output> as() const;
 
-    virtual ~BaseCore() {}
+    virtual ~EllipseCore() {}
 
 protected:
 #ifndef SWIG
@@ -199,7 +199,7 @@ protected:
         Registrar() { registerSubclass(boost::make_shared<T>()); }
     };
 
-    virtual BaseCore::Ptr _clone() const = 0;
+    virtual EllipseCore::Ptr _clone() const = 0;
 
     static void _assignQuadrupoleToAxes(
         double ixx, double iyy, double ixy, 
@@ -238,17 +238,17 @@ protected:
 
 #ifndef SWIG
 template <typename Output>
-struct BaseCore::Converter {
-    BaseCore const & input;
+struct EllipseCore::Converter {
+    EllipseCore const & input;
 
-    explicit Converter(BaseCore const & input_) : input(input_) {}
+    explicit Converter(EllipseCore const & input_) : input(input_) {}
 
     operator Output() const { return Output(input); }
     boost::shared_ptr<Output> copy() const { return boost::shared_ptr<Output>(new Output(input)); }
 };
 
 template <typename Output>
-inline BaseCore::Converter<Output> BaseCore::as() const {
+inline EllipseCore::Converter<Output> EllipseCore::as() const {
     return Converter<Output>(*this);
 }
 
@@ -256,4 +256,4 @@ inline BaseCore::Converter<Output> BaseCore::as() const {
 
 }}}} // namespace lsst::afw::geom::ellipses
 
-#endif // !LSST_AFW_GEOM_ELLIPSES_BaseCore_h_INCLUDED
+#endif // !LSST_AFW_GEOM_ELLIPSES_EllipseCore_h_INCLUDED

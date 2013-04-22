@@ -32,7 +32,7 @@
  *  \note Do not include directly; use the main ellipse header file.
  */
 
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
@@ -42,7 +42,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 /**
  *  @brief An ellipse core with quadrupole moments as parameters.
  */
-class Quadrupole : public BaseCore {
+class Quadrupole : public EllipseCore {
 public:
 
     typedef boost::shared_ptr<Quadrupole> Ptr;
@@ -88,13 +88,13 @@ public:
     Quadrupole & operator=(Quadrupole const & other) { _matrix = other._matrix; return *this; }
 
     /// @brief Converting assignment.
-    Quadrupole & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
+    Quadrupole & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
     /// @brief Construct from parameter values.
     explicit Quadrupole(double ixx=1.0, double iyy=1.0, double ixy=0.0, bool normalize=false);
 
     /// @brief Construct from a parameter vector.
-    explicit Quadrupole(BaseCore::ParameterVector const & vector, bool normalize=false);
+    explicit Quadrupole(EllipseCore::ParameterVector const & vector, bool normalize=false);
 
     /// @brief Construct from a 2x2 matrix.
     explicit Quadrupole(Matrix const & matrix, bool normalize=true);
@@ -103,21 +103,21 @@ public:
     Quadrupole(Quadrupole const & other) : _matrix(other._matrix) {}
 
     /// @brief Converting copy constructor.
-    Quadrupole(BaseCore const & other) { *this = other; }
+    Quadrupole(EllipseCore const & other) { *this = other; }
 #ifndef SWIG
     /// @brief Converting copy constructor.
-    Quadrupole(BaseCore::Transformer const & transformer) {
+    Quadrupole(EllipseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
     /// @brief Converting copy constructor.
-    Quadrupole(BaseCore::Convolution const & convolution) {
+    Quadrupole(EllipseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
 #endif
 protected:
 
-    virtual BaseCore::Ptr _clone() const { return boost::make_shared<Quadrupole>(*this); }
+    virtual EllipseCore::Ptr _clone() const { return boost::make_shared<Quadrupole>(*this); }
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);

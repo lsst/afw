@@ -30,7 +30,7 @@
  *  \brief Public header class for ellipse library.
  */
 
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"

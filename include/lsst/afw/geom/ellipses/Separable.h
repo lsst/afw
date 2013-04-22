@@ -32,7 +32,7 @@
  *  \note Do not include directly; use the main ellipse header file.
  */
 
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
@@ -45,7 +45,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  *  
  */
 template <typename Ellipticity_, typename Radius_>
-class Separable : public BaseCore {
+class Separable : public EllipseCore {
 public:
 
     typedef boost::shared_ptr<Separable> Ptr;
@@ -90,7 +90,7 @@ public:
     Separable & operator=(Separable const & other);
 
     /// @brief Converting assignment.
-    Separable & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
+    Separable & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
     /// @brief Construct from parameter values.
     explicit Separable(double e1=0.0, double e2=0.0, double radius=Radius(), bool normalize=true);
@@ -103,28 +103,28 @@ public:
     explicit Separable(Ellipticity const & ellipticity, double radius=Radius(), bool normalize=true);
 
     /// @brief Construct from a parameter vector.
-    explicit Separable(BaseCore::ParameterVector const & vector, bool normalize=false);
+    explicit Separable(EllipseCore::ParameterVector const & vector, bool normalize=false);
 
     /// @brief Copy constructor.
     Separable(Separable const & other) : _ellipticity(other._ellipticity), _radius(other._radius) {}
 
     /// @brief Converting copy constructor.
-    Separable(BaseCore const & other) { *this = other; }
+    Separable(EllipseCore const & other) { *this = other; }
 
 #ifndef SWIG
     /// @brief Converting copy constructor.
-    Separable(BaseCore::Transformer const & transformer) {
+    Separable(EllipseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
     /// @brief Converting copy constructor.
-    Separable(BaseCore::Convolution const & convolution) {
+    Separable(EllipseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
 #endif
 protected:
 
-    virtual BaseCore::Ptr _clone() const { return boost::make_shared<Separable>(*this); }
+    virtual EllipseCore::Ptr _clone() const { return boost::make_shared<Separable>(*this); }
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);
@@ -140,7 +140,7 @@ protected:
 
 private:
 
-    static BaseCore::Registrar<Separable> registrar;
+    static EllipseCore::Registrar<Separable> registrar;
 
     Ellipticity _ellipticity;
     Radius _radius;

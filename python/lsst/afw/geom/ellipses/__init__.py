@@ -37,7 +37,7 @@ Separable = {
     (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius
 }
 
-BaseCore.cast = lambda self: globals()[self.getName()].cast(self)
+EllipseCore.cast = lambda self: globals()[self.getName()].cast(self)
     
 class EllipseMatplotlibInterface(object):
     """An interface for drawing the ellipse using matplotlib.

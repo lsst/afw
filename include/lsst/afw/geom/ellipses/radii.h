@@ -32,7 +32,7 @@
  *  \note Do not include directly; use the main ellipse header file.
  */
 
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
 #include <complex>
 
@@ -91,7 +91,7 @@ private:
         Distortion & distortion
     );
 
-    BaseCore::Jacobian dAssignFromQuadrupole(
+    EllipseCore::Jacobian dAssignFromQuadrupole(
         double ixx, double iyy, double ixy, 
         Distortion & distortion
     );
@@ -101,7 +101,7 @@ private:
         double & ixx, double & iyy, double & ixy
     ) const;
 
-     BaseCore::Jacobian dAssignToQuadrupole(
+     EllipseCore::Jacobian dAssignToQuadrupole(
         Distortion const & distortion,
         double & ixx, double & iyy, double & ixy
     ) const;
@@ -151,7 +151,7 @@ private:
         Distortion & distortion
     );
 
-    BaseCore::Jacobian dAssignFromQuadrupole(
+    EllipseCore::Jacobian dAssignFromQuadrupole(
         double ixx, double iyy, double ixy, 
         Distortion & distortion
     );
@@ -161,7 +161,7 @@ private:
         double & ixx, double & iyy, double & ixy
     ) const;
 
-     BaseCore::Jacobian dAssignToQuadrupole(
+     EllipseCore::Jacobian dAssignToQuadrupole(
         Distortion const & distortion,
         double & ixx, double & iyy, double & ixy
     ) const;
@@ -205,7 +205,7 @@ private:
         Distortion & distortion
     );
 
-    BaseCore::Jacobian dAssignFromQuadrupole(
+    EllipseCore::Jacobian dAssignFromQuadrupole(
         double ixx, double iyy, double ixy, 
         Distortion & distortion
     );
@@ -215,7 +215,7 @@ private:
         double & ixx, double & iyy, double & ixy
     ) const;
 
-     BaseCore::Jacobian dAssignToQuadrupole(
+     EllipseCore::Jacobian dAssignToQuadrupole(
         Distortion const & distortion,
         double & ixx, double & iyy, double & ixy
     ) const;
@@ -259,7 +259,7 @@ private:
         Distortion & distortion
     );
 
-    BaseCore::Jacobian dAssignFromQuadrupole(
+    EllipseCore::Jacobian dAssignFromQuadrupole(
         double ixx, double iyy, double ixy, 
         Distortion & distortion
     );
@@ -269,7 +269,7 @@ private:
         double & ixx, double & iyy, double & ixy
     ) const;
 
-     BaseCore::Jacobian dAssignToQuadrupole(
+     EllipseCore::Jacobian dAssignToQuadrupole(
         Distortion const & distortion,
         double & ixx, double & iyy, double & ixy
     ) const;

@@ -33,7 +33,7 @@
  */
 
 #include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/ellipses/Transformer.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
@@ -43,7 +43,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 /**
  *  @brief An ellipse core for the semimajor/semiminor axis and position angle parametrization (a,b,theta).
  */
-class Axes : public BaseCore {
+class Axes : public EllipseCore {
 public:
 
     typedef boost::shared_ptr<Axes> Ptr;
@@ -80,36 +80,36 @@ public:
     Axes & operator=(Axes const & other) { _vector = other._vector; return *this; }
 
     /// @brief Converting assignment.
-    Axes & operator=(BaseCore const & other) { BaseCore::operator=(other); return *this; }
+    Axes & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
     /// @brief Construct from parameter values
     explicit Axes(double a=1.0, double b=1.0, Angle theta=0.0*radians, bool normalize=false) :
         _vector(a, b, theta.asRadians()) { if (normalize) this->normalize(); }
 
     /// @brief Construct from a parameter vector.
-    explicit Axes(BaseCore::ParameterVector const & vector, bool normalize=false) :
+    explicit Axes(EllipseCore::ParameterVector const & vector, bool normalize=false) :
         _vector(vector) { if (normalize) this->normalize(); }
 
     /// @brief Copy constructor.
     Axes(Axes const & other) : _vector(other._vector) {}
 
     /// @brief Converting copy constructor.
-    Axes(BaseCore const & other) { *this = other; }
+    Axes(EllipseCore const & other) { *this = other; }
 
 #ifndef SWIG
     /// @brief Converting copy constructor.
-    Axes(BaseCore::Transformer const & transformer) {
+    Axes(EllipseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
     /// @brief Converting copy constructor.
-    Axes(BaseCore::Convolution const & convolution) {
+    Axes(EllipseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }
 #endif
 protected:
 
-    virtual BaseCore::Ptr _clone() const { return boost::make_shared<Axes>(*this); }
+    virtual EllipseCore::Ptr _clone() const { return boost::make_shared<Axes>(*this); }
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);

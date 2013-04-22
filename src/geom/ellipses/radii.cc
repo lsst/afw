@@ -36,12 +36,12 @@ void DeterminantRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian DeterminantRadius::dAssignFromQuadrupole(
+EllipseCore::Jacobian DeterminantRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     _value = std::pow(ixx * iyy - ixy * ixy, 0.25);
     distortion.setE1((ixx - iyy) / xx_yy);
     distortion.setE2(2.0 * ixy / xx_yy);
@@ -70,11 +70,11 @@ void DeterminantRadius::assignToQuadrupole(
 }
 
 
-BaseCore::Jacobian DeterminantRadius::dAssignToQuadrupole(
+EllipseCore::Jacobian DeterminantRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     double den = std::sqrt(1.0 - std::norm(distortion.getComplex()));
     result.col(2).setConstant(2.0 * _value / den);
     double r2 = _value * _value;
@@ -103,12 +103,12 @@ void TraceRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian TraceRadius::dAssignFromQuadrupole(
+EllipseCore::Jacobian TraceRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     _value = std::sqrt(0.5 * xx_yy);
     distortion.setE1((ixx - iyy) / xx_yy);
     distortion.setE2(2.0 * ixy / xx_yy);
@@ -133,11 +133,11 @@ void TraceRadius::assignToQuadrupole(
     ixy = r2 * distortion.getE2();
 }
 
-BaseCore::Jacobian TraceRadius::dAssignToQuadrupole(
+EllipseCore::Jacobian TraceRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     result.col(2).setConstant(2.0 * _value);
     result(0, 2) *= (1.0 + distortion.getE1());
     result(1, 2) *= (1.0 - distortion.getE1());
@@ -161,12 +161,12 @@ void LogDeterminantRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian LogDeterminantRadius::dAssignFromQuadrupole(
+EllipseCore::Jacobian LogDeterminantRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     double det = ixx * iyy - ixy * ixy;
     _value = 0.25 * std::log(det);
     distortion.setE1((ixx - iyy) / xx_yy);
@@ -194,11 +194,11 @@ void LogDeterminantRadius::assignToQuadrupole(
     ixy = r2 * distortion.getE2() / den;
 }
 
-BaseCore::Jacobian LogDeterminantRadius::dAssignToQuadrupole(
+EllipseCore::Jacobian LogDeterminantRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     double den = std::sqrt(1.0 - std::norm(distortion.getComplex()));
     result.col(2).setConstant(2.0 * _value / den);
     double r2 = std::exp(2.0 * _value);
@@ -227,12 +227,12 @@ void LogTraceRadius::assignFromQuadrupole(
     distortion.setE2(2.0 * ixy / (ixx + iyy));
 }
 
-BaseCore::Jacobian LogTraceRadius::dAssignFromQuadrupole(
+EllipseCore::Jacobian LogTraceRadius::dAssignFromQuadrupole(
     double ixx, double iyy, double ixy, 
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     _value = 0.5 * std::log(0.5 * xx_yy);
     distortion.setE1((ixx - iyy) / xx_yy);
     distortion.setE2(2.0 * ixy / xx_yy);
@@ -257,11 +257,11 @@ void LogTraceRadius::assignToQuadrupole(
     ixy = r2 * distortion.getE2();
 }
 
-BaseCore::Jacobian LogTraceRadius::dAssignToQuadrupole(
+EllipseCore::Jacobian LogTraceRadius::dAssignToQuadrupole(
     Distortion const & distortion,
     double & ixx, double & iyy, double & ixy
 ) const {
-    BaseCore::Jacobian result = BaseCore::Jacobian::Zero();
+    EllipseCore::Jacobian result = EllipseCore::Jacobian::Zero();
     double r2 = std::exp(2.0 * _value);
     ixx = r2 * (1.0 + distortion.getE1());
     iyy = r2 * (1.0 - distortion.getE1());
