@@ -315,7 +315,8 @@ const ImageT cameraGeom::Amp::prepareAmpData(ImageT const inImage)
 // \cond
 //
 #define INSTANTIATE(TYPE) \
-    template const afwImage::Image<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const);
+    template const afwImage::Image<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::Image<TYPE> const); \
+    template const afwImage::MaskedImage<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::MaskedImage<TYPE> const);
 #define INSTANTIATEMASK(TYPE) \
     template const afwImage::Mask<TYPE> cameraGeom::Amp::prepareAmpData(afwImage::Mask<TYPE> const);
 

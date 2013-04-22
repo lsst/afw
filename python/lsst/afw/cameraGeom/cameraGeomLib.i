@@ -133,6 +133,8 @@ DistortInstantiate(double);
 %define Instantiate(PIXEL_TYPE...)
 %template(prepareAmpData)
     lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Image<PIXEL_TYPE> >;
+%template(prepareAmpData)
+    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
 %enddef
 
 Instantiate(boost::uint16_t);
