@@ -101,10 +101,6 @@ public:
     /// @brief Set the ellipse parameters from a vector.
     void setParameterVector(ParameterVector const & vector);
 
-    void readParameters(double const * iter);
-
-    void writeParameters(double * iter) const;
-
     /**
      *  @name Coordinate transforms
      *  

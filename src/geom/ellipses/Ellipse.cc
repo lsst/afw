@@ -37,18 +37,6 @@ void Ellipse::setParameterVector(Ellipse::ParameterVector const & vector) {
     _center = Point2D(vector.tail<2>());
 }
 
-void Ellipse::readParameters(double const * iter) {
-    _core->readParameters(iter);
-    _center.setX(iter[3]);
-    _center.setY(iter[4]);
-}
-
-void Ellipse::writeParameters(double * iter) const {
-    _core->writeParameters(iter);
-    iter[3] = _center.getX();
-    iter[4] = _center.getY();
-}
-
 Box2D Ellipse::computeBBox() const {
     Extent2D dimensions = getCore().computeDimensions();
     return Box2D(getCenter() - dimensions * 0.5, dimensions);

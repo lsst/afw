@@ -79,10 +79,6 @@ public:
      */
     virtual void normalize();
 
-    virtual void readParameters(double const * iter);
-
-    virtual void writeParameters(double * iter) const;
-
     /// @brief Standard assignment.
     Separable & operator=(Separable const & other);
 
@@ -125,6 +121,9 @@ public:
 protected:
 
     virtual PTR(EllipseCore) _clone() const { return boost::make_shared<Separable>(*this); }
+
+    virtual void readParameters(double const * iter);
+    virtual void writeParameters(double * iter) const;
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);

@@ -69,10 +69,6 @@ public:
      */
     virtual void normalize();
 
-    virtual void readParameters(double const * iter);
-
-    virtual void writeParameters(double * iter) const;
-
     /// @brief Standard assignment.
     Axes & operator=(Axes const & other) { _vector = other._vector; return *this; }
 
@@ -110,6 +106,9 @@ public:
 protected:
 
     virtual PTR(EllipseCore) _clone() const { return boost::make_shared<Axes>(*this); }
+
+    virtual void readParameters(double const * iter);
+    virtual void writeParameters(double * iter) const;
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);

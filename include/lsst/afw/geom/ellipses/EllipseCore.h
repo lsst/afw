@@ -145,10 +145,6 @@ public:
     /// @brief Return the size of the bounding box for the ellipse core.
     Extent2D computeDimensions() const;
 
-    virtual void readParameters(double const * iter) = 0;
-
-    virtual void writeParameters(double * iter) const = 0;
-
     /// @brief Return the core parameters as a vector.
     ParameterVector const getParameterVector() const;
 
@@ -198,6 +194,9 @@ protected:
     };
 
     virtual PTR(EllipseCore) _clone() const = 0;
+
+    virtual void readParameters(double const * iter) = 0;
+    virtual void writeParameters(double * iter) const = 0;
 
     static void _assignQuadrupoleToAxes(
         double ixx, double iyy, double ixy, 
