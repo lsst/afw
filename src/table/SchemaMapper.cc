@@ -69,11 +69,66 @@ private:
     bool _doMap;
 };
 
+// Schema::forEach functor that copies all fields from an schema to a schema mapper and maps them.
+struct AddMapped {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        Field<T> field(prefix + item.field.getName(), item.field.getDoc(), item.field.getUnits(), item.field);
+        mapper->addMapping(item.key, field);
+    }
+
+    explicit AddMapped(SchemaMapper * mapper_) : mapper(mapper_) {}
+
+    SchemaMapper * mapper;
+    std::string prefix;
+};
+
+// Schema::forEach functor that copies all fields from an schema to a schema mapper without mapping them.
+struct AddUnmapped {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        Field<T> field(prefix + item.field.getName(), item.field.getDoc(), item.field.getUnits(), item.field);
+        mapper->addOutputField(field);
+    }
+
+    explicit AddUnmapped(SchemaMapper * mapper_) : mapper(mapper_) {}
+
+    SchemaMapper * mapper;
+    std::string prefix;
+};
+
+struct RemoveMinimalSchema {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        if (!minimal.contains(item)) {
+            mapper->addMapping(item.key);
+        }
+    }
+
+    RemoveMinimalSchema(SchemaMapper * mapper_, Schema const & minimal_) :
+        mapper(mapper_), minimal(minimal_) {}
+
+    SchemaMapper * mapper;
+    Schema minimal;
+};
+
 } // anonymous
+
+SchemaMapper::SchemaMapper() : _impl(boost::make_shared<Impl>(Schema())) {}
+
+SchemaMapper::SchemaMapper(SchemaMapper const & other) : _impl(other._impl) {}
 
 SchemaMapper::SchemaMapper(Schema const & input) :
     _impl(boost::make_shared<Impl>(input))
 {}
+
+SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {
+    _impl = other._impl;
+    return *this;
+}
 
 void SchemaMapper::_edit() {
     if (!_impl.unique()) {
@@ -132,6 +187,13 @@ void SchemaMapper::addMinimalSchema(Schema const & minimal, bool doMap) {
     minimal.forEach(f);
 }
 
+SchemaMapper SchemaMapper::removeMinimalSchema(Schema const & input, Schema const & minimal) {
+    SchemaMapper mapper(input);
+    RemoveMinimalSchema f(&mapper, minimal);
+    input.forEach(boost::ref(f));
+    return mapper;
+}
+
 void SchemaMapper::invert() {
     _edit();
     std::swap(_impl->_input, _impl->_output);
@@ -161,6 +223,38 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
         );
     }
     return boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
+}
+
+std::vector<SchemaMapper> SchemaMapper::join(
+    std::vector<Schema> const & inputs,
+    std::vector<std::string> const & prefixes
+) {
+    std::size_t const size = inputs.size();
+    if (!prefixes.empty() && prefixes.size() != inputs.size()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LengthErrorException,
+            (boost::format("prefix vector size (%d) must be the same as input vector size (%d)")
+             % prefixes.size() % inputs.size()).str()
+        );
+    }
+    std::vector<SchemaMapper> result;
+    for (std::size_t i = 0; i < size; ++i) {
+        result.push_back(SchemaMapper(inputs[i]));
+    }
+    for (std::size_t i = 0; i < size; ++i) {
+        for (std::size_t j = 0; j < size; ++j) {
+            if (i == j) {
+                AddMapped functor(&result[j]);
+                if (!prefixes.empty()) functor.prefix = prefixes[i];
+                inputs[i].forEach(functor);
+            } else {
+                AddUnmapped functor(&result[j]);
+                if (!prefixes.empty()) functor.prefix = prefixes[i];
+                inputs[i].forEach(functor);
+            }
+        }
+    }
+    return result;
 }
 
 //----- Explicit instantiation ------------------------------------------------------------------------------

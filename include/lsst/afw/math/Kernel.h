@@ -55,6 +55,8 @@
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/traits.h"
 
+#include "lsst/afw/table/io/Persistable.h"
+
 namespace lsst {
 namespace afw {
 
@@ -67,10 +69,6 @@ namespace math {
 #ifndef SWIG
 using boost::serialization::make_nvp;
 #endif
-
-//forward declaration of LocalKernel Classes
-class ImageLocalKernel;
-class FourierLocalKernel;
 
     /**
      * @brief Kernels are used for convolution with MaskedImages and (eventually) Images
@@ -133,7 +131,10 @@ class FourierLocalKernel;
      *
      * @ingroup afw
      */
-    class Kernel : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable {
+    class Kernel : public lsst::daf::base::Citizen, public lsst::daf::base::Persistable,
+                   public afw::table::io::PersistableFacade<Kernel>,
+                   public afw::table::io::Persistable
+    {
 
     public:
         typedef double Pixel;
@@ -377,7 +378,12 @@ class FourierLocalKernel;
         virtual void toFile(std::string fileName) const;
 #endif
 
+        struct PersistenceHelper;
+
     protected:
+
+        virtual std::string getPythonModule() const;
+
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
         void setKernelParametersFromSpatialModel(double x, double y) const;
@@ -409,7 +415,7 @@ class FourierLocalKernel;
      *
      * @ingroup afw
      */
-    class FixedKernel : public Kernel {
+    class FixedKernel : public afw::table::io::PersistableFacade<FixedKernel>, public Kernel {
     public:
         typedef PTR(FixedKernel) Ptr;
         typedef CONST_PTR(FixedKernel) ConstPtr;
@@ -442,6 +448,16 @@ class FourierLocalKernel;
             return _sum;
         }
 
+        virtual bool isPersistable() const { return true; }
+
+        class Factory;
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(OutputArchiveHandle & handle) const;
+
     private:
         lsst::afw::image::Image<Pixel> _image;
         Pixel _sum;
@@ -470,7 +486,7 @@ class FourierLocalKernel;
      *
      * @ingroup afw
      */
-    class AnalyticKernel : public Kernel {
+    class AnalyticKernel : public afw::table::io::PersistableFacade<AnalyticKernel>, public Kernel {
     public:
         typedef PTR(AnalyticKernel) Ptr;
         typedef CONST_PTR(AnalyticKernel) ConstPtr;
@@ -510,6 +526,16 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+        virtual bool isPersistable() const { return true; }
+
+        class Factory;
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(OutputArchiveHandle & handle) const;
+
     protected:
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
@@ -532,7 +558,9 @@ class FourierLocalKernel;
      *
      * @ingroup afw
      */
-    class DeltaFunctionKernel : public Kernel {
+    class DeltaFunctionKernel : public afw::table::io::PersistableFacade<DeltaFunctionKernel>,
+                                public Kernel
+    {
     public:
         typedef PTR(DeltaFunctionKernel) Ptr;
         typedef CONST_PTR(DeltaFunctionKernel) ConstPtr;
@@ -559,6 +587,16 @@ class FourierLocalKernel;
         lsst::afw::geom::Point2I getPixel() const { return _pixel; }
 
         virtual std::string toString(std::string const& prefix="") const;
+
+        virtual bool isPersistable() const { return true; }
+
+        class Factory;
+
+    protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(OutputArchiveHandle & handle) const;
 
     private:
         lsst::afw::geom::Point2I _pixel;
@@ -588,7 +626,9 @@ class FourierLocalKernel;
      *
      * @ingroup afw
      */
-    class LinearCombinationKernel : public Kernel {
+    class LinearCombinationKernel : public afw::table::io::PersistableFacade<LinearCombinationKernel>,
+                                    public Kernel
+    {
     public:
         typedef PTR(LinearCombinationKernel) Ptr;
         typedef CONST_PTR(LinearCombinationKernel) ConstPtr;
@@ -643,7 +683,16 @@ class FourierLocalKernel;
 
         virtual std::string toString(std::string const& prefix="") const;
 
+        virtual bool isPersistable() const { return true; }
+
+        class Factory;
+
     protected:
+
+        virtual std::string getPersistenceName() const;
+
+        virtual void write(OutputArchiveHandle & handle) const;
+
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
     private:
@@ -686,7 +735,7 @@ class FourierLocalKernel;
      *
      * @ingroup afw
      */
-    class SeparableKernel : public Kernel {
+    class SeparableKernel : public afw::table::io::PersistableFacade<SeparableKernel>, public Kernel {
     public:
         typedef PTR(SeparableKernel) Ptr;
         typedef CONST_PTR(SeparableKernel) ConstPtr;

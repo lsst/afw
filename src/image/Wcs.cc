@@ -59,6 +59,7 @@ typedef lsst::daf::base::PropertyList PropertyList;
 typedef lsst::afw::image::Wcs Wcs;
 typedef lsst::afw::geom::Point2D GeomPoint;
 typedef lsst::afw::coord::Coord::Ptr CoordPtr;
+typedef lsst::afw::image::XYTransformFromWcsPair XYTransformFromWcsPair;
 
 //The amount of space allocated to strings in wcslib
 const int STRLEN = 72;
@@ -214,22 +215,19 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
 
-    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
     // Scamp produces PVi_xx header cards that are inconsistent with WCS Paper 2
     // and cause WCSLib to choke.  Aggressively, rename all PV keywords to X_PV
     for (int j=1; j<3; j++) {
         for (int i=0; i<=99; i++) {
             std::string key = (boost::format("PV%i_%i") % j % i).str();
-            //printf("looking for key: \"%s\"\n", key.c_str());
-            if (!access.toRead()->exists(key))
+            if (!access.toRead()->exists(key)) {
                 break;
+            }
             double val = access.toRead()->getAsDouble(key);
-            //printf("  found with val %g\n", val);
             access.toWrite()->remove(key);
             access.toWrite()->add("X_"+key, val);
         }
     }
-    //printf("FITS metadata:\n%s\n\n", access.toRead()->toString().c_str());
 
     //While the standard does not insist on CRVAL and CRPIX being present, it 
     //is almost certain their absence indicates a problem.   
@@ -254,6 +252,34 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         string msg = "Neither CRVAL2 not CRVAL2a found";
         throw LSST_EXCEPT(except::InvalidParameterException, msg);
     }
+    /*
+     * According to Greisen and Calabretta (A&A 395, 1061–1075 (2002)) it's illegal to mix PCi_j and CDi_j
+     * headers; unfortunately Subaru puts both in its headers.  It actually uses PC001002 instead of PC1_2
+     * (dating to a proposed FITS standard from 1996) and at least sometimes fails to include CDELT[12],
+     * so the CD and PC matrices are inconsistent
+     *
+     * If we detect any part of a CD matrix, delete all PC matrices
+     */
+    if(access.toRead()->exists("CD1_1") || access.toRead()->exists("CD1_2") ||
+       access.toRead()->exists("CD2_1") || access.toRead()->exists("CD2_2")) {
+        for (int i = 1; i <= 2; ++i) {
+            for (int j = 1; j <= 2; ++j) {
+                std::string key = (boost::format("PC%i_%i") % j % i).str();
+                if (access.toRead()->exists(key)) {
+                    double const val = access.toRead()->getAsDouble(key);
+                    access.toWrite()->remove(key);
+                    access.toWrite()->add("X_" + key, val);
+                }
+
+                key = (boost::format("PC%03d%03d") % j % i).str();
+                if (access.toRead()->exists(key)) {
+                    double const val = access.toRead()->getAsDouble(key);
+                    access.toWrite()->remove(key);
+                    access.toWrite()->add("X_" + key, val);
+                }
+            }
+        }
+    }
 
     //Pass the header into wcslib's formatter to extract & setup the Wcs. First need
     //to convert to a C style string, so the compile doesn't complain about constness
@@ -262,6 +288,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     char *hdrString = const_cast<char*>(metadataStr.c_str());
     //printf("wcspih string:\n%s\n", hdrString);
     
+    nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead()); // we may have dropped some
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
     if (pihStatus != 0) {
@@ -741,6 +768,13 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
     int stat[1];
     int status = 0;
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
+    if (status == 9) {
+        throw LSST_EXCEPT(except::DomainErrorException,
+            (boost::format("sky coordinates %s, %s degrees is not valid for this WCS")
+             % sky1.asDegrees() % sky2.asDegrees()
+             ).str()
+        );
+    }
     if (status > 0) {
         throw LSST_EXCEPT(except::RuntimeErrorException,
             (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
@@ -1044,7 +1078,7 @@ namespace {
 
 // Read-only singleton struct containing the schema and keys that a simple Wcs is mapped
 // to in record persistence.
-struct WcsSchema : private boost::noncopyable {
+struct WcsPersistenceHelper : private boost::noncopyable {
     table::Schema schema;
     table::Key< table::Point<double> > crval;
     table::Key< table::Point<double> > crpix;
@@ -1056,13 +1090,13 @@ struct WcsSchema : private boost::noncopyable {
     table::Key<std::string> cunit1;
     table::Key<std::string> cunit2;
 
-    static WcsSchema const & get() {
-        static WcsSchema instance;
+    static WcsPersistenceHelper const & get() {
+        static WcsPersistenceHelper instance;
         return instance;
     };
 
 private:
-    WcsSchema() :
+    WcsPersistenceHelper() :
         schema(),
         crval(schema.addField< table::Point<double> >("crval", "celestial reference point")),
         crpix(schema.addField< table::Point<double> >("crpix", "pixel reference point")),
@@ -1087,8 +1121,10 @@ WcsFactory registration(getWcsPersistenceName());
 
 std::string Wcs::getPersistenceName() const { return getWcsPersistenceName(); }
 
+std::string Wcs::getPythonModule() const { return "lsst.afw.image"; }
+
 void Wcs::write(OutputArchiveHandle & handle) const {
-    WcsSchema const & keys = WcsSchema::get();
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
     PTR(afw::table::BaseRecord) record = catalog.addNew();
     record->set(keys.crval, getSkyOrigin()->getPosition(afw::geom::degrees));
@@ -1122,7 +1158,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
     _nReject(0),
     _coordSystem(static_cast<afw::coord::CoordSystem>(-1))
 {
-    WcsSchema const & keys = WcsSchema::get();
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     if (!record.getSchema().contains(keys.schema)) {
         throw LSST_EXCEPT(
             afw::table::io::MalformedArchiveError,
@@ -1142,7 +1178,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
 
 PTR(table::io::Persistable)
 WcsFactory::read(InputArchive const & inputs, CatalogVector const & catalogs) const {
-    WcsSchema const & keys = WcsSchema::get();
+    WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     LSST_ARCHIVE_ASSERT(catalogs.size() >= 1u);
     LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
     LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
@@ -1249,7 +1285,8 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            
  * Strip keywords from the input metadata that are related to the generated Wcs
  *
  * It isn't entirely obvious that this is enough --- e.g. if the input metadata has deprecated
- * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12] and LTV[12],
+ * WCS keywords such as CDELT[12] they won't be stripped.  Well, actually we catch CDELT[12], LTV[12], and
+ * PC00[12]00[12]
  * but there may be others
  */
 int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
@@ -1262,6 +1299,10 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     paramNames.push_back("CDELT2");
     paramNames.push_back("LTV1");
     paramNames.push_back("LTV2");
+    paramNames.push_back("PC001001");
+    paramNames.push_back("PC001002");
+    paramNames.push_back("PC002001");
+    paramNames.push_back("PC002002");
     for (std::vector<std::string>::const_iterator ptr = paramNames.begin(); ptr != paramNames.end(); ++ptr) {
         metadata->remove(*ptr);
     }
@@ -1269,4 +1310,47 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
     return 0;                           // would be ncard if remove returned a status
 }
 
+
 }}}}
+
+
+
+// -------------------------------------------------------------------------------------------------
+//
+// XYTransformFromWcsPair
+
+
+XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
+    : XYTransform(false), _dst(dst), _src(src)
+{ }
+
+
+PTR(afwGeom::XYTransform) XYTransformFromWcsPair::clone() const
+{
+    return boost::make_shared<XYTransformFromWcsPair>(_dst->clone(), _src->clone());
+}
+
+
+afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
+{
+    //
+    // TODO there is an alternate version of pixelToSky() which is designated for the 
+    // "knowledgeable user in need of performance".  This is probably better, but first I need 
+    // to understand exactly which checks are needed (e.g. I think we need to check by hand 
+    // that both Wcs's use the same celestial coordinate system)
+    //
+    PTR(afw::coord::Coord) x = _src->pixelToSky(pixel);
+    return _dst->skyToPixel(*x);
+}
+
+afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
+{
+    PTR(afw::coord::Coord) x = _dst->pixelToSky(pixel);
+    return _src->skyToPixel(*x);
+}
+
+PTR(afwGeom::XYTransform) XYTransformFromWcsPair::invert() const
+{
+    // just swap src, dst
+    return boost::make_shared<XYTransformFromWcsPair> (_src, _dst);
+}

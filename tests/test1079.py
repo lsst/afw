@@ -110,8 +110,7 @@ class SavingSubImagesTest(unittest.TestCase):
         #Load sub-image directly off of disk
         llc = afwGeom.Point2I(20, 30)
         bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
-        hdu=0
-        subImg = afwImage.ExposureF(self.parentFile, hdu, bbox, afwImage.LOCAL)
+        subImg = afwImage.ExposureF(self.parentFile, bbox, afwImage.LOCAL)
         oSubImage = subImg.getWcs().getPixelOrigin()
         subImgLlc = subImg.getMaskedImage().getXY0()
        
@@ -166,8 +165,7 @@ class SavingSubImagesTest(unittest.TestCase):
         
         llc1 = afwGeom.Point2I(20, 30)
         bbox = afwGeom.Box2I(llc1, afwGeom.Extent2I(60, 50))
-        hdu=0
-        subImg = afwImage.ExposureF(self.parentFile, hdu, bbox, afwImage.LOCAL)
+        subImg = afwImage.ExposureF(self.parentFile, bbox, afwImage.LOCAL)
 
 
         llc2 = afwGeom.Point2I(22, 23)

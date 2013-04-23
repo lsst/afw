@@ -61,7 +61,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         self.persistence = dafPers.Persistence.getPersistence(policy)
 
         # Choose a file to manipulate
-        self.infile = os.path.join(dataDir, "small_MI")
+        self.infile = os.path.join(dataDir, "small_MI.fits")
 
         self.maskedImage = afwImage.MaskedImageF(self.infile)
         

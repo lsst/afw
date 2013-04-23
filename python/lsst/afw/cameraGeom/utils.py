@@ -30,6 +30,7 @@ import math
 import os
 import sys
 import unittest
+import numpy as np
 try:
     import pyfits
 except ImportError:
@@ -83,33 +84,63 @@ class GetCcdImage(object):
     def setTrimmed(self, doTrim):
         self.isTrimmed = doTrim
 
-class SynthesizeCcdImage(GetCcdImage):
+class ButlerImage(GetCcdImage):
     """A class to return an Image of a given Ccd based on its cameraGeometry"""
     
-    def __init__(self, isTrimmed=True, *args):
-        """Initialise"""
-        super(SynthesizeCcdImage, self).__init__(*args)
+    def __init__(self, butler=None, type="raw", isTrimmed=True,
+                 gravity=None, background=np.nan, *args, **kwargs):
+        """Initialise
+        gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
+                 Specify how to fit the image into the available space; N => align top, W => align left
+        background  The value of any pixels that lie outside the CCDs
+        """
+        super(ButlerImage, self).__init__(*args)
         self.isTrimmed = isTrimmed
-        self.isRaw = True               # we're always pretending to generate data straight from the DAQ
+        self.type = type
+        self.butler = butler
+        self.kwargs = kwargs
+        self.isRaw = False
+        self.gravity = gravity
+        self.background = background
 
-    def getImage(self, ccd, amp, imageFactory=afwImage.ImageU):
+    def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
         """Return an image of the specified amp in the specified ccd"""
-        
-        if self.isTrimmed:
-            bbox = amp.getElectronicDataSec()
+
+        im = None
+        if self.butler is not None:
+            try:
+                im = self.butler.get(self.type, ccd=ccd.getId().getSerial(),
+                                     **self.kwargs).getMaskedImage().getImage()
+            except Exception, e:
+                pass
+
+        if im is None:
+            return afwImage.ImageF(*ccd.getAllPixels(self.isTrimmed).getDimensions())
+                
+        if self.type == "raw":
+            im = im.convertF()
         else:
-            bbox = amp.getElectronicAllPixels()
-        im = imageFactory(bbox.getDimensions())
-        xy0 = afwGeom.Extent2I(bbox.getMin())
-        im += int(amp.getElectronicParams().getReadNoise())
-        bbox = afwGeom.Box2I(amp.getElectronicDataSec())
-        bbox.shift(-xy0)
-        sim = imageFactory(im, bbox, afwImage.LOCAL)
-        sim += int(1 + 100*amp.getElectronicParams().getGain() + 0.5)
-        #Since the image is in electronic coordinates, we need only mark at
-        #the origin of the dataSec.
-        imageFactory(im, afwGeom.Box2I(bbox.getMin(), afwGeom.Extent2I(3, 3)), afwImage.LOCAL).set(0)
-        return amp.prepareAmpData(im)
+            return im
+
+        trim = True
+        ccdImage = im.Factory(ccd.getAllPixels(trim))
+
+        for a in ccd:
+            if trim:
+                bias = im.Factory(im, a.getDiskBiasSec())
+
+                sim = im.Factory(im, a.getDiskDataSec())
+
+                sim -= afwMath.makeStatistics(bias, afwMath.MEANCLIP).getValue()
+
+            a.setTrimmed(True)
+
+            sub = ccdImage.Factory(ccdImage, a.getAllPixels(trim))
+
+            sub <<= a.prepareAmpData(sim)
+            sub /= a.getElectronicParams().getGain()
+
+        return ccdImage
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -144,6 +175,17 @@ def getGeomPolicy(cameraGeomPolicy):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def makeLinearityFromPolicy(linPol):
+    """Make and return a Linearity object from a suitable policy"""
+    assert linPol.get("type") == "PROPORTIONAL", "Checked in CameraGeomDictionary.paf"
+
+    return cameraGeom.Linearity(cameraGeom.Linearity.PROPORTIONAL,
+                                linPol.get("threshold"),
+                                linPol.get("maxCorrectable"),
+                                linPol.get("coefficient")
+                                )
+
+
 def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}, ccdDescription=None):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
@@ -170,6 +212,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
     if not ccdPol:
         raise("No valid CCD policy found")
     pixelSize = ccdPol.get("pixelSize")
+    offsetUnit = ccdPol.get('offsetUnit')
     
     nCol = ccdPol.get("nCol")
     nRow = ccdPol.get("nRow")
@@ -297,6 +340,37 @@ in particular that it has an entry ampSerial which is a single-element list, the
         #
         ccd.addAmp(amp)
     #
+    # Read any linearity information
+    #
+    # Start by looking for our CCD, then (failing that) for the default, with CCD serial number -1, 
+    #
+    def findLinearity(serial):
+        pol = [pol for pol in geomPolicy.get("Linearity").getArray("Ccd") if pol.get("serial") == serial]
+        if not pol:
+            return None
+        
+        if len(pol) != 1:
+            raise RuntimeError("Found more than one Linearity for serial %d" % (serial))
+        return pol[0]
+
+    linearityPolicy = findLinearity(ccdId.getSerial())
+    if not linearityPolicy:
+        linearityPolicy = findLinearity(-1)
+    #
+    # If we have a policy, set the linearity parameters
+    #
+    if linearityPolicy:
+        linPols = {}
+        for policy in linearityPolicy.getArray("Amp"):
+            linPols[policy.get("serial")] = policy
+
+        for amp in ccd:
+            try:
+                lin = makeLinearityFromPolicy(linPols[amp.getId().getSerial()])
+            except KeyError:
+                continue
+            amp.getElectronicParams().setLinearity(lin)
+    #
     # Information for the test code
     #
     if ccdInfo is not None:
@@ -308,6 +382,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
         ccdInfo["width"], ccdInfo["height"] = nCol*eWidth, nRow*eHeight
         ccdInfo["trimmedWidth"], ccdInfo["trimmedHeight"] = nCol*width, nRow*height
         ccdInfo["pixelSize"] = pixelSize
+        ccdInfo["offsetUnit"] = offsetUnit
         ccdInfo["ampIdMin"] = ampSerial0
         ccdInfo["ampIdMax"] = ampSerial[0] - 1
 
@@ -321,7 +396,7 @@ particular that it has an entry ampSerial which is a single-element list, the am
 """
 
     if raftInfo is None:
-        ccdInfo = None
+        ccdInfo = {}
     else:
         ccdInfo = {"ampSerial" : raftInfo.get("ampSerial", [0])}
 
@@ -369,9 +444,9 @@ particular that it has an entry ampSerial which is a single-element list, the am
                 raise RuntimeError, msg
 
     for ccdPol in raftPol.getArray("Ccd"):
-        Col, Row = ccdPol.getArray("index")
-        xc, yc = ccdPol.getArray("offset")
-
+        Col, Row   = ccdPol.getArray("index")
+        xc, yc     = ccdPol.getArray("offset")
+        
         nQuarter = ccdPol.get("nQuarter")
         pitch, roll, yaw = [afwGeom.Angle(a, afwGeom.degrees) for a in ccdPol.getArray("orientation")]
 
@@ -385,6 +460,13 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
         ccdId = cameraGeom.Id(ccdPol.get("serial"), ccdPol.get("name"))
         ccd = makeCcd(geomPolicy, ccdDescription=ccdPol, ccdId=ccdId, ccdInfo=ccdInfo, defectDict=defectDict)
+        pixelSize = ccd.getPixelSize()
+
+        offsetUnit = ccdInfo["offsetUnit"]
+        if offsetUnit == 'pixels':
+            xc *= pixelSize
+            yc *= pixelSize
+        
         raft.addDetector(afwGeom.Point2I(Col, Row),
                          cameraGeom.FpPoint(xc, yc),
                          cameraGeom.Orientation(nQuarter, pitch, roll, yaw), ccd)
@@ -473,11 +555,11 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
     distort = None
     if distortActive == "NullDistortion":
-	distort = cameraGeom.NullDistortion()
+        distort = cameraGeom.NullDistortion()
     elif distortActive == "RadialPolyDistortion":
-	coeffs = activePolicy.getArray('coeffs')
+        coeffs = activePolicy.getArray('coeffs')
         coefficientsDistort = activePolicy.get('coefficientsDistort')
-	distort = cameraGeom.RadialPolyDistortion(coeffs, coefficientsDistort)
+        distort = cameraGeom.RadialPolyDistortion(coeffs, coefficientsDistort)
     camera.setDistortion(distort)
 
 
@@ -495,23 +577,21 @@ particular that it has an entry ampSerial which is a single-element list, the am
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeAmpImageFromCcd(amp, imageSource=SynthesizeCcdImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
+def makeAmpImageFromCcd(amp, imageSource=ButlerImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
     """Make an Image of an Amp"""
 
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
-def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
-                     isTrimmed=None, imageFactory=afwImage.ImageU, bin=1,
-                     natural=False, display=False):
+def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
+                     isTrimmed=None, correctGain = False, imageFactory=afwImage.ImageU, bin=1,
+                     display=False):
     """Make an Image of a Ccd (or just a single amp)
-
-    If natural is True, return the CCD image without worrying about whether it's rotated when
-    placed into the camera
     """
 
     if isTrimmed is None:
         isTrimmed = ccd.isTrimmed()
-    imageSource.setTrimmed(isTrimmed)
+    if imageSource:
+        imageSource.setTrimmed(isTrimmed)
 
     if amp:
         ampImage = imageFactory(amp.getAllPixels(isTrimmed).getDimensions())
@@ -526,18 +606,27 @@ def makeImageFromCcd(ccd, imageSource=SynthesizeCcdImage(), amp=None,
     # the coordinates system in which the data is being stored on disk.  Since all bounding box
     # information is held in camera coordinates, there is no need to rotate the image after assembly.
     #
-    if imageSource.isRaw:
-        ccdImage = imageFactory(ccd.getAllPixels(isTrimmed))
-        for a in ccd:
-            im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
-            im <<= imageSource.getImage(ccd, a, imageFactory=imageFactory)
-    else:
-        ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
+    if imageSource:
+        if imageSource.isRaw:
+            ccdImage = imageFactory(ccd.getAllPixels(isTrimmed))
+            for a in ccd:
+                im = ccdImage.Factory(ccdImage, a.getAllPixels(isTrimmed), afwImage.LOCAL)
+                im <<= imageSource.getImage(ccd, a, imageFactory=imageFactory)
+        else:
+            ccdImage = imageSource.getImage(ccd, imageFactory=imageFactory)
+            if correctGain:
+                for a in ccd:
+                    samp = ccdImage.Factory(ccdImage, a.getAllPixels(True))
+                    samp /= a.getElectronicParams().getGain()
 
-    if bin > 1:
-        ccdImage = afwMath.binImage(ccdImage, bin)
-    if display:
-        showCcd(ccd, ccdImage=ccdImage, isTrimmed=isTrimmed)
+        if bin > 1:
+            ccdImage = afwMath.binImage(ccdImage, bin)
+        if display:
+            showCcd(ccd, ccdImage=ccdImage, isTrimmed=isTrimmed)
+    else:
+        dims = ccd.getAllPixels(isTrimmed).getDimensions()
+        ccdImage = imageFactory(dims[0]//bin, dims[1]//bin)
+            
     return ccdImage
 
 def trimExposure(ccdImage, ccd=None):
@@ -559,6 +648,11 @@ def trimExposure(ccdImage, ccd=None):
 def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1):
     """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
 of the detectors"""
+
+    if ccdOrigin is None:
+        ccdOrigin = afwGeom.PointD(0, 0)
+    else:
+        ccdOrigin = ccd.getPositionFromPixel(afwGeom.PointD(0, 0)).getMm() # + afwGeom.ExtentD(ccdOrigin)
 
     if isTrimmed is None:
         isTrimmed = ccd.isTrimmed()
@@ -642,7 +736,7 @@ of the detectors"""
         displayUtils.drawBBox(ccd.getAllPixels(isTrimmed), origin=ccdOrigin,
                               borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
 
-def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
+def makeImageFromRaft(raft, imageSource=ButlerImage(), raftCenter=None,
                       imageFactory=afwImage.ImageU, bin=1):
     """Make an Image of a Raft"""
 
@@ -669,18 +763,42 @@ def makeImageFromRaft(raft, imageSource=SynthesizeCcdImage(), raftCenter=None,
                              dims)
 
         ccdImage = raftImage.Factory(raftImage, bbox, afwImage.LOCAL)
-        ccdImage <<= makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
+
+        dataImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
+        
+        if ccdImage.getDimensions() == dataImage.getDimensions():
+            ccdImage <<= dataImage
+        else:
+            delta = ccdImage.getDimensions() - dataImage.getDimensions()
+
+            if imageSource.gravity == "N":
+                x0, y0 = delta[0]//2, delta[1]
+            elif imageSource.gravity == "S":
+                x0, y0 = delta[0]//2, 0
+            elif imageSource.gravity == "E":
+                x0, y0 = delta[0], delta[1]//2
+            elif imageSource.gravity == "W":
+                x0, y0 = 0, delta[1]//2
+            else:
+                x0, y0 = delta[0]//2, delta[1]//2
+            subCcdImage = ccdImage.Factory(ccdImage, afwGeom.BoxI(afwGeom.PointI(x0, y0), dataImage.getDimensions()))
+            subCcdImage <<= dataImage
+            del subCcdImage
 
     return raftImage
 
-def showRaft(raft, imageSource=SynthesizeCcdImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
+def showRaft(raft, imageSource=ButlerImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
     """Show a Raft on ds9.
 
 If imageSource isn't None, create an image using the images specified by imageSource"""
 
+    if raftOrigin is None:
+        raftOrigin = afwGeom.PointD(0, 0)
+    else:
+        raftOrigin = raft.getPositionFromPixel(afwGeom.PointD(0, 0)).getMm()
+
     raftCenter = afwGeom.Point2I(raft.getAllPixels().getDimensions()/2)
-    if raftOrigin:
-        raftCenter += afwGeom.ExtentI(int(raftOrigin[0]), int(raftOrigin[1]))
+    raftCenter += afwGeom.ExtentI(int(raftOrigin[0]), int(raftOrigin[1]))
 
     if imageSource is None:
         raftImage = None
@@ -700,9 +818,8 @@ If imageSource isn't None, create an image using the images specified by imageSo
             ccd = cameraGeom.cast_Ccd(det)
 
             bbox = ccd.getAllPixels(True)
-            origin = ccd.getCenterPixel() - \
-                    afwGeom.ExtentD(bbox.getWidth()/2 - raftCenter.getX(), 
-                                    bbox.getHeight()/2 - raftCenter.getY())
+            origin = ccd.getPositionFromPixel(afwGeom.PointD(0, 0)).getMm()
+            #origin -= afwGeom.ExtentD(raftCenter)
 
             if True:
                 name = ccd.getId().getName()
@@ -739,38 +856,121 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
 
     return cameraImage
 
-def showCamera(camera, imageSource=SynthesizeCcdImage(), imageFactory=afwImage.ImageU,
-               frame=None, overlay=True, bin=1):
-    """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and amplifier boundaries
+def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF,
+                bin=1, border=5, frame=None, overlay=True, title="", ctype=ds9.GREEN, names=False):
+    """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
 cameraGeom.GetCcdImage object); if it is "", an image will be created based on the properties
 of the detectors"""
+    #
+    # Figure out how big an image I need, and where the CCDs fit
+    #
+    cameraBbox = afwGeom.BoxI()
+    ccdBboxes = {}
+    for raft in camera:
+        raft = cameraGeom.cast_Raft(raft)
+        for ccd in raft:
+            ccd = cameraGeom.cast_Ccd(ccd)
+            ccd.setTrimmed(True)
+            
+            width, height = ccd.getAllPixels(True).getDimensions()
 
-    if imageSource is None:
-        cameraImage = None
-    elif isinstance(imageSource, GetCcdImage):
-        cameraImage = makeImageFromCamera(camera, imageSource, bin=bin, imageFactory=imageFactory)
-    else:
-        cameraImage = imageSource
+            bbox = afwGeom.BoxI()
+            for x, y in ((0.0,0.0), (0.0, height - 1), (width - 1, height - 1), (width - 1, 0.0), (0.0, 0.0)):
+                position = ccd.getPositionFromPixel(afwGeom.Point2D(x,y)).getPixels(ccd.getPixelSize())
+                bbox.include(afwGeom.PointI(int(position.getX()//bin), int(position.getY()//bin)))
 
-    if cameraImage:
-        ds9.mtv(cameraImage, frame=frame, title=camera.getId().getName())
+            cameraBbox.include(bbox)
+            ccdBboxes[ccd.getId().getSerial()] = bbox
 
-    with ds9.Buffering():
-        for det in camera:
-            raft = cameraGeom.cast_Raft(det)
+    cameraBbox.include(afwGeom.PointI(-border, -border))
+    cameraBbox.grow(afwGeom.ExtentI(   border,  border))
 
-            center = camera.getCenterPixel() + afwGeom.Extent2D(raft.getCenterPixel())
+    cameraImage = afwImage.ImageF(cameraBbox)
+    cameraImage.set(imageSource.background if imageSource else np.nan)
 
-            if overlay:
-                bbox = raft.getAllPixels()
-                ds9.dot(raft.getId().getName(), center[0]/bin, center[1]/bin, frame=frame)
+    for raft in camera:
+        raft = cameraGeom.cast_Raft(raft)
+        for ccd in raft:
+            ccd = cameraGeom.cast_Ccd(ccd)
 
-            showRaft(raft, None, frame=frame, overlay=overlay,
-                     raftOrigin=center - afwGeom.Extent2D(raft.getAllPixels().getWidth()/2,
-                                                             raft.getAllPixels().getHeight()/2), 
-                     bin=bin)
+            serialNo = ccd.getId().getSerial()
+            ccdImage = cameraImage.Factory(cameraImage, ccdBboxes[serialNo], afwImage.PARENT)
+            dataImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
+
+            if ccdImage.getDimensions() == dataImage.getDimensions():
+                ccdImage <<= dataImage
+            else:
+                delta = ccdImage.getDimensions() - dataImage.getDimensions()
+
+                if imageSource:
+                    if imageSource.gravity == "N":
+                        x0, y0 = delta[0]//2, delta[1]
+                    elif imageSource.gravity == "S":
+                        x0, y0 = delta[0]//2, 0
+                    elif imageSource.gravity == "E":
+                        x0, y0 = delta[0], delta[1]//2
+                    elif imageSource.gravity == "W":
+                        x0, y0 = 0, delta[1]//2
+                    else:
+                        x0, y0 = delta[0]//2, delta[1]//2
+                else:
+                    assert bin > 1
+                    x0, y0 = 0, 0       # rounding error in binning
+
+                subCcdImage = ccdImage.Factory(ccdImage,
+                                               afwGeom.BoxI(afwGeom.PointI(x0, y0), dataImage.getDimensions()))
+                subCcdImage <<= dataImage
+                del subCcdImage
+    #
+    # We've got the image, add a WCS
+    #
+    if frame is not None:
+        wcs = makeFocalPlaneWcs(camera)
+
+        ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
+
+        if overlay:
+            xy0 = afwGeom.ExtentI(cameraImage.getXY0())
+            
+            with ds9.Buffering():
+                for raft in camera:
+                    raft = cameraGeom.cast_Raft(raft)
+                    for ccd in raft:
+                        ccd = cameraGeom.cast_Ccd(ccd)
+
+                        serialNo = ccd.getId().getSerial()
+
+                        bbox = ccdBboxes[serialNo]
+                        displayUtils.drawBBox(bbox, origin=-xy0, borderWidth=0.49,
+                                              ctype=ctype, frame=frame)
+
+                        xy = [0, 0]
+                        for i in range(2):
+                            xy[i] = 0.5*(bbox.getMin()[i] + bbox.getMax()[i]) - xy0[i]
+
+                        ds9.dot(ccd.getId().getName() if names else str(serialNo), *xy,
+                                ctype=ctype, frame=frame)
+            
+    return cameraImage
+
+def makeFocalPlaneWcs(camera):
+    """Make a WCS for the focal plane geometry (i.e. returning positions in "mm")"""
+    import lsst.daf.base as dafBase
+
+    ccd = cameraGeom.cast_Ccd(list(cameraGeom.cast_Raft(list(camera)[0]))[0]) # some random CCD
+
+    md = dafBase.PropertySet()
+    pix = afwGeom.PointD(0,0)
+    fpPos = ccd.getPositionFromPixel(pix).getMm()
+
+    for i in range(2):
+        md.set("CRPOS%d" % i, pix[i])
+        md.set("CRVAL%d" % i, fpPos[i])
+    md.set("CDELT1", ccd.getPixelSize())
+
+    return afwImage.makeWcs(md)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -963,7 +1163,7 @@ def makeDefectsFromFits(filename):
 def makeDefects(geomPolicy):
     """Create a dictionary of DefectSets from a pexPolicy::Policy
 
-The dictionay is indexed by an Id object --- remember to compare by str(id) not object identity
+The dictionary is indexed by an Id object --- remember to compare by str(id) not object identity
     """
 
     defectsDict = {}

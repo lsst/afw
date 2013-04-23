@@ -79,7 +79,10 @@ class Mosaic(object):
         
     def append(self, image, label=None, ctype=None):
         """Add an image to the list of images to be mosaiced
-        Set may be cleared with Mosaic.reset()"""
+        Set may be cleared with Mosaic.reset()
+
+        Returns the index of this image (may be passed to getBBox())
+        """
         if not self.xsize:
             self.xsize = image.getWidth()
             self.ysize = image.getHeight()
@@ -87,7 +90,9 @@ class Mosaic(object):
         self.images.append(image)
         self.labels.append((label, ctype))
 
-    def makeMosaic(self, images=None, frame=None, mode=None, title=""):
+        return len(self.images)
+
+    def makeMosaic(self, images=None, frame=None, mode=None, background=None, title=""):
         """Return a mosaic of all the images provided; if none are specified,
         use the list accumulated with Mosaic.append().
 
@@ -112,7 +117,9 @@ class Mosaic(object):
             if h > self.ysize:
                 self.ysize = h
 
-        if not mode:
+        if background is None:
+            background = self.background
+        if mode is None:
             mode = self.mode
 
         if mode == "square":
@@ -125,7 +132,10 @@ class Mosaic(object):
                     ny += 1
                 if nx*ny < self.nImage:
                     nx += 1
-                    
+
+            if nx > self.nImage:
+                nx = self.nImage
+                
             assert(nx*ny >= self.nImage)
         elif mode == "x":
             nx, ny = self.nImage, 1
@@ -296,3 +306,23 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
                 x /= bin; y /= bin
 
                 ds9.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)
+
+def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1):
+    """Draw the bounding boxes of input exposures to a coadd on a ds9 frame with the specified ctype,
+    assuming ds9.mtv() has already been called on the given exposure on this frame.
+
+
+    All coordinates are divided by bin, as is right and proper for overlaying on a binned image
+    """
+    coaddWcs = exposure.getWcs()
+    catalog = exposure.getInfo().getCoaddInputs().ccds
+
+    offset = afwGeom.Point2D() - afwGeom.Point2D(exposure.getXY0())
+    with ds9.Buffering():
+        for record in catalog:
+            ccdBox = afwGeom.Box2D(record.getBBox())
+            ccdCorners = ccdBox.getCorners()
+            coaddCorners = [coaddWcs.skyToPixel(record.getWcs().pixelToSky(point)) + offset
+                            for point in ccdCorners]
+            ds9.line([(coaddCorners[i].getX() / bin, coaddCorners[i].getY() / bin)
+                      for i in range(-1, 4)], frame=frame, ctype=ctype)

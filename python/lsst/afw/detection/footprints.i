@@ -38,6 +38,8 @@ typedef lsst::afw::geom::Span Span;
 }}}
 
 %include "lsst/afw/image/LsstImageTypes.h"
+%include "std_pair.i"
+%template(pairBB) std::pair<bool, bool>;
 
 %shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
 

@@ -211,11 +211,166 @@ class FootprintSetTestCase(unittest.TestCase):
         """Grow footprints using the FootprintSet constructor"""
         fs = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
         self.assertEqual(len(fs.getFootprints()), len(self.objects))
-        grown = afwDetect.FootprintSet(fs, 1, False)
-        self.assertEqual(len(fs.getFootprints()), len(self.objects))
+        for isotropic in (True, False, afwDetect.FootprintControl(True),):
+            grown = afwDetect.FootprintSet(fs, 1, isotropic)
+            self.assertEqual(len(fs.getFootprints()), len(self.objects))
 
-        self.assertGreater(len(grown.getFootprints()), 0)
-        self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
+            self.assertGreater(len(grown.getFootprints()), 0)
+            self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
+
+    def testFootprintControl(self):
+        """Test the FootprintControl constructor"""
+        fctrl = afwDetect.FootprintControl()
+        self.assertFalse(fctrl.isCircular()[0]) # not set
+        self.assertFalse(fctrl.isIsotropic()[0]) # not set
+
+        fctrl.growIsotropic(False)
+        self.assertTrue(fctrl.isCircular()[0])
+        self.assertTrue(fctrl.isIsotropic()[0])
+        self.assertTrue(fctrl.isCircular()[1])
+        self.assertFalse(fctrl.isIsotropic()[1])
+
+        #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        fctrl = afwDetect.FootprintControl()
+        fctrl.growLeft(False)
+        self.assertTrue(fctrl.isLeft()[0]) # it's now set
+        self.assertFalse(fctrl.isLeft()[1]) # ... but False
+
+        #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        fctrl = afwDetect.FootprintControl(True, False, False, False)
+        self.assertTrue(fctrl.isLeft()[0])
+        self.assertTrue(fctrl.isRight()[0])
+        self.assertTrue(fctrl.isUp()[0])
+        self.assertTrue(fctrl.isDown()[0])
+
+        self.assertTrue(fctrl.isLeft()[1])
+        self.assertFalse(fctrl.isRight()[1])
+        
+    def testGrowCircular(self):
+        """Grow footprints in all 4 directions using the FootprintSet/FootprintControl constructor """
+        im = afwImage.MaskedImageF(11, 11)
+        im.set(5, 5, (10,))
+        fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
+        self.assertEqual(len(fs.getFootprints()), 1)
+
+        radius = 3                      # How much to grow by
+        for fctrl in (afwDetect.FootprintControl(),
+                      afwDetect.FootprintControl(True),
+                      afwDetect.FootprintControl(True, True),
+                      ):
+            grown = afwDetect.FootprintSet(fs, radius, fctrl)
+            afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
+
+            if display:
+                ds9.mtv(im)
+
+            foot = grown.getFootprints()[0]
+
+            if not fctrl.isCircular()[0]:
+                self.assertEqual(foot.getNpix(), 1)
+            elif fctrl.isCircular()[0]:
+                assert radius == 3
+                if fctrl.isIsotropic()[1]:
+                    self.assertEqual(foot.getNpix(), 29)
+                else:
+                    self.assertEqual(foot.getNpix(), 25)
+
+    def testGrowLRUD(self):
+        """Grow footprints in various directions using the FootprintSet/FootprintControl constructor """
+        im = afwImage.MaskedImageF(11, 11)
+        x0, y0, ny = 5, 5, 3
+        for y in range(y0 - ny//2, y0 + ny//2 + 1):
+            im.set(x0, y, (10,))
+        fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
+        self.assertEqual(len(fs.getFootprints()), 1)
+
+        ngrow = 2                       # How much to grow by
+        #
+        # Test growing to the left and/or right
+        #
+        for fctrl in (
+            afwDetect.FootprintControl(False, True, False, False),
+            afwDetect.FootprintControl(True, False, False, False),
+            afwDetect.FootprintControl(True, True, False, False),
+                      ):
+            grown = afwDetect.FootprintSet(fs, ngrow, fctrl)
+            im.getMask().set(0)
+            afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
+
+            if display:
+                ds9.mtv(im)
+
+            foot = grown.getFootprints()[0]
+            nextra = 0
+            if fctrl.isLeft()[1]:
+                nextra += ngrow
+                for y in range(y0 - ny//2, y0 + ny//2 + 1):
+                    self.assertNotEqual(im.getMask().get(x0 - 1, y), 0)
+
+            if fctrl.isRight()[1]:
+                nextra += ngrow
+                for y in range(y0 - ny//2, y0 + ny//2 + 1):
+                    self.assertNotEqual(im.getMask().get(x0 + 1, y), 0)
+
+            self.assertEqual(foot.getNpix(), (1 + nextra)*ny)
+        #
+        # Test growing to up and/or down
+        #
+        for fctrl in (
+            afwDetect.FootprintControl(False, False, True, False),
+            afwDetect.FootprintControl(False, False, False, True),
+            afwDetect.FootprintControl(False, False, True, True),
+                      ):
+            grown = afwDetect.FootprintSet(fs, ngrow, fctrl)
+            im.getMask().set(0)
+            afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
+
+            if display:
+                ds9.mtv(im)
+
+            foot = grown.getFootprints()[0]
+            nextra = 0
+            if fctrl.isUp()[1]:
+                nextra += ngrow
+                for y in range(y0 + ny//2 + 1, y0 + ny//2 + ngrow + 1):
+                    self.assertNotEqual(im.getMask().get(x0, y), 0)
+
+            if fctrl.isDown()[1]:
+                nextra += ngrow
+                for y in range(y0 - ny//2 - 1, y0 - ny//2 - ngrow - 1):
+                    self.assertNotEqual(im.getMask().get(x0, y), 0)
+
+            self.assertEqual(foot.getNpix(), ny + nextra)
+        
+    def testGrowLRUD2(self):
+        """Grow footprints in various directions using the FootprintSet/FootprintControl constructor
+
+        Check that overlapping grown Footprints give the expected answers
+        """
+        ngrow = 3                       # How much to grow by
+        for fctrl, xy in [
+            (afwDetect.FootprintControl(True, True, False, False), [(4, 5), (5, 6), (6, 5)]),
+            (afwDetect.FootprintControl(False, False, True, True), [(5, 4), (6, 5), (5, 6)]),
+            ]:
+            im = afwImage.MaskedImageF(11, 11)
+            for x, y in xy:
+                im.set(x, y, (10,))
+            fs = afwDetect.FootprintSet(im, afwDetect.Threshold(10))
+            self.assertEqual(len(fs.getFootprints()), 1)
+
+            grown = afwDetect.FootprintSet(fs, ngrow, fctrl)
+            im.getMask().set(0)
+            afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
+            
+            if display:
+                ds9.mtv(im)
+                
+            self.assertEqual(len(grown.getFootprints()), 1)
+            foot = grown.getFootprints()[0]
+                
+            npix = 1 + 2*ngrow
+            npix += 3 + 2*ngrow         # 3: distance between pair of set pixels 000X0X000
+            self.assertEqual(foot.getNpix(), npix)
 
     def testInf(self):
         """Test detection for images with Infs"""
@@ -237,7 +392,6 @@ class FootprintSetTestCase(unittest.TestCase):
 
         self.assertEqual(len(objects), 1)
             
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class PeaksInFootprintsTestCase(unittest.TestCase):

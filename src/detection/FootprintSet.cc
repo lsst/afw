@@ -186,13 +186,20 @@ namespace {
         int rLhs,                                         // Grow lhs Footprints by this many pixels
         detection::FootprintSet const &rhs, // the FootprintSet to be merged into lhs
         int rRhs,                                         // Grow rhs Footprints by this many pixels
-        bool isotropic                  // Grow isotropically (as opposed to a Manhattan metric)
-                                        // n.b. Isotropic grows are significantly slower
+        detection::FootprintControl const& ctrl           // Control how the grow is done
                       )
     {
         typedef detection::Footprint Footprint;
         typedef detection::FootprintSet::FootprintList FootprintList;
-        
+        // The isXXX routines return <isset, value>
+        bool const circular = ctrl.isCircular().first && ctrl.isCircular().second;
+        bool const isotropic = ctrl.isIsotropic().second; // isotropic grow as opposed to a Manhattan metric
+                                        // n.b. Isotropic grows are significantly slower
+        bool const left =  ctrl.isLeft().first  && ctrl.isLeft().second;
+        bool const right = ctrl.isRight().first && ctrl.isRight().second;
+        bool const up =    ctrl.isUp().first    && ctrl.isUp().second;
+        bool const down =  ctrl.isDown().first  && ctrl.isDown().second;
+
         geom::Box2I const region = lhs.getRegion();
         if (region != rhs.getRegion()) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
@@ -233,7 +240,8 @@ namespace {
             CONST_PTR(Footprint) foot = *ptr;
 
             if (rLhs > 0) {
-                foot = growFootprint(*foot, rLhs, isotropic);
+                foot = circular ?
+                    growFootprint(*foot, rLhs, isotropic) : growFootprint(*foot, rLhs, left, right, up, down);
             }
 
             std::set<boost::uint64_t> overwritten;
@@ -251,7 +259,8 @@ namespace {
             CONST_PTR(Footprint) foot = *ptr;
 
             if (rRhs > 0) {
-                foot = growFootprint(*foot, rRhs, isotropic);
+                foot = circular ?
+                    growFootprint(*foot, rRhs, isotropic) : growFootprint(*foot, rRhs, left, right, up, down);
             }
 
             std::set<boost::uint64_t> overwritten;
@@ -1318,7 +1327,13 @@ detection::FootprintSet::FootprintSet(
     FootprintSet const &rhs         //!< the input FootprintSet
 ) :
     lsst::daf::base::Citizen(typeid(this)),
-    _footprints(rhs._footprints), _region(rhs._region) {
+    _footprints(new FootprintList), _region(rhs._region)
+{
+    _footprints->reserve(rhs._footprints->size());
+    for (FootprintSet::FootprintList::const_iterator ptr = rhs._footprints->begin(),
+             end = rhs._footprints->end(); ptr != end; ++ptr) {
+        _footprints->push_back(PTR(Footprint)(new Footprint(**ptr)));
+    }
 }
 
 /// Assignment operator.
@@ -1340,11 +1355,9 @@ void detection::FootprintSet::merge(
         bool isotropic                      ///< Use (expensive) isotropic grow
 )
 {
-    detection::FootprintSet fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, isotropic);
-    /*
-     * Swap the new FootprintSet into place
-     */
-    this->swap(fs);
+    detection::FootprintControl const ctrl(true, isotropic);
+    detection::FootprintSet fs = mergeFootprintSets(*this, tGrow, rhs, rGrow, ctrl);
+    swap(fs);                           // Swap the new FootprintSet into place
 }
 
 /// Set the corners of the FootprintSet's MaskedImage to region
@@ -1375,20 +1388,40 @@ detection::FootprintSet::FootprintSet(
     bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
     //!< @note Isotropic grows are significantly slower
 )
-    : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region) {
-
+    : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
+{
     if (r == 0) {
+        FootprintSet fs = rhs;
+        swap(fs);                       // Swap the new FootprintSet into place
         return;
     } else if (r < 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                           (boost::format("I cannot grow by negative numbers: %d") % r).str());
     }
 
-    detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, r, isotropic);
-    /*
-     * Swap the new FootprintSet into place
-     */
-    swap(fs);
+    detection::FootprintControl const ctrl(true, isotropic);
+    detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, r, ctrl);
+    swap(fs);                           // Swap the new FootprintSet into place
+}
+
+/************************************************************************************************************/
+
+detection::FootprintSet::FootprintSet(detection::FootprintSet const& rhs,
+                                      int ngrow,
+                                      detection::FootprintControl const& ctrl)
+    : lsst::daf::base::Citizen(typeid(this)), _footprints(new FootprintList), _region(rhs._region)
+{
+    if (ngrow == 0) {
+        FootprintSet fs = rhs;
+        swap(fs);                       // Swap the new FootprintSet into place
+        return;
+    } else if (ngrow < 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          str(boost::format("I cannot grow by negative numbers: %d") % ngrow));
+    }
+
+    detection::FootprintSet fs = mergeFootprintSets(FootprintSet(rhs.getRegion()), 0, rhs, ngrow, ctrl);
+    swap(fs);                           // Swap the new FootprintSet into place
 }
 
 /************************************************************************************************************/

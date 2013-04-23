@@ -18,10 +18,10 @@ Camera: {
         offset: 2.11 0.0                # offset of Raft center from boresight, (x, y); mm
     }
     Distortion: {
-	active: "RadialPolyDistortion"
+    active: "RadialPolyDistortion"
         RadialPolyDistortion: {
-    	    coeffs: 0.0 1.0 7.16417e-08 3.03146e-10 5.69338e-14 -6.61572e-18
-    	}
+            coeffs: 0.0 1.0 7.16417e-08 3.03146e-10 5.69338e-14 -6.61572e-18
+        }
     }
 }
 #
@@ -36,7 +36,7 @@ Raft: {
         ptype: "vendor1"                 # Type of CCD
         index: 0 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 -2.02             # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 2                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -45,7 +45,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 1 0                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 -2.02              # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 0                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -54,7 +54,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 0 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 0.0               # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 0                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -63,7 +63,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 1 1                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 0.0                # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 1                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 0                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -72,7 +72,7 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 0 2                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: -1.01 2.02              # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 2                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
     Ccd: {
@@ -81,16 +81,17 @@ Raft: {
         ptype: "default"                 # Type of CCD
         index: 1 2                      # Location of CCD in Raft thought of as a grid of CCDs
         offset: 1.01 2.02               # offset of CCD center from raft center, (x, y); mm
-        nQuarter: 3                     # number of quarter turns applied to CCD when put into raft
+        nQuarter: 2                     # number of quarter turns applied to CCD when put into raft
         orientation: 0.0 0.0 0.0        # pitch, roll, yaw; degrees
     }
 }
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 Ccd: {
-    pixelSize: 10.0e-3                    # pixel size (mm)
+    pixelSize: 10.0e-3                  # pixel size (mm)
     ptype: "vendor1"
 
+    offsetUnit: 'mm'                    # the units of 'offset' values for CCDs
     nCol: 2                             # number of columns of amps; 2 == Left and Right
     nRow: 1                             # number of rows of amps
     Amp: {
@@ -116,7 +117,8 @@ Ccd: {
 Ccd: {
     pixelSize: 10.0e-3                    # pixel size (mm)
     ptype: "default"
-
+    
+    offsetUnit: 'mm'                    # the units of 'offset' values for CCDs
     nCol: 2                             # number of columns of amps; 2 == Left and Right
     nRow: 4                             # number of rows of amps
     Amp: {
@@ -336,6 +338,46 @@ Defects: {
                 x1: 12
                 y1: 10
             }
+        }
+    }
+}
+#
+# Non linearity
+#
+Linearity: {
+    Ccd: {
+        serial: -1                      # i.e. the default
+        Amp: {
+            serial: 1
+            type: "PROPORTIONAL"
+            threshold: 0
+            maxCorrectable: 65535
+            coefficient: 0.0
+        }
+        Amp: {
+            serial: 2
+            type: "PROPORTIONAL"
+            threshold: 0
+            maxCorrectable: 65535
+            coefficient: 0.0
+        }
+    }
+    #
+    Ccd: {
+        serial: 1234
+        Amp: {
+            serial: 1
+            type: "PROPORTIONAL"
+            threshold: 10
+            maxCorrectable: 65535
+            coefficient: 1.0
+        }
+        Amp: {
+            serial: 2
+            type: "PROPORTIONAL"
+            threshold: 10
+            maxCorrectable: 65535
+            coefficient: 1.0
         }
     }
 }

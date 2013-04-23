@@ -30,6 +30,7 @@
 #include "lsst/afw/geom.h"
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/table/Source.h"
 
@@ -86,6 +87,7 @@ public:
 
     FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
+    FootprintSet(FootprintSet const& set, int rGrow, FootprintControl const& ctrl);
     FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
     FootprintSet(FootprintSet const& footprints1, 
                  FootprintSet const& footprints2,

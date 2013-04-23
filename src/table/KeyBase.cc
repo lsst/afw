@@ -6,6 +6,7 @@
 #include "lsst/afw/table/KeyBase.h"
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/Flag.h"
+#include "lsst/afw/table/BaseRecord.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -39,6 +40,21 @@ Key<U> KeyBase< Moments<U> >::getIyy() const { return detail::Access::extractEle
 
 template <typename U>
 Key<U> KeyBase< Moments<U> >::getIxy() const { return detail::Access::extractElement(*this, 2); }
+
+template <typename U>
+std::vector<U> KeyBase< Array<U> >::extractVector(BaseRecord const & record) const {
+    Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);
+    std::vector<U> result(self->getSize());
+    typename Key< Array<U> >::ConstReference array = record[*self];
+    std::copy(array.begin(), array.end(), result.begin());
+    return result;
+}
+
+template <typename U>
+void KeyBase< Array<U> >::assignVector(BaseRecord & record, std::vector<U> const & values) const {
+    Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);
+    std::copy(values.begin(), values.end(), record[*self].begin());
+}
 
 template <typename U>
 Key<U> KeyBase< Array<U> >::operator[](int i) const {

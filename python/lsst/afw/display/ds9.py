@@ -38,7 +38,10 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
-needShow = True;                        # Used to avoid a bug in ds9 5.4
+try:
+    needShow
+except NameError:
+    needShow = True;                        # Used to avoid a bug in ds9 5.4
 
 ## An error talking to ds9
 class Ds9Error(IOError):
@@ -164,6 +167,11 @@ def getMaskPlaneVisibility(name):
         return _maskPlaneVisibility[name]
     else:
         return True
+
+try:
+    _maskTransparency
+except NameError:
+    _maskTransparency = None
 
 def setMaskTransparency(transparency=None, frame=None):
     """Specify ds9's mask transparency (percent); or None to not set it when loading masks"""
@@ -329,8 +337,14 @@ def ds9Cmd(cmd=None, trap=True, flush=False, silent=True, frame=None, get=False)
     else:
         return
 
+    cmd = cmd.rstrip()
+    if not cmd:
+        return
+
     try:
-        xpa.set(None, getXpaAccessPoint(), cmd, "", "", 0)
+        ret = xpa.set(None, getXpaAccessPoint(), cmd, "", "", 0)
+        if ret:
+            raise IOError(ret)
     except IOError, e:
         if not trap:
             raise Ds9Error, "XPA: %s, (%s)" % (e, cmd)
@@ -373,7 +387,6 @@ def initDS9(execDs9=True):
         sys.stdout.flush()
 
         raise Ds9Error
-    setMaskTransparency(85)
 
 def show(frame=None):
     """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
@@ -554,7 +567,9 @@ flush = lambda : cmdBuffer.flush(silent=True)
 
 class Buffering(object):
     """A class intended to be used with python's with statement:
-
+E.g.
+    with ds9.Buffering():
+        ds9.dot("+", xc, yc)
     """
     def __enter__(self):
         buffer(True)
@@ -576,6 +591,7 @@ def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", sile
 Possible values are:
         +                Draw a +
         x                Draw an x
+        *                Draw a *
         o                Draw a circle
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
         An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
@@ -621,6 +637,12 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         size = size/math.sqrt(2)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, color)
         cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, color)
+    elif symb == '*':
+        size30 = 0.5*size
+        size60 = 0.5*math.sqrt(3)*size
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r, c-size, r, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size30, r+size60, c+size30, r-size60, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size30, r+size60, c-size30, r-size60, color)
     elif symb == 'o':
         cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
     else:
@@ -735,9 +757,9 @@ def interact():
         vals = ds9Cmd("imexam key coordinate", get=True).split()
 
         k = vals.pop(0)
-        if vals:
+        try:
             x = float(vals[0]); y = float(vals[1])
-        else:
+        except:
             x = float("NaN"); y = float("NaN")
 
         try:
@@ -777,7 +799,7 @@ except NameError:
         setCallback(k)
         setCallback(k.upper())
 
-    for k in ('Return',):
+    for k in ('Return', 'XPA$ERROR'):
         setCallback(k)
 
     for k in ('q', 'Escape'):

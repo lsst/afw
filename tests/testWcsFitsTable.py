@@ -25,8 +25,10 @@
 import os
 import math
 import unittest
+import pyfits
 
 import lsst.afw.image
+import lsst.afw.geom
 import lsst.utils.tests as utilsTests
 import lsst.daf.base
 
@@ -75,7 +77,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
         wcsOut = self.doFitsRoundTrip(wcsIn)
         self.assertEqual(wcsIn, wcsOut)
 
-    def testTanWcs(self):
+    def addSipMetadata(self):
         self.metadata.add("A_ORDER", 3)
         self.metadata.add("A_0_0", -3.4299726900155e-05)
         self.metadata.add("A_0_2", 2.9999243742039e-08)
@@ -141,6 +143,9 @@ class WcsFitsTableTestCase(unittest.TestCase):
         self.metadata.add("BP_5_0", 2.8085458107813e-19)
         self.metadata.set("CTYPE1", "RA---TAN-SIP")
         self.metadata.set("CTYPE2", "DEC--TAN-SIP")
+        
+    def testTanWcs(self):
+        self.addSipMetadata()
         wcsIn = lsst.afw.image.makeWcs(self.metadata)
         wcsOut = self.doFitsRoundTrip(wcsIn)
         wcsIn1 = lsst.afw.image.cast_TanWcs(wcsIn)
@@ -151,6 +156,27 @@ class WcsFitsTableTestCase(unittest.TestCase):
         self.assert_(wcsOut1.hasDistortion())
         self.assertEqual(wcsIn1, wcsOut1)
 
+    def testExposure(self):
+        """Test that we load the Wcs from the binary table instead of headers when possible."""
+        self.addSipMetadata()
+        wcsIn = lsst.afw.image.makeWcs(self.metadata)
+        dim = lsst.afw.geom.Extent2I(20, 30)
+        expIn = lsst.afw.image.ExposureF(dim)
+        expIn.setWcs(wcsIn)
+        fileName = "wcs-table-test.fits"
+        expIn.writeFits(fileName)
+        # Manually mess up the headers, so we'd know if we were loading the Wcs from that;
+        # when there is a WCS in the header and a WCS in the FITS table, we should use the
+        # latter, because the former might just be an approximation.
+        fits = pyfits.open(fileName)
+        os.remove(fileName)
+        fits[1].header.remove("CTYPE1")
+        fits[1].header.remove("CTYPE2")
+        fits.writeto(fileName)
+        # now load it using afw
+        expOut = lsst.afw.image.ExposureF(fileName)
+        wcsOut = expOut.getWcs()
+        self.assertEqual(wcsIn, wcsOut)
 #####
 
 def suite():

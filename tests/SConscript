@@ -16,18 +16,16 @@ else:
         print "Database tests may be skipped or may fail"
     
     # set up arguments for C++ tests
-    inFile = os.path.join(dataDir, "data", "871034p_1_MI")
+    inFile = os.path.join(dataDir, "data", "871034p_1_MI.fits")
     inFileRamFitsIO1 = os.path.join(dataDir, "data", "fpC-002570-r6-0199_sub.fits")
     inFileRamFitsIO2 = os.path.join(dataDir, "data", "fpC-005902-r6-0677_sub.fits")
     testArgs = dict(
         maskedImage1 =   "%s %s file:maskedImage1_output_1.fits file:maskedImage1_output_2.fits" % \
             (inFile, inFile),
-        maskedImageIo1 = inFile,
-        maskedImageIo2 = inFile,
-        maskIo1 =         "%s_msk.fits" % inFile,
         ramFitsIO =       "%s %s" % (inFileRamFitsIO1, inFileRamFitsIO2),
     )
     
     scripts.BasicSConscript.tests(args=testArgs)
+    env.Depends("tests/PsfIo.py", "tests/testTableArchivesLib.py")
 
 env.Clean(targets["tests"], "#testTable.fits")

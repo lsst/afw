@@ -21,21 +21,18 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Log.h"
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
+#include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace image {
 
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
-
-PTR(detection::Psf) ExposureInfo::_clonePsf(CONST_PTR(detection::Psf) psf) {
-    if (psf)
-        return psf->clone();
-    return PTR(detection::Psf)();
-}
 
 PTR(Calib) ExposureInfo::_cloneCalib(CONST_PTR(Calib) calib) {
     if (calib)
@@ -55,9 +52,10 @@ ExposureInfo::ExposureInfo(
     CONST_PTR(Calib) const & calib,
     CONST_PTR(cameraGeom::Detector) const & detector,
     Filter const & filter,
-    PTR(daf::base::PropertySet) const & metadata
+    PTR(daf::base::PropertySet) const & metadata,
+    PTR(CoaddInputs) const & coaddInputs
 ) : _wcs(_cloneWcs(wcs)),
-    _psf(_clonePsf(psf)),
+    _psf(boost::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
     _filter(filter),
@@ -66,7 +64,7 @@ ExposureInfo::ExposureInfo(
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
     _wcs(_cloneWcs(other._wcs)),
-    _psf(_clonePsf(other._psf)),
+    _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
@@ -75,7 +73,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _wcs(_cloneWcs(other._wcs)),
-    _psf(_clonePsf(other._psf)),
+    _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
@@ -87,7 +85,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
 ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
     if (&other != this) {
         _wcs = _cloneWcs(other._wcs);
-        _psf = _clonePsf(other._psf);
+        _psf = other._psf;
         _calib = _cloneCalib(other._calib);
         _detector = other._detector;
         _filter = other._filter;
@@ -98,10 +96,33 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
 
 ExposureInfo::~ExposureInfo() {}
 
-PTR(daf::base::PropertySet) ExposureInfo::getFitsMetadata(afw::geom::Point2I const & xy0) const {
+ExposureInfo::FitsWriteData
+ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     
-    //Create fits header
-    PTR(daf::base::PropertySet) outputMetadata = getMetadata()->deepCopy();
+    FitsWriteData data;
+
+    data.metadata.reset(new daf::base::PropertyList());
+    data.imageMetadata.reset(new daf::base::PropertyList());
+    data.maskMetadata = data.imageMetadata;
+    data.varianceMetadata = data.imageMetadata;
+
+    data.metadata->combine(getMetadata());
+
+    // In the future, we might not have exactly three image HDUs, but we always do right now,
+    // so 1=primary, 2=image, 3=mask, 4=variance, 5+=archive
+    data.metadata->set("AR_HDU", 5, "HDU containing the archive used to store ancillary objects");
+    if (hasCoaddInputs()) {
+        int coaddInputsId = data.archive.put(getCoaddInputs());
+        data.metadata->set("COADD_INPUTS_ID", coaddInputsId, "archive ID for coadd inputs catalogs");
+    }
+    if (hasPsf() && getPsf()->isPersistable()) {
+        int psfId = data.archive.put(getPsf());
+        data.metadata->set("PSF_ID", psfId, "archive ID for the Exposure's main Psf");
+    }
+    if (hasWcs() && getWcs()->isPersistable()) {
+        int wcsId = data.archive.put(getWcs());
+        data.metadata->set("WCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
+    }
 
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
@@ -112,11 +133,10 @@ PTR(daf::base::PropertySet) ExposureInfo::getFitsMetadata(afw::geom::Point2I con
         PTR(Wcs) newWcs = getWcs()->clone(); //Create a copy
         newWcs->shiftReferencePixel(-xy0.getX(), -xy0.getY() );
 
-        // Copy wcsMetadata over to fits header
-        PTR(daf::base::PropertySet) wcsMetadata = newWcs->getFitsMetadata();
-        outputMetadata->combine(wcsMetadata);
+        // We want the WCS to appear in all HDUs
+        data.imageMetadata->combine(newWcs->getFitsMetadata());
     }
-    
+
     //Store _x0 and _y0. If this exposure is a portion of a larger image, _x0 and _y0
     //indicate the origin (the position of the bottom left corner) of the sub-image with
     //respect to the origin of the parent image.
@@ -128,23 +148,87 @@ PTR(daf::base::PropertySet) ExposureInfo::getFitsMetadata(afw::geom::Point2I con
     //the position of the origin of the parent image relative to the origin of the sub-image.
     // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
   
-    outputMetadata->set("LTV1", -xy0.getX());
-    outputMetadata->set("LTV2", -xy0.getY());
+    data.imageMetadata->set("LTV1", -xy0.getX());
+    data.imageMetadata->set("LTV2", -xy0.getY());
 
-    outputMetadata->set("FILTER", getFilter().getName());
+    data.metadata->set("FILTER", getFilter().getName());
     if (hasDetector()) {
-        outputMetadata->set("DETNAME", getDetector()->getId().getName());
-        outputMetadata->set("DETSER", getDetector()->getId().getSerial());
+        data.metadata->set("DETNAME", getDetector()->getId().getName());
+        data.metadata->set("DETSER", getDetector()->getId().getSerial());
     }
     /**
      * We need to define these keywords properly! XXX
      */
-    outputMetadata->set("TIME-MID", getCalib()->getMidTime().toString());
-    outputMetadata->set("EXPTIME", getCalib()->getExptime());
-    outputMetadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
-    outputMetadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
+    data.metadata->set("TIME-MID", getCalib()->getMidTime().toString());
+    data.metadata->set("EXPTIME", getCalib()->getExptime());
+    data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
+    data.metadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
     
-    return outputMetadata;
+    return data;
+}
+
+void ExposureInfo::_finishWriteFits(fits::Fits & fitsfile, FitsWriteData const & data) const {
+    data.archive.writeFits(fitsfile);
+}
+
+void ExposureInfo::_readFits(
+    fits::Fits & fitsfile,
+    PTR(daf::base::PropertySet) metadata,
+    PTR(daf::base::PropertySet) imageMetadata
+) {
+    // true: strip keywords that are related to the created WCS from the input metadata
+    _wcs = makeWcs(imageMetadata, true);
+
+    if (!imageMetadata->exists("INHERIT")) {
+        // New-style exposures put everything but the Wcs in the primary HDU, use
+        // INHERIT keyword in the others.  For backwards compatibility, if we don't
+        // find the INHERIT keyword, we ignore the primary HDU metadata and expect
+        // everything to be in the image HDU metadata.  Note that we can't merge them,
+        // because they're probably duplicates.
+        metadata = imageMetadata;
+    }
+
+    _filter = Filter(metadata, true);
+    detail::stripFilterKeywords(metadata);
+
+    PTR(Calib) newCalib(new Calib(metadata));
+    setCalib(newCalib);
+    detail::stripCalibKeywords(metadata);
+
+    if (metadata->exists("AR_HDU")) {
+        fitsfile.setHdu(metadata->get<int>("AR_HDU"));
+        table::io::InputArchive archive = table::io::InputArchive::readFits(fitsfile);
+        // Load the Psf and Wcs from the archive; id=0 results in a null pointer.
+        // Note that the binary table Wcs, if present, clobbers the FITS header one,
+        // because the former might be an approximation to something we can't represent
+        // using the FITS WCS standard but can represent with binary tables.
+        int psfId = metadata->get<int>("PSF_ID", 0);
+        try {
+            _psf = archive.get<detection::Psf>(psfId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read PSF; setting to null: %s") % err.what()
+            );
+        }
+        int wcsId = metadata->get<int>("WCS_ID", 0);
+        try {
+            _wcs = archive.get<Wcs>(wcsId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read WCS; setting to null: %s") % err.what()
+            );
+        }
+        int coaddInputsId = metadata->get<int>("COADD_INPUTS_ID", 0);
+        try {
+            _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read CoaddInputs; setting to null: %s") % err.what()
+            );
+        }
+    }
+
+    _metadata = metadata;
 }
 
 }}} // namespace lsst::afw::image

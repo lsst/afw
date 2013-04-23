@@ -32,6 +32,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %module(package="lsst.afw.geom.ellipses", docstring=ellipsesLib_DOCSTRING) ellipsesLib
 
 %{
+#include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_ELLIPSES_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"

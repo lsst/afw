@@ -36,6 +36,7 @@
 #include "lsst/base.h"
 #include "lsst/daf/base/DateTime.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst {
 namespace daf {
@@ -53,8 +54,7 @@ namespace image {
  * Describe an exposure's calibration
  */
 
-class Calib
-{
+class Calib : public table::io::PersistableFacade<Calib>, public table::io::Persistable {
 public :
     typedef boost::shared_ptr<Calib> Ptr;
     typedef boost::shared_ptr<Calib const> ConstPtr;
@@ -95,7 +95,16 @@ public :
      */
     bool operator==(Calib const& rhs) const;
     bool operator!=(Calib const& rhs) const { return !(*this == rhs); }
-private :
+
+    bool isPersistable() const { return true; }
+
+protected:
+
+    virtual std::string getPersistenceName() const;
+
+    virtual void write(OutputArchiveHandle & handle) const;
+
+private:
     lsst::daf::base::DateTime _midTime;
     double _exptime;
     double _fluxMag0;

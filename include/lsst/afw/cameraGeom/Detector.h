@@ -138,16 +138,13 @@ public:
     /// Return the Detector's footprint without applying any rotations that were used when inserting
     /// it into its parent (e.g. Raft)
     virtual lsst::afw::geom::BoxI getAllPixelsNoRotation(bool isTrimmed=true) const;
+
+    /// Get the center pixel of the detector
+    geom::Point2D getCenterPixel() const;
+
     //
     // Geometry of Detector --- i.e. mm not pixels
     //
-    /// Set the central pixel
-    void setCenterPixel(
-            lsst::afw::geom::Point2D const& centerPixel ///< the pixel \e defined to be the detector's centre
-                       ) { _centerPixel = centerPixel; }
-    /// Return the central pixel
-    lsst::afw::geom::Point2D getCenterPixel() const { return _centerPixel; }
-
     virtual void setOrientation(Orientation const& orientation);
     /// Return the Detector's Orientation
     Orientation const& getOrientation() const { return _orientation;}
@@ -155,14 +152,19 @@ public:
     /// Set the Detector's center
     virtual void setCenter(FpPoint const& center) { _center = center; }
 
+    /// Set the Detector's center relative to the old center.
+    virtual void shiftCenter(FpExtent const & offset) { _center = FpPoint(_center.getMm() + offset.getMm()); }
+
     /// Return the Detector's center
     FpPoint getCenter() const { return _center; }
-    //
-    // Translate between physical positions in mm to pixels
-    //
+
+    /// Translate between physical positions in mm to pixels
     virtual lsst::afw::geom::Point2D getPixelFromPosition(FpPoint const& pos) const;
     virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
-    virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix, bool const isTrimmed) const;
+
+    /// Local linearizations of the preceding coordinate-changing routines
+    virtual lsst::afw::geom::AffineTransform linearizePixelFromPosition(FpPoint const &pos) const;
+    virtual lsst::afw::geom::AffineTransform linearizePositionFromPixel(lsst::afw::geom::Point2D const &pix) const;
     
     virtual void shift(int dx, int dy);
     //
@@ -200,7 +202,6 @@ private:
     lsst::afw::geom::Box2I _allPixels;          // Bounding box of all the Detector's pixels
     bool _hasTrimmablePixels;           // true iff Detector has pixels that can be trimmed (e.g. a CCD)
     double _pixelSize;                  // Size of a pixel in mm
-    lsst::afw::geom::Point2D _centerPixel;      // the pixel defined to be the centre of the Detector
     Orientation _orientation;           // orientation of this Detector
     FpPoint _center;           // position of _centerPixel (mm)
     lsst::afw::geom::Extent2D _size;            // Size in mm of this Detector
@@ -229,6 +230,33 @@ namespace detail {
             lsst::afw::geom::Extent2I const& dimensions ///< The size of the region wherein bbox dwells
     );
 }
+
+
+/**
+ * @brief DetectorXYTransform: converts an XYTransform in FP coordinate system to detector coords
+ *
+ * Given a "global" XYTransform in the focal plane coordinate system, this class implements the 
+ * coordinate transformation necessary to get the same XYTransform in the coordinate system of an 
+ * individual detector.
+ */
+class DetectorXYTransform : public afw::geom::XYTransform
+{
+public:
+    DetectorXYTransform(CONST_PTR(afw::geom::XYTransform) fpTransform, CONST_PTR(Detector) detector);
+    virtual ~DetectorXYTransform() { }
+
+    virtual PTR(afw::geom::XYTransform) clone() const;
+    virtual PTR(afw::geom::XYTransform) invert() const;
+    virtual Point2D forwardTransform(Point2D const &pixel) const;
+    virtual Point2D reverseTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeForwardTransform(Point2D const &pixel) const;
+    virtual AffineTransform linearizeReverseTransform(Point2D const &pixel) const;
+
+protected:
+    CONST_PTR(XYTransform) _fpTransform;
+    CONST_PTR(Detector) _detector;
+};
+
     
 }}}
 

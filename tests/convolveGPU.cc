@@ -253,7 +253,7 @@ afwMath::LinearCombinationKernel::Ptr  ConstructLinearCombinationKernel(
 
 string GetInputFileName(int argc, char **argv)
 {
-    string imgBaseFileName;
+    string imgFileName;
     if (argc < 2) {
         string afwdata = getenv("AFWDATA_DIR");
         if (afwdata.empty()) {
@@ -264,16 +264,16 @@ string GetInputFileName(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         else {
-            imgBaseFileName = afwdata + "/data/med";
-            //imgBaseFileName = afwdata + "/data/medsub";
-            //imgBaseFileName = afwdata + "/data/871034p_1_MI";
-            cout << "Using image: " << imgBaseFileName << endl;
+            imgFileName = afwdata + "/data/medexp.fits";
+            //imgFileName = afwdata + "/data/medsub.fits";
+            //imgFileName = afwdata + "/data/871034p_1_MI.fits";
+            cout << "Using image: " << imgFileName << endl;
         }
     }
     else {
-        imgBaseFileName = string(argv[1]);
+        imgFileName = string(argv[1]);
     }
-    return imgBaseFileName;
+    return imgFileName;
 }
 
 afwMath::FixedKernel::Ptr ConstructKernel(
@@ -404,15 +404,15 @@ bool TestConvGpu(
     return isSuccess;
 }
 
-bool GpuTestAccuracy(string imgBaseFileName)
+bool GpuTestAccuracy(string imgFileName)
 {
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
     afwGeom::Box2I inputBBox(afwGeom::Point2I(52, 574), afwGeom::Extent2I(76, 80));
 
-    afwImage::MaskedImage<float>    inImgFlt(imgBaseFileName);
-    afwImage::MaskedImage<double>   inImgDbl(imgBaseFileName);
+    afwImage::MaskedImage<float>    inImgFlt(imgFileName);
+    afwImage::MaskedImage<double>   inImgDbl(imgFileName);
     const int sizeX = inImgFlt.getWidth();
     const int sizeY = inImgFlt.getHeight();
 
@@ -483,12 +483,12 @@ bool GpuTestAccuracy(string imgBaseFileName)
     return isSuccess;
 }
 
-bool GpuTestExceptions(const string imgBaseFileName)
+bool GpuTestExceptions(const string imgFileName)
 {
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
-    afwImage::MaskedImage<double> inImg(imgBaseFileName);
+    afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;
@@ -629,12 +629,12 @@ bool GpuTestExceptions(const string imgBaseFileName)
     return isSuccess;
 }
 
-bool CpuTestExceptions(const string imgBaseFileName)
+bool CpuTestExceptions(const string imgFileName)
 {
     lsst::pex::logging::Trace::setDestination(std::cout);
     lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
 
-    afwImage::MaskedImage<double> inImg(imgBaseFileName);
+    afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;

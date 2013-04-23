@@ -13,6 +13,7 @@
 #include <map>
 
 #include "boost/filesystem.hpp"
+#include "Eigen/Core"
 
 #include "lsst/utils/ieee.h"
 #include "lsst/afw/table/io/Persistable.h"
@@ -20,7 +21,12 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
-#include "ndarray.h"
+#include "ndarray/eigen.h"
+
+#include "lsst/afw/math/FunctionLibrary.h"
+#include "lsst/afw/math/Kernel.h"
+
+#include "lsst/afw/image/Exposure.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -234,6 +240,8 @@ static ExampleA::Factory const registrationA("ExampleA");
 static ExampleB::Factory const registrationB("ExampleB");
 static ExampleC::Factory const registrationC("ExampleC");
 
+
+
 template <int M, int N>
 std::vector< ndarray::Vector<PTR(Comparable),M> >
 roundtripAndCompare(
@@ -410,4 +418,227 @@ BOOST_AUTO_TEST_CASE(Nested) {
         BOOST_CHECK_EQUAL(c3->var3, r3[i][0]);
     }
 
+}
+
+namespace {
+
+std::vector<double> makeRandomVector(int size) {
+    std::vector<double> v(size);
+    Eigen::Map<Eigen::VectorXd>(&v.front(), size).setRandom();
+    return v;
+}
+
+ndarray::Array<double,2,2> makeRandomArray(int width, int height) {
+    ndarray::Array<double,2,2> array(ndarray::allocate(height, width));
+    array.asEigen().setRandom();
+    return array;
+}
+
+template <typename T>
+PTR(T) roundtrip(T const * input) {
+    using namespace lsst::afw::table::io;
+    using namespace lsst::afw::fits;
+    OutputArchive outArchive;
+    int id = outArchive.put(input);
+    MemFileManager manager;
+    Fits outFits(manager, "w", Fits::AUTO_CHECK);
+    outArchive.writeFits(outFits);
+    outFits.closeFile();
+    Fits inFits(manager, "r", Fits::AUTO_CHECK);
+    inFits.setHdu(0);
+    InputArchive inArchive = InputArchive::readFits(inFits);
+    inFits.closeFile();
+    return boost::dynamic_pointer_cast<T>(inArchive.get(id));
+}
+
+template <typename T>
+void compareFunctions(lsst::afw::math::Function<T> const & a, lsst::afw::math::Function<T> const & b) {
+    BOOST_CHECK( typeid(a) == typeid(b) );
+    BOOST_REQUIRE_EQUAL(a.getNParameters(), b.getNParameters());
+    for (unsigned int i = 0; i < a.getNParameters(); ++i) {
+        BOOST_CHECK_EQUAL(a.getParameter(i), b.getParameter(i));
+    }
+}
+
+} // anonymous
+
+BOOST_AUTO_TEST_CASE(GaussianFunction2) {
+    namespace afwMath = lsst::afw::math;
+    PTR(afwMath::PolynomialFunction2<double>)
+        p1(new afwMath::PolynomialFunction2<double>(makeRandomVector(15)));
+    PTR(afwMath::PolynomialFunction2<double>) p2 = roundtrip(p1.get());
+    compareFunctions(*p1, *p2);
+}
+
+BOOST_AUTO_TEST_CASE(PolynomialFunction2) {
+    namespace afwMath = lsst::afw::math;
+    PTR(afwMath::PolynomialFunction2<double>)
+        p1(new afwMath::PolynomialFunction2<double>(makeRandomVector(15)));
+    PTR(afwMath::PolynomialFunction2<double>) p2 = roundtrip(p1.get());
+    compareFunctions(*p1, *p2);
+}
+
+BOOST_AUTO_TEST_CASE(Chebyshev1Function2) {
+    namespace afwMath = lsst::afw::math;
+    PTR(afwMath::Chebyshev1Function2<double>)
+        p1(new afwMath::Chebyshev1Function2<double>(makeRandomVector(15)));
+    PTR(afwMath::Chebyshev1Function2<double>) p2 = roundtrip(p1.get());
+    compareFunctions(*p1, *p2);
+    BOOST_CHECK(p1->getXYRange() == p2->getXYRange());
+}
+
+BOOST_AUTO_TEST_CASE(FixedKernel) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    afwImage::Image<double> image1(makeRandomArray(5,7));
+    PTR(afwMath::FixedKernel) p1(new afwMath::FixedKernel(image1));
+    PTR(afwMath::FixedKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
+    afwImage::Image<double> image2(p2->getDimensions());
+    double s1 = p1->computeImage(image1, false);
+    double s2 = p2->computeImage(image2, false);
+    BOOST_CHECK_EQUAL(s1, s2);
+    BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+}
+
+BOOST_AUTO_TEST_CASE(AnalyticKernel1) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    PTR(afwMath::AnalyticKernel) p1(
+        new afwMath::AnalyticKernel(5, 7, afwMath::DoubleGaussianFunction2<double>(1.0, 2.0, 0.1))
+    );
+    PTR(afwMath::AnalyticKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
+    compareFunctions(*p1->getKernelFunction(), *p2->getKernelFunction());
+    afwImage::Image<double> image1(p1->getDimensions());
+    afwImage::Image<double> image2(p2->getDimensions());
+    double s1 = p1->computeImage(image1, false);
+    double s2 = p2->computeImage(image2, false);
+    BOOST_CHECK_EQUAL(s1, s2);
+    BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+}
+
+BOOST_AUTO_TEST_CASE(AnalyticKernel2) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    std::vector<PTR(afwMath::Kernel::SpatialFunction)> spatialFunctions(3);
+    spatialFunctions[0].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(10)));
+    spatialFunctions[1].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(6)));
+    spatialFunctions[2].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(21)));
+    PTR(afwMath::AnalyticKernel) p1(
+        new afwMath::AnalyticKernel(5, 7, afwMath::GaussianFunction2<double>(1.0, 1.0),
+                                    spatialFunctions)
+    );
+    PTR(afwMath::AnalyticKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
+    compareFunctions(*p1->getKernelFunction(), *p2->getKernelFunction());
+    BOOST_CHECK(p1->getSpatialParameters() == p2->getSpatialParameters());
+    afwImage::Image<double> image1(p1->getDimensions());
+    afwImage::Image<double> image2(p2->getDimensions());
+    Eigen::VectorXd x = Eigen::VectorXd::Random(10);
+    Eigen::VectorXd y = Eigen::VectorXd::Random(10);
+    for (int i = 0; i < 10; ++i) {
+        double s1 = p1->computeImage(image1, false, x[i], y[i]);
+        double s2 = p2->computeImage(image2, false, x[i], y[i]);
+        BOOST_CHECK_EQUAL(s1, s2);
+        BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(LinearCombinationKernel1) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    namespace afwGeom = lsst::afw::geom;
+    int const nComponents = 4;
+    int const width = 5;
+    int const height = 7;
+    std::vector<PTR(afwMath::Kernel)> kernelList(nComponents);
+    std::vector<PTR(afwMath::Kernel::SpatialFunction)> spatialFunctionList(nComponents);
+    for (int i = 0; i < nComponents; ++i) {
+        kernelList[i].reset(new afwMath::DeltaFunctionKernel(width, height, afwGeom::Point2I(i, i)));
+        spatialFunctionList[i].reset(new afwMath::PolynomialFunction2<double>(makeRandomVector(10)));
+    }
+    PTR(afwMath::LinearCombinationKernel) p1(
+        new afwMath::LinearCombinationKernel(kernelList, spatialFunctionList)
+    );
+    PTR(afwMath::LinearCombinationKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
+    BOOST_CHECK(p1->getSpatialParameters() == p2->getSpatialParameters());
+    afwImage::Image<double> image1(p1->getDimensions());
+    afwImage::Image<double> image2(p2->getDimensions());
+    Eigen::VectorXd x = Eigen::VectorXd::Random(10);
+    Eigen::VectorXd y = Eigen::VectorXd::Random(10);
+    for (int i = 0; i < 10; ++i) {
+        double s1 = p1->computeImage(image1, false, x[i], y[i]);
+        double s2 = p2->computeImage(image2, false, x[i], y[i]);
+        BOOST_CHECK_EQUAL(s1, s2);
+        BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(LinearCombinationKernel2) {
+    namespace afwMath = lsst::afw::math;
+    namespace afwImage = lsst::afw::image;
+    namespace afwGeom = lsst::afw::geom;
+    int const nComponents = 4;
+    int const width = 5;
+    int const height = 7;
+    std::vector<PTR(afwMath::Kernel)> kernelList(nComponents);
+    std::vector<double> kernelParams = makeRandomVector(nComponents);
+    for (int i = 0; i < nComponents; ++i) {
+        kernelList[i].reset(new afwMath::DeltaFunctionKernel(width, height, afwGeom::Point2I(i, i)));
+        kernelParams[i] *= kernelParams[i]; // want positive amplitudes
+    }
+    PTR(afwMath::LinearCombinationKernel) p1(
+        new afwMath::LinearCombinationKernel(kernelList, kernelParams)
+    );
+    PTR(afwMath::LinearCombinationKernel) p2 = roundtrip(p1.get());
+    BOOST_CHECK_EQUAL(p1->getWidth(), p2->getWidth());
+    BOOST_CHECK_EQUAL(p1->getHeight(), p2->getHeight());
+    BOOST_CHECK_EQUAL(p1->getCtrX(), p2->getCtrX());
+    BOOST_CHECK_EQUAL(p1->getCtrY(), p2->getCtrY());
+    BOOST_CHECK_EQUAL(p1->getNSpatialParameters(), p2->getNSpatialParameters());
+    BOOST_CHECK_EQUAL(p1->getNKernelParameters(), p2->getNKernelParameters());
+    BOOST_CHECK(p1->getSpatialParameters() == p2->getSpatialParameters());
+    afwImage::Image<double> image1(p1->getDimensions());
+    afwImage::Image<double> image2(p2->getDimensions());
+    Eigen::VectorXd x = Eigen::VectorXd::Random(10);
+    Eigen::VectorXd y = Eigen::VectorXd::Random(10);
+    for (int i = 0; i < 10; ++i) {
+        double s1 = p1->computeImage(image1, false, x[i], y[i]);
+        double s2 = p2->computeImage(image2, false, x[i], y[i]);
+        BOOST_CHECK_EQUAL(s1, s2);
+        BOOST_CHECK(ndarray::all(ndarray::equal(image1.getArray(), image2.getArray())));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(ArchiveImporter) {
+    // From pure-C++ code, we shouldn't be able to read the PSF from this file, because it's defined
+    // in a Python module that hasn't been loaded.  But we should get a warning and the PSF
+    // will be set to null.
+    std::cerr << "--------------------------------------------------------------------------------------\n";
+    std::cerr << "The following warning is expected, and is an indication the test has passed.\n";
+    std::cerr << "--------------------------------------------------------------------------------------\n";
+    lsst::afw::image::Exposure<float> exposure("tests/data/archiveImportTest.fits");
+    BOOST_CHECK(!exposure.getPsf());
 }

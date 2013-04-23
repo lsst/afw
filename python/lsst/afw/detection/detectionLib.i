@@ -76,11 +76,6 @@ Python interface to lsst::afw::detection classes
 
 %include "footprints.i"
 %include "psf.i"
-
- // The "tableLib.i" import has to go *after* the "footprints.i" because
- // "tableLib.i" imports "footprints.i".
- // We need "tableLib.i" to get Source, which is used by "footprintset.i" below.
-%import "lsst/afw/table/tableLib.i"
 %include "footprintset.i"
 
 %pythoncode %{

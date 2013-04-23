@@ -76,7 +76,7 @@ class ReadFitsTestCase(unittest.TestCase):
 
     def testF32(self):
         """Test reading F32 image"""
-        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI_var.fits"))
+        im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI.fits"), 4)
         
         col, row, val = 32, 1, 39.11672
         self.assertAlmostEqual(im.get(col, row), val, 5)
@@ -104,8 +104,8 @@ class ReadFitsTestCase(unittest.TestCase):
 
     def testSubimage(self):
         """Test reading a subimage image"""
-        fileName, hdu = os.path.join(dataDir, "871034p_1_MI_var.fits"), 0
-        im = afwImage.ImageF(fileName)
+        fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 4
+        im = afwImage.ImageF(fileName, hdu)
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120), afwGeom.Extent2I(20, 15))
         sim = im.Factory(im, bbox, afwImage.LOCAL) 
@@ -167,6 +167,20 @@ class ReadFitsTestCase(unittest.TestCase):
 
         for k, v in keys.items():
             self.assertEqual(jim.getMetadata().get(k), v)
+
+    def testLongStrings(self):
+        keyWord = 'ZZZ'
+        fitsName = 'zzz.fits'
+        longString = ' '.join(['This is a long string.'] * 8)
+
+        expOrig = afwImage.ExposureF(100,100)
+        mdOrig = expOrig.getMetadata()
+        mdOrig.set(keyWord, longString)
+        expOrig.writeFits(fitsName)
+
+        expNew = afwImage.ExposureF(fitsName)
+        self.assertEqual(expNew.getMetadata().get(keyWord), longString)
+        os.remove(fitsName)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

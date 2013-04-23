@@ -46,11 +46,11 @@ dataDir = os.path.join(eups.productDir("afwdata"), "data")
 if dataDir == None:
     warnings.warn("skipping all tests because afwdata is not setup")
 else:
-    originalExposureName = "med"
+    originalExposureName = "medexp.fits"
     originalExposurePath = os.path.join(dataDir, originalExposureName)
-    subExposureName = "medsub"
+    subExposureName = "medsub.fits"
     subExposurePath = os.path.join(dataDir, originalExposureName)
-    originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1")
+    originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
 class WarpExposureTestCase(unittest.TestCase):

@@ -75,20 +75,13 @@ public:
      *  @brief Construct an Exposure by reading a regular FITS file.
      *
      *  @param[in]      fileName      File to read.
-     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
-     *                                reads the first extension HDU.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
-     *
-     *  Exposures may also be read from three separate files, in which the fileName argument is
-     *  interpreted as the base file name and "_img.fits", "_msk.fits", and "_var.fits" are appended to it.
-     *  This format is deprecated and is only provided temporarily for backwards compatibility.
      */
     explicit Exposure(
-        std::string const & fileName, int hdu=0, geom::Box2I const& bbox=geom::Box2I(),
+        std::string const & fileName, geom::Box2I const& bbox=geom::Box2I(),
         ImageOrigin origin=LOCAL, bool conformMasks=false
     );
 
@@ -96,23 +89,20 @@ public:
      *  @brief Construct an Exposure by reading a FITS image in memory.
      *
      *  @param[in]      manager       An object that manages the memory buffer to read.
-     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
-     *                                reads the first extension HDU.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      */
     explicit Exposure(
-        fits::MemFileManager & manager, int hdu=0, geom::Box2I const & bbox=geom::Box2I(),
+        fits::MemFileManager & manager, geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=LOCAL, bool conformMasks=false
     );
 
     /**
      *  @brief Construct an Exposure from an already-open FITS object.
      *
-     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
+     *  @param[in]      fitsfile      A FITS object to read from.  Current HDU is ignored.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
@@ -247,15 +237,47 @@ public:
     /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
     CONST_PTR(ExposureInfo) getInfo() const { return _info; }
 
+    /**
+     *  @brief Write an Exposure to a regular multi-extension FITS file.
+     *
+     *  @param[in] fileName      Name of the file to write.
+     *
+     *  As with MaskedImage persistence, an empty primary HDU will be created and all images planes
+     *  will be saved to extension HDUs.  Most metadata will be saved only to the header of the
+     *  main image HDU, but the WCS will be saved to the header of the mask and variance as well.
+     *  If present, the Psf will be written to one or more additional HDUs.
+     *
+     *  Note that the LSST pixel origin differs from the FITS convention by one, so the values
+     *  of CRPIX and LTV saved in the file are not the same as those in the C++ objects in memory,
+     *  but are rather modified so they are interpreted by external tools (like ds9).
+     */
     void writeFits(std::string const & fileName) const;
+
+    /**
+     *  @brief Write an Exposure to a multi-extension FITS file in memory.
+     *
+     *  @param[in] manager       Manager for the memory to write to.
+     *
+     *  @sa writeFits
+     */
     void writeFits(fits::MemFileManager & manager) const;
+
+    /**
+     *  @brief Write an Exposure to an already-open FITS file object.
+     *
+     *  @param[in] fitsfile       FITS object to write.
+     *
+     *  @sa writeFits
+     */
     void writeFits(fits::Fits & fitsfile) const;
 
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
 
-    /// Finish initialization after constructing from a FITS file
-    void postFitsCtorInit(lsst::daf::base::PropertySet::Ptr metadata);
+    void _readFits(
+        fits::Fits & fitsfile, geom::Box2I const & bbox,
+        ImageOrigin origin, bool conformMasks
+    );
 
     MaskedImageT _maskedImage;
     PTR(ExposureInfo) _info;

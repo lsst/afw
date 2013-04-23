@@ -91,7 +91,13 @@ public:
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
     const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
-    PeakList & getPeaks() { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    /**
+     * Return the Peak%s contained in this Footprint
+     *
+     * The peaks are ordered by decreasing pixel intensity at the peak position (so the most negative
+     * peak appears last) 
+     */
+    PeakList & getPeaks() { return _peaks; }
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
     int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
@@ -107,6 +113,8 @@ public:
 
     /// Return the Footprint's bounding box
     geom::Box2I getBBox() const { return _bbox; }
+    /// Return the Footprint's bounding box
+    geom::Box2I & getBBox() { return _bbox; }
     /// Return the corners of the MaskedImage the footprints live in
     geom::Box2I const & getRegion() const { return _region; }
 
@@ -165,6 +173,8 @@ private:
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
+Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
+                             bool left, bool right, bool up, bool down);
 
 std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
 

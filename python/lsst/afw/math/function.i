@@ -31,6 +31,8 @@
 #include "lsst/afw/math/FunctionLibrary.h"
 %}
 
+%import "lsst/afw/table/io/ioLib.i"
+
 // Must be used before %include
 %define %baseFunctionPtrs(CTYPE)
 %shared_ptr(lsst::afw::math::Function<CTYPE>);
@@ -48,6 +50,9 @@
 %template(Function##TYPE) lsst::afw::math::Function<CTYPE>;
 %template(Function1##TYPE) lsst::afw::math::Function1<CTYPE>;
 %template(Function2##TYPE) lsst::afw::math::Function2<CTYPE>;
+%declareTablePersistable(Function##TYPE, lsst::afw::math::Function<CTYPE>);
+%declareTablePersistable(Function1##TYPE, lsst::afw::math::Function1<CTYPE>);
+%declareTablePersistable(Function2##TYPE, lsst::afw::math::Function2<CTYPE>);
 %template(BasePolynomialFunction2##TYPE) lsst::afw::math::BasePolynomialFunction2<CTYPE>;
 %enddef
 

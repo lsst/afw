@@ -84,12 +84,6 @@ public:
     Amp::Ptr findAmp(Id const id) const;
     Amp::Ptr findAmp(lsst::afw::geom::Point2I const& pixel) const;
     Amp::Ptr findAmp(lsst::afw::geom::Point2I const& pixel, bool const isTrimmed) const;
-    //
-    // Translate between physical positions in mm to pixels
-    //
-    virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix,
-                                                          bool const isTrimmed) const;
-    virtual FpPoint getPositionFromPixel(lsst::afw::geom::Point2D const& pix) const;
 
     virtual void setOrientation(Orientation const& orientation);
     virtual void shift(int dx, int dy);

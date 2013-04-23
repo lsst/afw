@@ -28,14 +28,12 @@
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
-#include "lsst/afw/table/io/FitsWriter.h"
+#include "lsst/afw/table/SortedCatalog.h"
 
 namespace lsst { namespace afw { namespace table {
 
 class SimpleRecord;
 class SimpleTable;
-
-template <typename RecordT> class SimpleCatalogT;
 
 /**
  *  @brief Record class that must contain a unique ID field and a celestial coordinate field.
@@ -49,8 +47,8 @@ public:
 
     typedef SimpleTable Table;
     typedef ColumnViewT<SimpleRecord> ColumnView;
-    typedef SimpleCatalogT<SimpleRecord> Catalog;
-    typedef SimpleCatalogT<SimpleRecord const> ConstCatalog;
+    typedef SortedCatalogT<SimpleRecord> Catalog;
+    typedef SortedCatalogT<SimpleRecord const> ConstCatalog;
 
     CONST_PTR(SimpleTable) getTable() const {
         return boost::static_pointer_cast<SimpleTable const>(BaseRecord::getTable());
@@ -88,8 +86,8 @@ public:
 
     typedef SimpleRecord Record;
     typedef ColumnViewT<SimpleRecord> ColumnView;
-    typedef SimpleCatalogT<Record> Catalog;
-    typedef SimpleCatalogT<Record const> ConstCatalog;
+    typedef SortedCatalogT<Record> Catalog;
+    typedef SortedCatalogT<Record const> ConstCatalog;
 
     /**
      *  @brief Construct a new table.
@@ -191,117 +189,16 @@ private:
     friend class io::FitsWriter;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(io::FitsWriter::Fits * fits) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
 
     PTR(IdFactory) _idFactory;        // generates IDs for new records
 };
 
 #ifndef SWIG
 
-/**
- *  @brief Custom catalog class for SimpleRecord/Table.
- *
- *  Because SimpleRecords are guaranteed to have an ID, SimpleCatalogT can provide member functions
- *  that sort the catalog by ID, and lookup records by ID when the catalog is sorted.
- */
-template <typename RecordT>
-class SimpleCatalogT : public CatalogT<RecordT> {
-    typedef CatalogT<RecordT> Base;
-public:
-
-    typedef RecordT Record;
-    typedef typename Record::Table Table;
-
-    typedef typename Base::iterator iterator;
-    typedef typename Base::const_iterator const_iterator;
-
-    using Base::isSorted;
-    using Base::sort;
-    using Base::find;
-
-    /// @brief Return true if the vector is in ascending ID order.
-    bool isSorted() const { return this->isSorted(SimpleTable::getIdKey()); }
-
-    /// @brief Sort the vector in-place by ID.
-    void sort() { this->sort(SimpleTable::getIdKey()); }
-
-    //@{
-    /**
-     *  @brief Return an iterator to the record with the given ID.
-     *
-     *  @note The vector must be sorted in ascending ID order before calling find (i.e. 
-     *        isSorted() must be true).
-     *
-     *  Returns end() if the Record cannot be found.
-     */
-    iterator find(RecordId id) { return this->find(id, SimpleTable::getIdKey()); }
-    const_iterator find(RecordId id) const { return this->find(id, SimpleTable::getIdKey()); }
-    //@}
-
-    /**
-     *  @brief Construct a vector from a table (or nothing).
-     *
-     *  A vector with no table is considered invalid; a valid table must be assigned to it
-     *  before it can be used.
-     */
-    explicit SimpleCatalogT(PTR(Table) const & table = PTR(Table)()) : Base(table) {}
-
-    /// @brief Construct a vector from a schema, creating a table with Table::make(schema).
-    explicit SimpleCatalogT(Schema const & schema) : Base(schema) {}
-
-    /**
-     *  @brief Construct a vector from a table and an iterator range.
-     *
-     *  If deep is true, new records will be created using table->copyRecord before being inserted.
-     *  If deep is false, records will be not be copied, but they must already be associated with
-     *  the given table.  The table itself is never deep-copied.
-     *
-     *  The iterator must dereference to a record reference or const reference rather than a pointer,
-     *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
-     *
-     *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
-     *  is true, table->preallocate will be used to ensure that the resulting records are
-     *  contiguous in memory and can be used with ColumnView.  To ensure this is the case for
-     *  other iterator types, the user must preallocate the table manually.
-     */
-    template <typename InputIterator>
-    SimpleCatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
-        Base(table, first, last, deep)
-    {}
-
-    /**
-     *  @brief Shallow copy constructor from a container containing a related record type.
-     *
-     *  This conversion only succeeds if OtherRecordT is convertible to RecordT and OtherTable is
-     *  convertible to Table.
-     */
-    template <typename OtherRecordT>
-    SimpleCatalogT(SimpleCatalogT<OtherRecordT> const & other) : Base(other) {}
-
-    /// @brief Read a FITS binary table.
-    static SimpleCatalogT readFits(std::string const & filename, int hdu=0) {
-        return io::FitsReader::apply<SimpleCatalogT>(filename, hdu);
-    }
-    /// @brief Read a FITS binary table.
-    static SimpleCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
-        return io::FitsReader::apply<SimpleCatalogT>(manager, hdu);
-    }
-
-    /**
-     * @brief Shallow copy a subset of another SimpleCatalog.  Mostly here for
-     * use from python.
-     */
-    SimpleCatalogT subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const {
-        return SimpleCatalogT(Base::subset(startd, stopd, step));
-    }
-
-protected:
-    explicit SimpleCatalogT(Base const & other) : Base(other) {}
-};
-
 typedef ColumnViewT<SimpleRecord> SimpleColumnView;
-typedef SimpleCatalogT<SimpleRecord> SimpleCatalog;
-typedef SimpleCatalogT<SimpleRecord const> ConstSimpleCatalog;
+typedef SortedCatalogT<SimpleRecord> SimpleCatalog;
+typedef SortedCatalogT<SimpleRecord const> ConstSimpleCatalog;
 
 inline RecordId SimpleRecord::getId() const { return get(SimpleTable::getIdKey()); }
 inline void SimpleRecord::setId(RecordId id) { set(SimpleTable::getIdKey(), id); }

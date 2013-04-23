@@ -130,7 +130,7 @@ void PrintSeparator()
 
 string GetInputFileName(int argc, char **argv)
 {
-    string imgBaseFileName;
+    string imgFileName;
     if (argc < 2) {
         string afwdata = getenv("AFWDATA_DIR");
         if (afwdata.empty()) {
@@ -141,16 +141,16 @@ string GetInputFileName(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
         else {
-            imgBaseFileName = afwdata + "/data/med";
-            //imgBaseFileName = afwdata + "/data/medsub";
-            //imgBaseFileName = afwdata + "/data/871034p_1_MI";
-            cout << "Using image: " << imgBaseFileName << endl;
+            imgFileName = afwdata + "/data/medexp.fits";
+            //imgFileName = afwdata + "/data/medsub.fits";
+            //imgFileName = afwdata + "/data/871034p_1_MI.fits";
+            cout << "Using image: " << imgFileName << endl;
         }
     }
     else {
-        imgBaseFileName = string(argv[1]);
+        imgFileName = string(argv[1]);
     }
-    return imgBaseFileName;
+    return imgFileName;
 }
 
 string Sel(bool b, const char* onTrue, const char* onFalse)

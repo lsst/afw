@@ -52,6 +52,9 @@ public:
      *  @brief Save an object to the archive and return a unique ID that can be used
      *         to retrieve it from an InputArchive.
      *
+     *  If permissive is true and obj->isPersistable() is false, the object will not
+     *  be saved but 0 will be returned instead of throwing an exception.
+     *
      *  If the given pointer has already been saved, it will not be written again
      *  and the same ID will be returned as the first time it was saved.
      *
@@ -67,8 +70,8 @@ public:
      *  being saved (or any nested object) throws an exception, the entire archive may
      *  be in an inconsistent state and should not be saved.
      */
-    int put(Persistable const * obj);
-    int put(CONST_PTR(Persistable) obj) { return put(obj.get()); }
+    int put(Persistable const * obj, bool permissive=false);
+    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get(), permissive); }
     //@}
 
     /**
@@ -130,8 +133,8 @@ public:
      *
      *  @copydoc OutputArchive::put.
      */
-    int put(Persistable const * obj);
-    int put(CONST_PTR(Persistable) obj) { return put(obj.get()); }
+    int put(Persistable const * obj, bool permissive=false);
+    int put(CONST_PTR(Persistable) obj, bool permissive=false) { return put(obj.get(), permissive); }
     //@}
 
     ~OutputArchiveHandle();
@@ -140,11 +143,15 @@ private:
 
     friend class OutputArchive::Impl;
 
-    OutputArchiveHandle(int id, std::string const & name, PTR(OutputArchive::Impl) impl);
+    OutputArchiveHandle(
+        int id, std::string const & name, std::string const & module,
+        PTR(OutputArchive::Impl) impl
+    );
 
     int _id;
     int _catPersistable;
     std::string _name;
+    std::string _module;
     PTR(OutputArchive::Impl) _impl;
 };
 

@@ -52,6 +52,66 @@ InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
 InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class WcsTestCase(unittest.TestCase):
+    def testCD_PC(self):
+        """Test that we can read a FITS file with both CD and PC keys (like early Suprimecam files)"""
+        
+        md = dafBase.PropertyList()
+        for k, v in (
+            ("EQUINOX", 2000.0),
+            ("RADESYS", 'FK5'),
+            ("CRPIX1" , 5353.0),
+            ("CRPIX2" , -35.0),
+            ("CD1_1"  , 0.0),
+            ("CD1_2"  , -5.611E-05),
+            ("CD2_1"  , -5.611E-05),
+            ("CD2_2"  , -0.0),
+            ("CRVAL1" , 4.5789875),
+            ("CRVAL2" , 16.30004444),
+            ("CUNIT1" , 'deg'),
+            ("CUNIT2" , 'deg'),
+            ("CTYPE1" , 'RA---TAN'),
+            ("CTYPE2" , 'DEC--TAN'),
+            ("CDELT1" , -5.611E-05),
+            ("CDELT2" , 5.611E-05),
+            ):
+            md.set(k, v)
+
+        wcs = afwImage.makeWcs(md)
+
+        x, y = 1000, 2000
+        ra, dec = 4.459815023498577, 16.544199850984768
+
+        sky = wcs.pixelToSky(x, y)
+        for i, v in enumerate([ra, dec]):
+            self.assertEqual(sky[i].asDegrees(), v)
+
+        for badPC in (False, True):
+            if verbose:
+                print "Checking PC coefficients: badPC =", badPC
+            for k, v in (
+                ("PC001001",  0.0),
+                ("PC001002", -1.0 if badPC else 1.0),
+                ("PC002001",  1.0 if badPC else -1.0),
+                ("PC002002",  0.0),
+                ):
+                md.set(k, v)
+
+            # Check Greisen and Calabretta A&A 395 1061 (2002), Eq. 3
+            if not badPC:
+                for i in (1, 2,):
+                    for j in (1, 2,):
+                        self.assertEqual(md.get("CD%d_%d" % (i, j)), 
+                                         md.get("CDELT%d" % i)*md.get("PC00%d00%d" % (i, j)))
+
+            wcs = afwImage.makeWcs(md)
+            sky = wcs.pixelToSky(x, y)
+            for i, v in enumerate([ra, dec]):
+                self.assertEqual(sky[i].asDegrees(), v)
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 class WCSRotateFlip(unittest.TestCase):
     """A test case for the methods to rotate and flip a wcs under similar operations to the image pixels"""
     def setUp(self):
@@ -415,6 +475,7 @@ def suite():
     utilsTests.init()
 
     suites = []
+    suites += unittest.makeSuite(WcsTestCase)
     suites += unittest.makeSuite(WCSTestCaseSDSS)
     suites += unittest.makeSuite(TestWcsCompare)
 #    suites += unittest.makeSuite(WCSTestCaseCFHT)

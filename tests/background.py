@@ -243,7 +243,7 @@ class BackgroundTestCase(unittest.TestCase):
             print >> sys.stderr, "Skipping testTicket987 as afwdata is not setup"
             return
 
-        imagePath = os.path.join(afwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci")
+        imagePath = os.path.join(afwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
         mimg      = afwImage.MaskedImageF(imagePath)
         binsize   = 512
         bctrl     = afwMath.BackgroundControl("NATURAL_SPLINE")
@@ -326,7 +326,7 @@ class BackgroundTestCase(unittest.TestCase):
             return
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
-                                                "CFHT", "D4", "cal-53535-i-797722_1"))
+                                                "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
@@ -355,7 +355,7 @@ class BackgroundTestCase(unittest.TestCase):
             return
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
-                                                "CFHT", "D4", "cal-53535-i-797722_1"))
+                                                "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
@@ -504,7 +504,125 @@ class BackgroundTestCase(unittest.TestCase):
 
         # Check that the non-string API works too
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.THROW_EXCEPTION)
+
+    def testBadAreaFailsSpline(self):
+        """Check that a NaN in the stats image doesn't cause spline interpolation to fail (#2734)"""
         
+        image = afwImage.ImageF(15, 9)
+        for y in range(image.getHeight()):
+            for x in range(image.getWidth()):
+                image.set(x, y, 1 + 2*y) # n.b. linear, which is what the interpolation will fall back to
+
+        # Set the right corner to NaN.  This will mean that we have too few points for a spline interpolator
+        binSize = 3
+        image[-binSize:, -binSize:] = np.nan
+
+        nx = image.getWidth()//binSize
+        ny = image.getHeight()//binSize
+
+        sctrl = afwMath.StatisticsControl()
+        bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
+
+        bkgd = afwMath.makeBackground(image, bctrl)
+        if display:
+            ds9.mtv(image)
+            ds9.mtv(afwMath.cast_BackgroundMI(bkgd).getStatsImage(), frame=1)
+        #
+        # Should throw if we don't permit REDUCE_INTERP_ORDER
+        #
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.OutOfRangeException,
+                                       bkgd.getImageF, afwMath.Interpolate.NATURAL_SPLINE)
+        #
+        # The interpolation should fall back to linear for the right part of the image
+        # where the NaNs don't permit spline interpolation (n.b. this happens to be exact)
+        #
+        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+            
+        if display:
+            ds9.mtv(bkgdImage, frame=2)
+
+        image -= bkgdImage
+        self.assertEqual(afwMath.makeStatistics(image, afwMath.MEAN).getValue(), 0.0)
+
+    def testBackgroundFromStatsImage(self):
+        """Check that we can rebuild a Background from a BackgroundMI.getStatsImage()"""
+
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        bkgd = afwMath.cast_BackgroundMI(afwMath.makeBackground(self.image, bgCtrl))
+
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+        bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
+        self.assertEqual(np.mean(bkgdImage.getArray()), self.val)
+        self.assertEqual(interpStyle, bkgd.getAsUsedInterpStyle())
+        self.assertEqual(undersampleStyle, bkgd.getAsUsedUndersampleStyle())
+        #
+        # OK, we have our background.  Make a copy
+        #
+        bkgd2 = afwMath.BackgroundMI(self.image.getBBox(), bkgd.getStatsImage())
+        del bkgd; bkgd = None           # we should be handling the memory correctly, but let's check
+        bkgdImage2 = bkgd2.getImageF(interpStyle)
+
+        self.assertEqual(np.mean(bkgdImage2.getArray()), self.val)
+        
+    def testBackgroundList(self):
+        """Test that a BackgroundLists behaves like a list"""
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+
+        backgroundList = afwMath.BackgroundList()
+        backImage = afwImage.ImageF(self.image.getDimensions())
+        for i in range(2):
+            bkgd = afwMath.makeBackground(self.image, bgCtrl)
+            if i == 0:
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+            else:
+                backgroundList.append(bkgd) # Relies on having called getImage; deprecated
+
+        self.assertEqual(len(backgroundList), 2) # check that len() works
+        for a in backgroundList:                 # check that we can iterate
+            pass
+        self.assertEqual(len(backgroundList[0]), 3) # check that we can index
+        self.assertEqual(len(backgroundList[1]), 3) # check that we always have a tuple (bkgd, interp, under)
+
+
+    def testBackgroundListIO(self):
+        """Test I/O for BackgroundLists"""
+        bgCtrl = afwMath.BackgroundControl(10, 10)
+        interpStyle = afwMath.Interpolate.AKIMA_SPLINE
+        undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+
+        backgroundList = afwMath.BackgroundList()
+        backImage = afwImage.ImageF(self.image.getDimensions())
+        for i in range(2):
+            bkgd = afwMath.makeBackground(self.image, bgCtrl)
+            if i == 0:
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+            else:
+                backgroundList.append(bkgd) # Relies on having called getImage; deprecated
+
+            backImage += bkgd.getImageF(interpStyle, undersampleStyle)
+
+        fileName = "backgroundList.fits"
+        try:
+            backgroundList.writeFits(fileName)
+
+            backgrounds = afwMath.BackgroundList.readFits(fileName)
+        finally:
+            if os.path.exists(fileName):
+                os.unlink(fileName)
+
+        img = backgrounds.getImage()
+        #
+        # Check that the read-back image is identical to that generated from the backgroundList
+        # round-tripped to disk
+        #
+        backImage -= img
+        
+        self.assertEqual(np.min(backImage.getArray()), 0.0)
+        self.assertEqual(np.max(backImage.getArray()), 0.0)
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 

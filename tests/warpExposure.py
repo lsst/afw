@@ -62,11 +62,11 @@ if not afwDataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 dataDir = os.path.join(afwDataDir, "data")
 
-originalExposureName = "med"
+originalExposureName = "medexp.fits"
 originalExposurePath = os.path.join(dataDir, originalExposureName)
-subExposureName = "medsub"
+subExposureName = "medsub.fits"
 subExposurePath = os.path.join(dataDir, originalExposureName)
-originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1")
+originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
 originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
 def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN"):

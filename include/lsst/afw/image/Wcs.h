@@ -36,6 +36,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/table/io/Persistable.h"
 
 struct wcsprm;                          // defined in wcs.h
@@ -305,6 +306,7 @@ protected:
 
     // See afw::table::io::Persistable
     virtual std::string getPersistenceName() const;
+    virtual std::string getPythonModule() const;
     virtual void write(OutputArchiveHandle & handle) const;
 
     // Protected virtual implementation for operator== (must be true in both directions for equality).
@@ -377,6 +379,36 @@ namespace detail {
                          CONST_PTR(Wcs) const& wcs ///< A Wcs with (implied) keywords
                         );
 }
+
+
+/**
+ * @brief XYTransformFromWcsPair: Represents an XYTransform obtained by putting two Wcs's "back to back".
+ *
+ * Eventually there will be an XYTransform subclass which represents a camera distortion.
+ * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
+ * with a SIP-distorted TanWcs and an undistorted Wcs.
+ *
+ * Note: this is very similar to class afw::math::detail::WcsSrcPosFunctor
+ *   but watch out since the XY0 offset convention is different!!
+ */
+class XYTransformFromWcsPair : public afw::geom::XYTransform
+{
+public:
+    XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src);
+    virtual ~XYTransformFromWcsPair() { }
+
+    virtual PTR(afw::geom::XYTransform) invert() const;
+
+    /// The following methods are needed to devirtualize the XYTransform parent class
+    virtual PTR(afw::geom::XYTransform) clone() const;
+    virtual Point2D forwardTransform(Point2D const &pixel) const;
+    virtual Point2D reverseTransform(Point2D const &pixel) const;
+    
+protected:
+    CONST_PTR(Wcs) _dst;
+    CONST_PTR(Wcs) _src;
+};  
+
 
 }}} // lsst::afw::image
 

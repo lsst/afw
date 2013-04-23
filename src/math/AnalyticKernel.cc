@@ -35,6 +35,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Kernel.h"
+#include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
@@ -175,3 +176,76 @@ std::vector<double> afwMath::AnalyticKernel::getKernelParameters() const {
 void afwMath::AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
     _kernelFunctionPtr->setParameter(ind, value);
 }
+
+// ------ Persistence ---------------------------------------------------------------------------------------
+
+namespace lsst { namespace afw { namespace math {
+
+namespace {
+
+struct AnalyticKernelPersistenceHelper : public Kernel::PersistenceHelper {
+    table::Key<int> kernelFunction;
+
+    explicit AnalyticKernelPersistenceHelper(int nSpatialFunctions) :
+        Kernel::PersistenceHelper(nSpatialFunctions),
+        kernelFunction(
+            schema.addField<int>(
+                "kernelfunction", "archive ID for analytic function used to produce kernel images"
+            )
+        )
+    {}
+
+    explicit AnalyticKernelPersistenceHelper(table::Schema const & schema_) :
+        Kernel::PersistenceHelper(schema_),
+        kernelFunction(schema["kernelfunction"])
+    {}
+};
+
+} // anonymous
+
+class AnalyticKernel::Factory : public afw::table::io::PersistableFactory {
+public:
+
+    virtual PTR(afw::table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
+        AnalyticKernelPersistenceHelper const keys(catalogs.front().getSchema());
+        afw::table::BaseRecord const & record = catalogs.front().front();
+        PTR(AnalyticKernel::KernelFunction) kernelFunction =
+            archive.get<AnalyticKernel::KernelFunction>(record.get(keys.kernelFunction));
+        PTR(AnalyticKernel) result;
+        if (keys.spatialFunctions.isValid()) {
+            result = boost::make_shared<AnalyticKernel>(
+                record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()), *kernelFunction,
+                keys.readSpatialFunctions(archive, record)
+            );
+        } else {
+            result = boost::make_shared<AnalyticKernel>(
+                record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()), *kernelFunction
+            );
+        }
+        result->setCtr(record.get(keys.center));
+        return result;
+    }
+
+    explicit Factory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
+};
+
+namespace {
+
+std::string getAnalyticKernelPersistenceName() { return "AnalyticKernel"; }
+
+AnalyticKernel::Factory registration(getAnalyticKernelPersistenceName());
+
+} // anonymous
+
+std::string AnalyticKernel::getPersistenceName() const { return getAnalyticKernelPersistenceName(); }
+
+void AnalyticKernel::write(OutputArchiveHandle & handle) const {
+    AnalyticKernelPersistenceHelper const keys(_spatialFunctionList.size());
+    PTR(afw::table::BaseRecord) record = keys.write(handle, *this);
+    record->set(keys.kernelFunction, handle.put(_kernelFunctionPtr.get()));
+}
+
+}}} // namespace lsst::afw::math

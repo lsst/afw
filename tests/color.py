@@ -119,6 +119,11 @@ class CalibTestCase(unittest.TestCase):
             self.assertAlmostEqual(flux, self.calib.getFlux(mag, magErr)[0])
             self.assertTrue(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]) < 1.0e-4)
 
+        # Test context manager; shouldn't raise an exception within the block, should outside
+        with imageUtils.CalibNoThrow():
+            self.assert_(numpy.isnan(self.calib.getMagnitude(-50.0)))
+        tests.assertRaisesLsstCpp(self, pexExcept.DomainErrorException, self.calib.getMagnitude, -50.0)
+
     def testPhotomMulti(self):
         self.calib.setFluxMag0(1e12, 1e10)
         flux, fluxErr = 1000.0, 10.0
@@ -281,10 +286,10 @@ class ColorTestCase(unittest.TestCase):
 
         self.assertEqual(c.getLambdaEff(f), 1000*g_r) # XXX Not a real implementation!
 
-    def testBool(self):
-        """Test that a default-constructed Color tests False, but ones with a g-r value test True"""
-        self.assertFalse(afwImage.Color())
-        self.assertTrue(afwImage.Color(1.2))
+    def testIsIndeterminate(self):
+        """Test that a default-constructed Color tests True, but ones with a g-r value test False"""
+        self.assertTrue(afwImage.Color().isIndeterminate())
+        self.assertFalse(afwImage.Color(1.2).isIndeterminate())
 
 class FilterTestCase(unittest.TestCase):
     """A test case for Filter"""

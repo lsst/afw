@@ -628,67 +628,75 @@ public:
      *  @brief Construct a MaskedImage by reading a regular FITS file.
      *
      *  @param[in]      fileName      File to read.
-     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
-     *                                reads the first extension HDU.
-     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in,out]  metadata      Metadata read from the primary HDU header.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
      *                                missing.  If false, silently initialize them to zero.
-     *
-     *  MaskedImages may also be read from three separate files, in which the fileName argument is
-     *  interpreted as the base file name and "_img.fits", "_msk.fits", and "_var.fits" are appended to it.
-     *  This format is deprecated and is only provided temporarily for backwards compatibility.
+     *  @param[in,out]  imageMetadata      Metadata read from the image HDU header.
+     *  @param[in,out]  maskMetadata       Metadata read from the mask HDU header.
+     *  @param[in,out]  varianceMetadata   Metadata read from the variance HDU header.
      */
     explicit MaskedImage(
-        std::string const & fileName, int hdu=0,
+        std::string const & fileName,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
-        bool conformMasks=false, bool needAllHdus=false
+        bool conformMasks=false, bool needAllHdus=false,
+        PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
+        PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
+        PTR(daf::base::PropertySet) varianceMetadata=PTR(daf::base::PropertySet)()
     );
 
     /**
      *  @brief Construct a MaskedImage by reading a FITS image in memory.
      *
      *  @param[in]      manager       An object that manages the memory buffer to read.
-     *  @param[in]      hdu           First HDU to read, 1-indexed (i.e. 1=Primary HDU).  The special value
-     *                                of 0 reads the Primary HDU unless it is empty, in which case it
-     *                                reads the first extension HDU.
-     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in,out]  metadata      Metadata read from the primary HDU header.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
      *                                missing.  If false, silently initialize them to zero.
+     *  @param[in,out]  imageMetadata      Metadata read from the image HDU header.
+     *  @param[in,out]  maskMetadata       Metadata read from the mask HDU header.
+     *  @param[in,out]  varianceMetadata   Metadata read from the variance HDU header.
      */
     explicit MaskedImage(
-        fits::MemFileManager & manager, int hdu=0,
+        fits::MemFileManager & manager,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
-        bool conformMasks=false, bool needAllHdus=false
+        bool conformMasks=false, bool needAllHdus=false,
+        PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
+        PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
+        PTR(daf::base::PropertySet) varianceMetadata=PTR(daf::base::PropertySet)()
     );
 
     /**
      *  @brief Construct a MaskedImage from an already-open FITS object.
      *
-     *  @param[in]      fitsfile      A FITS object to read from, already at the desired HDU.
-     *  @param[in,out]  metadata      Metadata read from the header of the image HDU (may be null).
+     *  @param[in]      fitsfile      A FITS object to read from.  Current HDU is ignored.
+     *  @param[in,out]  metadata      Metadata read from the primary HDU header.
      *  @param[in]      bbox          If non-empty, read only the pixels within the bounding box.
      *  @param[in]      origin        Coordinate system of the bounding box; if PARENT, the bounding box
      *                                should take into account the xy0 saved with the image.
      *  @param[in]      conformMasks  If true, make Mask conform to the mask layout in the file.
      *  @param[in]      needAllHdus   If true, throw fits::FitsError if the mask and/or variance plane is
      *                                missing.  If false, silently initialize them to zero.
+     *  @param[in,out]  imageMetadata      Metadata read from the image HDU header.
+     *  @param[in,out]  maskMetadata       Metadata read from the mask HDU header.
+     *  @param[in,out]  varianceMetadata   Metadata read from the variance HDU header.
      */
     explicit MaskedImage(
         fits::Fits & fitsfile,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=LOCAL,
-        bool conformMasks=false, bool needAllHdus=false
+        bool conformMasks=false, bool needAllHdus=false,
+        PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
+        PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
+        PTR(daf::base::PropertySet) varianceMetadata=PTR(daf::base::PropertySet)()
     );
 
     MaskedImage(
@@ -774,32 +782,24 @@ public:
     }
     void scaledDivides(double const c, MaskedImage const& rhs);
 
-    // IO functions
-    static std::string imageFileName(std::string const& baseName) { return baseName + "_img.fits"; }
-    static std::string maskFileName(std::string const& baseName) { return baseName + "_msk.fits"; }
-    static std::string varianceFileName(std::string const& baseName) { return baseName + "_var.fits"; }
-
     /**
      *  @brief Write a MaskedImage to a regular FITS file.
      *
-     *  @param[in] baseName      Name of the file to write.  When writing separate files, this is
+     *  @param[in] fileName      Name of the file to write.  When writing separate files, this is
      *                           the "base" of the filename (e.g. foo reads foo_{img.msk.var}.fits).
-     *  @param[in] metadata      Additional values to write to the header (may be null).
-     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
-     *  @param[in] writeMef      Whether to write to a single file (recommended) or three separate
-     *                           files (deprecated).  If baseName ends with ".fits", a single file
-     *                           will be written regardless of the value of writeMef.
+     *  @param[in] metadata      Additional values to write to the primary HDU header (may be null).
+     *  @param[in] imageMetadata      Metadata to be written to the image header.
      *  @param[in] maskMetadata       Metadata to be written to the mask header.
      *  @param[in] varianceMetadata   Metadata to be written to the variance header.
      *
-     *  In the MEF format, the primary data unit is ignored and all image planes are written to
-     *  extensions.
+     *  The FITS file will have four HDUs; the primary HDU will contain only metadata,
+     *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
+     *  to indicate that the primary metadata applies to those HDUs as well.
      */
     void writeFits(
-        std::string const& baseName,
+        std::string const & fileName,
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const& mode="w",
-        bool const writeMef=false,
+        CONST_PTR(daf::base::PropertySet) imageMetadata = CONST_PTR(daf::base::PropertySet)(),
         CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
         CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
@@ -808,17 +808,19 @@ public:
      *  @brief Write a MaskedImage to a FITS RAM file.
      *
      *  @param[in] manager       Manager object for the memory block to write to.
-     *  @param[in] metadata      Additional values to write to the header (may be null).
-     *  @param[in] mode          "w"=Create a new file; "a"=Append a new HDU.
+     *  @param[in] metadata      Additional values to write to the primary HDU header (may be null).
+     *  @param[in] imageMetadata      Metadata to be written to the image header.
      *  @param[in] maskMetadata       Metadata to be written to the mask header.
      *  @param[in] varianceMetadata   Metadata to be written to the variance header.
      *
-     *  Only MEF format is supported.
+     *  The FITS file will have four HDUs; the primary HDU will contain only metadata,
+     *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
+     *  to indicate that the primary metadata applies to those HDUs as well.
      */
     void writeFits(
         fits::MemFileManager & manager,
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
-        std::string const& mode="w",
+        CONST_PTR(daf::base::PropertySet) imageMetadata = CONST_PTR(daf::base::PropertySet)(),
         CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
         CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
@@ -826,16 +828,20 @@ public:
     /**
      *  @brief Write a MaskedImage to a FITS RAM file.
      *
-     *  @param[in] fitsfile      A FITS file already open to the desired HDU.
-     *  @param[in] metadata      Additional values to write to the header (may be null).
+     *  @param[in] fitsfile           An empty FITS file object.
+     *  @param[in] metadata           Additional values to write to the primary HDU header (may be null).
+     *  @param[in] imageMetadata      Metadata to be written to the image header.
      *  @param[in] maskMetadata       Metadata to be written to the mask header.
      *  @param[in] varianceMetadata   Metadata to be written to the variance header.
      *
-     *  Only MEF format is supported.
+     *  The FITS file will have four HDUs; the primary HDU will contain only metadata,
+     *  while the image, mask, and variance HDU headers will use the "INHERIT='T'" convention
+     *  to indicate that the primary metadata applies to those HDUs as well.
      */
     void writeFits(
         fits::Fits & fitsfile,
         CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)(),
+        CONST_PTR(daf::base::PropertySet) imageMetadata = CONST_PTR(daf::base::PropertySet)(),
         CONST_PTR(daf::base::PropertySet) maskMetadata = CONST_PTR(daf::base::PropertySet)(),
         CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
