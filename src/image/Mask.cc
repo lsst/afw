@@ -379,6 +379,7 @@ namespace {
         dict->add("EDGE", ++i);          // 
         dict->add("DETECTED", ++i);      // 
         dict->add("DETECTED_NEGATIVE", ++i);
+        dict->add("SUSPECT", ++i);
     }
 }
 
