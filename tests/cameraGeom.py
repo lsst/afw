@@ -124,10 +124,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def assertImagesAreEqual(self, outImage, compImage):
         """Assert that two images have all pixels equal"""
-        if True:                        # Incorrect old test
-            self.assertTrue(not (outImage.getArray() - compImage.getArray()).all())
-        else:
-            self.assertTrue((outImage.getArray() == compImage.getArray()).all())
+        self.assertTrue((outImage.getArray() == compImage.getArray()).all())
 
     def testDictionary(self):
         """Test the camera geometry dictionary"""
@@ -269,7 +266,7 @@ class CameraGeomTestCase(unittest.TestCase):
         corr = afwGeom.Extent2D(corrI.getX(), corrI.getY())
         pix += corr
         
-        self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.SENSOR)
+        self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.AMP)
         self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
         #
         # Trim the CCD and try again
