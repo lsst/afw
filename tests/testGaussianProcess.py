@@ -57,11 +57,9 @@ class GaussianProcessTestCase(unittest.TestCase):
     fn = np.zeros((pp),dtype = float) #input function values
     test = np.zeros((dd),dtype = float) #query points
     sigma = np.zeros((1),dtype = float) #variance
-    hh = np.zeros((1),dtype = float); #hyper parameters
     
-    hh[0] = 100.0
-    
-    xx=gp.SquaredExpCovariogramD(hh)
+    xx=gp.SquaredExpCovariogramD()
+    xx.setEllSquared(100.0)
     
     #read in the input data
     f = open("tests/data/gp_exp_covar_data.sav")
@@ -124,11 +122,11 @@ class GaussianProcessTestCase(unittest.TestCase):
     #now try with the Neural Network covariogram
     
     kk = 50
-    hh = np.zeros((2),dtype = float)
-    hh[0] = 1.23
-    hh[1] = 0.452
     
-    nn=gp.NeuralNetCovariogramD(hh)
+    nn=gp.NeuralNetCovariogramD()
+    nn.setSigma0(1.23)
+    nn.setSigma1(0.452)
+    
     gg.setCovariogram(nn)
     gg.setLambda(0.0045)
     
@@ -196,14 +194,13 @@ class GaussianProcessTestCase(unittest.TestCase):
     fn = np.zeros((pp),dtype = float)
     test = np.zeros((dd),dtype = float)
     sigma = np.zeros((1),dtype = float)
-    hh = np.zeros((2),dtype = float);
+   
     mins = np.zeros((dd),dtype = float)
     maxs = np.zeros((dd),dtype = float)
-   
-    hh[0] = 0.555
-    hh[1] = 0.112
     
-    nn=gp.NeuralNetCovariogramD(hh)
+    nn=gp.NeuralNetCovariogramD()
+    nn.setSigma0(0.555)
+    nn.setSigma1(0.112)
 
     f = open("tests/data/gp_exp_covar_data.sav")
     ff = f.readlines()
@@ -286,11 +283,10 @@ class GaussianProcessTestCase(unittest.TestCase):
     fn = np.zeros((pp),dtype = float)
     test = np.zeros((dd),dtype = float)
     sigma = np.zeros((1),dtype = float)
-    hh = np.zeros((1),dtype = float);
+
+    xx=gp.SquaredExpCovariogramD()
+    xx.setEllSquared(5.0)
     
-    hh[0] = 5.0
-    xx=gp.SquaredExpCovariogramD(hh)
-     
     f = open("tests/data/gp_additive_test_root.sav")
     ff = f.readlines()
     f.close()
@@ -381,11 +377,15 @@ class GaussianProcessTestCase(unittest.TestCase):
       for j in range(dd):
         data[i][j] = float(s[j])
     
-    kd = gp.KdTreeD(data)
+    kd = gp.KdTreeD()
+    kd.Initialize(data)
+    
     i = kd.testTree()
     self.assertEqual(i,1)
     
-    kds = gp.KdTreeD(data)
+    kds = gp.KdTreeD()
+    kds.Initialize(data)
+    
     kds.removePoint(2)
     i = kds.testTree()
     self.assertEqual(i,1)
@@ -395,7 +395,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         if i > 2:
             dd=0.0
             for j in range(5):
-                dd = dd+(kd.data[i][j]-kds.data[i-1][j])*(kd.data[i][j]-kds.data[i-1][j])
+                dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
             if dd>worstErr:
                 worstErr=dd
     self.assertTrue(worstErr<tol)
@@ -408,7 +408,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         if i > 10:
             dd=0.0
             for j in range(5):
-                dd = dd+(kd.data[i][j]-kds.data[i-1][j])*(kd.data[i][j]-kds.data[i-1][j])
+                dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
             if dd>worstErr:
                 worstErr=dd
     self.assertTrue(worstErr<tol)
@@ -421,11 +421,11 @@ class GaussianProcessTestCase(unittest.TestCase):
         if i > 21:
             dd=0.0
             for j in range(5):
-                dd = dd+(kd.data[i][j]-kds.data[i-1][j])*(kd.data[i][j]-kds.data[i-1][j])
+                dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
             if dd>worstErr:
                 worstErr=dd
     self.assertTrue(worstErr<tol)
-    
+    print "\nIn KdTest worst distance error is ",worstErr
 
 
   def testBatch(self):
@@ -448,10 +448,9 @@ class GaussianProcessTestCase(unittest.TestCase):
       for j in range(dd):
         data[i][j] = float(s[j])
       fn[i] = float(s[dd])
-    
-    hh = np.zeros((1),dtype = float)
-    hh[0] = 2.0
-    xx=gp.SquaredExpCovariogramD(hh);
+
+    xx=gp.SquaredExpCovariogramD();
+    xx.setEllSquared(2.0)
     
     gg = gp.GaussianProcessD(data,fn,xx)
     gg.setLambda(0.0032)
@@ -536,11 +535,10 @@ class GaussianProcessTestCase(unittest.TestCase):
       for j in range(dd):
         data[i][j] = float(s[j])
       fn[i] = float(s[dd])
-    
-    hh = np.zeros((1),dtype = float)
-    hh[0] = 20.0
 
-    xx=gp.SquaredExpCovariogramD(hh)
+
+    xx=gp.SquaredExpCovariogramD()
+    xx.setEllSquared(20.0)
     gg = gp.GaussianProcessD(data,fn,xx)
     gg.setKrigingParameter(30.0)
     gg.setLambda(0.00002)
@@ -597,11 +595,10 @@ class GaussianProcessTestCase(unittest.TestCase):
     mushld=np.zeros((4), dtype = float)
     vv=np.zeros((10), dtype = float)
     vvf=np.zeros((4), dtype = float)
-    hh=np.zeros((2), dtype= float)
+   
     kk=30
     ll=0.0045
-    hh[0]=2.25
-    hh[1]=0.76
+  
     
     f=open("tests/data/gp_vector_data.sav","r")
     ff=f.readlines()
@@ -614,7 +611,9 @@ class GaussianProcessTestCase(unittest.TestCase):
     
     f.close()
     
-    nn=gp.NeuralNetCovariogramD(hh)
+    nn=gp.NeuralNetCovariogramD()
+    nn.setSigma0(2.25)
+    nn.setSigma1(0.76)
     gg=gp.GaussianProcessD(data,fn,nn);   
     gg.setLambda(0.0045)
     
@@ -816,12 +815,9 @@ class GaussianProcessTestCase(unittest.TestCase):
     sig=np.zeros((4), dtype = float)
     mushld=np.zeros((4), dtype = float)
     vv=np.zeros((10), dtype = float)
-    hh=np.zeros((1), dtype= float)
     kk=30
     ll=0.002
-    hh[0]=2.3
 
-    
     f=open("tests/data/gp_subtraction_data.sav","r")
     ff=f.readlines()
     for i in range(len(ff)):
@@ -833,7 +829,8 @@ class GaussianProcessTestCase(unittest.TestCase):
     
     f.close()
     
-    xx=gp.SquaredExpCovariogramD(hh)
+    xx=gp.SquaredExpCovariogramD()
+    xx.setEllSquared(2.3)
     gg=gp.GaussianProcessD(data,fn,xx);   
     gg.setLambda(0.002)
     

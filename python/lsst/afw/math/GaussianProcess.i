@@ -1,7 +1,6 @@
 
 %{
 #include "lsst/afw/math/GaussianProcess.h"
-#include "lsst/afw/math/detail/GaussianProcessFunctions.h"
 %}
 
 // Enable ndarray's NumPy typemaps; types are declared in %included files.
@@ -39,7 +38,6 @@
 %declarePTR(double);
 
 %include "lsst/afw/math/GaussianProcess.h"
-%include "lsst/afw/math/detail/GaussianProcessFunctions.h"
 
 %declareGP(double,D);
 

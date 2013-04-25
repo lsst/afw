@@ -37,6 +37,7 @@
 #define LSST_AFW_MATH_GAUSSIAN_PROCESS_H
 
 #include <Eigen/Dense>
+#include <stdexcept>
 #include "ndarray/eigen.h"
 #include "boost/shared_ptr.hpp"
 #include "lsst/daf/base/Citizen.h"
@@ -67,7 +68,7 @@ struct GaussianProcessTimer{
 
     double eigenTime,iterationTime,searchTime,varianceTime,totalTime;
     int interpolationCount;
-    ~GaussianProcessTimer();
+ 
     GaussianProcessTimer();
     
     /**
@@ -96,22 +97,8 @@ public:
     * @brief construct a Covariogram assigning default values to the hyper parameters
    */
    explicit Covariogram():lsst::daf::base::Citizen(typeid(this)){};
+
    
-  /**
-    * @brief construct a Covariogram assigning values to the hyper parameters
-    *
-    * @param [in] input an array containing the desired values of the hyper parameters
-  */
-   explicit Covariogram(ndarray::Array<T,1,1> const &input)
-   : lsst::daf::base::Citizen(typeid(this)){};
-   
-   
-   /**
-     * @brief set the values of the hyper parameters   
-     *
-     * @param [in] input an array containing the values of the desired hyper parameters
-   */
-   virtual void setHyperParameters(ndarray::Array<T,1,1> const &input);
    
   /**
     * @brief Actually evaluate the covariogram function relating two points you want to interpolate from
@@ -122,16 +109,8 @@ public:
   */
    virtual T operator() (ndarray::Array<const T,1,1> const &p1,
                          ndarray::Array<const T,1,1> const &p2
-			 ) const;
-   /**
-     * @brief print a brief description of the specific covariogram, its hyper parameters, and their present
-     * values
-   */
-   virtual void explainHyperParameters() const;
+             ) const;
 
-protected:
-    int _nHyperParameters;
-    ndarray::Array<T,1,1> _hyperParameters;
 };
 
 /**
@@ -147,22 +126,24 @@ public:
   
     explicit SquaredExpCovariogram();
   
-    explicit SquaredExpCovariogram(ndarray::Array<T,1,1> const &);
-  
+    /**
+     * @brief set the _ellSquared hyper parameter (the square of the characteristic length scale)
+    */
+    void setEllSquared(double ellSquared);
   
     virtual T operator() (ndarray::Array<const T,1,1> const &,
                           ndarray::Array<const T,1,1> const &
-			  ) const;
+              ) const;
     
-    virtual void explainHyperParameters() const;
-  
+private:
+    double _ellSquared;  
   
 };
 
 /**
   * @class NeuralNetCovariogram
   *
-  * @brief a Covariogram that recreates a neural network with infinite hidden layers
+  * @brief a Covariogram that recreates a neural network with one hidden layer and infinite units in that layer
   *
   * see Rasmussen and Williams (2006) http://www.gaussianprocess.org/gpml/ 
   * equation 4.29
@@ -174,14 +155,24 @@ public:
     virtual ~NeuralNetCovariogram();
 
     explicit NeuralNetCovariogram();
+    
+    /**
+     * @brief set the _sigma0 hyper parameter
+    */
+    void setSigma0(double sigma0);
+    
+    /**
+     * @brief set the _sigma1 hyper parameter
+    */
+    void setSigma1(double sigma1);
  
-    explicit NeuralNetCovariogram(ndarray::Array<T,1,1> const &);
-
     virtual T operator() (ndarray::Array<const T,1,1> const &,
                           ndarray::Array<const T,1,1> const &
                           ) const;
-    
-    virtual void explainHyperParameters() const;
+
+    private:
+        double _sigma0,_sigma1;
+        
 
 };
 
@@ -219,17 +210,14 @@ class KdTree : private boost::noncopyable{
 
 
  public:
-    ndarray::Array<T,2,2> data;
- 
-    ~KdTree();
-    
+
     
   /**
     * @brief Build a KD Tree to store the data for GaussianProcess
     *
     * @param [in] dt -- an array, the rows of which are the data points (dt[i][j] is the jth component of the ith data point)
    */
-    KdTree(ndarray::Array<T,2,2> const &dt);
+    void Initialize(ndarray::Array<T,2,2> const &dt);
     
     /**
      * @brief Find the nearest neighbors of a point
@@ -249,8 +237,41 @@ class KdTree : private boost::noncopyable{
     void findNeighbors(ndarray::Array<int,1,1> neighdex, 
                        ndarray::Array<double,1,1> dd,
                        ndarray::Array<const T,1,1> const &v, 
-		       int n_nn) const;
+                       int n_nn) const;
     
+    
+    /**
+     * @brief Return one element of one node on the tree
+     *
+     * @param [in] ipt the index of the node to return
+     *
+     * @param [in] idim the index of the dimension to return
+    */
+    T getData(int ipt, int idim) const;
+    
+    
+    /**
+     * @brief Return an entire node from the tree
+     *
+     * @param [in] ipt the index of the node to return
+     *
+     * I currently have this as a return-by-value method.  When I tried it as
+     * a return-by-reference, the compiler gave me
+     *
+     * warning: returning reference to local temporary object
+     *
+     * Based on my reading of Stack Overflow, this is because ndarray
+     * was implicitly creating a new ndarray::Array<T,1,1> object and passing
+     * a reference thereto.  It is unclear to me whether or not this object
+     * would be destroyed once the call to getData was complete.
+     *
+     * The code still compiled, ran, and passed the unit tests, but the above
+     * behavior seemed to me like it could be dangerous (and, because ndarray
+     * was still creating a new object, it did not seem like we were saving
+     * any time), so I reverted to return-by-value.
+     *
+    */
+    ndarray::Array<T,1,1> getData(int ipt) const;
     
     /**
      * @brief Add a point to the tree.  Allot more space in _tree and data if needed.
@@ -288,10 +309,12 @@ class KdTree : private boost::noncopyable{
  private:
     ndarray::Array<int,2,2> _tree;
     ndarray::Array<int,1,1> _inn;
-   
+    ndarray::Array<T,2,2> _data;
+    
+    enum{DIMENSION,LT,GEQ,PARENT}; //these are indices for _tree
+    
     int _pts,_dimensions,_room,_roomStep,_masterParent;
     mutable int _neighborsFound,_neighborsWanted;
-    ndarray::Array<T,1,1> _toSort;
     
     mutable ndarray::Array<double,1,1> _neighborDistances;
     mutable ndarray::Array<int,1,1> _neighborCandidates;
@@ -309,8 +332,8 @@ class KdTree : private boost::noncopyable{
     */
     void _organize(ndarray::Array<int,1,1> const &use,
                    int ct,
-		   int parent,
-		   int dir);
+           int parent,
+           int dir);
        
     /**
       * @brief Find the point already in the tree that would be the parent of a point not in the tree
@@ -335,7 +358,7 @@ class KdTree : private boost::noncopyable{
    */
     void _lookForNeighbors(ndarray::Array<const T,1,1> const &v,
                            int consider,
-			   int from) const;
+               int from) const;
     
     /**
      * @brief A method to make sure that every data point in the tree is in the correct relation to its parents
@@ -348,7 +371,7 @@ class KdTree : private boost::noncopyable{
     */
     int _walkUpTree(int target,
                    int dir,
-		   int root) const;
+           int root) const;
     
     /**
       * @brief A method which counts the number of nodes descended from a given node (used by remove(int))
@@ -412,10 +435,7 @@ template <typename T>
 class GaussianProcess : private boost::noncopyable{
 
 public:
-  
 
-    
-    ~GaussianProcess();
     
     /**
       * @brief This is the constructor you call if you do not wish to normalize the positions of your data points
@@ -428,7 +448,7 @@ public:
       * @param [in] covarin -- is the input covariogram
     */
     GaussianProcess(ndarray::Array<T,2,2> const &datain,
-		    ndarray::Array<T,1,1> const &ff,
+            ndarray::Array<T,1,1> const &ff,
                     boost::shared_ptr< Covariogram<T> > const &covarin);
      
     /**
@@ -448,8 +468,8 @@ public:
      *Note: the member variable _useMaxMin will allow the code to remember which constructor you invoked
     */
     GaussianProcess(ndarray::Array<T,2,2> const &datain,
-		    ndarray::Array<T,1,1> const &mn,
-		    ndarray::Array<T,1,1> const &mx,
+                    ndarray::Array<T,1,1> const &mn,
+                    ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,1,1> const &ff,
                     boost::shared_ptr< Covariogram<T> > const &covarin);
     /**
@@ -464,7 +484,7 @@ public:
      * @param [in] covarin -- is the input covariogram
     */                
     GaussianProcess(ndarray::Array<T,2,2> const &datain,
-		    ndarray::Array<T,2,2> const &ff,
+            ndarray::Array<T,2,2> const &ff,
                     boost::shared_ptr< Covariogram<T> > const &covarin);
     /**
      * @brief this is the constructor to use in the case of a vector of input functions using minima and maxima in parameter space
@@ -482,8 +502,8 @@ public:
      * @param [in] covarin -- is the input covariogram
     */                    
     GaussianProcess(ndarray::Array<T,2,2> const &datain,
-		    ndarray::Array<T,1,1> const &mn,
-		    ndarray::Array<T,1,1> const &mx,
+                    ndarray::Array<T,1,1> const &mn,
+                    ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,2,2> const &ff,
                     boost::shared_ptr< Covariogram<T> > const &covarin);
      
@@ -503,7 +523,7 @@ public:
     */
     T interpolate(ndarray::Array<T,1,1> variance,
                   ndarray::Array<T,1,1> const &vin,
-		  int numberOfNeighbors) const;
+                  int numberOfNeighbors) const;
     /**
      @brief This is the version of GaussianProcess::interpolate for a vector of functions.
      *
@@ -686,7 +706,7 @@ public:
     */
     GaussianProcessTimer& getTimes() const;
      
-   
+    void waste();
      
      
  private:
@@ -695,9 +715,9 @@ public:
     T _krigingParameter,_lambda;
 
     ndarray::Array<T,1,1> _max,_min;
-    ndarray::Array<T,2,2> _data,_function;
+    ndarray::Array<T,2,2> _function;
     
-    KdTree<T> *_kdTreePtr;
+    KdTree<T> _kdTree;
     
     boost::shared_ptr< Covariogram<T> > _covariogram;
     mutable GaussianProcessTimer _timer;
