@@ -223,10 +223,10 @@ void BackgroundMI::operator-=(float const delta ///< Value to subtract
 /**
  * @brief Method to retrieve the background level at a pixel coord.
  *
- * @warning This can be a very costly function to get a single pixel
- *          If you want an image, use the getImage() method.
- *
  * @return an estimated background at x,y (double)
+ *
+ * \deprecated Don't call this image (not even in test code).
+ * This can be a very costly function to get a single pixel. If you want an image, use the getImage() method.
  */
 double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to interpolate
                             int const x, ///< x-pixel coordinate (column)
@@ -350,7 +350,6 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     double defaultValue = std::numeric_limits<double>::quiet_NaN();
 
     for (int iY = 0; iY < bg->getHeight(); ++iY) {
-
         // build an interp object for this row
         std::vector<double> bg_x(nxSample);
         for (int iX = 0; iX < nxSample; iX++) {
@@ -358,20 +357,49 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         }
         cullNan(_xcen, bg_x, xcenTmp, bgTmp, defaultValue);
         
+
+        PTR(Interpolate) intobj;
         try {
-            PTR(Interpolate) intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
-            // fill the image with interpolated values
-            int iX = 0;
-            for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
-                     end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-                *ptr = static_cast<PixelT>(intobj->interpolate(xpix[iX]));
+            intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
+        } catch(pex::exceptions::OutOfRangeException &e) {
+            switch (undersampleStyle) {
+              case THROW_EXCEPTION:
+                LSST_EXCEPT_ADD(e, str(boost::format("Interpolating in y (iY = %d)") % iY));
+                throw;
+              case REDUCE_INTERP_ORDER:
+                {
+                    if (bgTmp.empty()) {
+                        xcenTmp.push_back(0);
+                        bgTmp.push_back(defaultValue);
+                        
+                        intobj = makeInterpolate(xcenTmp, bgTmp, Interpolate::CONSTANT);
+                        break;
+                    } else {
+                        intobj = makeInterpolate(xcenTmp, bgTmp, lookupMaxInterpStyle(bgTmp.size()));
+                    }
+                }
+                break;
+              case INCREASE_NXNYSAMPLE:
+                LSST_EXCEPT_ADD(e, "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
+                throw;
+              default:
+                LSST_EXCEPT_ADD(e, str(boost::format("The selected BackgroundControl "
+                                                     "UndersampleStyle %d is not defined.") % undersampleStyle));
+                throw;
             }
         } catch(ex::Exception &e) {
-            LSST_EXCEPT_ADD(e, "Interpolating in x");
+            LSST_EXCEPT_ADD(e, str(boost::format("Interpolating in y (iY = %d)") % iY));
             throw;
         }
-    }
 
+        // fill the image with interpolated values
+        int iX = 0;
+        for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
+                 end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
+            *ptr = static_cast<PixelT>(intobj->interpolate(xpix[iX]));
+        }
+    }
+    
     return bg;
 }
 
