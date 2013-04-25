@@ -42,6 +42,8 @@ namespace lsst{
 namespace afw{
 namespace math {
 
+
+
 GaussianProcessTimer::GaussianProcessTimer(){
     interpolationCount = 0;
     iterationTime = 0.0;
@@ -90,6 +92,12 @@ void KdTree < T > ::Initialize(ndarray::Array < T,2,2 >  const &dt)
   
     _organize(_inn,_pts, - 1, - 1);
 
+    
+    i = _testTree();
+    if (i == 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Failed to properly initialize KdTree\n");
+    }
   
 }
 
@@ -149,7 +157,7 @@ template  < typename T >
 void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
 {
 
-    int i,j,node,dim;
+    int i,j,node,dim,dir;
   
     node = _findNode(v);
     dim = _tree[node][DIMENSION] + 1;
@@ -181,19 +189,19 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
   
     if(_data[node][i] > v[i]){
         if(_tree[node][LT] >= 0){
-            std::cout << "WARNING adding to a piece of tree that already exists 1\n";
-            std::cout << "node " << node << " " << _tree[node][LT] << " " << _data[node][i] << " " << v[i] << "\n";
-            std::cout << "pts " << _pts << "\n";
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            "Trying to add to KdTree in a node that is already occupied\n");
         }
         _tree[node][LT] = _pts;
+        dir=LT;
     }
     else{
         if(_tree[node][GEQ] >= 0){
-            std::cout << "WARNING adding to a piece of tree that already exists 2\n";
-            std::cout << "node " << node << " " << _tree[node][GEQ] << " " << _data[node][i] << " " << v[i] << "\n"; 
-            std::cout << "pts " << _pts << "\n";
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            "Trying to add to KdTree in a node that is already occupied\n");
         }
         _tree[node][GEQ] = _pts;
+        dir=GEQ;
     }
     _tree[_pts][LT] =  - 1;
     _tree[_pts][GEQ] =  - 1;
@@ -202,6 +210,14 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
     }
   
     _pts++ ;
+    
+    
+    i = _walkUpTree(_tree[_pts-1][PARENT],dir,_pts-1);
+    if (i != _masterParent){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        "Adding to KdTree failed\n");
+    }
+    
 }
 
 template  < typename T > 
@@ -220,11 +236,11 @@ void KdTree < T > ::getTreeNode(ndarray::Array < int,1,1 >  const &v, int dex) c
 }
 
 template  < typename T > 
-int KdTree < T > ::testTree() const{
+int KdTree < T > ::_testTree() const{
 
     int i,j,output;
     std::vector < int >  isparent;
-    
+
     for (i = 0 ; i < _pts ; i++ ) isparent.push_back(0);
     
     j = 0;
@@ -237,8 +253,11 @@ int KdTree < T > ::testTree() const{
     }
   
     for (i = 0 ; i < _pts ; i++ ) {
-        isparent[_tree[i][PARENT]]++ ;
+        if(_tree[i][PARENT]>=0){
+            isparent[_tree[i][PARENT]]++ ;
+        }
     }
+    
     for (i = 0 ; i < _pts ; i++ ) {
         if(isparent[i] > 2){ 
             std::cout << "_tree FAILURE " << i << " is parent to " << isparent[i] << "\n";
@@ -249,12 +268,16 @@ int KdTree < T > ::testTree() const{
   
     for (i = 0 ; i < _pts ; i++ ) {
         if(_tree[i][PARENT] >= 0){
-            if(_tree[_tree[i][PARENT]][1] == i)j = 1;
-            else j = 2;
+            if(_tree[_tree[i][PARENT]][LT] == i)j = LT;
+            else j = GEQ;
             output = _walkUpTree(_tree[i][PARENT],j,i);
-            if(output!= _masterParent)return 0;
+            
+            if(output!= _masterParent){
+              return 0;
+            }
         }
     }  
+    
     if(output!= _masterParent) return 0;
     else return 1;
 }
@@ -462,8 +485,8 @@ void KdTree < T > ::_lookForNeighbors(ndarray::Array < const T,1,1 >  const &v,
 
 template  < typename T > 
 int KdTree < T > ::_walkUpTree(int target, 
-                           int dir, 
-               int root) const
+                               int dir, 
+                               int root) const
 {
   //target is the node that you are examining now
   //dir is where you came from
@@ -473,7 +496,7 @@ int KdTree < T > ::_walkUpTree(int target,
   
     output = 1;
   
-    if(dir == 1){
+    if(dir == LT){
         if(_data[root][_tree[target][DIMENSION]] >= _data[target][_tree[target][DIMENSION]]){
             std::cout << "_tree FAILURE root " << root << " target " << target << " dir " << dir << "\n";
             std::cout << _data[root][_tree[target][DIMENSION]] << "  >=  " << _data[target][_tree[target][DIMENSION]] << "\n";
@@ -495,8 +518,8 @@ int KdTree < T > ::_walkUpTree(int target,
     }
   
     if(_tree[target][PARENT] >= 0){
-        if(_tree[_tree[target][PARENT]][LT] == target)i = 1;
-        else i = 2;
+        if(_tree[_tree[target][PARENT]][LT] == target)i = LT;
+        else i = GEQ;
     
         output = output*_walkUpTree(_tree[target][PARENT],i,root);
   
@@ -569,12 +592,12 @@ void KdTree < T > ::removePoint(int target)
          k = _tree[target][PARENT];
          if(k < 0){
             _masterParent = _tree[target][side];
-        _tree[_masterParent][PARENT] =  - 1;
+            _tree[_masterParent][PARENT] =  - 1;
           }
           else{
               if(_tree[k][LT] == target){
-              _tree[k][LT] = _tree[target][side];
-              _tree[_tree[k][LT]][PARENT] = k;
+                _tree[k][LT] = _tree[target][side];
+                _tree[_tree[k][LT]][PARENT] = k;
               }
               else{
                    _tree[k][GEQ] = _tree[target][side];
@@ -603,6 +626,13 @@ void KdTree < T > ::removePoint(int target)
         if(_masterParent > target)_masterParent-- ;
     }
     _pts-- ;
+    
+    i = _testTree();
+    if (i == 0) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        "Subtracting from KdTree failed\n");
+    }
+    
     //printf("done subtracting %d\n",_pts);
   
 }
@@ -675,8 +705,8 @@ double KdTree < T > ::_distance(ndarray::Array < const T,1,1 >  const &p1,
 
 template  < typename T > 
 GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &datain, 
-                                    ndarray::Array < T,1,1 >  const &ff,
-                                    boost::shared_ptr <  Covariogram < T >   >  const &covarin)
+                                        ndarray::Array < T,1,1 >  const &ff,
+                                        boost::shared_ptr <  Covariogram < T >   >  const &covarin)
 
 {
     int i,j;
@@ -848,8 +878,9 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
   
     _timer.interpolationCount++ ;
   
-    before = double(::time(NULL));
-
+    //before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
+    before=double(lsst::daf::base::DateTime::now().get()*24*60*60);
+    
      bb.resize(numberOfNeighbors,1);
      xx.resize(numberOfNeighbors,1);
      covariance.resize(numberOfNeighbors,numberOfNeighbors);
@@ -870,10 +901,10 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
         vv = vin;
     }
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _kdTree.findNeighbors(neighbors, neighborDistances, vv,
                               numberOfNeighbors);
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.searchTime += af - bef;
   
     fbar = 0.0;
@@ -891,7 +922,7 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
             covariance(j,i) = covariance(i,j);
         }
     }
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += bef - af;
   
     //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
@@ -899,7 +930,7 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
  
     for(i = 0;i < numberOfNeighbors;i++ )bb(i,0) = _function[neighbors[i]][0] - fbar;
     xx = ldlt.solve(bb);
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += af - bef;
   
     mu = fbar;
@@ -907,7 +938,7 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
     for(i = 0;i < numberOfNeighbors;i++ ){
         mu += covarianceTestPoint[i]*xx(i,0);
     }
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += bef - af;
   
   
@@ -922,7 +953,7 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
     } 
 
     variance(0) = variance(0)*_krigingParameter;
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.varianceTime += after - bef;
     _timer.totalTime += after - before;
   
@@ -948,7 +979,7 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
     Eigen::LDLT < Eigen::Matrix < T,Eigen::Dynamic,Eigen::Dynamic >   >  ldlt;
   
     _timer.interpolationCount++ ;
-    before = double(::time(NULL));
+    before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
   
      bb.resize(numberOfNeighbors,1);
      xx.resize(numberOfNeighbors,1);
@@ -970,11 +1001,11 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
         vv = vin;
     }
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _kdTree.findNeighbors(neighbors, neighborDistances, vv,
                               numberOfNeighbors);
   
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.searchTime += af - bef;
   
     for(i = 0;i < numberOfNeighbors;i++ ){
@@ -988,12 +1019,12 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
             covariance(j,i) = covariance(i,j);
         }
     }
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += bef - af;
   
     //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
     ldlt.compute(covariance); 
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += af - bef;
   
     for(ii = 0;ii < _nFunctions;ii++ ){
@@ -1013,7 +1044,7 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
   
      
     }//ii = 0 through _nFunctions
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += bef - af;
   
     variance[0] = (*_covariogram)(vv,vv) + _lambda;
@@ -1029,7 +1060,7 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
   
   
     for(i = 1;i < _nFunctions;i++ )variance[i] = variance[0];
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.varianceTime += after - bef;
     _timer.totalTime += after - before;
 }
@@ -1056,7 +1087,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
   
     _timer.interpolationCount++ ;
    
-    before = double(::time(NULL));
+    before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
   
     bb.resize(numberOfNeighbors,1);
     xx.resize(numberOfNeighbors,1);
@@ -1070,16 +1101,15 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
   
     //we don't use _useMaxMin because the data has already been normalized
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _kdTree.findNeighbors(selfNeighbors, selfDistances, _kdTree.getData(dex), 
                               numberOfNeighbors + 1);
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.searchTime = af - bef;
   
     if(selfNeighbors[0]!= dex){
-        std::cout << "WARNING selfdist " << selfDistances[0] << " " << selfDistances[1] << "\n";
-        std::cout << "dex " << dex << " " << selfNeighbors[0] << "\n";
-        exit(1);
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        "Nearest neighbor search in selfInterpolate did not find self\n");
     }
   
     //SelfNeighbors[0] will be the point itself (it is its own nearest neighbor)
@@ -1107,7 +1137,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
           covariance(j,i) = covariance(i,j);
         }
     }
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += bef - af;
 
     //use Eigen's ldlt solver in place of matrix inversion (for speed purposes)
@@ -1116,7 +1146,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
   
     for(i = 0;i < numberOfNeighbors;i++ )bb(i,0) = _function[neighbors[i]][0] - fbar;
     xx = ldlt.solve(bb);
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += af - bef;
   
     mu = fbar;
@@ -1125,7 +1155,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
         mu += covarianceTestPoint[i]*xx(i,0);
     }
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     variance(0) = (*_covariogram)(_kdTree.getData(dex),_kdTree.getData(dex)) + _lambda;
   
     for(i = 0;i < numberOfNeighbors;i++ )bb(i) = covarianceTestPoint[i];
@@ -1137,7 +1167,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
     } 
  
     variance(0) = variance(0)*_krigingParameter;
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.varianceTime += after - bef;
     _timer.totalTime += after - before;
   
@@ -1164,7 +1194,7 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
     Eigen::LDLT < Eigen::Matrix < T,Eigen::Dynamic,Eigen::Dynamic >   >  ldlt;
   
     _timer.interpolationCount++ ;
-    before = double(::time(NULL));
+    before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
 
     bb.resize(numberOfNeighbors,1);
     xx.resize(numberOfNeighbors,1);
@@ -1178,17 +1208,17 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
   
     //we don't use _useMaxMin because the data has already been normalized
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _kdTree.findNeighbors(selfNeighbors, selfDistances, _kdTree.getData(dex), 
                               numberOfNeighbors + 1);
   
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.searchTime += af - bef;
   
     if(selfNeighbors[0]!= dex){
-        std::cout << "WARNING selfdist " << selfDistances[0] << " " << selfDistances[1] << "\n";
-        std::cout << "dex " << dex << " " << selfNeighbors[0] << "\n";
-        exit(1);
+  
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        "Nearest neighbor search in selfInterpolate did not find self\n");
     }
   
     //SelfNeighbors[0] will be the point itself (it is its own nearest neighbor)
@@ -1214,7 +1244,7 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
             covariance(j,i) = covariance(i,j);
         }
     }
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += bef - af;  
 
   
@@ -1237,7 +1267,7 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
         }
     }//ii = 0 through _nFunctions
   
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += af - bef;
   
     variance[0] = (*_covariogram)(_kdTree.getData(dex),_kdTree.getData(dex)) + _lambda;
@@ -1254,7 +1284,7 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
 
     for(i = 1;i < _nFunctions;i++ )variance[i] = variance[0];
   
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.varianceTime += after - af;
     _timer.totalTime += after - before;
 }
@@ -1275,7 +1305,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
   
     ndarray::Array < T,1,1 >  v1; 
 
-    before = double(::time(NULL));
+    before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
   
     nQueries = queries.template getSize < 0 > ();
   
@@ -1296,7 +1326,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
             batchCovariance(j,i) = batchCovariance(i,j);
         }
     }
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += af - before;
   
     ldlt.compute(batchCovariance);  
@@ -1313,7 +1343,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
         batchbb(i,0) = _function[i][0] - fbar;
     }
     batchxx = ldlt.solve(batchbb);
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += bef - af;
   
   
@@ -1327,7 +1357,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
             mu(ii) += batchxx(i)*(*_covariogram)(v1,_kdTree.getData(i));
         }
     }
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += af - bef;
     
     for(ii = 0;ii < nQueries;ii++ ){
@@ -1351,7 +1381,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
         variance[ii] = variance[ii]*_krigingParameter;
       
     }
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.varianceTime += after - af;
     _timer.totalTime += after - before;
 }
@@ -1371,7 +1401,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
   
     ndarray::Array < T,1,1 >  v1; 
 
-    before = double(::time(NULL));
+    before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
   
     nQueries = queries.template getSize < 0 > ();
   
@@ -1391,12 +1421,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
         }
     }
   
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += af - before;
   
     ldlt.compute(batchCovariance);  
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += bef - af;
   
     for(ifn = 0;ifn < _nFunctions;ifn++ ){
@@ -1405,15 +1435,15 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
             fbar += _function[i][ifn];
         }
         fbar = fbar/T(_pts);
-        bef = double(::time(NULL));
+        bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
         for(i = 0;i < _pts;i++ ){
             batchbb(i,0) = _function[i][ifn] - fbar;
         }
         batchxx = ldlt.solve(batchbb);
-        af = double(::time(NULL));
+        af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
         _timer.eigenTime += af - bef;
       
-        bef = double(::time(NULL));
+        bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
         for(ii = 0;ii < nQueries;ii++ ){
             for(i = 0;i < _dimensions;i++ )v1[i] = queries(ii,i);
             if(_useMaxMin == 1){
@@ -1424,12 +1454,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
                 mu[ii][ifn] += batchxx(i)*(*_covariogram)(v1,_kdTree.getData(i));
             }
         }
-        af = double(::time(NULL));
+        af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
         _timer.iterationTime += af - bef;
 
     }//ifn = 0 to _nFunctions
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     for(ii = 0;ii < nQueries;ii++ ){
         for(i = 0;i < _dimensions;i++ )v1[i] = queries(ii,i);
         if(_useMaxMin == 1){
@@ -1452,7 +1482,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
         for(i = 1;i < _nFunctions;i++ )variance[ii][i] = variance[ii][0];
       
     }
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.varianceTime += after - bef;
     _timer.totalTime += after - before;
 }
@@ -1472,7 +1502,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
   
     ndarray::Array < T,1,1 >  v1;
 
-    before = double(::time(NULL));
+    before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
   
     nQueries = queries.template getSize < 0 > ();
   
@@ -1493,7 +1523,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
             batchCovariance(j,i) = batchCovariance(i,j);
         }
     }
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += af - before;
   
     ldlt.compute(batchCovariance);  
@@ -1508,7 +1538,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
         batchbb(i,0) = _function[i][0] - fbar;
     }
     batchxx = ldlt.solve(batchbb);
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += bef - af;
 
     for(ii = 0;ii < nQueries;ii++ ){
@@ -1522,7 +1552,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
             mu(ii) += batchxx(i)*(*_covariogram)(v1,_kdTree.getData(i));
         }
     }
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += after - bef;
     _timer.totalTime += after - before;
 
@@ -1543,7 +1573,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
   
     ndarray::Array < T,1,1 >  v1;
  
-    before = double(::time(NULL));
+    before = double(lsst::daf::base::DateTime::now().get()*24*60*60);
  
     nQueries = queries.template getSize < 0 > ();
   
@@ -1565,12 +1595,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
         }
     }
   
-    af = double(::time(NULL));
+    af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.iterationTime += af - before;
   
     ldlt.compute(batchCovariance);  
   
-    bef = double(::time(NULL));
+    bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.eigenTime += bef - af;
   
     for(ifn = 0;ifn < _nFunctions;ifn++ ){
@@ -1581,12 +1611,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
         fbar = fbar/T(_pts);
   
         //std::cout << "fbar " << fbar << "\n";
-        bef = double(::time(NULL));
+        bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
         for(i = 0;i < _pts;i++ ){
             batchbb(i,0) = _function[i][ifn] - fbar;
         }
         batchxx = ldlt.solve(batchbb);
-        af = double(::time(NULL));
+        af = double(lsst::daf::base::DateTime::now().get()*24*60*60);
         _timer.eigenTime += af - bef;
   
      
@@ -1601,12 +1631,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
                  mu[ii][ifn] += batchxx(i)*(*_covariogram)(v1,_kdTree.getData(i));
             }
         }
-        bef = double(::time(NULL));
+        bef = double(lsst::daf::base::DateTime::now().get()*24*60*60);
         _timer.iterationTime += bef - af;
       
     }//ifn = 0 through _nFunctions
   
-    after = double(::time(NULL));
+    after = double(lsst::daf::base::DateTime::now().get()*24*60*60);
     _timer.totalTime += after - before;
 
 }
@@ -1619,9 +1649,10 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
     int i,j;
   
     if(_nFunctions!= 1){
-        std::cout << "_nFunctions is " << _nFunctions << "\n";
-        std::cout << "you should call addPoint passing an ndarray for f\n";
-        return;
+        
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        "You are calling the wrong addPoint; you need a vector of functions\n");
+
     }
   
     ndarray::Array < T,1,1 >  v;
@@ -1657,7 +1688,7 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
 
 template  < typename T > 
 void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, 
-                                  ndarray::Array < T,1,1 >  const &f)
+                                      ndarray::Array < T,1,1 >  const &f)
 {
 
     int i,j;
@@ -1690,6 +1721,7 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin,
   
     _kdTree.addPoint(v);
     _pts = _kdTree.getPoints();
+    
     
 }
 
@@ -1832,13 +1864,8 @@ void NeuralNetCovariogram < T > ::explainHyperParameters() const
                Covariogram < T > ::_hyperParameters[1] << "\n";
 }*/
 
-template  < typename T > 
-void GaussianProcess < T > ::waste(){
-    std::runtime_error problem("Well... you called waste\n");
-    throw problem;
-}
-
 }}}
+
 
 #define gpn lsst::afw::math
 

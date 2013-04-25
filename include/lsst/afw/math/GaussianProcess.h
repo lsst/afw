@@ -41,10 +41,15 @@
 #include "ndarray/eigen.h"
 #include "boost/shared_ptr.hpp"
 #include "lsst/daf/base/Citizen.h"
+#include "lsst/daf/base/DateTime.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/pex/policy.h"
+#include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
+
 
 /**
   * @class GaussianProcessTimer
@@ -97,7 +102,6 @@ public:
     * @brief construct a Covariogram assigning default values to the hyper parameters
    */
    explicit Covariogram():lsst::daf::base::Citizen(typeid(this)){};
-
    
    
   /**
@@ -210,7 +214,6 @@ class KdTree : private boost::noncopyable{
 
 
  public:
-
     
   /**
     * @brief Build a KD Tree to store the data for GaussianProcess
@@ -301,10 +304,6 @@ class KdTree : private boost::noncopyable{
    */
     void getTreeNode(ndarray::Array<int,1,1> const &v,int dex) const;
     
-   /**
-     * @brief Make sure that the tree is properly constructed.  Returns 1 of it is.  Return zero if not.
-   */
-    int testTree() const;
      
  private:
     ndarray::Array<int,2,2> _tree;
@@ -359,6 +358,11 @@ class KdTree : private boost::noncopyable{
     void _lookForNeighbors(ndarray::Array<const T,1,1> const &v,
                            int consider,
                int from) const;
+    
+    /**
+     * @brief Make sure that the tree is properly constructed.  Returns 1 of it is.  Return zero if not.
+   */
+    int _testTree() const;
     
     /**
      * @brief A method to make sure that every data point in the tree is in the correct relation to its parents
@@ -435,7 +439,6 @@ template <typename T>
 class GaussianProcess : private boost::noncopyable{
 
 public:
-
     
     /**
       * @brief This is the constructor you call if you do not wish to normalize the positions of your data points
@@ -706,9 +709,6 @@ public:
     */
     GaussianProcessTimer& getTimes() const;
      
-    void waste();
-     
-     
  private:
     int _pts,_useMaxMin,_dimensions,_room,_roomStep,_nFunctions;
    
@@ -725,7 +725,5 @@ public:
 };
 
 }}}
-
-
 
 #endif //#ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H
