@@ -65,7 +65,30 @@ namespace detail {
     typedef std::map<std::string, int> MaskPlaneDict;
 }
 
-/// Represent a 2-dimensional array of bitmask pixels
+/**
+ * \brief Represent a 2-dimensional array of bitmask pixels
+ *
+ * Some mask planes are always defined (although you can add more with Mask::addMaskPlane):
+ *
+ <UL>
+ <LI> \c BAD This pixel is known to be bad (e.g. the amplifier is not working)
+
+ <LI> \c CR This pixel is contaminated by a cosmic ray
+
+ <LI> \c DETECTED This pixel lies within an object's Footprint
+
+ <LI> \c DETECTED_NEGATIVE This pixel lies within an object's Footprint, and the detection was looking for
+ pixels \em below a specified level
+
+ <LI> \c EDGE This pixel is too close to the edge to be processed properly
+
+ <LI> \c INTRP This pixel has been interpolated over \note should be called \c INTERPOLATED
+
+ <LI> \c SAT This pixel is saturated and has bloomed \note should be called \c SATURATED
+
+ <LI> \c SUSPECT This pixel is untrustworthy, and you may wish to discard any Source containing it
+ </UL>
+ */
 template<typename MaskPixelT=lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
 public:
