@@ -22,24 +22,16 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file GaussianProcess.h
- *
- * @ingroup afw
- *
- * @author Scott Daniel
- * Contact scott.f.daniel@gmail.com
- *
- * Created in February 2013
-*/
 
 #ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H
 #define LSST_AFW_MATH_GAUSSIAN_PROCESS_H
 
 #include <Eigen/Dense>
 #include <stdexcept>
+
 #include "ndarray/eigen.h"
 #include "boost/shared_ptr.hpp"
+
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/DateTime.h"
 #include "lsst/pex/exceptions.h"
@@ -50,30 +42,29 @@ namespace lsst {
 namespace afw {
 namespace math {
 
-
 /**
   * @class GaussianProcessTimer
   *
   * @brief This is a structure for keeping track of how long the interpolation methods spend on different parts of the interpolation
   *
-  * eigenTime keeps track of how much time is spent using Eigen's linear algebra packages
+  * _eigenTime keeps track of how much time is spent using Eigen's linear algebra packages
   *
-  * iterationTime keeps track of how much time is spent iterating over matrix indices
+  * _iterationTime keeps track of how much time is spent iterating over matrix indices
+  * (this is also a catch-all for time that does not obviously fit in the other categories)
   *
-  * searchTime keeps track of how much time is spent on nearest neighbor searches (when applicable)
+  * _searchTime keeps track of how much time is spent on nearest neighbor searches (when applicable)
   *
-  * varianceTime keeps track of how much time is spent calculating the variance of our interpolated function value
-  * (note: time spent using Eigen packages for this purpose is tallied here, not in eigenTime)
+  * _varianceTime keeps track of how much time is spent calculating the variance of our interpolated function value
+  * (note: time spent using Eigen packages for this purpose is tallied here, not in _eigenTime)
   *
-  * totalTime keeps track of how much time total is spent on interpolations
+  * _totalTime keeps track of how much time total is spent on interpolations
   *
-  * interpolationCount keeps track of how many points have been interpolated
+  * _interpolationCount keeps track of how many points have been interpolated
 */
-struct GaussianProcessTimer{
+class GaussianProcessTimer{
 
-    double eigenTime,iterationTime,searchTime,varianceTime,totalTime;
-    int interpolationCount;
- 
+public:
+
     GaussianProcessTimer();
     
     /**
@@ -81,6 +72,48 @@ struct GaussianProcessTimer{
      *
     */
     void reset();
+    
+    /**
+     * @brief Starts the timer for an individual call to an interpolation routine
+    */
+    void start();
+    
+    /** 
+     * @brief Adds time to _eigenTime
+    */
+    void addToEigen();
+    
+    /**
+     * @brief Adds time to _varianceTime
+    */
+    void addToVariance();
+   
+    /**
+     * @brief Adds time to _searchTime
+    */
+    void addToSearch();
+    
+    /**
+     * @brief Adds time to _iterationTime
+    */
+    void addToIteration();
+    
+    /**
+     * @brief Adds time to _totalTime and adds counts to _interpolationCount
+     *
+     * @param [in] i the number of counts to add to _interpolationCount
+    */
+    void addToTotal(int i);
+    
+    /**
+     * @brief Displays the current values of all times and _interpolationCount
+    */
+    void display();
+    
+private:
+    double _before,_beginning;
+    double _eigenTime,_iterationTime,_searchTime,_varianceTime,_totalTime;
+    int _interpolationCount;
 };
 
 
@@ -91,29 +124,32 @@ struct GaussianProcessTimer{
   *
   * Each instantiation of a Covariogram will store its own hyper parameters
   *
-  * @ingroup afw
 */
 template <typename T>
-class Covariogram : public lsst::daf::base::Citizen, private boost::noncopyable {
+class Covariogram : public lsst::daf::base::Citizen 
+                   #ifndef SWIG
+                    , private boost::noncopyable 
+                    #endif
+{
 public:
-   virtual ~Covariogram();
+    virtual ~Covariogram();
    
-   /**
-    * @brief construct a Covariogram assigning default values to the hyper parameters
-   */
-   explicit Covariogram():lsst::daf::base::Citizen(typeid(this)){};
+    /**
+     * @brief construct a Covariogram assigning default values to the hyper parameters
+    */
+    explicit Covariogram():lsst::daf::base::Citizen(typeid(this)){};
    
    
-  /**
-    * @brief Actually evaluate the covariogram function relating two points you want to interpolate from
-    *
-    * @param [in] p1 the first point
-    *
-    * @param [in] p2 the second point
-  */
-   virtual T operator() (ndarray::Array<const T,1,1> const &p1,
-                         ndarray::Array<const T,1,1> const &p2
-             ) const;
+    /**
+     * @brief Actually evaluate the covariogram function relating two points you want to interpolate from
+     *
+     * @param [in] p1 the first point
+     *
+     * @param [in] p2 the second point
+    */
+    virtual T operator() (ndarray::Array<const T,1,1> const &p1,
+                          ndarray::Array<const T,1,1> const &p2
+                          ) const;
 
 };
 
@@ -121,6 +157,8 @@ public:
  * @class SquaredExpCovariogram
  *
  * @brief a Covariogram that falls off as the negative exponent of the square of the distance between the points
+ *
+ * Contains one hyper parameter (_ellSquared) encoding the square of the characteristic length scale of the covariogram
 */
 template <typename T>
 class SquaredExpCovariogram : public Covariogram<T>{
@@ -131,13 +169,13 @@ public:
     explicit SquaredExpCovariogram();
   
     /**
-     * @brief set the _ellSquared hyper parameter (the square of the characteristic length scale)
+     * @brief set the _ellSquared hyper parameter (the square of the characteristic length scale of the covariogram)
     */
     void setEllSquared(double ellSquared);
   
     virtual T operator() (ndarray::Array<const T,1,1> const &,
                           ndarray::Array<const T,1,1> const &
-              ) const;
+                          ) const;
     
 private:
     double _ellSquared;  
@@ -148,6 +186,8 @@ private:
   * @class NeuralNetCovariogram
   *
   * @brief a Covariogram that recreates a neural network with one hidden layer and infinite units in that layer
+  *
+  * Contains two hyper parameters (_sigma0 and _sigma1) that characterize the expected variance of the function being interpolated
   *
   * see Rasmussen and Williams (2006) http://www.gaussianprocess.org/gpml/ 
   * equation 4.29
@@ -174,8 +214,8 @@ public:
                           ndarray::Array<const T,1,1> const &
                           ) const;
 
-    private:
-        double _sigma0,_sigma1;
+private:
+    double _sigma0,_sigma1;
         
 
 };
@@ -185,53 +225,38 @@ public:
  *
  * @brief The data for GaussianProcess is stored in a KD tree to facilitate nearest-neighbor searches
  *
- * @ingroup afw
- *
- * Important member variables are
- *   
- * _tree is a list of integers defining the structure of the tree.
- * _tree[i][0] is the dimension on which the ith point divides its daughters
- * _tree[i][1] is the index of the left hand daughter of the ith point (_data[_tree[i][1]][_tree[i][0]] < _data[i][_tree[i][0]])
- * _tree[i][2] is the index of the right hand daughter of the ith point (_data[_tree[i][2]][_tree[i][0]] >= _data[i][_tree[i][0]])
- * _tree[i][3] is the index of the parent of the ith point
- *
- *  _pts the number of data points stored in this tree
- *
- * _dimensions is the dimensionality of the parameter space on which the tree is defined
- *
- * _room is the number of points allotted in _tree and data (room will often be larger than _pts so that
- * the ndarrays do not have to be expanded every time a new point is added to the tree)
- *
- * data stores the data points in the tree.  data[i][j] is the jth element of the ith data point
- *
  * Note: I have removed the ability to arbitrarily specify a distance function.  The KD Tree nearest neighbor
  * search algorithm only makes sense in the case of Euclidean distances, so I have forced KdTree to use
  * Euclidean distances.
 */
 
 template <typename T>
-class KdTree : private boost::noncopyable{
-
-
- public:
+class KdTree  
+        #ifndef SWIG
+        : private boost::noncopyable
+        #endif
+{
+public:
     
-  /**
-    * @brief Build a KD Tree to store the data for GaussianProcess
-    *
-    * @param [in] dt -- an array, the rows of which are the data points (dt[i][j] is the jth component of the ith data point)
-   */
+    /**
+     * @brief Build a KD Tree to store the data for GaussianProcess
+     *
+     * @param [in] dt an array, the rows of which are the data points (dt[i][j] is the jth component of the ith data point)
+     *
+     * @throw pex_exceptions RuntimeError if the tree is not properly constructed
+    */
     void Initialize(ndarray::Array<T,2,2> const &dt);
     
     /**
      * @brief Find the nearest neighbors of a point
      *
-     * @param [out] neighdex -- this is where the indices of the nearest neighbor points will be stored
+     * @param [out] neighdex this is where the indices of the nearest neighbor points will be stored
      *
-     * @param [out] dd -- this is where the distances to the nearest neighbors will be stored
+     * @param [out] dd this is where the distances to the nearest neighbors will be stored
      *
-     * @param [in] v -- the point whose neighbors you want to find
+     * @param [in] v the point whose neighbors you want to find
      *
-     * @param [in] n_nn -- the number of nearest neighbors you want to find
+     * @param [in] n_nn the number of nearest neighbors you want to find
      *
      * neighbors will be returned in ascending order of distance
      *
@@ -279,14 +304,18 @@ class KdTree : private boost::noncopyable{
     /**
      * @brief Add a point to the tree.  Allot more space in _tree and data if needed.
      *
-     * @param [in] v -- the point you are adding to the tree
-   */
+     * @param [in] v the point you are adding to the tree
+     *
+     * @throw pex_exceptions RuntimeError if the branch ending in the new point is not properly constructed
+    */
     void addPoint(ndarray::Array<const T,1,1> const &v);
     
     /**
      * @brief Remove a point from the tree.  Reorganize what remains so that the tree remains self-consistent
      *
-     * @param [in] dex -- the index of the point you want to remove from the tree
+     * @param [in] dex the index of the point you want to remove from the tree
+     *
+     * @throw pex_exceptions RuntimeError if the entire tree is not poperly constructed after the point has been removed
     */
     void removePoint(int dex);
     
@@ -298,22 +327,34 @@ class KdTree : private boost::noncopyable{
    /**
      * @brief Return the _tree information for a given data point
      *
-     * @param [out] v -- the array in which to store the entry from _tree
+     * @param [out] v the array in which to store the entry from _tree
      *
-     * @param [in] dex -- the index of the node whose information you are requesting
+     * @param [in] dex the index of the node whose information you are requesting
    */
     void getTreeNode(ndarray::Array<int,1,1> const &v,int dex) const;
     
      
- private:
+private:
     ndarray::Array<int,2,2> _tree;
     ndarray::Array<int,1,1> _inn;
     ndarray::Array<T,2,2> _data;
     
-    enum{DIMENSION,LT,GEQ,PARENT}; //these are indices for _tree
+    enum{DIMENSION,LT,GEQ,PARENT}; 
+    
+    //_tree stores the relationships between data points
+    //_tree[i][DIMENSION] is the dimension on which the ith node segregates its daughters
+    //_tree[i][LT] is the branch of the tree down which the daughters' DIMENSIONth component is less than the parent's
+    //_tree[i][GEQ] is the branch of the tree down which the daughters' DIMENSIONth component is greather than or equal to the parent's
+    //_tree[i][PARENT] is the parent node of the ith node
+    
+    //_data actually stores the data points
+    
     
     int _pts,_dimensions,_room,_roomStep,_masterParent;
     mutable int _neighborsFound,_neighborsWanted;
+    
+    //_room denotes the capacity of _data and _tree.  It will usually be larger than _pts so that we do not have to reallocate
+    //_tree and _data every time we add a new point to the tree
     
     mutable ndarray::Array<double,1,1> _neighborDistances;
     mutable ndarray::Array<int,1,1> _neighborCandidates;
@@ -321,34 +362,34 @@ class KdTree : private boost::noncopyable{
     /**
      * @brief Find the daughter point of a node in the tree and segregate the points around it
      * 
-     * @param [in] use -- the indices of the data points being considered as possible daughters
+     * @param [in] use the indices of the data points being considered as possible daughters
      *
-     * @param [in] ct -- the number of possible daughters
+     * @param [in] ct the number of possible daughters
      *
-     * @param [in] parent -- the index of the parent whose daughter we are chosing
+     * @param [in] parent the index of the parent whose daughter we are chosing
      *
-     * @param [in] dir -- which side of the parent are we on?  dir==1 means that we are on the left side; dir==2 means the right side.
+     * @param [in] dir which side of the parent are we on?  dir==1 means that we are on the left side; dir==2 means the right side.
     */
     void _organize(ndarray::Array<int,1,1> const &use,
                    int ct,
-           int parent,
-           int dir);
+                   int parent,
+                   int dir);
        
     /**
       * @brief Find the point already in the tree that would be the parent of a point not in the tree
       *
-      * @param [in] v -- the points whose prospective parent you want to find
+      * @param [in] v the points whose prospective parent you want to find
     */
     int _findNode(ndarray::Array<const T,1,1> const &v) const;
     
    /**
     * @brief This method actually looks for the neighbors, determining whether or not to descend branches of the tree
     *
-    * @param [in] v -- the point whose neighbors you are looking for
+    * @param [in] v the point whose neighbors you are looking for
     *
-    * @param [in] consider -- the index of the data point you are considering as a possible nearest neighbor
+    * @param [in] consider the index of the data point you are considering as a possible nearest neighbor
     *
-    * @param [in] from -- the index of the point you last considered as a nearest neighbor 
+    * @param [in] from the index of the point you last considered as a nearest neighbor 
     *  (so the search does not backtrack along the tree)
     *
     * The class KdTree keeps track of how many neighbors you want and how many neighbors you have found and what their
@@ -357,46 +398,48 @@ class KdTree : private boost::noncopyable{
    */
     void _lookForNeighbors(ndarray::Array<const T,1,1> const &v,
                            int consider,
-               int from) const;
+                           int from) const;
     
     /**
      * @brief Make sure that the tree is properly constructed.  Returns 1 of it is.  Return zero if not.
-   */
+    */
     int _testTree() const;
     
     /**
-     * @brief A method to make sure that every data point in the tree is in the correct relation to its parents
+     * @brief A method to make sure that every data point in the tree is in the correct position relative to its parents
      *
-     * @param [in] target -- is the index of the node you are looking at
+     * @param [in] target is the index of the node you are looking at
      *
-     * @param [in] dir -- is the direction (1,2) of the branch you ascended from root
+     * @param [in] dir is the direction (1,2) of the branch you ascended from root
      *
-     * @param [in] root -- is the node you started walking up from
+     * @param [in] root is the node you started walking up from
+     *
+     * This method returns the value of _masterParent if the branch is correctly contructed.  It returns zero otherwise.
     */
     int _walkUpTree(int target,
                    int dir,
-           int root) const;
+                   int root) const;
     
     /**
-      * @brief A method which counts the number of nodes descended from a given node (used by remove(int))
+      * @brief A method which counts the number of nodes descended from a given node (used by removePoint(int))
       *
-      * @param [in] where -- the node you are currently on
+      * @param [in] where the node you are currently on
       *
-      * @param [in,out] *ct -- keeps track of how many nodes you have encountered as you descend the tree
+      * @param [in,out] *ct keeps track of how many nodes you have encountered as you descend the tree
     */
     void _count(int where,int *ct) const;
     
     /**
      * @brief Descend the tree from a node which has been removed, reassigning severed nodes as you go
      *
-     * @param root -- the index of the node where you are currently
+     * @param root the index of the node where you are currently
     */
     void _descend(int root);
     
     /**
-      * @brief Reassign nodes to the tree that were severed by a call to remove()
+      * @brief Reassign nodes to the tree that were severed by a call to removePoint(int)
       *
-      * @param target -- the node you are reassigning
+      * @param target the node you are reassigning
     */
     void _reassign(int target);
     
@@ -404,10 +447,7 @@ class KdTree : private boost::noncopyable{
      * @brief calculate the Euclidean distance between the points p1 and p2
     */
     double _distance(ndarray::Array<const T,1,1> const &p1,
-                     ndarray::Array<const T,1,1> const &p2) const;
-    
- 
-    
+                     ndarray::Array<const T,1,1> const &p2) const;    
 };
 
 
@@ -415,8 +455,6 @@ class KdTree : private boost::noncopyable{
  * @class GaussianProcess
  *
  * @brief Stores values of a function sampled on an image and allows you to interpolate the function to unsampled points
- *
- * @ingroup afw
  *
  * The data will be stored in a KD Tree for easy nearest neighbor searching when interpolating.
  *
@@ -426,8 +464,7 @@ class KdTree : private boost::noncopyable{
  * to each other, so the variances returned will be identical for all functions evaluated at the same point in parameter
  * space.
  *
- * _data[i][j] will be the jth component of the ith data point.  _function[i] is the value of the
- * function at the ith data point.
+ * _data[i][j] will be the jth component of the ith data point.
  *
  * _max and _min contain the maximum and minimum values of each dimension in parameter space
  * (if applicable) so that data points can be normalized by _max-_min to keep distances between
@@ -436,109 +473,114 @@ class KdTree : private boost::noncopyable{
 */
 
 template <typename T>
-class GaussianProcess : private boost::noncopyable{
+class GaussianProcess  
+                  #ifndef SWIG
+                  : private boost::noncopyable
+                  #endif
+{
 
 public:
     
     /**
-      * @brief This is the constructor you call if you do not wish to normalize the positions of your data points
+      * @brief This is the constructor you call if you do not wish to normalize the positions of your data points and you have only one function
       *
-      * @param [in] datain -- an ndarray containing the data points; the ith row of datain is the ith data point
+      * @param [in] dataIn an ndarray containing the data points; the ith row of datain is the ith data point
       *
-      * @param [in] ff -- a one-dimensional ndarray containing the values of the scalar function associated with each data point.  
+      * @param [in] ff a one-dimensional ndarray containing the values of the scalar function associated with each data point.  
       * This is the function you are interpolating
       *
-      * @param [in] covarin -- is the input covariogram
+      * @param [in] covarIn is the input covariogram
     */
-    GaussianProcess(ndarray::Array<T,2,2> const &datain,
-            ndarray::Array<T,1,1> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin);
+    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
+                    ndarray::Array<T,1,1> const &ff,
+                    boost::shared_ptr< Covariogram<T> > const &covarIn);
      
     /**
      * @brief This is the constructor you call if you want the positions of your data points normalized by the span of each dimension
+     * and you have only one function
      *
-     * @param [in] datain -- an ndarray containing the data points; the ith row of datain is the ith data point
+     * @param [in] dataIn an ndarray containing the data points; the ith row of datain is the ith data point
      *
-     * @param [in] mn -- a one-dimensional ndarray containing the minimum values of each dimension (for normalizing the positions of data points)
+     * @param [in] mn a one-dimensional ndarray containing the minimum values of each dimension (for normalizing the positions of data points)
      *
-     * @param [in] mx -- a one-dimensional ndarray containing the maximum values of each dimension (for normalizing the positions of data points)
+     * @param [in] mx a one-dimensional ndarray containing the maximum values of each dimension (for normalizing the positions of data points)
      *
-     * @param [in] ff -- a one-dimensional ndarray containing the values of the scalar function associated with each data point.  
+     * @param [in] ff a one-dimensional ndarray containing the values of the scalar function associated with each data point.  
      * This is the function you are interpolating
      *
-     * @param [in] covarin -- is the input covariogram
+     * @param [in] covarIn is the input covariogram
      *
      *Note: the member variable _useMaxMin will allow the code to remember which constructor you invoked
     */
-    GaussianProcess(ndarray::Array<T,2,2> const &datain,
+    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
                     ndarray::Array<T,1,1> const &mn,
                     ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,1,1> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin);
+                    boost::shared_ptr< Covariogram<T> > const &covarIn);
     /**
      * @brief this is the constructor to use in the case of a vector of input functions and an unbounded/unnormalized parameter space
      *
-     * @param [in] datain -- contains the data points, as in other constructors
+     * @param [in] dataIn contains the data points, as in other constructors
      *
-     * @param [in] ff -- contains the functions.  Each row of ff corresponds to a datapoint. 
+     * @param [in] ff contains the functions.  Each row of ff corresponds to a datapoint. 
      *  Each column corresponds to a function (ff[i][j] is the jth function associated with
      *  the ith data point)
      *
-     * @param [in] covarin -- is the input covariogram
+     * @param [in] covarIn is the input covariogram
     */                
-    GaussianProcess(ndarray::Array<T,2,2> const &datain,
-            ndarray::Array<T,2,2> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin);
+    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
+                    ndarray::Array<T,2,2> const &ff,
+                    boost::shared_ptr< Covariogram<T> > const &covarIn);
     /**
      * @brief this is the constructor to use in the case of a vector of input functions using minima and maxima in parameter space
      *
-     * @param [in] datain -- contains the data points, as in other constructors
+     * @param [in] dataIn contains the data points, as in other constructors
      *
-     * @param [in] mn -- contains the minimum allowed values of the parameters in parameter space
+     * @param [in] mn contains the minimum allowed values of the parameters in parameter space
      *
-     * @param [in] mx -- contains the maximum allowed values of the parameters in parameter space
+     * @param [in] mx contains the maximum allowed values of the parameters in parameter space
      *
-     * @param [in] ff -- contains the functions.  Each row of ff corresponds to a datapoint. 
+     * @param [in] ff contains the functions.  Each row of ff corresponds to a datapoint. 
      *  Each column corresponds to a function (ff[i][j] is the jth function associated with
      *  the ith data point)
      *
-     * @param [in] covarin -- is the input covariogram
+     * @param [in] covarIn is the input covariogram
     */                    
-    GaussianProcess(ndarray::Array<T,2,2> const &datain,
+    GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
                     ndarray::Array<T,1,1> const &mn,
                     ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,2,2> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarin);
+                    boost::shared_ptr< Covariogram<T> > const &covarIn);
      
     /**
-     @brief Interpolate the function value at one point using a specified number of nearest neighbors
+     * @brief Interpolate the function value at one point using a specified number of nearest neighbors
      *
      * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussian process will be stored in the zeroth element
      *
-     * @param [in] vin -- a one-dimensional ndarray representing the point at which you want to interpolate the function
+     * @param [in] vin a one-dimensional ndarray representing the point at which you want to interpolate the function
      *
-     * @param [in] numberOfNeighbors -- the number of nearest neighbors to be used in the interpolation
+     * @param [in] numberOfNeighbors the number of nearest neighbors to be used in the interpolation
      *
      * the interpolated value of the function will be returned at the end of this method
      *
-     *Note: if you used a normalized parameter space, you should not normalize vin before inputting.  The code will remember
+     * Note: if you used a normalized parameter space, you should not normalize vin before inputting.  The code will remember
      * that you want a normalized parameter space, and will apply the normalization when you call interpolate
     */
     T interpolate(ndarray::Array<T,1,1> variance,
                   ndarray::Array<T,1,1> const &vin,
                   int numberOfNeighbors) const;
     /**
-     @brief This is the version of GaussianProcess::interpolate for a vector of functions.
+     * @brief This is the version of GaussianProcess::interpolate for a vector of functions.
      *
-     * @param [out] mu -- will store the vector of interpolated function values
+     * @param [out] mu will store the vector of interpolated function values
      *
-     * @param [out] variance -- will store the vector of interpolated variances on mu
+     * @param [out] variance will store the vector of interpolated variances on mu
      *
-     * @param [in] vin -- the point at which you wish to interpolate the functions
+     * @param [in] vin the point at which you wish to interpolate the functions
      *
-     * @param [in] numberOfNeighbors -- is the number of nearest neighbor points to use in the interpolation
+     * @param [in] numberOfNeighbors is the number of nearest neighbor points to use in the interpolation
      *
-     * note: Because the variance currently only depends on the covariance function and the covariance
+     * Note: Because the variance currently only depends on the covariance function and the covariance
      * function currently does not include any terms relating different elements of mu to each other,
      * all of the elements of variance will be identical
     */
@@ -550,11 +592,13 @@ public:
     /**
      * @brief This method will interpolate the function on a data point for purposes of optimizing hyper parameters
      *
-     * @param [out] variance -- a one-dimensional ndarray.  The value of the variance predicted by the Gaussian process will be stored in the zeroth element
+     * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussian process will be stored in the zeroth element
      *
-     * @param [in] dex -- the index of the point you wish to self interpolate
+     * @param [in] dex the index of the point you wish to self interpolate
      *
-     * @param [in] numberOfNeighbors -- the number of nearest neighbors to be used in the interpolation
+     * @param [in] numberOfNeighbors the number of nearest neighbors to be used in the interpolation
+     *
+     * @throw pex_exceptions RuntimeError if the nearest neighbor search does not find the data point itself as the nearest neighbor
      *
      * The interpolated value of the function will be returned at the end of this method
      *
@@ -568,13 +612,15 @@ public:
     /**
      * @brief The version of selfInterpolate called for a vector of functions
      *
-     * @param [out] mu -- this is where the interpolated function values will be stored
+     * @param [out] mu this is where the interpolated function values will be stored
      *
-     * @param [out] variance -- the variance on mu will be stored here
+     * @param [out] variance the variance on mu will be stored here
      *
-     * @param [in] dex -- the index of the point you wish to interpolate
+     * @param [in] dex the index of the point you wish to interpolate
      *
-     * @param [in] numberOfNeighbors -- the number of nearest neighbors to use in the interpolation
+     * @param [in] numberOfNeighbors the number of nearest neighbors to use in the interpolation
+     *
+     * @throw pex_exceptions RuntimeError if the nearest neighbor search does not find the data point itself as the nearest neighbor
     */
     void selfInterpolate(ndarray::Array<T,1,1> mu,
                          ndarray::Array<T,1,1> variance,
@@ -584,20 +630,18 @@ public:
     /**
      * @brief Interpolate a list of query points using all of the input data (rather than nearest neighbors)
      *
+     * @param [out] mu a 1-dimensional ndarray where the interpolated function values will be stored
      *
-     * @param [out] mu -- a 1-dimensional ndarray where the interpolated function values will be stored
+     * @param [out] variance a 1-dimensional ndarray where the corresponding variances in the function value will be stored
      *
-     * @param [out] variance -- a 1-dimensional ndarray where the corresponding variances in the function value will be stored
-     *
-     * @param [in] queries -- a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
+     * @param [in] queries a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
      *
      * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
      * Be wary of using it in the case where _pts is very large.
      *
      * This version of the method will also return variances for all of the query points.  That is a very time consuming
      * calculation relative to just returning estimates for the function.  Consider calling the version of this method
-     * that does not calculate variances (below).  The difference in speed is a factor of two in the case of
-     * 189 data points and 1 million queries.
+     * that does not calculate variances (below).
      *
     */
     void batchInterpolate(ndarray::Array<T,1,1> mu,
@@ -607,9 +651,9 @@ public:
     /**
      * @brief Interpolate a list of points using all of the data. Do not return variances for the interpolation.
      *
-     * @param [out] mu -- a 1-dimensional ndarray where the interpolated function values will be stored
+     * @param [out] mu a 1-dimensional ndarray where the interpolated function values will be stored
      *
-     * @param [in] queries -- a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
+     * @param [in] queries a 2-dimensional ndarray containing the points to be interpolated.  queries[i][j] is the jth component of the ith point
      *
      * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
      * Be wary of using it in the case where _pts is very large.
@@ -638,9 +682,14 @@ public:
     /**
      * @brief Add a point to the pool of data used by GaussianProcess for interpolation
      *
-     * @param [in] vin -- a one-dimensional ndarray storing the point in parameter space that you are adding
+     * @param [in] vin a one-dimensional ndarray storing the point in parameter space that you are adding
      *
-     * @param [in]  f -- the value of the function at that point
+     * @param [in]  f the value of the function at that point
+     *
+     * @throw pex_exceptions RuntimeError if you call this when you should have called the version taking a vector of functions (below)
+     *
+     * @throw pex_exceptions RuntimeError if the tree does not end up properly constructed (the exception is actually thrown by
+     * KdTree<T>::addPoint() )
      *
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree, which will slow down nearest neighbor
      * searches
@@ -650,6 +699,9 @@ public:
     /**
      * @brief This is the version of addPoint that is called for a vector of functions
      *
+     * @throw pex_exceptions RuntimeError if the tree does not end up properly constructed (the exception is actually thrown by
+     * KdTree<T>::addPoint() )
+     *
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree, which will slow down nearest neighbor
      * searches
     */
@@ -658,7 +710,10 @@ public:
     /**
      * @brief This will remove a point from the data set
      *
-     * @param [in] dex -- the index of the point you want to remove from your data set
+     * @param [in] dex the index of the point you want to remove from your data set
+     *
+     * @throw pex_exceptions RuntimeError if the tree does not end up properly constructed (the exception is actually thrown by
+     * KdTree<T>::removePoint() )
      *
      * Note: excessive use of addPoint and removePoint can result in an unbalanced KdTree, which will slow down nearest neighbor
      * searches
@@ -668,7 +723,7 @@ public:
     /**
      * @brief Assign a value to the Kriging paramter
      *
-     * @param [in] kk -- the value assigned to the Kriging parameters
+     * @param [in] kk the value assigned to the Kriging parameters
      *
     */
     void setKrigingParameter(T kk);
@@ -676,7 +731,7 @@ public:
     /**
      * @brief Assign a different covariogram to this GaussianProcess
      *
-     * @param [in] covar -- the Covariogram object that you wish to assign
+     * @param [in] covar the Covariogram object that you wish to assign
      *
     */
     void setCovariogram(boost::shared_ptr< Covariogram<T> > const &covar);
@@ -684,7 +739,7 @@ public:
     /**
      * @brief set the value of the hyperparameter _lambda
      *
-     * @param [in] lambda -- the value you want assigned to _lambda
+     * @param [in] lambda the value you want assigned to _lambda
      *
      * _lambda is a parameter meant to represent the characteristic variance
      * of the function you are interpolating.  Currently, it is a scalar such that
@@ -705,7 +760,7 @@ public:
      *
      * ticktock=gg.getTimes()
      *
-     * print ticktock.eigenTime
+     * ticktock.display()
     */
     GaussianProcessTimer& getTimes() const;
      
@@ -725,5 +780,7 @@ public:
 };
 
 }}}
+
+
 
 #endif //#ifndef LSST_AFW_MATH_GAUSSIAN_PROCESS_H
