@@ -128,6 +128,7 @@ setMaskPlaneColor({
     "SATURATED" : GREEN,
     "DETECTED" : BLUE,
     "DETECTED_NEGATIVE" : CYAN,
+    "SUSPECT" : YELLOW,
     # deprecated names
     "INTRP" : GREEN,
     "SAT" : GREEN,

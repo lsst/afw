@@ -367,6 +367,9 @@ detail::MaskDict::getMaskPlane(const std::string& name) const
 namespace {
     /*
      * Definition of the default mask bits
+     *
+     * N.b. this function is in an anonymous namespace, and is invisible to doxygen.  ALL mask
+     * planes defined here should be documented with the Mask class in Mask.h
      */
     void
     setInitMaskBits(PTR(detail::MaskDict) dict)
@@ -379,6 +382,7 @@ namespace {
         dict->add("EDGE", ++i);          // 
         dict->add("DETECTED", ++i);      // 
         dict->add("DETECTED_NEGATIVE", ++i);
+        dict->add("SUSPECT", ++i);
     }
 }
 
