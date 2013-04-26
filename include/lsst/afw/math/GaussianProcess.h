@@ -641,7 +641,8 @@ public:
      *
      * This version of the method will also return variances for all of the query points.  That is a very time consuming
      * calculation relative to just returning estimates for the function.  Consider calling the version of this method
-     * that does not calculate variances (below).
+     * that does not calculate variances (below).  The difference in time spent is an order of magnitude for 189 data points
+     * and 1,000,000 interpolations.
      *
     */
     void batchInterpolate(ndarray::Array<T,1,1> mu,
