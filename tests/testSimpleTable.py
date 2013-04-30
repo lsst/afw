@@ -404,6 +404,11 @@ class SimpleTableTestCase(unittest.TestCase):
         item = schema.find("i")
         self.assertEqual(k, item.key)
 
+    def testTicket2850(self):
+        schema = lsst.afw.table.Schema()
+        table = lsst.afw.table.BaseTable.make(schema)
+        self.assertEqual(table.getBufferSize(), 0)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
