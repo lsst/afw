@@ -69,6 +69,7 @@ Python interface to lsst::afw::math classes
 
 %lsst_exceptions();
 
+
 %include "function.i"
 %include "kernel.i"
 %include "minimize.i"
@@ -79,9 +80,13 @@ Python interface to lsst::afw::math classes
 %include "spatialCell.i"
 %include "random.i"
 %include "stack.i"
+%include "GaussianProcess.i"
 %include "objectVectors.i" // must come last
 
 %include "LeastSquares.i"
+
+
+
 
 %inline %{
     struct InitGsl {
