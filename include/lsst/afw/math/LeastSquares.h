@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010, 2011 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -33,7 +33,7 @@ namespace lsst { namespace afw { namespace math {
 /**
  *  @brief Solver for linear least-squares problems.
  *
- *  Linear least-squares problems are defined as finding the vector @f$x@f$ that minimizes 
+ *  Linear least-squares problems are defined as finding the vector @f$x@f$ that minimizes
  *  @f$\left|A x - b\right|_2@f$, with the number of rows of @f$A@f$ generally
  *  greater than the number of columns.  We call @f$A@f$ the design matrix, @f$b@f$
  *  the data vector, and @f$x@f$ the solution vector.  When the rank of @f$A@f$ is
@@ -153,7 +153,6 @@ public:
         _getDesignMatrix() = design;
         _factor(false);
     }
-    
 
     /// @brief Initialize from the terms in the normal equations, given as ndarrays.
     template <typename T1, typename T2, int C1, int C2>
@@ -204,7 +203,7 @@ public:
         else
             _getFisherMatrix() = fisher.transpose();
         _getRhsVector() = rhs;
-        _factor(true);        
+        _factor(true);
     }
 
     /**
@@ -222,7 +221,7 @@ public:
      *  reflecting the fact that using the normal equations squares the condition number
      *  of the problem.
      *
-     *  The NORMAL_CHOLESKY method does not use the threshold and assumes the problem is 
+     *  The NORMAL_CHOLESKY method does not use the threshold and assumes the problem is
      *  full-rank.
      */
     void setThreshold(double threshold);
@@ -293,7 +292,7 @@ public:
      *  NORMAL_EIGENSYSTEM or DIRECT_SVD.
      *
      *  For the NORMAL_CHOLESKY method, this is @f$D@f$ in the pivoted Cholesky factorization
-     *  @f$P L D L^T P^T@f$ of the Fisher matrix.  This does not provide a reliable way to 
+     *  @f$P L D L^T P^T@f$ of the Fisher matrix.  This does not provide a reliable way to
      *  test the stability of the problem, but it does provide a way to compute the determinant
      *  of the Fisher matrix.  It is only available when the factorization is NORMAL_CHOLESKY.
      */
@@ -315,14 +314,14 @@ public:
 
     // Need to define dtor in source file so it can see Impl declaration.
     ~LeastSquares();
-    
+
 private:
 
-    // We want a column-major design matrix so the self-adjoint product is cache-friendly, hence '-2'...
-    // so we always copy a (possibly row-major) design matrix into a col-major one.  This is an
-    // unnecessarily and cache-unfriendly operation when solver is DIRECT_SVD, but right now it doesn't
-    // seem to be worth special-casing the design for that case.  In other cases it's a cache-unfriendly
-    // op that avoids an even worse one, and it can always be avoided by using a column-major design matrix.
+    // We want a column-major design matrix so the self-adjoint product is cache-friendly, so we always
+    // copy a (possibly row-major) design matrix into a col-major one.  This is an unnecessarily and
+    // cache-unfriendly operation when solver is DIRECT_SVD, but right now it doesn't seem to be worth
+    // special-casing the design for that case.  In other cases it's a cache-unfriendly op that avoids
+    // an even worse one, and it can always be avoided by using a column-major design matrix.
     Eigen::MatrixXd & _getDesignMatrix();
     Eigen::VectorXd & _getDataVector();
 
