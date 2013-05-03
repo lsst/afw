@@ -72,6 +72,7 @@ public:
 
 protected:
     virtual std::string getPersistenceName() const;
+    virtual std::string getPythonModule() const;
     virtual void write(OutputArchiveHandle & handle) const;
 };
 
