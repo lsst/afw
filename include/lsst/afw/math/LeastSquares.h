@@ -312,6 +312,14 @@ public:
     /// @brief Retun the type of factorization used by the solver.
     Factorization getFactorization() const;
 
+    /**
+     *  @brief Construct a least-squares object for the given factorization and dimensionality.
+     *
+     *  One of the set* member functions must be called before any other operations can be
+     *  performed on a LeastSquares object initialized this way.
+     */
+    LeastSquares(Factorization factorization, int dimension);
+
     // Need to define dtor in source file so it can see Impl declaration.
     ~LeastSquares();
 
@@ -335,8 +343,6 @@ private:
     // vectors must already be set before this is called.  The solution and other quantities
     // will not be computed until they are first requested.
     void _factor(bool haveNormalEquations);
-
-    LeastSquares(Factorization factorization, int dimension);
 
     PTR(Impl) _impl;
 };
