@@ -535,6 +535,17 @@ class ExposureTestCase(unittest.TestCase):
         self.assert_(frazzle is True)
         os.remove(filename)
 
+    def testArchiveKeys(self):
+        filename = "testArchiveKeys.fits"
+        exposure1 = afwImage.ExposureF(100, 100, self.wcs)
+        exposure1.setPsf(self.psf)
+        exposure1.writeFits(filename)
+        exposure2 = afwImage.ExposureF(filename)
+        self.assertFalse(exposure2.getMetadata().exists("AR_ID"))
+        self.assertFalse(exposure2.getMetadata().exists("PSF_ID"))
+        self.assertFalse(exposure2.getMetadata().exists("WCS_ID"))
+        os.remove(filename)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
