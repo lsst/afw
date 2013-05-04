@@ -43,6 +43,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
+import lsst.afw.table as afwTable
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -545,6 +546,21 @@ class ExposureTestCase(unittest.TestCase):
         self.assertFalse(exposure2.getMetadata().exists("PSF_ID"))
         self.assertFalse(exposure2.getMetadata().exists("WCS_ID"))
         os.remove(filename)
+
+    def testTicket2861(self):
+        filename = "testTicket2861.fits"
+        exposure1 = afwImage.ExposureF(100, 100, self.wcs)
+        exposure1.setPsf(self.psf)
+        schema = afwTable.ExposureTable.makeMinimalSchema()
+        coaddInputs = afwImage.CoaddInputs(schema, schema)
+        exposure1.getInfo().setCoaddInputs(coaddInputs)
+        exposure2 = afwImage.ExposureF(exposure1, True)
+        self.assertIsNotNone(exposure2.getInfo().getCoaddInputs())
+        exposure2.writeFits(filename)
+        exposure3 = afwImage.ExposureF(filename)
+        self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
+        os.remove(filename)
+        
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
