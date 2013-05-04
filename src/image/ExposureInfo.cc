@@ -74,7 +74,8 @@ ExposureInfo::ExposureInfo(
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
     _filter(filter),
-    _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList()))
+    _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList())),
+    _coaddInputs(coaddInputs)
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
@@ -83,7 +84,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
-    _metadata(other._metadata)
+    _metadata(other._metadata),
+    _coaddInputs(other._coaddInputs)
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
@@ -92,7 +94,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
-    _metadata(other._metadata)
+    _metadata(other._metadata),
+    _coaddInputs(other._coaddInputs)
 {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
@@ -105,6 +108,7 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
         _detector = other._detector;
         _filter = other._filter;
         _metadata = other._metadata;
+        _coaddInputs = other._coaddInputs;
     }
     return *this;
 }
