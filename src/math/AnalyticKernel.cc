@@ -21,16 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * @file
- *
- * @brief Definitions of AnalyticKernel member functions.
- *
- * @author Russell Owen
- *
- * @ingroup afw
- */
 #include <sstream>
 
 #include "lsst/pex/exceptions.h"
@@ -38,48 +28,31 @@
 #include "lsst/afw/math/KernelPersistenceHelper.h"
 
 namespace pexExcept = lsst::pex::exceptions;
+namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
 
-/**
- * @brief Construct an empty spatially invariant AnalyticKernel of size 0x0
- */
 afwMath::AnalyticKernel::AnalyticKernel()
 :
     Kernel(),
     _kernelFunctionPtr()
 {}
 
-/**
- * @brief Construct a spatially invariant AnalyticKernel,
- * or a spatially varying AnalyticKernel where the spatial model
- * is described by one function (that is cloned to give one per analytic function parameter).
- */
 afwMath::AnalyticKernel::AnalyticKernel(
-    int width,  ///< width of kernel
-    int height, ///< height of kernel
-    KernelFunction const &kernelFunction,   ///< kernel function; a deep copy is made
-    Kernel::SpatialFunction const &spatialFunction  ///< spatial function;
-        ///< one deep copy is made for each kernel function parameter;
-        ///< if omitted or set to Kernel::NullSpatialFunction then the kernel is spatially invariant
+    int width,
+    int height,
+    KernelFunction const &kernelFunction,
+    Kernel::SpatialFunction const &spatialFunction
 ) :
     Kernel(width, height, kernelFunction.getNParameters(), spatialFunction),
     _kernelFunctionPtr(kernelFunction.clone())
 {}
 
-/**
- * @brief Construct a spatially varying AnalyticKernel, where the spatial model
- * is described by a list of functions (one per analytic function parameter).
- *
- * @throw lsst::pex::exceptions::InvalidParameterException
- *        if the length of spatialFunctionList != # kernel function parameters.
- */
 afwMath::AnalyticKernel::AnalyticKernel(
-    int width,  ///< width of kernel
-    int height, ///< height of kernel
-    KernelFunction const &kernelFunction,   ///< kernel function; a deep copy is made
-    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList  ///< list of spatial functions,
-        ///< one per kernel function parameter; a deep copy is made of each function
+    int width,
+    int height,
+    KernelFunction const &kernelFunction,
+    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
 ) :
     Kernel(width, height, spatialFunctionList),
     _kernelFunctionPtr(kernelFunction.clone())
@@ -101,57 +74,24 @@ PTR(afwMath::Kernel) afwMath::AnalyticKernel::clone() const {
         retPtr.reset(new afwMath::AnalyticKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelFunctionPtr)));
     }
-    retPtr->setCtrX(this->getCtrX());
-    retPtr->setCtrY(this->getCtrY());
+    retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
 double afwMath::AnalyticKernel::computeImage(
-    afwImage::Image<Pixel> &image,
+    lsst::afw::image::Image<Pixel> &image,
     bool doNormalize,
-    double xPos,
-    double yPos
+    double x,
+    double y
 ) const {
-#if 0
-    if (image.getDimensions() != this->getDimensions()) {
-        std::ostringstream os;
-        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
-            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-#endif
+    afwGeom::Extent2I llBorder = (image.getDimensions() - getDimensions()) / 2;
+    image.setXY0(afwGeom::Point2I(-afwGeom::Extent2I(getCtr()+ llBorder)));
     if (this->isSpatiallyVarying()) {
-        this->setKernelParametersFromSpatialModel(xPos, yPos);
+        this->setKernelParametersFromSpatialModel(x, y);
     }
-
-    double xOffset = -this->getCtrX();
-    double yOffset = -this->getCtrY();
-
-    double imSum = 0;
-    for (int y = 0; y != image.getHeight(); ++y) {
-        double const fy = y + yOffset;
-        afwImage::Image<Pixel>::x_iterator ptr = image.row_begin(y);
-        for (int x = 0; x != image.getWidth(); ++x, ++ptr) {
-            double const fx = x + xOffset;
-            Pixel const pixelVal = (*_kernelFunctionPtr)(fx, fy);
-            *ptr = pixelVal;
-            imSum += pixelVal;
-        }
-    }
-    if (doNormalize) {
-        if (imSum == 0) {
-            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
-        }
-        image /= imSum;
-        imSum = 1;
-    }
-
-    return imSum;
+    return doComputeImage(image, doNormalize);
 }
 
-/**
- * @brief Get a deep copy of the kernel function
- */
 afwMath::AnalyticKernel::KernelFunctionPtr afwMath::AnalyticKernel::getKernelFunction(
 ) const {
     return _kernelFunctionPtr->clone();
@@ -173,6 +113,36 @@ std::vector<double> afwMath::AnalyticKernel::getKernelParameters() const {
 //
 // Protected Member Functions
 //
+double afwMath::AnalyticKernel::doComputeImage(
+    afwImage::Image<Pixel> &image,
+    bool doNormalize
+) const {
+    double xOffset = -this->getCtrX();
+    double yOffset = -this->getCtrY();
+
+    double imSum = 0;
+    for (int y = 0; y != image.getHeight(); ++y) {
+        double const fy = image.indexToPosition(y, afwImage::Y);
+        afwImage::Image<Pixel>::x_iterator ptr = image.row_begin(y);
+        for (int x = 0; x != image.getWidth(); ++x, ++ptr) {
+            double const fx = image.indexToPosition(x, afwImage::X);
+            Pixel const pixelVal = (*_kernelFunctionPtr)(fx, fy);
+            *ptr = pixelVal;
+            imSum += pixelVal;
+        }
+    }
+
+    if (doNormalize && (imSum != 1)) {
+        if (imSum == 0) {
+            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+        }
+        image /= imSum;
+        imSum = 1;
+    }
+
+    return imSum;
+}
+
 void afwMath::AnalyticKernel::setKernelParameter(unsigned int ind, double value) const {
     _kernelFunctionPtr->setParameter(ind, value);
 }
