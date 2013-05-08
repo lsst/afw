@@ -445,7 +445,10 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(schema2.find(kb2).field.getUnits(), fb2.getUnits())
         self.assertEqual(schema2.find(kb2).field.getSize(), fb2.getSize())
 
-        
+    def testTicket2850(self):
+        schema = lsst.afw.table.Schema()
+        table = lsst.afw.table.BaseTable.make(schema)
+        self.assertEqual(table.getBufferSize(), 0)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

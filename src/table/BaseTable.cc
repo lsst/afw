@@ -154,7 +154,11 @@ void BaseTable::preallocate(std::size_t n) {
 }
 
 std::size_t BaseTable::getBufferSize() const {
-    return Block::getBufferSize(_schema.getRecordSize(), _manager);
+    if (_manager) {
+        return Block::getBufferSize(_schema.getRecordSize(), _manager);
+    } else {
+        return 0;
+    }
 }
 
 PTR(BaseTable) BaseTable::make(Schema const & schema) {
