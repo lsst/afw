@@ -32,6 +32,21 @@
 
 namespace lsst { namespace afw { namespace image {
 
+namespace {
+
+// Return an int value from a PropertySet if it exists and remove it, or return 0.
+int popInt(daf::base::PropertySet & metadata, std::string const & name) {
+    int r = 0;
+    if (metadata.exists(name)) {
+        r = metadata.get<int>(name);
+        metadata.remove(name);
+    }
+    return r;
+}
+
+} // anonymous
+
+
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
 PTR(Calib) ExposureInfo::_cloneCalib(CONST_PTR(Calib) calib) {
@@ -59,7 +74,8 @@ ExposureInfo::ExposureInfo(
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
     _filter(filter),
-    _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList()))
+    _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList())),
+    _coaddInputs(coaddInputs)
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
@@ -68,7 +84,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
-    _metadata(other._metadata)
+    _metadata(other._metadata),
+    _coaddInputs(other._coaddInputs)
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
@@ -77,7 +94,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
     _filter(other._filter),
-    _metadata(other._metadata)
+    _metadata(other._metadata),
+    _coaddInputs(other._coaddInputs)
 {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
@@ -90,6 +108,7 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
         _detector = other._detector;
         _filter = other._filter;
         _metadata = other._metadata;
+        _coaddInputs = other._coaddInputs;
     }
     return *this;
 }
@@ -195,14 +214,16 @@ void ExposureInfo::_readFits(
     setCalib(newCalib);
     detail::stripCalibKeywords(metadata);
 
-    if (metadata->exists("AR_HDU")) {
-        fitsfile.setHdu(metadata->get<int>("AR_HDU"));
+    int archiveHdu = popInt(*metadata, "AR_HDU");
+
+    if (archiveHdu) {
+        fitsfile.setHdu(archiveHdu);
         table::io::InputArchive archive = table::io::InputArchive::readFits(fitsfile);
         // Load the Psf and Wcs from the archive; id=0 results in a null pointer.
         // Note that the binary table Wcs, if present, clobbers the FITS header one,
         // because the former might be an approximation to something we can't represent
         // using the FITS WCS standard but can represent with binary tables.
-        int psfId = metadata->get<int>("PSF_ID", 0);
+        int psfId = popInt(*metadata, "PSF_ID");
         try {
             _psf = archive.get<detection::Psf>(psfId);
         } catch (pex::exceptions::NotFoundException & err) {
@@ -210,7 +231,7 @@ void ExposureInfo::_readFits(
                 boost::format("Could not read PSF; setting to null: %s") % err.what()
             );
         }
-        int wcsId = metadata->get<int>("WCS_ID", 0);
+        int wcsId = popInt(*metadata, "WCS_ID");
         try {
             _wcs = archive.get<Wcs>(wcsId);
         } catch (pex::exceptions::NotFoundException & err) {
@@ -218,7 +239,7 @@ void ExposureInfo::_readFits(
                 boost::format("Could not read WCS; setting to null: %s") % err.what()
             );
         }
-        int coaddInputsId = metadata->get<int>("COADD_INPUTS_ID", 0);
+        int coaddInputsId = popInt(*metadata, "COADD_INPUTS_ID");
         try {
             _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
         } catch (pex::exceptions::NotFoundException & err) {
