@@ -63,6 +63,8 @@ bool CoaddInputs::isPersistable() const { return true; }
 
 std::string CoaddInputs::getPersistenceName() const { return "CoaddInputs"; }
 
+std::string CoaddInputs::getPythonModule() const { return "lsst.afw.image"; }
+
 void CoaddInputs::write(OutputArchiveHandle & handle) const {
     visits.writeToArchive(handle, true); // true == permissive - just ignore Psfs, Wcss that can't be saved
     ccds.writeToArchive(handle, true);
