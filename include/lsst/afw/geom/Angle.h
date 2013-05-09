@@ -136,10 +136,16 @@ public:
 		// == 2.0 * asin(0.5 * sqrt(d2))
 	}
 
-	/** Wraps this angle to the range [0, 2 pi) */
+	/** Wraps this angle to the range [0, 2 pi)
+
+	@warning The upper limit is only guaranteed for radians;
+	the upper limit may be slightly squishy for other units, due to roundoff errors.
+    However, there are no known violations for any units at this time;
+    if any are discovered they should be added to testWrap in tests/angle.py.
+    */
 	void wrap() {
 		_val = std::fmod(_val, TWOPI);
-		// now in range [-TWOPI, TWOPI]
+		// _val is now in the range [-TWOPI, TWOPI]
 		if (_val < 0.0)
 			_val += TWOPI;
 		// from Coord.cc : reduceAngle():
@@ -148,6 +154,50 @@ public:
 		if (_val == TWOPI)
 			_val = 0.0;
 	}
+	
+	/** Wrap this angle to the range [-pi, pi)
+	
+	@warning Exact limits are only guaranteed for radians; limits for other units
+	may be slightly squishy, due to roundoff errors. However, there are no known violations
+	for any units at this time; if any are discovered they should be added to testWrap in tests/angle.py.
+	*/
+	void wrapCtr() {
+		_val = std::fmod(_val, TWOPI);
+		// _val is now in the range [-TWOPI, TWOPI]
+        if (_val < -PI) {
+            _val += TWOPI;
+        }
+        // do not use "else if" to avoid _val + 2 pi -> 2 pi due to roundoff error
+        if (_val >= PI) {
+            _val -= TWOPI;
+        }
+	}
+	
+	/** Wrap this angle such that pi <= this - refAng <= pi
+	
+	@warning Exact limits are only guaranteed for radians; limits for other units
+	may be slightly squishy due to roundoff errors. There are known violations
+	that are demonstrated in testWrap in tests/angle.py.
+	*/
+	void wrapNear(
+	    Angle const & refAng ///< reference angle to match
+	) {
+	    // compute this = (this - refAng).wrapCtr() + refAng
+	    // which is correct except for roundoff error at the edges
+	    double refAngRad = refAng.asRadians();
+	    *this -= refAng;
+	    wrapCtr();
+        _val += refAngRad;
+
+        // roundoff can cause slightly out-of-range values; fix those
+        if (_val - refAngRad >= PI) {
+            _val -= TWOPI;
+        }
+        if (_val - refAngRad < -PI) {
+            _val += TWOPI;
+        }
+	}
+	
 
 #define ANGLE_OPUP_TYPE(OP, TYPE)                             \
     Angle& operator OP(TYPE const& d) {						  \
