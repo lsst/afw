@@ -140,40 +140,44 @@ public:
 
 	@warning The upper limit is only guaranteed for radians;
 	the upper limit may be slightly squishy for other units, due to roundoff errors.
-    However, there are no known violations for any units at this time;
-    if any are discovered they should be added to testWrap in tests/angle.py.
+    Whether there are any violations is unknown; please update this comment if you can prove
+    that the limits are or are not valid for all supported units.
     */
 	void wrap() {
 		_val = std::fmod(_val, TWOPI);
-		// _val is now in the range [-TWOPI, TWOPI]
+		// _val is now in the range (-TWOPI, TWOPI)
 		if (_val < 0.0)
 			_val += TWOPI;
-		// from Coord.cc : reduceAngle():
-		// if _val was -epsilon, adding 360.0 gives 360.0-epsilon = 360.0 which is actually 0.0
-		// Thus, a rare equivalence conditional test for a double ...
-		if (_val == TWOPI)
+		// if _val is small enough, adding 2 pi gives 2 pi
+		if (_val >= TWOPI)
 			_val = 0.0;
 	}
 	
 	/** Wrap this angle to the range [-pi, pi)
 	
 	@warning Exact limits are only guaranteed for radians; limits for other units
-	may be slightly squishy, due to roundoff errors. However, there are no known violations
-	for any units at this time; if any are discovered they should be added to testWrap in tests/angle.py.
+	may be slightly squishy, due to roundoff errors. Whether there are any violations is unknown;
+	please update this comment if you can prove that the limits are or are not valid for all supported units.
 	*/
 	void wrapCtr() {
 		_val = std::fmod(_val, TWOPI);
 		// _val is now in the range [-TWOPI, TWOPI]
         if (_val < -PI) {
             _val += TWOPI;
-        }
-        // do not use "else if" to avoid _val + 2 pi -> 2 pi due to roundoff error
-        if (_val >= PI) {
+            if (_val >= PI) {
+                // handle roundoff error, however unlikely
+                _val = -PI;
+            }
+        } else if (_val >= PI) {
             _val -= TWOPI;
+            if (_val < -PI) {
+                // handle roundoff error, however unlikely
+                _val = -PI;
+            }
         }
 	}
 	
-	/** Wrap this angle such that pi <= this - refAng <= pi
+	/** Wrap this angle such that pi <= this - refAng < pi
 	
 	@warning Exact limits are only guaranteed for radians; limits for other units
 	may be slightly squishy due to roundoff errors. There are known violations
@@ -193,8 +197,9 @@ public:
         if (_val - refAngRad >= PI) {
             _val -= TWOPI;
         }
+        // maximum relative roundoff error for subtraction is 2 epsilon
         if (_val - refAngRad < -PI) {
-            _val += TWOPI;
+            _val -= _val * 2.0 * std::numeric_limits<double>::epsilon();
         }
 	}
 	
