@@ -124,8 +124,8 @@ public:
         ndarray::Array<T1,2,C1> const & design,
         ndarray::Array<T2,1,C2> const & data
     ) {
-        _getDesignMatrix() = design.asEigen();
-        _getDataVector() = data.asEigen();
+        _getDesignMatrix() = design.asEigen().template cast<double>();
+        _getDataVector() = data.asEigen().template cast<double>();
         _factor(false);
     }
 
@@ -135,22 +135,22 @@ public:
         Eigen::MatrixBase<D1> const & design,
         Eigen::MatrixBase<D2> const & data
     ) {
-        _getDesignMatrix() = design;
-        _getDataVector() = data;
+        _getDesignMatrix() = design.template cast<double>();
+        _getDataVector() = data.template cast<double>();
         _factor(false);
     }
 
     /// @brief Reset the design matrix given as an ndarray; dimension and data are not changed.
     template <typename T1, int C1>
     void setDesignMatrix(ndarray::Array<T1,2,C1> const & design) {
-        _getDesignMatrix() = design.asEigen();
+        _getDesignMatrix() = design.asEigen().template cast<double>();
         _factor(false);
     }
 
     /// @brief Reset the design matrix given as an Eigen object; dimension and data are not changed.
     template <typename D1, typename D2>
     void setDesignMatrix(Eigen::MatrixBase<D1> const & design) {
-        _getDesignMatrix() = design;
+        _getDesignMatrix() = design.template cast<double>();
         _factor(false);
     }
 
@@ -184,11 +184,12 @@ public:
         ndarray::Array<T1,2,C1> const & fisher,
         ndarray::Array<T2,1,C2> const & rhs
     ) {
-        if ((C1 > 0) == Eigen::MatrixXd::IsRowMajor)
-            _getFisherMatrix() = fisher.asEigen();
-        else
-            _getFisherMatrix() = fisher.asEigen().transpose();
-        _getRhsVector() = rhs.asEigen();
+        if ((C1 > 0) == bool(Eigen::MatrixXd::IsRowMajor)) {
+            _getFisherMatrix() = fisher.asEigen().template cast<double>();
+        } else {
+            _getFisherMatrix() = fisher.asEigen().transpose().template cast<double>();
+        }
+        _getRhsVector() = rhs.asEigen().template cast<double>();
         _factor(true);
     }
 
@@ -198,11 +199,12 @@ public:
         Eigen::MatrixBase<D1> const & fisher,
         Eigen::MatrixBase<D2> const & rhs
     ) {
-        if (Eigen::MatrixBase<D1>::isRowMajor == Eigen::MatrixXd::IsRowMajor)
-            _getFisherMatrix() = fisher;
-        else
-            _getFisherMatrix() = fisher.transpose();
-        _getRhsVector() = rhs;
+        if (bool(Eigen::MatrixBase<D1>::IsRowMajor) == bool(Eigen::MatrixXd::IsRowMajor)) {
+            _getFisherMatrix() = fisher.template cast<double>();
+        } else {
+            _getFisherMatrix() = fisher.transpose().template cast<double>();
+        }
+        _getRhsVector() = rhs.template cast<double>();
         _factor(true);
     }
 
