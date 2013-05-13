@@ -21,16 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * @file
- *
- * @brief Definitions of LinearCombinationKernel member functions.
- *
- * @author Russell Owen
- *
- * @ingroup afw
- */
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
@@ -49,9 +39,6 @@ namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
 
-/**
- * @brief Construct an empty LinearCombinationKernel of size 0x0
- */
 afwMath::LinearCombinationKernel::LinearCombinationKernel()
 :
     Kernel(),
@@ -62,13 +49,10 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel()
     _isDeltaFunctionBasis(false)
 { }
 
-/**
- * @brief Construct a spatially invariant LinearCombinationKernel
- */
 afwMath::LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,    ///< list of (shared pointers to const) basis kernels
-    std::vector<double> const &kernelParameters) ///< kernel coefficients
-:
+    KernelList const &kernelList,
+    std::vector<double> const &kernelParameters
+) :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size()),
     _kernelList(),
     _kernelImagePtrList(),
@@ -86,15 +70,10 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-/**
- * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
- * is described by one function (that is cloned to give one per basis kernel).
- */
 afwMath::LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,    ///< list of (shared pointers to const) basis kernels
-    Kernel::SpatialFunction const &spatialFunction)  ///< spatial function;
-        ///< one deep copy is made for each basis kernel
-:
+    KernelList const &kernelList,
+    Kernel::SpatialFunction const &spatialFunction
+) :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), kernelList.size(), spatialFunction),
     _kernelList(),
     _kernelImagePtrList(),
@@ -106,17 +85,10 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
     _setKernelList(kernelList);
 }
 
-/**
- * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
- * is described by a list of functions (one per basis kernel).
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if the length of spatialFunctionList != # kernels
- */
 afwMath::LinearCombinationKernel::LinearCombinationKernel(
-    KernelList const &kernelList,    ///< list of (shared pointers to const) kernels
-    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList)
-        ///< list of spatial functions, one per basis kernel
-:
+    KernelList const &kernelList,
+    std::vector<Kernel::SpatialFunctionPtr> const &spatialFunctionList
+) :
     Kernel(kernelList[0]->getWidth(), kernelList[0]->getHeight(), spatialFunctionList),
     _kernelList(),
     _kernelImagePtrList(),
@@ -141,30 +113,24 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::clone() const {
     } else {
         retPtr.reset(new afwMath::LinearCombinationKernel(this->_kernelList, this->_kernelParams));
     }
-    retPtr->setCtrX(this->getCtrX());
-    retPtr->setCtrY(this->getCtrY());
+    retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
-/**
- * @brief Check that all kernels have the same size and center and that none are spatially varying
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if the check fails
- */
 void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
     if (kernelList.size() < 1) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelList has no elements");
     }
 
-    int ctrX = kernelList[0]->getCtrX();
-    int ctrY = kernelList[0]->getCtrY();
+    afwGeom::Extent2I const dim0 = kernelList[0]->getDimensions();
+    afwGeom::Point2I const ctr0 = kernelList[0]->getCtr();
 
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
-        if (kernelList[ii]->getDimensions() != kernelList[0]->getDimensions()) {
+        if (kernelList[ii]->getDimensions() != dim0) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 (boost::format("kernel %d has different size than kernel 0") % ii).str());
         }
-        if ((ctrX != kernelList[ii]->getCtrX()) || (ctrY != kernelList[ii]->getCtrY())) {
+        if (kernelList[ii]->getCtr() != ctr0) {
             throw LSST_EXCEPT(pexExcept::InvalidParameterException,
                 (boost::format("kernel %d has different center than kernel 0") % ii).str());
         }
@@ -175,75 +141,10 @@ void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelL
     }
 }
 
-double afwMath::LinearCombinationKernel::computeImage(
-    afwImage::Image<Pixel> &image,
-    bool doNormalize,
-    double x,
-    double y
-) const {
-    if ( (image.getWidth() != this->getWidth()) || (image.getHeight() != this->getHeight())) {
-        std::ostringstream os;
-        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
-            << ") > (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-    if (this->isSpatiallyVarying()) {
-        this->computeKernelParametersFromSpatialModel(this->_kernelParams, x, y);
-    }
-
-    int dx=0, dy=0;
-    if (image.getWidth() < this->getWidth()) {
-        dx = this->getWidth() - image.getWidth();
-    }
-    if (image.getHeight() < this->getHeight()) {
-        dy = this->getHeight() - image.getHeight();
-    }
-
-    if (dx%2 || dy%2 || dx != dy) {
-        std::ostringstream os;
-        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
-           << ") > (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions"
-           << " Image is smaller than kernel (ok), but I need a constant edge to center a bbox.";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-    
-    image = 0.0;
-    double imSum = 0.0;
-    std::vector<PTR(afwImage::Image<Pixel>)>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
-    std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
-    std::vector<double>::const_iterator kParIter = _kernelParams.begin();
-    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
-        if (dx || dy) {
-            afwGeom::Box2I bbox(afwGeom::Point2I(dx/2, dy/2),
-                                afwGeom::Extent2I(image.getWidth(), image.getHeight()));
-            image.scaledPlus(*kParIter, afwImage::Image<Pixel>(**kImPtrIter, bbox));
-        } else {
-            image.scaledPlus(*kParIter, **kImPtrIter);
-        }
-        imSum += (*kSumIter) * (*kParIter);
-    }
-
-    if (doNormalize) {
-        if (imSum == 0) {
-            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
-        }
-        image /= imSum;
-        imSum = 1;
-    }
-
-    return imSum;
-}
-
-/**
- * @brief Get the fixed basis kernels
- */
 afwMath::KernelList const & afwMath::LinearCombinationKernel::getKernelList() const {
     return _kernelList;
 }
 
-/**
-* @brief Get the sum of the pixels of each fixed basis kernel
-*/
 std::vector<double> afwMath::LinearCombinationKernel::getKernelSumList() const {
     return _kernelSumList;
 }
@@ -252,40 +153,6 @@ std::vector<double> afwMath::LinearCombinationKernel::getKernelParameters() cons
     return _kernelParams;
 }
 
-/**
-* @brief Refactor the kernel as a linear combination of N bases where N is the number of parameters
-* for the spatial model.
-*
-* Refactoring is only possible if all of the following are true:
-*  * Kernel is spatially varying
-*  * The spatial functions are a linear combination of coefficients (return isLinearCombination() true).
-*  * The spatial functions all are the same class (and so have the same functional form)
-* Refactoring produces a kernel that is faster to compute only if the number of basis kernels
-* is greater than the number of parameters in the spatial model.
-*
-* Details:
-* A spatially varying LinearCombinationKernel consisting of M basis kernels
-* and using a spatial model that is a linear combination of N coefficients can be expressed as:
-* K(x,y) =   K0 (C00 F0(x,y) + C10 F1(x,y) + C20 F2(x,y) + ... + CN0 FN(x,y))
-*          + K1 (C01 F0(x,y) + C11 F1(x,y) + C21 F2(x,y) + ... + CN1 FN(x,y))
-*          + K2 (C02 F0(x,y) + C12 F1(x,y) + C22 F2(x,y) + ... + CN2 FN(x,y))
-*          + ...
-*          + KM (C0M F0(x,y) + C1M F1(x,y) + C2M F2(x,y) + ... + CNM FN(x,y))
-*
-* This is equivalent to the following linear combination of N basis kernels:
-*
-*         =      K0' F0(x,y) + K1' F1(x,y) + K2' F2(x,y) + ... + KN' FN(x,y)
-*
-*           where Ki' = sum over j of Kj Cij
-*
-* This is what refactor returns provided the required conditions are met. However, the spatial functions
-* for the refactored kernel are the same as those for the original kernel (for generality and simplicity)
-* with all coefficients equal to 0 except one that is set to 1; hence they are not computed optimally.
-*
-* Thanks to Kresimir Cosic for inventing or reinventing this useful technique.
-*
-* @return a shared pointer to new kernel, or empty pointer if refactoring not possible
-*/
 PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
     if (!this->isSpatiallyVarying()) {
         return PTR(Kernel)();
@@ -368,6 +235,31 @@ std::string afwMath::LinearCombinationKernel::toString(std::string const& prefix
 //
 // Protected Member Functions
 //
+double afwMath::LinearCombinationKernel::doComputeImage(
+    afwImage::Image<Pixel> &image,
+    bool doNormalize
+) const {
+    image = 0.0;
+    double imSum = 0.0;
+    std::vector<PTR(afwImage::Image<Pixel>)>::const_iterator kImPtrIter = _kernelImagePtrList.begin();
+    std::vector<double>::const_iterator kSumIter = _kernelSumList.begin();
+    std::vector<double>::const_iterator kParIter = _kernelParams.begin();
+    for ( ; kImPtrIter != _kernelImagePtrList.end(); ++kImPtrIter, ++kSumIter, ++kParIter) {
+        image.scaledPlus(*kParIter, **kImPtrIter);
+        imSum += (*kSumIter) * (*kParIter);
+    }
+
+    if (doNormalize) {
+        if (imSum == 0) {
+            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+        }
+        image /= imSum;
+        imSum = 1;
+    }
+
+    return imSum;
+}
+
 void afwMath::LinearCombinationKernel::setKernelParameter(unsigned int ind, double value) const {
     this->_kernelParams[ind] = value;
 }
@@ -375,9 +267,6 @@ void afwMath::LinearCombinationKernel::setKernelParameter(unsigned int ind, doub
 //
 // Private Member Functions
 //
-/**
- * @brief Set _kernelList by cloning each input kernel and update the kernel image cache.
- */
 void afwMath::LinearCombinationKernel::_setKernelList(KernelList const &kernelList) {
     _kernelSumList.clear();
     _kernelImagePtrList.clear();

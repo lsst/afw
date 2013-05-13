@@ -21,14 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * @file
- *
- * @brief Definitions of Kernel member functions.
- *
- * @ingroup afw
- */
 #include <fstream>
 #include <sstream>
 
@@ -56,13 +48,6 @@ afwMath::deltafunction_kernel_tag afwMath::deltafunction_kernel_tag_;
 //
 // Constructors
 //
-/**
- * @brief Construct a null Kernel of size 0,0.
- *
- * A null constructor is primarily intended for persistence.
- */
-namespace {
-}
 afwMath::Kernel::Kernel()
 :
     daf::base::Citizen(typeid(this)),
@@ -74,19 +59,11 @@ afwMath::Kernel::Kernel()
     _nKernelParams(0)
 {}
 
-/**
- * @brief Construct a spatially invariant Kernel or a spatially varying Kernel with one spatial function
- * that is duplicated as needed.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if a spatial function is specified
- * and the kernel has no parameters.
- * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
- */
 afwMath::Kernel::Kernel(
-    int width,                          ///< number of columns
-    int height,                         ///< number of height
-    unsigned int nKernelParams,         ///< number of kernel parameters
-    SpatialFunction const &spatialFunction) ///< spatial function (or NullSpatialFunction if none specified)
+    int width,
+    int height,
+    unsigned int nKernelParams,
+    SpatialFunction const &spatialFunction)
 :
     daf::base::Citizen(typeid(this)),
     _spatialFunctionList(),
@@ -114,18 +91,29 @@ afwMath::Kernel::Kernel(
     }
 }
 
-/**
- * @brief Construct a spatially varying Kernel with a list of spatial functions (one per kernel parameter)
- *
- * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
- */
+double afwMath::Kernel::computeImage(
+    lsst::afw::image::Image<Pixel> &image,
+    bool doNormalize,
+    double x,
+    double y
+) const {
+    if (image.getDimensions() != this->getDimensions()) {
+        std::ostringstream os;
+        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
+            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+    }
+    image.setXY0(-_ctrX, -_ctrY);
+    if (this->isSpatiallyVarying()) {
+        this->setKernelParametersFromSpatialModel(x, y);
+    }
+    return doComputeImage(image, doNormalize);
+}
+
 afwMath::Kernel::Kernel(
-    int width,                          ///< number of columns
-    int height,                         ///< number of height
+    int width,
+    int height,
     std::vector<SpatialFunctionPtr> spatialFunctionList)
-        ///< list of spatial function, one per kernel parameter
 :
     daf::base::Citizen(typeid(this)),
    _width(width),
@@ -148,14 +136,6 @@ afwMath::Kernel::Kernel(
 //
 // Public Member Functions
 //
-/**
- * @brief Set the parameters of all spatial functions
- *
- * Params is indexed as [kernel parameter][spatial parameter]
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if params is the wrong shape
- *  (if this exception is thrown then no parameters are changed)
- */
 void afwMath::Kernel::setSpatialParameters(const std::vector<std::vector<double> > params) {
     // Check params size before changing anything
     unsigned int nKernelParams = this->getNKernelParameters();
@@ -179,12 +159,6 @@ void afwMath::Kernel::setSpatialParameters(const std::vector<std::vector<double>
     }
 }
 
-/**
- * @brief Compute the kernel parameters at a specified point
- *
- * Warning: this is a low-level function that assumes kernelParams is the right length.
- * It will fail in unpredictable ways if that condition is not met.
- */
 void afwMath::Kernel::computeKernelParametersFromSpatialModel(
     std::vector<double> &kernelParams, double x, double y) const {
     std::vector<double>::iterator paramIter = kernelParams.begin();
@@ -194,18 +168,8 @@ void afwMath::Kernel::computeKernelParametersFromSpatialModel(
     }
 }
 
-/**
- * @brief Return a clone of the specified spatial function (one component of the spatial model)
- *
- * @return a shared pointer to a spatial function. The function is a deep copy, so setting its parameters
- * has no effect on the kernel.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel not spatially varying
- * @throw lsst::pex::exceptions::InvalidParameterException if index out of range
- */
 afwMath::Kernel::SpatialFunctionPtr afwMath::Kernel::getSpatialFunction(
-    unsigned int index  ///< index of desired spatial function;
-                        ///< must be in range [0, number spatial parameters - 1]
+    unsigned int index
 ) const {
     if (index >= _spatialFunctionList.size()) {
         if (!this->isSpatiallyVarying()) {
@@ -219,12 +183,6 @@ afwMath::Kernel::SpatialFunctionPtr afwMath::Kernel::getSpatialFunction(
     return _spatialFunctionList[index]->clone();
 }
 
-/**
- * @brief Return a list of clones of the spatial functions.
- *
- * @return a list of shared pointers to spatial functions. The functions are deep copies,
- * so setting their parameters has no effect on the kernel.
- */
 std::vector<afwMath::Kernel::SpatialFunctionPtr> afwMath::Kernel::getSpatialFunctionList(
 ) const {
     std::vector<SpatialFunctionPtr> spFuncCopyList;
@@ -235,45 +193,17 @@ std::vector<afwMath::Kernel::SpatialFunctionPtr> afwMath::Kernel::getSpatialFunc
     return spFuncCopyList;
 }
 
-/**
- * @brief Return the current kernel parameters
- *
- * If the kernel is spatially varying then the parameters are those last computed.
- * See also computeKernelParametersFromSpatialModel.
- * If there are no kernel parameters then returns an empty vector.
- */
 std::vector<double> afwMath::Kernel::getKernelParameters() const {
     return std::vector<double>();
 }
 
 
-/**
- * Given a bounding box for pixels one wishes to compute by convolving an image with this kernel,
- * return the bounding box of pixels that must be accessed on the image to be convolved.
- * Thus the box shifted by -kernel.getCtr() and its size is expanded by kernel.getDimensions()-1.
- *
- * @return the bbox expanded by the kernel. 
- */
 afwGeom::Box2I afwMath::Kernel::growBBox(afwGeom::Box2I const &bbox) const {
     return afwGeom::Box2I(
-        afwGeom::Point2I(
-            bbox.getMinX() - getCtrX(),
-            bbox.getMinY() - getCtrY()),
-        afwGeom::Extent2I(
-            bbox.getWidth()  + getWidth() - 1,
-            bbox.getHeight() + getHeight() - 1));
+        afwGeom::Point2I(bbox.getMin() - afwGeom::Extent2I(getCtr())),
+        afwGeom::Extent2I(bbox.getDimensions() + getDimensions() - afwGeom::Extent2I(1,1)));
 }
 
-/**
- * Given a bounding box for an image one wishes to convolve with this kernel,
- * return the bounding box for the region of pixels that can be computed.
- * Thus the box shifted by kernel.getCtr() and its size is reduced by kernel.getDimensions()-1.
- *
- * @return the bbox shrunk by the kernel.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if the resulting box would have
- * dimension < 1 in either axis
- */
 afwGeom::Box2I afwMath::Kernel::shrinkBBox(afwGeom::Box2I const &bbox) const {
     if ((bbox.getWidth() < getWidth()) || ((bbox.getHeight() < getHeight()))) {
         std::ostringstream os;
@@ -291,9 +221,6 @@ afwGeom::Box2I afwMath::Kernel::shrinkBBox(afwGeom::Box2I const &bbox) const {
 }
 
 
-/**
- * @brief Return a string representation of the kernel
- */
 std::string afwMath::Kernel::toString(std::string const& prefix) const {
     std::ostringstream os;
     os << prefix << "Kernel:" << std::endl;
@@ -323,28 +250,10 @@ void afwMath::Kernel::toFile(std::string fileName) const {
 // Protected Member Functions
 //
 
-/**
- * @brief Set one kernel parameter
- *
- * Classes that have kernel parameters must subclass this function.
- *
- * This function is marked "const", despite modifying unimportant internals,
- * so that computeImage can be const.
- *
- * @throw lsst::pex::exceptions::InvalidParameterException always (unless subclassed)
- */
 void afwMath::Kernel::setKernelParameter(unsigned int, double) const {
     throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Kernel has no kernel parameters");
 }
 
-/**
- * @brief Set the kernel parameters from the spatial model (if any).
- *
- * This function has no effect if there is no spatial model.
- *
- * This function is marked "const", despite modifying unimportant internals,
- * so that computeImage can be const.
- */
 void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) const {
     std::vector<SpatialFunctionPtr>::const_iterator funcIter = _spatialFunctionList.begin();
     for (int ii = 0; funcIter != _spatialFunctionList.end(); ++funcIter, ++ii) {

@@ -56,7 +56,11 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
                                  float dx,               ///< move the %image this far in the column direction
                                  float dy,               ///< move the %image this far in the row direction
                                  std::string const& algorithmName,  ///< Type of resampling Kernel to use
-                                 unsigned int buffer ///< Buffer for kernel size
+                                 unsigned int buffer ///< Width of buffer (border) around kernel image
+                                    ///< to allow for warping edge effects (pixels).
+                                    ///< Values < 0 are treated as 0.
+                                    ///< This is only used during computation; the final image
+                                    ///< has the same dimensions as the kernel.
                                 ) {
     SeparableKernel::Ptr offsetKernel = makeWarpingKernel(algorithmName);
 
