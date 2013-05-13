@@ -214,7 +214,7 @@ using boost::serialization::make_nvp;
          */
         double computeImage(
             lsst::afw::image::Image<Pixel> &image,   ///< image whose pixels are to be set (output);
-                ///< xy0 = - kernel.getCtr() - border,
+                ///< xy0 of the image will be set to -kernel.getCtr()
             bool doNormalize,   ///< normalize the image (so sum is 1)?
             double x = 0.0, ///< x (column position) at which to compute spatial function
             double y = 0.0  ///< y (row position) at which to compute spatial function
@@ -689,7 +689,7 @@ using boost::serialization::make_nvp;
          */
         double computeImage(
             lsst::afw::image::Image<Pixel> &image,   ///< image whose pixels are to be set (output)
-                ///< xy0 = - kernel.getCtr() - border,
+                ///< xy0 of the image will be set to -kernel.getCtr() - border,
                 ///< where border = (image.getDimensions() - kernel.getDimensions()) / 2
             bool doNormalize,   ///< normalize the image (so sum is 1)?
             double x = 0.0, ///< x (column position) at which to compute spatial function
