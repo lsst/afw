@@ -65,11 +65,13 @@ struct FitsSchemaItem {
         char code = m[2].str()[0];
         // switch code over FITS codes that correspond to different element types
         switch (code) {
-        case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
+        case 'J': // 32-bit integers - can be scalars, Point fields, Arrays, or Archive IDs
             if (size == 1) {
                 if (cls == "Array") {
                     schema.addField< Array<boost::int32_t> >(name, doc, units, size);
-                } else { 
+                } else if (cls == "Persistable") {
+                    schema.addField<PTR(io::Persistable)>(name, doc, units);
+                } else {
                     schema.addField<boost::int32_t>(name, doc, units);
                 }
             } else if (size == 2) {
@@ -351,10 +353,21 @@ PTR(BaseTable) FitsReader::_readTable() {
 
 struct FitsReader::ProcessRecords {
 
+    template <typename U>
+    void readElements(U * elements, int size) const {
+        fits->readTableArray(row, col, size, elements);
+    }
+
+    void readElements(PTR(io::Persistable) * elements, int size) const {
+        std::vector<int> tmp(size);
+        fits->readTableArray(row, col, size, &tmp.front());
+        // TODO!!!
+    }
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         if (col == flagCol) ++col;
-        fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        readElements(record->getElement(item.key), item.key.getElementCount());
         ++col;
     }
 

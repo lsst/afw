@@ -27,6 +27,9 @@ template <> struct TypeTraits<float> {
 template <> struct TypeTraits<double> {
     static char const * getName() { return "D"; }
 };
+template <> struct TypeTraits<PTR(io::Persistable)> {
+    static char const * getName() { return "Persistable"; }
+};
 template <> struct TypeTraits<lsst::afw::geom::Angle> {
     static char const * getName() { return "Angle"; }
 };

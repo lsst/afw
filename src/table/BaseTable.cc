@@ -8,6 +8,7 @@
 #include "lsst/afw/table/SchemaMapper.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/detail/Access.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -187,11 +188,12 @@ BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), 
 
 namespace {
 
-// A Schema Functor used to set floating point-fields to NaN.  All others are left 0.
+// A Schema Functor used to set floating point-fields to NaN, and invoke placement new on PTR fields.
+// All others are left 0.
 struct RecordInitializer {
     
     template <typename T>
-    static void fill(T * element, int size) {} // this matches all non-floating-point-element fields.
+    static void fill(T * element, int size) {} // this matches all non-floating-point, non-PTR fields.
 
     static void fill(float * element, int size) {
         std::fill(element, element + size, std::numeric_limits<float>::quiet_NaN());
@@ -203,6 +205,12 @@ struct RecordInitializer {
 
     static void fill(Angle * element, int size) {
         fill(reinterpret_cast<double*>(element), size);
+    }
+
+    static void fill(PTR(io::Persistable) * element, int size) {
+        for (int i = 0; i < size; ++i) {
+            new (element + i) PTR(io::Persistable)();
+        }
     }
 
     template <typename T>
@@ -218,6 +226,32 @@ struct RecordInitializer {
     char * data;
 };
 
+// A Schema Functor used to invoke the destructors of elements created with placement new.
+struct RecordDeleter {
+
+    template <typename T>
+    static void destroy(T * element, int size) {} // this matches all PODs
+
+    static void destroy(PTR(io::Persistable) * element, int size) {
+        typedef PTR(io::Persistable) PersistablePtr;
+        for (int i = 0; i < size; ++i) {
+            element[i].~PersistablePtr();
+        }
+    }
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {
+        destroy(
+            reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
+            item.key.getElementCount()
+        );
+    }
+
+    void operator()(SchemaItem<Flag> const & item) const {} // do nothing for Flag fields
+
+    char * data;
+};
+
 } // anonymous
 
 void BaseTable::_initialize(BaseRecord & record) {
@@ -229,6 +263,8 @@ void BaseTable::_initialize(BaseRecord & record) {
 
 void BaseTable::_destroy(BaseRecord & record) {
     assert(record._table.get() == this);
+    RecordDeleter f = { reinterpret_cast<char*>(record._data) };
+    _schema.forEach(f);
     if (record._manager == _manager) Block::reclaim(_schema.getRecordSize(), record._data, _manager);
 }
 

@@ -37,6 +37,22 @@ struct ProcessSchema {
         specialize(item, n); // delegate to other member functions that are specialized on field tag types
     }
 
+    void operator()(SchemaItem<PTR(io::Persistable)> const & item) const {
+        std::string name = item.field.getName();
+        std::replace(name.begin(), name.end(), '.', '_');
+        int n = fits->addColumn<int>(
+            name, item.field.getElementCount(),
+            item.field.getDoc()
+        );
+        if (!item.field.getDoc().empty()) {
+            // We use a separate key TDOCn for documentation (in addition to the TTYPEn comments)
+            // so we can have long strings via the CONTINUE convention.
+            // When reading, if there is no TDOCn, we'll just use the TTYPEn comment.
+            fits->writeColumnKey("TDOC", n, item.field.getDoc());
+        }
+        fits->writeColumnKey("TCCLS", n, "Persistable", "Field template used by lsst.afw.table");
+    }
+
     void operator()(SchemaItem<std::string> const & item) const {
         std::string name = item.field.getName();
         std::replace(name.begin(), name.end(), '.', '_');
@@ -181,6 +197,11 @@ struct FitsWriter::ProcessRecords {
 
     void operator()(SchemaItem<std::string> const & item) const {
         fits->writeTableScalar(row, col, record->get(item.key));
+        ++col;
+    }
+
+    void operator()(SchemaItem<PTR(io::Persistable)> const & item) const {
+        // TODO!!!
         ++col;
     }
     
