@@ -117,6 +117,9 @@ public:
     /// The number of non-Flag fields.
     int getNonFlagFieldCount() const { return _impl->getNonFlagFieldCount(); }
 
+    /// Whether the schema has any Persistable fields that require special persistence handling
+    bool hasPersistableFields() const;
+
     /**
      *  @brief Add a new field to the Schema, and return the associated Key.
      *

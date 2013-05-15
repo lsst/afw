@@ -90,6 +90,28 @@ public:
 
 };
 
+// Schema::forEach functor that tests whether a schema has Persistable fields that require
+// an OutputArchive.
+struct HasPersistableFields {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const &) const {}
+
+    void operator()(SchemaItem<PTR(io::Persistable)> const &) const {
+        result = true;
+    }
+
+    static bool apply(Schema const & schema) {
+        HasPersistableFields f;
+        schema.forEach(boost::ref(f));
+        return f.result;
+    }
+
+    HasPersistableFields() : result(false) {}
+
+    mutable bool result;
+};
+
 } // anonymous
 
 //-----------------------------------------------------------------------------------------------------------
@@ -579,6 +601,10 @@ void Schema::_edit() {
         boost::shared_ptr<Impl> data(boost::make_shared<Impl>(*_impl));
         _impl.swap(data);
     }
+}
+
+bool Schema::hasPersistableFields() const {
+    return HasPersistableFields::apply(*this);
 }
 
 std::set<std::string> Schema::getNames(bool topOnly) const {

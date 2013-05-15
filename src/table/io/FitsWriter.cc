@@ -18,32 +18,6 @@ typedef FitsWriter::Fits Fits;
 // The driver code is at the bottom of this section; it's easier to understand if you start there
 // and work your way up.
 
-namespace {
-
-// Schema::forEach functor that tests whether a schema has Persistable fields that require
-// an OutputArchive.
-struct HasPersistableFields {
-
-    template <typename T>
-    void operator()(SchemaItem<T> const &) const {}
-
-    void operator()(SchemaItem<PTR(io::Persistable)> const &) const {
-        result = true;
-    }
-
-    static bool apply(Schema const & schema) {
-        HasPersistableFields f;
-        schema.forEach(boost::ref(f));
-        return f.result;
-    }
-
-    HasPersistableFields() : result(false) {}
-
-    mutable bool result;
-};
-
-} // anonymous
-
 // A Schema::forEach functor that writes FITS header keys for a field when it is called.
 struct ProcessSchema {
 
@@ -191,7 +165,7 @@ struct ProcessSchema {
 // the driver for all the above machinery
 void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows) {
     Schema schema = table->getSchema();
-    if (!_archive && HasPersistableFields::apply(schema)) {
+    if (!_archive && schema.hasPersistableFields()) {
         _doWriteArchive = true;
         _fits->writeKey(
             "AR_HDU", _fits->countHdus() + 1,
