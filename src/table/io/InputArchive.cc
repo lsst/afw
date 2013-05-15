@@ -123,7 +123,9 @@ public:
 
     Impl() : _index(ArchiveIndexSchema::get().schema) {}
 
-    Impl(BaseCatalog const & index, CatalogVector const & catalogs) : _index(index), _catalogs(catalogs) {
+    Impl(BaseCatalog const & index, CatalogVector const & catalogs=CatalogVector()) :
+        _index(index), _catalogs(catalogs)
+    {
         if (index.getSchema() != indexKeys.schema) {
             throw LSST_EXCEPT(
                 pex::exceptions::RuntimeErrorException,
@@ -175,12 +177,16 @@ InputArchive InputArchive::readFits(fits::Fits & fitsfile) {
         );
     }
     int nCatalogs = metadata->get<int>("AR_NCAT");
-    CatalogVector catalogs;
-    catalogs.reserve(nCatalogs);
+    // The archive isn't fully constructed, but we need something to pass to BaseCatalog::readFits()
+    // The order in which we've saved things should ensure that as of the time we read a catalog,
+    // all the Persistables it needs to get from the archive are already available.
+    PTR(Impl) impl(new Impl(index));
+    PTR(InputArchive) self(new InputArchive(impl));
+    impl->_catalogs.reserve(nCatalogs);
     for (int n = 1; n < nCatalogs; ++n) {
         fitsfile.setHdu(1, true); // increment HDU by one
-        catalogs.push_back(BaseCatalog::readFits(fitsfile));
-        metadata = catalogs.back().getTable()->popMetadata();
+        impl->_catalogs.push_back(BaseCatalog::readFits(fitsfile, self));
+        metadata = impl->_catalogs.back().getTable()->popMetadata();
         if (metadata->get<std::string>("EXTTYPE") != "ARCHIVE_DATA") {
             throw LSST_FITS_EXCEPT(
                 fits::FitsError,
@@ -198,7 +204,6 @@ InputArchive InputArchive::readFits(fits::Fits & fitsfile) {
             );
         }
     }
-    PTR(Impl) impl(new Impl(index, catalogs));
     return InputArchive(impl);
 }
 

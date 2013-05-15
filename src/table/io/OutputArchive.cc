@@ -52,11 +52,20 @@ struct OutputArchive::Impl {
 
     BaseCatalog makeCatalog(Schema const & schema) {
         int catArchive = 1;
-        CatalogVector::iterator iter = _catalogs.begin();
-        int const flags = table::Schema::EQUAL_KEYS | table::Schema::EQUAL_NAMES;
-        for (; iter != _catalogs.end(); ++iter, ++catArchive) {
-            if (iter->getSchema().compare(schema, flags) == flags) {
-                break;
+        CatalogVector::iterator iter;
+        if (schema.hasPersistableFields()) {
+            // Catalogs that have Persistable fields need to go at the back,
+            // so when we're reading, anything they need to get from the
+            // archive in readFits is already there.
+            iter = _catalogs.end();
+            catArchive += _catalogs.size();
+        } else {
+            iter = _catalogs.begin();
+            int const flags = table::Schema::EQUAL_KEYS | table::Schema::EQUAL_NAMES;
+            for (; iter != _catalogs.end(); ++iter, ++catArchive) {
+                if (iter->getSchema().compare(schema, flags) == flags) {
+                    break;
+                }
             }
         }
         if (iter == _catalogs.end()) {
