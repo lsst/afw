@@ -21,16 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * @file
- *
- * @brief Definitions of SeparableKernel member functions.
- *
- * @author Russell Owen
- *
- * @ingroup afw
- */
 #include <algorithm>
 #include <iterator>
 #include <sstream>
@@ -42,9 +32,6 @@ namespace pexExcept = lsst::pex::exceptions;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
-/**
- * @brief Construct an empty spatially invariant SeparableKernel of size 0x0
- */
 afwMath::SeparableKernel::SeparableKernel()
 :
     Kernel(),
@@ -57,18 +44,12 @@ afwMath::SeparableKernel::SeparableKernel()
     _setKernelXY();
 }
 
-/**
- * @brief Construct a spatially invariant SeparableKernel, or a spatially varying SeparableKernel
- * that uses the same functional form to model each function parameter.
- */
 afwMath::SeparableKernel::SeparableKernel(
-    int width,  ///< width of kernel
-    int height, ///< height of kernel
-    KernelFunction const& kernelColFunction,    ///< kernel column function
-    KernelFunction const& kernelRowFunction,    ///< kernel row function
-    Kernel::SpatialFunction const& spatialFunction  ///< spatial function;
-        ///< one deep copy is made for each kernel column and row function parameter;
-        ///< if omitted or set to Kernel::NullSpatialFunction then the kernel is spatially invariant
+    int width,
+    int height,
+    KernelFunction const& kernelColFunction,
+    KernelFunction const& kernelRowFunction,
+    Kernel::SpatialFunction const& spatialFunction
 ) :
     Kernel(width, height, kernelColFunction.getNParameters() + kernelRowFunction.getNParameters(),
         spatialFunction),
@@ -81,19 +62,12 @@ afwMath::SeparableKernel::SeparableKernel(
     _setKernelXY();
 }
 
-/**
- * @brief Construct a spatially varying SeparableKernel
- *
- * @throw lsst::pex::exceptions::InvalidParameterException
- *  if the length of spatialFunctionList != # kernel function parameters.
- */
 afwMath::SeparableKernel::SeparableKernel(
-    int width,  ///< width of kernel
-    int height, ///< height of kernel
-    KernelFunction const& kernelColFunction,    ///< kernel column function
-    KernelFunction const& kernelRowFunction,    ///< kernel row function
-    std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList  ///< list of spatial functions,
-        ///< one per kernel column and row function parameter; a deep copy is made of each function
+    int width,
+    int height,
+    KernelFunction const& kernelColFunction,
+    KernelFunction const& kernelRowFunction,
+    std::vector<Kernel::SpatialFunctionPtr> const& spatialFunctionList
 ) :
     Kernel(width, height, spatialFunctionList),
     _kernelColFunctionPtr(kernelColFunction.clone()),
@@ -123,58 +97,17 @@ PTR(afwMath::Kernel) afwMath::SeparableKernel::clone() const {
         retPtr.reset(new afwMath::SeparableKernel(this->getWidth(), this->getHeight(),
             *(this->_kernelColFunctionPtr), *(this->_kernelRowFunctionPtr)));
     }
-    retPtr->setCtrX(this->getCtrX());
-    retPtr->setCtrY(this->getCtrY());
+    retPtr->setCtr(this->getCtr());
     retPtr->computeCache(this->getCacheSize());
     return retPtr;
 }
 
-double afwMath::SeparableKernel::computeImage(
-    afwImage::Image<Pixel> &image,
-    bool doNormalize,
-    double xPos,
-    double yPos
-) const {
-    if (image.getDimensions() != this->getDimensions()) {
-        std::ostringstream os;
-        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
-            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-    if (this->isSpatiallyVarying()) {
-        this->setKernelParametersFromSpatialModel(xPos, yPos);
-    }
-    
-    double imSum = basicComputeVectors(_localColList, _localRowList, doNormalize);
-
-    for (int y = 0; y != image.getHeight(); ++y) {
-        afwImage::Image<Pixel>::x_iterator imPtr = image.row_begin(y);
-        for (std::vector<Pixel>::iterator colIter = _localColList.begin();
-             colIter != _localColList.end(); ++colIter, ++imPtr) {
-            *imPtr = (*colIter)*_localRowList[y];
-        }
-    }
-    
-    return imSum;
-}
-
-/**
- * @brief Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
- *
- * x, y are ignored if there is no spatial function.
- *
- * @return the kernel sum (1.0 if doNormalize true)
- *
- * @throw lsst::pex::exceptions::InvalidParameterException if colList or rowList is the wrong size
- * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
- * exactly 0
- */
 double afwMath::SeparableKernel::computeVectors(
-    std::vector<Pixel> &colList,   ///< column vector
-    std::vector<Pixel> &rowList,   ///< row vector
-    bool doNormalize,   ///< normalize the image (so sum of each is 1)?
-    double x,   ///< x (column position) at which to compute spatial function
-    double y    ///< y (row position) at which to compute spatial function
+    std::vector<Pixel> &colList,
+    std::vector<Pixel> &rowList,
+    bool doNormalize,
+    double x,
+    double y
 ) const {
     if (static_cast<int>(colList.size()) != this->getWidth()
         || static_cast<int>(rowList.size()) != this->getHeight()) {
@@ -192,17 +125,11 @@ double afwMath::SeparableKernel::computeVectors(
     return basicComputeVectors(colList, rowList, doNormalize);
 }
 
-/**
- * @brief Get a deep copy of the col kernel function
- */
 afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelColFunction(
 ) const {
     return _kernelColFunctionPtr->clone();
 }
 
-/**
- * @brief Get a deep copy of the row kernel function
- */
 afwMath::SeparableKernel::KernelFunctionPtr afwMath::SeparableKernel::getKernelRowFunction(
 ) const {
     return _kernelRowFunctionPtr->clone();
@@ -230,6 +157,23 @@ std::vector<double> afwMath::SeparableKernel::getKernelParameters() const {
 // Protected Member Functions
 //
 
+double afwMath::SeparableKernel::doComputeImage(
+    afwImage::Image<Pixel> &image,
+    bool doNormalize
+) const {
+    double imSum = basicComputeVectors(_localColList, _localRowList, doNormalize);
+
+    for (int y = 0; y != image.getHeight(); ++y) {
+        afwImage::Image<Pixel>::x_iterator imPtr = image.row_begin(y);
+        for (std::vector<Pixel>::iterator colIter = _localColList.begin();
+             colIter != _localColList.end(); ++colIter, ++imPtr) {
+            *imPtr = (*colIter)*_localRowList[y];
+        }
+    }
+    
+    return imSum;
+}
+
 void afwMath::SeparableKernel::setKernelParameter(unsigned int ind, double value) const {
     unsigned int const nColParams = _kernelColFunctionPtr->getNParameters();
     if (ind < nColParams) {
@@ -243,20 +187,10 @@ void afwMath::SeparableKernel::setKernelParameter(unsigned int ind, double value
 // Private Member Functions
 //
 
-/**
- * @brief Compute the column and row arrays in place, where kernel(col, row) = colList(col) * rowList(row)
- *
- * @return the kernel sum (1.0 if doNormalize true)
- *
- * Warning: the length of colList and rowList are not verified!
- *
- * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
- * exactly 0
- */
 double afwMath::SeparableKernel::basicComputeVectors(
-    std::vector<Pixel> &colList,        ///< column vector
-    std::vector<Pixel> &rowList,        ///< row vector
-    bool doNormalize                    ///< normalize the arrays (so sum of each is 1)?
+    std::vector<Pixel> &colList,
+    std::vector<Pixel> &rowList,
+    bool doNormalize
 ) const {
     double colSum = 0.0;
     if (_kernelColCache.empty()) {
@@ -327,59 +261,52 @@ double afwMath::SeparableKernel::basicComputeVectors(
 }
 
 /************************************************************************************************************/
-/**
- * Compute a cache of pre-computed Kernels
- */
 namespace {
-void _computeCache(int const cacheSize,
-                   std::vector<double> const& x,
-                   afwMath::SeparableKernel::KernelFunctionPtr & func,
-                   std::vector<std::vector<double> > *kernelCache)
-{
-    if (cacheSize <= 0) {
-        kernelCache->erase(kernelCache->begin(), kernelCache->end());
-        return;
-    }
-
-    if (kernelCache[0].size() != x.size()) { // invalid
-        kernelCache->erase(kernelCache->begin(), kernelCache->end());
-    }
-
-    int const old_cacheSize = kernelCache->size();
-
-    if (cacheSize == old_cacheSize) {
-        return;                     // nothing to do
-    }
-
-    if (cacheSize < old_cacheSize) {
-        kernelCache->erase(kernelCache->begin() + cacheSize, kernelCache->end());
-    } else {
-        kernelCache->resize(cacheSize);
-        for (int i = old_cacheSize; i != cacheSize; ++i) {
-            (*kernelCache)[i].resize(x.size());
+    /**
+     * Compute a cache of pre-computed Kernels
+     */
+    void _computeCache(int const cacheSize,
+                       std::vector<double> const& x,
+                       afwMath::SeparableKernel::KernelFunctionPtr & func,
+                       std::vector<std::vector<double> > *kernelCache)
+    {
+        if (cacheSize <= 0) {
+            kernelCache->erase(kernelCache->begin(), kernelCache->end());
+            return;
         }
-    }
-    //
-    // Actually fill the cache
-    //
-    for (int i = 0; i != cacheSize; ++i) {
-        func->setParameter(0, (i + 0.5)/static_cast<double>(cacheSize));
-        for (unsigned int j = 0; j != x.size(); ++j) {
-            (*kernelCache)[i][j] = (*func)(x[j]);
+
+        if (kernelCache[0].size() != x.size()) { // invalid
+            kernelCache->erase(kernelCache->begin(), kernelCache->end());
+        }
+
+        int const old_cacheSize = kernelCache->size();
+
+        if (cacheSize == old_cacheSize) {
+            return;                     // nothing to do
+        }
+
+        if (cacheSize < old_cacheSize) {
+            kernelCache->erase(kernelCache->begin() + cacheSize, kernelCache->end());
+        } else {
+            kernelCache->resize(cacheSize);
+            for (int i = old_cacheSize; i != cacheSize; ++i) {
+                (*kernelCache)[i].resize(x.size());
+            }
+        }
+        //
+        // Actually fill the cache
+        //
+        for (int i = 0; i != cacheSize; ++i) {
+            func->setParameter(0, (i + 0.5)/static_cast<double>(cacheSize));
+            for (unsigned int j = 0; j != x.size(); ++j) {
+                (*kernelCache)[i][j] = (*func)(x[j]);
+            }
         }
     }
 }
-}
 
-/***
- * @brief Compute a cache of values for the x and y kernel functions
- *
- * A value of 0 disables the cache for maximum accuracy.
- * 10,000 typically results in a warping error of a fraction of a count.
- * 100,000 typically results in a warping error of less than 0.01 count.
- */
 void afwMath::SeparableKernel::computeCache(
-        int const cacheSize ///< cache size (number of double precision array elements in the x and y caches)
+        int const cacheSize
 ) {
     afwMath::SeparableKernel::KernelFunctionPtr func;
 
@@ -390,9 +317,6 @@ void afwMath::SeparableKernel::computeCache(
     _computeCache(cacheSize, _kernelX, func, &_kernelRowCache);
 }
 
-/**
- * @brief Get the current cache size (0 if none)
- */
 int afwMath::SeparableKernel::getCacheSize() const {
     return _kernelColCache.size();
 };

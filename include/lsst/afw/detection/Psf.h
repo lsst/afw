@@ -129,10 +129,8 @@ public:
      *
      *  While the position need not be an integer, the center of the PSF image returned by
      *  computeKernelImage will in the center of the center pixel of the image, which will be
-     *  (0,0) when the Image's xy0 is taken into account.
-     *
-     *  This is similar to the image returned by a Kernel, but with the image's xy0 set such that
-     *  the center is at (0,0) (but see #2620, which proposes using the same convention for Kernel).
+     *  (0,0) when the Image's xy0 is taken into account; this is the same behavior as
+     *  Kernel::computeImage().
      *
      *  The returned image is normalized to sum to unity.
      *

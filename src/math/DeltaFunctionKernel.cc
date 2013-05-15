@@ -21,14 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * @file
- *
- * @brief Definitions of DeltaFunctionKernel member functions.
- *
- * @ingroup fw
- */
 #include <sstream>
 #include <vector>
 
@@ -40,15 +32,11 @@ namespace pexExcept = lsst::pex::exceptions;
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
-/**
- * @brief Construct a spatially invariant DeltaFunctionKernel
- *
- * @throw pexExcept::InvalidParameterException if active pixel is off the kernel
- */
+
 afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
-    int width,              ///< kernel size (columns)
-    int height,             ///< kernel size (rows)
-    afwGeom::Point2I const &point   ///< index of active pixel (where 0,0 is the lower left corner)
+    int width,
+    int height,
+    afwGeom::Point2I const &point
 ) :
     Kernel(width, height, 0),
     _pixel(point)
@@ -64,31 +52,8 @@ afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
 PTR(afwMath::Kernel) afwMath::DeltaFunctionKernel::clone() const {
     PTR(afwMath::Kernel) retPtr(new afwMath::DeltaFunctionKernel(this->getWidth(), this->getHeight(),
         this->_pixel));
-    retPtr->setCtrX(this->getCtrX());
-    retPtr->setCtrY(this->getCtrY());
+    retPtr->setCtr(this->getCtr());
     return retPtr;
-}
-
-double afwMath::DeltaFunctionKernel::computeImage(
-    afwImage::Image<Pixel> &image,
-    bool,
-    double,
-    double
-) const {
-    if (image.getDimensions() != this->getDimensions()) {
-        std::ostringstream os;
-        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
-            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-
-    const int pixelX = getPixel().getX(); // active pixel in Kernel
-    const int pixelY = getPixel().getY();
-
-    image = 0;
-    *image.xy_at(pixelX, pixelY) = 1;
-
-    return 1;
 }
 
 std::string afwMath::DeltaFunctionKernel::toString(std::string const& prefix) const {
@@ -100,6 +65,19 @@ std::string afwMath::DeltaFunctionKernel::toString(std::string const& prefix) co
     os << prefix << "Pixel (c,r) " << pixelX << "," << pixelY << ")" << std::endl;
     os << Kernel::toString(prefix + "\t");
     return os.str();
+}
+
+double afwMath::DeltaFunctionKernel::doComputeImage(
+    afwImage::Image<Pixel> &image,
+    bool
+) const {
+    const int pixelX = getPixel().getX(); // active pixel in Kernel
+    const int pixelY = getPixel().getY();
+
+    image = 0;
+    *image.xy_at(pixelX, pixelY) = 1;
+
+    return 1;
 }
 
 // ------ Persistence ---------------------------------------------------------------------------------------
