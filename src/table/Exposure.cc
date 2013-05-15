@@ -129,14 +129,9 @@ namespace {
 class ExposureFitsWriter : public io::FitsWriter {
 public:
 
-    ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive = PTR(io::OutputArchive)())
-        : io::FitsWriter(fits), _doWriteArchive(false), _archive(archive)
-    {
-        if (!_archive) {
-            _doWriteArchive = true;
-            _archive.reset(new io::OutputArchive());
-        }
-    }
+    ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive)
+        : io::FitsWriter(fits, archive)
+    {}
 
 protected:
     
@@ -144,12 +139,6 @@ protected:
 
     virtual void _writeRecord(BaseRecord const & r);
 
-    virtual void _finish() {
-        if (_doWriteArchive) _archive->writeFits(*_fits);
-    }
-
-    bool _doWriteArchive;
-    PTR(io::OutputArchive) _archive;
     PTR(BaseRecord) _record;
     SchemaMapper _mapper;
 };
@@ -166,6 +155,14 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
     PTR(BaseTable) outTable = BaseTable::make(_mapper.getOutputSchema());
     io::FitsWriter::_writeTable(outTable, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
+
+    // TODO: this is a temporary workaround
+    if (!_archive) {
+        _doWriteArchive = true;
+        _fits->writeKey("AR_HDU", _fits->countHdus() + 1);
+        _archive.reset(new io::OutputArchive());
+    }
+
     _record = outTable->makeRecord();
 }
 
@@ -190,15 +187,8 @@ class ExposureFitsReader : public io::FitsReader {
 public:
 
     explicit ExposureFitsReader(Fits * fits, PTR(io::InputArchive) archive) :
-        io::FitsReader(fits, archive), _archive(archive)
-    {
-        if (!_archive) {
-            int oldHdu = _fits->getHdu();
-            _fits->setHdu(oldHdu + 1);
-            _archive.reset(new io::InputArchive(io::InputArchive::readFits(*_fits)));
-            _fits->setHdu(oldHdu);
-        }
-    }
+        io::FitsReader(fits, archive)
+    {}
 
 protected:
 
@@ -207,7 +197,6 @@ protected:
     virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
     PTR(BaseTable) _inTable;
-    PTR(io::InputArchive) _archive;
     SchemaMapper _mapper;
 };
 
@@ -218,9 +207,9 @@ PTR(BaseTable) ExposureFitsReader::_readTable() {
     _inTable = BaseTable::make(schema);
     _mapper = PersistenceSchema::get().makeReadMapper(schema);
     PTR(ExposureTable) table = ExposureTable::make(_mapper.getOutputSchema());
-    _startRecords(*table);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
+    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+    _startRecords(*table);
     return table;
 }
 
@@ -311,11 +300,6 @@ ExposureTable::MinimalSchema::MinimalSchema() {
 ExposureTable::MinimalSchema & ExposureTable::getMinimalSchema() {
     static MinimalSchema it;
     return it;
-}
-
-PTR(io::FitsWriter)
-ExposureTable::makeFitsWriter(fits::Fits * fitsfile) const {
-    return boost::make_shared<ExposureFitsWriter>(fitsfile);
 }
 
 PTR(io::FitsWriter)

@@ -289,8 +289,8 @@ public:
         io::FitsWriter::apply(manager, mode, *this);
     }
     /// Write a FITS binary table to an open file object.
-    void writeFits(fits::Fits & fitsfile) const {
-        io::FitsWriter::apply(fitsfile, *this);
+    void writeFits(fits::Fits & fitsfile, PTR(io::OutputArchive) archive = PTR(io::OutputArchive)()) const {
+        io::FitsWriter::apply(fitsfile, *this, archive);
     }
 
     /// @brief Read a FITS binary table from a regular file.

@@ -37,14 +37,21 @@ public:
 
     /// @brief Low-level driver for writing FITS files, operating on an open FITS file.
     template <typename ContainerT>
-    static void apply(Fits & fits, ContainerT const & container) {
-        PTR(FitsWriter) writer
-            = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits);
+    static void apply(
+        Fits & fits,
+        ContainerT const & container,
+        PTR(io::OutputArchive) archive = PTR(io::OutputArchive)()
+    ) {
+        PTR(FitsWriter) writer =
+            boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(
+                &fits,
+                archive
+            );
         writer->write(container);
     }
 
-    /// @brief Construct from a wrapped cfitsio pointer. 
-    explicit FitsWriter(Fits * fits) : _fits(fits) {}
+    /// @brief Construct from a wrapped cfitsio pointer.
+    explicit FitsWriter(Fits * fits, PTR(io::OutputArchive) archive);
 
 protected:
 
@@ -54,11 +61,16 @@ protected:
     /// @copydoc Writer::_writeRecord
     virtual void _writeRecord(BaseRecord const & source);
 
+    /// @copydoc Writer::_finish
+    virtual void _finish();
+
     Fits * _fits;      // wrapped cfitsio pointer
     std::size_t _row;  // which row we're currently processing
+    bool _doWriteArchive;
+    PTR(io::OutputArchive) _archive;
 
 private:
-    
+
     struct ProcessRecords;
 
     boost::shared_ptr<ProcessRecords> _processor; // a private Schema::forEach functor that write records

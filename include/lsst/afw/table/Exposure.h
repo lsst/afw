@@ -211,8 +211,11 @@ private:
     template <typename RecordT> friend class ExposureCatalogT;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
-    PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(
+        fits::Fits * fitsfile,
+        PTR(io::OutputArchive) archive = PTR(io::OutputArchive)()
+    ) const;
+
 };
 
 #ifndef SWIG
@@ -273,20 +276,6 @@ public:
      */
     template <typename OtherRecordT>
     ExposureCatalogT(ExposureCatalogT<OtherRecordT> const & other) : Base(other) {}
-
-    using Base::writeFits;
-
-    /**
-     *  @brief Write a FITS binary table to an open file object.
-     *
-     *  Instead of writing nested Persistables to an internal archive and appending it
-     *  to the FITS file, this overload inserts nested Persistables into the given
-     *  archive and does not save it, leaving it to the user to save it later.
-     */
-    void writeFits(fits::Fits & fitsfile, PTR(io::OutputArchive) archive) const {
-        PTR(io::FitsWriter) writer = this->getTable()->makeFitsWriter(&fitsfile, archive);
-        writer->write(*this);
-    }
 
     /// @brief Read a FITS binary table.
     static ExposureCatalogT readFits(std::string const & filename, int hdu=0) {

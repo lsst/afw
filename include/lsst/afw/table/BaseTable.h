@@ -27,6 +27,7 @@ class SchemaMapper;
 namespace io {
 
 class FitsWriter;
+class OutputArchive;
 
 } // namespace io
 
@@ -229,7 +230,10 @@ private:
     void operator=(BaseTable const & other);
 
     // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(
+        fits::Fits * fitsfile,
+        PTR(io::OutputArchive) archive = PTR(io::OutputArchive)()
+    ) const;
 
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     Schema _schema;                 // schema that defines the table's fields

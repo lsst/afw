@@ -98,14 +98,8 @@ public:
         return reader->template read<ContainerT>();
     }
 
-    /**
-     *  @brief Construct from a wrapped cfitsio pointer and (ignored) InputArchive.
-     *
-     *  Subclasses that require an InputArchive should accept the one that is passed in,
-     *  but may need to construct their own from the HDUs following the catalog HDU(s)
-     *  if this pointer is null.
-     */
-    explicit FitsReader(Fits * fits, PTR(InputArchive)) : _fits(fits) {}
+    /// @brief Construct from a wrapped cfitsio pointer and optional InputArchive.
+    explicit FitsReader(Fits * fits, PTR(InputArchive) archive = PTR(InputArchive)());
 
 protected:
 
@@ -115,13 +109,19 @@ protected:
     /// @copydoc Reader::_readRecord
     virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
 
-    /// @brief Should be called by any reimplementation of _readTable.
+    /**
+     *  @brief Should be called by any reimplementation of _readTable.
+     *
+     *  If "AR_HDU" is present in the table's metadata, it will be stripped and used
+     *  to set the _archive data member by reading an InputArchive at that HDU.
+     */
     void _startRecords(BaseTable & table);
 
     struct ProcessRecords;
 
     Fits * _fits;         // cfitsio pointer in a conveniencer wrapper
     std::size_t _row;     // which row we're currently reading
+    PTR(io::InputArchive) _archive;
 private:
 
     friend class afw::table::Schema;

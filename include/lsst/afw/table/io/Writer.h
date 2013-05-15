@@ -11,6 +11,8 @@ class BaseRecord;
 
 namespace io {
 
+class OutputArchive;
+
 /**
  *  @brief Write a container of records to disk (or elsewhere).
  *

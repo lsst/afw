@@ -125,10 +125,11 @@ namespace {
 class SourceFitsWriter : public io::FitsWriter {
 public:
 
-    explicit SourceFitsWriter(Fits * fits) : io::FitsWriter(fits),
-                                             _heavyPixCol(-1),
-                                             _heavyMaskCol(-1),
-                                             _heavyVarCol(-1) {}
+    explicit SourceFitsWriter(Fits * fits, PTR(io::OutputArchive) archive) :
+        io::FitsWriter(fits, archive),
+        _heavyPixCol(-1),
+        _heavyMaskCol(-1),
+        _heavyVarCol(-1) {}
 
 protected:
     
@@ -285,7 +286,6 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
         metadata->remove((boost::format("TFORM%d") % _heavyVarCol).str());
     }
 
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     --_spanCol; // switch to 0-indexed rather than 1-indexed convention.
     --_peakCol;
     --_heavyPixCol;
@@ -299,8 +299,9 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     LOAD_FLUX_SLOT(INST, Inst);
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
-    _startRecords(*table);
     table->setMetadata(metadata);
+    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+    _startRecords(*table);
     return table;
 }
 
@@ -442,8 +443,8 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile) const {
-    return boost::make_shared<SourceFitsWriter>(fitsfile);
+PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive) const {
+    return boost::make_shared<SourceFitsWriter>(fitsfile, archive);
 }
 
 //-----------------------------------------------------------------------------------------------------------

@@ -324,7 +324,21 @@ void FitsReader::_readSchema(
 void FitsReader::_startRecords(BaseTable & table) {
     _row = -1;
     _nRows = _fits->countRows();
-    _processor = boost::make_shared<ProcessRecords>(_fits, _row);
+    if (table.getMetadata()->exists("AR_HDU")) {
+        int archiveHdu = table.getMetadata()->get<int>("AR_HDU");
+        table.getMetadata()->remove("AR_HDU");
+        if (_archive) {
+            throw LSST_EXCEPT(
+                afw::fits::FitsError,
+                "Catalog::readFits called with external archive, but internal archive found"
+            );
+        }
+        int oldHdu = _fits->getHdu();
+        _fits->setHdu(archiveHdu);
+        _archive.reset(new io::InputArchive(table::io::InputArchive::readFits(*_fits)));
+        _fits->setHdu(oldHdu);
+    }
+    _processor = boost::make_shared<ProcessRecords>(_fits, _row, _archive.get());
     table.preallocate(_nRows);
 }
 
@@ -333,9 +347,9 @@ PTR(BaseTable) FitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     PTR(BaseTable) table = BaseTable::make(schema);
-    _startRecords(*table);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
+    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+    _startRecords(*table);
     return table;
 }
 
@@ -361,7 +375,15 @@ struct FitsReader::ProcessRecords {
     void readElements(PTR(io::Persistable) * elements, int size) const {
         std::vector<int> tmp(size);
         fits->readTableArray(row, col, size, &tmp.front());
-        // TODO!!!
+        if (!archive) {
+            throw LSST_EXCEPT(
+                afw::fits::FitsError,
+                "No archive found (missing AR_HDU key?) for table with Persistable fields"
+            );
+        }
+        for (int i = 0; i < size; ++i) {
+            elements[i] = archive->get(tmp[i]);
+        }
     }
 
     template <typename T>
@@ -395,8 +417,8 @@ struct FitsReader::ProcessRecords {
         schema.forEach(boost::ref(*this));
     }
 
-    ProcessRecords(Fits * fits_, std::size_t const & row_) :
-        row(row_), col(0), bit(0), nFlags(0), flagCol(-1), fits(fits_)
+    ProcessRecords(Fits * fits_, std::size_t const & row_, io::InputArchive * archive_) :
+        row(row_), col(0), bit(0), nFlags(0), flagCol(-1), fits(fits_), archive(archive_)
     {
         fits->behavior &= ~ Fits::AUTO_CHECK; // temporarily disable automatic FITS exceptions
         fits->readKey("FLAGCOL", flagCol);
@@ -419,6 +441,7 @@ struct FitsReader::ProcessRecords {
     Fits * fits;              // the FITS file pointer
     boost::scoped_array<bool> flags;  // space to hold a bool array of the flags to pass to cfitsio
     BaseRecord * record;      // record to write values to
+    io::InputArchive * archive; // InputArchive for Persistable fields
 };
 
 PTR(BaseRecord) FitsReader::_readRecord(PTR(BaseTable) const & table) {
@@ -468,5 +491,7 @@ PTR(FitsReader) FitsReader::make(Fits * fits, PTR(io::InputArchive) archive) {
     }
     return (*i->second)(fits, archive);
 }
+
+FitsReader::FitsReader(Fits * fits, PTR(io::InputArchive) archive) : _fits(fits), _archive(archive) {}
 
 }}}} // namespace lsst::afw::table::io

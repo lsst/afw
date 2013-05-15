@@ -5,6 +5,7 @@
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -16,6 +17,32 @@ typedef FitsWriter::Fits Fits;
 
 // The driver code is at the bottom of this section; it's easier to understand if you start there
 // and work your way up.
+
+namespace {
+
+// Schema::forEach functor that tests whether a schema has Persistable fields that require
+// an OutputArchive.
+struct HasPersistableFields {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const &) const {}
+
+    void operator()(SchemaItem<PTR(io::Persistable)> const &) const {
+        result = true;
+    }
+
+    static bool apply(Schema const & schema) {
+        HasPersistableFields f;
+        schema.forEach(boost::ref(f));
+        return f.result;
+    }
+
+    HasPersistableFields() : result(false) {}
+
+    mutable bool result;
+};
+
+} // anonymous
 
 // A Schema::forEach functor that writes FITS header keys for a field when it is called.
 struct ProcessSchema {
@@ -164,6 +191,14 @@ struct ProcessSchema {
 // the driver for all the above machinery
 void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows) {
     Schema schema = table->getSchema();
+    if (!_archive && HasPersistableFields::apply(schema)) {
+        _doWriteArchive = true;
+        _fits->writeKey(
+            "AR_HDU", _fits->countHdus() + 1,
+            "First HDU for the binary table archive containing non-POD fields"
+        );
+        _archive.reset(new io::OutputArchive());
+    }
     _fits->createTable();
     LSST_FITS_CHECK_STATUS(*_fits, "creating table");
     int nFlags = schema.getFlagFieldCount();
@@ -172,11 +207,12 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
     ProcessSchema::apply(*_fits, schema);
-    if (table->getMetadata())
+    if (table->getMetadata()) {
         _fits->writeMetadata(*table->getMetadata());
+    }
     _row = -1;
     _fits->addRows(nRows);
-    _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
+    _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row, _archive.get());
 }
 
 //----- Code for writing FITS records -----------------------------------------------------------------------
@@ -188,7 +224,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
 // We instantiate one of these, then reuse it on all the records after updating the data
 // members that tell it which record and row number it's on.
 struct FitsWriter::ProcessRecords {
-    
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         fits->writeTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
@@ -201,17 +237,24 @@ struct FitsWriter::ProcessRecords {
     }
 
     void operator()(SchemaItem<PTR(io::Persistable)> const & item) const {
-        // TODO!!!
+        int id = archive->put(record->get(item.key));
+        fits->writeTableScalar(row, col, id);
         ++col;
     }
-    
+
     void operator()(SchemaItem<Flag> const & item) const {
         flags[bit] = record->get(item.key);
         ++bit;
     }
 
-    ProcessRecords(Fits * fits_, Schema const & schema_, int nFlags_, std::size_t const & row_) :
-        row(row_), col(0), bit(0), nFlags(nFlags_), fits(fits_), schema(schema_)
+    ProcessRecords(
+        Fits * fits_,
+        Schema const & schema_,
+        int nFlags_,
+        std::size_t const & row_,
+        io::OutputArchive * archive_
+    ) :
+        row(row_), col(0), bit(0), nFlags(nFlags_), fits(fits_), schema(schema_), archive(archive_)
     {
         if (nFlags) flags.reset(new bool[nFlags]);
     }
@@ -233,11 +276,22 @@ struct FitsWriter::ProcessRecords {
     boost::scoped_array<bool> flags;
     BaseRecord const * record;
     Schema schema;
+    io::OutputArchive * archive;
 };
 
 void FitsWriter::_writeRecord(BaseRecord const & record) {
     ++_row;
     _processor->apply(&record);
+}
+
+FitsWriter::FitsWriter(Fits * fits, PTR(io::OutputArchive) archive) :
+    _fits(fits), _row(0), _doWriteArchive(false), _archive(archive)
+{}
+
+void FitsWriter::_finish() {
+    if (_doWriteArchive) {
+        _archive->writeFits(*_fits);
+    }
 }
 
 }}}} // namespace lsst::afw::table::io
