@@ -29,6 +29,27 @@ typedef Map::value_type MapItem;
 
 struct OutputArchive::Impl {
 
+    // Schema::forEach functor that calls put() on each Persistable field in a record
+    struct SavePersistableFields {
+        
+        template <typename T>
+        void operator()(SchemaItem<T> const &) const {}
+
+        void operator()(SchemaItem<PTR(Persistable)> const & item) const {
+            _impl->put(record->get(item.key).get(), _impl, _permissive);
+        }
+
+        SavePersistableFields(PTR(Impl) const & impl, bool permissive) :
+            record(), _impl(impl), _permissive(permissive)
+        {}
+
+        PTR(BaseRecord) record;
+
+    private:
+        PTR(Impl) _impl;
+        bool _permissive;
+    };
+
     BaseCatalog makeCatalog(Schema const & schema) {
         int catArchive = 1;
         CatalogVector::iterator iter = _catalogs.begin();
@@ -52,9 +73,22 @@ struct OutputArchive::Impl {
 
     void saveCatalog(
         BaseCatalog const & catalog, int id,
-        std::string const & name, std::string const & module, 
-        int catPersistable
+        std::string const & name, std::string const & module,
+        int catPersistable, PTR(Impl) const & self, bool permissive
     ) {
+        if (catalog.getSchema().hasPersistableFields()) {
+            // We call put() on any nested Persistables in the catalog;
+            // we'll end up calling it agin when we call writeFits on
+            // the catalog, but that will just be a no-op that returns
+            // the ID.  We can't rely on that call to add them to the
+            // archive, because by that point the archive index has
+            // already been written to disk.
+            SavePersistableFields func(self, permissive);
+            for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
+                func.record = i;
+                catalog.getSchema().forEach(boost::ref(func));
+            }
+        }
         PTR(BaseRecord) indexRecord = _index.addNew();
         indexRecord->set(indexKeys.id, id);
         indexRecord->set(indexKeys.name, name);
@@ -97,17 +131,17 @@ struct OutputArchive::Impl {
         return r.first->second;
     }
 
-    void writeFits(fits::Fits & fitsfile) {
+    void writeFits(fits::Fits & fitsfile, PTR(OutputArchive) archive) {
         _index.getTable()->getMetadata()->set("AR_NCAT", int(_catalogs.size() + 1),
                                               "# of catalogs in this archive, including the index");
-        _index.writeFits(fitsfile);
+        _index.writeFits(fitsfile, archive);
         int n = 1;
         for (
             CatalogVector::const_iterator iter = _catalogs.begin();
             iter != _catalogs.end();
             ++iter, ++n
         ) {
-            iter->writeFits(fitsfile);
+            iter->writeFits(fitsfile, archive);
         }
     }
     
@@ -163,7 +197,8 @@ BaseCatalog const & OutputArchive::getCatalog(int n) const {
 int OutputArchive::countCatalogs() const { return _impl->_catalogs.size() + 1; }
 
 void OutputArchive::writeFits(fits::Fits & fitsfile) const {
-    _impl->writeFits(fitsfile);
+    PTR(OutputArchive) self(new OutputArchive(*this));  // this is a shallow copy, but we need a pointer
+    _impl->writeFits(fitsfile, self);
 }
 
 // ----- OutputArchiveHandle ------------------------------------------------------------------------------
@@ -172,8 +207,8 @@ BaseCatalog OutputArchiveHandle::makeCatalog(Schema const & schema) {
     return _impl->makeCatalog(schema);
 }
 
-void OutputArchiveHandle::saveCatalog(BaseCatalog const & catalog) {
-    _impl->saveCatalog(catalog, _id, _name, _module, _catPersistable);
+void OutputArchiveHandle::saveCatalog(BaseCatalog const & catalog, bool permissive) {
+    _impl->saveCatalog(catalog, _id, _name, _module, _catPersistable, _impl, permissive);
     ++_catPersistable;
 }
 

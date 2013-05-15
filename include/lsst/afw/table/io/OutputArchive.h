@@ -124,8 +124,11 @@ public:
      *
      *  The catalog must have been created using makeCatalog,
      *  or be a shallow copy or subset of such a catalog.
+     *
+     *  The "permissive" flag is passed to put() when this is
+     *  called on Persistable objects in the catalog.
      */
-    void saveCatalog(BaseCatalog const & catalog);
+    void saveCatalog(BaseCatalog const & catalog, bool permissive=false);
 
     //@{
     /**
