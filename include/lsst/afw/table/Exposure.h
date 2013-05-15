@@ -285,17 +285,16 @@ public:
     static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<ExposureCatalogT>(manager, hdu);
     }
-    /// @brief Read a FITS binary table from a file object already at the correct extension.
-    static ExposureCatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<ExposureCatalogT>(fitsfile);
-    }
     /**
      *  @brief Read a FITS binary table from a file object already at the correct extension.
      *
-     *  This overload reads nested Persistables from the given archive instead of loading
+     *  If non-null, nested Persistables will be read from the given archive instead of loading
      *  a new archive from the HDUs following the catalog.
      */
-    static ExposureCatalogT readFits(fits::Fits & fitsfile, PTR(io::InputArchive) archive) {
+    static ExposureCatalogT readFits(
+        fits::Fits & fitsfile,
+        PTR(io::InputArchive) archive = PTR(io::InputArchive)()
+    ) {
         return io::FitsReader::apply<ExposureCatalogT>(fitsfile, archive);
     }
 

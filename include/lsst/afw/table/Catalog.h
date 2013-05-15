@@ -15,6 +15,7 @@
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
+#include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/SchemaMapper.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -301,9 +302,17 @@ public:
     static CatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<CatalogT>(manager, hdu);
     }
-    /// @brief Read a FITS binary table from a file object already at the correct extension.
-    static CatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<CatalogT>(fitsfile);
+    /**
+     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *
+     *  If non-null, nested Persistables will be read from the given archive instead of loading
+     *  a new archive from the HDUs following the catalog.
+     */
+    static CatalogT readFits(
+        fits::Fits & fitsfile,
+        PTR(io::InputArchive) archive = PTR(io::InputArchive)()
+    ) {
+        return io::FitsReader::apply<CatalogT>(fitsfile, archive);
     }
 
     /**

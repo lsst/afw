@@ -118,9 +118,18 @@ public:
     static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
         return io::FitsReader::apply<SortedCatalogT>(manager, hdu);
     }
-    /// @brief Read a FITS binary table.
-    static SortedCatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<SortedCatalogT>(fitsfile);
+
+    /**
+     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *
+     *  If non-null, nested Persistables will be read from the given archive instead of loading
+     *  a new archive from the HDUs following the catalog.
+     */
+    static SortedCatalogT readFits(
+        fits::Fits & fitsfile,
+        PTR(io::InputArchive) archive = PTR(io::InputArchive)()
+    ) {
+        return io::FitsReader::apply<SortedCatalogT>(fitsfile, archive);
     }
 
     /**
