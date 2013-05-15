@@ -165,6 +165,7 @@ struct ProcessSchema {
 // the driver for all the above machinery
 void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows) {
     Schema schema = table->getSchema();
+    _fits->createTable();
     if (!_archive && schema.hasPersistableFields()) {
         _doWriteArchive = true;
         _fits->writeKey(
@@ -173,7 +174,6 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
         );
         _archive.reset(new io::OutputArchive());
     }
-    _fits->createTable();
     LSST_FITS_CHECK_STATUS(*_fits, "creating table");
     int nFlags = schema.getFlagFieldCount();
     if (nFlags > 0) {

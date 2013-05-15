@@ -31,7 +31,7 @@ struct OutputArchive::Impl {
 
     // Schema::forEach functor that calls put() on each Persistable field in a record
     struct SavePersistableFields {
-        
+
         template <typename T>
         void operator()(SchemaItem<T> const &) const {}
 

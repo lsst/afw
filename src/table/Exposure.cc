@@ -37,7 +37,7 @@ public:
 class ExposureTableImpl : public ExposureTable {
 public:
 
-    explicit ExposureTableImpl(Schema const & schema) : 
+    explicit ExposureTableImpl(Schema const & schema) :
         ExposureTable(schema)
     {}
 
@@ -53,65 +53,6 @@ private:
         return boost::make_shared<ExposureRecordImpl>(getSelf<ExposureTableImpl>());
     }
 
-};
-
-// Schema prepended when saving an Exposure table
-struct PersistenceSchema : private boost::noncopyable {
-    Schema schema;
-    Key<int> wcs;
-    Key<int> psf;
-    Key<int> calib;
-
-    static PersistenceSchema const & get() {
-        static PersistenceSchema const instance;
-        return instance;
-    }
-
-    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
-    SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
-        std::vector<Schema> inSchemas;
-        inSchemas.push_back(PersistenceSchema::get().schema);
-        inSchemas.push_back(inputSchema);
-        return SchemaMapper::join(inSchemas).back(); // don't need front; it's an identity mapper
-    }
-
-    // Create a SchemaMapper that maps a BaseRecord with IDs for Psf and Wcs to an ExposureRecord
-    SchemaMapper makeReadMapper(Schema const & inputSchema) const {
-        return SchemaMapper::removeMinimalSchema(inputSchema, schema);
-    }
-
-    // Convert an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
-    template <typename OutputArchiveIsh>
-    void writeRecord(
-        ExposureRecord const & input, BaseRecord & output,
-        SchemaMapper const & mapper, OutputArchiveIsh & archive,
-        bool permissive
-    ) const {
-        output.assign(input, mapper);
-        output.set(psf, archive.put(input.getPsf(), permissive));
-        output.set(wcs, archive.put(input.getWcs(), permissive));
-        output.set(calib, archive.put(input.getCalib(), permissive));
-    }
-
-    void readRecord(
-        BaseRecord const & input, ExposureRecord & output,
-        SchemaMapper const & mapper, io::InputArchive const & archive
-    ) const {
-        output.assign(input, mapper);
-        output.setPsf(archive.get<detection::Psf>(input.get(psf)));
-        output.setWcs(archive.get<image::Wcs>(input.get(wcs)));
-        output.setCalib(archive.get<image::Calib>(input.get(calib)));
-    }
-
-private:
-    PersistenceSchema() :
-        schema(),
-        wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
-        psf(schema.addField<int>("psf", "archive ID for Psf object")),
-        calib(schema.addField<int>("calib", "archive ID for Calib object"))
-    {
-        schema.getCitizen().markPersistent();
-    }
 };
 
 } // anonymous
@@ -134,42 +75,21 @@ public:
     {}
 
 protected:
-    
+
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
-    virtual void _writeRecord(BaseRecord const & r);
-
-    PTR(BaseRecord) _record;
-    SchemaMapper _mapper;
 };
 
 void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(ExposureTable) inTable = boost::dynamic_pointer_cast<ExposureTable const>(t);
-    if (!inTable) {
+    CONST_PTR(ExposureTable) table = boost::dynamic_pointer_cast<ExposureTable const>(t);
+    if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicErrorException,
             "Cannot use a ExposureFitsWriter on a non-Exposure table."
         );
     }
-    _mapper = PersistenceSchema::get().makeWriteMapper(inTable->getSchema());
-    PTR(BaseTable) outTable = BaseTable::make(_mapper.getOutputSchema());
-    io::FitsWriter::_writeTable(outTable, nRows);
+    io::FitsWriter::_writeTable(table, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
-
-    // TODO: this is a temporary workaround
-    if (!_archive) {
-        _doWriteArchive = true;
-        _fits->writeKey("AR_HDU", _fits->countHdus() + 1);
-        _archive.reset(new io::OutputArchive());
-    }
-
-    _record = outTable->makeRecord();
-}
-
-void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
-    ExposureRecord const & record = static_cast<ExposureRecord const &>(r);
-    PersistenceSchema::get().writeRecord(record, *_record, _mapper, *_archive, false);
-    io::FitsWriter::_writeRecord(*_record);
 }
 
 } // anonymous
@@ -194,34 +114,17 @@ protected:
 
     virtual PTR(BaseTable) _readTable();
 
-    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
-
-    PTR(BaseTable) _inTable;
-    SchemaMapper _mapper;
 };
 
 PTR(BaseTable) ExposureFitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
-    _inTable = BaseTable::make(schema);
-    _mapper = PersistenceSchema::get().makeReadMapper(schema);
-    PTR(ExposureTable) table = ExposureTable::make(_mapper.getOutputSchema());
-    table->setMetadata(metadata);
+    PTR(ExposureTable) table = ExposureTable::make(schema);
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+    table->setMetadata(metadata);
     _startRecords(*table);
     return table;
-}
-
-PTR(BaseRecord) ExposureFitsReader::_readRecord(PTR(BaseTable) const & t) {
-    PTR(ExposureRecord) record;
-    PTR(ExposureTable) table = boost::static_pointer_cast<ExposureTable>(t);
-    PTR(BaseRecord) inRecord = io::FitsReader::_readRecord(_inTable);
-    if (inRecord) {
-        record = table->makeRecord();
-        PersistenceSchema::get().readRecord(*inRecord, *record, _mapper, *_archive);
-    }
-    return record;
 }
 
 // registers the reader so FitsReader::make can use it.
@@ -240,6 +143,27 @@ geom::Box2I ExposureRecord::getBBox() const {
 void ExposureRecord::setBBox(geom::Box2I const & bbox) {
     set(ExposureTable::getBBoxMinKey(), bbox.getMin());
     set(ExposureTable::getBBoxMaxKey(), bbox.getMax());
+}
+
+CONST_PTR(image::Wcs) ExposureRecord::getWcs() const {
+    return boost::static_pointer_cast<image::Wcs>(get(ExposureTable::getWcsKey()));
+}
+void ExposureRecord::setWcs(CONST_PTR(image::Wcs) wcs) {
+    set(ExposureTable::getWcsKey(), boost::const_pointer_cast<image::Wcs>(wcs));
+}
+
+CONST_PTR(detection::Psf) ExposureRecord::getPsf() const {
+    return boost::static_pointer_cast<detection::Psf>(get(ExposureTable::getPsfKey()));
+}
+void ExposureRecord::setPsf(CONST_PTR(detection::Psf) psf) {
+    set(ExposureTable::getPsfKey(), boost::const_pointer_cast<detection::Psf>(psf));
+}
+
+CONST_PTR(image::Calib) ExposureRecord::getCalib() const {
+    return boost::static_pointer_cast<image::Calib>(get(ExposureTable::getCalibKey()));
+}
+void ExposureRecord::setCalib(CONST_PTR(image::Calib) calib) {
+    set(ExposureTable::getCalibKey(), boost::const_pointer_cast<image::Calib>(calib));
 }
 
 bool ExposureRecord::contains(Coord const & coord) const {
@@ -265,15 +189,6 @@ bool ExposureRecord::contains(geom::Point2D const & point, image::Wcs const & wc
 
 ExposureRecord::ExposureRecord(PTR(ExposureTable) const & table) : BaseRecord(table) {}
 
-void ExposureRecord::_assign(BaseRecord const & other) {
-    try {
-        ExposureRecord const & s = dynamic_cast<ExposureRecord const &>(other);
-        _psf = s._psf;
-        _wcs = s._wcs;
-        _calib = s._calib;
-    } catch (std::bad_cast&) {}
-}
-
 PTR(ExposureTable) ExposureTable::make(Schema const & schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
@@ -294,6 +209,9 @@ ExposureTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");
     bboxMin = schema.addField< Point<int> >("bbox.min", "bbox minimum point", "pixels");
     bboxMax = schema.addField< Point<int> >("bbox.max", "bbox maximum point", "pixels");
+    wcs = schema.addField<PTR(io::Persistable)>("wcs", "world coordinate system");
+    psf = schema.addField<PTR(io::Persistable)>("psf", "point spread function");
+    calib = schema.addField<PTR(io::Persistable)>("calib", "photometric calibration");
     schema.getCitizen().markPersistent();
 }
 
@@ -310,30 +228,6 @@ ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) arch
 //-----------------------------------------------------------------------------------------------------------
 //----- ExposureCatalogT member function implementations ----------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
-
-template <typename RecordT>
-void ExposureCatalogT<RecordT>::writeToArchive(io::OutputArchiveHandle & handle, bool permissive) const {
-    SchemaMapper mapper = PersistenceSchema::get().makeWriteMapper(this->getSchema());
-    BaseCatalog outputCat = handle.makeCatalog(mapper.getOutputSchema());
-    outputCat.reserve(this->size());
-    for (const_iterator i = this->begin(); i != this->end(); ++i) {
-        PersistenceSchema::get().writeRecord(*i, *outputCat.addNew(), mapper, handle, permissive);
-    }
-    handle.saveCatalog(outputCat);
-}
-
-template <typename RecordT>
-ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
-    io::InputArchive const & archive, BaseCatalog const & catalog
-) {
-    SchemaMapper mapper = PersistenceSchema::get().makeReadMapper(catalog.getSchema());
-    ExposureCatalogT<ExposureRecord> result(mapper.getOutputSchema());
-    result.reserve(catalog.size());
-    for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-        PersistenceSchema::get().readRecord(*i, *result.addNew(), mapper, archive);
-    }
-    return result;
-}
 
 template <typename RecordT>
 ExposureCatalogT<RecordT>

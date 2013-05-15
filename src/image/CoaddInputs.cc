@@ -24,10 +24,30 @@
 #include "lsst/afw/image/CoaddInputs.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 
 namespace lsst { namespace afw { namespace image {
 
 namespace {
+
+// A std::for_each functor to copy BaseRecords into ExposureRecords
+// (this should probably be something Catalogs should be able to do,
+// but coming up with a good API for that is tricky enough that I
+// don't want to tackle it right now).
+struct CopyRecords {
+
+    void operator()(afw::table::BaseRecord const & input) const {
+        out->addNew()->assign(input);
+    }
+
+    static void apply(afw::table::BaseCatalog const & input, afw::table::ExposureCatalog & output) {
+        CopyRecords f = { &output };
+        output.reserve(input.size());
+        std::for_each(input.begin(), input.end(), f);
+    }
+
+    afw::table::ExposureCatalog * out;
+};
 
 class CoaddInputsFactory : public table::io::PersistableFactory {
 public:
@@ -35,9 +55,11 @@ public:
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2);
-        PTR(CoaddInputs) result = boost::make_shared<CoaddInputs>();
-        result->visits = table::ExposureCatalog::readFromArchive(archive, catalogs.front());
-        result->ccds = table::ExposureCatalog::readFromArchive(archive, catalogs.back());
+        PTR(CoaddInputs) result = boost::make_shared<CoaddInputs>(
+            catalogs.front().getSchema(), catalogs.back().getSchema()
+        );
+        CopyRecords::apply(catalogs.front(), result->visits);
+        CopyRecords::apply(catalogs.back(), result->ccds);
         return result;
     }
 
@@ -64,8 +86,12 @@ bool CoaddInputs::isPersistable() const { return true; }
 std::string CoaddInputs::getPersistenceName() const { return "CoaddInputs"; }
 
 void CoaddInputs::write(OutputArchiveHandle & handle) const {
-    visits.writeToArchive(handle, true); // true == permissive - just ignore Psfs, Wcss that can't be saved
-    ccds.writeToArchive(handle, true);
+    afw::table::BaseCatalog visitOut = handle.makeCatalog(visits.getSchema());
+    visitOut.assign(visits.begin(), visits.end(), true); // true == deep copy
+    handle.saveCatalog(visitOut, true); // true == permissive - just ignore Psfs, Wcss that can't be saved
+    afw::table::BaseCatalog ccdOut = handle.makeCatalog(ccds.getSchema());
+    ccdOut.assign(ccds.begin(), ccds.end(), true);
+    handle.saveCatalog(ccdOut, true);
 }
 
 }}} // namespace lsst::afw::image

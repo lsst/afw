@@ -94,26 +94,20 @@ public:
 
     //@{
     /// Get/Set the the attached Wcs, Psf, or Calib.  No copies are made.
-    CONST_PTR(image::Wcs) getWcs() const { return _wcs; }
-    void setWcs(CONST_PTR(image::Wcs) wcs) { _wcs = wcs; }
+    CONST_PTR(image::Wcs) getWcs() const;
+    void setWcs(CONST_PTR(image::Wcs) wcs);
 
-    CONST_PTR(detection::Psf) getPsf() const { return _psf; }
-    void setPsf(CONST_PTR(detection::Psf) psf) { _psf = psf; }
+    CONST_PTR(detection::Psf) getPsf() const;
+    void setPsf(CONST_PTR(detection::Psf) psf);
 
-    CONST_PTR(image::Calib) getCalib() const { return _calib; }
-    void setCalib(CONST_PTR(image::Calib) calib) { _calib = calib; }
+    CONST_PTR(image::Calib) getCalib() const;
+    void setCalib(CONST_PTR(image::Calib) calib);
     //@}
 
 protected:
 
     ExposureRecord(PTR(ExposureTable) const & table);
 
-    virtual void _assign(BaseRecord const & other);
-
-private:
-    CONST_PTR(image::Wcs) _wcs;
-    CONST_PTR(detection::Psf) _psf;
-    CONST_PTR(image::Calib) _calib;
 };
 
 /**
@@ -167,6 +161,12 @@ public:
     static Key< Point<int> > getBBoxMinKey() { return getMinimalSchema().bboxMin; }
     /// @brief Key for the maximum point of the bbox.
     static Key< Point<int> > getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
+    /// @brief Key for the Wcs
+    static Key< PTR(io::Persistable) > getWcsKey() { return getMinimalSchema().wcs; }
+    /// @brief Key for the Psf
+    static Key< PTR(io::Persistable) > getPsfKey() { return getMinimalSchema().psf; }
+    /// @brief Key for the Calib
+    static Key< PTR(io::Persistable) > getCalibKey() { return getMinimalSchema().calib; }
     //@}
 
     /// @copydoc BaseTable::clone
@@ -199,6 +199,9 @@ private:
         Key<RecordId> id;
         Key< Point<int> > bboxMin;
         Key< Point<int> > bboxMax;
+        Key< PTR(io::Persistable) > wcs;
+        Key< PTR(io::Persistable) > psf;
+        Key< PTR(io::Persistable) > calib;
 
         MinimalSchema();
     };
@@ -297,23 +300,6 @@ public:
     ) {
         return io::FitsReader::apply<ExposureCatalogT>(fitsfile, archive);
     }
-
-    /**
-     *  @brief Convenience output function for Persistables that contain an ExposureCatalog.
-     *
-     *  Unlike writeFits, this saves main catalog to one of the tables within the archive,
-     *  as part of a Persistable's set of catalogs, rather than saving it to a separate HDU
-     *  not managed by the archive.
-     */
-    void writeToArchive(io::OutputArchiveHandle & handle, bool ignoreUnpersistable=true) const;
-
-    /**
-     *  @brief Convenience input function for Persistables that contain an ExposureCatalog.
-     *
-     *  Unlike the FITS read methods, this reader is not polymorphically aware - it always
-     *  tries to create an ExposureTable rather than infer the type of table from the data.
-     */
-    static ExposureCatalogT readFromArchive(io::InputArchive const & archive, BaseCatalog const & catalog);
 
     /**
      * @brief Shallow copy a subset of another ExposureCatalog.  Mostly here for
