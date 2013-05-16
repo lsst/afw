@@ -544,6 +544,110 @@ class BackgroundTestCase(unittest.TestCase):
         image -= bkgdImage
         self.assertEqual(afwMath.makeStatistics(image, afwMath.MEAN).getValue(), 0.0)
 
+    def testBadPatch(self):
+        """Test that a large bad patch of an image doesn't cause an absolute failure"""
+
+        initialValue = 20
+        mi = afwImage.MaskedImageF(500, 200)
+        mi.set((initialValue, 0x0, 1.0))
+        im = mi.getImage()
+        im[0:200, :] = np.nan
+        del im
+        msk = mi.getMask()
+        badBits = msk.getPlaneBitMask(['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
+        msk[0:400, :] |= badBits
+        del msk
+        
+        if display:
+            ds9.mtv(mi, frame=0)
+
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setAndMask(badBits)
+        nx, ny = 17, 17
+        bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
+
+        bkgd = afwMath.makeBackground(mi, bctrl)
+        statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+        if display:
+            ds9.mtv(statsImage, frame=1)
+
+        # the test is that this doesn't fail if the bug (#2297) is fixed
+        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+        self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+        if display:
+            ds9.mtv(bkgdImage, frame=2)
+        #
+        # Check that we can fix the NaNs in the statsImage
+        #
+        defaultValue = 10
+        sim = statsImage.getImage().getArray()
+        sim[np.isnan(sim)] = defaultValue # replace NaN by defaultValue
+        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+
+        self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), defaultValue)
+            
+    def testBadRows(self):
+        """Test that a bad set of rows in an image doesn't cause a failure"""
+
+        initialValue = 20
+        mi = afwImage.MaskedImageF(500, 200)
+        mi.set((initialValue, 0x0, 1.0))
+        im = mi.getImage()
+        im[:, 0:100] = np.nan
+        del im
+        msk = mi.getMask()
+        badBits = msk.getPlaneBitMask(['EDGE', 'DETECTED', 'DETECTED_NEGATIVE'])
+        msk[0:400, :] |= badBits
+        del msk
+        
+        if display:
+            ds9.mtv(mi, frame=0)
+
+        sctrl = afwMath.StatisticsControl()
+        sctrl.setAndMask(badBits)
+        nx, ny = 17, 17
+        bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
+
+        bkgd = afwMath.makeBackground(mi, bctrl)
+        statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+        if display:
+            ds9.mtv(statsImage, frame=1)
+
+        # the test is that this doesn't fail if the bug (#2297) is fixed
+        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+        self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+        if 1 or display:
+            ds9.mtv(bkgdImage, frame=2)
+
+    def testBadImage(self):
+        """Test that an entirely bad image doesn't cause an absolute failure"""
+
+        initialValue = 20
+        mi = afwImage.MaskedImageF(500, 200)
+        #
+        # Check that no good values don't crash (they return NaN), and that a single good value
+        # is enough to redeem the entire image
+        #
+        for pix00 in [np.nan, initialValue]:
+            mi.getImage()[:] = np.nan
+            mi.getImage()[0, 0] = pix00
+
+            sctrl = afwMath.StatisticsControl()
+            nx, ny = 17, 17
+            bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
+
+            bkgd = afwMath.makeBackground(mi, bctrl)
+            statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+
+            # the test is that this doesn't fail if the bug (#2297) is fixed
+            bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
+            val = np.mean(bkgdImage[0:100, 0:100].getArray())
+
+            if np.isfinite(pix00):
+                self.assertEqual(val, pix00)
+            else:
+                self.assertTrue(np.isnan(val))
+            
     def testBackgroundFromStatsImage(self):
         """Check that we can rebuild a Background from a BackgroundMI.getStatsImage()"""
 
