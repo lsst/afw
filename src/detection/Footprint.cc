@@ -800,7 +800,7 @@ Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WC
     geom::Box2I bounding(geom::Point2I(xMin, yMin), geom::Point2I(xMax, yMax));
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
-    Footprint::Ptr fpNew = boost::make_shared<Footprint>(bounding, bbox);
+    PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, bbox);
 
     for (int y = yMin; y <= yMax; ++y) {
         bool inSpan = false;            // Are we in a span?
