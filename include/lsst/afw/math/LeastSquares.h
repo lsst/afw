@@ -124,6 +124,10 @@ public:
         ndarray::Array<T1,2,C1> const & design,
         ndarray::Array<T2,1,C2> const & data
     ) {
+        // n.b. "template cast<T>" below is not a special kind of cast; it's just
+        // the weird C++ syntax required for calling a templated member function
+        // called "cast" in this context; see
+        // http://eigen.tuxfamily.org/dox-devel/TopicTemplateKeyword.html
         _getDesignMatrix() = design.asEigen().template cast<double>();
         _getDataVector() = data.asEigen().template cast<double>();
         _factor(false);
