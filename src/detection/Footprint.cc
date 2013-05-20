@@ -73,37 +73,6 @@ namespace {
 		}
 	};
 
-/// Get extremum from a list of four points
-///
-/// There are four options (min/max, x/y), supplied by the following helpers
-/// that are templated on in the extremum function.
-struct Min {
-    static double func(double a, double b) {
-        return std::min(a, b);
-    }
-};
-struct Max {
-    static double func(double a, double b) {
-        return std::max(a, b);
-    }
-};
-struct XPart {
-    static double get(geom::Point2D const& p) {
-        return p.getX();
-    }
-};
-struct YPart {
-    static double get(geom::Point2D const& p) {
-        return p.getY();
-    }
-};
-template <class Extremum, class Part>
-int extremum(geom::Point2D const& a, geom::Point2D const& b, geom::Point2D const& c, geom::Point2D const& d) {
-    double const extreme = Extremum::func(Extremum::func(Extremum::func(Part::get(a), Part::get(b)),
-                                                         Part::get(c)), Part::get(d));
-    return std::floor(0.5 + extreme);
-}
-
 /// Transform x,y in the frame of one image to another, via their WCSes
 geom::Point2D transformPoint(double x, double y, 
                              image::Wcs const& source,
@@ -782,25 +751,21 @@ Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WC
     ) const {
     // Transform the original bounding box
     geom::Box2I const& fpBox = getBBox(); // Original bounding box
-    geom::Point2D const& p00 = transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target);
-    geom::Point2D const& p01 = transformPoint(fpBox.getMinX(), fpBox.getMaxY(), source, target);
-    geom::Point2D const& p10 = transformPoint(fpBox.getMaxX(), fpBox.getMinY(), source, target);
-    geom::Point2D const& p11 = transformPoint(fpBox.getMaxX(), fpBox.getMaxY(), source, target);
-
-    // calculate the new bounding box that embraces the four transformed points.
-    int const xMin = std::max(bbox.getMinX(), extremum<Min, XPart>(p00, p01, p10, p11));
-    int const yMin = std::max(bbox.getMinY(), extremum<Min, YPart>(p00, p01, p10, p11));
-    int const xMax = std::min(bbox.getMaxX(), extremum<Max, XPart>(p00, p01, p10, p11));
-    int const yMax = std::min(bbox.getMaxY(), extremum<Max, YPart>(p00, p01, p10, p11));
+    geom::Box2D tBoxD;
+    tBoxD.include(transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target));
+    tBoxD.include(transformPoint(fpBox.getMinX(), fpBox.getMaxY(), source, target));
+    tBoxD.include(transformPoint(fpBox.getMaxX(), fpBox.getMinY(), source, target));
+    tBoxD.include(transformPoint(fpBox.getMaxX(), fpBox.getMaxY(), source, target));
+    geom::Box2I tBoxI(tBoxD);
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
     PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, bbox);
 
-    for (int y = yMin; y <= yMax; ++y) {
+    for (int y = tBoxI.getBeginY(); y < tBoxI.getEndY(); ++y) {
         bool inSpan = false;            // Are we in a span?
         int start = -1;                  // Start of span
 
-        for (int x = xMin; x <= xMax; ++x) {
+        for (int x = tBoxI.getBeginX(); x < tBoxI.getEndX(); ++x) {
             lsst::afw::geom::Point2D const& p = transformPoint(x, y, target, source);
             int const xSource = std::floor(0.5 + p.getX());
             int const ySource = std::floor(0.5 + p.getY());
@@ -816,7 +781,7 @@ Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WC
             }
         }
         if (inSpan) {
-            fpNew->addSpan(y, start, xMax);
+            fpNew->addSpan(y, start, tBoxI.getMaxX());
         }
     }
     
