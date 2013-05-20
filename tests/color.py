@@ -131,15 +131,16 @@ class CalibTestCase(unittest.TestCase):
 
         mag, magErr = self.calib.getMagnitude(flux, fluxErr) # Result assumed to be true: tested elsewhere
         
-        fluxList = [flux for i in range(num)]
-        fluxErrList = [fluxErr for i in range(num)]
+        fluxList = numpy.array([flux for i in range(num)], dtype=float)
+        fluxErrList = numpy.array([fluxErr for i in range(num)], dtype=float)
 
         magList = self.calib.getMagnitude(fluxList)
         for m in magList:
             self.assertEqual(m, mag)
         
-        magnitudes = self.calib.getMagnitude(fluxList, fluxErrList)
-        for m, dm in zip(magnitudes[0], magnitudes[1]):
+        mags, magErrs = self.calib.getMagnitude(fluxList, fluxErrList)
+
+        for m, dm in zip(mags, magErrs):
             self.assertEqual(m, mag)
             self.assertEqual(dm, magErr)
 
@@ -149,7 +150,7 @@ class CalibTestCase(unittest.TestCase):
         for f in fluxList:
             self.assertEqual(f, flux)
 
-        fluxes = self.calib.getFlux(magnitudes[0], magnitudes[1])
+        fluxes = self.calib.getFlux(mags, magErrs)
         for f, df in zip(fluxes[0], fluxes[1]):
             self.assertAlmostEqual(f, flux)
             self.assertAlmostEqual(df, fluxErr)

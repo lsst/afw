@@ -33,6 +33,7 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string/trim.hpp"
 
+#include "ndarray.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/image/Calib.h"
@@ -330,11 +331,11 @@ double Calib::getFlux(double const mag ///< the magnitude of the object
     checkNegativeFlux0(_fluxMag0);
     return convertToFlux(_fluxMag0, mag);
 }
-std::vector<double> Calib::getFlux(std::vector<double> const& mag) const {
+ndarray::Array<double,1> Calib::getFlux(ndarray::Array<double const,1> const & mag) const {
     checkNegativeFlux0(_fluxMag0);
-    std::vector<double> flux(mag.size());
-    std::vector<double>::const_iterator inIter = mag.begin();
-    std::vector<double>::iterator outIter = flux.begin();
+    ndarray::Array<double,1> flux = ndarray::allocate(mag.size());
+    ndarray::Array<double const,1>::Iterator inIter = mag.begin();
+    ndarray::Array<double,1>::Iterator outIter = flux.begin();
     for (; inIter != mag.end(); ++inIter, ++outIter) {
         *outIter = convertToFlux(_fluxMag0, *inIter);
     }
@@ -357,10 +358,10 @@ std::pair<double, double> Calib::getFlux(
     return std::make_pair(flux, fluxErr);
 }
 
-std::pair<std::vector<double>, std::vector<double> > Calib::getFlux(std::vector<double> const& mag,
-                                                                    std::vector<double> const& magErr
-    ) const
-{
+std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getFlux(
+    ndarray::Array<double const,1> const & mag,
+    ndarray::Array<double const,1> const & magErr
+) const {
     checkNegativeFlux0(_fluxMag0);
     if (mag.size() != magErr.size()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
@@ -368,11 +369,12 @@ std::pair<std::vector<double>, std::vector<double> > Calib::getFlux(std::vector<
                            mag.size() % magErr.size()).str());
     }
 
-    std::vector<double> flux(mag.size()), fluxErr(mag.size());
-    std::vector<double>::const_iterator magIter = mag.begin();
-    std::vector<double>::const_iterator magErrIter = magErr.begin();
-    std::vector<double>::iterator fluxIter = flux.begin();
-    std::vector<double>::iterator fluxErrIter = fluxErr.begin();
+    ndarray::Array<double,1> flux = ndarray::allocate(mag.size());
+    ndarray::Array<double,1> fluxErr = ndarray::allocate(mag.size());
+    ndarray::Array<double const,1>::Iterator magIter = mag.begin();
+    ndarray::Array<double const,1>::Iterator magErrIter = magErr.begin();
+    ndarray::Array<double,1>::Iterator fluxIter = flux.begin();
+    ndarray::Array<double,1>::Iterator fluxErrIter = fluxErr.begin();
 
     double fluxMag0InvSNR = _fluxMag0Sigma/_fluxMag0;
     for (; magIter != mag.end(); ++magIter, ++magErrIter, ++fluxIter, ++fluxErrIter) {
@@ -414,12 +416,11 @@ std::pair<double, double> Calib::getMagnitude(double const flux, ///< the measur
     return std::make_pair(mag, magErr);
 }
 
-std::vector<double> Calib::getMagnitude(std::vector<double> const& flux) const
-{
+ndarray::Array<double,1> Calib::getMagnitude(ndarray::Array<double const,1> const & flux) const {
     checkNegativeFlux0(_fluxMag0);
-    std::vector<double> mag(flux.size());
-    std::vector<double>::const_iterator fluxIter = flux.begin();
-    std::vector<double>::iterator magIter = mag.begin();
+    ndarray::Array<double,1> mag = ndarray::allocate(flux.size());
+    ndarray::Array<double const,1>::Iterator fluxIter = flux.begin();
+    ndarray::Array<double,1>::Iterator magIter = mag.begin();
     int nonPositive = 0;
     for (; fluxIter != flux.end(); ++fluxIter, ++magIter) {
         if (isNegativeFlux(*fluxIter, false)) {
@@ -436,10 +437,10 @@ std::vector<double> Calib::getMagnitude(std::vector<double> const& flux) const
     return mag;
 }
 
-std::pair<std::vector<double>, std::vector<double> > Calib::getMagnitude(std::vector<double> const& flux,
-                                                                         std::vector<double> const& fluxErr
-    ) const
-{
+std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitude(
+    ndarray::Array<double const,1> const & flux,
+    ndarray::Array<double const,1> const & fluxErr
+) const {
     checkNegativeFlux0(_fluxMag0);
     if (flux.size() != fluxErr.size()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
@@ -447,11 +448,12 @@ std::pair<std::vector<double>, std::vector<double> > Calib::getMagnitude(std::ve
                            flux.size() % fluxErr.size()).str());
     }
 
-    std::vector<double> mag(flux.size()), magErr(flux.size());
-    std::vector<double>::const_iterator fluxIter = flux.begin();
-    std::vector<double>::const_iterator fluxErrIter = fluxErr.begin();
-    std::vector<double>::iterator magIter = mag.begin();
-    std::vector<double>::iterator magErrIter = magErr.begin();
+    ndarray::Array<double,1> mag = ndarray::allocate(flux.size());
+    ndarray::Array<double,1> magErr = ndarray::allocate(flux.size());
+    ndarray::Array<double const,1>::Iterator fluxIter = flux.begin();
+    ndarray::Array<double const,1>::Iterator fluxErrIter = fluxErr.begin();
+    ndarray::Array<double,1>::Iterator magIter = mag.begin();
+    ndarray::Array<double,1>::Iterator magErrIter = magErr.begin();
     int nonPositive = 0;
     double fluxMag0InvSNR = _fluxMag0Sigma/_fluxMag0;
     for (; fluxIter != flux.end(); ++fluxIter, ++fluxErrIter, ++magIter, ++magErrIter) {
