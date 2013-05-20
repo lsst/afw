@@ -35,10 +35,12 @@ or
 
 import math, sys
 import unittest
+import numpy
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
+import lsst.afw.coord as afwCoord
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
@@ -594,6 +596,35 @@ class FootprintTestCase(unittest.TestCase):
         for y in range(im.getHeight()):
             for x in range(im.getWidth()):
                 self.assertEqual(mi.getMask().get(x, y), bitmask)
+
+    def testTransform(self):
+        dims = afwGeom.Extent2I(512, 512)
+        bbox = afwGeom.Box2I(afwGeom.Point2I(0,0), dims)
+        radius = 5
+        offset = afwGeom.Extent2D(123, 456)
+        crval = afwCoord.Coord(0*afwGeom.degrees, 0*afwGeom.degrees)
+        crpix = afwGeom.Point2D(0, 0)
+        cdMatrix = [1.0e-5, 0.0, 0.0, 1.0e-5]
+        source = afwImage.makeWcs(crval, crpix, *cdMatrix)
+        target = afwImage.makeWcs(crval, crpix + offset, *cdMatrix)
+        fpSource = afwDetect.Footprint(afwGeom.Point2I(12, 34), radius, bbox)
+
+        fpTarget = fpSource.transform(source, target, bbox)
+
+        self.assertEqual(len(fpSource.getSpans()), len(fpTarget.getSpans()))
+        self.assertEqual(fpSource.getNpix(), fpTarget.getNpix())
+        self.assertEqual(fpSource.getArea(), fpTarget.getArea())
+
+        imSource = afwImage.ImageU(dims)
+        fpSource.insertIntoImage(imSource, 1)
+
+        imTarget = afwImage.ImageU(dims)
+        fpTarget.insertIntoImage(imTarget, 1)
+
+        subSource = imSource.Factory(imSource, fpSource.getBBox())
+        subTarget = imTarget.Factory(imTarget, fpTarget.getBBox())
+        self.assertTrue(numpy.all(subSource.getArray() == subTarget.getArray()))
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
