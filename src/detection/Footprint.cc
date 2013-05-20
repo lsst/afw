@@ -88,19 +88,20 @@ struct Max {
     }
 };
 struct XPart {
-    static double get(geom::Point2D p) {
+    static double get(geom::Point2D const& p) {
         return p.getX();
     }
 };
 struct YPart {
-    static double get(geom::Point2D p) {
+    static double get(geom::Point2D const& p) {
         return p.getY();
     }
 };
 template <class Extremum, class Part>
-double extremum(geom::Point2D a, geom::Point2D b, geom::Point2D c, geom::Point2D d) {
-    return Extremum::func(Extremum::func(Extremum::func(Part::get(a), Part::get(b)), Part::get(c)), 
-                          Part::get(d));
+int extremum(geom::Point2D const& a, geom::Point2D const& b, geom::Point2D const& c, geom::Point2D const& d) {
+    double const extreme = Extremum::func(Extremum::func(Extremum::func(Part::get(a), Part::get(b)),
+                                                         Part::get(c)), Part::get(d));
+    return std::floor(0.5 + extreme);
 }
 
 /// Transform x,y in the frame of one image to another, via their WCSes
@@ -780,36 +781,29 @@ Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WC
                                     geom::Box2I const& bbox   // Bounding box for target image
     ) const {
     // Transform the original bounding box
-    geom::Box2I fpBox = getBBox(); // Original bounding box
-    geom::Point2D p00 = transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target);
-    geom::Point2D p01 = transformPoint(fpBox.getMinX(), fpBox.getMaxY(), source, target);
-    geom::Point2D p10 = transformPoint(fpBox.getMaxX(), fpBox.getMinY(), source, target);
-    geom::Point2D p11 = transformPoint(fpBox.getMaxX(), fpBox.getMaxY(), source, target);
+    geom::Box2I const& fpBox = getBBox(); // Original bounding box
+    geom::Point2D const& p00 = transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target);
+    geom::Point2D const& p01 = transformPoint(fpBox.getMinX(), fpBox.getMaxY(), source, target);
+    geom::Point2D const& p10 = transformPoint(fpBox.getMaxX(), fpBox.getMinY(), source, target);
+    geom::Point2D const& p11 = transformPoint(fpBox.getMaxX(), fpBox.getMaxY(), source, target);
 
     // calculate the new bounding box that embraces the four transformed points.
-    int xMin = std::floor(0.5 + extremum<Min, XPart>(p00, p01, p10, p11));
-    int yMin = std::floor(0.5 + extremum<Min, YPart>(p00, p01, p10, p11));
-    int xMax = std::floor(0.5 + extremum<Max, XPart>(p00, p01, p10, p11));
-    int yMax = std::floor(0.5 + extremum<Max, YPart>(p00, p01, p10, p11));
-
-    // restrict the transformed bbox by the one supplied
-    xMin = std::max(bbox.getMinX(), xMin);
-    yMin = std::max(bbox.getMinY(), yMin);
-    xMax = std::min(bbox.getMaxX(), xMax);
-    yMax = std::min(bbox.getMaxY(), yMax);
-    geom::Box2I bounding(geom::Point2I(xMin, yMin), geom::Point2I(xMax, yMax));
+    int const xMin = std::max(bbox.getMinX(), extremum<Min, XPart>(p00, p01, p10, p11));
+    int const yMin = std::max(bbox.getMinY(), extremum<Min, YPart>(p00, p01, p10, p11));
+    int const xMax = std::min(bbox.getMaxX(), extremum<Max, XPart>(p00, p01, p10, p11));
+    int const yMax = std::min(bbox.getMaxY(), extremum<Max, YPart>(p00, p01, p10, p11));
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
-    Footprint::Ptr fpNew = boost::make_shared<Footprint>(bounding, bbox);
+    PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, bbox);
 
     for (int y = yMin; y <= yMax; ++y) {
         bool inSpan = false;            // Are we in a span?
         int start = -1;                  // Start of span
 
         for (int x = xMin; x <= xMax; ++x) {
-            lsst::afw::geom::Point2D p = transformPoint(x, y, target, source);
-            int xSource = std::floor(0.5 + p.getX());
-            int ySource = std::floor(0.5 + p.getY());
+            lsst::afw::geom::Point2D const& p = transformPoint(x, y, target, source);
+            int const xSource = std::floor(0.5 + p.getX());
+            int const ySource = std::floor(0.5 + p.getY());
 
             if (contains(lsst::afw::geom::Point2I(xSource, ySource))) {
                 if (!inSpan) {

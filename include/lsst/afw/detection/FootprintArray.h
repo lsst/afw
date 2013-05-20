@@ -21,7 +21,11 @@
  */
 #include "boost/tr1/functional.hpp"
 #include "boost/type_traits.hpp"
+
 #include "ndarray.h"
+
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/Box.h"
 
 #if !defined(LSST_DETECTION_FOOTPRINT_ARRAY_H)
 #define LSST_DETECTION_FOOTPRINT_ARRAY_H
