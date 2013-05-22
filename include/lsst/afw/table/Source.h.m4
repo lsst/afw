@@ -111,6 +111,17 @@ m4def(`DECLARE_SLOT_DEFINERS',
 m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
 m4def(`DECLARE_CENTROID_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Centroid', `')')dnl
 m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `')')dnl
+define(`m4def', defn(`define'))dnl
+m4def(`DEFINE_FLUX_COLUMN_GETTERS',
+`/// @brief Get the value of the $1Flux slot measurement.
+    ndarray::Array<double,1> get$1Flux() const {
+        return this->operator[](this->getTable()->get$1FluxKey());
+    }
+    /// @brief Get the uncertainty on the $1Flux slot measurement.
+    ndarray::Array<double,1> get$1FluxErr() const {
+        return this->operator[](this->getTable()->get$1FluxErrKey());
+    }
+')dnl
 #ifndef AFW_TABLE_Source_h_INCLUDED
 #define AFW_TABLE_Source_h_INCLUDED
 
@@ -407,18 +418,10 @@ public:
     // See the documentation for BaseColumnView for an explanation of why these
     // accessors *appear* to violate const-correctness.
 
-    ndarray::Array<double,1> const getPsfFlux() const {
-        return this->operator[](this->getTable()->getPsfFluxKey());
-    }
-    ndarray::Array<double,1> const getApFlux() const {
-        return this->operator[](this->getTable()->getApFluxKey());
-    }
-    ndarray::Array<double,1> const getModelFlux() const {
-        return this->operator[](this->getTable()->getModelFluxKey());
-    }
-    ndarray::Array<double,1> const getInstFlux() const {
-        return this->operator[](this->getTable()->getInstFluxKey());
-    }
+    DEFINE_FLUX_COLUMN_GETTERS(`Psf')
+    DEFINE_FLUX_COLUMN_GETTERS(`Ap')
+    DEFINE_FLUX_COLUMN_GETTERS(`Model')
+    DEFINE_FLUX_COLUMN_GETTERS(`Inst')
 
     ndarray::Array<double,1> const getX() const {
         return this->operator[](this->getTable()->getCentroidKey().getX());
