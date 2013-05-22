@@ -204,6 +204,7 @@ class SourceTableTestCase(unittest.TestCase):
         self.table.defineCentroid("b")
         self.table.defineShape("c")
         self.assert_((cols2["a"] == cols2.getPsfFlux()).all())
+        self.assert_((cols2["a.err"] == cols2.getPsfFluxErr()).all())
         self.assert_((cols2["b.x"] == cols2.getX()).all())
         self.assert_((cols2["b.y"] == cols2.getY()).all())
         self.assert_((cols2["c.xx"] == cols2.getIxx()).all())
