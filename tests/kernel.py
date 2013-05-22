@@ -76,7 +76,7 @@ class KernelTestCase(unittest.TestCase):
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
-        self.basicTests(kernel, 3)
+        self.basicTests(kernel, 3, dimMustMatch=False)
         fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
@@ -694,7 +694,7 @@ class KernelTestCase(unittest.TestCase):
             if errStr:
                 self.fail("failed with %s for spOrder=%s; numSpCoeff=%s" % (errStr, spOrder, numSpParams))
 
-    def basicTests(self, kernel, nKernelParams, nSpatialParams=0):
+    def basicTests(self, kernel, nKernelParams, nSpatialParams=0, dimMustMatch=True):
         """Basic tests of a kernel"""
         self.assert_(kernel.getNSpatialParameters() == nSpatialParams)
         self.assert_(kernel.getNKernelParameters() == nKernelParams)
@@ -720,6 +720,24 @@ class KernelTestCase(unittest.TestCase):
                 else:
                     utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
                         kernel.setSpatialParameters, spatialParams)
+
+        kernelDim = kernel.getDimensions()
+        kernelCtr = kernel.getCtr()
+        for dx in (-1, 0, 1):
+            xDim = kernelDim.getX() + dx
+            for dy in (-1, 0, 1):
+                if dx == dy == 0:
+                    continue
+                yDim = kernelDim.getY() + dy
+                image = afwImage.ImageD(xDim, yDim)
+                if (dx == dy == 0) or not dimMustMatch:
+                    ksum = kernel.computeImage(image, True)
+                    self.assertAlmostEqual(ksum, 1.0)
+                    llBorder = (image.getDimensions() - kernelDim) / 2
+                    predCtr = afwGeom.Point2I(afwGeom.Extent2I(llBorder + kernelCtr))
+                    self.assertEqual(kernel.getCtr(), predCtr)
+                else:
+                    self.assertRaises(Exception, kernel.computeImage, image, True)
 
     def basicTestComputeImageRaise(self, kernel, doRaise, kernelDescr=""):
         """Test that computeImage either does or does not raise an exception, as appropriate

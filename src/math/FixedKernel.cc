@@ -21,16 +21,6 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/**
- * @file
- *
- * @brief Definitions of FixedKernel member functions.
- *
- * @author Russell Owen
- *
- * @ingroup afw
- */
 #include <stdexcept>
 #include <numeric>
 
@@ -43,13 +33,6 @@ namespace afwGeom = lsst::afw::geom;
 namespace afwMath = lsst::afw::math;
 namespace afwImage = lsst::afw::image;
 
-//
-// Constructors
-//
-
-/**
- * @brief Construct an empty FixedKernel of size 0x0
- */
 afwMath::FixedKernel::FixedKernel()
 :
     Kernel(),
@@ -57,12 +40,9 @@ afwMath::FixedKernel::FixedKernel()
     _sum(0) {
 }
 
-/**
- * @brief Construct a FixedKernel from an image
- */
 afwMath::FixedKernel::FixedKernel(
-    afwImage::Image<Pixel> const &image)     ///< image for kernel
-:
+    afwImage::Image<Pixel> const &image
+) :
     Kernel(image.getWidth(), image.getHeight(), 0),
     _image(image, true),
     _sum(0) {
@@ -77,44 +57,26 @@ afwMath::FixedKernel::FixedKernel(
     this->_sum = imSum;
 }
 
-
-/**
- * @brief Construct a FixedKernel from a generic Kernel
- */
 afwMath::FixedKernel::FixedKernel(
-    afwMath::Kernel const& kernel,      ///< Kernel to convert to Fixed
-    afwGeom::Point2D const& pos         ///< desired position 
-                                 )
-:
+    afwMath::Kernel const& kernel,
+    afwGeom::Point2D const& pos
+) :
     Kernel(kernel.getWidth(), kernel.getHeight(), 0),
     _image(kernel.getDimensions()),
     _sum(0) {
     _sum = kernel.computeImage(_image, false, pos[0], pos[1]);
 }
 
-//
-// Member Functions
-//
 PTR(afwMath::Kernel) afwMath::FixedKernel::clone() const {
     PTR(afwMath::Kernel) retPtr(new afwMath::FixedKernel(_image));
-    retPtr->setCtrX(this->getCtrX());
-    retPtr->setCtrY(this->getCtrY());
+    retPtr->setCtr(this->getCtr());
     return retPtr;
 }
 
-double afwMath::FixedKernel::computeImage(
+double afwMath::FixedKernel::doComputeImage(
     afwImage::Image<Pixel> &image,
-    bool doNormalize,
-    double,
-    double
+    bool doNormalize
 ) const {
-    if (image.getDimensions() != this->getDimensions()) {
-        std::ostringstream os;
-        os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
-            << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
-    }
-
     double multFactor = 1.0;
     double imSum = this->_sum;
     if (doNormalize) {
