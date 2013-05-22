@@ -138,7 +138,6 @@ ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
 ) {
     ndarray::Vector<int,N-1> shape 
         = ndarray::concatenate(fp.getArea(), src.getShape().template last<N-2>());
-    std::cerr << "shape: " << shape << "\n";
     ndarray::Array<typename boost::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
     flattenArray(fp, src, dest, xy0);
     return dest;
