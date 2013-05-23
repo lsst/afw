@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,24 +10,24 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include "lsst/afw/geom/ellipses/radii.h"
 #include <complex>
 
-namespace lsst { namespace afw { namespace geom {
-namespace ellipses {
+#include "lsst/afw/geom/ellipses/radii.h"
+
+namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 void DeterminantRadius::assignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     _value = std::pow(ixx * iyy - ixy * ixy, 0.25);
@@ -37,7 +36,7 @@ void DeterminantRadius::assignFromQuadrupole(
 }
 
 EllipseCore::Jacobian DeterminantRadius::dAssignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;
@@ -95,7 +94,7 @@ EllipseCore::Jacobian DeterminantRadius::dAssignToQuadrupole(
 }
 
 void TraceRadius::assignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     _value = std::sqrt(0.5 * (ixx + iyy));
@@ -104,7 +103,7 @@ void TraceRadius::assignFromQuadrupole(
 }
 
 EllipseCore::Jacobian TraceRadius::dAssignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;
@@ -145,7 +144,7 @@ EllipseCore::Jacobian TraceRadius::dAssignToQuadrupole(
     double r2 = _value * _value;
     ixx = r2 * (1.0 + distortion.getE1());
     iyy = r2 * (1.0 - distortion.getE1());
-    ixy = r2 * distortion.getE2(); 
+    ixy = r2 * distortion.getE2();
     result(0, 0) = r2;
     result(1, 0) = -r2;
     result(2, 1) = r2;
@@ -153,7 +152,7 @@ EllipseCore::Jacobian TraceRadius::dAssignToQuadrupole(
 }
 
 void LogDeterminantRadius::assignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     _value = 0.25 * std::log(ixx * iyy - ixy * ixy);
@@ -162,7 +161,7 @@ void LogDeterminantRadius::assignFromQuadrupole(
 }
 
 EllipseCore::Jacobian LogDeterminantRadius::dAssignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;
@@ -219,7 +218,7 @@ EllipseCore::Jacobian LogDeterminantRadius::dAssignToQuadrupole(
 }
 
 void LogTraceRadius::assignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     _value = 0.5 * std::log(0.5 * (ixx + iyy));
@@ -228,7 +227,7 @@ void LogTraceRadius::assignFromQuadrupole(
 }
 
 EllipseCore::Jacobian LogTraceRadius::dAssignFromQuadrupole(
-    double ixx, double iyy, double ixy, 
+    double ixx, double iyy, double ixy,
     Distortion & distortion
 ) {
     double xx_yy = ixx + iyy;

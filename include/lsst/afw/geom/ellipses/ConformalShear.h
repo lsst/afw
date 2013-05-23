@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +10,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -61,17 +60,33 @@ public:
 
     ConformalShear & operator=(ReducedShear const & other);
 
+    /**
+     *  @brief Return the derivative of the parameter transformation of setting *this = other.
+     *
+     *  If the parameter transformation is @f$ \{e_1^o, e_2^o\} = f(e_1^i, e_2^i) @f$, then the matrix
+     *  returned is:
+     *  @f[
+     *    \left[\begin{array}{ c c }
+     *       \frac{\partial e_1^o}{\partial e_1^i} & \frac{\partial e_1^o}{\partial e_2^i} \\
+     *       \frac{\partial e_2^o}{\partial e_1^i} & \frac{\partial e_2^o}{\partial e_2^i}
+     *    \end{array}\right]
+     *  @f]
+     */
     Jacobian dAssign(ConformalShear const & other) {
         _complex = other._complex;
         return Jacobian::Identity();
     }
 
+    /// @copydoc dAssign
     Jacobian dAssign(Distortion const & other);
 
+    /// @copydoc dAssign
     Jacobian dAssign(ReducedShear const & other);
 
+    /// Return the axis ratio @f$q = b/a@f$.
     double getAxisRatio() const;
 
+    /// Put the ellipticity in standard form and check for out-of-bounds (no-op for ConformalShear).
     void normalize() {}
 
     static std::string getName() { return "ConformalShear"; }

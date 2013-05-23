@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,26 +10,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #ifndef LSST_AFW_GEOM_ELLIPSES_radii_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_radii_h_INCLUDED
-
-/**
- *  \file
- *  @brief Helper classes defining radii for Separable core.
- *
- *  \note Do not include directly; use the main ellipse header file.
- */
 
 #include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
@@ -49,17 +41,19 @@ class LogDeterminantRadius;
 class LogTraceRadius;
 
 /**
- * \brief The radius defined as the 4th root of the determinant of the quadrupole matrix.
+ * @brief The radius defined as the 4th root of the determinant of the quadrupole matrix.
  *
  * The determinant radius is equal to the standard radius for a circle, and
  * \f$\pi R_{det}^2\f$ is the area of the ellipse.
+ *
+ * @sa Separable
  */
 class DeterminantRadius {
 public:
 
     void normalize() {
         if (_value < 0)
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, 
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
                               "Ellipse radius cannot be negative.");
     }
 
@@ -78,7 +72,7 @@ public:
     DeterminantRadius & operator=(LogDeterminantRadius const & other);
 
 private:
-    
+
     template <typename T1, typename T2> friend class Separable;
 
     /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
@@ -92,7 +86,7 @@ private:
     );
 
     EllipseCore::Jacobian dAssignFromQuadrupole(
-        double ixx, double iyy, double ixy, 
+        double ixx, double iyy, double ixy,
         Distortion & distortion
     );
 
@@ -110,9 +104,11 @@ private:
 };
 
 /**
- * \brief The radius defined as \f$\sqrt{0.5(I_{xx} + I_{yy})}\f$
+ * @brief The radius defined as \f$\sqrt{0.5(I_{xx} + I_{yy})}\f$
  *
  * The trace radius is equal to the standard radius for a circle
+ *
+ * @sa Separable
  */
 class TraceRadius {
 public:
@@ -138,7 +134,7 @@ public:
     TraceRadius & operator=(LogTraceRadius const & other);
 
 private:
-    
+
     template <typename T1, typename T2> friend class Separable;
 
     /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
@@ -152,7 +148,7 @@ private:
     );
 
     EllipseCore::Jacobian dAssignFromQuadrupole(
-        double ixx, double iyy, double ixy, 
+        double ixx, double iyy, double ixy,
         Distortion & distortion
     );
 
@@ -170,7 +166,9 @@ private:
 };
 
 /**
- * \brief The natural logarithm of the DeterminantRadius
+ * @brief The natural logarithm of the DeterminantRadius
+ *
+ * @sa Separable
  */
 class LogDeterminantRadius {
 public:
@@ -192,7 +190,7 @@ public:
     LogDeterminantRadius & operator=(DeterminantRadius const & other);
 
 private:
-    
+
     template <typename T1, typename T2> friend class Separable;
 
     /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
@@ -206,7 +204,7 @@ private:
     );
 
     EllipseCore::Jacobian dAssignFromQuadrupole(
-        double ixx, double iyy, double ixy, 
+        double ixx, double iyy, double ixy,
         Distortion & distortion
     );
 
@@ -224,11 +222,13 @@ private:
 };
 
 /**
- * \brief The natural logarithm of the TraceRadius
+ * @brief The natural logarithm of the TraceRadius
+ *
+ * @sa Separable
  */
 class LogTraceRadius {
 public:
-    
+
     void normalize() {}
 
     static std::string getName() { return "LogTraceRadius"; }
@@ -246,7 +246,7 @@ public:
     LogTraceRadius & operator=(TraceRadius const & value);
 
 private:
-    
+
     template <typename T1, typename T2> friend class Separable;
 
     /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
@@ -260,7 +260,7 @@ private:
     );
 
     EllipseCore::Jacobian dAssignFromQuadrupole(
-        double ixx, double iyy, double ixy, 
+        double ixx, double iyy, double ixy,
         Distortion & distortion
     );
 

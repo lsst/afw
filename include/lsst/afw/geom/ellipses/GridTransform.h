@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,26 +10,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #ifndef LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_GridTransform_h_INCLUDED
-
-/**
- *  @file
- *  @brief Definitions for Ellipse::GridTransform and EllipseCore::GridTransform.
- *
- *  @note Do not include directly; use the main ellipse header file.
- */
 
 #include "Eigen/Eigenvalues"
 
@@ -49,22 +41,22 @@ public:
     /// Matrix type for derivative with respect to ellipse parameters.
     typedef Eigen::Matrix<double,4,3> DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     explicit GridTransform(EllipseCore const & input);
-    
-    /// @brief Convert the proxy to a LinearTransform.
+
+    /// Convert the proxy to a LinearTransform.
     operator LinearTransform () const;
 
-    /// @brief Return the transform matrix as an Eigen object.
+    /// Return the transform matrix as an Eigen object.
     LinearTransform::Matrix getMatrix() const;
 
-    /// @brief Return the derivative of the transform with respect to input core.
+    /// Return the derivative of the transform with respect to input core.
     DerivativeMatrix d() const;
 
-    /// @brief Return the determinant of the LinearTransform.
+    /// Return the determinant of the LinearTransform.
     double getDeterminant() const;
 
-    /// @brief Return the inverse of the LinearTransform;
+    /// Return the inverse of the LinearTransform;
     LinearTransform invert() const;
 
 private:
@@ -79,26 +71,26 @@ private:
  */
 class Ellipse::GridTransform {
 public:
-    
+
     /// Matrix type for derivative with respect to input ellipse parameters.
     typedef Eigen::Matrix<double,6,5> DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     explicit GridTransform(Ellipse const & input);
 
-    /// @brief Return the transform matrix as an Eigen object.
+    /// Return the transform matrix as an Eigen object.
     AffineTransform::Matrix getMatrix() const;
-    
-    /// @brief Return the derivative of transform with respect to input ellipse.
+
+    /// Return the derivative of transform with respect to input ellipse.
     DerivativeMatrix d() const;
-    
-    /// @brief Return the determinant of the AffineTransform.
+
+    /// Return the determinant of the AffineTransform.
     double getDeterminant() const;
 
-    /// @brief Convert the proxy to a AffineTransform.
+    /// Convert the proxy to a AffineTransform.
     operator AffineTransform () const;
 
-    /// @brief Return the inverse of the AffineTransform.
+    /// Return the inverse of the AffineTransform.
     AffineTransform invert() const;
 
 private:

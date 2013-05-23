@@ -20,14 +20,15 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+
+#include <map>
+
+#include <boost/format.hpp>
+
 #include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/Angle.h"
-#include <boost/format.hpp>
-#include <map>
-
-namespace afwGeom = lsst::afw::geom;
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
@@ -112,7 +113,7 @@ void EllipseCore::scale(double factor) {
 double EllipseCore::getArea() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
-    return a * b * afwGeom::PI;
+    return a * b * geom::PI;
 }
 
 double EllipseCore::getDeterminantRadius() const {

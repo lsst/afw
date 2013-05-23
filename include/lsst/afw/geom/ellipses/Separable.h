@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,26 +10,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #ifndef LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Separable_h_INCLUDED
-
-/**
- *  \file
- *  @brief Definitions and inlines for Separable.
- *
- *  \note Do not include directly; use the main ellipse header file.
- */
 
 #include "lsst/afw/geom/ellipses/EllipseCore.h"
 #include "lsst/afw/geom/ellipses/Convolution.h"
@@ -42,7 +34,18 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 /**
  *  @brief An ellipse core with a complex ellipticity and radius parameterization.
  *
- *  
+ *  The Separable EllipseCore template combines a subclass of EllipticityBase with
+ *  a Radius class (from radii.h).  The mathematical definition of ellipticity and/or
+ *  radius thus differs with each template instantiation, but the parameter names
+ *  and API are the same.
+ *
+ *  While the ellipticity definitions are self-contained classes that are useful even
+ *  apart from Separable, the definition of the radius depends on the ellipticity as
+ *  well, so the radius classes should be considered semi-private helper classes for
+ *  Separable; only their names and associated mathematical definitions are part of
+ *  the public API.  Separable does have methods that return Radius objects, however,
+ *  but these are implicitly convertible to double, and should generally be interacted
+ *  with via this implicit conversion.
  */
 template <typename Ellipticity_, typename Radius_>
 class Separable : public EllipseCore {
@@ -53,21 +56,38 @@ public:
     typedef Ellipticity_ Ellipticity;
     typedef Radius_ Radius;
 
+
+    /// Get the real (axis-aligned) part of the ellipticity
     double const getE1() const { return _ellipticity.getE1(); }
+
+    /// Set the real (axis-aligned) part of the ellipticity
     void setE1(double e1) { _ellipticity.setE1(e1); }
 
+    /// Get the imaginary (45-degree-off-axis) part of the ellipticity
     double const getE2() const { return _ellipticity.getE2(); }
+
+    /// Set the imaginary (45-degree-off-axis) part of the ellipticity
     void setE2(double e2) { _ellipticity.setE2(e2); }
 
+    /// Get the radius of the ellipse
     Radius const & getRadius() const { return _radius; }
+
+    /// Get the radius of the ellipse (returns an internal reference)
     Radius & getRadius() { return _radius; }
+
+    /// Set the radius of the ellipse
     void setRadius(double radius) { _radius = radius; }
+
+    /// Set the radius of the ellipse
     void setRadius(Radius const & radius) { _radius = radius; }
 
+    /// Return the nested ellipticity object
     Ellipticity const & getEllipticity() const { return _ellipticity; }
+
+    /// Return the nested ellipticity object (returns an internal reference)
     Ellipticity & getEllipticity() { return _ellipticity; }
 
-    /// @brief Deep copy the ellipse core.
+    /// Deep copy the EllipeCore
     PTR(Separable) clone() const { return boost::static_pointer_cast<Separable>(_clone()); }
 
     /// Return a string that identifies this parametrization.
@@ -79,41 +99,41 @@ public:
      */
     virtual void normalize();
 
-    /// @brief Standard assignment.
+    /// Standard assignment.
     Separable & operator=(Separable const & other);
 
-    /// @brief Converting assignment.
+    /// Converting assignment.
     Separable & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
-    /// @brief Construct a circle with the given radius.
+    /// Construct a circle with the given radius.
     explicit Separable(double radius=1.0);
 
-    /// @brief Construct from parameter values.
+    /// Construct from parameter values.
     Separable(double e1, double e2, double radius=Radius(), bool normalize=true);
 
-    /// @brief Construct from parameter values.
-    explicit Separable(std::complex<double> const & complex, 
+    /// Construct from parameter values.
+    explicit Separable(std::complex<double> const & complex,
                        double radius=Radius(), bool normalize=true);
 
-    /// @brief Construct from parameter values.
+    /// Construct from parameter values.
     explicit Separable(Ellipticity const & ellipticity, double radius=Radius(), bool normalize=true);
 
-    /// @brief Construct from a parameter vector.
+    /// Construct from a parameter vector.
     explicit Separable(EllipseCore::ParameterVector const & vector, bool normalize=false);
 
-    /// @brief Copy constructor.
+    /// Copy constructor.
     Separable(Separable const & other) : _ellipticity(other._ellipticity), _radius(other._radius) {}
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Separable(EllipseCore const & other) { *this = other; }
 
 #ifndef SWIG
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Separable(EllipseCore::Transformer const & transformer) {
         transformer.apply(*this);
     }
 
-    /// @brief Converting copy constructor.
+    /// Converting copy constructor.
     Separable(EllipseCore::Convolution const & convolution) {
         convolution.apply(*this);
     }

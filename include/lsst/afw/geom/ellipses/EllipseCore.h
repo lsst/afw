@@ -143,10 +143,31 @@ public:
     //@}
 
     /**
-     *  @brief Return the transform that maps the ellipse to the unit circle.
+     *  @brief Return the symmetric transform that maps the ellipse to the unit circle.
+     *
+     *  Note that if @f$S@f$ is a transform matrix that maps some ellipse to the unit
+     *  circle, then @f$SQ@f$ also maps the same ellipse to the unit circle if @f$Q@f$ is an
+     *  orthogonal matrix.  To make the definition unique, we define the grid transform to be
+     *  symmetric.
+     *
+     *  Mathematically, this is equivalent to computing the inverse square root of the
+     *  quadrupole matrix.  We call it the "grid transform" because it's particularly
+     *  useful in evaluating an elliptically-symmetric function on a pixel grid.
+     *  If we have an ellipse 'e' that defines the 1-sigma contour of a 2-d Gaussian,
+     *  for instance, then, we can evaluate that Gaussian on a pixel grid using:
+     *  @code
+     *  LinearTransform s = e.getGridTransform()
+     *  for (int y : yrange) {
+     *      for (int x in xrange) {
+     *          Point2D p = s(Point2D(x, y));
+     *          out(x,y) = std::exp(-0.5 * (p.getX() * p.getX() + p.getY() * p.getY()));
+     *      }
+     *  }
+     *  @endcode
      *
      *  The returned temporary expression object is implicitly convertible to LinearTransform
-     *  and also supports differentiation.
+     *  and also supports differentiation, which can aid in computing the analytic derivatives
+     *  of elliptically-symmetric function w.r.t. the ellipse parameters.
      *
      *  In Python, a LinearTransform object is returned directly.
      */

@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,28 +10,19 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #ifndef LSST_AFW_GEOM_ELLIPSES_Convolution_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_Convolution_h_INCLUDED
-
-/**
- *  @file
- *  @brief Definitions for BaseEllipse::Convolution and EllipseCore::Convolution.
- *
- *  @note Do not include directly; use the main ellipse header file.
- */
-
-#include <boost/tuple/tuple.hpp>
 
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 
@@ -45,23 +35,23 @@ class EllipseCore::Convolution {
 public:
 
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix3d DerivativeMatrix; 
+    typedef Eigen::Matrix3d DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     Convolution(EllipseCore & self, EllipseCore const & other) :
         self(self), other(other) {}
 
-    /// @brief Return a new convolved ellipse core.
+    /// Return a new convolved EllipseCore.
     PTR(EllipseCore) copy() const;
 
-    /// @brief Convolve the ellipse core in-place.
+    /// Convolve the EllipseCore in-place.
     void inPlace();
 
-    /// @brief Return the derivative of convolved core with respect to self.
+    /// Return the derivative of convolved core with respect to self.
     DerivativeMatrix d() const;
-    
+
     void apply(EllipseCore & result) const;
- 
+
     EllipseCore & self;
     EllipseCore const & other;
 
@@ -74,19 +64,19 @@ class Ellipse::Convolution {
 public:
 
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix<double,5,5> DerivativeMatrix; 
+    typedef Eigen::Matrix<double,5,5> DerivativeMatrix;
 
-    /// @brief Standard constructor.
+    /// Standard constructor.
     Convolution(Ellipse & self, Ellipse const & other) :
         self(self), other(other) {}
 
-    /// @brief Return a new convolved ellipse.
+    /// Return a new convolved ellipse.
     Ellipse copy() const;
 
-    /// @brief Convolve the ellipse in-place.
+    /// Convolve the ellipse in-place.
     void inPlace();
 
-    /// @brief Return the derivative of convolved ellipse with respect to self.
+    /// Return the derivative of convolved ellipse with respect to self.
     DerivativeMatrix d() const;
 
     Ellipse & self;

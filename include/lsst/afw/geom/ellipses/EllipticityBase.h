@@ -1,9 +1,8 @@
 // -*- lsst-c++ -*-
-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ * Copyright 2008-2013 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +10,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -44,17 +43,22 @@ namespace detail {
 class EllipticityBase {
 public:
 
+    /// Matrix used for derivatives of ellipticity parametrizations
     typedef Eigen::Matrix2d Jacobian;
 
-    enum ParameterEnum { E1=0, E2=1 };
-
+    /// Return the ellipticity as a complex number (returns an internal reference)
     std::complex<double> & getComplex() { return _complex; }
 
+    /// Return the ellipticity as a complex number
     std::complex<double> const & getComplex() const { return _complex; }
 
+    /// Set the ellipticity from a complex number
     void setComplex(std::complex<double> const & v) { _complex = v; }
 
+    /// Get the real (axis-aligned) part of the ellipticity
     double getE1() const { return _complex.real(); }
+
+    /// Set the real (axis-aligned) part of the ellipticity
     void setE1(double e1) {
 #if __cplusplus < 201103L
         _complex = std::complex<double>(e1, _complex.imag());
@@ -63,7 +67,10 @@ public:
 #endif
     }
 
+    /// Get the imaginary (45-degree-off-axis) part of the ellipticity
     double getE2() const { return _complex.imag(); }
+
+    /// Set the imaginary (45-degree-off-axis) part of the ellipticity
     void setE2(double e2) {
 #if __cplusplus < 201103L
         _complex = std::complex<double>(_complex.real(), e2);
@@ -72,9 +79,13 @@ public:
 #endif
     }
 
+    /// Return the magnitude of the ellipticity
     double getE() const { return std::sqrt(std::norm(_complex)); }
+
+    /// Set the magnitude of the ellipticity, keeping the position angle fixed
     void setE(double e) { _complex *= e / getE(); }
 
+    /// Return the position angle of the major axis, measured CCW from the x-axis
     Angle getTheta() const { return 0.5 * std::arg(_complex) * radians; }
 
 protected:
