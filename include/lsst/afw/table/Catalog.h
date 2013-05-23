@@ -181,7 +181,7 @@ public:
      *  The returned array's records are shallow copies, and hence will not in general be contiguous.
      */
     CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
-        if (mask.size() != size()) {
+        if (size_type(mask.size()) != size()) {
             throw LSST_EXCEPT(
                 pex::exceptions::LengthErrorException,
                 (boost::format("Mask array with %d elements applied to catalog with %d elements")
