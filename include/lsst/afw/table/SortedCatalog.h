@@ -124,6 +124,15 @@ public:
     }
 
     /**
+     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *
+     *  The returned array's records are shallow copies, and hence will not in general be contiguous.
+     */
+    SortedCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+        return SortedCatalogT(Base::subset(mask));
+    }
+
+    /**
      * @brief Shallow copy a subset of another SortedCatalog.  Mostly here for
      * use from python.
      */

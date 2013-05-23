@@ -328,6 +328,15 @@ public:
     static ExposureCatalogT readFromArchive(io::InputArchive const & archive, BaseCatalog const & catalog);
 
     /**
+     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *
+     *  The returned array's records are shallow copies, and hence will not in general be contiguous.
+     */
+    ExposureCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+        return ExposureCatalogT(Base::subset(mask));
+    }
+
+    /**
      * @brief Shallow copy a subset of another ExposureCatalog.  Mostly here for
      * use from python.
      */

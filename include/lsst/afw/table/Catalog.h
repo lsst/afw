@@ -176,6 +176,28 @@ public:
     }
 
     /**
+     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *
+     *  The returned array's records are shallow copies, and hence will not in general be contiguous.
+     */
+    CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+        if (mask.size() != size()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LengthErrorException,
+                (boost::format("Mask array with %d elements applied to catalog with %d elements")
+                 % mask.size() % size()).str()
+            );
+        }
+        CatalogT<RecordT> result(getTable());
+        ndarray::Array<bool const,1>::Iterator maskIter = mask.begin();
+        const_iterator catIter = begin();
+        for (; maskIter != mask.end(); ++maskIter, ++catIter) {
+            if (*maskIter) result.push_back(catIter);
+        }
+        return result;
+    }
+
+    /**
      * @brief Returns a shallow copy of a subset of this Catalog.  The arguments
      * correspond to python's slice() syntax.
      */
