@@ -69,6 +69,8 @@ public:
 
     PTR(RecordT) addNew();
 
+    CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const;
+
     CatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 };
 
@@ -118,7 +120,9 @@ public:
     %feature("shadow") __getitem__ %{
     def __getitem__(self, k):
         """Return the record at index k if k is an integer,
-        or return a column if k is a string field name or Key.
+        return a column if k is a string field name or Key,
+        or return a subset of the catalog if k is a slice
+        or boolean NumPy array.
         """
         if type(k) is slice:
             (start, stop, step) = (k.start, k.stop, k.step)
@@ -129,6 +133,8 @@ public:
             if stop is None:
                 stop = len(self)
             return self.subset(start, stop, step)
+        elif isinstance(k, numpy.ndarray):
+            return self.subset(k)
         try:
             return $action(self, k)
         except TypeError:

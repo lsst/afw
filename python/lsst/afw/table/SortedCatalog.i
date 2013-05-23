@@ -31,6 +31,8 @@ public:
     bool isSorted() const;
     void sort();
 
+    SortedCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const;
+
     SortedCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 };
 
