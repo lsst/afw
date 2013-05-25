@@ -294,6 +294,29 @@ void writeKeyImpl(Fits & fits, char const * key, bool const & value, char const 
     );
 }
 
+void writeKeyImpl(Fits & fits, char const * key, double const & value, char const * comment) {
+    if (!utils::isfinite(value)) {
+        std::string strValue;
+        if (utils::isnan(value)) {
+            strValue = "NAN";
+        } else if (value < 0) {
+            strValue = "-INFINITY";
+        } else {
+            strValue = "+INFINITY";
+        }
+        writeKeyImpl(fits, key, strValue, comment);
+    } else {
+        fits_write_key(
+            reinterpret_cast<fitsfile*>(fits.fptr),
+            TDOUBLE,
+            const_cast<char*>(key),
+            const_cast<double*>(&value),
+            const_cast<char*>(comment),
+            &fits.status
+            );
+    }
+}
+
 } // anonymous
 
 template <typename T>
@@ -527,8 +550,16 @@ void MetadataIterationFunctor::operator()(
         converter >> val;
         add(key, val, comment);
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
-        // strip off the enclosing single quotes and return the string
-        add(key, matchStrings[1].str(), comment);
+        std::string const str = matchStrings[1].str(); // strip off the enclosing single quotes
+        if (str == "NAN") {
+            add(key, std::numeric_limits<double>::quiet_NaN(), comment);
+        } else if (str == "+INFINITY") {
+            add(key, std::numeric_limits<double>::infinity(), comment);
+        } else if (str == "-INFINITY") {
+            add(key, -std::numeric_limits<double>::infinity(), comment);
+        } else {
+            add(key, matchStrings[1].str(), comment);
+        }
     } else if (value.empty()) {
         // do nothing for empty values
     } else if (key == "HISTORY" ||
