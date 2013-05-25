@@ -54,7 +54,11 @@ class HeaderTestCase(unittest.TestCase):
         metadata = exp.getMetadata()
         for k,v in header.items():
             self.assertTrue(metadata.exists(k))
-            self.assertEqual(metadata.get(k), v)
+            if isinstance(v, float) and numpy.isnan(v):
+                self.assertTrue(isinstance(metadata.get(k), float))
+                self.assertTrue(numpy.isnan(metadata.get(k)))
+            else:
+                self.assertEqual(metadata.get(k), v)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
