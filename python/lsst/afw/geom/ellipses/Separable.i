@@ -36,8 +36,6 @@
 
 %rename(assign) lsst::afw::geom::ellipses::DeterminantRadius::operator=;
 %rename(assign) lsst::afw::geom::ellipses::TraceRadius::operator=;
-%rename(assign) lsst::afw::geom::ellipses::LogDeterminantRadius::operator=;
-%rename(assign) lsst::afw::geom::ellipses::LogTraceRadius::operator=;
 
 %rename(assign) lsst::afw::geom::ellipses::Distortion::operator=;
 %rename(assign) lsst::afw::geom::ellipses::ConformalShear::operator=;
@@ -97,8 +95,6 @@
 
 %Radius_POSTINCLUDE(TraceRadius);
 %Radius_POSTINCLUDE(DeterminantRadius);
-%Radius_POSTINCLUDE(LogTraceRadius);
-%Radius_POSTINCLUDE(LogDeterminantRadius);
 
 %ignore lsst::afw::geom::ellipses::Separable::writeParameters;
 %ignore lsst::afw::geom::ellipses::Separable::readParameters;
@@ -107,9 +103,9 @@
 %define %Separable_PREINCLUDE(ELLIPTICITY, RADIUS)
 %shared_ptr(
     lsst::afw::geom::ellipses::Separable<
-        lsst::afw::geom::ellipses::ELLIPTICITY, 
+        lsst::afw::geom::ellipses::ELLIPTICITY,
         lsst::afw::geom::ellipses::RADIUS
-    > 
+    >
 );
 %rename(assign) lsst::afw::geom::ellipses::Separable<
         lsst::afw::geom::ellipses::ELLIPTICITY,
@@ -119,9 +115,9 @@
 
 
 %define %Separable_POSTINCLUDE(ELLIPTICITY, RADIUS)
-%template(Separable ## ELLIPTICITY ## RADIUS) 
+%template(Separable ## ELLIPTICITY ## RADIUS)
     lsst::afw::geom::ellipses::Separable<
-        lsst::afw::geom::ellipses::ELLIPTICITY, 
+        lsst::afw::geom::ellipses::ELLIPTICITY,
         lsst::afw::geom::ellipses::RADIUS
     >;
 %enddef
@@ -129,18 +125,12 @@
 
 %Separable_PREINCLUDE(Distortion, DeterminantRadius);
 %Separable_PREINCLUDE(Distortion, TraceRadius);
-%Separable_PREINCLUDE(Distortion, LogDeterminantRadius);
-%Separable_PREINCLUDE(Distortion, LogTraceRadius);
 
 %Separable_PREINCLUDE(ConformalShear, DeterminantRadius);
 %Separable_PREINCLUDE(ConformalShear, TraceRadius);
-%Separable_PREINCLUDE(ConformalShear, LogDeterminantRadius);
-%Separable_PREINCLUDE(ConformalShear, LogTraceRadius);
 
 %Separable_PREINCLUDE(ReducedShear, DeterminantRadius);
 %Separable_PREINCLUDE(ReducedShear, TraceRadius);
-%Separable_PREINCLUDE(ReducedShear, LogDeterminantRadius);
-%Separable_PREINCLUDE(ReducedShear, LogTraceRadius);
 
 %include "lsst/afw/geom/ellipses/Separable.h"
 
@@ -192,15 +182,9 @@
 
 %Separable_POSTINCLUDE(Distortion, DeterminantRadius);
 %Separable_POSTINCLUDE(Distortion, TraceRadius);
-%Separable_POSTINCLUDE(Distortion, LogDeterminantRadius);
-%Separable_POSTINCLUDE(Distortion, LogTraceRadius);
 
 %Separable_POSTINCLUDE(ConformalShear, DeterminantRadius);
 %Separable_POSTINCLUDE(ConformalShear, TraceRadius);
-%Separable_POSTINCLUDE(ConformalShear, LogDeterminantRadius);
-%Separable_POSTINCLUDE(ConformalShear, LogTraceRadius);
 
 %Separable_POSTINCLUDE(ReducedShear, DeterminantRadius);
 %Separable_POSTINCLUDE(ReducedShear, TraceRadius);
-%Separable_POSTINCLUDE(ReducedShear, LogDeterminantRadius);
-%Separable_POSTINCLUDE(ReducedShear, LogTraceRadius);

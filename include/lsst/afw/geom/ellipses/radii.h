@@ -37,8 +37,6 @@ template <typename Ellipticity_, typename Radius_> class Separable;
 
 class DeterminantRadius;
 class TraceRadius;
-class LogDeterminantRadius;
-class LogTraceRadius;
 
 /**
  * @brief The radius defined as the 4th root of the determinant of the quadrupole matrix.
@@ -61,15 +59,11 @@ public:
 
     explicit DeterminantRadius(double value=1.0) : _value(value) {}
 
-    explicit DeterminantRadius(LogDeterminantRadius const & other);
-
     operator double const & () const { return _value; }
 
     operator double & () { return _value; }
 
     DeterminantRadius & operator=(double value) { _value = value; return *this; }
-
-    DeterminantRadius & operator=(LogDeterminantRadius const & other);
 
 private:
 
@@ -77,8 +71,6 @@ private:
 
     /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
     void operator=(TraceRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogTraceRadius const &);
 
     void assignFromQuadrupole(
         double ixx, double iyy, double ixy,
@@ -123,24 +115,18 @@ public:
 
     explicit TraceRadius(double value=1.0) : _value(value) {}
 
-    explicit TraceRadius(LogTraceRadius const & other);
-
     operator double const & () const { return _value; }
 
     operator double & () { return _value; }
 
     TraceRadius & operator=(double value) { _value = value; return *this; }
 
-    TraceRadius & operator=(LogTraceRadius const & other);
-
 private:
 
     template <typename T1, typename T2> friend class Separable;
 
     /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
     void operator=(DeterminantRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogDeterminantRadius const &);
 
     void assignFromQuadrupole(
         double ixx, double iyy, double ixy,
@@ -164,143 +150,6 @@ private:
 
     double _value;
 };
-
-/**
- * @brief The natural logarithm of the DeterminantRadius
- *
- * @sa Separable
- */
-class LogDeterminantRadius {
-public:
-
-    void normalize() {}
-
-    static std::string getName() { return "LogDeterminantRadius"; }
-
-    explicit LogDeterminantRadius(double value=0.0) : _value(value) {}
-
-    explicit LogDeterminantRadius(DeterminantRadius const & other);
-
-    operator double const & () const { return _value; }
-
-    operator double & () { return _value; }
-
-    LogDeterminantRadius & operator=(double value) { _value = value; return *this; }
-
-    LogDeterminantRadius & operator=(DeterminantRadius const & other);
-
-private:
-
-    template <typename T1, typename T2> friend class Separable;
-
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(TraceRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogTraceRadius const &);
-
-    void assignFromQuadrupole(
-        double ixx, double iyy, double ixy,
-        Distortion & distortion
-    );
-
-    EllipseCore::Jacobian dAssignFromQuadrupole(
-        double ixx, double iyy, double ixy,
-        Distortion & distortion
-    );
-
-     void assignToQuadrupole(
-        Distortion const & distortion,
-        double & ixx, double & iyy, double & ixy
-    ) const;
-
-     EllipseCore::Jacobian dAssignToQuadrupole(
-        Distortion const & distortion,
-        double & ixx, double & iyy, double & ixy
-    ) const;
-
-    double _value;
-};
-
-/**
- * @brief The natural logarithm of the TraceRadius
- *
- * @sa Separable
- */
-class LogTraceRadius {
-public:
-
-    void normalize() {}
-
-    static std::string getName() { return "LogTraceRadius"; }
-
-    explicit LogTraceRadius(double value=0.0) : _value(value) {}
-
-    explicit LogTraceRadius(TraceRadius const & other);
-
-    operator double const & () const { return _value; }
-
-    operator double & () { return _value; }
-
-    LogTraceRadius & operator=(double value) { _value = value; return *this; }
-
-    LogTraceRadius & operator=(TraceRadius const & value);
-
-private:
-
-    template <typename T1, typename T2> friend class Separable;
-
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(DeterminantRadius const &);
-    /// Undefined and disabled; conversion between trace and determinant radii requires ellipticity.
-    void operator=(LogDeterminantRadius const &);
-
-    void assignFromQuadrupole(
-        double ixx, double iyy, double ixy,
-        Distortion & distortion
-    );
-
-    EllipseCore::Jacobian dAssignFromQuadrupole(
-        double ixx, double iyy, double ixy,
-        Distortion & distortion
-    );
-
-     void assignToQuadrupole(
-        Distortion const & distortion,
-        double & ixx, double & iyy, double & ixy
-    ) const;
-
-     EllipseCore::Jacobian dAssignToQuadrupole(
-        Distortion const & distortion,
-        double & ixx, double & iyy, double & ixy
-    ) const;
-
-    double _value;
-};
-
-inline DeterminantRadius::DeterminantRadius(LogDeterminantRadius const & other) : _value(std::exp(other)) {}
-inline TraceRadius::TraceRadius(LogTraceRadius const & other) : _value(std::exp(other)) {}
-inline LogDeterminantRadius::LogDeterminantRadius(DeterminantRadius const & other) : _value(std::log(other)) {}
-inline LogTraceRadius::LogTraceRadius(TraceRadius const & other) : _value(std::log(other)) {}
-
-inline DeterminantRadius & DeterminantRadius::operator=(LogDeterminantRadius const & other) {
-    _value = std::exp(other);
-    return *this;
-}
-
-inline TraceRadius & TraceRadius::operator=(LogTraceRadius const & other) {
-    _value = std::exp(other);
-    return *this;
-}
-
-inline LogDeterminantRadius & LogDeterminantRadius::operator=(DeterminantRadius const & other) {
-    _value = std::log(other);
-    return *this;
-}
-
-inline LogTraceRadius & LogTraceRadius::operator=(TraceRadius const & other) {
-    _value = std::log(other);
-    return *this;
-}
 
 }}}} // namespace lsst::afw::geom::ellipses
 

@@ -1,7 +1,7 @@
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2008-2013 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -9,14 +9,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -29,20 +29,14 @@ import numpy
 Separable = {
     (Distortion, DeterminantRadius):SeparableDistortionDeterminantRadius,
     (Distortion, TraceRadius):SeparableDistortionTraceRadius,
-    (Distortion, LogDeterminantRadius):SeparableDistortionLogDeterminantRadius,
-    (Distortion, LogTraceRadius):SeparableDistortionLogTraceRadius,
     (ConformalShear, DeterminantRadius):SeparableConformalShearDeterminantRadius,
     (ConformalShear, TraceRadius):SeparableConformalShearTraceRadius,
-    (ConformalShear, LogDeterminantRadius):SeparableConformalShearLogDeterminantRadius,
-    (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius,
     (ReducedShear, DeterminantRadius):SeparableReducedShearDeterminantRadius,
     (ReducedShear, TraceRadius):SeparableReducedShearTraceRadius,
-    (ReducedShear, LogDeterminantRadius):SeparableReducedShearLogDeterminantRadius,
-    (ReducedShear, LogTraceRadius):SeparableReducedShearLogTraceRadius,
 }
 
 EllipseCore.cast = lambda self: globals()[self.getName()].cast(self)
-    
+
 class EllipseMatplotlibInterface(object):
     """An interface for drawing the ellipse using matplotlib.
 

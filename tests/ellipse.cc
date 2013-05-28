@@ -47,37 +47,24 @@ void invokeCoreTest(bool no_circles) {
     TestCase::apply(Axes(2.5,1.3,-0.75*radians));
     TestCase::apply(SeparableDistortionDeterminantRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableDistortionTraceRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableDistortionLogDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableDistortionLogTraceRadius(0.4,-0.25,2.3));
-    
+
     TestCase::apply(SeparableConformalShearDeterminantRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableConformalShearTraceRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableConformalShearLogDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableConformalShearLogTraceRadius(0.4,-0.25,2.3));
 
     TestCase::apply(SeparableReducedShearDeterminantRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableReducedShearTraceRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableReducedShearLogDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableReducedShearLogTraceRadius(0.4,-0.25,2.3));
-    
+
     if (no_circles) return;
     TestCase::apply(Quadrupole(200.0,200.0,0.0));
     TestCase::apply(Axes(40,40));
     TestCase::apply(SeparableDistortionDeterminantRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableDistortionTraceRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableDistortionLogDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableDistortionLogTraceRadius(0.0, 0.0, 2.3));
-    
+
     TestCase::apply(SeparableConformalShearDeterminantRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableConformalShearTraceRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableConformalShearLogDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableConformalShearLogTraceRadius(0.0, 0.0, 2.3));
 
     TestCase::apply(SeparableReducedShearDeterminantRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableReducedShearTraceRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableReducedShearLogDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableReducedShearLogTraceRadius(0.0, 0.0, 2.3));
-    
 }
 
 template <typename TestCase>
@@ -211,18 +198,12 @@ struct CoreConversionTest {
         testCoreConversion<Quadrupole>(core);
         testCoreConversion<SeparableDistortionDeterminantRadius>(core);
         testCoreConversion<SeparableDistortionTraceRadius>(core);
-        testCoreConversion<SeparableDistortionLogDeterminantRadius>(core);
-        testCoreConversion<SeparableDistortionLogTraceRadius>(core);
-        
+
         testCoreConversion<SeparableConformalShearDeterminantRadius>(core);
         testCoreConversion<SeparableConformalShearTraceRadius>(core);
-        testCoreConversion<SeparableConformalShearLogDeterminantRadius>(core);
-        testCoreConversion<SeparableConformalShearLogTraceRadius>(core);
 
         testCoreConversion<SeparableReducedShearDeterminantRadius>(core);
         testCoreConversion<SeparableReducedShearTraceRadius>(core);
-        testCoreConversion<SeparableReducedShearLogDeterminantRadius>(core);
-        testCoreConversion<SeparableReducedShearLogTraceRadius>(core);
 
     }
 
@@ -437,12 +418,4 @@ BOOST_AUTO_TEST_CASE(GridTransform) {
 
 BOOST_AUTO_TEST_CASE(Convolution) {
     afwEllipses::invokeCoreTest<afwEllipses::ConvolutionTest>(false);
-}
-
-BOOST_AUTO_TEST_CASE(Radii) {
-    afwEllipses::DeterminantRadius gr;
-    afwEllipses::LogDeterminantRadius lgr;
-    lgr = gr;
-    afwEllipses::TraceRadius ar;
-    //ar = gr; // this line should fail to compile
 }

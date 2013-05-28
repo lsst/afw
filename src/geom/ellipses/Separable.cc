@@ -170,17 +170,11 @@ EllipseCore::Jacobian Separable<Ellipticity_,Radius_>::_dAssignFromAxes(double a
 
 template class Separable<Distortion,DeterminantRadius>;
 template class Separable<Distortion,TraceRadius>;
-template class Separable<Distortion,LogDeterminantRadius>;
-template class Separable<Distortion,LogTraceRadius>;
 
 template class Separable<ConformalShear,DeterminantRadius>;
 template class Separable<ConformalShear,TraceRadius>;
-template class Separable<ConformalShear,LogDeterminantRadius>;
-template class Separable<ConformalShear,LogTraceRadius>;
 
 template class Separable<ReducedShear,DeterminantRadius>;
 template class Separable<ReducedShear,TraceRadius>;
-template class Separable<ReducedShear,LogDeterminantRadius>;
-template class Separable<ReducedShear,LogTraceRadius>;
 
 }}}} // namespace lsst::afw::geom::ellipses
