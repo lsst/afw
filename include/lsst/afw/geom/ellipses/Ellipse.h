@@ -142,6 +142,10 @@ public:
      */
     bool operator!=(Ellipse const & other) const { return !operator==(other); }
 
+    friend std::ostream & operator<<(std::ostream & os, Ellipse const & ellipse) {
+        return os << "(" << ellipse.getCore() << ", " << ellipse.getCenter() << ")";
+    }
+
     virtual ~Ellipse() {}
 
     explicit Ellipse(EllipseCore const & core, Point2D const & center = Point2D()) :

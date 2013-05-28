@@ -57,6 +57,12 @@ void Separable<Ellipticity_,Radius_>::writeParameters(double * iter) const {
 }
 
 template <typename Ellipticity_, typename Radius_>
+void Separable<Ellipticity_,Radius_>::_stream(std::ostream & os) const {
+    os << "(" << Ellipticity::getName() << "(e1=" << getE1() << ", e2=" << getE2() << "), "
+       << Radius::getName() << "(" << double(getRadius()) << ")";
+}
+
+template <typename Ellipticity_, typename Radius_>
 Separable<Ellipticity_,Radius_> &
 Separable<Ellipticity_,Radius_>::operator=(Separable<Ellipticity_,Radius_> const & other) {
     _ellipticity = other._ellipticity;

@@ -62,6 +62,10 @@ void Quadrupole::writeParameters(double * iter) const {
     *iter++ = getIxy();
 }
 
+void Quadrupole::_stream(std::ostream & os) const {
+    os << "(ixx=" << getIxx() << ", iyy=" << getIyy() << ", ixy=" << getIxy() << ")";
+}
+
 Quadrupole::Quadrupole(double irr) {
     setIxx(irr);
     setIyy(irr);

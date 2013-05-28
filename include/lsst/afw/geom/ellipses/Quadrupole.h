@@ -131,6 +131,8 @@ protected:
     virtual void readParameters(double const * iter);
     virtual void writeParameters(double * iter) const;
 
+    virtual void _stream(std::ostream & os) const;
+
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);
 

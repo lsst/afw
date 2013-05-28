@@ -54,6 +54,10 @@ void Axes::writeParameters(double * iter) const {
     *iter++ = getTheta().asRadians();
 }
 
+void Axes::_stream(std::ostream & os) const {
+    os << "(a=" << getA() << ", b=" << getB() << ", theta=" << getTheta() << ")";
+}
+
 void Axes::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
     EllipseCore::_assignAxesToQuadrupole(_vector[A], _vector[B], _vector[THETA], ixx, iyy, ixy);
 }

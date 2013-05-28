@@ -24,9 +24,11 @@
 #ifndef LSST_AFW_GEOM_ELLIPSES_EllipseCore_h_INCLUDED
 #define LSST_AFW_GEOM_ELLIPSES_EllipseCore_h_INCLUDED
 
+#include <memory>
+#include <iostream>
+
 #include "boost/shared_ptr.hpp"
 #include "boost/make_shared.hpp"
-#include <memory>
 #include "Eigen/Core"
 
 #include "lsst/base.h"
@@ -247,6 +249,11 @@ public:
      */
     PTR(EllipseCore) as(std::string const & name) const { return EllipseCore::make(name, *this); }
 
+    friend std::ostream & operator<<(std::ostream & os, EllipseCore const & ellipse) {
+        ellipse._stream(os);
+        return os;
+    }
+
     virtual ~EllipseCore() {}
 
 protected:
@@ -264,6 +271,8 @@ protected:
 
     virtual void readParameters(double const * iter) = 0;
     virtual void writeParameters(double * iter) const = 0;
+
+    virtual void _stream(std::ostream & os) const = 0;
 
     static void _assignQuadrupoleToAxes(
         double ixx, double iyy, double ixy,

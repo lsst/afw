@@ -188,12 +188,6 @@
     ) {
         return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
     }
-    %pythoncode {
-    def __repr__(self):
-        return "Separable(%r, %r)" % (self.getEllipticity(), self.getRadius())
-    def __str__(self):
-        return "(%s, %s)" % (self.getEllipticity(), self.getRadius())
-    }
 }
 
 %Separable_POSTINCLUDE(Distortion, DeterminantRadius);
