@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2008-2013 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -87,6 +87,19 @@ class EllipseTestCase(unittest.TestCase):
             orig2 = core.as_(core.getName())
             self.assertClose(core.getParameterVector(), orig1.getParameterVector())
             self.assertClose(core.getParameterVector(), orig2.getParameterVector())
+
+    def testComparison(self):
+        for coreA1, cls1 in zip(self.cores, self.classes):
+            coreB1 = cls1()
+            coreC1 = cls1()
+            coreC1.scale(0.0)
+            for cls2 in self.classes:
+                coreA2 = cls2(coreA1)
+                coreB2 = cls2(coreB1)
+                coreC2 = cls2(coreC1)
+                self.assertTrue(coreA1.compare(coreA2, False, 1E-12, 1E-12), "%s != %s" % (coreA1, coreA2))
+                self.assertTrue(coreB1.compare(coreB2, False, 1E-12, 1E-12), "%s != %s" % (coreB1, coreB2))
+                #self.assertTrue(coreC1.compare(coreC2), "%s != %s" % (coreC1, coreC2))
 
     def testAccessors(self):
         for core in self.cores:

@@ -22,6 +22,7 @@
  */
 
 #include <map>
+#include <typeinfo>
 
 #include <boost/format.hpp>
 
@@ -165,6 +166,29 @@ EllipseCore & EllipseCore::operator=(EllipseCore const & other) {
         _assignFromAxes(a, b, theta);
     }
     return *this;
+}
+
+namespace {
+
+bool compareScalars(double a, double b, double rtol, double atol) {
+    double absDiff = std::abs(a - b);
+    if (absDiff <= atol) return true;
+    double relTo = std::max(std::abs(a), std::abs(b));
+    if (absDiff <= relTo * rtol) return true;
+    return false;
+}
+
+} // anonymous
+
+bool EllipseCore::compare(EllipseCore const & other, bool requireTypeMatch, double rtol, double atol) const {
+    if (requireTypeMatch && typeid(*this) != typeid(other)) return false;
+    double ixx1, iyy1, ixy1;
+    _assignToQuadrupole(ixx1, iyy1, ixy1);
+    double ixx2, iyy2, ixy2;
+    other._assignToQuadrupole(ixx2, iyy2, ixy2);
+    return compareScalars(ixx1, ixx2, rtol, atol)
+        && compareScalars(iyy1, iyy2, rtol, atol)
+        && compareScalars(ixy1, ixy2, rtol, atol);
 }
 
 EllipseCore::Jacobian EllipseCore::dAssign(EllipseCore const & other) {

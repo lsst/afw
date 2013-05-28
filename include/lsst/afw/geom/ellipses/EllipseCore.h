@@ -220,6 +220,26 @@ public:
     bool operator!=(EllipseCore const & other) const { return !operator==(other); }
 
     /**
+     *  @brief Careful floating-point comparison of two EllipseCores
+     *
+     *  @param[in] other             the other EllipseCore to compare with
+     *  @param[in] requireTypeMatch  whether EllipseCores must have the same type in
+     *                               order to be considered equal
+     *  @param[in] rtol              relative floating-point tolerance
+     *  @param[in] atol              absolute floating-point tolerance
+     *
+     *  Comparisons are done by converting to the Quadrupole parametrization, even
+     *  when requireTypeMatch=true; this means the tolerances have the same interpretation
+     *  regardless of the underlying types of the ellipse cores.
+     */
+    bool compare(
+        EllipseCore const & other,
+        bool requireTypeMatch=false,
+        double rtol=1E-12,
+        double atol=1E-12
+    ) const;
+
+    /**
      *  @brief Set the parameters of this ellipse core from another.
      *
      *  This does not change the parametrization of the EllipseCore being assigned to.
