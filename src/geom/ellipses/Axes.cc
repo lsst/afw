@@ -25,21 +25,29 @@
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
+namespace {
+
+void normalizeImpl(double & a, double & b, double & theta) {
+    if (!(a >= 0.0 && b >= 0.0))
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                          "Major and minor axes cannot be negative.");
+    if (a < b) {
+        std::swap(a, b);
+        theta += M_PI_2;
+    }
+    if (theta > M_PI_2 || theta <= -M_PI_2) {
+        theta -= M_PI * std::ceil(theta / M_PI - 0.5);
+    }
+}
+
+} // anonymous
+
 EllipseCore::Registrar<Axes> Axes::registrar;
 
 std::string Axes::getName() const { return "Axes"; }
 
 void Axes::normalize() {
-    if (_vector[A] < 0 || _vector[B] < 0)
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                          "Major and minor axes cannot be negative.");
-    if (_vector[A] < _vector[B]) {
-        std::swap(_vector[A], _vector[B]);
-        _vector[THETA] += M_PI_2;
-    }
-    if (_vector[THETA] > M_PI_2 || _vector[THETA] <= -M_PI_2) {
-        _vector[THETA] -= M_PI * std::ceil(_vector[THETA] / M_PI - 0.5);
-    }
+    normalizeImpl(_vector[A], _vector[B], _vector[THETA]);
 }
 
 void Axes::readParameters(double const * iter) {
@@ -70,12 +78,14 @@ void Axes::_assignToAxes(double & a, double & b, double & theta) const {
     a = _vector[A];
     b = _vector[B];
     theta = _vector[THETA];
+    normalizeImpl(a, b, theta);
 }
 
 EllipseCore::Jacobian Axes::_dAssignToAxes(double & a, double & b, double & theta) const {
     a = _vector[A];
     b = _vector[B];
     theta = _vector[THETA];
+    normalizeImpl(a, b, theta);
     return Jacobian::Identity();
 }
 
