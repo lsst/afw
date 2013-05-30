@@ -20,6 +20,8 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+#ifndef LSST_AFW_GEOM_ELLIPSES_PyPixelRegionIterator_h_INCLUDED
+#define LSST_AFW_GEOM_ELLIPSES_PyPixelRegionIterator_h_INCLUDED
 
 // This is a bit of swig-only C++ code that ideally we'd put in a %inline block,
 // but it turns out %inline blocks don't get pulled in by %import statements,
@@ -56,3 +58,5 @@ private:
     lsst::afw::geom::ellipses::PixelRegion::Iterator _end;
     PyObject * _owner;
 };
+
+#endif // !LSST_AFW_GEOM_ELLIPSES_PyPixelRegionIterator_h_INCLUDED

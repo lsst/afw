@@ -38,4 +38,11 @@
 #include "lsst/afw/geom/ellipses/Separable.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 
+// When downstream .i files %import ellipsesLib.i, they'll typically need to #include
+// ellipses.h as well.  They'll also need PyPixelRegion.h in those cases, but we don't
+// want to include it when ellipses.h is included from within a regular C++ source file.
+#ifdef SWIGPYTHON
+#include "lsst/afw/geom/ellipses/PyPixelRegion.h"
+#endif
+
 #endif // !LSST_AFW_GEOM_ELLIPSES_H
