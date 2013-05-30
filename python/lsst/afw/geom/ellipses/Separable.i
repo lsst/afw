@@ -96,10 +96,6 @@
         def convolve(self, t):
             return $action(self, t)
     %}
-    %feature("shadow") _getGridTransform %{
-        def getGridTransform(self):
-            return $action(self)
-    %}
 
     PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_>) _convolve(
             lsst::afw::geom::ellipses::EllipseCore const & other
@@ -107,9 +103,6 @@
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_> >(
             self->convolve(other).copy()
         );
-    }
-    lsst::afw::geom::LinearTransform _getGridTransform() {
-        return self->getGridTransform();
     }
 
     static PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_>) cast(

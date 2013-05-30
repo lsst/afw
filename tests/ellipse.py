@@ -227,6 +227,44 @@ class EllipseTestCase(utilsTests.TestCase):
                                                            initial=at.getParameterVector())
                 self.assertClose(dTransformAnalytic, dTransformNumeric, rtol=1E-5, atol=1E-5)
 
+    def testGridTransform(self):
+        unitCircleCore = el.Axes(1.0)
+        unitCircleEllipse = el.Ellipse(unitCircleCore)
+        for cls in self.classes:
+            for axes in self.all:
+                core1 = cls(axes)
+
+                # test grid transform for EllipseCore
+                lt1, analytic = core1.getGridTransform(doDerivatives=True)
+                core2 = core1.transform(lt1)
+                self.assertTrue(unitCircleCore.compare(core2))
+
+                # test derivative w.r.t. input EllipseCore
+                self.assertEqual(type(analytic), numpy.ndarray)
+                def func1(p):
+                    return cls(p).getGridTransform().getParameterVector()
+                numeric = self.computeDerivative(m=4, eps=1E-8, func=func1,
+                                                 initial=core1.getParameterVector())
+                self.assertClose(analytic, numeric, rtol=1E-8, atol=1E-8)
+
+                # test grid transform for Ellipse
+                ellipse1 = el.Ellipse(core1, geom.Point2D(numpy.random.randn(2)))
+                at1, analytic = ellipse1.getGridTransform(doDerivatives=True)
+                ellipse2 = ellipse1.transform(at1)
+                self.assertTrue(unitCircleEllipse.getCore().compare(ellipse2.getCore()))
+                self.assertClose(ellipse2.getCenter().getX(), 0.0)
+                self.assertClose(ellipse2.getCenter().getY(), 0.0)
+
+                # test derivative w.r.t. input Ellipse
+                self.assertEqual(type(analytic), numpy.ndarray)
+                def func2(p):
+                    e = el.Ellipse(cls())
+                    e.setParameterVector(p)
+                    return e.getGridTransform().getParameterVector()
+                numeric = self.computeDerivative(m=6, eps=1E-8, func=func2,
+                                                 initial=ellipse1.getParameterVector())
+                self.assertClose(analytic, numeric, rtol=1E-8, atol=1E-8)
+
     def testPixelRegion(self):
         for cls in self.classes:
             for axes in self.all:

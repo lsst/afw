@@ -65,6 +65,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::ParameterVector);
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::Transformer::DerivativeMatrix);
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::Transformer::TransformDerivativeMatrix);
+%declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::GridTransform::DerivativeMatrix);
 
 %shared_ptr(lsst::afw::geom::ellipses::EllipseCore);
 
@@ -98,6 +99,42 @@ Python interface to lsst::afw::geom::ellipses classes and functions
             else:
                 return r
     %}
+    %feature("shadow") _transformInPlace %{%}
+    void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
+       self->transform(t).inPlace();
+    }
+    %feature("shadow") _transformDEllipse %{%}
+    lsst::afw::geom::ellipses::EllipseCore::Transformer::DerivativeMatrix _transformDEllipse(
+        lsst::afw::geom::LinearTransform const & t
+    ) const {
+        return self->transform(t).d();
+    }
+    %feature("shadow") _transformDTransform %{%}
+    lsst::afw::geom::ellipses::EllipseCore::Transformer::TransformDerivativeMatrix _transformDTransform(
+        lsst::afw::geom::LinearTransform const & t
+    ) const {
+        return self->transform(t).dTransform();
+    }
+
+    %feature("shadow") _getGridTransform %{
+        def getGridTransform(self, doDerivatives=False):
+            """Return the LinearTransform that maps self to the unit circle
+
+            If doDerivatives, a tuple of (transform, dEllipse) will be
+            returned, where dEllipse is the derivative of the LinearTransform
+            w.r.t. the input ellipse.
+            """
+            if doDerivatives:
+                return $action(self), $actionD(self)
+            return $action(self)
+    %}
+    lsst::afw::geom::LinearTransform _getGridTransform() {
+        return self->getGridTransform();
+    }
+    %feature("shadow") _getGridTransformD %{%}
+    lsst::afw::geom::ellipses::EllipseCore::GridTransform::DerivativeMatrix _getGridTransformD() {
+        return self->getGridTransform().d();
+    }
 
     %feature("shadow") as_ %{
         def as_(self, cls):
@@ -108,28 +145,10 @@ Python interface to lsst::afw::geom::ellipses classes and functions
                 return $action(self, cls)
             return cls(self)
     %}
-
     PTR(lsst::afw::geom::ellipses::EllipseCore) as_(std::string const & name) {
         return self->as(name);
     }
 
-    %feature("shadow") _transformInPlace %{%}
-    %feature("shadow") _transformDEllipse %{%}
-    %feature("shadow") _transformDTransform %{%}
-
-    void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
-       self->transform(t).inPlace();
-    }
-    lsst::afw::geom::ellipses::EllipseCore::Transformer::DerivativeMatrix _transformDEllipse(
-        lsst::afw::geom::LinearTransform const & t
-    ) const {
-        return self->transform(t).d();
-    }
-    lsst::afw::geom::ellipses::EllipseCore::Transformer::TransformDerivativeMatrix _transformDTransform(
-        lsst::afw::geom::LinearTransform const & t
-    ) const {
-        return self->transform(t).dTransform();
-    }
 }
 
 %define %EllipseCore_PREINCLUDE(NAME)
@@ -145,10 +164,6 @@ Python interface to lsst::afw::geom::ellipses classes and functions
         def convolve(self, t):
             return $action(self, t)
     %}
-    %feature("shadow") _getGridTransform %{
-        def getGridTransform(self):
-            return $action(self)
-    %}
 
     PTR(lsst::afw::geom::ellipses::NAME) _convolve(
         lsst::afw::geom::ellipses::EllipseCore const & other
@@ -156,9 +171,6 @@ Python interface to lsst::afw::geom::ellipses classes and functions
         return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
             self->convolve(other).copy()
         );
-    }
-    lsst::afw::geom::LinearTransform _getGridTransform() {
-        return self->getGridTransform();
     }
 
     static PTR(lsst::afw::geom::ellipses::NAME) cast(
@@ -208,6 +220,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::ParameterVector);
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::Transformer::DerivativeMatrix);
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::Transformer::TransformDerivativeMatrix);
+%declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::GridTransform::DerivativeMatrix);
 
 %addStreamRepr(lsst::afw::geom::ellipses::Ellipse);
 
@@ -239,41 +252,55 @@ Python interface to lsst::afw::geom::ellipses classes and functions
                 return r
     %}
     %feature("shadow") _transformInPlace %{%}
-    %feature("shadow") _transformDEllipse %{%}
-    %feature("shadow") _transformDTransform %{%}
-    %feature("shadow") _convolve %{
-        def convolve(self, t):
-            return $action(self, t)
-    %}
-    %feature("shadow") _getGridTransform %{
-        def getGridTransform(self):
-            return $action(self)
-    %}
-    %feature("shadow") getCorePtr %{
-        def getCore(self):
-            return $action(self).cast()
-    %}
-
     void _transformInPlace(lsst::afw::geom::AffineTransform const & t) {
         self->transform(t).inPlace();
     }
+    %feature("shadow") _transformDEllipse %{%}
     lsst::afw::geom::ellipses::Ellipse::Transformer::DerivativeMatrix _transformDEllipse(
         lsst::afw::geom::AffineTransform const & t
     ) const {
         return self->transform(t).d();
     }
+    %feature("shadow") _transformDTransform %{%}
     lsst::afw::geom::ellipses::Ellipse::Transformer::TransformDerivativeMatrix _transformDTransform(
         lsst::afw::geom::AffineTransform const & t
     ) const {
         return self->transform(t).dTransform();
     }
 
-    lsst::afw::geom::ellipses::Ellipse _convolve(lsst::afw::geom::ellipses::Ellipse const & other) const {
-        return self->convolve(other);
-    }
+    %feature("shadow") _getGridTransform %{
+        def getGridTransform(self, doDerivatives=False):
+            """Return the LinearTransform that maps self to the unit circle
+
+            If doDerivatives, a tuple of (transform, dEllipse) will be
+            returned, where dEllipse is the derivative of the LinearTransform
+            w.r.t. the input ellipse.
+            """
+            if doDerivatives:
+                return $action(self), $actionD(self)
+            return $action(self)
+    %}
     lsst::afw::geom::AffineTransform _getGridTransform() {
         return self->getGridTransform();
     }
+    %feature("shadow") _getGridTransformD %{%}
+    lsst::afw::geom::ellipses::Ellipse::GridTransform::DerivativeMatrix _getGridTransformD() {
+        return self->getGridTransform().d();
+    }
+
+    %feature("shadow") _convolve %{
+        def convolve(self, t):
+            return $action(self, t)
+    %}
+    lsst::afw::geom::ellipses::Ellipse _convolve(lsst::afw::geom::ellipses::Ellipse const & other) const {
+        return self->convolve(other);
+    }
+
+    %feature("shadow") getCorePtr %{
+        def getCore(self):
+            return $action(self).cast()
+    %}
+
     %pythoncode %{
     def __reduce__(self):
         return (Ellipse, (self.getCore(), self.getCenter()))

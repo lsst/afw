@@ -153,57 +153,6 @@ struct EllipticityConversionTest {
 
 };
 
-struct GridTransformTest {
-
-    struct Functor {
-
-        static int const M = 6;
-        static int const N = 5;
-
-        Ellipse ellipse;
-
-        Eigen::Matrix<double,M,1> operator()(Eigen::Matrix<double,N,1> const & x) {
-            ellipse.setParameterVector(x);
-            return AffineTransform(ellipse.getGridTransform()).getParameterVector();
-        }
-
-        Functor(Ellipse const & ellipse_) : ellipse(ellipse_) {}
-
-    };
-
-
-    template <typename T>
-    static void apply(T const & core) {
-        Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
-        AffineTransform output = input.getGridTransform();
-        BOOST_CHECK_MESSAGE(
-            output.getMatrix().isApprox(input.getGridTransform().getMatrix(), 1E-12),
-            boost::str(
-                boost::format("GridTransform::getMatrix incorrect %s:\ngetMatrix:\n%s\nTransform:\n%s\n")
-                % core.getName() % input.getGridTransform().getMatrix() % output.getMatrix()
-            )
-        );
-        BOOST_CHECK_CLOSE(output.getLinear().getMatrix()(0,1), output.getLinear().getMatrix()(1,0), 1E-8);
-        Ellipse unit_circle = input.transform(output);
-        Axes unit_circle_axes(unit_circle.getCore());
-        BOOST_CHECK_CLOSE(unit_circle_axes.getA(), 1.0, 1E-8);
-        BOOST_CHECK_CLOSE(unit_circle_axes.getB(), 1.0, 1E-8);
-        Functor f(input);
-        Ellipse::GridTransform::DerivativeMatrix d_analytic = input.getGridTransform().d();
-        Ellipse::GridTransform::DerivativeMatrix d_numeric
-            = computeJacobian(f, input.getParameterVector());
-        BOOST_CHECK_MESSAGE(
-            d_analytic.isApprox(d_numeric,1E-4),
-            boost::str(
-                boost::format("GridTransform::d failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n")
-                % core.getName() % d_analytic % d_numeric
-            )
-        );
-
-    }
-
-};
-
 struct ConvolutionTest {
 
     template <typename T>
@@ -261,10 +210,6 @@ BOOST_AUTO_TEST_CASE(ParametricTest) {
     BOOST_CHECK(
         p(-2.56).asEigen().isApprox(afwGeom::Point2D::EigenVector(-1.6804596457433354, 0.03378847788858419))
     );
-}
-
-BOOST_AUTO_TEST_CASE(GridTransform) {
-    afwEllipses::invokeCoreTest<afwEllipses::GridTransformTest>();
 }
 
 BOOST_AUTO_TEST_CASE(Convolution) {
