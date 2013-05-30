@@ -72,7 +72,7 @@ class EllipseTestCase(utilsTests.TestCase):
                 self.assertClose(conv.getTraceRadius(), traceRadius * 3, rtol=1E-15)
                 self.assertClose(conv.getArea(), area * 9, rtol=1E-15)
 
-    def computeJacobian(self, m, eps, func, initial):
+    def computeDerivative(self, m, eps, func, initial):
         n = len(initial)
         x = numpy.zeros(n, dtype=float)
         x[:] = initial
@@ -108,8 +108,8 @@ class EllipseTestCase(utilsTests.TestCase):
                     if cls2 is el.Axes and isCircle:
                         continue
                     analytic = core2a.dAssign(core1a)
-                    numeric = self.computeJacobian(3, 1E-8, lambda p: cls2(cls1(p)).getParameterVector(),
-                                                   core1a.getParameterVector())
+                    numeric = self.computeDerivative(3, 1E-8, lambda p: cls2(cls1(p)).getParameterVector(),
+                                                     core1a.getParameterVector())
                     self.assertClose(analytic, numeric, rtol=1E-6, atol=1E-6)
                     if cls1 is el.Axes and isCircle:
                         continue
@@ -170,12 +170,62 @@ class EllipseTestCase(utilsTests.TestCase):
     def testTransform(self):
         for cls in self.classes:
             for axes in self.all:
-                core = cls(axes)
-                transform = geom.LinearTransform(numpy.random.randn(2,2))
-                t1 = core.transform(transform)
-                core.transformInPlace(transform)
-                self.assert_(t1 is not core)
-                self.assertClose(t1.getParameterVector(), core.getParameterVector())
+                core1 = cls(axes)
+
+                # test transforming EllipseCore
+                lt = geom.LinearTransform(numpy.random.randn(2,2))
+                core2, dEllipseAnalytic, dTransformAnalytic = core1.transform(lt, doDerivatives=True)
+                core3 = core1.clone()
+                core3.transform(lt, inPlace=True)
+                self.assertIsNot(core2, core3)
+                self.assertClose(core2.getParameterVector(), core3.getParameterVector())
+
+                # test derivative w.r.t. input EllipseCore
+                self.assertEqual(type(dEllipseAnalytic), numpy.ndarray)
+                def func1(p):
+                    return cls(p).transform(lt).getParameterVector()
+                dEllipseNumeric = self.computeDerivative(m=3, eps=1E-8, func=func1,
+                                                         initial=core1.getParameterVector())
+                self.assertClose(dEllipseAnalytic, dEllipseNumeric, rtol=1E-5, atol=1E-5)
+
+                # test derivative w.r.t. LinearTransform
+                self.assertEqual(type(dTransformAnalytic), numpy.ndarray)
+                def func2(p):
+                    lt1 = geom.LinearTransform()
+                    lt1.setParameterVector(p)
+                    return core1.transform(lt1).getParameterVector()
+                dTransformNumeric = self.computeDerivative(m=3, eps=1E-8, func=func2,
+                                                           initial=lt.getParameterVector())
+                self.assertClose(dTransformAnalytic, dTransformNumeric, rtol=1E-5, atol=1E-5)
+
+                # test transforming Ellipse
+                ellipse1 = el.Ellipse(core1, geom.Point2D(numpy.random.randn(2)))
+                at = geom.AffineTransform(numpy.random.randn(2,2), numpy.random.randn(2))
+                ellipse2, dEllipseAnalytic, dTransformAnalytic = ellipse1.transform(at, doDerivatives=True)
+                ellipse3 = el.Ellipse(ellipse1)
+                ellipse3.transform(at, inPlace=True)
+                self.assertIsNot(ellipse2, ellipse3)
+                self.assertClose(ellipse2.getParameterVector(), ellipse3.getParameterVector())
+
+                # test derivative w.r.t. input Ellipse
+                self.assertEqual(type(dEllipseAnalytic), numpy.ndarray)
+                def func3(p):
+                    e = el.Ellipse(cls())
+                    e.setParameterVector(p)
+                    return e.transform(at).getParameterVector()
+                dEllipseNumeric = self.computeDerivative(m=5, eps=1E-8, func=func3,
+                                                         initial=ellipse1.getParameterVector())
+                self.assertClose(dEllipseAnalytic, dEllipseNumeric, rtol=1E-5, atol=1E-5)
+
+                # test derivative w.r.t. AffineTransform
+                self.assertEqual(type(dTransformAnalytic), numpy.ndarray)
+                def func4(p):
+                    at1 = geom.AffineTransform()
+                    at1.setParameterVector(p)
+                    return ellipse1.transform(at1).getParameterVector()
+                dTransformNumeric = self.computeDerivative(m=5, eps=1E-8, func=func4,
+                                                           initial=at.getParameterVector())
+                self.assertClose(dTransformAnalytic, dTransformNumeric, rtol=1E-5, atol=1E-5)
 
     def testPixelRegion(self):
         for cls in self.classes:

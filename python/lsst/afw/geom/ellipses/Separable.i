@@ -72,6 +72,8 @@
 %rename(assign) lsst::afw::geom::ellipses::Separable::operator=;
 
 %define %Separable_PREINCLUDE(ELLIPTICITY)
+%feature(notabstract) lsst::afw::geom::ellipses::NAME;
+%implicitconv lsst::afw::geom::ellipses::NAME;
 %shared_ptr(lsst::afw::geom::ellipses::Separable<lsst::afw::geom::ellipses::ELLIPTICITY>);
 %rename(assign) lsst::afw::geom::ellipses::Separable<lsst::afw::geom::ellipses::ELLIPTICITY>::operator=;
 %enddef
@@ -90,14 +92,6 @@
 %include "lsst/afw/geom/ellipses/Separable.h"
 
 %extend lsst::afw::geom::ellipses::Separable {
-    %feature("shadow") _transform %{
-        def transform(self, t):
-            return $action(self, t)
-    %}
-    %feature("shadow") _transformInPlace %{
-        def transformInPlace(self, t):
-            $action(self, t)
-    %}
     %feature("shadow") _convolve %{
         def convolve(self, t):
             return $action(self, t)
@@ -107,16 +101,6 @@
             return $action(self)
     %}
 
-    PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_>) _transform(
-            lsst::afw::geom::LinearTransform const & t
-    ) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_> >(
-            self->transform(t).copy()
-        );
-    }
-    void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
-       self->transform(t).inPlace();
-    }
     PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_>) _convolve(
             lsst::afw::geom::ellipses::EllipseCore const & other
     ) {

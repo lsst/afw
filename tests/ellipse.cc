@@ -153,80 +153,6 @@ struct EllipticityConversionTest {
 
 };
 
-struct TransformerTest {
-
-    struct Functor1 {
-
-        static int const M = 5;
-        static int const N = 5;
-
-        Ellipse ellipse;
-        AffineTransform transform;
-
-        Eigen::Matrix<double,5,1> operator()(Eigen::Matrix<double,5,1> const & x) {
-            ellipse.setParameterVector(x);
-            ellipse.transform(transform).inPlace();
-            return ellipse.getParameterVector();
-        }
-
-        Functor1(Ellipse const & ellipse_, AffineTransform const & transform_) :
-            ellipse(ellipse_), transform(transform_)
-        {}
-
-    };
-
-    struct Functor2 {
-
-        static int const M = 5;
-        static int const N = 6;
-
-        Ellipse ellipse;
-        AffineTransform transform;
-
-        Eigen::Matrix<double,5,1> operator()(Eigen::Matrix<double,6,1> const & x) {
-            transform.setParameterVector(x);
-            return ellipse.transform(transform).copy().getParameterVector();
-        }
-
-        Functor2(Ellipse const & ellipse_, AffineTransform const & transform_) :
-            ellipse(ellipse_), transform(transform_)
-        {}
-
-    };
-
-    template <typename Core>
-    static void apply(Core const & core) {
-        Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
-        Eigen::Matrix2d tm;
-        tm <<
-            -0.2704311, 0.9044595,
-            0.0268018, 0.8323901;
-        AffineTransform transform(tm, Eigen::Vector2d::Random());
-        Functor1 f1(input, transform);
-        Functor2 f2(input, transform);
-        Ellipse output = input.transform(transform);
-        Eigen::Matrix<double,5,5> e_d_analytic = input.transform(transform).d();
-        Eigen::Matrix<double,5,5> e_d_numeric = computeJacobian(f1, input.getParameterVector());
-        BOOST_CHECK_MESSAGE(
-            e_d_analytic.isApprox(e_d_numeric,1E-4),
-            boost::str(
-                boost::format("Transformer::d failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n")
-                % core.getName() % e_d_analytic % e_d_numeric
-            )
-        );
-        Eigen::Matrix<double,5,6> t_d_analytic = input.transform(transform).dTransform();
-        Eigen::Matrix<double,5,6> t_d_numeric = computeJacobian(f2, transform.getParameterVector());
-        BOOST_CHECK_MESSAGE(
-            t_d_analytic.isApprox(t_d_numeric,1E-4),
-            boost::str(
-                boost::format("Transformer::dTransform failed for %s:\nAnalytic:\n%s\nNumeric:\n%s\n")
-                % core.getName() % t_d_analytic % t_d_numeric
-            )
-        );
-    }
-
-};
-
 struct GridTransformTest {
 
     struct Functor {
@@ -335,10 +261,6 @@ BOOST_AUTO_TEST_CASE(ParametricTest) {
     BOOST_CHECK(
         p(-2.56).asEigen().isApprox(afwGeom::Point2D::EigenVector(-1.6804596457433354, 0.03378847788858419))
     );
-}
-
-BOOST_AUTO_TEST_CASE(Transformer) {
-    afwEllipses::invokeCoreTest<afwEllipses::TransformerTest>();
 }
 
 BOOST_AUTO_TEST_CASE(GridTransform) {
