@@ -66,6 +66,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::Transformer::DerivativeMatrix);
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::Transformer::TransformDerivativeMatrix);
 %declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::GridTransform::DerivativeMatrix);
+%declareNumPyConverters(lsst::afw::geom::ellipses::EllipseCore::Convolution::DerivativeMatrix);
 
 %shared_ptr(lsst::afw::geom::ellipses::EllipseCore);
 
@@ -78,7 +79,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
             """Transform an EllipseCore via a LinearTransform
 
             If inPlace, self will be transformed in-place and returned;
-            otherwise, a new transformed ellipse with the same EllipseCore type
+            otherwise, a new transformed EllipseCore of the same type
             will be returned.
 
             If doDerivatives, a tuple of (transformed, dEllipse, dTransform) will be
@@ -120,8 +121,8 @@ Python interface to lsst::afw::geom::ellipses classes and functions
         def getGridTransform(self, doDerivatives=False):
             """Return the LinearTransform that maps self to the unit circle
 
-            If doDerivatives, a tuple of (transform, dEllipse) will be
-            returned, where dEllipse is the derivative of the LinearTransform
+            If doDerivatives, a tuple of (transform, derivative) will be
+            returned, where 'derivative' is the derivative of the LinearTransform
             w.r.t. the input ellipse.
             """
             if doDerivatives:
@@ -134,6 +135,42 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     %feature("shadow") _getGridTransformD %{%}
     lsst::afw::geom::ellipses::EllipseCore::GridTransform::DerivativeMatrix _getGridTransformD() {
         return self->getGridTransform().d();
+    }
+
+    %pythoncode %{
+        def convolve(self, other, inPlace=False, doDerivatives=False):
+            """Given the 2nd-moment ellipses of two images, compute the 2nd-moment
+            ellipse of the convolution of the images.
+
+            If inPlace, self will be convolved in-place and returned;
+            otherwise, a new convolved EllipseCore of the same type
+            will be returned.
+
+            If doDerivatives, a tuple of (convolved, derivative) will be returned,
+            where 'derivative' is the derivative of the convolved EllipseCore w.r.t.
+            'self'.
+            """
+            if doDerivatives:
+                derivative = _ellipsesLib.EllipseCore__convolveD(self, other)
+            if inPlace:
+                r = self
+            else:
+                r = self.clone()
+            _ellipsesLib.EllipseCore__convolveInPlace(r, other)
+            if doDerivatives:
+                return r, derivative
+            else:
+                return r
+    %}
+    %feature("shadow") _convolveInPlace %{%}
+    void _convolveInPlace(lsst::afw::geom::ellipses::EllipseCore const & other) {
+       self->convolve(other).inPlace();
+    }
+    %feature("shadow") _convolveD %{%}
+    lsst::afw::geom::ellipses::EllipseCore::Convolution::DerivativeMatrix _convolveD(
+        lsst::afw::geom::ellipses::EllipseCore const & other
+    ) const {
+        return self->convolve(other).d();
     }
 
     %feature("shadow") as_ %{
@@ -160,18 +197,6 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 
 %define %EllipseCore_POSTINCLUDE(NAME)
 %extend lsst::afw::geom::ellipses::NAME {
-    %feature("shadow") _convolve %{
-        def convolve(self, t):
-            return $action(self, t)
-    %}
-
-    PTR(lsst::afw::geom::ellipses::NAME) _convolve(
-        lsst::afw::geom::ellipses::EllipseCore const & other
-    ) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
-            self->convolve(other).copy()
-        );
-    }
 
     static PTR(lsst::afw::geom::ellipses::NAME) cast(
         PTR(lsst::afw::geom::ellipses::EllipseCore) const & p
@@ -221,6 +246,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::Transformer::DerivativeMatrix);
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::Transformer::TransformDerivativeMatrix);
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::GridTransform::DerivativeMatrix);
+%declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::Convolution::DerivativeMatrix);
 
 %addStreamRepr(lsst::afw::geom::ellipses::Ellipse);
 
@@ -270,10 +296,10 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 
     %feature("shadow") _getGridTransform %{
         def getGridTransform(self, doDerivatives=False):
-            """Return the LinearTransform that maps self to the unit circle
+            """Return the AffineTransform that maps self to the unit circle at the origin
 
-            If doDerivatives, a tuple of (transform, dEllipse) will be
-            returned, where dEllipse is the derivative of the LinearTransform
+            If doDerivatives, a tuple of (transform, derivative) will be
+            returned, where 'derivative' is the derivative of the LinearTransform
             w.r.t. the input ellipse.
             """
             if doDerivatives:
@@ -288,12 +314,40 @@ Python interface to lsst::afw::geom::ellipses classes and functions
         return self->getGridTransform().d();
     }
 
-    %feature("shadow") _convolve %{
-        def convolve(self, t):
-            return $action(self, t)
+    %pythoncode %{
+        def convolve(self, other, inPlace=False, doDerivatives=False):
+            """Given the 2nd-moment ellipses of two images, compute the 2nd-moment
+            ellipse of the convolution of the images.
+
+            If inPlace, self will be convolved in-place and returned;
+            otherwise, a new convolved Ellipse of the same type
+            will be returned.
+
+            If doDerivatives, a tuple of (convolved, derivative) will be returned,
+            where 'derivative' is the derivative of the convolved Ellipse w.r.t.
+            'self'.
+            """
+            if doDerivatives:
+                derivative = _ellipsesLib.Ellipse__convolveD(self, other)
+            if inPlace:
+                r = self
+            else:
+                r = Ellipse(self)
+            _ellipsesLib.Ellipse__convolveInPlace(r, other)
+            if doDerivatives:
+                return r, derivative
+            else:
+                return r
     %}
-    lsst::afw::geom::ellipses::Ellipse _convolve(lsst::afw::geom::ellipses::Ellipse const & other) const {
-        return self->convolve(other);
+    %feature("shadow") _convolveInPlace %{%}
+    void _convolveInPlace(lsst::afw::geom::ellipses::Ellipse const & other) {
+       self->convolve(other).inPlace();
+    }
+    %feature("shadow") _convolveD %{%}
+    lsst::afw::geom::ellipses::Ellipse::Convolution::DerivativeMatrix _convolveD(
+        lsst::afw::geom::ellipses::Ellipse const & other
+    ) const {
+        return self->convolve(other).d();
     }
 
     %feature("shadow") getCorePtr %{
@@ -302,8 +356,8 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     %}
 
     %pythoncode %{
-    def __reduce__(self):
-        return (Ellipse, (self.getCore(), self.getCenter()))
+        def __reduce__(self):
+            return (Ellipse, (self.getCore(), self.getCenter()))
     %}
 }
 

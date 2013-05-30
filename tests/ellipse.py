@@ -106,6 +106,7 @@ class EllipseTestCase(utilsTests.TestCase):
                     self.assertTrue(core1a.compare(core1c))
                     self.assertTrue(core1a.compare(core1d))
                     if cls2 is el.Axes and isCircle:
+                        # TODO: fix this case or add warnings
                         continue
                     analytic = core2a.dAssign(core1a)
                     numeric = self.computeDerivative(3, 1E-8, lambda p: cls2(cls1(p)).getParameterVector(),
@@ -245,7 +246,7 @@ class EllipseTestCase(utilsTests.TestCase):
                     return cls(p).getGridTransform().getParameterVector()
                 numeric = self.computeDerivative(m=4, eps=1E-8, func=func1,
                                                  initial=core1.getParameterVector())
-                self.assertClose(analytic, numeric, rtol=1E-8, atol=1E-8)
+                self.assertClose(analytic, numeric, rtol=1E-6, atol=1E-8)
 
                 # test grid transform for Ellipse
                 ellipse1 = el.Ellipse(core1, geom.Point2D(numpy.random.randn(2)))
@@ -263,7 +264,71 @@ class EllipseTestCase(utilsTests.TestCase):
                     return e.getGridTransform().getParameterVector()
                 numeric = self.computeDerivative(m=6, eps=1E-8, func=func2,
                                                  initial=ellipse1.getParameterVector())
-                self.assertClose(analytic, numeric, rtol=1E-8, atol=1E-8)
+                self.assertClose(analytic, numeric, rtol=1E-6, atol=1E-8)
+
+    def testConvolution(self):
+        for axes1, isCircle1 in zip(self.all, (False, True)):
+            matrix1 = el.Quadrupole(axes1).getMatrix()
+            for axes2, isCircle2 in zip(self.all, (False, True)):
+                matrix2 = el.Quadrupole(axes2).getMatrix()
+                for cls1 in self.classes:
+                    for cls2 in self.classes:
+                        # test convolving EllipseCores
+                        core1 = cls1(axes1)
+                        core2 = cls2(axes2)
+                        core3, analytic1 = core1.convolve(core2, doDerivatives=True)
+                        core4 = core2.clone()
+                        core4a = core4.convolve(core1, inPlace=True)
+                        matrix3 = el.Quadrupole(core3).getMatrix()
+                        matrix4 = el.Quadrupole(core4).getMatrix()
+                        self.assertIs(core4, core4a)
+                        self.assertTrue(core3.compare(core4))
+                        self.assertClose(matrix1 + matrix2, matrix3, rtol=1E-14)
+                        self.assertClose(matrix1 + matrix2, matrix4, rtol=1E-14)
+
+                        # test convolving Ellipses
+                        ellipse1 = el.Ellipse(core1, geom.Point2D(numpy.random.randn(2)))
+                        ellipse2 = el.Ellipse(core2, geom.Point2D(numpy.random.randn(2)))
+                        ellipse3, analytic2 = ellipse1.convolve(ellipse2, doDerivatives=True)
+                        ellipse4 = el.Ellipse(ellipse2)
+                        ellipse4a = ellipse4.convolve(ellipse1, inPlace=True)
+                        matrix3 = el.Quadrupole(ellipse3.getCore()).getMatrix()
+                        matrix4 = el.Quadrupole(ellipse4.getCore()).getMatrix()
+                        self.assertIs(ellipse4, ellipse4a)
+                        self.assertTrue(ellipse3.getCore().compare(ellipse4.getCore()))
+                        self.assertClose(ellipse3.getCenter().getX(), ellipse4.getCenter().getX())
+                        self.assertClose(ellipse3.getCenter().getY(), ellipse4.getCenter().getY())
+                        self.assertClose(matrix1 + matrix2, matrix3, rtol=1E-14)
+                        self.assertClose(matrix1 + matrix2, matrix4, rtol=1E-14)
+
+                        if isCircle1 and isCircle2 and (cls1 is el.Axes or cls2 is el.Axes):
+                            # TODO: fix this case or add warnings
+                            continue
+
+                        # test derivative w.r.t. input EllipseCore
+                        self.assertEqual(type(analytic1), numpy.ndarray)
+                        def func1(p):
+                            return cls1(p).convolve(core2).getParameterVector()
+                        numeric1 = self.computeDerivative(m=3, eps=1E-6, func=func1,
+                                                          initial=core1.getParameterVector())
+                        self.assertClose(analytic1, numeric1, rtol=1E-4, atol=1E-4)
+
+                        # test derivative w.r.t. input Ellipse
+                        self.assertEqual(type(analytic2), numpy.ndarray)
+                        def func2(p):
+                            e = el.Ellipse(cls1())
+                            e.setParameterVector(p)
+                            return e.convolve(ellipse2).getParameterVector()
+                        numeric2 = self.computeDerivative(m=5, eps=1E-6, func=func2,
+                                                          initial=ellipse1.getParameterVector())
+                        self.assertClose(analytic2, numeric2, rtol=1E-4, atol=1E-4)
+
+    def testParametric(self):
+        """Spot-check ellipses::Parametric, using a few points calculated analytically with Mathematica
+        """
+        p = el.Parametric(el.Ellipse(el.Quadrupole(3,2,-0.65)))
+        self.assertClose(numpy.array(p(1.45)), numpy.array((0.76537615289287353, 1.0573336496088439)))
+        self.assertClose(numpy.array(p(-2.56)), numpy.array((-1.6804596457433354, 0.03378847788858419)))
 
     def testPixelRegion(self):
         for cls in self.classes:

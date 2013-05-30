@@ -92,19 +92,6 @@
 %include "lsst/afw/geom/ellipses/Separable.h"
 
 %extend lsst::afw::geom::ellipses::Separable {
-    %feature("shadow") _convolve %{
-        def convolve(self, t):
-            return $action(self, t)
-    %}
-
-    PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_>) _convolve(
-            lsst::afw::geom::ellipses::EllipseCore const & other
-    ) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_> >(
-            self->convolve(other).copy()
-        );
-    }
-
     static PTR(lsst::afw::geom::ellipses::Separable<Ellipticity_>) cast(
         PTR(lsst::afw::geom::ellipses::EllipseCore) const & p
     ) {
