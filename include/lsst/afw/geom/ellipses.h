@@ -30,7 +30,6 @@
 #include "lsst/afw/geom/ellipses/Convolution.h"
 #include "lsst/afw/geom/ellipses/GridTransform.h"
 #include "lsst/afw/geom/ellipses/Parametric.h"
-#include "lsst/afw/geom/ellipses/radii.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
@@ -38,18 +37,5 @@
 #include "lsst/afw/geom/ellipses/Axes.h"
 #include "lsst/afw/geom/ellipses/Separable.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
-
-namespace lsst { namespace afw { namespace geom { namespace ellipses {
-
-typedef Separable<Distortion,DeterminantRadius> SeparableDistortionDeterminantRadius;
-typedef Separable<Distortion,TraceRadius> SeparableDistortionTraceRadius;
-
-typedef Separable<ConformalShear,DeterminantRadius> SeparableConformalShearDeterminantRadius;
-typedef Separable<ConformalShear,TraceRadius> SeparableConformalShearTraceRadius;
-
-typedef Separable<ReducedShear,DeterminantRadius> SeparableReducedShearDeterminantRadius;
-typedef Separable<ReducedShear,TraceRadius> SeparableReducedShearTraceRadius;
-
-}}}} // namespace lsst::afw::geom::ellipses
 
 #endif // !LSST_AFW_GEOM_ELLIPSES_H

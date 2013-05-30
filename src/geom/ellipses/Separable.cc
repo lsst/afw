@@ -21,160 +21,147 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include "lsst/afw/geom/ellipses/Separable.h"
-#include "lsst/afw/geom/ellipses/radii.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
-template <typename Ellipticity_, typename Radius_>
-EllipseCore::Registrar< Separable<Ellipticity_,Radius_> > Separable<Ellipticity_,Radius_>::registrar;
+template <typename Ellipticity_>
+EllipseCore::Registrar< Separable<Ellipticity_> > Separable<Ellipticity_>::registrar;
 
-template <typename Ellipticity_, typename Radius_>
-std::string Separable<Ellipticity_,Radius_>::getName() const {
-    return "Separable" + Ellipticity_::getName() + Radius_::getName();
+template <typename Ellipticity_>
+std::string Separable<Ellipticity_>::getName() const {
+    return Ellipticity_::getName() + "EllipseCore";
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::normalize() {
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::normalize() {
     _ellipticity.normalize();
-    _radius.normalize();
+    if (!(_radius >= 0.0)) {
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterException,
+            "Ellipse radius must be >= 0"
+        );
+    }
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::readParameters(double const * iter) {
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::readParameters(double const * iter) {
     setE1(*iter++);
     setE2(*iter++);
     setRadius(*iter++);
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::writeParameters(double * iter) const {
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::writeParameters(double * iter) const {
     *iter++ = getE1();
     *iter++ = getE2();
     *iter++ = getRadius();
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_stream(std::ostream & os) const {
-    os << "(" << Ellipticity::getName() << "(e1=" << getE1() << ", e2=" << getE2() << "), "
-       << Radius::getName() << "(" << double(getRadius()) << ")";
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::_stream(std::ostream & os) const {
+    os << "(" << Ellipticity::getName() << "(e1=" << getE1() << ", e2=" << getE2() << "), " << getRadius() << ")";
 }
 
-template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_> &
-Separable<Ellipticity_,Radius_>::operator=(Separable<Ellipticity_,Radius_> const & other) {
+template <typename Ellipticity_>
+Separable<Ellipticity_> &
+Separable<Ellipticity_>::operator=(Separable<Ellipticity_> const & other) {
     _ellipticity = other._ellipticity;
     _radius = other._radius;
     return *this;
 }
 
-template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(double radius) :
+template <typename Ellipticity_>
+Separable<Ellipticity_>::Separable(double radius) :
     _ellipticity(0.0, 0.0), _radius(radius)
 {}
 
-template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(double e1, double e2, double radius, bool normalize) :
+template <typename Ellipticity_>
+Separable<Ellipticity_>::Separable(double e1, double e2, double radius, bool normalize) :
     _ellipticity(e1, e2), _radius(radius)
 {
     if (normalize) this->normalize();
 }
 
-template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(
+template <typename Ellipticity_>
+Separable<Ellipticity_>::Separable(
     std::complex<double> const & complex,
     double radius, bool normalize
 ) : _ellipticity(complex), _radius(radius) {
     if (normalize) this->normalize();
 }
 
-template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(Ellipticity const & ellipticity, double radius, bool normalize) :
+template <typename Ellipticity_>
+Separable<Ellipticity_>::Separable(Ellipticity const & ellipticity, double radius, bool normalize) :
     _ellipticity(ellipticity), _radius(radius)
 {
     if (normalize) this->normalize();
 }
 
-template <typename Ellipticity_, typename Radius_>
-Separable<Ellipticity_,Radius_>::Separable(EllipseCore::ParameterVector const & vector, bool normalize) :
+template <typename Ellipticity_>
+Separable<Ellipticity_>::Separable(EllipseCore::ParameterVector const & vector, bool normalize) :
     _ellipticity(vector[0], vector[1]), _radius(vector[2])
 {
     if (normalize) this->normalize();
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
-    Distortion distortion(_ellipticity);
-    _radius.assignToQuadrupole(distortion, ixx, iyy, ixy);
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::_assignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+    _ellipticity._assignToQuadrupole(_radius, ixx, iyy, ixy);
 }
 
-template <typename Ellipticity_, typename Radius_>
+template <typename Ellipticity_>
 EllipseCore::Jacobian
-Separable<Ellipticity_,Radius_>::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
-    Distortion distortion;
-    EllipseCore::Jacobian rhs = Jacobian::Identity();
-    rhs.block<2,2>(0,0) = distortion.dAssign(_ellipticity);
-    EllipseCore::Jacobian lhs = _radius.dAssignToQuadrupole(distortion, ixx, iyy, ixy);
-    return lhs * rhs;
+Separable<Ellipticity_>::_dAssignToQuadrupole(double & ixx, double & iyy, double & ixy) const {
+    return _ellipticity._dAssignToQuadrupole(_radius, ixx, iyy, ixy);
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignToAxes(double & a, double & b, double & theta) const {
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::_assignToAxes(double & a, double & b, double & theta) const {
     double ixx, iyy, ixy;
-    this->_assignToQuadrupole(ixx, iyy, ixy);
-    EllipseCore::_assignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
+    _ellipticity._assignToQuadrupole(_radius, ixx, iyy, ixy);
+    _assignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
 }
 
-template <typename Ellipticity_, typename Radius_>
+template <typename Ellipticity_>
 EllipseCore::Jacobian
-Separable<Ellipticity_,Radius_>::_dAssignToAxes(double & a, double & b, double & theta) const {
+Separable<Ellipticity_>::_dAssignToAxes(double & a, double & b, double & theta) const {
     double ixx, iyy, ixy;
-    EllipseCore::Jacobian rhs = this->_dAssignToQuadrupole(ixx, iyy, ixy);
-    EllipseCore::Jacobian lhs = EllipseCore::_dAssignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
-    return lhs * rhs;
+    EllipseCore::Jacobian j1 = _ellipticity._dAssignToQuadrupole(_radius, ixx, iyy, ixy);
+    EllipseCore::Jacobian j2 = _dAssignQuadrupoleToAxes(ixx, iyy, ixy, a, b, theta);
+    return j2 * j1;
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
-    Distortion distortion;
-    _radius.assignFromQuadrupole(ixx, iyy, ixy, distortion);
-    _ellipticity = distortion;
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::_assignFromQuadrupole(double ixx, double iyy, double ixy) {
+    _ellipticity._assignFromQuadrupole(_radius, ixx, iyy, ixy);
 }
 
-template <typename Ellipticity_, typename Radius_>
+template <typename Ellipticity_>
 EllipseCore::Jacobian
-Separable<Ellipticity_,Radius_>::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
-    Distortion distortion;
-    EllipseCore::Jacobian rhs = _radius.dAssignFromQuadrupole(ixx, iyy, ixy, distortion);
-    EllipseCore::Jacobian lhs = EllipseCore::Jacobian::Identity();
-    lhs.block<2,2>(0,0) = _ellipticity.dAssign(distortion);
-    return lhs * rhs;
+Separable<Ellipticity_>::_dAssignFromQuadrupole(double ixx, double iyy, double ixy) {
+    return _ellipticity._dAssignFromQuadrupole(_radius, ixx, iyy, ixy);
 }
 
-template <typename Ellipticity_, typename Radius_>
-void Separable<Ellipticity_,Radius_>::_assignFromAxes(double a, double b, double theta) {
+template <typename Ellipticity_>
+void Separable<Ellipticity_>::_assignFromAxes(double a, double b, double theta) {
     double ixx, iyy, ixy;
-    EllipseCore::_assignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
-    this->_assignFromQuadrupole(ixx, iyy, ixy);
+    _assignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
+    _ellipticity._assignFromQuadrupole(_radius, ixx, iyy, ixy);
 }
 
-template <typename Ellipticity_, typename Radius_>
-EllipseCore::Jacobian Separable<Ellipticity_,Radius_>::_dAssignFromAxes(double a, double b, double theta) {
+template <typename Ellipticity_>
+EllipseCore::Jacobian Separable<Ellipticity_>::_dAssignFromAxes(double a, double b, double theta) {
     double ixx, iyy, ixy;
-    EllipseCore::Jacobian rhs = EllipseCore::_dAssignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
-    EllipseCore::Jacobian lhs = this->_dAssignFromQuadrupole(ixx, iyy, ixy);
-    return lhs * rhs;
+    EllipseCore::Jacobian j1 = _dAssignAxesToQuadrupole(a, b, theta, ixx, iyy, ixy);
+    EllipseCore::Jacobian j2 = _ellipticity._dAssignFromQuadrupole(_radius, ixx, iyy, ixy);
+    return j2 * j1;
 }
 
-template class Separable<Distortion,DeterminantRadius>;
-template class Separable<Distortion,TraceRadius>;
-
-template class Separable<ConformalShear,DeterminantRadius>;
-template class Separable<ConformalShear,TraceRadius>;
-
-template class Separable<ReducedShear,DeterminantRadius>;
-template class Separable<ReducedShear,TraceRadius>;
+template class Separable<Distortion>;
+template class Separable<ConformalShear>;
+template class Separable<ReducedShear>;
 
 }}}} // namespace lsst::afw::geom::ellipses

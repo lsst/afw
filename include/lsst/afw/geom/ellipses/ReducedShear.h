@@ -25,6 +25,7 @@
 #define LSST_AFW_GEOM_ELLIPSES_ReducedShear_h_INCLUDED
 
 #include "lsst/afw/geom/ellipses/EllipticityBase.h"
+#include "lsst/afw/geom/ellipses/Separable.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
@@ -40,6 +41,8 @@ class ConformalShear;
  */
 class ReducedShear : public detail::EllipticityBase {
 public:
+
+    typedef Separable<ReducedShear> Core;
 
     explicit ReducedShear(std::complex<double> const & complex) : detail::EllipticityBase(complex) {}
 
@@ -75,11 +78,24 @@ public:
     /// @copydoc ConformalShear::getAxisRatio
     double getAxisRatio() const;
 
-    void normalize() {}
+    /// Put the ellipticity in standard form and check for out-of-bounds
+    void normalize();
 
     static std::string getName() { return "ReducedShear"; }
 
+private:
+
+    template <typename Ellipticity_> friend class Separable;
+
+    void _assignToQuadrupole(double r, double & ixx, double & iyy, double & ixy) const;
+    void _assignFromQuadrupole(double & r, double ixx, double iyy, double ixy);
+
+    EllipseCore::Jacobian _dAssignToQuadrupole(double r, double & ixx, double & iyy, double & ixy) const;
+    EllipseCore::Jacobian _dAssignFromQuadrupole(double & r, double ixx, double iyy, double ixy);
+
 };
+
+typedef Separable<ReducedShear> ReducedShearEllipseCore;
 
 }}}} // namespace lsst::afw::geom::ellipses
 

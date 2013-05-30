@@ -20,12 +20,29 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+
+#include "lsst/utils/ieee.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
-#include "lsst/afw/geom/ellipses/EllipseCore.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
+
+namespace {
+
+void fixNaN(std::complex<double> & c) {
+    double re = c.real();
+    double im = c.imag();
+    if (utils::isnan(re)) {
+        re = 0.0;
+    }
+    if (utils::isnan(im)) {
+        im = 0.0;
+    }
+    c = std::complex<double>(re, im);
+}
+
+} // anonymous
 
 double Distortion::getAxisRatio() const {
     double e = getE();
@@ -81,12 +98,57 @@ detail::EllipticityBase::Jacobian Distortion::dAssign(ReducedShear const & other
 }
 
 void Distortion::normalize() {
-    if (getE() > 1.0) {
+    if (!(getE() <= 1.0)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
             "Distortion magnitude cannot be greater than one."
         );
     }
+}
+
+void Distortion::_assignToQuadrupole(double r, double & ixx, double & iyy, double & ixy) const {
+    double r2 = r*r;
+    ixx = r2*(1.0 + getE1());
+    iyy = r2*(1.0 - getE1());
+    ixy = r2*getE2();
+}
+
+EllipseCore::Jacobian Distortion::_dAssignToQuadrupole(
+    double r, double & ixx, double & iyy, double & ixy
+) const {
+    double r2 = r * r;
+    ixx = r2*(1.0 + getE1());
+    iyy = r2*(1.0 - getE1());
+    ixy = r2*getE2();
+    EllipseCore::Jacobian result;
+    result <<
+        // e1        e2            r
+         r2,        0.0,    2.0*r*(1.0 + getE1()),    // ixx
+        -r2,        0.0,    2.0*r*(1.0 - getE1()),    // iyy
+        0.0,         r2,            2.0*r*getE2();    // ixy
+    return result;
+}
+
+void Distortion::_assignFromQuadrupole(double & r, double ixx, double iyy, double ixy) {
+    double tr = ixx + iyy;
+    r = std::sqrt(0.5*tr);
+    _complex = std::complex<double>((ixx - iyy)/tr, 2.0*ixy/tr);
+    fixNaN(_complex);
+}
+
+EllipseCore::Jacobian Distortion::_dAssignFromQuadrupole(double & r, double ixx, double iyy, double ixy) {
+    double tr = ixx + iyy;
+    r = std::sqrt(0.5*tr);
+    EllipseCore::Jacobian result;
+    _complex = std::complex<double>((ixx - iyy)/tr, 2.0*ixy/tr);
+    fixNaN(_complex);
+    double tr2 = tr*tr;
+    result <<
+        //   ixx              iyy           ixy
+         2.0*iyy/tr2,    -2.0*ixx/tr2,       0.0,  // e1
+        -2.0*ixy/tr2,    -2.0*ixy/tr2,    2.0/tr,  // e2
+              0.25/r,          0.25/r,       0.0;  // r
+    return result;
 }
 
 }}}} // namespace lsst::afw::geom::ellipses

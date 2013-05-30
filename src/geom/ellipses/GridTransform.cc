@@ -24,7 +24,6 @@
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Separable.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
-#include "lsst/afw/geom/ellipses/radii.h"
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
@@ -44,22 +43,22 @@ EllipseCore::GridTransform::operator LinearTransform () const {
 EllipseCore::GridTransform::DerivativeMatrix
 EllipseCore::GridTransform::d() const {
     /*
-       Grid transform is easiest to differentiate in the ReducedShear/DeterminantRadius parametrization.
+       Grid transform is easiest to differentiate in the ReducedShear parametrization.
        But we actually differentiate the inverse of the transform, and then use
        $dM^{-1}/dt = -M^{-1} dM/dt M^{-1} to compute the derivative of the inverse.
 
-       The inverse of the grid transform in ReducedShear/DeterminantRadius is:
-       $\frac{r}{\sqrt{1-g^2}}(\sigma_x + g_1 \sigma_z + g2 \sigma_y)$, where $\sigma_i$ are the
+       The inverse of the grid transform in ReducedShear (with r as trace radius) is:
+       $\frac{r}{\sqrt{1+g^2}}(\sigma_x + g_1 \sigma_z + g2 \sigma_y)$, where $\sigma_i$ are the
        Pauli spin matrices.
     */
-    typedef Separable<ReducedShear,DeterminantRadius> C;
+    typedef Separable<ReducedShear> C;
     C core;
     Jacobian rhs = core.dAssign(_input);
     double g1 = core.getE1();
     double g2 = core.getE2();
     double g = core.getEllipticity().getE();
     double r = core.getRadius();
-    double beta = 1.0 - g*g;
+    double beta = 1.0 + g*g;
     double alpha = r / std::sqrt(beta);
 
     Eigen::Matrix2d sigma_z, sigma_y;
@@ -71,8 +70,8 @@ EllipseCore::GridTransform::d() const {
         1.0, 0.0;
     Eigen::Matrix2d t = _eig.operatorSqrt();
     Eigen::Matrix2d tInv = _eig.operatorInverseSqrt();
-    Eigen::Matrix2d dt_dg1 = t * g1 / beta + alpha * sigma_z;
-    Eigen::Matrix2d dt_dg2 = t * g2 / beta + alpha * sigma_y;
+    Eigen::Matrix2d dt_dg1 = -t * g1 / beta + alpha * sigma_z;
+    Eigen::Matrix2d dt_dg2 = -t * g2 / beta + alpha * sigma_y;
     Eigen::Matrix2d dt_dr = t * (1.0 / r);
     Eigen::Matrix2d dtInv_dg1 = -tInv * dt_dg1 * tInv;
     Eigen::Matrix2d dtInv_dg2 = -tInv * dt_dg2 * tInv;

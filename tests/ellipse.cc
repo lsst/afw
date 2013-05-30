@@ -45,26 +45,16 @@ template <typename TestCase>
 void invokeCoreTest(bool no_circles) {
     TestCase::apply(Quadrupole(1.5,2.0,-0.75));
     TestCase::apply(Axes(2.5,1.3,-0.75*radians));
-    TestCase::apply(SeparableDistortionDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableDistortionTraceRadius(0.4,-0.25,2.3));
-
-    TestCase::apply(SeparableConformalShearDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableConformalShearTraceRadius(0.4,-0.25,2.3));
-
-    TestCase::apply(SeparableReducedShearDeterminantRadius(0.4,-0.25,2.3));
-    TestCase::apply(SeparableReducedShearTraceRadius(0.4,-0.25,2.3));
+    TestCase::apply(Separable<Distortion>(0.4,-0.25,2.3));
+    TestCase::apply(Separable<ConformalShear>(0.4,-0.25,2.3));
+    TestCase::apply(Separable<ReducedShear>(0.4,-0.25,2.3));
 
     if (no_circles) return;
     TestCase::apply(Quadrupole(200.0,200.0,0.0));
     TestCase::apply(Axes(40,40));
-    TestCase::apply(SeparableDistortionDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableDistortionTraceRadius(0.0, 0.0, 2.3));
-
-    TestCase::apply(SeparableConformalShearDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableConformalShearTraceRadius(0.0, 0.0, 2.3));
-
-    TestCase::apply(SeparableReducedShearDeterminantRadius(0.0, 0.0, 2.3));
-    TestCase::apply(SeparableReducedShearTraceRadius(0.0, 0.0, 2.3));
+    TestCase::apply(Separable<Distortion>(0.0, 0.0, 2.3));
+    TestCase::apply(Separable<ConformalShear>(0.0, 0.0, 2.3));
+    TestCase::apply(Separable<ReducedShear>(0.0, 0.0, 2.3));
 }
 
 template <typename TestCase>
@@ -196,15 +186,9 @@ struct CoreConversionTest {
     static void apply(T1 const & core) {
         testCoreConversion<Axes>(core);
         testCoreConversion<Quadrupole>(core);
-        testCoreConversion<SeparableDistortionDeterminantRadius>(core);
-        testCoreConversion<SeparableDistortionTraceRadius>(core);
-
-        testCoreConversion<SeparableConformalShearDeterminantRadius>(core);
-        testCoreConversion<SeparableConformalShearTraceRadius>(core);
-
-        testCoreConversion<SeparableReducedShearDeterminantRadius>(core);
-        testCoreConversion<SeparableReducedShearTraceRadius>(core);
-
+        testCoreConversion<Separable<Distortion> >(core);
+        testCoreConversion<Separable<ConformalShear> >(core);
+        testCoreConversion<Separable<ReducedShear> >(core);
     }
 
 };
@@ -395,17 +379,6 @@ BOOST_AUTO_TEST_CASE(ParametricTest) {
 
 BOOST_AUTO_TEST_CASE(CoreConversion) {
     afwEllipses::invokeCoreTest<afwEllipses::CoreConversionTest>(false);
-}
-
-BOOST_AUTO_TEST_CASE(Normalization) {
-    afwEllipses::Ellipse a1(afwEllipses::Axes(1.0, 1.5));
-    afwEllipses::Ellipse a2(afwEllipses::Axes(0.0, 0.0));
-    a2 = a1;
-    BOOST_CHECK_EQUAL(a2.getCore().getParameterVector(), a1.getCore().getParameterVector());
-    afwEllipses::Ellipse a3(afwEllipses::Axes(1.0, 1.0, 0.5*afwGeom::radians));
-    afwEllipses::Ellipse a4(afwEllipses::Axes(0.0, 0.0));
-    a3 = a4;
-    BOOST_CHECK_EQUAL(a3.getCore().getParameterVector(), a4.getCore().getParameterVector());    
 }
 
 BOOST_AUTO_TEST_CASE(Transformer) {

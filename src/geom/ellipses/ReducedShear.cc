@@ -31,6 +31,15 @@ double ReducedShear::getAxisRatio() const {
     return (1.0 - e) / (1.0 + e);
 }
 
+void ReducedShear::normalize() {
+    if (!(getE() <= 1.0)) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            "ReducedShear magnitude cannot be greater than one."
+        );
+    }
+}
+
 ReducedShear & ReducedShear::operator=(Distortion const & other) {
     double delta = other.getE();
     if (delta < 1E-8) {
@@ -89,6 +98,36 @@ detail::EllipticityBase::Jacobian ReducedShear::dAssign(ConformalShear const & o
     result(1, 1) = alpha + other.getE2() * other.getE2() * beta;
     result(1, 0) = result(0, 1) = other.getE1() * other.getE2() * beta;
     return result;
+}
+
+void ReducedShear::_assignToQuadrupole(double r, double & ixx, double & iyy, double & ixy) const {
+    Distortion delta(*this);
+    delta._assignToQuadrupole(r, ixx, iyy, ixy);
+}
+void ReducedShear::_assignFromQuadrupole(double & r, double ixx, double iyy, double ixy) {
+    Distortion delta;
+    delta._assignFromQuadrupole(r, ixx, iyy, ixy);
+    *this = delta;
+}
+
+EllipseCore::Jacobian ReducedShear::_dAssignToQuadrupole(
+    double r, double & ixx, double & iyy, double & ixy
+) const {
+    Distortion delta;
+    EllipseCore::Jacobian j1 = EllipseCore::Jacobian::Identity();
+    j1.block<2,2>(0,0) = delta.dAssign(*this);
+    EllipseCore::Jacobian j2 = delta._dAssignToQuadrupole(r, ixx, iyy, ixy);
+    return j2 * j1;
+}
+
+EllipseCore::Jacobian ReducedShear::_dAssignFromQuadrupole(
+    double & r, double ixx, double iyy, double ixy
+) {
+    Distortion delta;
+    EllipseCore::Jacobian j1 = delta._dAssignFromQuadrupole(r, ixx, iyy, ixy);
+    EllipseCore::Jacobian j2 = EllipseCore::Jacobian::Identity();
+    j2.block<2,2>(0,0) = dAssign(delta);
+    return j2 * j1;
 }
 
 }}}} // namespace lsst::afw::geom::ellipses

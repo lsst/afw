@@ -35,27 +35,17 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  *  @brief An ellipse core with a complex ellipticity and radius parameterization.
  *
  *  The Separable EllipseCore template combines a subclass of EllipticityBase with
- *  a Radius class (from radii.h).  The mathematical definition of ellipticity and/or
- *  radius thus differs with each template instantiation, but the parameter names
- *  and API are the same.
- *
- *  While the ellipticity definitions are self-contained classes that are useful even
- *  apart from Separable, the definition of the radius depends on the ellipticity as
- *  well, so the radius classes should be considered semi-private helper classes for
- *  Separable; only their names and associated mathematical definitions are part of
- *  the public API.  Separable does have methods that return Radius objects, however,
- *  but these are implicitly convertible to double, and should generally be interacted
- *  with via this implicit conversion.
+ *  a radius class (using the "trace radius" definition; see EllipseCore::getTraceRadius()).
+ *  The mathematical definition of the ellipticity thus differs with each template instantiation,
+ *  but the parameter names and API are the same.
  */
-template <typename Ellipticity_, typename Radius_>
+template <typename Ellipticity_>
 class Separable : public EllipseCore {
 public:
 
     enum ParameterEnum { E1=0, E2=1, RADIUS=2 }; ///< Definitions for elements of a core vector.
 
     typedef Ellipticity_ Ellipticity;
-    typedef Radius_ Radius;
-
 
     /// Get the real (axis-aligned) part of the ellipticity
     double const getE1() const { return _ellipticity.getE1(); }
@@ -70,16 +60,10 @@ public:
     void setE2(double e2) { _ellipticity.setE2(e2); }
 
     /// Get the radius of the ellipse
-    Radius const & getRadius() const { return _radius; }
-
-    /// Get the radius of the ellipse (returns an internal reference)
-    Radius & getRadius() { return _radius; }
+    double const getRadius() const { return _radius; }
 
     /// Set the radius of the ellipse
     void setRadius(double radius) { _radius = radius; }
-
-    /// Set the radius of the ellipse
-    void setRadius(Radius const & radius) { _radius = radius; }
 
     /// Return the nested ellipticity object
     Ellipticity const & getEllipticity() const { return _ellipticity; }
@@ -109,14 +93,13 @@ public:
     explicit Separable(double radius=1.0);
 
     /// Construct from parameter values.
-    Separable(double e1, double e2, double radius=Radius(), bool normalize=true);
+    Separable(double e1, double e2, double radius=1.0, bool normalize=true);
 
     /// Construct from parameter values.
-    explicit Separable(std::complex<double> const & complex,
-                       double radius=Radius(), bool normalize=true);
+    explicit Separable(std::complex<double> const & complex, double radius=1.0, bool normalize=true);
 
     /// Construct from parameter values.
-    explicit Separable(Ellipticity const & ellipticity, double radius=Radius(), bool normalize=true);
+    explicit Separable(Ellipticity const & ellipticity, double radius=1.0, bool normalize=true);
 
     /// Construct from a parameter vector.
     explicit Separable(EllipseCore::ParameterVector const & vector, bool normalize=false);
@@ -164,7 +147,7 @@ private:
     static EllipseCore::Registrar<Separable> registrar;
 
     Ellipticity _ellipticity;
-    Radius _radius;
+    double _radius;
 };
 
 }}}} // namespace lsst::afw::geom::ellipses

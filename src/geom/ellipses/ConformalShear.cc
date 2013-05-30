@@ -20,8 +20,11 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include <boost/math/special_functions/atanh.hpp>
 
+#include "boost/math/special_functions/atanh.hpp"
+
+#include "lsst/utils/ieee.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
@@ -31,6 +34,15 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 double ConformalShear::getAxisRatio() const {
     double e = getE();
     return std::exp(-e);
+}
+
+void ConformalShear::normalize() {
+    if (utils::isnan(_complex.real()) || utils::isnan(_complex.imag())) {
+        throw LSST_EXCEPT(
+            pex::exceptions::InvalidParameterException,
+            "NaN detected in ConformalShear ellipticity"
+        );
+    }
 }
 
 ConformalShear & ConformalShear::operator=(Distortion const & other) {
@@ -91,6 +103,36 @@ detail::EllipticityBase::Jacobian ConformalShear::dAssign(ReducedShear const & o
     result(1, 1) = alpha + other.getE2() * other.getE2() * beta;
     result(1, 0) = result(0, 1) = other.getE1() * other.getE2() * beta;
     return result;
+}
+
+void ConformalShear::_assignToQuadrupole(double r, double & ixx, double & iyy, double & ixy) const {
+    Distortion delta(*this);
+    delta._assignToQuadrupole(r, ixx, iyy, ixy);
+}
+void ConformalShear::_assignFromQuadrupole(double & r, double ixx, double iyy, double ixy) {
+    Distortion delta;
+    delta._assignFromQuadrupole(r, ixx, iyy, ixy);
+    *this = delta;
+}
+
+EllipseCore::Jacobian ConformalShear::_dAssignToQuadrupole(
+    double r, double & ixx, double & iyy, double & ixy
+) const {
+    Distortion delta;
+    EllipseCore::Jacobian j1 = EllipseCore::Jacobian::Identity();
+    j1.block<2,2>(0,0) = delta.dAssign(*this);
+    EllipseCore::Jacobian j2 = delta._dAssignToQuadrupole(r, ixx, iyy, ixy);
+    return j2 * j1;
+}
+
+EllipseCore::Jacobian ConformalShear::_dAssignFromQuadrupole(
+    double & r, double ixx, double iyy, double ixy
+) {
+    Distortion delta;
+    EllipseCore::Jacobian j1 = delta._dAssignFromQuadrupole(r, ixx, iyy, ixy);
+    EllipseCore::Jacobian j2 = EllipseCore::Jacobian::Identity();
+    j2.block<2,2>(0,0) = dAssign(delta);
+    return j2 * j1;
 }
 
 }}}} // namespace lsst::afw::geom::ellipses

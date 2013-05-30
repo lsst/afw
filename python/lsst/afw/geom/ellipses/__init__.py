@@ -27,12 +27,9 @@ import weakref
 import numpy
 
 Separable = {
-    (Distortion, DeterminantRadius):SeparableDistortionDeterminantRadius,
-    (Distortion, TraceRadius):SeparableDistortionTraceRadius,
-    (ConformalShear, DeterminantRadius):SeparableConformalShearDeterminantRadius,
-    (ConformalShear, TraceRadius):SeparableConformalShearTraceRadius,
-    (ReducedShear, DeterminantRadius):SeparableReducedShearDeterminantRadius,
-    (ReducedShear, TraceRadius):SeparableReducedShearTraceRadius,
+    Distortion: DistortionEllipseCore,
+    ConformalShear: ConformalShearEllipseCore,
+    ReducedShear: ReducedShearEllipseCore,
 }
 
 EllipseCore.cast = lambda self: globals()[self.getName()].cast(self)
