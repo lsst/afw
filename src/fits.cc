@@ -217,7 +217,7 @@ namespace {
 ///
 /// Non-finite values are written as special strings.  If the value is finite,
 /// an empty string is returned.
-std::string writeDoubleSpecial(double value)
+std::string nonFiniteDoubleToString(double value)
 {
     if (utils::isfinite(value)) {
         return "";
@@ -235,7 +235,7 @@ std::string writeDoubleSpecial(double value)
 ///
 /// Returns zero if the provided string is not one of the recognised special
 /// strings for doubles; otherwise, returns the mapped value.
-double readDoubleSpecial(std::string const& value)
+double stringToNonFiniteDouble(std::string const& value)
 {
     if (value == "NAN") {
         return std::numeric_limits<double>::quiet_NaN();
@@ -286,7 +286,7 @@ void updateKeyImpl(Fits & fits, char const * key, bool const & value, char const
 }
 
 void updateKeyImpl(Fits & fits, char const * key, double const & value, char const * comment) {
-    std::string strValue = writeDoubleSpecial(value);
+    std::string strValue = nonFiniteDoubleToString(value);
     if (!strValue.empty()) {
         updateKeyImpl(fits, key, strValue, comment);
     } else {
@@ -350,7 +350,7 @@ void writeKeyImpl(Fits & fits, char const * key, bool const & value, char const 
 }
 
 void writeKeyImpl(Fits & fits, char const * key, double const & value, char const * comment) {
-    std::string strValue = writeDoubleSpecial(value);
+    std::string strValue = nonFiniteDoubleToString(value);
     if (!strValue.empty()) {
         writeKeyImpl(fits, key, strValue, comment);
     } else {
@@ -477,7 +477,7 @@ void readKeyImpl(Fits & fits, char const * key, double & value) {
         if (fits.status != 0) {
             return;
         }
-        value = readDoubleSpecial(str);
+        value = stringToNonFiniteDouble(unquoted);
         if (value == 0) {
             throw LSST_EXCEPT(
                 afw::fits::FitsError,
@@ -633,7 +633,7 @@ void MetadataIterationFunctor::operator()(
         add(key, val, comment);
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
         std::string const str = matchStrings[1].str(); // strip off the enclosing single quotes
-        double val = readDoubleSpecial(str);
+        double val = stringToNonFiniteDouble(str);
         if (val != 0.0) {
             add(key, val, comment);
         } else {
