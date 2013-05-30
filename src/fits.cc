@@ -471,9 +471,9 @@ void readKeyImpl(Fits & fits, char const * key, double & value) {
     if (fits.status != 0) {
         return;
     }
-    std::string str(buf);
-    if (str.find('\'') != std::string::npos) {
-        readKeyImpl(fits, key, str);
+    if (std::string(buf).find('\'') != std::string::npos) {
+        std::string unquoted;
+        readKeyImpl(fits, key, unquoted); // Let someone else remove quotes and whitespace
         if (fits.status != 0) {
             return;
         }
@@ -482,7 +482,7 @@ void readKeyImpl(Fits & fits, char const * key, double & value) {
             throw LSST_EXCEPT(
                 afw::fits::FitsError,
                 (boost::format("Unrecognised string value for keyword '%s' when parsing as double: %s") %
-                 key % value).str());
+                 key % unquoted).str());
         }
     } else {
         fits_read_key(
