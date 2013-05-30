@@ -146,19 +146,17 @@ public:
         return os << "(" << ellipse.getCore() << ", " << ellipse.getCenter() << ")";
     }
 
-    virtual ~Ellipse() {}
-
+    /// Construct an Ellipse from an EllipseCore and center
     explicit Ellipse(EllipseCore const & core, Point2D const & center = Point2D()) :
         _core(core.clone()), _center(center) {}
 
-    explicit Ellipse(PTR(EllipseCore const) const & core, Point2D const & center = Point2D()) :
-        _core(core->clone()), _center(center) {}
-
 #ifndef SWIG
+
     Ellipse(Transformer const & other);
     Ellipse(Convolution const & other);
 #endif
 
+    /// Deep-copy an Ellipse (clones the EllipseCore)
     Ellipse(Ellipse const & other) :
         _core(other.getCore().clone()), _center(other.getCenter()) {}
 

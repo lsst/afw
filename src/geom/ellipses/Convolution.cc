@@ -56,7 +56,7 @@ void EllipseCore::Convolution::apply(EllipseCore & result) const {
 
 Ellipse Ellipse::Convolution::copy() const {
     return Ellipse(
-        self.getCore().convolve(other.getCore()).copy(),
+        *self.getCore().convolve(other.getCore()).copy(),
         PointD(self.getCenter() + Extent2D(other.getCenter()))
     );
 }

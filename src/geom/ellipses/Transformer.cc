@@ -96,7 +96,7 @@ EllipseCore::Transformer::dTransform() const {
 
 Ellipse Ellipse::Transformer::copy() const {
     return Ellipse(
-        input.getCore().transform(transform.getLinear()).copy(),
+        *input.getCore().transform(transform.getLinear()).copy(),
         transform(input.getCenter())
     );
 }
