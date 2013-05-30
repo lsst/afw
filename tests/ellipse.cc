@@ -1,3 +1,26 @@
+// -*- lsst-c++ -*-
+/*
+ * LSST Data Management System
+ * Copyright 2008-2013 LSST Corporation.
+ *
+ * This product includes software developed by the
+ * LSST Project (http://www.lsst.org/).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
+ * see <http://www.lsstcorp.org/LegalNotices/>.
+ */
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE ellipses
 #pragma clang diagnostic push
@@ -6,6 +29,7 @@
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
 
+#include "lsst/utils/ieee.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "Eigen/LU"
 
@@ -42,14 +66,13 @@ computeJacobian(Function f, Eigen::Matrix<double,Function::N,1> const & initial)
 }
 
 template <typename TestCase>
-void invokeCoreTest(bool no_circles) {
+void invokeCoreTest() {
     TestCase::apply(Quadrupole(1.5,2.0,-0.75));
     TestCase::apply(Axes(2.5,1.3,-0.75*radians));
     TestCase::apply(Separable<Distortion>(0.4,-0.25,2.3));
     TestCase::apply(Separable<ConformalShear>(0.4,-0.25,2.3));
     TestCase::apply(Separable<ReducedShear>(0.4,-0.25,2.3));
 
-    if (no_circles) return;
     TestCase::apply(Quadrupole(200.0,200.0,0.0));
     TestCase::apply(Axes(40,40));
     TestCase::apply(Separable<Distortion>(0.0, 0.0, 2.3));
@@ -71,10 +94,10 @@ struct EllipticityConversionTest {
 
     template <typename T1, typename T2>
     struct Functor {
-        
+
         static int const M = 2;
         static int const N = 2;
-        
+
         Eigen::Vector2d operator()(Eigen::Vector2d const & x) {
             T1 c1(x[0], x[1]);
             T2 c2(c1);
@@ -118,7 +141,7 @@ struct EllipticityConversionTest {
         BOOST_CHECK((a2 * a1).isIdentity(1E-5));
         BOOST_CHECK((a1 - b1).isMuchSmallerThan(1.0, 1E-4));
         BOOST_CHECK((a2 - b2).isMuchSmallerThan(1.0, 1E-4));
-        
+
     }
 
     template <typename T1>
@@ -126,69 +149,6 @@ struct EllipticityConversionTest {
         testEllipticityConversion<Distortion>(core);
         testEllipticityConversion<ReducedShear>(core);
         testEllipticityConversion<ConformalShear>(core);
-    }
-
-};
-
-
-struct CoreConversionTest {
-
-    template <typename T1, typename T2>
-    struct Functor {
-
-        static int const M = 3;
-        static int const N = 3;
-
-        EllipseCore::ParameterVector operator()(EllipseCore::ParameterVector const & x) {
-            T1 c1(x);
-            T2 c2(c1);
-            return c2.getParameterVector();
-        }
-
-    };
-
-    template <typename T2, typename T1>
-    static void testCoreConversion(T1 const & core) {
-        T1 copy(core);
-        BOOST_CHECK(approx(core, copy, 0.0));
-        if (!approx(core, copy, 0.0)) {
-            std::cerr << copy.getName() << "\n";
-            std::cerr << core.getParameterVector().transpose() << " ---- "
-                      << copy.getParameterVector().transpose() << "\n";
-        }
-        T2 other(core);
-        copy = other;
-        BOOST_CHECK(approx(core, copy, 1E-12));
-        EllipseCore::Jacobian a1 = copy.dAssign(other);
-        EllipseCore::Jacobian a2 = other.dAssign(copy);
-        if (copy.getName() != "Axes" && other.getName() != "Axes") {
-            Functor<T2,T1> f1;
-            Functor<T1,T2> f2;
-            EllipseCore::Jacobian b1 = computeJacobian(f1, other.getParameterVector());
-            EllipseCore::Jacobian b2 = computeJacobian(f2, copy.getParameterVector());
-            if (!(a1 - b1).isMuchSmallerThan(1.0, 1E-4)) {
-                std::cerr << copy.getName() << ", " << other.getName() << "\n";
-                std::cerr << (a1 - b1) << "\n\n";
-            }
-            if (!(a2 - b2).isMuchSmallerThan(1.0, 1E-4)) {
-                std::cerr << other.getName() << ", " << copy.getName() << "\n";
-                std::cerr << (a2 - b2) << "\n\n";
-            }
-            BOOST_CHECK(approx(core, copy, 1E-12));
-            BOOST_CHECK((a1 * a2).isIdentity(1E-5));
-            BOOST_CHECK((a2 * a1).isIdentity(1E-5));
-            BOOST_CHECK((a1 - b1).isMuchSmallerThan(1.0, 1E-4));
-            BOOST_CHECK((a2 - b2).isMuchSmallerThan(1.0, 1E-4));
-        }
-    }
-
-    template <typename T1>
-    static void apply(T1 const & core) {
-        testCoreConversion<Axes>(core);
-        testCoreConversion<Quadrupole>(core);
-        testCoreConversion<Separable<Distortion> >(core);
-        testCoreConversion<Separable<ConformalShear> >(core);
-        testCoreConversion<Separable<ReducedShear> >(core);
     }
 
 };
@@ -210,7 +170,7 @@ struct TransformerTest {
         }
 
         Functor1(Ellipse const & ellipse_, AffineTransform const & transform_) :
-            ellipse(ellipse_), transform(transform_) 
+            ellipse(ellipse_), transform(transform_)
         {}
 
     };
@@ -229,7 +189,7 @@ struct TransformerTest {
         }
 
         Functor2(Ellipse const & ellipse_, AffineTransform const & transform_) :
-            ellipse(ellipse_), transform(transform_) 
+            ellipse(ellipse_), transform(transform_)
         {}
 
     };
@@ -238,7 +198,7 @@ struct TransformerTest {
     static void apply(Core const & core) {
         Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
         Eigen::Matrix2d tm;
-        tm << 
+        tm <<
             -0.2704311, 0.9044595,
             0.0268018, 0.8323901;
         AffineTransform transform(tm, Eigen::Vector2d::Random());
@@ -255,7 +215,7 @@ struct TransformerTest {
             )
         );
         Eigen::Matrix<double,5,6> t_d_analytic = input.transform(transform).dTransform();
-        Eigen::Matrix<double,5,6> t_d_numeric = computeJacobian(f2, transform.getParameterVector());    
+        Eigen::Matrix<double,5,6> t_d_numeric = computeJacobian(f2, transform.getParameterVector());
         BOOST_CHECK_MESSAGE(
             t_d_analytic.isApprox(t_d_numeric,1E-4),
             boost::str(
@@ -268,7 +228,7 @@ struct TransformerTest {
 };
 
 struct GridTransformTest {
-    
+
     struct Functor {
 
         static int const M = 6;
@@ -295,7 +255,7 @@ struct GridTransformTest {
             boost::str(
                 boost::format("GridTransform::getMatrix incorrect %s:\ngetMatrix:\n%s\nTransform:\n%s\n")
                 % core.getName() % input.getGridTransform().getMatrix() % output.getMatrix()
-            )            
+            )
         );
         BOOST_CHECK_CLOSE(output.getLinear().getMatrix()(0,1), output.getLinear().getMatrix()(1,0), 1E-8);
         Ellipse unit_circle = input.transform(output);
@@ -304,7 +264,7 @@ struct GridTransformTest {
         BOOST_CHECK_CLOSE(unit_circle_axes.getB(), 1.0, 1E-8);
         Functor f(input);
         Ellipse::GridTransform::DerivativeMatrix d_analytic = input.getGridTransform().d();
-        Ellipse::GridTransform::DerivativeMatrix d_numeric 
+        Ellipse::GridTransform::DerivativeMatrix d_numeric
             = computeJacobian(f, input.getParameterVector());
         BOOST_CHECK_MESSAGE(
             d_analytic.isApprox(d_numeric,1E-4),
@@ -319,7 +279,7 @@ struct GridTransformTest {
 };
 
 struct ConvolutionTest {
-    
+
     template <typename T>
     struct Functor {
 
@@ -345,7 +305,7 @@ struct ConvolutionTest {
         T output = input.convolve(other);
         Functor<T> f(other);
         EllipseCore::Convolution::DerivativeMatrix d_analytic = input.convolve(other).d();
-        EllipseCore::Convolution::DerivativeMatrix d_numeric 
+        EllipseCore::Convolution::DerivativeMatrix d_numeric
             = computeJacobian(f, input.getParameterVector());
         BOOST_CHECK_MESSAGE(
             d_analytic.isApprox(d_numeric,1E-4),
@@ -354,7 +314,7 @@ struct ConvolutionTest {
                 % core.getName() % d_analytic % d_numeric
             )
         );
-    
+
     }
 };
 
@@ -377,18 +337,14 @@ BOOST_AUTO_TEST_CASE(ParametricTest) {
     );
 }
 
-BOOST_AUTO_TEST_CASE(CoreConversion) {
-    afwEllipses::invokeCoreTest<afwEllipses::CoreConversionTest>(false);
-}
-
 BOOST_AUTO_TEST_CASE(Transformer) {
-    afwEllipses::invokeCoreTest<afwEllipses::TransformerTest>(false);
+    afwEllipses::invokeCoreTest<afwEllipses::TransformerTest>();
 }
 
 BOOST_AUTO_TEST_CASE(GridTransform) {
-    afwEllipses::invokeCoreTest<afwEllipses::GridTransformTest>(false);
+    afwEllipses::invokeCoreTest<afwEllipses::GridTransformTest>();
 }
 
 BOOST_AUTO_TEST_CASE(Convolution) {
-    afwEllipses::invokeCoreTest<afwEllipses::ConvolutionTest>(false);
+    afwEllipses::invokeCoreTest<afwEllipses::ConvolutionTest>();
 }
