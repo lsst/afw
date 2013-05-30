@@ -168,6 +168,19 @@ class EllipseTestCase(utilsTests.TestCase):
             self.assertEqual(s.getEllipticity().getComplex(), s.getE1() + s.getE2()*1j)
             self.assertEqual(numpy.abs(s.getEllipticity().getComplex()), s.getEllipticity().getE())
 
+    def testModifiers(self):
+        for cls in self.classes:
+            for axes in self.all:
+                core1 = cls(axes)
+                core2 = core1.clone()
+                core2.scale(2.0)
+                core3 = core1.transform(geom.LinearTransform.makeScaling(2.0, 2.0))
+                self.assertTrue(core2.compare(core3))
+                self.assertClose(core2.getArea(), core1.getArea() * 4.0)
+                core4 = core1.clone()
+                core4.grow(3.0)
+                self.assertTrue(core4.compare(el.Axes(axes.getA() + 3.0, axes.getB() + 3.0, axes.getTheta())))
+
     def testTransform(self):
         for cls in self.classes:
             for axes in self.all:
