@@ -20,6 +20,7 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+#include "lsst/utils/ieee.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 #include "lsst/afw/geom/ellipses/Axes.h"
 
@@ -28,9 +29,24 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 namespace {
 
 void normalizeImpl(double & a, double & b, double & theta) {
-    if (!(a >= 0.0 && b >= 0.0))
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
-                          "Major and minor axes cannot be negative.");
+    if (a < 0.0) {
+        a = -a;
+    }
+    if (b < 0.0) {
+        b = -b;
+    }
+    if (utils::isnan(a)) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            "NaN detected in ellipse major axis"
+        );
+    }
+    if (utils::isnan(b)) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            "NaN detected in ellipse minor axis"
+        );
+    }
     if (a < b) {
         std::swap(a, b);
         theta += M_PI_2;
