@@ -49,6 +49,8 @@ ConformalShear & ConformalShear::operator=(Distortion const & other) {
     double delta = other.getE();
     if (delta < 1E-8) {
         _complex = other.getComplex() * (1.0 + delta * delta / 3.0);
+    } else if (delta >= 1.0) {
+        _complex = other.getComplex() * std::numeric_limits<double>::max() / delta;
     } else {
         double eta = boost::math::atanh(delta);
         _complex = other.getComplex() * eta / delta;
@@ -60,6 +62,8 @@ ConformalShear & ConformalShear::operator=(ReducedShear const & other) {
     double g = other.getE();
     if (g < 1E-8) {
         _complex = other.getComplex() * 2.0 * (1.0 + g * g / 3.0);
+    } else if (g >= 1.0) {
+        _complex = other.getComplex() * std::numeric_limits<double>::max() / g;
     } else {
         double eta = 2.0 * boost::math::atanh(g);
         _complex = other.getComplex() * eta / g;

@@ -83,6 +83,9 @@ public:
      */
     virtual void normalize();
 
+    /// Scale the EllipseCore in-place by multiplying its radii by 'factor'.
+    virtual void scale(double factor) { _radius *= factor; }
+
     /// Standard assignment.
     Separable & operator=(Separable const & other);
 

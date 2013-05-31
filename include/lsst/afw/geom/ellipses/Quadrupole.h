@@ -90,6 +90,9 @@ public:
     /// Return the determinant of the matrix representation.
     double getDeterminant() const { return getIxx() * getIyy() - getIxy() * getIxy(); }
 
+    /// Scale the EllipseCore in-place by multiplying its radii by 'factor'.
+    virtual void scale(double factor) { _matrix *= factor*factor; }
+
     /// Standard assignment.
     Quadrupole & operator=(Quadrupole const & other) { _matrix = other._matrix; return *this; }
 

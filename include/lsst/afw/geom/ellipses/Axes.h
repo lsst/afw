@@ -80,6 +80,12 @@ public:
     /// Converting assignment.
     Axes & operator=(EllipseCore const & other) { EllipseCore::operator=(other); return *this; }
 
+    /// Scale the EllipseCore in-place by multiplying its radii by 'factor'.
+    virtual void scale(double factor) {
+        _vector[A] *= factor;
+        _vector[B] *= factor;
+    }
+
     /**
      *  @brief Construct from parameter values, and optionally normalize.
      *

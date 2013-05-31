@@ -103,14 +103,6 @@ void EllipseCore::grow(double buffer) {
     _assignFromAxes(a, b, theta);
 }
 
-void EllipseCore::scale(double factor) {
-    double a, b, theta;
-    _assignToAxes(a, b, theta);
-    a *= factor;
-    b *= factor;
-    _assignFromAxes(a, b, theta);
-}
-
 double EllipseCore::getArea() const {
     double a, b, theta;
     _assignToAxes(a, b, theta);
@@ -118,9 +110,11 @@ double EllipseCore::getArea() const {
 }
 
 double EllipseCore::getDeterminantRadius() const {
-    double a, b, theta;
-    _assignToAxes(a, b, theta);
-    return std::sqrt(a * b);
+    double ixx, iyy, ixy;
+    _assignToQuadrupole(ixx, iyy, ixy);
+    double det = ixx*iyy - ixy*ixy;
+    if (det < 0.0) det = 0.0; // guard against round-off error for degenerate ellipses
+    return std::pow(det, 0.25);
 }
 
 double EllipseCore::getTraceRadius() const {
@@ -213,6 +207,9 @@ void EllipseCore::_assignQuadrupoleToAxes(
     double xx_p_yy = ixx + iyy;
     double xx_m_yy = ixx - iyy;
     double t = std::sqrt(xx_m_yy*xx_m_yy + 4*ixy*ixy);
+    if (t > xx_p_yy) { // this is almost certainly due to round-off error, but we never want
+        t = xx_p_yy;   // xx_p_yy - t to be negative, as that produces NaNs
+    }
     a = std::sqrt(0.5*(xx_p_yy + t));
     b = std::sqrt(0.5*(xx_p_yy - t));
     theta = 0.5*std::atan2(2.0*ixy, xx_m_yy);
@@ -227,6 +224,9 @@ EllipseCore::Jacobian EllipseCore::_dAssignQuadrupoleToAxes(
     double t2 = xx_m_yy*xx_m_yy + 4.0*ixy*ixy;
     Eigen::Vector3d dt2(2.0*xx_m_yy, -2.0*xx_m_yy, 8.0*ixy);
     double t = std::sqrt(t2);
+    if (t > xx_p_yy) { // this is almost certainly due to round-off error, but we never want
+        t = xx_p_yy;   // xx_p_yy - t to be negative, as that produces NaNs
+    }
     a = std::sqrt(0.5*(xx_p_yy + t));
     b = std::sqrt(0.5*(xx_p_yy - t));
     theta = 0.5*std::atan2(2.0*ixy, xx_m_yy);

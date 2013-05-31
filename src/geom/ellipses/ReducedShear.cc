@@ -44,6 +44,8 @@ ReducedShear & ReducedShear::operator=(Distortion const & other) {
     double delta = other.getE();
     if (delta < 1E-8) {
         _complex = other.getComplex() * (0.5 + 0.125 * delta * delta);
+    } else if (delta >= 1.0) {
+        _complex = other.getComplex();
     } else {
         double g = (1.0 - std::sqrt(1.0 - delta * delta)) / delta;
         _complex = other.getComplex() * g / delta;
@@ -70,6 +72,9 @@ detail::EllipticityBase::Jacobian ReducedShear::dAssign(Distortion const & other
     if (delta < 1E-8) {
         alpha = 0.5 + 0.125 * delta * delta;
         beta = 0.25;
+    } else if (delta >= 1.0) {
+        alpha = 1.0;
+        beta = 0.0;
     } else {
         alpha = (1.0 - s) / (delta * delta);
         beta = (2.0 * alpha - 1.0) / (delta * delta * s);

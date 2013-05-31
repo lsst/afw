@@ -103,8 +103,8 @@ public:
     /// Grow the EllipseCore in-place by adding 'buffer' to its semimajor and semiminor axes
     void grow(double buffer);
 
-    /// Scale the EllipseCore in-place by multiplying its semimajor and semiminor axes by 'factor'.
-    void scale(double factor);
+    /// Scale the EllipseCore in-place by multiplying its radii by 'factor'.
+    virtual void scale(double factor) = 0;
 
     /// Return the area of the EllipseCore.
     double getArea() const;
