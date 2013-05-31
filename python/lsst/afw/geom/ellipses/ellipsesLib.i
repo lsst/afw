@@ -186,6 +186,10 @@ Python interface to lsst::afw::geom::ellipses classes and functions
         return self->as(name);
     }
 
+    %pythoncode %{
+        def __reduce__(self):
+            return (EllipseCore.make, (name, self.getParameterVector()))
+    %}
 }
 
 %define %EllipseCore_PREINCLUDE(NAME)
@@ -214,20 +218,6 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 
 %EllipseCore_POSTINCLUDE(Axes);
 %EllipseCore_POSTINCLUDE(Quadrupole);
-
-%extend lsst::afw::geom::ellipses::Axes {
-    %pythoncode {
-    def __reduce__(self):
-        return (Axes, (self.getA(), self.getB(), self.getTheta()))
-    }
-}
-
-%extend lsst::afw::geom::ellipses::Quadrupole {
-    %pythoncode {
-    def __reduce__(self):
-        return (Quadrupole, (self.getIxx(), self.getIyy(), self.getIxy()))
-    }
-}
 
 %include "Separable.i"
 
