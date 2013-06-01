@@ -175,15 +175,23 @@ def getGeomPolicy(cameraGeomPolicy):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def makeLinearityFromPolicy(linPol):
+def makeLinearityFromPolicy(linPol, gain=1.0):
     """Make and return a Linearity object from a suitable policy"""
     assert linPol.get("type") == "PROPORTIONAL", "Checked in CameraGeomDictionary.paf"
 
+    threshold = linPol.get("threshold")
+    maxCorrectable = linPol.get("maxCorrectable")
+    coefficient = linPol.get("coefficient")
+
+    if linPol.get("intensityUnits") == "ELECTRONS":
+        threshold = int(threshold/gain + 0.5)
+        maxCorrectable = int(maxCorrectable/gain + 0.5)
+        coefficient /= gain
+    else:
+        assert linPol.get("intensityUnits") == "DN", "Checked in CameraGeomDictionary.paf"
+
     return cameraGeom.Linearity(cameraGeom.Linearity.PROPORTIONAL,
-                                linPol.get("threshold"),
-                                linPol.get("maxCorrectable"),
-                                linPol.get("coefficient")
-                                )
+                                threshold, maxCorrectable, coefficient)
 
 
 def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}, ccdDescription=None):
@@ -365,11 +373,12 @@ in particular that it has an entry ampSerial which is a single-element list, the
             linPols[policy.get("serial")] = policy
 
         for amp in ccd:
+            ep = amp.getElectronicParams()
             try:
-                lin = makeLinearityFromPolicy(linPols[amp.getId().getSerial()])
+                lin = makeLinearityFromPolicy(linPols[amp.getId().getSerial()], gain=ep.getGain())
             except KeyError:
                 continue
-            amp.getElectronicParams().setLinearity(lin)
+            ep.setLinearity(lin)
     #
     # Information for the test code
     #

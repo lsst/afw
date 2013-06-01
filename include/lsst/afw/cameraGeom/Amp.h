@@ -55,16 +55,16 @@ struct Linearity {
      * .paf files to initialise Cameras
      */
     explicit Linearity(LinearityType type_ = PROPORTIONAL, ///< Type of correction to apply
-                       int threshold_=0,    ///< DN where non-linear response commences
+                       float threshold_=0,    ///< DN where non-linear response commences
                        /// Maximum DN where non-linearity correction is believable
-                       int maxCorrectable_=std::numeric_limits<int>::max(),
+                       float maxCorrectable_=std::numeric_limits<float>::max(),
                        float coefficient_ = 0.0 ///< Coefficient for linearity correction
                       ) : type(type_), threshold(threshold_), maxCorrectable(maxCorrectable_),
                           coefficient(coefficient_) {}
 
     LinearityType type;                 // Type of correction to apply
-    int threshold;                      // DN where non-linear response commences
-    int maxCorrectable;                 // Maximum DN where non-linearity correction is believable
+    float threshold;                    // DN where non-linear response commences
+    float maxCorrectable;               // Maximum DN where non-linearity correction is believable
     float coefficient;                  // Coefficient for linearity correction
 };
 
