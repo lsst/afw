@@ -594,19 +594,34 @@ definitions: {
                                             }
                                             default: "PROPORTIONAL"
                                         }
+                                        intensityUnits: {
+                                            type: string
+                                            description: "Units of intensity when nonlinearity is corrected"
+                                            minOccurs: 0
+                                            maxOccurs: 1
+                                            allowed: {
+                                                value: "DN"
+                                                description: "Corrections are calculated after gain correction"
+                                            }
+                                            allowed: {
+                                                value: "ELECTRONS"
+                                                description: "Corrections are calculated before gain correction"
+                                            }
+                                            default: "DN"
+                                        }
                                         threshold: {
-                                            type: int
+                                            type: double
                                             description: "DN for onset of non-linearity"
                                             minOccurs: 0
                                             maxOccurs: 1
-                                            default: 999999
+                                            default: 1e30
                                         }
                                         maxCorrectable: {
-                                            type: int
+                                            type: double
                                             description: "Maximum DN that can be corrected"
                                             minOccurs: 0
                                             maxOccurs: 1
-                                            default: 999999
+                                            default: 1e30
                                         }
                                         coefficient: {
                                             type: double
