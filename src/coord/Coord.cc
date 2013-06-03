@@ -300,8 +300,16 @@ static afwGeom::Angle xmsStringToAngle(
     std::string const dms, ///< Coord as a string in dd:mm:ss format
     afwGeom::AngleUnit unit
     ) {
+    if (dms.find(":") == std::string::npos) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("String is not in xx:mm:ss format: %s") % dms).str());
+    }
     std::vector<std::string> elements;
     boost::split(elements, dms, boost::is_any_of(":"));
+    if (elements.size() != 3) {
+        throw LSST_EXCEPT(ex::InvalidParameterException,
+                          (boost::format("Could not parse string as xx:mm:ss format: %s") % dms).str());
+    }
     int const deg   = abs(atoi(elements[0].c_str()));
     int const min   = atoi(elements[1].c_str());
     double const sec = atof(elements[2].c_str());
