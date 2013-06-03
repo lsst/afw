@@ -603,6 +603,11 @@ class CoordTestCase(unittest.TestCase):
         self.assertEqual(gal_names[0], clone_names[0])
         self.assertEqual(gal_names[1], clone_names[1])
 
+    def testTicket2915(self):
+        """SegFault in construction of Coord from strings"""
+        self.assertRaises(pexEx.LsstCppException, afwCoord.IcrsCoord, "79.891963", "-10.110075")
+        self.assertRaises(pexEx.LsstCppException, afwCoord.IcrsCoord, "01:23", "45:67")
+
  
         
 #################################################################
