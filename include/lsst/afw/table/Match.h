@@ -27,6 +27,7 @@
 
 #include <vector>
 
+#include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/Source.h"

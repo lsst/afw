@@ -454,9 +454,6 @@ typedef SourceColumnViewT<SourceRecord> SourceColumnView;
 
 #ifndef SWIG
 
-typedef SortedCatalogT<SourceRecord> SourceCatalog;
-typedef SortedCatalogT<SourceRecord const> ConstSourceCatalog;
-
 DEFINE_FLUX_GETTERS(`Psf')
 DEFINE_FLUX_GETTERS(`Model')
 DEFINE_FLUX_GETTERS(`Ap')

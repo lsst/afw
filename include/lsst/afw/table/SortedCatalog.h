@@ -23,6 +23,7 @@
 #ifndef AFW_TABLE_SortedCatalog_h_INCLUDED
 #define AFW_TABLE_SortedCatalog_h_INCLUDED
 
+#include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Catalog.h"
 
 namespace lsst { namespace afw { namespace table {

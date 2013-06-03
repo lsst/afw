@@ -2,6 +2,7 @@
 
 #include "boost/make_shared.hpp"
 
+#include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/Catalog.h"
