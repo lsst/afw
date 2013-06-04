@@ -596,6 +596,7 @@ Footprint::insertIntoImage(
     }
 }
 
+// Factory class used for table-based persistence; invoked via registry in afw::table::io
 class FootprintFactory : public table::io::PersistableFactory {
 public:
 
@@ -614,6 +615,7 @@ public:
 
 namespace {
 
+// Singleton helper class that manages the schema and keys for persisting a Footprint
 class FootprintPersistenceHelper : private boost::noncopyable {
 public:
     table::Schema spanSchema;
@@ -648,6 +650,8 @@ private:
 
 std::string getFootprintPersistenceName() { return "Footprint"; }
 
+// Insert the factory into the registry (instantiating an instance is sufficient, because
+// the code that does the work is in the base class ctor)
 FootprintFactory registration(getFootprintPersistenceName());
 
 } // anonymous
