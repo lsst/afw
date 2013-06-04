@@ -32,7 +32,7 @@ or
    >>> import footprint1; footprint1.run()
 """
 
-
+import os
 import math, sys
 import unittest
 import numpy
@@ -212,6 +212,16 @@ class FootprintTestCase(unittest.TestCase):
 
         self.assertEqual(fp.getArea(), maskBBox.getArea() - innerBBox.getArea())
 
+    def testTablePersistence(self):
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25), afwGeom.Point2D(9,15))
+        fp1 = afwDetect.Footprint(ellipse)
+        filename = "testFootprintTablePersistence.fits"
+        fp1.writeFits(filename)
+        fp2 = afwDetect.Footprint.readFits(filename)
+        self.assertEqual(fp1.getArea(), fp2.getArea())
+        self.assertEqual(list(fp1.getSpans()), list(fp2.getSpans()))
+        self.assertEqual(list(fp1.getPeaks()), list(fp2.getPeaks()))
+        os.remove(filename)
 
     def testAddSpans(self):
         """Add spans to a Footprint"""

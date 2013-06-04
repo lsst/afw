@@ -43,6 +43,8 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
+#include "lsst/afw/table/fwd.h"
+#include "lsst/afw/table/io/Persistable.h"
 
 namespace boost{
 namespace serialization{
@@ -68,7 +70,10 @@ using geom::Span;
  * (see FootprintSet), or to create Footprints in the shape of various
  * geometrical figures
  */
-class Footprint : public lsst::daf::base::Citizen {
+class Footprint : public lsst::daf::base::Citizen,
+                  public afw::table::io::PersistableFacade<lsst::afw::detection::Footprint>,
+                  public afw::table::io::Persistable
+{
 public:
     typedef boost::shared_ptr<Footprint> Ptr;
     typedef boost::shared_ptr<const Footprint> ConstPtr;
@@ -154,6 +159,24 @@ public:
     Footprint::Ptr transform(image::Wcs const& source,
                              image::Wcs const& target,
                              geom::Box2I const& bbox) const;
+
+    bool isPersistable() const { return true; }
+
+protected:
+
+    virtual std::string getPersistenceName() const;
+
+    virtual std::string getPythonModule() const;
+
+    virtual void write(OutputArchiveHandle & handle) const;
+
+    //@{
+    /// Persistence implementation functions made available for derived classes
+    void readSpans(afw::table::BaseCatalog const & spanCat);
+    void readPeaks(afw::table::BaseCatalog const & peakCat);
+    //@}
+
+    friend class FootprintFactory;
 
 private:
     friend class boost::serialization::access;
