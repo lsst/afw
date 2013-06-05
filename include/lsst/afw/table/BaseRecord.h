@@ -3,13 +3,11 @@
 #define AFW_TABLE_BaseRecord_h_INCLUDED
 
 #include "lsst/base.h"
+#include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseTable.h"
 
 namespace lsst { namespace afw { namespace table {
-
-class SchemaMapper;
-class BaseColumnView;
 
 /**
  *  @brief Base class for all records.

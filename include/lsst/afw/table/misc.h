@@ -37,8 +37,6 @@ typedef lsst::afw::coord::IcrsCoord IcrsCoord;
 typedef lsst::afw::geom::Angle Angle;
 //@}
 
-template <typename RecordT> class CatalogT;
-
 }}} // namespace lsst::afw::table
 
 #endif // !AFW_TABLE_misc_h_INCLUDED

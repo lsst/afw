@@ -9,10 +9,7 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/table/misc.h"
-#include "lsst/afw/table/BaseTable.h"
-#include "lsst/afw/table/BaseRecord.h"
-#include "lsst/afw/table/BaseColumnView.h"
+#include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
 #include "lsst/afw/table/SchemaMapper.h"
@@ -701,9 +698,6 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
     if (i.base() == end() || *i != value) return end();
     return i.base();
 }
-
-typedef CatalogT<BaseRecord> BaseCatalog;
-typedef CatalogT<BaseRecord const> ConstBaseCatalog;
 
 }}} // namespace lsst::afw::table
 
