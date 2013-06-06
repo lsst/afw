@@ -84,6 +84,7 @@ public:
     static ExposureCatalogT readFits(std::string const & filename, int hdu=2);
     static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=2);
 
+    ExposureCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const;
     ExposureCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 
     ExposureCatalogT subsetContaining(Coord const & coord) const;

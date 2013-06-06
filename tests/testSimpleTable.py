@@ -450,6 +450,22 @@ class SimpleTableTestCase(unittest.TestCase):
         table = lsst.afw.table.BaseTable.make(schema)
         self.assertEqual(table.getBufferSize(), 0)
 
+    def testTicket2894(self):
+        """Test boolean-array indexing of catalogs"""
+        schema = lsst.afw.table.Schema()
+        key = schema.addField(lsst.afw.table.Field[int]("i", "doc for i"))
+        cat1 = lsst.afw.table.BaseCatalog(schema)
+        cat1.addNew().set(key, 1)
+        cat1.addNew().set(key, 2)
+        cat1.addNew().set(key, 3)
+        cat2 = cat1[numpy.array([True, False, False], dtype=bool)]
+        self.assertTrue((cat2[key] == numpy.array([1], dtype=int)).all())
+        self.assertEqual(cat2[0], cat1[0])  # records compare using pointer equality
+        cat3 = cat1[numpy.array([True, True, False], dtype=bool)]
+        self.assertTrue((cat3[key] == numpy.array([1,2], dtype=int)).all())
+        cat4 = cat1[numpy.array([True, False, True], dtype=bool)]
+        self.assertTrue((cat4.copy(deep=True)[key] == numpy.array([1,3], dtype=int)).all())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

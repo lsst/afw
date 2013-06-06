@@ -586,9 +586,9 @@ class CameraGeomTestCase(unittest.TestCase):
         for ccdNum, threshold in [(-1, 0), (1234, 10),]:
             ccdId = cameraGeom.Id(ccdNum, "")
             ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId)
-            amp = list(ccd)[0]
-            lin = amp.getElectronicParams().getLinearity()
-            self.assertEqual(lin.threshold, threshold)
+            for amp in list(ccd)[0:2]:  # only two amps in TestCameraGeom.paf
+                lin = amp.getElectronicParams().getLinearity()
+                self.assertEqual(lin.threshold, threshold)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

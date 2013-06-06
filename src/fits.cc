@@ -212,6 +212,45 @@ namespace {
 
 // Impl functions in the anonymous namespace do special handling for strings, bools, and IEEE fp values.
 
+
+/// Convert a double to a special string for writing FITS keyword values
+///
+/// Non-finite values are written as special strings.  If the value is finite,
+/// an empty string is returned.
+std::string nonFiniteDoubleToString(double value)
+{
+    if (utils::isfinite(value)) {
+        return "";
+    }
+    if (utils::isnan(value)) {
+        return "NAN";
+    }
+    if (value < 0) {
+        return "-INFINITY";
+    }
+    return "+INFINITY";
+}
+
+/// Convert a special string to double when reading FITS keyword values
+///
+/// Returns zero if the provided string is not one of the recognised special
+/// strings for doubles; otherwise, returns the mapped value.
+double stringToNonFiniteDouble(std::string const& value)
+{
+    if (value == "NAN") {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    if (value == "+INFINITY") {
+        return std::numeric_limits<double>::infinity();
+    }
+    if (value == "-INFINITY") {
+        return -std::numeric_limits<double>::infinity();
+    }
+    return 0;
+}
+
+
+
 template <typename T>
 void updateKeyImpl(Fits & fits, char const * key, T const & value, char const * comment) {
     fits_update_key(
@@ -244,6 +283,22 @@ void updateKeyImpl(Fits & fits, char const * key, bool const & value, char const
         const_cast<char*>(comment),
         &fits.status
     );
+}
+
+void updateKeyImpl(Fits & fits, char const * key, double const & value, char const * comment) {
+    std::string strValue = nonFiniteDoubleToString(value);
+    if (!strValue.empty()) {
+        updateKeyImpl(fits, key, strValue, comment);
+    } else {
+        fits_update_key(
+            reinterpret_cast<fitsfile*>(fits.fptr),
+            FitsType<double>::CONSTANT,
+            const_cast<char*>(key),
+            const_cast<double *>(&value),
+            const_cast<char*>(comment),
+            &fits.status
+            );
+    }
 }
 
 template <typename T>
@@ -292,6 +347,22 @@ void writeKeyImpl(Fits & fits, char const * key, bool const & value, char const 
         const_cast<char*>(comment),
         &fits.status
     );
+}
+
+void writeKeyImpl(Fits & fits, char const * key, double const & value, char const * comment) {
+    std::string strValue = nonFiniteDoubleToString(value);
+    if (!strValue.empty()) {
+        writeKeyImpl(fits, key, strValue, comment);
+    } else {
+        fits_write_key(
+            reinterpret_cast<fitsfile*>(fits.fptr),
+            FitsType<double>::CONSTANT,
+            const_cast<char*>(key),
+            const_cast<double*>(&value),
+            const_cast<char*>(comment),
+            &fits.status
+            );
+    }
 }
 
 } // anonymous
@@ -388,6 +459,40 @@ void readKeyImpl(Fits & fits, char const * key, std::string & value) {
     if (buf) {
         value = strip(buf);
         free(buf);
+    }
+}
+
+void readKeyImpl(Fits & fits, char const * key, double & value) {
+    // We need to check for the possibility that the value is a special string (for NAN, +/-Inf).
+    // If a quote mark (') is present then it's a string.
+
+    char buf[FLEN_VALUE];
+    fits_read_keyword(reinterpret_cast<fitsfile*>(fits.fptr), const_cast<char*>(key), buf, 0, &fits.status);
+    if (fits.status != 0) {
+        return;
+    }
+    if (std::string(buf).find('\'') != std::string::npos) {
+        std::string unquoted;
+        readKeyImpl(fits, key, unquoted); // Let someone else remove quotes and whitespace
+        if (fits.status != 0) {
+            return;
+        }
+        value = stringToNonFiniteDouble(unquoted);
+        if (value == 0) {
+            throw LSST_EXCEPT(
+                afw::fits::FitsError,
+                (boost::format("Unrecognised string value for keyword '%s' when parsing as double: %s") %
+                 key % unquoted).str());
+        }
+    } else {
+        fits_read_key(
+            reinterpret_cast<fitsfile*>(fits.fptr),
+            FitsType<double>::CONSTANT,
+            const_cast<char*>(key),
+            &value,
+            0,
+            &fits.status
+            );
     }
 }
 
@@ -527,8 +632,13 @@ void MetadataIterationFunctor::operator()(
         converter >> val;
         add(key, val, comment);
     } else if (boost::regex_match(value, matchStrings, fitsStringRegex)) {
-        // strip off the enclosing single quotes and return the string
-        add(key, matchStrings[1].str(), comment);
+        std::string const str = matchStrings[1].str(); // strip off the enclosing single quotes
+        double val = stringToNonFiniteDouble(str);
+        if (val != 0.0) {
+            add(key, val, comment);
+        } else {
+            add(key, str, comment);
+        }
     } else if (value.empty()) {
         // do nothing for empty values
     } else if (key == "HISTORY" ||

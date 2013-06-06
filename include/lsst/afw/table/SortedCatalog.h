@@ -23,6 +23,7 @@
 #ifndef AFW_TABLE_SortedCatalog_h_INCLUDED
 #define AFW_TABLE_SortedCatalog_h_INCLUDED
 
+#include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Catalog.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -121,6 +122,15 @@ public:
     /// @brief Read a FITS binary table.
     static SortedCatalogT readFits(fits::Fits & fitsfile) {
         return io::FitsReader::apply<SortedCatalogT>(fitsfile);
+    }
+
+    /**
+     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *
+     *  The returned array's records are shallow copies, and hence will not in general be contiguous.
+     */
+    SortedCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+        return SortedCatalogT(Base::subset(mask));
     }
 
     /**

@@ -41,6 +41,9 @@
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/utils/ieee.h"
 
 #include <boost/archive/text_iarchive.hpp>
@@ -590,6 +593,108 @@ Footprint::insertIntoImage(
         doInsertIntoImage<true>(_region, _spans, idImage, id, region, mask, oldIds);
     } else {
         doInsertIntoImage<false>(_region, _spans, idImage, id, region, mask, oldIds);
+    }
+}
+
+// Factory class used for table-based persistence; invoked via registry in afw::table::io
+class FootprintFactory : public table::io::PersistableFactory {
+public:
+
+    virtual PTR(table::io::Persistable)
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
+        PTR(Footprint) result = boost::make_shared<Footprint>();
+        result->readSpans(catalogs.front());
+        result->readPeaks(catalogs.back());
+        return result;
+    }
+
+    explicit FootprintFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+
+};
+
+namespace {
+
+// Singleton helper class that manages the schema and keys for persisting a Footprint
+class FootprintPersistenceHelper : private boost::noncopyable {
+public:
+    table::Schema spanSchema;
+    table::Key<int> spanY;
+    table::Key<int> spanX0;
+    table::Key<int> spanX1;
+    table::Schema peakSchema;
+    table::Key<float> peakX;
+    table::Key<float> peakY;
+    table::Key<float> peakValue;
+
+    static FootprintPersistenceHelper const & get() {
+        static FootprintPersistenceHelper instance;
+        return instance;
+    }
+
+private:
+    FootprintPersistenceHelper() :
+        spanSchema(),
+        spanY(spanSchema.addField<int>("y", "row position of span", "pixels")),
+        spanX0(spanSchema.addField<int>("x0", "first column of span (inclusive)", "pixels")),
+        spanX1(spanSchema.addField<int>("x1", "first column of span (inclusive)", "pixels")),
+        peakSchema(),
+        peakX(peakSchema.addField<float>("x", "column position of peak", "pixels")),
+        peakY(peakSchema.addField<float>("y", "column position of peak", "pixels")),
+        peakValue(peakSchema.addField<float>("value", "value of peak pixel", "pixels"))
+    {
+        spanSchema.getCitizen().markPersistent();
+        peakSchema.getCitizen().markPersistent();
+    }
+};
+
+std::string getFootprintPersistenceName() { return "Footprint"; }
+
+// Insert the factory into the registry (instantiating an instance is sufficient, because
+// the code that does the work is in the base class ctor)
+FootprintFactory registration(getFootprintPersistenceName());
+
+} // anonymous
+
+std::string Footprint::getPersistenceName() const { return getFootprintPersistenceName(); }
+
+std::string Footprint::getPythonModule() const { return "lsst.afw.detection"; }
+
+void Footprint::write(OutputArchiveHandle & handle) const {
+    FootprintPersistenceHelper const & keys = FootprintPersistenceHelper::get();
+    afw::table::BaseCatalog spanCat = handle.makeCatalog(keys.spanSchema);
+    spanCat.reserve(_spans.size());
+    for (SpanList::const_iterator i = _spans.begin(); i != _spans.end(); ++i) {
+        PTR(afw::table::BaseRecord) record = spanCat.addNew();
+        record->set(keys.spanY, (**i).getY());
+        record->set(keys.spanX0, (**i).getX0());
+        record->set(keys.spanX1, (**i).getX1());
+    }
+    handle.saveCatalog(spanCat);
+    afw::table::BaseCatalog peakCat = handle.makeCatalog(keys.peakSchema);
+    peakCat.reserve(_peaks.size());
+    for (PeakList::const_iterator i = _peaks.begin(); i != _peaks.end(); ++i) {
+        PTR(afw::table::BaseRecord) record = peakCat.addNew();
+        record->set(keys.peakX, (**i).getFx());
+        record->set(keys.peakY, (**i).getFy());
+        record->set(keys.peakValue, (**i).getPeakValue());
+    }
+    handle.saveCatalog(peakCat);
+}
+
+void Footprint::readSpans(afw::table::BaseCatalog const & spanCat) {
+    FootprintPersistenceHelper const & keys = FootprintPersistenceHelper::get();
+    for (afw::table::BaseCatalog::const_iterator i = spanCat.begin(); i != spanCat.end(); ++i) {
+        addSpan(i->get(keys.spanY), i->get(keys.spanX0), i->get(keys.spanX1));
+    }
+}
+
+void Footprint::readPeaks(afw::table::BaseCatalog const & peakCat) {
+    FootprintPersistenceHelper const & keys = FootprintPersistenceHelper::get();
+    for (afw::table::BaseCatalog::const_iterator i = peakCat.begin(); i != peakCat.end(); ++i) {
+        _peaks.push_back(
+            boost::make_shared<Peak>(i->get(keys.peakX), i->get(keys.peakY), i->get(keys.peakValue))
+        );
     }
 }
 

@@ -5,6 +5,8 @@
 #include <vector>
 
 #include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/BaseTable.h"
+#include "lsst/afw/table/BaseRecord.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 

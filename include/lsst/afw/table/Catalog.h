@@ -9,10 +9,7 @@
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/table/misc.h"
-#include "lsst/afw/table/BaseTable.h"
-#include "lsst/afw/table/BaseRecord.h"
-#include "lsst/afw/table/BaseColumnView.h"
+#include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/io/FitsReader.h"
 #include "lsst/afw/table/SchemaMapper.h"
@@ -173,6 +170,28 @@ public:
             _internal = other._internal;
         }
         return *this;
+    }
+
+    /**
+     *  @brief Return the subset of a catalog corresponding to the True values of the given mask array.
+     *
+     *  The returned array's records are shallow copies, and hence will not in general be contiguous.
+     */
+    CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
+        if (size_type(mask.size()) != size()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LengthErrorException,
+                (boost::format("Mask array with %d elements applied to catalog with %d elements")
+                 % mask.size() % size()).str()
+            );
+        }
+        CatalogT<RecordT> result(getTable());
+        ndarray::Array<bool const,1>::Iterator maskIter = mask.begin();
+        const_iterator catIter = begin();
+        for (; maskIter != mask.end(); ++maskIter, ++catIter) {
+            if (*maskIter) result.push_back(catIter);
+        }
+        return result;
     }
 
     /**
@@ -679,9 +698,6 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
     if (i.base() == end() || *i != value) return end();
     return i.base();
 }
-
-typedef CatalogT<BaseRecord> BaseCatalog;
-typedef CatalogT<BaseRecord const> ConstBaseCatalog;
 
 }}} // namespace lsst::afw::table
 

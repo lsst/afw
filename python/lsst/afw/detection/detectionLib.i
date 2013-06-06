@@ -45,9 +45,8 @@ Python interface to lsst::afw::detection classes
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
-#include "lsst/afw/math/SpatialCell.h"
-#include "lsst/afw/math/Background.h"
-    
+#include "lsst/afw/math.h"
+
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "ndarray/swig.h"

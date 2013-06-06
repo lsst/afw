@@ -68,7 +68,11 @@ public:
     template <typename D>
     void setRank(Eigen::MatrixBase<D> const & values) {
         double cond = threshold * values[0];
-        for (rank = dimension; (rank > 1) && (values[rank-1] < cond); --rank);
+        if (cond <= 0.0) {
+            rank = 0;
+        } else {
+            for (rank = dimension; (rank > 1) && (values[rank-1] < cond); --rank);
+        }
     }
 
     void ensure(int desired) {
@@ -174,6 +178,10 @@ public:
     }
 
     virtual void updateSolution() {
+        if (rank == 0) {
+            solution.asEigen().setZero();
+            return;
+        }
         if (_eig.info() == Eigen::Success) {
             _tmp.head(rank) = _eig.eigenvectors().rightCols(rank).adjoint() * rhs;
             _tmp.head(rank).array() /= _eig.eigenvalues().tail(rank).array();
@@ -186,6 +194,10 @@ public:
     }
 
     virtual void updateCovariance() {
+        if (rank == 0) {
+            covariance.asEigen().setZero();
+            return;
+        }
         if (_eig.info() == Eigen::Success) {
             covariance.asEigen() = 
                 _eig.eigenvectors().rightCols(rank)
@@ -275,12 +287,20 @@ public:
     }
 
     virtual void updateSolution() {
+        if (rank == 0) {
+            solution.asEigen().setZero();
+            return;
+        }
         _tmp.head(rank) = _svd.matrixU().leftCols(rank).adjoint() * data;
         _tmp.head(rank).array() /= _svd.singularValues().head(rank).array();
         solution.asEigen() = _svd.matrixV().leftCols(rank) * _tmp.head(rank);
     }
 
     virtual void updateCovariance() {
+        if (rank == 0) {
+            covariance.asEigen().setZero();
+            return;
+        }
         covariance.asEigen() = 
             _svd.matrixV().leftCols(rank)
             * _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal()

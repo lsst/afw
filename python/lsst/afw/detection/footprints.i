@@ -37,6 +37,8 @@ namespace lsst { namespace afw { namespace detection {
 typedef lsst::afw::geom::Span Span;
 }}}
 
+%import "lsst/afw/table/io/ioLib.i"
+
 %include "lsst/afw/image/LsstImageTypes.h"
 %include "std_pair.i"
 %template(pairBB) std::pair<bool, bool>;
@@ -49,7 +51,7 @@ typedef lsst::afw::geom::Span Span;
 // %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
 %shared_ptr(lsst::afw::detection::Peak);
-%shared_ptr(lsst::afw::detection::Footprint);
+%declareTablePersistable(Footprint, lsst::afw::detection::Footprint);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
 %declareNumPyConverters(ndarray::Array<unsigned short,1,1>);

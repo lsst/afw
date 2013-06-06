@@ -7,7 +7,7 @@
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "ndarray/Manager.h"
-#include "lsst/afw/table/misc.h"
+#include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Schema.h"
 
 namespace lsst { namespace afw {
@@ -19,16 +19,6 @@ class Fits;
 } // namespace fits
 
 namespace table {
-
-class BaseRecord;
-class BaseColumnView;
-class SchemaMapper;
-
-namespace io {
-
-class FitsWriter;
-
-} // namespace io
 
 /**
  *  @brief Base class for all tables.

@@ -196,10 +196,6 @@ private:
 
 #ifndef SWIG
 
-typedef ColumnViewT<SimpleRecord> SimpleColumnView;
-typedef SortedCatalogT<SimpleRecord> SimpleCatalog;
-typedef SortedCatalogT<SimpleRecord const> ConstSimpleCatalog;
-
 inline RecordId SimpleRecord::getId() const { return get(SimpleTable::getIdKey()); }
 inline void SimpleRecord::setId(RecordId id) { set(SimpleTable::getIdKey(), id); }
 
