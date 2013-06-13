@@ -98,9 +98,6 @@ namespace math {
     *
     * @todo: make a new class WarpingKernel and make this a subclass.
     */
-#if defined(SWIG)
-    #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
-#endif
     class BilinearWarpingKernel : public SeparableKernel {
     public:
         explicit BilinearWarpingKernel()
@@ -119,9 +116,6 @@ namespace math {
          * (which is why it defined in the BilinearWarpingKernel class instead of
          * being made available as a standalone function).
          */
-#if defined(SWIG)
-    #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
-#endif
         class BilinearFunction1: public Function1<Kernel::Pixel> {
         public:
             typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;
@@ -160,9 +154,6 @@ namespace math {
     *
     * @todo: make a new class WarpingKernel and make this a subclass.
     */
-#if defined(SWIG)
-    #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
-#endif
     class NearestWarpingKernel : public SeparableKernel {
     public:
         explicit NearestWarpingKernel()
@@ -181,9 +172,6 @@ namespace math {
          * (which is why it defined in the NearestWarpingKernel class instead of
          * being made available as a standalone function).
          */
-#if defined(SWIG)
-    #pragma SWIG nowarn=SWIGWARN_PARSE_NESTED_CLASS
-#endif
         class NearestFunction1: public Function1<Kernel::Pixel> {
         public:
             typedef PTR(Function1<Kernel::Pixel>) Function1Ptr;

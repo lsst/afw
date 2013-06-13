@@ -36,6 +36,10 @@
 %shared_ptr(lsst::afw::math::LanczosWarpingKernel);
 %shared_ptr(lsst::afw::math::NearestWarpingKernel);
 
+// No idea why Swig doesn't want these to be fully-qualified, but it doesn't work if they are
+%warnfilter(325) BilinearFunction1;
+%warnfilter(325) NearestFunction1;
+
 %import "lsst/afw/gpu/DevicePreference.h"
 %include "lsst/afw/math/warpExposure.h"
 
