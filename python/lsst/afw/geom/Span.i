@@ -27,6 +27,8 @@
 %}
 %shared_ptr(lsst::afw::geom::Span);
 
+%warnfilter(509) lsst::afw::geom::Span;
+
 %include "lsst/afw/geom/Span.h"
 
 %ignore lsst::afw::geom::Span::begin;
