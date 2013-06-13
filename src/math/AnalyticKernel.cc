@@ -117,9 +117,6 @@ double afwMath::AnalyticKernel::doComputeImage(
     afwImage::Image<Pixel> &image,
     bool doNormalize
 ) const {
-    double xOffset = -this->getCtrX();
-    double yOffset = -this->getCtrY();
-
     double imSum = 0;
     for (int y = 0; y != image.getHeight(); ++y) {
         double const fy = image.indexToPosition(y, afwImage::Y);
