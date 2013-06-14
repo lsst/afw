@@ -29,6 +29,17 @@
 
 %declareTablePersistable(Calib, lsst::afw::image::Calib);
 
+%typemap(out) std::pair<ndarray::Array<double,1>,ndarray::Array<double,1> > {
+    $result = PyTuple_New(2);
+    {
+        // need to invoke SwigValueWrapper's conversion operator
+        std::pair<ndarray::Array<double,1>,ndarray::Array<double,1> > & pair = $1;
+        PyObject * a0 = ndarray::PyConverter< ndarray::Array<double,1> >::toPython(pair.first);
+        PyObject * a1 = ndarray::PyConverter< ndarray::Array<double,1> >::toPython(pair.second);
+        PyTuple_SET_ITEM($result, 0, a0);
+        PyTuple_SET_ITEM($result, 1, a1);
+    }
+}
+
 %include "lsst/afw/image/Calib.h"
 %template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
-%template(pairVectorDVectorD) std::pair<std::vector<double>, std::vector<double> >;

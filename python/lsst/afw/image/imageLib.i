@@ -116,6 +116,9 @@ namespace boost {
 %declareNumPyConverters(ndarray::Array<double,2,1>);
 %declareNumPyConverters(ndarray::Array<double const,2,1>);
 
+%declareNumPyConverters(ndarray::Array<double,1>);
+%declareNumPyConverters(ndarray::Array<double const,1>);
+
 %lsst_exceptions();
 
 /******************************************************************************/
