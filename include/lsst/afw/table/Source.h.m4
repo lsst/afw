@@ -143,6 +143,12 @@ class Wcs;
 
 namespace table {
 
+/// Bitflags to be passed to SourceCatalog::readFits and SourceCatalog::writeFits
+enum {
+    SOURCE_IO_NO_FOOTPRINTS = 0x1,       ///< Do not read/write footprints at all
+    SOURCE_IO_NO_HEAVY_FOOTPRINTS = 0x2  ///< Read/write heavy footprints as non-heavy footprints
+};
+
 typedef lsst::afw::detection::Footprint Footprint;
 
 class SourceRecord;
@@ -371,12 +377,6 @@ public:
     DECLARE_CENTROID_DEFINERS
     DECLARE_SHAPE_DEFINERS
 
-    /// @brief Set whether this table should include HeavyFootprint data when being persisted.
-    void setWriteHeavyFootprints(bool write) { _writeHeavyFootprints = write; }
-
-    /// @brief Get whether this table should include HeavyFootprint data when being persisted.
-    bool getWriteHeavyFootprints() const { return _writeHeavyFootprints; }
-
 protected:
 
     SourceTable(Schema const & schema, PTR(IdFactory) const & idFactory);
@@ -404,8 +404,6 @@ private:
     boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux; // aliases for flux measurements
     KeyTuple<Centroid> _slotCentroid;  // alias for a centroid measurement
     KeyTuple<Shape> _slotShape;  // alias for a shape measurement
-
-    bool _writeHeavyFootprints;
 };
 
 template <typename RecordT>

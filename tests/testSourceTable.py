@@ -240,10 +240,9 @@ class SourceTableTestCase(unittest.TestCase):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
         sourceCat = baseCat.cast(lsst.afw.table.SourceCatalog)
 
-    def testHeavyFootprint(self):
-        '''Test round-tripping a HeavyFootprint to FITS
+    def testFootprints(self):
+        '''Test round-tripping Footprints (inc. HeavyFootprints) to FITS
         '''
-        self.catalog.setWriteHeavyFootprints(True)
         src1 = self.catalog.addNew()
         src2 = self.catalog.addNew()
         src3 = self.catalog.addNew()
@@ -292,7 +291,6 @@ class SourceTableTestCase(unittest.TestCase):
         self.assertFalse(cat2[1].getFootprint().isHeavy())
         self.assertFalse(cat2[2].getFootprint().isHeavy())
 
-
         if False:
             # Write out before-n-after FITS images
             for MI in [mim, mim2, mim3]:
@@ -318,7 +316,24 @@ class SourceTableTestCase(unittest.TestCase):
                     self.assertEqual(im3.get(x, y), 0.)
                     self.assertEqual(ma3.get(x, y), 0.)
                     self.assertEqual(va3.get(x, y), 0.)
-                        
+
+        cat3 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+        for src in cat3:
+            self.assertFalse(src.getFootprint().isHeavy())
+        cat4 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+        for src in cat4:
+            self.assertIsNone(src.getFootprint())
+
+        self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+        cat5 = lsst.afw.table.SourceCatalog.readFits(fn)
+        for src in cat5:
+            self.assertFalse(src.getFootprint().isHeavy())
+
+        self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+        cat6 = lsst.afw.table.SourceCatalog.readFits(fn)
+        for src in cat6:
+            self.assertIsNone(src.getFootprint())
+
     def testIdFactory(self):
         expId = int(1257198)
         reserved = 32
