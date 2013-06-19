@@ -300,29 +300,29 @@ public:
     }
 
     /// Write a FITS binary table to a regular file.
-    void writeFits(std::string const & filename, std::string const & mode="w") const {
-        io::FitsWriter::apply(filename, mode, *this);
+    void writeFits(std::string const & filename, std::string const & mode="w", int flags=0) const {
+        io::FitsWriter::apply(filename, mode, *this, flags);
     }
     /// Write a FITS binary table to a RAM file.
-    void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const {
-        io::FitsWriter::apply(manager, mode, *this);
+    void writeFits(fits::MemFileManager & manager, std::string const & mode="w", int flags=0) const {
+        io::FitsWriter::apply(manager, mode, *this, flags);
     }
     /// Write a FITS binary table to an open file object.
-    void writeFits(fits::Fits & fitsfile) const {
-        io::FitsWriter::apply(fitsfile, *this);
+    void writeFits(fits::Fits & fitsfile, int flags=0) const {
+        io::FitsWriter::apply(fitsfile, *this, flags);
     }
 
     /// @brief Read a FITS binary table from a regular file.
-    static CatalogT readFits(std::string const & filename, int hdu=0) {
-        return io::FitsReader::apply<CatalogT>(filename, hdu);
+    static CatalogT readFits(std::string const & filename, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<CatalogT>(filename, hdu, flags);
     }
     /// @brief Read a FITS binary table from a RAM file.
-    static CatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
-        return io::FitsReader::apply<CatalogT>(manager, hdu);
+    static CatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<CatalogT>(manager, hdu, flags);
     }
     /// @brief Read a FITS binary table from a file object already at the correct extension.
-    static CatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<CatalogT>(fitsfile);
+    static CatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+        return io::FitsReader::apply<CatalogT>(fitsfile, flags);
     }
 
     /**

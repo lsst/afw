@@ -211,8 +211,10 @@ private:
     template <typename RecordT> friend class ExposureCatalogT;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
-    PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
+    PTR(io::FitsWriter) makeFitsWriter(
+        fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags
+    ) const;
 };
 
 #ifndef SWIG
@@ -283,22 +285,22 @@ public:
      *  to the FITS file, this overload inserts nested Persistables into the given
      *  archive and does not save it, leaving it to the user to save it later.
      */
-    void writeFits(fits::Fits & fitsfile, PTR(io::OutputArchive) archive) const {
-        PTR(io::FitsWriter) writer = this->getTable()->makeFitsWriter(&fitsfile, archive);
+    void writeFits(fits::Fits & fitsfile, PTR(io::OutputArchive) archive, int flags=0) const {
+        PTR(io::FitsWriter) writer = this->getTable()->makeFitsWriter(&fitsfile, archive, flags);
         writer->write(*this);
     }
 
     /// @brief Read a FITS binary table.
-    static ExposureCatalogT readFits(std::string const & filename, int hdu=0) {
-        return io::FitsReader::apply<ExposureCatalogT>(filename, hdu);
+    static ExposureCatalogT readFits(std::string const & filename, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<ExposureCatalogT>(filename, hdu, flags);
     }
     /// @brief Read a FITS binary table.
-    static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
-        return io::FitsReader::apply<ExposureCatalogT>(manager, hdu);
+    static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<ExposureCatalogT>(manager, hdu, flags);
     }
     /// @brief Read a FITS binary table from a file object already at the correct extension.
-    static ExposureCatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<ExposureCatalogT>(fitsfile);
+    static ExposureCatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+        return io::FitsReader::apply<ExposureCatalogT>(fitsfile, flags);
     }
     /**
      *  @brief Read a FITS binary table from a file object already at the correct extension.
@@ -306,8 +308,8 @@ public:
      *  This overload reads nested Persistables from the given archive instead of loading
      *  a new archive from the HDUs following the catalog.
      */
-    static ExposureCatalogT readFits(fits::Fits & fitsfile, PTR(io::InputArchive) archive) {
-        return io::FitsReader::apply<ExposureCatalogT>(fitsfile, archive);
+    static ExposureCatalogT readFits(fits::Fits & fitsfile, PTR(io::InputArchive) archive, int flags=0) {
+        return io::FitsReader::apply<ExposureCatalogT>(fitsfile, archive, flags);
     }
 
     /**

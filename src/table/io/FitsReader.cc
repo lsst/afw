@@ -437,7 +437,7 @@ FitsReader::Factory::Factory(std::string const & name) {
     getRegistry()[name] = this;
 }
 
-PTR(FitsReader) FitsReader::make(Fits * fits, PTR(io::InputArchive) archive) {
+PTR(FitsReader) FitsReader::make(Fits * fits, PTR(io::InputArchive) archive, int flags) {
     std::string name;
     fits->behavior &= ~Fits::AUTO_CHECK; // temporarily disable automatic FITS exceptions
     fits->readKey("AFW_TYPE", name);
@@ -453,7 +453,7 @@ PTR(FitsReader) FitsReader::make(Fits * fits, PTR(io::InputArchive) archive) {
             (boost::format("FitsReader with name '%s' does not exist; check AFW_TYPE keyword.") % name).str()
         );
     }
-    return (*i->second)(fits, archive);
+    return (*i->second)(fits, archive, flags);
 }
 
 }}}} // namespace lsst::afw::table::io

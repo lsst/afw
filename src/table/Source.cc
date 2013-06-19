@@ -125,10 +125,12 @@ namespace {
 class SourceFitsWriter : public io::FitsWriter {
 public:
 
-    explicit SourceFitsWriter(Fits * fits) : io::FitsWriter(fits),
-                                             _heavyPixCol(-1),
-                                             _heavyMaskCol(-1),
-                                             _heavyVarCol(-1) {}
+    explicit SourceFitsWriter(Fits * fits, int flags) :
+        io::FitsWriter(fits, flags),
+        _heavyPixCol(-1),
+        _heavyMaskCol(-1),
+        _heavyVarCol(-1)
+    {}
 
 protected:
     
@@ -230,8 +232,8 @@ namespace {
 class SourceFitsReader : public io::FitsReader {
 public:
 
-    explicit SourceFitsReader(Fits * fits, PTR(io::InputArchive) archive) :
-        io::FitsReader(fits, archive), _spanCol(-1), _peakCol(-1),
+    explicit SourceFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
+        io::FitsReader(fits, archive, flags), _spanCol(-1), _peakCol(-1),
         _heavyPixCol(-1), _heavyMaskCol(-1), _heavyVarCol(-1)
         {}
 
@@ -442,8 +444,8 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile) const {
-    return boost::make_shared<SourceFitsWriter>(fitsfile);
+PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+    return boost::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
 
 //-----------------------------------------------------------------------------------------------------------

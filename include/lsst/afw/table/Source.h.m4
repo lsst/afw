@@ -399,7 +399,7 @@ private:
     friend class io::FitsWriter;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
-    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile) const;
+    virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
 
     boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux; // aliases for flux measurements
     KeyTuple<Centroid> _slotCentroid;  // alias for a centroid measurement

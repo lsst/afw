@@ -178,8 +178,8 @@ PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input, SchemaMapper con
     return output;
 }
 
-PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile) const {
-    return boost::make_shared<io::FitsWriter>(fitsfile);
+PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+    return boost::make_shared<io::FitsWriter>(fitsfile, flags);
 }
 
 BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), _schema(schema) {

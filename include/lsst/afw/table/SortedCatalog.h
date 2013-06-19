@@ -112,16 +112,16 @@ public:
     SortedCatalogT(SortedCatalogT<OtherRecordT> const & other) : Base(other) {}
 
     /// @brief Read a FITS binary table.
-    static SortedCatalogT readFits(std::string const & filename, int hdu=0) {
-        return io::FitsReader::apply<SortedCatalogT>(filename, hdu);
+    static SortedCatalogT readFits(std::string const & filename, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<SortedCatalogT>(filename, hdu, flags);
     }
     /// @brief Read a FITS binary table.
-    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
-        return io::FitsReader::apply<SortedCatalogT>(manager, hdu);
+    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<SortedCatalogT>(manager, hdu, flags);
     }
     /// @brief Read a FITS binary table.
-    static SortedCatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<SortedCatalogT>(fitsfile);
+    static SortedCatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+        return io::FitsReader::apply<SortedCatalogT>(fitsfile, flags);
     }
 
     /**
