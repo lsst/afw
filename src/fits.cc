@@ -605,7 +605,7 @@ void MetadataIterationFunctor::operator()(
 ) {
     static boost::regex const boolRegex("[tTfF]");
     static boost::regex const intRegex("[+-]?[0-9]+");
-    static boost::regex const doubleRegex("[+-]?([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*)([eE][+-]?[0-9]+)?");
+    static boost::regex const doubleRegex("[+-]?([0-9]*\\.[0-9]+|[0-9]+\\.[0-9]*|[0-9]+)([eE][+-]?[0-9]+)?");
     static boost::regex const fitsStringRegex("'(.*?) *'");
     boost::smatch matchStrings;
 
