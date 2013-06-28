@@ -33,6 +33,7 @@
 
 #include <utility>
 #include "boost/shared_ptr.hpp"
+#include "ndarray_fwd.h"
 #include "lsst/base.h"
 #include "lsst/daf/base/DateTime.h"
 #include "lsst/afw/geom/Point.h"
@@ -76,17 +77,26 @@ public :
     std::pair<double, double> getFluxMag0() const;
 
     double getFlux(double const mag) const;
+
     std::pair<double, double> getFlux(double const mag, double const magErr) const;
-    std::vector<double> getFlux(std::vector<double> const& mag) const;
-    std::pair<std::vector<double>, std::vector<double> > getFlux(std::vector<double> const& mag,
-                                                                 std::vector<double> const& magErr
-        ) const;
+
+    ndarray::Array<double,1> getFlux(ndarray::Array<double const,1> const & mag) const;
+
+    std::pair< ndarray::Array<double,1>, ndarray::Array<double,1> > getFlux(
+        ndarray::Array<double const,1> const & mag,
+        ndarray::Array<double const,1> const & magErr
+    ) const;
+
     double getMagnitude(double const flux) const;
+
     std::pair<double, double> getMagnitude(double const flux, double const fluxErr) const;
-    std::vector<double> getMagnitude(std::vector<double> const& flux) const;
-    std::pair<std::vector<double>, std::vector<double> > getMagnitude(std::vector<double> const& flux,
-                                                                      std::vector<double> const& fluxErr
-        ) const;
+
+    ndarray::Array<double,1> getMagnitude(ndarray::Array<double const,1> const & flux) const;
+
+    std::pair< ndarray::Array<double,1>,ndarray::Array<double,1> > getMagnitude(
+        ndarray::Array<double const,1> const & flux,
+        ndarray::Array<double const,1> const & fluxErr
+    ) const;
 
     static void setThrowOnNegativeFlux(bool raiseException);
     static bool getThrowOnNegativeFlux();

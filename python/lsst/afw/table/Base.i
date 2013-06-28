@@ -329,6 +329,8 @@ def asKey(self):
 %}
 } // %extend SubSchema
 
+%ignore lsst::afw::table::SchemaMapper::operator=;
+
 %include "lsst/afw/table/SchemaMapper.h"
 
 %template(SchemaVector) std::vector<lsst::afw::table::Schema>;

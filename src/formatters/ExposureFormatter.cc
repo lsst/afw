@@ -137,12 +137,12 @@ static std::string lookupFilterName(
     db->query();
     if (!db->next() || db->columnIsNull(0)) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          "Unable to get name for filter id: " + filterId);
+                          (boost::format("Unable to get name for filter id: %d") % filterId).str());
     }
     std::string filterName = db->getColumnByPos<std::string>(0);
     if (db->next()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
-                          "Multiple names for filter id: " + filterId);
+                          (boost::format("Multiple names for filter id: %d") % filterId).str());
 
     }
     db->finishQuery();

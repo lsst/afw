@@ -177,19 +177,14 @@ void Detector::shift(int dx, ///< How much to offset in x (pixels)
 }
 
 /************************************************************************************************************/
-/**
- * We're rotating an Image through an integral number of quarter turns,
- * modify this BBox accordingly
- *
- * If dimensions is provided interpret it as the size of an image, and the initial bbox as a bbox in
- * that image.  Then rotate about the center of the image
- *
- * If dimensions is 0, rotate the bbox about its LLC
- */
+//
+// We're rotating an Image through an integral number of quarter turns,
+// modify this BBox accordingly
+//
 afwGeom::Box2I detail::rotateBBoxBy90(
-        lsst::afw::geom::Box2I const& bbox,          ///< The BBox to rotate
-        int n90,                                     ///< number of anti-clockwise 90degree turns
-        lsst::afw::geom::Extent2I const& dimensions  ///< The size of the parent 
+        lsst::afw::geom::Box2I const& bbox,
+        int n90,
+        lsst::afw::geom::Extent2I const& dimensions
                                              )
 {
     while (n90 < 0) {

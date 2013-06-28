@@ -27,7 +27,8 @@ typedef Map::value_type MapItem;
 
 // ----- OutputArchive::Impl --------------------------------------------------------------------------------
 
-struct OutputArchive::Impl {
+class OutputArchive::Impl {
+public:
 
     BaseCatalog makeCatalog(Schema const & schema) {
         int catArchive = 1;

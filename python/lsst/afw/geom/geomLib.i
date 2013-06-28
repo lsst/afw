@@ -157,6 +157,9 @@ Python interface to lsst::afw::geom classes
     }
 };
 
+%returnCopy(lsst::afw::geom::AffineTransform::getTranslation);
+%returnCopy(lsst::afw::geom::AffineTransform::getLinear);
+
 %include "LinearTransform.i"
 %include "AffineTransform.i"
 %include "Box.i"

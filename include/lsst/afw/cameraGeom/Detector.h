@@ -223,6 +223,11 @@ namespace detail {
     };
     /**
      * Rotate a BBox about the center of some larger region by a multiple of 90 degrees 
+     *
+     * If dimensions is nonzero, interpret it as the size of an image, and the initial bbox as a bbox in
+     * that image.  Then rotate about the center of the image
+     *
+     * If dimensions is 0, rotate the bbox about its LLC
      */
     lsst::afw::geom::Box2I rotateBBoxBy90(
             lsst::afw::geom::Box2I const& bbox,         ///< the BBox to rotate

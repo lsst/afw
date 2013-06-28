@@ -42,8 +42,8 @@
 namespace lsst { namespace afw { namespace table {
 
 template <typename T> class Key;
-template <typename T> class Field;
-template <typename T> class SchemaItem;
+template <typename T> struct Field;
+template <typename T> struct SchemaItem;
 class Schema;
 class SchemaMapper;
 
