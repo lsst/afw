@@ -50,12 +50,6 @@ public:
 
     template <typename RecordT>
     CatalogIterator & operator=(PTR(RecordT) const & other) const {
-        if (other->getTable() != dereference().getTable()) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "Record to assign must be associated with the container's table."
-            );
-        }
         *this->base() = other;
         return *this;
     }
@@ -68,30 +62,33 @@ private:
 /**
  *  @brief A custom container class for records, based on std::vector.
  *
- *  CatalogT wraps a std::vector<PTR(RecordT)> in an interface that looks more like a std::vector<RecordT>;
- *  its iterators and accessors return references or const references, rather than pointers, making them
- *  easier to use.  It also holds a table, and requires that all records in the container be allocated
- *  by that table (this is sufficient to also ensure that all records have the same schema).  Because 
- *  a CatalogT is holds shared_ptrs internally, many of its operations can be either shallow or deep,
- *  with new deep copies allocated by the catalog's table object.  New records can be also be inserted
- *  by pointer (shallow) or by value (deep).
+ *  CatalogT wraps a std::vector<PTR(RecordT)> in an interface that looks more
+ *  like a std::vector<RecordT>; its iterators and accessors return references
+ *  or const references, rather than pointers, making them easier to use.  It
+ *  also holds a table, which is used to allocate new records and determine the
+ *  schema, but no checking is done to ensure that records added to the catalog
+ *  use the same table or indeed have the same schema.
  *
- *  In the future, we may have additional containers, and
- *  most of the tables library is designed to work with any container class that, like CatalogT, has
- *  a getTable() member function and yields references rather than pointers to records.
+ *  Because a CatalogT is holds shared_ptrs internally, many of its operations
+ *  can be either shallow or deep, with new deep copies allocated by the
+ *  catalog's table object.  New records can be also be inserted by pointer
+ *  (shallow) or by value (deep).
  *
- *  The constness of records is determined by the constness of the first template
- *  parameter to CatalogT; a container instance is always either const or non-const
- *  in that respect (like smart pointers).  Also like smart pointers, const member
- *  functions (and by extension, const_iterators) do not allow the underlying 
- *  pointers to be changed, while non-const member functions and iterators do.
+ *  The constness of records is determined by the constness of the first
+ *  template parameter to CatalogT; a container instance is always either const
+ *  or non-const in that respect (like smart pointers).  Also like smart
+ *  pointers, const member functions (and by extension, const_iterators) do not
+ *  allow the underlying pointers to be changed, while non-const member
+ *  functions and iterators do.
  *
- *  CatalogT does not permit empty (null) pointers as elements.  As a result, CatalogT has no resize
- *  member function.
+ *  CatalogT does not permit empty (null) pointers as elements.  As a result,
+ *  CatalogT has no resize member function.
  *
- *  CatalogT has a very different interface in Python; it mimics Python's list instead of C++'s std::vector.
- *  It is also considerably simpler, because it doesn't need to deal with iterator ranges or the distinction
- *  between references and shared_ptrs to records.  See the Python docstring for more information.
+ *  CatalogT has a very different interface in Python; it mimics Python's list
+ *  instead of C++'s std::vector.  It is also considerably simpler, because it
+ *  doesn't need to deal with iterator ranges or the distinction between
+ *  references and shared_ptrs to records.  See the Python docstring for more
+ *  information.
  */
 template <typename RecordT>
 class CatalogT {
@@ -329,8 +326,6 @@ public:
      *  @brief Return a ColumnView of this catalog's records.
      *
      *  Will throw RuntimeErrorException if records are not contiguous.
-     *
-     *  Note that this is a 
      */
     ColumnView getColumnView() const {
         if (boost::is_const<RecordT>::value) {
@@ -404,12 +399,6 @@ public:
 
     /// Set the record at index i to a pointer.
     void set(size_type i, PTR(RecordT) const & p) {
-        if (p->getTable() != _table) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "Record to assign must be associated with the container's table."
-            );
-        }
         _internal[i] = p;
     }
 
@@ -432,12 +421,6 @@ public:
 
     /// @brief Add the given record to the end of the catalog without copying.
     void push_back(PTR(RecordT) const & p) {
-        if (p->getTable() != _table) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "Record to append must be associated with the container's table."
-            );
-        }
         _internal.push_back(p);
     }
 
@@ -517,12 +500,6 @@ public:
 
     /// Insert the given record at the given position without copying.
     iterator insert(iterator pos, PTR(RecordT) const & p) {
-        if (p->getTable() != _table) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
-                "Record to insert must be associated with the container's table."
-            );
-        }
         return iterator(_internal.insert(pos.base(), p));
     }
 
