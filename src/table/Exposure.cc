@@ -129,8 +129,8 @@ namespace {
 class ExposureFitsWriter : public io::FitsWriter {
 public:
 
-    ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive = PTR(io::OutputArchive)())
-        : io::FitsWriter(fits), _doWriteArchive(false), _archive(archive)
+    ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive, int flags)
+        : io::FitsWriter(fits, flags), _doWriteArchive(false), _archive(archive)
     {
         if (!_archive) {
             _doWriteArchive = true;
@@ -189,8 +189,8 @@ namespace {
 class ExposureFitsReader : public io::FitsReader {
 public:
 
-    explicit ExposureFitsReader(Fits * fits, PTR(io::InputArchive) archive) :
-        io::FitsReader(fits, archive), _archive(archive)
+    explicit ExposureFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
+        io::FitsReader(fits, archive, flags), _archive(archive)
     {
         if (!_archive) {
             int oldHdu = _fits->getHdu();
@@ -314,13 +314,13 @@ ExposureTable::MinimalSchema & ExposureTable::getMinimalSchema() {
 }
 
 PTR(io::FitsWriter)
-ExposureTable::makeFitsWriter(fits::Fits * fitsfile) const {
-    return boost::make_shared<ExposureFitsWriter>(fitsfile);
+ExposureTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+    return boost::make_shared<ExposureFitsWriter>(fitsfile, PTR(io::OutputArchive)(), flags);
 }
 
 PTR(io::FitsWriter)
-ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive) const {
-    return boost::make_shared<ExposureFitsWriter>(fitsfile, archive);
+ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags) const {
+    return boost::make_shared<ExposureFitsWriter>(fitsfile, archive, flags);
 }
 
 //-----------------------------------------------------------------------------------------------------------

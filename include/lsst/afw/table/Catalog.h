@@ -296,30 +296,76 @@ public:
         return cat;
     }
 
-    /// Write a FITS binary table to a regular file.
-    void writeFits(std::string const & filename, std::string const & mode="w") const {
-        io::FitsWriter::apply(filename, mode, *this);
-    }
-    /// Write a FITS binary table to a RAM file.
-    void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const {
-        io::FitsWriter::apply(manager, mode, *this);
-    }
-    /// Write a FITS binary table to an open file object.
-    void writeFits(fits::Fits & fitsfile) const {
-        io::FitsWriter::apply(fitsfile, *this);
+    /**
+     *  @brief Write a FITS binary table to a regular file.
+     *
+     *  @param[in] filename    Name of the file to write.
+     *  @param[in] mode        "a" to append a new HDU, "w" to overwrite any existing file.
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to
+     *                         read the catalogs.  See e.g. SourceFitsFlags.
+     */
+    void writeFits(std::string const & filename, std::string const & mode="w", int flags=0) const {
+        io::FitsWriter::apply(filename, mode, *this, flags);
     }
 
-    /// @brief Read a FITS binary table from a regular file.
-    static CatalogT readFits(std::string const & filename, int hdu=0) {
-        return io::FitsReader::apply<CatalogT>(filename, hdu);
+    /**
+     *  @brief Write a FITS binary table to a RAM file.
+     *
+     *  @param[in,out] manager Object that manages the memory to write to.
+     *  @param[in] mode        "a" to append a new HDU, "w" to overwrite any existing file.
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to
+     *                         read the catalogs.  See e.g. SourceFitsFlags.
+     */
+    void writeFits(fits::MemFileManager & manager, std::string const & mode="w", int flags=0) const {
+        io::FitsWriter::apply(manager, mode, *this, flags);
     }
-    /// @brief Read a FITS binary table from a RAM file.
-    static CatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
-        return io::FitsReader::apply<CatalogT>(manager, hdu);
+
+    /**
+     *  @brief Write a FITS binary table to an open file object.
+     *
+     *  @param[in,out] fitsfile Fits file object to write to.
+     *  @param[in] flags        Table-subclass-dependent bitflags that control the details of how to
+     *                          read the catalogs.  See e.g. SourceFitsFlags.
+     */
+    void writeFits(fits::Fits & fitsfile, int flags=0) const {
+        io::FitsWriter::apply(fitsfile, *this, flags);
     }
-    /// @brief Read a FITS binary table from a file object already at the correct extension.
-    static CatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<CatalogT>(fitsfile);
+
+    /**
+     *  @brief Read a FITS binary table from a regular file.
+     *
+     *  @param[in] filename    Name of the file to read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
+     *                         the catalog.  See e.g. SourceFitsFlags.
+     */
+    static CatalogT readFits(std::string const & filename, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<CatalogT>(filename, hdu, flags);
+    }
+
+    /**
+     *  @brief Read a FITS binary table from a RAM file.
+     *
+     *  @param[in] manager     Object that manages the memory to be read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
+     *                         the catalog.  See e.g. SourceFitsFlags.
+     */
+    static CatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<CatalogT>(manager, hdu, flags);
+    }
+
+    /**
+     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *
+     *  @param[in] fitsfile    Fits file object to read from.
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
+     *                         the catalog.  See e.g. SourceFitsFlags.
+     */
+    static CatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+        return io::FitsReader::apply<CatalogT>(fitsfile, flags);
     }
 
     /**

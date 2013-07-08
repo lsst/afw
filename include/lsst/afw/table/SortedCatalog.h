@@ -111,17 +111,41 @@ public:
     template <typename OtherRecordT>
     SortedCatalogT(SortedCatalogT<OtherRecordT> const & other) : Base(other) {}
 
-    /// @brief Read a FITS binary table.
-    static SortedCatalogT readFits(std::string const & filename, int hdu=0) {
-        return io::FitsReader::apply<SortedCatalogT>(filename, hdu);
+    /**
+     *  @brief Read a FITS binary table from a regular file.
+     *
+     *  @param[in] filename    Name of the file to read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
+     *                         the catalog.  See e.g. SourceFitsFlags.
+     */
+    static SortedCatalogT readFits(std::string const & filename, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<SortedCatalogT>(filename, hdu, flags);
     }
-    /// @brief Read a FITS binary table.
-    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0) {
-        return io::FitsReader::apply<SortedCatalogT>(manager, hdu);
+
+    /**
+     *  @brief Read a FITS binary table from a RAM file.
+     *
+     *  @param[in] manager     Object that manages the memory to be read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
+     *                         the catalog.  See e.g. SourceFitsFlags.
+     */
+    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0) {
+        return io::FitsReader::apply<SortedCatalogT>(manager, hdu, flags);
     }
-    /// @brief Read a FITS binary table.
-    static SortedCatalogT readFits(fits::Fits & fitsfile) {
-        return io::FitsReader::apply<SortedCatalogT>(fitsfile);
+
+    /**
+     *  @brief Read a FITS binary table from a file object already at the correct extension.
+     *
+     *  @param[in] fitsfile    Fits file object to read from.
+     *  @param[in] flags       Table-subclass-dependent bitflags that control the details of how to read
+     *                         the catalog.  See e.g. SourceFitsFlags.
+     */
+    static SortedCatalogT readFits(fits::Fits & fitsfile, int flags=0) {
+        return io::FitsReader::apply<SortedCatalogT>(fitsfile, flags);
     }
 
     /**
