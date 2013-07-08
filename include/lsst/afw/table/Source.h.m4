@@ -143,8 +143,13 @@ class Wcs;
 
 namespace table {
 
-/// Bitflags to be passed to SourceCatalog::readFits and SourceCatalog::writeFits
-enum {
+/**
+ *  @brief Bitflags to be passed to SourceCatalog::readFits and SourceCatalog::writeFits
+ *
+ *  Note that these flags may also be passed when reading/writing SourceCatalogs via the Butler,
+ *  by passing a "flags" key/value pair as part of the data ID.
+ */
+enum SourceFitsFlags {
     SOURCE_IO_NO_FOOTPRINTS = 0x1,       ///< Do not read/write footprints at all
     SOURCE_IO_NO_HEAVY_FOOTPRINTS = 0x2  ///< Read/write heavy footprints as non-heavy footprints
 };
