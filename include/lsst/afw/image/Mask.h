@@ -284,6 +284,10 @@ public:
         CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)()
     ) const;
 
+    /// Interpret a mask value as a comma-separated list of mask plane names
+    static std::string interpret(MaskPixelT value);
+    std::string getAsString(int x, int y) { return interpret((*this)(x, y)); }
+
     // Mask Plane ops
     
     void clearAllMaskPlanes();
