@@ -81,8 +81,8 @@ public:
         "               __init__(self, catalog) -> shallow copy of the given catalog\n"
     ) SortedCatalogT;
 
-    static ExposureCatalogT readFits(std::string const & filename, int hdu=2);
-    static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=2);
+    static ExposureCatalogT readFits(std::string const & filename, int hdu=0, int flags=0);
+    static ExposureCatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0);
 
     ExposureCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const;
     ExposureCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;

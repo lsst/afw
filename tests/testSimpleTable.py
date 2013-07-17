@@ -466,6 +466,26 @@ class SimpleTableTestCase(unittest.TestCase):
         cat4 = cat1[numpy.array([True, False, True], dtype=bool)]
         self.assertTrue((cat4.copy(deep=True)[key] == numpy.array([1,3], dtype=int)).all())
 
+    def testTicket2938(self):
+        """Test heterogenous catalogs that have records from multiple tables"""
+        schema = lsst.afw.table.Schema()
+        schema.addField("i", type=int, doc="doc for i")
+        cat = lsst.afw.table.BaseCatalog(schema)
+        cat.addNew()
+        t1 = lsst.afw.table.BaseTable.make(schema)
+        cat.append(t1.makeRecord())
+        self.assertEqual(cat[-1].getTable(), t1)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.RuntimeErrorException,
+                                             cat.getColumnView)
+        filename = "testTicket2938.fits"
+        cat.writeFits(filename)  # shouldn't throw
+        schema.addField("d", type=float, doc="doc for d")
+        t2 = lsst.afw.table.BaseTable.make(schema)
+        cat.append(t2.makeRecord())
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException,
+                                             cat.writeFits, filename)
+        os.remove(filename)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

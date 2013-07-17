@@ -25,8 +25,8 @@ public:
         "               __init__(self, catalog) -> shallow copy of the given catalog\n"
     ) SortedCatalogT;
 
-    static SortedCatalogT readFits(std::string const & filename, int hdu=2);
-    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=2);
+    static SortedCatalogT readFits(std::string const & filename, int hdu=0, int flags=0);
+    static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0);
 
     bool isSorted() const;
     void sort();

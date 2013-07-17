@@ -49,11 +49,11 @@ public:
         "               __init__(self, catalog) -> shallow copy of the given catalog\n"
     ) CatalogT;
 
-    void writeFits(std::string const & filename, std::string const & mode="w") const;
-    void writeFits(fits::MemFileManager & manager, std::string const & mode="w") const;
+    void writeFits(std::string const & filename, std::string const & mode="w", int flags=0) const;
+    void writeFits(fits::MemFileManager & manager, std::string const & mode="w", int flags=0) const;
 
-    static CatalogT readFits(std::string const & filename, int hdu=2);
-    static CatalogT readFits(fits::MemFileManager & manager, int hdu=2);
+    static CatalogT readFits(std::string const & filename, int hdu=0, int flags=0);
+    static CatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0);
 
     ColumnView getColumnView() const;
 
@@ -182,6 +182,17 @@ public:
     %}
     %feature("pythonprepend") insert %{
         self._columns = None
+    %}
+    %feature("shadow") writeFits %{
+    def writeFits(self, filename, mode='w', flags=0):
+        """Write the catalog to a FITS binary table.
+
+        @param[in]  filename    Name of the file to write or a MemFileManager object.
+        @param[in]  mode        Write mode; one of 'w'=write (and clobber) or 'a'=append.
+        @param[in]  flags       Subclass-defined flags to control the details of how
+                                the catalog is written.
+        """
+        $action(self, filename, mode, flags)
     %}
     %pythoncode %{
     def __getColumns(self):

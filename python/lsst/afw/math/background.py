@@ -66,9 +66,12 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         
         self._backgrounds.append(val)
 
-    def writeFits(self, fileName):
+    def writeFits(self, fileName, flags=0):
         """Save our list of Backgrounds to a file
         @param fileName         FITS file to write
+        @param flags            Flags to control details of writing; currently unused,
+                                but present for consistency with
+                                afw.table.BaseCatalog.writeFits.
         """
 
         for i, bkgd in enumerate(self):
@@ -90,16 +93,19 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             statsImage.getVariance().writeFits(fileName, md, "a")
 
     @staticmethod
-    def readFits(fileName):
+    def readFits(fileName, hdu=0, flags=0):
         """Read a our list of Backgrounds from a file
         @param fileName         FITS file to read
+        @param hdu              First Header/Data Unit to attempt to read from
+        @param flags            Flags to control details of reading; currently unused,
+                                but present for consistency with
+                                afw.table.BaseCatalog.readFits.
 
         See also getImage()
         """
 
         self = BackgroundList()
 
-        hdu = 0
         while True:
             hdu += 1
 

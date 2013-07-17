@@ -30,21 +30,21 @@ public:
      *  then calls Writer::write on it.
      */
     template <typename OutputT, typename ContainerT>
-    static void apply(OutputT & output, std::string const & mode, ContainerT const & container) {
+    static void apply(OutputT & output, std::string const & mode, ContainerT const & container, int flags) {
         Fits fits(output, mode, Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
-        apply(fits, container);
+        apply(fits, container, flags);
     }
 
     /// @brief Low-level driver for writing FITS files, operating on an open FITS file.
     template <typename ContainerT>
-    static void apply(Fits & fits, ContainerT const & container) {
+    static void apply(Fits & fits, ContainerT const & container, int flags) {
         PTR(FitsWriter) writer
-            = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits);
+            = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits, flags);
         writer->write(container);
     }
 
-    /// @brief Construct from a wrapped cfitsio pointer. 
-    explicit FitsWriter(Fits * fits) : _fits(fits) {}
+    /// @brief Construct from a wrapped cfitsio pointer.
+    explicit FitsWriter(Fits * fits, int flags) : _fits(fits), _flags(flags) {}
 
 protected:
 
@@ -55,6 +55,7 @@ protected:
     virtual void _writeRecord(BaseRecord const & source);
 
     Fits * _fits;      // wrapped cfitsio pointer
+    int _flags;        // subclass-defined flags to control writing
     std::size_t _row;  // which row we're currently processing
 
 private:

@@ -63,7 +63,7 @@ namespace {
 class SimpleFitsWriter : public io::FitsWriter {
 public:
 
-    explicit SimpleFitsWriter(Fits * fits) : io::FitsWriter(fits) {}
+    explicit SimpleFitsWriter(Fits * fits, int flags) : io::FitsWriter(fits, flags) {}
 
 protected:
     
@@ -97,7 +97,8 @@ namespace {
 class SimpleFitsReader : public io::FitsReader {
 public:
 
-    explicit SimpleFitsReader(Fits * fits, PTR(io::InputArchive) archive) : io::FitsReader(fits, archive) {}
+    explicit SimpleFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
+        io::FitsReader(fits, archive, flags) {}
 
 protected:
 
@@ -155,8 +156,8 @@ SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
 }
 
 PTR(io::FitsWriter)
-SimpleTable::makeFitsWriter(fits::Fits * fitsfile) const {
-    return boost::make_shared<SimpleFitsWriter>(fitsfile);
+SimpleTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+    return boost::make_shared<SimpleFitsWriter>(fitsfile, flags);
 }
 
 template class CatalogT<SimpleRecord>;

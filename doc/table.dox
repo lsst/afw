@@ -109,6 +109,12 @@ namespace lsst { namespace afw { namespace table {
  *  (which can delegate most of the work to the base classes) to save derived-class data members and
  *  ensure loaded objects have the correct type.
  *
+ *  Each Table derived class can also define the interpretation of a set of bitflags that can be used
+ *  to control the details of how catalogs are saved and loaded.  For instance, SourceTable uses these
+ *  to determine whether to read or write Footprints with each source, and if so, whether to read or
+ *  write HeavyFootprints as regular Footprints (see SourceFitsFlags).  All Catalog FITS I/O routines
+ *  accept a flags argument, even if the underlying table object will ignore it.
+ *
  *  @section afwTableSchema Schemas
  *  Schema objects are append-only objects - you can add new fields, but you can never remove them.
  *  This is because the schema creates and returns keys to fields as they are added, and removing

@@ -125,10 +125,12 @@ namespace {
 class SourceFitsWriter : public io::FitsWriter {
 public:
 
-    explicit SourceFitsWriter(Fits * fits) : io::FitsWriter(fits),
-                                             _heavyPixCol(-1),
-                                             _heavyMaskCol(-1),
-                                             _heavyVarCol(-1) {}
+    explicit SourceFitsWriter(Fits * fits, int flags) :
+        io::FitsWriter(fits, flags),
+        _heavyPixCol(-1),
+        _heavyMaskCol(-1),
+        _heavyVarCol(-1)
+    {}
 
 protected:
     
@@ -153,17 +155,19 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         );
     }
     io::FitsWriter::_writeTable(table, nRows);
-    _spanCol = _fits->addColumn<int>("spans", 0, "footprint spans (y, x0, x1)");
-    _peakCol = _fits->addColumn<float>("peaks", 0, "footprint peaks (fx, fy, peakValue)");
-    _fits->writeKey("SPANCOL", _spanCol + 1, "Column with footprint spans.");
-    _fits->writeKey("PEAKCOL", _peakCol + 1, "Column with footprint peaks (float values).");
-    if (table->getWriteHeavyFootprints()) {
-        _heavyPixCol  = _fits->addColumn<HeavyFootprintPixelT>("heavyPix", 0, "HeavyFootprint pixels");
-        _heavyMaskCol = _fits->addColumn<lsst::afw::image::MaskPixel>("heavyMask", 0, "HeavyFootprint masks");
-        _heavyVarCol  = _fits->addColumn<lsst::afw::image::VariancePixel>("heavyVar", 0, "HeavyFootprint variance");
-        _fits->writeKey("HVYPIXCO", _heavyPixCol  + 1, "Column with HeavyFootprint pix");
-        _fits->writeKey("HVYMSKCO", _heavyMaskCol + 1, "Column with HeavyFootprint mask");
-        _fits->writeKey("HVYVARCO", _heavyVarCol  + 1, "Column with HeavyFootprint variance");
+    if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
+        _spanCol = _fits->addColumn<int>("spans", 0, "footprint spans (y, x0, x1)");
+        _peakCol = _fits->addColumn<float>("peaks", 0, "footprint peaks (fx, fy, peakValue)");
+        _fits->writeKey("SPANCOL", _spanCol + 1, "Column with footprint spans.");
+        _fits->writeKey("PEAKCOL", _peakCol + 1, "Column with footprint peaks (float values).");
+        if (!(_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS)) {
+            _heavyPixCol  = _fits->addColumn<HeavyFootprintPixelT>("heavyPix", 0, "HeavyFootprint pixels");
+            _heavyMaskCol = _fits->addColumn<image::MaskPixel>("heavyMask", 0, "HeavyFootprint masks");
+            _heavyVarCol  = _fits->addColumn<image::VariancePixel>("heavyVar", 0, "HeavyFootprint variance");
+            _fits->writeKey("HVYPIXCO", _heavyPixCol  + 1, "Column with HeavyFootprint pix");
+            _fits->writeKey("HVYMSKCO", _heavyMaskCol + 1, "Column with HeavyFootprint mask");
+            _fits->writeKey("HVYVARCO", _heavyVarCol  + 1, "Column with HeavyFootprint variance");
+        }
     }
     _fits->writeKey("AFW_TYPE", "SOURCE", "Tells lsst::afw to load this as a Source table.");
     SAVE_FLUX_SLOT(PSF, Psf);
@@ -175,11 +179,11 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
 }
 
 void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
-    typedef lsst::afw::detection::HeavyFootprint<HeavyFootprintPixelT,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
-
+    typedef detection::HeavyFootprint<HeavyFootprintPixelT,image::MaskPixel,image::VariancePixel>
+        HeavyFootprint;
     SourceRecord const & record = static_cast<SourceRecord const &>(r);
     io::FitsWriter::_writeRecord(record);
-    if (record.getFootprint()) {
+    if (record.getFootprint() && !(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
         Footprint::SpanList const & spans = record.getFootprint()->getSpans();
         Footprint::PeakList const & peaks = record.getFootprint()->getPeaks();
         if (!spans.empty()) {
@@ -201,7 +205,7 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
                 vec.push_back((**j).getPeakValue());}
             _fits->writeTableArray(_row, _peakCol, vec.size(), &vec.front());
         }
-        if ((_heavyPixCol != -1) && record.getFootprint()->isHeavy()) {
+        if (!(_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) && record.getFootprint()->isHeavy()) {
             assert((_heavyPixCol >= 0) && (_heavyMaskCol >= 0) && (_heavyVarCol >= 0));
             PTR(HeavyFootprint) heavy = boost::static_pointer_cast<HeavyFootprint>(record.getFootprint());
             int N = heavy->getArea();
@@ -230,8 +234,8 @@ namespace {
 class SourceFitsReader : public io::FitsReader {
 public:
 
-    explicit SourceFitsReader(Fits * fits, PTR(io::InputArchive) archive) :
-        io::FitsReader(fits, archive), _spanCol(-1), _peakCol(-1),
+    explicit SourceFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
+        io::FitsReader(fits, archive, flags), _spanCol(-1), _peakCol(-1),
         _heavyPixCol(-1), _heavyMaskCol(-1), _heavyVarCol(-1)
         {}
 
@@ -253,7 +257,7 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
     _spanCol = metadata->get("SPANCOL", 0);
-    if (_spanCol > 0) { 
+    if (_spanCol > 0) {
         // we remove these from the metadata so the Schema constructor doesn't try to parse
         // the footprint columns
         metadata->remove("SPANCOL");
@@ -261,25 +265,27 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
         metadata->remove((boost::format("TFORM%d") % _spanCol).str());
     }
     _peakCol = metadata->get("PEAKCOL", 0);
-    if (_peakCol >= 0) {
+    if (_peakCol > 0) {
         metadata->remove("PEAKCOL");
         metadata->remove((boost::format("TTYPE%d") % _peakCol).str());
         metadata->remove((boost::format("TFORM%d") % _peakCol).str());
     }
     _heavyPixCol  = metadata->get("HVYPIXCO", 0);
-    if (_heavyPixCol >= 0) {
+    if (_heavyPixCol > 0) {
         metadata->remove("HVYPIXCO");
         metadata->remove((boost::format("TTYPE%d") % _heavyPixCol).str());
         metadata->remove((boost::format("TFORM%d") % _heavyPixCol).str());
     }
     _heavyMaskCol  = metadata->get("HVYMSKCO", 0);
-    if (_heavyMaskCol >= 0) {
+    if (_heavyMaskCol > 0) {
         metadata->remove("HVYMSKCO");
         metadata->remove((boost::format("TTYPE%d") % _heavyMaskCol).str());
         metadata->remove((boost::format("TFORM%d") % _heavyMaskCol).str());
+        metadata->remove((boost::format("TZERO%d") % _heavyMaskCol).str());
+        metadata->remove((boost::format("TSCAL%d") % _heavyMaskCol).str());
     }
     _heavyVarCol  = metadata->get("HVYVARCO", 0);
-    if (_heavyVarCol >= 0) {
+    if (_heavyVarCol > 0) {
         metadata->remove("HVYVARCO");
         metadata->remove((boost::format("TTYPE%d") % _heavyVarCol).str());
         metadata->remove((boost::format("TFORM%d") % _heavyVarCol).str());
@@ -305,10 +311,11 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
 }
 
 PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
-    typedef lsst::afw::detection::HeavyFootprint<HeavyFootprintPixelT,lsst::afw::image::MaskPixel,lsst::afw::image::VariancePixel> HeavyFootprint;
-
+    typedef detection::HeavyFootprint<HeavyFootprintPixelT,image::MaskPixel,image::VariancePixel>
+        HeavyFootprint;
     PTR(SourceRecord) record = boost::static_pointer_cast<SourceRecord>(io::FitsReader::_readRecord(table));
     if (!record) return record;
+    if (_flags & SOURCE_IO_NO_FOOTPRINTS) return record;
     int spanElementCount = (_spanCol >= 0) ? _fits->getTableArraySize(_row, _spanCol) : 0;
     int peakElementCount = (_peakCol >= 0) ? _fits->getTableArraySize(_row, _peakCol) : 0;
     int heavyPixElementCount  = (_heavyPixCol  >= 0) ? _fits->getTableArraySize(_row, _heavyPixCol)  : 0;
@@ -360,7 +367,10 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
         }
         record->setFootprint(fp);
 
-        if (heavyPixElementCount && heavyMaskElementCount && heavyVarElementCount) {
+        if (
+            !(_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+            && heavyPixElementCount && heavyMaskElementCount && heavyVarElementCount
+        ) {
             int N = fp->getArea();
             if ((heavyPixElementCount  != N) ||
                 (heavyMaskElementCount != N) ||
@@ -422,13 +432,11 @@ PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const &
 SourceTable::SourceTable(
     Schema const & schema,
     PTR(IdFactory) const & idFactory
-    ) : SimpleTable(schema, idFactory),
-        _writeHeavyFootprints(false) {}
+) : SimpleTable(schema, idFactory) {}
 
 SourceTable::SourceTable(SourceTable const & other) :
     SimpleTable(other),
-    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape),
-    _writeHeavyFootprints(other._writeHeavyFootprints)
+    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
 {}
 
 SourceTable::MinimalSchema::MinimalSchema() {
@@ -442,8 +450,8 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
     return it;
 }
 
-PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile) const {
-    return boost::make_shared<SourceFitsWriter>(fitsfile);
+PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
+    return boost::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
 
 //-----------------------------------------------------------------------------------------------------------

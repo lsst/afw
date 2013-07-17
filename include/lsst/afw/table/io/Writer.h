@@ -2,11 +2,14 @@
 #ifndef AFW_TABLE_IO_Writer_h_INCLUDED
 #define AFW_TABLE_IO_Writer_h_INCLUDED
 
+#include <set>
+
 #include "lsst/base.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/table/BaseTable.h"
 
 namespace lsst { namespace afw { namespace table {
 
-class BaseTable;
 class BaseRecord;
 
 namespace io {
@@ -29,10 +32,25 @@ public:
      *
      *  The given container must have a getTable() member function that returns a shared_ptr
      *  to a table, and the iterators returned by begin() and end() must dereference to a type
-     *  convertible to RecordBase const &.
+     *  convertible to BaseRecord const &.
      */
     template <typename ContainerT>
     void write(ContainerT const & container) {
+        std::set<PTR(BaseTable const)> tables;
+        for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
+            if (i->getTable() != container.getTable()) tables.insert(i->getTable());
+        }
+        for (std::set<PTR(BaseTable const)>::iterator j = tables.begin(); j != tables.end(); ++j) {
+            if (
+                (**j).getSchema().compare(container.getTable()->getSchema(), Schema::IDENTICAL)
+                != Schema::IDENTICAL
+            ) {
+                throw LSST_EXCEPT(
+                    pex::exceptions::LogicErrorException,
+                    "Cannot save Catalog with heterogenous schemas"
+                );
+            }
+        }
         _writeTable(container.getTable(), container.size());
         for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
             _writeRecord(*i);

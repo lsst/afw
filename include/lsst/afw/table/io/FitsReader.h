@@ -41,8 +41,8 @@ public:
     class Factory {
     public:
 
-        /// Create a new FITS reader from a cfitsio pointer holder and (optional) input archive.
-        virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive) const = 0;
+        /// Create a new FITS reader from a cfitsio pointer holder and (optional) input archive and flags
+        virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive, int flags) const = 0;
 
         virtual ~Factory() {}
 
@@ -62,9 +62,9 @@ public:
     class FactoryT : public Factory {
     public:
 
-        /// Create a new FITS reader from a cfitsio pointer holder and (optional) input archive.
-        virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive) const {
-            return boost::make_shared<ReaderT>(fits, archive);
+        /// Create a new FITS reader from a cfitsio pointer holder and (optional) input archive and flags
+        virtual PTR(FitsReader) operator()(Fits * fits, PTR(InputArchive) archive, int flags) const {
+            return boost::make_shared<ReaderT>(fits, archive, flags);
         }
 
         /// Create a factory that will be used when the AFW_TYPE fits key matches the given name.
@@ -76,7 +76,7 @@ public:
      *  @brief Look for the header key (AFW_TYPE) that tells us the type of the FitsReader to use,
      *         then make it using the registered factory.
      */
-    static PTR(FitsReader) make(Fits * fits, PTR(io::InputArchive) archive);
+    static PTR(FitsReader) make(Fits * fits, PTR(io::InputArchive) archive, int flags);
 
     /**
      *  @brief Entry point for reading FITS files into arbitrary containers.
@@ -85,16 +85,23 @@ public:
      *  Reader::read.
      */
     template <typename ContainerT, typename SourceT>
-    static ContainerT apply(SourceT & source, int hdu) {
+    static ContainerT apply(SourceT & source, int hdu, int flags) {
         Fits fits(source, "r", Fits::AUTO_CLOSE | Fits::AUTO_CHECK);
         fits.setHdu(hdu);
-        return apply<ContainerT>(fits);
+        return apply<ContainerT>(fits, flags);
     }
 
     /// @brief Low-level entry point for reading FITS files into arbitrary containers.
     template <typename ContainerT>
-    static ContainerT apply(Fits & fits, PTR(io::InputArchive) archive = PTR(io::InputArchive)()) {
-        PTR(FitsReader) reader = make(&fits, archive);
+    static ContainerT apply(Fits & fits, PTR(io::InputArchive) archive=PTR(io::InputArchive)(), int flags=0) {
+        PTR(FitsReader) reader = make(&fits, archive, flags);
+        return reader->template read<ContainerT>();
+    }
+
+    /// @brief Low-level entry point for reading FITS files into arbitrary containers.
+    template <typename ContainerT>
+    static ContainerT apply(Fits & fits, int flags=0) {
+        PTR(FitsReader) reader = make(&fits, PTR(io::InputArchive)(), flags);
         return reader->template read<ContainerT>();
     }
 
@@ -105,7 +112,7 @@ public:
      *  but may need to construct their own from the HDUs following the catalog HDU(s)
      *  if this pointer is null.
      */
-    explicit FitsReader(Fits * fits, PTR(InputArchive)) : _fits(fits) {}
+    explicit FitsReader(Fits * fits, PTR(InputArchive), int flags) : _fits(fits), _flags(flags) {}
 
 protected:
 
@@ -121,6 +128,7 @@ protected:
     struct ProcessRecords;
 
     Fits * _fits;         // cfitsio pointer in a conveniencer wrapper
+    int _flags;           // subclass-defined flags to control FITS reading
     std::size_t _row;     // which row we're currently reading
 private:
 
