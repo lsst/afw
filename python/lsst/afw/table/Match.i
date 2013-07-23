@@ -96,6 +96,29 @@
 %template(NAME##MatchVector)
     std::vector< lsst::afw::table::Match<lsst::afw::table::R1##Record,lsst::afw::table::R2##Record> >;
 
+%extend std::vector< lsst::afw::table::Match<lsst::afw::table::R1##Record,lsst::afw::table::R2##Record> > {
+    %pythoncode {
+        def __getstate__(self):
+            num = len(self)
+            if num == 0:
+                return ()
+            firstSchema = self[0].first.schema
+            secondSchema = self[0].second.schema
+            first = R1##Catalog(firstSchema)
+            second = R2##Catalog(secondSchema)
+            distance = []
+            for match in self:
+                first.append(match.first)
+                second.append(match.second)
+                distance.append(match.distance)
+            return (first, second, distance)
+
+        def __setstate__(self, state):
+            first, second, distance = state
+            self.__init__([NAME##Match(f,s,d) for f,s,d in zip(first, second, distance)])
+    }
+}
+
 // swig can't parse the template declarations for these because of the nested names in the
 // return values, so we repeat them here and pretend they aren't templates, using typedefs
 // that swig can understand.
