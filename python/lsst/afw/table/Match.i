@@ -99,11 +99,14 @@
 %extend std::vector< lsst::afw::table::Match<lsst::afw::table::R1##Record,lsst::afw::table::R2##Record> > {
     %pythoncode {
         def __getstate__(self):
+            """Pickler"""
             num = len(self)
             if num == 0:
                 return ()
             firstSchema = self[0].first.schema
             secondSchema = self[0].second.schema
+            firstTable = self[0].first.table
+            secondTable = self[0].second.table
             first = R1##Catalog(firstSchema)
             second = R2##Catalog(secondSchema)
             distance = []
@@ -111,9 +114,46 @@
                 first.append(match.first)
                 second.append(match.second)
                 distance.append(match.distance)
+
+            def getSlot(table, name):
+                """Return key for a slot, specified by name, or None"""
+                getter = getattr(table, "get" + name + "Key", None)
+                if getter is None:
+                    return None
+                try:
+                    return getter()
+                except LsstCppException as e:
+                    if isinstance(e.message, NotFoundException):
+                        return None
+                    raise
+
+            def copySlots(tableFrom, tableTo):
+                """Copy slots from one table to another
+
+                Slots are identified from the method names ("define<name>")
+                and assumed to carry measurement, error and flag parts.
+                """
+                import re
+                from lsst.pex.exceptions import LsstCppException, NotFoundException
+                getKey = lambda x: getattr(tableFrom, x)() if hasattr(tableFrom, x) else None
+                for method in dir(tableTo):
+                    m = re.search(r"define(?P<name>.+)", method)
+                    if not m:
+                        continue
+                    name = m.group("name")
+                    meas = getSlot(tableFrom, name)
+                    err = getSlot(tableFrom, name + "Err")
+                    flag = getSlot(tableFrom, name + "Flag")
+                    setter = getattr(tableTo, "define" + name, None)
+                    if setter is not None:
+                        setter(meas, err, flag)
+
+            copySlots(firstTable, first.table)
+            copySlots(secondTable, second.table)
             return (first, second, distance)
 
         def __setstate__(self, state):
+            """Unpickler"""
             first, second, distance = state
             self.__init__([NAME##Match(f,s,d) for f,s,d in zip(first, second, distance)])
     }

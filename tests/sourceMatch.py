@@ -33,6 +33,7 @@ or
 """
 import os, re, sys
 
+import numpy
 import unittest
 import eups
 from math import radians
@@ -92,8 +93,8 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(m1.second.getId(), c["second"])
             self.assertEqual(m1.distance, c["distance"])
 
-        self.checkPickle(mat)
-        self.checkPickle(mat2)
+        self.checkPickle(mat, checkSlots=False)
+        self.checkPickle(mat2, checkSlots=False)
 
         if False:
             s0 = mat[0][0]
@@ -242,7 +243,11 @@ class SourceMatchTestCase(unittest.TestCase):
                 print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
                 print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
                 
-    def checkPickle(self, matches):
+    def checkPickle(self, matches, checkSlots=True):
+        """Check that a match list pickles
+
+        Also checks that the slots survive pickling, if checkSlots is True.
+        """
         orig = afwTable.SourceMatchVector(matches)
         unpickled = pickle.loads(pickle.dumps(orig))
         self.assertEqual(len(orig), len(unpickled))
@@ -254,6 +259,13 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(m1.second.getRa(), m2.second.getRa())
             self.assertEqual(m1.second.getDec(), m2.second.getDec())
             self.assertEqual(m1.distance, m2.distance)
+            if checkSlots:
+                self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
+                self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
+
+    def assertEqualFloat(self, value1, value2):
+        """Compare floating point values, allowing for NAN"""
+        self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
