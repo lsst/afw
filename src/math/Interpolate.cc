@@ -169,6 +169,8 @@ styleToGslInterpType(Interpolate::Style const style)
       case Interpolate::NUM_STYLES:
         throw LSST_EXCEPT(pex::exceptions::LogicErrorException,
                           str(boost::format("You can't get here: style == %") % style));
+      default:
+        std::abort();                   // Bad interpolation style
     }
 }
 }
