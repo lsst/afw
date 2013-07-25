@@ -33,9 +33,11 @@ or
 """
 import os, re, sys
 
+import numpy
 import unittest
 import eups
 from math import radians
+import pickle
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDetect
@@ -91,6 +93,9 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(m1.second.getId(), c["second"])
             self.assertEqual(m1.distance, c["distance"])
 
+        self.checkPickle(mat, checkSlots=False)
+        self.checkPickle(mat2, checkSlots=False)
+
         if False:
             s0 = mat[0][0]
             s1 = mat[0][1]
@@ -114,6 +119,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
         mat = afwTable.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
         self.assertEqual(len(mat), 1)
+        self.checkPickle(mat)
 
     def testPhotometricCalib(self):
         """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue"""
@@ -194,6 +200,7 @@ class SourceMatchTestCase(unittest.TestCase):
         matches = afwTable.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(matches), 901)
+        self.checkPickle(matches)
 
         if False:
             for mat in matches:
@@ -210,6 +217,7 @@ class SourceMatchTestCase(unittest.TestCase):
         matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
+        self.checkPickle(matches)
         #
         # Find the one that didn't match
         #
@@ -225,7 +233,8 @@ class SourceMatchTestCase(unittest.TestCase):
 
         matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
-        
+        self.checkPickle(matches)
+
         if False:
             for mat in matches:
                 s0 = mat[0]
@@ -234,6 +243,29 @@ class SourceMatchTestCase(unittest.TestCase):
                 print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
                 print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
                 
+    def checkPickle(self, matches, checkSlots=True):
+        """Check that a match list pickles
+
+        Also checks that the slots survive pickling, if checkSlots is True.
+        """
+        orig = afwTable.SourceMatchVector(matches)
+        unpickled = pickle.loads(pickle.dumps(orig))
+        self.assertEqual(len(orig), len(unpickled))
+        for m1, m2 in zip(orig, unpickled):
+            self.assertEqual(m1.first.getId(), m2.first.getId())
+            self.assertEqual(m1.first.getRa(), m2.first.getRa())
+            self.assertEqual(m1.first.getDec(), m2.first.getDec())
+            self.assertEqual(m1.second.getId(), m2.second.getId())
+            self.assertEqual(m1.second.getRa(), m2.second.getRa())
+            self.assertEqual(m1.second.getDec(), m2.second.getDec())
+            self.assertEqual(m1.distance, m2.distance)
+            if checkSlots:
+                self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
+                self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
+
+    def assertEqualFloat(self, value1, value2):
+        """Compare floating point values, allowing for NAN"""
+        self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
