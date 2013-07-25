@@ -280,7 +280,9 @@ int KdTree < T > ::_testTree() const{
 
     int i,j,output;
     std::vector < int >  isparent;
-
+    
+    output=1;
+    
     for (i = 0; i < _pts; i++ ) isparent.push_back(0);
 
     j = 0;
@@ -341,6 +343,8 @@ void KdTree < T > ::_organize(ndarray::Array < int,1,1 >  const &use,
       //below is code to choose the dimension on which the available points
       //have the greates variance.  This will be the dimension on which
       //the daughter node splits the data
+        idim=0;
+	varbest=-1.0;
         for (i = 0; i < _dimensions; i++ ) {
             mean = 0.0;
             var = 0.0;
