@@ -277,6 +277,26 @@ geom::Point2D TanWcs::skyToPixelImpl(
 
 }
 
+namespace {
+
+/// Generate a vector of polynomial elements, x^i
+///
+/// This is useful for optimising polynomial evaluations
+std::vector<double> polynomialElements(int const order, double const value)
+{
+    assert(order > 1);
+    std::vector<double> poly(order + 1);
+    poly[0] = 1.0;
+    poly[1] = value;
+    double incremental = value;
+    for (int i = 2; i < order; ++i) {
+        incremental = poly[i] = incremental*value;
+    }
+    return poly;
+}
+
+} // anonymous namespace
+
 geom::Point2D TanWcs::undistortPixel(geom::Point2D const & pix) const {
     if (!_hasDistortion) {
         return geom::Point2D(pix);
@@ -285,25 +305,25 @@ geom::Point2D TanWcs::undistortPixel(geom::Point2D const & pix) const {
     assert(_sipB.rows() > 0 );
     assert(_sipA.rows() == _sipA.cols());
     assert(_sipB.rows() == _sipB.cols());
+    int const fOrder = _sipA.rows(), gOrder = _sipB.rows(); // Note: these may be different in general
 
     double u = pix[0] - _wcsInfo->crpix[0];  //Relative pixel coords
     double v = pix[1] - _wcsInfo->crpix[1];
 
+    std::vector<double> uPoly = polynomialElements(std::max(fOrder, gOrder), u);
+    std::vector<double> vPoly = polynomialElements(std::max(fOrder, gOrder), v);
+
     double f = 0;
-    for(int i=0; i< _sipA.rows(); ++i) {
-        for(int j=0; j< _sipA.cols(); ++j) {
-            if (i+j>1 && i+j < _sipA.rows() ) {
-                f += _sipA(i,j)* pow(u, i) * pow(v, j);
-            }
+    for (int i = 0; i < fOrder; ++i) {
+        for (int j = std::max(0, 2-i); j < fOrder - i; ++j) {
+            f += _sipA(i,j)*uPoly[i]*vPoly[j];
         }
     }
 
     double g = 0;
-    for(int i=0; i< _sipB.rows(); ++i) {
-        for(int j=0; j< _sipB.cols(); ++j) {
-            if (i+j>1 && i+j < _sipB.rows() ) {
-                g += _sipB(i,j)* pow(u, i) * pow(v, j);
-            }
+    for (int i = 0; i < gOrder; ++i) {
+        for(int j = std::max(0, 2-i); j < gOrder - i; ++j) {
+            g += _sipB(i,j)*uPoly[i]*vPoly[j];
         }
     }
 
@@ -318,25 +338,29 @@ geom::Point2D TanWcs::distortPixel(geom::Point2D const & pix) const {
     assert(_sipBp.rows() > 0 );
     assert(_sipAp.rows() == _sipAp.cols());
     assert(_sipBp.rows() == _sipBp.cols());
+    int const fOrder = _sipAp.rows(), gOrder = _sipBp.rows(); // Note: these may be different in general
 
     double U = pix[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
     double V = pix[1] - _wcsInfo->crpix[1];
 
+    std::vector<double> uPoly = polynomialElements(std::max(fOrder, gOrder), U);
+    std::vector<double> vPoly = polynomialElements(std::max(fOrder, gOrder), V);
+
     double F = 0;
-    for(int i=0; i< _sipAp.rows(); ++i) {
-        for(int j=0; j< _sipAp.cols(); ++j) {
-            F += _sipAp(i,j)* pow(U, i) * pow(V, j);
+    for (int i = 0; i< fOrder; ++i) {
+        for (int j = 0; j < fOrder; ++j) {
+            F += _sipAp(i,j)*uPoly[i]*vPoly[j];
         }
     }
 
     double G = 0;
-    for(int i=0; i< _sipBp.rows(); ++i) {
-        for(int j=0; j< _sipBp.cols(); ++j) {
-            G += _sipBp(i,j)* pow(U, i) * pow(V, j);
+    for (int i = 0; i < gOrder; ++i) {
+        for (int j = 0; j< gOrder; ++j) {
+            G += _sipBp(i,j)*uPoly[i]*vPoly[j];
         }
     }
     return geom::Point2D(U + F + _wcsInfo->crpix[0],
-                            V + G + _wcsInfo->crpix[1]);
+                         V + G + _wcsInfo->crpix[1]);
 }
 
 /************************************************************************************************************/
