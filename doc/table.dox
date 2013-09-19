@@ -15,13 +15,17 @@ namespace lsst { namespace afw { namespace table {
  *  Key<int> k1 = schema.addField<int>("f1", "doc for f1");
  *  Key<float> k2 = schema.addField<float>("f2", "doc for f2", "units for f2");
  *  Key< Array<double> > k3 = schema.addField< Array<double> >("f3", "doc for f3", "units for f2", 5);
- *  PTR(BaseTable) table(schema);
- *  PTR(BaseRecord) record = table->makeRecord();
- *  record->set(k1, 2);
- *  record->set(k2, 3.14);
- *  ndarray::Array<double,1> a3 = (*record)[k3]; // operator[] allows in-place edits for some fields
- *  a3[2] = 5.2;
- *  std::cout << record->get(k1) << ", " << record->get(k2) << ", " << record->get(k3);
+ *  BaseCatalog catalog(schema);
+ *  for (int i = 1; i <= 3; ++i) {
+ *      PTR(BaseRecord) record = catalog.addNew();
+ *      record->set(k1, i);
+ *      record->set(k2, i*3.14);
+ *      ndarray::Array<double,1> a3 = (*record)[k3]; // operator[] allows in-place edits for some fields
+ *      a3.asEigen().setRandom();
+ *      a3.deep() += i;
+ *  }
+ *  BaseColumnView columns = catalog.getColumnView();
+ *  std::cout << columns[k1] << ", " << columns[k2] << ", " << columns[k3];
  *  @endcode
  *
  *  In Python:
@@ -31,47 +35,71 @@ namespace lsst { namespace afw { namespace table {
  *  k1 = schema.addField("f1", type=int, doc="doc for f1")
  *  k2 = schema.addField("f2", type=numpy.float32, "doc for f2", units="units for f2")
  *  k3 = schema.addField("f3", type="ArrayD", doc="doc for f3", units="units for f2", size=5)
- *  table = BaseTable.make(schema)
- *  record = table.makeRecord()
- *  record.set(k1, 2)
- *  record.set(k2, 3.14)
- *  record[k3] = numpy.random.randn(5) # ndarray::Array == numpy.ndarray in Python
- *  print "%d, %f, %s" % (record.get(k1), record.get(k2), record.get(k3))
+ *  catalog = BaseCatalog(schema)
+ *  for i in (1, 2, 3):
+ *      record = catalog.addNew()
+ *      record.set(k1, i)
+ *      record.set(k2, i * 3.14)
+ *      record[k3] = numpy.random.rand(5) + i # ndarray::Array == numpy.ndarray in Python
+ *  print catalog[k1], catalog[k2], catalog[k3]   # in Python, can access columns directly from the catalog
  *  @endcode
  *
  *  @section afwTableOverview Overview
- *  The primary objects users will interact with in the table library are Schemas, Keys, Tables,
- *  Records, and Catalogs.  Schema is a concrete class that defines the columns of a table; it behaves
- *  like a heterogeneous container of SchemaItem<T> objects, which are in turn composed of Field
- *  and Key objects.  A Field contains name, documentation, and units, while the Key object is
- *  a lightweight opaque object used to actually access elements of the table.  Using keys for
- *  access allows reads and writes to compile down to little (if any) more than a pointer
- *  offset and dereference.  String field names can be used instead of keys in Python (though 
- *  this is less efficient), but this is not possible in C++.
- *  
- *  Record and table classes are defined in pairs; each record class has a 1-to-1
- *  correspondence with a table class.  A record at its simplest is just a row in a table,
- *  though both classes are polymorphic and derived classes can add additional functionality
- *  (such as the SourceRecord and SourceTable classes, for instance).  A table acts as a factory
- *  for records; all record creating (even cloning) goes through a table member function.  This
- *  is because the underlying data for records is allocated in multi-record blocks by the table.
- *  Records thus hold a shared_ptr back to their table, as well as a pointer to their memory block,
- *  and data members that are shared by multiple records (such as the Schema) are accessed through
- *  the table rather than held separately in each record.  A table does not hold pointers to
- *  the records it is associated with, however, or provide ways to iterate over records.
+ *  The primary objects users will interact with in the table library are
+ *  Schemas, Fields, Keys, Tables, Records, Catalogs, and ColumnViews.  Schema
+ *  is a concrete class that defines the columns of a table; it behaves like a
+ *  heterogeneous container of SchemaItem<T> objects, which are in turn composed
+ *  of Field and Key objects.  A Field contains name, documentation, and units,
+ *  while the Key object is a lightweight opaque object used to actually access
+ *  elements of the table.  Using keys for access allows reads and writes to
+ *  compile down to little (if any) more than a pointer offset and dereference.
+ *  String field names can be used instead of keys in Python (though this is
+ *  less efficient), but this is not possible in C++.
  *
- *  Instead, we have a separate concept of a container class, which holds a single table pointer
- *  and multiple records, and is usually just a wrapper around an STL container of record shared_ptrs.
- *  While we've left open the possibility of additional containers in the future, the CatalogT and
- *  SimpleCatalogT implementations (better known by the BaseCatalog, SimpleCatalog, and SourceCatalog
- *  typedefs) will be the most commonly used.  Catalogs are based on a std::vector of record shared_ptrs,
- *  but provided accessors and iterators that yield record references, so you don't can use iter->method
- *  instead of (**iter).method.  Most Catalog operations are analogous to std::vector operations, though
- *  they often provide support for both deep and shallow copies, and the SimpleCatalogT class adds
- *  sorting and lookups based on unique IDs.  Future derived classes of BaseRecord and BaseTable
- *  will hopefully be able to just use one of the existing catalog templates and provide a new typedef
- *  rather than require a new catalog class.  Catalogs have a significantly different interface in
- *  Python, where they mimic a (limited) Python list instead of a C++ vector (see the Python in-line help).
+ *  Record and table classes are defined in pairs; each record class has a
+ *  1-to-1 correspondence with a table class.  A record at its simplest is just
+ *  a row in a table, though both classes are polymorphic and derived classes
+ *  can add additional functionality (such as the SourceRecord and SourceTable
+ *  classes, for instance).  A table acts as a factory for records; all record
+ *  creating (even cloning) goes through a table member function.  This is
+ *  because the underlying data for records is allocated in multi-record blocks
+ *  by the table.  Records thus hold a shared_ptr back to their table, as well
+ *  as a pointer to their memory block, and data members that are shared by
+ *  multiple records (such as the Schema) are accessed through the table rather
+ *  than held separately in each record.  A table does not hold pointers to the
+ *  records it is associated with, however, or provide ways to iterate over
+ *  records.
+ *
+ *  Instead, we have a separate concept of a container class, which holds a
+ *  single table pointer and multiple records, and is usually just a wrapper
+ *  around an STL container of record shared_ptrs.  While we've left open the
+ *  possibility of additional containers in the future, the CatalogT and
+ *  SimpleCatalogT implementations (better known by the BaseCatalog,
+ *  SimpleCatalog, and SourceCatalog typedefs) will be the most commonly used.
+ *  Catalogs are based on a std::vector of record shared_ptrs, but provided
+ *  accessors and iterators that yield record references, so you can use
+ *  iter->method instead of (**iter).method.  Most Catalog operations are
+ *  analogous to std::vector operations, though they often provide support for
+ *  both deep and shallow copies, and the SimpleCatalogT class adds sorting and
+ *  lookups based on unique IDs.  Future derived classes of BaseRecord and
+ *  BaseTable will hopefully be able to just use one of the existing catalog
+ *  templates and provide a new typedef rather than require a new catalog class.
+ *  Catalogs have a significantly different interface in Python, where they
+ *  mimic a (limited) Python list instead of a C++ vector (see the Python
+ *  in-line help).
+ *
+ *  ColumnView (i.e. BaseColumnView) objects can be created from Catalogs, and
+ *  provide views into columns of the catalog as ndarray::Array objects (in C++)
+ *  or numpy.ndarray objects (in Python).  In Python, columns can be directly
+ *  accessed from a Catalog (using a private ColumnView under the hood).  Not
+ *  all records are allocated in contiguous memory, however (as discussed
+ *  below), and only contiguous records can be viewed as columns.  To get
+ *  columns from a non-contiguous Catalog, you need to do a deep copy of it,
+ *  which will automatically ensure the new catalog is contiguous.  In Python,
+ *  that looks like this:
+ *  @code
+ *  newCat = oldCat.copy(deep=True)
+ *  @endcode
  *
  *  @section afwTableMemory Memory and Copy Semantics
  *  Tables and records are noncopyable, and are always allocated in shared_ptrs.  Both can be
@@ -207,6 +235,11 @@ namespace lsst { namespace afw { namespace table {
  *  <td> Can assign any Coord, but always stored as ICRS </td>
  *  </tr>
  *  <tr>
+ *  <td>std::string</td> <td>"String"</td> <td>str</td> <td>std::string</td>
+ *  <td>No</td> <td>No</td> <td>Yes</td> <td></td>
+ *  <td>Strings are fixed-size; sizes must be declared at schema-creation time as with arrays.</td>
+ *  </tr>
+ *  <tr>
  *  <td>Point<int></td> <td>"PointI"</td> <td>afw.geom.Point2I</td> <td>afw::geom::Point2I</td>
  *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
  *  </tr>
@@ -241,28 +274,13 @@ namespace lsst { namespace afw { namespace table {
  *  <td>symmetric matrix is stored packed (size*(size+1)/2 elements)</td>
  *  </tr>
  *  <tr>
- *  <td>Covariance<double></td> <td>"CovD"</td> <td></td> <td>Eigen::MatrixXd</td>
- *  <td>No</td> <td>No</td> <td>Yes</td> <td></td>
- *  <td>symmetric matrix is stored packed (size*(size+1)/2 elements)</td>
- *  </tr>
- *  <tr>
  *   <td>Covariance<&nbsp;Point<float>&nbsp;></td> <td>"CovPointF"</td> <td></td>
  *   <td>Eigen::Matrix2f</td>
  *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (3 elements)</td>
  *  </tr>
  *  <tr>
- *   <td>Covariance<&nbsp;Point<double>&nbsp;></td> <td>"CovPointD"</td> <td></td>
- *   <td>Eigen::Matrix2d</td>
- *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (3 elements)</td>
- *  </tr>
- *  <tr>
  *   <td>Covariance<&nbsp;Moments<float>&nbsp;></td> <td>"CovMomentsF"</td> <td></td>
  *   <td>Eigen::Matrix3f</td>
- *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (6 elements)</td>
- *  </tr>
- *  <tr>
- *   <td>Covariance<&nbsp;Moments<double>&nbsp;></td> <td>"CovMomentsD"</td> <td></td>
- *   <td>Eigen::Matrix3d</td>
  *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (6 elements)</td>
  *  </tr>
  *  </table>
