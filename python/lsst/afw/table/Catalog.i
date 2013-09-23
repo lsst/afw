@@ -69,6 +69,10 @@ public:
 
     PTR(RecordT) addNew();
 
+    %pythonprepend addNew %{
+        self._columns = None
+    %}
+
     CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const;
 
     CatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;

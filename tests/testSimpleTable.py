@@ -219,7 +219,6 @@ class SimpleTableTestCase(unittest.TestCase):
         k6 = schema.addField("f6", type="Angle")
         catalog = lsst.afw.table.BaseCatalog(schema)
         catalog.addNew()
-        catalog.addNew()
         catalog[0].set(k1, 2)
         catalog[0].set(k2, 0.5)
         catalog[0].set(k3, 0.25)
@@ -229,6 +228,9 @@ class SimpleTableTestCase(unittest.TestCase):
         catalog[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
         catalog[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
         catalog[0].set(k6, lsst.afw.geom.Angle(0.25))
+        col1a = catalog[k1]
+        self.assertEqual(col1a.shape, (1,))
+        catalog.addNew()
         catalog[1].set(k1, 3)
         catalog[1].set(k2, 2.5)
         catalog[1].set(k3, 0.75)
@@ -238,6 +240,8 @@ class SimpleTableTestCase(unittest.TestCase):
         catalog[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
         catalog[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
         catalog[1].set(k6, lsst.afw.geom.Angle(0.15))
+        col1b = catalog[k1]
+        self.assertEqual(col1b.shape, (2,))
         columns = catalog.getColumnView()
         for key in [k1, k2, k3, kb1, kb2, kb3]:
             array = columns[key]
