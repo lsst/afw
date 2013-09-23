@@ -110,6 +110,11 @@ struct Field : public FieldBase<T> {
         return os << ")";
     }
 
+    /// @brief Return a new Field with a new name and other properties the same as this.
+    Field<T> copyRenamed(std::string const & newName) const {
+        return Field<T>(newName, getDoc(), getUnits(), *this);
+    }
+
 private:
     std::string _name;
     std::string _doc;

@@ -40,13 +40,22 @@ public:
     Key<T> addMapping(Key<T> const & inputKey);
 
     /**
-     *  @brief Add a new mapped field to the output Schema with a new name and/or description.
+     *  @brief Add a new mapped field to the output Schema with new descriptions.
      *
      *  If the input Key has already been mapped, the existing output Key will be reused
      *  but the associated Field will be replaced with the given one.
      */
     template <typename T>
     Key<T> addMapping(Key<T> const & inputKey, Field<T> const & outputField);
+
+    /**
+     *  @brief Add a new mapped field to the output Schema with a new name.
+     *
+     *  If the input Key has already been mapped, the existing output Key will be reused
+     *  but the associated Field will be replaced with one with the given name.
+     */
+    template <typename T>
+    Key<T> addMapping(Key<T> const & inputKey, std::string const & outputName);
 
     /**
      *  @brief Add mappings for all fields that match criteria defined by a predicate.
