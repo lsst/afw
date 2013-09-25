@@ -613,9 +613,6 @@ private:
         iterator & pos, InputIterator first, InputIterator last, bool deep,
         std::random_access_iterator_tag *
     ) {
-        std::ptrdiff_t n = pos - begin();
-        _internal.reserve(_internal.size() + last - first);
-        pos = begin() + n;
         if (deep) _table->preallocate(last - first);
     }
 
