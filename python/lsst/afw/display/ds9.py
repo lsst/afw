@@ -435,6 +435,7 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                 break
 
     ds9Cmd(selectFrame(frame))
+    ds9Cmd("smooth no")
     erase(frame)
 
     if settings:
