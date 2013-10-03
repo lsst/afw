@@ -181,7 +181,7 @@ class Mosaic(object):
 
     def setGutter(self, gutter):
         """Set the number of pixels between panels in a mosaic"""
-        self.gutter = 3
+        self.gutter = gutter
 
     def setBackground(self, background):
         """Set the value in the gutters"""
