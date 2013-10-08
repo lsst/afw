@@ -373,7 +373,15 @@ Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool str
  */
 Wcs::Ptr makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
-    
+
+/**
+ *  @brief Create a Wcs that is equivalent to celestial coordinates in the neighborhood of a point.
+ *
+ *  The returned WCS will have a TAN projection, with CRVAL at the given position, CRPIX at (0,0),
+ *  +x aligned with +ra, +y aligned with +dec, and the pixel scale as given.
+ */
+PTR(Wcs) makeLocalWcs(coord::Coord const & position, geom::Angle pixelScale=1.0*geom::degrees);
+
 namespace detail {
     int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
                          CONST_PTR(Wcs) const& wcs ///< A Wcs with (implied) keywords

@@ -94,3 +94,8 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     crvalTmp[1] = crval.toIcrs().getLatitude().asDegrees();
     return afwImg::Wcs::Ptr(new lsst::afw::image::Wcs(crvalTmp, crpix, CD));
 }
+
+PTR(afwImg::Wcs) afwImg::makeLocalWcs(coord::Coord const & position, geom::Angle pixelScale) {
+    double cdelt = pixelScale.asDegrees();
+    return makeWcs(position, afw::geom::Point2D(), cdelt, 0.0, 0.0, cdelt);
+}
