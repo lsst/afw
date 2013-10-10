@@ -154,11 +154,21 @@ public:
         MaskPixelT bitmask=~0x0
     );
 
-
-    /// Transform a footprint from one frame to another via their WCSes
-    Footprint::Ptr transform(image::Wcs const& source,
-                             image::Wcs const& target,
-                             geom::Box2I const& bbox) const;
+    /**
+     *  @brief Transform the footprint from one WCS to another
+     *
+     *  @param[in]  source   Wcs that defines the coordinate system of the input footprint.
+     *  @param[in]  target   Wcs that defines that desired coordinate system of the returned footprint.
+     *  @param[in]  region   Used to set the "region" box of the returned footprint; note that this is
+     *                       NOT the same as the footprint's bounding box.
+     *  @param[in]  doClip   If true, clip the new footprint to the region bbox before returning it.
+     */
+    PTR(Footprint) transform(
+        image::Wcs const & source,
+        image::Wcs const & target,
+        geom::Box2I const & region,
+        bool doClip=false
+    ) const;
 
     bool isPersistable() const { return true; }
 
