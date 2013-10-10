@@ -167,7 +167,7 @@ public:
         image::Wcs const & source,
         image::Wcs const & target,
         geom::Box2I const & region,
-        bool doClip=false
+        bool doClip=true
     ) const;
 
     bool isPersistable() const { return true; }
