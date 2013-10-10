@@ -255,6 +255,11 @@ class FootprintTestCase(unittest.TestCase):
         self.assertEqual(bbox.getMinY(), 10)
         self.assertEqual(bbox.getMaxX(), 105)
         self.assertEqual(bbox.getMaxY(), 11)
+        # clip with a bbox that doesn't overlap at all
+        bbox2 = afwGeom.Box2I(afwGeom.Point2I(5, 90), afwGeom.Extent2I(1, 2))
+        foot.clipTo(bbox2)
+        self.assert_(foot.getBBox().isEmpty())
+        self.assertEqual(foot.getArea(), 0)
 
     def testSpanShift(self):
         """Test our ability to shift spans"""
@@ -890,12 +895,6 @@ class NaNFootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
-    def testGrowEmpty(self):
-        """Check that growing an empty Footprint doesn't fail an assertion; #1186"""
-        fp = afwDetect.Footprint()
-        fp.setRegion(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 10)))
-        afwDetect.growFootprint(fp, 5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

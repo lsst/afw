@@ -285,6 +285,7 @@ void Footprint::clipTo(geom::Box2I const& bbox) {
 
 	if (_spans.empty()) {
         _bbox = geom::Box2I();
+        _area = 0;
 		_normalized = true;
     } else {
 		_normalized = false;
