@@ -229,6 +229,24 @@ math::Random math::Random::deepCopy() const {
     return rng;
 }
 
+math::Random::State math::Random::getState() const {
+    return State(static_cast<char*>(::gsl_rng_state(_rng.get())), getStateSize());
+}
+
+void math::Random::setState(State const & state) {
+    if (state.size() != getStateSize()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LengthErrorException,
+            (boost::format("Size of given state vector (%d) does not match expected size (%d)")
+             % state.size() % getStateSize()).str()
+        );
+    }
+    std::copy(state.begin(), state.end(), static_cast<char*>(::gsl_rng_state(_rng.get())));
+}
+
+std::size_t math::Random::getStateSize() const {
+    return ::gsl_rng_size(_rng.get());
+}
 
 // -- Accessors --------
 
