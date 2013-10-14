@@ -230,9 +230,9 @@ math::Random math::Random::deepCopy() const {
 }
 
 math::Random::State math::Random::getState() const {
-    State result(getStateSize());
-    std::memcpy(&result.front(), ::gsl_rng_state(_rng.get()), result.size());
-    return result;
+    std::vector<char> tmp(getStateSize());
+    std::memcpy(&tmp.front(), ::gsl_rng_state(_rng.get()), tmp.size());
+    return State(tmp.begin(), tmp.end());
 }
 
 void math::Random::setState(State const & state) {
@@ -243,7 +243,8 @@ void math::Random::setState(State const & state) {
              % state.size() % getStateSize()).str()
         );
     }
-    std::memcpy(::gsl_rng_state(_rng.get()), &state.front(), state.size());
+    std::vector<char> tmp(state.begin(), state.end());
+    std::memcpy(::gsl_rng_state(_rng.get()), &tmp.front(), state.size());
 }
 
 std::size_t math::Random::getStateSize() const {
