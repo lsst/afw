@@ -102,6 +102,23 @@ public:
 
     Random deepCopy() const;
 
+    //@{
+    /**
+     *  Accessors for the opaque state of the random number generator.
+     *
+     *  These may be used to save the state and restore it later, possibly after persisting.
+     *  The state is algorithm-dependent, and possibly platform/architecture dependent; it
+     *  should only be used for debugging perposes.
+     *
+     *  We use string here because it's a format Python and afw::table understand; the actual
+     *  value is a binary blob that is not expected to be human-readable.
+     */
+    typedef std::string State;
+    State getState() const;
+    void setState(State const & state);
+    std::size_t getStateSize() const;
+    //@}
+
     // -- Accessors --------
     Algorithm getAlgorithm() const;
     std::string getAlgorithmName() const;

@@ -101,6 +101,15 @@ class RandomImageTestCase(unittest.TestCase):
     def tearDown(self):
         del self.image
 
+    def testState(self):
+        for i in range(100):
+            self.rand.uniformInt(10000)
+        state = self.rand.getState()
+        v1 = [self.rand.uniformInt(10000) for i in range(100)]
+        self.rand.setState(state)
+        v2 = [self.rand.uniformInt(10000) for i in range(100)]
+        self.assertEqual(v1, v2)
+
     def testRandomUniformImage(self):
         afwMath.randomUniformImage(self.image, self.rand)
         #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
