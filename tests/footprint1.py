@@ -649,6 +649,15 @@ class FootprintTestCase(unittest.TestCase):
         subTarget = imTarget.Factory(imTarget, fpTarget.getBBox())
         self.assertTrue(numpy.all(subSource.getArray() == subTarget.getArray()))
 
+        # make a bbox smaller than the target footprint
+        bbox2 = afwGeom.Box2I(fpTarget.getBBox())
+        bbox2.grow(-1)
+        fpTarget2 = fpSource.transform(source, target, bbox2)  # this one clips
+        fpTarget3 = fpSource.transform(source, target, bbox2, False)  # this one doesn't
+        self.assertTrue(bbox2.contains(fpTarget2.getBBox()))
+        self.assertFalse(bbox2.contains(fpTarget3.getBBox()))
+        self.assertNotEqual(fpTarget.getArea(), fpTarget2.getArea())
+        self.assertEqual(fpTarget.getArea(), fpTarget3.getArea())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
