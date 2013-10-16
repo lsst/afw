@@ -285,6 +285,7 @@ void Footprint::clipTo(geom::Box2I const& bbox) {
 
 	if (_spans.empty()) {
         _bbox = geom::Box2I();
+        _area = 0;
 		_normalized = true;
     } else {
 		_normalized = false;
@@ -846,17 +847,18 @@ void Footprint::intersectMask(
 }
 
 
-/// Transform a footprint from one image to another, via their WCSes
-///
-/// Original implementation by Sogo Mineo.
-/// If slow, could consider linearising the WCSes and combining the linear versions to a single transform.
-Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WCS (for this footprint)
-                                    image::Wcs const& target, // Target image WCS
-                                    geom::Box2I const& bbox   // Bounding box for target image
-    ) const {
+PTR(Footprint) Footprint::transform(
+    image::Wcs const& source,
+    image::Wcs const& target,
+    geom::Box2I const& region,
+    bool doClip
+) const {
     // Transform the original bounding box
     geom::Box2I const& fpBox = getBBox(); // Original bounding box
     geom::Box2D tBoxD;
+    // If slow, could consider linearising the WCSes and combining the
+    // linear versions to a single transform, and then using that to
+    // transform all the points.
     tBoxD.include(transformPoint(fpBox.getMinX(), fpBox.getMinY(), source, target));
     tBoxD.include(transformPoint(fpBox.getMinX(), fpBox.getMaxY(), source, target));
     tBoxD.include(transformPoint(fpBox.getMaxX(), fpBox.getMinY(), source, target));
@@ -864,7 +866,7 @@ Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WC
     geom::Box2I tBoxI(tBoxD);
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
-    PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, bbox);
+    PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, region);
 
     for (int y = tBoxI.getBeginY(); y < tBoxI.getEndY(); ++y) {
         bool inSpan = false;            // Are we in a span?
@@ -889,7 +891,9 @@ Footprint::Ptr Footprint::transform(image::Wcs const& source, // Source image WC
             fpNew->addSpan(y, start, tBoxI.getMaxX());
         }
     }
-    
+    if (doClip) {
+        fpNew->clipTo(region);
+    }
     return fpNew;
 }
 
