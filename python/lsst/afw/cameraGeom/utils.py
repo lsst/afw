@@ -1042,10 +1042,10 @@ of the detectors.  If it's None then no image is created or displayed (useful if
         #
         # If we're using multiprocessing we need to create the jobs now
         #
+        makeImageForCcdArgs = []        # list of arguments to be passed to calls to makeImageForCcd
         if nJob:
             verbose = True
             pool = multiprocessing.Pool(nJob)
-            makeImageForCcdArgs = []            # list of arguments to be passed to the Pool
         #
         # We'll do this in two stages;  first calculate the ccdImage (where the data will go)
         # and then the dataImage (the data), then set one from the other.
@@ -1060,7 +1060,7 @@ of the detectors.  If it's None then no image is created or displayed (useful if
 
                 serialNo = ccd.getId().getSerial()
 
-                ccdImages[serialNo] =cameraImage.Factory(cameraImage, ccdBboxes[serialNo], afwImage.PARENT)
+                ccdImages[serialNo] = cameraImage.Factory(cameraImage, ccdBboxes[serialNo], afwImage.PARENT)
                 #
                 # Now figure out how to calculate the dataImage
                 #
