@@ -1078,6 +1078,11 @@ of the detectors.  If it's None then no image is created or displayed (useful if
                 dataImages[serialNo] = makeImageFromCcd(*args, **kwargs)
         else:
             for serialNo, dataImage in pool.map(MakeImageFromCcdWorker(verbose), makeImageForCcdArgs):
+                if imageFactory == afwImage.MaskedImageF:
+                    if dataImage.getMask().getWidth() != dataImage.getWidth(): # bug #3035 in pickle code
+                        dataImage = imageFactory(dataImage.getImage(),
+                                                 type(dataImage.getMask())(dataImage.getDimensions()))
+
                 dataImages[serialNo] = dataImage
 
             pool.close()
