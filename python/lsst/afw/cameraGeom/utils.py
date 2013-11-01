@@ -167,9 +167,15 @@ class ButlerImage(GetCcdImage):
 
         im = None
         if self.butler is not None:
+            ccdNo = ccd.getId().getSerial()
             try:
-                im = self.butler.get(self.type, ccd=ccd.getId().getSerial(),
-                                     **self.kwargs).getMaskedImage()
+                im = self.butler.get(self.type, ccd=ccdNo, immediate=True, **self.kwargs)
+                try:
+                    ccd = cameraGeom.cast_Ccd(im.getDetector()) # ccd may be a PyCcd
+                except Exception, e:
+                    print "Failed to update Ccd:", e
+                im = im.getMaskedImage()
+
                 if not re.search(r"MaskedImage", str(imageFactory)):
                     im = im.getImage()
             except Exception, e:
