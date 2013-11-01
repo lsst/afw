@@ -27,6 +27,7 @@ Support for cameraGeom
 """
 
 import math
+import multiprocessing
 import os
 import re
 import sys
@@ -687,8 +688,8 @@ def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
             
     return ccdImage
 
-def trimExposure(ccdImage, ccd=None, subtractBias=False, modifyRawData=False):
-    """Trim a raw CCD Exposure, returning a new (trimmed) Exposure
+def trimExposure(ccdImage, ccd=None, subtractBias=False, rotate=False, modifyRawData=False):
+    """Trim a raw CCD Exposure, returning a new (trimmed, possibly rotated) Exposure
 
 If ccd isn't provided it'll be found in the input exposure, ccdImage
 If subtractBias is true, subtract the bias levels;  if modifyRawData is true, also subtract it from
@@ -698,7 +699,12 @@ the input exposure.
     if not ccd:
         ccd = cameraGeom.cast_Ccd(ccdImage.getDetector())
     
-    dim = ccd.getAllPixelsNoRotation(True).getDimensions()
+    if rotate:
+        nQuarter = ccd.getOrientation().getNQuarter()
+        if nQuarter != 0:
+            ccdImage.setMaskedImage(afwMath.rotateImageBy90(ccdImage.getMaskedImage(), nQuarter))
+
+    dim = ccd.getAllPixels(True).getDimensions()
     trimmedImage = ccdImage.Factory(dim)
 
     for a in ccd:
@@ -930,7 +936,68 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
 
     return cameraImage
 
-def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF,
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class PyCcd(object):
+    """A picklable partial implementation of cameraGeom.Ccd"""
+    def __init__(self, ccd):
+        self._id = PyCcdId(ccd.getId().getSerial(), ccd.getId().getName())
+        self._allPixels = ccd.getAllPixels()
+        self._orientation = PyCcdOrientation(ccd.getOrientation())
+
+    def getId(self):
+        return self._id
+
+    def getAllPixels(self, isTrimmed=False):
+        return self._allPixels
+
+    def getOrientation(self):
+        return self._orientation        
+
+class PyCcdId(object):
+    """A picklable partial implementation of cameraGeom.Id"""
+    def __init__(self, serial, name):
+        self.serial = serial
+        self.name = name
+
+    def getName(self):
+        return self.name
+
+    def getSerial(self):
+        return self.serial
+
+class PyCcdOrientation(object):
+    """A picklable partial implementation of cameraGeom.Orientation"""
+    def __init__(self, orientation):
+        self._nQuarter = orientation.getNQuarter()
+
+    def getNQuarter(self):
+        return self._nQuarter
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MakeImageFromCcdWorker(object):
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
+    def __call__(self, payload):
+        serialNo, args, kwargs = payload
+
+        try:
+            img = makeImageFromCcd(*args, **kwargs)
+        except Exception, e:
+            if self.verbose:
+                print >> sys.stderr, e
+                img = None
+
+        if self.verbose:
+            print "Returning image for CCD%03d [PID %d]" % (serialNo, os.getpid())
+
+        return serialNo, img
+
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF, nJob=None,
                 bin=1, border=5, frame=None, overlay=True, title="", ctype=ds9.GREEN, names=False):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
 
@@ -966,43 +1033,81 @@ of the detectors.  If it's None then no image is created or displayed (useful if
     cameraImage.set(imageSource.background if imageSource else np.nan)
 
     if cameraImage is not None:         # includes ""
+        #
+        # If we're using multiprocessing we need to create the jobs now
+        #
+        if nJob:
+            verbose = True
+            pool = multiprocessing.Pool(nJob)
+            makeImageForCcdArgs = []            # list of arguments to be passed to the Pool
+        #
+        # We'll do this in two stages;  first calculate the ccdImage (where the data will go)
+        # and then the dataImage (the data), then set one from the other.
+        #
+        # The split is to allow us to parallelise the calculation of the dataImages
+        #
+        ccdImages = {}
         for raft in camera:
             raft = cameraGeom.cast_Raft(raft)
-            for ccd in raft:
+            for i, ccd in enumerate(raft):
                 ccd = cameraGeom.cast_Ccd(ccd)
 
                 serialNo = ccd.getId().getSerial()
-                ccdImage = cameraImage.Factory(cameraImage, ccdBboxes[serialNo], afwImage.PARENT)
-                dataImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, isTrimmed=True, bin=bin)
 
-                if ccdImage.getDimensions() == dataImage.getDimensions():
-                    ccdImage <<= dataImage
-                else:
-                    delta = ccdImage.getDimensions() - dataImage.getDimensions()
+                ccdImages[serialNo] =cameraImage.Factory(cameraImage, ccdBboxes[serialNo], afwImage.PARENT)
+                #
+                # Now figure out how to calculate the dataImage
+                #
+                args = (PyCcd(ccd),     # we can't pickle a Ccd for multiprocessing
+                        imageSource)
+                kwargs = dict(imageFactory=imageFactory, isTrimmed=True, bin=bin)
 
-                    if imageSource:
-                        if imageSource.gravity == "N":
-                            x0, y0 = delta[0]//2, delta[1]
-                        elif imageSource.gravity == "S":
-                            x0, y0 = delta[0]//2, 0
-                        elif imageSource.gravity == "E":
-                            x0, y0 = delta[0], delta[1]//2
-                        elif imageSource.gravity == "W":
-                            x0, y0 = 0, delta[1]//2
-                        else:
-                            x0, y0 = delta[0]//2, delta[1]//2
+                makeImageForCcdArgs.append((serialNo, args, kwargs))
+        #
+        # Calculate the dataimages, either in series or parallel
+        #
+        dataImages = {}
+        if not nJob:
+            for serialNo, args, kwargs in makeImageForCcdArgs:
+                dataImages[serialNo] = makeImageFromCcd(*args, **kwargs)
+        else:
+            for serialNo, dataImage in pool.map(MakeImageFromCcdWorker(verbose), makeImageForCcdArgs):
+                dataImages[serialNo] = dataImage
+
+            pool.close()
+            pool.join()
+
+        for serialNo in ccdImages.keys():
+            dataImage, ccdImage = dataImages[serialNo], ccdImages[serialNo]
+
+            if ccdImage.getDimensions() == dataImage.getDimensions():
+                ccdImage <<= dataImage
+            else:
+                delta = ccdImage.getDimensions() - dataImage.getDimensions()
+
+                if imageSource:
+                    if imageSource.gravity == "N":
+                        x0, y0 = delta[0]//2, delta[1]
+                    elif imageSource.gravity == "S":
+                        x0, y0 = delta[0]//2, 0
+                    elif imageSource.gravity == "E":
+                        x0, y0 = delta[0], delta[1]//2
+                    elif imageSource.gravity == "W":
+                        x0, y0 = 0, delta[1]//2
                     else:
-                        assert bin > 1
-                        x0, y0 = 0, 0       # rounding error in binning
+                        x0, y0 = delta[0]//2, delta[1]//2
+                else:
+                    assert bin > 1
+                    x0, y0 = 0, 0       # rounding error in binning
 
-                    try:
-                        subCcdImage = ccdImage.Factory(ccdImage, afwGeom.BoxI(afwGeom.PointI(x0, y0),
-                                                                              dataImage.getDimensions()))
-                        subCcdImage <<= dataImage
-                        del subCcdImage
-                    except Exception, e:
-                        print "RHL", e
-                        import pdb; pdb.set_trace() 
+                try:
+                    subCcdImage = ccdImage.Factory(ccdImage, afwGeom.BoxI(afwGeom.PointI(x0, y0),
+                                                                          dataImage.getDimensions()))
+                    subCcdImage <<= dataImage
+                    del subCcdImage
+                except Exception, e:
+                    print "RHL", e
+                    import pdb; pdb.set_trace() 
     #
     # We've got the image, add a WCS
     #
