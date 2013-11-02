@@ -43,7 +43,7 @@
 %template(makeMaskedImage) lsst::afw::image::makeMaskedImage<PIXEL_TYPES>;
 %newobject makeMaskedImage;
 %lsst_persistable(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
-%boost_picklable(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
+%fits_reduce(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
 
 %extend lsst::afw::image::MaskedImage<PIXEL_TYPES> {
     %pythoncode {
