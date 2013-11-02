@@ -271,6 +271,24 @@ public:
      */
     void writeFits(fits::Fits & fitsfile) const;
 
+    /**
+     *  @brief Read an Exposure from a regular FITS file.
+     *
+     *  @param[in] filename    Name of the file to read.
+     */
+    static Exposure readFits(std::string const & filename) {
+        return Exposure<ImageT, MaskT, VarianceT>(filename);
+    }
+
+    /**
+     *  @brief Read an Exposure from a FITS RAM file.
+     *
+     *  @param[in] manager     Object that manages the memory to be read.
+     */
+    static Exposure readFits(fits::MemFileManager & manager) {
+        return Exposure<ImageT, MaskT, VarianceT>(manager);
+    }
+
 private:
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::ExposureFormatter<ImageT, MaskT, VarianceT>)
 

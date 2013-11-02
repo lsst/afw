@@ -284,6 +284,28 @@ public:
         CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)()
     ) const;
 
+    /**
+     *  @brief Read a Mask from a regular FITS file.
+     *
+     *  @param[in] filename    Name of the file to read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     */
+    static Mask readFits(std::string const & filename, int hdu=0) {
+        return Mask<MaskPixelT>(filename, hdu);
+    }
+
+    /**
+     *  @brief Read a Mask from a FITS RAM file.
+     *
+     *  @param[in] manager     Object that manages the memory to be read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     */
+    static Mask readFits(fits::MemFileManager & manager, int hdu=0) {
+        return Mask<MaskPixelT>(manager, hdu);
+    }
+
     /// Interpret a mask value as a comma-separated list of mask plane names
     static std::string interpret(MaskPixelT value);
     std::string getAsString(int x, int y) { return interpret((*this)(x, y)); }
