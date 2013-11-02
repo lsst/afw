@@ -284,6 +284,28 @@ public:
         CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)()
     ) const;
 
+    /**
+     *  @brief Read a mask from a regular file.
+     *
+     *  @param[in] filename    Name of the file to read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     */
+    static PTR(Mask<MaskPixelT>) readFits(std::string const & filename, int hdu=0) {
+        return boost::shared_ptr<Mask<MaskPixelT> >(new Mask<MaskPixelT>(filename, hdu));
+    }
+
+    /**
+     *  @brief Read a mask from a RAM file.
+     *
+     *  @param[in] manager     Object that manages the memory to be read.
+     *  @param[in] hdu         Number of the "header-data unit" to read (where 1 is the Primary HDU).
+     *                         The default value of 0 is interpreted as "the first HDU with NAXIS != 0".
+     */
+    static PTR(Mask<MaskPixelT>) readFits(fits::MemFileManager & manager, int hdu=0) {
+        return boost::shared_ptr<Mask<MaskPixelT> >(new Mask<MaskPixelT>(manager, hdu));
+    }
+
     // Mask Plane ops
     
     void clearAllMaskPlanes();

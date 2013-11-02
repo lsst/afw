@@ -42,6 +42,7 @@ import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.coord
+import lsst.afw.fits
 
 try:
     type(display)
@@ -203,7 +204,7 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertRaises(Exception, lsst.afw.table.BaseCatalog.readFits, "nonexistentfile.fits")
 
     def testMemoryFits(self):
-        mem = lsst.afw.table.MemFileManager()
+        mem = lsst.afw.fits.MemFileManager()
         self._testBaseFits(mem)
 
     def testColumnView(self):

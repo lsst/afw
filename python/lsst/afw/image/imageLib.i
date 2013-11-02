@@ -65,7 +65,7 @@ Basic routines to talk to lsst::afw::image classes
 #pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
-%include "../boost_picklable.i"
+%include "lsst/afw/fits/fits_reduce.i"
 
 %init %{
     import_array();
@@ -303,7 +303,7 @@ namespace boost {
 %template(Exposure##TYPE) lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
 %template(makeExposure) lsst::afw::image::makeExposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>;
 %lsst_persistable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
-%boost_picklable(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
+%fits_reduce(lsst::afw::image::Exposure<PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>);
 
 %supportSlicing(lsst::afw::image::Exposure,
                 PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
