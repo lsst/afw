@@ -344,6 +344,20 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(im.get(2,  2), 0x2)
         self.assertEqual(im.get(0,  0), 0x8)
 
+    def testInterpret(self):
+        """Interpretation of Mask values"""
+        planes = self.Mask().getMaskPlaneDict()
+        im = self.Mask(len(planes), 1)
+
+        allBits = 0
+        for i, p in enumerate(planes):
+            bitmask = self.Mask.getPlaneBitMask(p)
+            allBits |= bitmask
+            self.assertEqual(im.interpret(bitmask), p)
+            im.getArray()[0,i] = bitmask
+            self.assertEqual(im.getAsString(i,0), p)
+        self.assertEqual(self.Mask.interpret(allBits), ",".join(planes.keys()))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class OldMaskTestCase(unittest.TestCase):

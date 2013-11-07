@@ -680,6 +680,22 @@ namespace {
 }
 
 template<typename MaskPixelT>
+std::string Mask<MaskPixelT>::interpret(MaskPixelT value)
+{
+    std::string result = "";
+    MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
+    for (MaskPlaneDict::const_iterator iter = mpd.begin(); iter != mpd.end(); ++iter) {
+        if (value & getBitMask(iter->second)) {
+            if (result.size() > 0) {
+                result += ",";
+            }
+            result += iter->first;
+        }
+    }
+    return result;
+}
+
+template<typename MaskPixelT>
 int Mask<MaskPixelT>::addMaskPlane(const std::string& name)
 {
     int id = getMaskPlaneNoThrow(name); // see if the plane is already available
