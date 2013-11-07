@@ -98,7 +98,7 @@
 }
 %defineClone(NAME##TYPE, lsst::afw::image::Mask, PIXEL_TYPE);
 %supportSlicing(lsst::afw::image::Mask, PIXEL_TYPE);
-%fits_reduce(lsst::afw::image::Mask<PIXEL_TYPE>)
+%fits_reduce(lsst::afw::image::Mask<PIXEL_TYPE>);
 %enddef
 
 /************************************************************************************************************/

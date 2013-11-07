@@ -47,7 +47,6 @@
 %template(Decorated##NAME##TYPE) lsst::afw::image::DecoratedImage<PIXEL_TYPE>;
 %lsst_persistable(lsst::afw::image::Image<PIXEL_TYPE>);
 %lsst_persistable(lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
-%fits_reduce(lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
 
 %template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> > >;
 %template(NAME##Pca##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::Image<PIXEL_TYPE> >;
@@ -128,7 +127,7 @@
 }
 %defineClone(NAME##TYPE, lsst::afw::image::Image, PIXEL_TYPE);
 %supportSlicing(lsst::afw::image::Image, PIXEL_TYPE);
-%fits_reduce(lsst::afw::image::Image<PIXEL_TYPE>)
+%fits_reduce(lsst::afw::image::Image<PIXEL_TYPE>);
 %enddef
 
 /************************************************************************************************************/

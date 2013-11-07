@@ -29,6 +29,7 @@ import pickle
 import numpy
 
 import lsst.utils.tests as utilsTests
+import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 
@@ -58,8 +59,7 @@ class ImagePickleTestCase(unittest.TestCase):
         yy, xx = numpy.ogrid[0:self.ySize, 0:self.xSize] # NB: numpy operates 'backwards'
         return self.xSize*yy + xx
 
-    def checkImages(self, original):
-        image = pickle.loads(pickle.dumps(original))
+    def assertImagesEqual(self, image, original):
         self.assertEqual(image.__class__.__name__, original.__class__.__name__)
         self.assertEqual(image.getHeight(), original.getHeight())
         self.assertEqual(image.getWidth(), original.getWidth())
@@ -68,6 +68,15 @@ class ImagePickleTestCase(unittest.TestCase):
         for x in xrange(0, original.getWidth()):
             for y in xrange(0, image.getHeight()):
                 self.assertEqual(image.get(x, y), original.get(x, y))
+
+    def checkImages(self, original):
+        image = pickle.loads(pickle.dumps(original))
+        self.assertImagesEqual(image, original)
+
+    def checkExposures(self, original):
+        image = pickle.loads(pickle.dumps(original))
+        self.assertImagesEqual(image.getMaskedImage(), original.getMaskedImage())
+        self.assertEqual(image.getWcs(), original.getWcs())
 
     def testImage(self):
         for Image in (afwImage.ImageU,
@@ -80,11 +89,16 @@ class ImagePickleTestCase(unittest.TestCase):
             self.checkImages(image)
 
     def testMaskedImage(self):
+        scale = (1.0*afwGeom.arcseconds).asDegrees()
+        wcs = afwImage.makeWcs(afwCoord.Coord(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
+                               afwGeom.Point2D(0.0, 0.0), scale, 0.0, 0.0, scale)
         for MaskedImage in (afwImage.MaskedImageF,
                             afwImage.MaskedImageD,
                         ):
             image = self.createMaskedImage(MaskedImage)
             self.checkImages(image)
+            exposure = afwImage.makeExposure(image, wcs)
+            self.checkExposures(exposure)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

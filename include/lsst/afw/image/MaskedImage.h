@@ -847,23 +847,21 @@ public:
     ) const;
 
     /**
-     *  @brief Read a FITS image from a regular file.
+     *  @brief Read a MaskedImage from a regular FITS file.
      *
      *  @param[in] filename    Name of the file to read.
      */
-    static PTR(MaskedImage) readFits(std::string const & filename) {
-        return boost::shared_ptr<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> >(
-            new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(filename));
+    static MaskedImage readFits(std::string const & filename) {
+        return MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(filename);
     }
 
     /**
-     *  @brief Read a FITS image from a RAM file.
+     *  @brief Read a MaskedImage from a FITS RAM file.
      *
      *  @param[in] manager     Object that manages the memory to be read.
      */
-    static PTR(MaskedImage) readFits(fits::MemFileManager & manager) {
-        return boost::shared_ptr<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> >(
-            new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(manager));
+    static MaskedImage readFits(fits::MemFileManager & manager) {
+        return MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(manager);
     }
 
     // Getters
