@@ -12,6 +12,8 @@ Python interface to lsst::afw::fits exception classes
 #include "lsst/pex/exceptions.h"
 %}
 
+%include "cdata.i"
+
 %include "lsst/p_lsstSwig.i"
 
 %lsst_exceptions();
@@ -25,3 +27,14 @@ Python interface to lsst::afw::fits exception classes
 
 %types(lsst::afw::fits::FitsError *);
 %types(lsst::afw::fits::FitsTypeError *);
+
+namespace lsst { namespace afw { namespace fits {
+
+struct MemFileManager {
+     MemFileManager();
+     MemFileManager(std::size_t len);
+     void* getData() const;
+     std::size_t getLength() const;
+};
+
+}}}
