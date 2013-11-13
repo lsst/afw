@@ -101,6 +101,9 @@
     lsst::afw::table::Key<U> __getitem__(int n) const {
         return (*self)[n];
     }
+    lsst::afw::table::Key< lsst::afw::table::Array< U > > slice(int begin, int end) const {
+        return self->slice(begin, end);
+    }
     %pythoncode %{
         subfields = property(lambda self: tuple(range(self.getSize())))
         subkeys = property(lambda self: tuple(self[i] for i in range(self.getSize())))
