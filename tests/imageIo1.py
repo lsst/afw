@@ -25,6 +25,7 @@
 """
 Test cases to test image I/O
 """
+import lsst.daf.base as dafBase
 import os
 import os.path
 

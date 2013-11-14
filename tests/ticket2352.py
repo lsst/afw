@@ -22,6 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+import lsst.daf.base as dafBase
 import os, os.path
 import unittest
 import pickle
