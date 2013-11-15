@@ -317,16 +317,10 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code 
     //conforms to Calabretta & Greisen 2002 \S 3.1
     if (!(access.toRead()->exists("RADESYS") || access.toRead()->exists("RADESYSa"))) {
-
         // If RADECSYS exists, use that (counter to Calabretta & Greisen 2002 \S 3.1, but commonly used).
         // If equinox exist and < 1984, use FK4. If >= 1984, use FK5
         if (access.toRead()->exists("RADECSYS")) {
-            std::string radecsys = access.toRead()->getAsString("RADECSYS");
-            size_t space = radecsys.find(" ");
-            if (space != std::string::npos) {
-                radecsys.erase(space);
-            }
-            strncpy(_wcsInfo->radesys, radecsys.c_str(), STRLEN);
+            strncpy(_wcsInfo->radesys, access.toRead()->getAsString("RADECSYS").c_str(), STRLEN);
         } else if (access.toRead()->exists("EQUINOX") || access.toRead()->exists("EQUINOXa")) {
             std::string const EQUINOX = access.toRead()->exists("EQUINOX") ? "EQUINOX" : "EQUINOXa";
             double const equinox = access.toRead()->getAsDouble(EQUINOX);
@@ -338,6 +332,13 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         } else {
             //If Equinox doesn't exist, default to ICRS
             strncpy(_wcsInfo->radesys, "ICRS", STRLEN);
+        }
+    }
+    // strip trailing whitespace
+    {
+        char *space = strchr(_wcsInfo->radesys, ' ');
+        if (space != NULL) {
+            *space = '\0';
         }
     }
     //
