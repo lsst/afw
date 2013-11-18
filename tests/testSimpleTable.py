@@ -491,6 +491,48 @@ class SimpleTableTestCase(unittest.TestCase):
                                              cat.writeFits, filename)
         os.remove(filename)
 
+    def testTicket3056(self):
+        """Test sorting and sort-based searches of Catalogs"""
+        schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
+        ki = schema.addField("i", type=int, doc="doc for i")
+        kl = schema.addField("l", type=numpy.int64, doc="doc for l")
+        kf = schema.addField("f", type=float, doc="doc for f")
+        cat = lsst.afw.table.SimpleCatalog(schema)
+        for j in range(50, 0, -1):
+            record = cat.addNew()
+            record.set(ki, j//10)
+            record.set(kl, j)
+            record.set(kf, numpy.random.randn())
+        self.assertFalse(cat.isSorted(ki))
+        self.assertFalse(cat.isSorted(kl))
+        # sort by unique int64 field, try unique lookups
+        cat.sort(kl)
+        self.assertTrue(cat.isSorted(kl))
+        r10 = cat.find(10, kl)
+        self.assertEqual(r10.get(kl), 10)
+        # sort by probably-unique float field, try unique and range lookups
+        cat.sort(kf)
+        self.assertTrue(cat.isSorted(kf))
+        r10 = cat.find(10, kf)
+        self.assertTrue(r10 is None or r10.get(kf) == 10.0) # latter case virtually impossible
+        i0 = cat.lower_bound(-0.5, kf)
+        i1 = cat.upper_bound(0.5, kf)
+        for i in range(i0, i1):
+            self.assertGreaterEqual(cat[i].get(kf), -0.5)
+            self.assertLess(cat[i].get(kf), 0.5)
+        for r in cat[cat.between(-0.5, 0.5, kf)]:
+            self.assertGreaterEqual(r.get(kf), -0.5)
+            self.assertLess(r.get(kf), 0.5)
+        # sort by nonunique int32 field, try range lookups
+        cat.sort(ki)
+        self.assertTrue(cat.isSorted(ki))
+        s = cat.equal_range(3, ki)
+        self.assertTrue(cat[s].isSorted(kf))  # test for stable sort
+        for r in cat[s]:
+            self.assertEqual(r.get(ki), 3)
+        self.assertEqual(s.start, cat.lower_bound(3, ki))
+        self.assertEqual(s.stop, cat.upper_bound(3, ki))
+
     def testRename(self):
         """Test field-renaming functionality in Field, SchemaMapper"""
         field1i = lsst.afw.table.Field[int]("i1", "doc for i", "units for i")
