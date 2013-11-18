@@ -349,6 +349,26 @@ class SourceTableTestCase(unittest.TestCase):
         lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
                                              lsst.afw.table.IdFactory.makeSource, 0x1FFFFFFFF, reserved)
 
+    def testFamilies(self):
+        self.catalog.sort()
+        parents = self.catalog.getChildren(0)
+        self.assertEqual(list(parents), list(self.catalog))
+        parentKey = lsst.afw.table.SourceTable.getParentKey()
+        for parent in parents:
+            self.assertEqual(parent.get(parentKey), 0)
+            for i in range(10):
+                child = self.catalog.addNew()
+                self.fillRecord(child)
+                child.set(parentKey, parent.getId())
+        for parent in parents:
+            children, ids = self.catalog.getChildren(parent.getId(),
+                                                     [record.getId() for record in self.catalog])
+            self.assertEqual(len(children), 10)
+            self.assertEqual(len(children), len(ids))
+            for child, id in zip(children, ids):
+                self.assertEqual(child.getParent(), parent.getId())
+                self.assertEqual(child.getId(), id)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
