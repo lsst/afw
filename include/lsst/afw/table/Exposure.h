@@ -256,11 +256,6 @@ public:
      *
      *  The iterator must dereference to a record reference or const reference rather than a pointer,
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
-     *
-     *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
-     *  is true, table->preallocate will be used to ensure that the resulting records are
-     *  contiguous in memory and can be used with ColumnView.  To ensure this is the case for
-     *  other iterator types, the user must preallocate the table manually.
      */
     template <typename InputIterator>
     ExposureCatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
