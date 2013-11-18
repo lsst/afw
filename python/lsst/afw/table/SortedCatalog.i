@@ -28,6 +28,9 @@ public:
     static SortedCatalogT readFits(std::string const & filename, int hdu=0, int flags=0);
     static SortedCatalogT readFits(fits::MemFileManager & manager, int hdu=0, int flags=0);
 
+    using CatalogT<RecordT>::isSorted;
+    using CatalogT<RecordT>::sort;
+
     bool isSorted() const;
     void sort();
 
@@ -44,6 +47,37 @@ public:
         }
         return i;
     }
+
+    %feature("shadow") find %{
+    def find(self, value, key=None):
+        """If key is None, return the Record with the given ID.
+        Otherwise, return the Record for which record.get(key) == value.
+        """
+        if key is None:
+            return $action(self, value)
+        else:
+            return type(self).__base__.find(self, value, key)
+    %}
+
+    %feature("shadow") sort %{
+    def sort(self, key=None):
+        """Sort the catalog (stable) by the given Key, or by ID if key is None.
+        """
+        if key is None:
+            $action(self)
+        else:
+            type(self).__base__.sort(self, key)
+    %}
+
+    %feature("shadow") isSorted %{
+    def isSorted(self, key=None):
+        """Return True if self.sort(key) would be a no-op.
+        """
+        if key is None:
+            return $action(self)
+        else:
+            return type(self).__base__.isSorted(self, key)
+    %}
 }
 
 }}} // namespace lsst::afw::table
