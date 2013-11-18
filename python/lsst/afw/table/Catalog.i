@@ -311,28 +311,28 @@ public:
 
 namespace lsst { namespace afw { namespace table {
 
-template <typename RecordT, typename T>
-PTR(RecordT) _Catalog_find(CatalogT<RecordT> const & catalog, T value, Key<T> const & key) {
-    typename CatalogT<RecordT>::const_iterator iter = catalog.find(value, key);
+template <typename RecordT, typename Catalog, typename T>
+PTR(RecordT) _Catalog_find(Catalog const & catalog, T value, Key<T> const & key) {
+    typename Catalog::const_iterator iter = catalog.find(value, key);
     if (iter == catalog.end()) {
         return PTR(RecordT)();
     }
     return iter;  // n.b. CatalogIterator is explicitly convertible to shared_ptr
 }
 
-template <typename RecordT, typename T>
-int _Catalog_lower_bound(CatalogT<RecordT> const & catalog, T value, Key<T> const & key) {
+template <typename Catalog, typename T>
+int _Catalog_lower_bound(Catalog const & catalog, T value, Key<T> const & key) {
     return catalog.lower_bound(value, key) - catalog.begin();
 }
 
-template <typename RecordT, typename T>
-int _Catalog_upper_bound(CatalogT<RecordT> const & catalog, T value, Key<T> const & key) {
+template <typename Catalog, typename T>
+int _Catalog_upper_bound(Catalog const & catalog, T value, Key<T> const & key) {
     return catalog.upper_bound(value, key) - catalog.begin();
 }
 
-template <typename RecordT, typename T>
-std::pair<int,int> _Catalog_equal_range(CatalogT<RecordT> const & catalog, T value, Key<T> const & key) {
-    std::pair<typename CatalogT<RecordT>::const_iterator,typename CatalogT<RecordT>::const_iterator> p
+template <typename Catalog, typename T>
+std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T value, Key<T> const & key) {
+    std::pair<typename Catalog::const_iterator,typename Catalog::const_iterator> p
         = catalog.equal_range(value, key);
     return std::pair<int,int>(p.first - catalog.begin(), p.second - catalog.begin());
 }
@@ -341,11 +341,11 @@ std::pair<int,int> _Catalog_equal_range(CatalogT<RecordT> const & catalog, T val
 
 %}
 
-%define %instantiateCatalogSearchMethods(PREFIX, TYPE)
-%template(_Catalog_find) lsst::afw::table::_Catalog_find< PREFIX ## Record, TYPE >;
-%template(_Catalog_lower_bound) lsst::afw::table::_Catalog_lower_bound< PREFIX ## Record, TYPE >;
-%template(_Catalog_upper_bound) lsst::afw::table::_Catalog_upper_bound< PREFIX ## Record, TYPE >;
-%template(_Catalog_equal_range) lsst::afw::table::_Catalog_equal_range< PREFIX ## Record, TYPE >;
+%define %instantiateCatalogSearchMethods(PREFIX, TMPL, TYPE)
+%template(_Catalog_find) lsst::afw::table::_Catalog_find< PREFIX ## Record, TMPL< PREFIX ## Record >, TYPE >;
+%template(_Catalog_lower_bound) lsst::afw::table::_Catalog_lower_bound< TMPL< PREFIX ## Record >, TYPE >;
+%template(_Catalog_upper_bound) lsst::afw::table::_Catalog_upper_bound< TMPL< PREFIX ## Record >, TYPE >;
+%template(_Catalog_equal_range) lsst::afw::table::_Catalog_equal_range< TMPL< PREFIX ## Record >, TYPE >;
 %enddef
 
 %define %instantiateCatalogSortMethods(TYPE)
@@ -362,11 +362,11 @@ std::pair<int,int> _Catalog_equal_range(CatalogT<RecordT> const & catalog, T val
 // Macro that should be used to instantiate a Catalog type.
 %define %declareCatalog(TMPL, PREFIX)
 %pythondynamic TMPL< PREFIX ## Record >;
-%instantiateCatalogSearchMethods(PREFIX, boost::int32_t)
-%instantiateCatalogSearchMethods(PREFIX, boost::int64_t)
-%instantiateCatalogSearchMethods(PREFIX, float)
-%instantiateCatalogSearchMethods(PREFIX, double)
-%instantiateCatalogSearchMethods(PREFIX, lsst::afw::geom::Angle)
+%instantiateCatalogSearchMethods(PREFIX, TMPL, boost::int32_t)
+%instantiateCatalogSearchMethods(PREFIX, TMPL, boost::int64_t)
+%instantiateCatalogSearchMethods(PREFIX, TMPL, float)
+%instantiateCatalogSearchMethods(PREFIX, TMPL, double)
+%instantiateCatalogSearchMethods(PREFIX, TMPL, lsst::afw::geom::Angle)
 %template (PREFIX ## Catalog) TMPL< PREFIX ## Record >;
 typedef TMPL< PREFIX ## Record > PREFIX ## Catalog;
 %extend TMPL< PREFIX ## Record > {
