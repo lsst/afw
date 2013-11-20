@@ -494,6 +494,31 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(schema1.find(k1a).field.getUnits(), schema3.find(k3a).field.getUnits())
         self.assertEqual(schema1.find(k1a).field.getSize(), schema3.find(k3a).field.getSize())
 
+    def testTicket3066(self):
+        """Test the doReplace option on Schema.addField
+        """
+        schema = lsst.afw.table.Schema()
+        k1a = schema.addField("f1", doc="f1a", type="I")
+        k2a = schema.addField("f2", doc="f2a", type="Flag")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f1", doc="f1b", type="I")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f2", doc="f2b", type="Flag")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f1", doc="f1b", type="F")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f2", doc="f2b", type="F")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f1", doc="f1b", type="F", doReplace=True)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f2", doc="f2b", type="F", doReplace=True)
+        k1b = schema.addField("f1", doc="f1b", type="I", doReplace=True)
+        self.assertEqual(k1a, k1b)
+        self.assertEqual(schema.find(k1a).field.getDoc(), "f1b")
+        k2b = schema.addField("f2", doc="f2b", type="Flag", doReplace=True)
+        self.assertEqual(k2a, k2b)
+        self.assertEqual(schema.find(k2a).field.getDoc(), "f2b")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
