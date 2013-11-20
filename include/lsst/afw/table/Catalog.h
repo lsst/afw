@@ -842,6 +842,57 @@ CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> co
     return std::make_pair(i.first.base(), i.second.base());
 }
 
+//@{
+/**
+ *  @internal
+ *
+ *  This block is just a big, ugly workaround for a Swig deficiency: apparently we can't add
+ *  templated methods to an %extend block (or at least we can't do that if the class is also templated),
+ *  which we'd need to do to wrap these because they return iterators in C++ and other things in
+ *  Python.  Instead we'll add doubly-templated free functions, and call them from a %pythoncode
+ *  block in an %extend block in the .i file.
+ *
+ *  And we can't put these in an %inline block in the .i file because then the definitions
+ *  wouldn't be available to downstream instantiations with catalog/record types defined in
+ *  other packages.
+ *
+ *  But here's the best part: try putting these in 'namespace detail', and detectionLib_wrap.cc
+ *  fails to build, because it causes Swig to starts putting "lsst::afw::table::lsst::afw::detection"
+ *  in front of Footprint-related things!  I have no idea what unholy combination of chewing gum
+ *  and rubber bands is holding this together, but I don't want to touch it.
+ *
+ *  Oh, how I hate Swig.
+ */
+
+template <typename RecordT, typename Catalog, typename T>
+PTR(RecordT) _Catalog_find(Catalog const & catalog, T value, Key<T> const & key) {
+    typename Catalog::const_iterator iter = catalog.find(value, key);
+    if (iter == catalog.end()) {
+        return PTR(RecordT)();
+    }
+    return iter;  // n.b. CatalogIterator is explicitly convertible to shared_ptr
+}
+
+template <typename Catalog, typename T>
+int _Catalog_lower_bound(Catalog const & catalog, T value, Key<T> const & key) {
+    return catalog.lower_bound(value, key) - catalog.begin();
+}
+
+template <typename Catalog, typename T>
+int _Catalog_upper_bound(Catalog const & catalog, T value, Key<T> const & key) {
+    return catalog.upper_bound(value, key) - catalog.begin();
+}
+
+template <typename Catalog, typename T>
+std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T value, Key<T> const & key) {
+    std::pair<typename Catalog::const_iterator,typename Catalog::const_iterator> p
+        = catalog.equal_range(value, key);
+    return std::pair<int,int>(p.first - catalog.begin(), p.second - catalog.begin());
+}
+
+//@}
+
+
 }}} // namespace lsst::afw::table
 
 #endif // !AFW_TABLE_Catalog_h_INCLUDED
