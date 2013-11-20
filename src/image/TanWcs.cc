@@ -37,6 +37,7 @@
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/pex/logging/Log.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -90,6 +91,20 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
     //two of which are valid.. Both have distortion terms or both don't.
     int nSip = (((ctype1.substr(8, 4) == "-SIP") ? 1 : 0) +
 		((ctype2.substr(8, 4) == "-SIP") ? 1 : 0));
+
+
+    bool isTpv = false;
+    {
+        std::string key = "TPV_WCS";
+        if (fitsMetadata->exists(key) && fitsMetadata->getAsBool(key)) {
+            isTpv = true;
+        }
+    }
+
+    if (isTpv) {
+        pex::logging::Log log = pex::logging::Log(pex::logging::Log::getDefaultLog(), "lsst.afw.wcs");
+        log.log(-1, "Ignoring TPV terms");
+    }
 
     switch (nSip) {
         case 0:

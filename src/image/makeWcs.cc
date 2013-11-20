@@ -30,8 +30,6 @@
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
 
-using namespace std;
-
 /**
  * Create a Wcs object from a fits header.
  * It examines the header and determines the 
@@ -50,9 +48,16 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
         return PTR(Wcs)();
     }
 
-    afwImg::Wcs::Ptr wcs;
+    afwImg::Wcs::Ptr wcs;               // we can't use make_shared as ctor is private
     if (ctype1.substr(5, 3) == "TAN") {
-        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata)); // can't use make_shared as ctor is private
+        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata));
+    } else if (ctype1.substr(5, 3) == "TPV") {
+        PTR(daf::base::PropertySet) _metadata = metadata->deepCopy();
+        _metadata->set<std::string>("CTYPE1", "RA---TAN");
+        _metadata->set<std::string>("CTYPE2", "DEC--TAN");
+        _metadata->set<bool>("TPV_WCS", true);
+
+        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(_metadata));
     } else {
         wcs = afwImg::Wcs::Ptr(new afwImg::Wcs(metadata));
     }
