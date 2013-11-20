@@ -123,24 +123,27 @@ public:
      *  The offsets of fields are determined by the order they are added, but
      *  may be not contiguous (the Schema may add padding to align fields, and how
      *  much padding is considered an implementation detail).
+     *
+     *  If doReplace is true and the field exists, it will be replaced instead of
+     *  throwing an exception.
      */
     template <typename T>
-    Key<T> addField(Field<T> const & field);    
+    Key<T> addField(Field<T> const & field, bool doReplace=false);
 
     /**
      *  @brief Add a new field to the Schema, and return the associated Key.
      *
      *  This is simply a convenience wrapper, equivalent to:
      *  @code
-     *  addField(Field<T>(name, doc, units, base))
+     *  addField(Field<T>(name, doc, units, base), doReplace)
      *  @endcode
      */
     template <typename T>
     Key<T> addField(
         std::string const & name, std::string const & doc, std::string const & units = "",
-        FieldBase<T> const & base = FieldBase<T>()
+        FieldBase<T> const & base = FieldBase<T>(), bool doReplace=false
     ) {
-        return addField(Field<T>(name, doc, units, base));
+        return addField(Field<T>(name, doc, units, base), doReplace);
     }
 
     /**
@@ -148,12 +151,15 @@ public:
      *
      *  This is simply a convenience wrapper, equivalent to:
      *  @code
-     *  addField(Field<T>(name, doc, base))
+     *  addField(Field<T>(name, doc, base), doReplace)
      *  @endcode
      */
     template <typename T>
-    Key<T> addField(std::string const & name, std::string const & doc, FieldBase<T> const & base) {
-        return addField(Field<T>(name, doc, base));
+    Key<T> addField(
+        std::string const & name, std::string const & doc, FieldBase<T> const & base,
+        bool doReplace=false
+    ) {
+        return addField(Field<T>(name, doc, base), doReplace);
     }
 
     /// @brief Replace the Field (name/description) for an existing Key.

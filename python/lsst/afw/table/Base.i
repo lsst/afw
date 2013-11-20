@@ -267,7 +267,7 @@ def find(self, k):
              pass
     raise KeyError("Field '%s' not found in Schema." % k)
 
-def addField(self, field, type=None, doc="", units="", size=None):
+def addField(self, field, type=None, doc="", units="", size=None, doReplace=False):
     if type is None:
         try:
             prefix, suffix = __builtins__['type'](field).__name__.split("_")
@@ -287,7 +287,7 @@ def addField(self, field, type=None, doc="", units="", size=None):
         size = globals()["FieldBase_" + suffix]()
     else:
         size = globals()["FieldBase_" + suffix](size)
-    return method(field, doc, units, size)
+    return method(field, doc, units, size, doReplace)
 
 %}
 
