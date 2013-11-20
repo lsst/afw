@@ -23,6 +23,7 @@
  */
  
 %{
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
@@ -116,7 +117,7 @@ typedef lsst::afw::geom::Span Span;
              * Cast a Footprint to a HeavyFootprint of a specified type
              */
             cast_HeavyFootprint##NAME(PTR(lsst::afw::detection::Footprint) foot) {
-            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
+            return boost::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
 
         PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>)
@@ -125,7 +126,7 @@ typedef lsst::afw::geom::Span Span;
              */
             cast_HeavyFootprint(PTR(lsst::afw::detection::Footprint) foot,
                                 lsst::afw::image::MaskedImage<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> const&) {
-            return boost::shared_dynamic_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
+            return boost::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
     %}
 %enddef

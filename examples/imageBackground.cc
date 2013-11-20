@@ -24,6 +24,7 @@
  
 #include <iostream>
 #include <cmath>
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Background.h"
 #include "lsst/afw/math/Interpolate.h"
@@ -90,7 +91,7 @@ int main() {
     PTR(math::Background) back = math::makeBackground(img, bgCtrl);
     
     // can get an individual pixel or a whole frame.
-    float const MID = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
+    float const MID = boost::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
     ImageF::Ptr bg = back->getImage<ImageF::Pixel>();
     
     // create a background-subtracted image

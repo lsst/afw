@@ -48,16 +48,16 @@
 // ... and access to the derived members is required, these can be used to cast.
 %inline %{
     lsst::afw::coord::Fk5Coord::Ptr cast_Fk5(lsst::afw::coord::Coord::Ptr c) {
-        return boost::shared_dynamic_cast<lsst::afw::coord::Fk5Coord>(c);
+        return boost::dynamic_pointer_cast<lsst::afw::coord::Fk5Coord>(c);
     }
     lsst::afw::coord::IcrsCoord::Ptr cast_Icrs(lsst::afw::coord::Coord::Ptr c) {
-        return boost::shared_dynamic_cast<lsst::afw::coord::IcrsCoord>(c);
+        return boost::dynamic_pointer_cast<lsst::afw::coord::IcrsCoord>(c);
     }
     lsst::afw::coord::GalacticCoord::Ptr cast_Galactic(lsst::afw::coord::Coord::Ptr c) {
-        return boost::shared_dynamic_cast<lsst::afw::coord::GalacticCoord>(c);
+        return boost::dynamic_pointer_cast<lsst::afw::coord::GalacticCoord>(c);
     }
     lsst::afw::coord::EclipticCoord::Ptr cast_Ecliptic(lsst::afw::coord::Coord::Ptr c) {
-        return boost::shared_dynamic_cast<lsst::afw::coord::EclipticCoord>(c);
+        return boost::dynamic_pointer_cast<lsst::afw::coord::EclipticCoord>(c);
     }
     // altaz omitted as it requires an Observatory and DateTime as well.
     // ie. it's not similar enough to use the same factory
