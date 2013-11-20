@@ -23,6 +23,7 @@
  */
  
 %{
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"

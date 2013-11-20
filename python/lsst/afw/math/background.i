@@ -21,6 +21,7 @@
  */
  
 %{
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/math/Background.h"
 %}
 
