@@ -190,7 +190,7 @@ void printCamera(std::string const& title,
     cout << title << "Camera: " << camera->getId().getName() << endl;
 
     for (cameraGeom::Raft::const_iterator ptr = camera->begin(); ptr != camera->end(); ++ptr) {
-        printDewar("\n", boost::shared_dynamic_cast<cameraGeom::Raft>(*ptr), "    ");
+        printDewar("\n", boost::dynamic_pointer_cast<cameraGeom::Raft>(*ptr), "    ");
     }
 }
 

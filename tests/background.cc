@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         bgCtrl.getStatisticsControl()->setNumSigmaClip(3);
         bgCtrl.getStatisticsControl()->setNumIter(3);
         PTR(math::Background) back = math::makeBackground(img, bgCtrl);
-        double const TESTVAL = boost::shared_dynamic_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
+        double const TESTVAL = boost::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
         
         image::Image<float>::Ptr bImage = back->getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
             PTR(math::Background) backobj = math::makeBackground(*img, bctrl);
 
             // test getPixel()
-            float testval = boost::shared_dynamic_cast<math::BackgroundMI>(backobj)->getPixel(width/2, height/2);
+            float testval = boost::dynamic_pointer_cast<math::BackgroundMI>(backobj)->getPixel(width/2, height/2);
             BOOST_REQUIRE( fabs(testval - reqMean) < 2.0*stdevSubimg );
 
             // test getImage() by checking the center pixel
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         bctrl.getStatisticsControl()->setNumSigmaClip(20.0); //something large enough to avoid clipping entirely
         bctrl.getStatisticsControl()->setNumIter(1);
         PTR(math::BackgroundMI) backobj =
-            boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(rampimg, bctrl));
+            boost::dynamic_pointer_cast<math::BackgroundMI>(math::makeBackground(rampimg, bctrl));
 
         // test the values at the corners and in the middle
         int ntest = 3;
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         bctrl.getStatisticsControl()->setNumSigmaClip(10.0);
         bctrl.getStatisticsControl()->setNumIter(1);
         PTR(math::BackgroundMI) backobj =
-            boost::shared_dynamic_cast<math::BackgroundMI>(math::makeBackground(parabimg, bctrl));
+            boost::dynamic_pointer_cast<math::BackgroundMI>(math::makeBackground(parabimg, bctrl));
 
         // check the values at the corners and in the middle
         int const ntest = 3;

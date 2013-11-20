@@ -32,7 +32,7 @@
 %inline %{
    PTR(lsst::afw::math::BackgroundMI)
    cast_BackgroundMI(PTR(lsst::afw::math::Background) bback) {
-        return boost::shared_dynamic_cast<lsst::afw::math::BackgroundMI>(bback);
+        return boost::dynamic_pointer_cast<lsst::afw::math::BackgroundMI>(bback);
     }
 %}
 %extend lsst::afw::math::Background {
