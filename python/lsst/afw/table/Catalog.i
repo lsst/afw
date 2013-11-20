@@ -298,48 +298,23 @@ public:
     %}
 }
 
+// See comments by definitions in Catalog.h for why these exist
+
+template <typename RecordT, typename Catalog, typename T>
+PTR(RecordT) _Catalog_find(Catalog const & catalog, T value, Key<T> const & key);
+
+template <typename Catalog, typename T>
+int _Catalog_lower_bound(Catalog const & catalog, T value, Key<T> const & key);
+
+template <typename Catalog, typename T>
+int _Catalog_upper_bound(Catalog const & catalog, T value, Key<T> const & key);
+
+template <typename Catalog, typename T>
+std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T value, Key<T> const & key);
+
 }}} // namespace lsst::afw::table
 
 %template(IntPair) std::pair<int,int>;
-
-%inline %{
-
-// Apparently we can't add templated methods in an %extend block,
-// so we'll add doubly-templated free functions here, and call them
-// from a %pythoncode block inside the class %extend block (above).
-// Oh, how I hate Swig.
-
-namespace lsst { namespace afw { namespace table {
-
-template <typename RecordT, typename Catalog, typename T>
-PTR(RecordT) _Catalog_find(Catalog const & catalog, T value, Key<T> const & key) {
-    typename Catalog::const_iterator iter = catalog.find(value, key);
-    if (iter == catalog.end()) {
-        return PTR(RecordT)();
-    }
-    return iter;  // n.b. CatalogIterator is explicitly convertible to shared_ptr
-}
-
-template <typename Catalog, typename T>
-int _Catalog_lower_bound(Catalog const & catalog, T value, Key<T> const & key) {
-    return catalog.lower_bound(value, key) - catalog.begin();
-}
-
-template <typename Catalog, typename T>
-int _Catalog_upper_bound(Catalog const & catalog, T value, Key<T> const & key) {
-    return catalog.upper_bound(value, key) - catalog.begin();
-}
-
-template <typename Catalog, typename T>
-std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T value, Key<T> const & key) {
-    std::pair<typename Catalog::const_iterator,typename Catalog::const_iterator> p
-        = catalog.equal_range(value, key);
-    return std::pair<int,int>(p.first - catalog.begin(), p.second - catalog.begin());
-}
-
-}}} // namespace lsst::afw::table
-
-%}
 
 %define %instantiateCatalogSearchMethods(PREFIX, TMPL, TYPE)
 %template(_Catalog_find) lsst::afw::table::_Catalog_find< PREFIX ## Record, TMPL< PREFIX ## Record >, TYPE >;
