@@ -57,12 +57,12 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
     %inline %{
         boost::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
         cast_SpatialCellImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
-            return boost::shared_dynamic_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
+            return boost::dynamic_pointer_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
         }
 
         boost::shared_ptr<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >
         cast_SpatialCellMaskedImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
-             return boost::shared_dynamic_cast<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >(candidate);
+             return boost::dynamic_pointer_cast<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >(candidate);
         }
     %}
 %enddef

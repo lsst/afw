@@ -88,7 +88,7 @@
 %inline %{
     lsst::afw::image::TanWcs::Ptr
     cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
-        lsst::afw::image::TanWcs::Ptr tanWcs = boost::shared_dynamic_cast<lsst::afw::image::TanWcs>(wcs);
+        lsst::afw::image::TanWcs::Ptr tanWcs = boost::dynamic_pointer_cast<lsst::afw::image::TanWcs>(wcs);
         
         if(tanWcs.get() == NULL) {
             throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Up cast failed"));
