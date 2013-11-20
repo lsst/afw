@@ -336,9 +336,10 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     }
     // strip trailing whitespace
     {
-        char *space = strchr(_wcsInfo->radesys, ' ');
-        if (space != NULL) {
-            *space = '\0';
+        for(int i = strlen(_wcsInfo->radesys) - 1; i >= 0; i--) {
+            if (isspace(_wcsInfo->radesys[i])) {
+                _wcsInfo->radesys[i] = '\0';
+            }
         }
     }
     //
