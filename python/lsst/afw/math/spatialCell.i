@@ -73,6 +73,7 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 
 %{
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/math/SpatialCell.h"
 %}
 

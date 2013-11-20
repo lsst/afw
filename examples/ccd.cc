@@ -22,6 +22,7 @@
  
 #include <iostream>
 #include <sstream>
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/cameraGeom.h"
 

@@ -24,6 +24,7 @@
  
 #include <iostream>
 #include <cmath>
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Background.h"
 #include "lsst/afw/math/Interpolate.h"

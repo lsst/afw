@@ -32,6 +32,7 @@
 %ignore lsst::afw::image::NoWcs;
 
 %{
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 %}
