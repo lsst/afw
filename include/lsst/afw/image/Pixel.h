@@ -68,7 +68,7 @@ public:
     typedef _MaskPixelT MaskPixelT;
     typedef _VariancePixelT VariancePixelT;
 
-    SinglePixel(double const image, int mask=0, double const variance=0) :
+    explicit SinglePixel(double const image=0, int mask=0, double const variance=0) :
         _image(image), _mask(mask), _variance(variance) {}
     SinglePixel(int const image, int mask=0, double const variance=0) :
         _image(image), _mask(mask), _variance(variance) {}
