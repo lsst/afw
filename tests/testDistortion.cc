@@ -10,7 +10,6 @@
 #include "lsst/afw/cameraGeom.h"
 
 using namespace std;
-using namespace boost;
 using namespace Eigen;
 using namespace lsst::afw::geom;
 using namespace lsst::afw::math;
@@ -20,9 +19,9 @@ using namespace lsst::afw::cameraGeom;
 using namespace lsst::afw::geom::ellipses;
 
 
-static random::mt19937 rng(0);  // RNG deliberately initialized with same seed every time
-static random::uniform_int_distribution<> uni_int(0,100);
-static random::uniform_01<> uni_double;
+static boost::random::mt19937 rng(0);  // RNG deliberately initialized with same seed every time
+static boost::random::uniform_int_distribution<> uni_int(0,100);
+static boost::random::uniform_01<> uni_double;
 
 
 // -------------------------------------------------------------------------------------------------
@@ -80,7 +79,7 @@ static inline double compare(const Image<double> &im1, const Image<double> &im2)
     return sqrt(fabs(t12) / sqrt(t11*t22));
 }
 
-static shared_ptr<RadialXYTransform> makeRandomRadialXYTransform()
+static boost::shared_ptr<RadialXYTransform> makeRandomRadialXYTransform()
 {
     vector<double> coeffs(7, 0.0);
     double t = 1.0;
@@ -91,7 +90,7 @@ static shared_ptr<RadialXYTransform> makeRandomRadialXYTransform()
     }
 
     coeffs[1] += 1.0;
-    return make_shared<RadialXYTransform> (coeffs);
+    return boost::make_shared<RadialXYTransform> (coeffs);
 }
 
 
@@ -184,7 +183,7 @@ public:
         a[4] = 100 * (uni_double(rng) - 0.5);
         a[5] = 100 * (uni_double(rng) - 0.5);
 
-        return make_shared<ToyDetector> (a);
+        return boost::make_shared<ToyDetector> (a);
     }
 
 protected:
@@ -362,7 +361,7 @@ public:
     }
     
     // factory function
-    static shared_ptr<ToyXYTransform> makeRandom()
+    static boost::shared_ptr<ToyXYTransform> makeRandom()
     {
         double A = 0.1 * (uni_double(rng)-0.5);
         double B = 0.1 * (uni_double(rng)-0.5);
@@ -395,7 +394,7 @@ BOOST_AUTO_TEST_CASE(XYTransforms)
 
     cerr << "testing random DetectorXYTransform...\n";
     PTR(Detector) d = ToyDetector::makeRandom();
-    t = make_shared<DetectorXYTransform> (t,d);
+    t = boost::make_shared<DetectorXYTransform> (t,d);
     testXYTransform(*t, randpt(), false, true);
 }
 
