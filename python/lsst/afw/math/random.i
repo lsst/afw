@@ -24,6 +24,8 @@
 #include "lsst/afw/math/Random.h"
 %}
 
+%shared_ptr(lsst::afw::math::Random);
+
 %include "lsst/afw/math/Random.h"
 
 %define %randomImage(TYPE)

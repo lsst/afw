@@ -145,6 +145,14 @@ class MakeWcsTestCase(unittest.TestCase):
 
         
         
+    def testReadDESHeader(self):
+        """Verify that we can read a DES header"""
+        self.metadata.set("RADESYS", "FK5    ") # note trailing white space
+        self.metadata.set("CTYPE1", 'RA---TPV')
+        self.metadata.set("CTYPE2", 'DEC--TPV')
+
+        afwImage.makeWcs(self.metadata)
+
 #####
 
 def suite():

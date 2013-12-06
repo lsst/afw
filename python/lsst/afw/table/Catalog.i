@@ -6,20 +6,9 @@
 #include "lsst/afw/table/Catalog.h"
 %}
 
-%include "cdata.i"
-
 namespace lsst { namespace afw {
 
-namespace fits {
-
-struct MemFileManager {
-     MemFileManager();
-     MemFileManager(std::size_t len);
-     void* getData() const;
-     std::size_t getLength() const;
-};
-
-} namespace table {
+namespace table {
 
 template <typename RecordT>
 class CatalogT {
@@ -68,6 +57,10 @@ public:
     %}
 
     PTR(RecordT) addNew();
+
+    %pythonprepend addNew %{
+        self._columns = None
+    %}
 
     CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const;
 
@@ -240,22 +233,12 @@ public:
             return getattr(self.columns, name)
     table = property(getTable)
     schema = property(getSchema)
+
     def __reduce__(self):
-        manager = MemFileManager()
-        self.writeFits(manager)
-        size = manager.getLength()
-        data = cdata(manager.getData(), size);
-        return (lsst.afw.table.unpickleCatalog, (self.__class__, data, size))
+        return lsst.afw.fits.reduceToFits(self)
+
     %}
 }
-
-%pythoncode %{
-def unpickleCatalog(cls, data, size):
-    """Unpickle a catalog with data produced by its __reduce__ method"""
-    manager = MemFileManager(size)
-    memmove(manager.getData(), data)
-    return cls.readFits(manager)
-%}
 
 }}} // namespace lsst::afw::table
 

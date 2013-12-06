@@ -34,6 +34,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
+#include "boost/shared_ptr.hpp"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/pex/logging.h"
@@ -110,22 +111,22 @@ DistortInstantiate(double);
 %inline %{
     lsst::afw::cameraGeom::DetectorMosaic::Ptr
     cast_DetectorMosaic(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::DetectorMosaic>(detector);
+        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::DetectorMosaic>(detector);
     }
 
     lsst::afw::cameraGeom::Amp::Ptr
     cast_Amp(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Amp>(detector);
+        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::Amp>(detector);
     }
 
     lsst::afw::cameraGeom::Ccd::Ptr
     cast_Ccd(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Ccd>(detector);
+        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::Ccd>(detector);
     }
 
     lsst::afw::cameraGeom::Raft::Ptr
     cast_Raft(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::shared_dynamic_cast<lsst::afw::cameraGeom::Raft>(detector);
+        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::Raft>(detector);
     }
 
 %}

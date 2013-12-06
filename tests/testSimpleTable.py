@@ -42,6 +42,7 @@ import lsst.pex.exceptions
 import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.coord
+import lsst.afw.fits
 
 try:
     type(display)
@@ -203,7 +204,7 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertRaises(Exception, lsst.afw.table.BaseCatalog.readFits, "nonexistentfile.fits")
 
     def testMemoryFits(self):
-        mem = lsst.afw.table.MemFileManager()
+        mem = lsst.afw.fits.MemFileManager()
         self._testBaseFits(mem)
 
     def testColumnView(self):
@@ -219,7 +220,6 @@ class SimpleTableTestCase(unittest.TestCase):
         k6 = schema.addField("f6", type="Angle")
         catalog = lsst.afw.table.BaseCatalog(schema)
         catalog.addNew()
-        catalog.addNew()
         catalog[0].set(k1, 2)
         catalog[0].set(k2, 0.5)
         catalog[0].set(k3, 0.25)
@@ -229,6 +229,9 @@ class SimpleTableTestCase(unittest.TestCase):
         catalog[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
         catalog[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
         catalog[0].set(k6, lsst.afw.geom.Angle(0.25))
+        col1a = catalog[k1]
+        self.assertEqual(col1a.shape, (1,))
+        catalog.addNew()
         catalog[1].set(k1, 3)
         catalog[1].set(k2, 2.5)
         catalog[1].set(k3, 0.75)
@@ -238,6 +241,8 @@ class SimpleTableTestCase(unittest.TestCase):
         catalog[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
         catalog[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
         catalog[1].set(k6, lsst.afw.geom.Angle(0.15))
+        col1b = catalog[k1]
+        self.assertEqual(col1b.shape, (2,))
         columns = catalog.getColumnView()
         for key in [k1, k2, k3, kb1, kb2, kb3]:
             array = columns[key]
@@ -485,6 +490,50 @@ class SimpleTableTestCase(unittest.TestCase):
         lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException,
                                              cat.writeFits, filename)
         os.remove(filename)
+
+    def testRename(self):
+        """Test field-renaming functionality in Field, SchemaMapper"""
+        field1i = lsst.afw.table.Field[int]("i1", "doc for i", "units for i")
+        field2i = field1i.copyRenamed("i2")
+        self.assertEqual(field1i.getName(), "i1")
+        self.assertEqual(field2i.getName(), "i2")
+        self.assertEqual(field1i.getDoc(), field2i.getDoc())
+        self.assertEqual(field1i.getUnits(), field2i.getUnits())
+        field1a = lsst.afw.table.Field["ArrayF"]("a1", "doc for a", "units for a", 3)
+        field2a = field1a.copyRenamed("a2")
+        self.assertEqual(field1a.getName(), "a1")
+        self.assertEqual(field2a.getName(), "a2")
+        self.assertEqual(field1a.getDoc(), field2a.getDoc())
+        self.assertEqual(field1a.getUnits(), field2a.getUnits())
+        self.assertEqual(field1a.getSize(), field2a.getSize())
+        schema1 = lsst.afw.table.Schema()
+        k1i = schema1.addField(field1i)
+        k1a = schema1.addField(field1a)
+        mapper = lsst.afw.table.SchemaMapper(schema1)
+        k2i = mapper.addMapping(k1i, "i2")
+        k2a = mapper.addMapping(k1a, "a2")
+        schema2 = mapper.getOutputSchema()
+        self.assertEqual(schema1.find(k1i).field.getName(), "i1")
+        self.assertEqual(schema2.find(k2i).field.getName(), "i2")
+        self.assertEqual(schema1.find(k1a).field.getName(), "a1")
+        self.assertEqual(schema2.find(k2a).field.getName(), "a2")
+        self.assertEqual(schema1.find(k1i).field.getDoc(), schema2.find(k2i).field.getDoc())
+        self.assertEqual(schema1.find(k1a).field.getDoc(), schema2.find(k2a).field.getDoc())
+        self.assertEqual(schema1.find(k1i).field.getUnits(), schema2.find(k2i).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getUnits(), schema2.find(k2a).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getSize(), schema2.find(k2a).field.getSize())
+        k3i = mapper.addMapping(k1i, "i3")
+        k3a = mapper.addMapping(k1a, "a3")
+        schema3 = mapper.getOutputSchema()
+        self.assertEqual(schema1.find(k1i).field.getName(), "i1")
+        self.assertEqual(schema3.find(k3i).field.getName(), "i3")
+        self.assertEqual(schema1.find(k1a).field.getName(), "a1")
+        self.assertEqual(schema3.find(k3a).field.getName(), "a3")
+        self.assertEqual(schema1.find(k1i).field.getDoc(), schema3.find(k3i).field.getDoc())
+        self.assertEqual(schema1.find(k1a).field.getDoc(), schema3.find(k3a).field.getDoc())
+        self.assertEqual(schema1.find(k1i).field.getUnits(), schema3.find(k3i).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getUnits(), schema3.find(k3a).field.getUnits())
+        self.assertEqual(schema1.find(k1a).field.getSize(), schema3.find(k3a).field.getSize())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

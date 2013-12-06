@@ -177,7 +177,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
 }
 
 template <typename T>
-Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & name) {
+Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & outputName) {
     _edit();
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
@@ -186,14 +186,14 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & nam
     );
     if (i != _impl->_map.end()) {
         Key<T> const & outputKey = boost::get< std::pair< Key<T>, Key<T> > >(*i).second;
-        Field<T> oldField = _impl->_output.find(outputKey).field;
-        Field<T> newField(name, oldField.getDoc(), oldField.getUnits(), oldField);
-        _impl->_output.replaceField(outputKey, newField);
+        Field<T> field = _impl->_output.find(outputKey).field;
+        field = field.copyRenamed(outputName);
+        _impl->_output.replaceField(outputKey, field);
         return outputKey;
     } else {
-        Field<T> oldField = _impl->_input.find(inputKey).field;
-        Field<T> newField(name, oldField.getDoc(), oldField.getUnits(), oldField);
-        Key<T> outputKey = _impl->_output.addField(newField);
+        Field<T> inputField = _impl->_input.find(inputKey).field;
+        Field<T> outputField = inputField.copyRenamed(outputName);
+        Key<T> outputKey = _impl->_output.addField(outputField);
         _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }

@@ -846,6 +846,24 @@ public:
         CONST_PTR(daf::base::PropertySet) varianceMetadata = CONST_PTR(daf::base::PropertySet)()
     ) const;
 
+    /**
+     *  @brief Read a MaskedImage from a regular FITS file.
+     *
+     *  @param[in] filename    Name of the file to read.
+     */
+    static MaskedImage readFits(std::string const & filename) {
+        return MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(filename);
+    }
+
+    /**
+     *  @brief Read a MaskedImage from a FITS RAM file.
+     *
+     *  @param[in] manager     Object that manages the memory to be read.
+     */
+    static MaskedImage readFits(fits::MemFileManager & manager) {
+        return MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(manager);
+    }
+
     // Getters
     /// Return a (Ptr to) the MaskedImage's %image
     ImagePtr getImage(bool const noThrow=false) const {
