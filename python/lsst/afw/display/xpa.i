@@ -95,7 +95,7 @@ XPAGet1(XPA xpa,
 	char *mode)
 {
     char *buf = NULL;			/* desired response */
-    int len = 0;			/* length of buf; ignored */
+    size_t len = 0;			/* length of buf; ignored */
     char *error = NULL;			/* returned error if any*/
 
     if (xpa == NULL) {
