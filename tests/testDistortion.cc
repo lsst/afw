@@ -212,7 +212,7 @@ static void testDetector(const Detector &d)
 static PTR(Detector) makeRandomDetector()
 {
     double pixelSize = uni_double(rng);
-    PTR(Detector) d = make_shared<Detector> (Id(0), false, pixelSize);
+    PTR(Detector) d = boost::make_shared<Detector> (Id(0), false, pixelSize);
 
     Orientation rot(0, Angle(0), Angle(0), Angle(2*M_PI*uni_double(rng)));
     d->setOrientation(rot);
