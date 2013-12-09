@@ -63,21 +63,11 @@ template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=d
 class SinglePixel : public detail::MaskedImagePixel_tag {
 public:
     template<typename, typename, typename> friend class Pixel;
+    template<typename T> friend T std::numeric_limits<T>::quiet_NaN();
 
     typedef _ImagePixelT ImagePixelT;
     typedef _MaskPixelT MaskPixelT;
     typedef _VariancePixelT VariancePixelT;
-
-    /// Default Ctor
-    ///
-    /// Can be called by std::numeric_limits<SinglePixel>::quiet_NaN()
-    SinglePixel() :
-        _image(std::numeric_limits<_ImagePixelT>::has_quiet_NaN ?
-               std::numeric_limits<_ImagePixelT>::quiet_NaN() : 0),
-        _mask(0),
-        _variance(std::numeric_limits<_VariancePixelT>::has_quiet_NaN ?
-                  std::numeric_limits<_VariancePixelT>::quiet_NaN() : 0)
-        {}
 
     SinglePixel(double const image, int mask=0, double const variance=0) :
         _image(image), _mask(mask), _variance(variance) {}
@@ -91,6 +81,17 @@ public:
     MaskPixelT mask() const { return _mask; }
     VariancePixelT variance() const { return _variance; }
 private:
+    /// Default Ctor
+    ///
+    /// Can be called by std::numeric_limits<SinglePixel>::quiet_NaN()
+    SinglePixel() :
+        _image(std::numeric_limits<_ImagePixelT>::has_quiet_NaN ?
+               std::numeric_limits<_ImagePixelT>::quiet_NaN() : 0),
+        _mask(0),
+        _variance(std::numeric_limits<_VariancePixelT>::has_quiet_NaN ?
+                  std::numeric_limits<_VariancePixelT>::quiet_NaN() : 0)
+        {}
+
     ImagePixelT _image;
     MaskPixelT _mask;
     VariancePixelT _variance;
