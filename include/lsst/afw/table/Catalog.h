@@ -133,11 +133,6 @@ public:
      *
      *  The iterator must dereference to a record reference or const reference rather than a pointer,
      *  but should be implicitly convertible to a record pointer as well (see CatalogIterator).
-     *
-     *  If InputIterator models RandomAccessIterator (according to std::iterator_traits) and deep
-     *  is true, table->preallocate will be used to ensure that the resulting records are
-     *  contiguous in memory and can be used with ColumnView.  To ensure this is the case for
-     *  other iterator types, the user must preallocate the table manually.
      */
     template <typename InputIterator>
     CatalogT(PTR(Table) const & table, InputIterator first, InputIterator last, bool deep=false) :
@@ -565,7 +560,7 @@ public:
 
     /// Remove all records from the catalog.
     void clear() { _internal.clear(); }
-    
+
     /// @brief Return true if the catalog is in ascending order according to the given key.
     template <typename T>
     bool isSorted(Key<T> const & key) const;
@@ -577,11 +572,11 @@ public:
      */
     template <typename Compare>
     bool isSorted(Compare cmp) const;
-    
+
     /// @brief Sort the catalog in-place by the field with the given key.
     template <typename T>
     void sort(Key<T> const & key);
-    
+
     /**
      *  @brief Sort the catalog in-place by the field with the given predicate.
      *
@@ -594,6 +589,12 @@ public:
     /**
      *  @brief Return an iterator to the record with the given value.
      *
+     *  When the field being searched is not unique, which matching record will be returned
+     *  is not defined.  In these cases, lower_bound, upper_bound, or equal_range should be
+     *  used instead.
+     *
+     *  In Python, this method returns a Record, not an iterator.
+     *
      *  @note The catalog must be sorted in ascending order according to the given key
      *        before calling find (i.e. isSorted(key) must be true).
      *
@@ -604,6 +605,58 @@ public:
 
     template <typename T>
     const_iterator find(typename Field<T>::Value const & value, Key<T> const & key) const;
+    //@}
+
+    //@{
+    /**
+     *  @brief Performed binary searches on sorted fields.
+     *
+     *  These methods perform binary searches analogous to the STL algorithms of the same
+     *  name; they simply create a comparison functor using the given value and Key.
+     *
+     *  In Python, the lower_bound and upper_bound methods return the position of the
+     *  result record in the catalog, and equal_range returns a Python slice object
+     *  that defines the range.
+     *
+     *  @note The catalog must be sorted in ascending order according to the given key
+     *        before calling any of the search methods (i.e. isSorted(key) must be true).
+     */
+    template <typename T>
+    iterator lower_bound(typename Field<T>::Value const & value, Key<T> const & key);
+
+    template <typename T>
+    const_iterator lower_bound(typename Field<T>::Value const & value, Key<T> const & key) const;
+
+    template <typename T>
+    iterator upper_bound(typename Field<T>::Value const & value, Key<T> const & key);
+
+    template <typename T>
+    const_iterator upper_bound(typename Field<T>::Value const & value, Key<T> const & key) const;
+
+    template <typename T>
+    std::pair<iterator,iterator>
+    equal_range(typename Field<T>::Value const & value, Key<T> const & key);
+
+    template <typename T>
+    std::pair<const_iterator,const_iterator>
+    equal_range(typename Field<T>::Value const & value, Key<T> const & key) const;
+    //@}
+
+    //@{
+    /**
+     *  @brief Return a reference to the internal vector-of-shared_ptr
+     *
+     *  While in most cases it is more convenient to use the Catalog's iterators, which dereference
+     *  directly to Record objects (and hence allow iter->method() rather than (**iter).method()),
+     *  direct access to the underlying vector-of-shared_ptr is provided here to allow complete use
+     *  of the C++ STL.  In particular, in order to use a mutating STL algorithm on a Catalog in
+     *  such a way that Records are shallow-copied (i.e. shared_ptr::operator= is invoked instead
+     *  of Record::operator=), those algorithms should be called on the iterators of these internal
+     *  containers.  When an algorithm should be called in such a way that records are deep-copied,
+     *  the regular Catalog iterators should be used.
+     */
+    Internal & getInternal() { return _internal; }
+    Internal const & getInternal() const { return _internal; }
     //@}
 
 private:
@@ -661,6 +714,7 @@ struct KeyExtractionFunctor {
 template <typename RecordT>
 template <typename Compare>
 bool CatalogT<RecordT>::isSorted(Compare cmp) const {
+    /// TODO: C++11 has an is_sorted function we should use when available.
     detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
     if (empty()) return true;
     const_iterator last = this->begin();
@@ -676,7 +730,7 @@ template <typename RecordT>
 template <typename Compare>
 void CatalogT<RecordT>::sort(Compare cmp) {
     detail::ComparisonAdaptor<RecordT,Compare> f = { cmp };
-    std::sort(_internal.begin(), _internal.end(), f);
+    std::stable_sort(_internal.begin(), _internal.end(), f);
 }
 
 template <typename RecordT>
@@ -718,6 +772,126 @@ CatalogT<RecordT>::find(typename Field<T>::Value const & value, Key<T> const & k
     if (i.base() == end() || *i != value) return end();
     return i.base();
 }
+
+template <typename RecordT>
+template <typename T>
+typename CatalogT<RecordT>::iterator
+CatalogT<RecordT>::lower_bound(typename Field<T>::Value const & value, Key<T> const & key) {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
+    SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
+    return i.base();
+}
+
+template <typename RecordT>
+template <typename T>
+typename CatalogT<RecordT>::const_iterator
+CatalogT<RecordT>::lower_bound(typename Field<T>::Value const & value, Key<T> const & key) const {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
+    SearchIter i = std::lower_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
+    return i.base();
+}
+
+template <typename RecordT>
+template <typename T>
+typename CatalogT<RecordT>::iterator
+CatalogT<RecordT>::upper_bound(typename Field<T>::Value const & value, Key<T> const & key) {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
+    SearchIter i = std::upper_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
+    return i.base();
+}
+
+template <typename RecordT>
+template <typename T>
+typename CatalogT<RecordT>::const_iterator
+CatalogT<RecordT>::upper_bound(typename Field<T>::Value const & value, Key<T> const & key) const {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
+    SearchIter i = std::upper_bound(SearchIter(begin(), f), SearchIter(end(), f), value);
+    return i.base();
+}
+
+template <typename RecordT>
+template <typename T>
+std::pair<typename CatalogT<RecordT>::iterator,typename CatalogT<RecordT>::iterator>
+CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> const & key) {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,iterator> SearchIter;
+    std::pair<SearchIter,SearchIter> i
+        = std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
+    return std::make_pair(i.first.base(), i.second.base());
+
+}
+
+template <typename RecordT>
+template <typename T>
+std::pair<typename CatalogT<RecordT>::const_iterator,typename CatalogT<RecordT>::const_iterator>
+CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> const & key) const {
+    detail::KeyExtractionFunctor<RecordT,T> f = { key };
+    // Iterator adaptor that makes a CatalogT iterator work like an iterator over field values.
+    typedef boost::transform_iterator<detail::KeyExtractionFunctor<RecordT,T>,const_iterator> SearchIter;
+    std::pair<SearchIter,SearchIter> i
+        = std::equal_range(SearchIter(begin(), f), SearchIter(end(), f), value);
+    return std::make_pair(i.first.base(), i.second.base());
+}
+
+//@{
+/**
+ *  @internal
+ *
+ *  This block is just a big, ugly workaround for a Swig deficiency: apparently we can't add
+ *  templated methods to an %extend block (or at least we can't do that if the class is also templated),
+ *  which we'd need to do to wrap these because they return iterators in C++ and other things in
+ *  Python.  Instead we'll add doubly-templated free functions, and call them from a %pythoncode
+ *  block in an %extend block in the .i file.
+ *
+ *  And we can't put these in an %inline block in the .i file because then the definitions
+ *  wouldn't be available to downstream instantiations with catalog/record types defined in
+ *  other packages.
+ *
+ *  But here's the best part: try putting these in 'namespace detail', and detectionLib_wrap.cc
+ *  fails to build, because it causes Swig to starts putting "lsst::afw::table::lsst::afw::detection"
+ *  in front of Footprint-related things!  I have no idea what unholy combination of chewing gum
+ *  and rubber bands is holding this together, but I don't want to touch it.
+ *
+ *  Oh, how I hate Swig.
+ */
+
+template <typename RecordT, typename Catalog, typename T>
+PTR(RecordT) _Catalog_find(Catalog const & catalog, T const & value, Key<T> const & key) {
+    typename Catalog::const_iterator iter = catalog.find(value, key);
+    if (iter == catalog.end()) {
+        return PTR(RecordT)();
+    }
+    return iter;  // n.b. CatalogIterator is explicitly convertible to shared_ptr
+}
+
+template <typename Catalog, typename T>
+int _Catalog_lower_bound(Catalog const & catalog, T const & value, Key<T> const & key) {
+    return catalog.lower_bound(value, key) - catalog.begin();
+}
+
+template <typename Catalog, typename T>
+int _Catalog_upper_bound(Catalog const & catalog, T const & value, Key<T> const & key) {
+    return catalog.upper_bound(value, key) - catalog.begin();
+}
+
+template <typename Catalog, typename T>
+std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T const & value, Key<T> const & key) {
+    std::pair<typename Catalog::const_iterator,typename Catalog::const_iterator> p
+        = catalog.equal_range(value, key);
+    return std::pair<int,int>(p.first - catalog.begin(), p.second - catalog.begin());
+}
+
+//@}
+
 
 }}} // namespace lsst::afw::table
 
