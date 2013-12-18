@@ -589,7 +589,7 @@ public:
     /**
      *  @brief Return an iterator to the record with the given value.
      *
-     *  When the field being search is not unique, which matching record will be returned
+     *  When the field being searched is not unique, which matching record will be returned
      *  is not defined.  In these cases, lower_bound, upper_bound, or equal_range should be
      *  used instead.
      *
@@ -865,7 +865,7 @@ CatalogT<RecordT>::equal_range(typename Field<T>::Value const & value, Key<T> co
  */
 
 template <typename RecordT, typename Catalog, typename T>
-PTR(RecordT) _Catalog_find(Catalog const & catalog, T value, Key<T> const & key) {
+PTR(RecordT) _Catalog_find(Catalog const & catalog, T const & value, Key<T> const & key) {
     typename Catalog::const_iterator iter = catalog.find(value, key);
     if (iter == catalog.end()) {
         return PTR(RecordT)();
@@ -874,17 +874,17 @@ PTR(RecordT) _Catalog_find(Catalog const & catalog, T value, Key<T> const & key)
 }
 
 template <typename Catalog, typename T>
-int _Catalog_lower_bound(Catalog const & catalog, T value, Key<T> const & key) {
+int _Catalog_lower_bound(Catalog const & catalog, T const & value, Key<T> const & key) {
     return catalog.lower_bound(value, key) - catalog.begin();
 }
 
 template <typename Catalog, typename T>
-int _Catalog_upper_bound(Catalog const & catalog, T value, Key<T> const & key) {
+int _Catalog_upper_bound(Catalog const & catalog, T const & value, Key<T> const & key) {
     return catalog.upper_bound(value, key) - catalog.begin();
 }
 
 template <typename Catalog, typename T>
-std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T value, Key<T> const & key) {
+std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T const & value, Key<T> const & key) {
     std::pair<typename Catalog::const_iterator,typename Catalog::const_iterator> p
         = catalog.equal_range(value, key);
     return std::pair<int,int>(p.first - catalog.begin(), p.second - catalog.begin());
