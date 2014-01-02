@@ -608,6 +608,18 @@ class CoordTestCase(unittest.TestCase):
         self.assertRaises(pexEx.LsstCppException, afwCoord.IcrsCoord, "79.891963", "-10.110075")
         self.assertRaises(pexEx.LsstCppException, afwCoord.IcrsCoord, "01:23", "45:67")
 
+    def testTicket3093(self):
+        """Declination -1 < delta < 0 always prints positive as a string"""
+
+        # how to reproduce code reported on 3093 ticket
+        ra   = 26.468676561631767*afwGeom.degrees
+        decl = -0.6684668814164008*afwGeom.degrees
+        printableCoord = afwCoord.IcrsCoord(ra, decl).getDecStr()
+        
+        # With bug, this prints '00:40:06.48.  It should be '-00:40:06.48'
+        print "Decl 0 to -1 bug:", printableCoord
+        
+        self.assertEqual(printableCoord, "-00:40:06.48")
  
         
 #################################################################
