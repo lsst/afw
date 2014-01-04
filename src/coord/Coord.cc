@@ -276,7 +276,7 @@ static std::string angleToXmsString(afwGeom::Angle const a, afwGeom::AngleUnit c
 
     std::string fmt("%02d:%02d:%05.2f");
     std::string s = (boost::format(fmt) % dms.deg % dms.min % dms.sec).str();
-    if (dms.deg == 0 && dms.sign < 0) {
+    if (dms.sign < 0) {
         s = "-" + s;
     }
     return s;
