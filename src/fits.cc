@@ -690,6 +690,15 @@ void writeKeyFromProperty(
         } else {
             writeKeyImpl(fits, key.c_str(), metadata.get<long>(key), comment);
         }
+    } else if (valueType == typeid(long long)) {
+        if (metadata.isArray(key)) {
+            std::vector<long long> tmp = metadata.getArray<long long>(key);
+            for (std::size_t i = 0; i != tmp.size(); ++i) {
+                writeKeyImpl(fits, key.c_str(), tmp[i], comment);
+            }
+        } else {
+            writeKeyImpl(fits, key.c_str(), metadata.get<long long>(key), comment);
+        }
     } else if (valueType == typeid(boost::int64_t)) {
         if (metadata.isArray(key)) {
             std::vector<boost::int64_t> tmp = metadata.getArray<boost::int64_t>(key);

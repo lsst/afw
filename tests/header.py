@@ -41,6 +41,7 @@ class HeaderTestCase(unittest.TestCase):
                   "NAN": numpy.nan,
                   "PLUSINF": numpy.inf,
                   "MINUSINF": -numpy.inf,
+                  "LONG": long(987654321),
                   }
 
         exp = afwImage.ExposureI(0,0)
