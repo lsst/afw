@@ -900,7 +900,17 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                                       ndarray::Array < T,1,1 >  const &vin,
                                       int numberOfNeighbors) const
 {
-
+    
+    if(numberOfNeighbors<=0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for zero or negative number of neighbors\n");
+    }
+    
+    if(numberOfNeighbors>_kdTree.get_pts()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for more neighbors than you have data points\n");
+    }
+    
     int i,j;
     T fbar,mu;
 
@@ -1003,6 +1013,18 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
                                          int numberOfNeighbors) const
 {
 
+
+    if(numberOfNeighbors<=0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for zero or negative number of neighbors\n");
+    }
+    
+    if(numberOfNeighbors>_kdTree.get_pts()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for more neighbors than you have data points\n");
+    }
+
+
     int i,j,ii;
     T fbar;
 
@@ -1104,6 +1126,16 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
                                           int dex,
                                           int numberOfNeighbors) const
 {
+
+    if(numberOfNeighbors<=0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for zero or negative number of neighbors\n");
+    }
+    
+    if(numberOfNeighbors>_kdTree.get_pts()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for more neighbors than you have data points\n");
+    }
 
     int i,j;
     T fbar,mu;
@@ -1208,6 +1240,16 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
                                              ndarray::Array < T,1,1 >  variance,
                                              int dex,
                                              int numberOfNeighbors) const{
+
+    if(numberOfNeighbors<=0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for zero or negative number of neighbors\n");
+    }
+    
+    if(numberOfNeighbors>_kdTree.get_pts()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked for more neighbors than you have data points\n");
+    }
 
     int i,j,ii;
     T fbar;
