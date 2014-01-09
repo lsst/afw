@@ -33,22 +33,22 @@ import lsst.pex.exceptions as pex
 
 class GaussianProcessTestCase(unittest.TestCase):
     
-        def testTooManyNeighbors(self):
-            """
-            Test that GaussianProcess checks if too many neighbours are requested
-            """
-            nData = 100                        # number of data points
-            dimen = 10                         # dimension of each point
-            data = np.zeros((nData,dimen))
-            fn = np.zeros(nData)
-            gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
-            test = np.zeros(dimen)
-            sigma = np.empty(1)
-            try:
-                mu = gg.interpolate(sigma, test, 2*nData)
-                self.assertTrue(False, "Failed to catch using too many points")
-            except pex.LsstCppException, e:
-                self.assertTrue(True)
+    def testTooManyNeighbors(self):
+        """
+        Test that GaussianProcess checks if too many neighbours are requested
+        """
+        nData = 100                        # number of data points
+        dimen = 10                         # dimension of each point
+        data = np.zeros((nData,dimen))
+        fn = np.zeros(nData)
+        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+        test = np.zeros(dimen)
+        sigma = np.empty(1)
+        try:
+            mu = gg.interpolate(sigma, test, 2*nData)
+            self.assertTrue(False, "Failed to catch using too many points")
+        except pex.LsstCppException, e:
+            self.assertTrue(True)
     
     def testInterpolate(self):
         """
