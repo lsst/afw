@@ -55,17 +55,21 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def trimRawCallback(im, ccd=None, butler=None, correctGain=False):
+def trimRawCallback(im, ccd=None, butler=None, imageSource=None, correctGain=False,
+                    subtractDark=False, subtractBias=False,
+                    convertToFloat=False):
     """A callback function that subtracts the bias and trims a raw image"""
     if ccd is None:
         ccd = cameraGeom.cast_Ccd(im.getDetector())
     if hasattr(im, "getMaskedImage"):
         im = im.getMaskedImage()
+    if convertToFloat and hasattr(im, "convertF"):
+        im = im.convertF()
 
     ccdImage = im.Factory(ccd.getAllPixels(True))
 
     for a in ccd:
-        if True:
+        if False:
             im[a.getDiskDataSec()] -= \
                 afwMath.makeStatistics(im[a.getDiskBiasSec()], afwMath.MEDIAN).getValue()
         else:
@@ -81,26 +85,57 @@ def trimRawCallback(im, ccd=None, butler=None, correctGain=False):
                         afwMath.MEANCLIP).getValue())
 
             dataSec = a.getDiskDataSec()
-            if True:
+            try:
+                ima = im.getImage().getArray()
+            except:
+                ima = im.getArray()
+
+            if False:
                 ramp = np.arange(im.getHeight())
                 ramp = 0.5*(vals[0] + vals[1]) + \
                     (ramp - biasSec.getMinY() - 0.5*height)*2*(vals[1] - vals[0])/height
                 
                 for i in range(dataSec.getMinX(), dataSec.getMinX() + dataSec.getWidth()):
-                    im.getImage().getArray()[:, i] -= ramp # n.b. numpy indexes are (y, x) not our (x, y)
-            else:
+                    ima[:, i] -= ramp # n.b. numpy indexes are (y, x) not our (x, y)
+            elif False:
                 X, Y = np.meshgrid(np.arange(im.getWidth()), np.arange(im.getHeight()))
                 
                 ramp = 0.5*(vals[0] + vals[1]) + \
                     (Y - biasSec.getMinY() - 0.5*height)*2*(vals[1] - vals[0])/height
                 
-                im.getImage().getArray()[:] -= ramp
-
+                ima[:] -= ramp
+            else:                       # do a per-row bias subtraction
+                y0, y1 = a.getDiskDataSec().getMinY(), a.getDiskDataSec().getMaxY()
+                for y in range(y0, y1 + 1):
+                    im[:, y] -= afwMath.makeStatistics(im[a.getDiskBiasSec()][:, y - y0],
+                                                       afwMath.MEANCLIP).getValue()
         a.setTrimmed(True)
         
         ccdImage[a.getAllPixels()] <<= a.prepareAmpData(im[a.getDiskDataSec()])
-        
-        if correctGain:
+
+    if subtractDark or subtractBias:
+        assert imageSource
+        if not butler:
+            butler = imageSource.butler
+
+        md = butler.get("raw_md", ccd=ccd.getId().getSerial(), **imageSource.kwargs)
+        if subtractDark:
+            exptime = afwImage.Calib(md).getExptime()
+            dark = butler.get("dark", ccd=ccd.getId().getSerial(), **imageSource.kwargs)
+            dark = dark.getMaskedImage().getImage()
+            dark *= exptime
+
+            ccdImage -= dark
+        if subtractBias:
+            bias = butler.get("bias", ccd=ccd.getId().getSerial(), **imageSource.kwargs)
+            bias = bias.getMaskedImage().getImage()
+
+            ccdImage -= bias
+    #
+    # Convert from DN to e?
+    #
+    if correctGain:
+        for a in ccd:
             ccdImage[a.getAllPixels()] *= a.getElectronicParams().getGain()
 
     return ccdImage
