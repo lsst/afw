@@ -40,6 +40,7 @@ except ImportError:
 
 import lsst.daf.persistence as dafPersist
 import lsst.pex.policy as pexPolicy
+import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -1023,12 +1024,16 @@ class PyCcdOrientation(object):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class MakeImageFromCcdWorker(object):
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, logLevel=None):
         self.verbose = verbose
+        self.logLevel = logLevel
 
     def __call__(self, payload):
         serialNo, args, kwargs = payload
 
+        if self.logLevel is not None:
+            pexLog.getDefaultLog().setThresholdFor("CameraMapper", self.logLevel)
+           
         try:
             img = makeImageFromCcd(*args, **kwargs)
         except Exception, e:
@@ -1036,7 +1041,7 @@ class MakeImageFromCcdWorker(object):
                 print >> sys.stderr, e
                 img = None
 
-        if self.verbose:
+        if self.verbose > 1:
             print "Returning image for CCD%03d [PID %d]" % (serialNo, os.getpid())
 
         return serialNo, img
