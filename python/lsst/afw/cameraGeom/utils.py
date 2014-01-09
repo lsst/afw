@@ -1049,8 +1049,10 @@ class MakeImageFromCcdWorker(object):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF, nJob=None,
-                bin=1, border=5, frame=None, overlay=True, title="", ctype=ds9.GREEN, names=False):
+               onlySerials=None, bin=1, border=5, frame=None, overlay=True, title="", ctype=ds9.GREEN, names=False):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
+
+    If onlySerials is provided, only show CCDs with those serial numbers
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
 cameraGeom.GetCcdImage object); if it is "", an image will be created based on the properties
@@ -1064,6 +1066,9 @@ of the detectors.  If it's None then no image is created or displayed (useful if
     for raft in camera:
         raft = cameraGeom.cast_Raft(raft)
         for ccd in raft:
+            if onlySerials and ccd.getId().getSerial() not in onlySerials:
+                continue
+
             ccd = cameraGeom.cast_Ccd(ccd)
             ccd.setTrimmed(True)
             
@@ -1077,8 +1082,7 @@ of the detectors.  If it's None then no image is created or displayed (useful if
             cameraBbox.include(bbox)
             ccdBboxes[ccd.getId().getSerial()] = bbox
 
-    cameraBbox.include(afwGeom.PointI(-border, -border))
-    cameraBbox.grow(afwGeom.ExtentI(   border,  border))
+    cameraBbox.grow(afwGeom.ExtentI(border, border))
 
     cameraImage = imageFactory(cameraBbox)
     cameraImage.set(imageSource.background if imageSource else np.nan)
@@ -1088,8 +1092,8 @@ of the detectors.  If it's None then no image is created or displayed (useful if
         # If we're using multiprocessing we need to create the jobs now
         #
         makeImageForCcdArgs = []        # list of arguments to be passed to calls to makeImageForCcd
-        if nJob:
-            verbose = True
+        verbose = True
+        if nJob > 1:
             pool = multiprocessing.Pool(nJob)
         #
         # We'll do this in two stages;  first calculate the ccdImage (where the data will go)
@@ -1104,6 +1108,8 @@ of the detectors.  If it's None then no image is created or displayed (useful if
                 ccd = cameraGeom.cast_Ccd(ccd)
 
                 serialNo = ccd.getId().getSerial()
+                if not ccdBboxes.has_key(serialNo):
+                    continue
 
                 ccdImages[serialNo] = cameraImage.Factory(cameraImage, ccdBboxes[serialNo], afwImage.PARENT)
                 #
@@ -1118,11 +1124,16 @@ of the detectors.  If it's None then no image is created or displayed (useful if
         # Calculate the dataimages, either in series or parallel
         #
         dataImages = {}
-        if not nJob:
-            for serialNo, args, kwargs in makeImageForCcdArgs:
-                dataImages[serialNo] = makeImageFromCcd(*args, **kwargs)
+        if nJob <= 1:
+            worker = MakeImageFromCcdWorker()
+            for args in makeImageForCcdArgs:
+                dataImages.update([worker(args)])
         else:
-            for serialNo, dataImage in pool.map(MakeImageFromCcdWorker(verbose), makeImageForCcdArgs):
+            # We use map_async(...).get(9999) instead of map(...) to workaround a python bug
+            # in handling ^C in subprocesses (http://bugs.python.org/issue8296)
+            worker = MakeImageFromCcdWorker(verbose, pexLog.Log.FATAL)
+            for serialNo, dataImage in pool.map_async(worker, makeImageForCcdArgs).get(9999):
+
                 dataImages[serialNo] = dataImage
 
             pool.close()
@@ -1158,7 +1169,8 @@ of the detectors.  If it's None then no image is created or displayed (useful if
                     del subCcdImage
                 except Exception, e:
                     print "RHL", e
-                    import pdb; pdb.set_trace() 
+                    import pdb; pdb.set_trace()
+                    pass
     #
     # We've got the image, add a WCS
     #
@@ -1178,6 +1190,8 @@ of the detectors.  If it's None then no image is created or displayed (useful if
                         ccd = cameraGeom.cast_Ccd(ccd)
 
                         serialNo = ccd.getId().getSerial()
+                        if not ccdBboxes.has_key(serialNo):
+                            continue
 
                         bbox = ccdBboxes[serialNo]
                         displayUtils.drawBBox(bbox, origin=-xy0, borderWidth=0.49,
