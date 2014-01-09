@@ -44,12 +44,42 @@ class GaussianProcessTestCase(unittest.TestCase):
         gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
         test = np.zeros(dimen)
         sigma = np.empty(1)
+	mu_arr = np.empty(1)
+	
         try:
             mu = gg.interpolate(sigma, test, 2*nData)
             self.assertTrue(False, "Failed to catch using too many points")
         except pex.LsstCppException, e:
             self.assertTrue(True)
-    
+        
+        try:
+            gg.interpolate(mu_arr, sigma, 2*nData)
+            self.assertTrue(False, "Failed to catch using too many points")
+        except pex.LsstCppException, e:
+            self.assertTrue(True)
+
+        try:
+            mu = gg.selfInterpolate(sigma, 0, 2*nData)
+            self.assertTrue(False, "Failed to catch using too many points")
+        except pex.LsstCppException, e:
+            self.assertTrue(True)
+	
+	try:
+            mu = gg.selfInterpolate(sigma, -1, 2*nData)
+            self.assertTrue(False, 
+	    "Failed to catch selfInterpolating non-existent point")
+	    
+        except pex.LsstCppException, e:
+            self.assertTrue(True)
+	
+	try:
+            mu = gg.selfInterpolate(sigma, nData, 2*nData)
+            self.assertTrue(False, 
+	    "Failed to catch selfInterpolating non-existent point")
+	    
+        except pex.LsstCppException, e:
+            self.assertTrue(True)
+	
     def testInterpolate(self):
         """
         This will test GaussianProcess.interpolate using both the squared
