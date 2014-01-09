@@ -1250,7 +1250,12 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
-
+    
+    if(dex < 0 || dex >=_kdTree.getPoints()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                          "Asked to self interpolate on a point that does not exist\n");
+    }
+    
     int i,j,ii;
     T fbar;
 
