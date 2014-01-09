@@ -906,7 +906,7 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors > _kdTree.get_pts()){
+    if(numberOfNeighbors > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1019,7 +1019,7 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors > _kdTree.get_pts()){
+    if(numberOfNeighbors > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1132,7 +1132,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors > _kdTree.get_pts()){
+    if(numberOfNeighbors > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1246,7 +1246,7 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors + 1 > _kdTree.get_pts()){
+    if(numberOfNeighbors + 1 > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
