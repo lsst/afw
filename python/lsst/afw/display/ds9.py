@@ -712,6 +712,24 @@ otherwise connect the dots.  Ctype is the name of a colour (e.g. 'red')"""
 
             ds9Cmd(cmd)
 #
+# Set gray scale
+#
+def scale(min=None, max=None, type=None, frame=None):
+    if type is None:
+        if min is None and max is None:
+            raise Ds9Error("Please specify min and max, or a stretch  type, or both")
+    else:
+        ds9Cmd("scale %s" % type, frame=frame)
+
+    if min is None:
+        if max is not None:
+            raise Ds9Error("Please specify min")
+    else:
+        if max is None:
+            raise Ds9Error("Please specify max")
+        ds9Cmd("scale limits %g %g" % (min, max), frame=frame)
+            
+#
 # Zoom and Pan
 #
 def zoom(zoomfac=None, colc=None, rowc=None, frame=None):
