@@ -115,6 +115,7 @@ class GetCcdImage(object):
         self.isTrimmed = False
         self.imageIsBinned = False    # i.e. images returned by getImage aren't already binned
         self.isRaw = True
+        self.filter = None
 
     def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
         """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
@@ -174,6 +175,10 @@ class ButlerImage(GetCcdImage):
                     ccd = cameraGeom.cast_Ccd(im.getDetector()) # ccd may be a PyCcd
                 except Exception, e:
                     print "Failed to update Ccd:", e
+                try:
+                    self.filter = im.getFilter().getName()
+                except:
+                    raise
                 im = im.getMaskedImage()
 
                 if not re.search(r"MaskedImage", str(imageFactory)):
@@ -192,7 +197,7 @@ class ButlerImage(GetCcdImage):
             return im
 
         try:
-            return self.callback(im, ccd, self.butler)
+            return self.callback(im, ccd, self.butler, imageSource=self)
         except Exception, e:
             if self.verbose:
                 print "callback failed: %s" % e
