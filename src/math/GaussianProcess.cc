@@ -901,12 +901,12 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                                       int numberOfNeighbors) const
 {
     
-    if(numberOfNeighbors<=0){
+    if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors>_kdTree.get_pts()){
+    if(numberOfNeighbors > _kdTree.get_pts()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1014,12 +1014,12 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
 {
 
 
-    if(numberOfNeighbors<=0){
+    if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors>_kdTree.get_pts()){
+    if(numberOfNeighbors > _kdTree.get_pts()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1127,12 +1127,12 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
                                           int numberOfNeighbors) const
 {
 
-    if(numberOfNeighbors<=0){
+    if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors>_kdTree.get_pts()){
+    if(numberOfNeighbors > _kdTree.get_pts()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1241,12 +1241,12 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
                                              int dex,
                                              int numberOfNeighbors) const{
 
-    if(numberOfNeighbors<=0){
+    if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for zero or negative number of neighbors\n");
     }
     
-    if(numberOfNeighbors>_kdTree.get_pts()){
+    if(numberOfNeighbors + 1 > _kdTree.get_pts()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
                           "Asked for more neighbors than you have data points\n");
     }
