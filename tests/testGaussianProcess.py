@@ -45,40 +45,15 @@ class GaussianProcessTestCase(unittest.TestCase):
         test = np.zeros(dimen)
         sigma = np.empty(1)
 	mu_arr = np.empty(1)
-	
-        try:
-            mu = gg.interpolate(sigma, test, 2*nData)
-            self.assertTrue(False, "Failed to catch using too many points")
-        except pex.LsstCppException, e:
-            self.assertTrue(True)
-        
-        try:
-            gg.interpolate(mu_arr, sigma, 2*nData)
-            self.assertTrue(False, "Failed to catch using too many points")
-        except pex.LsstCppException, e:
-            self.assertTrue(True)
 
-        try:
-            mu = gg.selfInterpolate(sigma, 0, 2*nData)
-            self.assertTrue(False, "Failed to catch using too many points")
-        except pex.LsstCppException, e:
-            self.assertTrue(True)
-
-        try:
-            mu = gg.selfInterpolate(sigma, -1, 2*nData)
-            self.assertTrue(False, 
-            "Failed to catch selfInterpolating non-existent point")
-   
-        except pex.LsstCppException, e:
-            self.assertTrue(True)
-
-        try:
-            mu = gg.selfInterpolate(sigma, nData, 2*nData)
-            self.assertTrue(False, 
-            "Failed to catch selfInterpolating non-existent point")
-
-        except pex.LsstCppException, e:
-            self.assertTrue(True)
+        self.assertRaises(pex.LsstCppException,gg.interpolate,sigma,test,2*nData)
+        self.assertRaises(pex.LsstCppException,gg.interpolate,sigma,test,-5)
+        self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,0,2*nData)
+        self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,0,-5)
+        self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,-1,nData-1)
+        self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,nData,nData-1)
+        self.assertRaises(pex.LsstCppException,gg.interpolate,mu_arr,sigma,2*nData)
+        self.assertRaises(pex.LsstCppException,gg.interpolate,mu_arr,sigma,-5)
 
     def testInterpolate(self):
         """
