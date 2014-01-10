@@ -510,52 +510,91 @@ std::set<std::string> SchemaImpl::getNames(bool topOnly, std::string const & pre
 }
 
 template <typename T>
-Key<T> SchemaImpl::addField(Field<T> const & field) {
+Key<T> SchemaImpl::addField(Field<T> const & field, bool doReplace) {
     static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
-    if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
-        );
-    }
-    int padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
-    if (padding != ELEMENT_SIZE) {
-        _recordSize += padding;
-    }
-    SchemaItem<T> item(detail::Access::makeKey(field, _recordSize), field);
-    _recordSize += field.getElementCount() * ELEMENT_SIZE;
-    _offsets.insert(std::pair<int,int>(item.key.getOffset(), _items.size()));
-    _items.push_back(item);
-    return item.key;
-}
-
-Key<Flag> SchemaImpl::addField(Field<Flag> const & field) {
-    static int const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
-    if (!_names.insert(std::pair<std::string,int>(field.getName(), _items.size())).second) {
-        throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
-            (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
-        );
-    }
-    if (_lastFlagField < 0 || _lastFlagBit >= ELEMENT_SIZE * 8) {
+    std::pair<NameMap::iterator,bool> result
+        = _names.insert(std::pair<std::string,int>(field.getName(), _items.size()));
+    if (!result.second) {
+        if (doReplace) {
+            SchemaItem<T> * item = boost::get< SchemaItem<T> >(&_items[result.first->second]);
+            if (!item) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::InvalidParameterException,
+                    (boost::format("Cannot replace field with name '%s' because types differ.")
+                     % field.getName()).str()
+                );
+            }
+            if (item->field.getElementCount() != field.getElementCount()) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::InvalidParameterException,
+                    (boost::format("Cannot replace field with name '%s' because sizes differ.")
+                     % field.getName()).str()
+                );
+            }
+            item->field = field;
+            return item->key;
+        } else {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
+            );
+        }
+    } else {
         int padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
         if (padding != ELEMENT_SIZE) {
             _recordSize += padding;
         }
-        _lastFlagField = _recordSize;
-        _lastFlagBit = 0;
+        SchemaItem<T> item(detail::Access::makeKey(field, _recordSize), field);
         _recordSize += field.getElementCount() * ELEMENT_SIZE;
+        _offsets.insert(std::pair<int,int>(item.key.getOffset(), _items.size()));
+        _items.push_back(item);
+        return item.key;
     }
-    SchemaItem<Flag> item(detail::Access::makeKey(_lastFlagField, _lastFlagBit), field);
-    ++_lastFlagBit;
-    _flags.insert(
-        std::pair<std::pair<int,int>,int>(
-            std::make_pair(item.key.getOffset(), item.key.getBit()),
-            _items.size()
-        )
-    );
-    _items.push_back(item);
-    return item.key;
+}
+
+Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
+    static int const ELEMENT_SIZE = sizeof(Field<Flag>::Element);
+    std::pair<NameMap::iterator,bool> result
+        = _names.insert(std::pair<std::string,int>(field.getName(), _items.size()));
+    if (!result.second) {
+        if (doReplace) {
+            SchemaItem<Flag> * item = boost::get< SchemaItem<Flag> >(&_items[result.first->second]);
+            if (!item) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::InvalidParameterException,
+                    (boost::format("Cannot replace field with name '%s' because types differ.")
+                     % field.getName()).str()
+                );
+            }
+            item->field = field;
+            return item->key;
+        } else {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterException,
+                (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
+            );
+        }
+    } else {
+        if (_lastFlagField < 0 || _lastFlagBit >= ELEMENT_SIZE * 8) {
+            int padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
+            if (padding != ELEMENT_SIZE) {
+                _recordSize += padding;
+            }
+            _lastFlagField = _recordSize;
+            _lastFlagBit = 0;
+            _recordSize += field.getElementCount() * ELEMENT_SIZE;
+        }
+        SchemaItem<Flag> item(detail::Access::makeKey(_lastFlagField, _lastFlagBit), field);
+        ++_lastFlagBit;
+        _flags.insert(
+            std::pair<std::pair<int,int>,int>(
+                std::make_pair(item.key.getOffset(), item.key.getBit()),
+                _items.size()
+            )
+        );
+        _items.push_back(item);
+        return item.key;
+    }
 }
 
 } // namespace detail
@@ -596,9 +635,9 @@ SchemaItem<T> Schema::find(Key<T> const & key) const {
 }
 
 template <typename T>
-Key<T> Schema::addField(Field<T> const & field) {
+Key<T> Schema::addField(Field<T> const & field, bool doReplace) {
     _edit();
-    return _impl->addField(field);
+    return _impl->addField(field, doReplace);
 }
 
 template <typename T>
@@ -689,7 +728,7 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const {
 // more explicit instantiation.
 
 #define INSTANTIATE_LAYOUT(r, data, elem)                               \
-    template Key< elem > Schema::addField(Field< elem > const &);            \
+    template Key< elem > Schema::addField(Field< elem > const &, bool);            \
     template SchemaItem< elem > Schema::find(std::string const & ) const; \
     template SchemaItem< elem > Schema::find(Key< elem > const & ) const; \
     template int Schema::contains(SchemaItem< elem > const &, int) const;   \
