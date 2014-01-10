@@ -63,23 +63,23 @@ class GaussianProcessTestCase(unittest.TestCase):
             self.assertTrue(False, "Failed to catch using too many points")
         except pex.LsstCppException, e:
             self.assertTrue(True)
-	
-	try:
+
+        try:
             mu = gg.selfInterpolate(sigma, -1, 2*nData)
             self.assertTrue(False, 
-	    "Failed to catch selfInterpolating non-existent point")
-	    
+            "Failed to catch selfInterpolating non-existent point")
+   
         except pex.LsstCppException, e:
             self.assertTrue(True)
-	
-	try:
+
+        try:
             mu = gg.selfInterpolate(sigma, nData, 2*nData)
             self.assertTrue(False, 
-	    "Failed to catch selfInterpolating non-existent point")
-	    
+            "Failed to catch selfInterpolating non-existent point")
+
         except pex.LsstCppException, e:
             self.assertTrue(True)
-	
+
     def testInterpolate(self):
         """
         This will test GaussianProcess.interpolate using both the squared
