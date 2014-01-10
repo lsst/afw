@@ -283,7 +283,7 @@ std::vector<SchemaMapper> SchemaMapper::join(
 //----- Explicit instantiation ------------------------------------------------------------------------------
 
 #define INSTANTIATE_LAYOUTMAPPER(r, data, elem)                         \
-    template Key< elem > SchemaMapper::addOutputField(Field< elem > const &);      \
+    template Key< elem > SchemaMapper::addOutputField(Field< elem > const &, bool); \
     template Key< elem > SchemaMapper::addMapping(Key< elem > const &);       \
     template Key< elem > SchemaMapper::addMapping(Key< elem > const &, Field< elem > const &); \
     template Key< elem > SchemaMapper::addMapping(Key< elem > const &, std::string const &); \

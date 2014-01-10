@@ -25,9 +25,9 @@ public:
 
     /// @brief Add a new field to the output Schema that is not connected to the input Schema.
     template <typename T>
-    Key<T> addOutputField(Field<T> const & newField) {
+    Key<T> addOutputField(Field<T> const & newField, bool doReplace=false) {
         _edit();
-        return _impl->_output.addField(newField);
+        return _impl->_output.addField(newField, doReplace);
     }
 
     /**
