@@ -44,7 +44,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
         test = np.zeros(dimen)
         sigma = np.empty(1)
-	mu_arr = np.empty(1)
+        mu_arr = np.empty(1)
 
         self.assertRaises(pex.LsstCppException,gg.interpolate,sigma,test,2*nData)
         self.assertRaises(pex.LsstCppException,gg.interpolate,sigma,test,-5)
