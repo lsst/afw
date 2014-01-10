@@ -5,6 +5,7 @@ namespace lsst { namespace afw { namespace image {
 
  - \ref afwSecDs9Mosaics
  - \ref afwSecDs9Commands
+ - \ref afwSecShowCamera
  - \ref afwSecDs9Firewall
  
 \section afwSecDs9  Using DS9 in the LSST framework
@@ -286,6 +287,65 @@ Colours may be specified as any X11-compliant string (e.g. <tt>"orchid"</tt>), o
 of the following constants defined in \c ds9;  the advantage of the latter
 approach is that the python interpreter can detect typos: \c BLACK, \c WHITE, \c RED, \c BLUE,
 \c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
+
+\subsection afwSecShowCamera  How to use cameraGeom to Display Mosaics of Focal Plane
+
+If you're dealing with mosaic cameras (suprimeCam, HSC, DES, LSST, ...) you often want to generate
+images of the whole focal plane;  fortunately cameraGeom can help:
+\code
+import lsst.afw.cameraGeom.utils as cgUtils
+import lsst.daf.persistence as dafPersist
+
+butler = dafPersist.Butler("dataRoot")
+camera = butler.get("camera")
+
+im = cgUtils.showCamera(camera, cgUtils.ButlerImage(butler, type="calexp", visit=666), frame=0)
+\endcode
+For HSC that's a pretty big image -- several Gbytes.  There are two solutions:
+ - Bin the CCD images
+ - Only show a subset of the chips
+The former is done by setting \c bin:
+\code
+im = cgUtils.showCamera(camera, cgUtils.ButlerImage(butler, type="bias", visit=667),
+                        frame=0, bin=32, title="bias")
+\endcode
+and the latter by passing the list of desired serial numbers:
+\code
+im = cgUtils.showCamera(camera, cgUtils.ButlerImage(butler, type="bias", visit=667),
+                        frame=0, bin=4, onlySerials=[3, 8, 9], title="bias")
+\endcode
+
+Sometimes you want to process each CCD image before mosaicing it.  An example is trimming raw
+images (which is \c ButlerImage's default \c type):
+\code
+im = cgUtils.showCamera(camera, cgUtils.ButlerImage(butler, visit=visit, callback=cgUtils.trimRawCallback,
+			verbose=True), frame=0, bin=32)
+\endcode
+The API is
+\code
+def myCallback(im, ccd=None, butler=None, imageSource=None):
+    ...
+    return im
+\endcode
+where \c imageSource is the input \c ButlerImage (which contains useful information like the filter).
+The callback is allowed to return a binned image, in which case \c showCamera won't bin a second time --- but
+the binning factors should agree.
+
+If your callback is expensive (e.g. I have callbacks that correct for vignetting) you may want to
+run it on many cores.  To do so, set \c nJob:
+\code
+im = cgUtils.showCamera(camera, cgUtils.ButlerImage(butler, visit=666,
+     				                    callback=utils.correctVignettingCallback, verbose=True),
+			nJob=20, frame=0, bin=32)
+\endcode
+(n.b. you'll get lots of chatter from the butler, as a new one is created for each process)
+
+It can be useful to label the chips even if you didn't user \c showCamera to generate the image (e.g. if
+you're looking at the median of a set of mosaics returned by \c showCamera); this is done with:
+\code
+im = cgUtils.showCamera(camera, None, frame=0, bin=32, overlay=True, names=False)
+\endcode
+(\c names specifies if we use the chip's name or serial)
 
 \subsection afwSecDs9Firewall  How to use ds9 through a firewall
 
