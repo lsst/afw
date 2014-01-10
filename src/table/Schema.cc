@@ -524,6 +524,13 @@ Key<T> SchemaImpl::addField(Field<T> const & field, bool doReplace) {
                      % field.getName()).str()
                 );
             }
+            if (item->field.getElementCount() != field.getElementCount()) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::InvalidParameterException,
+                    (boost::format("Cannot replace field with name '%s' because sizes differ.")
+                     % field.getName()).str()
+                );
+            }
             item->field = field;
             return item->key;
         } else {
