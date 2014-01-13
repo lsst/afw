@@ -69,6 +69,24 @@ Key<U> KeyBase< Array<U> >::operator[](int i) const {
 }
 
 template <typename U>
+Key< Array<U> > KeyBase< Array<U> >::slice(int begin, int end) const {
+    Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);
+    if (begin > self->getSize() || begin < 0) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LengthErrorException,
+            "Array key begin index out of range."
+        );
+    }
+    if (end > self->getSize() || end < 0) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LengthErrorException,
+            "Array key end index out of range."
+        );
+    }
+    return detail::Access::extractRange(*this, begin, end);
+}
+
+template <typename U>
 Key<U> KeyBase< Covariance<U> >::operator()(int i, int j) const {
     Key< Covariance<U> > const * self = static_cast<Key< Covariance<U> > const *>(this);
     if (i >= self->getSize() || j >= self->getSize() || i < 0 || j < 0) {

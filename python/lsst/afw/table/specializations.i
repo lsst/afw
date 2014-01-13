@@ -98,13 +98,22 @@
 
 %define %specializeArray(U, PYNAME)
 %extend lsst::afw::table::KeyBase< lsst::afw::table::Array< U > > {
-    lsst::afw::table::Key<U> __getitem__(int n) const {
+    lsst::afw::table::Key<U> get(int n) const {
         return (*self)[n];
+    }
+    lsst::afw::table::Key< lsst::afw::table::Array< U > > slice(int begin, int end) const {
+        return self->slice(begin, end);
     }
     %pythoncode %{
         subfields = property(lambda self: tuple(range(self.getSize())))
         subkeys = property(lambda self: tuple(self[i] for i in range(self.getSize())))
         HAS_NAMED_SUBFIELDS = False
+
+        def __getitem__(self, k):
+            if isinstance(k, slice):
+                return self.slice(k.start, k.stop)
+            else:
+                return self.get(k)
     %}
 }
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Array< U > > {
