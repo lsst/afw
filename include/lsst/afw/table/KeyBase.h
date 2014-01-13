@@ -70,6 +70,8 @@ public:
     void assignVector(BaseRecord & record, std::vector<U> const & values) const;
 
     Key<U> operator[](int i) const; ///< @brief Return a subfield key for the i-th element of the array.
+
+    Key< Array<U> > slice(int begin, int end) const; ///< @brief Return a key for a range of elements
 };
 
 /// @brief KeyBase specialization for arbitrarily-size covariance matrices.
