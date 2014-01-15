@@ -232,6 +232,11 @@ MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                              Footprint const& footprint,
                              MaskT const bitmask);
 
+template <typename ImageOrMaskedImageT>
+void copyWithinFootprint(Footprint const& foot,
+                         PTR(ImageOrMaskedImageT) const input,
+                         PTR(ImageOrMaskedImageT) output);
+
 /************************************************************************************************************/
 /**
  * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
@@ -309,6 +314,13 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
 {
     return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img, ctrl);
 }
+
+template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+boost::shared_ptr<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> >
+mergeHeavyFootprints(
+    HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h1,
+    HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h2
+);
 
 }}}
 
