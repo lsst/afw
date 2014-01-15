@@ -1482,6 +1482,30 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
 }
 
 
+template<typename ImageOrMaskedImageT>
+void
+copyWithinFootprint(Footprint const& foot,
+                    PTR(ImageOrMaskedImageT) const input,
+                    PTR(ImageOrMaskedImageT) output) {
+    Footprint::SpanList spans = foot.getSpans();
+    for (Footprint::SpanList::iterator sp = spans.begin();
+         sp != spans.end(); ++sp) {
+        int y  = (*sp)->getY();
+        int x0 = (*sp)->getX0();
+        int x1 = (*sp)->getX1();
+        typename ImageOrMaskedImageT::const_x_iterator initer = input->x_at(
+            x0 - input->getX0(),  y - input->getY0());
+        typename ImageOrMaskedImageT::x_iterator outiter = output->x_at(
+            x0 - output->getX0(), y - output->getY0());
+        for (int x=x0; x <= x1; ++x, ++initer, ++outiter) {
+            *outiter = *initer;
+        }
+    }
+}
+
+
+
+
 #if 0
 
 /************************************************************************************************************/
@@ -1875,6 +1899,15 @@ template \
 TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
                                           CONST_PTR(std::vector<Footprint::Ptr>) footprints, \
                                           TYPE const value); \
+template \
+void copyWithinFootprint(Footprint const&,                          \
+                         PTR(lsst::afw::image::Image<TYPE>) const,  \
+                         PTR(lsst::afw::image::Image<TYPE>));       \
+template \
+void copyWithinFootprint(Footprint const&,                          \
+                         PTR(lsst::afw::image::MaskedImage<TYPE>) const,  \
+                         PTR(lsst::afw::image::MaskedImage<TYPE>));       \
+
 
 INSTANTIATE_FLOAT(float);
 INSTANTIATE_FLOAT(double);
