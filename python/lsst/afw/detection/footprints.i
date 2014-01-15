@@ -109,6 +109,9 @@ typedef lsst::afw::geom::Span Span;
 }
  */
 
+    %template(HeavyFootprintPtrList ## NAME) std::vector<boost::shared_ptr<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> > >;
+
+
     %template(makeHeavyFootprint ##NAME) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
 
     %template(mergeHeavyFootprints ##NAME) lsst::afw::detection::mergeHeavyFootprints<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
