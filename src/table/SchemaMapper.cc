@@ -117,29 +117,22 @@ struct RemoveMinimalSchema {
 
 } // anonymous
 
-SchemaMapper::SchemaMapper() : _impl(boost::make_shared<Impl>(Schema())) {}
+SchemaMapper::SchemaMapper() : _impl(new Impl(Schema())) {}
 
-SchemaMapper::SchemaMapper(SchemaMapper const & other) : _impl(other._impl) {}
+SchemaMapper::SchemaMapper(SchemaMapper const & other) : _impl(new Impl(*other._impl)) {}
 
 SchemaMapper::SchemaMapper(Schema const & input) :
-    _impl(boost::make_shared<Impl>(input))
+    _impl(new Impl(input))
 {}
 
 SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {
-    _impl = other._impl;
+    boost::scoped_ptr<Impl> tmp(new Impl(*other._impl));
+    _impl.swap(tmp);
     return *this;
-}
-
-void SchemaMapper::_edit() {
-    if (!_impl.unique()) {
-        boost::shared_ptr<Impl> impl(boost::make_shared<Impl>(*_impl));
-        _impl.swap(impl);
-    }
 }
 
 template <typename T>
 Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
-    _edit();
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
@@ -159,7 +152,6 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
 
 template <typename T>
 Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field) {
-    _edit();
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
@@ -178,7 +170,6 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
 
 template <typename T>
 Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & outputName) {
-    _edit();
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
@@ -218,7 +209,6 @@ SchemaMapper SchemaMapper::removeMinimalSchema(Schema const & input, Schema cons
 }
 
 void SchemaMapper::invert() {
-    _edit();
     std::swap(_impl->_input, _impl->_output);
     std::for_each(_impl->_map.begin(), _impl->_map.end(), SwapKeyPair());
 }

@@ -2,6 +2,8 @@
 #ifndef AFW_TABLE_SchemaMapper_h_INCLUDED
 #define AFW_TABLE_SchemaMapper_h_INCLUDED
 
+#include "boost/scoped_ptr.hpp"
+
 #include "lsst/afw/table/detail/SchemaMapperImpl.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -26,7 +28,6 @@ public:
     /// @brief Add a new field to the output Schema that is not connected to the input Schema.
     template <typename T>
     Key<T> addOutputField(Field<T> const & newField, bool doReplace=false) {
-        _edit();
         return _impl->_output.addField(newField, doReplace);
     }
 
@@ -151,9 +152,6 @@ public:
 
 private:
 
-    /// @brief Copy on write; should be called by all mutators.
-    void _edit();
-
     template <typename Predicate>
     struct AddMappingsWhere {
 
@@ -171,7 +169,7 @@ private:
 
     typedef detail::SchemaMapperImpl Impl;
 
-    boost::shared_ptr<Impl> _impl;
+    boost::scoped_ptr<Impl> _impl;
 };
 
 template <typename Predicate>
