@@ -117,12 +117,12 @@ struct RemoveMinimalSchema {
 
 } // anonymous
 
-SchemaMapper::SchemaMapper() : _impl(new Impl(Schema())) {}
+SchemaMapper::SchemaMapper() : _impl(new Impl(Schema(), Schema())) {}
 
 SchemaMapper::SchemaMapper(SchemaMapper const & other) : _impl(new Impl(*other._impl)) {}
 
-SchemaMapper::SchemaMapper(Schema const & input) :
-    _impl(new Impl(input))
+SchemaMapper::SchemaMapper(Schema const & input, Schema const & output) :
+    _impl(new Impl(input, output))
 {}
 
 SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {

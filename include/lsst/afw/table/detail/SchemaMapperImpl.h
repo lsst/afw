@@ -47,8 +47,8 @@ public:
         /// A std::vector whose elements can be any of the allowed pair types.
     typedef std::vector<KeyPairVariant> KeyPairMap;
 
-    /// Constructor from the input schema; output schema is default-constructed.
-    explicit SchemaMapperImpl(Schema const & input) : _input(input), _output() {}
+    /// Constructor from the given input and output schemas
+    explicit SchemaMapperImpl(Schema const & input, Schema const & output) : _input(input), _output(output) {}
 
     /**
      *  @brief A functor-wrapper used in the implementation of SchemaMapper::forEach.

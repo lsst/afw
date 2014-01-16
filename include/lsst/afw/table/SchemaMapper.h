@@ -127,8 +127,15 @@ public:
     /// @brief Construct an empty mapper; useless unless you assign a fully-constructed one to it.
     explicit SchemaMapper();
 
-    /// @brief Construct a mapper from the given input Schema.
-    explicit SchemaMapper(Schema const & input);
+    /**
+     *  @brief Construct a mapper from the given input Schema and optional output Schema
+     *
+     *  Note that the addMapping() methods will not connect input schema fields to existing
+     *  output schema fields; instead, these append new fields to the output schema.  So
+     *  most often you'll want to start with an empty output schema and construct it as
+     *  fields are mapped from the input schema.
+     */
+    explicit SchemaMapper(Schema const & input, Schema const & output=Schema());
 
     /// @brief Copy construct (copy-on-write).
     SchemaMapper(SchemaMapper const & other);
