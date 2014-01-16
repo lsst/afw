@@ -225,12 +225,19 @@ class SchemaMapperTestCase(unittest.TestCase):
     def testOutputSchema(self):
         mapper = lsst.afw.table.SchemaMapper(lsst.afw.table.Schema())
         out1 = mapper.getOutputSchema()
+        out2 = mapper.editOutputSchema()
         k1 = out1.addField("a1", type=int)
         self.assert_(k1 not in mapper.getOutputSchema())
         self.assert_(k1 in out1)
+        self.assert_(k1 not in out2)
         k2 = mapper.addOutputField(lsst.afw.table.Field[float]("a2", "doc for a2"))
         self.assert_(k2 not in out1)
         self.assert_(k2 in mapper.getOutputSchema())
+        self.assert_(k2 in out2)
+        k3 = out2.addField("a3", type=numpy.float32, doc="doc for a3")
+        self.assert_(k3 not in out1)
+        self.assert_(k3 in mapper.getOutputSchema())
+        self.assert_(k3 in out2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
