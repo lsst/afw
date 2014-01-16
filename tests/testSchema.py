@@ -222,6 +222,16 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertEqual(inputRecord.get(ka), outputRecord1.get(ka))
         self.assertEqual(inputRecord.get(kb), outputRecord1.get(kb))
 
+    def testOutputSchema(self):
+        mapper = lsst.afw.table.SchemaMapper(lsst.afw.table.Schema())
+        out1 = mapper.getOutputSchema()
+        k1 = out1.addField("a1", type=int)
+        self.assert_(k1 not in mapper.getOutputSchema())
+        self.assert_(k1 in out1)
+        k2 = mapper.addOutputField(lsst.afw.table.Field[float]("a2", "doc for a2"))
+        self.assert_(k2 not in out1)
+        self.assert_(k2 in mapper.getOutputSchema())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
