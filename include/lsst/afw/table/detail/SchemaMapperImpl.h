@@ -24,7 +24,8 @@ namespace detail {
  *  @brief A private implementation class to hide the messy details of SchemaMapper.
  *
  *  This class is very similar in spirit to SchemaImpl, from the reason it's not a real
- *  pimpl (forEach) to copy-on-write to Citizen; look there for more information.
+ *  pimpl (forEach) to Citizen; look there for more information (though SchemaMapper is
+ *  not copy-on-write).
  */
 class SchemaMapperImpl {
 private:
