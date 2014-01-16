@@ -20,10 +20,13 @@ class SchemaMapper {
 public:
 
     /// @brief Return the input schema (copy-on-write).
-    Schema getInputSchema() const { return _impl->_input; }
+    Schema const getInputSchema() const { return _impl->_input; }
 
     /// @brief Return the output schema (copy-on-write).
-    Schema getOutputSchema() const { return _impl->_output; }
+    Schema const getOutputSchema() const { return _impl->_output; }
+
+    /// @brief Return a reference to the output schema that allows it to be modified in place.
+    Schema & editOutputSchema() { return _impl->_output; }
 
     /// @brief Add a new field to the output Schema that is not connected to the input Schema.
     template <typename T>
