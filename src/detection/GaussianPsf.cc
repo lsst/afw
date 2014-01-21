@@ -21,10 +21,11 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include "boost/make_shared.hpp"
+
 #include "ndarray/eigen.h"
 
 #include "lsst/afw/detection/GaussianPsf.h"
-
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
@@ -82,12 +83,8 @@ public:
 
 GaussianPsfFactory registration("GaussianPsf");
 
-} // anonymous
-
-GaussianPsf::GaussianPsf(int width, int height, double sigma) :
-    _dimensions(width, height), _sigma(sigma)
-{
-    if (_dimensions.getX() % 2 == 0 || _dimensions.getY() % 2 == 2) {
+void checkDimensions(geom::Extent2I const & dimensions) {
+    if (dimensions.getX() % 2 == 0 || dimensions.getY() % 2 == 2) {
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterException,
             "GaussianPsf dimensions must be odd"
@@ -95,15 +92,18 @@ GaussianPsf::GaussianPsf(int width, int height, double sigma) :
     }
 }
 
-GaussianPsf::GaussianPsf(geom::Extent2I const & dimensions, double sigma) :
-    _dimensions(dimensions), _sigma(sigma)
+} // anonymous
+
+GaussianPsf::GaussianPsf(int width, int height, double sigma) :
+    Psf(true), _dimensions(width, height), _sigma(sigma)
 {
-    if (_dimensions.getX() % 2 == 0 || _dimensions.getY() % 2 == 2) {
-        throw LSST_EXCEPT(
-            pex::exceptions::InvalidParameterException,
-            "GaussianPsf dimensions must be odd"
-        );
-    }
+    checkDimensions(_dimensions);
+}
+
+GaussianPsf::GaussianPsf(geom::Extent2I const & dimensions, double sigma) :
+    Psf(true), _dimensions(dimensions), _sigma(sigma)
+{
+    checkDimensions(_dimensions);
 }
 
 PTR(afw::detection::Psf) GaussianPsf::clone() const {

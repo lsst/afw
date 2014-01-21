@@ -23,6 +23,8 @@
 #ifndef LSST_AFW_DETECTION_GaussianPsf_h_INCLUDED
 #define LSST_AFW_DETECTION_GaussianPsf_h_INCLUDED
 
+#include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/detection/Psf.h"
 
 namespace lsst { namespace afw { namespace detection {
@@ -46,7 +48,7 @@ public:
      *  @param[in] height  Number of rows in realizations of the PSF at a point.
      *  @param[in] sigma   Radius of the Gaussian.
      */
-    explicit GaussianPsf(int width, int height, double sigma);
+    GaussianPsf(int width, int height, double sigma);
 
     /**
      *  @brief Constructor for a GaussianPsf
@@ -54,10 +56,13 @@ public:
      *  @param[in] dimensions     Number of columns, rows in realizations of the PSF at a point.
      *  @param[in] sigma   Radius of the Gaussian.
      */
-    explicit GaussianPsf(geom::Extent2I const & dimensions, double sigma);
+    GaussianPsf(geom::Extent2I const & dimensions, double sigma);
 
-    /// Polymorphic deep copy; should usually unnecessary because Psfs are immutable.
+    /// Polymorphic deep copy; should usually be unnecessary because Psfs are immutable.
     virtual PTR(afw::detection::Psf) clone() const;
+
+    /// Return the dimensions of the images returned by computeImage()
+    geom::Extent2I getDimensions() const { return _dimensions; }
 
     /// Return the radius of the Gaussian.
     double getSigma() const { return _sigma; }
@@ -77,7 +82,7 @@ private:
 
 #if 0 // We could reimplement this more efficiently than what's in the base class,
       // but it's tricky to get the position right in all corner cases, and it's
-      // not actually performance-critical, so we should just wait for #3115.
+      // not actually performance-critical, so we should just wait for #3116.
     virtual PTR(Image) doComputeImage(
         geom::Point2D const & position, image::Color const& color
     ) const;
