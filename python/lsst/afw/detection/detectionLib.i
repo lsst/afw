@@ -80,3 +80,5 @@ Python interface to lsst::afw::detection classes
 %pythoncode %{
 from lsst.afw.geom import Span
 %}
+
+%include "GaussianPsf.i"
