@@ -88,7 +88,7 @@ public:
     explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
 
     explicit Footprint(SpanList const & spans, geom::Box2I const & region=geom::Box2I());
-    Footprint(Footprint const & other);    
+    Footprint(Footprint const & other);
     virtual ~Footprint();
 
     virtual bool isHeavy() const { return false; }
@@ -100,7 +100,7 @@ public:
      * Return the Peak%s contained in this Footprint
      *
      * The peaks are ordered by decreasing pixel intensity at the peak position (so the most negative
-     * peak appears last) 
+     * peak appears last).
      */
     PeakList & getPeaks() { return _peaks; }
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
@@ -196,7 +196,7 @@ private:
     static int id;
     mutable int _fid;                    //!< unique ID
     int _area;                           //!< number of pixels in this Footprint (not the area of the bbox)
-     
+
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
     PeakList _peaks;                     //!< the Peaks lying in this footprint
@@ -292,12 +292,12 @@ public:
 
     /* Returns the OR of all the mask pixels held in this HeavyFootprint. */
     MaskPixelT getMaskBitsSet() const {
-		MaskPixelT maskbits = 0;
+        MaskPixelT maskbits = 0;
         for (typename ndarray::Array<MaskPixelT,1,1>::Iterator i = _mask.begin(); i != _mask.end(); ++i) {
-			maskbits |= *i;
-		}
-		return maskbits;
-	}
+            maskbits |= *i;
+        }
+        return maskbits;
+    }
 
 private:
     ndarray::Array<ImagePixelT, 1, 1> _image;
