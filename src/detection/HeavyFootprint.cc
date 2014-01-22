@@ -19,7 +19,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /*****************************************************************************/
 /** \file
  *
@@ -102,7 +102,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
         ImagePixelT const ival = ctrl->getImageVal();
         MaskPixelT const mval = ctrl->getMaskVal();
         VariancePixelT const vval = ctrl->getVarianceVal();
-        
+
         flattenArray(*this, mimage.getImage()->getArray(),    _image,
             setPixel<ImagePixelT>(ival), mimage.getXY0());
         flattenArray(*this, mimage.getMask()->getArray(),     _mask,
@@ -122,11 +122,11 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     Footprint const& foot,              ///< The Footprint defining the pixels to set
-	HeavyFootprintCtrl const* ctrl)
-	: Footprint(foot),
-	  _image   (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-	  _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-	  _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
+    HeavyFootprintCtrl const* ctrl)
+    : Footprint(foot),
+      _image   (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+      _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+      _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
 {
 }
 
@@ -177,7 +177,7 @@ mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const
     // Find the union bounding-box
     geom::Box2I bbox(h1.getBBox());
     bbox.include(h2.getBBox());
-    
+
     // Create union-bb-sized images and insert the heavies
     image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> im1(bbox);
     image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> im2(bbox);
