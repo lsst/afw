@@ -32,6 +32,7 @@
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Psf.h"
 

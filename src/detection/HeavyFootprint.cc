@@ -34,6 +34,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/FootprintArray.h"

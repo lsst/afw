@@ -8,6 +8,7 @@
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
+#include "lsst/afw/detection/HeavyFootprint.h"
 
 // We ASSUME, for FITS persistence:
 typedef float HeavyFootprintPixelT;
