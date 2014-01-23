@@ -10,4 +10,4 @@
 
 %include "lsst/afw/detection/GaussianPsf.h"
 
-%lsst_persistable(lsst::afw::detection::GaussianPsf);
+%castShared(lsst::afw::detection::GaussianPsf, lsst::afw::detection::Psf)
