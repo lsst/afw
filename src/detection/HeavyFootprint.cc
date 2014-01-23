@@ -19,7 +19,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /*****************************************************************************/
 /** \file
  *
@@ -34,6 +34,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"
+#include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/FootprintArray.h"
@@ -102,7 +103,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
         ImagePixelT const ival = ctrl->getImageVal();
         MaskPixelT const mval = ctrl->getMaskVal();
         VariancePixelT const vval = ctrl->getVarianceVal();
-        
+
         flattenArray(*this, mimage.getImage()->getArray(),    _image,
             setPixel<ImagePixelT>(ival), mimage.getXY0());
         flattenArray(*this, mimage.getMask()->getArray(),     _mask,
@@ -122,11 +123,11 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     Footprint const& foot,              ///< The Footprint defining the pixels to set
-	HeavyFootprintCtrl const* ctrl)
-	: Footprint(foot),
-	  _image   (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-	  _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
-	  _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
+    HeavyFootprintCtrl const* ctrl)
+    : Footprint(foot),
+      _image   (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+      _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
+      _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
 {
 }
 
@@ -155,6 +156,43 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 }
 
 
+/**
+ Sums the two given HeavyFootprints *h1* and *h2*, returning a
+ HeavyFootprint with the union footprint, and summed pixels where they
+ overlap.
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)
+mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const& h1,
+                     HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const& h2)
+{
+    // Merge the Footprints (by merging the Spans)
+    Footprint foot(h1);
+    Footprint::SpanList spans = h2.getSpans();
+    for (Footprint::SpanList::iterator sp = spans.begin();
+         sp != spans.end(); ++sp) {
+        foot.addSpan(**sp);
+    }
+    foot.normalize();
+
+    // Find the union bounding-box
+    geom::Box2I bbox(h1.getBBox());
+    bbox.include(h2.getBBox());
+
+    // Create union-bb-sized images and insert the heavies
+    image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> im1(bbox);
+    image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> im2(bbox);
+    h1.insert(im1);
+    h2.insert(im2);
+    // Add the pixels
+    im1 += im2;
+
+    // Build new HeavyFootprint from the merged spans and summed pixels.
+    return PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)(
+        new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(foot, im1));
+}
+
+
 /************************************************************************************************************/
 //
 // Explicit instantiations
@@ -162,7 +200,9 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 //
 //
 #define INSTANTIATE(TYPE) \
-    template class HeavyFootprint<TYPE>;
+    template class HeavyFootprint<TYPE>; \
+    template PTR(HeavyFootprint<TYPE>) mergeHeavyFootprints<TYPE>( \
+        HeavyFootprint<TYPE> const&, HeavyFootprint<TYPE> const&);
 
 INSTANTIATE(boost::uint16_t);
 INSTANTIATE(double);

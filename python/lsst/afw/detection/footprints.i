@@ -28,6 +28,7 @@
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
+#include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/FootprintArray.cc"
@@ -72,6 +73,7 @@ typedef lsst::afw::geom::Span Span;
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
 %include "lsst/afw/detection/FootprintCtrl.h"
+%include "lsst/afw/detection/HeavyFootprint.h"
 %include "lsst/afw/detection/FootprintFunctor.h"
 
 %define %thresholdOperations(TYPE)
@@ -109,7 +111,12 @@ typedef lsst::afw::geom::Span Span;
 }
  */
 
+    %template(HeavyFootprintPtrList ## NAME) std::vector<boost::shared_ptr<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> > >;
+
+
     %template(makeHeavyFootprint ##NAME) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
+
+    %template(mergeHeavyFootprints ##NAME) lsst::afw::detection::mergeHeavyFootprints<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
 
     %inline %{
         PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>)
@@ -137,7 +144,11 @@ typedef lsst::afw::geom::Span Span;
                        lsst::afw::detection::FootprintFunctor<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
     %template(setImageFromFootprint) lsst::afw::detection::setImageFromFootprint<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(setImageFromFootprintList)
-                       lsst::afw::detection::setImageFromFootprintList<lsst::afw::image::Image<PIXEL_TYPE> >
+    lsst::afw::detection::setImageFromFootprintList<lsst::afw::image::Image<PIXEL_TYPE> >;
+    %template(copyWithinFootprintImage)
+    lsst::afw::detection::copyWithinFootprint<lsst::afw::image::Image<PIXEL_TYPE> >;
+    %template(copyWithinFootprintMaskedImage)
+    lsst::afw::detection::copyWithinFootprint<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
 %enddef
 
 %define %maskOperations(PIXEL_TYPE)

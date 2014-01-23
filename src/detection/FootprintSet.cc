@@ -56,6 +56,7 @@
 #include "lsst/afw/detection/FootprintFunctor.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
+#include "lsst/afw/detection/HeavyFootprint.h"
 
 namespace detection = lsst::afw::detection;
 namespace image = lsst::afw::image;

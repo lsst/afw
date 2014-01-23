@@ -198,6 +198,51 @@ class HeavyFootprintTestCase(unittest.TestCase):
         self.assertEqual(afwDetect.cast_HeavyFootprintI(hfoot), None,
                          "Cast to the wrong sort of HeavyFootprint")
 
+    def testMergeHeavyFootprints(self):
+        mi = afwImage.MaskedImageF(20, 10)
+        objectPixelVal = (42, 0x9, 400)
+        
+        foot = afwDetect.Footprint()
+        for y, x0, x1 in [(1, 9, 12),
+                          (2, 12, 13),
+                          (3, 11, 15)]:
+            foot.addSpan(y, x0, x1)
+            for x in range(x0, x1 + 1):
+                mi.set(x, y, objectPixelVal)
+
+        hfoot1 = afwDetect.makeHeavyFootprint(self.foot, self.mi)
+        hfoot2 = afwDetect.makeHeavyFootprint(foot, mi)
+
+        hsum = afwDetect.mergeHeavyFootprintsF(hfoot1, hfoot2)
+        
+        bb = hsum.getBBox()
+        self.assertEquals(bb.getMinX(), 9)
+        self.assertEquals(bb.getMaxX(), 15)
+        self.assertEquals(bb.getMinY(), 1)
+        self.assertEquals(bb.getMaxY(), 3)
+
+        msum = afwImage.MaskedImageF(20,10)
+        hsum.insert(msum)
+
+        sa = msum.getImage().getArray()
+
+        self.assertTrue(np.all(sa[1, 9:13] == objectPixelVal[0]))
+        self.assertTrue(np.all(sa[2, 12:14] == objectPixelVal[0] + self.objectPixelVal[0]))
+        self.assertTrue(np.all(sa[2, 10:12] == self.objectPixelVal[0]))
+
+        sv = msum.getVariance().getArray()
+
+        self.assertTrue(np.all(sv[1, 9:13] == objectPixelVal[2]))
+        self.assertTrue(np.all(sv[2, 12:14] == objectPixelVal[2] + self.objectPixelVal[2]))
+        self.assertTrue(np.all(sv[2, 10:12] == self.objectPixelVal[2]))
+
+        sm = msum.getMask().getArray()
+
+        self.assertTrue(np.all(sm[1, 9:13] == objectPixelVal[1]))
+        self.assertTrue(np.all(sm[2, 12:14] == objectPixelVal[1] | self.objectPixelVal[1]))
+        self.assertTrue(np.all(sm[2, 10:12] == self.objectPixelVal[1]))
+        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
