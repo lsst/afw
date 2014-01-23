@@ -44,6 +44,17 @@ namespace afw {
 namespace math {
 namespace detail {
 
+    /**
+     * @brief Base class to transform col,row coordinates for a destination image
+     *        to their col,row location in the original source image.
+     *
+     * The different possible transform definitions (from WCS to WCS, or via AffineTransform) are handled
+     * through derived classes, and are used in warping.  When computing a warped image, one
+     * iterates over the pixels in the destination image and must ask 'for the value I wish to
+     * put *here*, where should I go to find it in the source image?'.  Instantiating a Functor derived from
+     * this base class creates a callable function which accepts (destination) col,row and returns
+     * (source image) col,row (in the form of a Point2D).
+     */    
     class SrcPosFunctor {
     public:
         typedef boost::shared_ptr<SrcPosFunctor> Ptr;
@@ -55,6 +66,10 @@ namespace detail {
     };
 
 
+    /**
+     * @brief Derived functor class to transform col,row coordinates for a destination image
+     *        to their col,row location in the source image.  The transform is from one WCS to another.
+     */    
     class WcsSrcPosFunctor : public SrcPosFunctor {
     public:
         typedef boost::shared_ptr<WcsSrcPosFunctor> Ptr;
@@ -87,10 +102,14 @@ namespace detail {
     };
 
 
+    /**
+     * @brief Derived functor class to transform col,row coordinates for a destination image
+     *        to their col,row location in the source image via an AffineTransform.
+     */    
     class AffineTransformSrcPosFunctor : public SrcPosFunctor {
     public:
         // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
-        // ... so we actually want to use the *inverse* transform of the affineTransform we we're given.
+        // ... so we actually want to use the *inverse* transform of the affineTransform we were given.
         // Thus _affineTransform is initialized to affineTransform.invert()
         AffineTransformSrcPosFunctor(
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image

@@ -592,6 +592,11 @@ namespace math {
             ///< Specifies whether to use CPU or GPU device
      );
 
+
+    /**
+     * @brief Warp an image with a LinearTranform about a specified point.
+     *        This enables warping an image of e.g. a PSF without translating the centroid.
+     */    
     template<typename DestImageT, typename SrcImageT>
     int warpCenteredImage(
         DestImageT &destImage,              ///< remapped %image
