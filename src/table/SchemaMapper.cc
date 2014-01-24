@@ -132,7 +132,7 @@ SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {
 }
 
 template <typename T>
-Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
+Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, bool doReplace) {
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
@@ -144,14 +144,14 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey) {
         _impl->_output.replaceField(outputKey, inputField);
         return outputKey;
     } else {
-        Key<T> outputKey = _impl->_output.addField(inputField);
+        Key<T> outputKey = _impl->_output.addField(inputField, doReplace);
         _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
 }
 
 template <typename T>
-Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field) {
+Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field, bool doReplace) {
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
@@ -162,14 +162,14 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, Field<T> const & field)
         _impl->_output.replaceField(outputKey, field);
         return outputKey;
     } else {
-        Key<T> outputKey = _impl->_output.addField(field);
+        Key<T> outputKey = _impl->_output.addField(field, doReplace);
         _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
 }
 
 template <typename T>
-Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & outputName) {
+Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & outputName, bool doReplace) {
     typename Impl::KeyPairMap::iterator i = std::find_if(
         _impl->_map.begin(),
         _impl->_map.end(),
@@ -184,7 +184,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & out
     } else {
         Field<T> inputField = _impl->_input.find(inputKey).field;
         Field<T> outputField = inputField.copyRenamed(outputName);
-        Key<T> outputKey = _impl->_output.addField(outputField);
+        Key<T> outputKey = _impl->_output.addField(outputField, doReplace);
         _impl->_map.insert(i, std::make_pair(inputKey, outputKey));
         return outputKey;
     }
@@ -274,9 +274,9 @@ std::vector<SchemaMapper> SchemaMapper::join(
 
 #define INSTANTIATE_LAYOUTMAPPER(r, data, elem)                         \
     template Key< elem > SchemaMapper::addOutputField(Field< elem > const &, bool); \
-    template Key< elem > SchemaMapper::addMapping(Key< elem > const &);       \
-    template Key< elem > SchemaMapper::addMapping(Key< elem > const &, Field< elem > const &); \
-    template Key< elem > SchemaMapper::addMapping(Key< elem > const &, std::string const &); \
+    template Key< elem > SchemaMapper::addMapping(Key< elem > const &, bool);       \
+    template Key< elem > SchemaMapper::addMapping(Key< elem > const &, Field< elem > const &, bool); \
+    template Key< elem > SchemaMapper::addMapping(Key< elem > const &, std::string const &, bool); \
     template bool SchemaMapper::isMapped(Key< elem > const &) const;    \
     template Key< elem > SchemaMapper::getMapping(Key< elem > const &) const;
 
