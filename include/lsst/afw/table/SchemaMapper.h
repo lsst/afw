@@ -39,27 +39,39 @@ public:
      *
      *  If the input Key has already been mapped, the existing output Key will be reused
      *  but the associated Field in the output Schema will be reset to a copy of the input Field.
+     *
+     *  If doReplace=True and a field with same name already exists in the output schema, that
+     *  field will be mapped instead of adding a new field to the output schema.  If doReplace=false
+     *  and a name conflict occurs, an exception will be thrown.
      */
     template <typename T>
-    Key<T> addMapping(Key<T> const & inputKey);
+    Key<T> addMapping(Key<T> const & inputKey, bool doReplace=false);
 
     /**
      *  @brief Add a new mapped field to the output Schema with new descriptions.
      *
      *  If the input Key has already been mapped, the existing output Key will be reused
      *  but the associated Field will be replaced with the given one.
+     *
+     *  If doReplace=True and a field with same name already exists in the output schema, that
+     *  field will be mapped instead of adding a new field to the output schema.  If doReplace=false
+     *  and a name conflict occurs, an exception will be thrown.
      */
     template <typename T>
-    Key<T> addMapping(Key<T> const & inputKey, Field<T> const & outputField);
+    Key<T> addMapping(Key<T> const & inputKey, Field<T> const & outputField, bool doReplace=false);
 
     /**
      *  @brief Add a new mapped field to the output Schema with a new name.
      *
      *  If the input Key has already been mapped, the existing output Key will be reused
      *  but the associated Field will be replaced with one with the given name.
+     *
+     *  If doReplace=True and a field with same name already exists in the output schema, that
+     *  field will be mapped instead of adding a new field to the output schema.  If doReplace=false
+     *  and a name conflict occurs, an exception will be thrown.
      */
     template <typename T>
-    Key<T> addMapping(Key<T> const & inputKey, std::string const & outputName);
+    Key<T> addMapping(Key<T> const & inputKey, std::string const & outputName, bool doReplace=true);
 
     /**
      *  @brief Add mappings for all fields that match criteria defined by a predicate.
@@ -68,9 +80,13 @@ public:
      *  such that 'predicate(i)' is true.  Note that the predicate must have a templated
      *  and/or sufficiently overloaded operator() to match all supported field types,
      *  not just those present in the input Schema.
+     *
+     *  If doReplace=True and a field with same name already exists in the output schema, that
+     *  field will be mapped instead of adding a new field to the output schema.  If doReplace=false
+     *  and a name conflict occurs, an exception will be thrown.
      */
     template <typename Predicate>
-    void addMappingsWhere(Predicate predicate);
+    void addMappingsWhere(Predicate predicate, bool doReplace=true);
 
     /**
      *  @brief Add the given minimal schema to the output schema.
@@ -134,9 +150,10 @@ public:
      *  @brief Construct a mapper from the given input Schema and optional output Schema
      *
      *  Note that the addMapping() methods will not connect input schema fields to existing
-     *  output schema fields; instead, these append new fields to the output schema.  So
-     *  most often you'll want to start with an empty output schema and construct it as
-     *  fields are mapped from the input schema.
+     *  output schema fields unless doReplace=true; instead, these will by default append
+     *  new fields to the output schema.  So most often you'll want to start with an empty
+     *  output schema and construct it as fields are mapped from the input schema, or be sure
+     *  to always pass doReplace=true to addMapping.
      */
     explicit SchemaMapper(Schema const & input, Schema const & output=Schema());
 
@@ -167,14 +184,15 @@ private:
 
         template <typename T>
         void operator()(SchemaItem<T> const & item) const {
-            if (predicate(item)) mapper->addMapping(item.key);
+            if (predicate(item)) mapper->addMapping(item.key, doReplace);
         }
 
-        AddMappingsWhere(SchemaMapper * mapper_, Predicate predicate_) :
-            mapper(mapper_), predicate(predicate_) {}
+        AddMappingsWhere(SchemaMapper * mapper_, Predicate predicate_, bool doReplace_) :
+            mapper(mapper_), predicate(predicate_), doReplace(doReplace_) {}
 
         SchemaMapper * mapper;
         Predicate predicate;
+        bool doReplace;
     };
 
     typedef detail::SchemaMapperImpl Impl;
@@ -183,8 +201,8 @@ private:
 };
 
 template <typename Predicate>
-void SchemaMapper::addMappingsWhere(Predicate predicate) {
-    _impl->_input.forEach(AddMappingsWhere<Predicate>(this, predicate));
+void SchemaMapper::addMappingsWhere(Predicate predicate, bool doReplace) {
+    _impl->_input.forEach(AddMappingsWhere<Predicate>(this, predicate, doReplace));
 }
 
 }}} // namespace lsst::afw::table

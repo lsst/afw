@@ -239,6 +239,22 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assert_(k3 in mapper.getOutputSchema())
         self.assert_(k3 in out2)
 
+    def testDoReplace(self):
+        inSchema = lsst.afw.table.Schema()
+        ka = inSchema.addField("a", type=int)
+        outSchema = lsst.afw.table.Schema(inSchema)
+        kb = outSchema.addField("b", type=int)
+        kc = outSchema.addField("c", type=int)
+        mapper1 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
+        mapper1.addMapping(ka, True)
+        self.assertEqual(mapper1.getMapping(ka), ka)
+        mapper2 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
+        mapper2.addMapping(ka, lsst.afw.table.Field[int]("b", "doc for b"), True)
+        self.assertEqual(mapper2.getMapping(ka), kb)
+        mapper3 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
+        mapper3.addMapping(ka, "c", True)
+        self.assertEqual(mapper3.getMapping(ka), kc)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
