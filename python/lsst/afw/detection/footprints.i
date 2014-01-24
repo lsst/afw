@@ -119,6 +119,8 @@ typedef lsst::afw::geom::Span Span;
     %template(mergeHeavyFootprints ##NAME) lsst::afw::detection::mergeHeavyFootprints<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
 
     %inline %{
+        //------------------------------------------------------------------------
+        // THIS CAST INTERFACE IS DEPRECATED IN FAVOR OF %castShared AND WILL BE REMOVED IN THE FUTURE
         PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>)
             /**
              * Cast a Footprint to a HeavyFootprint of a specified type
@@ -126,7 +128,7 @@ typedef lsst::afw::geom::Span Span;
             cast_HeavyFootprint##NAME(PTR(lsst::afw::detection::Footprint) foot) {
             return boost::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
-
+        //------------------------------------------------------------------------
         PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>)
             /**
              * Cast a Footprint to a HeavyFootprint; the MaskedImage disambiguates the type
@@ -136,7 +138,14 @@ typedef lsst::afw::geom::Span Span;
             return boost::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
     %}
+#define DERIVED_ARGS PIXEL_TYPE, MASK_TYPE, VAR_TYPE
+    %castShared(lsst::afw::detection::HeavyFootprint< DERIVED_ARGS >,
+                lsst::afw::detection::Footprint)
+#undef DERIVED_ARGS
+
 %enddef
+
+
 
 %define %imageOperations(NAME, PIXEL_TYPE)
     %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;
