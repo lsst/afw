@@ -20,23 +20,23 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include <sstream>
+#include <utility>
 #include "boost/make_shared.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/cameraGeom/TransformRegistry.h"
+#include "lsst/afw/geom/TransformRegistry.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 
 namespace lsst {
 namespace afw {
-namespace cameraGeom {
+namespace geom {
 
 TransformRegistry::TransformRegistry(
-    std::string const &nativeCoordSys,
-    std::vector<std::pair<std::string, CONST_PTR(geom::XYTransform)> > const &transformRegistry
+    CoordSys const &nativeCoordSys,
+    std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > const &transformRegistry
 ) :
     _nativeCoordSys(nativeCoordSys)
 {
-    typedef std::vector<std::pair<std::string, CONST_PTR(geom::XYTransform)> >::const_iterator ListIter;
     for (ListIter trIter = transformRegistry.begin(); trIter != transformRegistry.end(); ++trIter) {
         if (_transformMap.count(trIter->first) > 0) {
             std::ostringstream os;
@@ -49,22 +49,27 @@ TransformRegistry::TransformRegistry(
         }
         _transformMap.insert(*trIter);
     }
+
+    // insert identity transform for nativeCoordSys, if not already provided
+    if not hasXYTransform(nativeCoordSys) {
+        _transformMap.insert(std::make_pair(nativeCoordSys,
+            boost::make_shared<IdentityXYTransform>(false)));
+    }
 }
 
-CameraPoint TransformRegistry::convert(
-    CameraPoint const &fromPoint,
-    std::string const &toCoordSys
+CoordPoint2 TransformRegistry::convert(
+    CoordPoint2 const &fromPoint,
+    CoordSys const &toCoordSys
 ) const {
-    std::string fromCoordSys = fromPoint.getCoordSys();
+    CoordSys fromCoordSys = fromPoint.getCoordSys();
     if (fromCoordSys == toCoordSys) {
-        return fromPoint;
+        return CoordPoint2(fromPoint.getPoint(), toCoordSys);
     }
 
-    geom::Point2D outPoint2D;
-
     // compute outPoint2D = fromPoint converted to native coords
+    Point2D outPoint2D;
     if (fromCoordSys != _nativeCoordSys) {
-        CONST_PTR(geom::XYTransform) fromTransform = getXYTransform(fromCoordSys);
+        CONST_PTR(XYTransform) fromTransform = getXYTransform(fromCoordSys);
         outPoint2D = fromTransform->forwardTransform(fromPoint.getPoint());
     } else {
         outPoint2D = fromPoint.getPoint();
@@ -72,32 +77,32 @@ CameraPoint TransformRegistry::convert(
 
     // convert outPoint2D from native coords to toCoordSys
     if (toCoordSys != _nativeCoordSys) {
-        CONST_PTR(geom::XYTransform) toTransform = getXYTransform(toCoordSys);
+        CONST_PTR(XYTransform) toTransform = getXYTransform(toCoordSys);
         outPoint2D = toTransform->reverseTransform(outPoint2D);
     }
-    return CameraPoint(outPoint2D, toCoordSys, fromPoint.getFrameName());
+    return CoordPoint2(outPoint2D, toCoordSys);
 }
 
-std::vector<geom::Point2D> TransformRegistry::convert(
-    std::vector<geom::Point2D> const &pointList,
-    std::string const &fromCoordSys,
-    std::string const &toCoordSys
+std::vector<Point2D> TransformRegistry::convert(
+    std::vector<Point2D> const &pointList,
+    CoordSys const &fromCoordSys,
+    CoordSys const &toCoordSys
 ) const {
     if (fromCoordSys == toCoordSys) {
         return pointList;
     }
 
-    std::vector<geom::Point2D> outList;
+    std::vector<Point2D> outList;
 
     // convert pointList from fromCoordSys to native coords, filling outList
     if (fromCoordSys != _nativeCoordSys) {
-        CONST_PTR(geom::XYTransform) fromTransform = getXYTransform(fromCoordSys);
-        for (std::vector<geom::Point2D>::const_iterator fromPtIter = pointList.begin();
+        CONST_PTR(XYTransform) fromTransform = getXYTransform(fromCoordSys);
+        for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
             fromPtIter != pointList.end(); ++fromPtIter) {
             outList.push_back(fromTransform->forwardTransform(*fromPtIter));
         }
     } else {
-        for (std::vector<geom::Point2D>::const_iterator fromPtIter = pointList.begin();
+        for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
             fromPtIter != pointList.end(); ++fromPtIter) {
             outList.push_back(*fromPtIter);
         }
@@ -105,8 +110,8 @@ std::vector<geom::Point2D> TransformRegistry::convert(
 
     // convert outList from native coords to toCoordSys, in place
     if (toCoordSys != _nativeCoordSys) {
-        CONST_PTR(geom::XYTransform) toTransform = getXYTransform(toCoordSys);
-        for (std::vector<geom::Point2D>::iterator nativePtIter = outList.begin();
+        CONST_PTR(XYTransform) toTransform = getXYTransform(toCoordSys);
+        for (std::vector<Point2D>::iterator nativePtIter = outList.begin();
             nativePtIter != pointList.end(); ++nativePtIter) {
             *nativePtIter = toTransform->reverseTransform(*nativePtIter);
         }
@@ -114,14 +119,17 @@ std::vector<geom::Point2D> TransformRegistry::convert(
     return outList;
 }
 
-
-CONST_PTR(geom::XYTransform) TransformRegistry::getXYTransform(
-    std::string const &coordSys
-) const {
-    if (coordSys == _nativeCoordSys) {
-        return boost::make_shared<geom::IdentityXYTransform>(false);
+std::vector<CoordSys> TransformRegistry::getCoordSysList() const {
+    std::vector<CoordSys> coordSysList;
+    for (_MapIter trIter = _transformMap.begin(); trIter != _transformMap.end(); ++trIter) {
+        coordSysList.push_back(trIter->first);
     }
+    return coordSysList;
+}
 
+CONST_PTR(XYTransform) TransformRegistry::getXYTransform(
+    CoordSys const &coordSys
+) const {
     _MapIter const foundIter = _transformMap.find(coordSys);
     if (foundIter == _transformMap.end()) {
         std::ostringstream os;
@@ -131,13 +139,10 @@ CONST_PTR(geom::XYTransform) TransformRegistry::getXYTransform(
     return foundIter->second;
 }
 
-std::vector<std::string> TransformRegistry::getCoordSysList() const {
-    std::vector<std::string> coordSysList;
-    coordSysList.push_back(_nativeCoordSys);
-    for (_MapIter trIter = _transformMap.begin(); trIter != _transformMap.end(); ++trIter) {
-        coordSysList.push_back(trIter->first);
-    }
-    return coordSysList;
+bool TransformRegistry::hasXYTransform(
+    CoordSys const &coordSys
+) const {
+    return _transformMap.find(coordSys) != _transformMap.end();
 }
 
 }}}

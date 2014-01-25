@@ -24,34 +24,36 @@
 #define LSST_AFW_CAMERAGEOM_CAMERASYS_H
 
 #include <string>
+#include <sstream>
+#include "lsst/afw/geom/TransformRegistry.h"
 
+/**
+ * @file
+ *
+ * Describe the physical layout of pixels in the focal plane
+ */
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
+ 
+/**
+ * Standard coordinate systems for CameraGeom
+ * (see Detector.h for standard detector-specific coordinate system prefixes)
+ */
 
 /**
- * Coordinate system and coordinate frame (if needed to disambiguate).
+ * Focal plane coordinates:
+ * Rectilinear x, y (and z when talking about the location of a detector) on the camera focal plane (mm).
+ * For z=0 choose a convenient point near the focus at x, y = 0.
  */
-class CameraSys {
-public:
-    /**
-     * Construct a CameraSys
-     */
-    explicit CameraSys(
-        std::string const &coordSys,    ///< coordinate system
-        std::string const &frameName    ///< frame name, if needed to disambiguate
-            ///< (typically detector name or "")
-    ) : _coordSys(coordSys), _frameName(frameName) {}
+CoordSys const geom::CoordSys("focalPlane") FOCAL_PLANE;
 
-    std::string getCoordSys() const { return _coordSys; }
-
-    std::string getFrameName() const { return _frameName; }
- 
-private:
-    std::string _coordSys;  ///< coordinate system
-    std::string _frameName; ///< frame name, if needed to disambiguate (typically detector name or "")
-};
-
+/**
+ * Pupil coordinates:
+ * Angular x,y offset from the vertex at the pupil (arcsec).
+ */
+CoordSys const geom::CoordSys("pupil") PUPIL;
+    
 }}}
 
 #endif

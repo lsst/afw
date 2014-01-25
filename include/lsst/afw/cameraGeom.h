@@ -33,4 +33,6 @@
 #include "lsst/afw/cameraGeom/Camera.h"
 #include "lsst/afw/cameraGeom/Distortion.h"
 
+#include "lsst/afw/cameraGeom.CameraPoint.h"
+
 #endif

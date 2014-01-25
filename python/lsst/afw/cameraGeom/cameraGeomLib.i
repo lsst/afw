@@ -64,6 +64,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %shared_ptr(lsst::afw::cameraGeom::Distortion);
 %shared_ptr(lsst::afw::cameraGeom::NullDistortion);
 %shared_ptr(lsst::afw::cameraGeom::RadialPolyDistortion);
+// new in CameraGeom rewrite
+%shared_ptr(lsst::afw::cameraGeom::CameraSys);
 
 %template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
 %template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
@@ -96,6 +98,9 @@ radians = lsst.afw.geom.radians
 %include "lsst/afw/cameraGeom/Raft.h"
 %include "lsst/afw/cameraGeom/Camera.h"
 %include "lsst/afw/cameraGeom/Distortion.h"
+// new in CameraGeom rewrite
+%include "lsst/afw/cameraGeom/CameraPoint.h"
+%include "lsst/afw/cameraGeom/TransformRegistry.h"
 
 %define DistortInstantiate(PIXEL)
 %template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::Image<PIXEL> >;

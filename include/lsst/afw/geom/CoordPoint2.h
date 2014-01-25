@@ -1,8 +1,6 @@
-// -*- lsst-c++ -*-
-
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -22,21 +20,39 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-/************************************************************************************************************/
+#if !defined(LSST_AFW_GEOM_COORDPOINT2_H)
+#define LSST_AFW_GEOM_COORDPOINT2_H
 
-%{
-#include "lsst/afw/geom/XYTransform.h"
+#include <string>
+#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/CoordSys.h"
-%include "lsst/afw/geom/TransformRegistry.h"
-%}
 
-%shared_ptr(lsst::afw::geom::XYTransform);
-%shared_ptr(lsst::afw::geom::IdentityXYTransform);
-%shared_ptr(lsst::afw::geom::InvertedXYTransform);
-%shared_ptr(lsst::afw::geom::RadialXYTransform);
-%shared_ptr(lsst::afw::geom::DetectorXYTransform);
+namespace lsst {
+namespace afw {
+namespace geom {
 
-%template(NameXYTransformList) std::vector<std::point<lsst::afw::geom::CoordSys, boost::shared_ptr<lsst::afw::geom::XYTransform> > >;
+/**
+ * A 2d point with associated coordinate system
+ */
+class CoordPoint2 {
+public:
+    /**
+     * Construct a CoordPoint2
+     */
+    explicit CoordPoint2(
+        Point2D const &point, ///< 2D point
+        CoordSys const &coordSys    ///< coordinate system
+    ) : _point(point), _coordSys(coordSys) {}
 
-%include "lsst/afw/geom/XYTransform.h"
-%include "lsst/afw/geom/TransformRegistry.h"
+    Point2D getPoint() const { return _point; }
+
+    CoordSys getCoordSys() const { return _coordSys; }
+
+private:
+    Point2D _point;   ///< 2D point
+    CoordSys _coordSys;     ///< coordinate system
+};
+
+}}}
+
+#endif
