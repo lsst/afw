@@ -110,6 +110,17 @@ class WcsTestCase(unittest.TestCase):
             for i, v in enumerate([ra, dec]):
                 self.assertEqual(sky[i].asDegrees(), v)
 
+    def testCast(self):
+        # strangely, this overload of makeWcs returns a TAN WCS that's not a TanWcs
+        wcs = afwImage.makeWcs(afwCoord.IcrsCoord(45.0*afwGeom.degrees, 45.0*afwGeom.degrees),
+                               afwGeom.Point2D(0.0, 0.0), 1.0, 0.0, 0.0, 1.0)
+        # ...but if you round-trip it through a PropertySet, you get a TanWcs in a Wcs ptr,
+        # which is what we want for this test.
+        base = afwImage.makeWcs(wcs.getFitsMetadata())
+        self.assertEqual(type(base), afwImage.Wcs)
+        derived = afwImage.TanWcs.cast(base)
+        self.assertEqual(type(derived), afwImage.TanWcs)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class WCSRotateFlip(unittest.TestCase):
