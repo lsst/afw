@@ -39,63 +39,11 @@ namespace afw {
 namespace geom {
 
 /**
- * Base class for coordinate system keys used in in TransformRegistry
- *
- * @note: A subclass is used for keys in TransformRegistry, and another subclass is used by CameraGeom
- * for detector-specific coordinate system prefixes (Jim Bosch's clever idea). Thus the shared base class.
- *
- * Comparison is by name, so each unique coordinate system (or prefix) must have a unique name.
- */
-class BaseCoordSys {
-public:
-    explicit BaseCoordSys(std::string const &name) : _name(name) {}
-    ~BaseCoordSys() {}
-
-    /**
-     * Get name as <className>(arg1, arg2...)
-     *
-     * The name must be unique for a unique coordinate system,
-     * since it is used by getHash operator== and other operators.
-     */
-    std::string getName() const { return _name; };
-
-    // /** get a hash; allows use in std::unordered_map */
-    // size_t getHash() const {
-    //     return std::tr1::hash<std::string>(_name);
-    // }
-
-    /** equals operator; based on name */
-    bool operator==(BaseCoordSys const &rhs) const {
-        return _name == rhs.getName();
-    }
-
-    /** not equals operator; based on name */
-    bool operator!=(BaseCoordSys const &rhs) const {
-        return _name != rhs.getName();
-    }
-
-    /** less-than operator; based on name; allows use in std::map */
-    bool operator<(BaseCoordSys const &rhs) const {
-        return _name < rhs.getName();
-    }
-public:
-    std::string _name;
-};
-
-/**
- * Class used for keys in TransformRegistry
- *
- * Each coordinate system must have a unique name. Hashing and equality testing are based on this name.
- */
-class CoordSys : public BaseCoordSys {
-public:
-    explicit CoordSys(std::string const &name) : BaseCoordSys(name) {}
-    ~CoordSys() {}
-};
-
-/**
  * A registry of 2-dimensional coordinate transforms
+ *
+ * CoordSys must support operator< (because the underlying representation is std::map)
  */
+template<typename CoordSys>
 class TransformRegistry {
 public:
     /**
@@ -169,25 +117,12 @@ public:
 
  
 private:
+    typedef std::map<CoordSys, CONST_PTR(XYTransform)> MapType;
     CoordSys _nativeCoordSys;    ///< native coordinate system
-    std::map<CoordSys, CONST_PTR(XYTransform)> _transformMap; 
+    MapType _transformMap; 
         ///< map of coordSys: XYTransform
-    typedef std::map<CoordSys, CONST_PTR(XYTransform)>::const_iterator _MapIter;
 };
 
 }}}
-
-namespace std {
-    /** add hash<CoordSys>(CoordSys) to std namespace 
-     *
-     * this allows CoordSys to be used as a key in unordered_map
-     * without specifying the hash template parameter
-     */
-    // template <> struct hash<BaseCoordSys> {
-    //     size_t operator()(const CoordSys & x) const {
-    //             return CoordSys.getHash();
-    //     }
-    // };
-}
 
 #endif

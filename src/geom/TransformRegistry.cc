@@ -31,7 +31,8 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-TransformRegistry::TransformRegistry(
+template<typename CoordSys>
+TransformRegistry<CoordSys>::TransformRegistry(
     CoordSys const &nativeCoordSys,
     std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > const &transformRegistry
 ) :
@@ -57,7 +58,8 @@ TransformRegistry::TransformRegistry(
     }
 }
 
-CoordPoint2 TransformRegistry::convert(
+template<typename CoordSys>
+CoordPoint2 TransformRegistry<CoordSys>::convert(
     CoordPoint2 const &fromPoint,
     CoordSys const &toCoordSys
 ) const {
@@ -83,7 +85,8 @@ CoordPoint2 TransformRegistry::convert(
     return CoordPoint2(outPoint2D, toCoordSys);
 }
 
-std::vector<Point2D> TransformRegistry::convert(
+template<typename CoordSys>
+std::vector<Point2D> TransformRegistry<CoordSys>::convert(
     std::vector<Point2D> const &pointList,
     CoordSys const &fromCoordSys,
     CoordSys const &toCoordSys
@@ -119,18 +122,20 @@ std::vector<Point2D> TransformRegistry::convert(
     return outList;
 }
 
-std::vector<CoordSys> TransformRegistry::getCoordSysList() const {
+template<typename CoordSys>
+std::vector<CoordSys> TransformRegistry<CoordSys>::getCoordSysList() const {
     std::vector<CoordSys> coordSysList;
-    for (_MapIter trIter = _transformMap.begin(); trIter != _transformMap.end(); ++trIter) {
+    for (_MapType::const_iterator trIter = _transformMap.begin(); trIter != _transformMap.end(); ++trIter) {
         coordSysList.push_back(trIter->first);
     }
     return coordSysList;
 }
 
-CONST_PTR(XYTransform) TransformRegistry::getXYTransform(
+template<typename CoordSys>
+CONST_PTR(XYTransform) TransformRegistry<CoordSys>::getXYTransform(
     CoordSys const &coordSys
 ) const {
-    _MapIter const foundIter = _transformMap.find(coordSys);
+    _MapType::const_iterator const foundIter = _transformMap.find(coordSys);
     if (foundIter == _transformMap.end()) {
         std::ostringstream os;
         os << "Registry does not support coordSys \"" << coordSys << "\"";
@@ -139,7 +144,8 @@ CONST_PTR(XYTransform) TransformRegistry::getXYTransform(
     return foundIter->second;
 }
 
-bool TransformRegistry::hasXYTransform(
+template<typename CoordSys>
+bool TransformRegistry<CoordSys>::hasXYTransform(
     CoordSys const &coordSys
 ) const {
     return _transformMap.find(coordSys) != _transformMap.end();

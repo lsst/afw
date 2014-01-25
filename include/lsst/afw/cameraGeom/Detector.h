@@ -27,6 +27,7 @@
 #include <sstream>
 #include "lsst/afw/geom/TransformRegistry.h"
 #include "lsst/afw/geom/CoordPoint2.h"
+#include "lsst/afw/cameraGeom/CameraSys.h"
 
 /**
  * @file
@@ -36,19 +37,6 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
- 
-/**
- * Prefix for detector-specific coordinate systems
- *
- * A full detector-specific coordinate system combines this prefix with the detector name
- * as follows: <prefix>:<detector name>, e.g. "pixels:R11 S01".
- */
-class DetectorSys : public BaseCoordSys {
-public:
-    explicit DetectorSys(std::string const &name) : BaseCoordSys(name) {}
-    ~DetectorSys() {}
-};
-
 
 class Detector {
     /**
@@ -59,66 +47,43 @@ class Detector {
      */
     explicit Detector(
         std::string const &name,    ///< detector name
-        transformRegistry const &geom::TransformRegistry  ///< transform registry for this detector
+        &geom::TransformRegistry<CameraSys> const transformRegistry ///< transform registry for this detector
     ) _name(name), _transformRegistry(transformRegistry) {}
 
     ~Detector() {}
 
-    /** make a CoordSys from another CoordSys; a no-op */
-    CoordSys makeCoordSys(CoordSys const &coordSys) const { return coordSys; }
+    /** 
+     * Get a coordinate system from a coordinate system (return input unchanged)
+     */
+    CameraSys getCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
 
-    /** make a CoordSys from a DetectorSys prefix */
-    CoordSys makeCoordSys(DetectorSys const &detectorSys) const {
-        std::ostringstream os;
-        os << DetectorSys.getName() << ":" << getName();
-        return CoordSys(os.str())
+    /** 
+     * Get a coordinate system from a detector system prefix (add detector name)
+     */
+    CameraSys getCameraSys(DetectorSysPrefix const &detectorSysPrefix) const {
+        return CameraSys(detectorSysPrefix.getSysName(), _name);
     }
 
     /**
-     * Convert a CoordPoint2 from one coordinate system to another specified by a CoordSys
+     * Convert a CoordPoint2 from one coordinate system to adetectorSysPrefixnother specified by a CameraSys
      */
     CoordPoint2 convert(
         CoordPoint2 const &fromPoint,   ///< point to convert
-        CoordSys const &toSys           ///< coordinate system to which to convert,
-                                        ///< e.g. FOCAL_PLANE or detector.getCoordSys(PIXELS)
+        CameraSys const &toSys        ///< detector-specific system to which to convert, e.g. PIXELS
     ) const {
-        return _transformRegistry.convert(fromPoint, toSys);
-    }
-
-    /**
-     * Convert a CoordPoint2 from one coordinate system to another specified by a DetectorSys
-     */
-    CoordPoint2 convert(
-        CoordPoint2 const &fromPoint,   ///< point to convert
-        DetectorSys const &toSys        ///< detector-specific system to which to convert, e.g. PIXELS
-    ) const {
-        CoordSys toCoordSys = getCoordSys(toSys);
-        return convert(fromPoint, toCoordSys);
+        return convert(fromPoint, getCameraSys(toSys));
     }
 
     /** Get the detector name */
     std::string getName() { return _name; }
 
     /** Get the transform registry */
-    geom::TransformRegistry getTransformRegistry() { return _transformRegistry; }
+    geom::TransformRegistry<CameraSys> getTransformRegistry() { return _transformRegistry; }
 
 private:
     std::string _name; ///< detector name
-    geom::TransformRegistry _transformRegistry; ///< registry of coordinate transforms
+    geom::TransformRegistry<CameraSys> _transformRegistry; ///< registry of coordinate transforms
 }
-
-/**
- * Nominal pixels on the detector (unbinned)
- * This ignores manufacturing imperfections, "tree ring" distortions and all other such effects.
- * It is a uniform grid of rectangular (usually square) pixels.
- */
-DetectorSys const PIXELS("pixels");
-
-/**
- * The actual pixels where the photon lands and electrons are generated (unbinned)
- * This takes into account manufacturing defectos, "tree ring" distortions and other such effects.
- */
-DetectorSys const ACTUAL_PIXELS("pixels");
 
 }}}
 
