@@ -26,8 +26,8 @@
 #include <string>
 #include <sstream>
 #include "lsst/afw/geom/TransformRegistry.h"
-#include "lsst/afw/geom/CoordPoint2.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
+#include "lsst/afw/cameraGeom/CameraPoint.h"
 
 /**
  * @file
@@ -39,6 +39,7 @@ namespace afw {
 namespace cameraGeom {
 
 class Detector {
+public:
     /**
      * Make a Detector
      *
@@ -47,8 +48,8 @@ class Detector {
      */
     explicit Detector(
         std::string const &name,    ///< detector name
-        &geom::TransformRegistry<CameraSys> const transformRegistry ///< transform registry for this detector
-    ) _name(name), _transformRegistry(transformRegistry) {}
+        CameraTransformRegistry const &transformRegistry ///< transform registry for this detector
+    ) : _name(name), _transformRegistry(transformRegistry) {}
 
     ~Detector() {}
 
@@ -65,25 +66,40 @@ class Detector {
     }
 
     /**
-     * Convert a CoordPoint2 from one coordinate system to adetectorSysPrefixnother specified by a CameraSys
+     * Convert a CameraPoint from one coordinate system to another
+     *
+     * @throw: pexExcept::InvalidParameterException if from or to coordinate system is unknown
      */
-    CoordPoint2 convert(
-        CoordPoint2 const &fromPoint,   ///< point to convert
-        CameraSys const &toSys        ///< detector-specific system to which to convert, e.g. PIXELS
+    CameraPoint convert(
+        CameraPoint const &fromPoint,   ///< camera point to convert
+        CameraSys const &toSys          ///< coordinate system to which to convert;
+                                        ///< may be a full system or a detector prefix such as PIXELS
     ) const {
-        return convert(fromPoint, getCameraSys(toSys));
+        CameraSys fullToSys = getCameraSys(toSys);
+        geom::Point2D toPoint = _transformRegistry.convert(fromPoint.getPoint(), fromPoint.getCameraSys(), fullToSys);
+        return CameraPoint(toPoint, fullToSys);
     }
 
     /** Get the detector name */
     std::string getName() { return _name; }
 
     /** Get the transform registry */
-    geom::TransformRegistry<CameraSys> getTransformRegistry() { return _transformRegistry; }
+    CameraTransformRegistry getTransformRegistry() { return _transformRegistry; }
+
+    /**
+     * Make a CameraPoint from a point and a camera system or detector prefix
+     */
+    CameraPoint makeCameraPoint(
+        geom::Point2D point,    ///< 2-d point
+        CameraSys cameraSys     ///< coordinate system; may be a full system or a detector prefix
+    ) {
+        return CameraPoint(point, getCameraSys(cameraSys));
+    }
 
 private:
     std::string _name; ///< detector name
-    geom::TransformRegistry<CameraSys> _transformRegistry; ///< registry of coordinate transforms
-}
+    CameraTransformRegistry _transformRegistry; ///< registry of coordinate transforms
+};
 
 }}}
 

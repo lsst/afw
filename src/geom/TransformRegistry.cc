@@ -34,11 +34,12 @@ namespace geom {
 template<typename CoordSys>
 TransformRegistry<CoordSys>::TransformRegistry(
     CoordSys const &nativeCoordSys,
-    std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > const &transformRegistry
+    std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > const &transformList
 ) :
     _nativeCoordSys(nativeCoordSys)
 {
-    for (ListIter trIter = transformRegistry.begin(); trIter != transformRegistry.end(); ++trIter) {
+    for (typename std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> >::const_iterator
+        trIter = transformList.begin(); trIter != transformList.end(); ++trIter) {
         if (_transformMap.count(trIter->first) > 0) {
             std::ostringstream os;
             os << "Duplicate coordSys \"" << trIter->first << "\"";
@@ -52,37 +53,26 @@ TransformRegistry<CoordSys>::TransformRegistry(
     }
 
     // insert identity transform for nativeCoordSys, if not already provided
-    if not hasXYTransform(nativeCoordSys) {
+    if (!hasXYTransform(nativeCoordSys)) {
         _transformMap.insert(std::make_pair(nativeCoordSys,
             boost::make_shared<IdentityXYTransform>(false)));
     }
 }
 
 template<typename CoordSys>
-CoordPoint2 TransformRegistry<CoordSys>::convert(
-    CoordPoint2 const &fromPoint,
+Point2D TransformRegistry<CoordSys>::convert(
+    Point2D const &fromPoint,
+    CoordSys const &fromCoordSys,
     CoordSys const &toCoordSys
 ) const {
-    CoordSys fromCoordSys = fromPoint.getCoordSys();
     if (fromCoordSys == toCoordSys) {
-        return CoordPoint2(fromPoint.getPoint(), toCoordSys);
+        return fromPoint;
     }
 
-    // compute outPoint2D = fromPoint converted to native coords
-    Point2D outPoint2D;
-    if (fromCoordSys != _nativeCoordSys) {
-        CONST_PTR(XYTransform) fromTransform = getXYTransform(fromCoordSys);
-        outPoint2D = fromTransform->forwardTransform(fromPoint.getPoint());
-    } else {
-        outPoint2D = fromPoint.getPoint();
-    }
-
-    // convert outPoint2D from native coords to toCoordSys
-    if (toCoordSys != _nativeCoordSys) {
-        CONST_PTR(XYTransform) toTransform = getXYTransform(toCoordSys);
-        outPoint2D = toTransform->reverseTransform(outPoint2D);
-    }
-    return CoordPoint2(outPoint2D, toCoordSys);
+    // transform fromSys -> nativeSys -> toSys
+    CONST_PTR(XYTransform) fromTransform = getXYTransform(fromCoordSys);
+    CONST_PTR(XYTransform) toTransform = getXYTransform(toCoordSys);
+    return toTransform->reverseTransform(fromTransform->forwardTransform(fromPoint));
 }
 
 template<typename CoordSys>

@@ -26,8 +26,6 @@
 
 %{
 #include "lsst/afw/geom/XYTransform.h"
-#include "lsst/afw/geom/CoordSys.h"
-%include "lsst/afw/geom/TransformRegistry.h"
 %}
 
 %shared_ptr(lsst::afw::geom::XYTransform);
@@ -36,7 +34,4 @@
 %shared_ptr(lsst::afw::geom::RadialXYTransform);
 %shared_ptr(lsst::afw::geom::DetectorXYTransform);
 
-%template(NameXYTransformList) std::vector<std::point<lsst::afw::geom::CoordSys, boost::shared_ptr<lsst::afw::geom::XYTransform> > >;
-
 %include "lsst/afw/geom/XYTransform.h"
-%include "lsst/afw/geom/TransformRegistry.h"

@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -20,12 +20,31 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-/**
- * \file
- */
-#include <algorithm>
-#include "lsst/afw/cameraGeom/Camera.h"
+#if !defined(LSST_AFW_CAMERAGEOM_CAMERAPOINT_H)
+#define LSST_AFW_CAMERAGEOM_CAMERAPOINT_H
 
-namespace afwGeom = lsst::afw::geom;
-namespace afwImage = lsst::afw::image;
-namespace cameraGeom = lsst::afw::cameraGeom;
+#include <string>
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/cameraGeom/CameraSys.h"
+
+namespace lsst {
+namespace afw {
+namespace cameraGeom {
+
+/**
+ * A Point2D with associated camera coordinate system
+ */
+class CameraPoint {
+public:
+    CameraPoint(geom::Point2D point, CameraSys const &cameraSys) : _point(point), _cameraSys(cameraSys) {}
+    ~CameraPoint() {}
+    geom::Point2D getPoint() const { return _point; }
+    CameraSys getCameraSys() const { return _cameraSys; }
+private:
+    geom::Point2D _point;         ///< 2-d point
+    CameraSys _cameraSys;   ///< camera coordinate system
+};
+
+}}}
+
+#endif

@@ -28,10 +28,7 @@
 #include <utility>
 // #include <tr1/functional> // for hash
 // #include "boost/unordered_map.hpp" // using <tr1/unordered_map> conflicts with the utils package
-#include "boost/make_shared.hpp"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/CoordSys.h"
-#include "lsst/afw/geom/CoordPoint2.h"
 #include "lsst/afw/geom/XYTransform.h"
 
 namespace lsst {
@@ -68,12 +65,13 @@ public:
     /**
      * Convert a point from one coordinate system to another
      *
-     * @return the converted value as a CoordPoint2
+     * @return the converted value as a Point2D
      *
      * @throw: pexExcept::InvalidParameterException if toCoordSys is unknown
      */
-    CoordPoint2 convert(
-        CoordPoint2 const &coordPoint,  ///< point from which to convert
+    Point2D convert(
+        Point2D const &fromPoint,       ///< point from which to convert
+        CoordSys const &fromSys,        ///< coordinate system from which to convert
         CoordSys const &toCoordSys      ///< coordinate system to which to convert
     ) const;
 
@@ -117,9 +115,9 @@ public:
 
  
 private:
-    typedef std::map<CoordSys, CONST_PTR(XYTransform)> MapType;
+    typedef std::map<CoordSys, CONST_PTR(XYTransform)> _MapType;
     CoordSys _nativeCoordSys;    ///< native coordinate system
-    MapType _transformMap; 
+    _MapType _transformMap; 
         ///< map of coordSys: XYTransform
 };
 

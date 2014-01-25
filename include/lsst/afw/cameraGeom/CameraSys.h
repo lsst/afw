@@ -25,13 +25,7 @@
 
 #include <string>
 #include <sstream>
-#include "lsst/afw/geom/TransformRegistry.h"
 
-/**
- * @file
- *
- * Describe the physical layout of pixels in the focal plane
- */
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
@@ -46,8 +40,12 @@ namespace cameraGeom {
  */
 class CameraSys {
 public:
+    /**
+     * Construct a CameraSys
+     */
     explicit CameraSys(std::string const &sysName, std::string const &detectorName="")
-        : _sysName(sysName), _detectorName(detectorName) {}
+    : _sysName(sysName), _detectorName(detectorName) {};
+
     ~CameraSys() {}
 
     /**
@@ -63,13 +61,13 @@ public:
     /**
      * Does this have a non-blank detector name?
      */
-    std::string hasDetectorName() const { return bool(_detectorName); }
+    bool hasDetectorName() const { return !_detectorName.empty(); }
 
     bool operator==(CameraSys const &rhs) const {
         return _sysName == rhs.getSysName() && _detectorName == rhs.getDetectorName();
     }
 
-    bool operator!=(BaseCoordSys const &rhs) const {
+    bool operator!=(CameraSys const &rhs) const {
         return !(*this == rhs);
     }
 
@@ -81,7 +79,8 @@ public:
             return _sysName < rhs.getSysName();
         }
     }
-public:
+
+private:
     std::string _sysName;   ///< coordinate system name
     std::string _detectorName;  ///< detector name; "" if not a detector-specific coordinate system
 };
@@ -90,32 +89,33 @@ public:
  * Incomplete coordinate system for detector-specific coordinates (detector name is blank)
  *
  * This is Jim Bosch's clever idea for simplifying Detector.convert;
- * CoordSys is always complete and DetectorSysPrefix is not.
+ * CameraSys is always complete and DetectorSysPrefix is not.
  */
 class DetectorSysPrefix : public CameraSys {
+public:
     explicit DetectorSysPrefix(std::string const &sysName)
         : _sysName(sysName), _detectorName("") {}
     ~CameraSys() {}
-}
+};
 
 
-/**
- * Standard coordinate systems for CameraGeom
- * (see Detector.h for standard detector-specific coordinate system prefixes)
- */
+typedef typename geom::TransformRegistry<CameraSys> CameraTransformRegistry;
+
+
+// *** Standard camera coordinate systems ***
 
 /**
  * Focal plane coordinates:
  * Rectilinear x, y (and z when talking about the location of a detector) on the camera focal plane (mm).
  * For z=0 choose a convenient point near the focus at x, y = 0.
  */
-CameraSys const geom::CoordSys("FocalPlane") FOCAL_PLANE;
+CameraSys const FOCAL_PLANE("FocalPlane");
 
 /**
  * Pupil coordinates:
  * Angular x,y offset from the vertex at the pupil (arcsec).
  */
-CameraSys const geom::CoordSys("Pupil") PUPIL;
+CameraSys const PUPIL("Pupil");
 
 /**
  * Nominal pixels on the detector (unbinned)
