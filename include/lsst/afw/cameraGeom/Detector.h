@@ -38,6 +38,8 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
+
 class Detector {
 public:
     /**

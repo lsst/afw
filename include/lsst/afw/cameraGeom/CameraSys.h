@@ -102,9 +102,6 @@ public:
 };
 
 
-typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
-
-
 // *** Standard camera coordinate systems ***
 
 /**
@@ -112,13 +109,13 @@ typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
  * Rectilinear x, y (and z when talking about the location of a detector) on the camera focal plane (mm).
  * For z=0 choose a convenient point near the focus at x, y = 0.
  */
-CameraSys const FOCAL_PLANE("FocalPlane");
+extern CameraSys const FOCAL_PLANE;
 
 /**
  * Pupil coordinates:
  * Angular x,y offset from the vertex at the pupil (arcsec).
  */
-CameraSys const PUPIL("Pupil");
+extern CameraSys const PUPIL;
 
 /**
  * Nominal pixels on the detector (unbinned)
@@ -127,7 +124,7 @@ CameraSys const PUPIL("Pupil");
  *
  * This is a detector prefix; call Detector.getCameraSys(PIXELS) to make a full coordsys.
  */
-DetectorSysPrefix const PIXELS("Pixels");
+extern DetectorSysPrefix const PIXELS;
 
 /**
  * The actual pixels where the photon lands and electrons are generated (unbinned)
@@ -135,7 +132,7 @@ DetectorSysPrefix const PIXELS("Pixels");
  *
  * This is a detector prefix; call Detector.getCameraSys(ACTUAL_PIXELS) to make a full coordsys.
  */
-DetectorSysPrefix const ACTUAL_PIXELS("ActualPixels");
+extern DetectorSysPrefix const ACTUAL_PIXELS;
     
 }}}
 

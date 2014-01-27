@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,13 +19,18 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#if !defined(LSST_AFW_CAMERAGEOM_H)
-#define LSST_AFW_CAMERAGEOM_H
+#include "lsst/afw/cameraGeom/CameraSys.h"
 
-// uncomment after it works
-// #include "lsst/afw/cameraGeom/CameraSys.h"
-// #include "lsst/afw/cameraGeom/CameraPoint.h"
-// #include "lsst/afw/cameraGeom/Detector.h"
+namespace lsst {
+namespace afw {
+namespace cameraGeom {
 
-#endif
+CameraSys const FOCAL_PLANE = CameraSys("FocalPlane");
+
+CameraSys const PUPIL = CameraSys("Pupil");
+
+DetectorSysPrefix const PIXELS = DetectorSysPrefix("Pixels");
+
+DetectorSysPrefix const ACTUAL_PIXELS = DetectorSysPrefix("ActualPixels");
+    
+}}}

@@ -22,6 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+// used by lsst/afw/image/imageLib.i to avoid circular import
+// can be removed if and when this file does not need imageLib.i
 #define CAMERA_GEOM_LIB_I
 
 %define cameraGeomLib_DOCSTRING
@@ -36,10 +38,16 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %{
 #include "boost/shared_ptr.hpp"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/geom/ellipses.h"
 #include "lsst/pex/logging.h"
-#include "lsst/afw/image.h"
 #include "lsst/afw/cameraGeom.h"
+// ditch the following once cameraGeom.h has them
+#include "lsst/afw/cameraGeom/CameraSys.h"
+#include "lsst/afw/cameraGeom/CameraPoint.h"
+#include "lsst/afw/cameraGeom/Orientation.h"
+#include "lsst/afw/cameraGeom/RawAmplifier.h"
+#include "lsst/afw/cameraGeom/Amplifier.h"
+#include "lsst/afw/cameraGeom/Detector.h"
+
 %}
 
 %include "lsst/p_lsstSwig.i"
@@ -47,118 +55,18 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %import "lsst/afw/geom/geomLib.i"
 
-#if defined(IMPORT_IMAGE_I)
-%import  "lsst/afw/image/imageLib.i"
-%import  "lsst/afw/geom/ellipses/ellipsesLib.i"
-#endif
-
 %lsst_exceptions();
 
 %shared_ptr(lsst::afw::cameraGeom::Detector);
-%shared_ptr(lsst::afw::cameraGeom::Amp);
-%shared_ptr(lsst::afw::cameraGeom::ElectronicParams);
-%shared_ptr(lsst::afw::cameraGeom::DetectorMosaic);
-%shared_ptr(lsst::afw::cameraGeom::Ccd);
-%shared_ptr(lsst::afw::cameraGeom::Raft);
-%shared_ptr(lsst::afw::cameraGeom::Camera);
-%shared_ptr(lsst::afw::cameraGeom::Distortion);
-%shared_ptr(lsst::afw::cameraGeom::NullDistortion);
-%shared_ptr(lsst::afw::cameraGeom::RadialPolyDistortion);
-// new in CameraGeom rewrite
-%shared_ptr(lsst::afw::cameraGeom::CameraSys);
+%shared_ptr(lsst::afw::cameraGeom::RawAmplifier);
+%shared_ptr(lsst::afw::cameraGeom::Amplifier);
 
-%template(AmpSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amp> >;
-%template(DetectorSet) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
+%template(AmplifierList) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amplifier> >;
+%template(DetectorList) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
 
-%include "lsst/afw/cameraGeom/Id.h"
-
-%extend lsst::afw::cameraGeom::Id {
-    %pythoncode {
-        def __str__(self):
-            return "%d, %s" % (self.getSerial(), self.getName())
-
-        def __repr__(self):
-            return "Id(%s)" % (str(self))
-    }
-}
-%pythoncode {
-# See comment in Orientation.h
-import lsst.afw.geom			# needed for initialising Orientation
-radians = lsst.afw.geom.radians
-}
-
-%shared_ptr(lsst::afw::cameraGeom::DetectorXYTransform);
-
-%include "lsst/afw/cameraGeom/FpPoint.h"
-%include "lsst/afw/cameraGeom/Orientation.h"
-%include "lsst/afw/cameraGeom/Detector.h"
-%include "lsst/afw/cameraGeom/Amp.h"
-%include "lsst/afw/cameraGeom/DetectorMosaic.h"
-%include "lsst/afw/cameraGeom/Ccd.h"
-%include "lsst/afw/cameraGeom/Raft.h"
-%include "lsst/afw/cameraGeom/Camera.h"
-%include "lsst/afw/cameraGeom/Distortion.h"
-// new in CameraGeom rewrite
+%include "lsst/afw/cameraGeom/CameraSys.h"
 %include "lsst/afw/cameraGeom/CameraPoint.h"
-%include "lsst/afw/cameraGeom/TransformRegistry.h"
-
-%define DistortInstantiate(PIXEL)
-%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::Image<PIXEL> >;
-%template(distort) lsst::afw::cameraGeom::Distortion::distort<lsst::afw::image::MaskedImage<PIXEL> >;
-%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::Image<PIXEL> >;
-%template(undistort) lsst::afw::cameraGeom::Distortion::undistort<lsst::afw::image::MaskedImage<PIXEL> >;
-%enddef
-
-DistortInstantiate(float);
-DistortInstantiate(double);
-
-
-%inline %{
-    lsst::afw::cameraGeom::DetectorMosaic::Ptr
-    cast_DetectorMosaic(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::DetectorMosaic>(detector);
-    }
-
-    lsst::afw::cameraGeom::Amp::Ptr
-    cast_Amp(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::Amp>(detector);
-    }
-
-    lsst::afw::cameraGeom::Ccd::Ptr
-    cast_Ccd(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::Ccd>(detector);
-    }
-
-    lsst::afw::cameraGeom::Raft::Ptr
-    cast_Raft(lsst::afw::cameraGeom::Detector::Ptr detector) {
-        return boost::dynamic_pointer_cast<lsst::afw::cameraGeom::Raft>(detector);
-    }
-
-%}
-
-%define Instantiate(PIXEL_TYPE...)
-%template(prepareAmpData)
-    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Image<PIXEL_TYPE> >;
-%template(prepareAmpData)
-    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
-%enddef
-
-Instantiate(boost::uint16_t);
-Instantiate(float);
-Instantiate(double);
-%template(prepareAmpData)
-    lsst::afw::cameraGeom::Amp::prepareAmpData<lsst::afw::image::Mask<boost::uint16_t> >;
-
-%definePythonIterator(lsst::afw::cameraGeom::Ccd);
-%definePythonIterator(lsst::afw::cameraGeom::DetectorMosaic);
-
-%pythoncode {
-class ReadoutCorner(object):
-    """A python object corresponding to Amp::ReadoutCorner"""
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return ["LLC", "LRC", "URC", "ULC"][self.value]
-}
-
+%include "lsst/afw/cameraGeom/Orientation.h"
+%include "lsst/afw/cameraGeom/RawAmplifier.h"
+%include "lsst/afw/cameraGeom/Amplifier.h"
+%include "lsst/afw/cameraGeom/Detector.h"
