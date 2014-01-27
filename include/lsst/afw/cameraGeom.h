@@ -23,8 +23,9 @@
 #if !defined(LSST_AFW_CAMERAGEOM_H)
 #define LSST_AFW_CAMERAGEOM_H
 
-#include "lsst/afw/cameraGeom/Detector.h"
-#include "lsst/afw/cameraGeom.CameraSys.h"
-#include "lsst/afw/cameraGeom.CameraPoint.h"
+// uncomment after it works
+// #include "lsst/afw/cameraGeom/Detector.h"
+// #include "lsst/afw/cameraGeom.CameraSys.h"
+// #include "lsst/afw/cameraGeom.CameraPoint.h"
 
 #endif

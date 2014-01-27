@@ -43,8 +43,10 @@ public:
     /**
      * Construct a CameraSys
      */
-    explicit CameraSys(std::string const &sysName, std::string const &detectorName="")
-    : _sysName(sysName), _detectorName(detectorName) {};
+    explicit CameraSys(
+        std::string const &sysName,         ///< coordinate system name
+        std::string const &detectorName=""  /// detector name
+    ) : _sysName(sysName), _detectorName(detectorName) {};
 
     ~CameraSys() {}
 
@@ -54,7 +56,7 @@ public:
     std::string getSysName() const { return _sysName; };
 
     /**
-     * Get detector name, or "" if not a detector-specific coordinate system)
+     * Get detector name, or "" if not a detector-specific coordinate system
      */
     std::string getDetectorName() const { return _detectorName; };
 
@@ -93,13 +95,14 @@ private:
  */
 class DetectorSysPrefix : public CameraSys {
 public:
-    explicit DetectorSysPrefix(std::string const &sysName)
-        : _sysName(sysName), _detectorName("") {}
-    ~CameraSys() {}
+    explicit DetectorSysPrefix(
+        std::string const &sysName  ///< coordinate system name
+    ) : CameraSys(sysName, "") {}
+    ~DetectorSysPrefix() {}
 };
 
 
-typedef typename geom::TransformRegistry<CameraSys> CameraTransformRegistry;
+typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
 
 
 // *** Standard camera coordinate systems ***

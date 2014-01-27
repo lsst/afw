@@ -172,8 +172,8 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
 
     data.metadata->set("FILTER", getFilter().getName());
     if (hasDetector()) {
-        data.metadata->set("DETNAME", getDetector()->getId().getName());
-        data.metadata->set("DETSER", getDetector()->getId().getSerial());
+        data.metadata->set("DETNAME", getDetector()->getName());
+        data.metadata->set("DETSER", getDetector()->getSerial());
     }
     /**
      * We need to define these keywords properly! XXX

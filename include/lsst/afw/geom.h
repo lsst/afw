@@ -39,6 +39,7 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/XYTransform.h"
-#include "lsst/afw/geom/TransformRegistry.h"
+// uncomment after it works
+// #include "lsst/afw/geom/TransformRegistry.h"
 
 #endif // LSST_GEOM_H

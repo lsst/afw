@@ -43,13 +43,17 @@ public:
     /**
      * Make a Detector
      *
-     * Warning: the keys for the detector-specific coordinate systems in the transform registry
+     * @todo: Replace this constructor with one that takes an orientation
+     * and construct the FocalPlane->Pixels entry from that Orientation
+     *
+     * @warning The keys for the detector-specific coordinate systems in the transform registry
      * must include the detector name.
      */
     explicit Detector(
         std::string const &name,    ///< detector name
+        std::string const &serial,  ///< detector serial "number" that identifies the physical detector
         CameraTransformRegistry const &transformRegistry ///< transform registry for this detector
-    ) : _name(name), _transformRegistry(transformRegistry) {}
+    ) : _name(name), _serial(serial), _transformRegistry(transformRegistry) {}
 
     ~Detector() {}
 
@@ -81,10 +85,13 @@ public:
     }
 
     /** Get the detector name */
-    std::string getName() { return _name; }
+    std::string getName() const { return _name; }
+
+    /** Get the detector serial "number" */
+    std::string getSerial() const { return _serial; }
 
     /** Get the transform registry */
-    CameraTransformRegistry getTransformRegistry() { return _transformRegistry; }
+    CameraTransformRegistry getTransformRegistry() const { return _transformRegistry; }
 
     /**
      * Make a CameraPoint from a point and a camera system or detector prefix
@@ -92,12 +99,13 @@ public:
     CameraPoint makeCameraPoint(
         geom::Point2D point,    ///< 2-d point
         CameraSys cameraSys     ///< coordinate system; may be a full system or a detector prefix
-    ) {
+    ) const {
         return CameraPoint(point, getCameraSys(cameraSys));
     }
 
 private:
     std::string _name; ///< detector name
+    std::string _serial;    ///< detector serial "number" that identifies the physical detector
     CameraTransformRegistry _transformRegistry; ///< registry of coordinate transforms
 };
 
