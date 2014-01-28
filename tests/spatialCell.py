@@ -309,7 +309,7 @@ class TestMaskedImageCandidateCase(unittest.TestCase):
         # pointer to SpatialCellMaskedImageCandidate<Image<float> > and all will be well;
         #
 
-        cand = afwMath.cast_SpatialCellMaskedImageCandidateF(cand)
+        cand = afwMath.SpatialCellMaskedImageCandidateF.cast(cand)
 
         width, height = 15, 21
         cand.setWidth(width)
