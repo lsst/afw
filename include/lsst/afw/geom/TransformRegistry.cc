@@ -60,6 +60,10 @@ TransformRegistry<CoordSys>::TransformRegistry(
 }
 
 template<typename CoordSys>
+TransformRegistry<CoordSys>::TransformRegistry() : _nativeCoordSys(), _transformMap() {}
+
+
+template<typename CoordSys>
 Point2D TransformRegistry<CoordSys>::convert(
     Point2D const &fromPoint,
     CoordSys const &fromCoordSys,

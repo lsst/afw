@@ -25,6 +25,7 @@
 
 #include <functional>
 #include <string>
+#include <ostream>
 #include <sstream>
 #include "boost/functional/hash.hpp"
 #include "lsst/afw/geom/TransformRegistry.h"
@@ -156,4 +157,17 @@ namespace boost {
     };
 }
 
+namespace std {
+
+std::ostream& operator<< (std::ostream &os, lsst::afw::cameraGeom::CameraSys const &cameraSys) {
+    os << "CameraSys(" << cameraSys.getSysName() << ", " << cameraSys.getDetectorName() << ")";
+    return os;
+}
+
+std::ostream& operator<< (std::ostream &os, lsst::afw::cameraGeom::DetectorSysPrefix const &detSysPrefix) {
+    os << "DetectorSysPrefix(" << detSysPrefix.getSysName() << ")";
+    return os;
+}
+
+}
 #endif

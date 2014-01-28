@@ -25,6 +25,7 @@
 
 #include <string>
 #include <utility>
+#include <vector>
 // I would rather include <tr1/unordered_map> but I get symbol collisions from the utils package
 #include "lsst/tr1/unordered_map.h"
 #include "lsst/afw/geom/Point.h"
@@ -37,8 +38,11 @@ namespace geom {
 /**
  * A registry of 2-dimensional coordinate transforms
  *
- * If CoordSys is not a plain old data type then you must define functor boost::hash<CoordSys>;
- * see ../geom/CameraSys.h for an example.
+ * If CoordSys is not a plain old data type then:
+ * * You must define functor boost::hash<CoordSys>; to allow use as a key in unordered_map
+ * * It must have a default constructor (no arguments), to make SWIG happy
+ * * You must overload ostream operator<<
+ * For an example see ../cameraGeom/CameraSys.h (CameraSys is used as a CoordSys)
  */
 template<typename CoordSys>
 class TransformRegistry {
@@ -60,6 +64,11 @@ public:
             ///< * coordSys: coordinate system
             ///< * xyTransform: an XYTransform whose forward method converts coordSys->nativeCoordSys
     );
+
+    /// null implementation to make SWIG willing to wrap a vector that contains these
+    explicit TransformRegistry();
+
+    ~TransformRegistry() {}
 
     /**
      * Convert a point from one coordinate system to another
@@ -120,5 +129,8 @@ private:
 };
 
 }}}
+
+/// the implementation code must be included so other users can make templated versions
+#include "lsst/afw/geom/TransformRegistry.cc"
 
 #endif
