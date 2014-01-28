@@ -34,6 +34,18 @@ namespace cameraGeom {
 /**
  * Geometry and electronic information about raw amplifier images
  *
+ * Here is a pictorial example showing the meaning of flipX and flipY:
+ *
+ *    CCD with 4 amps        Desired assembled output      Use these parameters
+ *   
+ *    --x         x--            y                       
+ *   |  amp1    amp2 |           |                               flipX       flipY
+ *   y               y           |                       amp1    False       True
+ *                               | CCD image             amp2    True        True
+ *   y               y           |                       amp3    False       False
+ *   |  amp3    amp4 |           |                       amp4    True        False
+ *    --x         x--             ----------- x
+ *   
  * @note:
  * * All bounding boxes are parent boxes with respect to the raw image.
  * * The overscan and underscan bounding boxes are regions containing USABLE data,
@@ -45,6 +57,8 @@ namespace cameraGeom {
  *   individual amplifier images (which is uncommon):
  *   * Use 0,0 for cameras that supply raw data as a raw CCD image (most cameras)
  *   * Use nonzero for cameras that supply raw data as separate amplifier images with xy0=0,0 (LSST)
+ * * This design assumes assembled X is always +/- raw X, which we require for CCDs (so that bleed trails
+ *   are always along the Y axis). If you must swap X/Y then add a doTranspose flag.
  */
 class RawAmplifier : public lsst::daf::base::Citizen {
 public:

@@ -38,11 +38,17 @@ namespace geom {
 /**
  * A registry of 2-dimensional coordinate transforms
  *
- * If CoordSys is not a plain old data type then:
- * * You must define functor boost::hash<CoordSys>; to allow use as a key in unordered_map
- * * It must have a default constructor (no arguments), to make SWIG happy
- * * You must overload ostream operator<<
+ * If CoordSys is not a plain old data type or std::string then:
+ * * CoordSys must have a default constructor (no arguments)
+ * * CoordSys must have member function operator==
+ * * You must define function hash_value(CoordSys const &)
+ * * You must overload ostream operator<<(CoordSys const &)
  * For an example see ../cameraGeom/CameraSys.h (CameraSys is used as a CoordSys)
+ * The reason for these rules is to allow CoordSys to be used as a key in boost::unordered_map,
+ * and to allow SWIG to wrap a collection containing CoordSys.
+ *
+ * @warning When we switch to using std::unordered_map then you must define functor
+ * std::hash<CoordSys>(CoordSys const &) instead of function hash_value.
  */
 template<typename CoordSys>
 class TransformRegistry {

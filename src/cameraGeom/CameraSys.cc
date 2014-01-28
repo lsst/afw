@@ -34,6 +34,16 @@ DetectorSysPrefix const PIXELS = DetectorSysPrefix("Pixels");
 
 DetectorSysPrefix const ACTUAL_PIXELS = DetectorSysPrefix("ActualPixels");
 
+std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys) {
+    os << "CameraSys(" << cameraSys.getSysName() << ", " << cameraSys.getDetectorName() << ")";
+    return os;
+}
+
+std::ostream &operator<< (std::ostream &os, DetectorSysPrefix const &detSysPrefix) {
+    os << "DetectorSysPrefix(" << detSysPrefix.getSysName() << ")";
+    return os;
+}
+
 // instantiate CameraTransformRegistry = TransformRegistry<CameraSys>
 template class geom::TransformRegistry<CameraSys>;
 

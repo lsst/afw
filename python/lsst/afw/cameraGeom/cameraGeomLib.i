@@ -52,6 +52,12 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %lsst_exceptions();
 
+%pythoncode {
+# See comment in Orientation.h
+import lsst.afw.geom            # needed for initialising Orientation
+radians = lsst.afw.geom.radians
+}
+
 %shared_ptr(lsst::afw::cameraGeom::Detector);
 %shared_ptr(lsst::afw::cameraGeom::RawAmplifier);
 %shared_ptr(lsst::afw::cameraGeom::Amplifier);

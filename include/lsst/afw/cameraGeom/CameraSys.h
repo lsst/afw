@@ -142,32 +142,20 @@ extern DetectorSysPrefix const PIXELS;
  * This is a detector prefix; call Detector.getCameraSys(ACTUAL_PIXELS) to make a full coordsys.
  */
 extern DetectorSysPrefix const ACTUAL_PIXELS;
-    
+
+
+// define operator<< and hash_value so CameraSys can be used as a key in TransformRegistry
+std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys);
+
+std::ostream &operator<< (std::ostream &os, DetectorSysPrefix const &detSysPrefix);
+
+inline size_t hash_value(CameraSys const &cameraSys) {
+    size_t seed = 0;
+    boost::hash_combine(seed, cameraSys.getSysName());
+    boost::hash_combine(seed, cameraSys.getDetectorName());
+    return seed;
+}
+
 }}}
 
-// define boost::hash<CameraSys> so CameraSys can be used as a key in TransformRegistry
-namespace boost {
-    template<> struct hash<lsst::afw::cameraGeom::CameraSys> {
-        inline size_t operator()(lsst::afw::cameraGeom::CameraSys const &cameraSys) const {
-            size_t seed = 0;
-            boost::hash_combine(seed, cameraSys.getSysName());
-            boost::hash_combine(seed, cameraSys.getDetectorName());
-            return seed;
-        }
-    };
-}
-
-namespace std {
-
-std::ostream& operator<< (std::ostream &os, lsst::afw::cameraGeom::CameraSys const &cameraSys) {
-    os << "CameraSys(" << cameraSys.getSysName() << ", " << cameraSys.getDetectorName() << ")";
-    return os;
-}
-
-std::ostream& operator<< (std::ostream &os, lsst::afw::cameraGeom::DetectorSysPrefix const &detSysPrefix) {
-    os << "DetectorSysPrefix(" << detSysPrefix.getSysName() << ")";
-    return os;
-}
-
-}
 #endif
