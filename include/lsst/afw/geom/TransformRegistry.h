@@ -26,8 +26,10 @@
 #include <string>
 #include <utility>
 #include <vector>
-// I would rather include <tr1/unordered_map> but I get symbol collisions from the utils package
-#include "lsst/tr1/unordered_map.h"
+// I would rather include <tr1/unordered_map> but I get symbol collisions from the utils package,
+// due to lsst/tr1/unordered_map.h, which pretends that boost::unordered_map is std::tr1::unordered_map;
+// this pretence falls apart if one specializes the hash function, since boost and tr1 do that differently
+#include "boost/unordered_map.hpp"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/XYTransform.h"
 
@@ -136,7 +138,7 @@ public:
 
  
 private:
-    typedef std::tr1::unordered_map<CoordSys, CONST_PTR(XYTransform)> _MapType;
+    typedef boost::unordered_map<CoordSys, CONST_PTR(XYTransform)> _MapType;
     CoordSys _nativeCoordSys;   ///< native coordinate system
     _MapType _transformMap;     ///< map of coordSys: XYTransform
 };

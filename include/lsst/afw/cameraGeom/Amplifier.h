@@ -52,12 +52,17 @@ public:
         CONST_PTR(RawAmplifier) rawAmplifierPtr ///< data about raw amplifier image, if known and relevant
     );
 
-    std::string const getName() { return _name; }
-    geom::Box2I const getBBox() { return _bbox; }
-    double getGain() { return _gain; }
-    double getReadNoise() { return _readNoise; }
-    CONST_PTR(RawAmplifier) getRawAmplifierPtr() { return _rawAmplifierPtr; }
-    bool hasRawAmplifierPtr() { return bool(_rawAmplifierPtr); }
+    std::string const getName() const { return _name; }
+
+    geom::Box2I const getBBox() const { return _bbox; }
+
+    double getGain() const { return _gain; }
+
+    double getReadNoise() const { return _readNoise; }
+
+    CONST_PTR(RawAmplifier) getRawAmplifierPtr() const { return _rawAmplifierPtr; }
+
+    bool hasRawAmplifierPtr() const { return bool(_rawAmplifierPtr); }
 
 private:
     std::string _name;

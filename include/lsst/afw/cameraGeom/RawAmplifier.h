@@ -78,13 +78,20 @@ public:
 
     ~RawAmplifier() {}
 
-    geom::Box2I const getBBox() { return _bbox; }
-    geom::Box2I const getDataBBox() { return _dataBBox; }
-    geom::Box2I const getHorizontalOverscanBBox() { return _horizontalOverscanBBox; }
-    geom::Box2I const getVerticalOverscanBBox() { return _verticalOverscanBBox; }
-    geom::Box2I const getPrescanBBox() { return _prescanBBox; }
-    bool getFlipX() { return _flipX; }
-    bool getFlipY() { return _flipY; }
+    geom::Box2I const getBBox() const { return _bbox; }
+
+    geom::Box2I const getDataBBox() const { return _dataBBox; }
+
+    geom::Box2I const getHorizontalOverscanBBox() const { return _horizontalOverscanBBox; }
+
+    geom::Box2I const getVerticalOverscanBBox() const { return _verticalOverscanBBox; }
+
+    geom::Box2I const getPrescanBBox() const { return _prescanBBox; }
+
+    bool getFlipX() const { return _flipX; }
+
+    bool getFlipY() const { return _flipY; }
+
     geom::Extent2I const getXYOffset() { return _xyOffset; }
 
 private:

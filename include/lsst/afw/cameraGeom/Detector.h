@@ -24,7 +24,6 @@
 #define LSST_AFW_CAMERAGEOM_DETECTOR_H
 
 #include <string>
-#include <sstream>
 #include "lsst/base.h"
 #include "lsst/afw/geom/TransformRegistry.h"
 #include "lsst/afw/cameraGeom/Amplifier.h"
@@ -32,11 +31,6 @@
 #include "lsst/afw/cameraGeom/CameraPoint.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
 
-/**
- * @file
- *
- * Describe the physical layout of pixels in the focal plane
- */
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
@@ -55,10 +49,13 @@ enum DetectorType {
 /**
  * Information about a CCD or other imaging detector
  *
+ * This class also acts as an iterator over amplifiers.
+ *
  * @warning Only supports detectors with square pixels
  */
 class Detector {
 public:
+    typedef std::vector<CONST_PTR(Amplifier)> AmplifierList;
     /**
      * Make a Detector
      *
@@ -70,31 +67,27 @@ public:
         std::string const &name,    ///< name of detector's location in the camera
         DetectorType type,          ///< type of detector
         std::string const &serial,  ///< serial "number" that identifies the physical detector
-        std::vector<CONST_PTR(Amplifier)> const &amplifierList,    ///< list of amplifier data
-        Orientation const &orientation, ///< detector position and orientation in focal plane
+        AmplifierList const &amplifierList, ///< list of amplifier data
+        Orientation const &orientation,     ///< detector position and orientation in focal plane
         double pixelSize,           ///< size of pixel along x or y (mm); pixels are assumed to be square
-        CameraTransformList const &transformList ///< coordinate transforms for this detector
-    ) :
-        _name(name),
-        _type(type),
-        _serial(serial),
-        _amplifierList(amplifierList),
-        _orientation(orientation),
-        _pixelSize(pixelSize),
-        _transformRegistry(PIXELS, transformList)
-    {}
+        CameraTransformList const &transformList);  ///< list of coordinate transforms for this detector
 
     ~Detector() {}
+
+    /**
+     * Get the list of amplifiers
+     */
+    AmplifierList const getAmplifierList() const { return _amplifierList; }
 
     /** 
      * Get a coordinate system from a coordinate system (return input unchanged)
      */
-    CameraSys getCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
+    CameraSys const getCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
 
     /** 
      * Get a coordinate system from a detector system prefix (add detector name)
      */
-    CameraSys getCameraSys(DetectorSysPrefix const &detectorSysPrefix) const {
+    CameraSys const getCameraSys(DetectorSysPrefix const &detectorSysPrefix) const {
         return CameraSys(detectorSysPrefix.getSysName(), _name);
     }
 
@@ -122,7 +115,30 @@ public:
     std::string getSerial() const { return _serial; }
 
     /** Get the transform registry */
-    CameraTransformRegistry getTransformRegistry() const { return _transformRegistry; }
+    CameraTransformRegistry const getTransformRegistry() const { return _transformRegistry; }
+
+    /** Get iterator to beginning of amplifier list */
+    AmplifierList::const_iterator begin() const { return _amplifierList.begin(); }
+
+    /** Get iterator to end of amplifier list */
+    AmplifierList::const_iterator end() const { return _amplifierList.end(); }
+
+    /**
+     * Get the amplifier specified by index
+     *
+     * @throw something if index is out of range (uses "at" internally)
+     */
+    CONST_PTR(Amplifier) operator[](size_t i) const { return _amplifierList.at(i); }
+
+    /**
+     * Get the amplifier specified by name
+     *
+     * @throw lst::pex::exceptions::InvalidParameterException if no such amplifier
+     */
+    CONST_PTR(Amplifier) operator[](std::string const &name) const;
+
+    /** Get number of amplifiers */
+    size_t size() const {return _amplifierList.size(); }
 
     /**
      * Make a CameraPoint from a point and a camera system or detector prefix
@@ -135,13 +151,18 @@ public:
     }
 
 private:
+    typedef boost::unordered_map<std::string, CONST_PTR(Amplifier)> _AmpMap;
+    // set _amplifierMap from _amplifierList
+    void _makeAmplifierMap();
+
     std::string _name;      ///< name of detector's location in the camera
     DetectorType _type;     ///< type of detector
     std::string _serial;    ///< serial "number" that identifies the physical detector
-    std::vector<CONST_PTR(Amplifier)> _amplifierList;   ///< list of amplifier data
-    Orientation _orientation;   ///< position and orientation of detector in focal plane
+    AmplifierList _amplifierList; ///< list of amplifier data
+    _AmpMap _amplifierMap;  ///< map of amplifier name: amplifier
+    Orientation _orientation;       ///< position and orientation of detector in focal plane
     double _pixelSize;      ///< size of pixel along x or y (mm)
-    CameraTransformRegistry _transformRegistry;         ///< registry of coordinate transforms
+    CameraTransformRegistry _transformRegistry; ///< registry of coordinate transforms
 };
 
 }}}
