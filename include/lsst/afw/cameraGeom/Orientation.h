@@ -36,14 +36,7 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-#if defined(SWIG)
-    // swig generates incorrect python bindings, putting e.g. "pitch = 0*lsst::afw::geom::radians" into
-    // the .py file.  The other part of the workaround is to make the symbol "radian" available to python
-    // in cameraGeomLib.i
-    #define AFW_GEOM_RADIANS radians
-#else
-    #define AFW_GEOM_RADIANS lsst::afw::geom::radians
-#endif
+
 /**
  * Describe a detector's orientation with respect to the nominal position
  *
@@ -53,11 +46,10 @@ namespace cameraGeom {
 class Orientation {
 public:
     explicit Orientation(int nQuarter = 0, ///< Nominal rotation of device in units of pi/2
-                         lsst::afw::geom::Angle pitch=0*AFW_GEOM_RADIANS, ///< pitch (rotation in YZ)
-                         lsst::afw::geom::Angle roll=0*AFW_GEOM_RADIANS,  ///< roll (rotation in XZ)
-                         lsst::afw::geom::Angle yaw=0*AFW_GEOM_RADIANS    ///< yaw (rotation in XY)
+                         geom::Angle const &pitch=geom::Angle(0), ///< pitch (rotation in YZ)
+                         geom::Angle const &roll=geom::Angle(0),  ///< roll (rotation in XZ)
+                         geom::Angle const &yaw=geom::Angle(0)    ///< yaw (rotation in XY)
                         )
-#undef AFW_GEOM_RADIANS
         :
         _nQuarter(nQuarter % 4),
         _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),

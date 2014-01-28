@@ -108,8 +108,9 @@ public:
     ~DetectorSysPrefix() {}
 };
 
-// CameraSys is intended as a key for geom::TransformRegistry, so define that here
+// CameraSys is intended as a key for geom::TransformRegistry, so define these useful types
 typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
+typedef geom::TransformRegistry<CameraSys>::TransformList CameraTransformList;
 
 // *** Standard camera coordinate systems ***
 

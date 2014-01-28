@@ -65,8 +65,6 @@ public:
      * @warning
      * * The keys for the detector-specific coordinate systems in the transform registry
      *   must include the detector name (even though this is redundant).
-     *   This restriction could be lifted by copying the transform registry,
-     *   expanding each key using getCameraSys.
      */
     explicit Detector(
         std::string const &name,    ///< name of detector's location in the camera
@@ -75,7 +73,7 @@ public:
         std::vector<CONST_PTR(Amplifier)> const &amplifierList,    ///< list of amplifier data
         Orientation const &orientation, ///< detector position and orientation in focal plane
         double pixelSize,           ///< size of pixel along x or y (mm); pixels are assumed to be square
-        CameraTransformRegistry const &transformRegistry ///< transform registry for this detector
+        CameraTransformList const &transformList ///< coordinate transforms for this detector
     ) :
         _name(name),
         _type(type),
@@ -83,7 +81,7 @@ public:
         _amplifierList(amplifierList),
         _orientation(orientation),
         _pixelSize(pixelSize),
-        _transformRegistry(transformRegistry)
+        _transformRegistry(PIXELS, transformList)
     {}
 
     ~Detector() {}

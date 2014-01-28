@@ -53,6 +53,8 @@ namespace geom {
 template<typename CoordSys>
 class TransformRegistry {
 public:
+    typedef std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > TransformList;
+
     /**
      * Construct a TransformRegistry
      *
@@ -65,7 +67,7 @@ public:
     explicit TransformRegistry(
         CoordSys const &nativeCoordSys,   ///< Native coordinate system for this registry;
             ///< all XYTransforms in the registry must convert to this coordinate system
-        std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > const &transformRegistry
+        TransformList const &transformRegistry
             ///< xy transforms: a list of pairs of:
             ///< * coordSys: coordinate system
             ///< * xyTransform: an XYTransform whose forward method converts coordSys->nativeCoordSys
@@ -116,14 +118,19 @@ public:
      *
      * @throw pexExcept::InvalidParameterException if coordSys is unknown
      */
-    CONST_PTR(XYTransform) getXYTransform(
+    CONST_PTR(XYTransform) getTransform(
         CoordSys const &coordSys ///< coordinate system whose XYTransform is wanted
     ) const;
 
     /**
+     * Return a list of transforms
+     */
+    TransformList getTransformList() const;
+
+    /**
      * Return true if the coordinate system is supported
      */
-    bool hasXYTransform(
+    bool hasTransform(
         CoordSys const &coordSys ///< coordinate system
     ) const;
 
