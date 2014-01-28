@@ -46,7 +46,7 @@ public:
     /**
      * Construct a TransformRegistry
      *
-     * @note: If transformRegistry includes a transform for nativeCoordSys
+     * @note If transformRegistry includes a transform for nativeCoordSys
      * then it is used (without checking); if not, then a unity transform is added.
      *
      * @throw pexExcept::InvalidParameterException if you specify the same coordSys
@@ -57,9 +57,8 @@ public:
             ///< all XYTransforms in the registry must convert to this coordinate system
         std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > const &transformRegistry
             ///< xy transforms: a list of pairs of:
-            ///< * coordSys: coordinate system name
+            ///< * coordSys: coordinate system
             ///< * xyTransform: an XYTransform whose forward method converts coordSys->nativeCoordSys
-            ///<       and whose reverse method is accurate
     );
 
     /**

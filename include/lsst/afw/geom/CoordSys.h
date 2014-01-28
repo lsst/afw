@@ -33,7 +33,7 @@ namespace geom {
 /**
  * Base class for coordinate system keys used in in TransformRegistry
  *
- * @note: A subclass is used for keys in TransformRegistry, and another subclass is used by CameraGeom
+ * @note A subclass is used for keys in TransformRegistry, and another subclass is used by CameraGeom
  * for detector-specific coordinate system prefixes (Jim Bosch's clever idea). Thus the shared base class.
  *
  * Comparison is by name, so each unique coordinate system (or prefix) must have a unique name.

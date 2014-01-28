@@ -25,9 +25,12 @@
 
 #include <string>
 #include <sstream>
+#include "lsst/base.h"
 #include "lsst/afw/geom/TransformRegistry.h"
+#include "lsst/afw/cameraGeom/Amplifier.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/CameraPoint.h"
+#include "lsst/afw/cameraGeom/Orientation.h"
 
 /**
  * @file
@@ -38,22 +41,50 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+/**
+ * Type of imaging detector
+ */
+enum DetectorType {
+    SCIENCE,
+    FOCUS,
+    GUIDER,
+    WAVEFRONT,
+};
+
+
+/**
+ * Information about a CCD or other imaging detector
+ *
+ * @warning Only supports detectors with square pixels
+ */
 class Detector {
 public:
     /**
      * Make a Detector
      *
-     * @todo: Replace this constructor with one that takes an orientation
-     * and construct the FocalPlane->Pixels entry from that Orientation
-     *
-     * @warning The keys for the detector-specific coordinate systems in the transform registry
-     * must include the detector name.
+     * @warning
+     * * The keys for the detector-specific coordinate systems in the transform registry
+     *   must include the detector name (even though this is redundant).
+     *   This restriction could be lifted by copying the transform registry,
+     *   expanding each key using getCameraSys.
      */
     explicit Detector(
-        std::string const &name,    ///< detector name
-        std::string const &serial,  ///< detector serial "number" that identifies the physical detector
+        std::string const &name,    ///< name of detector's location in the camera
+        DetectorType type,          ///< type of detector
+        std::string const &serial,  ///< serial "number" that identifies the physical detector
+        std::vector<CONST_PTR(Amplifier)> const &amplifierList,    ///< list of amplifier data
+        Orientation const &orientation, ///< detector position and orientation in focal plane
+        double pixelSize,           ///< size of pixel along x or y (mm); pixels are assumed to be square
         CameraTransformRegistry const &transformRegistry ///< transform registry for this detector
-    ) : _name(name), _serial(serial), _transformRegistry(transformRegistry) {}
+    ) :
+        _name(name),
+        _type(type),
+        _serial(serial),
+        _amplifierList(amplifierList),
+        _orientation(orientation),
+        _pixelSize(pixelSize),
+        _transformRegistry(transformRegistry)
+    {}
 
     ~Detector() {}
 
@@ -87,6 +118,8 @@ public:
     /** Get the detector name */
     std::string getName() const { return _name; }
 
+    DetectorType getType() const { return _type; }
+
     /** Get the detector serial "number" */
     std::string getSerial() const { return _serial; }
 
@@ -104,9 +137,13 @@ public:
     }
 
 private:
-    std::string _name; ///< detector name
-    std::string _serial;    ///< detector serial "number" that identifies the physical detector
-    CameraTransformRegistry _transformRegistry; ///< registry of coordinate transforms
+    std::string _name;      ///< name of detector's location in the camera
+    DetectorType _type;     ///< type of detector
+    std::string _serial;    ///< serial "number" that identifies the physical detector
+    std::vector<CONST_PTR(Amplifier)> _amplifierList;   ///< list of amplifier data
+    Orientation _orientation;   ///< position and orientation of detector in focal plane
+    double _pixelSize;      ///< size of pixel along x or y (mm)
+    CameraTransformRegistry _transformRegistry;         ///< registry of coordinate transforms
 };
 
 }}}
