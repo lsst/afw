@@ -19,12 +19,15 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #if !defined(LSST_AFW_CAMERAGEOM_CAMERASYS_H)
 #define LSST_AFW_CAMERAGEOM_CAMERASYS_H
 
+#include <functional>
 #include <string>
 #include <sstream>
+#include "boost/functional/hash.hpp"
+#include "lsst/afw/geom/TransformRegistry.h"
 
 namespace lsst {
 namespace afw {
@@ -47,6 +50,9 @@ public:
         std::string const &sysName,         ///< coordinate system name
         std::string const &detectorName=""  /// detector name
     ) : _sysName(sysName), _detectorName(detectorName) {};
+
+    /// default constructor so SWIG can wrap a vector of pairs containing these
+    CameraSys() : _sysName(), _detectorName() {};
 
     ~CameraSys() {}
 
@@ -101,6 +107,8 @@ public:
     ~DetectorSysPrefix() {}
 };
 
+// CameraSys is intended as a key for geom::TransformRegistry, so define that here
+typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
 
 // *** Standard camera coordinate systems ***
 
@@ -135,5 +143,17 @@ extern DetectorSysPrefix const PIXELS;
 extern DetectorSysPrefix const ACTUAL_PIXELS;
     
 }}}
+
+// define boost::hash<CameraSys> so CameraSys can be used as a key in TransformRegistry
+namespace boost {
+    template<> struct hash<lsst::afw::cameraGeom::CameraSys> {
+        inline size_t operator()(lsst::afw::cameraGeom::CameraSys const &cameraSys) const {
+            size_t seed = 0;
+            boost::hash_combine(seed, cameraSys.getSysName());
+            boost::hash_combine(seed, cameraSys.getDetectorName());
+            return seed;
+        }
+    };
+}
 
 #endif

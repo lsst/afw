@@ -38,8 +38,6 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
-typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
-
 class Detector {
 public:
     /**
@@ -74,7 +72,7 @@ public:
     /**
      * Convert a CameraPoint from one coordinate system to another
      *
-     * @throw: pexExcept::InvalidParameterException if from or to coordinate system is unknown
+     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
      */
     CameraPoint convert(
         CameraPoint const &fromPoint,   ///< camera point to convert

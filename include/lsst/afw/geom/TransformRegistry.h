@@ -23,11 +23,10 @@
 #if !defined(LSST_AFW_GEOM_TRANSFORMREGISTRY_H)
 #define LSST_AFW_GEOM_TRANSFORMREGISTRY_H
 
-#include <map>
 #include <string>
 #include <utility>
-// #include <tr1/functional> // for hash
-// #include "boost/unordered_map.hpp" // using <tr1/unordered_map> conflicts with the utils package
+// I would rather include <tr1/unordered_map> but I get symbol collisions from the utils package
+#include "lsst/tr1/unordered_map.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/XYTransform.h"
 
@@ -38,7 +37,8 @@ namespace geom {
 /**
  * A registry of 2-dimensional coordinate transforms
  *
- * CoordSys must support operator< (because the underlying representation is std::map)
+ * If CoordSys is not a plain old data type then you must define functor boost::hash<CoordSys>;
+ * see ../geom/CameraSys.h for an example.
  */
 template<typename CoordSys>
 class TransformRegistry {
@@ -67,7 +67,7 @@ public:
      *
      * @return the converted value as a Point2D
      *
-     * @throw: pexExcept::InvalidParameterException if toCoordSys is unknown
+     * @throw pexExcept::InvalidParameterException if toCoordSys is unknown
      */
     Point2D convert(
         Point2D const &fromPoint,       ///< point from which to convert
@@ -78,7 +78,7 @@ public:
     /**
      * Convert a list of Point2D from one coordinate system to another
      *
-     * @throw: pexExcept::InvalidParameterException if fromCoordSys or toCoordSys is unknown
+     * @throw pexExcept::InvalidParameterException if fromCoordSys or toCoordSys is unknown
      */
      std::vector<Point2D> convert(
         std::vector<Point2D> const &pointList,    ///< list of points to convert
@@ -100,7 +100,7 @@ public:
      *
      * @return an XYTransform
      *
-     * @throw: pexExcept::InvalidParameterException if coordSys is unknown
+     * @throw pexExcept::InvalidParameterException if coordSys is unknown
      */
     CONST_PTR(XYTransform) getXYTransform(
         CoordSys const &coordSys ///< coordinate system whose XYTransform is wanted
@@ -115,10 +115,9 @@ public:
 
  
 private:
-    typedef std::map<CoordSys, CONST_PTR(XYTransform)> _MapType;
-    CoordSys _nativeCoordSys;    ///< native coordinate system
-    _MapType _transformMap; 
-        ///< map of coordSys: XYTransform
+    typedef std::tr1::unordered_map<CoordSys, CONST_PTR(XYTransform)> _MapType;
+    CoordSys _nativeCoordSys;   ///< native coordinate system
+    _MapType _transformMap;     ///< map of coordSys: XYTransform
 };
 
 }}}

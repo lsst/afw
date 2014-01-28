@@ -37,8 +37,8 @@ Python interface to lsst::afw::math classes
 #   include "lsst/pex/policy.h"
 #   include "lsst/afw/image.h"
 #   include "lsst/afw/geom.h"
-#   include "lsst/afw/math.h"
 #   include "lsst/afw/cameraGeom.h"
+#   include "lsst/afw/math.h"
 
 #   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}

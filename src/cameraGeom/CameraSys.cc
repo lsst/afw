@@ -19,6 +19,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+
 #include "lsst/afw/cameraGeom/CameraSys.h"
 
 namespace lsst {
@@ -32,5 +33,8 @@ CameraSys const PUPIL = CameraSys("Pupil");
 DetectorSysPrefix const PIXELS = DetectorSysPrefix("Pixels");
 
 DetectorSysPrefix const ACTUAL_PIXELS = DetectorSysPrefix("ActualPixels");
-    
+
+// instantiate CameraTransformRegistry = TransformRegistry<CameraSys>
+template class geom::TransformRegistry<CameraSys>;
+
 }}}

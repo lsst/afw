@@ -19,7 +19,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #if !defined(LSST_AFW_CAMERAGEOM_AMPLIFIER_H)
 #define LSST_AFW_CAMERAGEOM_AMPLIFIER_H
 

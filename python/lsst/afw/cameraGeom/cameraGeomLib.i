@@ -36,24 +36,19 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %module(package="lsst.afw.cameraGeom", docstring=cameraGeomLib_DOCSTRING) cameraGeomLib
 
 %{
+#include <utility>
+#include <vector>
 #include "boost/shared_ptr.hpp"
-#include "lsst/afw/geom.h"
 #include "lsst/pex/logging.h"
+#include "lsst/afw/geom/TransformRegistry.h"
 #include "lsst/afw/cameraGeom.h"
-// ditch the following once cameraGeom.h has them
-#include "lsst/afw/cameraGeom/CameraSys.h"
-#include "lsst/afw/cameraGeom/CameraPoint.h"
-#include "lsst/afw/cameraGeom/Orientation.h"
-#include "lsst/afw/cameraGeom/RawAmplifier.h"
-#include "lsst/afw/cameraGeom/Amplifier.h"
-#include "lsst/afw/cameraGeom/Detector.h"
-
 %}
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
 
 %import "lsst/afw/geom/geomLib.i"
+%include "lsst/afw/geom/TransformRegistry.h"
 
 %lsst_exceptions();
 
@@ -61,12 +56,15 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %shared_ptr(lsst::afw::cameraGeom::RawAmplifier);
 %shared_ptr(lsst::afw::cameraGeom::Amplifier);
 
-%template(AmplifierList) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amplifier> >;
-%template(DetectorList) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
-
 %include "lsst/afw/cameraGeom/CameraSys.h"
 %include "lsst/afw/cameraGeom/CameraPoint.h"
 %include "lsst/afw/cameraGeom/Orientation.h"
 %include "lsst/afw/cameraGeom/RawAmplifier.h"
 %include "lsst/afw/cameraGeom/Amplifier.h"
 %include "lsst/afw/cameraGeom/Detector.h"
+
+%template(CameraTransformList) std::vector<std::pair<lsst::afw::cameraGeom::CameraSys, boost::shared_ptr<lsst::afw::geom::XYTransform> > >;
+%template(CameraTransformRegistry) lsst::afw::geom::TransformRegistry<lsst::afw::cameraGeom::CameraSys>;
+%template(AmplifierList) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Amplifier> >;
+%template(DetectorList) std::vector<boost::shared_ptr<lsst::afw::cameraGeom::Detector> >;
+
