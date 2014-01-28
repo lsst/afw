@@ -809,6 +809,23 @@ class KernelTestCase(unittest.TestCase):
             if ctr2 != newCtr2:
                 return "changing center of kernel1 to %s changed the center of kernel2 from %s to %s" % \
                     (newCtr1, ctr2, newCtr2)
+
+    def testCast(self):
+        instances = []
+        kVec = makeGaussianKernelList(9, 9, [(2.0, 2.0, 0.0)])
+        kParams = [0.0]*len(kVec)
+        instances.append(afwMath.LinearCombinationKernel(kVec, kParams))
+        instances.append(afwMath.AnalyticKernel(7, 7, afwMath.GaussianFunction2D(2.0, 2.0, 0.0)))
+        instances.append(afwMath.DeltaFunctionKernel(5, 5, afwGeom.Point2I(1, 1)))
+        instances.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(7, 7))))
+        instances.append(afwMath.SeparableKernel(3, 3, afwMath.PolynomialFunction1D(0),
+                                                 afwMath.PolynomialFunction1D(0)))
+        for instance in instances:
+            Class = type(instance)
+            base = instance.clone()
+            self.assertEqual(type(base), afwMath.Kernel)
+            derived = Class.cast(base)
+            self.assertEqual(type(derived), Class)
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

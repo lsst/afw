@@ -108,13 +108,9 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %templateKernel(float, boost::uint16_t);
 %templateKernel(int, int);
 %templateKernel(boost::uint16_t, boost::uint16_t);
-         
-//
-// When swig sees a Kernel it doesn't know about KERNEL_TYPE; all it knows is that it
-// has a Kernel, and Kernels don't know about e.g. LinearCombinationKernel's getKernelParameters()
-//
-// We therefore provide a cast to KERNEL_TYPE* and swig can go from there
-//
+  
+//-------------------------------------------------------------------------
+// THIS CAST INTERFACE NOW DEPRECATED IN FAVOR OF %castShared
 %define %dynamic_cast(KERNEL_TYPE)
 %inline %{
     lsst::afw::math::KERNEL_TYPE *
@@ -123,9 +119,15 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
     }
 %}
 %enddef
-
 %dynamic_cast(AnalyticKernel);
 %dynamic_cast(DeltaFunctionKernel);
 %dynamic_cast(FixedKernel);
 %dynamic_cast(LinearCombinationKernel);
 %dynamic_cast(SeparableKernel);
+//-------------------------------------------------------------------------
+
+%castShared(lsst::afw::math::AnalyticKernel, lsst::afw::math::Kernel)
+%castShared(lsst::afw::math::DeltaFunctionKernel, lsst::afw::math::Kernel)
+%castShared(lsst::afw::math::FixedKernel, lsst::afw::math::Kernel)
+%castShared(lsst::afw::math::LinearCombinationKernel, lsst::afw::math::Kernel)
+%castShared(lsst::afw::math::SeparableKernel, lsst::afw::math::Kernel)
