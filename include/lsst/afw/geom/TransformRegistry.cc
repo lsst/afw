@@ -34,11 +34,11 @@ namespace geom {
 template<typename CoordSys>
 TransformRegistry<CoordSys>::TransformRegistry(
     CoordSys const &nativeCoordSys,
-    TransformList const &transformList
+    TransformMap const &transformList
 ) :
     _nativeCoordSys(nativeCoordSys), _transformMap()
 {
-    for (typename TransformList::const_iterator trIter = transformList.begin();
+    for (typename TransformMap::const_iterator trIter = transformList.begin();
         trIter != transformList.end(); ++trIter) {
         if (_transformMap.count(trIter->first) > 0) {
             std::ostringstream os;
@@ -74,8 +74,8 @@ Point2D TransformRegistry<CoordSys>::convert(
     }
 
     // transform fromSys -> nativeSys -> toSys
-    CONST_PTR(XYTransform) fromTransform = getTransform(fromCoordSys);
-    CONST_PTR(XYTransform) toTransform = getTransform(toCoordSys);
+    CONST_PTR(XYTransform) fromTransform = (*this)[fromCoordSys];
+    CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
     return toTransform->reverseTransform(fromTransform->forwardTransform(fromPoint));
 }
 
@@ -93,7 +93,7 @@ std::vector<Point2D> TransformRegistry<CoordSys>::convert(
 
     // convert pointList from fromCoordSys to native coords, filling outList
     if (fromCoordSys != _nativeCoordSys) {
-        CONST_PTR(XYTransform) fromTransform = getTransform(fromCoordSys);
+        CONST_PTR(XYTransform) fromTransform = (*this)[fromCoordSys];
         for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
             fromPtIter != pointList.end(); ++fromPtIter) {
             outList.push_back(fromTransform->forwardTransform(*fromPtIter));
@@ -107,7 +107,7 @@ std::vector<Point2D> TransformRegistry<CoordSys>::convert(
 
     // convert outList from native coords to toCoordSys, in place
     if (toCoordSys != _nativeCoordSys) {
-        CONST_PTR(XYTransform) toTransform = getTransform(toCoordSys);
+        CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
         for (std::vector<Point2D>::iterator nativePtIter = outList.begin();
             nativePtIter != pointList.end(); ++nativePtIter) {
             *nativePtIter = toTransform->reverseTransform(*nativePtIter);
@@ -127,7 +127,7 @@ std::vector<CoordSys> TransformRegistry<CoordSys>::getCoordSysList() const {
 }
 
 template<typename CoordSys>
-CONST_PTR(XYTransform) TransformRegistry<CoordSys>::getTransform(
+CONST_PTR(XYTransform) TransformRegistry<CoordSys>::operator[](
     CoordSys const &coordSys
 ) const {
     typename TransformMap::const_iterator const foundIter = _transformMap.find(coordSys);
@@ -137,16 +137,6 @@ CONST_PTR(XYTransform) TransformRegistry<CoordSys>::getTransform(
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
     return foundIter->second;
-}
-
-template<typename CoordSys>
-typename TransformRegistry<CoordSys>::TransformList TransformRegistry<CoordSys>::getTransformList() const {
-    TransformList transformList;
-    for (typename TransformMap::const_iterator trIter = _transformMap.begin();
-        trIter != _transformMap.end(); ++trIter) {
-        transformList.push_back(*trIter);
-    }
-    return transformList;
 }
 
 template<typename CoordSys>

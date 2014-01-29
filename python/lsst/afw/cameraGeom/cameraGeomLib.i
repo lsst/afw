@@ -38,6 +38,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %{
 #include <utility>
 #include <vector>
+#include <map>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/geom/TransformRegistry.h"
@@ -47,15 +48,18 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
 %include "std_pair.i"
+%include "std_map.i"
 
 %import "lsst/afw/geom/geomLib.i"
-%include "lsst/afw/geom/TransformRegistry.h"
 
 %lsst_exceptions();
 
 %shared_ptr(lsst::afw::cameraGeom::Detector);
 %shared_ptr(lsst::afw::cameraGeom::RawAmplifier);
 %shared_ptr(lsst::afw::cameraGeom::Amplifier);
+
+%rename("__getitem__") lsst::afw::cameraGeom::Detector::operator[];
+%rename("__len__") lsst::afw::cameraGeom::Detector::size();
 
 %include "lsst/afw/cameraGeom/CameraSys.h"
 %include "lsst/afw/cameraGeom/CameraPoint.h"
@@ -64,11 +68,38 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/Amplifier.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 
+%extend lsst::afw::cameraGeom::CameraSys {
+    std::string __repr__() {
+        std::ostringstream os;
+        os << *$self;
+        return os.str();
+    }
+
+    %pythoncode {
+        def __hash__(self):
+            return hash(repr(self))
+    }
+}
+
+%extend lsst::afw::cameraGeom::DetectorSysPrefix {
+    std::string __repr__() {
+        std::ostringstream os;
+        os << *$self;
+        return os.str();
+    }
+}
+
+%extend lsst::afw::cameraGeom::Detector {
+    %pythoncode {
+        def __iter__(self):
+            for i in xrange(len(self)):
+                yield self[i]
+    }
+}
+
 %template(CameraSysList) std::vector<lsst::afw::cameraGeom::CameraSys>;
-%template(PairCameraSysXYTransform)
-    std::pair<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)>;
-%template(CameraTransformList)
-    std::vector<std::pair<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)> >;
+%template(CameraTransformMap)
+    std::map<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)>;
 %template(CameraTransformRegistry) lsst::afw::geom::TransformRegistry<lsst::afw::cameraGeom::CameraSys>;
 %template(AmplifierList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Amplifier)>;
 %template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;

@@ -35,7 +35,7 @@ Detector::Detector(
     AmplifierList const &amplifierList,
     Orientation const &orientation,
     double pixelSize,
-    CameraTransformList const &transformList
+    CameraTransformMap const &transformMap
 ) :
     _name(name),
     _type(type),
@@ -44,7 +44,7 @@ Detector::Detector(
     _amplifierMap(),
     _orientation(orientation),
     _pixelSize(pixelSize),
-    _transformRegistry(PIXELS, transformList)
+    _transformRegistry(PIXELS, transformMap)
 {
     _makeAmplifierMap();
 }

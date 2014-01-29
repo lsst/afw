@@ -22,7 +22,6 @@
 #
 """
 Tests for lsst.afw.cameraGeom.CameraTransformRegistry
-as well as some basic tests for CameraSys (which is its key)
 """
 
 import sys
@@ -35,73 +34,41 @@ import lsst.afw.cameraGeom as cameraGeom
 
 
 class CameraTransformRegistryTestCase(unittest.TestCase):
-    def testCameraSys(self):
-        """Test CameraSys and DetectorSysPrefix
+    def setUp(self):
+        self.nativeSys = cameraGeom.FOCAL_PLANE
+        self.radialTransform = afwGeom.RadialXYTransform([0, 0.5, 0.01])
+        transMap = {cameraGeom.PUPIL: self.radialTransform}
+        self.transReg = cameraGeom.CameraTransformRegistry(self.nativeSys, transMap)
+
+    def tearDown(self):
+        self.nativeSys = None
+        self.radialTransform = None
+        self.transReg = None
+
+    def testBasics(self):
+        """Test basic attributes
         """
-        for sysName in ("pupil", "pixels"):
-            for detectorName in ("", "det1", "det2"):
-                cameraSys = cameraGeom.CameraSys(sysName, detectorName)
-                self.assertEquals(cameraSys.getSysName(), sysName)
-                self.assertEquals(cameraSys.getDetectorName(), detectorName)
-                self.assertEquals(cameraSys.hasDetectorName(), bool(detectorName))
+        self.assertTrue(self.transReg.hasTransform(self.nativeSys))
+        self.assertTrue(self.transReg.hasTransform(cameraGeom.PUPIL))
+        self.assertFalse(self.transReg.hasTransform(cameraGeom.PIXELS))
+        self.assertFalse(self.transReg.hasTransform(cameraGeom.CameraSys("garbage")))
 
-                noDetSys = cameraGeom.CameraSys(sysName)
-                self.assertEquals(noDetSys.getSysName(), sysName)
-                self.assertEquals(noDetSys.getDetectorName(), "")
-                self.assertFalse(noDetSys.hasDetectorName())
-
-                detSysPrefix = cameraGeom.DetectorSysPrefix(sysName)
-                self.assertEquals(detSysPrefix.getSysName(), sysName)
-                self.assertEquals(detSysPrefix.getDetectorName(), "")
-                self.assertFalse(detSysPrefix.hasDetectorName())
-                self.assertTrue(noDetSys == detSysPrefix)
-                self.assertFalse(noDetSys != detSysPrefix)
-
-                if detectorName:
-                    self.assertFalse(cameraSys == noDetSys)
-                    self.assertTrue(cameraSys != noDetSys)
-                else:
-                    self.assertTrue(cameraSys == noDetSys)
-                    self.assertFalse(cameraSys != noDetSys)
-
-            for sysName2 in ("pupil", "pixels"):
-                for detectorName2 in ("", "det1", "det2"):
-                    cameraSys2 = cameraGeom.CameraSys(sysName2, detectorName2)
-                    if sysName == sysName2 and detectorName == detectorName2:
-                        self.assertTrue(cameraSys == cameraSys2)
-                        self.assertFalse(cameraSys != cameraSys2)
-                    else:
-                        self.assertFalse(cameraSys == cameraSys2)
-                        self.assertTrue(cameraSys != cameraSys2)
-
-                    detSysPrefix2 = cameraGeom.DetectorSysPrefix(sysName2)
-                    if sysName2 == sysName:
-                        self.assertTrue(detSysPrefix2 == detSysPrefix)
-                        self.assertFalse(detSysPrefix2 != detSysPrefix)
-                    else:
-                        self.assertFalse(detSysPrefix2 == detSysPrefix)
-                        self.assertTrue(detSysPrefix2 != detSysPrefix)
-
-    def testSimpleTransforms(self):
-        """Test a simple CameraTransformRegistry
-        """
-        nativeSys = cameraGeom.FOCAL_PLANE
-        radialTransform = afwGeom.RadialXYTransform([0, 0.5, 0.01])
-        transList = [(cameraGeom.PUPIL, radialTransform)]
-        transReg = cameraGeom.CameraTransformRegistry(nativeSys, transList)
-
-        self.assertTrue(transReg.hasTransform(nativeSys))
-        self.assertTrue(transReg.hasTransform(cameraGeom.PUPIL))
-        self.assertFalse(transReg.hasTransform(cameraGeom.PIXELS))
-
-        csList = transReg.getCoordSysList()
+        csList = self.transReg.getCoordSysList()
         self.assertTrue(len(csList) == 2)
-        self.assertTrue(nativeSys in csList)
+        self.assertTrue(self.nativeSys in csList)
         self.assertTrue(cameraGeom.PUPIL in csList)
 
-        print transReg.getTransformList()
-        # self.assertTrue(len(trList) == 2)
-
+    def testIteration(self):
+        """Test iteration, len and indexing
+        """
+        self.assertEquals(len(self.transReg), 2)
+        trList = []
+        for coordSys in self.transReg.getCoordSysList():
+            trList.append(self.transReg[coordSys])
+        self.assertEquals(len(trList), 2)
+        trList2 = [tr for tr in self.transReg]
+        self.assertEquals(len(trList2), 2)
+        # it would be nice to test equality of the transforms, but it's not worth the fuss
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

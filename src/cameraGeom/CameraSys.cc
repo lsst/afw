@@ -35,7 +35,11 @@ DetectorSysPrefix const PIXELS = DetectorSysPrefix("Pixels");
 DetectorSysPrefix const ACTUAL_PIXELS = DetectorSysPrefix("ActualPixels");
 
 std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys) {
-    os << "CameraSys(" << cameraSys.getSysName() << ", " << cameraSys.getDetectorName() << ")";
+    os << "CameraSys(" << cameraSys.getSysName();
+    if (cameraSys.hasDetectorName()) {
+        os << ", " << cameraSys.getDetectorName();
+    }
+    os << ")";
     return os;
 }
 

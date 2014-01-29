@@ -27,7 +27,6 @@
 #include <string>
 #include <ostream>
 #include <sstream>
-#include "boost/functional/hash.hpp"
 #include "lsst/afw/geom/TransformRegistry.h"
 
 namespace lsst {
@@ -41,6 +40,12 @@ namespace cameraGeom {
  * for detector-specific coordinate system prefixes (Jim Bosch's clever idea). Thus the shared base class.
  *
  * Comparison is by name, so each unique coordinate system (or prefix) must have a unique name.
+ *
+ * When switching to unordered_map, a good way to compute the hash is:
+ *   size_t hash = 0;
+ *   boost::hash_combine(hash, cameraSys.getSysName());
+ *   boost::hash_combine(hash, cameraSys.getDetectorName());
+ *   return hash;
  */
 class CameraSys {
 public:
@@ -110,7 +115,7 @@ public:
 
 // CameraSys is intended as a key for geom::TransformRegistry, so define these useful types
 typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
-typedef geom::TransformRegistry<CameraSys>::TransformList CameraTransformList;
+typedef geom::TransformRegistry<CameraSys>::TransformMap CameraTransformMap;
 
 // *** Standard camera coordinate systems ***
 
@@ -149,13 +154,6 @@ extern DetectorSysPrefix const ACTUAL_PIXELS;
 std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys);
 
 std::ostream &operator<< (std::ostream &os, DetectorSysPrefix const &detSysPrefix);
-
-inline size_t hash_value(CameraSys const &cameraSys) {
-    size_t seed = 0;
-    boost::hash_combine(seed, cameraSys.getSysName());
-    boost::hash_combine(seed, cameraSys.getDetectorName());
-    return seed;
-}
 
 }}}
 

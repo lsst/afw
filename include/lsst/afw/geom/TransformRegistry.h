@@ -26,10 +26,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-// I would rather include <tr1/unordered_map> but I get symbol collisions from the utils package,
-// due to lsst/tr1/unordered_map.h, which pretends that boost::unordered_map is std::tr1::unordered_map;
-// this pretence falls apart if one specializes the hash function, since boost and tr1 do that differently
-#include "boost/unordered_map.hpp"
+#include <map>
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/XYTransform.h"
 
@@ -41,39 +38,37 @@ namespace geom {
  * A registry of 2-dimensional coordinate transforms
  *
  * If CoordSys is not a plain old data type or std::string then:
- * * CoordSys must have a default constructor (no arguments)
- * * CoordSys must have member function operator==
- * * You must define function hash_value(CoordSys const &)
- * * You must overload ostream operator<<(CoordSys const &)
- * For an example see ../cameraGeom/CameraSys.h (CameraSys is used as a CoordSys)
- * The reason for these rules is to allow CoordSys to be used as a key in boost::unordered_map,
- * and to allow SWIG to wrap a collection containing CoordSys.
+ * * CoordSys must have a default constructor (no arguments) to allow SWIG to wrap a collection
+ * * CoordSys must support operator< to support use as a key in std::map
+ * * CoordSys should support operator== and operator!= for common sense
+ * * CoordSys should support __hash__ in Python to support proper behavior in sets and dicts
+ * * You must overload ostream operator<<(CoordSys const &) to support error messages in TransformRegistry
+ * For an example see ../cameraGeom/CameraSys.h (CameraSys is used as a CoordSys) and its SWIG wrapper.
  *
- * @warning When we switch to using std::unordered_map then you must define functor
- * std::hash<CoordSys>(CoordSys const &) instead of function hash_value.
+ * At some point we will switch to using std::unordered_map (once we switch to C++11 and a SWIG that supports
+ * its collection classes). At that point instead of requiring operator<, it will be necessary to
+ * specialize std::hash<CoordSys>(CoordSys const &).
  */
 template<typename CoordSys>
 class TransformRegistry {
 public:
-    typedef std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > TransformList;
-    typedef boost::unordered_map<CoordSys, CONST_PTR(XYTransform)> TransformMap;
+    typedef std::map<CoordSys, CONST_PTR(XYTransform)> TransformMap;
+    // the following is needed by SWIG; see TransformRegistry.i
+    typedef CoordSys _CoordSysType;
 
     /**
      * Construct a TransformRegistry
      *
-     * @note If transformRegistry includes a transform for nativeCoordSys
+     * @note If transformMap includes a transform for nativeCoordSys
      * then it is used (without checking); if not, then a unity transform is added.
      *
      * @throw pexExcept::InvalidParameterException if you specify the same coordSys
      * more than once, or a transform is specified where coordSys == nativeCoordSys
      */
     explicit TransformRegistry(
-        CoordSys const &nativeCoordSys,   ///< Native coordinate system for this registry;
-            ///< all XYTransforms in the registry must convert to this coordinate system
-        TransformList const &transformRegistry
-            ///< xy transforms: a list of pairs of:
-            ///< * coordSys: coordinate system
-            ///< * xyTransform: an XYTransform whose forward method converts coordSys->nativeCoordSys
+        CoordSys const &nativeCoordSys,   ///< Native coordinate system for this registry
+        TransformMap const &transformMap ///< xy transforms: a map of coordSys:xyTransform,
+            ///< where xyTransform.forward converts coordSys to nativeCoordSys
     );
 
     /// null implementation to make SWIG willing to wrap a vector that contains these
@@ -128,7 +123,7 @@ public:
      *
      * @throw pexExcept::InvalidParameterException if coordSys is unknown
      */
-    CONST_PTR(XYTransform) getTransform(
+    CONST_PTR(XYTransform) operator[](
         CoordSys const &coordSys ///< coordinate system whose XYTransform is wanted
     ) const;
 
@@ -137,11 +132,6 @@ public:
     typename TransformMap::const_iterator end() const { return _transformMap.end(); }
 
     size_t size() const { return _transformMap.size(); }
-
-    /**
-     * Return a list of transforms
-     */
-    TransformList getTransformList() const;
 
 private:
     CoordSys _nativeCoordSys;   ///< native coordinate system
