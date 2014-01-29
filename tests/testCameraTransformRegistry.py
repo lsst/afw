@@ -48,10 +48,10 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
     def testBasics(self):
         """Test basic attributes
         """
-        self.assertTrue(self.transReg.hasTransform(self.nativeSys))
-        self.assertTrue(self.transReg.hasTransform(cameraGeom.PUPIL))
-        self.assertFalse(self.transReg.hasTransform(cameraGeom.PIXELS))
-        self.assertFalse(self.transReg.hasTransform(cameraGeom.CameraSys("garbage")))
+        self.assertTrue(self.nativeSys in self.transReg)
+        self.assertTrue(cameraGeom.PUPIL in self.transReg)
+        self.assertFalse(cameraGeom.PIXELS in self.transReg)
+        self.assertFalse(cameraGeom.CameraSys("garbage") in self.transReg)
 
         csList = self.transReg.getCoordSysList()
         self.assertTrue(len(csList) == 2)
@@ -60,6 +60,9 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
 
     def testIteration(self):
         """Test iteration, len and indexing
+
+        I don't bother to test that the returned transforms are the right once
+        because it's more work than it's worth
         """
         self.assertEquals(len(self.transReg), 2)
         trList = []
@@ -68,7 +71,9 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
         self.assertEquals(len(trList), 2)
         trList2 = [tr for tr in self.transReg]
         self.assertEquals(len(trList2), 2)
-        # it would be nice to test equality of the transforms, but it's not worth the fuss
+
+        for missingSys in (cameraGeom.DetectorSysPrefix("foo"), cameraGeom.CameraSys("garbage")):
+            self.assertRaises(pexException.LsstCppException, self.transReg.__getitem__, missingSys)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

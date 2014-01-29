@@ -53,7 +53,7 @@ TransformRegistry<CoordSys>::TransformRegistry(
     }
 
     // insert identity transform for nativeCoordSys, if not already provided
-    if (!hasTransform(nativeCoordSys)) {
+    if (!contains(nativeCoordSys)) {
         _transformMap.insert(std::make_pair(nativeCoordSys,
             boost::make_shared<IdentityXYTransform>(false)));
     }
@@ -140,7 +140,7 @@ CONST_PTR(XYTransform) TransformRegistry<CoordSys>::operator[](
 }
 
 template<typename CoordSys>
-bool TransformRegistry<CoordSys>::hasTransform(
+bool TransformRegistry<CoordSys>::contains(
     CoordSys const &coordSys
 ) const {
     return _transformMap.find(coordSys) != _transformMap.end();

@@ -47,7 +47,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i" 
-%include "std_pair.i"
 %include "std_map.i"
 
 %import "lsst/afw/geom/geomLib.i"
@@ -58,8 +57,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %shared_ptr(lsst::afw::cameraGeom::RawAmplifier);
 %shared_ptr(lsst::afw::cameraGeom::Amplifier);
 
-%rename("__getitem__") lsst::afw::cameraGeom::Detector::operator[];
-%rename("__len__") lsst::afw::cameraGeom::Detector::size();
+%rename(__getitem__) lsst::afw::cameraGeom::Detector::operator[];
+%rename(__len__) lsst::afw::cameraGeom::Detector::size();
 
 %include "lsst/afw/cameraGeom/CameraSys.h"
 %include "lsst/afw/cameraGeom/CameraPoint.h"

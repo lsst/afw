@@ -25,19 +25,28 @@
 #include "lsst/afw/geom/TransformRegistry.h"
 %}
 
-// unfortunately the following rename doesn't work, so use %ignore and %extend
-// %rename("__getitem__") lsst::afw::geom::TransformRegistry::operator[];
-// %rename("__len__") lsst::afw::geom::TransformRegistry::size();
-%ignore lsst::afw::geom::TransformRegistry::operator[];
-%ignore lsst::afw::geom::TransformRegistry::size();
+// unfortunately the following renames don't work, so use %extend
+// %rename(__getitem__) lsst::afw::geom::TransformRegistry::operator[];
+// %rename(__contains__) lsst::afw::geom::TransformRegistry::contains();
+// %rename(__len__) lsst::afw::geom::TransformRegistry::size();
+%ignore lsst::afw::geom::TransformRegistry::operator[]; // this avoids a SWIG warning
+%ignore lsst::afw::geom::TransformRegistry::contains(); // this does nothing, alas
+%ignore lsst::afw::geom::TransformRegistry::size(); // this does nothing, alas
 
 %include "lsst/afw/geom/TransformRegistry.h"
 
 %extend lsst::afw::geom::TransformRegistry {
+    // rename operator[]
     CONST_PTR(lsst::afw::geom::XYTransform) __getitem__(
             lsst::afw::geom::TransformRegistry::_CoordSysType const &coordSys
         ) const { return (*($self))[coordSys]; }
 
+    // rename contains
+    bool __contains__(
+        lsst::afw::geom::TransformRegistry::_CoordSysType const &coordSys
+    ) const { return $self->contains(coordSys); }
+
+    // rename size
     size_t __len__() const { return $self->size(); }
 
     %pythoncode {

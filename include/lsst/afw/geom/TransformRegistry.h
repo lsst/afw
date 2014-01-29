@@ -111,8 +111,11 @@ public:
 
     /**
      * Return true if the coordinate system is supported
+     *
+     * In Python this is renamed to __contains__; use as follows:
+     *     coordSys in transformRegistry
      */
-    bool hasTransform(
+    bool contains(
         CoordSys const &coordSys ///< coordinate system
     ) const;
 
