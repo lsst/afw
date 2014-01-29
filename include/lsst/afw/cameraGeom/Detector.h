@@ -70,7 +70,8 @@ public:
         AmplifierList const &amplifierList, ///< list of amplifier data
         Orientation const &orientation,     ///< detector position and orientation in focal plane
         double pixelSize,           ///< size of pixel along x or y (mm); pixels are assumed to be square
-        CameraTransformList const &transformList);  ///< list of coordinate transforms for this detector
+        CameraTransformList const &transformList    ///< list of coordinate transforms for this detector
+    );
 
     ~Detector() {}
 
