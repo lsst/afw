@@ -56,6 +56,7 @@ template<typename CoordSys>
 class TransformRegistry {
 public:
     typedef std::vector<std::pair<CoordSys, CONST_PTR(XYTransform)> > TransformList;
+    typedef boost::unordered_map<CoordSys, CONST_PTR(XYTransform)> TransformMap;
 
     /**
      * Construct a TransformRegistry
@@ -114,6 +115,13 @@ public:
     std::vector<CoordSys> getCoordSysList() const;
 
     /**
+     * Return true if the coordinate system is supported
+     */
+    bool hasTransform(
+        CoordSys const &coordSys ///< coordinate system
+    ) const;
+
+    /**
      * Get an XYTransform that converts from coordSys to nativeCoordSys in the forward direction
      *
      * @return an XYTransform
@@ -124,23 +132,20 @@ public:
         CoordSys const &coordSys ///< coordinate system whose XYTransform is wanted
     ) const;
 
+    typename TransformMap::const_iterator begin() const { return _transformMap.begin(); }
+
+    typename TransformMap::const_iterator end() const { return _transformMap.end(); }
+
+    size_t size() const { return _transformMap.size(); }
+
     /**
      * Return a list of transforms
      */
     TransformList getTransformList() const;
 
-    /**
-     * Return true if the coordinate system is supported
-     */
-    bool hasTransform(
-        CoordSys const &coordSys ///< coordinate system
-    ) const;
-
- 
 private:
-    typedef boost::unordered_map<CoordSys, CONST_PTR(XYTransform)> _MapType;
     CoordSys _nativeCoordSys;   ///< native coordinate system
-    _MapType _transformMap;     ///< map of coordSys: XYTransform
+    TransformMap _transformMap; ///< map of coordSys: XYTransform
 };
 
 }}}

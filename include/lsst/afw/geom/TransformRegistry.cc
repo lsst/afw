@@ -119,7 +119,7 @@ std::vector<Point2D> TransformRegistry<CoordSys>::convert(
 template<typename CoordSys>
 std::vector<CoordSys> TransformRegistry<CoordSys>::getCoordSysList() const {
     std::vector<CoordSys> coordSysList;
-    for (typename _MapType::const_iterator trIter = _transformMap.begin();
+    for (typename TransformMap::const_iterator trIter = _transformMap.begin();
         trIter != _transformMap.end(); ++trIter) {
         coordSysList.push_back(trIter->first);
     }
@@ -130,7 +130,7 @@ template<typename CoordSys>
 CONST_PTR(XYTransform) TransformRegistry<CoordSys>::getTransform(
     CoordSys const &coordSys
 ) const {
-    typename _MapType::const_iterator const foundIter = _transformMap.find(coordSys);
+    typename TransformMap::const_iterator const foundIter = _transformMap.find(coordSys);
     if (foundIter == _transformMap.end()) {
         std::ostringstream os;
         os << "Registry does not support coordSys \"" << coordSys << "\"";
@@ -142,7 +142,7 @@ CONST_PTR(XYTransform) TransformRegistry<CoordSys>::getTransform(
 template<typename CoordSys>
 typename TransformRegistry<CoordSys>::TransformList TransformRegistry<CoordSys>::getTransformList() const {
     TransformList transformList;
-    for (typename _MapType::const_iterator trIter = _transformMap.begin();
+    for (typename TransformMap::const_iterator trIter = _transformMap.begin();
         trIter != _transformMap.end(); ++trIter) {
         transformList.push_back(*trIter);
     }
