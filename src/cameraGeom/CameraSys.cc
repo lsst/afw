@@ -30,12 +30,12 @@ CameraSys const FOCAL_PLANE = CameraSys("FocalPlane");
 
 CameraSys const PUPIL = CameraSys("Pupil");
 
-BaseCameraSys const PIXELS = BaseCameraSys("Pixels");
+CameraSysPrefix const PIXELS = CameraSysPrefix("Pixels");
 
-BaseCameraSys const ACTUAL_PIXELS = BaseCameraSys("ActualPixels");
+CameraSysPrefix const ACTUAL_PIXELS = CameraSysPrefix("ActualPixels");
 
-std::ostream &operator<< (std::ostream &os, BaseCameraSys const &baseCamSys) {
-    os << "BaseCameraSys(" << baseCamSys.getSysName() << ")";
+std::ostream &operator<< (std::ostream &os, CameraSysPrefix const &camSysPrefix) {
+    os << "CameraSysPrefix(" << camSysPrefix.getSysName() << ")";
     return os;
 }
 

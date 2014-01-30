@@ -67,7 +67,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/Amplifier.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 
-%extend lsst::afw::cameraGeom::BaseCameraSys {
+%extend lsst::afw::cameraGeom::CameraSysPrefix {
     std::string __repr__() {
         std::ostringstream os;
         os << *$self;

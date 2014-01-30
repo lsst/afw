@@ -21,7 +21,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
-Tests for lsst.afw.cameraGeom.CameraSys and BaseCameraSys
+Tests for lsst.afw.cameraGeom.CameraSys and CameraSysPrefix
 """
 import unittest
 
@@ -31,7 +31,7 @@ import lsst.afw.cameraGeom as cameraGeom
 
 class CameraSysTestCase(unittest.TestCase):
     def testBasics(self):
-        """Test CameraSys and BaseCameraSys
+        """Test CameraSys and CameraSysPrefix
         """
         for sysName in ("pupil", "pixels"):
             for detectorName in ("", "det1", "det2"):
@@ -45,8 +45,8 @@ class CameraSysTestCase(unittest.TestCase):
                 self.assertEquals(noDetSys.getDetectorName(), "")
                 self.assertFalse(noDetSys.hasDetectorName())
 
-                baseCamSys = cameraGeom.BaseCameraSys(sysName)
-                self.assertEquals(baseCamSys.getSysName(), sysName)
+                camSysPrefix = cameraGeom.CameraSysPrefix(sysName)
+                self.assertEquals(camSysPrefix.getSysName(), sysName)
 
                 if detectorName:
                     self.assertFalse(cameraSys == noDetSys)
@@ -65,13 +65,13 @@ class CameraSysTestCase(unittest.TestCase):
                         self.assertFalse(cameraSys == cameraSys2)
                         self.assertTrue(cameraSys != cameraSys2)
 
-                    baseCamSys2 = cameraGeom.BaseCameraSys(sysName2)
+                    camSysPrefix2 = cameraGeom.CameraSysPrefix(sysName2)
                     if sysName2 == sysName:
-                        self.assertTrue(baseCamSys2 == baseCamSys)
-                        self.assertFalse(baseCamSys2 != baseCamSys)
+                        self.assertTrue(camSysPrefix2 == camSysPrefix)
+                        self.assertFalse(camSysPrefix2 != camSysPrefix)
                     else:
-                        self.assertFalse(baseCamSys2 == baseCamSys)
-                        self.assertTrue(baseCamSys2 != baseCamSys)
+                        self.assertFalse(camSysPrefix2 == camSysPrefix)
+                        self.assertTrue(camSysPrefix2 != camSysPrefix)
 
     def testRepr(self):
         """Test __repr__
@@ -82,8 +82,8 @@ class CameraSysTestCase(unittest.TestCase):
         cs2 = cameraGeom.CameraSys("pixels")
         self.assertEqual(repr(cs2), "CameraSys(pixels)")
 
-        dsp = cameraGeom.BaseCameraSys("pixels")
-        self.assertEqual(repr(dsp), "BaseCameraSys(pixels)")
+        dsp = cameraGeom.CameraSysPrefix("pixels")
+        self.assertEqual(repr(dsp), "CameraSysPrefix(pixels)")
 
     def testHashing(self):
         """Test that hashing works as expected"""

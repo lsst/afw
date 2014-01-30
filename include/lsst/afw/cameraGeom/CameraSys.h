@@ -40,25 +40,25 @@ namespace cameraGeom {
  * to construct a fully specified CameraSys
  *
  * This is Jim Bosch's clever idea for simplifying Detector.convert;
- * CameraSys is always complete and BaseCameraSys is not.
+ * CameraSys is always complete and CameraSysPrefix is not.
  */
-class BaseCameraSys {
+class CameraSysPrefix {
 public:
-    explicit BaseCameraSys(
+    explicit CameraSysPrefix(
         std::string const &sysName  ///< coordinate system name
     ) : _sysName(sysName) {}
-    ~BaseCameraSys() {}
+    ~CameraSysPrefix() {}
 
     /**
      * Get coordinate system name
      */
     std::string getSysName() const { return _sysName; };
 
-    bool operator==(BaseCameraSys const &rhs) const {
+    bool operator==(CameraSysPrefix const &rhs) const {
         return _sysName == rhs.getSysName();
     }
 
-    bool operator!=(BaseCameraSys const &rhs) const {
+    bool operator!=(CameraSysPrefix const &rhs) const {
         return !(*this == rhs);
     }
 private:
@@ -79,7 +79,7 @@ private:
  *   boost::hash_combine(hash, cameraSys.getDetectorName());
  *   return hash;
  */
-class CameraSys : public BaseCameraSys {
+class CameraSys {
 public:
     /**
      * Construct a CameraSys
@@ -87,12 +87,17 @@ public:
     explicit CameraSys(
         std::string const &sysName,         ///< coordinate system name
         std::string const &detectorName=""  /// detector name
-    ) : BaseCameraSys(sysName), _detectorName(detectorName) {};
+    ) : _sysName(sysName), _detectorName(detectorName) {};
 
     /// default constructor so SWIG can wrap a vector of pairs containing these
-    CameraSys() : BaseCameraSys("?"), _detectorName() {};
+    CameraSys() : _sysName("?"), _detectorName() {};
 
     ~CameraSys() {}
+
+    /**
+     * Get coordinate system name
+     */
+    std::string getSysName() const { return _sysName; };
 
     /**
      * Get detector name, or "" if not a detector-specific coordinate system
@@ -105,7 +110,7 @@ public:
     bool hasDetectorName() const { return !_detectorName.empty(); }
 
     bool operator==(CameraSys const &rhs) const {
-        return this->getSysName() == rhs.getSysName() && _detectorName == rhs.getDetectorName();
+        return _sysName == rhs.getSysName() && _detectorName == rhs.getDetectorName();
     }
 
     bool operator!=(CameraSys const &rhs) const {
@@ -114,14 +119,15 @@ public:
 
     // less-than operator required for use in std::map
     bool operator<(CameraSys const &rhs) const {
-        if (this->getSysName() == rhs.getSysName()) {
+        if (_sysName == rhs.getSysName()) {
             return _detectorName < rhs.getDetectorName();
         } else {
-            return this->getSysName() < rhs.getSysName();
+            return _sysName < rhs.getSysName();
         }
     }
 
 private:
+    std::string _sysName;       ///< coordinate system name
     std::string _detectorName;  ///< detector name; "" if not a detector-specific coordinate system
 };
 
@@ -151,7 +157,7 @@ extern CameraSys const PUPIL;
  *
  * This is a detector prefix; call Detector.getCameraSys(PIXELS) to make a full coordsys.
  */
-extern BaseCameraSys const PIXELS;
+extern CameraSysPrefix const PIXELS;
 
 /**
  * The actual pixels where the photon lands and electrons are generated (unbinned)
@@ -159,9 +165,9 @@ extern BaseCameraSys const PIXELS;
  *
  * This is a detector prefix; call Detector.getCameraSys(ACTUAL_PIXELS) to make a full coordsys.
  */
-extern BaseCameraSys const ACTUAL_PIXELS;
+extern CameraSysPrefix const ACTUAL_PIXELS;
 
-std::ostream &operator<< (std::ostream &os, BaseCameraSys const &detSysPrefix);
+std::ostream &operator<< (std::ostream &os, CameraSysPrefix const &detSysPrefix);
 
 std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys);
 
