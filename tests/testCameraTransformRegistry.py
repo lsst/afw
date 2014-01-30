@@ -91,7 +91,6 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
         """
         self.assertTrue(self.nativeSys in self.transReg)
         self.assertTrue(cameraGeom.PUPIL in self.transReg)
-        self.assertFalse(cameraGeom.PIXELS in self.transReg)
         self.assertFalse(cameraGeom.CameraSys("garbage") in self.transReg)
 
         csList = self.transReg.getCoordSysList()
@@ -110,8 +109,7 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
         trList2 = [tr for tr in self.transReg]
         self.assertEquals(len(trList2), 2)
 
-        for missingSys in (cameraGeom.DetectorSysPrefix("foo"), cameraGeom.CameraSys("garbage")):
-            self.assertRaises(pexException.LsstCppException, self.transReg.__getitem__, missingSys)
+        self.assertRaises(pexException.LsstCppException, self.transReg.__getitem__, cameraGeom.CameraSys("missing"))
 
     def testTransforms(self):
         """Test that the contained transforms are the ones expected

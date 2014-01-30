@@ -44,7 +44,7 @@ Detector::Detector(
     _amplifierMap(),
     _orientation(orientation),
     _pixelSize(pixelSize),
-    _transformRegistry(PIXELS, transformMap)
+    _transformRegistry(CameraSys(PIXELS.getSysName(), name), transformMap)
 {
     _makeAmplifierMap();
 }

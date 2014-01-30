@@ -34,6 +34,38 @@ namespace afw {
 namespace cameraGeom {
 
 /**
+ * Base class for camera coordinate systems
+ *
+ * This version has no detector name and used by Detector.makeCameraSys
+ * to construct a fully specified CameraSys
+ *
+ * This is Jim Bosch's clever idea for simplifying Detector.convert;
+ * CameraSys is always complete and BaseCameraSys is not.
+ */
+class BaseCameraSys {
+public:
+    explicit BaseCameraSys(
+        std::string const &sysName  ///< coordinate system name
+    ) : _sysName(sysName) {}
+    ~BaseCameraSys() {}
+
+    /**
+     * Get coordinate system name
+     */
+    std::string getSysName() const { return _sysName; };
+
+    bool operator==(BaseCameraSys const &rhs) const {
+        return _sysName == rhs.getSysName();
+    }
+
+    bool operator!=(BaseCameraSys const &rhs) const {
+        return !(*this == rhs);
+    }
+private:
+    std::string _sysName;   ///< coordinate system name
+};
+
+/**
  * Base class for coordinate system keys used in in TransformRegistry
  *
  * @note A subclass is used for keys in TransformRegistry, and another subclass is used by CameraGeom
@@ -47,7 +79,7 @@ namespace cameraGeom {
  *   boost::hash_combine(hash, cameraSys.getDetectorName());
  *   return hash;
  */
-class CameraSys {
+class CameraSys : public BaseCameraSys {
 public:
     /**
      * Construct a CameraSys
@@ -55,17 +87,12 @@ public:
     explicit CameraSys(
         std::string const &sysName,         ///< coordinate system name
         std::string const &detectorName=""  /// detector name
-    ) : _sysName(sysName), _detectorName(detectorName) {};
+    ) : BaseCameraSys(sysName), _detectorName(detectorName) {};
 
     /// default constructor so SWIG can wrap a vector of pairs containing these
-    CameraSys() : _sysName(), _detectorName() {};
+    CameraSys() : BaseCameraSys("?"), _detectorName() {};
 
     ~CameraSys() {}
-
-    /**
-     * Get coordinate system name
-     */
-    std::string getSysName() const { return _sysName; };
 
     /**
      * Get detector name, or "" if not a detector-specific coordinate system
@@ -78,7 +105,7 @@ public:
     bool hasDetectorName() const { return !_detectorName.empty(); }
 
     bool operator==(CameraSys const &rhs) const {
-        return _sysName == rhs.getSysName() && _detectorName == rhs.getDetectorName();
+        return this->getSysName() == rhs.getSysName() && _detectorName == rhs.getDetectorName();
     }
 
     bool operator!=(CameraSys const &rhs) const {
@@ -87,30 +114,15 @@ public:
 
     // less-than operator required for use in std::map
     bool operator<(CameraSys const &rhs) const {
-        if (_sysName == rhs.getSysName()) {
+        if (this->getSysName() == rhs.getSysName()) {
             return _detectorName < rhs.getDetectorName();
         } else {
-            return _sysName < rhs.getSysName();
+            return this->getSysName() < rhs.getSysName();
         }
     }
 
 private:
-    std::string _sysName;   ///< coordinate system name
     std::string _detectorName;  ///< detector name; "" if not a detector-specific coordinate system
-};
-
-/**
- * Incomplete coordinate system for detector-specific coordinates (detector name is blank)
- *
- * This is Jim Bosch's clever idea for simplifying Detector.convert;
- * CameraSys is always complete and DetectorSysPrefix is not.
- */
-class DetectorSysPrefix : public CameraSys {
-public:
-    explicit DetectorSysPrefix(
-        std::string const &sysName  ///< coordinate system name
-    ) : CameraSys(sysName, "") {}
-    ~DetectorSysPrefix() {}
 };
 
 // CameraSys is intended as a key for geom::TransformRegistry, so define these useful types
@@ -139,7 +151,7 @@ extern CameraSys const PUPIL;
  *
  * This is a detector prefix; call Detector.getCameraSys(PIXELS) to make a full coordsys.
  */
-extern DetectorSysPrefix const PIXELS;
+extern BaseCameraSys const PIXELS;
 
 /**
  * The actual pixels where the photon lands and electrons are generated (unbinned)
@@ -147,13 +159,11 @@ extern DetectorSysPrefix const PIXELS;
  *
  * This is a detector prefix; call Detector.getCameraSys(ACTUAL_PIXELS) to make a full coordsys.
  */
-extern DetectorSysPrefix const ACTUAL_PIXELS;
+extern BaseCameraSys const ACTUAL_PIXELS;
 
+std::ostream &operator<< (std::ostream &os, BaseCameraSys const &detSysPrefix);
 
-// define operator<< and hash_value so CameraSys can be used as a key in TransformRegistry
 std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys);
-
-std::ostream &operator<< (std::ostream &os, DetectorSysPrefix const &detSysPrefix);
 
 }}}
 

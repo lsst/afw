@@ -88,7 +88,7 @@ public:
     /** 
      * Get a coordinate system from a detector system prefix (add detector name)
      */
-    CameraSys const getCameraSys(DetectorSysPrefix const &detectorSysPrefix) const {
+    CameraSys const getCameraSys(BaseCameraSys const &detectorSysPrefix) const {
         return CameraSys(detectorSysPrefix.getSysName(), _name);
     }
 
