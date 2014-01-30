@@ -60,9 +60,9 @@ public:
 
     double getReadNoise() const { return _readNoise; }
 
-    CONST_PTR(RawAmplifier) getRawAmplifierPtr() const { return _rawAmplifierPtr; }
+    CONST_PTR(RawAmplifier) getRawAmplifier() const { return _rawAmplifierPtr; }
 
-    bool hasRawAmplifierPtr() const { return bool(_rawAmplifierPtr); }
+    bool hasRawAmplifier() const { return bool(_rawAmplifierPtr); }
 
 private:
     std::string _name;
