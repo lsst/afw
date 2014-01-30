@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -51,7 +51,6 @@
 
     %pythoncode {
         def __iter__(self):
-            for coordSys in self.getCoordSysList():
-                yield self[coordSys]
+            return iter(self.getCoordSysList())
     }
 }

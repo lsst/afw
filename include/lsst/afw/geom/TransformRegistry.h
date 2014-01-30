@@ -35,10 +35,17 @@ namespace afw {
 namespace geom {
 
 /**
- * A registry of 2-dimensional coordinate transforms
+ * A registry of 2-dimensional coordinate transforms, templated on CoordSys
+ *
+ * Contains a native CoordSys and a map of CoordSys: XYTransform (including an entry for the native CoordSys).
+ * Each map entry describes a conversion from CoordSys to native CoordSys via XYTransform.forwardTransform.
+ *
+ * TransformRegistry supports converting between any two supported CoordSys using the convert method.
+ * It also allows iteration over the map of CoordSys: XYTransform. (In Python iteration is over
+ * CoordSys; use TransformRegistry[CoordSys] to access the XYTransform).
  *
  * If CoordSys is not a plain old data type or std::string then:
- * * CoordSys must have a default constructor (no arguments) to allow SWIG to wrap a collection
+ * * CoordSys must have a default constructor (no arguments), so SWIG can wrap some collections
  * * CoordSys must support operator< to support use as a key in std::map
  * * CoordSys should support operator== and operator!= for common sense
  * * CoordSys should support __hash__ in Python to support proper behavior in sets and dicts
@@ -46,7 +53,7 @@ namespace geom {
  * For an example see ../cameraGeom/CameraSys.h (CameraSys is used as a CoordSys) and its SWIG wrapper.
  *
  * At some point we will switch to using std::unordered_map (once we switch to C++11 and a SWIG that supports
- * its collection classes). At that point instead of requiring operator<, it will be necessary to
+ * its collection classes). At that point instead of requiring CoordSys.operator<, it will be necessary to
  * specialize std::hash<CoordSys>(CoordSys const &).
  */
 template<typename CoordSys>

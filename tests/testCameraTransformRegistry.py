@@ -102,12 +102,15 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
         """Test iteration, len and indexing
         """
         self.assertEquals(len(self.transReg), 2)
-        trList = []
-        for coordSys in self.transReg.getCoordSysList():
-            trList.append(self.transReg[coordSys])
-        self.assertEquals(len(trList), 2)
-        trList2 = [tr for tr in self.transReg]
-        self.assertEquals(len(trList2), 2)
+
+        csList = self.transReg.getCoordSysList()
+        csList2 = [cs for cs in self.transReg]
+        self.assertEquals(len(csList), len(self.transReg))
+        self.assertEquals(tuple(csList), tuple(csList2))
+
+        for cs in csList:
+            xyTrans = self.transReg[cs]
+            self.assertTrue(isinstance(xyTrans, afwGeom.XYTransform))
 
         self.assertRaises(pexException.LsstCppException, self.transReg.__getitem__, cameraGeom.CameraSys("missing"))
 
