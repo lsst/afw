@@ -70,7 +70,7 @@ public:
         std::string const &serial,  ///< serial "number" that identifies the physical detector
         AmplifierList const &amplifierList, ///< list of amplifier data
         Orientation const &orientation,     ///< detector position and orientation in focal plane
-        double pixelSize,           ///< size of pixel along x or y (mm); pixels are assumed to be square
+        double pixelSize,           ///< size of pixel along x = y (mm); pixels are assumed to be square
         CameraTransformMap const &transformMap  ///< list of coordinate transforms for this detector
     );
 
@@ -104,12 +104,18 @@ public:
     }
 
     /** Get the detector name */
-    std::string getName() const { return _name; }
+    std::string const getName() const { return _name; }
 
     DetectorType getType() const { return _type; }
 
     /** Get the detector serial "number" */
-    std::string getSerial() const { return _serial; }
+    std::string const getSerial() const { return _serial; }
+
+    /** Get detector's orientation in the focal plane */
+    Orientation const getOrientation() const { return _orientation; }
+
+    /** Get size of pixel along x = y (mm) */
+    double getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
     CameraTransformRegistry const getTransformRegistry() const { return _transformRegistry; }

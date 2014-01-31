@@ -31,43 +31,47 @@ import lsst.afw.cameraGeom as cameraGeom
 
 
 class DetectorTestCase(unittest.TestCase):
-    def testConstructor(self):
-        """Test constructor
-        """
-        ampList = []
+    def setUp(self):
+        self.name = "detector 1"
+        self.type = cameraGeom.SCIENCE
+        self.serial = "xkcd722"
+        self.ampList = []
         for name in ("amp 1", "amp 2", "amp 3"):
             bbox = afwGeom.Box2I(afwGeom.Point2I(-1, 1), afwGeom.Extent2I(5, 6))
             gain = 1.71234e3
             readNoise = 0.521237e2
-            rawAmplifier = cameraGeom.RawAmplifier(
-                afwGeom.Box2I(afwGeom.Point2I(-25, 2), afwGeom.Extent2I(550, 629)),
-                afwGeom.Box2I(afwGeom.Point2I(-2, 29), afwGeom.Extent2I(123, 307)),
-                afwGeom.Box2I(afwGeom.Point2I(150, 29), afwGeom.Extent2I(25, 307)),
-                afwGeom.Box2I(afwGeom.Point2I(-2, 201), afwGeom.Extent2I(123, 6)),
-                afwGeom.Box2I(afwGeom.Point2I(-20, 2), afwGeom.Extent2I(5, 307)),
-                False,
-                True,
-                afwGeom.Extent2I(-97, 253),
-            )
-            ampList.append(cameraGeom.Amplifier(name, bbox, gain, readNoise, rawAmplifier))
-
-        pixelSize = 0.02
-
-        focalPlaneTransform = afwGeom.RadialXYTransform([0, pixelSize])
-        distortionTransform = afwGeom.RadialXYTransform([0, 0.95, 0.01])
-        transMap = {
-            cameraGeom.CameraSys(cameraGeom.PIXELS, name): focalPlaneTransform,
-            cameraGeom.CameraSys(cameraGeom.ACTUAL_PIXELS, name): distortionTransform,
+            self.ampList.append(cameraGeom.Amplifier(name, bbox, gain, readNoise, None))
+        self.oriention = cameraGeom.Orientation()
+        self.pixelSize = 0.02
+        self.transMap = {
+            cameraGeom.CameraSys(cameraGeom.PIXELS, name): afwGeom.RadialXYTransform([0, self.pixelSize]),
+            cameraGeom.CameraSys(cameraGeom.ACTUAL_PIXELS, name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
         }
-        detector = cameraGeom.Detector(
-            "detector 1",
-            cameraGeom.SCIENCE,
-            "xkcd722",
-            ampList,
-            cameraGeom.Orientation(),
-            pixelSize,
-            transMap,
+        self.detector = cameraGeom.Detector(
+            self.name,
+            self.type,
+            self.serial,
+            self.ampList,
+            self.oriention,
+            self.pixelSize,
+            self.transMap,
         )
+
+    def tearDown(self):
+        self.ampList = None
+        self.pixelSize = None
+        self.transMap = None
+        self.detector = None
+
+    def testConstructor(self):
+        """Test constructor
+        """
+        detector = self.detector
+        self.assertEquals(self.name,   detector.getName())
+        self.assertEquals(self.type,   detector.getType())
+        self.assertEquals(self.serial, detector.getSerial())
+        self.assertAlmostEquals(self.pixelSize, detector.getPixelSize())
+        self.assertEquals(len(detector), 3)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
