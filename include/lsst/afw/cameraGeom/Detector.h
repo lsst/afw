@@ -63,6 +63,10 @@ public:
      * @warning
      * * The keys for the detector-specific coordinate systems in the transform registry
      *   must include the detector name (even though this is redundant).
+     *
+     * @throw lsst::pex::exceptions::InvalidParameterException if:
+     * - any amplifier names are not unique
+     * - any CamerSys in transformMap has a detector name other than "" or this detector's name
      */
     explicit Detector(
         std::string const &name,    ///< name of detector's location in the camera
@@ -83,12 +87,25 @@ public:
      */
     CameraPoint convert(
         CameraPoint const &fromPoint,   ///< camera point to convert
-        CameraSys const &toSys          ///< coordinate system to which to convert;
-                                        ///< may be a full system or a detector prefix such as PIXELS
+        CameraSys const &toSys          ///< coordinate system to which to convert
     ) const {
-        CameraSys fullToSys = getCameraSys(toSys);
-        geom::Point2D toPoint = _transformRegistry.convert(fromPoint.getPoint(), fromPoint.getCameraSys(), fullToSys);
-        return CameraPoint(toPoint, fullToSys);
+        return CameraPoint(
+            _transformRegistry.convert(fromPoint.getPoint(), fromPoint.getCameraSys(), toSys),
+            toSys);
+    }
+
+    /**
+     * Convert a CameraPoint from one coordinate system to a coordinate system prefix
+     *
+     * The coordinate system prefix is filled in with this detector's name
+     *
+     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
+     */
+    CameraPoint convert(
+        CameraPoint const &fromPoint,   ///< camera point to convert
+        CameraSysPrefix const &toSys    ///< coordinate system prefix to which to convert
+    ) const {
+        return convert(fromPoint, getCameraSys(toSys));
     }
 
     /** 
@@ -157,8 +174,17 @@ public:
 
 private:
     typedef boost::unordered_map<std::string, CONST_PTR(Amplifier)> _AmpMap;
-    // set _amplifierMap from _amplifierList
-    void _makeAmplifierMap();
+    /**
+     * Finish constructing this object
+     *
+     * Set _amplifierMap from amplifierList
+     * Check detector name in the CoordSys in the transform registry
+     *
+     * @throw lsst::pex::exceptions::InvalidParameterException if:
+     * - any amplifier names are not unique
+     * - any CamerSys in transformMap has a detector name other than "" or this detector's name
+     */
+    void _init();
 
     std::string _name;      ///< name of detector's location in the camera
     DetectorType _type;     ///< type of detector

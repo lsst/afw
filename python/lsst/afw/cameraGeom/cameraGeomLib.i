@@ -65,8 +65,10 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;
 
 %rename(__getitem__) lsst::afw::cameraGeom::Detector::operator[];
-// the following rename silently fails (and so does %ignore) so use %extend to add __len__=size
-// %rename(__len__) lsst::afw::cameraGeom::Detector::size();
+// note: the following fail with SWIG 2.0.4 if the method names have () after them; why?
+%rename(__len__) lsst::afw::cameraGeom::Detector::size;
+%ignore lsst::afw::cameraGeom::Detector::begin;
+%ignore lsst::afw::cameraGeom::Detector::end;
 
 %include "lsst/afw/cameraGeom/CameraSys.h"
 %include "lsst/afw/cameraGeom/CameraPoint.h"
@@ -97,8 +99,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 }
 
 %extend lsst::afw::cameraGeom::Detector {
-    size_t __len__() const { return $self->size(); }
-
     %pythoncode {
         def __iter__(self):
             for i in xrange(len(self)):

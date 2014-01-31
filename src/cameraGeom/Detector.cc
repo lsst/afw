@@ -46,7 +46,7 @@ Detector::Detector(
     _pixelSize(pixelSize),
     _transformRegistry(CameraSys(PIXELS.getSysName(), name), transformMap)
 {
-    _makeAmplifierMap();
+    _init();
 }
 
 CONST_PTR(Amplifier) Detector::operator[](std::string const &name) const {
@@ -59,10 +59,25 @@ CONST_PTR(Amplifier) Detector::operator[](std::string const &name) const {
     return ampIter->second;
 }
 
- void Detector::_makeAmplifierMap() {
+ void Detector::_init() {
+    // make _amplifierMap
     for (AmplifierList::const_iterator ampIter = _amplifierList.begin();
         ampIter != _amplifierList.end(); ++ampIter) {
         _amplifierMap.insert(std::make_pair((*ampIter)->getName(), *ampIter));
+    }
+    if (_amplifierMap.size() != _amplifierList.size()) {
+        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            "Invalid amplifierList: not all amplifier names are unique");
+    }
+
+    // check detector name in CoordSys in transform registry
+    for (CameraTransformMap::const_iterator mapIter = _transformRegistry.begin();
+        mapIter != _transformRegistry.end(); ++mapIter) {
+            if (mapIter->first.hasDetectorName() && mapIter->first.getDetectorName() != _name) {
+                std::ostringstream os;
+                os << "Invalid transformMap: " << mapIter->first << " detector name != \"" << _name << "\"";
+                throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+            }
     }
 }
 

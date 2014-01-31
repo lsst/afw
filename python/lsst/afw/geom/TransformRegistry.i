@@ -25,13 +25,16 @@
 #include "lsst/afw/geom/TransformRegistry.h"
 %}
 
-// unfortunately the following renames don't work, so use %extend
+// unfortunately the following rename silently fails with SWIG 2.0.4 (though it stops the SWIG warning)
+// so use %ignore and %extend instead
 // %rename(__getitem__) lsst::afw::geom::TransformRegistry::operator[];
-// %rename(__contains__) lsst::afw::geom::TransformRegistry::contains();
-// %rename(__len__) lsst::afw::geom::TransformRegistry::size();
-%ignore lsst::afw::geom::TransformRegistry::operator[]; // this avoids a SWIG warning
-%ignore lsst::afw::geom::TransformRegistry::contains(); // this does nothing, alas
-%ignore lsst::afw::geom::TransformRegistry::size(); // this does nothing, alas
+%ignore lsst::afw::geom::TransformRegistry::operator[];
+
+// note: the following fail with SWIG 2.0.4 if the method names have () after them; why?
+%rename(__contains__) lsst::afw::geom::TransformRegistry::contains;
+%rename(__len__) lsst::afw::geom::TransformRegistry::size;
+%ignore lsst::afw::geom::TransformRegistry::begin;
+%ignore lsst::afw::geom::TransformRegistry::end;
 
 %include "lsst/afw/geom/TransformRegistry.h"
 
@@ -39,15 +42,7 @@
     // rename operator[]
     CONST_PTR(lsst::afw::geom::XYTransform) __getitem__(
             lsst::afw::geom::TransformRegistry::_CoordSysType const &coordSys
-        ) const { return (*($self))[coordSys]; }
-
-    // rename contains
-    bool __contains__(
-        lsst::afw::geom::TransformRegistry::_CoordSysType const &coordSys
-    ) const { return $self->contains(coordSys); }
-
-    // rename size
-    size_t __len__() const { return $self->size(); }
+        ) const { return (*$self)[coordSys]; }
 
     %pythoncode {
         def __iter__(self):

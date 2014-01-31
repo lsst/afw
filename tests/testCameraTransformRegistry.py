@@ -27,7 +27,7 @@ import itertools
 import unittest
 
 import lsst.utils.tests
-import lsst.pex.exceptions as pexException
+from lsst.pex.exceptions import LsstCppException
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 
@@ -89,6 +89,9 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
     def testBasics(self):
         """Test basic attributes
         """
+        for methodName in ("begin", "end", "constains", "size"):
+            self.assertFalse(hasattr(self.transReg, methodName))
+
         self.assertTrue(self.nativeSys in self.transReg)
         self.assertTrue(cameraGeom.PUPIL in self.transReg)
         self.assertFalse(cameraGeom.CameraSys("garbage") in self.transReg)
@@ -97,6 +100,7 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
         self.assertTrue(len(csList) == 2)
         self.assertTrue(self.nativeSys in csList)
         self.assertTrue(cameraGeom.PUPIL in csList)
+
 
     def testIteration(self):
         """Test iteration, len and indexing
@@ -112,7 +116,7 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
             xyTrans = self.transReg[cs]
             self.assertTrue(isinstance(xyTrans, afwGeom.XYTransform))
 
-        self.assertRaises(pexException.LsstCppException, self.transReg.__getitem__, cameraGeom.CameraSys("missing"))
+        self.assertRaises(LsstCppException, self.transReg.__getitem__, cameraGeom.CameraSys("missing"))
 
     def testTransforms(self):
         """Test that the contained transforms are the ones expected
