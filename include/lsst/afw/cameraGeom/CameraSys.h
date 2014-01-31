@@ -34,10 +34,10 @@ namespace afw {
 namespace cameraGeom {
 
 /**
- * Base class for camera coordinate systems
+ * Camera coordinate system prefix
  *
- * This version has no detector name and used by Detector.makeCameraSys
- * to construct a fully specified CameraSys
+ * Used for coordinate systems that are detector-based before the detector name is known
+ * (e.g. for constants such as PIXELS).
  *
  * This is Jim Bosch's clever idea for simplifying Detector.convert;
  * CameraSys is always complete and CameraSysPrefix is not.
@@ -66,14 +66,9 @@ private:
 };
 
 /**
- * Base class for coordinate system keys used in in TransformRegistry
+ * Camera coordinate system; used as a key in in TransformRegistry
  *
- * @note A subclass is used for keys in TransformRegistry, and another subclass is used by CameraGeom
- * for detector-specific coordinate system prefixes (Jim Bosch's clever idea). Thus the shared base class.
- *
- * Comparison is by name, so each unique coordinate system (or prefix) must have a unique name.
- *
- * When switching to unordered_map, a good way to compute the hash is:
+ * @note When TransformRegistry switches to using unordered_map, a good way to compute the hash is:
  *   size_t hash = 0;
  *   boost::hash_combine(hash, cameraSys.getSysName());
  *   boost::hash_combine(hash, cameraSys.getDetectorName());
@@ -82,12 +77,20 @@ private:
 class CameraSys {
 public:
     /**
-     * Construct a CameraSys
+     * Construct a CameraSys from a sysName and a detectorName
      */
     explicit CameraSys(
         std::string const &sysName,         ///< coordinate system name
-        std::string const &detectorName=""  /// detector name
+        std::string const &detectorName=""  ///< detector name
     ) : _sysName(sysName), _detectorName(detectorName) {};
+
+    /**
+     * Construct a CameraSys from a CameraSysPrefix and a detectorName
+     */
+    explicit CameraSys(
+        CameraSysPrefix const &sysPrefix,   ///< coordinate system prefix
+        std::string const &detectorName=""  ///< detector name
+    ) : _sysName(sysPrefix.getSysName()), _detectorName(detectorName) {};
 
     /// default constructor so SWIG can wrap a vector of pairs containing these
     CameraSys() : _sysName("?"), _detectorName() {};

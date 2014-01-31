@@ -57,6 +57,13 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %shared_ptr(lsst::afw::cameraGeom::RawAmplifier);
 %shared_ptr(lsst::afw::cameraGeom::Amplifier);
 
+%template(CameraSysList) std::vector<lsst::afw::cameraGeom::CameraSys>;
+%template(CameraTransformMap)
+    std::map<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)>;
+%template(CameraTransformRegistry) lsst::afw::geom::TransformRegistry<lsst::afw::cameraGeom::CameraSys>;
+%template(AmplifierList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Amplifier)>;
+%template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;
+
 %rename(__getitem__) lsst::afw::cameraGeom::Detector::operator[];
 %rename(__len__) lsst::afw::cameraGeom::Detector::size();
 
@@ -95,11 +102,3 @@ Python bindings for classes describing the the geometry of a mosaic camera
                 yield self[i]
     }
 }
-
-%template(CameraSysList) std::vector<lsst::afw::cameraGeom::CameraSys>;
-%template(CameraTransformMap)
-    std::map<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)>;
-%template(CameraTransformRegistry) lsst::afw::geom::TransformRegistry<lsst::afw::cameraGeom::CameraSys>;
-%template(AmplifierList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Amplifier)>;
-%template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;
-

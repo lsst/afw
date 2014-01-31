@@ -49,7 +49,8 @@ enum DetectorType {
 /**
  * Information about a CCD or other imaging detector
  *
- * This class also acts as an iterator over amplifiers.
+ * Supports conversion of CameraPoint between FOCAL_PLANE and pixel-based coordinate systems.
+ * Also an iterator over amplifiers (in C++ use begin(), end(), in Python use "for amplifier in detector").
  *
  * @warning Only supports detectors with square pixels
  */
@@ -76,23 +77,6 @@ public:
     ~Detector() {}
 
     /**
-     * Get the list of amplifiers
-     */
-    AmplifierList const getAmplifierList() const { return _amplifierList; }
-
-    /** 
-     * Get a coordinate system from a coordinate system (return input unchanged)
-     */
-    CameraSys const getCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
-
-    /** 
-     * Get a coordinate system from a detector system prefix (add detector name)
-     */
-    CameraSys const getCameraSys(CameraSysPrefix const &cameraSysPrefix) const {
-        return CameraSys(cameraSysPrefix.getSysName(), _name);
-    }
-
-    /**
      * Convert a CameraPoint from one coordinate system to another
      *
      * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
@@ -105,6 +89,18 @@ public:
         CameraSys fullToSys = getCameraSys(toSys);
         geom::Point2D toPoint = _transformRegistry.convert(fromPoint.getPoint(), fromPoint.getCameraSys(), fullToSys);
         return CameraPoint(toPoint, fullToSys);
+    }
+
+    /** 
+     * Get a coordinate system from a coordinate system (return input unchanged)
+     */
+    CameraSys const getCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
+
+    /** 
+     * Get a coordinate system from a detector system prefix (add detector name)
+     */
+    CameraSys const getCameraSys(CameraSysPrefix const &cameraSysPrefix) const {
+        return CameraSys(cameraSysPrefix.getSysName(), _name);
     }
 
     /** Get the detector name */
@@ -138,7 +134,9 @@ public:
      */
     CONST_PTR(Amplifier) operator[](std::string const &name) const;
 
-    /** Get number of amplifiers */
+    /**
+     * Get number of amplifiers. Renamed to __len__ in Python.
+     */
     size_t size() const {return _amplifierList.size(); }
 
     /**
