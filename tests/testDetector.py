@@ -104,31 +104,6 @@ class DetectorTestCase(unittest.TestCase):
         self.assertRaises(LsstCppException, DetectorWrapper, tryDuplicateAmpNames=True)
         self.assertRaises(LsstCppException, DetectorWrapper, tryBadCameraSys=True)
 
-    def testIteration(self):
-        """Test iteration over amplifiers and __getitem__
-        """
-        dw = DetectorWrapper()
-        ampList = [amp for amp in dw.detector]
-        self.assertEquals(len(ampList), len(dw.ampList))
-        for i, amp in enumerate(ampList):
-            self.assertEquals(amp.getName(), dw.detector[i].getName())
-            self.assertEquals(amp.getName(), dw.ampList[i].getName())
-            self.assertEquals(amp.getName(), dw.detector[amp.getName()].getName())
-
-    def testGetCameraSys(self):
-        """Test the getCameraSys method
-        """
-        dw = DetectorWrapper()
-        for sysName in ("csys1", "csys2"):
-            for detectorName in ("", dw.name, "a different detector"):
-                inCamSys = cameraGeom.CameraSys(sysName, detectorName)
-                outCamSys = dw.detector.getCameraSys(inCamSys)
-                self.assertEquals(inCamSys, outCamSys)
-
-            inCamSysPrefix = cameraGeom.CameraSysPrefix(sysName)
-            outCamSys2 = dw.detector.getCameraSys(inCamSysPrefix)
-            self.assertEquals(outCamSys2, cameraGeom.CameraSys(sysName, dw.name))
-
     def testConvert(self):
         """Test the convert method
         """
@@ -144,6 +119,52 @@ class DetectorTestCase(unittest.TestCase):
             fpPoint2 = fpCamPoint2.getPoint()
             for i in range(2):
                 self.assertAlmostEquals(fpPoint[i], fpPoint2[i])
+
+    def testIteration(self):
+        """Test iteration over amplifiers and __getitem__
+        """
+        dw = DetectorWrapper()
+        ampList = [amp for amp in dw.detector]
+        self.assertEquals(len(ampList), len(dw.ampList))
+        for i, amp in enumerate(ampList):
+            self.assertEquals(amp.getName(), dw.detector[i].getName())
+            self.assertEquals(amp.getName(), dw.ampList[i].getName())
+            self.assertEquals(amp.getName(), dw.detector[amp.getName()].getName())
+
+    def testMakeCameraPoint(self):
+        """Test the makeCameraPoint method
+        """
+        dw = DetectorWrapper()
+        for xyMM in ((25.6, -31.07), (0, 0)):
+            point = afwGeom.Point2D(*xyMM)
+            for sysName in ("csys1", "csys2"):
+                for detectorName in ("", dw.name, "a different detector"):
+                    cameraSys1 = cameraGeom.CameraSys(sysName, detectorName)
+                    cameraPoint1 = dw.detector.makeCameraPoint(point, cameraSys1)
+
+                    self.assertEquals(cameraPoint1.getPoint(), point)
+                    self.assertEquals(cameraPoint1.getCameraSys(), cameraSys1)
+
+                cameraSysPrefix = cameraGeom.CameraSysPrefix(sysName)
+                cameraPoint2 = dw.detector.makeCameraPoint(point, cameraSysPrefix)
+                predCameraSys2 = cameraGeom.CameraSys(sysName, dw.name)
+                self.assertEquals(cameraPoint2.getPoint(), point)
+                self.assertEquals(cameraPoint2.getCameraSys(), predCameraSys2)
+
+    def testMakeCameraSys(self):
+        """Test the makeCameraSys method
+        """
+        dw = DetectorWrapper()
+        for sysName in ("csys1", "csys2"):
+            for detectorName in ("", dw.name, "a different detector"):
+                inCamSys = cameraGeom.CameraSys(sysName, detectorName)
+                outCamSys = dw.detector.makeCameraSys(inCamSys)
+                self.assertEquals(inCamSys, outCamSys)
+
+            inCamSysPrefix = cameraGeom.CameraSysPrefix(sysName)
+            outCamSys2 = dw.detector.makeCameraSys(inCamSysPrefix)
+            self.assertEquals(outCamSys2, cameraGeom.CameraSys(sysName, dw.name))
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

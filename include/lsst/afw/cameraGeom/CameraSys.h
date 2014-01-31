@@ -158,7 +158,7 @@ extern CameraSys const PUPIL;
  * This ignores manufacturing imperfections, "tree ring" distortions and all other such effects.
  * It is a uniform grid of rectangular (usually square) pixels.
  *
- * This is a detector prefix; call Detector.getCameraSys(PIXELS) to make a full coordsys.
+ * This is a detector prefix; call Detector.makeCameraSys(PIXELS) to make a full coordsys.
  */
 extern CameraSysPrefix const PIXELS;
 
@@ -166,7 +166,7 @@ extern CameraSysPrefix const PIXELS;
  * The actual pixels where the photon lands and electrons are generated (unbinned)
  * This takes into account manufacturing defects, "tree ring" distortions and other such effects.
  *
- * This is a detector prefix; call Detector.getCameraSys(ACTUAL_PIXELS) to make a full coordsys.
+ * This is a detector prefix; call Detector.makeCameraSys(ACTUAL_PIXELS) to make a full coordsys.
  */
 extern CameraSysPrefix const ACTUAL_PIXELS;
 

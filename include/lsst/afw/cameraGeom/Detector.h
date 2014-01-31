@@ -105,19 +105,7 @@ public:
         CameraPoint const &fromPoint,   ///< camera point to convert
         CameraSysPrefix const &toSys    ///< coordinate system prefix to which to convert
     ) const {
-        return convert(fromPoint, getCameraSys(toSys));
-    }
-
-    /** 
-     * Get a coordinate system from a coordinate system (return input unchanged)
-     */
-    CameraSys const getCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
-
-    /** 
-     * Get a coordinate system from a detector system prefix (add detector name)
-     */
-    CameraSys const getCameraSys(CameraSysPrefix const &cameraSysPrefix) const {
-        return CameraSys(cameraSysPrefix.getSysName(), _name);
+        return convert(fromPoint, makeCameraSys(toSys));
     }
 
     /** Get the detector name */
@@ -163,13 +151,35 @@ public:
     size_t size() const {return _amplifierList.size(); }
 
     /**
-     * Make a CameraPoint from a point and a camera system or detector prefix
+     * Make a CameraPoint from a point and a camera system
      */
     CameraPoint makeCameraPoint(
         geom::Point2D point,    ///< 2-d point
-        CameraSys cameraSys     ///< coordinate system; may be a full system or a detector prefix
+        CameraSys cameraSys     ///< coordinate system
     ) const {
-        return CameraPoint(point, getCameraSys(cameraSys));
+        return CameraPoint(point, cameraSys);
+    }
+
+    /**
+     * Make a CameraPoint from a point and a camera system prefix
+     */
+    CameraPoint makeCameraPoint(
+        geom::Point2D point,    ///< 2-d point
+        CameraSysPrefix cameraSysPrefix     ///< coordinate system prefix
+    ) const {
+        return CameraPoint(point, makeCameraSys(cameraSysPrefix));
+    }
+
+    /** 
+     * Get a coordinate system from a coordinate system (return input unchanged and untested)
+     */
+    CameraSys const makeCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
+
+    /** 
+     * Get a coordinate system from a detector system prefix (add detector name)
+     */
+    CameraSys const makeCameraSys(CameraSysPrefix const &cameraSysPrefix) const {
+        return CameraSys(cameraSysPrefix.getSysName(), _name);
     }
 
 private:
