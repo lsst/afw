@@ -23,7 +23,7 @@
 # dict of doFlip: slice
 _SliceDict = {
     False: slice(None,None,1)
-    True: slice(None,None,-1)
+    True:  slice(None,None,-1)
 }
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):
@@ -34,19 +34,25 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     @param[in] rawImage: raw image (same type as destImage)
     @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier data
 
-    @throw RuntimeError if amplifier has no raw amplifier data
+    @throw RuntimeError if:
+    - image types do not match
+    - amplifier has no raw amplifier data
     """
-    # warning: numpy arrays are transposed with respect to afw images;
-    # this code uses x,y in the afw image sense
-
     if not amplifier.hasRawAmplifier():
         raise RuntimeError("amplifier must contain raw amplifier data")
+    if type(destImage.Factory) != type(rawImage.Factory):
+        raise RuntimeError("destImage type = %s != %s = rawImage type" % \
+            type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
     rawAmp = amplifier.getRawAmplifier()
-    inView = rawImage.Factory(rawAmp.getDataBBox(), False)
-    outView = destImage.Factory(amplifier.getBBox(), False)
+    inView = rawImage.Factory(rawImage, rawAmp.getDataBBox(), False)
+    outView = destImage.Factory(destImage, amplifier.getBBox(), False)
+
+    # For the sake of simplicity and robustness, this code does not short-circuit the case flipX=flipY=False.
+    # However, it would save a bit of time, including the cost of making numpy array views.
+    # If short circuiting is wanted, do it here.
+
     xSlice = _SliceDict[rawAmp.getFlipX]
     ySlice = _SliceDict[rawAmp.getFlipY]
-
     if hasattr(rawImage, "getArrays"):
         # MaskedImage
         inArrList = inView.getArrays()
@@ -56,6 +62,34 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
         outArrList = [outView.getArray()]
 
     for inArr, outArr in itertools.izip(inArrList, outArrList):
-        outArr[:] = inArr[ySlice, xSlice] # numpy arrays are transposed w.r.t. afw Images
+        outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
 
+def assembleAmplifierImage(destImage, rawImage, amplifier):
+    """Assemble the amplifier region of a raw CCD image
+
+    For most cameras this is a no-op: the raw image already is an assembled CCD image.
+    However, it is useful for camera such as LSST for which each amplifier image is a separate image.
+
+    @param[in,out] destImage: CCD image (lsst.afw.image.Image or MaskedImage);
+        the region amplifier.getRawAmplifier().getBBox() is overwritten with the raw amplifier image
+    @param[in] rawImage: raw image (same type as destImage)
+    @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier data
+
+    @throw RuntimeError if:
+    - image types do not match
+    - amplifier has no raw amplifier data
+    """
+    if not amplifier.hasRawAmplifier():
+        raise RuntimeError("amplifier must contain raw amplifier data")
+    if type(destImage.Factory) != type(rawImage.Factory):
+        raise RuntimeError("destImage type = %s != %s = rawImage type" % \
+            type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
+    rawAmp = amplifier.getRawAmplifier()
+    inBBox = rawAmp.getBBox()
+    inView = rawImage.Factory(rawImage, inBBox(), False)
+    outBBox = rawAmp.getBBox()
+    outBBox.shift(rawAmp.getXYOffset())
+    outView = destImage.Factory(destImage, outBBox(), False)
+
+    outView <<= inView
 
