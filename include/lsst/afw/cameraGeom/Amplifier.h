@@ -39,8 +39,11 @@ namespace cameraGeom {
  * Information about the amplifier region of an assembled image.
  *
  * Optionally contains information about the raw amplifier, as well.
- * This is usually only omitted if data processing begins with data that has already had
- * the instrument signature removed (e.g. the way LSST processes SDSS data).
+ * If provided then its data bounding box must have the same dimensions as this amplifier.
+ * Raw amplifier data must be provided if you intend to assemble raw images.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterException if raw amplifier data provided
+ * and rawAmplifier data bbox has different dimensions than this amplifier's bbox.
  */
 class Amplifier : public lsst::daf::base::Citizen {
 public:

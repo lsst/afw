@@ -26,49 +26,70 @@ Tests for lsst.afw.cameraGeom.Amplifier
 import unittest
 
 import lsst.utils.tests
+from lsst.pex.exceptions import LsstCppException
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
+
+class AmplifierWrapper(object):
+    def __init__(self, name, doRawAmp=True, doBadBBox=False):
+        """Construct an Amplifier
+        """
+        self.name = name
+        self.bbox = afwGeom.Box2I(afwGeom.Point2I(-1, 1), afwGeom.Extent2I(123, 307))
+        if doBadBBox:
+            self.bbox.grow(afwGeom.Extent2I(1, 0))
+        self.gain = 1.71234e3
+        self.readNoise = 0.521237e2
+        if doRawAmp:
+            self.rawAmplifier = cameraGeom.RawAmplifier(
+                afwGeom.Box2I(afwGeom.Point2I(-25, 2), afwGeom.Extent2I(550, 629)),
+                afwGeom.Box2I(afwGeom.Point2I(-2, 29), afwGeom.Extent2I(123, 307)),
+                afwGeom.Box2I(afwGeom.Point2I(150, 29), afwGeom.Extent2I(25, 307)),
+                afwGeom.Box2I(afwGeom.Point2I(-2, 201), afwGeom.Extent2I(123, 6)),
+                afwGeom.Box2I(afwGeom.Point2I(-20, 2), afwGeom.Extent2I(5, 307)),
+                False,
+                True,
+                afwGeom.Extent2I(-97, 253),
+            )
+        else:
+            self.rawAmplifier = None
+        self.amplifier = cameraGeom.Amplifier(
+            self.name,
+            self.bbox,
+            self.gain,
+            self.readNoise,
+            self.rawAmplifier,
+        )
 
 
 class AmplifierTestCase(unittest.TestCase):
     def testConstructorNoRawAmp(self):
         """Test constructor with no raw amplifier
         """
-        name = "an amp"
-        bbox = afwGeom.Box2I(afwGeom.Point2I(-1, 1), afwGeom.Extent2I(5, 6))
-        gain = 1.70354
-        readNoise = 0.51029
-        amp = cameraGeom.Amplifier(name, bbox, gain, readNoise, None)
-        self.assertEquals(name, amp.getName())
-        self.assertEquals(bbox, amp.getBBox())
-        self.assertEquals(gain, amp.getGain())
-        self.assertEquals(readNoise, amp.getReadNoise())
+        aw = AmplifierWrapper(name="amp 1", doRawAmp=False)
+        amp = aw.amplifier
+        self.assertEquals(aw.name, amp.getName())
+        self.assertEquals(aw.bbox, amp.getBBox())
+        self.assertEquals(aw.gain, amp.getGain())
+        self.assertEquals(aw.readNoise, amp.getReadNoise())
         self.assertFalse(amp.hasRawAmplifier())
         self.assertTrue(amp.getRawAmplifier() is None)
 
     def testConstructorWithRawAmp(self):
         """Test constructor with a raw amplifier
         """
-        name = ""
-        bbox = afwGeom.Box2I(afwGeom.Point2I(-1, 1), afwGeom.Extent2I(5, 6))
-        gain = 1.71234e3
-        readNoise = 0.521237e2
-        rawAmplifier = cameraGeom.RawAmplifier(
-            afwGeom.Box2I(afwGeom.Point2I(-25, 2), afwGeom.Extent2I(550, 629)),
-            afwGeom.Box2I(afwGeom.Point2I(-2, 29), afwGeom.Extent2I(123, 307)),
-            afwGeom.Box2I(afwGeom.Point2I(150, 29), afwGeom.Extent2I(25, 307)),
-            afwGeom.Box2I(afwGeom.Point2I(-2, 201), afwGeom.Extent2I(123, 6)),
-            afwGeom.Box2I(afwGeom.Point2I(-20, 2), afwGeom.Extent2I(5, 307)),
-            False,
-            True,
-            afwGeom.Extent2I(-97, 253),
-        )
-        amp = cameraGeom.Amplifier(name, bbox, gain, readNoise, rawAmplifier)
-        self.assertEquals(name, amp.getName())
-        self.assertEquals(bbox, amp.getBBox())
-        self.assertEquals(gain, amp.getGain())
-        self.assertEquals(readNoise, amp.getReadNoise())
+        aw = AmplifierWrapper(name="", doRawAmp=True)
+        amp = aw.amplifier
+        self.assertEquals(aw.name, amp.getName())
+        self.assertEquals(aw.bbox, amp.getBBox())
+        self.assertEquals(aw.gain, amp.getGain())
+        self.assertEquals(aw.readNoise, amp.getReadNoise())
         self.assertTrue(amp.hasRawAmplifier())
+
+    def testConstructorWithBadRawAmp(self):
+        """Test constructor with a raw amplifier with bad data size
+        """
+        self.assertRaises(LsstCppException, AmplifierWrapper, name="amp 1", doBadBBox=True)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

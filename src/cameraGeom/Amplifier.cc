@@ -20,6 +20,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <sstream>
 #include "lsst/afw/cameraGeom/Amplifier.h"
 
 namespace lsst {
@@ -39,6 +40,14 @@ namespace cameraGeom {
         _gain(gain),
         _readNoise(readNoise),
         _rawAmplifierPtr(rawAmplifierPtr)
-    {}
+    {
+        if (rawAmplifierPtr && (getBBox().getDimensions() != rawAmplifierPtr->getDataBBox().getDimensions())) {
+            std::ostringstream os;
+            os << "Amplifier bbox size = " << getBBox().getDimensions()
+                << " != " << rawAmplifierPtr->getDataBBox().getDimensions()
+                << " = raw amplifier data bbox size";
+            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        }
+    }
 
 }}}
