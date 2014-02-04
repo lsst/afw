@@ -258,6 +258,7 @@ std::pair<afwGeom::Angle, afwGeom::Angle> pointToLonLat(lsst::afw::geom::Point3D
 /******************* Public functions ********************/
 
 static std::string angleToXmsString(afwGeom::Angle const a, afwGeom::AngleUnit const unit) {
+
     Dms dms(a, unit);
 
     // make sure rounding won't give 60.00 for sec or min
@@ -273,7 +274,13 @@ static std::string angleToXmsString(afwGeom::Angle const a, afwGeom::AngleUnit c
         }
     }
 
-    return (boost::format("%02d:%02d:%05.2f") % (dms.sign*dms.deg) % dms.min % dms.sec).str();
+    std::string fmt("%02d:%02d:%05.2f");
+    std::string s = (boost::format(fmt) % dms.deg % dms.min % dms.sec).str();
+    if (dms.sign < 0) {
+        s = "-" + s;
+    }
+    return s;
+    
 }
 
     
