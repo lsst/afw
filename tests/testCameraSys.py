@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 # 
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -27,7 +28,6 @@ import unittest
 
 import lsst.utils.tests
 import lsst.afw.cameraGeom as cameraGeom
-
 
 class CameraSysTestCase(unittest.TestCase):
     def testBasics(self):

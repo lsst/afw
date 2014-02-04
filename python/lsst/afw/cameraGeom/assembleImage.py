@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division
 # 
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -18,12 +19,13 @@
 # You should have received a copy of the LSST License Statement and 
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
-# 
+#
+import itertools
 
 # dict of doFlip: slice
 _SliceDict = {
-    False: slice(None,None,1)
-    True:  slice(None,None,-1)
+    False: slice(None,None,1),
+    True:  slice(None,None,-1),
 }
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):
@@ -64,7 +66,7 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     for inArr, outArr in itertools.izip(inArrList, outArrList):
         outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
 
-def assembleAmplifierImage(destImage, rawImage, amplifier):
+def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     """Assemble the amplifier region of a raw CCD image
 
     For most cameras this is a no-op: the raw image already is an assembled CCD image.

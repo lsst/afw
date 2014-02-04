@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 # 
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -23,7 +24,6 @@
 """
 Tests for lsst.afw.cameraGeom.CameraTransformRegistry
 """
-import itertools
 import unittest
 
 import lsst.utils.tests
