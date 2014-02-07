@@ -234,6 +234,15 @@ class BackgroundTestCase(unittest.TestCase):
         new = pickle.loads(pickle.dumps(bg))
         self.assertBackgroundEqual(bg, new)
 
+        # Check creation of sub-image
+        box = afwGeom.Box2I(afwGeom.Point2I(123, 45), afwGeom.Extent2I(45, 123))
+        bgImage = bg.getImageF("AKIMA_SPLINE")
+        bgSubImage = afwImage.ImageF(bgImage, box)
+        testImage = bg.getImageF(box, "AKIMA_SPLINE")
+        self.assertEqual(testImage.getXY0(), bgSubImage.getXY0())
+        self.assertEqual(testImage.getDimensions(), bgSubImage.getDimensions())
+        self.assertTrue(np.all(testImage.getArray() == bgSubImage.getArray()))
+
     def getParabolaImage(self, nx, ny):
         parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
         d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms

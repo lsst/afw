@@ -236,8 +236,7 @@ public:
         Interpolate::Style const interpStyle,                   ///< Style of the interpolation
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION ///< Behaviour if there are too few points
                                                  ) const {
-        PixelT disambiguate = 0;
-        return _getImage(interpStyle, undersampleStyle, disambiguate);
+        return getImage<PixelT>(_imgBBox, interpStyle, undersampleStyle);
     }
     /**
      * \brief Method to interpolate and return the background for entire image
@@ -251,6 +250,23 @@ public:
                                                  ) const {
         return getImage<PixelT>(math::stringToInterpStyle(interpStyle),
                                 stringToUndersampleStyle(undersampleStyle));
+    }
+    template<typename PixelT>
+    PTR(lsst::afw::image::Image<PixelT>) getImage(
+        lsst::afw::geom::Box2I const& bbox,                     ///< Bounding box for sub-image
+        Interpolate::Style const interpStyle,                   ///< Style of the interpolation
+        UndersampleStyle const undersampleStyle=THROW_EXCEPTION ///< Behaviour if there are too few points
+        ) const {
+        return _getImage(bbox, interpStyle, undersampleStyle, static_cast<PixelT>(0));
+    }
+    template<typename PixelT>
+    PTR(lsst::afw::image::Image<PixelT>) getImage(
+        lsst::afw::geom::Box2I const& bbox,               ///< Bounding box for sub-image
+        std::string const& interpStyle,                   ///< Style of the interpolation
+        std::string const& undersampleStyle="THROW_EXCEPTION" ///< Behaviour if there are too few points
+        ) const {
+        return _getImage(bbox, math::stringToInterpStyle(interpStyle),
+                         stringToUndersampleStyle(undersampleStyle), static_cast<PixelT>(0));
     }
 
     /**
@@ -317,6 +333,7 @@ protected:
 #define LSST_makeBackground_getApproximate_types      (Background::InternalPixelT)
 #define LSST_makeBackground_getImage(m, v, T)                \
     virtual PTR(lsst::afw::image::Image<T>) _getImage( \
+        lsst::afw::geom::Box2I const& bbox, \
         Interpolate::Style const interpStyle,                     /* Style of the interpolation */ \
         UndersampleStyle const undersampleStyle=THROW_EXCEPTION,  /* Behaviour if there are too few points */\
         T = 0                                                     /* disambiguate */ \
@@ -373,6 +390,7 @@ public:
     virtual void operator+=(float const delta);
     virtual void operator-=(float const delta);
 
+
     double getPixel(Interpolate::Style const style, int const x, int const y) const;
     /**
      * \brief Return the background value at a point
@@ -411,7 +429,8 @@ private:
 #endif
     // Here's the worker function for _getImage (non-virtual; it's templated in BackgroundMI, not Background)
     template<typename PixelT>
-    PTR(image::Image<PixelT>) doGetImage(Interpolate::Style const interpStyle_,
+    PTR(image::Image<PixelT>) doGetImage(geom::Box2I const& bbox,
+                                         Interpolate::Style const interpStyle_,
                                          UndersampleStyle const undersampleStyle) const;
     // and for _getApproximate
     template<typename PixelT>
