@@ -89,10 +89,11 @@ public:
     /// Return sin(yaw)
     double getSinYaw() const { return _sinYaw; }
 
-    lsst::afw::geom::AffineTransform makeFpPixelTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
+    lsst::afw::geom::AffineXYTransform makeFpPixelTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
         //This comes from solving the transform equations.
         Eigen::Matrix2d jacobian;
         Eigen::Vector2d translation;
+        lsst::afw::geom::AffineTransform affineTransform;
         double aprime = _coeffA*pixelSizeMm.getX();
         double bprime = _coeffB*pixelSizeMm.getY();
         double eprime = _coeffE*pixelSizeMm.getX();
@@ -106,19 +107,22 @@ public:
         jacobian(1,1) = -1/numer;
         translation[0] = xoffprime*bprime*dprime/aprime/aprime/numer - yoffprime*bprime/aprime/numer - xoffprime/aprime;
         translation[1] = yoffprime/numer - xoffprime*dprime/aprime/numer;
-        return lsst::afw::geom::AffineTransform(jacobian, translation);
+        affineTransform = lsst::afw::geom::AffineTransform(jacobian, translation);
+        return lsst::afw::geom::AffineXYTransform(affineTransform);
     }
 
-    lsst::afw::geom::AffineTransform makePixelFpTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
+    lsst::afw::geom::AffineXYTransform makePixelFpTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
         Eigen::Matrix2d jacobian;
         Eigen::Vector2d translation; 
+        lsst::afw::geom::AffineTransform affineTransform;
         jacobian(0,0) = _coeffA*pixelSizeMm.getX();
         jacobian(0,1) = _coeffB*pixelSizeMm.getY();
         jacobian(1,0) = _coeffD*pixelSizeMm.getX();
         jacobian(1,1) = _coeffE*pixelSizeMm.getY();
         translation[0] = _offset.getX() - pixelSizeMm.getX()*numPixels.getX()/2.;
         translation[1] = _offset.getY() - pixelSizeMm.getY()*numPixels.getY()/2.;
-        return lsst::afw::geom::AffineTransform(jacobian, translation);
+        affineTransform = lsst::afw::geom::AffineTransform(jacobian, translation);
+        return lsst::afw::geom::AffineXYTransform(affineTransform);
     }
 private:
     lsst::afw::geom::Point2D _offset;     // offset

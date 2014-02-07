@@ -149,6 +149,28 @@ protected:
 
 
 /**
+ * @brief This class wraps an AffineTransform to work like an XYTransform
+ *
+ */
+class AffineXYTransform : public XYTransform
+{
+public:
+    AffineXYTransform(AffineTransform const &affineTransform);
+    virtual ~AffineXYTransform() { }
+
+    virtual PTR(XYTransform) clone() const;
+    virtual Point2D forwardTransform(Point2D const &position) const;
+    virtual Point2D reverseTransform(Point2D const &position) const;
+    virtual AffineTransform linearizeForwardTransform(Point2D const &position) const;
+    virtual AffineTransform linearizeReverseTransform(Point2D const &position) const;
+
+protected:    
+    AffineTransform _forwardAffineTransform;
+    AffineTransform _reverseAffineTransform;
+};
+
+
+/**
  * @brief RadialXYTransform: represents a purely radial polynomial distortion, up to 6th order.
  *
  * Note: this transform is always in the focal plane coordinate system but can be

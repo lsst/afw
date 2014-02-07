@@ -166,6 +166,41 @@ AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &pi
     return _base->linearizeForwardTransform(pixel);
 }
 
+// -------------------------------------------------------------------------------------------------
+//
+// AffineXYTransform
+
+
+AffineXYTransform::AffineXYTransform(AffineTransform const &affineTransform)
+    : XYTransform(false), _forwardAffineTransform(affineTransform), 
+      _reverseAffineTransform(_forwardAffineTransform.invert())
+{ }
+
+PTR(XYTransform) AffineXYTransform::clone() const
+{
+    return boost::make_shared<AffineXYTransform> (_forwardAffineTransform);
+}
+
+Point2D AffineXYTransform::forwardTransform(Point2D const &position) const
+{
+    return _forwardAffineTransform(position);
+}
+
+Point2D AffineXYTransform::reverseTransform(Point2D const &position) const
+{
+    return _reverseAffineTransform(position);
+}
+
+AffineTransform AffineXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+{
+    return _forwardAffineTransform;
+}
+
+AffineTransform AffineXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+{
+    return _reverseAffineTransform; 
+}
+
 
 // -------------------------------------------------------------------------------------------------
 //
