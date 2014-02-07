@@ -21,6 +21,7 @@
  */
 
 #include "lsst/afw/cameraGeom/CameraSys.h"
+#include "lsst/afw/geom/TransformRegistry.h"
 
 namespace lsst {
 namespace afw {
@@ -47,8 +48,6 @@ std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys) {
     os << ")";
     return os;
 }
-
-// instantiate CameraTransformRegistry = TransformRegistry<CameraSys>
-template class geom::TransformRegistry<CameraSys>;
-
 }}}
+// instantiate CameraTransformRegistry = TransformRegistry<CameraSys>
+template class lsst::afw::geom::TransformRegistry<lsst::afw::cameraGeom::CameraSys>;

@@ -40,25 +40,33 @@ namespace cameraGeom {
 /**
  * Describe a detector's orientation with respect to the nominal position
  *
- * Only the yaw angle is used when computing the mapping between detector and focal plane coordinates.
- * All rotations are about the origin of the trimmed detector coordinate system, NOT the center.
+ * All rotations are about the center of the detector coordinate system.
+ * All rotations are intrinsic, so about the rotated coordinate system.
+ * It this implementation applies the rotations in zy'x'' order.
  */
 class Orientation {
 public:
-    explicit Orientation(int nQuarter = 0, ///< Nominal rotation of device in units of pi/2
-                         geom::Angle const &pitch=geom::Angle(0), ///< pitch (rotation in YZ)
-                         geom::Angle const &roll=geom::Angle(0),  ///< roll (rotation in XZ)
-                         geom::Angle const &yaw=geom::Angle(0)    ///< yaw (rotation in XY)
+    explicit Orientation(geom::Point2D const offset=geom::Point2D(0, 0), ///< offset to the center of the detector (mm)
+                         geom::Angle const yaw=geom::Angle(0),    ///< yaw (rotation in XY)
+                         geom::Angle const roll=geom::Angle(0), ///< pitch (rotation in YZ)
+                         geom::Angle const pitch=geom::Angle(0)  ///< roll (rotation in XZ)
                         )
         :
-        _nQuarter(nQuarter % 4),
-        _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
+        _offset(offset),
+        _yaw(yaw), _cosYaw(std::cos(yaw)),  _sinYaw(std::sin(yaw)),
         _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll)),
-        _yaw(yaw), _cosYaw(std::cos(yaw)),  _sinYaw(std::sin(yaw))
-        {}
-
-    /// Return the number of quarter-turns applied to this detector
-    int getNQuarter() const { return _nQuarter; }
+        _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch))
+        {
+            //This comes from the rotation matrix written down here:
+            //http://en.wikipedia.org/wiki/Euler_angles
+            //for Tait-Bryan angles Z_1Y_2X_3
+            _coeffA = _cosYaw*_cosPitch;
+            _coeffB = _cosYaw*_sinPitch*_sinRoll - _cosRoll*_sinYaw;
+            _coeffD = _cosPitch*_sinYaw;
+            _coeffE = _cosYaw*_cosRoll + _sinYaw*_sinPitch*_sinRoll;
+        }
+    /// Return offset
+    lsst::afw::geom::Point2D getOffset() const { return _offset; }
 
     /// Return the pitch angle
     lsst::afw::geom::Angle getPitch() const { return _pitch; }
@@ -80,20 +88,58 @@ public:
     double getCosYaw() const { return _cosYaw; }
     /// Return sin(yaw)
     double getSinYaw() const { return _sinYaw; }
-private:
-    int _nQuarter;                      // number of quarter-turns in +ve direction
 
-    lsst::afw::geom::Angle _pitch;      // pitch
-    double _cosPitch;                   // cos(pitch)
-    double _sinPitch;                   // sin(pitch)
+    lsst::afw::geom::AffineTransform makeFpPixelTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
+        //This comes from solving the transform equations.
+        Eigen::Matrix2d jacobian;
+        Eigen::Vector2d translation;
+        double aprime = _coeffA*pixelSizeMm.getX();
+        double bprime = _coeffB*pixelSizeMm.getY();
+        double eprime = _coeffE*pixelSizeMm.getX();
+        double dprime = _coeffD*pixelSizeMm.getY();
+        double numer = dprime*bprime/aprime - eprime;
+        double xoffprime = _offset.getX() - pixelSizeMm.getX()*numPixels.getX()/2.;
+        double yoffprime = _offset.getY() - pixelSizeMm.getY()*numPixels.getY()/2.;
+        jacobian(0,0) = 1/aprime - bprime*dprime/aprime/aprime/numer;
+        jacobian(0,1) = bprime/aprime/numer;
+        jacobian(1,0) = dprime/aprime/numer;
+        jacobian(1,1) = -1/numer;
+        translation[0] = xoffprime*bprime*dprime/aprime/aprime/numer - yoffprime*bprime/aprime/numer - xoffprime/aprime;
+        translation[1] = yoffprime/numer - xoffprime*dprime/aprime/numer;
+        return lsst::afw::geom::AffineTransform(jacobian, translation);
+    }
+
+    lsst::afw::geom::AffineTransform makePixelFpTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
+        Eigen::Matrix2d jacobian;
+        Eigen::Vector2d translation; 
+        jacobian(0,0) = _coeffA*pixelSizeMm.getX();
+        jacobian(0,1) = _coeffB*pixelSizeMm.getY();
+        jacobian(1,0) = _coeffD*pixelSizeMm.getX();
+        jacobian(1,1) = _coeffE*pixelSizeMm.getY();
+        translation[0] = _offset.getX() - pixelSizeMm.getX()*numPixels.getX()/2.;
+        translation[1] = _offset.getY() - pixelSizeMm.getY()*numPixels.getY()/2.;
+        return lsst::afw::geom::AffineTransform(jacobian, translation);
+    }
+private:
+    lsst::afw::geom::Point2D _offset;     // offset
+
+    lsst::afw::geom::Angle _yaw;        // yaw
+    double _cosYaw;                     // cos(yaw)
+    double _sinYaw;                     // sin(yaw)
 
     lsst::afw::geom::Angle _roll;       // roll
     double _cosRoll;                    // cos(roll)
     double _sinRoll;                    // sin(roll)
 
-    lsst::afw::geom::Angle _yaw;        // yaw
-    double _cosYaw;                     // cos(yaw)
-    double _sinYaw;                     // sin(yaw)
+    lsst::afw::geom::Angle _pitch;      // pitch
+    double _cosPitch;                   // cos(pitch)
+    double _sinPitch;                   // sin(pitch)
+
+    //Elements of the Jacobian for three space rotation projected into XY plane.
+    double _coeffA;                     // 01 element
+    double _coeffB;                     // 11 element
+    double _coeffD;                     // 00 element
+    double _coeffE;                     // 10 element
 };
 
 }}}
