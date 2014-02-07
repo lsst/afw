@@ -19,12 +19,13 @@
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import os
 import sys
 import lsst.daf.base as dafBase
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-from lsst.afw.fits.fitsLib import FitsError
+from lsst.afw.fits import FitsError, MemFileManager, reduceToFits
 import mathLib as afwMath
 
 class BackgroundList(object):
@@ -62,9 +63,24 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         try:
             bkgd, interpStyle, undersampleStyle = val
         except TypeError:
-            val = (val, None, None)
-        
-        self._backgrounds.append(val)
+            bkgd = val
+            interpStyle = None
+            undersampleStyle = None
+
+        # Check to see if the Background is actually a BackgroundMI.
+        # Such special treatment is not generally a good idea as it is against the whole idea of subclassing.
+        # However, lsst.afw.math.makeBackground() returns a Background, even though it's really a BackgroundMI
+        # under the covers.  Persistence requires that the type python sees is the actual type under the covers
+        # (or it will call the wrong python class's python persistence methods).
+        # The real solution is to not use makeBackground() in python but call the constructor directly;
+        # however there is already code using makeBackground(), so this is an attempt to assist the user.
+        subclassed = afwMath.cast_BackgroundMI(bkgd)
+        if subclassed is not None:
+            bkgd = subclassed
+        else:
+            print "WARNING: Unrecognised Background object %s may be unpersistable." % (bkgd,)
+
+        self._backgrounds.append((bkgd, interpStyle, undersampleStyle))
 
     def writeFits(self, fileName, flags=0):
         """Save our list of Backgrounds to a file
@@ -77,7 +93,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         for i, bkgd in enumerate(self):
             bkgd, interpStyle, undersampleStyle = bkgd
 
-            statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+            statsImage = bkgd.getStatsImage()
 
             md = dafBase.PropertyList()
             md.set("INTERPSTYLE", interpStyle)
@@ -103,6 +119,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
         See also getImage()
         """
+        if not isinstance(fileName, MemFileManager) and not os.path.exists(fileName):
+            raise RuntimeError("File not found: %s" % fileName)
 
         self = BackgroundList()
 
@@ -149,3 +167,6 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
                 bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
 
         return bkgdImage
+
+    def __reduce__(self):
+        return reduceToFits(self)

@@ -37,6 +37,7 @@ import os
 import sys
 import unittest
 import numpy as np
+import pickle
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
@@ -227,6 +228,11 @@ class BackgroundTestCase(unittest.TestCase):
             for ypix in ypixels:
                 testval = afwMath.cast_BackgroundMI(backobj).getPixel(xpix, ypix)
                 self.assertAlmostEqual(testval/rampimg.get(xpix, ypix), 1, 6)
+
+        # Test pickle
+        bg = afwMath.cast_BackgroundMI(backobj)
+        new = pickle.loads(pickle.dumps(bg))
+        self.assertBackgroundEqual(bg, new)
 
     def getParabolaImage(self, nx, ny):
         parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
@@ -684,12 +690,29 @@ class BackgroundTestCase(unittest.TestCase):
             else:
                 backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
-        self.assertEqual(len(backgroundList), 2) # check that len() works
-        for a in backgroundList:                 # check that we can iterate
-            pass
-        self.assertEqual(len(backgroundList[0]), 3) # check that we can index
-        self.assertEqual(len(backgroundList[1]), 3) # check that we always have a tuple (bkgd, interp, under)
+        def assertBackgroundList(bgl):
+            self.assertEqual(len(bgl), 2) # check that len() works
+            for a in bgl:                 # check that we can iterate
+                pass
+            self.assertEqual(len(bgl[0]), 3) # check that we can index
+            self.assertEqual(len(bgl[1]), 3) # check that we always have a tuple (bkgd, interp, under)
 
+        assertBackgroundList(backgroundList)
+
+        # Check pickling
+        new = pickle.loads(pickle.dumps(backgroundList))
+        assertBackgroundList(new)
+        self.assertEqual(len(new), len(backgroundList))
+        for i, j in zip(new, backgroundList):
+            self.assertBackgroundEqual(i[0], j[0])
+            self.assertEqual(i[1:], j[1:])
+
+    def assertBackgroundEqual(self, lhs, rhs):
+        lhsStats, rhsStats = lhs.getStatsImage(), rhs.getStatsImage()
+        self.assertEqual(lhs.getImageBBox(), rhs.getImageBBox())
+        self.assertTrue(np.all(lhsStats.getImage().getArray() == rhsStats.getImage().getArray()))
+        self.assertTrue(np.all(lhsStats.getMask().getArray() == rhsStats.getMask().getArray()))
+        self.assertTrue(np.all(lhsStats.getVariance().getArray() == rhsStats.getVariance().getArray()))
 
     def testBackgroundListIO(self):
         """Test I/O for BackgroundLists"""
