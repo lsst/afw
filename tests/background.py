@@ -631,7 +631,7 @@ class BackgroundTestCase(unittest.TestCase):
         # the test is that this doesn't fail if the bug (#2297) is fixed
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
         self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
-        if 1 or display:
+        if display:
             ds9.mtv(bkgdImage, frame=2)
 
     def testBadImage(self):
