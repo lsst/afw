@@ -39,5 +39,6 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/XYTransform.h"
+#include "lsst/afw/geom/Polygon.h"
 
 #endif // LSST_GEOM_H
