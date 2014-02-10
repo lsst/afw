@@ -48,12 +48,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
     %template(SpatialCellImageCandidate##NAME) lsst::afw::math::SpatialCellImageCandidate<TYPE>;
     %template(SpatialCellMaskedImageCandidate##NAME) lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE>;
 
-    //
-    // When swig sees a SpatialCellCandidate it doesn't know about SpatialCellImageCandidates; all it knows is that it
-    // has a SpatialCellCandidate, and SpatialCellCandidates don't know about e.g. getSource()
-    //
-    // We therefore provide a cast to SpatialCellImageCandidate<> and swig can go from there
-    //
+    //--------------------------------------------------------
+    // THESE CASTS NOW DEPRECATED IN FAVOR OF %castShared
     %inline %{
         boost::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
         cast_SpatialCellImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
@@ -65,6 +61,11 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
              return boost::dynamic_pointer_cast<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >(candidate);
         }
     %}
+    //--------------------------------------------------------
+
+    %castShared(lsst::afw::math::SpatialCellImageCandidate<TYPE>, lsst::afw::math::SpatialCellCandidate)
+    %castShared(lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE>, lsst::afw::math::SpatialCellCandidate)
+
 %enddef
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

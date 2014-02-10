@@ -86,6 +86,8 @@
 
 %useValueEquality(lsst::afw::image::Wcs);
 
+// ----------------------------------------------------------
+// THIS CASE API IS DEPRECATED IN FAVOR OF %castShared
 %inline %{
     lsst::afw::image::TanWcs::Ptr
     cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
@@ -97,4 +99,6 @@
         return tanWcs;
     }
 %}
+// ----------------------------------------------------------
 
+%castShared(lsst::afw::image::TanWcs, lsst::afw::image::Wcs)

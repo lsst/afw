@@ -54,10 +54,14 @@
 %declareTablePersistable(Function1##TYPE, lsst::afw::math::Function1<CTYPE>);
 %declareTablePersistable(Function2##TYPE, lsst::afw::math::Function2<CTYPE>);
 %template(BasePolynomialFunction2##TYPE) lsst::afw::math::BasePolynomialFunction2<CTYPE>;
+%castShared(lsst::afw::math::Function1<CTYPE>, lsst::afw::math::Function<CTYPE>)
+%castShared(lsst::afw::math::Function2<CTYPE>, lsst::afw::math::Function<CTYPE>)
+%castShared(lsst::afw::math::BasePolynomialFunction2<CTYPE>, lsst::afw::math::Function<CTYPE>)
 %enddef
 
 %define %function(NAME, N, TYPE, CTYPE)
 %template(NAME##N##TYPE) lsst::afw::math::NAME##N<CTYPE>;
+%castShared(lsst::afw::math::NAME##N<CTYPE>, lsst::afw::math::Function<CTYPE>)
 %enddef
 //
 // Macros to define float or double versions of things
