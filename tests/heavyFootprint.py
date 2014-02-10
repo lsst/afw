@@ -157,7 +157,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
 
         self.assertTrue(np.all(np.equal(self.mi.getImage().getArray(), omi.getImage().getArray())))
 
-    def testMakeHeavy(self):
+    def testXY0(self):
         """Test that inserting a HeavyFootprint obeys XY0"""
         fs = afwDetect.FootprintSet(self.mi, afwDetect.Threshold(1))
 
