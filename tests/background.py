@@ -37,6 +37,7 @@ import os
 import sys
 import unittest
 import numpy as np
+import pickle
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
@@ -227,6 +228,20 @@ class BackgroundTestCase(unittest.TestCase):
             for ypix in ypixels:
                 testval = afwMath.cast_BackgroundMI(backobj).getPixel(xpix, ypix)
                 self.assertAlmostEqual(testval/rampimg.get(xpix, ypix), 1, 6)
+
+        # Test pickle
+        bg = afwMath.cast_BackgroundMI(backobj)
+        new = pickle.loads(pickle.dumps(bg))
+        self.assertBackgroundEqual(bg, new)
+
+        # Check creation of sub-image
+        box = afwGeom.Box2I(afwGeom.Point2I(123, 45), afwGeom.Extent2I(45, 123))
+        bgImage = bg.getImageF("AKIMA_SPLINE")
+        bgSubImage = afwImage.ImageF(bgImage, box)
+        testImage = bg.getImageF(box, "AKIMA_SPLINE")
+        self.assertEqual(testImage.getXY0(), bgSubImage.getXY0())
+        self.assertEqual(testImage.getDimensions(), bgSubImage.getDimensions())
+        self.assertTrue(np.all(testImage.getArray() == bgSubImage.getArray()))
 
     def getParabolaImage(self, nx, ny):
         parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
@@ -616,7 +631,7 @@ class BackgroundTestCase(unittest.TestCase):
         # the test is that this doesn't fail if the bug (#2297) is fixed
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
         self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
-        if 1 or display:
+        if display:
             ds9.mtv(bkgdImage, frame=2)
 
     def testBadImage(self):
@@ -684,12 +699,29 @@ class BackgroundTestCase(unittest.TestCase):
             else:
                 backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
-        self.assertEqual(len(backgroundList), 2) # check that len() works
-        for a in backgroundList:                 # check that we can iterate
-            pass
-        self.assertEqual(len(backgroundList[0]), 3) # check that we can index
-        self.assertEqual(len(backgroundList[1]), 3) # check that we always have a tuple (bkgd, interp, under)
+        def assertBackgroundList(bgl):
+            self.assertEqual(len(bgl), 2) # check that len() works
+            for a in bgl:                 # check that we can iterate
+                pass
+            self.assertEqual(len(bgl[0]), 3) # check that we can index
+            self.assertEqual(len(bgl[1]), 3) # check that we always have a tuple (bkgd, interp, under)
 
+        assertBackgroundList(backgroundList)
+
+        # Check pickling
+        new = pickle.loads(pickle.dumps(backgroundList))
+        assertBackgroundList(new)
+        self.assertEqual(len(new), len(backgroundList))
+        for i, j in zip(new, backgroundList):
+            self.assertBackgroundEqual(i[0], j[0])
+            self.assertEqual(i[1:], j[1:])
+
+    def assertBackgroundEqual(self, lhs, rhs):
+        lhsStats, rhsStats = lhs.getStatsImage(), rhs.getStatsImage()
+        self.assertEqual(lhs.getImageBBox(), rhs.getImageBBox())
+        self.assertTrue(np.all(lhsStats.getImage().getArray() == rhsStats.getImage().getArray()))
+        self.assertTrue(np.all(lhsStats.getMask().getArray() == rhsStats.getMask().getArray()))
+        self.assertTrue(np.all(lhsStats.getVariance().getArray() == rhsStats.getVariance().getArray()))
 
     def testBackgroundListIO(self):
         """Test I/O for BackgroundLists"""

@@ -257,10 +257,18 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
  */
 template<typename PixelT>
 PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
+    geom::Box2I const& bbox,
         Interpolate::Style const interpStyle_,   // Style of the interpolation
         UndersampleStyle const undersampleStyle // Behaviour if there are too few points
                                                 ) const
 {
+    if (!_imgBBox.contains(bbox)) {
+        throw LSST_EXCEPT(ex::LengthErrorException,
+                          str(boost::format("BBox (%d:%d,%d:%d) out of range (%d:%d,%d:%d)") %
+                              bbox.getMinX() % bbox.getMaxX() % bbox.getMinY() % bbox.getMaxY() %
+                              _imgBBox.getMinX() % _imgBBox.getMaxX() %
+                              _imgBBox.getMinY() % _imgBBox.getMaxY()));
+    }
     int const nxSample = _statsImage.getWidth();
     int const nySample = _statsImage.getHeight();
     Interpolate::Style interpStyle = interpStyle_; // not const -- may be modified if REDUCE_INTERP_ORDER
@@ -319,6 +327,8 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     // make a vector containing the y pixel coords for the column
     int const width = _imgBBox.getWidth();
     int const height = _imgBBox.getHeight();
+    int const x0 = bbox.getMinX();
+    int const y0 = bbox.getMinY();
 
     std::vector<int> ypix(height);
     for (int iY = 0; iY < height; ++iY) {
@@ -332,12 +342,8 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
 
     // create a shared_ptr to put the background image in and return to caller
     PTR(image::Image<PixelT>) bg =
-        PTR(image::Image<PixelT>)(new typename image::Image<PixelT>(_imgBBox.getDimensions()));
+        PTR(image::Image<PixelT>)(new image::Image<PixelT>(bbox.getDimensions()));
 
-    // need a vector of all x pixel coords to interpolate over
-    std::vector<int> xpix(bg->getWidth());
-    for (int iX = 0; iX < bg->getWidth(); ++iX) { xpix[iX] = iX; }
-    
     // go through row by row
     // - interpolate on the gridcolumns that were pre-computed by the constructor
     // - copy the values to an ImageT to return to the caller.
@@ -349,14 +355,13 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     // us to put a NaN into the outputs some changes will be needed
     double defaultValue = std::numeric_limits<double>::quiet_NaN();
 
-    for (int iY = 0; iY < bg->getHeight(); ++iY) {
+    for (int iY = y0; iY <= bbox.getMaxY(); ++iY) {
         // build an interp object for this row
         std::vector<double> bg_x(nxSample);
         for (int iX = 0; iX < nxSample; iX++) {
             bg_x[iX] = static_cast<double>(_gridColumns[iX][iY]);
         }
         cullNan(_xcen, bg_x, xcenTmp, bgTmp, defaultValue);
-        
 
         PTR(Interpolate) intobj;
         try {
@@ -393,13 +398,13 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         }
 
         // fill the image with interpolated values
-        int iX = 0;
-        for (typename image::Image<PixelT>::x_iterator ptr = bg->row_begin(iY),
-                 end = ptr + bg->getWidth(); ptr != end; ++ptr, ++iX) {
-            *ptr = static_cast<PixelT>(intobj->interpolate(xpix[iX]));
+        int const y = iY - y0;
+        for (int iX = x0, x = 0; iX <= bbox.getMaxX(); ++iX, ++x) {
+            (*bg)(x, y) = static_cast<PixelT>(intobj->interpolate(iX));
         }
     }
-    
+    bg->setXY0(x0, y0);
+
     return bg;
 }
 
@@ -426,12 +431,13 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
                                           BackgroundControl const& bgCtrl); \
     PTR(image::Image<TYPE>)                                     \
     BackgroundMI::_getImage(                                            \
+        geom::Box2I const& bbox, \
         Interpolate::Style const interpStyle,                    /* Style of the interpolation */ \
         UndersampleStyle const undersampleStyle,                 /* Behaviour if there are too few points */ \
         TYPE                                                     /* disambiguate */    \
                          ) const                                        \
     {                                                                   \
-        return BackgroundMI::doGetImage<TYPE>(interpStyle, undersampleStyle); \
+        return BackgroundMI::doGetImage<TYPE>(bbox, interpStyle, undersampleStyle); \
     }
 
 #define CREATE_getApproximate(m, v, TYPE)                               \

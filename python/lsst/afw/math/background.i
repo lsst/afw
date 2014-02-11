@@ -79,6 +79,10 @@
         _mathLib.BackgroundMI___isub__(*args) # clears thisown as it things args[0] is returned
         args[0].thisown = True
         return args[0]
+
+    def __reduce__(self):
+        """Pickling"""
+        return self.__class__, (self.getImageBBox(), self.getStatsImage())
     }
 }
 
