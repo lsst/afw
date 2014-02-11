@@ -43,6 +43,7 @@
 %newobject lsst::afw::geom::LinearTransform::makeScaling;
 %newobject lsst::afw::geom::LinearTransform::invert;
 
+%include "lsst/afw/geom/Angle.i"
 %include "lsst/afw/geom/LinearTransform.h"
 
 %extend lsst::afw::geom::LinearTransform {    

@@ -41,6 +41,7 @@
 %newobject lsst::afw::geom::AffineTransform::makeTranslation;
 %newobject lsst::afw::geom::AffineTransform::invert;
 
+%include "lsst/afw/geom/Angle.i"
 %include "lsst/afw/geom/AffineTransform.h"
 
 %extend lsst::afw::geom::AffineTransform {    
