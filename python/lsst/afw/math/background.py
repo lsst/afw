@@ -78,7 +78,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         if subclassed is not None:
             bkgd = subclassed
         else:
-            print "WARNING: Unrecognised Background object %s may be unpersistable." % (bkgd,)
+            from lsst.pex.logging import getDefaultLog
+            getDefaultLog().warn("Unrecognised Background object %s may be unpersistable." % (bkgd,))
 
         self._backgrounds.append((bkgd, interpStyle, undersampleStyle))
 
