@@ -40,7 +40,9 @@
 #include "boost/mpl/bool.hpp"
 #include "boost/shared_ptr.hpp"
 
-#include "lsst/afw/geom.h"
+#include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/geom/Box.h"
+#include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/ImageUtils.h"

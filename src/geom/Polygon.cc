@@ -5,12 +5,13 @@
 #include "boost/make_shared.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/CartesianPolygon.h"
+#include "lsst/afw/geom/Extent.h"
+#include "lsst/afw/geom/Polygon.h"
 
 
 
-typedef lsst::afw::geom::CartesianPolygon::Point LsstPoint;
-typedef lsst::afw::geom::CartesianPolygon::Box LsstBox;
+typedef lsst::afw::geom::Polygon::Point LsstPoint;
+typedef lsst::afw::geom::Polygon::Box LsstBox;
 typedef std::vector<LsstPoint> LsstRing;
 typedef boost::geometry::model::polygon<LsstPoint> BoostPolygon;
 typedef boost::geometry::model::box<LsstPoint> BoostBox;
@@ -84,6 +85,23 @@ std::vector<LsstPoint> boxToCorners(LsstBox const& box)
     return corners;
 }
 
+/// Sub-sample a line
+///
+/// Add 'num' points to 'vector' between 'first' and 'second'
+void addSubSampledEdge(
+    std::vector<LsstPoint>& vertices, // Vector of points to which to add
+    LsstPoint const& first,           // First vertex defining edge
+    LsstPoint const& second,          // Second vertex defining edge
+    size_t const num                  // Number of parts to divide edge into
+    )
+{
+    lsst::afw::geom::Extent2D const delta = (second - first)/num;
+    vertices.push_back(first);
+    for (size_t i = 1; i < num; ++i) {
+        vertices.push_back(first + delta*i);
+    }
+}
+
 /// Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y)
 {
@@ -134,21 +152,21 @@ std::ostream& operator<<(std::ostream& os, BoostPolygon const& poly)
     return os << "BoostPolygon(" << poly.outer() << ")";
 }
 
-/// Stream CartesianPolygon
-std::ostream& operator<<(std::ostream& os, CartesianPolygon const& poly)
+/// Stream Polygon
+std::ostream& operator<<(std::ostream& os, Polygon const& poly)
 {
-    os << "CartesianPolygon(" << poly.getVertices() << ")";
+    os << "Polygon(" << poly.getVertices() << ")";
     return os;
 }
 
-struct CartesianPolygon::Impl
+struct Polygon::Impl
 {
     Impl() : poly() {}
-    explicit Impl(CartesianPolygon::Box const& box) : poly() {
+    explicit Impl(Polygon::Box const& box) : poly() {
         boost::geometry::assign(poly, box);
         // Assignment from a box is correctly handled by BoostPolygon, so doesn't need a "check()"
     }
-    explicit Impl(std::vector<CartesianPolygon::Point> const& vertices) : poly() {
+    explicit Impl(std::vector<Polygon::Point> const& vertices) : poly() {
         boost::geometry::assign(poly, vertices);
         check(); // because the vertices might not have the correct orientation (CW vs CCW) or be open
     }
@@ -162,88 +180,88 @@ struct CartesianPolygon::Impl
     }
 
     template <class PolyT>
-    CartesianPolygon intersectionSingle(PolyT const& other) const;
+    Polygon intersectionSingle(PolyT const& other) const;
 
     template <class PolyT>
-    std::vector<CartesianPolygon> intersection(PolyT const& other) const;
+    std::vector<Polygon> intersection(PolyT const& other) const;
 
     template <class PolyT>
-    CartesianPolygon unionSingle(PolyT const& other) const;
+    Polygon unionSingle(PolyT const& other) const;
 
     template <class PolyT>
-    std::vector<CartesianPolygon> union_(PolyT const& other) const;
+    std::vector<Polygon> union_(PolyT const& other) const;
 
     BoostPolygon poly;
 };
 
 template <class PolyT>
-CartesianPolygon CartesianPolygon::Impl::intersectionSingle(PolyT const& other) const
+Polygon Polygon::Impl::intersectionSingle(PolyT const& other) const
 {
     std::vector<BoostPolygon> result;
     boost::geometry::intersection(poly, other, result);
     if (result.size() == 0) {
-        throw LSST_EXCEPT(pex::exceptions::LengthErrorException, "Polygons have no intersection");
+        throw LSST_EXCEPT(SinglePolygonException, "Polygons have no intersection");
     }
     if (result.size() > 1) {
-        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(SinglePolygonException,
                           (boost::format("Multiple polygons (%d) created by intersection()") %
                            result.size()).str());
     }
-    return CartesianPolygon(PTR(Impl)(new Impl(result[0])));
+    return Polygon(PTR(Impl)(new Impl(result[0])));
 }
 
 template <class PolyT>
-std::vector<CartesianPolygon> CartesianPolygon::Impl::intersection(PolyT const& other) const
+std::vector<Polygon> Polygon::Impl::intersection(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::intersection(poly, other, boostResult);
-    std::vector<CartesianPolygon> lsstResult;
+    std::vector<Polygon> lsstResult;
     lsstResult.reserve(boostResult.size());
     for (typename std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
          i != boostResult.end(); ++i) {
-        lsstResult.push_back(CartesianPolygon(PTR(Impl)(new Impl(*i))));
+        lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
     }
     return lsstResult;
 }
 
 template <class PolyT>
-CartesianPolygon CartesianPolygon::Impl::unionSingle(PolyT const& other) const
+Polygon Polygon::Impl::unionSingle(PolyT const& other) const
 {
     std::vector<BoostPolygon> result;
     boost::geometry::union_(poly, other, result);
     if (result.size() != 1) {
-        throw LSST_EXCEPT(pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(SinglePolygonException,
                           (boost::format("Multiple polygons (%d) created by union_()") %
                            result.size()).str());
     }
-    return CartesianPolygon(PTR(Impl)(new Impl(result[0])));
+    return Polygon(PTR(Impl)(new Impl(result[0])));
 }
 
 template <class PolyT>
-std::vector<CartesianPolygon> CartesianPolygon::Impl::union_(PolyT const& other) const
+std::vector<Polygon> Polygon::Impl::union_(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::union_(poly, other, boostResult);
-    std::vector<CartesianPolygon> lsstResult;
+    std::vector<Polygon> lsstResult;
     lsstResult.reserve(boostResult.size());
     for (typename std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
          i != boostResult.end(); ++i) {
-        lsstResult.push_back(CartesianPolygon(PTR(Impl)(new Impl(*i))));
+        lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
     }
     return lsstResult;
 }
 
 
-CartesianPolygon::CartesianPolygon(CartesianPolygon::Box const& box) :
-    _impl(new CartesianPolygon::Impl(box)) {}
+Polygon::Polygon(Polygon::Box const& box) :
+    _impl(new Polygon::Impl(box)) {}
 
-CartesianPolygon::CartesianPolygon(std::vector<CartesianPolygon::Point> const& vertices) :
-    _impl(new CartesianPolygon::Impl(vertices)) {}
+Polygon::Polygon(std::vector<Polygon::Point> const& vertices) :
+    _impl(new Polygon::Impl(vertices)) {}
 
-CartesianPolygon::CartesianPolygon(
-    CartesianPolygon::Box const &box,
+Polygon::Polygon(
+    Polygon::Box const &box,
     CONST_PTR(afw::geom::XYTransform) const& transform
-    ) : _impl(new CartesianPolygon::Impl())
+    ) : _impl(new Polygon::Impl())
 {
     std::vector<LsstPoint> corners = boxToCorners(box);
     for (typename std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
@@ -253,10 +271,10 @@ CartesianPolygon::CartesianPolygon(
     _impl->check();
 }
 
-CartesianPolygon::CartesianPolygon(
-    CartesianPolygon::Box const &box,
+Polygon::Polygon(
+    Polygon::Box const &box,
     afw::geom::AffineTransform const& transform
-    ) : _impl(new CartesianPolygon::Impl())
+    ) : _impl(new Polygon::Impl())
 {
     std::vector<LsstPoint> corners = boxToCorners(box);
     for (typename std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
@@ -266,30 +284,30 @@ CartesianPolygon::CartesianPolygon(
     _impl->check();
 }
 
-size_t CartesianPolygon::getNumEdges() const {
+size_t Polygon::getNumEdges() const {
     // boost::geometry::models::polygon uses a "closed" polygon: the start/end point is included twice
     return boost::geometry::num_points(_impl->poly) - 1;
 }
 
-CartesianPolygon::Box CartesianPolygon::getBBox() const
+Polygon::Box Polygon::getBBox() const
 {
     return boostBoxToLsst(boost::geometry::return_envelope<BoostBox>(_impl->poly));
 }
 
-CartesianPolygon::Point CartesianPolygon::calculateCenter() const
+Polygon::Point Polygon::calculateCenter() const
 {
     return boost::geometry::return_centroid<LsstPoint>(_impl->poly);
 }
 
-double CartesianPolygon::calculateArea() const { return boost::geometry::area(_impl->poly); }
+double Polygon::calculateArea() const { return boost::geometry::area(_impl->poly); }
 
-double CartesianPolygon::calculatePerimeter() const { return boost::geometry::perimeter(_impl->poly); }
+double Polygon::calculatePerimeter() const { return boost::geometry::perimeter(_impl->poly); }
 
-std::vector<std::pair<CartesianPolygon::Point, CartesianPolygon::Point> >
-CartesianPolygon::getEdges() const
+std::vector<std::pair<Polygon::Point, Polygon::Point> >
+Polygon::getEdges() const
 {
     std::vector<LsstPoint> const vertices = getVertices();
-    std::vector<std::pair<CartesianPolygon::Point, CartesianPolygon::Point> > edges;
+    std::vector<std::pair<Polygon::Point, Polygon::Point> > edges;
     edges.reserve(getNumEdges());
     for (typename std::vector<LsstPoint>::const_iterator i = vertices.begin(), j = vertices.begin() + 1;
          j != vertices.end(); ++i, ++j) {
@@ -298,66 +316,121 @@ CartesianPolygon::getEdges() const
     return edges;
 }
 
-std::vector<CartesianPolygon::Point> CartesianPolygon::getVertices() const { return _impl->poly.outer(); }
+std::vector<Polygon::Point> Polygon::getVertices() const { return _impl->poly.outer(); }
 
-bool CartesianPolygon::operator==(CartesianPolygon const& other) const
+std::vector<Polygon::Point>::const_iterator Polygon::begin() const { return _impl->poly.outer().begin(); }
+
+std::vector<Polygon::Point>::const_iterator Polygon::end() const {
+    return _impl->poly.outer().end() - 1; // Note removal of final "closed" point
+}
+
+bool Polygon::operator==(Polygon const& other) const
 {
     return boost::geometry::equals(_impl->poly, other._impl->poly);
 }
 
-bool CartesianPolygon::contains(CartesianPolygon::Point const& point) const
+bool Polygon::contains(Polygon::Point const& point) const
 {
     return boost::geometry::within(point, _impl->poly);
 }
 
-bool CartesianPolygon::overlaps(CartesianPolygon const& other) const {
+bool Polygon::overlaps(Polygon const& other) const {
     return _impl->overlaps(other._impl->poly);
 }
 
-bool CartesianPolygon::overlaps(Box const& box) const {
+bool Polygon::overlaps(Box const& box) const {
     return _impl->overlaps(box);
 }
 
-CartesianPolygon CartesianPolygon::intersectionSingle(CartesianPolygon const& other) const {
+Polygon Polygon::intersectionSingle(Polygon const& other) const {
     return _impl->intersectionSingle(other._impl->poly);
 }
 
-CartesianPolygon CartesianPolygon::intersectionSingle(Box const& box) const {
+Polygon Polygon::intersectionSingle(Box const& box) const {
     return _impl->intersectionSingle(box);
 }
 
-std::vector<CartesianPolygon> CartesianPolygon::intersection(CartesianPolygon const& other) const {
+std::vector<Polygon> Polygon::intersection(Polygon const& other) const {
     return _impl->intersection(other._impl->poly);
 }
 
-std::vector<CartesianPolygon> CartesianPolygon::intersection(Box const& box) const {
+std::vector<Polygon> Polygon::intersection(Box const& box) const {
     return _impl->intersection(box);
 }
 
-CartesianPolygon CartesianPolygon::unionSingle(CartesianPolygon const& other) const {
+Polygon Polygon::unionSingle(Polygon const& other) const {
     return _impl->unionSingle(other._impl->poly);
 }
 
-CartesianPolygon CartesianPolygon::unionSingle(Box const& box) const {
+Polygon Polygon::unionSingle(Box const& box) const {
     return _impl->unionSingle(box);
 }
 
-std::vector<CartesianPolygon> CartesianPolygon::union_(CartesianPolygon const& other) const {
+std::vector<Polygon> Polygon::union_(Polygon const& other) const {
     return _impl->union_(other._impl->poly);
 }
 
-std::vector<CartesianPolygon> CartesianPolygon::union_(Box const& box) const {
+std::vector<Polygon> Polygon::union_(Box const& box) const {
     return _impl->union_(box);
 }
 
-CartesianPolygon CartesianPolygon::convexHull() const
+Polygon Polygon::convexHull() const
 {
     BoostPolygon hull;
     boost::geometry::convex_hull(_impl->poly, hull);
-    return CartesianPolygon(PTR(Impl)(new Impl(hull)));
+    return Polygon(PTR(Impl)(new Impl(hull)));
 }
 
-PTR(afw::image::Image<float>) CartesianPolygon::createImage(afw::geom::Box2I const& bbox) const
+Polygon Polygon::transform(CONST_PTR(XYTransform) const& transform) const
+{
+    std::vector<LsstPoint> vertices;        // New vertices
+    vertices.reserve(getNumEdges());
+    for (typename std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
+         i != _impl->poly.outer().end(); ++i) {
+        vertices.push_back(transform->forwardTransform(*i));
+    }
+    return Polygon(PTR(Impl)(new Impl(vertices)));
+}
+
+Polygon Polygon::transform(AffineTransform const& transform) const
+{
+    std::vector<LsstPoint> vertices;        // New vertices
+    vertices.reserve(getNumEdges());
+    for (typename std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
+         i != _impl->poly.outer().end(); ++i) {
+        vertices.push_back(transform(*i));
+    }
+    return Polygon(PTR(Impl)(new Impl(vertices)));
+}
+
+Polygon Polygon::subSample(size_t num) const
+{
+    std::vector<LsstPoint> vertices;        // New vertices
+    vertices.reserve(getNumEdges()*num);
+    std::vector<std::pair<Point, Point> > edges = getEdges();
+    for (typename std::vector<std::pair<Point, Point> >::const_iterator i = edges.begin();
+         i != edges.end(); ++i) {
+        addSubSampledEdge(vertices, i->first, i->second, num);
+    }
+    return Polygon(PTR(Impl)(new Impl(vertices)));
+}
+
+Polygon Polygon::subSample(double maxLength) const
+{
+    std::vector<LsstPoint> vertices;        // New vertices
+    vertices.reserve(getNumEdges() + static_cast<size_t>(::ceil(calculatePerimeter()/maxLength)));
+    std::vector<std::pair<Point, Point> > edges = getEdges();
+    for (typename std::vector<std::pair<Point, Point> >::const_iterator i = edges.begin();
+         i != edges.end(); ++i) {
+        Point const& p1 = i->first, p2 = i->second;
+        double const dist = ::sqrt(p1.distanceSquared(p2));
+        addSubSampledEdge(vertices, p1, p2, static_cast<size_t>(::ceil(dist/maxLength)));
+    }
+    return Polygon(PTR(Impl)(new Impl(vertices)));
+}
+
+
+PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox) const
 {
     typedef afw::image::Image<float> Image;
     PTR(Image) image = boost::make_shared<Image>(bbox);
