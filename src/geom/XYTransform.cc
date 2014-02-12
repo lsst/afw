@@ -169,7 +169,11 @@ AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &pi
 // -------------------------------------------------------------------------------------------------
 //
 // AffineXYTransform
-
+/*
+ * @brief This wraps an AffineTransform as an XYTransform for inclusing in a TransformRegistry
+ * Note that the inFpCoordinateSystem is not used and set to false
+ *
+ */
 
 AffineXYTransform::AffineXYTransform(AffineTransform const &affineTransform)
     : XYTransform(false), _forwardAffineTransform(affineTransform), 
@@ -189,6 +193,16 @@ Point2D AffineXYTransform::forwardTransform(Point2D const &position) const
 Point2D AffineXYTransform::reverseTransform(Point2D const &position) const
 {
     return _reverseAffineTransform(position);
+}
+
+AffineTransform AffineXYTransform::getForwardTransform() const
+{
+    return _forwardAffineTransform;
+}
+
+AffineTransform AffineXYTransform::getReverseTransform() const
+{
+    return _reverseAffineTransform;
 }
 
 AffineTransform AffineXYTransform::linearizeForwardTransform(Point2D const &pixel) const

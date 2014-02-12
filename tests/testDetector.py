@@ -30,41 +30,7 @@ import lsst.utils.tests
 from lsst.pex.exceptions import LsstCppException
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
-
-class DetectorWrapper(object):
-    """Construct a detector, with various errors possible
-    """
-    def __init__(self, numAmps=3, tryDuplicateAmpNames=False, tryBadCameraSys=False):
-        self.name = "detector 1"
-        self.type = cameraGeom.SCIENCE
-        self.serial = "xkcd722"
-        self.ampList = []
-        for i in range(numAmps):
-            ampName = "amp %d" % (i + 1,)
-            if i == 1 and tryDuplicateAmpNames:
-                ampName = self.ampList[0].getName()
-            bbox = afwGeom.Box2I(afwGeom.Point2I(-1, 1), afwGeom.Extent2I(5, 6))
-            gain = 1.71234e3
-            readNoise = 0.521237e2
-            self.ampList.append(cameraGeom.Amplifier(ampName, bbox, gain, readNoise, None))
-        self.orientation = cameraGeom.Orientation(2)
-        self.pixelSize = 0.02
-        self.transMap = {
-            cameraGeom.FOCAL_PLANE: afwGeom.RadialXYTransform([0, self.pixelSize]),
-            cameraGeom.CameraSys(cameraGeom.ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
-        }
-        if tryBadCameraSys:
-            self.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform(False)
-        self.detector = cameraGeom.Detector(
-            self.name,
-            self.type,
-            self.serial,
-            self.ampList,
-            self.orientation,
-            self.pixelSize,
-            self.transMap,
-        )
-
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
 class DetectorTestCase(unittest.TestCase):
     def testBasics(self):
@@ -91,10 +57,10 @@ class DetectorTestCase(unittest.TestCase):
         # make sure some complex objects stick around after detector is deleted
 
         detectorName = detector.getName()
-        orientNQuarter = dw.orientation.getNQuarter()
+        offset = dw.orientation.getOffset()
         del detector
         del dw
-        self.assertEquals(orientation.getNQuarter(), orientNQuarter)
+        self.assertEquals(orientation.getOffset(), offset)
         nativeCoordSys = transformRegistry.getNativeCoordSys()
         self.assertEquals(nativeCoordSys,
             cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
@@ -115,7 +81,7 @@ class DetectorTestCase(unittest.TestCase):
             pixCamPoint = dw.detector.convert(fpCamPoint, cameraGeom.PIXELS)
             pixPoint = pixCamPoint.getPoint()
             for i in range(2):
-                self.assertAlmostEquals(fpPoint[i] * dw.pixelSize, pixPoint[i])
+                self.assertAlmostEquals(fpPoint[i]/dw.pixelSize, pixPoint[i])
             fpCamPoint2 = dw.detector.convert(pixCamPoint, cameraGeom.FOCAL_PLANE)
             fpPoint2 = fpCamPoint2.getPoint()
             for i in range(2):

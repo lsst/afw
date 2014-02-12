@@ -161,6 +161,8 @@ public:
     virtual PTR(XYTransform) clone() const;
     virtual Point2D forwardTransform(Point2D const &position) const;
     virtual Point2D reverseTransform(Point2D const &position) const;
+    virtual AffineTransform getForwardTransform() const;
+    virtual AffineTransform getReverseTransform() const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &position) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &position) const;
 

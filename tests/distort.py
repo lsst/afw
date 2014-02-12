@@ -44,17 +44,18 @@ import lsst.afw.geom             as afwGeom
 import lsst.afw.geom.ellipses    as geomEllip
 import lsst.afw.cameraGeom       as cameraGeom
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
 class DistortionTestCase(unittest.TestCase):
 
     def setUp(self):
 	self.prynt = False
-
         nx, ny = 6001, 8001
         pixelSize = 1.0 # mm
-        allPixels = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(nx, ny))
-        self.det = cameraGeomUtils.makeDefaultCcd(allPixels, pixelSize=pixelSize)
-        self.det.setCenter(cameraGeom.FpPoint(int(0.5*nx), int(0.5*ny)))
+        self.dw = DetectorWrapper(pixelSize=pixelSize, ampExtent=afwGeom.Extent2I(nx,ny))
+
+        self.det = self.dw.detector
+        self.center = afwGeom.Point2D(int(0.5*nx), int(0.5*ny)))
         
 	# try the suprimecam numbers
 	self.coeffs = [0.0, 1.0, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]

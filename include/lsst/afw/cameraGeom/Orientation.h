@@ -47,12 +47,13 @@ namespace cameraGeom {
 class Orientation {
 public:
     explicit Orientation(geom::Point2D const offset=geom::Point2D(0, 0), ///< offset to the center of the detector (mm)
+                         geom::Point2D const refPosition=geom::Point2D(-0.5, -0.5), ///< Position of origin on detector (-0.5, -0.5 is LLC)
                          geom::Angle const yaw=geom::Angle(0),    ///< yaw (rotation in XY)
                          geom::Angle const roll=geom::Angle(0), ///< pitch (rotation in YZ)
                          geom::Angle const pitch=geom::Angle(0)  ///< roll (rotation in XZ)
                         )
         :
-        _offset(offset),
+        _offset(offset), _refPosition(refPosition),
         _yaw(yaw), _cosYaw(std::cos(yaw)),  _sinYaw(std::sin(yaw)),
         _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll)),
         _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch))
@@ -66,7 +67,10 @@ public:
             _coeffE = _cosYaw*_cosRoll + _sinYaw*_sinPitch*_sinRoll;
         }
     /// Return offset
-    lsst::afw::geom::Point2D getOffset() const { return _offset; }
+    geom::Point2D getOffset() const { return _offset; }
+
+    /// Return reference pixel index
+    geom::Point2D getReferencePosition() const { return _refPosition; }
 
     /// Return the pitch angle
     lsst::afw::geom::Angle getPitch() const { return _pitch; }
@@ -76,56 +80,65 @@ public:
     double getSinPitch() const { return _sinPitch; }
 
     /// Return the roll angle
-    lsst::afw::geom::Angle getRoll() const { return _roll; }
+    geom::Angle getRoll() const { return _roll; }
     /// Return cos(roll)
     double getCosRoll() const { return _cosRoll; }
     /// Return sin(roll)
     double getSinRoll() const { return _sinRoll; }
 
     /// Return the yaw angle
-    lsst::afw::geom::Angle getYaw() const { return _yaw; }
+    geom::Angle getYaw() const { return _yaw; }
     /// Return cos(yaw)
     double getCosYaw() const { return _cosYaw; }
     /// Return sin(yaw)
     double getSinYaw() const { return _sinYaw; }
 
-    lsst::afw::geom::AffineXYTransform makeFpPixelTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
-        //This comes from solving the transform equations.
+    /**
+     * @brief Generate an XYTransform from pixel to focalplance coordinates
+     *
+     * @return lsst::afw::geom::XYTransform from pixel to focalplane coordinates
+     */
+    geom::AffineXYTransform makePixelFpTransform(
+            geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
+    ) const {
         Eigen::Matrix2d jacobian;
-        Eigen::Vector2d translation;
-        lsst::afw::geom::AffineTransform affineTransform;
-        double aprime = _coeffA*pixelSizeMm.getX();
-        double bprime = _coeffB*pixelSizeMm.getY();
-        double eprime = _coeffE*pixelSizeMm.getX();
-        double dprime = _coeffD*pixelSizeMm.getY();
-        double numer = dprime*bprime/aprime - eprime;
-        double xoffprime = _offset.getX() - pixelSizeMm.getX()*numPixels.getX()/2.;
-        double yoffprime = _offset.getY() - pixelSizeMm.getY()*numPixels.getY()/2.;
-        jacobian(0,0) = 1/aprime - bprime*dprime/aprime/aprime/numer;
-        jacobian(0,1) = bprime/aprime/numer;
-        jacobian(1,0) = dprime/aprime/numer;
-        jacobian(1,1) = -1/numer;
-        translation[0] = xoffprime*bprime*dprime/aprime/aprime/numer - yoffprime*bprime/aprime/numer - xoffprime/aprime;
-        translation[1] = yoffprime/numer - xoffprime*dprime/aprime/numer;
-        affineTransform = lsst::afw::geom::AffineTransform(jacobian, translation);
-        return lsst::afw::geom::AffineXYTransform(affineTransform);
-    }
+        jacobian << _coeffA*pixelSizeMm.getX(), _coeffB*pixelSizeMm.getY(),
+                    _coeffD*pixelSizeMm.getX(),  _coeffE*pixelSizeMm.getY();
 
-    lsst::afw::geom::AffineXYTransform makePixelFpTransform(lsst::afw::geom::Extent2D const pixelSizeMm, lsst::afw::geom::Extent2I const numPixels) {
-        Eigen::Matrix2d jacobian;
-        Eigen::Vector2d translation; 
-        lsst::afw::geom::AffineTransform affineTransform;
+/*
         jacobian(0,0) = _coeffA*pixelSizeMm.getX();
         jacobian(0,1) = _coeffB*pixelSizeMm.getY();
         jacobian(1,0) = _coeffD*pixelSizeMm.getX();
         jacobian(1,1) = _coeffE*pixelSizeMm.getY();
-        translation[0] = _offset.getX() - pixelSizeMm.getX()*numPixels.getX()/2.;
-        translation[1] = _offset.getY() - pixelSizeMm.getY()*numPixels.getY()/2.;
-        affineTransform = lsst::afw::geom::AffineTransform(jacobian, translation);
-        return lsst::afw::geom::AffineXYTransform(affineTransform);
+*/
+
+        Eigen::Vector2d translation; 
+        translation << _offset.getX() - pixelSizeMm.getX()*_refPosition.getX(), 
+                       _offset.getY() - pixelSizeMm.getY()*_refPosition.getY();
+/*
+        translation[0] = _offset.getX() - pixelSizeMm.getX()*_refPosition.getX();
+        translation[1] = _offset.getY() - pixelSizeMm.getY()*_refPosition.getY();
+*/
+
+        geom::AffineTransform affineTransform = geom::AffineTransform(jacobian, translation);
+        return geom::AffineXYTransform(affineTransform);
+    }
+
+    /**
+     * @brief Generate an XYTransform from focalplane to pixel coordinates
+     *
+     * @return lsst::afw::geom::XYTransform from focalplane to pixel coordinates
+     */
+    geom::InvertedXYTransform makeFpPixelTransform(
+            geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
+    ) const {
+        geom::AffineXYTransform transform = makePixelFpTransform(pixelSizeMm);
+  
+        return geom::InvertedXYTransform(transform.clone());
     }
 private:
-    lsst::afw::geom::Point2D _offset;     // offset
+    geom::Point2D _offset;              // offset
+    geom::Point2D _refPosition;         // reference position
 
     lsst::afw::geom::Angle _yaw;        // yaw
     double _cosYaw;                     // cos(yaw)

@@ -47,6 +47,7 @@ import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
 try:
     type(verbose)
@@ -65,6 +66,7 @@ class CalibTestCase(unittest.TestCase):
     """A test case for Calib"""
     def setUp(self):
         self.calib = afwImage.Calib()
+        self.dw = DetectorWrapper()
 
     def tearDown(self):
         del self.calib
@@ -87,7 +89,7 @@ class CalibTestCase(unittest.TestCase):
         import lsst.afw.geom as afwGeom
         import lsst.afw.cameraGeom as cameraGeom
 
-        det = cameraGeom.Detector(cameraGeom.Id(1))
+        det = self.dw.detector
 
         p = afwGeom.PointI(3, 4)
         self.calib.getMidTime(det, p)
