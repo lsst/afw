@@ -31,7 +31,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.coord as afwCoord
 
-from lsst.afw.geom import Polygon, VectorPoint, SinglePolygonException
+from lsst.afw.geom import Polygon, SinglePolygonException
 
 DEBUG = False
 
@@ -66,7 +66,7 @@ class PolygonTest(utilsTests.TestCase):
         if y0 is None:
             y0 = self.y0
         points = circle(radius, num, x0=x0, y0=y0)
-        return Polygon(VectorPoint([afwGeom.Point2D(x,y) for x,y in reversed(points)]))
+        return Polygon([afwGeom.Point2D(x,y) for x,y in reversed(points)])
 
     def square(self, size=1.0, x0=0, y0=0):
         """Generate a square
@@ -74,8 +74,8 @@ class PolygonTest(utilsTests.TestCase):
         @param size: Half-length of the sides
         @param x0,y0: Offset of center
         """
-        return Polygon(VectorPoint([afwGeom.Point2D(size*x + x0, size*y + y0)
-                             for x, y in ((-1, -1), (-1, 1), (1, 1), (1, -1))]))
+        return Polygon([afwGeom.Point2D(size*x + x0, size*y + y0) for
+                        x, y in ((-1, -1), (-1, 1), (1, 1), (1, -1))])
 
     def testGetters(self):
         """Test Polygon getters"""
@@ -183,9 +183,9 @@ class PolygonTest(utilsTests.TestCase):
         """Test Polygon.union"""
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
-        poly3 = Polygon(VectorPoint([afwGeom.Point2D(x,y) for x,y in
-                                              ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
-                                               (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))]))
+        poly3 = Polygon([afwGeom.Point2D(x,y) for x,y in
+                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
+                          (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))])
         poly4 = self.square(1.0, +5.0, +5.0)
 
         # unionSingle: assumes there's a single union (intersecting polygons)
@@ -214,9 +214,9 @@ class PolygonTest(utilsTests.TestCase):
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
         poly = poly1.unionSingle(poly2)
-        expected = Polygon(VectorPoint([afwGeom.Point2D(x,y) for x,y in
-                                        ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
-                                         (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))]))
+        expected = Polygon([afwGeom.Point2D(x,y) for x,y in
+                            ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
+                             (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))])
         self.assertEqual(poly.convexHull(), expected)
 
     def testImage(self):

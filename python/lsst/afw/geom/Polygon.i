@@ -25,54 +25,22 @@
 
 %include "lsst/p_lsstSwig.i"
 %include "lsst/afw/utils.i"
+
+%template(VectorPoint) std::vector<lsst::afw::geom::Point2D>;
+%template(PairPoint) std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D>;
+%template(VectorPairPoint) std::vector<std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D> >;
+
 %include "lsst/afw/geom/Point.i"
 
 %{
 #include "lsst/afw/geom/Polygon.h"
 %}
 
-// Using typemaps because "%template(VectorFoo) std::vector<Foo>" requires a default constructor for Foo
-// but Polygon doesn't have one.
-// An alternative is:
-//     %ignore std::vector<lsst::afw::geom::Polygon>::vector;
-//     %ignore std::vector<lsst::afw::geom::Polygon>::resize;
-//     %template(VectorPolygon) std::vector<lsst::afw::geom::Polygon>;
-// However, this makes VectorPolygon a separate SWIG object, rather than a list which is easily manipulated.
-%typemap(typecheck) std::vector<lsst::afw::geom::Polygon>& {
-    $1 = PySequence_Check($input) ? 1 : 0;
-}
-%typemap(in) std::vector<lsst::afw::geom::Polygon>& (std::vector<lsst::afw::geom::Polygon> mapped) {
-    PyObject* seq = PySequence_Fast($input, "expected a sequence");
-    size_t len = PySequence_Fast_GET_SIZE(seq);
-    for (size_t i = 0; i < len; ++i) {
-        PyObject* item = PySequence_Fast_GET_ITEM(seq, i);
-        void* vPoly = 0;
-        int res = SWIG_ConvertPtr(item, &vPoly, $descriptor(lsst::afw::geom::Polygon*), 0);
-        if (!SWIG_IsOK(res)) {
-            SWIG_exception_fail(SWIG_ArgError(res), "while converting Polygon");
-        }
-        if (!vPoly) {
-            SWIG_exception_fail(SWIG_ValueError, "while converting Polygon");
-        }
-        lsst::afw::geom::Polygon* poly = reinterpret_cast<lsst::afw::geom::Polygon*>(vPoly);
-        mapped.push_back(*poly);
-    }
-    $1 = &mapped;
-}
-%typemap(out) std::vector<lsst::afw::geom::Polygon> {
-    $result = PyList_New($1.size());
-    for (size_t i = 0; i < $1.size(); ++i) {
-        PyList_SetItem($result, i,
-                       SWIG_NewPointerObj(new lsst::afw::geom::Polygon($1.operator[](i)),
-                                          $descriptor(lsst::afw::geom::Polygon*), SWIG_POINTER_OWN));
-    }
-}
+%ignore std::vector<lsst::afw::geom::Polygon>::vector; // required because Polygon doesn't have a default Ctor
+%ignore std::vector<lsst::afw::geom::Polygon>::resize; // required because Polygon doesn't have a default Ctor
+%template(VectorPolygon) std::vector<lsst::afw::geom::Polygon>;
 
 %include "lsst/afw/geom/Polygon.h"
-
-%template(VectorPoint) std::vector<lsst::afw::geom::Point2D>;
-%template(PairPoint) std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D>;
-%template(VectorPairPoint) std::vector<std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D> >;
 
 %useValueEquality(lsst::afw::geom::Polygon);
 %definePythonIterator(lsst::afw::geom::Polygon);
