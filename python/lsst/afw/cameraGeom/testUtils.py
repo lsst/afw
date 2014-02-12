@@ -5,7 +5,9 @@ class DetectorWrapper(object):
     """Construct a detector, with various errors possible
     """
     def __init__(self, numAmps=3, pixelSize=0.02, ampExtent=afwGeom.Extent2I(5,6), 
-                 offset=afwGeom.Point2D(0., 0.), tryDuplicateAmpNames=False, tryBadCameraSys=False):
+                 offset=afwGeom.Point2D(0., 0.), refposition=afwGeom.Point2D(0., 0.), 
+                 tryDuplicateAmpNames=False, tryBadCameraSys=False):
+        # note that (0., 0.) for the reference position is the center of the first pixel
         self.name = "detector 1"
         self.type = cameraGeom.SCIENCE
         self.serial = "xkcd722"
@@ -18,7 +20,7 @@ class DetectorWrapper(object):
             gain = 1.71234e3
             readNoise = 0.521237e2
             self.ampList.append(cameraGeom.Amplifier(ampName, bbox, gain, readNoise, None))
-        self.orientation = cameraGeom.Orientation(offset)
+        self.orientation = cameraGeom.Orientation(offset, refposition)
         self.pixelSize = pixelSize
         self.transMap = {
             cameraGeom.FOCAL_PLANE: self.orientation.makeFpPixelTransform(afwGeom.Extent2D(self.pixelSize, self.pixelSize)),

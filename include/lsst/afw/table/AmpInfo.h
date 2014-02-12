@@ -212,20 +212,26 @@ public:
     /// @brief Key for the unique ID.
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
     static Key<std::string> getNameKey() { return getMinimalSchema().name; }
-    static Key<geom::Box2I> getTrimmedBboxKey() { return getMinimalSchema().trimmedbbox; }
+    static Key< Point<int> > getTrimmedBboxLLKey() { return getMinimalSchema().trimmedbbox_ll; }
+    static Key< Point<int> > getTrimmedBboxURKey() { return getMinimalSchema().trimmedbbox_ur; }
     static Key<double> getGainKey() { return getMinimalSchema().gain; }
     static Key<double> getReadNoiseKey() { return getMinimalSchema().readnoise; }
-    static Key< std::vector<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearitycoeffs; }
+    static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearitycoeffs; }
     static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearitytype; }
-    static Key<bool> getHasRawAmplifierKey() { return getMinimalSchema().hasrawamplifier; }
-    static Key<geom::Box2I> getRawBboxKey() { return getMinimalSchema().rawbbox; }
-    static Key<geom::Box2I> getDataBboxKey() { return getMinimalSchema().databbox; }
-    static Key<geom::Box2I> getHorizontalOverscanBboxKey() { return getMinimalSchema().horizontaloverscanbbox; }
-    static Key<geom::Box2I> getVerticalOverscanBboxKey() { return getMinimalSchema().verticaloverscanbbox; }
-    static Key<geom::Box2I> getPrescanBboxKey() { return getMinimalSchema().prescanbbox; }
-    static Key<bool> getFlipXKey() { return getMinimalSchema().flipx; }
-    static Key<bool> getFlipYKey() { return getMinimalSchema().flipy; }
-    static Key<geom::Extent2I> getRawXYOffsetKey() { return getMinimalSchema().rawxyoffset; }
+    static Key<Flag> getHasRawAmplifierKey() { return getMinimalSchema().hasrawamplifier; }
+    static Key< Point<int> > getRawBboxLLKey() { return getMinimalSchema().rawbbox_ll; }
+    static Key< Point<int> > getRawBboxURKey() { return getMinimalSchema().rawbbox_ur; }
+    static Key< Point<int> > getDataBboxLLKey() { return getMinimalSchema().databbox_ll; }
+    static Key< Point<int> > getDataBboxURKey() { return getMinimalSchema().databbox_ur; }
+    static Key< Point<int> > getHorizontalOverscanBboxLLKey() { return getMinimalSchema().horizontaloverscanbbox_ll; }
+    static Key< Point<int> > getHorizontalOverscanBboxURKey() { return getMinimalSchema().horizontaloverscanbbox_ur; }
+    static Key< Point<int> > getVerticalOverscanBboxLLKey() { return getMinimalSchema().verticaloverscanbbox_ll; }
+    static Key< Point<int> > getVerticalOverscanBboxURKey() { return getMinimalSchema().verticaloverscanbbox_ur; }
+    static Key< Point<int> > getPrescanBboxLLKey() { return getMinimalSchema().prescanbbox_ll; }
+    static Key< Point<int> > getPrescanBboxURKey() { return getMinimalSchema().prescanbbox_ur; }
+    static Key<Flag> getFlipXKey() { return getMinimalSchema().flipx; }
+    static Key<Flag> getFlipYKey() { return getMinimalSchema().flipy; }
+    static Key< Point<int> > getRawXYOffsetKey() { return getMinimalSchema().rawxyoffset; }
     //@}
 
     /// @copydoc BaseTable::clone
@@ -257,20 +263,26 @@ private:
         Schema schema;
         Key<RecordId> id;
         Key<std::string> name;
-        Key<geom::Box2I> trimmedbbox;
+        Key< Point<int> > trimmedbbox_ll;
+        Key< Point<int> > trimmedbbox_ur;
         Key<double> gain;
         Key<double> readnoise;
-        Key< std::vector<double> > linearitycoeffs;
+        Key< Array<double> > linearitycoeffs;
         Key<std::string> linearitytype;
-        Key<bool> hasrawamplifier;
-        Key<geom::Box2I> rawbbox;
-        Key<geom::Box2I> databbox;
-        Key<geom::Box2I> horizontaloverscanbbox;
-        Key<geom::Box2I> verticaloverscanbbox;
-        Key<geom::Box2I> prescanbbox;
-        Key<bool> flipx;
-        Key<bool> flipy;
-        Key<geom::Extent2I> rawxyoffset;
+        Key<Flag> hasrawamplifier;
+        Key< Point<int> > rawbbox_ll;
+        Key< Point<int> > rawbbox_ur;
+        Key< Point<int> > databbox_ll;
+        Key< Point<int> > databbox_ur;
+        Key< Point<int> > horizontaloverscanbbox_ll;
+        Key< Point<int> > horizontaloverscanbbox_ur;
+        Key< Point<int> > verticaloverscanbbox_ll;
+        Key< Point<int> > verticaloverscanbbox_ur;
+        Key< Point<int> > prescanbbox_ll;
+        Key< Point<int> > prescanbbox_ur;
+        Key<Flag> flipx;
+        Key<Flag> flipy;
+        Key< Point<int> > rawxyoffset;
         MinimalSchema();
     };
     
@@ -284,58 +296,6 @@ private:
 
     PTR(IdFactory) _idFactory;        // generates IDs for new records
 };
-
-#ifndef SWIG
-
-inline RecordId AmpInfoRecord::getId() const { return get(AmpInfoTable::getIdKey()); }
-inline void AmpInfoRecord::setId(RecordId id) { set(AmpInfoTable::getIdKey(), id); }
-
-inline std::string AmpInfoRecord::getName() const { return get(AmpInfoTable::getNameKey()); }
-inline void AmpInfoRecord::setName(std::string const &name) { set(AmpInfoTable::getNameKey(), name); }
-
-inline geom::Box2I AmpInfoRecord::getTrimmedBbox() const { return get(AmpInfoTable::getTrimmedBboxKey()); }
-inline void AmpInfoRecord::setTrimmedBbox(geom::Box2I const &trimmedbbox) { set(AmpInfoTable::getTrimmedBboxKey(), trimmedbbox); }
-
-inline double AmpInfoRecord::getGain() const { return get(AmpInfoTable::getGainKey()); }
-inline void AmpInfoRecord::setGain(double gain) { set(AmpInfoTable::getGainKey(), gain); }
-
-inline double AmpInfoRecord::getReadNoise() const { return get(AmpInfoTable::getReadNoiseKey()); }
-inline void AmpInfoRecord::setReadNoise(double readnoise) { set(AmpInfoTable::getReadNoiseKey(), readnoise); }
-
-inline std::vector<double> AmpInfoRecord::getLinearityCoeffs() const { return get(AmpInfoTable::getLinearityCoeffsKey()); }
-inline void AmpInfoRecord::setLinearityCoeffs(std::vector<double> const &linearitycoeffs) { set(AmpInfoTable::getLinearityCoeffsKey(), linearitycoeffs); }
-
-inline std::string AmpInfoRecord::getLinearityType() const { return get(AmpInfoTable::getLinearityTypeKey()); }
-inline void AmpInfoRecord::setLinearityType(std::string const &linearitytype) { set(AmpInfoTable::getLinearityTypeKey(), linearitytype); }
-
-inline bool AmpInfoRecord::getHasRawAmplifier() const { return get(AmpInfoTable::getHasRawAmplifierKey()); }
-inline void AmpInfoRecord::setHasRawAmplifier(bool hasrawamplifier) { set(AmpInfoTable::getHasRawAmplifierKey(), hasrawamplifier); }
-
-inline geom::Box2I AmpInfoRecord::getRawBbox() const { return get(AmpInfoTable::getRawBboxKey()); }
-inline void AmpInfoRecord::setRawBbox(geom::Box2I const &rawbbox) { set(AmpInfoTable::getRawBboxKey(), rawbbox); }
-
-inline geom::Box2I AmpInfoRecord::getDataBbox() const { return get(AmpInfoTable::getDataBboxKey()); }
-inline void AmpInfoRecord::setDataBbox(geom::Box2I const &databbox) { set(AmpInfoTable::getDataBboxKey(), databbox); }
-
-inline geom::Box2I AmpInfoRecord::getHorizontalOverscanBbox() const { return get(AmpInfoTable::getHorizontalOverscanBboxKey()); }
-inline void AmpInfoRecord::setHorizontalOverscanBbox(geom::Box2I const &horizontaloverscanbbox) { set(AmpInfoTable::getHorizontalOverscanBboxKey(), horizontaloverscanbbox); }
-
-inline geom::Box2I AmpInfoRecord::getVerticalOverscanBbox() const { return get(AmpInfoTable::getVerticalOverscanBboxKey()); }
-inline void AmpInfoRecord::setVerticalOverscanBbox(geom::Box2I const &verticaloverscanbbox) { set(AmpInfoTable::getVerticalOverscanBboxKey(), verticaloverscanbbox); }
-
-inline geom::Box2I AmpInfoRecord::getPrescanBbox() const { return get(AmpInfoTable::getPrescanBboxKey()); }
-inline void AmpInfoRecord::setPrescanBbox(geom::Box2I const &prescanbbox) { set(AmpInfoTable::getPrescanBboxKey(), prescanbbox); }
-
-inline bool AmpInfoRecord::getFlipX() const { return get(AmpInfoTable::getFlipXKey()); }
-inline void AmpInfoRecord::setFlipX(bool flipx) { set(AmpInfoTable::getFlipXKey(), flipx); }
-
-inline bool AmpInfoRecord::getFlipY() const { return get(AmpInfoTable::getFlipYKey()); }
-inline void AmpInfoRecord::setFlipY(bool flipy) { set(AmpInfoTable::getFlipYKey(), flipy); }
-
-inline geom::Extent2I AmpInfoRecord::getRawXYOffset() const { return get(AmpInfoTable::getRawXYOffsetKey()); }
-inline void AmpInfoRecord::setRawXYOffset(geom::Extent2I const &rawxyoffset) { set(AmpInfoTable::getRawXYOffsetKey(), rawxyoffset); }
-
-#endif // !SWIG
 
 }}} // namespace lsst::afw::table
 

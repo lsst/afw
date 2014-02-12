@@ -40,13 +40,13 @@ namespace cameraGeom {
 /**
  * Describe a detector's orientation with respect to the nominal position
  *
- * All rotations are about the center of the detector coordinate system.
+ * All rotations are about the reference position of the detector coordinate system.
  * All rotations are intrinsic, so about the rotated coordinate system.
  * It this implementation applies the rotations in zy'x'' order.
  */
 class Orientation {
 public:
-    explicit Orientation(geom::Point2D const offset=geom::Point2D(0, 0), ///< offset to the center of the detector (mm)
+    explicit Orientation(geom::Point2D const offset=geom::Point2D(0, 0), ///< offset to the reference position of the detector (mm)
                          geom::Point2D const refPosition=geom::Point2D(-0.5, -0.5), ///< Position of origin on detector (-0.5, -0.5 is LLC)
                          geom::Angle const yaw=geom::Angle(0),    ///< yaw (rotation in XY)
                          geom::Angle const roll=geom::Angle(0), ///< pitch (rotation in YZ)
