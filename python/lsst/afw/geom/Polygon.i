@@ -36,8 +36,8 @@
 #include "lsst/afw/geom/Polygon.h"
 %}
 
-%ignore std::vector<lsst::afw::geom::Polygon>::vector; // required because Polygon doesn't have a default Ctor
-%ignore std::vector<lsst::afw::geom::Polygon>::resize; // required because Polygon doesn't have a default Ctor
+%ignore std::vector<lsst::afw::geom::Polygon>::vector(size_type); // Polygon doesn't have a default Ctor
+%ignore std::vector<lsst::afw::geom::Polygon>::resize; // Polygon doesn't have a default Ctor
 %template(VectorPolygon) std::vector<lsst::afw::geom::Polygon>;
 
 %include "lsst/afw/geom/Polygon.h"
