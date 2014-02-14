@@ -38,18 +38,15 @@ import numpy
 
 import eups
 import lsst.daf.base as dafBase
-import lsst.afw.detection as afwDetection
 import lsst.afw.image as afwImage
-import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-import lsst.afw.coord as afwCoord
 import lsst.afw.table as afwTable
-import lsst.afw.cameraGeom as cameraGeom
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.afw.fits
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 from testTableArchivesLib import DummyPsf
 
 try:
@@ -91,6 +88,7 @@ class ExposureTestCase(unittest.TestCase):
         self.height = maskedImage.getHeight()
         self.wcs = afwImage.makeWcs(maskedImageMD)
         self.psf = DummyPsf(2.0)
+        self.detector = DetectorWrapper().detector
 
         self.exposureBlank = afwImage.ExposureF()
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
@@ -109,6 +107,7 @@ class ExposureTestCase(unittest.TestCase):
         del self.smallExposure
         del self.wcs
         del self.psf
+        del self.detector
 
         del self.exposureBlank
         del self.exposureMiOnly
@@ -196,10 +195,11 @@ class ExposureTestCase(unittest.TestCase):
         maskedImage = afwImage.MaskedImageF(inFilePathSmall)
         exposure.setMaskedImage(maskedImage)
         exposure.setWcs(self.wcs)
-        exposure.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
+        exposure.setDetector(self.detector)
         exposure.setFilter(afwImage.Filter("g"))
 
-        self.assertEquals(exposure.getDetector().getId().getSerial(), 666)
+        self.assertEquals(exposure.getDetector().getName(), self.detector.getName())
+        self.assertEquals(exposure.getDetector().getSerial(), self.detector.getSerial())
         self.assertEquals(exposure.getFilter().getName(), "g")
         
         try:
@@ -305,7 +305,7 @@ class ExposureTestCase(unittest.TestCase):
         """
         # This should pass without an exception
         mainExposure = afwImage.ExposureF(inFilePathSmall)
-        mainExposure.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
+        mainExposure.setDetector(self.detector)
         
         subBBox = afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.Extent2I(40, 50))
         subExposure = mainExposure.Factory(mainExposure, subBBox, afwImage.LOCAL)
@@ -378,7 +378,8 @@ class ExposureTestCase(unittest.TestCase):
                 )
 
     def cmpExposure(self, e1, e2):
-        self.assertEqual(e1.getDetector(), e2.getDetector())
+        self.assertEqual(e1.getDetector().getName(), e2.getDetector().getName())
+        self.assertEqual(e1.getDetector().getSerial(), e2.getDetector().getSerial())
         self.assertEqual(e1.getFilter().getName(), e2.getFilter().getName())
         xy = afwGeom.Point2D(0, 0)
         self.assertEqual(e1.getWcs().pixelToSky(xy)[0], e2.getWcs().pixelToSky(xy)[0])
@@ -396,7 +397,7 @@ class ExposureTestCase(unittest.TestCase):
 
         exposureU = afwImage.ExposureU(inFilePathSmall)
         exposureU.setWcs(self.wcs)
-        exposureU.setDetector(cameraGeom.Detector(cameraGeom.Id(666)))
+        exposureU.setDetector(self.detector)
         exposureU.setFilter(afwImage.Filter("g"))
         exposureU.getCalib().setExptime(666)
         exposureU.setPsf(DummyPsf(4.0))

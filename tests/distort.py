@@ -52,9 +52,7 @@ class DistortionTestCase(unittest.TestCase):
 	self.prynt = False
         nx, ny = 6001, 8001
         pixelSize = 1.0 # mm
-        self.dw = DetectorWrapper(pixelSize=pixelSize, ampExtent=afwGeom.Extent2I(nx,ny))
-
-        self.det = self.dw.detector
+        self.det = DetectorWrapper(pixelSize=pixelSize, ampExtent=afwGeom.Extent2I(nx,ny)).detector
         self.center = afwGeom.Point2D(int(0.5*nx), int(0.5*ny)))
         
 	# try the suprimecam numbers
