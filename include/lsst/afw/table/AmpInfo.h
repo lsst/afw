@@ -102,20 +102,20 @@ public:
     bool getHasRawInfo() const;
     void setHasRawInfo(bool hasRawInfo); ///< does this table have raw amplifier information?
 
+    geom::Box2I getRawBBox() const;
+    void setRawBBox(geom::Box2I const &bbox); ///< bounding box of all amplifier pixels on raw image
+
+    geom::Box2I getRawDataBBox() const;
+    void setRawDataBBox(geom::Box2I const &bbox); ///< bounding box of amplifier image pixels on raw image
+
     bool getRawFlipX() const;
     void setRawFlipX(bool rawFlipX);  ///< flip row order to make assembled image?
 
     bool getRawFlipY() const;
     void setRawFlipY(bool rawFlipY); ///< flip column order to make an assembled image?
 
-    geom::Box2I getRawBBox() const;
-    void setRawBBox(geom::Box2I const &bbox); ///< bounding box of all amplifier pixels on raw image
-
     geom::Extent2I getRawXYOffset() const;
     void setRawXYOffset(geom::Extent2I const &xy); ///< offset for assembling a raw CCD image: desired xy0 - raw xy0
-
-    geom::Box2I getRawDataBBox() const;
-    void setRawDataBBox(geom::Box2I const &bbox); ///< bounding box of amplifier image pixels on raw image
 
     geom::Box2I getRawHorizontalOverscanBBox() const;
     void setRawHorizontalOverscanBBox(geom::Box2I const &bbox); ///< bounding box of usable horizontal overscan pixels
@@ -192,13 +192,13 @@ public:
     static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearityCoeffs; }
     static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearityType; }
     static Key<Flag> getHasRawInfoKey() { return getMinimalSchema().hasRawInfo; }
-    static Key<Flag> getRawFlipXKey() { return getMinimalSchema().rawFlipX; }
-    static Key<Flag> getRawFlipYKey() { return getMinimalSchema().rawFlipY; }
     static Key< Point<int> > getRawBBoxMinKey() { return getMinimalSchema().rawBBoxMin; }
     static Key< Point<int> > getRawBBoxMaxKey() { return getMinimalSchema().rawBBoxMax; }
-    static Key< Point<int> > getRawXYOffsetKey() { return getMinimalSchema().rawXYOffset; }
     static Key< Point<int> > getRawDataBBoxMinKey() { return getMinimalSchema().rawDataBBoxMin; }
     static Key< Point<int> > getRawDataBBoxMaxKey() { return getMinimalSchema().rawDataBBoxMax; }
+    static Key<Flag> getRawFlipXKey() { return getMinimalSchema().rawFlipX; }
+    static Key<Flag> getRawFlipYKey() { return getMinimalSchema().rawFlipY; }
+    static Key< Point<int> > getRawXYOffsetKey() { return getMinimalSchema().rawXYOffset; }
     static Key< Point<int> > getRawHorizontalOverscanBBoxMinKey() { return getMinimalSchema().rawHorizontalOverscanBBoxMin; }
     static Key< Point<int> > getRawHorizontalOverscanBBoxMaxKey() { return getMinimalSchema().rawHorizontalOverscanBBoxMax; }
     static Key< Point<int> > getRawVerticalOverscanBBoxMinKey() { return getMinimalSchema().rawVerticalOverscanBBoxMin; }
@@ -243,13 +243,13 @@ private:
         Key< Array<double> > linearityCoeffs;
         Key<std::string> linearityType;
         Key<Flag> hasRawInfo;
-        Key<Flag> rawFlipX;
-        Key<Flag> rawFlipY;
         Key< Point<int> > rawBBoxMin;
         Key< Point<int> > rawBBoxMax;
-        Key< Point<int> > rawXYOffset;
         Key< Point<int> > rawDataBBoxMin;
         Key< Point<int> > rawDataBBoxMax;
+        Key<Flag> rawFlipX;
+        Key<Flag> rawFlipY;
+        Key< Point<int> > rawXYOffset;
         Key< Point<int> > rawHorizontalOverscanBBoxMin;
         Key< Point<int> > rawHorizontalOverscanBBoxMax;
         Key< Point<int> > rawVerticalOverscanBBoxMin;

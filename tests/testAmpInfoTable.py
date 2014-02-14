@@ -25,9 +25,9 @@ from __future__ import absolute_import, division
 Tests for lsst.afw.table.AmpInfoTable, etc.
 """
 import unittest
+import itertools
 
 import lsst.utils.tests
-from lsst.pex.exceptions import LsstCppException
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 
@@ -43,55 +43,70 @@ class AmpInfoTableTestCase(unittest.TestCase):
     def testBasics(self):
         """Test basics
         """
-        name = "Amp1"
-        gain = 1.2345
-        readNoise = -0.523
-        linearityCoeffs = (1.1, 2.2, 3.3, 4.4)
-        linearityType = "Polynomial"
-        bbox = afwGeom.Box2I(afwGeom.Point2I(3, -2), afwGeom.Extent2I(231, 320))
-        hasRawInfo = True
-        rawFlipX = True
-        rawFlipY = False
-        rawBBox = afwGeom.Box2I(afwGeom.Point2I(-25, 2), afwGeom.Extent2I(550, 629))
-        rawXYOffset = afwGeom.Extent2I(-97, 253)
-        rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 29), afwGeom.Extent2I(123, 307))
-        rawHorizontalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(150, 29), afwGeom.Extent2I(25, 307))
-        rawVerticalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 201), afwGeom.Extent2I(123, 6))
-        rawPrescanBBox = afwGeom.Box2I(afwGeom.Point2I(-20, 2), afwGeom.Extent2I(5, 307))
+        nameRawInfoList = (
+            ("Amp1", True),
+            ("Amp2", False),
+        )
 
-        record = self.catalog.addNew()
-        record.setBBox(bbox)
-        record.setName(name)
-        record.setGain(gain)
-        record.setReadNoise(readNoise)
-        record.setLinearityCoeffs(linearityCoeffs)
-        record.setLinearityType(linearityType)
-        record.setHasRawInfo(hasRawInfo)
-        record.setRawFlipX(rawFlipX)
-        record.setRawFlipY(rawFlipY)
-        record.setRawBBox(rawBBox)
-        record.setRawXYOffset(rawXYOffset)
-        record.setRawDataBBox(rawDataBBox)
-        record.setRawHorizontalOverscanBBox(rawHorizontalOverscanBBox)
-        record.setRawVerticalOverscanBBox(rawVerticalOverscanBBox)
-        record.setRawPrescanBBox(rawPrescanBBox)
+        for name, hasRawInfo in nameRawInfoList:
+            gain = 1.2345
+            readNoise = -0.523
+            linearityCoeffs = (1.1, 2.2, 3.3, 4.4)
+            linearityType = "Polynomial"
+            bbox = afwGeom.Box2I(afwGeom.Point2I(3, -2), afwGeom.Extent2I(231, 320))
+            hasRawInfo = hasRawInfo
+            rawFlipX = True
+            rawFlipY = False
+            rawBBox = afwGeom.Box2I(afwGeom.Point2I(-25, 2), afwGeom.Extent2I(550, 629))
+            rawXYOffset = afwGeom.Extent2I(-97, 253)
+            rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 29), afwGeom.Extent2I(123, 307))
+            rawHorizontalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(150, 29), afwGeom.Extent2I(25, 307))
+            rawVerticalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 201), afwGeom.Extent2I(123, 6))
+            rawPrescanBBox = afwGeom.Box2I(afwGeom.Point2I(-20, 2), afwGeom.Extent2I(5, 307))
 
-        self.assertEquals(name, record.getName())
-        self.assertEquals(gain, record.getGain())
-        self.assertEquals(readNoise, record.getReadNoise())
-        self.assertEquals(linearityCoeffs, record.getLinearityCoeffs())
-        self.assertEquals(linearityType, record.getLinearityType())
-        self.assertEquals(bbox, record.getBBox())
-        self.assertEquals(rawBBox, record.getRawBBox())
-        self.assertEquals(rawDataBBox, record.getRawDataBBox())
-        self.assertEquals(rawHorizontalOverscanBBox, record.getRawHorizontalOverscanBBox())
-        self.assertEquals(rawVerticalOverscanBBox, record.getRawVerticalOverscanBBox())
-        self.assertEquals(rawPrescanBBox, record.getRawPrescanBBox())
-        self.assertEquals(rawFlipX, record.getRawFlipX())
-        self.assertEquals(rawFlipY, record.getRawFlipY())
-        self.assertEquals(rawXYOffset, record.getRawXYOffset())
+            record = self.catalog.addNew()
+            record.setBBox(bbox)
+            record.setName(name)
+            record.setGain(gain)
+            record.setReadNoise(readNoise)
+            record.setLinearityCoeffs(linearityCoeffs)
+            record.setLinearityType(linearityType)
+            record.setHasRawInfo(hasRawInfo)
+            if hasRawInfo:
+                record.setRawFlipX(rawFlipX)
+                record.setRawFlipY(rawFlipY)
+                record.setRawBBox(rawBBox)
+                record.setRawXYOffset(rawXYOffset)
+                record.setRawDataBBox(rawDataBBox)
+                record.setRawHorizontalOverscanBBox(rawHorizontalOverscanBBox)
+                record.setRawVerticalOverscanBBox(rawVerticalOverscanBBox)
+                record.setRawPrescanBBox(rawPrescanBBox)
 
-        self.assertEquals(len(self.catalog), 1)
+            self.assertEquals(name, record.getName())
+            self.assertEquals(gain, record.getGain())
+            self.assertEquals(readNoise, record.getReadNoise())
+            self.assertEquals(linearityCoeffs, record.getLinearityCoeffs())
+            self.assertEquals(linearityType, record.getLinearityType())
+            self.assertEquals(bbox, record.getBBox())
+            self.assertEquals(hasRawInfo, record.getHasRawInfo())
+            if hasRawInfo:
+                self.assertEquals(rawBBox, record.getRawBBox())
+                self.assertEquals(rawDataBBox, record.getRawDataBBox())
+                self.assertEquals(rawHorizontalOverscanBBox, record.getRawHorizontalOverscanBBox())
+                self.assertEquals(rawVerticalOverscanBBox, record.getRawVerticalOverscanBBox())
+                self.assertEquals(rawPrescanBBox, record.getRawPrescanBBox())
+                self.assertEquals(rawFlipX, record.getRawFlipX())
+                self.assertEquals(rawFlipY, record.getRawFlipY())
+                self.assertEquals(rawXYOffset, record.getRawXYOffset())
+
+        self.assertEquals(len(self.catalog), 2)
+        for i, data in enumerate(itertools.izip(nameRawInfoList, self.catalog)):
+            name, hasRawInfo = data[0]
+            record = data[1]
+            self.assertEquals(name, self.catalog[i].getName())
+            self.assertEquals(name, record.getName())
+            self.assertEquals(hasRawInfo, self.catalog[i].getHasRawInfo())
+            self.assertEquals(hasRawInfo, record.getHasRawInfo())
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

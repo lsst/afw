@@ -176,12 +176,6 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
     hasRawInfo = schema.addField<Flag>(
         "hasrawinfo", 
         "is raw amplifier information available (e.g. untrimmed bounding boxes)?");
-    rawFlipX = schema.addField<Flag>(
-        "raw.flip.x",
-        "flip row order to make assembled image?");
-    rawFlipY = schema.addField<Flag>(
-        "raw.flip.y",
-        "flip column order to make an assembled image?");
     rawBBoxMin = schema.addField< Point<int> >(
         "raw.bbox.min",
         "entire amplifier bbox on raw image, min point",
@@ -190,10 +184,6 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
         "raw.bbox.max",
         "entire amplifier bbox on raw image, max point",
         "pixels");
-    rawXYOffset = schema.addField< Point<int> >(
-        "raw.xyoffset", 
-        "offset for assembling a raw CCD image: desired xy0 - raw xy0; 0,0 if raw data comes assembled",
-        "pixels");
     rawDataBBoxMin = schema.addField< Point<int> >(
         "raw.databbox.min",
         "image data bbox on raw image, min point",
@@ -201,6 +191,16 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
     rawDataBBoxMax = schema.addField< Point<int> >(
         "raw.databbox.max",
         "image data bbox on raw image, max point",
+        "pixels");
+    rawFlipX = schema.addField<Flag>(
+        "raw.flip.x",
+        "flip row order to make assembled image?");
+    rawFlipY = schema.addField<Flag>(
+        "raw.flip.y",
+        "flip column order to make an assembled image?");
+    rawXYOffset = schema.addField< Point<int> >(
+        "raw.xyoffset", 
+        "offset for assembling a raw CCD image: desired xy0 - raw xy0; 0,0 if raw data comes assembled",
         "pixels");
     rawHorizontalOverscanBBoxMin = schema.addField< Point<int> >(
         "raw.horizontaloverscanbbox.min", 
@@ -273,12 +273,6 @@ void AmpInfoRecord::setLinearityType(std::string const &linearitytype) { set(Amp
 bool AmpInfoRecord::getHasRawInfo() const { return get(AmpInfoTable::getHasRawInfoKey()); }
 void AmpInfoRecord::setHasRawInfo(bool hasrawamplifier) { set(AmpInfoTable::getHasRawInfoKey(), hasrawamplifier); }
 
-bool AmpInfoRecord::getRawFlipX() const { return get(AmpInfoTable::getRawFlipXKey()); }
-void AmpInfoRecord::setRawFlipX(bool rawFlipX) { set(AmpInfoTable::getRawFlipXKey(), rawFlipX); }
-
-bool AmpInfoRecord::getRawFlipY() const { return get(AmpInfoTable::getRawFlipYKey()); }
-void AmpInfoRecord::setRawFlipY(bool rawFlipY) { set(AmpInfoTable::getRawFlipYKey(), rawFlipY); }
-
 geom::Box2I AmpInfoRecord::getRawBBox() const { 
     return geom::Box2I(get(AmpInfoTable::getRawBBoxMinKey()), get(AmpInfoTable::getRawBBoxMaxKey())); 
 }
@@ -287,17 +281,23 @@ void AmpInfoRecord::setRawBBox(geom::Box2I const &bbox) {
     set(AmpInfoTable::getRawBBoxMaxKey(), bbox.getMax()); 
 }
 
-geom::Extent2I AmpInfoRecord::getRawXYOffset() const { return geom::Extent2I(get(AmpInfoTable::getRawXYOffsetKey())); }
-void AmpInfoRecord::setRawXYOffset(geom::Extent2I const &rawxyoffset) { 
-    set(AmpInfoTable::getRawXYOffsetKey(), geom::Point2I(rawxyoffset.asPair())); 
-}
-
 geom::Box2I AmpInfoRecord::getRawDataBBox() const { 
     return geom::Box2I(get(AmpInfoTable::getRawDataBBoxMinKey()), get(AmpInfoTable::getRawDataBBoxMaxKey())); 
 }
 void AmpInfoRecord::setRawDataBBox(geom::Box2I const &bbox) { 
     set(AmpInfoTable::getRawDataBBoxMinKey(), bbox.getMin()); 
     set(AmpInfoTable::getRawDataBBoxMaxKey(), bbox.getMax()); 
+}
+
+bool AmpInfoRecord::getRawFlipX() const { return get(AmpInfoTable::getRawFlipXKey()); }
+void AmpInfoRecord::setRawFlipX(bool rawFlipX) { set(AmpInfoTable::getRawFlipXKey(), rawFlipX); }
+
+bool AmpInfoRecord::getRawFlipY() const { return get(AmpInfoTable::getRawFlipYKey()); }
+void AmpInfoRecord::setRawFlipY(bool rawFlipY) { set(AmpInfoTable::getRawFlipYKey(), rawFlipY); }
+
+geom::Extent2I AmpInfoRecord::getRawXYOffset() const { return geom::Extent2I(get(AmpInfoTable::getRawXYOffsetKey())); }
+void AmpInfoRecord::setRawXYOffset(geom::Extent2I const &rawxyoffset) { 
+    set(AmpInfoTable::getRawXYOffsetKey(), geom::Point2I(rawxyoffset.asPair())); 
 }
 
 geom::Box2I AmpInfoRecord::getRawHorizontalOverscanBBox() const { 
