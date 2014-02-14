@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -59,7 +59,7 @@ void linearTransformExample(){
     cout << "scaling LinearTransform parameters: " << s.getParameterVector() << endl;
 
     //copy construt a rotation transform
-    afwGeom::LinearTransform r = afwGeom::LinearTransform::makeRotation(1.0);
+    afwGeom::LinearTransform r = afwGeom::LinearTransform::makeRotation(1.0*afwGeom::radians);
     cout << "rotation LinearTransform matrix: "<< r.getMatrix() << endl;
     cout << "rotation LinearTransform parameters: " << r.getParameterVector() << endl;
    
@@ -97,7 +97,7 @@ void affineTransformExample() {
     cout << "scaling AffineTransform parameters: " << s.getParameterVector() << endl;
 
     //copy construt a rotation transform
-    afwGeom::AffineTransform r = afwGeom::AffineTransform::makeRotation(1.0);
+    afwGeom::AffineTransform r = afwGeom::AffineTransform::makeRotation(1.0*afwGeom::radians);
     cout << "rotation AffineTransform matrix: "<< r.getMatrix() << endl;
     cout << "rotation AffineTransform parameters: " << r.getParameterVector() << endl;
   

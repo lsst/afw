@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -28,6 +28,7 @@
 #include "lsst/pex/exceptions/Runtime.h"
 
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -97,8 +98,8 @@ public:
         return LinearTransform((Matrix() << s, 0.0, 0.0, t).finished());
     }
 
-    static LinearTransform makeRotation(double t) { 
-        return LinearTransform(Matrix(Eigen::Rotation2D<double>(t)));
+    static LinearTransform makeRotation(Angle t) {
+        return LinearTransform(Matrix(Eigen::Rotation2D<double>(t.asRadians())));
     }
     
     LinearTransform & operator=(LinearTransform const & other) {
