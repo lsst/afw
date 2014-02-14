@@ -217,7 +217,7 @@ std::vector<Polygon> Polygon::Impl::intersection(PolyT const& other) const
     boost::geometry::intersection(poly, other, boostResult);
     std::vector<Polygon> lsstResult;
     lsstResult.reserve(boostResult.size());
-    for (typename std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
+    for (std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
          i != boostResult.end(); ++i) {
         lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
     }
@@ -244,7 +244,7 @@ std::vector<Polygon> Polygon::Impl::union_(PolyT const& other) const
     boost::geometry::union_(poly, other, boostResult);
     std::vector<Polygon> lsstResult;
     lsstResult.reserve(boostResult.size());
-    for (typename std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
+    for (std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
          i != boostResult.end(); ++i) {
         lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
     }
@@ -264,7 +264,7 @@ Polygon::Polygon(
     ) : _impl(new Polygon::Impl())
 {
     std::vector<LsstPoint> corners = boxToCorners(box);
-    for (typename std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
+    for (std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
         *p = transform->forwardTransform(*p);
     }
     boost::geometry::assign(_impl->poly, corners);
@@ -277,7 +277,7 @@ Polygon::Polygon(
     ) : _impl(new Polygon::Impl())
 {
     std::vector<LsstPoint> corners = boxToCorners(box);
-    for (typename std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
+    for (std::vector<LsstPoint>::iterator p = corners.begin(); p != corners.end(); ++p) {
         *p = transform(*p);
     }
     boost::geometry::assign(_impl->poly, corners);
@@ -309,7 +309,7 @@ Polygon::getEdges() const
     std::vector<LsstPoint> const vertices = getVertices();
     std::vector<std::pair<Polygon::Point, Polygon::Point> > edges;
     edges.reserve(getNumEdges());
-    for (typename std::vector<LsstPoint>::const_iterator i = vertices.begin(), j = vertices.begin() + 1;
+    for (std::vector<LsstPoint>::const_iterator i = vertices.begin(), j = vertices.begin() + 1;
          j != vertices.end(); ++i, ++j) {
         edges.push_back(std::make_pair(*i, *j));
     }
@@ -385,7 +385,7 @@ Polygon Polygon::transform(CONST_PTR(XYTransform) const& transform) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges());
-    for (typename std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
+    for (std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform->forwardTransform(*i));
     }
@@ -396,7 +396,7 @@ Polygon Polygon::transform(AffineTransform const& transform) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges());
-    for (typename std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
+    for (std::vector<LsstPoint>::const_iterator i = _impl->poly.outer().begin();
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform(*i));
     }
@@ -408,7 +408,7 @@ Polygon Polygon::subSample(size_t num) const
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges()*num);
     std::vector<std::pair<Point, Point> > edges = getEdges();
-    for (typename std::vector<std::pair<Point, Point> >::const_iterator i = edges.begin();
+    for (std::vector<std::pair<Point, Point> >::const_iterator i = edges.begin();
          i != edges.end(); ++i) {
         addSubSampledEdge(vertices, i->first, i->second, num);
     }
@@ -420,7 +420,7 @@ Polygon Polygon::subSample(double maxLength) const
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges() + static_cast<size_t>(::ceil(calculatePerimeter()/maxLength)));
     std::vector<std::pair<Point, Point> > edges = getEdges();
-    for (typename std::vector<std::pair<Point, Point> >::const_iterator i = edges.begin();
+    for (std::vector<std::pair<Point, Point> >::const_iterator i = edges.begin();
          i != edges.end(); ++i) {
         Point const& p1 = i->first, p2 = i->second;
         double const dist = ::sqrt(p1.distanceSquared(p2));
@@ -487,11 +487,11 @@ PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox)
         }
 
         // Last resort: do each pixel independently...
-        for (typename std::vector<BoostPolygon>::const_iterator p = intersections.begin();
+        for (std::vector<BoostPolygon>::const_iterator p = intersections.begin();
              p != intersections.end(); ++p) {
             double xMinRow = xMax, xMaxRow = xMin;
             std::vector<LsstPoint> const vertices = p->outer();
-            for (typename std::vector<LsstPoint>::const_iterator q = vertices.begin();
+            for (std::vector<LsstPoint>::const_iterator q = vertices.begin();
                  q != vertices.end(); ++q) {
                 double const x = q->getX();
                 if (x < xMinRow) xMinRow = x;
