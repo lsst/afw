@@ -14,9 +14,7 @@ class DetectorWrapper(object):
     @param[in] numAmps: number of amplifiers
     @param[in] pixelSize: pixel size (mm)
     @param[in] ampExtent: dimensions of amplifier image bbox
-    @param[in] fpOffset: x,y offset of CCD lower left corner in focal plane
-        (note: the other orientation parameters are defaulted, so
-        no rotation and the reference point is the lower left corner of the detector)
+    @param[in] orientation: orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
     @param[in] tryDuplicateAmpNames: create 2 amps with the same name (should result in an error)
     @param[in] tryBadCameraSys: add a transform for an unsupported coord. system (should result in an error)
     """
@@ -27,7 +25,7 @@ class DetectorWrapper(object):
         numAmps = 3,
         pixelSize = afwGeom.Extent2D(0.02),
         ampExtent = afwGeom.Extent2I(5,6), 
-        offset = afwGeom.Point2D(0., 0.),
+        orientation = cameraGeom.Orientation(),
         tryDuplicateAmpNames = False,
         tryBadCameraSys = False,
     ):
@@ -47,7 +45,7 @@ class DetectorWrapper(object):
             record.setGain(1.71234e3)
             record.setReadNoise(0.521237e2)
             record.setHasRawInfo(False)
-        self.orientation = cameraGeom.Orientation(offset)
+        self.orientation = orientation
         self.pixelSize = pixelSize
         self.transMap = {
             cameraGeom.FOCAL_PLANE: self.orientation.makeFpPixelTransform(self.pixelSize),

@@ -75,13 +75,14 @@ class DetectorTestCase(unittest.TestCase):
         """Test the convert method
         """
         dw = DetectorWrapper()
+        pixOffset = dw.orientation.getReferencePosition()
         for xyMM in ((25.6, -31.07), (0, 0), (-1.234e5, 3.123e4)):
             fpPoint = afwGeom.Point2D(*xyMM)
             fpCamPoint = cameraGeom.CameraPoint(fpPoint, cameraGeom.FOCAL_PLANE)
             pixCamPoint = dw.detector.convert(fpCamPoint, cameraGeom.PIXELS)
             pixPoint = pixCamPoint.getPoint()
             for i in range(2):
-                self.assertAlmostEquals(fpPoint[i]/dw.pixelSize[i], pixPoint[i])
+                self.assertAlmostEquals(fpPoint[i]/dw.pixelSize[i] + pixOffset[i], pixPoint[i])
             fpCamPoint2 = dw.detector.convert(pixCamPoint, cameraGeom.FOCAL_PLANE)
             fpPoint2 = fpCamPoint2.getPoint()
             for i in range(2):
