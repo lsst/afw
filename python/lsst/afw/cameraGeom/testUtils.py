@@ -1,4 +1,5 @@
 import lsst.afw.geom as afwGeom
+import lsst.afw.table as afwTable
 import lsst.afw.cameraGeom as cameraGeom
 
 class DetectorWrapper(object):
@@ -11,15 +12,18 @@ class DetectorWrapper(object):
         self.name = "detector 1"
         self.type = cameraGeom.SCIENCE
         self.serial = "xkcd722"
-        self.ampList = []
+        schema = afwTable.AmpInfoTable.makeMinimalSchema()
+        self.ampInfo = afwTable.AmpInfoCatalog(schema)
         for i in range(numAmps):
+            record = self.ampInfo.addNew()
             ampName = "amp %d" % (i + 1,)
             if i == 1 and tryDuplicateAmpNames:
                 ampName = self.ampList[0].getName()
-            bbox = afwGeom.Box2I(afwGeom.Point2I(-1, 1), ampExtent)
-            gain = 1.71234e3
-            readNoise = 0.521237e2
-            self.ampList.append(cameraGeom.Amplifier(ampName, bbox, gain, readNoise, None))
+            record.setName(ampName)
+            record.setBBox(afwGeom.Box2I(afwGeom.Point2I(-1, 1), ampExtent))
+            record.setGain(1.71234e3)
+            record.setReadNoise(0.521237e2)
+            record.setHasRawInfo(False)
         self.orientation = cameraGeom.Orientation(offset, refposition)
         self.pixelSize = pixelSize
         self.transMap = {
@@ -32,7 +36,7 @@ class DetectorWrapper(object):
             self.name,
             self.type,
             self.serial,
-            self.ampList,
+            self.ampInfo,
             self.orientation,
             self.pixelSize,
             self.transMap,

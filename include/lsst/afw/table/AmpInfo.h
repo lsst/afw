@@ -25,10 +25,8 @@
 
 #include "lsst/afw/table/BaseRecord.h"
 #include "lsst/afw/table/BaseTable.h"
-#include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
-#include "lsst/afw/table/SortedCatalog.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -39,62 +37,8 @@ class AmpInfoTable;
  *  @brief Record class that must contain a unique ID field and *** some other things for amps.
  *
  *  AmpInfoTable / AmpInfoRecord are intended to be the base class for records containing information about 
- *  amplifiers in detectors.  
- */
-class AmpInfoRecord : public BaseRecord {
-public:
-
-    typedef AmpInfoTable Table;
-    typedef ColumnViewT<AmpInfoRecord> ColumnView;
-    typedef SortedCatalogT<AmpInfoRecord> Catalog;
-    typedef SortedCatalogT<AmpInfoRecord const> ConstCatalog;
-
-    CONST_PTR(AmpInfoTable) getTable() const {
-        return boost::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
-    }
-
-    //@{
-    /// @brief Convenience accessors for the keys in the minimal reference schema.
-    RecordId getId() const;
-    void setId(RecordId id);
-
-    std::string getName() const;
-    void setName(std::string const &name); ///< name of amplifier location in camera
-
-    geom::Box2I getTrimmedBbox() const;
-    void setTrimmedBbox(geom::Box2I const &bbox); ///< bounding box of amplifier pixels in assembled image
-
-    double getGain() const;
-    void setGain(double gain); ///< amplifier gain in e-/ADU
-    
-    double getReadNoise() const;
-    void setReadNoise(double readNoise); ///< amplifier read noise, in e-
-
-    std::vector<double> getLinearityCoeffs() const;
-    void setLinearityCoeffs(std::vector<double> const &coeffs); ///< vector of linearity coefficients
-
-    std::string getLinearityType() const;
-    void setLinearityType(std::string const &type); ///< name of linearity parameterization
-
-    bool getHasRawAmplifier() const;
-    void setHasRawAmplifier(bool hasRawAmplifier); ///< does this table have raw amplifier information?
-
-    geom::Box2I getRawBbox() const;
-    void setRawBbox(geom::Box2I const &bbox); ///< bounding box of all amplifier pixels on raw image
-
-    geom::Box2I getDataBbox() const;
-    void setDataBbox(geom::Box2I const &bbox); ///< bounding box of amplifier image pixels on raw image
-
-    geom::Box2I getHorizontalOverscanBbox() const;
-    void setHorizontalOverscanBbox(geom::Box2I const &bbox); ///< bounding box of usable horizontal overscan pixels
-
-    geom::Box2I getVerticalOverscanBbox() const;
-    void setVerticalOverscanBbox(geom::Box2I const &bbox); ///< bounding box of usable vertical overscan pixels
-
-    geom::Box2I getPrescanBbox() const;
-    void setPrescanBbox(geom::Box2I const &bbox); ///< bounding box of usable (horizontal) prescan pixels on raw image
-
-/**
+ *  amplifiers in detectors.
+ *
  * Geometry and electronic information about raw amplifier images
  *
  * Here is a pictorial example showing the meaning of flipX and flipY:
@@ -123,15 +67,64 @@ public:
  * * This design assumes assembled X is always +/- raw X, which we require for CCDs (so that bleed trails
  *   are always along the Y axis). If you must swap X/Y then add a doTranspose flag.
  */
+class AmpInfoRecord : public BaseRecord {
+public:
 
-    bool getFlipX() const;
-    void setFlipX(bool doFlipX);  ///< flip row order to make assembled image?
+    typedef AmpInfoTable Table;
+    typedef ColumnViewT<AmpInfoRecord> ColumnView;
+    typedef CatalogT<AmpInfoRecord> Catalog;
+    typedef CatalogT<AmpInfoRecord const> ConstCatalog;
 
-    bool getFlipY() const;
-    void setFlipY(bool doFlipY); ///< flip column order to make an assembled image?
+    CONST_PTR(AmpInfoTable) getTable() const {
+        return boost::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
+    }
+
+    //@{
+    /// @brief Convenience accessors for the keys in the minimal reference schema.
+    std::string getName() const;
+    void setName(std::string const &name); ///< name of amplifier location in camera
+
+    geom::Box2I getBBox() const;
+    void setBBox(geom::Box2I const &bbox); ///< bounding box of amplifier pixels in assembled image
+
+    double getGain() const;
+    void setGain(double gain); ///< amplifier gain in e-/ADU
+    
+    double getReadNoise() const;
+    void setReadNoise(double readNoise); ///< amplifier read noise, in e-
+
+    std::vector<double> getLinearityCoeffs() const;
+    void setLinearityCoeffs(std::vector<double> const &coeffs); ///< vector of linearity coefficients
+
+    std::string getLinearityType() const;
+    void setLinearityType(std::string const &type); ///< name of linearity parameterization
+
+    bool getHasRawInfo() const;
+    void setHasRawInfo(bool hasRawInfo); ///< does this table have raw amplifier information?
+
+    bool getRawFlipX() const;
+    void setRawFlipX(bool rawFlipX);  ///< flip row order to make assembled image?
+
+    bool getRawFlipY() const;
+    void setRawFlipY(bool rawFlipY); ///< flip column order to make an assembled image?
+
+    geom::Box2I getRawBBox() const;
+    void setRawBBox(geom::Box2I const &bbox); ///< bounding box of all amplifier pixels on raw image
 
     geom::Extent2I getRawXYOffset() const;
     void setRawXYOffset(geom::Extent2I const &xy); ///< offset for assembling a raw CCD image: desired xy0 - raw xy0
+
+    geom::Box2I getRawDataBBox() const;
+    void setRawDataBBox(geom::Box2I const &bbox); ///< bounding box of amplifier image pixels on raw image
+
+    geom::Box2I getRawHorizontalOverscanBBox() const;
+    void setRawHorizontalOverscanBBox(geom::Box2I const &bbox); ///< bounding box of usable horizontal overscan pixels
+
+    geom::Box2I getRawVerticalOverscanBBox() const;
+    void setRawVerticalOverscanBBox(geom::Box2I const &bbox); ///< bounding box of usable vertical overscan pixels
+
+    geom::Box2I getRawPrescanBBox() const;
+    void setRawPrescanBBox(geom::Box2I const &bbox); ///< bounding box of usable (horizontal) prescan pixels on raw image
     
     //@}
 
@@ -151,29 +144,18 @@ public:
 
     typedef AmpInfoRecord Record;
     typedef ColumnViewT<AmpInfoRecord> ColumnView;
-    typedef SortedCatalogT<Record> Catalog;
-    typedef SortedCatalogT<Record const> ConstCatalog;
+    typedef CatalogT<Record> Catalog;
+    typedef CatalogT<Record const> ConstCatalog;
+    static int const MAX_NAME_LENGTH = 64; // max length for amplifier name
+    static int const MAX_LINEARITY_COEFFS = 4;  // max number of linearity coefficients
+    static int const MAX_LINEARITY_TYPE_LENGTH = 64; // max length for linearity type
 
     /**
      *  @brief Construct a new table.
      *
      *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
-     *  @param[in] idFactory         Factory class to generate record IDs when they are not explicitly given.
-     *                               If null, record IDs will default to zero.
-     *
-     *  Note that not passing an IdFactory at all will call the other override of make(), which will
-     *  set the ID factory to IdFactory::makeSimple().
      */
-    static PTR(AmpInfoTable) make(Schema const & schema, PTR(IdFactory) const & idFactory);
-
-    /**
-     *  @brief Construct a new table.
-     *
-     *  @param[in] schema            Schema that defines the fields, offsets, and record size for the table.
-     *
-     *  This overload sets the ID factory to IdFactory::makeSimple().
-     */
-    static PTR(AmpInfoTable) make(Schema const & schema) { return make(schema, IdFactory::makeSimple()); }
+    static PTR(AmpInfoTable) make(Schema const & schema);
 
     /**
      *  @brief Return a minimal schema for AmpInfo tables and records.
@@ -194,15 +176,6 @@ public:
         return other.contains(getMinimalSchema().schema);
     }
 
-    /// @brief Return the object that generates IDs for the table (may be null).
-    PTR(IdFactory) getIdFactory() { return _idFactory; }
-
-    /// @brief Return the object that generates IDs for the table (may be null).
-    CONST_PTR(IdFactory) getIdFactory() const { return _idFactory; }
-
-    /// @brief Switch to a new IdFactory -- object that generates IDs for the table (may be null).
-    void setIdFactory(PTR(IdFactory) f) { _idFactory = f; }
-
     //@{
     /**
      *  Get keys for standard fields shared by all references.
@@ -210,28 +183,28 @@ public:
      *  These keys are used to implement getters and setters on AmpInfoRecord.
      */
     /// @brief Key for the unique ID.
-    static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
+//    static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
     static Key<std::string> getNameKey() { return getMinimalSchema().name; }
-    static Key< Point<int> > getTrimmedBboxLLKey() { return getMinimalSchema().trimmedbbox_ll; }
-    static Key< Point<int> > getTrimmedBboxURKey() { return getMinimalSchema().trimmedbbox_ur; }
+    static Key< Point<int> > getBBoxMinKey() { return getMinimalSchema().bboxMin; }
+    static Key< Point<int> > getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
     static Key<double> getGainKey() { return getMinimalSchema().gain; }
-    static Key<double> getReadNoiseKey() { return getMinimalSchema().readnoise; }
-    static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearitycoeffs; }
-    static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearitytype; }
-    static Key<Flag> getHasRawAmplifierKey() { return getMinimalSchema().hasrawamplifier; }
-    static Key< Point<int> > getRawBboxLLKey() { return getMinimalSchema().rawbbox_ll; }
-    static Key< Point<int> > getRawBboxURKey() { return getMinimalSchema().rawbbox_ur; }
-    static Key< Point<int> > getDataBboxLLKey() { return getMinimalSchema().databbox_ll; }
-    static Key< Point<int> > getDataBboxURKey() { return getMinimalSchema().databbox_ur; }
-    static Key< Point<int> > getHorizontalOverscanBboxLLKey() { return getMinimalSchema().horizontaloverscanbbox_ll; }
-    static Key< Point<int> > getHorizontalOverscanBboxURKey() { return getMinimalSchema().horizontaloverscanbbox_ur; }
-    static Key< Point<int> > getVerticalOverscanBboxLLKey() { return getMinimalSchema().verticaloverscanbbox_ll; }
-    static Key< Point<int> > getVerticalOverscanBboxURKey() { return getMinimalSchema().verticaloverscanbbox_ur; }
-    static Key< Point<int> > getPrescanBboxLLKey() { return getMinimalSchema().prescanbbox_ll; }
-    static Key< Point<int> > getPrescanBboxURKey() { return getMinimalSchema().prescanbbox_ur; }
-    static Key<Flag> getFlipXKey() { return getMinimalSchema().flipx; }
-    static Key<Flag> getFlipYKey() { return getMinimalSchema().flipy; }
-    static Key< Point<int> > getRawXYOffsetKey() { return getMinimalSchema().rawxyoffset; }
+    static Key<double> getReadNoiseKey() { return getMinimalSchema().readNoise; }
+    static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearityCoeffs; }
+    static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearityType; }
+    static Key<Flag> getHasRawInfoKey() { return getMinimalSchema().hasRawInfo; }
+    static Key<Flag> getRawFlipXKey() { return getMinimalSchema().rawFlipX; }
+    static Key<Flag> getRawFlipYKey() { return getMinimalSchema().rawFlipY; }
+    static Key< Point<int> > getRawBBoxMinKey() { return getMinimalSchema().rawBBoxMin; }
+    static Key< Point<int> > getRawBBoxMaxKey() { return getMinimalSchema().rawBBoxMax; }
+    static Key< Point<int> > getRawXYOffsetKey() { return getMinimalSchema().rawXYOffset; }
+    static Key< Point<int> > getRawDataBBoxMinKey() { return getMinimalSchema().rawDataBBoxMin; }
+    static Key< Point<int> > getRawDataBBoxMaxKey() { return getMinimalSchema().rawDataBBoxMax; }
+    static Key< Point<int> > getRawHorizontalOverscanBBoxMinKey() { return getMinimalSchema().rawHorizontalOverscanBBoxMin; }
+    static Key< Point<int> > getRawHorizontalOverscanBBoxMaxKey() { return getMinimalSchema().rawHorizontalOverscanBBoxMax; }
+    static Key< Point<int> > getRawVerticalOverscanBBoxMinKey() { return getMinimalSchema().rawVerticalOverscanBBoxMin; }
+    static Key< Point<int> > getRawVerticalOverscanBBoxMaxKey() { return getMinimalSchema().rawVerticalOverscanBBoxMax; }
+    static Key< Point<int> > getRawPrescanBBoxMinKey() { return getMinimalSchema().rawPrescanBBoxMin; }
+    static Key< Point<int> > getRawPrescanBBoxMaxKey() { return getMinimalSchema().rawPrescanBBoxMax; }
     //@}
 
     /// @copydoc BaseTable::clone
@@ -252,7 +225,7 @@ public:
 
 protected:
 
-    AmpInfoTable(Schema const & schema, PTR(IdFactory) const & idFactory);
+    AmpInfoTable(Schema const & schema);
 
     AmpInfoTable(AmpInfoTable const & other);
 
@@ -263,26 +236,26 @@ private:
         Schema schema;
         Key<RecordId> id;
         Key<std::string> name;
-        Key< Point<int> > trimmedbbox_ll;
-        Key< Point<int> > trimmedbbox_ur;
+        Key< Point<int> > bboxMin;
+        Key< Point<int> > bboxMax;
         Key<double> gain;
-        Key<double> readnoise;
-        Key< Array<double> > linearitycoeffs;
-        Key<std::string> linearitytype;
-        Key<Flag> hasrawamplifier;
-        Key< Point<int> > rawbbox_ll;
-        Key< Point<int> > rawbbox_ur;
-        Key< Point<int> > databbox_ll;
-        Key< Point<int> > databbox_ur;
-        Key< Point<int> > horizontaloverscanbbox_ll;
-        Key< Point<int> > horizontaloverscanbbox_ur;
-        Key< Point<int> > verticaloverscanbbox_ll;
-        Key< Point<int> > verticaloverscanbbox_ur;
-        Key< Point<int> > prescanbbox_ll;
-        Key< Point<int> > prescanbbox_ur;
-        Key<Flag> flipx;
-        Key<Flag> flipy;
-        Key< Point<int> > rawxyoffset;
+        Key<double> readNoise;
+        Key< Array<double> > linearityCoeffs;
+        Key<std::string> linearityType;
+        Key<Flag> hasRawInfo;
+        Key<Flag> rawFlipX;
+        Key<Flag> rawFlipY;
+        Key< Point<int> > rawBBoxMin;
+        Key< Point<int> > rawBBoxMax;
+        Key< Point<int> > rawXYOffset;
+        Key< Point<int> > rawDataBBoxMin;
+        Key< Point<int> > rawDataBBoxMax;
+        Key< Point<int> > rawHorizontalOverscanBBoxMin;
+        Key< Point<int> > rawHorizontalOverscanBBoxMax;
+        Key< Point<int> > rawVerticalOverscanBBoxMin;
+        Key< Point<int> > rawVerticalOverscanBBoxMax;
+        Key< Point<int> > rawPrescanBBoxMin;
+        Key< Point<int> > rawPrescanBBoxMax;
         MinimalSchema();
     };
     
@@ -293,8 +266,6 @@ private:
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
-
-    PTR(IdFactory) _idFactory;        // generates IDs for new records
 };
 
 }}} // namespace lsst::afw::table

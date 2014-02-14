@@ -44,3 +44,4 @@ Python interface to lsst::afw::table classes
 %include "Source.i"
 %include "Match.i"
 %include "Exposure.i"
+%include "AmpInfo.i"

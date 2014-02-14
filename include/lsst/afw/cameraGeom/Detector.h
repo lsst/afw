@@ -26,7 +26,7 @@
 #include <string>
 #include "lsst/base.h"
 #include "lsst/afw/geom/TransformRegistry.h"
-#include "lsst/afw/cameraGeom/Amplifier.h"
+#include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/CameraPoint.h"
 #include "lsst/afw/cameraGeom/Orientation.h"
@@ -52,11 +52,11 @@ enum DetectorType {
  * Supports conversion of CameraPoint between FOCAL_PLANE and pixel-based coordinate systems.
  * Also an iterator over amplifiers (in C++ use begin(), end(), in Python use "for amplifier in detector").
  *
- * @warning Only supports detectors with square pixels
+ * @note: code definitions use lsst::afw::table:: instead of table:: because the latter confused swig
+ * when I tried it. I don't know why and it didn't seem worth pursuing.
  */
 class Detector {
 public:
-    typedef std::vector<CONST_PTR(Amplifier)> AmplifierList;
     /**
      * Make a Detector
      *
@@ -72,9 +72,9 @@ public:
         std::string const &name,    ///< name of detector's location in the camera
         DetectorType type,          ///< type of detector
         std::string const &serial,  ///< serial "number" that identifies the physical detector
-        AmplifierList const &amplifierList, ///< list of amplifier data
+        lsst::afw::table::ConstAmpInfoCatalog const &ampInfoCatalog,   ///< catalog of amplifier information
         Orientation const &orientation,     ///< detector position and orientation in focal plane
-        double pixelSize,           ///< size of pixel along x = y (mm); pixels are assumed to be square
+        geom::Extent2D const &pixelSize,    ///< pixel size (mm)
         CameraTransformMap const &transformMap  ///< list of coordinate transforms for this detector
     );
 
@@ -116,39 +116,42 @@ public:
     /** Get the detector serial "number" */
     std::string const getSerial() const { return _serial; }
 
+    /** Get the amplifier information catalog */
+    lsst::afw::table::ConstAmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
+
     /** Get detector's orientation in the focal plane */
     Orientation const getOrientation() const { return _orientation; }
 
-    /** Get size of pixel along x = y (mm) */
-    double getPixelSize() const { return _pixelSize; }
+    /** Get size of pixel along (mm) */
+    geom::Extent2D const getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
     CameraTransformRegistry const getTransformRegistry() const { return _transformRegistry; }
 
     /** Get iterator to beginning of amplifier list */
-    AmplifierList::const_iterator begin() const { return _amplifierList.begin(); }
+    lsst::afw::table::ConstAmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
 
     /** Get iterator to end of amplifier list */
-    AmplifierList::const_iterator end() const { return _amplifierList.end(); }
+    lsst::afw::table::ConstAmpInfoCatalog::const_iterator end() const { return _ampInfoCatalog.end(); }
 
     /**
      * Get the amplifier specified by index
      *
-     * @throw something if index is out of range (uses "at" internally)
+     * @throw std::out_of_range) if index is out of range
      */
-    CONST_PTR(Amplifier) operator[](size_t i) const { return _amplifierList.at(i); }
+    const lsst::afw::table::AmpInfoRecord & operator[](size_t i) const { return _ampInfoCatalog.at(i); }
 
     /**
      * Get the amplifier specified by name
      *
      * @throw lst::pex::exceptions::InvalidParameterException if no such amplifier
      */
-    CONST_PTR(Amplifier) operator[](std::string const &name) const;
+    const lsst::afw::table::AmpInfoRecord & operator[](std::string const &name) const;
 
     /**
      * Get number of amplifiers. Renamed to __len__ in Python.
      */
-    size_t size() const {return _amplifierList.size(); }
+    size_t size() const {return _ampInfoCatalog.size(); }
 
     /**
      * Make a CameraPoint from a point and a camera system
@@ -183,11 +186,11 @@ public:
     }
 
 private:
-    typedef boost::unordered_map<std::string, CONST_PTR(Amplifier)> _AmpMap;
+    typedef boost::unordered_map<std::string, table::ConstAmpInfoCatalog::const_iterator> _AmpInfoMap;
     /**
      * Finish constructing this object
      *
-     * Set _amplifierMap from amplifierList
+     * Set _ampNameIterMap from _ampInfoCatalog
      * Check detector name in the CoordSys in the transform registry
      *
      * @throw lsst::pex::exceptions::InvalidParameterException if:
@@ -197,12 +200,12 @@ private:
     void _init();
 
     std::string _name;      ///< name of detector's location in the camera
-    DetectorType _type;     ///< type of detector
+    DetectorType _type;     ///< type of detectorsize_t
     std::string _serial;    ///< serial "number" that identifies the physical detector
-    AmplifierList _amplifierList; ///< list of amplifier data
-    _AmpMap _amplifierMap;  ///< map of amplifier name: amplifier
+    table::ConstAmpInfoCatalog _ampInfoCatalog; ///< list of amplifier data
+    _AmpInfoMap _ampNameIterMap;    ///< map of amplifier name: catalog iterator
     Orientation _orientation;       ///< position and orientation of detector in focal plane
-    double _pixelSize;      ///< size of pixel along x or y (mm)
+    geom::Extent2D _pixelSize;      ///< pixel size (mm)
     CameraTransformRegistry _transformRegistry; ///< registry of coordinate transforms
 };
 

@@ -29,8 +29,8 @@ public:
 class AmpInfoTableImpl : public AmpInfoTable {
 public:
 
-    explicit AmpInfoTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) : 
-        AmpInfoTable(schema, idFactory)
+    explicit AmpInfoTableImpl(Schema const & schema) : 
+        AmpInfoTable(schema)
     {}
 
     AmpInfoTableImpl(AmpInfoTableImpl const & other) : AmpInfoTable(other) {}
@@ -42,9 +42,7 @@ private:
     }
 
     virtual PTR(BaseRecord) _makeRecord() {
-        PTR(AmpInfoRecord) record = boost::make_shared<AmpInfoRecordImpl>(getSelf<AmpInfoTableImpl>());
-        if (getIdFactory()) record->setId((*getIdFactory())());
-        return record;
+        return boost::make_shared<AmpInfoRecordImpl>(getSelf<AmpInfoTableImpl>());
     }
 
 };
@@ -110,7 +108,7 @@ PTR(BaseTable) AmpInfoFitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
-    PTR(AmpInfoTable) table =  AmpInfoTable::make(schema, PTR(IdFactory)());
+    PTR(AmpInfoTable) table = AmpInfoTable::make(schema);
     _startRecords(*table);
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
@@ -128,59 +126,106 @@ static io::FitsReader::FactoryT<AmpInfoFitsReader> referenceFitsReaderFactory("A
 
 AmpInfoRecord::AmpInfoRecord(PTR(AmpInfoTable) const & table) : BaseRecord(table) {}
 
-PTR(AmpInfoTable) AmpInfoTable::make(Schema const & schema, PTR(IdFactory) const & idFactory) {
+PTR(AmpInfoTable) AmpInfoTable::make(Schema const & schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
             "Schema for AmpInfo must contain at least the keys defined by makeMinimalSchema()."
         );
     }
-    return boost::make_shared<AmpInfoTableImpl>(schema, idFactory);
+    return boost::make_shared<AmpInfoTableImpl>(schema);
 }
 
-AmpInfoTable::AmpInfoTable(Schema const & schema, PTR(IdFactory) const & idFactory) :
-    BaseTable(schema), _idFactory(idFactory) {}
+AmpInfoTable::AmpInfoTable(Schema const & schema) :
+    BaseTable(schema) {}
 
 AmpInfoTable::AmpInfoTable(AmpInfoTable const & other) :
-    BaseTable(other), _idFactory(other._idFactory ? other._idFactory->clone() : other._idFactory) {}
+    BaseTable(other) {}
 
 AmpInfoTable::MinimalSchema::MinimalSchema() {
-    id = schema.addField<RecordId>("id", "unique ID");
-    name = schema.addField<std::string>("name", "name of amplifier location in camera");
-    gain = schema.addField<double>("gain", "amplifier gain in e-/ADU", "e-/ADU");
-    readnoise = schema.addField<double>("readnoise", "amplifier read noise, in e-", "e-");
+    name = schema.addField<std::string>(
+        "name",
+        "name of amplifier location in camera",
+        AmpInfoTable::MAX_NAME_LENGTH);
+    bboxMin = schema.addField< Point<int> >(
+        "bbox.min",
+        "bbox of amplifier image data on assembled image, min point",
+        "pixels");
+    bboxMax = schema.addField< Point<int> >(
+        "bbox.max",
+        "bbox of amplifier image data on assembled image, max point",
+        "pixels");
+    gain = schema.addField<double>(
+        "gain",
+        "amplifier gain in e-/ADU",
+        "e-/ADU");
+    readNoise = schema.addField<double>(
+        "readnoise",
+        "amplifier read noise, in e-",
+        "e-");
+    linearityCoeffs = schema.addField< Array<double> >(
+        "linearity.coeffs",
+        "coefficients for linearity fit up to cubic",
+        AmpInfoTable::MAX_LINEARITY_COEFFS);
+    linearityType = schema.addField<std::string>(
+        "linearity.type",
+        "type of linearity model",
+        AmpInfoTable::MAX_LINEARITY_TYPE_LENGTH);
 
-    linearitycoeffs = schema.addField< Array<double> >("linearitycoeffs", "coefficients for linearity fit up to cubic", 4);
-    linearitytype = schema.addField<std::string>("linearitytype", "type of linearity model");
-
-    trimmedbbox_ll = schema.addField< Point<int> >("trimmedbbox_ll", "LL pixel of amplifier pixels in assembled image", "pixels");
-    trimmedbbox_ur = schema.addField< Point<int> >("trimmedbbox_ur", "UR pixel of amplifier pixels in assembled image", "pixels");
     // Raw data fields
-    hasrawamplifier = schema.addField<Flag>("hasrawamplifier", 
-                      "does the amp have raw information (e.g. untrimmed bounding boxes)");
-
-    flipx = schema.addField<Flag>("flipx", "flip row order to make assembled image?");
-    flipy = schema.addField<Flag>("flipy", "flip column order to make an assembled image?");
-
-    rawxyoffset = schema.addField< Point<int> >("rawxyoffset", 
-                  "offset for assembling a raw CCD image: desired xy0 - raw xy0", "pixels");
-
-    rawbbox_ll = schema.addField< Point<int> >("rawbbox_ll", "LL pixel of all amplifier pixels on raw image", "pixels");
-    rawbbox_ur = schema.addField< Point<int> >("rawbbox_ur", "UR pixel bounding box of all amplifier pixels on raw image", "pixels");
-    databbox_ll = schema.addField< Point<int> >("databbox_ll", "LL pixel of amplifier image pixels on raw image", "pixels");
-    databbox_ur = schema.addField< Point<int> >("databbox_ur", "UR pixel of amplifier image pixels on raw image", "pixels");
-    horizontaloverscanbbox_ll = schema.addField< Point<int> >("horizontaloverscanbbox_ll", 
-                             "LL pixel of usable horizontal overscan pixels", "pixels");
-    horizontaloverscanbbox_ur = schema.addField< Point<int> >("horizontaloverscanbboxUur", 
-                             "UR pixel of usable horizontal overscan pixels", "pixels");
-    verticaloverscanbbox_ll = schema.addField< Point<int> >("verticaloverscanbbox_ll", 
-                             "LL pixel of usable vertical overscan pixels", "pixels");
-    verticaloverscanbbox_ur = schema.addField< Point<int> >("verticaloverscanbbox_ur", 
-                             "UR pixel of usable vertical overscan pixels", "pixels");
-    prescanbbox_ll = schema.addField< Point<int> >("prescanbbox_ll",
-                             "LL pixel of usable (horizontal) prescan pixels on raw image", "pixels");
-    prescanbbox_ur = schema.addField< Point<int> >("prescanbbox_ll",
-                             "UR pixel of usable (horizontal) prescan pixels on raw image", "pixels");
+    hasRawInfo = schema.addField<Flag>(
+        "hasrawinfo", 
+        "is raw amplifier information available (e.g. untrimmed bounding boxes)?");
+    rawFlipX = schema.addField<Flag>(
+        "raw.flip.x",
+        "flip row order to make assembled image?");
+    rawFlipY = schema.addField<Flag>(
+        "raw.flip.y",
+        "flip column order to make an assembled image?");
+    rawBBoxMin = schema.addField< Point<int> >(
+        "raw.bbox.min",
+        "entire amplifier bbox on raw image, min point",
+        "pixels");
+    rawBBoxMax = schema.addField< Point<int> >(
+        "raw.bbox.max",
+        "entire amplifier bbox on raw image, max point",
+        "pixels");
+    rawXYOffset = schema.addField< Point<int> >(
+        "raw.xyoffset", 
+        "offset for assembling a raw CCD image: desired xy0 - raw xy0; 0,0 if raw data comes assembled",
+        "pixels");
+    rawDataBBoxMin = schema.addField< Point<int> >(
+        "raw.databbox.min",
+        "image data bbox on raw image, min point",
+        "pixels");
+    rawDataBBoxMax = schema.addField< Point<int> >(
+        "raw.databbox.max",
+        "image data bbox on raw image, max point",
+        "pixels");
+    rawHorizontalOverscanBBoxMin = schema.addField< Point<int> >(
+        "raw.horizontaloverscanbbox.min", 
+        "usable horizontal overscan bbox on raw image, min point",
+        "pixels");
+    rawHorizontalOverscanBBoxMax = schema.addField< Point<int> >(
+        "raw.horizontaloverscanbbox.max", 
+        "usable horizontal overscan bbox on raw image, max point",
+        "pixels");
+    rawVerticalOverscanBBoxMin = schema.addField< Point<int> >(
+        "raw.verticaloverscanbbox.min", 
+        "usable vertical overscan region raw image, min point",
+        "pixels");
+    rawVerticalOverscanBBoxMax = schema.addField< Point<int> >(
+        "raw.verticaloverscanbbox.max", 
+        "usable vertical overscan region raw image, max point",
+        "pixels");
+    rawPrescanBBoxMin = schema.addField< Point<int> >(
+        "raw.prescanbbox.min",
+        "usable (horizontal) prescan bbox on raw image, min point",
+        "pixels");
+    rawPrescanBBoxMax = schema.addField< Point<int> >(
+        "raw.prescanbbox.max",
+        "usable (horizontal) prescan bbox on raw image, max point",
+        "pixels");
     schema.getCitizen().markPersistent();
 }
 
@@ -196,26 +241,22 @@ AmpInfoTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
 //-------------------------------------------------------------------------------------------------
 // Getters and Setters
 //-------------------------------------------------------------------------------------------------
-RecordId AmpInfoRecord::getId() const { return get(AmpInfoTable::getIdKey()); }
-void AmpInfoRecord::setId(RecordId id) { set(AmpInfoTable::getIdKey(), id); }
-
 std::string AmpInfoRecord::getName() const { return get(AmpInfoTable::getNameKey()); }
 void AmpInfoRecord::setName(std::string const &name) { set(AmpInfoTable::getNameKey(), name); }
 
-geom::Box2I AmpInfoRecord::getTrimmedBbox() const { 
-    return geom::Box2I(get(AmpInfoTable::getTrimmedBboxLLKey()), get(AmpInfoTable::getTrimmedBboxURKey())); 
+geom::Box2I AmpInfoRecord::getBBox() const { 
+    return geom::Box2I(get(AmpInfoTable::getBBoxMinKey()), get(AmpInfoTable::getBBoxMaxKey())); 
 }
-
-void AmpInfoRecord::setTrimmedBbox(geom::Box2I const &trimmedbbox) { 
-    set(AmpInfoTable::getTrimmedBboxLLKey(), trimmedbbox.getMin()); 
-    set(AmpInfoTable::getTrimmedBboxURKey(), trimmedbbox.getMax()); 
+void AmpInfoRecord::setBBox(geom::Box2I const &bbox) { 
+    set(AmpInfoTable::getBBoxMinKey(), bbox.getMin()); 
+    set(AmpInfoTable::getBBoxMaxKey(), bbox.getMax()); 
 }
 
 double AmpInfoRecord::getGain() const { return get(AmpInfoTable::getGainKey()); }
 void AmpInfoRecord::setGain(double gain) { set(AmpInfoTable::getGainKey(), gain); }
 
 double AmpInfoRecord::getReadNoise() const { return get(AmpInfoTable::getReadNoiseKey()); }
-void AmpInfoRecord::setReadNoise(double readnoise) { set(AmpInfoTable::getReadNoiseKey(), readnoise); }
+void AmpInfoRecord::setReadNoise(double readNoise) { set(AmpInfoTable::getReadNoiseKey(), readNoise); }
 
 std::vector<double> AmpInfoRecord::getLinearityCoeffs() const { 
     Key< Array<double> > coeffKey = AmpInfoTable::getLinearityCoeffsKey();
@@ -229,69 +270,61 @@ void AmpInfoRecord::setLinearityCoeffs(std::vector<double> const &linearitycoeff
 std::string AmpInfoRecord::getLinearityType() const { return get(AmpInfoTable::getLinearityTypeKey()); }
 void AmpInfoRecord::setLinearityType(std::string const &linearitytype) { set(AmpInfoTable::getLinearityTypeKey(), linearitytype); }
 
-bool AmpInfoRecord::getHasRawAmplifier() const { return get(AmpInfoTable::getHasRawAmplifierKey()); }
-void AmpInfoRecord::setHasRawAmplifier(bool hasrawamplifier) { set(AmpInfoTable::getHasRawAmplifierKey(), hasrawamplifier); }
+bool AmpInfoRecord::getHasRawInfo() const { return get(AmpInfoTable::getHasRawInfoKey()); }
+void AmpInfoRecord::setHasRawInfo(bool hasrawamplifier) { set(AmpInfoTable::getHasRawInfoKey(), hasrawamplifier); }
 
-geom::Box2I AmpInfoRecord::getRawBbox() const { 
-    return geom::Box2I(get(AmpInfoTable::getRawBboxLLKey()), get(AmpInfoTable::getRawBboxURKey())); 
+bool AmpInfoRecord::getRawFlipX() const { return get(AmpInfoTable::getRawFlipXKey()); }
+void AmpInfoRecord::setRawFlipX(bool rawFlipX) { set(AmpInfoTable::getRawFlipXKey(), rawFlipX); }
+
+bool AmpInfoRecord::getRawFlipY() const { return get(AmpInfoTable::getRawFlipYKey()); }
+void AmpInfoRecord::setRawFlipY(bool rawFlipY) { set(AmpInfoTable::getRawFlipYKey(), rawFlipY); }
+
+geom::Box2I AmpInfoRecord::getRawBBox() const { 
+    return geom::Box2I(get(AmpInfoTable::getRawBBoxMinKey()), get(AmpInfoTable::getRawBBoxMaxKey())); 
 }
-
-void AmpInfoRecord::setRawBbox(geom::Box2I const &trimmedbbox) { 
-    set(AmpInfoTable::getRawBboxLLKey(), trimmedbbox.getMin()); 
-    set(AmpInfoTable::getRawBboxURKey(), trimmedbbox.getMax()); 
+void AmpInfoRecord::setRawBBox(geom::Box2I const &bbox) { 
+    set(AmpInfoTable::getRawBBoxMinKey(), bbox.getMin()); 
+    set(AmpInfoTable::getRawBBoxMaxKey(), bbox.getMax()); 
 }
-
-geom::Box2I AmpInfoRecord::getDataBbox() const { 
-    return geom::Box2I(get(AmpInfoTable::getDataBboxLLKey()), get(AmpInfoTable::getDataBboxURKey())); 
-}
-
-void AmpInfoRecord::setDataBbox(geom::Box2I const &trimmedbbox) { 
-    set(AmpInfoTable::getDataBboxLLKey(), trimmedbbox.getMin()); 
-    set(AmpInfoTable::getDataBboxURKey(), trimmedbbox.getMax()); 
-}
-
-geom::Box2I AmpInfoRecord::getHorizontalOverscanBbox() const { 
-    return geom::Box2I(get(AmpInfoTable::getHorizontalOverscanBboxLLKey()), get(AmpInfoTable::getHorizontalOverscanBboxURKey())); 
-}
-
-void AmpInfoRecord::setHorizontalOverscanBbox(geom::Box2I const &trimmedbbox) { 
-    set(AmpInfoTable::getHorizontalOverscanBboxLLKey(), trimmedbbox.getMin()); 
-    set(AmpInfoTable::getHorizontalOverscanBboxURKey(), trimmedbbox.getMax()); 
-}
-
-geom::Box2I AmpInfoRecord::getVerticalOverscanBbox() const { 
-    return geom::Box2I(get(AmpInfoTable::getVerticalOverscanBboxLLKey()), get(AmpInfoTable::getVerticalOverscanBboxURKey())); 
-}
-
-void AmpInfoRecord::setVerticalOverscanBbox(geom::Box2I const &trimmedbbox) { 
-    set(AmpInfoTable::getVerticalOverscanBboxLLKey(), trimmedbbox.getMin()); 
-    set(AmpInfoTable::getVerticalOverscanBboxURKey(), trimmedbbox.getMax()); 
-}
-
-geom::Box2I AmpInfoRecord::getPrescanBbox() const { 
-    return geom::Box2I(get(AmpInfoTable::getPrescanBboxLLKey()), get(AmpInfoTable::getPrescanBboxURKey())); 
-}
-
-void AmpInfoRecord::setPrescanBbox(geom::Box2I const &trimmedbbox) { 
-    set(AmpInfoTable::getPrescanBboxLLKey(), trimmedbbox.getMin()); 
-    set(AmpInfoTable::getPrescanBboxURKey(), trimmedbbox.getMax()); 
-}
-
-bool AmpInfoRecord::getFlipX() const { return get(AmpInfoTable::getFlipXKey()); }
-void AmpInfoRecord::setFlipX(bool flipx) { set(AmpInfoTable::getFlipXKey(), flipx); }
-
-bool AmpInfoRecord::getFlipY() const { return get(AmpInfoTable::getFlipYKey()); }
-void AmpInfoRecord::setFlipY(bool flipy) { set(AmpInfoTable::getFlipYKey(), flipy); }
 
 geom::Extent2I AmpInfoRecord::getRawXYOffset() const { return geom::Extent2I(get(AmpInfoTable::getRawXYOffsetKey())); }
 void AmpInfoRecord::setRawXYOffset(geom::Extent2I const &rawxyoffset) { 
     set(AmpInfoTable::getRawXYOffsetKey(), geom::Point2I(rawxyoffset.asPair())); 
 }
 
+geom::Box2I AmpInfoRecord::getRawDataBBox() const { 
+    return geom::Box2I(get(AmpInfoTable::getRawDataBBoxMinKey()), get(AmpInfoTable::getRawDataBBoxMaxKey())); 
+}
+void AmpInfoRecord::setRawDataBBox(geom::Box2I const &bbox) { 
+    set(AmpInfoTable::getRawDataBBoxMinKey(), bbox.getMin()); 
+    set(AmpInfoTable::getRawDataBBoxMaxKey(), bbox.getMax()); 
+}
+
+geom::Box2I AmpInfoRecord::getRawHorizontalOverscanBBox() const { 
+    return geom::Box2I(get(AmpInfoTable::getRawHorizontalOverscanBBoxMinKey()), get(AmpInfoTable::getRawHorizontalOverscanBBoxMaxKey())); 
+}
+void AmpInfoRecord::setRawHorizontalOverscanBBox(geom::Box2I const &bbox) { 
+    set(AmpInfoTable::getRawHorizontalOverscanBBoxMinKey(), bbox.getMin()); 
+    set(AmpInfoTable::getRawHorizontalOverscanBBoxMaxKey(), bbox.getMax()); 
+}
+
+geom::Box2I AmpInfoRecord::getRawVerticalOverscanBBox() const { 
+    return geom::Box2I(get(AmpInfoTable::getRawVerticalOverscanBBoxMinKey()), get(AmpInfoTable::getRawVerticalOverscanBBoxMaxKey())); 
+}
+void AmpInfoRecord::setRawVerticalOverscanBBox(geom::Box2I const &bbox) { 
+    set(AmpInfoTable::getRawVerticalOverscanBBoxMinKey(), bbox.getMin()); 
+    set(AmpInfoTable::getRawVerticalOverscanBBoxMaxKey(), bbox.getMax()); 
+}
+
+geom::Box2I AmpInfoRecord::getRawPrescanBBox() const { 
+    return geom::Box2I(get(AmpInfoTable::getRawPrescanBBoxMinKey()), get(AmpInfoTable::getRawPrescanBBoxMaxKey())); 
+}
+void AmpInfoRecord::setRawPrescanBBox(geom::Box2I const &bbox) { 
+    set(AmpInfoTable::getRawPrescanBBoxMinKey(), bbox.getMin()); 
+    set(AmpInfoTable::getRawPrescanBBoxMaxKey(), bbox.getMax()); 
+}
+
 template class CatalogT<AmpInfoRecord>;
 template class CatalogT<AmpInfoRecord const>;
-
-template class SortedCatalogT<AmpInfoRecord>;
-template class SortedCatalogT<AmpInfoRecord const>;
 
 }}} // namespace lsst::afw::table

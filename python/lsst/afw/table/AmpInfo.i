@@ -54,10 +54,10 @@
 
 // =============== Catalogs =================================================================================
 
-%include "lsst/afw/table/SortedCatalog.i"
+%include "lsst/afw/table/Catalog.i"
 
 namespace lsst { namespace afw { namespace table {
 
-%declareSortedCatalog(SortedCatalogT, AmpInfo)
+%declareCatalog(CatalogT, AmpInfo)
 
 }}} // namespace lsst::afw::table

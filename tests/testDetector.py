@@ -45,7 +45,7 @@ class DetectorTestCase(unittest.TestCase):
         self.assertEquals(dw.type,   detector.getType())
         self.assertEquals(dw.serial, detector.getSerial())
         self.assertAlmostEquals(dw.pixelSize, detector.getPixelSize())
-        self.assertEquals(len(detector), len(dw.ampList))
+        self.assertEquals(len(detector), len(dw.ampInfo))
 
         orientation = detector.getOrientation()
 

@@ -32,16 +32,16 @@ Detector::Detector(
     std::string const &name,
     DetectorType type,
     std::string const &serial,
-    AmplifierList const &amplifierList,
+    table::ConstAmpInfoCatalog const &ampInfoCatalog,
     Orientation const &orientation,
-    double pixelSize,
+    geom::Extent2D const & pixelSize,
     CameraTransformMap const &transformMap
 ) :
     _name(name),
     _type(type),
     _serial(serial),
-    _amplifierList(amplifierList),
-    _amplifierMap(),
+    _ampInfoCatalog(ampInfoCatalog),
+    _ampNameIterMap(),
     _orientation(orientation),
     _pixelSize(pixelSize),
     _transformRegistry(CameraSys(PIXELS.getSysName(), name), transformMap)
@@ -49,25 +49,25 @@ Detector::Detector(
     _init();
 }
 
-CONST_PTR(Amplifier) Detector::operator[](std::string const &name) const {
-    _AmpMap::const_iterator ampIter = _amplifierMap.find(name);
-    if (ampIter == _amplifierMap.end()) {
+const table::AmpInfoRecord & Detector::operator[](std::string const &name) const {
+    _AmpInfoMap::const_iterator ampIter = _ampNameIterMap.find(name);
+    if (ampIter == _ampNameIterMap.end()) {
         std::ostringstream os;
         os << "Unknown amplifier \"" << name << "\"";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
     }
-    return ampIter->second;
+    return *(ampIter->second);
 }
 
  void Detector::_init() {
-    // make _amplifierMap
-    for (AmplifierList::const_iterator ampIter = _amplifierList.begin();
-        ampIter != _amplifierList.end(); ++ampIter) {
-        _amplifierMap.insert(std::make_pair((*ampIter)->getName(), *ampIter));
+    // make _ampNameIterMap
+    for (table::ConstAmpInfoCatalog::const_iterator ampIter = _ampInfoCatalog.begin();
+        ampIter != _ampInfoCatalog.end(); ++ampIter) {
+        _ampNameIterMap.insert(std::make_pair(ampIter->getName(), ampIter));
     }
-    if (_amplifierMap.size() != _amplifierList.size()) {
+    if (_ampNameIterMap.size() != _ampInfoCatalog.size()) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterException,
-            "Invalid amplifierList: not all amplifier names are unique");
+            "Invalid ampInfoCatalog: not all amplifier names are unique");
     }
 
     // check detector name in CoordSys in transform registry

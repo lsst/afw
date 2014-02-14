@@ -54,14 +54,11 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %lsst_exceptions();
 
 %shared_ptr(lsst::afw::cameraGeom::Detector);
-%shared_ptr(lsst::afw::cameraGeom::RawAmplifier);
-%shared_ptr(lsst::afw::cameraGeom::Amplifier);
 
 %template(CameraSysList) std::vector<lsst::afw::cameraGeom::CameraSys>;
 %template(CameraTransformMap)
     std::map<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)>;
 %template(CameraTransformRegistry) lsst::afw::geom::TransformRegistry<lsst::afw::cameraGeom::CameraSys>;
-%template(AmplifierList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Amplifier)>;
 %template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;
 
 %rename(__getitem__) lsst::afw::cameraGeom::Detector::operator[];
@@ -73,8 +70,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/CameraSys.h"
 %include "lsst/afw/cameraGeom/CameraPoint.h"
 %include "lsst/afw/cameraGeom/Orientation.h"
-%include "lsst/afw/cameraGeom/RawAmplifier.h"
-%include "lsst/afw/cameraGeom/Amplifier.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 
 %extend lsst::afw::cameraGeom::CameraSysPrefix {
