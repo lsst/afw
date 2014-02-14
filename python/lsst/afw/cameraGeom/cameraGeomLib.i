@@ -50,6 +50,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "std_map.i"
 
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/table/AmpInfo.i"
 
 %lsst_exceptions();
 

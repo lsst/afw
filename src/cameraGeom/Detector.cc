@@ -32,7 +32,7 @@ Detector::Detector(
     std::string const &name,
     DetectorType type,
     std::string const &serial,
-    table::ConstAmpInfoCatalog const &ampInfoCatalog,
+    table::AmpInfoCatalog const &ampInfoCatalog,
     Orientation const &orientation,
     geom::Extent2D const & pixelSize,
     CameraTransformMap const &transformMap
@@ -61,7 +61,7 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
 
  void Detector::_init() {
     // make _ampNameIterMap
-    for (table::ConstAmpInfoCatalog::const_iterator ampIter = _ampInfoCatalog.begin();
+    for (table::AmpInfoCatalog::const_iterator ampIter = _ampInfoCatalog.begin();
         ampIter != _ampInfoCatalog.end(); ++ampIter) {
         _ampNameIterMap.insert(std::make_pair(ampIter->getName(), ampIter));
     }

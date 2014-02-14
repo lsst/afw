@@ -52,6 +52,11 @@ enum DetectorType {
  * Supports conversion of CameraPoint between FOCAL_PLANE and pixel-based coordinate systems.
  * Also an iterator over amplifiers (in C++ use begin(), end(), in Python use "for amplifier in detector").
  *
+ * @todo: this would probably be a bit more robust if it used a ConstAmpInfoCatalog
+ * (a catalog with const records) but I don't think const catalogs really work yet;
+ * for instance it is not possible to construct one from a non-const catalog,
+ * so I don't know how to construct one.
+ *
  * @note: code definitions use lsst::afw::table:: instead of table:: because the latter confused swig
  * when I tried it. I don't know why and it didn't seem worth pursuing.
  */
@@ -72,7 +77,7 @@ public:
         std::string const &name,    ///< name of detector's location in the camera
         DetectorType type,          ///< type of detector
         std::string const &serial,  ///< serial "number" that identifies the physical detector
-        lsst::afw::table::ConstAmpInfoCatalog const &ampInfoCatalog,   ///< catalog of amplifier information
+        lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog, ///< catalog of amplifier information
         Orientation const &orientation,     ///< detector position and orientation in focal plane
         geom::Extent2D const &pixelSize,    ///< pixel size (mm)
         CameraTransformMap const &transformMap  ///< list of coordinate transforms for this detector
@@ -117,7 +122,7 @@ public:
     std::string const getSerial() const { return _serial; }
 
     /** Get the amplifier information catalog */
-    lsst::afw::table::ConstAmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
+    lsst::afw::table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
 
     /** Get detector's orientation in the focal plane */
     Orientation const getOrientation() const { return _orientation; }
@@ -129,10 +134,10 @@ public:
     CameraTransformRegistry const getTransformRegistry() const { return _transformRegistry; }
 
     /** Get iterator to beginning of amplifier list */
-    lsst::afw::table::ConstAmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
+    lsst::afw::table::AmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
 
     /** Get iterator to end of amplifier list */
-    lsst::afw::table::ConstAmpInfoCatalog::const_iterator end() const { return _ampInfoCatalog.end(); }
+    lsst::afw::table::AmpInfoCatalog::const_iterator end() const { return _ampInfoCatalog.end(); }
 
     /**
      * Get the amplifier specified by index
@@ -186,7 +191,7 @@ public:
     }
 
 private:
-    typedef boost::unordered_map<std::string, table::ConstAmpInfoCatalog::const_iterator> _AmpInfoMap;
+    typedef boost::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
     /**
      * Finish constructing this object
      *
@@ -202,7 +207,7 @@ private:
     std::string _name;      ///< name of detector's location in the camera
     DetectorType _type;     ///< type of detectorsize_t
     std::string _serial;    ///< serial "number" that identifies the physical detector
-    table::ConstAmpInfoCatalog _ampInfoCatalog; ///< list of amplifier data
+    table::AmpInfoCatalog _ampInfoCatalog; ///< list of amplifier data
     _AmpInfoMap _ampNameIterMap;    ///< map of amplifier name: catalog iterator
     Orientation _orientation;       ///< position and orientation of detector in focal plane
     geom::Extent2D _pixelSize;      ///< pixel size (mm)

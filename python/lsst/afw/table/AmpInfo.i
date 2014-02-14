@@ -48,6 +48,9 @@
 %include "lsst/afw/table/AmpInfo.h"
 
 %template(AmpInfoColumnView) lsst::afw::table::ColumnViewT<lsst::afw::table::AmpInfoRecord>;
+// this works but I cannot figure out how to construct such a catalog;
+// it cannot be copied from a non-const catalog
+// %template(ConstAmpInfoCatalog) lsst::afw::table::CatalogT<lsst::afw::table::AmpInfoRecord const>;
 
 %addCastMethod(lsst::afw::table::AmpInfoTable, lsst::afw::table::BaseTable)
 %addCastMethod(lsst::afw::table::AmpInfoRecord, lsst::afw::table::BaseRecord)

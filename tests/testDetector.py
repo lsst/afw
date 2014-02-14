@@ -81,7 +81,7 @@ class DetectorTestCase(unittest.TestCase):
             pixCamPoint = dw.detector.convert(fpCamPoint, cameraGeom.PIXELS)
             pixPoint = pixCamPoint.getPoint()
             for i in range(2):
-                self.assertAlmostEquals(fpPoint[i]/dw.pixelSize, pixPoint[i])
+                self.assertAlmostEquals(fpPoint[i]/dw.pixelSize[i], pixPoint[i])
             fpCamPoint2 = dw.detector.convert(pixCamPoint, cameraGeom.FOCAL_PLANE)
             fpPoint2 = fpCamPoint2.getPoint()
             for i in range(2):
@@ -92,10 +92,10 @@ class DetectorTestCase(unittest.TestCase):
         """
         dw = DetectorWrapper()
         ampList = [amp for amp in dw.detector]
-        self.assertEquals(len(ampList), len(dw.ampList))
+        self.assertEquals(len(ampList), len(dw.ampInfo))
         for i, amp in enumerate(ampList):
             self.assertEquals(amp.getName(), dw.detector[i].getName())
-            self.assertEquals(amp.getName(), dw.ampList[i].getName())
+            self.assertEquals(amp.getName(), dw.ampInfo[i].getName())
             self.assertEquals(amp.getName(), dw.detector[amp.getName()].getName())
 
     def testMakeCameraPoint(self):
