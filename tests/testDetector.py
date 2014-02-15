@@ -57,10 +57,10 @@ class DetectorTestCase(unittest.TestCase):
         # make sure some complex objects stick around after detector is deleted
 
         detectorName = detector.getName()
-        offset = dw.orientation.getOffset()
+        offset = dw.orientation.getFpPosition()
         del detector
         del dw
-        self.assertEquals(orientation.getOffset(), offset)
+        self.assertEquals(orientation.getFpPosition(), offset)
         nativeCoordSys = transformRegistry.getNativeCoordSys()
         self.assertEquals(nativeCoordSys,
             cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
@@ -75,7 +75,7 @@ class DetectorTestCase(unittest.TestCase):
         """Test the convert method
         """
         dw = DetectorWrapper()
-        pixOffset = dw.orientation.getReferencePosition()
+        pixOffset = dw.orientation.getReferencePoint()
         for xyMM in ((25.6, -31.07), (0, 0), (-1.234e5, 3.123e4)):
             fpPoint = afwGeom.Point2D(*xyMM)
             fpCamPoint = cameraGeom.CameraPoint(fpPoint, cameraGeom.FOCAL_PLANE)
