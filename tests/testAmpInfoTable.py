@@ -24,8 +24,9 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.table.AmpInfoTable, etc.
 """
-import unittest
 import itertools
+import os
+import unittest
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -107,6 +108,20 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.assertEquals(name, record.getName())
             self.assertEquals(hasRawInfo, self.catalog[i].getHasRawInfo())
             self.assertEquals(hasRawInfo, record.getHasRawInfo())
+
+        fileName = "testAmpInfoTable_ampInfo.fits"
+        self.catalog.writeFits(fileName)
+        try:
+            catCopy = afwTable.AmpInfoCatalog.readFits(fileName)
+            self.assertEquals(type(self.catalog), type(catCopy))
+            for rec1, rec2 in itertools.izip(self.catalog, catCopy):
+                self.assertEquals(rec1.getName(), rec2.getName())
+                self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
+        finally:
+            os.remove(fileName)
+
+
+
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
