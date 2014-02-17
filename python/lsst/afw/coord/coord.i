@@ -89,6 +89,24 @@ strCoord(IcrsCoord);
 strCoord(GalacticCoord);
 strCoord(EclipticCoord);
 
+// Add __iter__ to allow  'ra,dec = coord' statement in python
+%define genCoord(TYPE)
+%extend lsst::afw::coord::TYPE {
+    %pythoncode {
+    def __iter__(self):
+        for i in 0,1:
+            yield self[i]
+    }
+}
+%enddef
+
+genCoord(Coord);
+genCoord(Fk5Coord);
+genCoord(IcrsCoord);
+genCoord(GalacticCoord);
+genCoord(EclipticCoord);
+
+
 // Add __reduce__ for Coord subclasses that take 3 arguments
 %define reduceCoord3(TYPE)
 %extend lsst::afw::coord::TYPE {
