@@ -45,8 +45,8 @@ namespace math {
 namespace detail {
 
     /**
-     * @brief Base class to transform col,row coordinates for a destination image
-     *        to their col,row location in the original source image.
+     * @brief Base class to transform pixel position for a destination image
+     *        to its position in the original source image.
      *
      * The different possible transform definitions (from WCS to WCS, or via AffineTransform) are handled
      * through derived classes, and are used in warping.  When computing a warped image, one
@@ -67,8 +67,8 @@ namespace detail {
 
 
     /**
-     * @brief Derived functor class to transform col,row coordinates for a destination image
-     *        to their col,row location in the source image.  The transform is from one WCS to another.
+     * @brief Derived functor class to transform pixel position for a destination image
+     *        to its position in the source image.  The transform is from one WCS to another.
      */    
     class WcsSrcPosFunctor : public SrcPosFunctor {
     public:
@@ -103,8 +103,8 @@ namespace detail {
 
 
     /**
-     * @brief Derived functor class to transform col,row coordinates for a destination image
-     *        to their col,row location in the source image via an AffineTransform.
+     * @brief Derived functor class to transform pixel position for a destination image
+     *        to its position in the source image via an AffineTransform.
      */    
     class AffineTransformSrcPosFunctor : public SrcPosFunctor {
     public:

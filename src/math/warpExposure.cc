@@ -681,7 +681,7 @@ int afwMath::warpCenteredImage(
     DestImageT &destImage,
     SrcImageT const &srcImage,
     afwGeom::LinearTransform const &linearTransform,
-    afwGeom::Point2D const &centerPixel,
+    afwGeom::Point2D const &centerPosition,
     afwMath::WarpingControl const &control,
     typename DestImageT::SinglePixel padValue
 ) {
@@ -700,11 +700,11 @@ int afwMath::warpCenteredImage(
     SrcImageT srcImageCopy(srcImage, true);
     srcImageCopy.setXY0(0, 0);
     destImage.setXY0(0, 0);
-    afwGeom::Extent2D cLocal = afwGeom::Extent2D(centerPixel) - afwGeom::Extent2D(srcImage.getXY0());
+    afwGeom::Extent2D cLocal = afwGeom::Extent2D(centerPosition) - afwGeom::Extent2D(srcImage.getXY0());
 
-    // for the affine transform, the centerPixel will not only get sheared, but also
+    // for the affine transform, the centerPosition will not only get sheared, but also
     // moved slightly.  So we'll include a translation to move it back by an amount
-    // centerPixel - translatedCenterPixel
+    // centerPosition - translatedCenterPosition
     afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
 
     // now warp
@@ -733,13 +733,13 @@ int afwMath::warpCenteredImage(
     SrcImageT const &srcImage,
     afwMath::SeparableKernel &warpingKernel,
     afwGeom::LinearTransform const &linearTransform,
-    afwGeom::Point2D const &centerPixel,
+    afwGeom::Point2D const &centerPosition,
     int const interpLength,
     typename DestImageT::SinglePixel padValue,
     lsst::afw::gpu::DevicePreference devPref
 ) {
     afwMath::WarpingControl control(warpingKernel, interpLength, devPref);
-    return warpCenteredImage(destImage, srcImage, linearTransform, centerPixel, control, padValue);
+    return warpCenteredImage(destImage, srcImage, linearTransform, centerPosition, control, padValue);
 }
 
 
@@ -758,14 +758,14 @@ int afwMath::warpCenteredImage(
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwGeom::LinearTransform const &linearTransform, \
-        afwGeom::Point2D const &centerPixel, \
+        afwGeom::Point2D const &centerPosition, \
         afwMath::WarpingControl const &control, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpCenteredImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwGeom::LinearTransform const &linearTransform, \
-        afwGeom::Point2D const &centerPixel, \
+        afwGeom::Point2D const &centerPosition, \
         afwMath::WarpingControl const &control, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpCenteredImage( \
@@ -773,7 +773,7 @@ int afwMath::warpCenteredImage(
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwMath::SeparableKernel &warpingKernel, \
         afwGeom::LinearTransform const &linearTransform, \
-        afwGeom::Point2D const &centerPixel, \
+        afwGeom::Point2D const &centerPosition, \
         int const interpLength, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         lsst::afw::gpu::DevicePreference devPref); NL \
@@ -782,7 +782,7 @@ int afwMath::warpCenteredImage(
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwMath::SeparableKernel &warpingKernel, \
         afwGeom::LinearTransform const &linearTransform, \
-        afwGeom::Point2D const &centerPixel, \
+        afwGeom::Point2D const &centerPosition, \
         int const interpLength, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         lsst::afw::gpu::DevicePreference devPref); NL \
