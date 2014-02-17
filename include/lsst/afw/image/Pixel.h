@@ -80,7 +80,12 @@ public:
     ImagePixelT image() const { return _image; }
     MaskPixelT mask() const { return _mask; }
     VariancePixelT variance() const { return _variance; }
+
+#ifdef __clang__
+public:
+#else
 private:
+#endif
     /// Default Ctor
     ///
     /// Can be called by std::numeric_limits<SinglePixel>::quiet_NaN()
