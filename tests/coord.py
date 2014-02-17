@@ -628,7 +628,21 @@ class CoordTestCase(unittest.TestCase):
         
             self.assertEqual(printableCoord, declKnown[i])
 
+    def testIterable(self):
         
+        for ctor,enum,cast,sname in self.coordList:
+            c = ctor(self.ra, self.dec)
+            ra, dec = c
+            print "Iterable:  ", type(c), c, ra, dec
+            self.assertEqual(ra,  c[0])
+            self.assertEqual(dec, c[1])
+
+            # make sure we raise if we ask for too many args
+            def three(c):
+                ra, dec, menudo = c
+            self.assertRaises(ValueError, three, c)
+
+
 #################################################################
 # Test suite boiler plate
 #################################################################
