@@ -22,7 +22,7 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
-Tests for lsst.afw.cameraGeom.CameraTransformRegistry
+Tests for lsst.afw.cameraGeom.CameraTransformMap
 """
 import unittest
 
@@ -31,16 +31,16 @@ from lsst.pex.exceptions import LsstCppException
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 
-class ConversionFunction(object):
-    """Wrap a TransformRegistry conversion as a function(Point2D)->Point2D
+class TransformWrapper(object):
+    """Wrap a TransformMap transformation as a function(Point2D)->Point2D
     """
-    def __init__(self, transformRegistry, fromSys, toSys):
-        self.transformRegistry = transformRegistry
+    def __init__(self, transformMap, fromSys, toSys):
+        self.transformMap = transformMap
         self.fromSys = fromSys
         self.toSys = toSys
 
     def __call__(self, point):
-        return self.transformRegistry.convert(point, self.fromSys, self.toSys)
+        return self.transformMap.transform(point, self.fromSys, self.toSys)
 
 class FuncPair(object):
     """Wrap a pair of function(Point2D)->Point2D functions as a single such function
@@ -58,12 +58,12 @@ def unityTransform(point):
     return point
 
 
-class CameraTransformRegistryTestCase(unittest.TestCase):
+class CameraTransformMapTestCase(unittest.TestCase):
     def setUp(self):
         self.nativeSys = cameraGeom.FOCAL_PLANE
         self.pupilTransform = afwGeom.RadialXYTransform([0, 0.5, 0.01])
         transMap = {cameraGeom.PUPIL: self.pupilTransform}
-        self.transReg = cameraGeom.CameraTransformRegistry(self.nativeSys, transMap)
+        self.transReg = cameraGeom.CameraTransformMap(self.nativeSys, transMap)
 
     def tearDown(self):
         self.nativeSys = None
@@ -89,7 +89,7 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
     def testBasics(self):
         """Test basic attributes
         """
-        for methodName in ("begin", "end", "constains", "size"):
+        for methodName in ("begin", "end", "contains", "size"):
             self.assertFalse(hasattr(self.transReg, methodName))
 
         self.assertTrue(self.nativeSys in self.transReg)
@@ -129,12 +129,12 @@ class CameraTransformRegistryTestCase(unittest.TestCase):
         self.compare2DFunctions(pupilTr.forwardTransform, self.pupilTransform.forwardTransform)
         self.compare2DFunctions(pupilTr.reverseTransform, self.pupilTransform.reverseTransform)
 
-    def testConvert(self):
-        """Test convert
+    def testTransform(self):
+        """Test transform
         """
         for fromSys in self.transReg.getCoordSysList():
             for toSys in self.transReg.getCoordSysList():
-                trConvFunc = ConversionFunction(self.transReg, fromSys, toSys)
+                trConvFunc = TransformWrapper(self.transReg, fromSys, toSys)
                 if fromSys == toSys:
                     self.compare2DFunctions(trConvFunc, unityTransform)
                 funcPair = FuncPair(
@@ -152,7 +152,7 @@ def suite():
     lsst.utils.tests.init()
 
     suites = []
-    suites += unittest.makeSuite(CameraTransformRegistryTestCase)
+    suites += unittest.makeSuite(CameraTransformMapTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

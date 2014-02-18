@@ -49,10 +49,10 @@ class DetectorTestCase(unittest.TestCase):
 
         orientation = detector.getOrientation()
 
-        transformRegistry = detector.getTransformRegistry()
-        self.assertEquals(len(transformRegistry), len(dw.transMap) + 1) # add 1 for null transform
+        transformMap = detector.getTransformMap()
+        self.assertEquals(len(transformMap), len(dw.transMap) + 1) # add 1 for null transform
         for cameraSys in dw.transMap:
-            self.assertTrue(cameraSys in transformRegistry)
+            self.assertTrue(cameraSys in transformMap)
 
         # make sure some complex objects stick around after detector is deleted
 
@@ -61,7 +61,7 @@ class DetectorTestCase(unittest.TestCase):
         del detector
         del dw
         self.assertEquals(orientation.getFpPosition(), offset)
-        nativeCoordSys = transformRegistry.getNativeCoordSys()
+        nativeCoordSys = transformMap.getNativeCoordSys()
         self.assertEquals(nativeCoordSys,
             cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
 
@@ -71,19 +71,19 @@ class DetectorTestCase(unittest.TestCase):
         self.assertRaises(LsstCppException, DetectorWrapper, tryDuplicateAmpNames=True)
         self.assertRaises(LsstCppException, DetectorWrapper, tryBadCameraSys=True)
 
-    def testConvert(self):
-        """Test the convert method
+    def testTransform(self):
+        """Test the transform method
         """
         dw = DetectorWrapper()
         pixOffset = dw.orientation.getReferencePoint()
         for xyMM in ((25.6, -31.07), (0, 0), (-1.234e5, 3.123e4)):
             fpPoint = afwGeom.Point2D(*xyMM)
             fpCamPoint = cameraGeom.CameraPoint(fpPoint, cameraGeom.FOCAL_PLANE)
-            pixCamPoint = dw.detector.convert(fpCamPoint, cameraGeom.PIXELS)
+            pixCamPoint = dw.detector.transform(fpCamPoint, cameraGeom.PIXELS)
             pixPoint = pixCamPoint.getPoint()
             for i in range(2):
                 self.assertAlmostEquals(fpPoint[i]/dw.pixelSize[i] + pixOffset[i], pixPoint[i])
-            fpCamPoint2 = dw.detector.convert(pixCamPoint, cameraGeom.FOCAL_PLANE)
+            fpCamPoint2 = dw.detector.transform(pixCamPoint, cameraGeom.FOCAL_PLANE)
             fpPoint2 = fpCamPoint2.getPoint()
             for i in range(2):
                 self.assertAlmostEquals(fpPoint[i], fpPoint2[i])

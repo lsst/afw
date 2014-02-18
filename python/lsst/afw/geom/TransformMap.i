@@ -22,26 +22,26 @@
  
 
 %{
-#include "lsst/afw/geom/TransformRegistry.h"
+#include "lsst/afw/geom/TransformMap.h"
 %}
 
 // unfortunately the following rename silently fails with SWIG 2.0.4 (though it stops the SWIG warning)
 // so use %ignore and %extend instead
-// %rename(__getitem__) lsst::afw::geom::TransformRegistry::operator[];
-%ignore lsst::afw::geom::TransformRegistry::operator[];
+// %rename(__getitem__) lsst::afw::geom::TransformMap::operator[];
+%ignore lsst::afw::geom::TransformMap::operator[];
 
 // note: the following fail with SWIG 2.0.4 if the method names have () after them; why?
-%rename(__contains__) lsst::afw::geom::TransformRegistry::contains;
-%rename(__len__) lsst::afw::geom::TransformRegistry::size;
-%ignore lsst::afw::geom::TransformRegistry::begin;
-%ignore lsst::afw::geom::TransformRegistry::end;
+%rename(__contains__) lsst::afw::geom::TransformMap::contains;
+%rename(__len__) lsst::afw::geom::TransformMap::size;
+%ignore lsst::afw::geom::TransformMap::begin;
+%ignore lsst::afw::geom::TransformMap::end;
 
-%include "lsst/afw/geom/TransformRegistry.h"
+%include "lsst/afw/geom/TransformMap.h"
 
-%extend lsst::afw::geom::TransformRegistry {
+%extend lsst::afw::geom::TransformMap {
     // rename operator[]
     CONST_PTR(lsst::afw::geom::XYTransform) __getitem__(
-            lsst::afw::geom::TransformRegistry::_CoordSysType const &coordSys
+            lsst::afw::geom::TransformMap::_CoordSysType const &coordSys
         ) const { return (*$self)[coordSys]; }
 
     %pythoncode {

@@ -48,6 +48,6 @@ std::ostream &operator<< (std::ostream &os, CameraSys const &cameraSys) {
     return os;
 }
 }
-// instantiate CameraTransformRegistry = TransformRegistry<CameraSys>
-template class geom::TransformRegistry<cameraGeom::CameraSys>;
+// instantiate CameraTransformMap = TransformMap<CameraSys>
+template class geom::TransformMap<cameraGeom::CameraSys>;
 }}

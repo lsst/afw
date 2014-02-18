@@ -31,9 +31,9 @@ namespace afw {
 namespace geom {
 
 /**
- * Base class for coordinate system keys used in in TransformRegistry
+ * Base class for coordinate system keys used in in TransformMap
  *
- * @note A subclass is used for keys in TransformRegistry, and another subclass is used by CameraGeom
+ * @note A subclass is used for keys in TransformMap, and another subclass is used by CameraGeom
  * for detector-specific coordinate system prefixes (Jim Bosch's clever idea). Thus the shared base class.
  *
  * Comparison is by name, so each unique coordinate system (or prefix) must have a unique name.
@@ -75,7 +75,7 @@ public:
 };
 
 /**
- * Class used for keys in TransformRegistry
+ * Class used for keys in TransformMap
  *
  * Each coordinate system must have a unique name. Hashing and equality testing are based on this name.
  */

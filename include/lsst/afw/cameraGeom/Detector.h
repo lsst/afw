@@ -25,7 +25,7 @@
 
 #include <string>
 #include "lsst/base.h"
-#include "lsst/afw/geom/TransformRegistry.h"
+#include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/table/AmpInfo.h"
 #include "lsst/afw/cameraGeom/CameraSys.h"
 #include "lsst/afw/cameraGeom/CameraPoint.h"
@@ -80,7 +80,7 @@ public:
         lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog, ///< catalog of amplifier information
         Orientation const &orientation,     ///< detector position and orientation in focal plane
         geom::Extent2D const &pixelSize,    ///< pixel size (mm)
-        CameraTransformMap const &transformMap  ///< list of coordinate transforms for this detector
+        CameraTransformMap::Transforms const &Transforms///< map of CameraSys: XYTranform
     );
 
     ~Detector() {}
@@ -90,12 +90,12 @@ public:
      *
      * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
      */
-    CameraPoint convert(
-        CameraPoint const &fromPoint,   ///< camera point to convert
-        CameraSys const &toSys          ///< coordinate system to which to convert
+    CameraPoint transform(
+        CameraPoint const &fromPoint,   ///< camera point to transform
+        CameraSys const &toSys          ///< coordinate system to which to transform
     ) const {
         return CameraPoint(
-            _transformRegistry.convert(fromPoint.getPoint(), fromPoint.getCameraSys(), toSys),
+            _transformMap.transform(fromPoint.getPoint(), fromPoint.getCameraSys(), toSys),
             toSys);
     }
 
@@ -106,11 +106,11 @@ public:
      *
      * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
      */
-    CameraPoint convert(
-        CameraPoint const &fromPoint,   ///< camera point to convert
-        CameraSysPrefix const &toSys    ///< coordinate system prefix to which to convert
+    CameraPoint transform(
+        CameraPoint const &fromPoint,   ///< camera point to transform
+        CameraSysPrefix const &toSys    ///< coordinate system prefix to which to transform
     ) const {
-        return convert(fromPoint, makeCameraSys(toSys));
+        return transform(fromPoint, makeCameraSys(toSys));
     }
 
     /** Get the detector name */
@@ -131,7 +131,7 @@ public:
     geom::Extent2D const getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
-    CameraTransformRegistry const getTransformRegistry() const { return _transformRegistry; }
+    CameraTransformMap const getTransformMap() const { return _transformMap; }
 
     /** Get iterator to beginning of amplifier list */
     lsst::afw::table::AmpInfoCatalog::const_iterator begin() const { return _ampInfoCatalog.begin(); }
@@ -211,7 +211,7 @@ private:
     _AmpInfoMap _ampNameIterMap;    ///< map of amplifier name: catalog iterator
     Orientation _orientation;       ///< position and orientation of detector in focal plane
     geom::Extent2D _pixelSize;      ///< pixel size (mm)
-    CameraTransformRegistry _transformRegistry; ///< registry of coordinate transforms
+    CameraTransformMap _transformMap; ///< registry of coordinate transforms
 };
 
 }}}

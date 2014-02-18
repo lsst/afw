@@ -41,7 +41,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 #include <map>
 #include "boost/shared_ptr.hpp"
 #include "lsst/pex/logging.h"
-#include "lsst/afw/geom/TransformRegistry.h"
+#include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/cameraGeom.h"
 %}
 
@@ -57,9 +57,11 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %shared_ptr(lsst::afw::cameraGeom::Detector);
 
 %template(CameraSysList) std::vector<lsst::afw::cameraGeom::CameraSys>;
-%template(CameraTransformMap)
+// I would prefer to use lsst::afw::geom::TransformMap<lsst::afw::cameraGeom::CameraSys>::Transforms
+// in the following, but SIG complains of a syntax error
+%template(CameraTransforms) 
     std::map<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)>;
-%template(CameraTransformRegistry) lsst::afw::geom::TransformRegistry<lsst::afw::cameraGeom::CameraSys>;
+%template(CameraTransformMap) lsst::afw::geom::TransformMap<lsst::afw::cameraGeom::CameraSys>;
 %template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;
 
 %rename(__getitem__) lsst::afw::cameraGeom::Detector::operator[];

@@ -170,7 +170,7 @@ AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &pi
 //
 // AffineXYTransform
 /*
- * @brief This wraps an AffineTransform as an XYTransform for inclusing in a TransformRegistry
+ * @brief This wraps an AffineTransform as an XYTransform for inclusing in a TransformMap
  * Note that the inFpCoordinateSystem is not used and set to false
  *
  */

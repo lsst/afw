@@ -19,11 +19,11 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+// this file is meant to be included by TransformMap.h
 #include <sstream>
 #include <utility>
 #include "boost/make_shared.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/geom/TransformRegistry.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 
@@ -32,15 +32,15 @@ namespace afw {
 namespace geom {
 
 template<typename CoordSys>
-TransformRegistry<CoordSys>::TransformRegistry(
+TransformMap<CoordSys>::TransformMap(
     CoordSys const &nativeCoordSys,
-    TransformMap const &transformList
+    Transforms const &transforms
 ) :
-    _nativeCoordSys(nativeCoordSys), _transformMap()
+    _nativeCoordSys(nativeCoordSys), _transforms()
 {
-    for (typename TransformMap::const_iterator trIter = transformList.begin();
-        trIter != transformList.end(); ++trIter) {
-        if (_transformMap.count(trIter->first) > 0) {
+    for (typename Transforms::const_iterator trIter = transforms.begin();
+        trIter != transforms.end(); ++trIter) {
+        if (_transforms.count(trIter->first) > 0) {
             std::ostringstream os;
             os << "Duplicate coordSys \"" << trIter->first << "\"";
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
@@ -49,22 +49,22 @@ TransformRegistry<CoordSys>::TransformRegistry(
             os << "coordSys \"" << trIter->first << "\" matches nativeCoordSys";
             throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
         }
-        _transformMap.insert(*trIter);
+        _transforms.insert(*trIter);
     }
 
     // insert identity transform for nativeCoordSys, if not already provided
     if (!contains(nativeCoordSys)) {
-        _transformMap.insert(std::make_pair(nativeCoordSys,
+        _transforms.insert(std::make_pair(nativeCoordSys,
             boost::make_shared<IdentityXYTransform>(false)));
     }
 }
 
 template<typename CoordSys>
-TransformRegistry<CoordSys>::TransformRegistry() : _nativeCoordSys(), _transformMap() {}
+TransformMap<CoordSys>::TransformMap() : _nativeCoordSys(), _transforms() {}
 
 
 template<typename CoordSys>
-Point2D TransformRegistry<CoordSys>::convert(
+Point2D TransformMap<CoordSys>::transform(
     Point2D const &fromPoint,
     CoordSys const &fromCoordSys,
     CoordSys const &toCoordSys
@@ -80,7 +80,7 @@ Point2D TransformRegistry<CoordSys>::convert(
 }
 
 template<typename CoordSys>
-std::vector<Point2D> TransformRegistry<CoordSys>::convert(
+std::vector<Point2D> TransformMap<CoordSys>::transform(
     std::vector<Point2D> const &pointList,
     CoordSys const &fromCoordSys,
     CoordSys const &toCoordSys
@@ -91,7 +91,7 @@ std::vector<Point2D> TransformRegistry<CoordSys>::convert(
 
     std::vector<Point2D> outList;
 
-    // convert pointList from fromCoordSys to native coords, filling outList
+    // transform pointList from fromCoordSys to native coords, filling outList
     if (fromCoordSys != _nativeCoordSys) {
         CONST_PTR(XYTransform) fromTransform = (*this)[fromCoordSys];
         for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
@@ -105,7 +105,7 @@ std::vector<Point2D> TransformRegistry<CoordSys>::convert(
         }
     }
 
-    // convert outList from native coords to toCoordSys, in place
+    // transform outList from native coords to toCoordSys, in place
     if (toCoordSys != _nativeCoordSys) {
         CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
         for (std::vector<Point2D>::iterator nativePtIter = outList.begin();
@@ -117,21 +117,21 @@ std::vector<Point2D> TransformRegistry<CoordSys>::convert(
 }
 
 template<typename CoordSys>
-std::vector<CoordSys> TransformRegistry<CoordSys>::getCoordSysList() const {
+std::vector<CoordSys> TransformMap<CoordSys>::getCoordSysList() const {
     std::vector<CoordSys> coordSysList;
-    for (typename TransformMap::const_iterator trIter = _transformMap.begin();
-        trIter != _transformMap.end(); ++trIter) {
+    for (typename Transforms::const_iterator trIter = _transforms.begin();
+        trIter != _transforms.end(); ++trIter) {
         coordSysList.push_back(trIter->first);
     }
     return coordSysList;
 }
 
 template<typename CoordSys>
-CONST_PTR(XYTransform) TransformRegistry<CoordSys>::operator[](
+CONST_PTR(XYTransform) TransformMap<CoordSys>::operator[](
     CoordSys const &coordSys
 ) const {
-    typename TransformMap::const_iterator const foundIter = _transformMap.find(coordSys);
-    if (foundIter == _transformMap.end()) {
+    typename Transforms::const_iterator const foundIter = _transforms.find(coordSys);
+    if (foundIter == _transforms.end()) {
         std::ostringstream os;
         os << "Registry does not support coordSys \"" << coordSys << "\"";
         throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
@@ -140,10 +140,10 @@ CONST_PTR(XYTransform) TransformRegistry<CoordSys>::operator[](
 }
 
 template<typename CoordSys>
-bool TransformRegistry<CoordSys>::contains(
+bool TransformMap<CoordSys>::contains(
     CoordSys const &coordSys
 ) const {
-    return _transformMap.find(coordSys) != _transformMap.end();
+    return _transforms.find(coordSys) != _transforms.end();
 }
 
 }}}

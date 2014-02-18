@@ -27,7 +27,7 @@
 #include <string>
 #include <ostream>
 #include <sstream>
-#include "lsst/afw/geom/TransformRegistry.h"
+#include "lsst/afw/geom/TransformMap.h"
 
 namespace lsst {
 namespace afw {
@@ -66,9 +66,9 @@ private:
 };
 
 /**
- * Camera coordinate system; used as a key in in TransformRegistry
+ * Camera coordinate system; used as a key in in TransformMap
  *
- * @note When TransformRegistry switches to using unordered_map, a good way to compute the hash is:
+ * @note When TransformMap switches to using unordered_map, a good way to compute the hash is:
  *   size_t hash = 0;
  *   boost::hash_combine(hash, cameraSys.getSysName());
  *   boost::hash_combine(hash, cameraSys.getDetectorName());
@@ -134,9 +134,8 @@ private:
     std::string _detectorName;  ///< detector name; "" if not a detector-specific coordinate system
 };
 
-// CameraSys is intended as a key for geom::TransformRegistry, so define these useful types
-typedef geom::TransformRegistry<CameraSys> CameraTransformRegistry;
-typedef geom::TransformRegistry<CameraSys>::TransformMap CameraTransformMap;
+// CameraSys is intended as a key for geom::TransformMap, so define this useful type
+typedef geom::TransformMap<CameraSys> CameraTransformMap;
 
 // *** Standard camera coordinate systems ***
 

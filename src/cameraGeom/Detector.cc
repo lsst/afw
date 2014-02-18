@@ -35,7 +35,7 @@ Detector::Detector(
     table::AmpInfoCatalog const &ampInfoCatalog,
     Orientation const &orientation,
     geom::Extent2D const & pixelSize,
-    CameraTransformMap const &transformMap
+    CameraTransformMap::Transforms const &transforms
 ) :
     _name(name),
     _type(type),
@@ -44,7 +44,7 @@ Detector::Detector(
     _ampNameIterMap(),
     _orientation(orientation),
     _pixelSize(pixelSize),
-    _transformRegistry(CameraSys(PIXELS.getSysName(), name), transformMap)
+    _transformMap(CameraSys(PIXELS.getSysName(), name), transforms)
 {
     _init();
 }
@@ -71,11 +71,11 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
     }
 
     // check detector name in CoordSys in transform registry
-    for (CameraTransformMap::const_iterator mapIter = _transformRegistry.begin();
-        mapIter != _transformRegistry.end(); ++mapIter) {
-            if (mapIter->first.hasDetectorName() && mapIter->first.getDetectorName() != _name) {
+    for (CameraTransformMap::Transforms::const_iterator trIter = _transformMap.begin();
+        trIter != _transformMap.end(); ++trIter) {
+            if (trIter->first.hasDetectorName() && trIter->first.getDetectorName() != _name) {
                 std::ostringstream os;
-                os << "Invalid transformMap: " << mapIter->first << " detector name != \"" << _name << "\"";
+                os << "Invalid transformMap: " << trIter->first << " detector name != \"" << _name << "\"";
                 throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
             }
     }
