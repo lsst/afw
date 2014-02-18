@@ -56,7 +56,7 @@
 #include "lsst/afw/gpu/GpuExceptions.h"
 #include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/math/detail/CudaLanczosWrapper.h"
-#include "lsst/afw/math/detail/SrcPosFunctor.h"
+#include "lsst/afw/math/detail/PositionFunctor.h"
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
 
 namespace pexExcept = lsst::pex::exceptions;
@@ -380,7 +380,7 @@ namespace {
     int doWarpImage(
         DestImageT &destImage,                      ///< remapped %image
         SrcImageT const &srcImage,                  ///< source %image
-        afwMath::detail::SrcPosFunctor const &computeSrcPos,   ///< Functor to compute source position
+        afwMath::detail::PositionFunctor const &computeSrcPos,   ///< Functor to compute source position
         afwMath::WarpingControl const &control,     ///< warping parameters
         typename DestImageT::SinglePixel padValue   ///< value to use for undefined pixels
     ) {
@@ -622,7 +622,7 @@ int afwMath::warpImage(
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwMath::detail::WcsSrcPosFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
+    afwMath::detail::WcsPositionFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 
@@ -638,7 +638,7 @@ int afwMath::warpImage(
     lsst::afw::gpu::DevicePreference devPref
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwMath::detail::WcsSrcPosFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
+    afwMath::detail::WcsPositionFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
     afwMath::WarpingControl control(warpingKernel, interpLength, devPref);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
@@ -653,7 +653,7 @@ int afwMath::warpImage(
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwMath::detail::AffineTransformSrcPosFunctor const computeSrcPos(destXY0, affineTransform);
+    afwMath::detail::AffineTransformPositionFunctor const computeSrcPos(destXY0, affineTransform);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 
@@ -670,7 +670,7 @@ int afwMath::warpImage(
                       )
 {
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwMath::detail::AffineTransformSrcPosFunctor const computeSrcPos(destXY0, affineTransform);
+    afwMath::detail::AffineTransformPositionFunctor const computeSrcPos(destXY0, affineTransform);
     afwMath::WarpingControl control(warpingKernel, interpLength, devPref);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
