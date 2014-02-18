@@ -99,21 +99,13 @@ public:
     typename ImageT::Ptr distort(lsst::afw::geom::Point2D const &p,
                                  ImageT const &img,
                                  Detector const &det,
-                                 typename ImageT::SinglePixel padValue=
-                                 typename ImageT::SinglePixel(
-                                     std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
-                                     std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
-                                                                 )
+                                 typename ImageT::SinglePixel padValue=afw::image::pixel::PixelTypeTraits<typename ImageT::SinglePixel>::padValue()
                                 ) const;
     template<typename ImageT>
     typename ImageT::Ptr undistort(lsst::afw::geom::Point2D const &p,
                                    ImageT const &img,
                                    Detector const &det,
-                                   typename ImageT::SinglePixel padValue=
-                                   typename ImageT::SinglePixel(
-                                       std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
-                                       std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
-                                                                   )
+                                   typename ImageT::SinglePixel padValue=afw::image::pixel::PixelTypeTraits<typename ImageT::SinglePixel>::padValue()
                                   ) const;
 
     double computeMaxShear(Detector const &det) const;
@@ -144,11 +136,7 @@ private:
                                ImageT const &img,
                                Detector const &det, 
                                bool forard,
-                               typename ImageT::SinglePixel padValue=
-                               typename ImageT::SinglePixel(
-                                   std::numeric_limits<typename ImageT::SinglePixel>::has_quiet_NaN ?
-                                   std::numeric_limits<typename ImageT::SinglePixel>::quiet_NaN() : 0
-                                                           )
+                               typename ImageT::SinglePixel padValue=afw::image::pixel::PixelTypeTraits<typename ImageT::SinglePixel>::padValue()
                                ) const;
     int _lanczosOrder;
     mutable std::map<Id,double> _maxShear;
