@@ -88,7 +88,7 @@ public:
     explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
 
     explicit Footprint(SpanList const & spans, geom::Box2I const & region=geom::Box2I());
-    Footprint(Footprint const & other);    
+    Footprint(Footprint const & other);
     virtual ~Footprint();
 
     virtual bool isHeavy() const { return false; }
@@ -100,7 +100,7 @@ public:
      * Return the Peak%s contained in this Footprint
      *
      * The peaks are ordered by decreasing pixel intensity at the peak position (so the most negative
-     * peak appears last) 
+     * peak appears last).
      */
     PeakList & getPeaks() { return _peaks; }
     const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
@@ -196,7 +196,7 @@ private:
     static int id;
     mutable int _fid;                    //!< unique ID
     int _area;                           //!< number of pixels in this Footprint (not the area of the bbox)
-     
+
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
     PeakList _peaks;                     //!< the Peaks lying in this footprint
@@ -232,6 +232,11 @@ MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                              Footprint const& footprint,
                              MaskT const bitmask);
 
+template <typename ImageOrMaskedImageT>
+void copyWithinFootprint(Footprint const& foot,
+                         PTR(ImageOrMaskedImageT) const input,
+                         PTR(ImageOrMaskedImageT) output);
+
 /************************************************************************************************************/
 /**
  * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
@@ -252,63 +257,6 @@ Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
                                 MaskT const bitmask);
 
 /************************************************************************************************************/
-
-class HeavyFootprintCtrl;
-
-/*!
- * \brief A set of pixels in an Image, including those pixels' actual values
- */
-template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
-          typename VariancePixelT=lsst::afw::image::VariancePixel>
-class HeavyFootprint : public Footprint {
-public:
-
-    explicit HeavyFootprint(
-        Footprint const& foot,
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
-        HeavyFootprintCtrl const* ctrl=NULL
-                           );
-
-    explicit HeavyFootprint(Footprint const& foot,
-                            HeavyFootprintCtrl const* ctrl=NULL);
-
-    virtual bool isHeavy() const { return true; }
-
-    void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
-    void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
-
-    ndarray::Array<ImagePixelT,1,1>     getImageArray() { return _image; }
-    ndarray::Array<MaskPixelT,1,1>      getMaskArray() { return _mask; }
-    ndarray::Array<VariancePixelT,1,1>  getVarianceArray() { return _variance; }
-
-    ndarray::Array<ImagePixelT const,1,1>     getImageArray() const { return _image; }
-    ndarray::Array<MaskPixelT const,1,1>      getMaskArray() const { return _mask; }
-    ndarray::Array<VariancePixelT const,1,1>  getVarianceArray() const { return _variance; }
-
-    /* Returns the OR of all the mask pixels held in this HeavyFootprint. */
-    MaskPixelT getMaskBitsSet() const {
-		MaskPixelT maskbits = 0;
-        for (typename ndarray::Array<MaskPixelT,1,1>::Iterator i = _mask.begin(); i != _mask.end(); ++i) {
-			maskbits |= *i;
-		}
-		return maskbits;
-	}
-
-private:
-    ndarray::Array<ImagePixelT, 1, 1> _image;
-    ndarray::Array<MaskPixelT, 1, 1> _mask;
-    ndarray::Array<VariancePixelT, 1, 1> _variance;
-};
-
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
-    Footprint const& foot,
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& img,
-    HeavyFootprintCtrl const* ctrl=NULL
-                                                                          )
-{
-    return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img, ctrl);
-}
 
 }}}
 

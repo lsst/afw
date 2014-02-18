@@ -113,10 +113,10 @@ public:
 
     /// Add a field to the schema (used to implement Schema::addField).
     template <typename T>
-    Key<T> addField(Field<T> const & field);
+    Key<T> addField(Field<T> const & field, bool doReplace=false);
 
     /// Add a field to the schema (used to implement Schema::addField).
-    Key<Flag> addField(Field<Flag> const & field);
+    Key<Flag> addField(Field<Flag> const & field, bool doReplace=false);
 
     /// Replace the Field in an existing SchemaItem without changing the Key.
     template <typename T>

@@ -45,6 +45,22 @@ public:
         );
     }
 
+    /// @internal @brief Return a sub-field key corresponding to a range
+    template <typename T>
+    static Key< Array<T> > extractRange(KeyBase< Array<T> > const & kb, int begin, int end) {
+        if (!static_cast<Key< Array<T> > const &>(kb).isValid()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                (boost::format("Cannot extract subfield key from invalid key of type '%s' ")
+                 % Key<T>::getTypeString()).str()
+            );
+        }
+        return Key< Array<T> >(
+            static_cast<Key< Array<T> > const &>(kb).getOffset() + begin * sizeof(typename Key<T>::Element),
+            end - begin
+        );
+    }
+
     /// @internal @brief Access to the private Key constructor.
     template <typename T>
     static Key<T> makeKey(Field<T> const & field, int offset) {

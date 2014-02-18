@@ -222,6 +222,39 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertEqual(inputRecord.get(ka), outputRecord1.get(ka))
         self.assertEqual(inputRecord.get(kb), outputRecord1.get(kb))
 
+    def testOutputSchema(self):
+        mapper = lsst.afw.table.SchemaMapper(lsst.afw.table.Schema())
+        out1 = mapper.getOutputSchema()
+        out2 = mapper.editOutputSchema()
+        k1 = out1.addField("a1", type=int)
+        self.assert_(k1 not in mapper.getOutputSchema())
+        self.assert_(k1 in out1)
+        self.assert_(k1 not in out2)
+        k2 = mapper.addOutputField(lsst.afw.table.Field[float]("a2", "doc for a2"))
+        self.assert_(k2 not in out1)
+        self.assert_(k2 in mapper.getOutputSchema())
+        self.assert_(k2 in out2)
+        k3 = out2.addField("a3", type=numpy.float32, doc="doc for a3")
+        self.assert_(k3 not in out1)
+        self.assert_(k3 in mapper.getOutputSchema())
+        self.assert_(k3 in out2)
+
+    def testDoReplace(self):
+        inSchema = lsst.afw.table.Schema()
+        ka = inSchema.addField("a", type=int)
+        outSchema = lsst.afw.table.Schema(inSchema)
+        kb = outSchema.addField("b", type=int)
+        kc = outSchema.addField("c", type=int)
+        mapper1 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
+        mapper1.addMapping(ka, True)
+        self.assertEqual(mapper1.getMapping(ka), ka)
+        mapper2 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
+        mapper2.addMapping(ka, lsst.afw.table.Field[int]("b", "doc for b"), True)
+        self.assertEqual(mapper2.getMapping(ka), kb)
+        mapper3 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
+        mapper3.addMapping(ka, "c", True)
+        self.assertEqual(mapper3.getMapping(ka), kc)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

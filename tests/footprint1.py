@@ -659,6 +659,96 @@ class FootprintTestCase(unittest.TestCase):
         self.assertNotEqual(fpTarget.getArea(), fpTarget2.getArea())
         self.assertEqual(fpTarget.getArea(), fpTarget3.getArea())
 
+    def testCopyWithinFootprintImage(self):
+        W,H = 10,10
+        dims = afwGeom.Extent2I(W,H)
+        source = afwImage.ImageF(dims)
+        dest = afwImage.ImageF(dims)
+        sa = source.getArray()
+        for i in range(H):
+            for j in range(W):
+                sa[i,j] = 100 * i + j
+
+        self.foot.addSpan(4, 3, 6)
+        self.foot.addSpan(5, 2, 4)
+
+        afwDetect.copyWithinFootprintImage(self.foot, source, dest)
+
+        da = dest.getArray()
+        self.assertEqual(da[4,2], 0)
+        self.assertEqual(da[4,3], 403)
+        self.assertEqual(da[4,4], 404)
+        self.assertEqual(da[4,5], 405)
+        self.assertEqual(da[4,6], 406)
+        self.assertEqual(da[4,7], 0)
+        self.assertEqual(da[5,1], 0)
+        self.assertEqual(da[5,2], 502)
+        self.assertEqual(da[5,3], 503)
+        self.assertEqual(da[5,4], 504)
+        self.assertEqual(da[5,5], 0)
+        self.assertTrue(numpy.all(da[:4,:] == 0))
+        self.assertTrue(numpy.all(da[6:,:] == 0))
+
+    def testCopyWithinFootprintMaskedImage(self):
+        W,H = 10,10
+        dims = afwGeom.Extent2I(W,H)
+        source = afwImage.MaskedImageF(dims)
+        dest = afwImage.MaskedImageF(dims)
+        sa = source.getImage().getArray()
+        sv = source.getVariance().getArray()
+        sm = source.getMask().getArray()
+        for i in range(H):
+            for j in range(W):
+                sa[i,j] = 100 * i + j
+                sv[i,j] = 100 * j + i
+                sm[i,j] = 1
+
+        self.foot.addSpan(4, 3, 6)
+        self.foot.addSpan(5, 2, 4)
+
+        afwDetect.copyWithinFootprintMaskedImage(self.foot, source, dest)
+
+        da = dest.getImage().getArray()
+        dv = dest.getVariance().getArray()
+        dm = dest.getMask().getArray()
+
+        self.assertEqual(da[4,2], 0)
+        self.assertEqual(da[4,3], 403)
+        self.assertEqual(da[4,4], 404)
+        self.assertEqual(da[4,5], 405)
+        self.assertEqual(da[4,6], 406)
+        self.assertEqual(da[4,7], 0)
+        self.assertEqual(da[5,1], 0)
+        self.assertEqual(da[5,2], 502)
+        self.assertEqual(da[5,3], 503)
+        self.assertEqual(da[5,4], 504)
+        self.assertEqual(da[5,5], 0)
+        self.assertTrue(numpy.all(da[:4,:] == 0))
+        self.assertTrue(numpy.all(da[6:,:] == 0))
+
+        self.assertEqual(dv[4,2], 0)
+        self.assertEqual(dv[4,3], 304)
+        self.assertEqual(dv[4,4], 404)
+        self.assertEqual(dv[4,5], 504)
+        self.assertEqual(dv[4,6], 604)
+        self.assertEqual(dv[4,7], 0)
+        self.assertEqual(dv[5,1], 0)
+        self.assertEqual(dv[5,2], 205)
+        self.assertEqual(dv[5,3], 305)
+        self.assertEqual(dv[5,4], 405)
+        self.assertEqual(dv[5,5], 0)
+        self.assertTrue(numpy.all(dv[:4,:] == 0))
+        self.assertTrue(numpy.all(dv[6:,:] == 0))
+
+        self.assertTrue(numpy.all(dm[4, 3:7] == 1))
+        self.assertTrue(numpy.all(dm[5, 2:5] == 1))
+        self.assertTrue(numpy.all(dm[:4,:] == 0))
+        self.assertTrue(numpy.all(dm[6:,:] == 0))
+        self.assertTrue(numpy.all(dm[4, :3] == 0))
+        self.assertTrue(numpy.all(dm[4, 7:] == 0))
+
+        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class FootprintSetTestCase(unittest.TestCase):

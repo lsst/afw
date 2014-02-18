@@ -70,14 +70,14 @@ namespace {
  * A utility functor passed to sort; needed to dereference the boost::shared_ptrs.
  */
     struct compareSpanByYX :
-		public std::binary_function<Span::ConstPtr, Span::ConstPtr, bool> {
-		int operator()(Span::ConstPtr a, Span::ConstPtr b) {
-			return (*a) < (*b);
-		}
-	};
+        public std::binary_function<Span::ConstPtr, Span::ConstPtr, bool> {
+        int operator()(Span::ConstPtr a, Span::ConstPtr b) {
+            return (*a) < (*b);
+        }
+    };
 
 /// Transform x,y in the frame of one image to another, via their WCSes
-geom::Point2D transformPoint(double x, double y, 
+geom::Point2D transformPoint(double x, double y,
                              image::Wcs const& source,
                              image::Wcs const& target){
     return target.skyToPixel(*source.pixelToSky(x, y));
@@ -103,7 +103,7 @@ Footprint::Footprint(
     _area(0),
     _bbox(geom::Box2I()),
     _region(region),
-    _normalized(true) 
+    _normalized(true)
 {
     if (nspan < 0) {
         throw LSST_EXCEPT(
@@ -134,14 +134,14 @@ Footprint::Footprint(
     _normalized=true;
 }
 Footprint::Footprint(
-    geom::Point2I const & center, 
+    geom::Point2I const & center,
     double const radius,
     geom::BoxI const & region
 ) : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _area(0),
     _bbox(geom::BoxI()),
-    _region(region)    
+    _region(region)
 {
     int const r2 = static_cast<int>(radius*radius + 0.5); // rounded radius^2
     int const r = static_cast<int>(std::sqrt(static_cast<double>(r2))); // truncated radius; r*r <= r2
@@ -153,7 +153,7 @@ Footprint::Footprint(
     _normalized = true;
 }
 Footprint::Footprint(
-    geom::ellipses::Ellipse const & ellipse, 
+    geom::ellipses::Ellipse const & ellipse,
     geom::Box2I const & region
 ) :  lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
@@ -195,7 +195,7 @@ Footprint::Footprint(
     }
 }
 
-Footprint::Footprint(Footprint const & other) 
+Footprint::Footprint(Footprint const & other)
   : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _bbox(other._bbox),
@@ -203,7 +203,7 @@ Footprint::Footprint(Footprint const & other)
 {
     //deep copy spans
     _spans.reserve(other._spans.size());
-    for(SpanList::const_iterator i(other._spans.begin()); 
+    for(SpanList::const_iterator i(other._spans.begin());
         i != other._spans.end(); ++i
     ) {
         addSpan(**i);
@@ -233,9 +233,9 @@ bool Footprint::contains(
 {
     if (_bbox.contains(pix)) {
         for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter) {
-			if ((*siter)->contains(pix.getX(), pix.getY())) {
-				return true;
-			}
+            if ((*siter)->contains(pix.getX(), pix.getY())) {
+                return true;
+            }
         }
     }
 
@@ -243,120 +243,119 @@ bool Footprint::contains(
 }
 
 void Footprint::clipTo(geom::Box2I const& bbox) {
-	Footprint::SpanList::iterator it = _spans.begin();
-	for (; it != _spans.end();) {
-		Span *sp = it->get();
-		//printf("span: y=%i (x=[%i,%i]), vs bbox [%i,%i]\n", sp->getY(), sp->getX0(), sp->getX1(), bbox.getMinY(), bbox.getMaxY());
-		if ((sp->getY() < bbox.getMinY()) ||
-			(sp->getY() > bbox.getMaxY())) {
-			//printf("  --> out of bounds in y; erasing.\n");
-			it = _spans.erase(it);
-			continue;
-		}
-		//printf("span: x=[%i,%i], vs bbox [%i,%i]\n", sp->getX0(), sp->getX1(), bbox.getMinX(), bbox.getMaxX());
-		if ((sp->getX0() > bbox.getMaxX()) ||
-			(sp->getX1() < bbox.getMinX())) {
-			//printf("  --> out of bounds in x; erasing.\n");
-			it = _spans.erase(it);
-			continue;
-		}
+    Footprint::SpanList::iterator it = _spans.begin();
+    for (; it != _spans.end();) {
+        Span *sp = it->get();
+        //printf("span: y=%i (x=[%i,%i]), vs bbox [%i,%i]\n", sp->getY(), sp->getX0(), sp->getX1(), bbox.getMinY(), bbox.getMaxY());
+        if ((sp->getY() < bbox.getMinY()) ||
+            (sp->getY() > bbox.getMaxY())) {
+            //printf("  --> out of bounds in y; erasing.\n");
+            it = _spans.erase(it);
+            continue;
+        }
+        //printf("span: x=[%i,%i], vs bbox [%i,%i]\n", sp->getX0(), sp->getX1(), bbox.getMinX(), bbox.getMaxX());
+        if ((sp->getX0() > bbox.getMaxX()) ||
+            (sp->getX1() < bbox.getMinX())) {
+            //printf("  --> out of bounds in x; erasing.\n");
+            it = _spans.erase(it);
+            continue;
+        }
 
-		// clip
-		if (sp->getX0() < bbox.getMinX()) {
-			//printf("  -> clipped span x0 to bbox\n");
-			sp->_x0 = bbox.getMinX();
-		}
-		if (sp->getX1() > bbox.getMaxX()) {
-			//printf("  -> clipped span x1 to bbox\n");
-			sp->_x1 = bbox.getMaxX();
-		}
-		it++;
-	}
+        // clip
+        if (sp->getX0() < bbox.getMinX()) {
+            //printf("  -> clipped span x0 to bbox\n");
+            sp->_x0 = bbox.getMinX();
+        }
+        if (sp->getX1() > bbox.getMaxX()) {
+            //printf("  -> clipped span x1 to bbox\n");
+            sp->_x1 = bbox.getMaxX();
+        }
+        it++;
+    }
 
-	Footprint::PeakList::iterator pit = _peaks.begin();
-	for (; pit != _peaks.end();) {
-		Peak *pk = pit->get();
-		if (!bbox.contains(geom::Point2I(pk->getIx(), pk->getIy()))) {
-			pit = _peaks.erase(pit);
-			continue;
-		}
-		pit++;
-	}
+    Footprint::PeakList::iterator pit = _peaks.begin();
+    for (; pit != _peaks.end();) {
+        Peak *pk = pit->get();
+        if (!bbox.contains(geom::Point2I(pk->getIx(), pk->getIy()))) {
+            pit = _peaks.erase(pit);
+            continue;
+        }
+        pit++;
+    }
 
-	if (_spans.empty()) {
+    if (_spans.empty()) {
         _bbox = geom::Box2I();
         _area = 0;
-		_normalized = true;
+        _normalized = true;
     } else {
-		_normalized = false;
-		normalize();
-	}
+        _normalized = false;
+        normalize();
+    }
 }
 
 /**
  * Normalise a Footprint, sorting spans and setting the BBox
  */
 void Footprint::normalize() {
-	if (_normalized) {
-		return;
-	}
-	assert(!_spans.empty());
-	//
-	// Check that the spans are sorted, and (more importantly) that each pixel appears
-	// in only one span
-	//
-	sort(_spans.begin(), _spans.end(), compareSpanByYX());
+    if (_normalized) {
+        return;
+    }
+    assert(!_spans.empty());
+    //
+    // Check that the spans are sorted, and (more importantly) that each pixel appears
+    // in only one span
+    //
+    sort(_spans.begin(), _spans.end(), compareSpanByYX());
 
-	Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
-        
-	Span *lspan = ptr->get();  // Left span
-	int y = lspan->_y;
-	int x1 = lspan->_x1;
-	_area = lspan->getWidth();
-	int minX = lspan->_x0, minY=y, maxX=x1;
+    Footprint::SpanList::iterator ptr = _spans.begin(), end = _spans.end();
+    Span *lspan = ptr->get();  // Left span
+    int y = lspan->_y;
+    int x1 = lspan->_x1;
+    _area = lspan->getWidth();
+    int minX = lspan->_x0, minY=y, maxX=x1;
 
-	++ptr;
+    ++ptr;
 
-	for (; ptr != end; ++ptr) {
-		Span *rspan = ptr->get(); // Right span
-		if (rspan->_y == y) {
-			if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
-				if (rspan->_x1 > x1) {  // right span extends left span
-					//update area
-					_area += rspan->_x1 - x1;
-					//update end of current span
-					x1 = lspan->_x1 = rspan->_x1;
-					//update bounds
-					if(x1 > maxX) maxX = x1;
-				}                    
-                    
-				ptr = _spans.erase(ptr);
-				end = _spans.end();   // delete the right span
-				if (ptr == end) {
-					break;
-				}
-                    
-				--ptr;
-				continue;
-			} 
-			else{
-				_area += rspan->getWidth();
-				if(rspan->_x1 > maxX) maxX = rspan->_x1;
-			}
-		} else {
-			_area += rspan->getWidth();
-		}
+    for (; ptr != end; ++ptr) {
+        Span *rspan = ptr->get(); // Right span
+        if (rspan->_y == y) {
+            if (rspan->_x0 <= x1 + 1) { // Spans overlap or touch
+                if (rspan->_x1 > x1) {  // right span extends left span
+                    //update area
+                    _area += rspan->_x1 - x1;
+                    //update end of current span
+                    x1 = lspan->_x1 = rspan->_x1;
+                    //update bounds
+                    if(x1 > maxX) maxX = x1;
+                }
 
-		y = rspan->_y;            
-		x1 = rspan->_x1;
-            
-		lspan = rspan;
-		if(lspan->_x0 < minX) minX = lspan->_x0;
-		if(x1 > maxX) maxX = x1;
-	}
-	_bbox = geom::Box2I(geom::Point2I(minX, minY), geom::Point2I(maxX, y));
+                ptr = _spans.erase(ptr);
+                end = _spans.end();   // delete the right span
+                if (ptr == end) {
+                    break;
+                }
 
-	_normalized = true;
+                --ptr;
+                continue;
+            }
+            else{
+                _area += rspan->getWidth();
+                if(rspan->_x1 > maxX) maxX = rspan->_x1;
+            }
+        } else {
+            _area += rspan->getWidth();
+        }
+
+        y = rspan->_y;
+        x1 = rspan->_x1;
+
+        lspan = rspan;
+        if(lspan->_x0 < minX) minX = lspan->_x0;
+        if(x1 > maxX) maxX = x1;
+    }
+    _bbox = geom::Box2I(geom::Point2I(minX, minY), geom::Point2I(maxX, y));
+
+    _normalized = true;
 }
 
 /**
@@ -491,7 +490,7 @@ namespace {
                       long const mask=0x0,                    // Don't overwrite bits in this mask
                       std::set<boost::uint64_t> *oldIds=NULL // if non-NULL, set the IDs that were overwritten
                    )
-    {    
+    {
         int width, height, x0, y0;
         if(!region.isEmpty()) {
             height = region.getHeight();
@@ -543,12 +542,10 @@ namespace {
                     if (val != 0 and oldIds != NULL) {
                         pos = oldIds->insert(pos, val); // update our hint, pos
                     }
-
                     *ptr = (*ptr & mask) + id;
                 } else {
                     *ptr += id;
                 }
-                    
             }
         }
     }
@@ -564,7 +561,7 @@ Footprint::insertIntoImage(
     boost::uint64_t const id,               //!< Add id to idImage for pixels in the Footprint
     geom::Box2I const& region               //!< Footprint's region (default: getRegion())
 ) const
-{    
+{
     static_cast<void>(doInsertIntoImage<false>(_region, _spans, idImage, id, region));
 }
 
@@ -724,7 +721,7 @@ void Footprint::serialize(Archive & ar, const unsigned int version) {
 
     ar & make_nvp("x0", x0) & make_nvp("y0", y0) & make_nvp("width", width) & make_nvp("height", height);
     ar & make_nvp("rx0", rx0) & make_nvp("ry0", ry0) & make_nvp("rwidth", rwidth) & make_nvp("rheight", rheight);
-    
+
     if(Archive::is_loading::value) {
         _bbox = geom::BoxI(geom::Point2I(x0, y0), geom::Extent2I(width, height));
         _region = geom::BoxI(geom::Point2I(rx0, ry0), geom::Extent2I(rwidth, rheight));
@@ -747,7 +744,7 @@ Footprint & Footprint::operator=(Footprint & other) {
     //deep copy spans
     _spans = SpanList();
     _spans.reserve(other._spans.size());
-    for(SpanList::const_iterator i(other._spans.begin()); 
+    for(SpanList::const_iterator i(other._spans.begin());
         i != other._spans.end(); ++i
     ) {
         addSpan(**i);
@@ -784,7 +781,7 @@ void Footprint::intersectMask(
     //make sure this is normalized
     normalize();
 
-    SpanList::iterator s(_spans.begin()); 
+    SpanList::iterator s(_spans.begin());
     while((*s)->getY() < maskBBox.getMinY() && s != _spans.end()){
         ++s;
     }
@@ -812,28 +809,28 @@ void Footprint::intersectMask(
         if(x1 > maskBBox.getMaxX()) x1 = maskBBox.getMaxX();
 
         //Image iterators are always specified with respect to (0,0)
-        //regardless what the image::XY0 is set to.        
+        //regardless what the image::XY0 is set to.
         typename image::Mask<MaskT>::const_x_iterator mIter = mask.x_at(
             x0 - maskBBox.getMinX(), y - maskBBox.getMinY()
         );
 
         //loop over all span locations, slicing the span at maskedPixels
-        for(int x = x0; x <= x1; ++x, ++mIter) {            
+        for(int x = x0; x <= x1; ++x, ++mIter) {
             if((*mIter & bitmask) != 0) {
                 //masked pixel found within span
-                if (x > x0) {                    
+                if (x > x0) {
                     //add beginning of span to the output
                     //the fixed span contains all the unmasked pixels up to,
                     //but not including this masked pixel
                     Span::Ptr maskedSpan(new Span(y, x0, x- 1));
-                    maskedSpans.push_back(maskedSpan);                
+                    maskedSpans.push_back(maskedSpan);
                     maskedArea += maskedSpan->getWidth();
                 }
                 //set the next Span to start after this pixel
                 x0 = x + 1;
             }
         }
-        
+
         //add last section of span
         if(x0 <= x1) {
             Span::Ptr maskedSpan(new Span(y, x0, x1));
@@ -1040,7 +1037,7 @@ class SetFootprint : public FootprintFunctor<ImageT> {
 public:
     SetFootprint(ImageT const& image,
                  typename ImageT::Pixel value) :
-        FootprintFunctor<ImageT>(image), _value(value) {} 
+        FootprintFunctor<ImageT>(image), _value(value) {}
 
 
     void operator()(typename ImageT::xy_locator loc, int, int) {
@@ -1130,7 +1127,7 @@ set_footprint_array_ids(
     typename image::Image<IDPixelT>::Ptr idImage, // the image to set
     std::vector<Footprint::Ptr> const& footprints, // the footprints to insert
     bool const relativeIDs // show IDs starting at 0, not Footprint->id
-) {    
+) {
     int id = 0;                         // first index will be 1
 
     for (std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin();
@@ -1161,7 +1158,7 @@ template void set_footprint_array_ids<int>(
  */
 template <typename IDImageT>
 typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
-    std::vector<Footprint::Ptr> const& footprints, 
+    std::vector<Footprint::Ptr> const& footprints,
     bool const relativeIDs
 ) {
     std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin();
@@ -1301,9 +1298,9 @@ Footprint::Ptr growFootprint(
     image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
     *idImage = 0;
     idImage->setXY0(0, 0);
-    
+
     // Set all the pixels in the footprint to 1
-    set_footprint_id<int>(idImage, foot, 1, -bbox.getMinX(), -bbox.getMinY()); 
+    set_footprint_id<int>(idImage, foot, 1, -bbox.getMinX(), -bbox.getMinY());
     //
     // Set the idImage to the Manhattan distance from the nearest set pixel
     //
@@ -1324,7 +1321,7 @@ Footprint::Ptr growFootprint(
                 // or one more than the pixel to the north
                 if (y > 0) {
                     // im(0, 0)[0] == static_cast<int>(im(0, 0))
-                    im(0, 0) = std::min(im(0, 0)[0], im(0, -1) + 1); 
+                    im(0, 0) = std::min(im(0, 0)[0], im(0, -1) + 1);
                 }
                 // or one more than the pixel to the west
                 if (x > 0) {
@@ -1384,8 +1381,8 @@ PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
                              bool down             ///< grow down
                             )
 {
-	Footprint::Ptr grown(new Footprint(0, old.getRegion()));
-    
+    Footprint::Ptr grown(new Footprint(0, old.getRegion()));
+
     for (Footprint::SpanList::const_iterator siter = old.getSpans().begin();
             siter != old.getSpans().end(); ++siter) {
         CONST_PTR(Span) span = *siter;
@@ -1396,7 +1393,7 @@ PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
         if (up) {
             for(int i=1; i <=nGrow; i++) {
                 grown->addSpan(y+i,span->getX0(), span->getX1());
-            }				
+            }
         }
         if (down) {
             for(int i=1; i <=nGrow; i++) {
@@ -1458,14 +1455,14 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
 
                 bbox.include(geom::Point2I(x0, y));     // the LLC
                 bbox.include(geom::Point2I(x1, y));     // the LRC; initial guess for URC
-                
+
                 // we found at least one pixel so extend the BBox upwards
                 for (++y; y != height; ++y) {
                     if (std::find(idImage->at(x0, y), idImage->at(x1 + 1, y), 0) != idImage->at(x1 + 1, y)) {
                         break;  // some pixels weren't set, so the BBox stops here, (actually in previous row)
                     }
                     std::fill(idImage->at(x0, y), idImage->at(x1 + 1, y), 0);
-                    
+
                     bbox.include(geom::Point2I(x1, y)); // the new URC
                 }
 
@@ -1480,6 +1477,30 @@ std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
 
     return bboxes;
 }
+
+
+template<typename ImageOrMaskedImageT>
+void
+copyWithinFootprint(Footprint const& foot,
+                    PTR(ImageOrMaskedImageT) const input,
+                    PTR(ImageOrMaskedImageT) output) {
+    Footprint::SpanList spans = foot.getSpans();
+    for (Footprint::SpanList::iterator sp = spans.begin();
+         sp != spans.end(); ++sp) {
+        int y  = (*sp)->getY();
+        int x0 = (*sp)->getX0();
+        int x1 = (*sp)->getX1();
+        typename ImageOrMaskedImageT::const_x_iterator initer = input->x_at(
+            x0 - input->getX0(),  y - input->getY0());
+        typename ImageOrMaskedImageT::x_iterator outiter = output->x_at(
+            x0 - output->getX0(), y - output->getY0());
+        for (int x=x0; x <= x1; ++x, ++initer, ++outiter) {
+            *outiter = *initer;
+        }
+    }
+}
+
+
 
 
 #if 0
@@ -1797,7 +1818,7 @@ pmFootprintArrayCullPeaks(psImage const *img, // the image wherein lives the foo
             return psError(PS_ERR_UNKNOWN, false, "Culling pmFootprint %d", fp->id);
         }
     }
-    
+
     return PS_ERR_NONE;
 }
 
@@ -1808,13 +1829,13 @@ pmFootprintArrayCullPeaks(psImage const *img, // the image wherein lives the foo
 psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
     assert(footprints != NULL);
     assert(footprints->n == 0 || pmIsFootprint(footprints->data[0]));
-    
+
     int npeak = 0;
     for (int i = 0; i < footprints->n; i++) {
         pmFootprint const *fp = footprints->data[i];
         npeak += fp->peaks->n;
     }
-    
+
     psArray *peaks = psArrayAllocEmpty(npeak);
 
     for (int i = 0; i < footprints->n; i++) {
@@ -1823,7 +1844,7 @@ psArray *pmFootprintArrayToPeaks(psArray const *footprints) {
             psArrayAdd(peaks, 1, fp->peaks->data[j]);
         }
     }
-    
+
     return peaks;
 }
 #endif
@@ -1845,12 +1866,12 @@ Footprint::Ptr footprintAndMask(
     image::Mask<image::MaskPixel>::Ptr const& mask,
     image::MaskPixel bitMask);
 
-template 
+template
 image::MaskPixel setMaskFromFootprintList(
     image::Mask<image::MaskPixel> *mask,
     CONST_PTR(std::vector<Footprint::Ptr>) const& footprints,
     image::MaskPixel const bitmask);
-template 
+template
 image::MaskPixel setMaskFromFootprintList(
     image::Mask<image::MaskPixel> *mask,
     std::vector<Footprint::Ptr> const& footprints,
@@ -1875,6 +1896,15 @@ template \
 TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
                                           CONST_PTR(std::vector<Footprint::Ptr>) footprints, \
                                           TYPE const value); \
+template \
+void copyWithinFootprint(Footprint const&,                          \
+                         PTR(lsst::afw::image::Image<TYPE>) const,  \
+                         PTR(lsst::afw::image::Image<TYPE>));       \
+template \
+void copyWithinFootprint(Footprint const&,                          \
+                         PTR(lsst::afw::image::MaskedImage<TYPE>) const,  \
+                         PTR(lsst::afw::image::MaskedImage<TYPE>));       \
+
 
 INSTANTIATE_FLOAT(float);
 INSTANTIATE_FLOAT(double);

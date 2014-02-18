@@ -166,6 +166,11 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkArrayAccessors(record, k12, "f12", makeCov(k12.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k14, "f14", makeCov(k14.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k16, "f16", makeCov(k16.getSize(), dtype=numpy.float32))
+        sub1 = k11.slice(1, 3)
+        sub2 = k11[0:2]
+        self.assert_((record.get(sub1) == record.get(k11)[1:3]).all())
+        self.assert_((record.get(sub2) == record.get(k11)[0:2]).all())
+        self.assertEqual(sub1[0], sub2[1])
         for k in (k12, k14, k16):
             n = 0
             for idx, subkey in zip(k.subfields, k.subkeys):
@@ -576,6 +581,38 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(schema1.find(k1i).field.getUnits(), schema3.find(k3i).field.getUnits())
         self.assertEqual(schema1.find(k1a).field.getUnits(), schema3.find(k3a).field.getUnits())
         self.assertEqual(schema1.find(k1a).field.getSize(), schema3.find(k3a).field.getSize())
+
+    def testTicket3066(self):
+        """Test the doReplace option on Schema.addField
+        """
+        schema = lsst.afw.table.Schema()
+        k1a = schema.addField("f1", doc="f1a", type="I")
+        k2a = schema.addField("f2", doc="f2a", type="Flag")
+        k3a = schema.addField("f3", doc="f3a", type="ArrayF", size=4)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f1", doc="f1b", type="I")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f2", doc="f2b", type="Flag")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f1", doc="f1b", type="F")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f2", doc="f2b", type="F")
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f1", doc="f1b", type="F", doReplace=True)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f2", doc="f2b", type="F", doReplace=True)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+                                             schema.addField, "f3", doc="f3b", type="ArrayF",
+                                             size=3, doReplace=True)
+        k1b = schema.addField("f1", doc="f1b", type="I", doReplace=True)
+        self.assertEqual(k1a, k1b)
+        self.assertEqual(schema.find(k1a).field.getDoc(), "f1b")
+        k2b = schema.addField("f2", doc="f2b", type="Flag", doReplace=True)
+        self.assertEqual(k2a, k2b)
+        self.assertEqual(schema.find(k2a).field.getDoc(), "f2b")
+        k3b = schema.addField("f3", doc="f3b", type="ArrayF", size=4, doReplace=True)
+        self.assertEqual(k3a, k3b)
+        self.assertEqual(schema.find(k3a).field.getDoc(), "f3b")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

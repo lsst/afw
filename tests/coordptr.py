@@ -46,27 +46,36 @@ class CoordPtrTestCase(unittest.TestCase):
 
     def setUp(self):
         pass
-        
+
     def tearDown(self):
         pass
-        
+
     def testMakeCoord(self):
-        
         c = coord.Coord(1 * afwGeom.degrees,2 * afwGeom.degrees)
         print type(c)
         c = coord.makeCoord(coord.FK5, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
         print type(c)
+
     def testMakeWcs(self):
         path= eups.productDir("afw")
         path = os.path.join(path, "tests", "data", "parent.fits")
         fitsHdr = image.readMetadata(path)
-        
+
         wcs = image.makeWcs(fitsHdr)
-        
+
         c = wcs.pixelToSky(0,0)
         print type(c)
         c.getPosition()
-        
+
+    def testCoordCast(self):
+        for CoordClass in (coord.IcrsCoord, coord.Fk5Coord, coord.GalacticCoord, coord.EclipticCoord):
+            derived1 = CoordClass(1 * afwGeom.degrees, 2 * afwGeom.degrees)
+            self.assertEqual(type(derived1), CoordClass)
+            base = derived1.clone()
+            self.assertEqual(type(base), coord.Coord)
+            derived2 = CoordClass.cast(base)
+            self.assertEqual(type(derived2), CoordClass)
+
 #################################################################
 # Test suite boiler plate
 #################################################################

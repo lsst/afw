@@ -7,6 +7,7 @@ except:
     debug = False
 
 import optparse
+argparse = None                         # we're using optparse
 
 class GdbOptionParser(optparse.OptionParser):
     """A subclass of the standard optparse OptionParser for gdb
@@ -232,7 +233,7 @@ try:
                     opts.ny = int(args.pop(0))
 
                 if args:
-                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ".join(args))
 
             var = gdb.parse_and_eval(opts.eigenObject)
 
@@ -349,7 +350,7 @@ try:
                 opts.object = args.pop(0)
 
                 if args:
-                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ".join(args))
             
             var = gdb.parse_and_eval(opts.object)
             if re.search(r"shared_ptr<", str(var.type)):
@@ -586,16 +587,17 @@ try:
         def invoke (self, args, fromTty):
             self.dont_repeat()
 
-            parser = GdbOptionParser("show image")
+            parser = GdbOptionParser("show image" + ("" if argparse else " <image> [<nx> [<ny>]]"))
             parser.add_option("-a", "--all", action="store_true", help="Display the whole image/mask")
-            parser.add_option("-c", "--center", action="store_true", help="Center the output at (x, y)")
-            parser.add_option("-o", "--origin", type="str", nargs=2, default=("0", "0"),
+            parser.add_option("-c", "--center", type="str", nargs=2, default=(None, None,),
+                              help="Center the output at (x, y)")
+            parser.add_option("-o", "--origin", type="str", nargs=2, default=(None, None,),
                                 help="Print the region starting at (x, y)")
             parser.add_option("-x", "--xy0", action="store_true", help="Obey the image's (x0, y0)")
             parser.add_option("-f", "--formatWidth", type="int", default=8, help="Field width for values")
             parser.add_option("-d", "--dataFmt", default="%.2f", help="Format for values")
 
-            if False:
+            if argparse:
                 parser.add_option("image", help="Expression giving image to show")
                 parser.add_option("width", help="Width of patch to print", default=1, nargs="?")
                 parser.add_option("height", help="Height of patch to print", default=1, nargs="?")
@@ -620,10 +622,21 @@ try:
                     opts.height = int(args.pop(0))
 
                 if args:
-                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ",join(args))
+                    raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ".join(args))
 
-            x0 = gdb.parse_and_eval(opts.origin[0])
-            y0 = gdb.parse_and_eval(opts.origin[1])
+            for i in range(2):
+                val = "0"
+                if opts.origin[i] is None:
+                    if opts.center[i] is not None:
+                        val = opts.center[i]
+                else:
+                    val = opts.origin[i]
+                    if opts.center[i] is not None:
+                        raise gdb.GdbError("You may not specify both --center and --origin")
+                        
+                val = gdb.parse_and_eval(val)
+                if i == 0: x0 = val
+                else: y0 = val
 
             if opts.all:
                 nx, ny = 0, 0
@@ -664,11 +677,11 @@ try:
             if ny == 0:
                 ny = var["_gilView"]["_dimensions"]["y"]
 
-            if opts.center:
+            if opts.center[0]:
                 x0 -= nx//2
                 y0 -= ny//2
 
-            if opts.xy0:
+            if opts.xy0 and not opts.all:
                 arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
                 
                 x0 -= arr[0]

@@ -43,9 +43,8 @@
 
 %rename(__getitem__) lsst::afw::coord::Coord::operator[];
 
-// make dynamic casts available for each Coord type.
-// If the makeCoord factory returns a pointer to the base class,
-// ... and access to the derived members is required, these can be used to cast.
+// -----------------------------------------------------------------------
+// THESE CASTS ARE NOW DEPRECATED; USE E.G. `Fk5Coord.cast()` INSTEAD
 %inline %{
     lsst::afw::coord::Fk5Coord::Ptr cast_Fk5(lsst::afw::coord::Coord::Ptr c) {
         return boost::dynamic_pointer_cast<lsst::afw::coord::Fk5Coord>(c);
@@ -59,9 +58,14 @@
     lsst::afw::coord::EclipticCoord::Ptr cast_Ecliptic(lsst::afw::coord::Coord::Ptr c) {
         return boost::dynamic_pointer_cast<lsst::afw::coord::EclipticCoord>(c);
     }
-    // altaz omitted as it requires an Observatory and DateTime as well.
-    // ie. it's not similar enough to use the same factory
 %}
+// -----------------------------------------------------------------------
+
+%castShared(lsst::afw::coord::Fk5Coord, lsst::afw::coord::Coord)
+%castShared(lsst::afw::coord::IcrsCoord, lsst::afw::coord::Coord)
+%castShared(lsst::afw::coord::GalacticCoord, lsst::afw::coord::Coord)
+%castShared(lsst::afw::coord::EclipticCoord, lsst::afw::coord::Coord)
+%castShared(lsst::afw::coord::TopocentricCoord, lsst::afw::coord::Coord)
 
 %include "lsst/afw/coord/Utils.h"
 %include "lsst/afw/coord/Coord.h"
@@ -84,6 +88,24 @@ strCoord(Fk5Coord);
 strCoord(IcrsCoord);
 strCoord(GalacticCoord);
 strCoord(EclipticCoord);
+
+// Add __iter__ to allow  'ra,dec = coord' statement in python
+%define genCoord(TYPE)
+%extend lsst::afw::coord::TYPE {
+    %pythoncode {
+    def __iter__(self):
+        for i in 0,1:
+            yield self[i]
+    }
+}
+%enddef
+
+genCoord(Coord);
+genCoord(Fk5Coord);
+genCoord(IcrsCoord);
+genCoord(GalacticCoord);
+genCoord(EclipticCoord);
+
 
 // Add __reduce__ for Coord subclasses that take 3 arguments
 %define reduceCoord3(TYPE)

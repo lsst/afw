@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -31,6 +31,7 @@
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/LinearTransform.h"
+#include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
 namespace afw {
@@ -220,7 +221,7 @@ public:
      *     \end{array}\right]
      *  \f$
      */
-    static AffineTransform makeRotation(double t) { 
+    static AffineTransform makeRotation(Angle t) {
         return AffineTransform(LinearTransform::makeRotation(t));
     }
 
