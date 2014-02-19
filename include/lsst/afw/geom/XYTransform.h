@@ -49,7 +49,6 @@ class XYTransform : public daf::base::Citizen
 {
 public:
     typedef afw::geom::Point2D Point2D;
-    typedef afw::geom::ellipses::Quadrupole Quadrupole;
     typedef afw::geom::AffineTransform AffineTransform;
 
     XYTransform();
@@ -83,10 +82,6 @@ public:
      */
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
-
-    /// apply distortion to an (infinitesimal) quadrupole
-    Quadrupole forwardTransform(Point2D const &point, Quadrupole const &q) const;
-    Quadrupole reverseTransform(Point2D const &point, Quadrupole const &q) const;
 };
 
 
