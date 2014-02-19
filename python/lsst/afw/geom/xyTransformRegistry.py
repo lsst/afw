@@ -39,7 +39,7 @@ xyTransformRegistry = makeRegistry(
 def makeIdentityTransform(config=None):
     """Make an IdentityXYTransform (which has no config parameters)
     """
-    return IdentityXYTransform(False)
+    return IdentityXYTransform()
 makeIdentityTransform.ConfigClass = Config
 xyTransformRegistry.register("identity", makeIdentityTransform)
 
@@ -75,8 +75,12 @@ class RadialXYTransformConfig(Config):
         optional = False,
     )
     def validate(self):
-        if self.coeffs[0] != 0:
-            raise RuntimeError("coeffs[0] must be 0 for RadialXYTransform")
+        if len(self.coeffs) == 0:
+            return
+        if len(self.coeffs) == 1 or self.coeffs[0] != 0 or self.coeffs[1] == 0:
+            raise RuntimeError(
+                "invalid RadialXYTransform coeffs %s: " % (self.coeffs,) \
+                + " need len(coeffs)=0 or len(coeffs)>1, coeffs[0]==0, and coeffs[1]!=0")
 def makeRadialXYTransform(config):
     """Make a RadialXYTransform
     """

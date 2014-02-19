@@ -52,7 +52,7 @@ class DetectorWrapper(object):
             cameraGeom.CameraSys(cameraGeom.ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
         }
         if tryBadCameraSys:
-            self.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform(False)
+            self.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
         self.detector = cameraGeom.Detector(
             self.name,
             self.type,

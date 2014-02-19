@@ -55,7 +55,7 @@ TransformMap<CoordSys>::TransformMap(
     // insert identity transform for nativeCoordSys, if not already provided
     if (!contains(nativeCoordSys)) {
         _transforms.insert(std::make_pair(nativeCoordSys,
-            boost::make_shared<IdentityXYTransform>(false)));
+            boost::make_shared<IdentityXYTransform>()));
     }
 }
 

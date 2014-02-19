@@ -37,8 +37,8 @@ namespace geom {
 // XYTransform
 
 
-XYTransform::XYTransform(bool inFpCoordinateSystem) 
-    : daf::base::Citizen(typeid(this)), _inFpCoordinateSystem(inFpCoordinateSystem)
+XYTransform::XYTransform() 
+    : daf::base::Citizen(typeid(this))
 { }
 
 
@@ -74,16 +74,16 @@ PTR(XYTransform) XYTransform::invert() const
     return boost::make_shared<InvertedXYTransform> (this->clone());
 }
 
-ellipses::Quadrupole XYTransform::forwardTransform(Point2D const &pixel, Quadrupole const &q) const
+ellipses::Quadrupole XYTransform::forwardTransform(Point2D const &point, Quadrupole const &q) const
 {
     // Note: q.transform(L) returns (LQL^T)
-    AffineTransform a = linearizeForwardTransform(pixel);
+    AffineTransform a = linearizeForwardTransform(point);
     return q.transform(a.getLinear());
 }
 
-ellipses::Quadrupole XYTransform::reverseTransform(Point2D const &pixel, Quadrupole const &q) const
+ellipses::Quadrupole XYTransform::reverseTransform(Point2D const &point, Quadrupole const &q) const
 {
-    AffineTransform a = linearizeReverseTransform(pixel);
+    AffineTransform a = linearizeReverseTransform(point);
     return q.transform(a.getLinear());
 }
 
@@ -94,32 +94,32 @@ ellipses::Quadrupole XYTransform::reverseTransform(Point2D const &pixel, Quadrup
 // IdentityXYTransform
 
 
-IdentityXYTransform::IdentityXYTransform(bool inFpCoordinateSystem)
-    : XYTransform(inFpCoordinateSystem)
+IdentityXYTransform::IdentityXYTransform()
+    : XYTransform()
 { }
 
 PTR(XYTransform) IdentityXYTransform::clone() const
 {
-    return boost::make_shared<IdentityXYTransform> (_inFpCoordinateSystem);
+    return boost::make_shared<IdentityXYTransform> ();
 }
 
-Point2D IdentityXYTransform::forwardTransform(Point2D const &pixel) const
+Point2D IdentityXYTransform::forwardTransform(Point2D const &point) const
 {
-    return pixel;
+    return point;
 }
 
-Point2D IdentityXYTransform::reverseTransform(Point2D const &pixel) const
+Point2D IdentityXYTransform::reverseTransform(Point2D const &point) const
 {
-    return pixel;
+    return point;
 }
 
-AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &point) const
 {
     // note: AffineTransform constructor called with no arguments gives the identity transform
     return AffineTransform(); 
 }
 
-AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &point) const
 {
     // note: AffineTransform constructor called with no arguments gives the identity transform
     return AffineTransform(); 
@@ -132,7 +132,7 @@ AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &pi
 
 
 InvertedXYTransform::InvertedXYTransform(CONST_PTR(XYTransform) base)
-    : XYTransform(base->inFpCoordinateSystem()), _base(base)
+    : XYTransform(), _base(base)
 { }
 
 PTR(XYTransform) InvertedXYTransform::clone() const
@@ -146,37 +146,32 @@ PTR(XYTransform) InvertedXYTransform::invert() const
     return _base->clone();
 }
 
-Point2D InvertedXYTransform::forwardTransform(Point2D const &pixel) const
+Point2D InvertedXYTransform::forwardTransform(Point2D const &point) const
 {
-    return _base->reverseTransform(pixel);
+    return _base->reverseTransform(point);
 }
 
-Point2D InvertedXYTransform::reverseTransform(Point2D const &pixel) const
+Point2D InvertedXYTransform::reverseTransform(Point2D const &point) const
 {
-    return _base->forwardTransform(pixel);
+    return _base->forwardTransform(point);
 }
 
-AffineTransform InvertedXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+AffineTransform InvertedXYTransform::linearizeForwardTransform(Point2D const &point) const
 {
-    return _base->linearizeReverseTransform(pixel);
+    return _base->linearizeReverseTransform(point);
 }
 
-AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &point) const
 {
-    return _base->linearizeForwardTransform(pixel);
+    return _base->linearizeForwardTransform(point);
 }
 
 // -------------------------------------------------------------------------------------------------
 //
 // AffineXYTransform
-/*
- * @brief This wraps an AffineTransform as an XYTransform for inclusing in a TransformMap
- * Note that the inFpCoordinateSystem is not used and set to false
- *
- */
 
 AffineXYTransform::AffineXYTransform(AffineTransform const &affineTransform)
-    : XYTransform(false), _forwardAffineTransform(affineTransform), 
+    : XYTransform(), _forwardAffineTransform(affineTransform), 
       _reverseAffineTransform(_forwardAffineTransform.invert())
 { }
 
@@ -205,12 +200,12 @@ AffineTransform AffineXYTransform::getReverseTransform() const
     return _reverseAffineTransform;
 }
 
-AffineTransform AffineXYTransform::linearizeForwardTransform(Point2D const &pixel) const
+AffineTransform AffineXYTransform::linearizeForwardTransform(Point2D const &point) const
 {
     return _forwardAffineTransform;
 }
 
-AffineTransform AffineXYTransform::linearizeReverseTransform(Point2D const &pixel) const
+AffineTransform AffineXYTransform::linearizeReverseTransform(Point2D const &point) const
 {
     return _reverseAffineTransform; 
 }
@@ -222,7 +217,7 @@ AffineTransform AffineXYTransform::linearizeReverseTransform(Point2D const &pixe
 
 
 RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs, bool coefficientsDistort)
-    : XYTransform(true)
+    : XYTransform()
 {
     if (coeffs.size() == 0) {
         // constructor called with no arguments = identity transformation
@@ -233,7 +228,7 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs, bool coe
     else if ((coeffs.size() == 1) || (coeffs[0] != 0.0) || (coeffs[1] == 0.0)) {
         // Discontinuous or singular transformation; presumably unintentional so throw exception
         throw LSST_EXCEPT(pexEx::InvalidParameterException, 
-                          "invalid parameters for radial distortion");
+            "invalid parameters for radial distortion: need coeffs.size() != 1, coeffs[0]==0, coeffs[1]!=0");
     }
     else {
         _coeffs = coeffs;

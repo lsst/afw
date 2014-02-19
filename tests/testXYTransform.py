@@ -32,34 +32,7 @@ from lsst.pex.exceptions import LsstCppException
 from lsst.afw.geom import Extent2D, Point2D, xyTransformRegistry, \
     IdentityXYTransform, AffineXYTransform, RadialXYTransform
 
-class TransformWrapper(object):
-    """Wrap a TransformMap transformation as a function(Point2D)->Point2D
-    """
-    def __init__(self, transformMap, fromSys, toSys):
-        self.transformMap = transformMap
-        self.fromSys = fromSys
-        self.toSys = toSys
-
-    def __call__(self, point):
-        return self.transformMap.transform(point, self.fromSys, self.toSys)
-
-class FuncPair(object):
-    """Wrap a pair of function(Point2D)->Point2D functions as a single such function
-    """
-    def __init__(self, func1, func2):
-        self.func1 = func1
-        self.func2 = func2
-
-    def __call__(self, point):
-        return self.func2(self.func1(point))
-
-def unityTransform(point):
-    """Unity function(Point2D)->Point2D
-    """
-    return point
-
-
-class XYTransformRegistryTestCase(unittest.TestCase):
+class XYTransformTestCase(unittest.TestCase):
     def fromIter(self):
         for x in (-1.1, 0, 2.2):
             for y in (3.1, 0, 2.1):
@@ -175,12 +148,18 @@ class XYTransformRegistryTestCase(unittest.TestCase):
     def testBadRadial(self):
         """Test radial with invalid coefficients
         """
-        self.assertRaises(LsstCppException, RadialXYTransform, (0.1,))
+        for badCoeffs in (
+            (0.1,),     # len(coeffs) must be > 1
+            (0.1, 1.0), # coeffs[0] must be zero
+            (0.0, 0.0), # coeffs[1] must be nonzero
+            (0.0, 0.0, 0.1), # coeffs[1] must be nonzero
+        ):
+            self.assertRaises(LsstCppException, RadialXYTransform, badCoeffs)
 
-        radialClass = xyTransformRegistry["radial"]
-        radialConfig = radialClass.ConfigClass()
-        radialConfig.coeffs = (0.1,)
-        self.assertRaises(Exception, radialConfig.validate)
+            radialClass = xyTransformRegistry["radial"]
+            radialConfig = radialClass.ConfigClass()
+            radialConfig.coeffs = badCoeffs
+            self.assertRaises(Exception, radialConfig.validate)
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -191,7 +170,7 @@ def suite():
     lsst.utils.tests.init()
 
     suites = []
-    suites += unittest.makeSuite(XYTransformRegistryTestCase)
+    suites += unittest.makeSuite(XYTransformTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
