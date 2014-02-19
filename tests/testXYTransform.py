@@ -38,11 +38,27 @@ class XYTransformTestCase(unittest.TestCase):
             for y in (3.1, 0, 2.1):
                 yield Point2D(x, y)
 
-    def checkForwardReverse(self, transform):
+    def checkBasics(self, transform):
+        """Check round trip and linearization of transform
+        """
         for fromPoint in self.fromIter():
-            roundTripPoint = transform.reverseTransform(transform.forwardTransform(fromPoint))
+            toPoint = transform.forwardTransform(fromPoint)
+            roundTripPoint = transform.reverseTransform(toPoint)
             for i in range(2):
                 self.assertAlmostEqual(fromPoint[i], roundTripPoint[i])
+
+            for deltaFrom in (
+                Extent2D(0),
+                Extent2D(0.1, -0.1),
+                Extent2D(-0.15, 0.1),
+            ):
+                tweakedFromPoint = fromPoint + deltaFrom
+                tweakedToPoint = transform.forwardTransform(tweakedFromPoint)
+                linToPoint = transform.linearizeForwardTransform(fromPoint)(tweakedFromPoint)
+                linRoundTripPoint = transform.linearizeReverseTransform(toPoint)(tweakedToPoint)
+                for i in range(2):
+                    self.assertAlmostEqual(tweakedToPoint[i], linToPoint[i], places=2)
+                    self.assertAlmostEqual(tweakedFromPoint[i], linRoundTripPoint[i], places=2)
 
     def testIdentity(self):
         """Test identity = IdentityXYTransform
@@ -50,7 +66,7 @@ class XYTransformTestCase(unittest.TestCase):
         identClass = xyTransformRegistry["identity"]
         ident = identClass(identClass.ConfigClass())
         self.assertEquals(type(ident), IdentityXYTransform)
-        self.checkForwardReverse(ident)
+        self.checkBasics(ident)
         for fromPoint in self.fromIter():
             toPoint = ident.forwardTransform(fromPoint)
             for i in range(2):
@@ -62,7 +78,7 @@ class XYTransformTestCase(unittest.TestCase):
         affineClass = xyTransformRegistry["affine"]
         affine = affineClass(affineClass.ConfigClass())
         self.assertEquals(type(affine), AffineXYTransform)
-        self.checkForwardReverse(affine)
+        self.checkBasics(affine)
         for fromPoint in self.fromIter():
             toPoint = affine.forwardTransform(fromPoint)
             for i in range(2):
@@ -135,7 +151,7 @@ class XYTransformTestCase(unittest.TestCase):
         radialConfig.coeffs = (0, 1.05, 0.1)
         radial = radialClass(radialConfig)
         self.assertEquals(type(radial), RadialXYTransform)
-        self.checkForwardReverse(radial)
+        self.checkBasics(radial)
         for fromPoint in self.fromIter():
             fromRadius = math.hypot(fromPoint[0], fromPoint[1])
             fromAngle = math.atan2(fromPoint[1], fromPoint[0])
