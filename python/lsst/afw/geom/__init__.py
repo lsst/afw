@@ -24,6 +24,7 @@
 """
 from .geomLib import *
 from .xyTransformRegistry import *
+from .transformConfig import *
 
 BoxI = Box2I
 BoxD = Box2D
