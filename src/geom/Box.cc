@@ -282,6 +282,15 @@ bool geom::Box2I::operator!=(Box2I const & other) const {
     return other._minimum != this->_minimum || other._dimensions != this->_dimensions;
 }
 
+std::vector<geom::Point2I> geom::Box2I::getCorners() const {
+    std::vector<geom::Point2I> retVec;
+    retVec.push_back(getMin());
+    retVec.push_back(geom::Point2I(getMaxX(), getMinY()));
+    retVec.push_back(getMax());
+    retVec.push_back(geom::Point2I(getMinX(), getMaxY()));
+    return retVec;
+}
+
 double const geom::Box2D::EPSILON = std::numeric_limits<double>::epsilon()*2;
 
 double const geom::Box2D::INVALID = std::numeric_limits<double>::quiet_NaN();
@@ -518,6 +527,15 @@ bool geom::Box2D::operator==(Box2D const & other) const {
 bool geom::Box2D::operator!=(Box2D const & other) const {
     return !(other.isEmpty() && other.isEmpty()) &&
         (other._minimum != this->_minimum || other._maximum != this->_maximum);
+}
+
+std::vector<geom::Point2D> geom::Box2D::getCorners() const {
+    std::vector<geom::Point2D> retVec;
+    retVec.push_back(getMin());
+    retVec.push_back(geom::Point2D(getMaxX(), getMinY()));
+    retVec.push_back(getMax());
+    retVec.push_back(geom::Point2D(getMinX(), getMaxY()));
+    return retVec;
 }
 
 std::ostream & geom::operator<<(std::ostream & os, geom::Box2I const & box) {

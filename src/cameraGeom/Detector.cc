@@ -52,13 +52,7 @@ Detector::Detector(
 }
 
 std::vector<geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
-    std::vector<geom::Point2D> fromVec;
-    CONST_PTR(geom::XYTransform) cameraSysToPixelsPtr = _transformMap[cameraSys];
-    geom::Box2D const bboxD = geom::Box2D(_bbox);
-    fromVec.push_back(bboxD.getMin());
-    fromVec.push_back(geom::Point2D(bboxD.getMaxX(), bboxD.getMinY()));
-    fromVec.push_back(bboxD.getMax());
-    fromVec.push_back(geom::Point2D(bboxD.getMinX(), bboxD.getMaxY()));
+    std::vector<geom::Point2D> fromVec = geom::Box2D(_bbox).getCorners();
     return _transformMap.transform(fromVec, _transformMap.getNativeCoordSys(), cameraSys);
 }
 

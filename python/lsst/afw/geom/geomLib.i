@@ -56,8 +56,9 @@ Python interface to lsst::afw::geom classes
 
 %lsst_exceptions();
 
-%template(Point2IVector) std::vector<lsst::afw::geom::Point2I>;
-%template(Point2DVector) std::vector<lsst::afw::geom::Point2D>;
+%include "std_vector.i"
+%template(Point2IVector) std::vector<lsst::afw::geom::Point<int, 2> >;
+%template(Point2DVector) std::vector<lsst::afw::geom::Point<double, 2> >;
 
 %include "ndarray.i"
 
