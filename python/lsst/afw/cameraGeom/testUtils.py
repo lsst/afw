@@ -11,6 +11,7 @@ class DetectorWrapper(object):
     @param[in] name: detector name
     @param[in] detType: detector type
     @param[in] serial: serial "number" (a string)
+    @param[in] bbox: bounding box; defaults to something sensible
     @param[in] numAmps: number of amplifiers
     @param[in] pixelSize: pixel size (mm)
     @param[in] ampExtent: dimensions of amplifier image bbox
@@ -22,6 +23,7 @@ class DetectorWrapper(object):
         name = "detector 1",
         detType = cameraGeom.SCIENCE,
         serial = "xkcd722",
+        bbox = None,    # do not use mutable objects as defaults
         numAmps = 3,
         pixelSize = afwGeom.Extent2D(0.02),
         ampExtent = afwGeom.Extent2I(5,6), 
@@ -33,6 +35,9 @@ class DetectorWrapper(object):
         self.name = name
         self.type = detType
         self.serial = serial
+        if bbox is None:
+            bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1024, 1048))
+        self.bbox = bbox
         schema = afwTable.AmpInfoTable.makeMinimalSchema()
         self.ampInfo = afwTable.AmpInfoCatalog(schema)
         for i in range(numAmps):
@@ -57,6 +62,7 @@ class DetectorWrapper(object):
             self.name,
             self.type,
             self.serial,
+            self.bbox,
             self.ampInfo,
             self.orientation,
             self.pixelSize,

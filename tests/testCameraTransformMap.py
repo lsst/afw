@@ -24,6 +24,7 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.cameraGeom.CameraTransformMap
 """
+import itertools
 import unittest
 
 import lsst.utils.tests
@@ -61,14 +62,14 @@ def unityTransform(point):
 class CameraTransformMapTestCase(unittest.TestCase):
     def setUp(self):
         self.nativeSys = cameraGeom.FOCAL_PLANE
-        self.pupilTransform = afwGeom.RadialXYTransform([0, 0.5, 0.01])
-        transMap = {cameraGeom.PUPIL: self.pupilTransform}
-        self.transReg = cameraGeom.CameraTransformMap(self.nativeSys, transMap)
+        self.pupilTransform = afwGeom.RadialXYTransform([0, 0.5, 0.005])
+        transforms = {cameraGeom.PUPIL: self.pupilTransform}
+        self.transformMap = cameraGeom.CameraTransformMap(self.nativeSys, transforms)
 
     def tearDown(self):
         self.nativeSys = None
         self.pupilTransform = None
-        self.transReg = None
+        self.transformMap = None
 
     def compare2DFunctions(self, func1, func2, minVal=-10, maxVal=None, nVal=5):
         """Compare two functions(Point2D) -> Point2D over a range of values
@@ -90,13 +91,13 @@ class CameraTransformMapTestCase(unittest.TestCase):
         """Test basic attributes
         """
         for methodName in ("begin", "end", "contains", "size"):
-            self.assertFalse(hasattr(self.transReg, methodName))
+            self.assertFalse(hasattr(self.transformMap, methodName))
 
-        self.assertTrue(self.nativeSys in self.transReg)
-        self.assertTrue(cameraGeom.PUPIL in self.transReg)
-        self.assertFalse(cameraGeom.CameraSys("garbage") in self.transReg)
+        self.assertTrue(self.nativeSys in self.transformMap)
+        self.assertTrue(cameraGeom.PUPIL in self.transformMap)
+        self.assertFalse(cameraGeom.CameraSys("garbage") in self.transformMap)
 
-        csList = self.transReg.getCoordSysList()
+        csList = self.transformMap.getCoordSysList()
         self.assertTrue(len(csList) == 2)
         self.assertTrue(self.nativeSys in csList)
         self.assertTrue(cameraGeom.PUPIL in csList)
@@ -105,44 +106,62 @@ class CameraTransformMapTestCase(unittest.TestCase):
     def testIteration(self):
         """Test iteration, len and indexing
         """
-        self.assertEquals(len(self.transReg), 2)
+        self.assertEquals(len(self.transformMap), 2)
 
-        csList = self.transReg.getCoordSysList()
-        csList2 = [cs for cs in self.transReg]
-        self.assertEquals(len(csList), len(self.transReg))
+        csList = self.transformMap.getCoordSysList()
+        csList2 = [cs for cs in self.transformMap]
+        self.assertEquals(len(csList), len(self.transformMap))
         self.assertEquals(tuple(csList), tuple(csList2))
 
         for cs in csList:
-            xyTrans = self.transReg[cs]
+            xyTrans = self.transformMap[cs]
             self.assertTrue(isinstance(xyTrans, afwGeom.XYTransform))
 
-        self.assertRaises(LsstCppException, self.transReg.__getitem__, cameraGeom.CameraSys("missing"))
+        self.assertRaises(LsstCppException, self.transformMap.__getitem__, cameraGeom.CameraSys("missing"))
 
-    def testTransforms(self):
+    def testGetItem(self):
         """Test that the contained transforms are the ones expected
         """
-        nativeTr = self.transReg[self.nativeSys]
+        nativeTr = self.transformMap[self.nativeSys]
         self.compare2DFunctions(nativeTr.forwardTransform, unityTransform)
         self.compare2DFunctions(nativeTr.reverseTransform, unityTransform)
 
-        pupilTr = self.transReg[cameraGeom.PUPIL]
+        pupilTr = self.transformMap[cameraGeom.PUPIL]
         self.compare2DFunctions(pupilTr.forwardTransform, self.pupilTransform.forwardTransform)
         self.compare2DFunctions(pupilTr.reverseTransform, self.pupilTransform.reverseTransform)
 
     def testTransform(self):
-        """Test transform
+        """Test transform method, point version
         """
-        for fromSys in self.transReg.getCoordSysList():
-            for toSys in self.transReg.getCoordSysList():
-                trConvFunc = TransformWrapper(self.transReg, fromSys, toSys)
+        for fromSys in self.transformMap.getCoordSysList():
+            for toSys in self.transformMap.getCoordSysList():
+                trConvFunc = TransformWrapper(self.transformMap, fromSys, toSys)
                 if fromSys == toSys:
                     self.compare2DFunctions(trConvFunc, unityTransform)
                 funcPair = FuncPair(
-                    self.transReg[fromSys].forwardTransform,
-                    self.transReg[toSys].reverseTransform,
+                    self.transformMap[fromSys].forwardTransform,
+                    self.transformMap[toSys].reverseTransform,
                 )
                 self.compare2DFunctions(trConvFunc, funcPair)
 
+    def testTransformList(self):
+        """Test transform method, list version
+        """
+        fromList = []
+        for x in (-1.2, 0.0, 25.3):
+            for y in (-23.4, 0.0, 2.3):
+                fromList.append(afwGeom.Point2D(x, y))
+
+        for fromSys in self.transformMap.getCoordSysList():
+            for toSys in self.transformMap.getCoordSysList():
+#                import os, pdb; print "PID =", os.getpid(); pdb.set_trace()
+                toList = self.transformMap.transform(fromList, fromSys, toSys)
+
+                self.assertEquals(len(fromList), len(toList))
+                for fromPoint, toPoint in itertools.izip(fromList, toList):
+                    predToPoint = self.transformMap.transform(fromPoint, fromSys, toSys)
+                    for i in range(2):
+                        self.assertAlmostEqual(predToPoint[i], toPoint[i])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

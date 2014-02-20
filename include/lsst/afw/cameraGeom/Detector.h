@@ -24,6 +24,7 @@
 #define LSST_AFW_CAMERAGEOM_DETECTOR_H
 
 #include <string>
+#include <vector>
 #include "lsst/base.h"
 #include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/table/AmpInfo.h"
@@ -77,6 +78,7 @@ public:
         std::string const &name,    ///< name of detector's location in the camera
         DetectorType type,          ///< type of detector
         std::string const &serial,  ///< serial "number" that identifies the physical detector
+        geom::Box2I const &bbox,    ///< bounding box
         lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog, ///< catalog of amplifier information
         Orientation const &orientation,     ///< detector position and orientation in focal plane
         geom::Extent2D const &pixelSize,    ///< pixel size (mm)
@@ -85,41 +87,19 @@ public:
 
     ~Detector() {}
 
-    /**
-     * Convert a CameraPoint from one coordinate system to another
-     *
-     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
-     */
-    CameraPoint transform(
-        CameraPoint const &fromPoint,   ///< camera point to transform
-        CameraSys const &toSys          ///< coordinate system to which to transform
-    ) const {
-        return CameraPoint(
-            _transformMap.transform(fromPoint.getPoint(), fromPoint.getCameraSys(), toSys),
-            toSys);
-    }
-
-    /**
-     * Convert a CameraPoint from one coordinate system to a coordinate system prefix
-     *
-     * The coordinate system prefix is filled in with this detector's name
-     *
-     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
-     */
-    CameraPoint transform(
-        CameraPoint const &fromPoint,   ///< camera point to transform
-        CameraSysPrefix const &toSys    ///< coordinate system prefix to which to transform
-    ) const {
-        return transform(fromPoint, makeCameraSys(toSys));
-    }
-
     /** Get the detector name */
-    std::string const getName() const { return _name; }
+    std::string getName() const { return _name; }
 
     DetectorType getType() const { return _type; }
 
     /** Get the detector serial "number" */
-    std::string const getSerial() const { return _serial; }
+    std::string getSerial() const { return _serial; }
+
+    /** Get the bounding box */
+    lsst::afw::geom::Box2I getBBox() const { return _bbox; }
+
+    /** Get the corners of the detector in the specified coordinate system */
+    std::vector<geom::Point2D> getCorners(CameraSys const &cameraSys) const;
 
     /** Get the amplifier information catalog */
     lsst::afw::table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
@@ -128,7 +108,7 @@ public:
     Orientation const getOrientation() const { return _orientation; }
 
     /** Get size of pixel along (mm) */
-    geom::Extent2D const getPixelSize() const { return _pixelSize; }
+    geom::Extent2D getPixelSize() const { return _pixelSize; }
 
     /** Get the transform registry */
     CameraTransformMap const getTransformMap() const { return _transformMap; }
@@ -190,6 +170,34 @@ public:
         return CameraSys(cameraSysPrefix.getSysName(), _name);
     }
 
+    /**
+     * Convert a CameraPoint from one coordinate system to another
+     *
+     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
+     */
+    CameraPoint transform(
+        CameraPoint const &fromCameraPoint, ///< camera point to transform
+        CameraSys const &toSys          ///< coordinate system to which to transform
+    ) const {
+        return CameraPoint(
+            _transformMap.transform(fromCameraPoint.getPoint(), fromCameraPoint.getCameraSys(), toSys),
+            toSys);
+    }
+
+    /**
+     * Convert a CameraPoint from one coordinate system to a coordinate system prefix
+     *
+     * The coordinate system prefix is filled in with this detector's name
+     *
+     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
+     */
+    CameraPoint transform(
+        CameraPoint const &fromCameraPoint, ///< camera point to transform
+        CameraSysPrefix const &toSys    ///< coordinate system prefix to which to transform
+    ) const {
+        return transform(fromCameraPoint, makeCameraSys(toSys));
+    }
+
 private:
     typedef boost::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
     /**
@@ -207,6 +215,7 @@ private:
     std::string _name;      ///< name of detector's location in the camera
     DetectorType _type;     ///< type of detectorsize_t
     std::string _serial;    ///< serial "number" that identifies the physical detector
+    geom::Box2I _bbox;      ///< bounding box
     table::AmpInfoCatalog _ampInfoCatalog; ///< list of amplifier data
     _AmpInfoMap _ampNameIterMap;    ///< map of amplifier name: catalog iterator
     Orientation _orientation;       ///< position and orientation of detector in focal plane

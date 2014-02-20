@@ -109,7 +109,7 @@ std::vector<Point2D> TransformMap<CoordSys>::transform(
     if (toCoordSys != _nativeCoordSys) {
         CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
         for (std::vector<Point2D>::iterator nativePtIter = outList.begin();
-            nativePtIter != pointList.end(); ++nativePtIter) {
+            nativePtIter != outList.end(); ++nativePtIter) {
             *nativePtIter = toTransform->reverseTransform(*nativePtIter);
         }
     }

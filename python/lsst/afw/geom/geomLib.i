@@ -38,6 +38,7 @@ Python interface to lsst::afw::geom classes
 #pragma SWIG nowarn=503                 // comparison operators ignored
 
 %{
+#include <vector>
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
@@ -54,6 +55,9 @@ Python interface to lsst::afw::geom classes
 %import "lsst/daf/base/baseLib.i"
 
 %lsst_exceptions();
+
+%template(Point2IVector) std::vector<lsst::afw::geom::Point2I>;
+%template(Point2DVector) std::vector<lsst::afw::geom::Point2D>;
 
 %include "ndarray.i"
 

@@ -24,6 +24,7 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
+import itertools
 import unittest
 
 import lsst.utils.tests
@@ -44,6 +45,10 @@ class DetectorTestCase(unittest.TestCase):
         self.assertEquals(dw.name,   detector.getName())
         self.assertEquals(dw.type,   detector.getType())
         self.assertEquals(dw.serial, detector.getSerial())
+        bbox = detector.getBBox()
+        for i in range(2):
+            self.assertEquals(bbox.getMin()[i], dw.bbox.getMin()[i])
+            self.assertEquals(bbox.getMax()[i], dw.bbox.getMax()[i])
         self.assertAlmostEquals(dw.pixelSize, detector.getPixelSize())
         self.assertEquals(len(detector), len(dw.ampInfo))
 
@@ -133,6 +138,21 @@ class DetectorTestCase(unittest.TestCase):
             outCamSys2 = dw.detector.makeCameraSys(inCamSysPrefix)
             self.assertEquals(outCamSys2, cameraGeom.CameraSys(sysName, dw.name))
 
+    def testGetCorners(self):
+        """Test the getCorners method
+        """
+        dw = DetectorWrapper()
+        cameraSys = cameraGeom.FOCAL_PLANE
+        cornerList = dw.detector.getCorners(cameraSys)
+        for fromPoint, toPoint in itertools.izip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
+            predToCameraPoint = dw.detector.transform(
+                dw.detector.makeCameraPoint(fromPoint, cameraGeom.PIXELS),
+                cameraSys,
+            )
+            predToPoint = predToCameraPoint.getPoint()
+            self.assertEquals(predToCameraPoint.getCameraSys(), cameraSys)
+            for i in range(2):
+                self.assertAlmostEquals(predToPoint[i], toPoint[i])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -32,6 +32,7 @@ Detector::Detector(
     std::string const &name,
     DetectorType type,
     std::string const &serial,
+    geom::Box2I const &bbox,
     table::AmpInfoCatalog const &ampInfoCatalog,
     Orientation const &orientation,
     geom::Extent2D const & pixelSize,
@@ -40,6 +41,7 @@ Detector::Detector(
     _name(name),
     _type(type),
     _serial(serial),
+    _bbox(bbox),
     _ampInfoCatalog(ampInfoCatalog),
     _ampNameIterMap(),
     _orientation(orientation),
@@ -47,6 +49,17 @@ Detector::Detector(
     _transformMap(CameraSys(PIXELS.getSysName(), name), transforms)
 {
     _init();
+}
+
+std::vector<geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) const {
+    std::vector<geom::Point2D> fromVec;
+    CONST_PTR(geom::XYTransform) cameraSysToPixelsPtr = _transformMap[cameraSys];
+    geom::Box2D const bboxD = geom::Box2D(_bbox);
+    fromVec.push_back(bboxD.getMin());
+    fromVec.push_back(geom::Point2D(bboxD.getMaxX(), bboxD.getMinY()));
+    fromVec.push_back(bboxD.getMax());
+    fromVec.push_back(geom::Point2D(bboxD.getMinX(), bboxD.getMaxY()));
+    return _transformMap.transform(fromVec, _transformMap.getNativeCoordSys(), cameraSys);
 }
 
 const table::AmpInfoRecord & Detector::operator[](std::string const &name) const {
@@ -80,5 +93,6 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
             }
     }
 }
+
 
 }}}
