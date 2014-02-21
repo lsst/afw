@@ -3,7 +3,7 @@ from lsst.afw.cameraGeom import FOCAL_PLANE, PUPIL, PIXELS, ACTUAL_PIXELS, Camer
                                 Camera, Detector, Orientation, CameraTransformMap, CameraSys
 
 class CameraFactoryTask(object):
-    configClass = CameraConfig
+    ConfigClass = CameraConfig
     coordSysList = [PUPIL, FOCAL_PLANE, PIXELS, ACTUAL_PIXELS]
     coordSysMap = dict([(sys.getSysName(), sys) for sys in coordSysList])
     def __init__(self, config, ampInfoCatDict):
@@ -37,7 +37,6 @@ class CameraFactoryTask(object):
         orientation = self.makeOrientation(config)
         pixelSize = afwGeom.Extent2D(config.pixelSize_x, config.pixelSize_y)
         transformDict = {FOCAL_PLANE:orientation.makePixelFpTransform(pixelSize)}
-        nativeSys = CameraSys(self.coordSysMap[config.transformDict.nativeSys], config.name)
         transforms = self.makeTransformDict(config.transformDict.transforms, defaultMap=transformDict)
         llPoint = afwGeom.Point2I(config.bbox_x0, config.bbox_y0)
         urPoint = afwGeom.Point2I(config.bbox_x1, config.bbox_y1)
