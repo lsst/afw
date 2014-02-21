@@ -22,7 +22,9 @@ from __future__ import absolute_import, division
 #
 import numpy
 from lsst.pex.config import Config, ListField, makeRegistry, Field
-from .geomLib import IdentityXYTransform, AffineTransform, AffineXYTransform, RadialXYTransform
+from lsst.afw.geom import Point2D
+from .geomLib import IdentityXYTransform, AffineTransform, AffineXYTransform, \
+                     RadialXYTransform, PupilXYTransform
 
 __all__ = ["xyTransformRegistry"]
 

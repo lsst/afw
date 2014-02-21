@@ -34,4 +34,6 @@ class CameraConfig(pexConfig.Config):
 
     # Parameters to build a simple pupil to focalplane transform
     plateScale = pexConfig.Field("Plate scale of the camera in arcsec/mm", float)
-    # TODO should we add a field for radial distortion coefficients?
+    pincushion = pexConfig.Field("Amount of pincushion(+ve)/barrel(-ve) distortion to apply.", float)
+    boresiteOffset_x = pexConfig.Field("Offset of the camera coordinates system relative to the boresite (x value)", float)
+    boresiteOffset_y = pexConfig.Field("Offset of the camera coordinates system relative to the boresite (y value)", float)
