@@ -43,7 +43,7 @@ namespace cameraGeom {
  * All rotations are about the reference point on the detector.
  * Rotations are intrinsic, meaning each rotation is applied in the coordinates system
  * produced by the previous rotation.
- * Rotations are applied in this order: yaw (Z), roll (Y'), and pitch (X'').
+ * Rotations are applied in this order: yaw (Z), pitch (Y'), and roll (X'').
  *
  * @warning: default refPoint is -0.5, -0.5 (the lower left corner of a detector).
  * This means that the default-constructed Orientation is not a unity transform,
@@ -59,13 +59,13 @@ public:
             ///< Offset is measured to this point and all all rotations are about this point.
             ///< The default value (-0.5, -0.5) is the lower left corner of the detector.
         geom::Angle const yaw=geom::Angle(0),   ///< yaw: rotation about Z (X to Y), 1st rotation
-        geom::Angle const roll=geom::Angle(0),  ///< roll: rotation about Y' (Z'=Z to X'), 2nd rotation
-        geom::Angle const pitch=geom::Angle(0)  ///< pitch: rotation about X'' (Y''=Y' to Z''), 3rd rotation
+        geom::Angle const pitch=geom::Angle(0),  ///< pitch: rotation about Y' (Z'=Z to X'), 2nd rotation
+        geom::Angle const roll=geom::Angle(0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
     ) :
         _fpPosition(fpPosition), _refPoint(refPoint),
         _yaw(yaw), _cosYaw(std::cos(yaw)),  _sinYaw(std::sin(yaw)),
-        _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll)),
-        _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch))
+        _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
+        _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll))
     {
         // This comes from the rotation matrix written down here:
         // http://en.wikipedia.org/wiki/Euler_angles
@@ -103,20 +103,9 @@ public:
         jacobian << _coeffA*pixelSizeMm.getX(), _coeffB*pixelSizeMm.getY(),
                     _coeffD*pixelSizeMm.getX(), _coeffE*pixelSizeMm.getY();
 
-/*
-        jacobian(0,0) = _coeffA*pixelSizeMm.getX();
-        jacobian(0,1) = _coeffB*pixelSizeMm.getY();
-        jacobian(1,0) = _coeffD*pixelSizeMm.getX();
-        jacobian(1,1) = _coeffE*pixelSizeMm.getY();
-*/
-
         Eigen::Vector2d translation; 
         translation << _fpPosition.getX() - pixelSizeMm.getX()*_refPoint.getX(), 
                        _fpPosition.getY() - pixelSizeMm.getY()*_refPoint.getY();
-/*
-        translation[0] = _fpPosition.getX() - pixelSizeMm.getX()*_refPoint.getX();
-        translation[1] = _fpPosition.getY() - pixelSizeMm.getY()*_refPoint.getY();
-*/
 
         geom::AffineTransform affineTransform = geom::AffineTransform(jacobian, translation);
         return geom::AffineXYTransform(affineTransform);
@@ -142,13 +131,13 @@ private:
     double _cosYaw;                     ///< cos(yaw)
     double _sinYaw;                     ///< sin(yaw)
 
-    lsst::afw::geom::Angle _roll;       ///< roll
-    double _cosRoll;                    ///< cos(roll)
-    double _sinRoll;                    ///< sin(roll)
-
     lsst::afw::geom::Angle _pitch;      ///< pitch
     double _cosPitch;                   ///< cos(pitch)
     double _sinPitch;                   ///< sin(pitch)
+
+    lsst::afw::geom::Angle _roll;       ///< roll
+    double _cosRoll;                    ///< cos(roll)
+    double _sinRoll;                    ///< sin(roll)
 
     // Elements of the Jacobian for three space rotation projected into XY plane.
     double _coeffA;                     ///< 01 element

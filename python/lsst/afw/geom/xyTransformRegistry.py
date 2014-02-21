@@ -21,7 +21,7 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import numpy
-from lsst.pex.config import Config, ListField, makeRegistry
+from lsst.pex.config import Config, ListField, makeRegistry, Field
 from .geomLib import IdentityXYTransform, AffineTransform, AffineXYTransform, RadialXYTransform
 
 __all__ = ["xyTransformRegistry"]
@@ -42,6 +42,31 @@ def makeIdentityTransform(config=None):
     return IdentityXYTransform()
 makeIdentityTransform.ConfigClass = Config
 xyTransformRegistry.register("identity", makeIdentityTransform)
+
+class PupilXYTransformConfig(Config):
+    plateScale = Field(
+        doc = "The platescale of the system in arces/mm",
+        dtype = float,
+    )
+    pincushion = Field(
+        doc = "The amount of pincushion(+ve)/barrel(-ve) distortion in the system",
+        dtype = float,
+    )
+    boresiteOffset_x = Field(
+        doc = "Offset of the camera coordinate system from the boresite in mm (x value)",
+        dtype = float,
+    )
+    boresiteOffset_y = Field(
+        doc = "Offset of the camera coordinate system from the boresite in mm (y value)",
+        dtype = float,
+    )
+def makePupilXYTransform(config):
+    """Make an PupilXYTransform
+    """
+    boresiteOffset = Point2D(config.boresiteOffset_x, config.boresiteOffset_y)
+    return PupilXYTransform(config.plateScale, config.pincushion, boresiteOffset)
+makePupilXYTransform.ConfigClass = PupilXYTransformConfig
+xyTransformRegistry.register("pupil", makePupilXYTransform)
 
 class AffineXYTransformConfig(Config):
     linear = ListField(

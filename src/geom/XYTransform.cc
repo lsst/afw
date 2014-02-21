@@ -23,7 +23,9 @@
  */
 
 #include "lsst/afw/geom/XYTransform.h"
+#include "lsst/afw/geom/Angle.h"
 #include "boost/make_shared.hpp"
+#include <math.h>
 
 namespace pexEx = lsst::pex::exceptions;
 
@@ -152,6 +154,67 @@ AffineTransform InvertedXYTransform::linearizeReverseTransform(Point2D const &po
 {
     return _base->linearizeForwardTransform(point);
 }
+
+// -------------------------------------------------------------------------------------------------
+//
+// PupilXYTransform -- This is a transform to go from pupil to focalplane and back.  Note that
+// it only includes pincushion/barrel distortion.  
+
+PupilXYTransform::PupilXYTransform(double plateScale, ///< plateScale in arcsec/mm
+                                   double pincushion, ///< pincushion if +ve barrel if -ve
+                                   Point2D const &boresiteOffset=Point2D(0., 0.)
+                                       ///< offset of the focalplane origin from the boresite in mm
+                                   )
+    : XYTransform(), _platescale(plateScale), _pincushion(pincushion), _offset(boresiteOffset)
+{ 
+    _coeffs.resize(4);
+    _coeffs[0] = 0.;
+    _coeffs[1] = 1.;
+    _coeffs[2] = 0.;
+    _coeffs[3] = _pincushion;
+
+    _icoeffs = RadialXYTransform::polyInvert(_coeffs);
+}
+
+PTR(XYTransform) PupilXYTransform::clone() const
+{
+    return boost::make_shared<PupilXYTransform> (_platescale, _pincushion, _offset);
+}
+
+Point2D PupilXYTransform::forwardTransform(Point2D const &position) const ///< position in the Pupil in radians 
+                                                                          ///< first is azimuthal angle second is radial
+{
+    double cosalpha = std::cos(position[0]);
+    double sinalpha = std::sin(position[1]);
+    double x = position[1]*cosalpha + _pincushion*pow(position[0],3)*cosalpha;
+    double y = position[1]*sinalpha + _pincushion*pow(position[0],3)*sinalpha;
+    double xmm = radToArcsec(x)/_platescale - _offset[0];
+    double ymm = radToArcsec(y)/_platescale - _offset[1];
+    return Point2D(xmm, ymm);
+}
+
+Point2D PupilXYTransform::reverseTransform(Point2D const &position) const ///< position in the focalplane in mm.
+{   
+    double x = arcsecToRad(position.getX()*_platescale);
+    double y = arcsecToRad(position.getY()*_platescale);
+    double rp = sqrt(x*x + y*y);
+    double beta = RadialXYTransform::polyEvalInverse(_coeffs, _icoeffs, rp);
+    double alpha = atan(x/y);
+    return Point2D(alpha, beta);
+}
+
+AffineTransform PupilXYTransform::linearizeForwardTransform(Point2D const &point) const
+{
+    throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Not implemented yet");
+    return AffineTransform();
+}
+
+AffineTransform PupilXYTransform::linearizeReverseTransform(Point2D const &point) const
+{
+    throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Not implemented yet.");
+    return AffineTransform();
+}
+
 
 // -------------------------------------------------------------------------------------------------
 //

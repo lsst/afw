@@ -37,15 +37,15 @@ class OrientationWrapper(object):
         fpPosition = afwGeom.Point2D(0, 0),
         refPoint = afwGeom.Point2D(-0.5, -0.5),
         yaw = afwGeom.Angle(0),
-        roll = afwGeom.Angle(0),
         pitch = afwGeom.Angle(0),
+        roll = afwGeom.Angle(0),
     ):
         self.fpPosition = fpPosition
         self.refPoint = refPoint
         self.yaw = yaw
-        self.roll = roll
         self.pitch = pitch
-        self.orient = Orientation(fpPosition, refPoint, yaw, roll, pitch)
+        self.roll = roll
+        self.orient = Orientation(fpPosition, refPoint, yaw, pitch, roll)
 
 class OrientationTestCase(unittest.TestCase):
     def testDefaultConstructor(self):
@@ -105,8 +105,8 @@ class OrientationTestCase(unittest.TestCase):
             fpPosition = afwGeom.Point2D(0.1, -0.2),
             refPoint = afwGeom.Point2D(-5.7, 42.3),
             yaw = afwGeom.Angle(-0.53),
-            roll = afwGeom.Angle(1.2),
             pitch = afwGeom.Angle(0.234),
+            roll = afwGeom.Angle(1.2),
         )
         for i in range(2):
             self.assertAlmostEquals(ow.fpPosition[i], ow.orient.getFpPosition()[i])

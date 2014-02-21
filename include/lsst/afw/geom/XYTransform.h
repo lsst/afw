@@ -125,6 +125,33 @@ protected:
 
 
 /**
+ * @brief This class privides a transform from anglular coordinates in the pupil to
+ * position in the focal plane.  Only pincushion/barrel distortion is taken into 
+ * account.
+ *
+ */
+class PupilXYTransform : public XYTransform
+{
+public:
+    PupilXYTransform(double plateScale, double pincushion, Point2D const &boresiteOffset);
+    virtual ~PupilXYTransform() { }
+
+    virtual PTR(XYTransform) clone() const;
+    virtual Point2D forwardTransform(Point2D const &position) const;
+    virtual Point2D reverseTransform(Point2D const &position) const;
+    virtual AffineTransform linearizeForwardTransform(Point2D const &position) const;
+    virtual AffineTransform linearizeReverseTransform(Point2D const &position) const;
+
+protected:    
+    double _platescale; ///< platescale in arcsec/mm
+    double _pincushion; ///< amount of pincushion(+ve)/barrel(-ve) distortion 
+    geom::Point2D _offset; ///< offset of the focalplane origin from the boresite in mm.
+    std::vector<double> _coeffs;
+    std::vector<double> _icoeffs;
+};
+
+
+/**
  * @brief This class wraps an AffineTransform to work like an XYTransform
  *
  */
