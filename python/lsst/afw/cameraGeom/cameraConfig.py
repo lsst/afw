@@ -32,8 +32,10 @@ class CameraConfig(pexConfig.Config):
     transformDict = pexConfig.ConfigField("Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
     name = pexConfig.Field("Name of this camera", str)
 
-    # Parameters to build a simple pupil to focalplane transform
     plateScale = pexConfig.Field("Plate scale of the camera in arcsec/mm", float)
-    pincushion = pexConfig.Field("Amount of pincushion(+ve)/barrel(-ve) distortion to apply.", float)
-    boresiteOffset_x = pexConfig.Field("Offset of the camera coordinates system relative to the boresite (x value)", float)
-    boresiteOffset_y = pexConfig.Field("Offset of the camera coordinates system relative to the boresite (y value)", float)
+    # Note that the radial transform will also apply a scaling, so all coefficients should be 
+    # scaled by the plate scale in appropriate units
+    radialCoeffs = pexConfig.ListField("Coefficients for radial distortion", float)
+    # The following is commented until radialXYTransform supports an offset (ticket/3155)
+    #boresiteOffset_x = pexConfig.Field("Offset of the camera coordinates system relative to the boresite (x value)", float)
+    #boresiteOffset_y = pexConfig.Field("Offset of the camera coordinates system relative to the boresite (y value)", float)

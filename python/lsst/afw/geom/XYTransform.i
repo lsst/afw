@@ -31,7 +31,6 @@
 %shared_ptr(lsst::afw::geom::XYTransform);
 %shared_ptr(lsst::afw::geom::IdentityXYTransform);
 %shared_ptr(lsst::afw::geom::InvertedXYTransform);
-%shared_ptr(lsst::afw::geom::PupilXYTransform);
 %shared_ptr(lsst::afw::geom::AffineXYTransform);
 %shared_ptr(lsst::afw::geom::RadialXYTransform);
 %shared_ptr(lsst::afw::geom::DetectorXYTransform);
