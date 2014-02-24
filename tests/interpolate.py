@@ -44,12 +44,12 @@ import lsst.pex.exceptions as pexExcept
 
 class InterpolateTestCase(unittest.TestCase):
     
-    """A test case for Interpolate Lienar"""
+    """A test case for Interpolate Linear"""
     def setUp(self):
         self.n = 10
-        self.x = afwMath.vectorD(self.n)
-        self.y1 = afwMath.vectorD(self.n)
-        self.y2 = afwMath.vectorD(self.n)
+        self.x = np.zeros(self.n, dtype=float)
+        self.y1 = np.zeros(self.n, dtype=float)
+        self.y2 = np.zeros(self.n, dtype=float)
         self.y0 = 1.0
         self.dydx = 1.0
         self.d2ydx2 = 0.5
@@ -127,14 +127,17 @@ class InterpolateTestCase(unittest.TestCase):
         """Test that invalid inputs cause an abort"""
 
         self.assertRaises(pexExcept.InvalidParameterError,
-                                       lambda : afwMath.makeInterpolate([], [],
-                                                                        afwMath.Interpolate.CONSTANT))
+            lambda : afwMath.makeInterpolate(np.array([], dtype=float), np.array([], dtype=float),
+                                             afwMath.Interpolate.CONSTANT)
+            )
 
-        afwMath.makeInterpolate([0], [1], afwMath.Interpolate.CONSTANT)
+        afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
+                                afwMath.Interpolate.CONSTANT)
 
         self.assertRaises(pexExcept.OutOfRangeError,
-                                       lambda : afwMath.makeInterpolate([0], [1],
-                                                                        afwMath.Interpolate.LINEAR))
+            lambda : afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
+                                             afwMath.Interpolate.LINEAR))
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
