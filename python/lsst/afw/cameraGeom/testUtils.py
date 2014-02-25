@@ -53,7 +53,7 @@ class DetectorWrapper(object):
         self.orientation = orientation
         self.pixelSize = pixelSize
         self.transMap = {
-            cameraGeom.FOCAL_PLANE: self.orientation.makeFpPixelTransform(self.pixelSize),
+            cameraGeom.FOCAL_PLANE: self.orientation.makePixelFpTransform(self.pixelSize),
             cameraGeom.CameraSys(cameraGeom.ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
         }
         if tryBadCameraSys:

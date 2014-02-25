@@ -38,11 +38,12 @@ namespace geom {
  * A registry of 2-dimensional coordinate transforms, templated on CoordSys
  *
  * Contains a native CoordSys and a map of CoordSys: XYTransform (including an entry for the native CoordSys).
- * Each map entry describes a conversion from CoordSys to native CoordSys via XYTransform.forwardTransform.
+ * Each map entry is an XYTransform whose forwardTransform method converts from the native system to CoordSys.
  *
  * TransformMap supports transforming between any two supported CoordSys using the transform method.
- * It also allows iteration over the map of CoordSys: XYTransform. (In Python iteration is over
- * CoordSys; use TransformMap[CoordSys] to access the XYTransform).
+ * It also allows iteration over the map of CoordSys: XYTransform:
+ * * In C++ the iterator is a CoordSys, CONST_PTR(XYTransform) pair.
+ * * In Python, the iterator returns a CoordSys; use TransformMap[CoordSys] to access the XYTransform.
  *
  * If CoordSys is not a plain old data type or std::string then:
  * * CoordSys must have a default constructor (no arguments), so SWIG can wrap some collections

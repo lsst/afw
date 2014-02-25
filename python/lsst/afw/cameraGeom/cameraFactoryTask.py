@@ -1,68 +1,81 @@
+import os.path
 import lsst.afw.geom as afwGeom
-from lsst.afw.cameraGeom import FOCAL_PLANE, PUPIL, PIXELS, ACTUAL_PIXELS, CameraConfig, \
-                                Camera, Detector, Orientation, CameraTransformMap, CameraSys
+from lsst.afw.table import AmpInfoCatalog
+from lsst.afw.cameraGeom import FOCAL_PLANE, PUPIL, PIXELS, ACTUAL_PIXELS, \
+                                Camera, Detector, Orientation, CameraTransformMap
+
+__all__ = ["CameraFactoryTask"]
 
 class CameraFactoryTask(object):
-    ConfigClass = CameraConfig
-    coordSysList = [PUPIL, FOCAL_PLANE, PIXELS, ACTUAL_PIXELS]
-    coordSysMap = dict([(sys.getSysName(), sys) for sys in coordSysList])
-    def __init__(self, config, ampInfoCatDict):
-        '''
-        Construct a CameraFactoryTask
-        @param config -- CameraConfig object for this camera
-        @param ampInfoCatDict -- Dictionary of afwTable.AmpInfoCatalog objects keyed on detector.name
-        '''
-        self.config = config
-        self.ampInfo = ampInfoCatDict
+    """Make a camera
 
-    def run(self):
-        '''
-        Construct a camera given a camera config
-        '''
+    Eventually we hope that camera data will be unpersisted using a butler,
+    which is why this is written to look something like a Task.
+    """
+    cameraSysList = [PUPIL, FOCAL_PLANE, PIXELS, ACTUAL_PIXELS]
+    cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
+
+    def __init__(self):
+        """Construct a CameraFactoryTask
+        """
+        pass
+
+    def run(self, cameraConfig, ampInfoPath):
+        """Construct a camera (lsst.afw.cameraGeom Camera)
+
+        @param[in] cameraConfig: an instance of CameraConfig
+        @param[in] ampInfoPath: path to lsst.afw.table.AmpInfoCatalog FITS files
+        @return camera (an lsst.afw.cameraGeom.Camera)
+        """
         detectorList = []
-        for i in xrange(len(self.config.detectorList)):
-            ampInfoCat = self.ampInfo[self.config.detectorList[i].name]
-            detectorList.append(self.makeDetector(self.config.detectorList[i], ampInfoCat))
-        nativeSys = self.coordSysMap[self.config.transformDict.nativeSys]
-        transformDict = self.makeTransformDict(self.config.transformDict.transforms)
+        for detectorConfig in cameraConfig.detectorList:
+            ampCatPath = os.path.join(ampInfoPath, detectorConfig.name + ".fits")
+            ampInfoCat = AmpInfoCatalog.readFits(ampCatPath)
+            detectorList.append(self.makeDetector(detectorConfig, ampInfoCat))
+        nativeSys = self.cameraSysMap[cameraConfig.transformDict.nativeSys]
+        transformDict = self.makeTransformDict(cameraConfig.transformDict.transforms)
         transformMap = CameraTransformMap(nativeSys, transformDict)
-        return Camera(self.config.name, detectorList, transformMap)
+        return Camera(cameraConfig.name, detectorList, transformMap)
 
-    def makeDetector(self, config, ampInfoCatalog):
+    def makeDetector(self, detectorConfig, ampInfoCatalog):
+        """Make a detector object:
+
+        @param detectorConfig -- config for this detector (an lsst.pex.config.Config)
+        @param ampInfoCatalog -- amplifier information for this detector (an lsst.afw.table.AmpInfoCatalog)
+        @return detector (an lsst.afw.cameraGeom.Detector)
         """
-        Make a detector object:
-        @param config -- The config for this detector
-        @param ampInfoCatalog -- The ampInfoCatalog for the amps in this detector
-        """
-        orientation = self.makeOrientation(config)
-        pixelSize = afwGeom.Extent2D(config.pixelSize_x, config.pixelSize_y)
-        transformDict = {FOCAL_PLANE:orientation.makePixelFpTransform(pixelSize)}
-        transforms = self.makeTransformDict(config.transformDict.transforms, defaultMap=transformDict)
-        llPoint = afwGeom.Point2I(config.bbox_x0, config.bbox_y0)
-        urPoint = afwGeom.Point2I(config.bbox_x1, config.bbox_y1)
+        orientation = self.makeOrientation(detectorConfig)
+        pixelSize = afwGeom.Extent2D(detectorConfig.pixelSize_x, detectorConfig.pixelSize_y)
+        transforms = self.makeTransformDict(detectorConfig.transformDict.transforms)
+        transforms[FOCAL_PLANE] = orientation.makePixelFpTransform(pixelSize)
+        llPoint = afwGeom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0)
+        urPoint = afwGeom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
         bbox = afwGeom.Box2I(llPoint, urPoint)
-        return Detector(config.name, config.detectorType, config.serial, bbox, ampInfoCatalog, 
+        return Detector(detectorConfig.name, detectorConfig.detectorType, detectorConfig.serial, bbox, ampInfoCatalog, 
                              orientation, pixelSize, transforms)
 
-    def makeOrientation(self, config):
+    def makeOrientation(self, detectorConfig):
+        """Make an instance of an Orientation class
+
+        @param detectorConfig -- config for this detector (an lsst.pex.config.Config)
+        @return orientation (an lsst.afw.cameraGeom.Orientation)
         """
-        Make an instance of an Orientation class
-        @param config -- config containing the necessary information
-        """
-        offset = afwGeom.Point2D(config.offset_x, config.offset_y)
-        refPos = afwGeom.Point2D(config.refpos_x, config.refpos_y)
-        yaw = afwGeom.Angle(config.yawDeg, afwGeom.degrees)
-        pitch = afwGeom.Angle(config.pitchDeg, afwGeom.degrees)
-        roll = afwGeom.Angle(config.rollDeg, afwGeom.degrees)
+        offset = afwGeom.Point2D(detectorConfig.offset_x, detectorConfig.offset_y)
+        refPos = afwGeom.Point2D(detectorConfig.refpos_x, detectorConfig.refpos_y)
+        yaw = afwGeom.Angle(detectorConfig.yawDeg, afwGeom.degrees)
+        pitch = afwGeom.Angle(detectorConfig.pitchDeg, afwGeom.degrees)
+        roll = afwGeom.Angle(detectorConfig.rollDeg, afwGeom.degrees)
         return Orientation(offset, refPos, yaw, pitch, roll)
         
-    def makeTransformDict(self, transformConfigDict, defaultMap={}):
+    def makeTransformDict(self, transformConfigDict):
+        """Make a dictionary of CameraSys: XYTransform.
+
+        @param transformConfigDict -- an lsst.pex.config.ConfigDictField from an XYTransform registry;
+            keys are camera system names.
+        @return a dict of CameraSys or CameraSysPrefix: XYTransform
         """
-        Make a dictionary of CameraSys and transforms.  Optionally provide default transforms.
-        @param transformConfigDict -- A dictionary of transforms
-        @param defaultMap -- A dictionary of default transforms
-        """
+        resMap = dict()
         if transformConfigDict is not None:
             for key in transformConfigDict:
-                defaultMap[self.coordSysMap[key]] = transformConfigDict[key].transform.apply()
-        return defaultMap
+                resMap[self.cameraSysMap[key]] = transformConfigDict[key].transform.apply()
+        return resMap

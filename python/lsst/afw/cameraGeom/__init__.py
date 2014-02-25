@@ -26,4 +26,5 @@ from .cameraGeomLib import *
 from .cameraConfig import *
 from .detectorCollection import *
 from .camera import *
-from .cameraFactoryTask import CameraFactoryTask
+from .cameraConfig import *
+from .cameraFactoryTask import *

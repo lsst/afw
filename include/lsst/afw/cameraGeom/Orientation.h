@@ -116,12 +116,10 @@ public:
      *
      * @return lsst::afw::geom::AffineXYTransform from focal plane to pixel coordinates
      */
-    geom::InvertedXYTransform makeFpPixelTransform(
+    geom::AffineXYTransform makeFpPixelTransform(
             geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
     ) const {
-        geom::AffineXYTransform transform = makePixelFpTransform(pixelSizeMm);
-  
-        return geom::InvertedXYTransform(transform.clone());
+        return geom::AffineXYTransform(makePixelFpTransform(pixelSizeMm).getReverseTransform());
     }
 private:
     geom::Point2D _fpPosition;          ///< focal plane position of reference point on detector
