@@ -28,7 +28,7 @@ class CameraFactoryTask(object):
         @return camera (an lsst.afw.cameraGeom.Camera)
         """
         detectorList = []
-        for detectorConfig in cameraConfig.detectorList:
+        for detectorConfig in cameraConfig.detectorList.itervalues():
             ampCatPath = os.path.join(ampInfoPath, detectorConfig.name + ".fits")
             ampInfoCat = AmpInfoCatalog.readFits(ampCatPath)
             detectorList.append(self.makeDetector(detectorConfig, ampInfoCat))
