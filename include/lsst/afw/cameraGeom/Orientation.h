@@ -104,8 +104,8 @@ public:
                     _coeffD*pixelSizeMm.getX(), _coeffE*pixelSizeMm.getY();
 
         Eigen::Vector2d translation; 
-        translation << _fpPosition.getX() - pixelSizeMm.getX()*_refPoint.getX(), 
-                       _fpPosition.getY() - pixelSizeMm.getY()*_refPoint.getY();
+        translation << _fpPosition.getX() - _coeffA*pixelSizeMm.getX()*_refPoint.getX() - _coeffB*pixelSizeMm.getY()*_refPoint.getY(), 
+                       _fpPosition.getY() - _coeffD*pixelSizeMm.getX()*_refPoint.getX() - _coeffE*pixelSizeMm.getY()*_refPoint.getY();
 
         geom::AffineTransform affineTransform = geom::AffineTransform(jacobian, translation);
         return geom::AffineXYTransform(affineTransform);

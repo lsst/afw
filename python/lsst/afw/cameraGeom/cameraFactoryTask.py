@@ -21,7 +21,12 @@ class CameraFactoryTask(object):
         '''
         detectorList = []
         for i in xrange(len(self.config.detectorList)):
-            ampInfoCat = self.ampInfo[self.config.detectorList[i].name]
+            detName = self.config.detectorList[i].name
+            if detName not in self.ampInfo:
+                # TODO how do we do warnings in python in DM?
+                print "Can't find ampInfo for %s", detName
+                continue
+            ampInfoCat = self.ampInfo[detName]
             detectorList.append(self.makeDetector(self.config.detectorList[i], ampInfoCat))
         nativeSys = self.coordSysMap[self.config.transformDict.nativeSys]
         transformDict = self.makeTransformDict(self.config.transformDict.transforms)
@@ -36,7 +41,7 @@ class CameraFactoryTask(object):
         """
         orientation = self.makeOrientation(config)
         pixelSize = afwGeom.Extent2D(config.pixelSize_x, config.pixelSize_y)
-        transformDict = {FOCAL_PLANE:orientation.makePixelFpTransform(pixelSize)}
+        transformDict = {FOCAL_PLANE:orientation.makeFpPixelTransform(pixelSize)}
         transforms = self.makeTransformDict(config.transformDict.transforms, defaultMap=transformDict)
         llPoint = afwGeom.Point2I(config.bbox_x0, config.bbox_y0)
         urPoint = afwGeom.Point2I(config.bbox_x1, config.bbox_y1)
