@@ -76,7 +76,7 @@ Point2D TransformMap<CoordSys>::transform(
     // transform fromSys -> nativeSys -> toSys
     CONST_PTR(XYTransform) fromTransform = (*this)[fromCoordSys];
     CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
-    return toTransform->reverseTransform(fromTransform->forwardTransform(fromPoint));
+    return toTransform->forwardTransform(fromTransform->reverseTransform(fromPoint));
 }
 
 template<typename CoordSys>
@@ -96,7 +96,7 @@ std::vector<Point2D> TransformMap<CoordSys>::transform(
         CONST_PTR(XYTransform) fromTransform = (*this)[fromCoordSys];
         for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
             fromPtIter != pointList.end(); ++fromPtIter) {
-            outList.push_back(fromTransform->forwardTransform(*fromPtIter));
+            outList.push_back(fromTransform->reverseTransform(*fromPtIter));
         }
     } else {
         for (std::vector<Point2D>::const_iterator fromPtIter = pointList.begin();
@@ -110,7 +110,7 @@ std::vector<Point2D> TransformMap<CoordSys>::transform(
         CONST_PTR(XYTransform) toTransform = (*this)[toCoordSys];
         for (std::vector<Point2D>::iterator nativePtIter = outList.begin();
             nativePtIter != outList.end(); ++nativePtIter) {
-            *nativePtIter = toTransform->reverseTransform(*nativePtIter);
+            *nativePtIter = toTransform->forwardTransform(*nativePtIter);
         }
     }
     return outList;

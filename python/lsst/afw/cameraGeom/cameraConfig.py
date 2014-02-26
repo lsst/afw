@@ -1,5 +1,8 @@
 import lsst.pex.config as pexConfig
 from lsst.afw.geom import TransformMapConfig
+
+__all__ = ["CameraConfig", "DetectorConfig"]
+
 class DetectorConfig(pexConfig.Config):
     transformDict = pexConfig.ConfigField("Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
     name = pexConfig.Field("Name of detector slot", str)

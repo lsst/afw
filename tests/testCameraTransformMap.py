@@ -139,8 +139,8 @@ class CameraTransformMapTestCase(unittest.TestCase):
                 if fromSys == toSys:
                     self.compare2DFunctions(trConvFunc, unityTransform)
                 funcPair = FuncPair(
-                    self.transformMap[fromSys].forwardTransform,
-                    self.transformMap[toSys].reverseTransform,
+                    self.transformMap[fromSys].reverseTransform,
+                    self.transformMap[toSys].forwardTransform,
                 )
                 self.compare2DFunctions(trConvFunc, funcPair)
 
