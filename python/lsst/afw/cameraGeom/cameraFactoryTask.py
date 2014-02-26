@@ -1,7 +1,7 @@
 import os.path
 import lsst.afw.geom as afwGeom
 from lsst.afw.table import AmpInfoCatalog
-from lsst.afw.cameraGeom import FOCAL_PLANE, PUPIL, PIXELS, ACTUAL_PIXELS, \
+from lsst.afw.cameraGeom import FOCAL_PLANE, PUPIL, PIXELS, ACTUAL_PIXELS, CameraSys,\
                                 Camera, Detector, Orientation, CameraTransformMap
 
 __all__ = ["CameraFactoryTask"]
@@ -77,5 +77,10 @@ class CameraFactoryTask(object):
         resMap = dict()
         if transformConfigDict is not None:
             for key in transformConfigDict:
-                resMap[CameraSys(key)] = transformConfigDict[key].transform.apply()
+                #TODO This needs to be handled by someone else.
+                if key == "Pupil":
+                    transform = afwGeom.InvertedXYTransform(transformConfigDict[key].transform.apply())
+                else:
+                    transform = transformConfigDict[key].transform.apply()
+                resMap[CameraSys(key)] =  transform
         return resMap

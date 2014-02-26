@@ -64,9 +64,10 @@ class Camera(DetectorCollection):
         """
         return self._transformMap
 
-    def convert(self, cameraPoint, toSys):
+    def transform(self, cameraPoint, toSys):
         if toSys in self._transformMap:
-            return self._transformMap.convert(cameraPoint, toSys)
+            p = self._transformMap.transform(cameraPoint.getPoint(), cameraPoint.getCameraSys(), toSys)
+            return CameraPoint(p, toSys)
         else:
             detList = self.findDetectors(cameraPoint)
             if len(detList) <= 0:
@@ -74,7 +75,7 @@ class Camera(DetectorCollection):
             elif len(detList) > 1:
                 raise ValueError("Found more than one detector that contains this point.  Cannot convert to more than one coordinate system.")
             else:
-                detList[0].convert(cameraPoint, toSys)
+                return detList[0].transform(cameraPoint, toSys)
 
     @staticmethod
     def makeCameraPoint(point, cameraSys):

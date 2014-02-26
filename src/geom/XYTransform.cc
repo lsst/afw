@@ -367,7 +367,7 @@ AffineTransform RadialXYTransform::polyEvalJacobian(std::vector<double> const &c
 double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, 
                                           std::vector<double> const &icoeffs, double x)
 {
-    static const int maxIter = 10;
+    static const int maxIter = 1000;
     double tolerance = 1.0e-14 * x;
 
     double r = polyEval(icoeffs, x);      // initial guess
