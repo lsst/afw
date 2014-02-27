@@ -30,6 +30,17 @@
 
 namespace lsst { namespace afw { namespace table {
 
+/**
+ * Readout corner, in the frame of reference of the assembled image
+ */
+enum ReadoutCorner {
+    LL,
+    LR,
+    UR,
+    UL,
+};
+
+
 class AmpInfoRecord;
 class AmpInfoTable;
 
@@ -92,6 +103,9 @@ public:
     
     double getReadNoise() const;
     void setReadNoise(double readNoise); ///< amplifier read noise, in e-
+
+    ReadoutCorner getReadoutCorner() const;
+    void setReadoutCorner(ReadoutCorner val); ///< set readout corner
 
     std::vector<double> getLinearityCoeffs() const;
     void setLinearityCoeffs(std::vector<double> const &coeffs); ///< vector of linearity coefficients
@@ -189,6 +203,7 @@ public:
     static Key< Point<int> > getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
     static Key<double> getGainKey() { return getMinimalSchema().gain; }
     static Key<double> getReadNoiseKey() { return getMinimalSchema().readNoise; }
+    static Key<int> getReadoutCornerKey() { return getMinimalSchema().readoutCorner; }
     static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearityCoeffs; }
     static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearityType; }
     static Key<Flag> getHasRawInfoKey() { return getMinimalSchema().hasRawInfo; }
@@ -240,6 +255,7 @@ private:
         Key< Point<int> > bboxMax;
         Key<double> gain;
         Key<double> readNoise;
+        Key<int> readoutCorner;
         Key< Array<double> > linearityCoeffs;
         Key<std::string> linearityType;
         Key<Flag> hasRawInfo;

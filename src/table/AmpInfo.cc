@@ -163,6 +163,9 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
         "readnoise",
         "amplifier read noise, in e-",
         "e-");
+    readoutCorner = schema.addField<int>(
+        "readoutcorner",
+        "readout corner, in the frame of the assembled image");
     linearityCoeffs = schema.addField< Array<double> >(
         "linearity.coeffs",
         "coefficients for linearity fit up to cubic",
@@ -258,17 +261,24 @@ void AmpInfoRecord::setGain(double gain) { set(AmpInfoTable::getGainKey(), gain)
 double AmpInfoRecord::getReadNoise() const { return get(AmpInfoTable::getReadNoiseKey()); }
 void AmpInfoRecord::setReadNoise(double readNoise) { set(AmpInfoTable::getReadNoiseKey(), readNoise); }
 
+ReadoutCorner AmpInfoRecord::getReadoutCorner() const {
+     return static_cast<ReadoutCorner>(get(AmpInfoTable::getReadoutCornerKey()));
+ }
+void AmpInfoRecord::setReadoutCorner(ReadoutCorner readoutCorner) {
+    set(AmpInfoTable::getReadoutCornerKey(), readoutCorner);
+}
+
 std::vector<double> AmpInfoRecord::getLinearityCoeffs() const { 
     Key< Array<double> > coeffKey = AmpInfoTable::getLinearityCoeffsKey();
     return coeffKey.extractVector(*this);
 }
-void AmpInfoRecord::setLinearityCoeffs(std::vector<double> const &linearitycoeffs) { 
+void AmpInfoRecord::setLinearityCoeffs(std::vector<double> const &linearityCoeffs) { 
     Key< Array<double> > coeffKey = AmpInfoTable::getLinearityCoeffsKey();
-    coeffKey.assignVector(*this, linearitycoeffs);
+    coeffKey.assignVector(*this, linearityCoeffs);
 }
 
 std::string AmpInfoRecord::getLinearityType() const { return get(AmpInfoTable::getLinearityTypeKey()); }
-void AmpInfoRecord::setLinearityType(std::string const &linearitytype) { set(AmpInfoTable::getLinearityTypeKey(), linearitytype); }
+void AmpInfoRecord::setLinearityType(std::string const &linearityType) { set(AmpInfoTable::getLinearityTypeKey(), linearityType); }
 
 bool AmpInfoRecord::getHasRawInfo() const { return get(AmpInfoTable::getHasRawInfoKey()); }
 void AmpInfoRecord::setHasRawInfo(bool hasrawamplifier) { set(AmpInfoTable::getHasRawInfoKey(), hasrawamplifier); }
