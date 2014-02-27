@@ -58,6 +58,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             hasRawInfo = hasRawInfo
             rawFlipX = True
             rawFlipY = False
+            readoutCorner = afwTable.UL
             rawBBox = afwGeom.Box2I(afwGeom.Point2I(-25, 2), afwGeom.Extent2I(550, 629))
             rawXYOffset = afwGeom.Extent2I(-97, 253)
             rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(-2, 29), afwGeom.Extent2I(123, 307))
@@ -70,6 +71,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             record.setName(name)
             record.setGain(gain)
             record.setReadNoise(readNoise)
+            record.setReadoutCorner(readoutCorner)
             record.setLinearityCoeffs(linearityCoeffs)
             record.setLinearityType(linearityType)
             record.setHasRawInfo(hasRawInfo)
@@ -86,6 +88,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.assertEquals(name, record.getName())
             self.assertEquals(gain, record.getGain())
             self.assertEquals(readNoise, record.getReadNoise())
+            self.assertEquals(readoutCorner, record.getReadoutCorner())
             self.assertEquals(linearityCoeffs, record.getLinearityCoeffs())
             self.assertEquals(linearityType, record.getLinearityType())
             self.assertEquals(bbox, record.getBBox())
