@@ -22,11 +22,31 @@ from __future__ import absolute_import, division
 #
 import itertools
 
+__ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage']
+
 # dict of doFlip: slice
 _SliceDict = {
     False: slice(None,None,1),
     True:  slice(None,None,-1),
 }
+
+def _insertPixelChunk(outView, inView, amplifier):
+    # For the sake of simplicity and robustness, this code does not short-circuit the case flipX=flipY=False.
+    # However, it would save a bit of time, including the cost of making numpy array views.
+    # If short circuiting is wanted, do it here.
+
+    xSlice = _SliceDict[amplifier.getRawFlipX]
+    ySlice = _SliceDict[amplifier.getRawFlipY]
+    if hasattr(rawImage, "getArrays"):
+        # MaskedImage
+        inArrList = inView.getArrays()
+        outArrList = outView.getArrays()
+    else:
+        inArrList = [inView.getArray()]
+        outArrList = [outView.getArray()]
+
+    for inArr, outArr in itertools.izip(inArrList, outArrList):
+        outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):
     """Assemble the amplifier region of an image from a raw image
@@ -40,31 +60,15 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     - image types do not match
     - amplifier has no raw amplifier data
     """
-    if not amplifier.hasRawAmplifier():
+    if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier data")
     if type(destImage.Factory) != type(rawImage.Factory):
         raise RuntimeError("destImage type = %s != %s = rawImage type" % \
             type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
-    rawAmp = amplifier.getRawAmplifier()
-    inView = rawImage.Factory(rawImage, rawAmp.getDataBBox(), False)
+    inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox(), False)
     outView = destImage.Factory(destImage, amplifier.getBBox(), False)
 
-    # For the sake of simplicity and robustness, this code does not short-circuit the case flipX=flipY=False.
-    # However, it would save a bit of time, including the cost of making numpy array views.
-    # If short circuiting is wanted, do it here.
-
-    xSlice = _SliceDict[rawAmp.getFlipX]
-    ySlice = _SliceDict[rawAmp.getFlipY]
-    if hasattr(rawImage, "getArrays"):
-        # MaskedImage
-        inArrList = inView.getArrays()
-        outArrList = outView.getArrays()
-    else:
-        inArrList = [inView.getArray()]
-        outArrList = [outView.getArray()]
-
-    for inArr, outArr in itertools.izip(inArrList, outArrList):
-        outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
+    _insertPixelChunk(outView, inView, amplifier)
 
 def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     """Assemble the amplifier region of a raw CCD image
@@ -81,17 +85,15 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     - image types do not match
     - amplifier has no raw amplifier data
     """
-    if not amplifier.hasRawAmplifier():
+    if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier data")
     if type(destImage.Factory) != type(rawImage.Factory):
         raise RuntimeError("destImage type = %s != %s = rawImage type" % \
             type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
-    rawAmp = amplifier.getRawAmplifier()
-    inBBox = rawAmp.getBBox()
+    inBBox = amplifier.getBBox()
     inView = rawImage.Factory(rawImage, inBBox(), False)
-    outBBox = rawAmp.getBBox()
-    outBBox.shift(rawAmp.getXYOffset())
+    outBBox = amplifier.getBBox()
+    outBBox.shift(amplifier.getXYOffset())
     outView = destImage.Factory(destImage, outBBox(), False)
 
-    outView <<= inView
-
+    _insertPixelChunk(outView, inView, amplifier)

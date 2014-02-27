@@ -45,7 +45,7 @@ class Camera(DetectorCollection):
         @return a list of zero or more Detectors that overlap the specified point
         """
         # first convert to focalPlane because it's faster to convert to pixel from focalPlane
-        fpCoord = self.convert(cameraPoint, FOCAL_PLANE)
+        fpCoord = self.transform(cameraPoint, FOCAL_PLANE)
         detectorList = []
         for detector in self._detectorList:
             cameraSys = detector.makeCameraSys(PIXELS)

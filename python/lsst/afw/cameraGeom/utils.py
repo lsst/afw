@@ -30,7 +30,7 @@ import math
 import os
 import sys
 import unittest
-import numpy as np
+import numpy as numpy
 try:
     import pyfits
 except ImportError:
@@ -45,11 +45,70 @@ import lsst.afw.cameraGeom as cameraGeom
 
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
+
+from lsst.afw.cameraGeom import CameraSys, PUPIL, PIXELS, FOCAL_PLANE
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
+import matplotlib.pyplot as plt
 try:
     type(display)
 except NameError:
     display = False
     force = False
+
+
+def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsize=(10., 10.), showFig=True, savePath=None):
+    """
+    Make a plot of the focal plane along with a set points that sample the Pupil
+    @param camera -- a camera object
+    """
+    pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2., 
+                                              numpy.arange(0., pupilSizeDeg_y+dy, dy) -  pupilSizeDeg_y/2.)
+    xs = []
+    ys = []
+    pcolors = []
+    for pos in zip(pupil_gridx.flatten(), pupil_gridy.flatten()):
+        posRad = afwGeom.Point2D(math.radians(pos[0]), math.radians(pos[1]))
+        cp = camera.makeCameraPoint(posRad, PUPIL)
+        ncp = camera.transform(cp, FOCAL_PLANE)
+        xs.append(ncp.getPoint().getX())
+        ys.append(ncp.getPoint().getY())
+        dets = camera.findDetectors(cp)
+        if len(dets) > 0:
+            pcolors.append('w')
+        else:
+            pcolors.append('k')
+
+
+    colorMap = {0:'b', 1:'y', 2:'g', 3:'r'}
+
+    patches = []
+    colors = []
+    fig = plt.figure(figsize=figsize)
+    ax = plt.gca()
+    xvals = []
+    yvals = []
+    for det in camera:
+        corners = [(c.getX(), c.getY()) for c in det.getCorners(FOCAL_PLANE)]
+        for corner in corners:
+            xvals.append(corner[0])
+            yvals.append(corner[1])
+        colors.append(colorMap[det.getType()])
+        patches.append(Polygon(corners, True))
+        center = det.getOrientation().getFpPosition()
+        ax.text(center.getX(), center.getY(), det.getName(), horizontalalignment='center', size=8)
+
+    p = PatchCollection(patches, alpha=0.6, facecolor=colors)
+    ax.add_collection(p)
+    ax.scatter(xs, ys, s=10, alpha=.7, linewidths=0., c=pcolors)
+    ax.set_xlim(min(xvals) - abs(0.1*min(xvals)), max(xvals) + abs(0.1*max(xvals)))
+    ax.set_ylim(min(yvals) - abs(0.1*min(yvals)), max(yvals) + abs(0.1*max(yvals)))
+    ax.set_xlabel('Focal Plane X (mm)')
+    ax.set_ylabel('Focal Plane Y (mm)')
+    if savePath is not None:
+        plt.savefig(savePath)
+    if showFig:
+        plt.show()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -88,7 +147,7 @@ class ButlerImage(GetCcdImage):
     """A class to return an Image of a given Ccd based on its cameraGeometry"""
     
     def __init__(self, butler=None, type="raw", isTrimmed=True,
-                 gravity=None, background=np.nan, *args, **kwargs):
+                 gravity=None, background=numpy.nan, *args, **kwargs):
         """Initialise
         gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
                  Specify how to fit the image into the available space; N => align top, W => align left
@@ -141,58 +200,6 @@ class ButlerImage(GetCcdImage):
             sub /= a.getElectronicParams().getGain()
 
         return ccdImage
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def mergeGeomDefaults(cameraGeomPolicy):
-   policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
-   defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
-   cameraGeomPolicy.mergeDefaults(defPolicy.getDictionary())
-   
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def getGeomPolicy(cameraGeomPolicy):
-    """Return a Policy describing a Camera's geometry given a filename; the Policy will be validated using the
-    dictionary, and defaults will be supplied.  If you pass a Policy, it will be validated and completed.
-"""
-
-    policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
-    defPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
-    if isinstance(cameraGeomPolicy, pexPolicy.Policy):
-        geomPolicy = cameraGeomPolicy
-    else:
-        if os.path.exists(cameraGeomPolicy):
-            geomPolicy = pexPolicy.Policy.createPolicy(cameraGeomPolicy)
-        else:
-            policyFile = pexPolicy.DefaultPolicyFile("afw", cameraGeomPolicy, "examples")
-            geomPolicy = pexPolicy.Policy.createPolicy(policyFile, policyFile.getRepositoryPath(), True)
-
-    geomPolicy.mergeDefaults(defPolicy.getDictionary())
-
-    return geomPolicy
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def makeLinearityFromPolicy(linPol, gain=1.0):
-    """Make and return a Linearity object from a suitable policy"""
-    assert linPol.get("type") == "PROPORTIONAL", "Checked in CameraGeomDictionary.paf"
-
-    threshold = linPol.get("threshold")
-    maxCorrectable = linPol.get("maxCorrectable")
-    coefficient = linPol.get("coefficient")
-
-    if linPol.get("intensityUnits") == "ELECTRONS":
-        threshold = int(threshold/gain + 0.5)
-        maxCorrectable = int(maxCorrectable/gain + 0.5)
-        coefficient /= gain
-    else:
-        assert linPol.get("intensityUnits") == "DN", "Checked in CameraGeomDictionary.paf"
-
-    return cameraGeom.Linearity(cameraGeom.Linearity.PROPORTIONAL,
-                                threshold, maxCorrectable, coefficient)
-
 
 def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}, ccdDescription=None):
     """Build a Ccd from a set of amplifiers given a suitable pex::Policy
@@ -591,19 +598,18 @@ def makeAmpImageFromCcd(amp, imageSource=ButlerImage(), isTrimmed=None, imageFac
 
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
-def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
-                     isTrimmed=None, correctGain = False, imageFactory=afwImage.ImageU, bin=1,
-                     display=False):
-    """Make an Image of a Ccd (or just a single amp)
+def makeImageFromAmp(amp, showAmpGain=True, imageFactory=afwImage.ImageU, bin=1):
+    if not amp.hasRawInfo():
+        raise RuntimeError("Can't create a raw amp image without raw amp data")
+    dimensions = amp.getRawBBox().getDimensions()
+    return imageFactory(dimensions[0]//bin, dimensions[1]//bin, )
+
+def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImage.ImageU, bin=1):
+    """Make an Image of a Ccd
     """
-
-    if isTrimmed is None:
-        isTrimmed = ccd.isTrimmed()
-    if imageSource:
-        imageSource.setTrimmed(isTrimmed)
-
-    if amp:
-        ampImage = imageFactory(amp.getAllPixels(isTrimmed).getDimensions())
+    ampImages = []
+    for amp in ccd:
+        ampImages.append(makeImageFromAmp(amp, showAmpGain, imageFactory, bin)
         ampImage <<= imageSource.getImage(ccd, amp, imageFactory=imageFactory)
 
         if bin > 1:
@@ -630,8 +636,6 @@ def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
 
         if bin > 1:
             ccdImage = afwMath.binImage(ccdImage, bin)
-        if display:
-            showCcd(ccd, ccdImage=ccdImage, isTrimmed=isTrimmed)
     else:
         dims = ccd.getAllPixels(isTrimmed).getDimensions()
         ccdImage = imageFactory(dims[0]//bin, dims[1]//bin)
@@ -654,21 +658,13 @@ def trimExposure(ccdImage, ccd=None):
     ccd.setTrimmed(True)
     return trimmedImage
 
-def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1):
-    """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
+def showCcd(ccd, ccdImage="", isTrimmed=True, frame=None, overlay=True, bin=1):
+    """Show a CCD on ds9.  If ccdImage is "", an image will be created based on the properties
 of the detectors"""
-
-    if ccdOrigin is None:
-        ccdOrigin = afwGeom.PointD(0, 0)
-    else:
-        ccdOrigin = ccd.getPositionFromPixel(afwGeom.PointD(0, 0)).getMm() # + afwGeom.ExtentD(ccdOrigin)
-
-    if isTrimmed is None:
-        isTrimmed = ccd.isTrimmed()
 
     if ccdImage == "":
         ccdImage = makeImageFromCcd(ccd, bin=bin)
-
+xxx
     if ccdImage:
         title = ccd.getId().getName()
         if amp:
@@ -897,7 +893,7 @@ of the detectors"""
     cameraBbox.grow(afwGeom.ExtentI(   border,  border))
 
     cameraImage = afwImage.ImageF(cameraBbox)
-    cameraImage.set(imageSource.background if imageSource else np.nan)
+    cameraImage.set(imageSource.background if imageSource else numpy.nan)
 
     for raft in camera:
         raft = cameraGeom.cast_Raft(raft)
@@ -1162,7 +1158,7 @@ def makeDefectsFromFits(filename):
         for i in range(len(data)):
             bbox = afwGeom.Box2I(
                         afwGeom.Point2I(int(data[i]['x0']), int(data[i]['y0'])),\
-		        afwGeom.Extent2I(int(data[i]['width']), int(data[i]['height'])))
+                        afwGeom.Extent2I(int(data[i]['width']), int(data[i]['height'])))
             defectList.append(afwImage.DefectBase(bbox))
         defects[id] = defectList
     return defects
