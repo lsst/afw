@@ -2,6 +2,8 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.afw.cameraGeom as cameraGeom
 
+__all__ = ["DetectorWrapper"]
+
 class DetectorWrapper(object):
     """Construct a simple detector
 
@@ -49,6 +51,7 @@ class DetectorWrapper(object):
             record.setBBox(afwGeom.Box2I(afwGeom.Point2I(-1, 1), ampExtent))
             record.setGain(1.71234e3)
             record.setReadNoise(0.521237e2)
+            record.setReadoutCorner(afwTable.LL)
             record.setHasRawInfo(False)
         self.orientation = orientation
         self.pixelSize = pixelSize
