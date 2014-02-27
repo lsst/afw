@@ -56,7 +56,17 @@ except NameError:
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def trimRawCallback(im, ccd=None, butler=None, correctGain=False):
-    """A callback function that subtracts the bias and trims a raw image"""
+    """!\brief A ButlerImage callback function that subtracts the bias and trims a raw image
+
+\returns The trimmed Exposure
+
+\param im           The Exposure to trim
+\param ccd          The cameraGeom.Ccd (taken from im.getDetector() if None)
+\param butler       Unused
+\param correctGain  Correct the amplifier gains if True
+
+\deprecated Belongs in isr (but isr needs to provide a usable callback)
+"""
     if ccd is None:
         ccd = cameraGeom.cast_Ccd(im.getDetector())
     if hasattr(im, "getMaskedImage"):
@@ -108,7 +118,10 @@ def trimRawCallback(im, ccd=None, butler=None, correctGain=False):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class GetCcdImage(object):
-    """A class to return an Image of a given Ccd"""
+    """!\brief A class to return an Image of a given Ccd
+
+\note  Probably should be replaced by ButlerImage (which is currently a subclass)
+"""
 
     def __init__(self, imageFile=None):
         self.imageFile = imageFile
@@ -117,13 +130,13 @@ class GetCcdImage(object):
         self.isRaw = True
 
     def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
-        """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
+        """!\brief Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
 
         return self.getImageFromFilename(self.imageFile, ccd, amp, imageFactory=imageFactory)
 
     def getImageFromFilename(self, fileName, ccd, amp=None, hdu=0, imageFactory=afwImage.ImageU,
                              oneAmpPerFile=False):
-        """Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
+        """!\brief Return the image of the chip with cameraGeom.Id == id; if provided only read the given BBox"""
 
         if amp:
             if self.isTrimmed:
@@ -140,16 +153,23 @@ class GetCcdImage(object):
         self.isTrimmed = doTrim
 
 class ButlerImage(GetCcdImage):
-    """A class to return an Image of a given Ccd based on its cameraGeometry"""
+    """!\brief A class to return an Image of a given Ccd based on its cameraGeometry"""
     
     def __init__(self, butler=None, type="raw", isTrimmed=True, callback=None,
                  gravity=None, background=np.nan, verbose=False, *args, **kwargs):
-        """Initialise
-        gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
-                 Specify how to fit the image into the available space; N => align top, W => align left
-        background  The value of any pixels that lie outside the CCDs
-        callback  A function called with (image, Ccd, butler) for every image, which returns the image
+        """!\brief Initialise
+
+\param butler     The butler to use to retrieve images
+\param type       The data type to be passed to the butler (e.g. "raw")
+\param isTrimmed  Is the data returned by the butler already trimmed of overclock etc.
+\param callback   A function called with (image, Ccd, butler) for every image, which returns the image
                   to be displayed (e.g. trimRawCallback)
+\param gravity    If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
+                  Specify how to fit the image into the available space; N => align top, W => align left
+\param background The value of any pixels that lie outside the CCDs
+\param verbose    If True, be chattier about problems
+\param *args      Arguments passed to super
+\param **kwargs   Keyword arguments passed to the butler to retrieve data (e.g. visit=666)
         """
         super(ButlerImage, self).__init__(*args)
         self.isTrimmed = isTrimmed
@@ -162,8 +182,13 @@ class ButlerImage(GetCcdImage):
         self.background = background
         self.callback = callback
 
-    def getImage(self, ccd, amp=None, imageFactory=afwImage.ImageU):
-        """Return an image of the specified amp in the specified ccd"""
+    def getImage(self, ccd, amp=None, imageFactory=None):
+        """!\brief Return an image of the specified amp in the specified ccd
+
+\param ccd An afw.cameraGeom.Ccd
+\param amp [ignored]
+\param imageFactory [ignored]
+"""
 
         im = None
         if self.butler is not None:
@@ -209,8 +234,10 @@ def mergeGeomDefaults(cameraGeomPolicy):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def getGeomPolicy(cameraGeomPolicy):
-    """Return a Policy describing a Camera's geometry given a filename; the Policy will be validated using the
-    dictionary, and defaults will be supplied.  If you pass a Policy, it will be validated and completed.
+    """!\brief Return a Policy describing a Camera's geometry given a filename
+
+The Policy will be validated using the dictionary, and defaults will be supplied.  If you pass a Policy, it
+will be validated and completed.
 """
 
     policyFile = pexPolicy.DefaultPolicyFile("afw", "CameraGeomDictionary.paf", "policy")
@@ -232,7 +259,7 @@ def getGeomPolicy(cameraGeomPolicy):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def makeLinearityFromPolicy(linPol, gain=1.0):
-    """Make and return a Linearity object from a suitable policy"""
+    """!\brief Make and return a Linearity object from a suitable policy"""
     assert linPol.get("type") == "PROPORTIONAL", "Checked in CameraGeomDictionary.paf"
 
     threshold = linPol.get("threshold")
@@ -251,7 +278,7 @@ def makeLinearityFromPolicy(linPol, gain=1.0):
 
 
 def makeCcd(geomPolicy, ccdId=None, ccdInfo=None, defectDict={}, ccdDescription=None):
-    """Build a Ccd from a set of amplifiers given a suitable pex::Policy
+    """!\brief Build a Ccd from a set of amplifiers given a suitable pex::Policy
 
 If ccdInfo is provided it's set to various facts about the CCDs which are used in unit tests.  Note
 in particular that it has an entry ampSerial which is a single-element list, the amplifier serial counter
@@ -305,7 +332,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
     # Actually build the Ccd
     #
     ccd = cameraGeom.Ccd(ccdId, pixelSize)
-    for k in defectDict.keys():
+    for k in defectDict:
         if ccdId == k:
             ccd.setDefects(defectDict[k])
         else:
@@ -454,7 +481,7 @@ in particular that it has an entry ampSerial which is a single-element list, the
     return ccd
 
 def makeRaft(geomPolicy, raftId=None, raftInfo=None, defectDict={}):
-    """Build a Raft from a set of CCDs given a suitable pex::Policy
+    """!\brief Build a Raft from a set of CCDs given a suitable pex::Policy
     
 If raftInfo is provided it's set to various facts about the Rafts which are used in unit tests.  Note in
 particular that it has an entry ampSerial which is a single-element list, the amplifier serial counter
@@ -564,10 +591,10 @@ particular that it has an entry ampSerial which is a single-element list, the am
     return raft
 
 def makeCamera(geomPolicy, cameraId=None, cameraInfo=None):
-    """Build a Camera from a set of Rafts given a suitable pex::Policy
-    
-If cameraInfo is provided it's set to various facts about the Camera which are used in unit tests.  Note in
-particular that it has an entry ampSerial which is a single-element list, the amplifier serial counter
+    """!\brief Build a Camera from a set of Rafts given a suitable pex::Policy
+
+\deprecated If cameraInfo is provided it's set to various facts about the Camera which are used in unit tests.
+Note in particular that it has an entry ampSerial which is a single-element list, the amplifier serial counter
 """
     if cameraInfo is None:
         raftInfo = None
@@ -643,14 +670,23 @@ particular that it has an entry ampSerial which is a single-element list, the am
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def makeAmpImageFromCcd(amp, imageSource=ButlerImage(), isTrimmed=None, imageFactory=afwImage.ImageU):
-    """Make an Image of an Amp"""
+    """!\brief Make an Image of an Amp"""
 
     return imageSource.getImage(amp, imageFactory=imageFactory)
 
 def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
-                     isTrimmed=None, correctGain = False, imageFactory=afwImage.ImageU, bin=1,
+                     isTrimmed=None, correctGain=False, imageFactory=afwImage.ImageU, bin=1,
                      display=False):
-    """Make an Image of a Ccd (or just a single amp)
+    """!\brief Make an Image of a Ccd (or just a single amp)
+
+\param ccd          The cameraGeom.Ccd whose image is desired
+\param imageSource  The source of the pixel data
+\param amp          The cameraGeom.Amp to be shown (deprecated)
+\param isTrimmed    Is the CCD trimmed?  Overrides ccd.isTrimmed (deprecated)
+\param correctGain  Correct for the amplifier's gains if True
+\param imageFactory The desired type of image (e.g. afwImage.ImageU)
+\param bin          How much to bin the returned image
+\param display      Display the image (debugging; deprecated)
     """
 
     if isTrimmed is None:
@@ -695,11 +731,15 @@ def makeImageFromCcd(ccd, imageSource=ButlerImage(), amp=None,
     return ccdImage
 
 def trimExposure(ccdImage, ccd=None, subtractBias=False, rotate=False, modifyRawData=False):
-    """Trim a raw CCD Exposure, returning a new (trimmed, possibly rotated) Exposure
+    """!\brief Trim a raw CCD Exposure, returning a new (trimmed, possibly rotated) Exposure
 
-If ccd isn't provided it'll be found in the input exposure, ccdImage
-If subtractBias is true, subtract the bias levels;  if modifyRawData is true, also subtract it from
-the input exposure.
+\param ccdImage      The Exposure to be trimmed
+\param ccd           The cameraGeom.Ccd object for the image (taken from ccdImage if omitted)
+\param subtractBias  Subtract the bias levels if True
+\param modifyRawData Subtract bias from the input exposure if True (ignored unless subtractBias is True)
+\param rotate        Obey ccd.getOrientation().getNQuarter() if True
+
+\note deprecated; belongs in isr
     """
 
     if not ccd:
@@ -732,7 +772,7 @@ the input exposure.
     return trimmedImage
 
 def showCcd(ccd, ccdImage="", amp=None, ccdOrigin=None, isTrimmed=None, frame=None, overlay=True, bin=1):
-    """Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
+    """!\brief Show a CCD on ds9.  If cameraImage is "", an image will be created based on the properties
 of the detectors"""
 
     if ccdOrigin is None:
@@ -824,7 +864,7 @@ of the detectors"""
 
 def makeImageFromRaft(raft, imageSource=ButlerImage(), raftCenter=None,
                       imageFactory=afwImage.ImageU, bin=1):
-    """Make an Image of a Raft"""
+    """!\brief Make an Image of a Raft"""
 
     if raftCenter is None:
         raftCenter = afwGeom.Point2I(raft.getAllPixels().getDimensions()[0]//2,
@@ -874,7 +914,7 @@ def makeImageFromRaft(raft, imageSource=ButlerImage(), raftCenter=None,
     return raftImage
 
 def showRaft(raft, imageSource=ButlerImage(), raftOrigin=None, frame=None, overlay=True, bin=1):
-    """Show a Raft on ds9.
+    """!\brief Show a Raft on ds9.
 
 If imageSource isn't None, create an image using the images specified by imageSource"""
 
@@ -918,7 +958,7 @@ If imageSource isn't None, create an image using the images specified by imageSo
             showCcd(ccd, None, isTrimmed=True, frame=frame, ccdOrigin=origin, overlay=overlay, bin=bin)
 
 def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, bin=1):
-    """Make an Image of a Camera"""
+    """!\brief Make an Image of a Camera"""
 
     cameraImage = imageFactory(camera.getAllPixels().getDimensions()/bin)
     for det in camera:
@@ -945,7 +985,10 @@ def makeImageFromCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class PyCcd(object):
-    """A picklable partial implementation of cameraGeom.Ccd"""
+    """!\brief A pickleable partial implementation of cameraGeom.Ccd
+
+Multiprocessing requires that we be able to pickle a Ccd; a better solution would be to make a Ccd pickleable
+"""
     def __init__(self, ccd):
         self._id = PyCcdId(ccd.getId().getSerial(), ccd.getId().getName())
         self._allPixels = ccd.getAllPixels()
@@ -961,7 +1004,10 @@ class PyCcd(object):
         return self._orientation        
 
 class PyCcdId(object):
-    """A picklable partial implementation of cameraGeom.Id"""
+    """!\brief A pickleable partial implementation of cameraGeom.Id
+
+Multiprocessing requires that we be able to pickle an Id; a better solution would be to make an Id pickleable
+"""
     def __init__(self, serial, name):
         self.serial = serial
         self.name = name
@@ -973,7 +1019,11 @@ class PyCcdId(object):
         return self.serial
 
 class PyCcdOrientation(object):
-    """A picklable partial implementation of cameraGeom.Orientation"""
+    """!\brief A pickleable partial implementation of cameraGeom.Orientation
+
+Multiprocessing requires that we be able to pickle an Orientation; a better solution would be to make an
+Orientation pickleable
+    """
     def __init__(self, orientation):
         self._nQuarter = orientation.getNQuarter()
 
@@ -983,6 +1033,7 @@ class PyCcdOrientation(object):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class MakeImageFromCcdWorker(object):
+    """!\brief Worker object called from multiprocessing; wraps call to makeImageFromCcd"""
     def __init__(self, verbose=False):
         self.verbose = verbose
 
@@ -1003,9 +1054,21 @@ class MakeImageFromCcdWorker(object):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF, nJob=None,
+def showCamera(camera, imageSource=ButlerImage(), imageFactory=afwImage.ImageF, nJob=1,
                 bin=1, border=5, frame=None, overlay=True, title="", ctype=ds9.GREEN, names=False):
-    """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
+    """!\brief Return an image of a Camera, including the data for each CCD.  Optionally display the result
+
+\param  camera  The afw.cameraGeom.Camera that you are using
+\param  imageSource  An object that can provide the pixel values
+\param  imageFactory Constructor for the images displayed in each CCD of the camera
+\param  nJob    Number of multi-processing "threads" to use 
+\param  bin   Binning factor to be applied to each CCD image
+\param  border Number of pixels to add to the outside of the camera image
+\param  frame  If not None, display the image in this ds9 frame
+\param  title   Use this title for the ds9 display
+\param  overlay If True, overlay the CCDs' bounding boxes and serials on ds9
+\param  names   If True, use CCDs' names, not serials, in the overlay
+\param  ctype   ds9 colour to use for the overlay
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
 cameraGeom.GetCcdImage object); if it is "", an image will be created based on the properties
@@ -1088,7 +1151,7 @@ of the detectors.  If it's None then no image is created or displayed (useful if
             pool.close()
             pool.join()
 
-        for serialNo in ccdImages.keys():
+        for serialNo in ccdImages:
             dataImage, ccdImage = dataImages[serialNo], ccdImages[serialNo]
 
             if ccdImage.getDimensions() == dataImage.getDimensions():
@@ -1117,8 +1180,8 @@ of the detectors.  If it's None then no image is created or displayed (useful if
                     subCcdImage <<= dataImage
                     del subCcdImage
                 except Exception, e:
-                    print "RHL", e
-                    import pdb; pdb.set_trace() 
+                    print "Impossible error in showCamera", e
+                    raise
     #
     # We've got the image, add a WCS
     #
@@ -1153,7 +1216,10 @@ of the detectors.  If it's None then no image is created or displayed (useful if
     return cameraImage
 
 def makeFocalPlaneWcs(camera):
-    """Make a WCS for the focal plane geometry (i.e. returning positions in "mm")"""
+    """!\brief Make a WCS for the focal plane geometry (i.e. returning positions in "mm")
+
+\param camera The camera in question
+"""
     import lsst.daf.base as dafBase
 
     ccd = cameraGeom.cast_Ccd(list(cameraGeom.cast_Raft(list(camera)[0]))[0]) # some random CCD
@@ -1174,7 +1240,9 @@ def makeFocalPlaneWcs(camera):
 def showMosaic(fileName, geomPolicy=None, camera=None,
                display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=False, doTrim=False,
                imageFactory=afwImage.ImageU, bin=1, frame=None):
-    """Return a mosaic for a given snapshot of the sky; if display is true, also show it on ds9
+    """!\brief Return a mosaic for a given snapshot of the sky; if display is true, also show it on ds9
+
+\deprecated  Use e.g. showCamera directly
 
 The camera geometry is defined by cameraGeomPolicyFile;  raft IDs etc. are drawn on ds9 if overlay is True;
 The camera (or raft) is described if describe is True
@@ -1255,7 +1323,7 @@ If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def describeRaft(raft, indent=""):
-    """Describe an entire Raft"""
+    """!\brief Describe an entire Raft"""
     descrip = []
 
     size = raft.getSize().getMm()
@@ -1274,7 +1342,7 @@ def describeRaft(raft, indent=""):
     return "\n".join(descrip)
 
 def describeCamera(camera):
-    """Describe an entire Camera"""
+    """!\brief Describe an entire Camera"""
     descrip = []
 
     size = camera.getSize().getMm()
@@ -1289,7 +1357,7 @@ def describeCamera(camera):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def findAmp(parent, ccdId, ix, iy):
-    """Find the Amp with the specified Id within the composite"""
+    """!\brief Find the Amp with the specified Id within the composite"""
 
     ccd = findCcd(parent, ccdId)
     for amp in ccd:
@@ -1299,7 +1367,7 @@ def findAmp(parent, ccdId, ix, iy):
     return None
 
 def findCcd(parent, id):
-    """Find the Ccd with the specified Id within the composite"""
+    """!\brief Find the Ccd with the specified Id within the composite"""
 
     if isinstance(id, int):
         id = cameraGeom.Id(id)
@@ -1321,7 +1389,7 @@ def findCcd(parent, id):
     return None
 
 def findRaft(parent, id):
-    """Find the Raft with the specified Id within the composite"""
+    """!\brief Find the Raft with the specified Id within the composite"""
 
     if isinstance(parent, cameraGeom.Camera):
         d = parent.findDetector(id)
@@ -1336,7 +1404,7 @@ def findRaft(parent, id):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def makeDefectsFromFits(filename):
-    """Create a dictionary of DefectSets from a fits file with one ccd worth
+    """!\brief Create a dictionary of DefectSets from a fits file with one ccd worth
     of defects per extension.
 
        The dictionary is indexed by an Id object --- remember to compare by str(id) not object identity
@@ -1361,7 +1429,7 @@ def makeDefectsFromFits(filename):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def makeDefects(geomPolicy):
-    """Create a dictionary of DefectSets from a pexPolicy::Policy
+    """!\brief Create a dictionary of DefectSets from a pexPolicy::Policy
 
 The dictionary is indexed by an Id object --- remember to compare by str(id) not object identity
     """
@@ -1420,14 +1488,16 @@ The dictionary is indexed by an Id object --- remember to compare by str(id) not
 
 
 def makeDefaultCcd(box, **kwargs):
-    """
+    """!\brief 
     Make a Ccd object for a Box2I object suitable to be used as Detector in an Exposure
-    **kwargs may specify params needed to construct ElectronicParams, Amp, and Ccd.
+
+\param box               The BBox of the image that needs a Ccd
+\param **kwargs Specify params needed to construct ElectronicParams, Amp, and Ccd.
     Defaults are:
        ElectronicParams: gain (1.0), rdnoise (5.0), saturation (60000)
        Amp:              detId (1), biasSec (empty Box2I), dataSec (Box2I(img.xy0, img.getDimentions()))
        Ccd:              pixelSize (1.0)
-    This is only intented to be a useful factory for Detectors needed to test simple images.
+    This is only intended to be a useful factory for Detectors needed to test simple images.
     """
     
     # build the Electronics
@@ -1453,13 +1523,15 @@ def makeDefaultCcd(box, **kwargs):
             
 
 def makeCcdFromImage(img, **kwargs):
-    """
-    Make a Ccd object for an afw::Image object suitable to be used as Detector in an Exposure
-    **kwargs may specify params needed to construct Electronics, Amp, and Ccd.  Defaults are:
+    """!\brief Make a Ccd object for an afw::Image object suitable to be used as Detector in an Exposure
+    
+\param img          The image that needs a Ccd
+\param **kwargs     Specify params needed to construct Electronics, Amp, and Ccd.  Defaults are:
        Electronics: gain (1.0), rdnoise (5.0), saturation (60000)
        Amp:         detId (1), biasSec (empty Box2I), dataSec (Box2I(img.xy0, img.getDimentions()))
        Ccd:         pixelSize (1.0)
-    This is only intented to be a useful factory for Detectors needed to test simple images.
+
+This is only intented to be a useful factory for Detectors needed to test simple images.
     """
     
     allPixels     = afwGeom.Box2I(img.getXY0(), img.getDimensions())
