@@ -20,8 +20,9 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 from __future__ import absolute_import, division
-from .cameraGeomLib import CameraPoint
+from .cameraGeomLib import CameraPoint, CameraSys, FOCAL_PLANE, PIXELS
 from .detectorCollection import DetectorCollection
+import lsst.afw.geom as afwGeom
 
 class Camera(DetectorCollection):
     """A collection of Detectors that also supports coordinate transformation
@@ -44,11 +45,13 @@ class Camera(DetectorCollection):
         @return a list of zero or more Detectors that overlap the specified point
         """
         # first convert to focalPlane because it's faster to convert to pixel from focalPlane
-        fpCoord = self.convert(cameraPoint, "focalPlane")
+        fpCoord = self.convert(cameraPoint, FOCAL_PLANE)
         detectorList = []
         for detector in self._detectorList:
-            detPoint = detector.convert(fpCoord, "pixel")
-            if detector.getBBox().contains(detPoint):
+            cameraSys = detector.makeCameraSys(PIXELS)
+            detPoint = detector.transform(fpCoord, cameraSys)
+            #This is safe because CameraPoint is not templated and getPoint() returns a Point2D.
+            if afwGeom.Box2D(detector.getBBox()).contains(detPoint.getPoint()):
                 detectorList.append(detector)
         return detectorList
 
@@ -61,15 +64,10 @@ class Camera(DetectorCollection):
         """
         return self._transformMap
 
-    def convert(self, cameraPoint, cameraSys):
-        """Convert a CameraPoint to another camera coordinate system
-        
-        @param[in] cameraPoint: initial CameraPoint
-        @param[in] cameraSys: desired camera coordinate system (a CameraSys)
-        @return converted cameraPoint (a CameraPoint)
-        """
-        if cameraSys in self._transformMap:
-            return self._transformMap.convert(cameraPoint, cameraSys)
+    def transform(self, cameraPoint, toSys):
+        if toSys in self._transformMap:
+            p = self._transformMap.transform(cameraPoint.getPoint(), cameraPoint.getCameraSys(), toSys)
+            return CameraPoint(p, toSys)
         else:
             detList = self.findDetectors(cameraPoint)
             if len(detList) <= 0:
@@ -77,7 +75,7 @@ class Camera(DetectorCollection):
             elif len(detList) > 1:
                 raise ValueError("Found more than one detector that contains this point.  Cannot convert to more than one coordinate system.")
             else:
-                detList[0].convert(cameraPoint, cameraSys)
+                return detList[0].transform(cameraPoint, toSys)
 
     @staticmethod
     def makeCameraPoint(point, cameraSys):
