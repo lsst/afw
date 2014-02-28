@@ -323,13 +323,11 @@ double RadialXYTransform::polyEval(std::vector<double> const &coeffs, double x)
 
 Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D const &p)
 {
-    double x = p.getX();
-    double y = p.getY();
-    double r = ::hypot(x, y);
+    double r = p.asEigen().norm();
 
     if (r > 0.0) {
         double rnew = polyEval(coeffs,r);
-        return Point2D(rnew*x/r, rnew*y/r);
+        return Point2D(rnew*p.getX()/r, rnew*p.getY()/r);
     }
 
     if (coeffs.size() == 0 || coeffs[0] != 0.0) {
@@ -353,12 +351,10 @@ double RadialXYTransform::polyEvalDeriv(std::vector<double> const &coeffs, doubl
 
 AffineTransform RadialXYTransform::polyEvalJacobian(std::vector<double> const &coeffs, Point2D const &p)
 {
-    double x = p.getX();
-    double y = p.getY();
-    double r = ::hypot(x, y);
+    double r = p.asEigen().norm();
     double rnew = polyEval(coeffs,r);
     double rderiv = polyEvalDeriv(coeffs,r);
-    return makeAffineTransform(x, y, rnew, rderiv);
+    return makeAffineTransform(p.getX(), p.getY(), rnew, rderiv);
 }
 
 double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs, 
@@ -386,13 +382,11 @@ Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
                                                     std::vector<double> const &icoeffs, 
                                                     Point2D const &p)
 {
-    double x = p.getX();
-    double y = p.getY();
-    double r = ::hypot(x, y);
+    double r = p.asEigen().norm();
 
     if (r > 0.0) {
         double rnew = polyEvalInverse(coeffs, icoeffs, r);
-        return Point2D(rnew*x/r, rnew*y/r);
+        return Point2D(rnew*p.getX()/r, rnew*p.getY()/r);
     }
 
     if (coeffs.size() == 0 || coeffs[0] != 0.0) {
@@ -407,12 +401,10 @@ AffineTransform RadialXYTransform::polyEvalInverseJacobian(std::vector<double> c
                                                            std::vector<double> const &icoeffs, 
                                                            Point2D const &p)
 {
-    double x = p.getX();
-    double y = p.getY();
-    double r = ::hypot(x, y);
+    double r = p.asEigen().norm();
     double rnew = polyEvalInverse(coeffs,icoeffs,r);
     double rderiv = 1.0 / polyEvalDeriv(coeffs,rnew);
-    return makeAffineTransform(x, y, rnew, rderiv);
+    return makeAffineTransform(p.getX(), p.getY(), rnew, rderiv);
 }
 
 AffineTransform RadialXYTransform::makeAffineTransform(double x, double y, double rnew, double rderiv)

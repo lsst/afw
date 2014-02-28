@@ -28,6 +28,7 @@
 #include <ostream>
 #include <sstream>
 #include "lsst/afw/geom/TransformMap.h"
+#include "lsst/afw/geom/TransformMapImpl.h"
 
 namespace lsst {
 namespace afw {

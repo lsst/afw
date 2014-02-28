@@ -57,6 +57,9 @@ namespace geom {
  * At some point we will switch to using std::unordered_map (once we switch to C++11 and a SWIG that supports
  * its collection classes). At that point instead of requiring CoordSysT.operator<, it will be necessary to
  * specialize std::hash<CoordSysT>(CoordSysT const &).
+ *
+ * @warning: code that instantiates a templated version of TransformMap must include
+ * lsst/afw/geom/TransformMapImpl.h (else you will get linker errors).
  */
 template<typename CoordSysT>
 class TransformMap {
@@ -148,8 +151,5 @@ private:
 };
 
 }}}
-
-/// the implementation code must be included so other users can make templated versions
-#include "lsst/afw/geom/TransformMap.cc"
 
 #endif

@@ -19,7 +19,12 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-// this file is meant to be included by TransformMap.h
+/**
+ * @file
+ *
+ * This file must be be included by any code that instantiates a templated version of TransformMap;
+ * failure to do so will result in linker errors.
+ */
 #include <sstream>
 #include <utility>
 #include "boost/make_shared.hpp"
