@@ -43,7 +43,7 @@ namespace geom {
 
 
 /**
- * @brief XYTransform: virtual base class for 2D transforms
+ * @brief Virtual base class for 2D transforms
  */
 class XYTransform : public daf::base::Citizen
 {
@@ -51,7 +51,7 @@ public:
     typedef afw::geom::Point2D Point2D;
     typedef afw::geom::AffineTransform AffineTransform;
 
-    XYTransform();
+    explicit XYTransform();
     virtual ~XYTransform() { }
 
     /// returns a deep copy
@@ -86,13 +86,12 @@ public:
 
 
 /**
- * @brief IdentityXYTransform: Represents a trivial XYTransform satisfying f(x)=x.
+ * @brief A trivial XYTransform satisfying f(x)=x.
  */
 class IdentityXYTransform : public XYTransform
 {
 public:
     IdentityXYTransform();
-    virtual ~IdentityXYTransform() { }
     
     virtual PTR(XYTransform) clone() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
@@ -103,13 +102,12 @@ public:
 
 
 /**
- * @brief This class wraps an XYTransform, swapping forward and reverse transforms.
+ * @brief Wrap an XYTransform, swapping forward and reverse transforms.
  */
 class InvertedXYTransform : public XYTransform
 {
 public:
     InvertedXYTransform(CONST_PTR(XYTransform) base);
-    virtual ~InvertedXYTransform() { }
 
     virtual PTR(XYTransform) clone() const;
     /** @brief Return the wrapped XYTransform */
@@ -125,22 +123,23 @@ protected:
 
 
 /**
- * @brief This class wraps an AffineTransform to work like an XYTransform
+ * @brief Wrap an AffineTransform
  *
  */
 class AffineXYTransform : public XYTransform
 {
 public:
     AffineXYTransform(AffineTransform const &affineTransform);
-    virtual ~AffineXYTransform() { }
 
     virtual PTR(XYTransform) clone() const;
     virtual Point2D forwardTransform(Point2D const &position) const;
     virtual Point2D reverseTransform(Point2D const &position) const;
-    virtual AffineTransform getForwardTransform() const;
-    virtual AffineTransform getReverseTransform() const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &position) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &position) const;
+    /// get underlying forward AffineTransform
+    AffineTransform getForwardTransform() const;
+    /// get underlying reverse AffineTransform
+    AffineTransform getReverseTransform() const;
 
 protected:    
     AffineTransform _forwardAffineTransform;
@@ -149,11 +148,14 @@ protected:
 
 
 /**
- * @brief RadialXYTransform: represents a purely radial polynomial distortion, up to 6th order.
+ * @brief A purely radial polynomial distortion, up to 6th order.
  *
- * @warning reverseTransform will fail if the polynomial is too far from linear
+ * forwardTransform(pt) = pt * scale
+ * where:
+ * - scale = (coeffs[1] r + coeffs[2] r^2 + ...) / r
+ * - r = magnitude of pt
  *
- * @note this transform is always in the focal plane coordinate system
+ * @warning reverseTransform will fail if the polynomial is too far from linear (ticket #3152)
  *
  * @throw lsst::pex::exceptions::InvalidParameterException if coeffs.size() > 0 and any of
  * the following are true: coeffs.size() == 1, coeffs[0] != 0 or coeffs[1] == 0
@@ -162,13 +164,10 @@ class RadialXYTransform : public XYTransform
 {
 public:
     RadialXYTransform(
-        std::vector<double> const &coeffs, ///< radial polynomial coefficients;
+        std::vector<double> const &coeffs   ///< radial polynomial coefficients;
             ///< if size == 0 then gives the identity transformation;
             ///< otherwise must satisfy: size > 1, coeffs[0] == 0, and coeffs[1] != 0
-        bool coefficientsDistort=true   ///< WHAT IS THIS??? An inversion flag?
-            ///< In any case, if true (the default) then the normal polynomial equation is used.
     );
-    virtual ~RadialXYTransform() { }
 
     virtual PTR(XYTransform) clone() const;
     virtual PTR(XYTransform) invert() const;

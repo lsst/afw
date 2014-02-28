@@ -30,7 +30,6 @@
 // %rename(__getitem__) lsst::afw::geom::TransformMap::operator[];
 %ignore lsst::afw::geom::TransformMap::operator[];
 
-// note: the following fail with SWIG 2.0.4 if the method names have () after them; why?
 %rename(__contains__) lsst::afw::geom::TransformMap::contains;
 %rename(__len__) lsst::afw::geom::TransformMap::size;
 %ignore lsst::afw::geom::TransformMap::begin;
@@ -41,7 +40,7 @@
 %extend lsst::afw::geom::TransformMap {
     // rename operator[]
     CONST_PTR(lsst::afw::geom::XYTransform) __getitem__(
-            lsst::afw::geom::TransformMap::_CoordSysType const &coordSys
+            lsst::afw::geom::TransformMap::CoordSys const &coordSys
         ) const { return (*$self)[coordSys]; }
 
     %pythoncode {

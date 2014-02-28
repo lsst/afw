@@ -22,10 +22,10 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <cmath>
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/Angle.h"
 #include "boost/make_shared.hpp"
-#include <math.h>
 
 namespace pexEx = lsst::pex::exceptions;
 
@@ -180,6 +180,16 @@ Point2D AffineXYTransform::reverseTransform(Point2D const &position) const
     return _reverseAffineTransform(position);
 }
 
+AffineTransform AffineXYTransform::linearizeForwardTransform(Point2D const &) const
+{
+    return _forwardAffineTransform;
+}
+
+AffineTransform AffineXYTransform::linearizeReverseTransform(Point2D const &) const
+{
+    return _reverseAffineTransform; 
+}
+
 AffineTransform AffineXYTransform::getForwardTransform() const
 {
     return _forwardAffineTransform;
@@ -190,23 +200,13 @@ AffineTransform AffineXYTransform::getReverseTransform() const
     return _reverseAffineTransform;
 }
 
-AffineTransform AffineXYTransform::linearizeForwardTransform(Point2D const &point) const
-{
-    return _forwardAffineTransform;
-}
-
-AffineTransform AffineXYTransform::linearizeReverseTransform(Point2D const &point) const
-{
-    return _reverseAffineTransform; 
-}
-
 
 // -------------------------------------------------------------------------------------------------
 //
 // RadialXYTransform
 
 
-RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs, bool coefficientsDistort)
+RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs)
     : XYTransform()
 {
     if (coeffs.size() == 0) {
@@ -215,49 +215,46 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs, bool coe
         _coeffs[0] = 0.0;
         _coeffs[1] = 1.0;
     }
-    else if ((coeffs.size() == 1) || (coeffs[0] != 0.0) || (coeffs[1] == 0.0)) {
-        // Discontinuous or singular transformation; presumably unintentional so throw exception
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
-            "invalid parameters for radial distortion: need coeffs.size() != 1, coeffs[0]==0, coeffs[1]!=0");
-    }
     else {
+        if ((coeffs.size() == 1) || (coeffs[0] != 0.0) || (coeffs[1] == 0.0)) {
+            // Discontinuous or singular transformation; presumably unintentional so throw exception
+            throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+                "invalid parameters for radial distortion: need coeffs.size() != 1, coeffs[0]==0, coeffs[1]!=0");
+        }
         _coeffs = coeffs;
     }
 
     _icoeffs = polyInvert(_coeffs);
-    _coefficientsDistort = coefficientsDistort;
 }
 
 PTR(XYTransform) RadialXYTransform::clone() const
 {
-    return boost::make_shared<RadialXYTransform> (_coeffs, _coefficientsDistort);    
+    return boost::make_shared<RadialXYTransform> (_coeffs);    
 }
 
 PTR(XYTransform) RadialXYTransform::invert() const
 {
-    return boost::make_shared<RadialXYTransform> (_coeffs, !_coefficientsDistort);
+    return boost::make_shared<RadialXYTransform> (_coeffs);
 }
 
 Point2D RadialXYTransform::forwardTransform(Point2D const &p) const
 {
-    return _coefficientsDistort ? polyEval(_coeffs,p) : polyEvalInverse(_coeffs,_icoeffs,p);
+    return polyEval(_coeffs,p);
 }
 
 Point2D RadialXYTransform::reverseTransform(Point2D const &p) const
 {
-    return _coefficientsDistort ? polyEvalInverse(_coeffs,_icoeffs,p) : polyEval(_coeffs,p);
+    return polyEvalInverse(_coeffs,_icoeffs,p);
 }
 
 AffineTransform RadialXYTransform::linearizeForwardTransform(Point2D const &p) const
 {
-    return _coefficientsDistort ? polyEvalJacobian(_coeffs,p) 
-        : polyEvalInverseJacobian(_coeffs,_icoeffs,p);
+    return polyEvalJacobian(_coeffs,p);
 }
 
 AffineTransform RadialXYTransform::linearizeReverseTransform(Point2D const &p) const
 {
-    return _coefficientsDistort ? polyEvalInverseJacobian(_coeffs,_icoeffs,p) 
-        : polyEvalJacobian(_coeffs,p);
+    return polyEvalInverseJacobian(_coeffs,_icoeffs,p);
 }
 
 
@@ -328,7 +325,7 @@ Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D c
 {
     double x = p.getX();
     double y = p.getY();
-    double r = sqrt(x*x+y*y);
+    double r = ::hypot(x, y);
 
     if (r > 0.0) {
         double rnew = polyEval(coeffs,r);
@@ -358,7 +355,7 @@ AffineTransform RadialXYTransform::polyEvalJacobian(std::vector<double> const &c
 {
     double x = p.getX();
     double y = p.getY();
-    double r = sqrt(x*x+y*y);
+    double r = ::hypot(x, y);
     double rnew = polyEval(coeffs,r);
     double rderiv = polyEvalDeriv(coeffs,r);
     return makeAffineTransform(x, y, rnew, rderiv);
@@ -391,7 +388,7 @@ Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
 {
     double x = p.getX();
     double y = p.getY();
-    double r = sqrt(x*x+y*y);
+    double r = ::hypot(x, y);
 
     if (r > 0.0) {
         double rnew = polyEvalInverse(coeffs, icoeffs, r);
@@ -412,7 +409,7 @@ AffineTransform RadialXYTransform::polyEvalInverseJacobian(std::vector<double> c
 {
     double x = p.getX();
     double y = p.getY();
-    double r = sqrt(x*x+y*y);
+    double r = ::hypot(x, y);
     double rnew = polyEvalInverse(coeffs,icoeffs,r);
     double rderiv = 1.0 / polyEvalDeriv(coeffs,rnew);
     return makeAffineTransform(x, y, rnew, rderiv);
@@ -420,7 +417,7 @@ AffineTransform RadialXYTransform::polyEvalInverseJacobian(std::vector<double> c
 
 AffineTransform RadialXYTransform::makeAffineTransform(double x, double y, double rnew, double rderiv)
 {
-    double r = sqrt(x*x + y*y);
+    double r = ::hypot(x, y);
     
     if (r <= 0.0) {
         AffineTransform ret;

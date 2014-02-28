@@ -47,7 +47,6 @@ public:
     explicit CameraSysPrefix(
         std::string const &sysName  ///< coordinate system name
     ) : _sysName(sysName) {}
-    ~CameraSysPrefix() {}
 
     /**
      * Get coordinate system name
@@ -94,8 +93,6 @@ public:
 
     /// default constructor so SWIG can wrap a vector of pairs containing these
     CameraSys() : _sysName("?"), _detectorName() {};
-
-    ~CameraSys() {}
 
     /**
      * Get coordinate system name
