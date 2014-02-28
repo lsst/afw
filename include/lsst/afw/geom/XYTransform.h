@@ -123,6 +123,29 @@ protected:
 
 
 /**
+ * @brief Wrap a sequence of multiple XYTransforms
+ *
+ * forwardTransform executes transformList[i].forwardTransform in order 0, 1, 2..., e.g.
+ *  
+ * MultiXYTransform.forwardTransform(p) =
+ *   transformList[n].forwardTransform(...(transformList[1].forwardTransform(transformList[0].forwardTransform(p))...)
+ */
+class MultiXYTransform : public XYTransform
+{
+public:
+    typedef std::vector<CONST_PTR(XYTransform)> TransformList;
+    MultiXYTransform(TransformList const &transformList);
+    virtual PTR(XYTransform) clone() const;
+    virtual Point2D forwardTransform(Point2D const &point) const;
+    virtual Point2D reverseTransform(Point2D const &point) const;
+    virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
+    virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
+    TransformList getTransformList() const { return _transformList; }
+private:
+    TransformList _transformList;
+};
+
+/**
  * @brief Wrap an AffineTransform
  *
  */
@@ -175,6 +198,7 @@ public:
     virtual Point2D reverseTransform(Point2D const &point) const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
+//    std::vector<double> getCoeffs() const { return _coeffs; }
 
     /**
      * @brief These static member functions operate on polynomials represented by vector<double>.
