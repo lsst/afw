@@ -37,7 +37,6 @@ namespace cameraGeom {
 class CameraPoint {
 public:
     CameraPoint(geom::Point2D point, CameraSys const &cameraSys) : _point(point), _cameraSys(cameraSys) {}
-    ~CameraPoint() {}
     geom::Point2D getPoint() const { return _point; }
     CameraSys getCameraSys() const { return _cameraSys; }
 private:
