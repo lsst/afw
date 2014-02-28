@@ -206,7 +206,6 @@ public:
 protected:
     std::vector<double> _coeffs;
     std::vector<double> _icoeffs;
-    bool _coefficientsDistort;
 };
 
 
