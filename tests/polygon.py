@@ -209,6 +209,26 @@ class PolygonTest(utilsTests.TestCase):
         self.assertTrue((polyList3[0] == poly1 and polyList3[1] == poly4) or
                         (polyList3[0] == poly4 and polyList3[1] == poly1))
 
+    def testSymDifference(self):
+        """Test Polygon.symDifference"""
+        poly1 = self.square(2.0, -1.0, -1.0)
+        poly2 = self.square(2.0, +1.0, +1.0)
+
+        poly3 = Polygon([afwGeom.Point2D(x,y) for x,y in
+                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
+        poly4 = Polygon([afwGeom.Point2D(x,y) for x,y in
+                         ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
+
+        diff1 = poly1.symDifference(poly2)
+        diff2 = poly2.symDifference(poly1)
+
+        self.assertEqual(len(diff1), 2)
+        self.assertEqual(len(diff2), 2)
+        self.assertTrue((diff1[0] == diff2[0] and diff1[1] == diff2[1]) or
+                        (diff1[1] == diff2[0] and diff1[0] == diff2[1]))
+        self.assertTrue((diff1[0] == poly3 and diff1[1] == poly4) or
+                        (diff1[1] == poly3 and diff1[0] == poly4))
+
     def testConvexHull(self):
         """Test Polygon.convexHull"""
         poly1 = self.square(2.0, -1.0, -1.0)

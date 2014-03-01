@@ -114,6 +114,9 @@ public:
 
     //@{
     /// Returns whether the polygons overlap each other
+    ///
+    /// Note that there may be no intersection if the polygons
+    /// only share a boundary.
     bool overlaps(Polygon const& other) const;
     bool overlaps(Box const& box) const;
     //@}
@@ -156,11 +159,19 @@ public:
     //@}
 
     //@{
+    /// Return the symmetric difference of two polygons
+    std::vector<Polygon> symDifference(Polygon const& other) const;
+    std::vector<Polygon> symDifference(Box const& box) const;
+    //@}
+
+    //@{
     /// Operators for syntactic sugar
     std::vector<Polygon> operator&(Polygon const& rhs) const { return intersection(rhs); }
     std::vector<Polygon> operator&(Box const& rhs) const { return intersection(rhs); }
     std::vector<Polygon> operator|(Polygon const& rhs) const { return union_(rhs); }
     std::vector<Polygon> operator|(Box const& rhs) const { return union_(rhs); }
+    std::vector<Polygon> operator^(Polygon const& rhs) const { return symDifference(rhs); }
+    std::vector<Polygon> operator^(Box const& rhs) const { return symDifference(rhs); }
     //@}
 
     /// Produce a polygon from the convex hull
