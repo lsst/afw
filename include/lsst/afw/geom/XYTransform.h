@@ -198,7 +198,7 @@ public:
     virtual Point2D reverseTransform(Point2D const &point) const;
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
-//    std::vector<double> getCoeffs() const { return _coeffs; }
+    std::vector<double> getCoeffs() const { return _coeffs; }
 
     /**
      * @brief These static member functions operate on polynomials represented by vector<double>.

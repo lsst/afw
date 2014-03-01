@@ -24,13 +24,14 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.geom.XYTransform and xyTransformRegistry
 """
-import unittest
+import itertools
 import math
+import unittest
 
 import lsst.utils.tests
 from lsst.pex.exceptions import LsstCppException
 from lsst.afw.geom import Extent2D, Point2D, xyTransformRegistry, OneXYTransformConfig, \
-    IdentityXYTransform, AffineXYTransform, RadialXYTransform, MultiXYTransform
+    IdentityXYTransform, AffineXYTransform, RadialXYTransform
 
 class RefMultiAffineTransform(object):
     def __init__(self, affineTransformList):
@@ -198,6 +199,9 @@ class XYTransformTestCase(unittest.TestCase):
         radialConfig.coeffs = (0, 1.05, 0.1)
         radial = radialClass(radialConfig)
         self.assertEquals(type(radial), RadialXYTransform)
+        self.assertEquals(len(radial.getCoeffs()), len(radialConfig.coeffs))
+        for coeff, predCoeff in itertools.izip(radial.getCoeffs(), radialConfig.coeffs):
+            self.assertAlmostEqual(coeff, predCoeff)
         self.checkBasics(radial)
         for fromPoint in self.fromIter():
             fromRadius = math.hypot(fromPoint[0], fromPoint[1])
