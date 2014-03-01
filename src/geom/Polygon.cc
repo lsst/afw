@@ -174,6 +174,9 @@ struct Polygon::Impl
 
     void check() { boost::geometry::correct(poly); }
 
+    /// Convert collection of Boost polygons to our own
+    static std::vector<Polygon> convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons);
+
     template <class PolyT>
     bool overlaps(PolyT const& other) const {
         return !boost::geometry::disjoint(poly, other);
@@ -191,8 +194,21 @@ struct Polygon::Impl
     template <class PolyT>
     std::vector<Polygon> union_(PolyT const& other) const;
 
+    template <class PolyT>
+    std::vector<Polygon> symDifference(PolyT const& other) const;
+
     BoostPolygon poly;
 };
+
+std::vector<Polygon> Polygon::Impl::convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons)
+{
+    std::vector<Polygon> lsstPolygons;
+    lsstPolygons.reserve(boostPolygons.size());
+    for (std::vector<BoostPolygon>::const_iterator i = boostPolygons.begin(); i != boostPolygons.end(); ++i) {
+        lsstPolygons.push_back(Polygon(PTR(Polygon::Impl)(new Polygon::Impl(*i))));
+    }
+    return lsstPolygons;
+}
 
 template <class PolyT>
 Polygon Polygon::Impl::intersectionSingle(PolyT const& other) const
@@ -215,13 +231,7 @@ std::vector<Polygon> Polygon::Impl::intersection(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::intersection(poly, other, boostResult);
-    std::vector<Polygon> lsstResult;
-    lsstResult.reserve(boostResult.size());
-    for (std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
-         i != boostResult.end(); ++i) {
-        lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
-    }
-    return lsstResult;
+    return convertBoostPolygons(boostResult);
 }
 
 template <class PolyT>
@@ -242,14 +252,17 @@ std::vector<Polygon> Polygon::Impl::union_(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::union_(poly, other, boostResult);
-    std::vector<Polygon> lsstResult;
-    lsstResult.reserve(boostResult.size());
-    for (std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
-         i != boostResult.end(); ++i) {
-        lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
-    }
-    return lsstResult;
+    return convertBoostPolygons(boostResult);
 }
+
+template <class PolyT>
+std::vector<Polygon> Polygon::Impl::symDifference(PolyT const& other) const
+{
+    std::vector<BoostPolygon> boostResult;
+    boost::geometry::sym_difference(poly, other, boostResult);
+    return convertBoostPolygons(boostResult);
+}
+
 
 
 Polygon::Polygon(Polygon::Box const& box) :
@@ -372,6 +385,14 @@ std::vector<Polygon> Polygon::union_(Polygon const& other) const {
 
 std::vector<Polygon> Polygon::union_(Box const& box) const {
     return _impl->union_(box);
+}
+
+std::vector<Polygon> Polygon::symDifference(Polygon const& other) const {
+    return _impl->symDifference(other._impl->poly);
+}
+
+std::vector<Polygon> Polygon::symDifference(Box const& box) const {
+    return _impl->symDifference(box);
 }
 
 Polygon Polygon::convexHull() const
