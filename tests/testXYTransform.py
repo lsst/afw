@@ -110,13 +110,15 @@ class XYTransformTestCase(unittest.TestCase):
         """
         invertedClass = xyTransformRegistry["inverted"]
         invertedConfig = invertedClass.ConfigClass()
-        invertedConfig.transform.name = "affine"
-        invertedConfig.transform.active.translation = (-2.1, 3.4)
+        affineClass = xyTransformRegistry["affine"]
+        invertedConfig.transform.retarget(affineClass)
+        affineConfig = invertedConfig.transform
+        affineConfig.translation = (1.2, -3.4)
         inverted = invertedClass(invertedConfig)
         self.checkBasics(inverted)
         for fromPoint in self.fromIter():
             toPoint = inverted.forwardTransform(fromPoint)
-            predToPoint = fromPoint - Extent2D(*invertedConfig.transform.active.translation)
+            predToPoint = fromPoint - Extent2D(*invertedConfig.transform.translation)
             for i in range(2):
                 self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
@@ -124,7 +126,8 @@ class XYTransformTestCase(unittest.TestCase):
         """Test affine = AffineXYTransform with default coeffs (identity transform)
         """
         affineClass = xyTransformRegistry["affine"]
-        affine = affineClass(affineClass.ConfigClass())
+        affineConfig = affineClass.ConfigClass()
+        affine = affineClass(affineConfig)
         self.assertEquals(type(affine), AffineXYTransform)
         self.checkBasics(affine)
         for fromPoint in self.fromIter():
@@ -233,8 +236,8 @@ class XYTransformTestCase(unittest.TestCase):
         """
         affineClass = xyTransformRegistry["affine"]
         wrapper0 = OneXYTransformConfig()
-        wrapper0.tr.retarget(affineClass)
-        affineConfig0 = wrapper0.tr
+        wrapper0.transform.retarget(affineClass)
+        affineConfig0 = wrapper0.transform
         affineConfig0.translation = (-2.1, 3.4)
         rotAng = 0.832 # radians
         xScale = 3.7
@@ -245,8 +248,8 @@ class XYTransformTestCase(unittest.TestCase):
         )
 
         wrapper1 = OneXYTransformConfig()
-        wrapper1.tr.retarget(affineClass)
-        affineConfig1 = wrapper1.tr
+        wrapper1.transform.retarget(affineClass)
+        affineConfig1 = wrapper1.transform
         affineConfig1.translation = (26.5, -35.1)
         rotAng = -0.25 # radians
         xScale = 1.45

@@ -44,14 +44,17 @@ def makeIdentityTransform(config=None):
 makeIdentityTransform.ConfigClass = Config
 xyTransformRegistry.register("identity", makeIdentityTransform)
 
+class OneXYTransformConfig(Config):
+    transform = ConfigurableField(
+        doc = "XYTransform factory",
+        target = makeIdentityTransform,
+    )
 
-class InvertedXYTransformConfig(Config):
-    transform = xyTransformRegistry.makeField("Transform to invert")
 def makeInvertedTransform(config):
     """Make an InvertedXYTransform
     """
     return InvertedXYTransform(config.transform.apply())
-makeInvertedTransform.ConfigClass = InvertedXYTransformConfig
+makeInvertedTransform.ConfigClass = OneXYTransformConfig
 xyTransformRegistry.register("inverted", makeInvertedTransform)
 
 
@@ -102,11 +105,6 @@ makeRadialXYTransform.ConfigClass = RadialXYTransformConfig
 xyTransformRegistry.register("radial", makeRadialXYTransform)
 
 
-class OneXYTransformConfig(Config):
-    tr = ConfigurableField(
-        doc = "XYTransform factory",
-        target = makeIdentityTransform,
-    )
 class MultiXYTransformConfig(Config):
     transformDict = ConfigDictField(
         doc = "Dict of index: OneXYTransformConfig (a transform wrapper); key order is transform order",
@@ -117,7 +115,7 @@ def makeMultiTransform(config):
     """Make an MultiXYTransform
     """
     transformKeys = sorted(config.transformDict.iterkeys())
-    transformList = [config.transformDict[key].tr.apply() for key in transformKeys]
+    transformList = [config.transformDict[key].transform.apply() for key in transformKeys]
     return MultiXYTransform(transformList)
 makeMultiTransform.ConfigClass = MultiXYTransformConfig
 xyTransformRegistry.register("multi", makeMultiTransform)
