@@ -35,4 +35,6 @@
 %shared_ptr(lsst::afw::geom::RadialXYTransform);
 %shared_ptr(lsst::afw::geom::MultiXYTransform);
 
+%template(XYTransformVector) std::vector<CONST_PTR(lsst::afw::geom::XYTransform)>;
+
 %include "lsst/afw/geom/XYTransform.h"

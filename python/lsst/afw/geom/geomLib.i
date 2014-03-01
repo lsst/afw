@@ -59,7 +59,6 @@ Python interface to lsst::afw::geom classes
 %include "std_vector.i"
 %template(Point2IVector) std::vector<lsst::afw::geom::Point<int, 2> >;
 %template(Point2DVector) std::vector<lsst::afw::geom::Point<double, 2> >;
-// %template(XYTransformVector) std::vector<CONST_PTR(lsst::afw::geom::XYTransform)>;
 
 %include "ndarray.i"
 

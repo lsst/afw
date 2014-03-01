@@ -29,8 +29,40 @@ import math
 
 import lsst.utils.tests
 from lsst.pex.exceptions import LsstCppException
-from lsst.afw.geom import Extent2D, Point2D, xyTransformRegistry, \
-    IdentityXYTransform, AffineXYTransform, RadialXYTransform
+from lsst.afw.geom import Extent2D, Point2D, xyTransformRegistry, OneXYTransformConfig, \
+    IdentityXYTransform, AffineXYTransform, RadialXYTransform, MultiXYTransform
+
+class RefMultiAffineTransform(object):
+    def __init__(self, affineTransformList):
+        self.affineTransformList = affineTransformList
+
+    def __call__(self, point):
+        for tr in self.affineTransformList:
+            point = tr(point)
+        return point
+
+class RefMultiXYTransform(object):
+    def __init__(self, transformList):
+        self.transformList = transformList
+
+    def forwardTransform(self, point):
+        for tr in self.transformList:
+            point = tr.forwardTransform(point)
+        return point
+
+    def reverseTransform(self, point):
+        for tr in reversed(self.transformList):
+            point = tr.reverseTransform(point)
+        return point
+
+    def linearizeForwardTransform(self, point):
+        affineTransformList = [tr.linearizeForwardTransform(point) for tr in self.transformList]
+        return RefMultiAffineTransform(affineTransformList)
+
+    def linearizeReverseTransform(self, point):
+        affineTransformList = [tr.linearizeReverseTransform(point) for tr in reversed(self.transformList)]
+        return RefMultiAffineTransform(affineTransformList)
+
 
 class XYTransformTestCase(unittest.TestCase):
     def fromIter(self):
@@ -71,6 +103,21 @@ class XYTransformTestCase(unittest.TestCase):
             toPoint = ident.forwardTransform(fromPoint)
             for i in range(2):
                 self.assertAlmostEqual(fromPoint[i], toPoint[i])
+
+    def testInverted(self):
+        """Test inverted = InvertedXYTransform
+        """
+        invertedClass = xyTransformRegistry["inverted"]
+        invertedConfig = invertedClass.ConfigClass()
+        invertedConfig.transform.name = "affine"
+        invertedConfig.transform.active.translation = (-2.1, 3.4)
+        inverted = invertedClass(invertedConfig)
+        self.checkBasics(inverted)
+        for fromPoint in self.fromIter():
+            toPoint = inverted.forwardTransform(fromPoint)
+            predToPoint = fromPoint - Extent2D(*invertedConfig.transform.active.translation)
+            for i in range(2):
+                self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
     def testDefaultAffine(self):
         """Test affine = AffineXYTransform with default coeffs (identity transform)
@@ -176,6 +223,55 @@ class XYTransformTestCase(unittest.TestCase):
             radialConfig = radialClass.ConfigClass()
             radialConfig.coeffs = badCoeffs
             self.assertRaises(Exception, radialConfig.validate)
+
+    def testMulti(self):
+        """Test multi = MultiXYTransform
+        """
+        affineClass = xyTransformRegistry["affine"]
+        wrapper0 = OneXYTransformConfig()
+        wrapper0.tr.retarget(affineClass)
+        affineConfig0 = wrapper0.tr
+        affineConfig0.translation = (-2.1, 3.4)
+        rotAng = 0.832 # radians
+        xScale = 3.7
+        yScale = 45.3
+        affineConfig0.linear = (
+             math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
+            -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
+        )
+
+        wrapper1 = OneXYTransformConfig()
+        wrapper1.tr.retarget(affineClass)
+        affineConfig1 = wrapper1.tr
+        affineConfig1.translation = (26.5, -35.1)
+        rotAng = -0.25 # radians
+        xScale = 1.45
+        yScale = 0.9
+        affineConfig1.linear = (
+             math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
+            -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
+        )
+
+        multiClass = xyTransformRegistry["multi"]
+        multiConfig = multiClass.ConfigClass()
+        multiConfig.transformDict = {
+            0: wrapper0,
+            1: wrapper1,
+        }
+        multiXYTransform = multiClass(multiConfig)
+
+        affine0 = affineClass(affineConfig0)
+        affine1 = affineClass(affineConfig1)
+        transformList = (affine0, affine1)
+        refMultiXYTransform = RefMultiXYTransform(transformList)
+
+        self.checkBasics(refMultiXYTransform)
+
+        for fromPoint in self.fromIter():
+            toPoint = multiXYTransform.forwardTransform(fromPoint)
+            predToPoint = refMultiXYTransform.forwardTransform(fromPoint)
+            for i in range(2):
+                self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
