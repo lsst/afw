@@ -55,6 +55,11 @@ class CameraSysTestCase(unittest.TestCase):
                     self.assertTrue(cameraSys == noDetSys)
                     self.assertFalse(cameraSys != noDetSys)
 
+                self.assertTrue(cameraSys != camSysPrefix)
+                self.assertTrue(noDetSys != camSysPrefix)
+                self.assertFalse(cameraSys == camSysPrefix)
+                self.assertFalse(noDetSys == camSysPrefix)
+
             for sysName2 in ("pupil", "pixels"):
                 for detectorName2 in ("", "det1", "det2"):
                     cameraSys2 = cameraGeom.CameraSys(sysName2, detectorName2)
