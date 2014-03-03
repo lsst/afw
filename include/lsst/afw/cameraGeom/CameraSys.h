@@ -160,6 +160,21 @@ extern CameraSys const PUPIL;
 extern CameraSysPrefix const PIXELS;
 
 /**
+ * Tangent-plane pixels on the detector (unbinned)
+ *
+ * Converting from PIXELS to TAN_PIXELS has the effect of removing optical distortion,
+ * with the point at the center of the detector being unaffected by the transformation.
+ *
+ * In detail, PIXELS->TAN_PIXELS is PIXELS->PUPIL plus an affine transformation, such that:
+ * * The x,y axes are parallel to the detector axes
+ * * The dimensions are nominal pixels at the center of the focal plane
+ * * The point at the center of the detector has the same value in PIXELS and TAN_PIXELS
+ *
+ * This is a detector prefix; call Detector.makeCameraSys(TAN_PIXELS) to make a full coordsys.
+ */
+extern CameraSysPrefix const TAN_PIXELS;
+
+/**
  * The actual pixels where the photon lands and electrons are generated (unbinned)
  * This takes into account manufacturing defects, "tree ring" distortions and other such effects.
  *
