@@ -29,3 +29,4 @@ from .camera import *
 from .cameraConfig import *
 from .cameraFactoryTask import *
 from .cameraGeomEnumDicts import *
+from .makePixelToTanPixel import *
