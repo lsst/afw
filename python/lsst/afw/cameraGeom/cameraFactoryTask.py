@@ -24,14 +24,36 @@ class CameraFactoryTask(object):
         """Construct a camera (lsst.afw.cameraGeom Camera)
 
         @param[in] cameraConfig: an instance of CameraConfig
-        @param[in] ampInfoDict: a dictionary keyed on the detector name of AmpInfoCatalog objects
+        @param[in] ampInfoPath: path to find the persisted AmpInfoCatalogs
         @return camera (an lsst.afw.cameraGeom.Camera)
         """
         detectorList = []
         for detectorConfig in cameraConfig.detectorList.itervalues():
-            ampCatPath = os.path.join(ampInfoPath, detectorConfig.name + ".fits")
+            #HACK until the mapper can get the short name
+            nameEls = detectorConfig.name.split(" ")
+            if len(nameEls[1]) == 7:
+                nmap = {'A':'C0', 'B':'C1'}
+                shortName = "R%s%s_S%s%s_%s"%(nameEls[0][2], nameEls[0][4], nameEls[1][2], nameEls[1][4], nmap[nameEls[1][6]])
+            else:
+                shortName = "R%s%s_S%s%s"%(nameEls[0][2], nameEls[0][4], nameEls[1][2], nameEls[1][4])
+            ampCatPath = os.path.join(ampInfoPath, shortName + ".fits")
             ampInfoCat = AmpInfoCatalog.readFits(ampCatPath)
             detectorList.append(self.makeDetector(detectorConfig, ampInfoCat))
+        nativeSys = self.cameraSysMap[cameraConfig.transformDict.nativeSys]
+        transformDict = self.makeTransformDict(cameraConfig.transformDict.transforms)
+        transformMap = CameraTransformMap(nativeSys, transformDict)
+        return Camera(cameraConfig.name, detectorList, transformMap)
+
+    def runCatDict(self, cameraConfig, ampInfoCatDict):
+        """Construct a camera (lsst.afw.cameraGeom Camera)
+
+        @param[in] cameraConfig: an instance of CameraConfig
+        @param[in] ampInfoCatDict: a dictionary keyed on the detector name of AmpInfoCatalog objects
+        @return camera (an lsst.afw.cameraGeom.Camera)
+        """
+        detectorList = []
+        for detectorConfig in cameraConfig.detectorList.itervalues():
+            detectorList.append(self.makeDetector(detectorConfig, ampInfoCatDict[detectorConfig.name]))
         nativeSys = self.cameraSysMap[cameraConfig.transformDict.nativeSys]
         transformDict = self.makeTransformDict(cameraConfig.transformDict.transforms)
         transformMap = CameraTransformMap(nativeSys, transformDict)

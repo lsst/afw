@@ -37,6 +37,7 @@ import os
 import sys
 import unittest
 import eups
+import tempfile
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
@@ -47,7 +48,9 @@ import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
+import lsst.afw.table as afwTable
 import lsst.afw.cameraGeom as cameraGeom
+from lsst.afw.cameraGeom import DetectorConfig, CameraConfig, PIXELS, PUPIL, FOCAL_PLANE, CameraFactoryTask
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 try:
     type(display)
@@ -55,6 +58,7 @@ except NameError:
     display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+'''
 class LsstLikeImage(cameraGeomUtils.GetCcdImage):
     def __init__(self, isTrimmed=True, isRaw=True):
         super(LsstLikeImage, self).__init__()
@@ -107,263 +111,248 @@ def trimCcd(ccd, ccdImage=""):
         trimmedImage = afwMath.rotateImageBy90(trimmedImage, ccd.getOrientation().getNQuarter())
     """
     return trimmedImage
-
+'''
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+def makeDetectorConfigs(detFile):
+    detectors = []
+    with open(detFile) as fh:
+        names = fh.readline().rstrip().lstrip("#").split("|")
+        for l in fh:
+            els = l.rstrip().split("|")
+            detectorProps = dict([(name, el) for name, el in zip(names, els)])
+            detectors.append(detectorProps)
+    detectorConfigs = []
+    for detector in detectors:
+        detConfig = DetectorConfig()
+        detConfig.name = detector['name']
+        detConfig.bbox_x0 = 0
+        detConfig.bbox_y0 = 0
+        detConfig.bbox_x1 = int(detector['npix_x']) - 1
+        detConfig.bbox_y1 = int(detector['npix_y']) - 1
+        detConfig.serial = str(detector['serial'])
+        detConfig.detectorType = int(detector['detectorType'])
+        detConfig.offset_x = float(detector['x'])
+        detConfig.offset_y = float(detector['y'])
+        detConfig.refpos_x = float(detector['refPixPos_x'])
+        detConfig.refpos_y = float(detector['refPixPos_y'])
+        detConfig.yawDeg = float(detector['yaw'])
+        detConfig.pitchDeg = float(detector['pitch'])
+        detConfig.rollDeg = float(detector['roll'])
+        detConfig.pixelSize_x = float(detector['pixelSize'])
+        detConfig.pixelSize_y = float(detector['pixelSize'])
+        detConfig.transposeDetector = False
+        detConfig.transformDict.nativeSys = PIXELS.getSysName()
+        detectorConfigs.append(detConfig)
+    return detectorConfigs
+
+def makeAmpCatalogs(ampFile, isLsstLike=False):
+    readoutMap = {'LL':0, 'LR':1, 'UR':2, 'UL':3}
+    amps = []
+    with open(ampFile) as fh:
+        names = fh.readline().rstrip().lstrip("#").split("|")
+        for l in fh:
+            els = l.rstrip().split("|")
+            ampProps = dict([(name, el) for name, el in zip(names, els)])
+            amps.append(ampProps)
+    ampTablesDict = {}
+    schema = afwTable.AmpInfoTable.makeMinimalSchema()
+    linThreshKey = schema.addField('linearityThreshold', type=float)
+    linMaxKey = schema.addField('linearityMaximum', type=float)
+    linUnitsKey = schema.addField('linearityUnits', type=str, size=9)
+    for amp in amps:
+        if amp['ccd_name'] in ampTablesDict:
+            ampCatalog = ampTablesDict[amp['ccd_name']]
+        else:
+            ampCatalog = afwTable.AmpInfoCatalog(schema)
+            ampTablesDict[amp['ccd_name']] = ampCatalog
+        record = ampCatalog.addNew()
+        bbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['trimmed_xmin']), int(amp['trimmed_ymin'])),
+                         afwGeom.Point2I(int(amp['trimmed_xmax']), int(amp['trimmed_ymax'])))
+        rawBbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['raw_xmin']), int(amp['raw_ymin'])),
+                         afwGeom.Point2I(int(amp['raw_xmax']), int(amp['raw_ymax'])))
+        rawDataBbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['raw_data_xmin']), int(amp['raw_data_ymin'])),
+                         afwGeom.Point2I(int(amp['raw_data_xmax']), int(amp['raw_data_ymax'])))
+        rawHOverscanBbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['hoscan_xmin']), int(amp['hoscan_ymin'])),
+                         afwGeom.Point2I(int(amp['hoscan_xmax']), int(amp['hoscan_ymax'])))
+        rawVOverscanBbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['voscan_xmin']), int(amp['voscan_ymin'])),
+                         afwGeom.Point2I(int(amp['voscan_xmax']), int(amp['voscan_ymax'])))
+        rawPrescanBbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['pscan_xmin']), int(amp['pscan_ymin'])),
+                         afwGeom.Point2I(int(amp['pscan_xmax']), int(amp['pscan_ymax'])))
+        xoffset = int(amp['x_offset'])
+        yoffset = int(amp['y_offset'])
+        flipx = bool(int(amp['flipx']))
+        flipy = bool(int(amp['flipy']))
+        readcorner = 'LL'
+        if not isLsstLike:
+            offext = afwGeom.Extent2I(xoffset, yoffset)
+            if flipx:
+                xExt = rawBbox.getDimensions().getX()
+                rawBbox.flipLR(xExt)
+                rawDataBbox.flipLR(xExt)
+                rawHOverscanBbox.flipLR(xExt)
+                rawVOverscanBbox.flipLR(xExt)
+                rawPrescanBbox.flipLR(xExt)
+            if flipy:
+                yExt = rawBbox.getDimensions().getY()
+                rawBbox.flipTB(yExt)
+                rawDataBbox.flipTB(yExt)
+                rawHOverscanBbox.flipTB(yExt)
+                rawVOverscanBbox.flipTB(yExt)
+                rawPrescanBbox.flipTB(yExt)
+            if not flipx and not flipy:
+                readcorner = 'LL'
+            elif flipx and not flipy:
+                readcorner = 'LR'
+            elif flipx and flipy:
+                readcorner = 'UR'
+            elif not flipx and flipy:
+                readcorner = 'UL'
+            else:
+                raise RuntimeError("Couldn't find read corner")
+
+            flipx = False
+            flipy = False
+            rawBbox.shift(offext)
+            rawDataBbox.shift(offext)
+            rawHOverscanBbox.shift(offext)
+            rawVOverscanBbox.shift(offext)
+            rawPrescanBbox.shift(offext)
+            xoffset = 0
+            yoffset = 0
+        offset = afwGeom.Extent2I(xoffset, yoffset)
+        record.setBBox(bbox)
+        record.setRawXYOffset(offset)
+        record.setName(str(amp['name']))
+        record.setReadoutCorner(readoutMap[readcorner])
+        record.setGain(float(amp['gain']))
+        record.setReadNoise(float(amp['readnoise']))
+        record.setLinearityCoeffs([float(amp['lin_coeffs']),])
+        record.setLinearityType(str(amp['lin_type']))
+        record.setHasRawInfo(True)
+        record.setRawFlipX(flipx)
+        record.setRawFlipY(flipy)
+        record.setRawBBox(rawBbox)
+        record.setRawDataBBox(rawDataBbox)
+        record.setRawHorizontalOverscanBBox(rawHOverscanBbox)
+        record.setRawVerticalOverscanBBox(rawVOverscanBbox)
+        record.setRawPrescanBBox(rawPrescanBbox)
+        record.set(linThreshKey, float(amp['lin_thresh']))
+        record.set(linMaxKey, float(amp['lin_max']))
+        record.set(linUnitsKey, str(amp['lin_units']))
+    return ampTablesDict
+
+def makeTestRepositoryItems(isLsstLike=False):
+    detFile = os.path.join(eups.productDir("afw"), "tests", "testCameraDetectors.dat")
+    detectorConfigs = makeDetectorConfigs(detFile)
+    ampFile = os.path.join(eups.productDir("afw"), "tests", "testCameraAmps.dat")
+    ampCatalogDict = makeAmpCatalogs(ampFile, isLsstLike=isLsstLike)
+    camConfig = CameraConfig()
+    camConfig.detectorList = dict([(i,detectorConfigs[i]) for i in xrange(len(detectorConfigs))])
+    plateScale = 20. #arcsec/mm
+    camConfig.plateScale = plateScale
+    pScaleRad = afwGeom.arcsecToRad(plateScale)
+    #These came from the old test
+    #radialDistortCoeffs = [0.0, 1.0/pScaleRad, 7.16417e-08, 3.03146e-10, 5.69338e-14, -6.61572e-18]
+    #This matches what Dave M. has measured for an LSST like system.
+    radialDistortCoeffs = [0.0, 1.0/pScaleRad, 0., 0.925/pScaleRad]
+    tConfig = afwGeom.TransformConfig()
+    tConfig.transform.name = 'radial'
+    tConfig.transform.active.coeffs = radialDistortCoeffs
+    tmc = afwGeom.TransformMapConfig()
+    tmc.nativeSys = FOCAL_PLANE.getSysName()
+    tmc.transforms = {PUPIL.getSysName():tConfig}
+    camConfig.transformDict = tmc
+    return camConfig, ampCatalogDict 
+    
 
 class CameraGeomTestCase(unittest.TestCase):
     """A test case for camera geometry"""
 
     def setUp(self):
-        CameraGeomTestCase.ampSerial = [0] # an array so we pass the value by reference
-
-        self.geomPolicy = cameraGeomUtils.getGeomPolicy(os.path.join(eups.productDir("afw"),
-                                                                     "tests", "TestCameraGeom.paf"))
+        self.scCamConfig, self.scAmpCatalogDict = makeTestRepositoryItems()
+        cameraTask = CameraFactoryTask()
+        self.scCamera = cameraTask.runCatDict(self.scCamConfig, self.scAmpCatalogDict)
+        self.lsstCamConfig, self.lsstAmpCatalogDict = makeTestRepositoryItems(isLsstLike=True)
+        cameraTask = CameraFactoryTask()
+        self.lsstCamera = cameraTask.runCatDict(self.lsstCamConfig, self.lsstAmpCatalogDict)
 
     def tearDown(self):
-        del self.geomPolicy
+        del self.scCamera
+        del self.lsstCamera
+        del self.scCamConfig
+        del self.scAmpCatalogDict
+        del self.lsstCamConfig
+        del self.lsstAmpCatalogDict
 
     def assertImagesAreEqual(self, outImage, compImage):
         """Assert that two images have all pixels equal"""
         self.assertTrue((outImage.getArray() == compImage.getArray()).all())
 
-    def testDictionary(self):
-        """Test the camera geometry dictionary"""
-
-        if False:
-            for r in self.geomPolicy.getArray("Raft"):
-                print "raft", r
-            for c in self.geomPolicy.getArray("Ccd"):
-                print "ccd", c
-            for a in self.geomPolicy.getArray("Amp"):
-                print "amp", a
-
-    def testRotatedCcd(self):
-        """Test if we can build a Ccd out of Amps"""
-
-        #print >> sys.stderr, "Skipping testRotatedCcd"; return
-
-        ccdId = cameraGeom.Id(1, "Rot. CCD")
-        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
-        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
-        zero = 0.0*afwGeom.radians
-        ccd.setOrientation(cameraGeom.Orientation(1, zero, zero, zero))
-        if display:
-            cameraGeomUtils.showCcd(ccd)
-            ds9.incrDefaultFrame()
-        #
-        # Trim the CCD and try again
-        #
-
-
-        trimmedImage = trimCcd(ccd)
-
-        if display:
-            cameraGeomUtils.showCcd(ccd, trimmedImage)
-            ds9.incrDefaultFrame()
-
-    def testId(self):
-        """Test cameraGeom.Id"""
-
-        #print >> sys.stderr, "Skipping testId"; return
+    def testConstructor(self):
+        for camera in (self.scCamera, self.lsstCamera):
+            self.assertTrue(isinstance(camera, Camera))
+    def testMakeCameraPoint(self):
         
-        ix, iy = 2, 1
-        id = cameraGeom.Id(666, "Beasty", ix, iy)
-        self.assertTrue(id.getIndex(), (ix, iy))
+        for camera in (self.scCamera, self.lsstCamera):
+            for coordSys in (PUPIL, FOCAL_PLANE):
+                pt1 = afwGeom.Point2D(0.1, 0.3)
+                pt2 = afwGeom.Point2D(0., 0.)
+                pt3 = afwGeom.Point2D(-0.2, 0.2)
+                pt4 = afwGeom.Point2D(0.02, -0.2)
+                pt5 = afwGeom.Point2D(-0.2, -0.03)
+                for pt in (pt1, pt2, pt3, pt4, pt5):
+                    cp = camera.makeCameraPoint(pt, coordSys)
+                    self.assertEquals(cp.getPoint(), pt)
+                    self.assertEquals(cp.getCoordSys().getName(), coordSys.getName())
 
-        self.assertTrue(cameraGeom.Id(1) == cameraGeom.Id(1))
-        self.assertFalse(cameraGeom.Id(1) == cameraGeom.Id(100))
+    def testTransform(self);
+        #These test data come from SLALIB using SLA_PCD with 0.925 and
+        #a plate scale of 20 arcsec/mm
+        testData = [(-1.84000000, 1.04000000, -331.61689069, 187.43563387),
+                    (-1.64000000, 0.12000000, -295.42491556, 21.61645724),
+                    (-1.44000000, -0.80000000, -259.39818797, -144.11010443),
+                    (-1.24000000, -1.72000000, -223.48275934, -309.99221457),
+                    (-1.08000000, 1.36000000, -194.56520533, 245.00803635),
+                    (-0.88000000, 0.44000000, -158.44320430, 79.22160215),
+                    (-0.68000000, -0.48000000, -122.42389383, -86.41686623),
+                    (-0.48000000, -1.40000000, -86.45332534, -252.15553224),
+                    (-0.32000000, 1.68000000, -57.64746955, 302.64921514),
+                    (-0.12000000, 0.76000000, -21.60360306, 136.82281940),
+                    (0.08000000, -0.16000000, 14.40012984, -28.80025968),
+                    (0.28000000, -1.08000000, 50.41767773, -194.46818554),
+                    (0.48000000, -2.00000000, 86.50298919, -360.42912163),
+                    (0.64000000, 1.08000000, 115.25115701, 194.48632746),
+                    (0.84000000, 0.16000000, 151.23115189, 28.80593369),
+                    (1.04000000, -0.76000000, 187.28751874, -136.86395600),
+                    (1.24000000, -1.68000000, 223.47420612, -302.77150507),
+                    (1.40000000, 1.40000000, 252.27834478, 252.27834478),
+                    (1.60000000, 0.48000000, 288.22644118, 86.46793236),
+                    (1.80000000, -0.44000000, 324.31346653, -79.27662515),]
+
+        for camera in (self.scCamera, self.lsstCamera):
+            for point in testData:
+                fpTestPt = afwGeom.Point2D(point[2], point[3])
+                pupilTestPt = afwGeom.Point2D(afwGeom.degToRad(point[0]), afwGeom.detToRad(point[1]0)
+                cp = camera.makeCameraPoint(pupilTestPt, PUPIL)
+                ncp = camera.transform(cp, FOCAL_PLANE)
+                self.assertAlmostEquals(ncp.getPoint, fpTestPt)
+                cp = camera.makeCameraPoint(fpTestPt, FOCAL_PLANE)
+                ncp = camera.transform(cp, PUPIL)
+                self.assertAlmostEquals(ncp.getPoint, pupilTestPt)
+'''
+
+    def testFindDetector(self):
         
-        self.assertTrue(cameraGeom.Id("AA") == cameraGeom.Id("AA"))
-        self.assertFalse(cameraGeom.Id("AA") == cameraGeom.Id("BB"))
-        
-        self.assertTrue(cameraGeom.Id(1, "AA") == cameraGeom.Id(1, "AA"))
-        self.assertFalse(cameraGeom.Id(1, "AA") == cameraGeom.Id(2, "AA"))
-        self.assertFalse(cameraGeom.Id(1, "AA") == cameraGeom.Id(1, "BB"))
-        #
-        self.assertTrue(cameraGeom.Id(1) < cameraGeom.Id(2))
-        self.assertFalse(cameraGeom.Id(100) < cameraGeom.Id(1))
-        
-        self.assertTrue(cameraGeom.Id("AA") < cameraGeom.Id("BB"))
-        
-        self.assertTrue(cameraGeom.Id(1, "AA") < cameraGeom.Id(2, "AA"))
-        self.assertTrue(cameraGeom.Id(1, "AA") < cameraGeom.Id(1, "BB"))
 
-    def testSortedAmps(self):
-        """Test if the Amps are sorted by ID after insertion into a Ccd"""
+    def testFpBbox(self):
 
-        ccd = cameraGeom.Ccd(cameraGeom.Id())
-        Col = 0
-        for serial in [0, 1, 2, 3, 4, 5, 6, 7]:
-            gain, readNoise, saturationLevel = 0, 0, 0
-            width, height = 10, 10
+    def testIteration(self):
+        assert len = detectorConfigs.len
 
-            allPixels = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(width, height))
-            biasSec = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(0, height))
-            dataSec = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(width, height))
+    def testDefaultTransform(self):
 
-            eParams = cameraGeom.ElectronicParams(gain, readNoise, saturationLevel)
-            amp = cameraGeom.Amp(cameraGeom.Id(serial, "", Col, 0), allPixels, biasSec, dataSec,
-                                 eParams)
+    def testCameraGeomUtils(self):
 
-            ccd.addAmp(afwGeom.Point2I(Col, 0), amp); Col += 1
-        #
-        # Check that Amps are sorted by Id
-        #
-        serials = []
-        for a in ccd:
-            serials.append(a.getId().getSerial())
-
-        self.assertEqual(serials, sorted(serials))
-
-    def testCcd(self):
-        """Test if we can build a Ccd out of Amps"""
-
-        #print >> sys.stderr, "Skipping testCcd"; return
-
-        ccdId = cameraGeom.Id("CCD")
-        ccdInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
-        ccd = cameraGeomUtils.makeCcd(self.geomPolicy, ccdId, ccdInfo=ccdInfo)
-        if display:
-            cameraGeomUtils.showCcd(ccd)
-            ds9.incrDefaultFrame()
-            trimmedImage = cameraGeomUtils.makeImageFromCcd(ccd, isTrimmed=True)
-            cameraGeomUtils.showCcd(ccd, trimmedImage, isTrimmed=True)
-            ds9.incrDefaultFrame()
-
-        for i in range(2):
-            self.assertEqual(ccd.getSize().getMm()[i],
-                             ccdInfo["pixelSize"]*ccd.getAllPixels(True).getDimensions()[i])
-
-        self.assertEqual(ccd.getId().getName(), ccdInfo["name"])
-        self.assertEqual(ccd.getAllPixels().getWidth(), ccdInfo["width"])
-        self.assertEqual(ccd.getAllPixels().getHeight(), ccdInfo["height"])
-        self.assertEqual([a.getId().getSerial() for a in ccd],
-                         range(ccdInfo["ampIdMin"], ccdInfo["ampIdMax"] + 1))
-
-        id = cameraGeom.Id("ID%d" % ccdInfo["ampIdMax"])
-        self.assertTrue(ccd.findAmp(id), id)
-
-        self.assertEqual(ccd.findAmp(afwGeom.Point2I(10, 10)).getId().getSerial(), ccdInfo["ampIdMin"])
-
-        self.assertEqual(ccd.getAllPixels().getMin(),
-                         ccd.findAmp(afwGeom.Point2I(10, 10)).getAllPixels().getMin())
-
-        self.assertEqual(ccd.getAllPixels().getMax(),
-                         ccd.findAmp(afwGeom.Point2I(ccdInfo["width"] - 1,
-                                                            ccdInfo["height"] - 1)).getAllPixels().getMax())
-        ps = ccd.getPixelSize()
-        #
-        # Test mapping pixel <--> mm.  Use a pixel at the middle of the top of the CCD
-        #
-        pix = afwGeom.Point2D(99.5, 203.5)            # wrt bottom left
-        pos = cameraGeom.FpPoint(0.00, 1.02)             # pixel center wrt CCD center
-        posll = cameraGeom.FpPoint(0.00, 1.02)           # llc of pixel wrt CCD center
-        #
-        # Map pix into untrimmed coordinates
-        #
-        amp = ccd.findAmp(afwGeom.Point2I(int(pix[0]), int(pix[1])))
-        corrI = amp.getDataSec(False).getMin() - amp.getDataSec(True).getMin()
-        corr = afwGeom.Extent2D(corrI.getX(), corrI.getY())
-        pix += corr
-        
-        self.assertEqual(amp.getDiskCoordSys(), cameraGeom.Amp.AMP)
-        self.assertEqual(ccd.getPixelFromPosition(pos) + corr, pix)
-        #
-        # Trim the CCD and try again
-        #
-        trimmedImage = trimCcd(ccd)
-
-        if display:
-            ds9.mtv(trimmedImage, title='Trimmed')
-            cameraGeomUtils.showCcd(ccd, trimmedImage)
-            ds9.incrDefaultFrame()
-
-        a = ccd.findAmp(cameraGeom.Id("ID%d" % ccdInfo["ampIdMin"]))
-        self.assertEqual(a.getDataSec(), afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                                                       afwGeom.Extent2I(ccdInfo["ampWidth"], ccdInfo["ampHeight"])))
-
-        self.assertEqual(ccd.getSize().getMm()[0], ccdInfo["pixelSize"]*ccdInfo["trimmedWidth"])
-        self.assertEqual(ccd.getSize().getMm()[1], ccdInfo["pixelSize"]*ccdInfo["trimmedHeight"])
-        #
-        # Test mapping pixel <--> mm
-        #
-        pix = afwGeom.Point2D(99.5, 203.5)            # wrt bottom left
-        pos = cameraGeom.FpPoint(0.00, 1.02)             # pixel center wrt CCD center
-        posll = cameraGeom.FpPoint(0.00, 1.02)           # llc of pixel wrt CCD center
-        
-        self.assertEqual(ccd.getPixelFromPosition(pos), pix)
-        self.assertEqual(ccd.getPositionFromPixel(pix).getMm(), posll.getMm())
-
-
-    def testSortedCcds(self):
-        """Test if the Ccds are sorted by ID after insertion into a Raft"""
-
-        raft = cameraGeom.Raft(cameraGeom.Id(), 8, 1)
-        Col = 0
-        for serial in [7, 0, 1, 3, 2, 6, 5, 4]:
-            ccd = cameraGeom.Ccd(cameraGeom.Id(serial))
-            raft.addDetector(afwGeom.Point2I(Col, 0), cameraGeom.FpPoint(afwGeom.Point2D(0, 0)),
-                             cameraGeom.Orientation(0), ccd)
-            Col += 1
-        #
-        # Check that CCDs are sorted by Id
-        #
-        serials = []
-        for ccd in raft:
-            serials.append(ccd.getId().getSerial())
-
-        self.assertEqual(serials, sorted(serials))
-
-    def testRaft(self):
-        """Test if we can build a Raft out of Ccds"""
-
-        #print >> sys.stderr, "Skipping testRaft"; return
-        raftId = cameraGeom.Id("Raft")
-        raftInfo = {"ampSerial" : CameraGeomTestCase.ampSerial}
-        raft = cameraGeomUtils.makeRaft(self.geomPolicy, raftId, raftInfo=raftInfo)
-
-        if display:
-            cameraGeomUtils.showRaft(raft)
-            ds9.incrDefaultFrame()
-
-        if False:
-            print cameraGeomUtils.describeRaft(raft)
-
-        self.assertEqual(raft.getAllPixels().getWidth(), raftInfo["width"])
-        self.assertEqual(raft.getAllPixels().getHeight(), raftInfo["height"])
-
-        name = "C:0,2"
-        self.assertEqual(raft.findDetector(cameraGeom.Id(name)).getId().getName(), name)
-
-        self.assertEqual(raft.getSize().getMm()[0], raftInfo["widthMm"])
-        self.assertEqual(raft.getSize().getMm()[1], raftInfo["heightMm"])
-        #
-        # Test mapping pixel <--> mm
-        #
-        ps = raft.getPixelSize()
-        for ix, iy, x, y in [(102, 500, -1.01,  2.02),
-                             (306, 100,  1.01, -2.02),
-                             (306, 500,  1.01,  2.02),
-                             (356, 525,  1.51,  2.27),
-                             ]:
-            pix = afwGeom.Point2I(ix, iy) # wrt raft LLC
-            #position of pixel center
-            pos = cameraGeom.FpPoint(x+ps/2., y+ps/2.) # wrt raft center
-            #position of pixel lower left corner which is returned by getPositionFromPixel()
-            posll = cameraGeom.FpPoint(x, y) # wrt raft center
-
-            rpos = raft.getPixelFromPosition(pos)
-            rpos = afwGeom.PointI(int(rpos.getX()), int(rpos.getY()))
-            # need to rework cameraGeom since FpPoint changes.  disable this for now
-            if False:
-                self.assertEqual(rpos, pix)
-
-            # this test is no longer meaningful as pixel is specific to a detector xy0
-            if False:
-                self.assertEqual(raft.getPositionFromPixel(afwGeom.Point2D(pix[0], pix[1])).getMm(),
-                                 posll.getMm())
-                
-        
     def testCamera(self):
         """Test if we can build a Camera out of Rafts"""
 
@@ -545,41 +534,6 @@ class CameraGeomTestCase(unittest.TestCase):
             cameraGeomUtils.showCcd(ccd, outImage)
             ds9.incrDefaultFrame()
 
-    def testAddTrimmedAmp(self):
-        """Test that building a Ccd from trimmed Amps leads to a trimmed Ccd"""
-
-        dataSec = afwGeom.BoxI(afwGeom.PointI(1, 0), afwGeom.ExtentI(10, 20))
-        biasSec = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(1, 1))
-        allPixelsInAmp = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(11, 21))
-        eParams = cameraGeom.ElectronicParams(1.0, 1.0, 65000)
-
-        ccd = cameraGeom.Ccd(cameraGeom.Id(0))
-        self.assertFalse(ccd.isTrimmed())
-
-        for i in range(2):
-            amp = cameraGeom.Amp(cameraGeom.Id(i, "", i, 0),
-                                 allPixelsInAmp, biasSec, dataSec, eParams)
-            amp.setTrimmed(True)
-
-            if i%2 == 0:                # check both APIs
-                ccd.addAmp(afwGeom.PointI(i, 0), amp)
-            else:
-                ccd.addAmp(amp)
-            self.assertTrue(ccd.isTrimmed())
-
-        # should fail to add non-trimmed Amp to a trimmed Ccd
-        i += 1
-        amp = cameraGeom.Amp(cameraGeom.Id(i, "", i, 0),
-                             allPixelsInAmp, biasSec, dataSec, eParams)
-        self.assertFalse(amp.isTrimmed())
-
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, ccd.addAmp, amp)
-
-        # should fail to add trimmed Amp to a non-trimmed Ccd
-        ccd.setTrimmed(False)
-        amp.setTrimmed(True)
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, ccd.addAmp, amp)
-        
     def testLinearity(self):
         """Test if we can set Linearity parameters"""
 
@@ -618,3 +572,4 @@ def run(exit=False):
 
 if __name__ == "__main__":
     run(True)
+'''

@@ -30,14 +30,14 @@ _SliceDict = {
     True:  slice(None,None,-1),
 }
 
-def _insertPixelChunk(outView, inView, amplifier):
+def _insertPixelChunk(outView, inView, amplifier, hasArrays):
     # For the sake of simplicity and robustness, this code does not short-circuit the case flipX=flipY=False.
     # However, it would save a bit of time, including the cost of making numpy array views.
     # If short circuiting is wanted, do it here.
 
-    xSlice = _SliceDict[amplifier.getRawFlipX]
-    ySlice = _SliceDict[amplifier.getRawFlipY]
-    if hasattr(rawImage, "getArrays"):
+    xSlice = _SliceDict[amplifier.getRawFlipX()]
+    ySlice = _SliceDict[amplifier.getRawFlipY()]
+    if hasArrays:
         # MaskedImage
         inArrList = inView.getArrays()
         outArrList = outView.getArrays()
@@ -68,7 +68,7 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox(), False)
     outView = destImage.Factory(destImage, amplifier.getBBox(), False)
 
-    _insertPixelChunk(outView, inView, amplifier)
+    _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
 
 def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     """Assemble the amplifier region of a raw CCD image
@@ -90,10 +90,10 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     if type(destImage.Factory) != type(rawImage.Factory):
         raise RuntimeError("destImage type = %s != %s = rawImage type" % \
             type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
-    inBBox = amplifier.getBBox()
-    inView = rawImage.Factory(rawImage, inBBox(), False)
-    outBBox = amplifier.getBBox()
-    outBBox.shift(amplifier.getXYOffset())
-    outView = destImage.Factory(destImage, outBBox(), False)
+    inBBox = amplifier.getRawBBox()
+    inView = rawImage.Factory(rawImage, inBBox, False)
+    outBBox = amplifier.getRawBBox()
+    outBBox.shift(amplifier.getRawXYOffset())
+    outView = destImage.Factory(destImage, outBBox, False)
 
-    _insertPixelChunk(outView, inView, amplifier)
+    _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
