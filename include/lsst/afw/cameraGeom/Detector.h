@@ -101,6 +101,15 @@ public:
     /** Get the corners of the detector in the specified coordinate system */
     std::vector<geom::Point2D> getCorners(CameraSys const &cameraSys) const;
 
+    /** Get the corners of the detector in the specified coordinate system prefix */
+    std::vector<geom::Point2D> getCorners(CameraSysPrefix const &cameraSysPrefix) const;
+
+    /** Get the center of the detector in the specified coordinate system */
+    CameraPoint getCenter(CameraSys const &cameraSys) const;
+
+    /** Get the center of the detector in the specified coordinate system prefix */
+    CameraPoint getCenter(CameraSysPrefix const &cameraSysPrefix) const;
+
     /** Get the amplifier information catalog */
     lsst::afw::table::AmpInfoCatalog const getAmpInfoCatalog() const { return _ampInfoCatalog; }
 

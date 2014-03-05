@@ -28,6 +28,8 @@ from .detectorCollection import *
 from .camera import *
 from .cameraConfig import *
 from .cameraFactoryTask import *
+from .cameraGeomEnumDicts import *
+from .makePixelToTanPixel import *
 from .assembleImage import *
 
 def rotateBBoxBy90(bbox, n90, dimensions):

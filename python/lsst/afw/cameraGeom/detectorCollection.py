@@ -21,7 +21,7 @@
 #
 from __future__ import absolute_import, division
 from lsst.afw.geom import Box2D
-from lsst.afw.cameraGeom import FOCAL_PLANE
+from .cameraGeomLib import FOCAL_PLANE
 
 class DetectorCollection(object):
     """An immutable collection of Detectors that can be accessed in various ways

@@ -21,20 +21,43 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/************************************************************************************************************/
 
-%{
 #include "lsst/afw/geom/XYTransform.h"
-%}
+#include "boost/make_shared.hpp"
 
-%shared_ptr(lsst::afw::geom::XYTransform);
-%shared_ptr(lsst::afw::geom::IdentityXYTransform);
-%shared_ptr(lsst::afw::geom::InvertedXYTransform);
-%shared_ptr(lsst::afw::geom::AffineXYTransform);
-%shared_ptr(lsst::afw::geom::RadialXYTransform);
-%shared_ptr(lsst::afw::geom::MultiXYTransform);
+namespace lsst {
+namespace afw {
+namespace geom {
 
-%template(XYTransformVector) std::vector<CONST_PTR(lsst::afw::geom::XYTransform)>;
+IdentityXYTransform::IdentityXYTransform()
+    : XYTransform()
+{ }
 
-%include "lsst/afw/geom/XYTransform.h"
+PTR(XYTransform) IdentityXYTransform::clone() const
+{
+    return boost::make_shared<IdentityXYTransform> ();
+}
+
+Point2D IdentityXYTransform::forwardTransform(Point2D const &point) const
+{
+    return point;
+}
+
+Point2D IdentityXYTransform::reverseTransform(Point2D const &point) const
+{
+    return point;
+}
+
+AffineTransform IdentityXYTransform::linearizeForwardTransform(Point2D const &point) const
+{
+    // note: AffineTransform constructor called with no arguments gives the identity transform
+    return AffineTransform(); 
+}
+
+AffineTransform IdentityXYTransform::linearizeReverseTransform(Point2D const &point) const
+{
+    // note: AffineTransform constructor called with no arguments gives the identity transform
+    return AffineTransform(); 
+}
+
+}}}

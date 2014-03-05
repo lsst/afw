@@ -56,6 +56,19 @@ std::vector<geom::Point2D> Detector::getCorners(CameraSys const &cameraSys) cons
     return _transformMap.transform(fromVec, _transformMap.getNativeCoordSys(), cameraSys);
 }
 
+std::vector<geom::Point2D> Detector::getCorners(CameraSysPrefix const &cameraSysPrefix) const {
+    return getCorners(makeCameraSys(cameraSysPrefix));
+}
+
+CameraPoint Detector::getCenter(CameraSys const &cameraSys) const {
+    CameraPoint ctrPix = makeCameraPoint(geom::Box2D(_bbox).getCenter(), _transformMap.getNativeCoordSys());
+    return transform(ctrPix, cameraSys);
+}
+
+CameraPoint Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
+    return getCenter(makeCameraSys(cameraSysPrefix));
+}
+
 const table::AmpInfoRecord & Detector::operator[](std::string const &name) const {
     _AmpInfoMap::const_iterator ampIter = _ampNameIterMap.find(name);
     if (ampIter == _ampNameIterMap.end()) {
@@ -87,6 +100,5 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
             }
     }
 }
-
 
 }}}

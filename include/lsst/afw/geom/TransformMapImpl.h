@@ -19,21 +19,24 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-// this file is meant to be included by TransformMap.h
+/**
+ * @file
+ *
+ * This file must be be included by any code that instantiates a templated version of TransformMap;
+ * failure to do so will result in linker errors.
+ */
 #include <sstream>
 #include <utility>
 #include "boost/make_shared.hpp"
 #include "lsst/pex/exceptions.h"
 
-namespace pexExcept = lsst::pex::exceptions;
-
 namespace lsst {
 namespace afw {
 namespace geom {
 
-template<typename CoordSys>
-TransformMap<CoordSys>::TransformMap(
-    CoordSys const &nativeCoordSys,
+template<typename CoordSysT>
+TransformMap<CoordSysT>::TransformMap(
+    CoordSysT const &nativeCoordSys,
     Transforms const &transforms
 ) :
     _nativeCoordSys(nativeCoordSys), _transforms()
@@ -43,11 +46,11 @@ TransformMap<CoordSys>::TransformMap(
         if (_transforms.count(trIter->first) > 0) {
             std::ostringstream os;
             os << "Duplicate coordSys \"" << trIter->first << "\"";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
         } else if (trIter->first == _nativeCoordSys) {
             std::ostringstream os;
             os << "coordSys \"" << trIter->first << "\" matches nativeCoordSys";
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
         }
         _transforms.insert(*trIter);
     }
@@ -59,15 +62,15 @@ TransformMap<CoordSys>::TransformMap(
     }
 }
 
-template<typename CoordSys>
-TransformMap<CoordSys>::TransformMap() : _nativeCoordSys(), _transforms() {}
+template<typename CoordSysT>
+TransformMap<CoordSysT>::TransformMap() : _nativeCoordSys(), _transforms() {}
 
 
-template<typename CoordSys>
-Point2D TransformMap<CoordSys>::transform(
+template<typename CoordSysT>
+Point2D TransformMap<CoordSysT>::transform(
     Point2D const &fromPoint,
-    CoordSys const &fromCoordSys,
-    CoordSys const &toCoordSys
+    CoordSysT const &fromCoordSys,
+    CoordSysT const &toCoordSys
 ) const {
     if (fromCoordSys == toCoordSys) {
         return fromPoint;
@@ -79,11 +82,11 @@ Point2D TransformMap<CoordSys>::transform(
     return toTransform->forwardTransform(fromTransform->reverseTransform(fromPoint));
 }
 
-template<typename CoordSys>
-std::vector<Point2D> TransformMap<CoordSys>::transform(
+template<typename CoordSysT>
+std::vector<Point2D> TransformMap<CoordSysT>::transform(
     std::vector<Point2D> const &pointList,
-    CoordSys const &fromCoordSys,
-    CoordSys const &toCoordSys
+    CoordSysT const &fromCoordSys,
+    CoordSysT const &toCoordSys
 ) const {
     if (fromCoordSys == toCoordSys) {
         return pointList;
@@ -116,9 +119,9 @@ std::vector<Point2D> TransformMap<CoordSys>::transform(
     return outList;
 }
 
-template<typename CoordSys>
-std::vector<CoordSys> TransformMap<CoordSys>::getCoordSysList() const {
-    std::vector<CoordSys> coordSysList;
+template<typename CoordSysT>
+std::vector<CoordSysT> TransformMap<CoordSysT>::getCoordSysList() const {
+    std::vector<CoordSysT> coordSysList;
     for (typename Transforms::const_iterator trIter = _transforms.begin();
         trIter != _transforms.end(); ++trIter) {
         coordSysList.push_back(trIter->first);
@@ -126,22 +129,22 @@ std::vector<CoordSys> TransformMap<CoordSys>::getCoordSysList() const {
     return coordSysList;
 }
 
-template<typename CoordSys>
-CONST_PTR(XYTransform) TransformMap<CoordSys>::operator[](
-    CoordSys const &coordSys
+template<typename CoordSysT>
+CONST_PTR(XYTransform) TransformMap<CoordSysT>::operator[](
+    CoordSysT const &coordSys
 ) const {
     typename Transforms::const_iterator const foundIter = _transforms.find(coordSys);
     if (foundIter == _transforms.end()) {
         std::ostringstream os;
         os << "Registry does not support coordSys \"" << coordSys << "\"";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
     }
     return foundIter->second;
 }
 
-template<typename CoordSys>
-bool TransformMap<CoordSys>::contains(
-    CoordSys const &coordSys
+template<typename CoordSysT>
+bool TransformMap<CoordSysT>::contains(
+    CoordSysT const &coordSys
 ) const {
     return _transforms.find(coordSys) != _transforms.end();
 }

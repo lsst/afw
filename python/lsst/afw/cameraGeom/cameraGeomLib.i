@@ -65,7 +65,6 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;
 
 %rename(__getitem__) lsst::afw::cameraGeom::Detector::operator[];
-// note: the following fail with SWIG 2.0.4 if the method names have () after them; why?
 %rename(__len__) lsst::afw::cameraGeom::Detector::size;
 %ignore lsst::afw::cameraGeom::Detector::begin;
 %ignore lsst::afw::cameraGeom::Detector::end;
@@ -81,6 +80,18 @@ Python bindings for classes describing the the geometry of a mosaic camera
         os << *$self;
         return os.str();
     }
+
+    %pythoncode { 
+        def __eq__(self, rhs): 
+            if not isinstance(rhs, type(self)):
+                return False
+            return _cameraGeomLib.CameraSysPrefix___eq__(self, rhs)
+
+        def __ne__(self, rhs):
+            if not isinstance(rhs, type(self)):
+                return True
+            return not _cameraGeomLib.CameraSysPrefix___eq__(self, rhs)
+    }
 }
 
 %extend lsst::afw::cameraGeom::CameraSys {
@@ -90,7 +101,17 @@ Python bindings for classes describing the the geometry of a mosaic camera
         return os.str();
     }
 
-    %pythoncode {
+    %pythoncode { 
+        def __eq__(self, rhs): 
+            if not isinstance(rhs, type(self)):
+                return False
+            return _cameraGeomLib.CameraSys___eq__(self, rhs)
+
+        def __ne__(self, rhs):
+            if not isinstance(rhs, type(self)):
+                return True
+            return not _cameraGeomLib.CameraSys___eq__(self, rhs)
+
         def __hash__(self):
             return hash(repr(self))
     }

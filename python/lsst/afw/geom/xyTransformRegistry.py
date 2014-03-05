@@ -21,12 +21,11 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import numpy
-from lsst.pex.config import Config, ListField, makeRegistry, Field
-from lsst.afw.geom import Point2D
-from .geomLib import IdentityXYTransform, AffineTransform, AffineXYTransform, \
-                     RadialXYTransform
+from lsst.pex.config import Config, ListField, makeRegistry, ConfigDictField, ConfigurableField
+from .geomLib import IdentityXYTransform, InvertedXYTransform, \
+    AffineTransform, AffineXYTransform, RadialXYTransform, MultiXYTransform
 
-__all__ = ["xyTransformRegistry"]
+__all__ = ["xyTransformRegistry", "OneXYTransformConfig"]
 
 xyTransformRegistry = makeRegistry(
     '''A registry of XYTransform factories
@@ -44,6 +43,20 @@ def makeIdentityTransform(config=None):
     return IdentityXYTransform()
 makeIdentityTransform.ConfigClass = Config
 xyTransformRegistry.register("identity", makeIdentityTransform)
+
+class OneXYTransformConfig(Config):
+    transform = ConfigurableField(
+        doc = "XYTransform factory",
+        target = makeIdentityTransform,
+    )
+
+def makeInvertedTransform(config):
+    """Make an InvertedXYTransform
+    """
+    return InvertedXYTransform(config.transform.apply())
+makeInvertedTransform.ConfigClass = OneXYTransformConfig
+xyTransformRegistry.register("inverted", makeInvertedTransform)
+
 
 class AffineXYTransformConfig(Config):
     linear = ListField(
@@ -69,6 +82,7 @@ def makeAffineXYTransform(config):
 makeAffineXYTransform.ConfigClass = AffineXYTransformConfig
 xyTransformRegistry.register("affine", makeAffineXYTransform)
 
+
 class RadialXYTransformConfig(Config):
     coeffs = ListField(
         doc = "Coefficients for the radial polynomial; coeff[0] must be 0",
@@ -89,3 +103,20 @@ def makeRadialXYTransform(config):
     return RadialXYTransform(config.coeffs)
 makeRadialXYTransform.ConfigClass = RadialXYTransformConfig
 xyTransformRegistry.register("radial", makeRadialXYTransform)
+
+
+class MultiXYTransformConfig(Config):
+    transformDict = ConfigDictField(
+        doc = "Dict of index: OneXYTransformConfig (a transform wrapper); key order is transform order",
+        keytype = int,
+        itemtype = OneXYTransformConfig,
+    )
+def makeMultiTransform(config):
+    """Make an MultiXYTransform
+    """
+    transformKeys = sorted(config.transformDict.iterkeys())
+    transformList = [config.transformDict[key].transform.apply() for key in transformKeys]
+    return MultiXYTransform(transformList)
+makeMultiTransform.ConfigClass = MultiXYTransformConfig
+xyTransformRegistry.register("multi", makeMultiTransform)
+

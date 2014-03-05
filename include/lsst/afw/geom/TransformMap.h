@@ -35,34 +35,37 @@ namespace afw {
 namespace geom {
 
 /**
- * A registry of 2-dimensional coordinate transforms, templated on CoordSys
+ * A registry of 2-dimensional coordinate transforms, templated on a coordinate system type
  *
- * Contains a native CoordSys and a map of CoordSys: XYTransform (including an entry for the native CoordSys).
- * Each map entry is an XYTransform whose forwardTransform method converts from the native system to CoordSys.
+ * Contains a native CoordSysT and a map of CoordSysT:XYTransform (including an identity transform
+ * entry for native CoordSysT). Each map entry is an XYTransform whose forwardTransform method
+ * converts from the native system to CoordSysT.
  *
- * TransformMap supports transforming between any two supported CoordSys using the transform method.
- * It also allows iteration over the map of CoordSys: XYTransform:
- * * In C++ the iterator is a CoordSys, CONST_PTR(XYTransform) pair.
- * * In Python, the iterator returns a CoordSys; use TransformMap[CoordSys] to access the XYTransform.
+ * TransformMap supports transforming between any two supported CoordSysT using the transform method.
+ * It also allows iteration over the map of CoordSysT: XYTransform:
+ * * In C++ the iterator is a CoordSysT, CONST_PTR(XYTransform) pair.
+ * * In Python, the iterator returns a CoordSysT; use TransformMap[CoordSysT] to access the XYTransform.
  *
- * If CoordSys is not a plain old data type or std::string then:
- * * CoordSys must have a default constructor (no arguments), so SWIG can wrap some collections
- * * CoordSys must support operator< to support use as a key in std::map
- * * CoordSys should support operator== and operator!= for common sense
- * * CoordSys should support __hash__ in Python to support proper behavior in sets and dicts
- * * You must overload ostream operator<<(CoordSys const &) to support error messages in TransformMap
- * For an example see ../cameraGeom/CameraSys.h (CameraSys is used as a CoordSys) and its SWIG wrapper.
+ * If CoordSysT is not a plain old data type or std::string then:
+ * * CoordSysT must have a default constructor (no arguments), so SWIG can wrap some collections
+ * * CoordSysT must support operator< to support use as a key in std::map
+ * * CoordSysT should support operator== and operator!= for common sense
+ * * CoordSysT should support __hash__ in Python to support proper behavior in sets and dicts
+ * * You must overload ostream operator<<(CoordSysT const &) to support error messages in TransformMap
+ * For an example see ../cameraGeom/CameraSys.h (CameraSys is used as a CoordSysT) and its SWIG wrapper.
  *
  * At some point we will switch to using std::unordered_map (once we switch to C++11 and a SWIG that supports
- * its collection classes). At that point instead of requiring CoordSys.operator<, it will be necessary to
- * specialize std::hash<CoordSys>(CoordSys const &).
+ * its collection classes). At that point instead of requiring CoordSysT.operator<, it will be necessary to
+ * specialize std::hash<CoordSysT>(CoordSysT const &).
+ *
+ * @warning: code that instantiates a templated version of TransformMap must include
+ * lsst/afw/geom/TransformMapImpl.h (else you will get linker errors).
  */
-template<typename CoordSys>
+template<typename CoordSysT>
 class TransformMap {
 public:
-    typedef std::map<CoordSys, CONST_PTR(XYTransform)> Transforms;
-    // the following is needed by SWIG; see TransformMap.i
-    typedef CoordSys _CoordSysType;
+    typedef std::map<CoordSysT, CONST_PTR(XYTransform)> Transforms;
+    typedef CoordSysT CoordSys; // needed by SWIG; see TransformMap.i
 
     /**
      * Construct a TransformMap
@@ -74,15 +77,13 @@ public:
      * more than once, or a transform is specified where coordSys == nativeCoordSys
      */
     explicit TransformMap(
-        CoordSys const &nativeCoordSys, ///< Native coordinate system for this registry
+        CoordSysT const &nativeCoordSys, ///< Native coordinate system for this registry
         Transforms const &transforms    ///< a map of coordSys:xyTransform,
             ///< where xyTransform.forward transforms coordSys to nativeCoordSys
     );
 
-    /// null implementation to make SWIG willing to wrap a vector that contains these
+    /// null implementation to make SWIG willing to wrap a map that contains these
     explicit TransformMap();
-
-    ~TransformMap() {}
 
     /**
      * Convert a point from one coordinate system to another
@@ -93,8 +94,8 @@ public:
      */
     Point2D transform(
         Point2D const &fromPoint,       ///< point from which to transform
-        CoordSys const &fromSys,        ///< coordinate system from which to transform
-        CoordSys const &toCoordSys      ///< coordinate system to which to transform
+        CoordSysT const &fromSys,        ///< coordinate system from which to transform
+        CoordSysT const &toCoordSys      ///< coordinate system to which to transform
     ) const;
 
     /**
@@ -104,18 +105,18 @@ public:
      */
      std::vector<Point2D> transform(
         std::vector<Point2D> const &pointList,    ///< list of points to transform
-        CoordSys const &fromCoordSys,    ///< from coordinate system
-        CoordSys const &toCoordSys       ///< to coordinate system
+        CoordSysT const &fromCoordSys,    ///< from coordinate system
+        CoordSysT const &toCoordSys       ///< to coordinate system
     ) const;
 
-    CoordSys getNativeCoordSys() const { return _nativeCoordSys; }
+    CoordSysT getNativeCoordSys() const { return _nativeCoordSys; }
 
     /**
      * Get a list of supported coordinate systems
      *
      * @return a list of coordinate systems, in undefined order.
      */
-    std::vector<CoordSys> getCoordSysList() const;
+    std::vector<CoordSysT> getCoordSysList() const;
 
     /**
      * Return true if the coordinate system is supported
@@ -124,7 +125,7 @@ public:
      *     coordSys in transformMap
      */
     bool contains(
-        CoordSys const &coordSys ///< coordinate system
+        CoordSysT const &coordSys ///< coordinate system
     ) const;
 
     /**
@@ -135,7 +136,7 @@ public:
      * @throw pexExcept::InvalidParameterException if coordSys is unknown
      */
     CONST_PTR(XYTransform) operator[](
-        CoordSys const &coordSys ///< coordinate system whose XYTransform is wanted
+        CoordSysT const &coordSys ///< coordinate system whose XYTransform is wanted
     ) const;
 
     typename Transforms::const_iterator begin() const { return _transforms.begin(); }
@@ -145,13 +146,10 @@ public:
     size_t size() const { return _transforms.size(); }
 
 private:
-    CoordSys _nativeCoordSys;   ///< native coordinate system
+    CoordSysT _nativeCoordSys;   ///< native coordinate system
     Transforms _transforms;   ///< map of coordSys: XYTransform
 };
 
 }}}
-
-/// the implementation code must be included so other users can make templated versions
-#include "lsst/afw/geom/TransformMap.cc"
 
 #endif

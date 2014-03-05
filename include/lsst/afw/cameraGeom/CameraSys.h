@@ -28,6 +28,7 @@
 #include <ostream>
 #include <sstream>
 #include "lsst/afw/geom/TransformMap.h"
+#include "lsst/afw/geom/TransformMapImpl.h"
 
 namespace lsst {
 namespace afw {
@@ -47,7 +48,6 @@ public:
     explicit CameraSysPrefix(
         std::string const &sysName  ///< coordinate system name
     ) : _sysName(sysName) {}
-    ~CameraSysPrefix() {}
 
     /**
      * Get coordinate system name
@@ -94,8 +94,6 @@ public:
 
     /// default constructor so SWIG can wrap a vector of pairs containing these
     CameraSys() : _sysName("?"), _detectorName() {};
-
-    ~CameraSys() {}
 
     /**
      * Get coordinate system name
@@ -160,6 +158,21 @@ extern CameraSys const PUPIL;
  * This is a detector prefix; call Detector.makeCameraSys(PIXELS) to make a full coordsys.
  */
 extern CameraSysPrefix const PIXELS;
+
+/**
+ * Tangent-plane pixels on the detector (unbinned)
+ *
+ * Converting from PIXELS to TAN_PIXELS has the effect of removing optical distortion,
+ * with the point at the center of the detector being unaffected by the transformation.
+ *
+ * In detail, PIXELS->TAN_PIXELS is PIXELS->PUPIL plus an affine transformation, such that:
+ * * The x,y axes are parallel to the detector axes
+ * * The dimensions are nominal pixels at the center of the focal plane
+ * * The point at the center of the detector has the same value in PIXELS and TAN_PIXELS
+ *
+ * This is a detector prefix; call Detector.makeCameraSys(TAN_PIXELS) to make a full coordsys.
+ */
+extern CameraSysPrefix const TAN_PIXELS;
 
 /**
  * The actual pixels where the photon lands and electrons are generated (unbinned)

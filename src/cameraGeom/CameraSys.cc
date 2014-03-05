@@ -32,6 +32,8 @@ CameraSys const PUPIL = CameraSys("Pupil");
 
 CameraSysPrefix const PIXELS = CameraSysPrefix("Pixels");
 
+CameraSysPrefix const TAN_PIXELS = CameraSysPrefix("TanPixels");
+
 CameraSysPrefix const ACTUAL_PIXELS = CameraSysPrefix("ActualPixels");
 
 std::ostream &operator<< (std::ostream &os, CameraSysPrefix const &camSysPrefix) {

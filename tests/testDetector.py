@@ -142,19 +142,37 @@ class DetectorTestCase(unittest.TestCase):
         """Test the getCorners method
         """
         dw = DetectorWrapper()
-        cameraSys = cameraGeom.FOCAL_PLANE
-        cornerList = dw.detector.getCorners(cameraSys)
-        for fromPoint, toPoint in itertools.izip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
-            predToCameraPoint = dw.detector.transform(
-                dw.detector.makeCameraPoint(fromPoint, cameraGeom.PIXELS),
-                cameraSys,
-            )
-            predToPoint = predToCameraPoint.getPoint()
-            self.assertEquals(predToCameraPoint.getCameraSys(), cameraSys)
-            for i in range(2):
-                self.assertAlmostEquals(predToPoint[i], toPoint[i])
+        for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
+            cornerList = dw.detector.getCorners(cameraSys)
+            for fromPoint, toPoint in itertools.izip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
+                predToCameraPoint = dw.detector.transform(
+                    dw.detector.makeCameraPoint(fromPoint, cameraGeom.PIXELS),
+                    cameraSys,
+                )
+                predToPoint = predToCameraPoint.getPoint()
+                self.assertEquals(predToCameraPoint.getCameraSys().getSysName(), cameraSys.getSysName())
+                for i in range(2):
+                    self.assertAlmostEquals(predToPoint[i], toPoint[i])
+                    if cameraSys == cameraGeom.PIXELS:
+                        self.assertAlmostEquals(fromPoint[i], toPoint[i])
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    def testGetCenter(self):
+        """Test the getCenter method
+        """
+        dw = DetectorWrapper()
+        ctrPixPoint = afwGeom.Box2D(dw.detector.getBBox()).getCenter()
+        ctrPixCameraPoint = dw.detector.makeCameraPoint(ctrPixPoint, cameraGeom.PIXELS)
+        for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
+            ctrCameraPoint = dw.detector.getCenter(cameraSys)
+            self.assertEquals(ctrCameraPoint.getCameraSys().getSysName(), cameraSys.getSysName())
+            ctrPoint = ctrCameraPoint.getPoint()
+            predCtrCameraPoint = dw.detector.transform(ctrPixCameraPoint, cameraSys)
+            predCtrPoint = predCtrCameraPoint.getPoint()
+            for i in range(2):
+                self.assertAlmostEquals(ctrPoint[i], predCtrPoint[i])
+                if cameraSys == cameraGeom.PIXELS:
+                    self.assertAlmostEquals(ctrPixPoint[i], ctrPoint[i])
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""

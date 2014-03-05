@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -82,14 +82,14 @@ public:
     /// Return detector reference point (pixels)
     geom::Point2D getReferencePoint() const { return _refPoint; }
 
+    /// Return the yaw angle
+    geom::Angle getYaw() const { return _yaw; }
+
     /// Return the pitch angle
     lsst::afw::geom::Angle getPitch() const { return _pitch; }
 
     /// Return the roll angle
     geom::Angle getRoll() const { return _roll; }
-
-    /// Return the yaw angle
-    geom::Angle getYaw() const { return _yaw; }
 
     /**
      * @brief Generate an XYTransform from pixel to focal plane coordinates
