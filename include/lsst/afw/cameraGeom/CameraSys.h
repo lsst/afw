@@ -146,7 +146,7 @@ extern CameraSys const FOCAL_PLANE;
 
 /**
  * Pupil coordinates:
- * Angular x,y offset from the vertex at the pupil (arcsec).
+ * Angular x,y offset from the vertex at the pupil (radians).
  */
 extern CameraSys const PUPIL;
 
@@ -162,12 +162,14 @@ extern CameraSysPrefix const PIXELS;
 /**
  * Tangent-plane pixels on the detector (unbinned)
  *
- * Converting from PIXELS to TAN_PIXELS has the effect of removing optical distortion,
+ * Converting from PIXELS to TAN_PIXELS has the effect of removing optical distortion
+ * (and the distortion due to rectangular pixels)
  * with the point at the center of the detector being unaffected by the transformation.
  *
  * In detail, PIXELS->TAN_PIXELS is PIXELS->PUPIL plus an affine transformation, such that:
  * * The x,y axes are parallel to the detector axes
  * * The dimensions are nominal pixels at the center of the focal plane
+ *   (where nominal pixels size is mean of x, y pixel size).
  * * The point at the center of the detector has the same value in PIXELS and TAN_PIXELS
  *
  * This is a detector prefix; call Detector.makeCameraSys(TAN_PIXELS) to make a full coordsys.
