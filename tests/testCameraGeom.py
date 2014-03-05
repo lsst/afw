@@ -50,7 +50,7 @@ import lsst.afw.display.utils as displayUtils
 
 import lsst.afw.table as afwTable
 import lsst.afw.cameraGeom as cameraGeom
-from lsst.afw.cameraGeom import DetectorConfig, CameraConfig, PIXELS, PUPIL, FOCAL_PLANE, CameraFactoryTask
+from lsst.afw.cameraGeom import Camera, DetectorConfig, CameraConfig, PIXELS, PUPIL, FOCAL_PLANE, CameraFactoryTask
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 try:
     type(display)
@@ -303,9 +303,9 @@ class CameraGeomTestCase(unittest.TestCase):
                 for pt in (pt1, pt2, pt3, pt4, pt5):
                     cp = camera.makeCameraPoint(pt, coordSys)
                     self.assertEquals(cp.getPoint(), pt)
-                    self.assertEquals(cp.getCoordSys().getName(), coordSys.getName())
+                    self.assertEquals(cp.getCameraSys().getSysName(), coordSys.getSysName())
 
-    def testTransform(self);
+    def testTransform(self):
         #These test data come from SLALIB using SLA_PCD with 0.925 and
         #a plate scale of 20 arcsec/mm
         testData = [(-1.84000000, 1.04000000, -331.61689069, 187.43563387),
@@ -332,13 +332,15 @@ class CameraGeomTestCase(unittest.TestCase):
         for camera in (self.scCamera, self.lsstCamera):
             for point in testData:
                 fpTestPt = afwGeom.Point2D(point[2], point[3])
-                pupilTestPt = afwGeom.Point2D(afwGeom.degToRad(point[0]), afwGeom.detToRad(point[1]0)
+                pupilTestPt = afwGeom.Point2D(afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
                 cp = camera.makeCameraPoint(pupilTestPt, PUPIL)
                 ncp = camera.transform(cp, FOCAL_PLANE)
-                self.assertAlmostEquals(ncp.getPoint, fpTestPt)
+                self.assertAlmostEquals(ncp.getPoint()[0], fpTestPt[0], 6)
+                self.assertAlmostEquals(ncp.getPoint()[1], fpTestPt[1], 6)
                 cp = camera.makeCameraPoint(fpTestPt, FOCAL_PLANE)
                 ncp = camera.transform(cp, PUPIL)
-                self.assertAlmostEquals(ncp.getPoint, pupilTestPt)
+                self.assertAlmostEquals(ncp.getPoint()[0], pupilTestPt[0], 6)
+                self.assertAlmostEquals(ncp.getPoint()[1], pupilTestPt[1], 6)
 '''
 
     def testFindDetector(self):
@@ -544,6 +546,7 @@ class CameraGeomTestCase(unittest.TestCase):
                 lin = amp.getElectronicParams().getLinearity()
                 self.assertEqual(lin.threshold, threshold)
 
+'''
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -572,4 +575,3 @@ def run(exit=False):
 
 if __name__ == "__main__":
     run(True)
-'''

@@ -129,6 +129,7 @@ std::vector<double> RadialXYTransform::polyInvert(std::vector<double> const &coe
     
     ic[5]  = 6.0*c[1]*c[1]*c[2]*c[4] + 3.0*c[1]*c[1]*c[3]*c[3] - c[1]*c[1]*c[1]*c[5] + 
         14.0*std::pow(c[2], 4) - 21.0*c[1]*c[2]*c[2]*c[3];
+    ic[5] /= std::pow(c[1], 9);
 
     ic[6]  = 7.0*c[1]*c[1]*c[1]*c[2]*c[5] + 84.0*c[1]*c[2]*c[2]*c[2]*c[3] +
         7.0*c[1]*c[1]*c[1]*c[3]*c[4] - 28.0*c[1]*c[1]*c[2]*c[3]*c[3] - 
