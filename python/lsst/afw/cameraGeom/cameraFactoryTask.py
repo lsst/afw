@@ -87,13 +87,13 @@ class CameraFactoryTask(object):
         urPoint = afwGeom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
         bbox = afwGeom.Box2I(llPoint, urPoint)
 
-        transforms[TAN_PIXELS] = makePixelToTanPixel(
-            bbox = bbox,
-            orientation = orientation,
-            focalPlaneToPupil = focalPlaneToPupil,
-            pixelSizeMm = pixelSizeMm,
-            plateScale = plateScale,
-        )
+        # transforms[TAN_PIXELS] = makePixelToTanPixel(
+        #     bbox = bbox,
+        #     orientation = orientation,
+        #     focalPlaneToPupil = focalPlaneToPupil,
+        #     pixelSizeMm = pixelSizeMm,
+        #     plateScale = plateScale,
+        # )
 
         return Detector(
             detectorConfig.name,
