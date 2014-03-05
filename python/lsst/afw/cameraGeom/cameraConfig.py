@@ -23,8 +23,8 @@ class DetectorConfig(pexConfig.Config):
                              "after optional transposition.", float)
     pitchDeg = pexConfig.Field("pitch (rotation about y) of the detector in degrees", float)
     rollDeg = pexConfig.Field("roll (rotation about x) of the detector in degrees", float)
-    pixelSize_x = pexConfig.Field("Pixel size in the x dimention in microns", float)
-    pixelSize_y = pexConfig.Field("Pixel size in the y dimention in microns", float)
+    pixelSize_x = pexConfig.Field("Pixel size in the x dimension in mm", float)
+    pixelSize_y = pexConfig.Field("Pixel size in the y dimension in mm", float)
 
     # Depending on the choice of detector coordinates, the pixel grid may need to be transposed before rotation to put
     # it in camera coordinates.

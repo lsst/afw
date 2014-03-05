@@ -48,7 +48,8 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             refPoint,
             yaw,
         )
-        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScale, 0.0, 0.001 * plateScale))
+        plateScaleRad = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians()
+        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox = bbox,
@@ -65,9 +66,9 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             self.assertAlmostEquals(ctrPointTanPix[i], ctrPointPix[i])
 
         # two points separated by x pixels in tan pixels coordinates
-        # should be separated x * arcsec/tanPix in pupil coordinates,
-        # where arcsec/tanPix = plate scale (arcsec/MM) * mean pixel size (mm)
-        arcSecPerTanPixel = plateScale * (pixelSizeMm[0] + pixelSizeMm[1]) / 2.0
+        # should be separated x * rad/tanPix in pupil coordinates,
+        # where rad/tanPix = plate scale in rad/MM * mean pixel size in mm
+        radPerTanPixel = plateScale * (pixelSizeMm[0] + pixelSizeMm[1]) / 2.0
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
         pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
         prevPointPupil = None
@@ -83,7 +84,7 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             if prevPointPupil:
                 pupilSep = numpy.linalg.norm(pointPupil - prevPointPupil)
                 tanPixSep = numpy.linalg.norm(pointTanPix - prevPointTanPix)
-                self.assertAlmostEquals(tanPixSep * arcSecPerTanPixel, pupilSep)
+                self.assertAlmostEquals(tanPixSep * radPerTanPixel, pupilSep)
             prevPointPupil = pointPupil
             prevPointTanPix = pointTanPix
 
