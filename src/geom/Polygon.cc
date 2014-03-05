@@ -395,6 +395,12 @@ std::vector<Polygon> Polygon::symDifference(Box const& box) const {
     return _impl->symDifference(box);
 }
 
+Polygon Polygon::simplify(double const distance) const {
+    BoostPolygon result;
+    boost::geometry::simplify(_impl->poly, result, distance);
+    return Polygon(PTR(Impl)(new Impl(result)));
+}
+
 Polygon Polygon::convexHull() const
 {
     BoostPolygon hull;

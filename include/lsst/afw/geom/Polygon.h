@@ -164,6 +164,11 @@ public:
     std::vector<Polygon> symDifference(Box const& box) const;
     //@}
 
+    /// Return a simplified polygon
+    ///
+    /// Removes unnecessary points (using the Douglas-Peucker algorithm).
+    Polygon simplify(double const distance) const;
+
     //@{
     /// Operators for syntactic sugar
     std::vector<Polygon> operator&(Polygon const& rhs) const { return intersection(rhs); }
