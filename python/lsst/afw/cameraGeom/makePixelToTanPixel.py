@@ -26,7 +26,7 @@ import lsst.afw.geom as afwGeom
 
 __all__ = ["makePixelToTanPixel"]
 
-def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm, plateScale):
+def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm, plateScaleArcsec):
     """Make an XYTransform whose forward direction converts PIXEL to TAN_PIXEL for one detector
 
     @param[in] bbox: detector bounding box
@@ -34,14 +34,14 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm, plate
     @param[in] focalPlaneToPupil: XYTransform that converts from focal plane (mm)
         to pupil coordinates (radians) in the forward direction
     @param[in] pixelSizeMm: size of the pixel in mm in X and Y
-    @param[in] plateScale: plate scale of the camera in arcsec/mm
+    @param[in] plateScaleArcsec: plate scale of the camera in arcsec/mm
 
     If the pixels are rectangular then the TAN_PIXEL scale is based on the mean size
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
 
     meanPixelSizeMm = (pixelSizeMm[0] + pixelSizeMm[1]) / 2.0
-    radPerMeanPix = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians() * meanPixelSizeMm
+    radPerMeanPix = afwGeom.Angle(plateScaleArcsec, afwGeom.arcseconds).asRadians() * meanPixelSizeMm
 
     detCtrPix = afwGeom.Box2D(bbox).getCenter()
     detCtrTanPix = detCtrPix # by definition

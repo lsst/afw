@@ -39,7 +39,7 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
         """
         bbox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(1000, 1000))
         pixelSizeMm = afwGeom.Extent2D(0.02, 0.03)
-        plateScale = 25.0   # arcsec/mm
+        plateScaleArcsec = 25.0   # arcsec/mm
         yaw = afwGeom.Angle(20, afwGeom.degrees)
         fpPosition = afwGeom.Point2D(50, 25) # focal-plane position of ref position on detector (mm)
         refPoint = afwGeom.Point2D(-0.5, -0.5) # ref position on detector (pos of lower left corner)
@@ -48,7 +48,7 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             refPoint,
             yaw,
         )
-        plateScaleRad = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians()
+        plateScaleRad = afwGeom.Angle(plateScaleArcsec, afwGeom.arcseconds).asRadians()
         focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
 
         pixelToTanPixel = makePixelToTanPixel(
@@ -56,7 +56,7 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             orientation = orientation,
             focalPlaneToPupil = focalPlaneToPupil,
             pixelSizeMm = pixelSizeMm,
-            plateScale = plateScale,
+            plateScaleArcsec = plateScaleArcsec,
         )
 
         # the center point of the detector should not move
@@ -68,7 +68,7 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
         # two points separated by x pixels in tan pixels coordinates
         # should be separated x * rad/tanPix in pupil coordinates,
         # where rad/tanPix = plate scale in rad/MM * mean pixel size in mm
-        radPerTanPixel = plateScale * (pixelSizeMm[0] + pixelSizeMm[1]) / 2.0
+        radPerTanPixel = plateScaleRad * (pixelSizeMm[0] + pixelSizeMm[1]) / 2.0
         pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
         pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
         prevPointPupil = None
@@ -95,7 +95,7 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
         bbox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(1000, 1000))
         pixSizeFactor = numpy.array((1.2, 0.8))
         pixelSizeMm = afwGeom.Extent2D(0.02 * pixSizeFactor[0], 0.02 * pixSizeFactor[1])
-        plateScale = 25.0   # arcsec/mm
+        plateScaleArcsec = 25.0   # arcsec/mm
         yaw = afwGeom.Angle(20, afwGeom.degrees)
         fpPosition = afwGeom.Point2D(50, 25) # focal-plane position of ref position on detector (mm)
         refPoint = afwGeom.Point2D(-0.5, -0.5) # ref position on detector (pos of lower left corner)
@@ -104,14 +104,15 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             refPoint,
             yaw,
         )
-        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScale))
+        plateScaleRad = afwGeom.Angle(plateScaleArcsec, afwGeom.arcseconds).asRadians()
+        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox = bbox,
             orientation = orientation,
             focalPlaneToPupil = focalPlaneToPupil,
             pixelSizeMm = pixelSizeMm,
-            plateScale = plateScale,
+            plateScaleArcsec = plateScaleArcsec,
         )
 
         # with no distortion, this should be a unity transform
