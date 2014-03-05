@@ -105,15 +105,15 @@ void addSubSampledEdge(
 /// Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y)
 {
-    BoostPolygon pixel;     // Polygon for single pixel
-    boost::geometry::assign(pixel, LsstBox(lsst::afw::geom::Point2D(x - 0.5, y - 0.5),
-                                           lsst::afw::geom::Extent2D(1.0, 1.0)));
     std::vector<BoostPolygon> overlap; // Overlap between pixel and polygon
+    LsstBox const pixel(lsst::afw::geom::Point2D(x - 0.5, y - 0.5),
+                        lsst::afw::geom::Point2D(x + 0.5, y + 0.5));
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (std::vector<BoostPolygon>::const_iterator i = overlap.begin(); i != overlap.end(); ++i) {
-        area += boost::geometry::area(*i);
-        assert(area <= 1.0); // by construction
+        double const polyArea = boost::geometry::area(*i);
+        area += std::min(polyArea, 1.0);
+        assert(polyArea <= 1.0 + std::numeric_limits<float>::epsilon()); // by construction, + rounding error
     }
     return area;
 }
