@@ -37,6 +37,9 @@ class Camera(DetectorCollection):
         self._name = name
         self._transformMap = transformMap
         super(Camera, self).__init__(detectorList)
+  
+    def getName(self):
+        return self._name
         
     def findDetectors(self, cameraPoint):
         """Find the detectors that cover a given cameraPoint, or empty list

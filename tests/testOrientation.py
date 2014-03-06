@@ -69,6 +69,20 @@ class OrientationTestCase(unittest.TestCase):
                     self.assertAlmostEquals(xy[i] - 0.5, fwdXY[i])
         self.compareTransforms(orient)
 
+    def testGetNQuarter(self):
+        """Test the getNQuarter method
+        """
+        refPos = afwGeom.Point2D(0., 0.)
+        fpPos = afwGeom.Point2D(0., 0.)
+        angles = ((0., 0), (90., 1), (180., 2), (270., 3), (360., 4),
+                  (0.1, 0), (44.9, 0), (45.1, 1), (89.9, 1), (90.1, 1),
+                  (134.9, 1), (135.1, 2), (179.9, 2), (180.1, 2), (224.9, 2),
+                  (225.1, 3), (269.9, 3), (270.1, 3), (314.9, 3), (315.1, 4),
+                  (359.9, 4))
+        for angle in angles:
+            orient = Orientation(fpPos, refPos, afwGeom.Angle(angle[0], afwGeom.degrees))
+            self.assertEquals(orient.getNQuarter(), angle[1])
+
     def checkTransforms(self, orientWrapper, pixelSize=afwGeom.Extent2D(0.12, 0.21)):
         """Check that the transforms do what we expect them to
         """
