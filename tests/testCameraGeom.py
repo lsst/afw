@@ -50,9 +50,9 @@ class CameraGeomTestCase(unittest.TestCase):
         self.cameraList = (self.lsstCamWrapper, self.scCamWrapper)
         self.assemblyList = {}
         self.assemblyList[self.lsstCamWrapper.camera.getName()] =\
-            [afwImage.ImageU('test_amp.fits.gz') for i in range(8)]
+            [afwImage.ImageU('tests/test_amp.fits.gz') for i in range(8)]
         self.assemblyList[self.scCamWrapper.camera.getName()] =\
-            [afwImage.ImageU('test.fits.gz')]
+            [afwImage.ImageU('tests/test.fits.gz')]
 
     def tearDown(self):
         del self.lsstCamWrapper
@@ -174,7 +174,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testAssembly(self):
         ccdNames = ('R:0,0 S:1,0', 'R:0,0 S:0,1')
-        compMap = {True:afwImage.ImageU('test_comp_trimmed.fits.gz'), False:afwImage.ImageU('test_comp.fits.gz')}
+        compMap = {True:afwImage.ImageU('tests/test_comp_trimmed.fits.gz'), False:afwImage.ImageU('tests/test_comp.fits.gz')}
         for cw in self.cameraList:
             camera = cw.camera
             imList = self.assemblyList[camera.getName()]
