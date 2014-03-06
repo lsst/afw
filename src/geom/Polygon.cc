@@ -112,8 +112,7 @@ double pixelOverlap(BoostPolygon const& poly, int const x, int const y)
     double area = 0.0;
     for (std::vector<BoostPolygon>::const_iterator i = overlap.begin(); i != overlap.end(); ++i) {
         double const polyArea = boost::geometry::area(*i);
-        area += std::min(polyArea, 1.0);
-        assert(polyArea <= 1.0 + std::numeric_limits<float>::epsilon()); // by construction, + rounding error
+        area += std::min(polyArea, 1.0); // remove any rounding error
     }
     return area;
 }
