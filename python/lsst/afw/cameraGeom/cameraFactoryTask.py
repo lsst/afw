@@ -20,29 +20,23 @@ class CameraFactoryTask(object):
     def __init__(self):
         """Construct a CameraFactoryTask
         """
-        pass
 
-    def run(self, cameraConfig, ampInfoPath):
+    def run(self, cameraConfig, ampInfoPath, shortNameFunc):
         """Construct a camera (lsst.afw.cameraGeom Camera)
 
         @param[in] cameraConfig: an instance of CameraConfig
         @param[in] ampInfoPath: path to ampInfo data files
+        @param[in] shortNameFunc: a function that converts a long detector name to a short one
         @return camera (an lsst.afw.cameraGeom.Camera)
         """
         ampInfoCatDict = dict()
         for detectorConfig in cameraConfig.detectorList.itervalues():
-            #HACK until the mapper can get the short name
-            nameEls = detectorConfig.name.split(" ")
-            if len(nameEls[1]) == 7:
-                nmap = {'A':'C0', 'B':'C1'}
-                shortName = "R%s%s_S%s%s_%s"%(nameEls[0][2], nameEls[0][4], nameEls[1][2], nameEls[1][4], nmap[nameEls[1][6]])
-            else:
-                shortName = "R%s%s_S%s%s"%(nameEls[0][2], nameEls[0][4], nameEls[1][2], nameEls[1][4])
+            shortName = shortNameFunc(detectorConfig.name)
             ampCatPath = os.path.join(ampInfoPath, shortName + ".fits")
             ampInfoCatalog = AmpInfoCatalog.readFits(ampCatPath)
             ampInfoCatDict[detectorConfig.name] = ampInfoCatalog
 
-        return self.runCatDict(self, cameraConfig, ampInfoCatDict)
+        return self.runCatDict(cameraConfig, ampInfoCatDict)
 
     def runCatDict(self, cameraConfig, ampInfoCatDict):
         """Construct a camera (lsst.afw.cameraGeom Camera)
