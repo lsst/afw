@@ -54,7 +54,9 @@ public:
     
     virtual ~Interpolate() {}
     virtual double interpolate(double const x) const = 0;
+#ifndef SWIG
     std::vector<double> interpolate(std::vector<double> const& x) const;
+#endif
     ndarray::Array<double, 1> interpolate(ndarray::Array<double const, 1> const& x) const;
 protected:
     /**
@@ -75,8 +77,10 @@ private:
     Interpolate& operator=(Interpolate const&);
 };
 
+#ifndef SWIG
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
+#endif
 PTR(Interpolate) makeInterpolate(ndarray::Array<double const, 1> const &x,
                                  ndarray::Array<double const, 1> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
