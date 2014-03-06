@@ -54,7 +54,7 @@ def rotateBBoxBy90(bbox, n90, dimensions):
     else:
         raise ValueError("n90 must be an integer")
 
-    centerPixel = afwGeom.Point2I(dimensions[0]/2, dimensions[1]/2)
+    centerPixel = afwGeom.Point2I(int(dimensions[0]/2), int(dimensions[1]/2))
 
     xCorner = numpy.array([(corner.getX() - centerPixel[0]) for corner in bbox.getCorners()])
     yCorner = numpy.array([(corner.getY() - centerPixel[1]) for corner in bbox.getCorners()])

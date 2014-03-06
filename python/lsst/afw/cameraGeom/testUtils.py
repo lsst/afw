@@ -3,8 +3,11 @@ import eups
 import numpy
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
-import lsst.afw.cameraGeom as cameraGeom
-from lsst.afw.cameraGeom import Camera, DetectorConfig, CameraConfig, PIXELS, PUPIL, FOCAL_PLANE, CameraFactoryTask
+from .cameraGeomLib import PIXELS, PUPIL, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS,\
+                           CameraSys, Detector, Orientation
+from .camera import Camera
+from .cameraConfig import DetectorConfig, CameraConfig
+from .cameraFactoryTask import CameraFactoryTask
 
 __all__ = ["DetectorWrapper", "CameraWrapper"]
 
@@ -27,13 +30,13 @@ class DetectorWrapper(object):
     """
     def __init__(self,
         name = "detector 1",
-        detType = cameraGeom.SCIENCE,
+        detType = SCIENCE,
         serial = "xkcd722",
         bbox = None,    # do not use mutable objects as defaults
         numAmps = 3,
         pixelSize = afwGeom.Extent2D(0.02),
         ampExtent = afwGeom.Extent2I(5,6), 
-        orientation = cameraGeom.Orientation(),
+        orientation = Orientation(),
         tryDuplicateAmpNames = False,
         tryBadCameraSys = False,
     ):
@@ -60,12 +63,12 @@ class DetectorWrapper(object):
         self.orientation = orientation
         self.pixelSize = pixelSize
         self.transMap = {
-            cameraGeom.FOCAL_PLANE: self.orientation.makePixelFpTransform(self.pixelSize),
-            cameraGeom.CameraSys(cameraGeom.ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
+            FOCAL_PLANE: self.orientation.makePixelFpTransform(self.pixelSize),
+            CameraSys(ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
         }
         if tryBadCameraSys:
-            self.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
-        self.detector = cameraGeom.Detector(
+            self.transMap[CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
+        self.detector = Detector(
             self.name,
             self.type,
             self.serial,

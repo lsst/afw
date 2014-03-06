@@ -22,16 +22,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-"""
-Tests for SpatialCell
-
-Run with:
-   python SpatialCell.py
-or
-   python
-   >>> import SpatialCell; SpatialCell.run()
-"""
-
 import unittest
 import numpy
 
