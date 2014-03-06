@@ -1,10 +1,10 @@
 import os
-import eups
 import numpy
+import eups
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.afw.cameraGeom as cameraGeom
-from lsst.afw.cameraGeom import Camera, DetectorConfig, CameraConfig, PIXELS, PUPIL, FOCAL_PLANE, CameraFactoryTask
+from lsst.afw.cameraGeom import DetectorConfig, CameraConfig, PIXELS, PUPIL, FOCAL_PLANE, CameraFactoryTask
 
 __all__ = ["DetectorWrapper", "CameraWrapper"]
 
@@ -81,7 +81,8 @@ class CameraWrapper(object):
 
     Intended for use with unit tests, thus saves some interesting information.
 
-    @param[in] isLsstLike: make repository products with one amp per image (True), or with amps assembled in a raw pixel grid (False)
+    @param[in] isLsstLike: make repository products with one raw image per amplifier (True)
+        or with one raw image per detector (False)
     """
     def makeDetectorConfigs(self, detFile):
         detectors = []
