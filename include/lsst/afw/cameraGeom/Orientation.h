@@ -91,6 +91,15 @@ public:
     /// Return the roll angle
     geom::Angle getRoll() const { return _roll; }
 
+    /// Return the number of quarter turns (rounded to the closest quarter)
+    int getNQuarter() const {
+        float yawDeg = _yaw.asDegrees();
+        while (yawDeg < 0.) {
+            yawDeg += 360.;
+        }
+        return std::floor((yawDeg + 45.)/90.);
+    }
+
     /**
      * @brief Generate an XYTransform from pixel to focal plane coordinates
      *

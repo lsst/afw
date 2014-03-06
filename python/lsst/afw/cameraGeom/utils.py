@@ -27,31 +27,19 @@ Support for cameraGeom
 """
 from __future__ import division
 import math
-import os
-import sys
-import unittest
-import numpy as numpy
+import numpy
 import itertools
-try:
-    import pyfits
-except ImportError:
-    pyfits = None
 
-import lsst.daf.persistence as dafPersist
-import lsst.pex.policy as pexPolicy
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.cameraGeom as cameraGeom
+import lsst.daf.base as dafBase
+from lsst.afw.cameraGeom import PUPIL, PIXELS, FOCAL_PLANE
 
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
-from lsst.afw.cameraGeom import CameraSys, PUPIL, PIXELS, FOCAL_PLANE
-#TODO protect this or add it to setups.
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
-import matplotlib.pyplot as plt
 try:
     type(display)
 except NameError:
@@ -64,6 +52,12 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
     Make a plot of the focal plane along with a set points that sample the Pupil
     @param camera -- a camera object
     """
+    try:
+        from matplotlib.patches import Polygon
+        from matplotlib.collections import PatchCollection
+        import matplotlib.pyplot as plt
+    except ImportError:
+        raise ImportError("Can't run plotFocalPlane: matplotlib has not been set up")
     pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2., 
                                               numpy.arange(0., pupilSizeDeg_y+dy, dy) -  pupilSizeDeg_y/2.)
     xs = []
@@ -100,8 +94,8 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
         center = det.getOrientation().getFpPosition()
         ax.text(center.getX(), center.getY(), det.getName(), horizontalalignment='center', size=8)
 
-    p = PatchCollection(patches, alpha=0.6, facecolor=colors)
-    ax.add_collection(p)
+    patchCollection = PatchCollection(patches, alpha=0.6, facecolor=colors)
+    ax.add_collection(patchCollection)
     ax.scatter(xs, ys, s=10, alpha=.7, linewidths=0., c=pcolors)
     ax.set_xlim(min(xvals) - abs(0.1*min(xvals)), max(xvals) + abs(0.1*max(xvals)))
     ax.set_ylim(min(yvals) - abs(0.1*min(yvals)), max(yvals) + abs(0.1*max(yvals)))
@@ -111,8 +105,6 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
         plt.savefig(savePath)
     if showFig:
         plt.show()
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0):
     if not amp.getHasRawInfo():
@@ -124,7 +116,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
         img.set((amp.getGain()*1000)//10)
     else:
         img.set(imValue)
-    #TODO set the first pixel read to a different value
+    #Set the first pixel read to a different value
     markbbox = afwGeom.Box2I()
     if amp.getReadoutCorner() == 0:
         markbbox.include(dbbox.getMin())
@@ -157,7 +149,7 @@ def calcRawCcdBBox(ccd):
         bbox.include(tbbox)
     return bbox
 
-def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImage.ImageU, rcMarkSize=10, bin=1):
+def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImage.ImageU, rcMarkSize=10, binSize=1):
     """Make an Image of a Ccd
     """
     ampImages = []
@@ -185,10 +177,10 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
         if not isTrimmed:
             raise RuntimeError("Cannot create untrimmed CCD without amps with raw information")
         ccdImage = imageFactory(ccd.getBBox())
-    ccdImage = afwMath.binImage(ccdImage, bin)
+    ccdImage = afwMath.binImage(ccdImage, binSize)
     return ccdImage
 
-def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame, bin):
+def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame, binSize):
     with ds9.Buffering():
         ccdDim = untrimmedCcdBbox.getDimensions()
         ccdBbox = cameraGeom.rotateBBoxBy90(untrimmedCcdBbox, nQuarter, ccdDim)
@@ -202,7 +194,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
                 ampbbox = cameraGeom.rotateBBoxBy90(ampbbox, nQuarter, ccdDim)
 
             displayUtils.drawBBox(ampbbox, origin=ccdOrigin, borderWidth=0.49,
-                                  frame=frame, bin=bin)
+                                  frame=frame, binSize=binSize)
 
             if not isTrimmed and amp.getHasRawInfo():
                 for bbox, ctype in ((amp.getRawHorizontalOverscanBBox(), ds9.RED), (amp.getRawDataBBox(), ds9.BLUE),
@@ -214,7 +206,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
                     bbox.shift(amp.getRawXYOffset())
                     if nQuarter != 0:
                         bbox = cameraGeom.rotateBBoxBy90(bbox, nQuarter, ccdDim)
-                    displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49, ctype=ctype, frame=frame, bin=bin)
+                    displayUtils.drawBBox(bbox, origin=ccdOrigin, borderWidth=0.49, ctype=ctype, frame=frame, binSize=binSize)
             # Label each Amp
             xc, yc = (ampbbox.getMin()[0] + ampbbox.getMax()[0])//2, (ampbbox.getMin()[1] +
                     ampbbox.getMax()[1])//2
@@ -241,10 +233,10 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
             if ccdOrigin:
                 xc += ccdOrigin[0]
                 yc += ccdOrigin[1]
-            ds9.dot(str(amp.getName()), xc/bin, yc/bin, frame=frame)
+            ds9.dot(str(amp.getName()), xc/binSize, yc/binSize, frame=frame)
 
         displayUtils.drawBBox(ccdBbox, origin=ccdOrigin,
-                              borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=bin)
+                              borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, binSize=binSize)
 
 def showAmp(amp, ampImage=None, isTrimmed=False, frame=None, overlay=True, imageFactory=afwImage.ImageU, markSize=10, markValue=0):
     if ampImage is None:
@@ -280,19 +272,19 @@ def showAmp(amp, ampImage=None, isTrimmed=False, frame=None, overlay=True, image
                 bbox.shift(-afwGeom.ExtentI(xy0))
                 displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame)
 
-def showCcd(ccd, ccdImage=None, isTrimmed=True, showAmpGain=True, frame=None, overlay=True, bin=1, inCameraCoords=False):
+def showCcd(ccd, ccdImage=None, isTrimmed=True, showAmpGain=True, frame=None, overlay=True, binSize=1, inCameraCoords=False):
     """Show a CCD on ds9.  If ccdImage is None, an image will be created based on the properties
 of the detectors"""
     ccdOrigin = afwGeom.Point2I(0,0)
     nQuarter = 0
     if ccdImage is None:
-        ccdImage = makeImageFromCcd(ccd, isTrimmed=isTrimmed, showAmpGain=showAmpGain, bin=bin)
+        ccdImage = makeImageFromCcd(ccd, isTrimmed=isTrimmed, showAmpGain=showAmpGain, binSize=binSize)
     else:
         rawBbox = calcRawCcdBBox(ccd)
         if isTrimmed and not ccdImage.getBBox() == ccd.getBBox():
-            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ampImage.getBBox(), ccd.getBBox()))
+            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ccdImage.getBBox(), ccd.getBBox()))
         if not isTrimmed and not ccdImage.getBBox() == rawBbox:
-            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ampImage.getBBox(), rawBbox))
+            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ccdImage.getBBox(), rawBbox))
     ccdBbox = ccdImage.getBBox()
     if inCameraCoords:
         #TODO add getNQuarter to detector
@@ -308,10 +300,10 @@ of the detectors"""
     ds9.mtv(ccdImage, frame=frame, title=title)
 
     if overlay:
-        overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, frame, bin)
+        overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, frame, binSize)
 
 
-def makeImageFromCamera(camera, detectorList=None, background=numpy.nan, buffer=10, imageSource=None, imageFactory=afwImage.ImageU, bin=1):
+def makeImageFromCamera(camera, detectorList=None, background=numpy.nan, bufferSize=10, imageSource=None, imageFactory=afwImage.ImageU, binSize=1):
     """Make an Image of a Camera"""
     if detectorList is None:
         detectorList = camera._nameDetectorDict.keys()
@@ -321,20 +313,20 @@ def makeImageFromCamera(camera, detectorList=None, background=numpy.nan, buffer=
     pixMin = afwGeom.Point2I(int(camBbox.getMinX()//pixelSize_o.getX()), int(camBbox.getMinY()//pixelSize_o.getY()))
     pixMax = afwGeom.Point2I(int(camBbox.getMaxX()//pixelSize_o.getX()), int(camBbox.getMaxY()//pixelSize_o.getY()))
     camBbox = afwGeom.Box2I(pixMin, pixMax)
-    camBbox.grow(buffer)
+    camBbox.grow(bufferSize)
     origin = camBbox.getMin()
     # This segfaults for large images.  It seems better to throw instead of segfaulting, but maybe that's not easy.
-    camIm = imageFactory(int(camBbox.getDimensions().getX()/bin), int(camBbox.getDimensions().getY()/bin))
+    camIm = imageFactory(int(camBbox.getDimensions().getX()/binSize), int(camBbox.getDimensions().getY()/binSize))
     
     for det in (camera[name] for name in detectorList):
         if not pixelSize_o == det.getPixelSize():
             raise RuntimeError("Cameras with detectors with different pixel scales are not currently supported")
         if imageSource is None:
-            im = makeImageFromCcd(det, isTrimmed=True, showAmpGain=False, imageFactory=imageFactory, bin=bin)
+            im = makeImageFromCcd(det, isTrimmed=True, showAmpGain=False, imageFactory=imageFactory, binSize=binSize)
         else:
             raise NotImplementedError("Do something reasonable if an image is sent")
 
-        #TODO add getNQuarter to detector -- could break this out into util.
+        #TODO add getNQuarter to detector.
         yaw = det.getOrientation().getYaw()
         while (yaw.asDegrees() < 0.):
             yaw += afwGeom.Angle(afwGeom.TWOPI)
@@ -346,15 +338,15 @@ def makeImageFromCamera(camera, detectorList=None, background=numpy.nan, buffer=
             dbbox.include(corner)
         llc = dbbox.getMin()
         bbox = im.getBBox()
-        bbox.shift(afwGeom.Extent2I(int(llc.getX()//pixelSize_o.getX()/bin), int(llc.getY()//pixelSize_o.getY()/bin)))
-        bbox.shift(afwGeom.Extent2I(-int(origin.getX()//bin), -int(origin.getY())//bin))
+        bbox.shift(afwGeom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize), int(llc.getY()//pixelSize_o.getY()/binSize)))
+        bbox.shift(afwGeom.Extent2I(-int(origin.getX()//binSize), -int(origin.getY())//binSize))
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         imView <<= im
 
     return camIm
 
 def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorList=None,
-                bin=10, buffer=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
+                binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
                 referenceDetectorName=None, **kwargs):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
 
@@ -362,17 +354,16 @@ If imageSource is provided its getImage method will be called to return a CCD im
 cameraGeom.GetCcdImage object); if it is "", an image will be created based on the properties
 of the detectors"""
     
-    cameraImage = makeImageFromCamera(camera, detectorList=detectorList, buffer=buffer,
-                                      imageSource=imageSource, imageFactory=imageFactory, bin=bin)
-    wcs = makeFocalPlaneWcs(camera, bin, referenceDetectorName)
+    cameraImage = makeImageFromCamera(camera, detectorList=detectorList, bufferSize=bufferSize,
+                                      imageSource=imageSource, imageFactory=imageFactory, binSize=binSize)
+    wcs = makeFocalPlaneWcs(camera, binSize, referenceDetectorName)
     #TODO makeFocalPlaneWcs is returning None and I don't know why.
     ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
    
     return cameraImage
 
-def makeFocalPlaneWcs(camera, bin=1, referenceDetectorName=None):
+def makeFocalPlaneWcs(camera, binSize=1, referenceDetectorName=None):
     """Make a WCS for the focal plane geometry (i.e. returning positions in "mm")"""
-    import lsst.daf.base as dafBase
 
     if referenceDetectorName is not None:
         ccd = camera[referenceDetectorName]
@@ -391,95 +382,15 @@ def makeFocalPlaneWcs(camera, bin=1, referenceDetectorName=None):
     for i in range(2):
         md.set("CRPOS%d" % i, pix[i])
         md.set("CRVAL%d" % i, fpPos[i])
-    md.set("CDELT1", ccd.getPixelSize()[0]*bin)
-    md.set("CDELT2", ccd.getPixelSize()[1]*bin)
+    md.set("CDELT1", ccd.getPixelSize()[0]*binSize)
+    md.set("CDELT2", ccd.getPixelSize()[1]*binSize)
 
     return afwImage.makeWcs(md)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-#TODO fix this, but maybe not until S14???
 def showMosaic(fileName, geomPolicy=None, camera=None,
                display=True, what=cameraGeom.Camera, id=None, overlay=False, describe=False, doTrim=False,
-               imageFactory=afwImage.ImageU, bin=1, frame=None):
-    """Return a mosaic for a given snapshot of the sky; if display is true, also show it on ds9
-
-The camera geometry is defined by cameraGeomPolicyFile;  raft IDs etc. are drawn on ds9 if overlay is True;
-The camera (or raft) is described if describe is True
-
-You may set what to a type (e.g. cameraGeom.Ccd) to display that type; if provided id will be obeyed
-
-If relevant (for e.g. a Ccd) doTrim is applied to the Detector.
-    """
-
-    if isinstance(fileName, GetCcdImage):
-        imageSource = fileName
-    elif isinstance(fileName, str):
-        imageSource = GetCcdImage(fileName) # object that understands the CCD <--> HDU mapping
-    else:
-        imageSource = None
-
-    if imageSource:
-        imageSource.setTrimmed(doTrim)
-    
-    if not camera:
-        camera = makeCamera(geomPolicy)
-
-    if what == cameraGeom.Amp:
-        if id is None:
-            ccd = makeCcd(geomPolicy)
-        else:
-            ccd = findCcd(camera, id[0])
-        amp = [a for a in ccd if a.getId() == id[1]][0]
-
-        if not amp:
-            raise RuntimeError, "Failed to find Amp %s" % id
-
-        ccd.setTrimmed(doTrim)
-
-        outImage = makeImageFromCcd(ccd, imageSource, amp=amp, imageFactory=imageFactory, bin=bin)
-        if display:
-            showCcd(ccd, outImage, amp=amp, overlay=overlay, frame=frame, bin=bin)
-    elif what == cameraGeom.Ccd:
-        if id is None:
-            ccd = makeCcd(geomPolicy)
-        else:
-            ccd = findCcd(camera, id)
-
-        if not ccd:
-            raise RuntimeError, "Failed to find Ccd %s" % id
-
-        ccd.setTrimmed(doTrim)
-
-        outImage = makeImageFromCcd(ccd, imageSource, imageFactory=imageFactory, bin=bin)
-        if display:
-            showCcd(ccd, outImage, overlay=overlay, frame=frame, bin=bin)
-    elif what == cameraGeom.Raft:
-        if id:
-            raft = findRaft(camera, id)
-        else:
-            raft = makeRaft(geomPolicy)
-        if not raft:
-            raise RuntimeError, "Failed to find Raft %s" % id
-
-        outImage = makeImageFromRaft(raft, imageSource, imageFactory=imageFactory, bin=bin)
-        if display:
-            showRaft(raft, outImage, overlay=overlay, frame=frame, bin=bin)
-
-        if describe:
-            print describeRaft(raft)
-    elif what == cameraGeom.Camera:
-        outImage = makeImageFromCamera(camera, imageSource, imageFactory=imageFactory, bin=bin)
-        if display:
-            showCamera(camera, outImage, overlay=overlay, frame=frame, bin=bin)
-
-        if describe:
-            print describeCamera(camera)
-    else:
-        raise RuntimeError, ("I don't know how to display %s" % what)
-
-    return outImage
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+               imageFactory=afwImage.ImageU, binSize=1, frame=None):
+    raise NotImplementedError("This function has not been updated to the new CameraGeom.  This will be done in the Summer 2014 work period")
 
 def findAmp(ccd, pixelPosition):
     """Find the Amp with the specified Id within the composite"""
