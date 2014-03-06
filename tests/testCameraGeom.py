@@ -27,9 +27,11 @@ import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.geom as afwGeom
+import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 
-from lsst.afw.cameraGeom import PUPIL, FOCAL_PLANE, Camera, Detector
+from lsst.afw.cameraGeom import PUPIL, FOCAL_PLANE, Camera, Detector,\
+                                assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -46,15 +48,17 @@ class CameraGeomTestCase(unittest.TestCase):
         self.lsstCamWrapper = testUtils.CameraWrapper(isLsstLike=True)
         self.scCamWrapper = testUtils.CameraWrapper(isLsstLike=False)
         self.cameraList = (self.lsstCamWrapper, self.scCamWrapper)
+        self.assemblyList = {}
+        self.assemblyList[self.lsstCamWrapper.camera.getName()] =\
+            [afwImage.ImageU('test_amp.fits.gz') for i in range(8)]
+        self.assemblyList[self.scCamWrapper.camera.getName()] =\
+            [afwImage.ImageU('test.fits.gz')]
 
     def tearDown(self):
         del self.lsstCamWrapper
         del self.scCamWrapper
         del self.cameraList
-
-    def assertImagesAreEqual(self, outImage, compImage):
-        """Assert that two images have all pixels equal"""
-        self.assertTrue((outImage.getArray() == compImage.getArray()).all())
+        del self.assemblyList
 
     def testConstructor(self):
         for cw in self.cameraList:
@@ -167,6 +171,31 @@ class CameraGeomTestCase(unittest.TestCase):
                                       amp.getLinearityCoeffs()):
                         if numpy.isfinite(c1) and numpy.isfinite(c2):
                             self.assertEquals(c1, c2)
+
+    def testAssembly(self):
+        ccdNames = ('R:0,0 S:1,0', 'R:0,0 S:0,1')
+        compMap = {True:afwImage.ImageU('test_comp_trimmed.fits.gz'), False:afwImage.ImageU('test_comp.fits.gz')}
+        for cw in self.cameraList:
+            camera = cw.camera
+            imList = self.assemblyList[camera.getName()]
+            for ccdName in ccdNames:
+                for trim, assemble in ((False, assembleAmplifierRawImage), (True, assembleAmplifierImage)):
+                    det = camera[ccdName]
+                    if not trim:
+                        outBbox = cameraGeomUtils.calcRawCcdBBox(det)
+                    else:
+                        outBbox = det.getBBox()
+                    outImage = afwImage.ImageU(outBbox)
+                    if len(imList) == 1:
+                        for amp in det:
+                            assemble(outImage, imList[0], amp)
+                    else:
+                        for amp, im in zip(det, imList):
+                            assemble(outImage, im, amp)
+                    self.assertTrue((outImage.getArray() == compMap[trim].getArray()).all())
+                    
+                    
+        
 
     def testCameraGeomUtils(self):
         if not display:
