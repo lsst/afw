@@ -763,6 +763,10 @@ class FootprintTestCase(unittest.TestCase):
         f1.addSpan(13, 30, 40)
         f1.addSpan(13, 50, 60)
 
+        f1.addSpan(15, 10,20)
+        f1.addSpan(15, 31,40)
+        f1.addSpan(15, 51,60)
+
         f2.addSpan(8,  10, 20)
         f2.addSpan(9,  20, 30)
         f2.addSpan(10,  0,  9)
@@ -771,6 +775,10 @@ class FootprintTestCase(unittest.TestCase):
 
         f2.addSpan(13, 49, 54)
         f2.addSpan(14, 10, 30)
+
+        f2.addSpan(15, 21,30)
+        f2.addSpan(15, 41,50)
+        f2.addSpan(15, 61,70)
 
         f1.normalize()
         f2.normalize()

@@ -1417,6 +1417,15 @@ Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
     return _mergeFootprints(foot1, foot2);
 }
 
+Footprint::Ptr Footprint::mergeWith(Footprint const& foot2) const {
+  if (!isNormalized() || !foot2.isNormalized()) {
+    throw LSST_EXCEPT(
+      lsst::pex::exceptions::InvalidParameterException,
+      "mergeFootprints(const Footprints) requires normalize()d Footprints.");
+  }
+  return _mergeWith(foot2);
+}
+
 /************************************************************************************************************/
 /**
  * Grow a Footprint by ngrow pixels, returning a new Footprint
