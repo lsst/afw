@@ -796,6 +796,9 @@ class FootprintTestCase(tests.TestCase):
         f2.addSpan(13, 49, 54)
         f2.addSpan(14, 10, 30)
 
+        f1.normalize()
+        f2.normalize()
+
         fA = afwDetect.mergeFootprints(f1, f2)
         fB = afwDetect.mergeFootprints(f2, f1)
 
