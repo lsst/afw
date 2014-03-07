@@ -204,6 +204,10 @@ private:
     bool _normalized;                    //!< Are the spans sorted?
 };
 
+Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2);
+
+Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2);
+
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
