@@ -781,7 +781,6 @@ class FootprintTestCase(tests.TestCase):
         f1.addSpan(10, 50, 60)
 
         f1.addSpan(11, 30, 50)
-
         f1.addSpan(12, 30, 50)
 
         f1.addSpan(13, 10, 20)
@@ -795,16 +794,10 @@ class FootprintTestCase(tests.TestCase):
         f2.addSpan(10, 70, 80)
 
         f2.addSpan(13, 49, 54)
-
         f2.addSpan(14, 10, 30)
 
-        print
-        print 'fA'
         fA = afwDetect.mergeFootprints(f1, f2)
-        print
-        print 'fB'
         fB = afwDetect.mergeFootprints(f2, f1)
-        print 'done'
 
         ims = []
         for i,f in enumerate([f1,f2,fA,fB]):
@@ -816,7 +809,6 @@ class FootprintTestCase(tests.TestCase):
             ims.append(im1)
 
         for i,merged in enumerate([ims[2],ims[3]]):
-            print 'checking merged', i
             m = merged.getArray()
             a1 = ims[0].getArray()
             a2 = ims[1].getArray()
@@ -828,16 +820,16 @@ class FootprintTestCase(tests.TestCase):
             # merged == a1 | a2.
             self.assertTrue(numpy.all(m == numpy.maximum(a1, a2)))
 
-        import matplotlib
-        matplotlib.use('Agg')
-        import pylab as plt
-
-        plt.clf()
-        for i,im1 in enumerate(ims):
-            plt.subplot(4,1, i+1)
-            plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
-            plt.axis([0, 100, 0, 20])
-        plt.savefig('merge2.png')
+        if False:
+            import matplotlib
+            matplotlib.use('Agg')
+            import pylab as plt
+            plt.clf()
+            for i,im1 in enumerate(ims):
+                plt.subplot(4,1, i+1)
+                plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
+                plt.axis([0, 100, 0, 20])
+            plt.savefig('merge2.png')
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
