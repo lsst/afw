@@ -894,6 +894,41 @@ PTR(Footprint) Footprint::transform(
     return fpNew;
 }
 
+/**
+   Returns *true* iff this Footprint satisfies the "normalized" conditions.
+
+   Useful as an "assert" during algorithm development.
+ */
+bool _checkNormalized(Footprint const& foot) {
+  // Ugly!
+  Footprint copy(foot);
+  copy.normalize();
+  if (copy.getArea() != foot.getArea()) {
+    return false;
+  }
+  if (copy.getSpans().size() != foot.getSpans().size()) {
+    return false;
+  }
+  const Footprint::SpanList spansa = foot.getSpans();
+  const Footprint::SpanList spansb = copy.getSpans();
+  Footprint::SpanList::const_iterator spa = spansa.begin();
+  Footprint::SpanList::const_iterator spb = spansb.begin();
+  for (; spa != spansa.end(); spa++, spb++) {
+    if ((*spa)->getY() != (*spb)->getY()) {
+      return false;
+    }
+    if ((*spa)->getX0() != (*spb)->getX0()) {
+      return false;
+    }
+    if ((*spa)->getX1() != (*spb)->getX1()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+
 /************************************************************************************************************/
 /**
  * \brief Return a Footprint that's the intersection of a Footprint with a Mask
@@ -1271,11 +1306,14 @@ Footprint::Ptr growFootprintSlow(
 
 /************************************************************************************************************/
 
-namespace {
+//namespace {
+/*
   Footprint::Ptr _mergeFootprints(Footprint const& foota,
-				  Footprint const& footb) {
+  Footprint const& footb) {
+*/
+Footprint::Ptr Footprint::_mergeWith(Footprint const& footb) const {
+  Footprint const& foota = *this;
     PTR(Footprint) foot(new Footprint());
-    foot->getSpans().reserve(std::max(foota.getSpans().size(), footb.getSpans().size()));
 
     Footprint::PeakList pka = foota.getPeaks();
     Footprint::PeakList pkb = footb.getPeaks();
@@ -1290,7 +1328,12 @@ namespace {
     Footprint::SpanList::const_iterator spa = spansa.begin();
     Footprint::SpanList::const_iterator spb = spansb.begin();
 
-    while ((spa != spansa.end()) && (spb != spansb.end())) {
+    Footprint::SpanList::const_iterator enda = spansa.end();
+    Footprint::SpanList::const_iterator endb = spansb.end();
+
+    foot->getSpans().reserve(std::max(spansa.size(), spansb.size()));
+
+    while ((spa != enda) && (spb != endb)) {
       int y = (*spa)->getY();
       int x0 = (*spa)->getX0();
       int x1 = (*spa)->getX1();
@@ -1299,14 +1342,14 @@ namespace {
       int xb0 = (*spb)->getX0();
       int xb1 = (*spb)->getX1();
 
-      if ((y < yb) || (y == yb && (x1 < xb0))) {
+      if ((y < yb) || (y == yb && (x1 < (xb0-1)))) {
 	// A is earlier -- add A
 	foot->addSpan(**spa);
 	spa++;
 	continue;
       }
 
-      if ((yb < y) || (y == yb && (xb1 < x0))) {
+      if ((yb < y) || (y == yb && (xb1 < (x0-1)))) {
 	// B is earlier -- add B
 	foot->addSpan(**spb);
 	spb++;
@@ -1317,11 +1360,11 @@ namespace {
       // Overlap -- find connected spans from both iterators.
       x0 = std::min(x0, xb0);
       x1 = std::max(x1, xb1);
-
+      // Union all connected spans
       spa++;
       spb++;
       while (1) {
-	if ((spa != spansa.end()) &&
+	if ((spa != enda) &&
 	    ((*spa)->getY() == y) &&
 	    ((*spa)->getX0() <= (x1+1))) {
 	  // *spa continues this span.
@@ -1329,7 +1372,7 @@ namespace {
 	  spa++;
 	  continue;
 	}
-	if ((spb != spansb.end()) &&
+	if ((spb != endb) &&
 	    ((*spb)->getY() == y) &&
 	    ((*spb)->getX0() <= (x1+1))) {
 	  // *spb continues this span.
@@ -1341,29 +1384,52 @@ namespace {
       }
       foot->addSpan(y, x0, x1);
     }
+    // At this point either "spa" or "spb" is at the end.
 
     // Add any remaining spans from "A".
-    for (; spa != spansa.end(); spa++) {
+    for (; spa != enda; spa++) {
       foot->addSpan(**spa);
     }
     // Add any remaining spans from "B".
-    for (; spb != spansb.end(); spb++) {
+    for (; spb != endb; spb++) {
       foot->addSpan(**spb);
     }
 
-    foot->normalize();
+    /*
+      if (_checkNormalized(*foot)) {
+      printf("Merged footprint IS normalized\n");
+      } else {
+      printf("Merged footprint IS NOT normalized\n");
+      }
+      foot->normalize();
+    */
+    foot->_normalized = true;
+    
     return foot;
   }
-}			       
+//}			       
 
 /**
    Merges two Footprints -- appends their peaks, and unions their
    spans, returning a new Footprint.
  */
-Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2) {
+/*
+  Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2) {
   foot1.normalize();
   foot2.normalize();
   return _mergeFootprints(foot1, foot2);
+*/
+Footprint::Ptr Footprint::mergeWith(Footprint& foot2) {
+  normalize();
+  foot2.normalize();
+  return _mergeWith(foot2);
+}
+
+Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2) {
+  return foot1.mergeWith(foot2);
+}
+Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
+  return foot1.mergeWith(foot2);
 }
 
 /**
@@ -1373,6 +1439,7 @@ Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2) {
    This const version requires that both input footprints are
    normalized (and will raise an exception if not).
  */
+/*
 Footprint::Ptr mergeFootprints(Footprint const& foota,
 			       Footprint const& footb) {
   if (!foota.isNormalized() || !footb.isNormalized()) {
@@ -1381,6 +1448,15 @@ Footprint::Ptr mergeFootprints(Footprint const& foota,
       "mergeFootprints(const Footprints) requires normalize()d Footprints.");
   }
   return _mergeFootprints(foota, footb);
+}
+*/
+Footprint::Ptr Footprint::mergeWith(Footprint const& foot2) const {
+  if (!isNormalized() || !foot2.isNormalized()) {
+    throw LSST_EXCEPT(
+      lsst::pex::exceptions::InvalidParameterException,
+      "mergeFootprints(const Footprints) requires normalize()d Footprints.");
+  }
+  return _mergeWith(foot2);
 }
 
 
