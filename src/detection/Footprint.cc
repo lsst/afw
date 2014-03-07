@@ -1296,14 +1296,89 @@ Footprint::Ptr growFootprintSlow(
 
 /************************************************************************************************************/
 
-Footprint::Ptr mergeFootprints(Footprint const& foot1,
-			       Footprint const& foot2) {
-  PTR(Footprint) foot(new Footprint(foot1));
-  Footprint::SpanList spans = foot2.getSpans();
-  for (Footprint::SpanList::iterator sp = spans.begin();
-       sp != spans.end(); ++sp) {
-    foot->addSpan(**sp);
+Footprint::Ptr mergeFootprints(Footprint const& foota,
+			       Footprint const& footb) {
+  PTR(Footprint) foot(new Footprint());
+  foot->getSpans().reserve(std::max(foota.getSpans().size(), footb.getSpans().size()));
+
+  Footprint::PeakList pka = foota.getPeaks();
+  Footprint::PeakList pkb = footb.getPeaks();
+  Footprint::PeakList pk = foot->getPeaks();
+  pk.reserve(pka.size() + pkb.size());
+  pk.insert(pk.begin(), pka.begin(), pka.end());
+  pk.insert(pk.end()-1, pkb.begin(), pkb.end());
+  assert(pk.size() == (pka.size() + pkb.size()));
+
+  const Footprint::SpanList spansa = foota.getSpans();
+  const Footprint::SpanList spansb = footb.getSpans();
+  Footprint::SpanList::const_iterator spa = spansa.begin();
+  Footprint::SpanList::const_iterator spb = spansb.begin();
+
+  while (1) {
+    if (spa == spansa.end())
+      break;
+    int y = (*spa)->getY();
+    int x0 = (*spa)->getX0();
+    int x1 = (*spa)->getX1();
+
+    while (1) {
+      if (spb == spansb.end()) {
+	printf("end of B\n");
+	printf("adding span A: %i, [%i, %i]\n", y, x0, x1);
+	foot->addSpan(**spa);
+	break;
+      }
+
+      int yb  = (*spb)->getY();
+      int xb0 = (*spb)->getX0();
+      int xb1 = (*spb)->getX1();
+      printf("merge: span A: %i, [%i, %i].  span B: %i, [%i, %i]\n",
+	     y, x0, x1, yb, xb0, xb1);
+
+      // First grab all spans from B that are strictly before "spa".
+      if ( (yb < y) || ((yb == y) && (xb1 < x0)) ) {
+	printf("B before A\n");
+	printf("adding span B: %i, [%i, %i]\n", yb, xb0, xb1);
+	foot->addSpan(**spb);
+	spb++;
+	continue;
+      }
+      // Now we have a "spb" that is >= "spa".
+
+      // If it's >, we add "spa" and skip to next "spa".
+      if ( (yb > y) || ((yb == y) && (xb0 > x1)) ) {
+	printf("B after A\n");
+	printf("adding span A: %i, [%i, %i]\n", y, x0, x1);
+	foot->addSpan(**spa);
+	break;
+      }
+
+      printf("B overlaps A\n");
+      // Overlapping "spa" and "spb".
+      assert(yb == y);
+      // Add the union span.
+      printf("adding union span: %i, [%i, %i]\n",
+	     y, std::min(x0, xb0), std::max(x1, xb1));
+      foot->addSpan(y, std::min(x0, xb0), std::max(x1, xb1));
+      // Skip to next in BOTH lists (?)
+      spb++;
+      break;
+    }
+
+    spa++;
   }
+
+  // Add any remaining spans from "B".
+  for (; spb != spansb.end(); spb++) {
+    foot->addSpan(**spb);
+  }
+  /*
+  // Add any remaining spans from "A".
+  for (; spa != spansa.end(); spa++) {
+  foot->addSpan(**spa);
+  }
+  */
+
   foot->normalize();
   return foot;
 }
