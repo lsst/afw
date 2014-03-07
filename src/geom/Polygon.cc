@@ -501,13 +501,16 @@ PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox)
                 int const xStart = ::ceil(std::max(top[0], bottom[0])) + 1;
                 int const xStop = std::min(top[1], bottom[1]) - 1;
                 int const xMax = ::ceil(std::max(top[1], bottom[1]));
-                pixelRowOverlap(image, _impl->poly, xMin, xStart, y);
+                pixelRowOverlap(image, _impl->poly, std::max(xMin, bbox.getMinX()),
+                                std::min(xStart, bbox.getMaxX()), y);
                 int x = xStart;
-                for (Image::x_iterator i = image->x_at(xStart - image->getX0(), y - image->getY0());
-                     x <= xStop; ++i, ++x) {
+                for (Image::x_iterator i = image->x_at(std::max(xStart, bbox.getMinX()) - image->getX0(),
+                                                       y - image->getY0());
+                     x <= std::min(xStop, bbox.getMaxX()); ++i, ++x) {
                     *i = 1.0;
                 }
-                pixelRowOverlap(image, _impl->poly, xStop, xMax, y);
+                pixelRowOverlap(image, _impl->poly, std::max(xStop, bbox.getMinX()),
+                                std::min(xMax, bbox.getMaxX()), y);
                 continue;
             }
         }
@@ -524,7 +527,8 @@ PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox)
                 if (x > xMaxRow) xMaxRow = x;
             }
 
-            pixelRowOverlap(image, _impl->poly, xMinRow, ::ceil(xMaxRow), y);
+            pixelRowOverlap(image, _impl->poly, std::max(static_cast<int>(xMinRow), bbox.getMinX()),
+                            std::min(static_cast<int>(::ceil(xMaxRow)), bbox.getMaxX()), y);
         }
     }
     return image;
