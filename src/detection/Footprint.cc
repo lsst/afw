@@ -1289,70 +1289,44 @@ Footprint::Ptr mergeFootprints(Footprint const& foota,
   Footprint::SpanList::const_iterator spa = spansa.begin();
   Footprint::SpanList::const_iterator spb = spansb.begin();
 
-  while (1) {
-    if (spa == spansa.end())
-      break;
+  while ((spa != spansa.end()) && (spb != spansb.end())) {
     int y = (*spa)->getY();
     int x0 = (*spa)->getX0();
     int x1 = (*spa)->getX1();
 
-    while (1) {
-      if (spb == spansb.end()) {
-	printf("end of B\n");
-	printf("adding span A: %i, [%i, %i]\n", y, x0, x1);
-	foot->addSpan(**spa);
-	break;
-      }
+    int yb  = (*spb)->getY();
+    int xb0 = (*spb)->getX0();
+    int xb1 = (*spb)->getX1();
 
-      int yb  = (*spb)->getY();
-      int xb0 = (*spb)->getX0();
-      int xb1 = (*spb)->getX1();
-      printf("merge: span A: %i, [%i, %i].  span B: %i, [%i, %i]\n",
-	     y, x0, x1, yb, xb0, xb1);
-
-      // First grab all spans from B that are strictly before "spa".
-      if ( (yb < y) || ((yb == y) && (xb1 < x0)) ) {
-	printf("B before A\n");
-	printf("adding span B: %i, [%i, %i]\n", yb, xb0, xb1);
-	foot->addSpan(**spb);
-	spb++;
-	continue;
-      }
-      // Now we have a "spb" that is >= "spa".
-
-      // If it's >, we add "spa" and skip to next "spa".
-      if ( (yb > y) || ((yb == y) && (xb0 > x1)) ) {
-	printf("B after A\n");
-	printf("adding span A: %i, [%i, %i]\n", y, x0, x1);
-	foot->addSpan(**spa);
-	break;
-      }
-
-      printf("B overlaps A\n");
-      // Overlapping "spa" and "spb".
-      assert(yb == y);
-      // Add the union span.
-      printf("adding union span: %i, [%i, %i]\n",
-	     y, std::min(x0, xb0), std::max(x1, xb1));
-      foot->addSpan(y, std::min(x0, xb0), std::max(x1, xb1));
-      // Skip to next in BOTH lists (?)
-      spb++;
-      break;
+    if ((y < yb) || (y == yb && (x1 < xb0))) {
+      // A is earlier -- add A
+      foot->addSpan(**spa);
+      spa++;
+      continue;
     }
 
+    if ((yb < y) || (y == yb && (xb1 < x0))) {
+      // B is earlier -- add B
+      foot->addSpan(**spb);
+      spb++;
+      continue;
+    }
+
+    assert(yb == y);
+    // Overlap -- add union and advance both.
+    foot->addSpan(y, std::min(x0, xb0), std::max(x1, xb1));
     spa++;
+    spb++;
   }
 
+  // Add any remaining spans from "A".
+  for (; spa != spansa.end(); spa++) {
+    foot->addSpan(**spa);
+  }
   // Add any remaining spans from "B".
   for (; spb != spansb.end(); spb++) {
     foot->addSpan(**spb);
   }
-  /*
-  // Add any remaining spans from "A".
-  for (; spa != spansa.end(); spa++) {
-  foot->addSpan(**spa);
-  }
-  */
 
   foot->normalize();
   return foot;
