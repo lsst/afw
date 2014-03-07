@@ -1270,6 +1270,22 @@ Footprint::Ptr growFootprintSlow(
 }
 
 /************************************************************************************************************/
+
+Footprint::Ptr mergeFootprints(Footprint const& foot1,
+			       Footprint const& foot2) {
+  PTR(Footprint) foot(new Footprint(foot1));
+  Footprint::SpanList spans = foot2.getSpans();
+  for (Footprint::SpanList::iterator sp = spans.begin();
+       sp != spans.end(); ++sp) {
+    foot->addSpan(**sp);
+  }
+  foot->normalize();
+  return foot;
+}
+			       
+
+
+/************************************************************************************************************/
 /**
  * Grow a Footprint by ngrow pixels, returning a new Footprint
  */
