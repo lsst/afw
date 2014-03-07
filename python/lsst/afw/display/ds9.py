@@ -806,14 +806,26 @@ def noop_callback(k, x, y):
     """Callback function: arguments key, x, y"""
     return False
 
-def setCallback(k, func=noop_callback):
+def setCallback(k, func=noop_callback, noRaise=False):
     """Set the callback for key k to be func, returning the old callback
     """
+
+    if k in "f":
+        if noRaise:
+            return
+        raise RuntimeError("Key '%s' is already in use by ds9, so I can't add a callback for it" % k)
 
     ofunc = callbacks.get(k)
     callbacks[k] = func
 
     return ofunc
+
+def getActiveCallbackKeys(onlyActive=True):
+    """!Return all callback keys
+\param onlyActive  If true only return keys that do something
+    """
+
+    return sorted([k for k, func in callbacks.items() if not (onlyActive and func == noop_callback)])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -824,8 +836,8 @@ except NameError:
 
     for ik in range(ord('a'), ord('z') + 1):
         k = "%c" % ik
-        setCallback(k)
-        setCallback(k.upper())
+        setCallback(k, noRaise=True)
+        setCallback(k.upper(), noRaise=True)
 
     for k in ('Return', 'XPA$ERROR'):
         setCallback(k)
