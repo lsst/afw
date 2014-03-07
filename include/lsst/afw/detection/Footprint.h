@@ -181,7 +181,12 @@ public:
 
     bool isPersistable() const { return true; }
 
+    Footprint::Ptr mergeWith(Footprint const& foot2) const;
+    Footprint::Ptr mergeWith(Footprint& foot2);
+
 protected:
+
+    Footprint::Ptr _mergeWith(Footprint const& foot2) const;
 
     virtual std::string getPersistenceName() const;
 
@@ -214,7 +219,6 @@ private:
 };
 
 Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2);
-
 Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2);
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
