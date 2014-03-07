@@ -213,6 +213,8 @@ class HeavyFootprintTestCase(unittest.TestCase):
         hfoot1 = afwDetect.makeHeavyFootprint(self.foot, self.mi)
         hfoot2 = afwDetect.makeHeavyFootprint(foot, mi)
 
+        hfoot1.normalize()
+        hfoot2.normalize()
         hsum = afwDetect.mergeHeavyFootprintsF(hfoot1, hfoot2)
         
         bb = hsum.getBBox()
