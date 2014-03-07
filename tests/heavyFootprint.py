@@ -243,23 +243,24 @@ class HeavyFootprintTestCase(unittest.TestCase):
         self.assertTrue(np.all(sm[2, 10:12] == self.objectPixelVal[1]))
 
 
-        import matplotlib
-        matplotlib.use('Agg')
-        import pylab as plt
-        im1 = afwImage.ImageF(bb)
-        hfoot1.insert(im1)
-        im2 = afwImage.ImageF(bb)
-        hfoot2.insert(im2)
-        im3 = afwImage.ImageF(bb)
-        hsum.insert(im3)
-        plt.clf()
-        plt.subplot(1,3,1)
-        plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
-        plt.subplot(1,3,2)
-        plt.imshow(im2.getArray(), interpolation='nearest', origin='lower')
-        plt.subplot(1,3,3)
-        plt.imshow(im3.getArray(), interpolation='nearest', origin='lower')
-        plt.savefig('merge.png')
+        if False:
+            import matplotlib
+            matplotlib.use('Agg')
+            import pylab as plt
+            im1 = afwImage.ImageF(bb)
+            hfoot1.insert(im1)
+            im2 = afwImage.ImageF(bb)
+            hfoot2.insert(im2)
+            im3 = afwImage.ImageF(bb)
+            hsum.insert(im3)
+            plt.clf()
+            plt.subplot(1,3,1)
+            plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
+            plt.subplot(1,3,2)
+            plt.imshow(im2.getArray(), interpolation='nearest', origin='lower')
+            plt.subplot(1,3,3)
+            plt.imshow(im3.getArray(), interpolation='nearest', origin='lower')
+            plt.savefig('merge.png')
         
         
 
