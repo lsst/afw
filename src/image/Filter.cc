@@ -29,7 +29,6 @@
 //! \brief  Implements looking up a filter identifier by name.
 //
 //##====----------------                                ----------------====##/
-
 #include "boost/format.hpp"
 #include "boost/algorithm/string/trim.hpp"
 #include "lsst/pex/exceptions.h"
@@ -178,6 +177,26 @@ int stripFilterKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata
     return nstripped;
 }
 }
+
+/*
+ * Return all aliases by which this filter is known
+ *
+ * N.b. we cannot declare a std::vector<std::string const&> as there's no way to push the references
+ */
+std::vector<std::string> Filter::getAliases() const
+{
+    std::vector<std::string> aliases;
+
+    std::string const& canonicalName = getCanonicalName();
+    for (AliasMap::iterator ptr = _aliasMap->begin(), end = _aliasMap->end(); ptr != end; ++ptr) {
+        if (ptr->second == canonicalName) {
+            aliases.push_back(ptr->first);
+        }
+    }
+
+    return aliases;
+}
+
 /**
  * Return a list of known filters
  */

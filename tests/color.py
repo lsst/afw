@@ -249,24 +249,25 @@ class CalibTestCase(unittest.TestCase):
             tests.assertRaisesLsstCpp(self, pexExcept.DomainErrorException, func)
 
 
-def defineSdssFilters():
+def defineSdssFilters(test):
     # Initialise filters as used for our tests
     imageUtils.resetFilters()
     wavelengths = dict()
-    for name, lambdaEff, aliases in (('u', 355.1, []),
-                                     ('g', 468.6, []),
-                                     ('r', 616.5, []),
-                                     ('i', 748.1, []),
-                                     ('z', 893.1, ['zprime', "z'"]),
+    test.aliases = dict(u = [], g = [], r = [], i = [], z = ['zprime', "z'"])
+    for name, lambdaEff in (('u', 355.1),
+                                     ('g', 468.6),
+                                     ('r', 616.5),
+                                     ('i', 748.1),
+                                     ('z', 893.1),
                                      ):
         wavelengths[name] = lambdaEff
-        imageUtils.defineFilter(name, lambdaEff, alias=aliases)
+        imageUtils.defineFilter(name, lambdaEff, alias=test.aliases[name])
     return wavelengths
 
 class ColorTestCase(unittest.TestCase):
     """A test case for Color"""
     def setUp(self):
-        defineSdssFilters()
+        defineSdssFilters(self)
 
     def tearDown(self):
         pass
@@ -295,7 +296,7 @@ class FilterTestCase(unittest.TestCase):
         #
         # Start by forgetting that we may already have defined filters
         #
-        wavelengths = defineSdssFilters()
+        wavelengths = defineSdssFilters(self)
         self.filters = tuple(sorted(wavelengths.keys()))
         self.g_lambdaEff = [lambdaEff for name, lambdaEff in wavelengths.items() if name == "g"][0] # for tests
 
@@ -363,12 +364,23 @@ class FilterTestCase(unittest.TestCase):
 
     def testFilterAliases(self):
         """Test that we can provide an alias for a Filter"""
-        f0 = afwImage.Filter("z")
-        f1 = afwImage.Filter("zprime")
-        f2 = afwImage.Filter("z'")
+        for name0 in self.aliases:
+            f0 = afwImage.Filter(name0)
+            self.assertEqual(f0.getCanonicalName(), name0)
+            self.assertEqual(sorted(f0.getAliases()), sorted(self.aliases[name0]))
 
-        self.assertEqual(f0.getFilterProperty().getLambdaEff(), f1.getFilterProperty().getLambdaEff())
-        self.assertEqual(f0.getFilterProperty().getLambdaEff(), f2.getFilterProperty().getLambdaEff())
+            for name in self.aliases[name0]:
+                f = afwImage.Filter(name)
+
+                self.assertEqual(sorted(f.getAliases()), sorted(self.aliases[name0]))
+
+                self.assertEqual(f.getId(), f0.getId())
+                self.assertEqual(f.getName(), name)
+                self.assertEqual(afwImage.Filter(f.getId()).getName(), name0)
+                self.assertEqual(f.getCanonicalName(), name0)
+                self.assertNotEqual(f.getCanonicalName(), name)
+            
+                self.assertEqual(f.getFilterProperty().getLambdaEff(), f0.getFilterProperty().getLambdaEff())
 
     def testReset(self):
         """Test that we can reset filter IDs and properties if needs be"""
