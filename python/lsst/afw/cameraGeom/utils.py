@@ -25,10 +25,10 @@
 """
 Support for cameraGeom
 """
-from __future__ import division
 import math
 import numpy
 import itertools
+import os
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -48,7 +48,6 @@ try:
 except NameError:
     display = False
     force = False
-
 
 def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsize=(10., 10.), showFig=True, savePath=None):
     """
@@ -95,7 +94,7 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
         colors.append(colorMap[det.getType()])
         patches.append(Polygon(corners, True))
         center = det.getOrientation().getFpPosition()
-        ax.text(center.getX(), center.getY(), det.getName(), horizontalalignment='center', size=8)
+        ax.text(center.getX(), center.getY(), det.getName(), horizontalalignment='center', size=6)
 
     patchCollection = PatchCollection(patches, alpha=0.6, facecolor=colors)
     ax.add_collection(patchCollection)
@@ -299,47 +298,69 @@ of the detectors"""
     if overlay:
         overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, frame, binSize)
 
+def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
+    boxList = []
+    for ccd in ccdList:
+        if not pixelSize_o == ccd.getPixelSize():
+            raise RuntimeError("Cameras with detectors with different pixel scales are not currently supported")
 
-def makeImageFromCamera(camera, detectorList=None, background=numpy.nan, bufferSize=10, imageSource=None, imageFactory=afwImage.ImageU, binSize=1):
+        dbbox = afwGeom.Box2D()
+        for corner in ccd.getCorners(FOCAL_PLANE):
+            dbbox.include(corner)
+        llc = dbbox.getMin()
+        nQuarter = ccd.getOrientation().getNQuarter()
+        cbbox = ccd.getBBox()
+        ex = cbbox.getDimensions().getX()//2
+        ey = cbbox.getDimensions().getY()//2
+        bbox = afwGeom.Box2I(cbbox.getMin(), afwGeom.Extent2I(int(ex), int(ey)))
+        bbox = rotateBBoxBy90(bbox, nQuarter, bbox.getDimensions())
+        bbox.shift(afwGeom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize), int(llc.getY()//pixelSize_o.getY()/binSize)))
+        bbox.shift(afwGeom.Extent2I(-int(origin.getX()//binSize), -int(origin.getY())//binSize))
+        boxList.append(bbox)
+    return boxList
+
+def getCameraImageBBox(camBbox, pixelSize, bufferSize):
+    pixMin = afwGeom.Point2I(int(camBbox.getMinX()//pixelSize.getX()), int(camBbox.getMinY()//pixelSize.getY()))
+    pixMax = afwGeom.Point2I(int(camBbox.getMaxX()//pixelSize.getX()), int(camBbox.getMaxY()//pixelSize.getY()))
+    retBox = afwGeom.Box2I(pixMin, pixMax)
+    retBox.grow(bufferSize)
+    return retBox
+
+def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10, imageSource=None, imageFactory=afwImage.ImageU, binSize=1):
     """Make an Image of a Camera"""
-    if detectorList is None:
-        detectorList = camera._nameDetectorDict.keys()
-    
-    camBbox = camera.getFpBBox()
+    if detectorNameList is None:
+        ccdList = camera
+    else:
+        ccdList = [camera[name] for name in detectorNameList]
+
+    if detectorNameList is None:
+        camBbox = camera.getFpBBox()
+    else:
+        camBbox = afwGeom.Box2D()
+        for detName in detectorNameList:
+            for corner in camera[detName].getCorners(FOCAL_PLANE):
+                camBbox.include(corner)
     pixelSize_o = camera[0].getPixelSize()
-    pixMin = afwGeom.Point2I(int(camBbox.getMinX()//pixelSize_o.getX()), int(camBbox.getMinY()//pixelSize_o.getY()))
-    pixMax = afwGeom.Point2I(int(camBbox.getMaxX()//pixelSize_o.getX()), int(camBbox.getMaxY()//pixelSize_o.getY()))
-    camBbox = afwGeom.Box2I(pixMin, pixMax)
-    camBbox.grow(bufferSize)
+    camBbox = getCameraImageBBox(camBbox, pixelSize_o, bufferSize)
     origin = camBbox.getMin()
     # This segfaults for large images.  It seems better to throw instead of segfaulting, but maybe that's not easy.
     camIm = imageFactory(int(camBbox.getDimensions().getX()/binSize), int(camBbox.getDimensions().getY()/binSize))
-    
-    for det in (camera[name] for name in detectorList):
-        if not pixelSize_o == det.getPixelSize():
-            raise RuntimeError("Cameras with detectors with different pixel scales are not currently supported")
+    boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin) 
+    for det, bbox in itertools.izip(ccdList, boxList):
         if imageSource is None:
             im = makeImageFromCcd(det, isTrimmed=True, showAmpGain=False, imageFactory=imageFactory, binSize=binSize)
         else:
             raise NotImplementedError("Do something reasonable if an image is sent")
-
         nQuarter = det.getOrientation().getNQuarter()
         im = afwMath.rotateImageBy90(im, nQuarter)
-        dbbox = afwGeom.Box2D()
-        for corner in det.getCorners(FOCAL_PLANE):
-            dbbox.include(corner)
-        llc = dbbox.getMin()
-        bbox = im.getBBox()
-        bbox.shift(afwGeom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize), int(llc.getY()//pixelSize_o.getY()/binSize)))
-        bbox.shift(afwGeom.Extent2I(-int(origin.getX()//binSize), -int(origin.getY())//binSize))
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         imView <<= im
 
     return camIm
 
-def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorList=None,
+def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorNameList=None,
                 binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
-                referenceDetectorName=None, **kwargs):
+                textSize=1.25, referenceDetectorName=None, **kwargs):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
 
 If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
@@ -347,12 +368,34 @@ cameraGeom.GetCcdImage object); if it is "", an image will be created based on t
 of the detectors"""
     # Haven't decided yet what to do about the camera source
     
-    cameraImage = makeImageFromCamera(camera, detectorList=detectorList, bufferSize=bufferSize,
+    cameraImage = makeImageFromCamera(camera, detectorNameList=detectorNameList, bufferSize=bufferSize,
                                       imageSource=imageSource, imageFactory=imageFactory, binSize=binSize)
-    wcs = makeFocalPlaneWcs(camera, binSize, referenceDetectorName)
     #TODO makeFocalPlaneWcs is returning None and I don't know why.
+    wcs = makeFocalPlaneWcs(camera, binSize, referenceDetectorName)
+    if title == "":
+        title = camera.getName()
     ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
-   
+    if detectorNameList is None:
+        ccdList = camera
+    else:
+        ccdList = [camera[name] for name in detectorNameList]
+
+    if detectorNameList is None:
+        camBbox = camera.getFpBBox()
+    else:
+        camBbox = afwGeom.Box2D()
+        for detName in detectorNameList:
+            for corner in camera[detName].getCorners(FOCAL_PLANE):
+                camBbox.include(corner)
+    if overlay:
+        camBbox = getCameraImageBBox(camBbox, ccdList[0].getPixelSize(), bufferSize)
+        bboxList = getCcdInCamBBoxList(ccdList, binSize, ccdList[0].getPixelSize(), camBbox.getMin())
+        for bbox, ccd in itertools.izip(bboxList, ccdList):
+            # borderWidth to 0.5 to align with the outside edge of the pixel
+            displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, frame=frame)
+            dims = bbox.getDimensions()/2
+            ds9.dot(ccd.getName(), bbox.getMinX()+dims.getX(), bbox.getMinY()+dims.getY(), ctype=ctype, frame=frame, size=textSize)
+
     return cameraImage
 
 def makeFocalPlaneWcs(camera, binSize=1, referenceDetectorName=None):
