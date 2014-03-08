@@ -35,6 +35,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "boost/shared_ptr.hpp"
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
@@ -138,7 +139,19 @@ public :
      * Return a Filter's name
      */
     std::string const& getName() const { return _name; }
-    
+    /**
+     * Return a filter's canonical name
+     *
+     * I.e. if this filter's an alias, return the name of the aliased Filter
+     */
+    std::string const& getCanonicalName() const { return _lookup(_id); }
+    /**
+     * Return all aliases by which this filter is known
+     *
+     * The list excludes the canonical name
+     */
+    std::vector<std::string> getAliases() const;
+
     FilterProperty const& getFilterProperty() const;
     /**
      * Clear all definitions
