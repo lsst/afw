@@ -3,43 +3,53 @@ import numpy
 import eups
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
-from .cameraGeomLib import PIXELS, PUPIL, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS,\
+from .cameraGeomLib import PIXELS, TAN_PIXELS, PUPIL, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
                            CameraSys, Detector, Orientation
-from .camera import Camera
 from .cameraConfig import DetectorConfig, CameraConfig
 from .cameraFactoryTask import CameraFactoryTask
+from .makePixelToTanPixel import makePixelToTanPixel
 
 __all__ = ["DetectorWrapper", "CameraWrapper"]
 
+
 class DetectorWrapper(object):
-    """Construct a simple detector
+    """A Detector and the data used to construct it
 
     Intended for use with unit tests, thus saves a copy of all input parameters.
     Does not support setting details of amplifiers.
-
-    @param[in] name: detector name
-    @param[in] detType: detector type
-    @param[in] serial: serial "number" (a string)
-    @param[in] bbox: bounding box; defaults to something sensible
-    @param[in] numAmps: number of amplifiers
-    @param[in] pixelSize: pixel size (mm)
-    @param[in] ampExtent: dimensions of amplifier image bbox
-    @param[in] orientation: orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
-    @param[in] tryDuplicateAmpNames: create 2 amps with the same name (should result in an error)
-    @param[in] tryBadCameraSys: add a transform for an unsupported coord. system (should result in an error)
     """
     def __init__(self,
-        name = "detector 1",
-        detType = SCIENCE,
-        serial = "xkcd722",
-        bbox = None,    # do not use mutable objects as defaults
-        numAmps = 3,
-        pixelSize = afwGeom.Extent2D(0.02),
-        ampExtent = afwGeom.Extent2I(5,6), 
-        orientation = Orientation(),
-        tryDuplicateAmpNames = False,
-        tryBadCameraSys = False,
+        name="detector 1",
+        detType=SCIENCE,
+        serial="xkcd722",
+        bbox=None,    # do not use mutable objects as defaults
+        numAmps=3,
+        pixelSize=(0.02, 0.02),
+        ampExtent=(5, 6),
+        orientation=Orientation(),
+        plateScale=20.0,
+        radialDistortion=0.925,
+        tryDuplicateAmpNames=False,
+        tryBadCameraSys=False,
     ):
+        """Construct a DetectorWrapper
+
+        @param[in] name: detector name
+        @param[in] detType: detector type
+        @param[in] serial: serial "number" (a string)
+        @param[in] bbox: bounding box; defaults to (0, 0), (1024x1024)
+        @param[in] numAmps: number of amplifiers
+        @param[in] pixelSize: pixel size (mm)
+        @param[in] ampExtent: dimensions of amplifier image bbox
+        @param[in] orientation: orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
+        @param[in] plateScale: plate scale in arcsec/mm; 20.0 is for LSST
+        @param[in] radialDistortion: radial distortion, in mm/rad^2
+            (the r^3 coefficient of the radial distortion polynomial
+            that converts PUPIL in radians to FOCAL_PLANE in mm);
+            0.925 is the value Dave Monet measured for lsstSim data
+        @param[in] tryDuplicateAmpNames: create 2 amps with the same name (should result in an error)
+        @param[in] tryBadCameraSys: add a transform for an unsupported coord. system (should result in an error)
+        """
         # note that (0., 0.) for the reference position is the center of the first pixel
         self.name = name
         self.type = detType
@@ -47,6 +57,10 @@ class DetectorWrapper(object):
         if bbox is None:
             bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1024, 1048))
         self.bbox = bbox
+        self.pixelSize = afwGeom.Extent2D(*pixelSize)
+        self.ampExtent = afwGeom.Extent2I(*ampExtent)
+        self.plateScale = float(plateScale)
+        self.radialDistortion = float(radialDistortion)
         schema = afwTable.AmpInfoTable.makeMinimalSchema()
         self.ampInfo = afwTable.AmpInfoCatalog(schema)
         for i in range(numAmps):
@@ -55,15 +69,28 @@ class DetectorWrapper(object):
             if i == 1 and tryDuplicateAmpNames:
                 ampName = self.ampInfo[0].getName()
             record.setName(ampName)
-            record.setBBox(afwGeom.Box2I(afwGeom.Point2I(-1, 1), ampExtent))
+            record.setBBox(afwGeom.Box2I(afwGeom.Point2I(-1, 1), self.ampExtent))
             record.setGain(1.71234e3)
             record.setReadNoise(0.521237e2)
             record.setReadoutCorner(afwTable.LL)
             record.setHasRawInfo(False)
         self.orientation = orientation
-        self.pixelSize = pixelSize
+
+        # compute TAN_PIXELS transform
+        pScaleRad = afwGeom.arcsecToRad(self.plateScale)
+        radialDistortCoeffs = [0.0, 1.0/pScaleRad, 0.0, self.radialDistortion/pScaleRad]
+        focalPlaneToPupil = afwGeom.RadialXYTransform(radialDistortCoeffs)
+        pixelToTanPixel = makePixelToTanPixel(
+            bbox = self.bbox,
+            orientation = self.orientation,
+            focalPlaneToPupil = focalPlaneToPupil,
+            pixelSizeMm = self.pixelSize,
+            plateScale = self.plateScale,
+        )
+
         self.transMap = {
             FOCAL_PLANE: self.orientation.makePixelFpTransform(self.pixelSize),
+            CameraSys(TAN_PIXELS, self.name): pixelToTanPixel,
             CameraSys(ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
         }
         if tryBadCameraSys:
@@ -80,14 +107,41 @@ class DetectorWrapper(object):
         )
 
 class CameraWrapper(object):
-    """Construct a simple camera
+    """A simple Camera and the data used to construct it
 
     Intended for use with unit tests, thus saves some interesting information.
-
-    @param[in] isLsstLike: make repository products with one raw image per amplifier (True)
-        or with one raw image per detector (False)
     """
+    def __init__(self, plateScale=20.0, radialDistortion=0.925, isLsstLike=False):
+        """Construct a CameraWrapper
+
+        @param[in] plateScale: plate scale in arcsec/mm; 20.0 is for LSST
+        @param[in] radialDistortion: radial distortion, in mm/rad^2
+            (the r^3 coefficient of the radial distortion polynomial
+            that converts PUPIL in radians to FOCAL_PLANE in mm);
+            0.925 is the value Dave Monet measured for lsstSim data
+        @param[in] isLsstLike: make repository products with one raw image per amplifier (True)
+            or with one raw image per detector (False)
+        """
+        afwDir = eups.productDir("afw")
+        if afwDir is None:
+            raise RuntimeError("afw is not setup")
+        self._afwTestDir = os.path.join(afwDir, "tests")
+
+        self.plateScale = float(plateScale)
+        self.radialDistortion = float(radialDistortion)
+        self.detectorNames = []
+        self.ampInfo = {}
+        self.camConfig, self.ampCatalogDict = self.makeTestRepositoryItems(isLsstLike)
+        cameraTask = CameraFactoryTask()
+        self.camera = cameraTask.runCatDict(self.camConfig, self.ampCatalogDict)
+
+    @property
+    def nDetectors(self):
+        return len(self.detectorNames)
+
     def makeDetectorConfigs(self, detFile):
+        """Construct a list of DetectorConfig, one per detector
+        """
         detectors = []
         self.detectorNames = []
         with open(detFile) as fh:
@@ -98,9 +152,7 @@ class CameraWrapper(object):
                 detectors.append(detectorProps)
                 self.detectorNames.append(detectorProps['name'])
         detectorConfigs = []
-        self.nDetectors = 0
         for detector in detectors:
-            self.nDetectors += 1
             detConfig = DetectorConfig()
             detConfig.name = detector['name']
             detConfig.bbox_x0 = 0
@@ -230,18 +282,18 @@ class CameraWrapper(object):
         return ampTablesDict
 
     def makeTestRepositoryItems(self, isLsstLike=False):
-        detFile = os.path.join(eups.productDir("afw"), "tests", "testCameraDetectors.dat")
+        """Make camera config and amp catalog dictionary, using default detector and amp files
+        """
+        detFile = os.path.join(self._afwTestDir, "testCameraDetectors.dat")
         detectorConfigs = self.makeDetectorConfigs(detFile)
-        ampFile = os.path.join(eups.productDir("afw"), "tests", "testCameraAmps.dat")
+        ampFile = os.path.join(self._afwTestDir, "testCameraAmps.dat")
         ampCatalogDict = self.makeAmpCatalogs(ampFile, isLsstLike=isLsstLike)
         camConfig = CameraConfig()
         camConfig.name = "testCamera%s"%('LSST' if isLsstLike else 'SC')
-        camConfig.detectorList = dict([(i,detectorConfigs[i]) for i in xrange(len(detectorConfigs))])
-        plateScale = 20. #arcsec/mm
-        camConfig.plateScale = plateScale
-        pScaleRad = afwGeom.arcsecToRad(plateScale)
-        #This matches what Dave M. has measured for an LSST like system.
-        radialDistortCoeffs = [0.0, 1.0/pScaleRad, 0., 0.925/pScaleRad]
+        camConfig.detectorList = dict((i, detConfig) for i, detConfig in enumerate(detectorConfigs))
+        camConfig.plateScale = self.plateScale
+        pScaleRad = afwGeom.arcsecToRad(self.plateScale)
+        radialDistortCoeffs = [0.0, 1.0/pScaleRad, 0.0, self.radialDistortion/pScaleRad]
         tConfig = afwGeom.TransformConfig()
         tConfig.transform.name = 'radial'
         tConfig.transform.active.coeffs = radialDistortCoeffs
@@ -250,8 +302,3 @@ class CameraWrapper(object):
         tmc.transforms = {PUPIL.getSysName():tConfig}
         camConfig.transformDict = tmc
         return camConfig, ampCatalogDict 
-
-    def __init__(self, isLsstLike):
-        self.camConfig, self.ampCatalogDict = self.makeTestRepositoryItems(isLsstLike)
-        cameraTask = CameraFactoryTask()
-        self.camera = cameraTask.runCatDict(self.camConfig, self.ampCatalogDict)

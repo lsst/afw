@@ -199,7 +199,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testCameraGeomUtils(self):
         if not display:
-            print "display variable not set.  Skpping cameraGeomUtils test"
+            print "display variable not set; skipping cameraGeomUtils test"
             return
         for cw in self.cameraList:
             camera = cw.camera
