@@ -82,7 +82,7 @@ public:
         lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog, ///< catalog of amplifier information
         Orientation const &orientation,     ///< detector position and orientation in focal plane
         geom::Extent2D const &pixelSize,    ///< pixel size (mm)
-        CameraTransformMap::Transforms const &Transforms///< map of CameraSys: XYTranform
+        CameraTransformMap::Transforms const &transforms///< map of CameraSys: XYTranform
     );
 
     ~Detector() {}
@@ -133,14 +133,14 @@ public:
      *
      * @throw std::out_of_range) if index is out of range
      */
-    const lsst::afw::table::AmpInfoRecord & operator[](size_t i) const { return _ampInfoCatalog.at(i); }
+    lsst::afw::table::AmpInfoRecord const & operator[](size_t i) const { return _ampInfoCatalog.at(i); }
 
     /**
      * Get the amplifier specified by name
      *
      * @throw lst::pex::exceptions::InvalidParameterException if no such amplifier
      */
-    const lsst::afw::table::AmpInfoRecord & operator[](std::string const &name) const;
+    lsst::afw::table::AmpInfoRecord const & operator[](std::string const &name) const;
 
     /**
      * Get number of amplifiers. Renamed to __len__ in Python.
@@ -149,6 +149,8 @@ public:
 
     /**
      * Make a CameraPoint from a point and a camera system
+     *
+     * @note the CameraSysPrefix version needs the detector name, which is why this is not static.
      */
     CameraPoint makeCameraPoint(
         geom::Point2D point,    ///< 2-d point
@@ -169,6 +171,8 @@ public:
 
     /** 
      * Get a coordinate system from a coordinate system (return input unchanged and untested)
+     *
+     * @note the CameraSysPrefix version needs the detector name, which is why this is not static.
      */
     CameraSys const makeCameraSys(CameraSys const &cameraSys) const { return cameraSys; }
 

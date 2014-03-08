@@ -33,13 +33,6 @@
 #include "lsst/afw/table/AmpInfo.h"
 %}
 
-// =============== IdFactory =======================================================================
-
-%shared_ptr(lsst::afw::table::IdFactory);
-%ignore lsst::afw::table::IdFactory::operator=;
-
-%include "lsst/afw/table/IdFactory.h"
-
 // =============== AmpInfoTable and AmpInfoRecord =============================================================
 
 %shared_ptr(lsst::afw::table::AmpInfoTable)

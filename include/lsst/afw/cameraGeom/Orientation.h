@@ -25,7 +25,8 @@
 
 #include <string>
 #include <cmath>
-#include "lsst/afw/geom/Angle.h"
+#include "Eigen/Dense"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Utils.h"
 
 /**
@@ -61,20 +62,7 @@ public:
         geom::Angle const yaw=geom::Angle(0),   ///< yaw: rotation about Z (X to Y), 1st rotation
         geom::Angle const pitch=geom::Angle(0),  ///< pitch: rotation about Y' (Z'=Z to X'), 2nd rotation
         geom::Angle const roll=geom::Angle(0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
-    ) :
-        _fpPosition(fpPosition), _refPoint(refPoint),
-        _yaw(yaw), _cosYaw(std::cos(yaw)),  _sinYaw(std::sin(yaw)),
-        _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
-        _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll))
-    {
-        // This comes from the rotation matrix written down here:
-        // http://en.wikipedia.org/wiki/Euler_angles
-        // for Tait-Bryan angles Z_1Y_2X_3
-        _coeffA = _cosYaw*_cosPitch;
-        _coeffB = _cosYaw*_sinPitch*_sinRoll - _cosRoll*_sinYaw;
-        _coeffD = _cosPitch*_sinYaw;
-        _coeffE = _cosYaw*_cosRoll + _sinYaw*_sinPitch*_sinRoll;
-    }
+    );
 
     /// Return focal plane position of detector reference point (mm)
     geom::Point2D getFpPosition() const { return _fpPosition; }
@@ -92,13 +80,7 @@ public:
     geom::Angle getRoll() const { return _roll; }
 
     /// Return the number of quarter turns (rounded to the closest quarter)
-    int getNQuarter() const {
-        float yawDeg = _yaw.asDegrees();
-        while (yawDeg < 0.) {
-            yawDeg += 360.;
-        }
-        return std::floor((yawDeg + 45.)/90.);
-    }
+    int getNQuarter() const;
 
     /**
      * @brief Generate an XYTransform from pixel to focal plane coordinates
@@ -107,18 +89,7 @@ public:
      */
     geom::AffineXYTransform makePixelFpTransform(
             geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
-    ) const {
-        Eigen::Matrix2d jacobian;
-        jacobian << _coeffA*pixelSizeMm.getX(), _coeffB*pixelSizeMm.getY(),
-                    _coeffD*pixelSizeMm.getX(), _coeffE*pixelSizeMm.getY();
-
-        Eigen::Vector2d translation; 
-        translation << _fpPosition.getX() - _coeffA*pixelSizeMm.getX()*_refPoint.getX() - _coeffB*pixelSizeMm.getY()*_refPoint.getY(), 
-                       _fpPosition.getY() - _coeffD*pixelSizeMm.getX()*_refPoint.getX() - _coeffE*pixelSizeMm.getY()*_refPoint.getY();
-
-        geom::AffineTransform affineTransform = geom::AffineTransform(jacobian, translation);
-        return geom::AffineXYTransform(affineTransform);
-    }
+    ) const;
 
     /**
      * @brief Generate an XYTransform from focal plane to pixel coordinates
@@ -127,30 +98,18 @@ public:
      */
     geom::AffineXYTransform makeFpPixelTransform(
             geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
-    ) const {
-        return geom::AffineXYTransform(makePixelFpTransform(pixelSizeMm).getReverseTransform());
-    }
+    ) const;
+
 private:
     geom::Point2D _fpPosition;          ///< focal plane position of reference point on detector
     geom::Point2D _refPoint;            ///< reference point on detector
 
     lsst::afw::geom::Angle _yaw;        ///< yaw
-    double _cosYaw;                     ///< cos(yaw)
-    double _sinYaw;                     ///< sin(yaw)
-
     lsst::afw::geom::Angle _pitch;      ///< pitch
-    double _cosPitch;                   ///< cos(pitch)
-    double _sinPitch;                   ///< sin(pitch)
-
     lsst::afw::geom::Angle _roll;       ///< roll
-    double _cosRoll;                    ///< cos(roll)
-    double _sinRoll;                    ///< sin(roll)
 
     // Elements of the Jacobian for three space rotation projected into XY plane.
-    double _coeffA;                     ///< 01 element
-    double _coeffB;                     ///< 11 element
-    double _coeffD;                     ///< 00 element
-    double _coeffE;                     ///< 10 element
+    Eigen::Matrix2d _rotMat;
 };
 
 }}}

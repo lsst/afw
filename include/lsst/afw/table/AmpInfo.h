@@ -45,12 +45,7 @@ class AmpInfoRecord;
 class AmpInfoTable;
 
 /**
- *  @brief Record class that must contain a unique ID field and *** some other things for amps.
- *
- *  AmpInfoTable / AmpInfoRecord are intended to be the base class for records containing information about 
- *  amplifiers in detectors.
- *
- * Geometry and electronic information about raw amplifier images
+ *  @brief Geometry and electronic information about raw amplifier images
  *
  * Here is a pictorial example showing the meaning of flipX and flipY:
  *
@@ -149,7 +144,7 @@ protected:
 };
 
 /**
- *  @brief Table class that must contain a unique ID field and *** some other things for amps..
+ *  @brief Table of amplifier information (AmpInfoRecord records)
  *
  *  @copydetails AmpInfoRecord
  */
@@ -196,8 +191,6 @@ public:
      *
      *  These keys are used to implement getters and setters on AmpInfoRecord.
      */
-    /// @brief Key for the unique ID.
-//    static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
     static Key<std::string> getNameKey() { return getMinimalSchema().name; }
     static Key< Point<int> > getBBoxMinKey() { return getMinimalSchema().bboxMin; }
     static Key< Point<int> > getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
@@ -249,7 +242,6 @@ private:
     // Struct that holds the minimal schema and the special keys we've added to it.
     struct MinimalSchema {
         Schema schema;
-        Key<RecordId> id;
         Key<std::string> name;
         Key< Point<int> > bboxMin;
         Key< Point<int> > bboxMax;
