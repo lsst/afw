@@ -20,6 +20,7 @@ class DetectorWrapper(object):
     """
     def __init__(self,
         name="detector 1",
+        id=1,
         detType=SCIENCE,
         serial="xkcd722",
         bbox=None,    # do not use mutable objects as defaults
@@ -35,6 +36,7 @@ class DetectorWrapper(object):
         """Construct a DetectorWrapper
 
         @param[in] name: detector name
+        @param[in] id: detector ID (int)
         @param[in] detType: detector type
         @param[in] serial: serial "number" (a string)
         @param[in] bbox: bounding box; defaults to (0, 0), (1024x1024)
@@ -52,6 +54,7 @@ class DetectorWrapper(object):
         """
         # note that (0., 0.) for the reference position is the center of the first pixel
         self.name = name
+        self.id = int(id)
         self.type = detType
         self.serial = serial
         if bbox is None:
@@ -97,6 +100,7 @@ class DetectorWrapper(object):
             self.transMap[CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
         self.detector = Detector(
             self.name,
+            self.id,
             self.type,
             self.serial,
             self.bbox,
@@ -129,32 +133,36 @@ class CameraWrapper(object):
 
         self.plateScale = float(plateScale)
         self.radialDistortion = float(radialDistortion)
-        self.detectorNames = []
-        self.ampInfo = {}
+        self.detectorNameList = []
+        self.detectorIdList = []
+        self.ampInfoDict = {}
         self.camConfig, self.ampCatalogDict = self.makeTestRepositoryItems(isLsstLike)
         cameraTask = CameraFactoryTask()
         self.camera = cameraTask.runCatDict(self.camConfig, self.ampCatalogDict)
 
     @property
     def nDetectors(self):
-        return len(self.detectorNames)
+        return len(self.detectorNameList)
 
     def makeDetectorConfigs(self, detFile):
         """Construct a list of DetectorConfig, one per detector
         """
         detectors = []
-        self.detectorNames = []
+        self.detectorNameList = []
+        self.detectorIdList = []
         with open(detFile) as fh:
             names = fh.readline().rstrip().lstrip("#").split("|")
             for l in fh:
                 els = l.rstrip().split("|")
                 detectorProps = dict([(name, el) for name, el in zip(names, els)])
                 detectors.append(detectorProps)
-                self.detectorNames.append(detectorProps['name'])
         detectorConfigs = []
-        for detector in detectors:
+        for i, detector in enumerate(detectors):
+            detectorId = (i + 1) * 10 # to avoid simple 0, 1, 2...
+            detectorName = detector['name']
             detConfig = DetectorConfig()
-            detConfig.name = detector['name']
+            detConfig.name = detectorName
+            detConfig.id = detectorId
             detConfig.bbox_x0 = 0
             detConfig.bbox_y0 = 0
             detConfig.bbox_x1 = int(detector['npix_x']) - 1
@@ -173,6 +181,8 @@ class CameraWrapper(object):
             detConfig.transposeDetector = False
             detConfig.transformDict.nativeSys = PIXELS.getSysName()
             detectorConfigs.append(detConfig)
+            self.detectorNameList.append(detectorName)
+            self.detectorIdList.append(detectorId)
         return detectorConfigs
 
     def makeAmpCatalogs(self, ampFile, isLsstLike=False):
@@ -189,15 +199,15 @@ class CameraWrapper(object):
         linThreshKey = schema.addField('linearityThreshold', type=float)
         linMaxKey = schema.addField('linearityMaximum', type=float)
         linUnitsKey = schema.addField('linearityUnits', type=str, size=9)
-        self.ampInfo = {}
+        self.ampInfoDict = {}
         for amp in amps:
             if amp['ccd_name'] in ampTablesDict:
                 ampCatalog = ampTablesDict[amp['ccd_name']]
-                self.ampInfo[amp['ccd_name']]['namps'] += 1
+                self.ampInfoDict[amp['ccd_name']]['namps'] += 1
             else:
                 ampCatalog = afwTable.AmpInfoCatalog(schema)
                 ampTablesDict[amp['ccd_name']] = ampCatalog
-                self.ampInfo[amp['ccd_name']] = {'namps':1, 'linInfo':{}}
+                self.ampInfoDict[amp['ccd_name']] = {'namps':1, 'linInfo':{}}
             record = ampCatalog.addNew()
             bbox = afwGeom.Box2I(afwGeom.Point2I(int(amp['trimmed_xmin']), int(amp['trimmed_ymin'])),
                              afwGeom.Point2I(int(amp['trimmed_xmax']), int(amp['trimmed_ymax'])))
@@ -275,7 +285,7 @@ class CameraWrapper(object):
             #The current schema assumes third order coefficients
             saveCoeffs = (float(amp['lin_coeffs']),)
             saveCoeffs += (numpy.nan, numpy.nan, numpy.nan)
-            self.ampInfo[amp['ccd_name']]['linInfo'][amp['name']] = \
+            self.ampInfoDict[amp['ccd_name']]['linInfo'][amp['name']] = \
             {'lincoeffs':saveCoeffs, 'lintype':str(amp['lin_type']),
              'linthresh':float(amp['lin_thresh']), 'linmax':float(amp['lin_max']),
              'linunits':str(amp['lin_units'])}

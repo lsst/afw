@@ -92,6 +92,7 @@ class CameraFactoryTask(object):
 
         return Detector(
             detectorConfig.name,
+            detectorConfig.id,
             detectorConfig.detectorType,
             detectorConfig.serial,
             bbox,

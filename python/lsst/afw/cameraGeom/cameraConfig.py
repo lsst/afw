@@ -6,6 +6,7 @@ __all__ = ["CameraConfig", "DetectorConfig"]
 class DetectorConfig(pexConfig.Config):
     transformDict = pexConfig.ConfigField("Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
     name = pexConfig.Field("Name of detector slot", str)
+    id = pexConfig.Field("ID of detector slot", int)
     bbox_x0 = pexConfig.Field("x0 of pixel bounding box", int)
     bbox_y0 = pexConfig.Field("y0 of pixel bounding box", int)
     bbox_x1 = pexConfig.Field("x1 of pixel bounding box", int)

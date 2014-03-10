@@ -43,6 +43,7 @@ class DetectorTestCase(unittest.TestCase):
             if hasattr(detector, methodName):
                 self.assertFalse(hasattr(detector, methodName))
         self.assertEquals(dw.name,   detector.getName())
+        self.assertEquals(dw.id,   detector.getId())
         self.assertEquals(dw.type,   detector.getType())
         self.assertEquals(dw.serial, detector.getSerial())
         bbox = detector.getBBox()

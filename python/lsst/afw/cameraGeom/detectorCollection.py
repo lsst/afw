@@ -24,35 +24,55 @@ from lsst.afw.geom import Box2D
 from .cameraGeomLib import FOCAL_PLANE
 
 class DetectorCollection(object):
-    """An immutable collection of Detectors that can be accessed in various ways
+    """An immutable collection of Detectors that can be accessed by name or ID
     """
     def __init__(self, detectorList):
         """Construct a DetectorCollection
         
         @param[in] detectorList: a sequence of detectors in index order
         """
-        self._detectorList = tuple(detectorList)
+        self._idDetectorDict = dict((d.getId(), d) for d in detectorList)
         self._nameDetectorDict = dict((d.getName(), d) for d in detectorList)
         self._fpBBox = Box2D()
-        for detector in self._detectorList:
+        for detector in detectorList:
             for corner in detector.getCorners(FOCAL_PLANE):
                 self._fpBBox.include(corner)
+        if len(self._idDetectorDict) < len(detectorList):
+            raise RuntimeError("Detector IDs are not unique")
+        if len(self._nameDetectorDict) < len(detectorList):
+            raise RuntimeError("Detector names are not unique")
 
     def __iter__(self):
         """Return an iterator over all detectors in this collection"""
-        return iter(self._detectorList)
+        return self._idDetectorDict.itervalues()
 
     def __len__(self):
         """Return the number of detectors in this collection"""
-        return len(self._detectorList)
+        return len(self._idDetectorDict)
 
     def __getitem__(self, key):
-        """Return a detector given its name or index
+        """Return a detector given its name or ID
         """
         if isinstance(key, basestring):
             return self._nameDetectorDict[key]
         else:
-            return self._detectorList[key]
+            return self._idDetectorDict[key]
+
+    def __contains__(self, key):
+        if isinstance(key, basestring):
+            return key in self._nameDetectorDict
+        else:
+            return key in self._idDetectorDict
+
+    def getNameIter(self):
+        """Get an iterator over detector names
+        """
+        return self._nameDetectorDict.iterkeys()
+
+    def getIdIter(self):
+        """Get an iterator over detector IDs
+        """
+        return self._idDetectorDict.iterkeys()
     
     def getFpBBox(self):
         """Return a focal plane bounding box that encompasses all detectors

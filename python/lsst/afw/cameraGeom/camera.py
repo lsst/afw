@@ -50,7 +50,7 @@ class Camera(DetectorCollection):
         # first convert to focalPlane because it's faster to convert to pixel from focalPlane
         fpCoord = self.transform(cameraPoint, FOCAL_PLANE)
         detectorList = []
-        for detector in self._detectorList:
+        for detector in self:
             cameraSys = detector.makeCameraSys(PIXELS)
             detPoint = detector.transform(fpCoord, cameraSys)
             #This is safe because CameraPoint is not templated and getPoint() returns a Point2D.

@@ -76,6 +76,7 @@ public:
      */
     explicit Detector(
         std::string const &name,    ///< name of detector's location in the camera
+        int id,                     ///< detector integer ID; used as keys in some tables
         DetectorType type,          ///< type of detector
         std::string const &serial,  ///< serial "number" that identifies the physical detector
         geom::Box2I const &bbox,    ///< bounding box
@@ -89,6 +90,9 @@ public:
 
     /** Get the detector name */
     std::string getName() const { return _name; }
+
+    /** Get the detector ID */
+    int getId() const { return _id; }
 
     DetectorType getType() const { return _type; }
 
@@ -226,6 +230,7 @@ private:
     void _init();
 
     std::string _name;      ///< name of detector's location in the camera
+    int _id;                ///< detector numeric ID
     DetectorType _type;     ///< type of detectorsize_t
     std::string _serial;    ///< serial "number" that identifies the physical detector
     geom::Box2I _bbox;      ///< bounding box

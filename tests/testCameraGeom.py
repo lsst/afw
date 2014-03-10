@@ -64,10 +64,12 @@ class CameraGeomTestCase(unittest.TestCase):
         for cw in self.cameraList:
             self.assertTrue(isinstance(cw.camera, Camera))
             self.assertEqual(cw.nDetectors, len(cw.camera))
-            self.assertEqual(cw.nDetectors, len(cw.ampInfo))
+            self.assertEqual(cw.nDetectors, len(cw.ampInfoDict))
+            self.assertEqual(sorted(cw.detectorNameList), sorted(cw.camera.getNameIter()))
+            self.assertEqual(sorted(cw.detectorIdList), sorted(cw.camera.getIdIter()))
             for det in cw.camera:
                 self.assertTrue(isinstance(det, Detector))
-                self.assertEqual(cw.ampInfo[det.getName()]['namps'], len(det))
+                self.assertEqual(cw.ampInfoDict[det.getName()]['namps'], len(det))
             
     def testMakeCameraPoint(self):
         for cw in self.cameraList:
@@ -86,10 +88,10 @@ class CameraGeomTestCase(unittest.TestCase):
     def testAccessor(self):
         for cw in self.cameraList:
             camera = cw.camera
-            for name in cw.detectorNames:
+            for name in cw.detectorNameList:
                 self.assertTrue(isinstance(camera[name], Detector))
-            for i in range(len(cw.detectorNames)):
-                self.assertTrue(isinstance(camera[i], Detector))
+            for detId in cw.detectorIdList:
+                self.assertTrue(isinstance(camera[detId], Detector))
 
     def testTransform(self):
         #These test data come from SLALIB using SLA_PCD with 0.925 and
@@ -147,7 +149,7 @@ class CameraGeomTestCase(unittest.TestCase):
         for cw in self.cameraList:
             camera = cw.camera
             bbox = afwGeom.Box2D()
-            for name in cw.detectorNames:
+            for name in cw.detectorNameList:
                 for corner in camera[name].getCorners(FOCAL_PLANE):
                     bbox.include(corner)
             self.assertTrue(bbox.getMin(), camera.getFpBBox().getMin())
@@ -159,15 +161,15 @@ class CameraGeomTestCase(unittest.TestCase):
             camera = cw.camera
             for det in camera:
                 for amp in det:
-                    self.assertEquals(cw.ampInfo[det.getName()]['linInfo'][amp.getName()]['linthresh'],
+                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linthresh'],
                                       amp.get('linearityThreshold'))
-                    self.assertEquals(cw.ampInfo[det.getName()]['linInfo'][amp.getName()]['linmax'],
+                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linmax'],
                                       amp.get('linearityMaximum'))
-                    self.assertEquals(cw.ampInfo[det.getName()]['linInfo'][amp.getName()]['linunits'],
+                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['linunits'],
                                       amp.get('linearityUnits'))
-                    self.assertEquals(cw.ampInfo[det.getName()]['linInfo'][amp.getName()]['lintype'],
+                    self.assertEquals(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lintype'],
                                       amp.getLinearityType())
-                    for c1, c2 in zip(cw.ampInfo[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],
+                    for c1, c2 in zip(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],
                                       amp.getLinearityCoeffs()):
                         if numpy.isfinite(c1) and numpy.isfinite(c2):
                             self.assertEquals(c1, c2)

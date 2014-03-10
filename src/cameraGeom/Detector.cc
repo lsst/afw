@@ -30,6 +30,7 @@ namespace cameraGeom {
 
 Detector::Detector(
     std::string const &name,
+    int id,
     DetectorType type,
     std::string const &serial,
     geom::Box2I const &bbox,
@@ -39,6 +40,7 @@ Detector::Detector(
     CameraTransformMap::Transforms const &transforms
 ) :
     _name(name),
+    _id(id),
     _type(type),
     _serial(serial),
     _bbox(bbox),
