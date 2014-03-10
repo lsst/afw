@@ -59,7 +59,7 @@ def prepareWcsData(wcs, amp):
     ampDims = amp.getRawDataBBox().getDimensions()
     wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampDims)
     offset = amp.getRawXYOffset()
-    wcs->shiftReferencePixel(offset.getX(), offset.getY())
+    wcs.shiftReferencePixel(offset.getX(), offset.getY())
     
 def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsize=(10., 10.), showFig=True, savePath=None):
     """
