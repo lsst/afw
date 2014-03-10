@@ -168,7 +168,6 @@ mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const
 {
     // Merge the Footprints (by merging the Spans)
     PTR(Footprint) foot = mergeFootprints(h1, h2);
-    printf("after mergeFootprints: %i peaks\n", (int)foot->getPeaks().size());
 
     // Find the union bounding-box
     geom::Box2I bbox(h1.getBBox());
@@ -183,11 +182,10 @@ mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const
     im1 += im2;
 
     // Build new HeavyFootprint from the merged spans and summed pixels.
-    PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>) x(new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(*foot, im1));
-    printf("mergeHeavyFootprints: %i peaks\n", (int)x->getPeaks().size());
-    return x;
-      //return PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)(
-      //new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(foot, im1));
+    return PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)
+        (new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(*foot, im1));
+    //PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>) x(new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(*foot, im1));
+    //return x;
 }
 
 

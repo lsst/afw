@@ -158,6 +158,7 @@ typedef lsst::afw::geom::Span Span;
     lsst::afw::detection::copyWithinFootprint<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(copyWithinFootprintMaskedImage)
     lsst::afw::detection::copyWithinFootprint<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
+    %template(clipToNonzero ##NAME) lsst::afw::detection::Footprint::clipToNonzero<PIXEL_TYPE>;
 %enddef
 
 %define %maskOperations(PIXEL_TYPE)
