@@ -74,44 +74,14 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/Orientation.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 
-%extend lsst::afw::cameraGeom::CameraSysPrefix {
-    std::string __repr__() {
-        std::ostringstream os;
-        os << *$self;
-        return os.str();
-    }
-
-    %pythoncode { 
-        def __eq__(self, rhs): 
-            if not isinstance(rhs, type(self)):
-                return False
-            return _cameraGeomLib.CameraSysPrefix___eq__(self, rhs)
-
-        def __ne__(self, rhs):
-            if not isinstance(rhs, type(self)):
-                return True
-            return not _cameraGeomLib.CameraSysPrefix___eq__(self, rhs)
-    }
-}
+# macros from p_lsstSWig.i
+%addStreamRepr(lsst::afw::cameraGeom::CameraSysPrefix)
+%useValueEquality(lsst::afw::cameraGeom::CameraSysPrefix)
+%addStreamRepr(lsst::afw::cameraGeom::CameraSys)
+%useValueEquality(lsst::afw::cameraGeom::CameraSys)
 
 %extend lsst::afw::cameraGeom::CameraSys {
-    std::string __repr__() const {
-        std::ostringstream os;
-        os << *$self;
-        return os.str();
-    }
-
     %pythoncode { 
-        def __eq__(self, rhs): 
-            if not isinstance(rhs, type(self)):
-                return False
-            return _cameraGeomLib.CameraSys___eq__(self, rhs)
-
-        def __ne__(self, rhs):
-            if not isinstance(rhs, type(self)):
-                return True
-            return not _cameraGeomLib.CameraSys___eq__(self, rhs)
-
         def __hash__(self):
             return hash(repr(self))
     }
