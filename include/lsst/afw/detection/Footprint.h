@@ -113,6 +113,8 @@ public:
     const Span& addSpan(Span const& span);
     const Span& addSpan(Span const& span, int dx, int dy);
 
+    const Span& addSpanInSeries(const int y, const int x0, const int x1);
+
     void shift(int dx, int dy);
     void shift(geom::ExtentI d) {shift(d.getX(), d.getY());}
 
@@ -127,6 +129,9 @@ public:
     void setRegion(geom::Box2I const & region) { _region = region; }
 
     void clipTo(geom::Box2I const & bbox);
+
+    template<typename PixelT>
+    void clipToNonzero(lsst::afw::image::Image<PixelT> const& img);
 
     bool contains(geom::Point2I const& pix) const;
 
