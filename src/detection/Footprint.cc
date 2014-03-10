@@ -400,6 +400,47 @@ const Span& Footprint::addSpan(
 ) {
     return addSpan(span._y + dy, span._x0 + dx, span._x1 + dx);
 }
+
+/**
+ * Add a Span to a Footprint, where the Spans MUST be added in order
+ * (first in increasing y, then increasing x), and MUST NOT be
+ * overlapping.  This method does NOT reset the _normalized boolean.
+ */
+const Span& Footprint::addSpanInSeries(
+    int const y, //!< row value
+    int const x0, //!< starting column
+    int const x1 //!< ending column
+) {
+    if (x1 < x0) {
+        return this->addSpanInSeries(y, x1, x0);
+    }
+    if (_spans.size() == 0) {
+      const Span& s = this->addSpan(y, x0, x1);
+      _normalized = true;
+      return s;
+    }
+    // merge contiguous spans
+    Span::Ptr lastspan = _spans.back();
+    if ((y == lastspan->getY()) &&
+        (x0 == (lastspan->getX1() + 1))) {
+      // contiguous.
+      lastspan->_x1 = x1;
+      _area += (1 + x1 - x0);
+      _bbox.include(geom::Point2I(x1,y));
+      return *lastspan;
+    }
+    if (!((y  >  lastspan->getY()) ||
+          (x0 > (lastspan->getX1() + 1)))) {
+        throw LSST_EXCEPT(
+                          lsst::pex::exceptions::InvalidParameterException,
+                          str(boost::format("addSpanInSeries: new span %i,[%i,%i] is NOT in series after last span %i,[%i,%i]") %
+                              y % x0 % x1 % lastspan->getY() % lastspan->getX0() % lastspan->getX1()));
+    }
+    const Span& s = this->addSpan(y, x0, x1);
+    _normalized = true;
+    return s;
+}
+
 /**
  * Shift a Footprint by <tt>(dx, dy)</tt>
  */
@@ -547,6 +588,54 @@ namespace {
                     *ptr += id;
                 }
             }
+        }
+    }
+}
+
+/**
+   Clips the given *Footprint* to the region in the *Image* containing
+   non-zero values.  The clipping drops spans that are totally zero,
+   and moves endpoints to non-zero; it does not split spans that have
+   internal zeros.
+*/
+template<typename PixelT>
+void
+Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
+    typedef typename lsst::afw::image::Image<PixelT> ImageT;
+    int ix0 = img.getX0();
+    int iy0 = img.getY0();
+    SpanList spans = getSpans();
+    PixelT zero = 0;
+    for (SpanList::iterator s = spans.begin(); s < spans.end(); s++) {
+        int y = (*s)->getY();
+        int x0 = (*s)->getX0();
+        int x1 = (*s)->getX1();
+        typename ImageT::x_iterator img_it = img.row_begin(y - iy0) + (x0 - ix0);
+        int leftx, rightx;
+        // find zero pixels on the left...
+        for (leftx = x0; leftx <= x1; ++leftx, ++img_it) {
+            if (*img_it != zero) {
+                break;
+            }
+        }
+        if (leftx > x1) {
+            // whole span is zero; drop it.
+            spans.erase(s);
+            s--;
+            continue;
+        }
+        // find zero pixels on the right...
+        img_it = img.row_begin(y - iy0) + (x1 - ix0);
+        for (rightx = x1; rightx >= leftx; --rightx, --img_it) {
+            if (*img_it != zero) {
+                break;
+            }
+        }
+        if (leftx != x0) {
+            (*s)->_x0 = leftx;
+        }
+        if (rightx != x1) {
+            (*s)->_x1 = rightx;
         }
     }
 }
@@ -2094,7 +2183,9 @@ void copyWithinFootprint(Footprint const&,                          \
 template \
 void copyWithinFootprint(Footprint const&,                          \
                          PTR(lsst::afw::image::MaskedImage<TYPE>) const,  \
-                         PTR(lsst::afw::image::MaskedImage<TYPE>));       \
+                         PTR(lsst::afw::image::MaskedImage<TYPE>));	\
+template								\
+ void Footprint::clipToNonzero(lsst::afw::image::Image<TYPE> const&);	\
 
 
 INSTANTIATE_FLOAT(float);
