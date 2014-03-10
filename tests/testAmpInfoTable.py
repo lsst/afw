@@ -51,6 +51,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
 
         for name, hasRawInfo in nameRawInfoList:
             gain = 1.2345
+            saturation = 65535
             readNoise = -0.523
             linearityCoeffs = (1.1, 2.2, 3.3, 4.4)
             linearityType = "Polynomial"
@@ -70,6 +71,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             record.setBBox(bbox)
             record.setName(name)
             record.setGain(gain)
+            record.setSaturation(saturation)
             record.setReadNoise(readNoise)
             record.setReadoutCorner(readoutCorner)
             record.setLinearityCoeffs(linearityCoeffs)
@@ -87,6 +89,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
 
             self.assertEquals(name, record.getName())
             self.assertEquals(gain, record.getGain())
+            self.assertEquals(saturation, record.getSaturation())
             self.assertEquals(readNoise, record.getReadNoise())
             self.assertEquals(readoutCorner, record.getReadoutCorner())
             self.assertEquals(linearityCoeffs, record.getLinearityCoeffs())

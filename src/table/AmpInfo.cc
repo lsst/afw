@@ -159,6 +159,10 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
         "gain",
         "amplifier gain in e-/ADU",
         "e-/ADU");
+    saturation = schema.addField<int>(
+        "saturation",
+        "saturation value, in ADU",
+        "ADU");
     readNoise = schema.addField<double>(
         "readnoise",
         "amplifier read noise, in e-",
@@ -257,6 +261,9 @@ void AmpInfoRecord::setBBox(geom::Box2I const &bbox) {
 
 double AmpInfoRecord::getGain() const { return get(AmpInfoTable::getGainKey()); }
 void AmpInfoRecord::setGain(double gain) { set(AmpInfoTable::getGainKey(), gain); }
+
+int AmpInfoRecord::getSaturation() const { return get(AmpInfoTable::getSaturationKey()); }
+void AmpInfoRecord::setSaturation(int saturation) { set(AmpInfoTable::getSaturationKey(), saturation); }
 
 double AmpInfoRecord::getReadNoise() const { return get(AmpInfoTable::getReadNoiseKey()); }
 void AmpInfoRecord::setReadNoise(double readNoise) { set(AmpInfoTable::getReadNoiseKey(), readNoise); }

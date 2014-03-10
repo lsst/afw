@@ -99,6 +99,9 @@ public:
     double getReadNoise() const;
     void setReadNoise(double readNoise); ///< amplifier read noise, in e-
 
+    int getSaturation() const;
+    void setSaturation(int saturation); ///< saturation value, in ADU
+
     ReadoutCorner getReadoutCorner() const;
     void setReadoutCorner(ReadoutCorner val); ///< set readout corner
 
@@ -196,6 +199,7 @@ public:
     static Key< Point<int> > getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
     static Key<double> getGainKey() { return getMinimalSchema().gain; }
     static Key<double> getReadNoiseKey() { return getMinimalSchema().readNoise; }
+    static Key<int> getSaturationKey() { return getMinimalSchema().saturation; }
     static Key<int> getReadoutCornerKey() { return getMinimalSchema().readoutCorner; }
     static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearityCoeffs; }
     static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearityType; }
@@ -247,6 +251,7 @@ private:
         Key< Point<int> > bboxMax;
         Key<double> gain;
         Key<double> readNoise;
+        Key<int> saturation;
         Key<int> readoutCorner;
         Key< Array<double> > linearityCoeffs;
         Key<std::string> linearityType;

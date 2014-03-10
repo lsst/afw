@@ -47,8 +47,20 @@ try:
     type(display)
 except NameError:
     display = False
-    force = False
 
+def prepareWcsData(wcs, amp):
+    """
+    Put Wcs from an Amp image into CCD coordinates
+    @param wcs -- WCS object to modify in place
+    @param amp -- Amp object to use
+    """
+    if not amp.getHasRawInfo():
+        raise RuntimeError("Cannot modify wcs without raw amp information")
+    ampDims = amp.getRawDataBBox().getDimensions()
+    wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampDims)
+    offset = amp.getRawXYOffset()
+    wcs->shiftReferencePixel(offset.getX(), offset.getY())
+    
 def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsize=(10., 10.), showFig=True, savePath=None):
     """
     Make a plot of the focal plane along with a set points that sample the Pupil
