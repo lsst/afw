@@ -177,12 +177,7 @@ public:
 
     bool isPersistable() const { return true; }
 
-    Footprint::Ptr mergeWith(Footprint const& foot2) const;
-    Footprint::Ptr mergeWith(Footprint& foot2);
-
 protected:
-
-    Footprint::Ptr _mergeWith(Footprint const& foot2) const;
 
     virtual std::string getPersistenceName() const;
 
