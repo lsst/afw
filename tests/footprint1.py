@@ -842,6 +842,63 @@ class FootprintTestCase(tests.TestCase):
                 plt.axis([0, 100, 0, 20])
             plt.savefig('merge2.png')
 
+    def testClipToNonzero(self):
+
+        # create a circular footprint
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
+                                          afwGeom.Point2D(9,15))
+        bb = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30))
+        foot = afwDetect.Footprint(ellipse, bb)
+
+        plots = False
+        if plots:
+            import matplotlib
+            matplotlib.use('Agg')
+            import pylab as plt
+            
+            plt.clf()
+            img = afwImage.ImageU(bb)
+            foot.insertIntoImage(img, 1)
+            ima = dict(interpolation='nearest', origin='lower', cmap='gray')
+            plt.imshow(img.getArray(), **ima)
+            plt.savefig('clipnz1.png')
+
+        source = afwImage.ImageF(bb)
+        source.getArray()[:,:] = 1.
+        source.getArray()[:,0:10] = 0.
+
+        foot.clipToNonzeroF(source)
+
+        img = afwImage.ImageU(bb)
+        foot.insertIntoImage(img, 1)
+        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+
+        if plots:
+            plt.clf()
+            plt.subplot(1,2,1)
+            plt.imshow(source.getArray(), **ima)
+            plt.subplot(1,2,2)
+            plt.imshow(img.getArray(), **ima)
+            plt.savefig('clipnz2.png')
+
+        source.getArray()[:12,:] = 0.
+        foot.clipToNonzeroF(source)
+
+        img = afwImage.ImageU(bb)
+        foot.insertIntoImage(img, 1)
+        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+
+        if plots:
+            plt.clf()
+            plt.subplot(1,2,1)
+            plt.imshow(source.getArray(), **ima)
+            plt.subplot(1,2,2)
+            img = afwImage.ImageU(bb)
+            foot.insertIntoImage(img, 1)
+            plt.imshow(img.getArray(), **ima)
+            plt.savefig('clipnz3.png')
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class FootprintSetTestCase(unittest.TestCase):
