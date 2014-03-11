@@ -827,6 +827,8 @@ class FootprintTestCase(unittest.TestCase):
         bb = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30))
         foot = afwDetect.Footprint(ellipse, bb)
 
+        a0 = foot.getArea()
+
         plots = False
         if plots:
             import matplotlib
@@ -845,6 +847,9 @@ class FootprintTestCase(unittest.TestCase):
         source.getArray()[:,0:10] = 0.
 
         foot.clipToNonzeroF(source)
+        foot.normalize()
+        a1 = foot.getArea()
+        self.assertTrue(a1 < a0)
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
@@ -860,6 +865,10 @@ class FootprintTestCase(unittest.TestCase):
 
         source.getArray()[:12,:] = 0.
         foot.clipToNonzeroF(source)
+        foot.normalize()
+
+        a2 = foot.getArea()
+        self.assertTrue(a2 < a1)
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
