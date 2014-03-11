@@ -431,10 +431,10 @@ const Span& Footprint::addSpanInSeries(
     }
     if (!((y  >  lastspan->getY()) ||
           (x0 > (lastspan->getX1() + 1)))) {
-        throw LSST_EXCEPT(
-                          lsst::pex::exceptions::InvalidParameterException,
-                          str(boost::format("addSpanInSeries: new span %i,[%i,%i] is NOT in series after last span %i,[%i,%i]") %
-                              y % x0 % x1 % lastspan->getY() % lastspan->getX0() % lastspan->getX1()));
+        throw LSST_EXCEPT
+            (lsst::pex::exceptions::InvalidParameterException,
+             str(boost::format("addSpanInSeries: new span %i,[%i,%i] is NOT in series after last span %i,[%i,%i]") %
+                 y % x0 % x1 % lastspan->getY() % lastspan->getX0() % lastspan->getX1()));
     }
     const Span& s = this->addSpan(y, x0, x1);
     _normalized = true;
@@ -604,9 +604,8 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
     typedef typename lsst::afw::image::Image<PixelT> ImageT;
     int ix0 = img.getX0();
     int iy0 = img.getY0();
-    SpanList spans = getSpans();
     PixelT zero = 0;
-    for (SpanList::iterator s = spans.begin(); s < spans.end(); s++) {
+    for (SpanList::iterator s = _spans.begin(); s < _spans.end(); s++) {
         int y = (*s)->getY();
         int x0 = (*s)->getX0();
         int x1 = (*s)->getX1();
@@ -620,7 +619,7 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
         }
         if (leftx > x1) {
             // whole span is zero; drop it.
-            spans.erase(s);
+            _spans.erase(s);
             s--;
             continue;
         }
