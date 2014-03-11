@@ -392,15 +392,6 @@ try:
             return "Source{id=%d astrom=(%.3f, %.3f)}" % (self.val["_id"],
                                                           self.val["_xAstrom"], self.val["_yAstrom"])
 
-    class cgIdPrinter(object):
-        "Print a cameraGeom::Id"
-
-        def __init__(self, val):
-            self.val = val
-
-        def to_string(self):
-            return "Id{%d %s}" % (self.val["_serial"], self.val["_name"])
-
     class DetectorPrinter(object):
         "Print a cameraGeom::Detector"
 
@@ -408,8 +399,8 @@ try:
             self.val = val
 
         def to_string(self):
-            return "Detector{%s Centre: %smm %spix %s}" % (self.val["_id"], self.val["_center"]["_p"],
-                                                self.val["_centerPixel"], self.val["_trimmedAllPixels"])
+            return "Detector{name: %s id: %s type: %s bbox: %s}" % (self.val["_name"], self.val["_id"],
+                self.val["_type"], self.val["_bbox"])
 
     class FootprintPrinter(object):
         "Print a Footprint"
@@ -827,8 +818,6 @@ try:
     def build_afw_dictionary():
         printer = gdb.printing.RegexpCollectionPrettyPrinter("afw")
 
-        printer.add_printer('lsst::afw::cameraGeom::Id',
-                            '^lsst::afw::cameraGeom::Id$', cgIdPrinter)
         printer.add_printer('lsst::afw::cameraGeom::Detector',
                             '^lsst::afw::cameraGeom::(Amp|Ccd|Detector|DetectorMosaic)$', DetectorPrinter)
 

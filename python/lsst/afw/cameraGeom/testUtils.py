@@ -37,12 +37,12 @@ class DetectorWrapper(object):
 
         @param[in] name: detector name
         @param[in] id: detector ID (int)
-        @param[in] detType: detector type
+        @param[in] detType: detector type (an lsst.afw.cameraGeom.DetectorType)
         @param[in] serial: serial "number" (a string)
-        @param[in] bbox: bounding box; defaults to (0, 0), (1024x1024)
-        @param[in] numAmps: number of amplifiers
-        @param[in] pixelSize: pixel size (mm)
-        @param[in] ampExtent: dimensions of amplifier image bbox
+        @param[in] bbox: bounding box; defaults to (0, 0), (1024x1024) (an lsst.afw.geom.Box2I)
+        @param[in] numAmps: number of amplifiers (int)
+        @param[in] pixelSize: pixel size (mm) (an lsst.afw.geom.Point2D)
+        @param[in] ampExtent: dimensions of amplifier image bbox (an lsst.afw.geom.Extent2I)
         @param[in] orientation: orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
         @param[in] plateScale: plate scale in arcsec/mm; 20.0 is for LSST
         @param[in] radialDistortion: radial distortion, in mm/rad^2
