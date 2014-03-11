@@ -605,6 +605,7 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
     int ix0 = img.getX0();
     int iy0 = img.getY0();
     PixelT zero = 0;
+
     for (SpanList::iterator s = _spans.begin(); s < _spans.end(); s++) {
         int y = (*s)->getY();
         int x0 = (*s)->getX0();
@@ -619,6 +620,7 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
         }
         if (leftx > x1) {
             // whole span is zero; drop it.
+            _normalized = false;
             _spans.erase(s);
             s--;
             continue;
@@ -632,10 +634,18 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
         }
         if (leftx != x0) {
             (*s)->_x0 = leftx;
+            _normalized = false;
         }
         if (rightx != x1) {
             (*s)->_x1 = rightx;
+            _normalized = false;
         }
+    }
+
+    if (_spans.empty()) {
+        _bbox = geom::Box2I();
+        _area = 0;
+        _normalized = true;
     }
 }
 
