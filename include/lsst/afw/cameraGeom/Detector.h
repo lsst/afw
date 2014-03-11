@@ -59,7 +59,7 @@ enum DetectorType {
  * so I don't know how to construct one.
  *
  * @note: code definitions use lsst::afw::table:: instead of table:: because the latter confused swig
- * when I tried it. I don't know why and it didn't seem worth pursuing.
+ * when I tried it. This is a known issue: ticket #2461.
  */
 class Detector {
 public:
@@ -83,7 +83,8 @@ public:
         lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog, ///< catalog of amplifier information
         Orientation const &orientation,     ///< detector position and orientation in focal plane
         geom::Extent2D const &pixelSize,    ///< pixel size (mm)
-        CameraTransformMap::Transforms const &transforms///< map of CameraSys: XYTranform
+        CameraTransformMap::Transforms const &Transforms    ///< map of CameraSys: XYTranform, where each
+            ///< XYTransform's "forward" method transforms from PIXELS to the specified camera system
     );
 
     ~Detector() {}
