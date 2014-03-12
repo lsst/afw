@@ -54,14 +54,14 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     @param[in,out] destImage: assembled image (lsst.afw.image.Image or MaskedImage);
         the region amplifier.getBBox() is overwritten with the assembled amplifier image
     @param[in] rawImage: raw image (same type as destImage)
-    @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier data
+    @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
 
     @throw RuntimeError if:
     - image types do not match
-    - amplifier has no raw amplifier data
+    - amplifier has no raw amplifier info 
     """
     if not amplifier.getHasRawInfo():
-        raise RuntimeError("amplifier must contain raw amplifier data")
+        raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):
         raise RuntimeError("destImage type = %s != %s = rawImage type" % \
             type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
@@ -79,14 +79,14 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
     @param[in,out] destImage: CCD image (lsst.afw.image.Image or MaskedImage);
         the region amplifier.getRawAmplifier().getBBox() is overwritten with the raw amplifier image
     @param[in] rawImage: raw image (same type as destImage)
-    @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier data
+    @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
 
     @throw RuntimeError if:
     - image types do not match
-    - amplifier has no raw amplifier data
+    - amplifier has no raw amplifier info
     """
     if not amplifier.getHasRawInfo():
-        raise RuntimeError("amplifier must contain raw amplifier data")
+        raise RuntimeError("amplifier must contain raw amplifier info")
     if type(destImage.Factory) != type(rawImage.Factory):
         raise RuntimeError("destImage type = %s != %s = rawImage type" % \
             type(destImage.Factory).__name__, type(rawImage.Factory).__name__)

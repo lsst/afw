@@ -51,8 +51,8 @@ except NameError:
 def prepareWcsData(wcs, amp):
     """
     Put Wcs from an Amp image into CCD coordinates
-    @param wcs -- WCS object to modify in place
-    @param amp -- Amp object to use
+    @param wcs: WCS object to modify in place
+    @param amp: Amp object to use
     """
     if not amp.getHasRawInfo():
         raise RuntimeError("Cannot modify wcs without raw amp information")
@@ -64,7 +64,13 @@ def prepareWcsData(wcs, amp):
 def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsize=(10., 10.), showFig=True, savePath=None):
     """
     Make a plot of the focal plane along with a set points that sample the Pupil
-    @param camera -- a camera object
+    @param camera: a camera object
+    @param pupilSizeDeg_x: Amount of the pupil to sample in x in degrees
+    @param pupilSizeDeg_y: Amount of the pupil to sample in y in degrees
+    @param dx: Spacing of sample points in x in degrees
+    @param dy: Spacing of sample points in y in degrees
+    @param figsize: matplotlib style tuple indicating the size of the figure in inches
+    @param savePath: File to save the figure to (ignored if None)
     """
     try:
         from matplotlib.patches import Polygon
@@ -121,6 +127,14 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
         plt.show()
 
 def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0):
+    """Make an image from an amp object
+    @param amp: Amp record to use for constructing the raw amp image
+    @param imValue: Value to assign to the constructed image set to (gain*1000)//10 if not set
+    @param imageFactory: Type of image to construct
+    @param markSize: Size of mark at read corner in pixels
+    @param markValue: Value of pixels in the read corner mark
+    @return an untrimmed amp image
+    """
     if not amp.getHasRawInfo():
         raise RuntimeError("Can't create a raw amp image without raw amp data")
     bbox = amp.getRawBBox()
@@ -154,6 +168,10 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     return img
 
 def calcRawCcdBBox(ccd):
+    """Calculate the raw ccd bounding box
+    @param ccd: Detector for with to calculate the un-trimmed bounding box
+    @return Box2I of the un-trimmed Detector
+    """
     bbox = afwGeom.Box2I()
     for amp in ccd:
         if not amp.getHasRawInfo():
@@ -165,6 +183,13 @@ def calcRawCcdBBox(ccd):
 
 def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImage.ImageU, rcMarkSize=10, binSize=1):
     """Make an Image of a Ccd
+    @param ccd: Detector to use in making the image
+    @param isTrimmed: Assemble a trimmed Detector image if True
+    @param showAmpGain: Use the per amp gain to color the pixels in the image
+    @param imageFactory: Image type to generate
+    @param rcMarkSize: Size of the mark to make in the amp images at the read corner
+    @param binSize: Bin the image by this factor in both dimensions
+    @return Image of the Detector
     """
     ampImages = []
     index = 0
@@ -195,6 +220,15 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     return ccdImage
 
 def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame, binSize):
+    """Overlay bounding boxes on a frame in ds9
+    @param ccd: Detector to iterate for the amp bounding boxes
+    @param untrimmedCcdBbox: Bounding box of the un-trimmed Detector
+    @param nQuarter: number of 90 degree rotations to apply to the bounding boxes
+    @param isTrimmed: Is the Detector image over which the boxes are layed trimmed?
+    @param ccdOrigin: Detector origin relative to the  parent origin if in a larger pixel grid
+    @param frame: ds9 frame to display on
+    @param binSize: binning factor
+    """
     with ds9.Buffering():
         ccdDim = untrimmedCcdBbox.getDimensions()
         ccdBbox = rotateBBoxBy90(untrimmedCcdBbox, nQuarter, ccdDim)
@@ -252,6 +286,17 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
                               borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=binSize)
 
 def showAmp(amp, ampImage=None, isTrimmed=False, frame=None, overlay=True, imageFactory=afwImage.ImageU, markSize=10, markValue=0):
+    """Show an amp in a ds9 frame
+    @param amp: amp record to use in display
+    @param ampImage: Not used.  Will allow for passing an amp image to display.
+    @param isTrimmed: Display a trimmed amp image
+    @param frame: ds9 frame to display on
+    @param overlay: Overlay bounding boxes?
+    @param imageFactory: Type of image to display (only used if ampImage is None)
+    @param markSize: Size of make to make at the read corner (only used if ampImage is None)
+    @param markValue: Value of pixels in read corner mark
+    """
+    
     if ampImage is None:
         ampImage = makeImageFromAmp(amp, imageFactory=imageFactory, markSize=markSize, markValue=markValue)
     else:
@@ -286,8 +331,16 @@ def showAmp(amp, ampImage=None, isTrimmed=False, frame=None, overlay=True, image
                 displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame)
 
 def showCcd(ccd, ccdImage=None, isTrimmed=True, showAmpGain=True, frame=None, overlay=True, binSize=1, inCameraCoords=False):
-    """Show a CCD on ds9.  If ccdImage is None, an image will be created based on the properties
-of the detectors"""
+    """Show a CCD on ds9.  
+    @param ccd: Detector to use in display
+    @param ccdImage: Not used.  Will allow an image to be displayed.  If None an image is synthesized from the Detector properties.
+    @param isTrimmed: Is the displayed Detector trimmed?
+    @param showAmpGain: Show the amps colored proportional to the gain?  Only used if ccdImage is None
+    @param fram: ds9 frame to use
+    @param overlay: Show amp bounding boxes on the displayed image?
+    @param binSize: Binning factor
+    @param inCameraCoords: Show the Detector in camera coordinates?
+    """
     ccdOrigin = afwGeom.Point2I(0,0)
     nQuarter = 0
     if ccdImage is None:
@@ -311,6 +364,13 @@ of the detectors"""
         overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, frame, binSize)
 
 def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
+    """Get the bounding boxes of a list of Detectors within a camera sized pixel grid
+    @param ccdList: List of Detector
+    @param binSize: Binning factor
+    @param pixelSize_o: Size of the pixel in mm.
+    @param origin: origin of the camera pixel grid in pixels
+    @return a list of bounding boxes in camera pixel coordinates
+    """
     boxList = []
     for ccd in ccdList:
         if not pixelSize_o == ccd.getPixelSize():
@@ -322,8 +382,8 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
         llc = dbbox.getMin()
         nQuarter = ccd.getOrientation().getNQuarter()
         cbbox = ccd.getBBox()
-        ex = cbbox.getDimensions().getX()//2
-        ey = cbbox.getDimensions().getY()//2
+        ex = cbbox.getDimensions().getX()//binSize
+        ey = cbbox.getDimensions().getY()//binSize
         bbox = afwGeom.Box2I(cbbox.getMin(), afwGeom.Extent2I(int(ex), int(ey)))
         bbox = rotateBBoxBy90(bbox, nQuarter, bbox.getDimensions())
         bbox.shift(afwGeom.Extent2I(int(llc.getX()//pixelSize_o.getX()/binSize), int(llc.getY()//pixelSize_o.getY()/binSize)))
@@ -332,6 +392,11 @@ def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
     return boxList
 
 def getCameraImageBBox(camBbox, pixelSize, bufferSize):
+    """Get the bounding box of a camera sized image in pixels
+    @param camBbox: Camera bounding box in focal plane coordinates (mm)
+    @param pixelSize: Size of a detector pixel in mm
+    @param bufferSize: Buffer around edge of image in pixels
+    """
     pixMin = afwGeom.Point2I(int(camBbox.getMinX()//pixelSize.getX()), int(camBbox.getMinY()//pixelSize.getY()))
     pixMax = afwGeom.Point2I(int(camBbox.getMaxX()//pixelSize.getX()), int(camBbox.getMaxY()//pixelSize.getY()))
     retBox = afwGeom.Box2I(pixMin, pixMax)
@@ -339,7 +404,15 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
     return retBox
 
 def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10, imageSource=None, imageFactory=afwImage.ImageU, binSize=1):
-    """Make an Image of a Camera"""
+    """Make an Image of a Camera
+    @param camera: Camera object to use to make the image
+    @param detectorNameList: List of detector names to use in building the image.  Use all Detectors if None.
+    @param background: Value to use where there is no Detector
+    @param imageSource: Not Used.  Will allow sending a set of images to display instead of the synthetic ones.
+    @param imageFactory: Type of image to build
+    @param binSize: bin factor
+    @return an image of the camera
+    """
     if detectorNameList is None:
         ccdList = camera
     else:
@@ -352,7 +425,8 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         for detName in detectorNameList:
             for corner in camera[detName].getCorners(FOCAL_PLANE):
                 camBbox.include(corner)
-    pixelSize_o = camera[0].getPixelSize()
+    
+    pixelSize_o = camera[camera.getNameIter().next()].getPixelSize()
     camBbox = getCameraImageBBox(camBbox, pixelSize_o, bufferSize)
     origin = camBbox.getMin()
     # This segfaults for large images.  It seems better to throw instead of segfaulting, but maybe that's not easy.
@@ -374,21 +448,28 @@ def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorN
                 binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
                 textSize=1.25, referenceDetectorName=None, **kwargs):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
-
-If imageSource is provided its getImage method will be called to return a CCD image (e.g. a
-cameraGeom.GetCcdImage object); if it is "", an image will be created based on the properties
-of the detectors"""
-    # Haven't decided yet what to do about the camera source
-    
+    @param camera: Camera to show
+    @param imageSource: Not used.  Will allow passing images to assemble into a Camera
+    @param imageFactory: Type of image to make
+    @param detectorNameList: List of names of Detectors to use. If None use all
+    @param binSize: bin factor
+    @param bufferSize: size of border to make around camera image
+    @param frame: ds9 frame in which to display
+    @param overlay: Overlay Detector boundaries?
+    @param title: Title in ds9 frame
+    @param ctype: Color to use when drawing Detector boundaries
+    @param textSize: Size of detector labels
+    @param referenceDetectorName: Name of detector to supply WCS information.  Assume central detector if None.
+    """
     cameraImage = makeImageFromCamera(camera, detectorNameList=detectorNameList, bufferSize=bufferSize,
                                       imageSource=imageSource, imageFactory=imageFactory, binSize=binSize)
-    #TODO makeFocalPlaneWcs is returning None and I don't know why.
+
     wcs = makeFocalPlaneWcs(camera, binSize, referenceDetectorName)
     if title == "":
         title = camera.getName()
     ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
     if detectorNameList is None:
-        ccdList = camera
+        ccdList = [camera[name] for name in camera.getNameIter()]
     else:
         ccdList = [camera[name] for name in detectorNameList]
 
@@ -400,8 +481,9 @@ of the detectors"""
             for corner in camera[detName].getCorners(FOCAL_PLANE):
                 camBbox.include(corner)
     if overlay:
-        camBbox = getCameraImageBBox(camBbox, ccdList[0].getPixelSize(), bufferSize)
-        bboxList = getCcdInCamBBoxList(ccdList, binSize, ccdList[0].getPixelSize(), camBbox.getMin())
+        pSize = ccdList[0].getPixelSize()
+        camBbox = getCameraImageBBox(camBbox, pSize, bufferSize)
+        bboxList = getCcdInCamBBoxList(ccdList, binSize, pSize, camBbox.getMin())
         for bbox, ccd in itertools.izip(bboxList, ccdList):
             # borderWidth to 0.5 to align with the outside edge of the pixel
             displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, frame=frame)
@@ -428,10 +510,14 @@ def makeFocalPlaneWcs(camera, binSize=1, referenceDetectorName=None):
     fpPos = ccd.transform(cp, FOCAL_PLANE)
     fpPos = fpPos.getPoint()
     for i in range(2):
-        md.set("CRPOS%d" % i, pix[i])
-        md.set("CRVAL%d" % i, fpPos[i])
+        md.set("CRPIX%d"%(i+1), pix[i])
+        md.set("CRVAL%d"%(i+1), fpPos[i])
     md.set("CDELT1", ccd.getPixelSize()[0]*binSize)
     md.set("CDELT2", ccd.getPixelSize()[1]*binSize)
+    md.set("CTYPE1", "CAMERA_X")
+    md.set("CTYPE2", "CAMERA_Y")
+    md.set("CUNIT1", "mm")
+    md.set("CUNIT2", "mm")
 
     return afwImage.makeWcs(md)
 
@@ -441,7 +527,11 @@ def showMosaic(fileName, geomPolicy=None, camera=None,
     raise NotImplementedError("This function has not been updated to the new CameraGeom.  This will be done in the Summer 2014 work period")
 
 def findAmp(ccd, pixelPosition):
-    """Find the Amp with the specified Id within the composite"""
+    """Find the Amp with the specified Id within the composite
+    @param ccd: Detector to look in
+    @param pixelPosition: Point2I containing the pixel position
+    @return amp: Amp record in which pixelPosition falls or None if no Amp found.
+    """
 
     for amp in ccd:
         if amp.getBBox().contains(pixelPosition):

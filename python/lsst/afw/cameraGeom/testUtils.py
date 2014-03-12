@@ -6,7 +6,7 @@ import lsst.afw.table as afwTable
 from .cameraGeomLib import PIXELS, TAN_PIXELS, PUPIL, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
                            CameraSys, Detector, Orientation
 from .cameraConfig import DetectorConfig, CameraConfig
-from .cameraFactoryTask import CameraFactoryTask
+from .cameraFactory import makeCameraFromCatalogs
 from .makePixelToTanPixel import makePixelToTanPixel
 
 __all__ = ["DetectorWrapper", "CameraWrapper"]
@@ -130,15 +130,16 @@ class CameraWrapper(object):
         if afwDir is None:
             raise RuntimeError("afw is not setup")
         self._afwTestDir = os.path.join(afwDir, "tests")
-
+        
+        # Info to store for unit tests
         self.plateScale = float(plateScale)
         self.radialDistortion = float(radialDistortion)
         self.detectorNameList = []
         self.detectorIdList = []
         self.ampInfoDict = {}
+
         self.camConfig, self.ampCatalogDict = self.makeTestRepositoryItems(isLsstLike)
-        cameraTask = CameraFactoryTask()
-        self.camera = cameraTask.runCatDict(self.camConfig, self.ampCatalogDict)
+        self.camera = makeCameraFromCatalogs(self.camConfig, self.ampCatalogDict)
 
     @property
     def nDetectors(self):
@@ -186,6 +187,8 @@ class CameraWrapper(object):
         return detectorConfigs
 
     def makeAmpCatalogs(self, ampFile, isLsstLike=False):
+        """Construct a list of AmpInfoCatalog, one per detector
+        """
         readoutMap = {'LL':0, 'LR':1, 'UR':2, 'UL':3}
         amps = []
         with open(ampFile) as fh:
@@ -305,7 +308,7 @@ class CameraWrapper(object):
         pScaleRad = afwGeom.arcsecToRad(self.plateScale)
         radialDistortCoeffs = [0.0, 1.0/pScaleRad, 0.0, self.radialDistortion/pScaleRad]
         tConfig = afwGeom.TransformConfig()
-        tConfig.transform.name = 'radial'
+        tConfig.transform.name = 'inverted_radial'
         tConfig.transform.active.coeffs = radialDistortCoeffs
         tmc = afwGeom.TransformMapConfig()
         tmc.nativeSys = FOCAL_PLANE.getSysName()

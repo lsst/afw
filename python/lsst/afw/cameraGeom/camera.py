@@ -68,6 +68,11 @@ class Camera(DetectorCollection):
         return self._transformMap
 
     def transform(self, cameraPoint, toSys):
+        """Transform a CameraPoint to a different CameraSys
+        @param[in] cameraPoint: CameraPoint to transform
+        @param[in] toSys: Transform to this CameraSys
+        @return a CameraPoint in the new CameraSys
+        """
         if toSys in self._transformMap:
             p = self._transformMap.transform(cameraPoint.getPoint(), cameraPoint.getCameraSys(), toSys)
             return CameraPoint(p, toSys)
