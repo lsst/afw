@@ -136,7 +136,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     @return an untrimmed amp image
     """
     if not amp.getHasRawInfo():
-        raise RuntimeError("Can't create a raw amp image without raw amp data")
+        raise RuntimeError("Can't create a raw amp image without raw amp information")
     bbox = amp.getRawBBox()
     dbbox = amp.getRawDataBBox()
     img = imageFactory(bbox)
