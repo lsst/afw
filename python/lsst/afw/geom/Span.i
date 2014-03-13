@@ -34,13 +34,6 @@
 %ignore lsst::afw::geom::Span::begin;
 %ignore lsst::afw::geom::Span::end;
 
-%include "std_vector.i"
-// We don't actually need this vector, but we do need SWIG to generate
-// the traits classes needed to support iterators that yield points.
-// Presumably there's a more minimal way to do that, but it's the
-// opposite of well-documented.
-%template(Point2IVector) std::vector<lsst::afw::geom::Point2I>;
-
 %newobject lsst::afw::geom::Span::__iter__;
 %extend lsst::afw::geom::Span {
 

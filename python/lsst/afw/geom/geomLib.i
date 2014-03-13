@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -38,6 +38,7 @@ Python interface to lsst::afw::geom classes
 #pragma SWIG nowarn=503                 // comparison operators ignored
 
 %{
+#include <vector>
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
@@ -54,6 +55,10 @@ Python interface to lsst::afw::geom classes
 %import "lsst/daf/base/baseLib.i"
 
 %lsst_exceptions();
+
+%include "std_vector.i"
+%template(Point2IVector) std::vector<lsst::afw::geom::Point<int, 2> >;
+%template(Point2DVector) std::vector<lsst::afw::geom::Point<double, 2> >;
 
 %include "ndarray.i"
 
@@ -167,3 +172,4 @@ Python interface to lsst::afw::geom classes
 %include "Span.i"
 %include "XYTransform.i"
 %include "Polygon.i"
+%include "TransformMap.i"

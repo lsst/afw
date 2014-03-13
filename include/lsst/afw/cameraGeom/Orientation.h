@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008, 2009, 2010, 2011, 2012, 2013, 2014 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -25,7 +25,8 @@
 
 #include <string>
 #include <cmath>
-#include "lsst/afw/geom/Angle.h"
+#include "Eigen/Dense"
+#include "lsst/afw/geom.h"
 #include "lsst/afw/image/Utils.h"
 
 /**
@@ -36,72 +37,79 @@
 namespace lsst {
 namespace afw {
 namespace cameraGeom {
-#if defined(SWIG)
-    // swig generates incorrect python bindings, putting e.g. "pitch = 0*lsst::afw::geom::radians" into
-    // the .py file.  The other part of the workaround is to make the symbol "radian" available to python
-    // in cameraGeomLib.i
-    #define AFW_GEOM_RADIANS radians
-#else
-    #define AFW_GEOM_RADIANS lsst::afw::geom::radians
-#endif
+
 /**
- * Describe a detector's orientation with respect to the nominal position
+ * Describe a detector's orientation in the focal plane
  *
- * Only the yaw angle is used when computing the mapping between detector and focal plane coordinates.
- * All rotations are about the origin of the trimmed detector coordinate system, NOT the center.
+ * All rotations are about the reference point on the detector.
+ * Rotations are intrinsic, meaning each rotation is applied in the coordinates system
+ * produced by the previous rotation.
+ * Rotations are applied in this order: yaw (Z), pitch (Y'), and roll (X'').
+ *
+ * @warning: default refPoint is -0.5, -0.5 (the lower left corner of a detector).
+ * This means that the default-constructed Orientation is not a unity transform,
+ * but instead includes a 1/2 pixel shift.
  */
 class Orientation {
 public:
-    explicit Orientation(int nQuarter = 0, ///< Nominal rotation of device in units of pi/2
-                         lsst::afw::geom::Angle pitch=0*AFW_GEOM_RADIANS, ///< pitch (rotation in YZ)
-                         lsst::afw::geom::Angle roll=0*AFW_GEOM_RADIANS,  ///< roll (rotation in XZ)
-                         lsst::afw::geom::Angle yaw=0*AFW_GEOM_RADIANS    ///< yaw (rotation in XY)
-                        )
-#undef AFW_GEOM_RADIANS
-        :
-        _nQuarter(nQuarter % 4),
-        _pitch(pitch), _cosPitch(std::cos(pitch)),  _sinPitch(std::sin(pitch)),
-        _roll(roll), _cosRoll(std::cos(roll)),  _sinRoll(std::sin(roll)),
-        _yaw(yaw), _cosYaw(std::cos(yaw)),  _sinYaw(std::sin(yaw))
-        {}
+    explicit Orientation(
+        geom::Point2D const fpPosition=geom::Point2D(0, 0),
+            ///< Focal plane position of detector reference point (mm)
+        geom::Point2D const refPoint=geom::Point2D(-0.5, -0.5),
+            ///< Reference point on detector (pixels).
+            ///< Offset is measured to this point and all all rotations are about this point.
+            ///< The default value (-0.5, -0.5) is the lower left corner of the detector.
+        geom::Angle const yaw=geom::Angle(0),   ///< yaw: rotation about Z (X to Y), 1st rotation
+        geom::Angle const pitch=geom::Angle(0),  ///< pitch: rotation about Y' (Z'=Z to X'), 2nd rotation
+        geom::Angle const roll=geom::Angle(0)  ///< roll: rotation about X'' (Y''=Y' to Z''), 3rd rotation
+    );
 
-    /// Return the number of quarter-turns applied to this detector
-    int getNQuarter() const { return _nQuarter; }
+    /// Return focal plane position of detector reference point (mm)
+    geom::Point2D getFpPosition() const { return _fpPosition; }
+
+    /// Return detector reference point (pixels)
+    geom::Point2D getReferencePoint() const { return _refPoint; }
+
+    /// Return the yaw angle
+    geom::Angle getYaw() const { return _yaw; }
 
     /// Return the pitch angle
     lsst::afw::geom::Angle getPitch() const { return _pitch; }
-    /// Return cos(pitch)
-    double getCosPitch() const { return _cosPitch; }
-    /// Return sin(pitch)
-    double getSinPitch() const { return _sinPitch; }
 
     /// Return the roll angle
-    lsst::afw::geom::Angle getRoll() const { return _roll; }
-    /// Return cos(roll)
-    double getCosRoll() const { return _cosRoll; }
-    /// Return sin(roll)
-    double getSinRoll() const { return _sinRoll; }
+    geom::Angle getRoll() const { return _roll; }
 
-    /// Return the yaw angle
-    lsst::afw::geom::Angle getYaw() const { return _yaw; }
-    /// Return cos(yaw)
-    double getCosYaw() const { return _cosYaw; }
-    /// Return sin(yaw)
-    double getSinYaw() const { return _sinYaw; }
+    /// Return the number of quarter turns (rounded to the closest quarter)
+    int getNQuarter() const;
+
+    /**
+     * @brief Generate an XYTransform from pixel to focal plane coordinates
+     *
+     * @return lsst::afw::geom::AffineXYTransform from pixel to focal plane coordinates
+     */
+    geom::AffineXYTransform makePixelFpTransform(
+            geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
+    ) const;
+
+    /**
+     * @brief Generate an XYTransform from focal plane to pixel coordinates
+     *
+     * @return lsst::afw::geom::AffineXYTransform from focal plane to pixel coordinates
+     */
+    geom::AffineXYTransform makeFpPixelTransform(
+            geom::Extent2D const pixelSizeMm ///< Size of the pixel in mm in X and Y
+    ) const;
+
 private:
-    int _nQuarter;                      // number of quarter-turns in +ve direction
+    geom::Point2D _fpPosition;          ///< focal plane position of reference point on detector
+    geom::Point2D _refPoint;            ///< reference point on detector
 
-    lsst::afw::geom::Angle _pitch;      // pitch
-    double _cosPitch;                   // cos(pitch)
-    double _sinPitch;                   // sin(pitch)
+    lsst::afw::geom::Angle _yaw;        ///< yaw
+    lsst::afw::geom::Angle _pitch;      ///< pitch
+    lsst::afw::geom::Angle _roll;       ///< roll
 
-    lsst::afw::geom::Angle _roll;       // roll
-    double _cosRoll;                    // cos(roll)
-    double _sinRoll;                    // sin(roll)
-
-    lsst::afw::geom::Angle _yaw;        // yaw
-    double _cosYaw;                     // cos(yaw)
-    double _sinYaw;                     // sin(yaw)
+    // Elements of the Jacobian for three space rotation projected into XY plane.
+    Eigen::Matrix2d _rotMat;
 };
 
 }}}

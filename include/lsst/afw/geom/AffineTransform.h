@@ -164,6 +164,9 @@ public:
         return (i < 4) ? _linear[i] : _translation[i - 4]; 
     }
 
+    /**
+     * Construct a new AffineTransform from two others: (B * A)(p) = B(A(p))
+     */
     AffineTransform operator*(AffineTransform const & other) const {
         return AffineTransform(
             getLinear()*other.getLinear(),

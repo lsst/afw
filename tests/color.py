@@ -33,20 +33,19 @@ or
 """
 
 
-import math, os, sys
-import numpy
+import math
 import unittest
+
+import numpy
+
 import lsst.utils.tests as tests
 import lsst.daf.base as dafBase
 import lsst.pex.logging as logging
-import lsst.pex.config as pexConfig
 import lsst.pex.exceptions as pexExcept
+import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
-import lsst.afw.math as afwMath
-import lsst.afw.detection as afwDetect
-import lsst.afw.detection.utils as afwDetectUtils
-import lsst.afw.display.ds9 as ds9
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
 try:
     type(verbose)
@@ -65,9 +64,11 @@ class CalibTestCase(unittest.TestCase):
     """A test case for Calib"""
     def setUp(self):
         self.calib = afwImage.Calib()
+        self.detector = DetectorWrapper().detector
 
     def tearDown(self):
         del self.calib
+        del self.detector
 
     def testTime(self):
         """Test the exposure time information"""
@@ -83,14 +84,8 @@ class CalibTestCase(unittest.TestCase):
 
     def testDetectorTime(self):
         """Test that we can ask a calib for the MidTime at a point in a detector (ticket #1337)"""
-
-        import lsst.afw.geom as afwGeom
-        import lsst.afw.cameraGeom as cameraGeom
-
-        det = cameraGeom.Detector(cameraGeom.Id(1))
-
         p = afwGeom.PointI(3, 4)
-        self.calib.getMidTime(det, p)
+        self.calib.getMidTime(self.detector, p)
 
     def testPhotom(self):
         """Test the zero-point information"""

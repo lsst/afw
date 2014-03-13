@@ -31,7 +31,10 @@
 %shared_ptr(lsst::afw::geom::XYTransform);
 %shared_ptr(lsst::afw::geom::IdentityXYTransform);
 %shared_ptr(lsst::afw::geom::InvertedXYTransform);
+%shared_ptr(lsst::afw::geom::AffineXYTransform);
 %shared_ptr(lsst::afw::geom::RadialXYTransform);
-%shared_ptr(lsst::afw::geom::DetectorXYTransform);
+%shared_ptr(lsst::afw::geom::MultiXYTransform);
+
+%template(XYTransformVector) std::vector<CONST_PTR(lsst::afw::geom::XYTransform)>;
 
 %include "lsst/afw/geom/XYTransform.h"

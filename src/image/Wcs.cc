@@ -1323,7 +1323,7 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
 
 
 XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
-    : XYTransform(false), _dst(dst), _src(src)
+    : XYTransform(), _dst(dst), _src(src)
 { }
 
 

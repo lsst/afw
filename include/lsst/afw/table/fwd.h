@@ -78,6 +78,12 @@ typedef ColumnViewT<ExposureRecord> ExposureColumnView;
 typedef ExposureCatalogT<ExposureRecord> ExposureCatalog;
 typedef ExposureCatalogT<ExposureRecord const> ConstExposureCatalog;
 
+class AmpInfoRecord;
+class AmpInfoTable;
+typedef ColumnViewT<AmpInfoRecord> AmpInfoColumnView;
+typedef CatalogT<AmpInfoRecord> AmpInfoCatalog;
+typedef CatalogT<AmpInfoRecord const> ConstAmpInfoCatalog;
+
 template <typename Record1, typename Record2> struct Match;
 
 typedef Match<SimpleRecord,SimpleRecord> SimpleMatch;

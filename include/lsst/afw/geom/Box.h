@@ -29,6 +29,7 @@
 #ifndef LSST_AFW_GEOM_BOX_H
 #define LSST_AFW_GEOM_BOX_H
 
+#include <vector>
 #include "boost/format.hpp"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Extent.h"
@@ -151,6 +152,14 @@ public:
 
     bool operator==(Box2I const & other) const;
     bool operator!=(Box2I const & other) const;
+
+    /**
+     * Get the corner points
+     * 
+     * The order is counterclockise, starting from the lower left corner, i.e.:
+     *   (minX, minY), (maxX, maxY), (maxX, maxX), (minX, maxY)
+     */
+    std::vector<Point2I> getCorners() const;
 
     std::string toString() const {
         return (boost::format("Box2I(%s,%s)") % _minimum.toString() % _dimensions.toString()).str();
@@ -276,6 +285,14 @@ public:
 
     bool operator==(Box2D const & other) const;
     bool operator!=(Box2D const & other) const;
+
+    /**
+     * Get the corner points
+     * 
+     * The order is counterclockise, starting from the lower left corner, i.e.:
+     *   (minX, minY), (maxX, maxY), (maxX, maxX), (minX, maxY)
+     */
+    std::vector<Point2D> getCorners() const;
 
     std::string toString() const {
         return (boost::format("Box2D(%s,%s)") % _minimum.toString() % _maximum.toString()).str();

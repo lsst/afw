@@ -40,5 +40,6 @@
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/Polygon.h"
+#include "lsst/afw/geom/TransformMap.h"
 
 #endif // LSST_GEOM_H
