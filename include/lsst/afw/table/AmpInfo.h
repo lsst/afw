@@ -196,7 +196,7 @@ public:
      */
     static Key<std::string> getNameKey() { return getMinimalSchema().name; }
     static Key< Point<int> > getBBoxMinKey() { return getMinimalSchema().bboxMin; }
-    static Key< Point<int> > getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
+    static Key< Point<int> > getBBoxExtentKey() { return getMinimalSchema().bboxExtent; }
     static Key<double> getGainKey() { return getMinimalSchema().gain; }
     static Key<double> getReadNoiseKey() { return getMinimalSchema().readNoise; }
     static Key<int> getSaturationKey() { return getMinimalSchema().saturation; }
@@ -205,18 +205,18 @@ public:
     static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearityType; }
     static Key<Flag> getHasRawInfoKey() { return getMinimalSchema().hasRawInfo; }
     static Key< Point<int> > getRawBBoxMinKey() { return getMinimalSchema().rawBBoxMin; }
-    static Key< Point<int> > getRawBBoxMaxKey() { return getMinimalSchema().rawBBoxMax; }
+    static Key< Point<int> > getRawBBoxExtentKey() { return getMinimalSchema().rawBBoxExtent; }
     static Key< Point<int> > getRawDataBBoxMinKey() { return getMinimalSchema().rawDataBBoxMin; }
-    static Key< Point<int> > getRawDataBBoxMaxKey() { return getMinimalSchema().rawDataBBoxMax; }
+    static Key< Point<int> > getRawDataBBoxExtentKey() { return getMinimalSchema().rawDataBBoxExtent; }
     static Key<Flag> getRawFlipXKey() { return getMinimalSchema().rawFlipX; }
     static Key<Flag> getRawFlipYKey() { return getMinimalSchema().rawFlipY; }
     static Key< Point<int> > getRawXYOffsetKey() { return getMinimalSchema().rawXYOffset; }
     static Key< Point<int> > getRawHorizontalOverscanBBoxMinKey() { return getMinimalSchema().rawHorizontalOverscanBBoxMin; }
-    static Key< Point<int> > getRawHorizontalOverscanBBoxMaxKey() { return getMinimalSchema().rawHorizontalOverscanBBoxMax; }
+    static Key< Point<int> > getRawHorizontalOverscanBBoxExtentKey() { return getMinimalSchema().rawHorizontalOverscanBBoxExtent; }
     static Key< Point<int> > getRawVerticalOverscanBBoxMinKey() { return getMinimalSchema().rawVerticalOverscanBBoxMin; }
-    static Key< Point<int> > getRawVerticalOverscanBBoxMaxKey() { return getMinimalSchema().rawVerticalOverscanBBoxMax; }
+    static Key< Point<int> > getRawVerticalOverscanBBoxExtentKey() { return getMinimalSchema().rawVerticalOverscanBBoxExtent; }
     static Key< Point<int> > getRawPrescanBBoxMinKey() { return getMinimalSchema().rawPrescanBBoxMin; }
-    static Key< Point<int> > getRawPrescanBBoxMaxKey() { return getMinimalSchema().rawPrescanBBoxMax; }
+    static Key< Point<int> > getRawPrescanBBoxExtentKey() { return getMinimalSchema().rawPrescanBBoxExtent; }
     //@}
 
     /// @copydoc BaseTable::clone
@@ -248,7 +248,7 @@ private:
         Schema schema;
         Key<std::string> name;
         Key< Point<int> > bboxMin;
-        Key< Point<int> > bboxMax;
+        Key< Point<int> > bboxExtent;
         Key<double> gain;
         Key<double> readNoise;
         Key<int> saturation;
@@ -257,18 +257,18 @@ private:
         Key<std::string> linearityType;
         Key<Flag> hasRawInfo;
         Key< Point<int> > rawBBoxMin;
-        Key< Point<int> > rawBBoxMax;
+        Key< Point<int> > rawBBoxExtent;
         Key< Point<int> > rawDataBBoxMin;
-        Key< Point<int> > rawDataBBoxMax;
+        Key< Point<int> > rawDataBBoxExtent;
         Key<Flag> rawFlipX;
         Key<Flag> rawFlipY;
         Key< Point<int> > rawXYOffset;
         Key< Point<int> > rawHorizontalOverscanBBoxMin;
-        Key< Point<int> > rawHorizontalOverscanBBoxMax;
+        Key< Point<int> > rawHorizontalOverscanBBoxExtent;
         Key< Point<int> > rawVerticalOverscanBBoxMin;
-        Key< Point<int> > rawVerticalOverscanBBoxMax;
+        Key< Point<int> > rawVerticalOverscanBBoxExtent;
         Key< Point<int> > rawPrescanBBoxMin;
-        Key< Point<int> > rawPrescanBBoxMax;
+        Key< Point<int> > rawPrescanBBoxExtent;
         MinimalSchema();
     };
     

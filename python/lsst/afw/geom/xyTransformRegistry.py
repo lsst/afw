@@ -25,7 +25,7 @@ from lsst.pex.config import Config, ListField, makeRegistry, ConfigDictField, Co
 from .geomLib import IdentityXYTransform, InvertedXYTransform, \
     AffineTransform, AffineXYTransform, RadialXYTransform, MultiXYTransform
 
-__all__ = ["xyTransformRegistry", "OneXYTransformConfig"] 
+__all__ = ["xyTransformRegistry", "OneXYTransformConfig"]
 
 xyTransformRegistry = makeRegistry(
     '''A registry of XYTransform factories
@@ -103,13 +103,6 @@ def makeRadialXYTransform(config):
     return RadialXYTransform(config.coeffs)
 makeRadialXYTransform.ConfigClass = RadialXYTransformConfig
 xyTransformRegistry.register("radial", makeRadialXYTransform)
-
-def makeInvertedRadialXYTransform(config):
-    """Make an InvertedRadialXYTransform
-    """
-    return InvertedXYTransform(RadialXYTransform(config.coeffs))
-makeInvertedRadialXYTransform.ConfigClass = RadialXYTransformConfig
-xyTransformRegistry.register("inverted_radial", makeInvertedRadialXYTransform)
 
 
 class MultiXYTransformConfig(Config):

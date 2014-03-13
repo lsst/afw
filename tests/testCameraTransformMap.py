@@ -117,8 +117,6 @@ class CameraTransformMapTestCase(unittest.TestCase):
             xyTrans = self.transformMap[cs]
             self.assertTrue(isinstance(xyTrans, afwGeom.XYTransform))
 
-        self.assertRaises(LsstCppException, self.transformMap.__getitem__, cameraGeom.CameraSys("missing"))
-
     def testGetItem(self):
         """Test that the contained transforms are the ones expected
         """
@@ -129,6 +127,25 @@ class CameraTransformMapTestCase(unittest.TestCase):
         pupilTr = self.transformMap[cameraGeom.PUPIL]
         self.compare2DFunctions(pupilTr.forwardTransform, self.pupilTransform.forwardTransform)
         self.compare2DFunctions(pupilTr.reverseTransform, self.pupilTransform.reverseTransform)
+
+        missingCamSys = cameraGeom.CameraSys("missing")
+        self.assertRaises(LsstCppException, self.transformMap.__getitem__, missingCamSys)
+
+    def testGet(self):
+        """Test the get method
+        """
+        for cs in self.transformMap.getCoordSysList():
+            xyTrans2 = self.transformMap.get(cs)
+            self.assertTrue(isinstance(xyTrans2, afwGeom.XYTransform))
+
+        missingCamSys = cameraGeom.CameraSys("missing")
+        shouldBeNone = self.transformMap.get(missingCamSys)
+        self.assertTrue(shouldBeNone is None)
+        self.assertRaises(Exception, self.transformMap.get, "badDataType")
+
+        for default in (1, "hello", cameraGeom.CameraSys("default")):
+            res = self.transformMap.get(missingCamSys, default)
+            self.assertEquals(res, default)
 
     def testTransform(self):
         """Test transform method, point version
@@ -154,7 +171,6 @@ class CameraTransformMapTestCase(unittest.TestCase):
 
         for fromSys in self.transformMap.getCoordSysList():
             for toSys in self.transformMap.getCoordSysList():
-#                import os, pdb; print "PID =", os.getpid(); pdb.set_trace()
                 toList = self.transformMap.transform(fromList, fromSys, toSys)
 
                 self.assertEquals(len(fromList), len(toList))

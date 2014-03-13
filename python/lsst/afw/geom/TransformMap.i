@@ -46,5 +46,15 @@
     %pythoncode {
         def __iter__(self):
             return iter(self.getCoordSysList())
+
+        def get(self, coordSys, default=None):
+            """Return the specified transform if present, else the default
+
+            @raise TypeError if coordSys is the wrong type (however, the type of "default" is not checked)
+            """
+            if coordSys in self:
+                return self[coordSys]
+            else:
+                return default
     }
 }
