@@ -207,15 +207,12 @@ class BackgroundTestCase(unittest.TestCase):
         # make a ramping image (spline should be exact for linear increasing image
         nx = 512
         ny = 512
-        x0, y0 = 9876, 54321
-        box = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(nx, ny))
-        rampimg = afwImage.ImageF(box)
-        dzdx, dzdy, z0 = 0.5, 0.7, 10000.0
-        dz2dx2, dz2dy2 = 0.01, -0.01
+        rampimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
+        dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
 
         for x in range(nx):
             for y in range(ny):
-                rampimg.set(x, y, dzdx*x + dzdy*y + z0 + dz2dx2*x**2 + dz2dy2*y**2)
+                rampimg.set(x, y, dzdx*x + dzdy*y + z0)
         
         # check corner, edge, and center pixels
         bctrl = afwMath.BackgroundControl(10, 10)
@@ -224,37 +221,25 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl.setNySample(6)
         bctrl.getStatisticsControl().setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
         bctrl.getStatisticsControl().setNumIter(1)
-        backobj = afwMath.cast_BackgroundMI(afwMath.makeBackground(rampimg, bctrl))
-
-        print rampimg.getArray()
-
-        import lsst.afw.display.ds9 as ds9
-        frame = 1
-        for interp in ("CONSTANT", "LINEAR", "NATURAL_SPLINE", "AKIMA_SPLINE"):
-            diff = backobj.getImageF(interp)
-            ds9.mtv(diff, frame=frame); frame += 1
-            diff -= rampimg
-            print interp, diff.getArray().mean(), diff.getArray().std()
-            ds9.mtv(diff, frame=frame); frame += 1
-        ds9.mtv(rampimg, frame=frame); frame += 1
-        ds9.mtv(backobj.getStatsImage(), frame=frame); frame += 1
+        backobj = afwMath.makeBackground(rampimg, bctrl)
 
         xpixels = [0, nx//2, nx - 1]
         ypixels = [0, ny//2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
-                testval = backobj.getPixel(xpix, ypix)
+                testval = afwMath.cast_BackgroundMI(backobj).getPixel(xpix, ypix)
                 self.assertAlmostEqual(testval/rampimg.get(xpix, ypix), 1, 6)
 
         # Test pickle
-        new = pickle.loads(pickle.dumps(backobj))
-        self.assertBackgroundEqual(backobj, new)
+        bg = afwMath.cast_BackgroundMI(backobj)
+        new = pickle.loads(pickle.dumps(bg))
+        self.assertBackgroundEqual(bg, new)
 
         # Check creation of sub-image
         box = afwGeom.Box2I(afwGeom.Point2I(123, 45), afwGeom.Extent2I(45, 123))
-        bgImage = backobj.getImageF("AKIMA_SPLINE")
+        bgImage = bg.getImageF("AKIMA_SPLINE")
         bgSubImage = afwImage.ImageF(bgImage, box)
-        testImage = backobj.getImageF(box, "AKIMA_SPLINE")
+        testImage = bg.getImageF(box, "AKIMA_SPLINE")
         self.assertEqual(testImage.getXY0(), bgSubImage.getXY0())
         self.assertEqual(testImage.getDimensions(), bgSubImage.getDimensions())
         self.assertTrue(np.all(testImage.getArray() == bgSubImage.getArray()))
@@ -737,8 +722,6 @@ class BackgroundTestCase(unittest.TestCase):
         self.assertTrue(np.all(lhsStats.getImage().getArray() == rhsStats.getImage().getArray()))
         self.assertTrue(np.all(lhsStats.getMask().getArray() == rhsStats.getMask().getArray()))
         self.assertTrue(np.all(lhsStats.getVariance().getArray() == rhsStats.getVariance().getArray()))
-        lhsImage, rhsImage = lhs.getImageF("LINEAR"), rhs.getImageF("LINEAR")
-        self.assertTrue(np.all(lhsImage.getArray() == rhsImage.getArray()))
 
     def testBackgroundListIO(self):
         """Test I/O for BackgroundLists"""
