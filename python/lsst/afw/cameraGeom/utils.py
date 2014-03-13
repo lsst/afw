@@ -446,7 +446,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
 def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorNameList=None,
                 binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
-                textSize=1.25, referenceDetectorName=None, **kwargs):
+                textSize=1.25, originAtCenter=True, **kwargs):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
     @param camera: Camera to show
     @param imageSource: Not used.  Will allow passing images to assemble into a Camera
@@ -459,15 +459,11 @@ def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorN
     @param title: Title in ds9 frame
     @param ctype: Color to use when drawing Detector boundaries
     @param textSize: Size of detector labels
-    @param referenceDetectorName: Name of detector to supply WCS information.  Assume central detector if None.
+    @param originAtCenter: Put the origin of the camera WCS at the center of the image?
     """
     cameraImage = makeImageFromCamera(camera, detectorNameList=detectorNameList, bufferSize=bufferSize,
                                       imageSource=imageSource, imageFactory=imageFactory, binSize=binSize)
 
-    wcs = makeFocalPlaneWcs(camera, binSize, referenceDetectorName)
-    if title == "":
-        title = camera.getName()
-    ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
     if detectorNameList is None:
         ccdList = [camera[name] for name in camera.getNameIter()]
     else:
@@ -480,10 +476,19 @@ def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorN
         for detName in detectorNameList:
             for corner in camera[detName].getCorners(FOCAL_PLANE):
                 camBbox.include(corner)
+    pixelSize = ccdList[0].getPixelSize()
+    if originAtCenter:
+        wcsReferencePixel = cameraImage.getBBox().getDimensions()/2
+    else:
+        wcsReferencePixel = afwGeom.Point2I(0,0)
+    wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
+    if title == "":
+        title = camera.getName()
+    ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
+     
     if overlay:
-        pSize = ccdList[0].getPixelSize()
-        camBbox = getCameraImageBBox(camBbox, pSize, bufferSize)
-        bboxList = getCcdInCamBBoxList(ccdList, binSize, pSize, camBbox.getMin())
+        camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize)
+        bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
         for bbox, ccd in itertools.izip(bboxList, ccdList):
             # borderWidth to 0.5 to align with the outside edge of the pixel
             displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, frame=frame)
@@ -492,28 +497,21 @@ def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorN
 
     return cameraImage
 
-def makeFocalPlaneWcs(camera, binSize=1, referenceDetectorName=None):
-    """Make a WCS for the focal plane geometry (i.e. returning positions in "mm")"""
+def makeFocalPlaneWcs(pixelSize, referencePixel):
+    """Make a WCS for the focal plane geometry (i.e. returning positions in "mm")
+    @param pixelSize: Size of the image pixels in physical units
+    @param referencePixel: Pixel for origin of WCS
+    @return Wcs object for mapping between pixels and focal plane.
+    """
 
-    if referenceDetectorName is not None:
-        ccd = camera[referenceDetectorName]
-    else:
-        cp = camera.makeCameraPoint(camera.getFpBBox().getCenter(), FOCAL_PLANE)
-        ccds = camera.findDetectors(cp)
-        if len(ccds) == 1:
-            ccd = ccds[0]
-        else:
-            raise RuntimeError("Could not find detector to make WCS.  Specify a detector to use")
     md = dafBase.PropertySet()
-    pix = afwGeom.PointD(0,0)
-    cp = ccd.makeCameraPoint(pix, PIXELS)
-    fpPos = ccd.transform(cp, FOCAL_PLANE)
-    fpPos = fpPos.getPoint()
+    if referencePixel is None:
+        referencePixel = afwGeom.PointD(0,0)
     for i in range(2):
-        md.set("CRPIX%d"%(i+1), pix[i])
-        md.set("CRVAL%d"%(i+1), fpPos[i])
-    md.set("CDELT1", ccd.getPixelSize()[0]*binSize)
-    md.set("CDELT2", ccd.getPixelSize()[1]*binSize)
+        md.set("CRPIX%d"%(i+1), referencePixel[i])
+        md.set("CRVAL%d"%(i+1), 0.)
+    md.set("CDELT1", pixelSize[0])
+    md.set("CDELT2", pixelSize[1])
     md.set("CTYPE1", "CAMERA_X")
     md.set("CTYPE2", "CAMERA_Y")
     md.set("CUNIT1", "mm")
