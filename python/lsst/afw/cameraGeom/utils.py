@@ -403,7 +403,7 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
     retBox.grow(bufferSize)
     return retBox
 
-def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10, imageSource=None, imageFactory=afwImage.ImageU, binSize=1):
+def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10, imageSource=None, imageFactory=afwImage.ImageU, binSize=1, showGains=False):
     """Make an Image of a Camera
     @param camera: Camera object to use to make the image
     @param detectorNameList: List of detector names to use in building the image.  Use all Detectors if None.
@@ -434,7 +434,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin) 
     for det, bbox in itertools.izip(ccdList, boxList):
         if imageSource is None:
-            im = makeImageFromCcd(det, isTrimmed=True, showAmpGain=False, imageFactory=imageFactory, binSize=binSize)
+            im = makeImageFromCcd(det, isTrimmed=True, showAmpGain=showGains, imageFactory=imageFactory, binSize=binSize)
         else:
             raise NotImplementedError("Do something reasonable if an image is sent")
         nQuarter = det.getOrientation().getNQuarter()
@@ -462,7 +462,7 @@ def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorN
     @param originAtCenter: Put the origin of the camera WCS at the center of the image?
     """
     cameraImage = makeImageFromCamera(camera, detectorNameList=detectorNameList, bufferSize=bufferSize,
-                                      imageSource=imageSource, imageFactory=imageFactory, binSize=binSize)
+                                      imageSource=imageSource, imageFactory=imageFactory, binSize=binSize, **kwargs)
 
     if detectorNameList is None:
         ccdList = [camera[name] for name in camera.getNameIter()]

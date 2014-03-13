@@ -41,6 +41,28 @@ class AmpInfoTableTestCase(unittest.TestCase):
         self.catalog = None
         self.schema = None
 
+    def testEmptyBBox(self):
+        record = self.catalog.addNew()
+        emptyBox = afwGeom.Box2I()
+        record.setBBox(emptyBox)
+        record.setRawBBox(emptyBox)
+        record.setRawDataBBox(emptyBox)
+        record.setRawHorizontalOverscanBBox(emptyBox)
+        record.setRawVerticalOverscanBBox(emptyBox)
+        record.setRawPrescanBBox(emptyBox)
+        self.assertEqual(emptyBox, record.getBBox())
+        self.assertTrue(record.getBBox().isEmpty())
+        self.assertEqual(emptyBox, record.getRawBBox())
+        self.assertTrue(record.getRawBBox().isEmpty())
+        self.assertEqual(emptyBox, record.getRawDataBBox())
+        self.assertTrue(record.getRawDataBBox().isEmpty())
+        self.assertEqual(emptyBox, record.getRawHorizontalOverscanBBox())
+        self.assertTrue(record.getRawHorizontalOverscanBBox().isEmpty())
+        self.assertEqual(emptyBox, record.getRawVerticalOverscanBBox())
+        self.assertTrue(record.getRawVerticalOverscanBBox().isEmpty())
+        self.assertEqual(emptyBox, record.getRawPrescanBBox())
+        self.assertTrue(record.getRawPrescanBBox().isEmpty())
+
     def testBasics(self):
         """Test basics
         """
@@ -125,6 +147,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
         finally:
             os.remove(fileName)
+
 
 
 

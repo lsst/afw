@@ -26,6 +26,7 @@ Tests for lsst.afw.geom.XYTransform and xyTransformRegistry
 """
 import itertools
 import math
+import os
 import unittest
 
 import lsst.utils.tests
@@ -66,6 +67,10 @@ class RefMultiXYTransform(object):
 
 
 class XYTransformTestCase(unittest.TestCase):
+    def tearDown(self):
+        if os.path.isfile("checkConfigTest.py"):
+            os.remove("checkConfigTest.py")
+
     def fromIter(self):
         for x in (-1.1, 0, 2.2):
             for y in (3.1, 0, 2.1):
@@ -93,10 +98,22 @@ class XYTransformTestCase(unittest.TestCase):
                     self.assertAlmostEqual(tweakedToPoint[i], linToPoint[i], places=2)
                     self.assertAlmostEqual(tweakedFromPoint[i], linRoundTripPoint[i], places=2)
 
+    def checkConfig(self, tClass, tConfig): 
+        """Check round trip of config
+        """
+        if os.path.isfile("checkConfigTest.py"):
+            os.remove("checkConfigTest.py")
+        tConfig.save("checkConfigTest.py")
+        loadConfig = tConfig.__class__()
+        loadConfig.load("checkConfigTest.py")
+        transform = tClass(loadConfig)
+        self.checkBasics(transform)
+
     def testIdentity(self):
         """Test identity = IdentityXYTransform
         """
         identClass = xyTransformRegistry["identity"]
+        self.checkConfig(identClass, identClass.ConfigClass())
         ident = identClass(identClass.ConfigClass())
         self.assertEquals(type(ident), IdentityXYTransform)
         self.checkBasics(ident)
@@ -114,6 +131,7 @@ class XYTransformTestCase(unittest.TestCase):
         invertedConfig.transform.retarget(affineClass)
         affineConfig = invertedConfig.transform
         affineConfig.translation = (1.2, -3.4)
+        self.checkConfig(invertedClass, invertedConfig)
         inverted = invertedClass(invertedConfig)
         self.checkBasics(inverted)
         for fromPoint in self.fromIter():
@@ -127,6 +145,7 @@ class XYTransformTestCase(unittest.TestCase):
         """
         affineClass = xyTransformRegistry["affine"]
         affineConfig = affineClass.ConfigClass()
+        self.checkConfig(affineClass, affineConfig)
         affine = affineClass(affineConfig)
         self.assertEquals(type(affine), AffineXYTransform)
         self.checkBasics(affine)
@@ -141,6 +160,7 @@ class XYTransformTestCase(unittest.TestCase):
         affineClass = xyTransformRegistry["affine"]
         affineConfig = affineClass.ConfigClass()
         affineConfig.translation = (1.2, -3.4)
+        self.checkConfig(affineClass, affineConfig)
         affine = affineClass(affineConfig)
         for fromPoint in self.fromIter():
             toPoint = affine.forwardTransform(fromPoint)
@@ -160,6 +180,7 @@ class XYTransformTestCase(unittest.TestCase):
              math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
+        self.checkConfig(affineClass, affineConfig)
         affine = affineClass(affineConfig)
         for fromPoint in self.fromIter():
             toPoint = affine.forwardTransform(fromPoint)
@@ -183,6 +204,7 @@ class XYTransformTestCase(unittest.TestCase):
              math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
+        self.checkConfig(affineClass, affineConfig)
         affine = affineClass(affineConfig)
         for fromPoint in self.fromIter():
             toPoint = affine.forwardTransform(fromPoint)
@@ -200,6 +222,7 @@ class XYTransformTestCase(unittest.TestCase):
         radialClass = xyTransformRegistry["radial"]
         radialConfig = radialClass.ConfigClass()
         radialConfig.coeffs = (0, 1.05, 0.1)
+        self.checkConfig(radialClass, radialConfig)
         radial = radialClass(radialConfig)
         self.assertEquals(type(radial), RadialXYTransform)
         self.assertEquals(len(radial.getCoeffs()), len(radialConfig.coeffs))
@@ -265,6 +288,7 @@ class XYTransformTestCase(unittest.TestCase):
             0: wrapper0,
             1: wrapper1,
         }
+        self.checkConfig(multiClass, multiConfig)
         multiXYTransform = multiClass(multiConfig)
 
         affine0 = affineClass(affineConfig0)

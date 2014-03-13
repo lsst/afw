@@ -308,8 +308,10 @@ class CameraWrapper(object):
         pScaleRad = afwGeom.arcsecToRad(self.plateScale)
         radialDistortCoeffs = [0.0, 1.0/pScaleRad, 0.0, self.radialDistortion/pScaleRad]
         tConfig = afwGeom.TransformConfig()
-        tConfig.transform.name = 'inverted_radial'
-        tConfig.transform.active.coeffs = radialDistortCoeffs
+        tConfig.transform.name = 'inverted'
+        radialClass = afwGeom.xyTransformRegistry['radial']
+        tConfig.transform.active.transform.retarget(radialClass)
+        tConfig.transform.active.transform.coeffs = radialDistortCoeffs
         tmc = afwGeom.TransformMapConfig()
         tmc.nativeSys = FOCAL_PLANE.getSysName()
         tmc.transforms = {PUPIL.getSysName():tConfig}

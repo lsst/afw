@@ -23,7 +23,7 @@
 """Application Framework geometry code including Point, Extent, and ellipses
 """
 from .geomLib import *
-from .xyTransformRegistry import *
+from .xyTransformFactory import *
 from .transformConfig import *
 
 BoxI = Box2I
