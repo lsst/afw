@@ -58,10 +58,10 @@ def rotateBBoxBy90(bbox, n90, dimensions):
 
     xCorner = numpy.array([(corner.getX() - centerPixel[0]) for corner in bbox.getCorners()])
     yCorner = numpy.array([(corner.getY() - centerPixel[1]) for corner in bbox.getCorners()])
-    x0 = min(c*xCorner - s*yCorner)
-    y0 = min(s*xCorner + c*yCorner)
-    x1 = max(c*xCorner - s*yCorner)
-    y1 = max(s*xCorner + c*yCorner)
+    x0 = int((c*xCorner - s*yCorner).min())
+    y0 = int((s*xCorner + c*yCorner).min())
+    x1 = int((c*xCorner - s*yCorner).max())
+    y1 = int((s*xCorner + c*yCorner).max())
 
     # Fiddle things a little if the detector has an even number of pixels so that square BBoxes
     # will map into themselves
