@@ -252,10 +252,15 @@ void Chebyshev1Function2<ReturnT>::write(table::io::OutputArchiveHandle & handle
     handle.saveCatalog(catalog);
 }
 
-template class PolynomialFunction2<float>;
-template class PolynomialFunction2<double>;
 
-template class Chebyshev1Function2<float>;
-template class Chebyshev1Function2<double>;
+// Explicit instantiation
+#define INSTANTIATE(TYPE) \
+    template class GaussianFunction2<TYPE>; \
+    template class DoubleGaussianFunction2<TYPE>; \
+    template class PolynomialFunction2<TYPE>; \
+    template class Chebyshev1Function2<TYPE>;
+
+INSTANTIATE(float);
+INSTANTIATE(double);
 
 }}} // namespace lsst::afw::math
