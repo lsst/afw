@@ -97,8 +97,12 @@ PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
 #define INSTANTIATE(TYPE) \
     template afwImage::Image<TYPE>::Ptr \
              binImage(afwImage::Image<TYPE> const&, int, lsst::afw::math::Property const); \
+    template afwImage::Image<TYPE>::Ptr \
+             binImage(afwImage::Image<TYPE> const&, int, int, lsst::afw::math::Property const); \
     template afwImage::MaskedImage<TYPE>::Ptr \
              binImage(afwImage::MaskedImage<TYPE> const&, int, lsst::afw::math::Property const); \
+    template afwImage::MaskedImage<TYPE>::Ptr \
+             binImage(afwImage::MaskedImage<TYPE> const&, int, int, lsst::afw::math::Property const); \
 
 INSTANTIATE(boost::uint16_t)
 INSTANTIATE(int)
