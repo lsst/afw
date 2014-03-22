@@ -588,7 +588,7 @@ def erase(frame=None):
 
     ds9Cmd("regions delete all", flush=True, frame=frame)
 
-def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", silent=True):
+def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", silent=True, textAngle=0):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
@@ -598,7 +598,8 @@ Possible values are:
         @:Mxx,Mxy,Myy    Draw an ellipse with moments (Mxx, Mxy, Myy) (argument size is ignored)
         An object derived from afwGeom.ellipses.BaseCore Draw the ellipse (argument size is ignored)
 Any other value is interpreted as a string to be drawn. Strings obey the fontFamily (which may be extended
-with other characteristics, e.g. "times bold italic".
+with other characteristics, e.g. "times bold italic".  Text will be drawn rotated by textAngle (textAngle is
+ignored otherwise).
 
 N.b. objects derived from BaseCore include Axes and Quadrupole.
 """
@@ -653,18 +654,20 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
             # if it doesn't
             if needShow:
                 show(frame)
+            angle = ""
+            if not color:
+                angle += " #"
+            angle += " textangle=%f"%(textAngle) 
 
             font = ""
             if size != 2 or fontFamily != "helvetica":
-                if not color:
-                    font += " #"
                 fontFamily = fontFamily.split()
                 font += ' font="%s %d' % (fontFamily.pop(0), int(10*size/2.0 + 0.5))
                 if fontFamily:
                     font += " %s" % " ".join(fontFamily)
                 font += '"'
 
-            cmd += 'regions command {text %g %g \"%s\"%s%s };' % (c, r, symb, color, font)
+            cmd += 'regions command {text %g %g \"%s\"%s%s%s };' % (c, r, symb, color, angle, font)
         except Exception, e:
             print >> sys.stderr, ("Ds9 frame %d doesn't exist" % frame), e
 
