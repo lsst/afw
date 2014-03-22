@@ -731,6 +731,7 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const {
     template Key< elem > Schema::addField(Field< elem > const &, bool);            \
     template SchemaItem< elem > Schema::find(std::string const & ) const; \
     template SchemaItem< elem > Schema::find(Key< elem > const & ) const; \
+    template SchemaItem< elem > detail::SchemaImpl::find(Key< elem > const & ) const; \
     template int Schema::contains(SchemaItem< elem > const &, int) const;   \
     template void Schema::replaceField(Key< elem > const &, Field< elem > const &); \
     template SchemaItem< elem > SubSchema::find(std::string const & ) const; \

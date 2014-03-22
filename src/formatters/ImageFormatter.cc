@@ -286,6 +286,8 @@ lsst::daf::persistence::Formatter::Ptr ImageFormatter<ImagePixelT>::createInstan
     template class ImageFormatter<ImagePixelT >; \
     template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_oarchive&, int const, Persistable*); \
     template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::text_iarchive&, int const, Persistable*); \
+    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::xml_oarchive&, int const, Persistable*); \
+    template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::xml_iarchive&, int const, Persistable*); \
     template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_oarchive&, int const, Persistable*); \
     template void ImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_iarchive&, int const, Persistable*);
 

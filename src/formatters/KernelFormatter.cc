@@ -243,6 +243,14 @@ void afwForm::KernelFormatter::delegateSerialize(
 }
 
 template void afwForm::KernelFormatter::delegateSerialize(
+    boost::archive::text_oarchive& ar, unsigned int const, dafBase::Persistable*);
+template void afwForm::KernelFormatter::delegateSerialize(
+    boost::archive::text_iarchive& ar, unsigned int const, dafBase::Persistable*);
+template void afwForm::KernelFormatter::delegateSerialize(
+    boost::archive::xml_oarchive& ar, unsigned int const, dafBase::Persistable*);
+template void afwForm::KernelFormatter::delegateSerialize(
+    boost::archive::xml_iarchive& ar, unsigned int const, dafBase::Persistable*);
+template void afwForm::KernelFormatter::delegateSerialize(
     boost::archive::binary_oarchive& ar, unsigned int const, dafBase::Persistable*);
 template void afwForm::KernelFormatter::delegateSerialize(
     boost::archive::binary_iarchive& ar, unsigned int const, dafBase::Persistable*);
