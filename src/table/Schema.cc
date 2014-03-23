@@ -298,20 +298,22 @@ struct ExtractItemByKey : public boost::static_visitor<> {
 template <typename T>
 SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
     OffsetMap::const_iterator i = _offsets.lower_bound(key.getOffset());
-    if (i->first == key.getOffset()) {
-        try {
-            return boost::get< SchemaItem<T> const >(_items[i->second]);
-        } catch (boost::bad_get & err) {
-            // just swallow the exception; this might be a subfield key that points to the beginning.
+    if (i != _offsets.end()) {
+        if (i->first == key.getOffset()) {
+            try {
+                return boost::get< SchemaItem<T> const >(_items[i->second]);
+            } catch (boost::bad_get & err) {
+                // just swallow the exception; this might be a subfield key that points to the beginning.
+            }
         }
-    }
-    // We didn't get an exact match, but we might be searching for a subfield.
-    // Because the offsets are sorted, we know we overshot it, so we work backwards.
-    ExtractItemByKey<T> extractor(key);
-    while (i != _offsets.begin()) {
-        --i;
-        boost::apply_visitor(extractor, _items[i->second]);
-        if (extractor.result) return *extractor.result;
+        // We didn't get an exact match, but we might be searching for a subfield.
+        // Because the offsets are sorted, we know we overshot it, so we work backwards.
+        ExtractItemByKey<T> extractor(key);
+        while (i != _offsets.begin()) {
+            --i;
+            boost::apply_visitor(extractor, _items[i->second]);
+            if (extractor.result) return *extractor.result;
+        }
     }
     throw LSST_EXCEPT(
         lsst::pex::exceptions::NotFoundException,
@@ -323,15 +325,17 @@ SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
 // We handle Flag fields separately when searching for keys, because their keys aren't like the others.
 SchemaItem<Flag> SchemaImpl::find(Key<Flag> const & key) const {
     FlagMap::const_iterator i = _flags.lower_bound(std::make_pair(key.getOffset(), key.getBit()));
-    if (i->first.first == key.getOffset() && i->first.second == key.getBit()) {
-        try {
-            return boost::get< SchemaItem<Flag> const >(_items[i->second]);
-        } catch (boost::bad_get & err) {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::NotFoundException,
-                (boost::format("Flag field with offset %d and bit %d not found.")
-                 % key.getOffset() % key.getBit()).str()
-            );
+    if (i != _flags.end()) {
+        if (i->first.first == key.getOffset() && i->first.second == key.getBit()) {
+            try {
+                return boost::get< SchemaItem<Flag> const >(_items[i->second]);
+            } catch (boost::bad_get & err) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::NotFoundException,
+                    (boost::format("Flag field with offset %d and bit %d not found.")
+                     % key.getOffset() % key.getBit()).str()
+                );
+            }
         }
     }
     // Flag keys are never subfields, so we require an exact match.
