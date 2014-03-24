@@ -24,7 +24,7 @@ template<> struct tag<LsstPoint> { typedef point_tag type; };
 template<> struct coordinate_type<LsstPoint> { typedef LsstPoint::Element type; };
 template<> struct coordinate_system<LsstPoint> { typedef cs::cartesian type; };
 template<> struct dimension<LsstPoint> : boost::mpl::int_<2> {};
-template<unsigned long dim>
+template<std::size_t dim>
 struct access<LsstPoint, dim>
 {
     static double get(LsstPoint const& p) { return p[dim]; }
