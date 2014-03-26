@@ -157,6 +157,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
     }
     ProcessSchema::apply(*_fits, schema);
     if (table->getMetadata())
+        table->getMetadata("VERSION") = table->getVersion();
         _fits->writeMetadata(*table->getMetadata());
     _row = -1;
     _fits->addRows(nRows);

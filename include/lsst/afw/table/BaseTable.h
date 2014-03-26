@@ -121,6 +121,9 @@ public:
      *  @copydetails BaseTable::copyRecord(BaseRecord const &)
      */
     PTR(BaseRecord) copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
+
+    /// @brief Return the table's version.
+    int getVersion() const { return _version; }
     
     /// @brief Return the table's schema.
     Schema getSchema() const { return _schema; }
@@ -187,7 +190,7 @@ protected:
 
     /// @brief Copy construct.
     BaseTable(BaseTable const & other) :
-        daf::base::Citizen(other), _schema(other._schema),
+        daf::base::Citizen(other), _schema(other._schema), _version(other._version),
         _metadata(other._metadata) 
     {
         if (_metadata)
@@ -224,6 +227,7 @@ private:
     // All these are definitely private, not protected - we don't want derived classes mucking with them.
     Schema _schema;                 // schema that defines the table's fields
     ndarray::Manager::Ptr _manager; // current memory block to use for new records
+    int _version;                   // versioning number for incompatible changes
     PTR(daf::base::PropertyList) _metadata; // flexible metadata; may be null
 };
 
