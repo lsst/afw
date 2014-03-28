@@ -109,7 +109,8 @@ private:
     lsst::afw::geom::Angle _roll;       ///< roll
 
     // Elements of the Jacobian for three space rotation projected into XY plane.
-    Eigen::Matrix2d _rotMat;
+    // Turn off alignment since this is dynamically allocated (via Detector)
+    Eigen::Matrix<double,2,2,Eigen::DontAlign> _rotMat;
 };
 
 }}}
