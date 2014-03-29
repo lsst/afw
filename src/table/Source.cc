@@ -307,6 +307,8 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
     _startRecords(*table);
+    int version = metadata->get<int>("AFW_TABLE_VERSION", 0);
+    table->setVersion(version);  
     table->setMetadata(metadata);
     return table;
 }

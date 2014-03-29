@@ -125,6 +125,9 @@ public:
     /// @brief Return the table's version.
     int getVersion() const { return _version; }
     
+    /// @brief Set the table's version.
+    void setVersion(int version) { _version = version; }
+    
     /// @brief Return the table's schema.
     Schema getSchema() const { return _schema; }
 

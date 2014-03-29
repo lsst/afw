@@ -156,9 +156,15 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
     ProcessSchema::apply(*_fits, schema);
-    if (table->getMetadata())
-        table->getMetadata("VERSION") = table->getVersion();
-        _fits->writeMetadata(*table->getMetadata());
+    // write the version number to the fits header, plus any other metadata
+    PTR(daf::base::PropertyList) metadata = table->getMetadata();
+    if (!metadata) {
+        metadata = boost::make_shared<daf::base::PropertyList>();
+    }
+    int version = table->getVersion();
+    metadata->set<int>("AFW_TABLE_VERSION", version);
+    _fits->writeMetadata(*metadata);
+    metadata->remove("AFW_TABLE_VERSION");
     _row = -1;
     _fits->addRows(nRows);
     _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
