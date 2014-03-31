@@ -614,6 +614,11 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(k3a, k3b)
         self.assertEqual(schema.find(k3a).field.getDoc(), "f3b")
 
+    def testDM349(self):
+        filename = os.path.join(os.path.split(__file__)[0], "data", "great3.fits")
+        cat = lsst.afw.table.BaseCatalog.readFits(filename)
+        self.assertEqual(len(cat), 1)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
