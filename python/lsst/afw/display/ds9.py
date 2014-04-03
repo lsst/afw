@@ -588,7 +588,7 @@ def erase(frame=None):
 
     ds9Cmd("regions delete all", flush=True, frame=frame)
 
-def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", silent=True, textAngle=0):
+def dot(symb, c, r, frame=None, size=2, ctype=None, fontFamily="helvetica", silent=True, textAngle=None):
     """Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
 Possible values are:
         +                Draw a +
@@ -615,7 +615,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
     if ctype == None:
         color = ""                       # the default
     else:
-        color = ' # color=%s' % ctype
+        color = 'color=%s' % ctype
 
     cmd = selectFrame(frame) + "; "
     r += 1
@@ -655,9 +655,8 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
             if needShow:
                 show(frame)
             angle = ""
-            if not color:
-                angle += " #"
-            angle += " textangle=%f"%(textAngle) 
+            if textAngle is not None:
+                angle += " textangle=%.1f"%(textAngle) 
 
             font = ""
             if size != 2 or fontFamily != "helvetica":
@@ -666,8 +665,14 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
                 if fontFamily:
                     font += " %s" % " ".join(fontFamily)
                 font += '"'
+            extra = ""
+            if color or angle or font:
+                extra = " # "
+                extra += color
+                extra += angle
+                extra += font
 
-            cmd += 'regions command {text %g %g \"%s\"%s%s%s };' % (c, r, symb, color, angle, font)
+            cmd += 'regions command {text %g %g \"%s\"%s };' % (c, r, symb, extra)
         except Exception, e:
             print >> sys.stderr, ("Ds9 frame %d doesn't exist" % frame), e
 
