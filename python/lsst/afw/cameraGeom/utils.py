@@ -280,7 +280,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
             if ccdOrigin:
                 xc += ccdOrigin[0]
                 yc += ccdOrigin[1]
-            ds9.dot(str(amp.getName()), xc/binSize, yc/binSize, frame=frame)
+            ds9.dot(str(amp.getName()), xc/binSize, yc/binSize, frame=frame, textAngle=nQuarter*90)
 
         displayUtils.drawBBox(ccdBbox, origin=ccdOrigin,
                               borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=binSize)
@@ -490,10 +490,12 @@ def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorN
         camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize)
         bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
         for bbox, ccd in itertools.izip(bboxList, ccdList):
+            nQuarter = ccd.getOrientation().getNQuarter()
             # borderWidth to 0.5 to align with the outside edge of the pixel
             displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, frame=frame)
             dims = bbox.getDimensions()/2
-            ds9.dot(ccd.getName(), bbox.getMinX()+dims.getX(), bbox.getMinY()+dims.getY(), ctype=ctype, frame=frame, size=textSize)
+            ds9.dot(ccd.getName(), bbox.getMinX()+dims.getX(), bbox.getMinY()+dims.getY(), ctype=ctype, 
+                    frame=frame, size=textSize, textAngle=nQuarter*90)
 
     return cameraImage
 
