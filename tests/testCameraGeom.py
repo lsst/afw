@@ -30,7 +30,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 
-from lsst.afw.cameraGeom import PUPIL, FOCAL_PLANE, Camera, Detector,\
+from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, Camera, Detector,\
                                 assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
@@ -219,6 +219,18 @@ class CameraGeomTestCase(unittest.TestCase):
                 for amp in det:
                     cameraGeomUtils.showAmp(amp)
                     ds9.incrDefaultFrame()
+
+    def testCameraRaises(self):
+        for cw in self.cameraList:
+            camera = cw.camera
+            cp = camera.makeCameraPoint(afwGeom.Point2D(1e6,1e6), FOCAL_PLANE)
+            #Way off the focal plane
+            self.assertRaises(ValueError, camera.transform, cp, PIXELS)
+            cp = camera.makeCameraPoint(afwGeom.Point2D(0,0), CameraSys('abcd'))
+            #non-existant camera system
+            self.assertRaises(ValueError, camera.transform, cp, FOCAL_PLANE)
+
+        
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
