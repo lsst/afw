@@ -56,7 +56,10 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
     """
     if not amp.getHasRawInfo():
         raise RuntimeError("Cannot modify wcs without raw amp information")
-    ampBox = amp.getRawDataBBox()
+    if isTrimmed:
+        ampBox = amp.getRawDataBBox()
+    else:
+        ampBox = amp.getRawBBox()
     wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampBox.getDimensions())
     #Shift WCS for trimming
     wcs.shiftReferencePixel(-ampBox.getMinX(), -ampBox.getMinY())
