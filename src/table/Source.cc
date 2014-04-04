@@ -307,6 +307,11 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
     _startRecords(*table);
+    // get the version number from the metadata.  If the entry is not there, set to 0
+    // remove it from the metadata while the table is in memory
+    int version = metadata->get<int>("AFW_TABLE_VERSION", 0);
+    table->setVersion(version);
+    metadata->remove("AFW_TABLE_VERSION");
     table->setMetadata(metadata);
     return table;
 }
