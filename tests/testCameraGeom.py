@@ -35,6 +35,7 @@ from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, Camera, D
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
+from lsst.pex.exceptions import LsstCppException
 try:
     type(display)
 except NameError:
@@ -225,10 +226,13 @@ class CameraGeomTestCase(unittest.TestCase):
             camera = cw.camera
             cp = camera.makeCameraPoint(afwGeom.Point2D(1e6,1e6), FOCAL_PLANE)
             #Way off the focal plane
-            self.assertRaises(ValueError, camera.transform, cp, PIXELS)
+            self.assertRaises(RuntimeError, camera.transform, cp, PIXELS)
             cp = camera.makeCameraPoint(afwGeom.Point2D(0,0), CameraSys('abcd'))
-            #non-existant camera system
-            self.assertRaises(ValueError, camera.transform, cp, FOCAL_PLANE)
+            #non-existant camera system in camera point
+            self.assertRaises(LsstCppException, camera.transform, cp, FOCAL_PLANE)
+            #non-existant destination camera system
+            cp = camera.makeCameraPoint(afwGeom.Point2D(0,0), FOCAL_PLANE)
+            self.assertRaises(RuntimeError, camera.transform, cp, CameraSys('abcd'))
 
         
 
