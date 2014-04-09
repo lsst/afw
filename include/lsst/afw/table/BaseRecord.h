@@ -6,6 +6,7 @@
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/BaseTable.h"
+#include "lsst/afw/table/FunctorKey.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -135,6 +136,26 @@ public:
     void set(Key<T> const & key, U const & value) {
         key.setValue(getElement(key), _manager, value);
     }
+
+#ifndef SWIG
+
+    /**
+     *  @brief Compute a calculated or aggregate field.
+     */
+    template <typename T>
+    T get(OutputFunctorKey<T> const & key) const {
+        return key.get(*this);
+    }
+
+    /**
+     *  @brief Set a calculated or aggregate field.
+     */
+    template <typename T>
+    void set(InputFunctorKey<T> const & key, T const & value) {
+        return key.set(*this, value);
+    }
+
+#endif // !SWIG
 
     /// @brief Copy all field values from other to this, requiring that they have equal schemas.
     void assign(BaseRecord const & other);
