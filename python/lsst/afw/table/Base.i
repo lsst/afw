@@ -336,6 +336,9 @@ def asKey(self):
 %template(SchemaVector) std::vector<lsst::afw::table::Schema>;
 %template(SchemaMapperVector) std::vector<lsst::afw::table::SchemaMapper>;
 
+// =============== FunctorKeys ==============================================================================
+
+%include "lsst/afw/table/FunctorKey.h"
 
 // =============== BaseTable and BaseRecord =================================================================
 
