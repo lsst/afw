@@ -1410,11 +1410,14 @@ namespace {
 
         const Footprint::PeakList& pka = foota.getPeaks();
         const Footprint::PeakList& pkb = footb.getPeaks();
-        Footprint::PeakList pk = foot->getPeaks();
+        Footprint::PeakList& pk = foot->getPeaks();
         pk.reserve(pka.size() + pkb.size());
         pk.insert(pk.begin(), pka.begin(), pka.end());
         pk.insert(pk.end()-1, pkb.begin(), pkb.end());
         assert(pk.size() == (pka.size() + pkb.size()));
+
+        printf("_mergeFootprints: peaks A: %i, B: %i, result %i\n",
+               (int)pka.size(), (int)pkb.size(), (int)pk.size());
 
         const Footprint::SpanList& spansa = foota.getSpans();
         const Footprint::SpanList& spansb = footb.getSpans();
