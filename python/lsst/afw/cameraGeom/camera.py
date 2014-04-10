@@ -126,13 +126,18 @@ class Camera(DetectorCollection):
         return self._tranformFromNativeSys(nativeCoord, toSys)
 
 
-    @staticmethod
-    def makeCameraPoint(point, cameraSys):
+    def makeCameraPoint(self, point, cameraSys):
         """Make a CameraPoint from a Point2D and a CameraSys
 
         @param[in] point: an lsst.afw.geom.Point2D
         @param[in] cameraSys: a CameraSys
         @return cameraPoint: a CameraPoint
         """
-        return CameraPoint(point, cameraSys)
-
+        if isinstance(cameraSys, CameraSysPrefix):
+            raise TypeError("Use the detector method to make a camera point from a CameraSysPrefix.")
+        if cameraSys in self._transformMap:
+            return CameraPoint(point, cameraSys)
+        for det in self:
+            if cameraSys in det.getTransformMap():
+                return CamereaPoint(point, cameraSys)
+        raise RuntimeError("Could not find %s in any transformMap"%(cameraSys))

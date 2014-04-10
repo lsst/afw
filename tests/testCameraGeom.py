@@ -31,7 +31,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 
 from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, Camera, Detector,\
-                                assembleAmplifierImage, assembleAmplifierRawImage
+                                CameraSysPrefix, assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -227,9 +227,10 @@ class CameraGeomTestCase(unittest.TestCase):
             cp = camera.makeCameraPoint(afwGeom.Point2D(1e6,1e6), FOCAL_PLANE)
             #Way off the focal plane
             self.assertRaises(RuntimeError, camera.transform, cp, PIXELS)
-            cp = camera.makeCameraPoint(afwGeom.Point2D(0,0), CameraSys('abcd'))
-            #non-existant camera system in camera point
-            self.assertRaises(LsstCppException, camera.transform, cp, FOCAL_PLANE)
+            #non-existant camera sys in makeCameraPoint
+            self.assertRaises(RuntimeError, camera.makeCameraPoint, afwGeom.Point2D(0,0), CameraSys('abcd'))
+            #CameraSysPrefix camera sys in makeCameraPoint
+            self.assertRaises(TypeError, camera.makeCameraPoint, afwGeom.Point2D(0,0), CameraSysPrefix('PIXELS'))
             #non-existant destination camera system
             cp = camera.makeCameraPoint(afwGeom.Point2D(0,0), FOCAL_PLANE)
             self.assertRaises(RuntimeError, camera.transform, cp, CameraSys('abcd'))
