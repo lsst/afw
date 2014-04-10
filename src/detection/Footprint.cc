@@ -1441,9 +1441,6 @@ namespace {
         pk.insert(pk.end()-1, pkb.begin(), pkb.end());
         assert(pk.size() == (pka.size() + pkb.size()));
 
-        printf("_mergeFootprints: peaks A: %i, B: %i, result %i\n",
-               (int)pka.size(), (int)pkb.size(), (int)pk.size());
-
         const Footprint::SpanList& spansa = foota.getSpans();
         const Footprint::SpanList& spansb = footb.getSpans();
         Footprint::SpanList::const_iterator spa = spansa.begin();
