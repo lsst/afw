@@ -9,5 +9,6 @@
 #include "lsst/afw/table/Match.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/FunctorKey.h"
+#include "lsst/afw/table/aggregates.h"
 
 #endif // !LSST_AFW_table_h_INCLUDED
