@@ -149,6 +149,80 @@ private:
     Key<double> _ixy;
 };
 
+template <typename T, int N>
+class CovarianceMatrixKey : public FunctorKey< Eigen::Matrix<T,N,N> > {
+public:
+
+    typedef std::vector< Key<T> > SigmaKeyArray;
+    typedef std::vector< Key<T> > CovarianceKeyArray;
+    typedef std::vector<std::string> NameArray;
+
+    /// Construct an invalid instance; must assign before subsequent use.
+    CovarianceMatrixKey();
+
+    /**
+     *  @brief Construct a from arrays of per-element Keys
+     *
+     *  The sigma array Keys should point to the square root of the diagonal of the
+     *  covariance matrix.  The cov array Keys should point to the off-diagonal elements
+     *  of the lower-triangle, packed first in rows, then in columns (or equivalently,
+     *  in the upper-triangle, packed first in columns, then in rows).  For a 4x4 matrix,
+     *  the order is is:
+     *  @code
+     *    sigma[0]^2   cov[0]       cov[1]       cov[3]
+     *    cov[0]       sigma[1]^2   cov[2]       cov[4]
+     *    cov[1]       cov[2]       sigma[2]^2   cov[5]
+     *    cov[3]       cov[4]       cov[5]       sigma[3]^2
+     *  @endcode
+     *
+     *  The cov array may also be empty, to indicate that no off-diagonal elements are
+     *  stored, and should be set to zero.  If not empty, the size of the cov matrix
+     *  must be exactly n*(n-1)/2, where n is the size of the sigma matrix.
+     */
+    explicit CovarianceMatrixKey(
+        SigmaKeyArray const & sigma,
+        CovarianceKeyArray const & cov=CovarianceKeyArray()
+    );
+
+    /**
+     *  @brief Construct from a subschema and an array of names for each parameter of the matrix.
+     *
+     *  The field names should match the following convention:
+     *   - diagonal elements should have names like "p1Sigma", where "p1" is the name of the parameter,
+     *     and should contain the square root of the variance in that parameter.
+     *   - off-diagonal elements hould have names like "p1_p2_Cov", where "p1" and "p2" are names of
+     *     parameters.
+     *  For example, for the covariance matrix of a position, we'd look for "xSigma", "ySigma", and
+     *  "x_y_Cov".
+     */
+    CovarianceMatrixKey(SubSchema const & s, NameArray const & names);
+
+    /// Get a covariance matrix from the given record
+    virtual Eigen::Matrix<T,N,N> get(BaseRecord const & record) const;
+
+    /// Set a covariance matrix in the given record (uses only the lower triangle of the given matrix)
+    virtual void set(BaseRecord & record, Eigen::Matrix<T,N,N> const & value) const;
+
+    /**
+     *  @brief Return True if all the constituent sigma Keys are valid
+     *
+     *  Note that if the only one or more off-diagonal keys are invalid, we assume that means those terms
+     *  are zero, not that the whole FunctorKey is invalid.
+     */
+    bool isValid() const;
+
+    //@{
+    /// Compare the FunctorKey for equality with another, using its constituent Keys
+    bool operator==(CovarianceMatrixKey const & other) const;
+    bool operator!=(CovarianceMatrixKey const & other) const { return !(*this == other); }
+    //@}
+
+private:
+    SigmaKeyArray _sigma;
+    CovarianceKeyArray _cov;
+};
+
+
 }}} // namespace lsst::afw::table
 
 #endif // !AFW_TABLE_aggregates_h_INCLUDED
