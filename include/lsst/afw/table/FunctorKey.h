@@ -24,6 +24,7 @@
 #define AFW_TABLE_FunctorKey_h_INCLUDED
 
 #include "lsst/afw/table/fwd.h"
+#include "lsst/afw/table/Key.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -31,7 +32,7 @@ template <typename T>
 class OutputFunctorKey {
 public:
 
-    virtual T getPolymorphic(BaseRecord const & record) const = 0;
+    virtual T get(BaseRecord const & record) const = 0;
 
     virtual ~OutputFunctorKey() {}
 
@@ -41,11 +42,14 @@ template <typename T>
 class InputFunctorKey {
 public:
 
-    virtual void setPolymorphic(BaseRecord & record, T const & value) const = 0;
+    virtual void set(BaseRecord & record, T const & value) const = 0;
 
     virtual ~InputFunctorKey() {}
 
 };
+
+template <typename T>
+class FunctorKey : public OutputFunctorKey<T>, public InputFunctorKey<T> {};
 
 }}} // namespace lsst::afw::table
 
