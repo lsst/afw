@@ -159,7 +159,7 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
 /**
  Sums the two given HeavyFootprints *h1* and *h2*, returning a
  HeavyFootprint with the union footprint, and summed pixels where they
- overlap.
+ overlap.  The peak list is the union of the two inputs.
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)
@@ -167,29 +167,24 @@ mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const
                      HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const& h2)
 {
     // Merge the Footprints (by merging the Spans)
-    printf("mergeHeavyFootprints: 1\n");
     PTR(Footprint) foot = mergeFootprints(h1, h2);
+    printf("after mergeFootprints: %i peaks\n", (int)foot->getPeaks().size());
 
     // Find the union bounding-box
-    printf("mergeHeavyFootprints: 5\n");
     geom::Box2I bbox(h1.getBBox());
     bbox.include(h2.getBBox());
 
     // Create union-bb-sized images and insert the heavies
     image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> im1(bbox);
     image::MaskedImage<ImagePixelT,MaskPixelT,VariancePixelT> im2(bbox);
-    printf("mergeHeavyFootprints: 6\n");
     h1.insert(im1);
-    printf("mergeHeavyFootprints: 7\n");
     h2.insert(im2);
     // Add the pixels
-    printf("mergeHeavyFootprints: 8\n");
     im1 += im2;
 
     // Build new HeavyFootprint from the merged spans and summed pixels.
-    printf("mergeHeavyFootprints: 9\n");
     PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>) x(new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(*foot, im1));
-  printf("mergeHeavyFootprints: 10\n");
+    printf("mergeHeavyFootprints: %i peaks\n", (int)x->getPeaks().size());
     return x;
       //return PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)(
       //new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(foot, im1));
