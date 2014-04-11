@@ -1539,6 +1539,95 @@ Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
 }
 
 /************************************************************************************************************/
+
+void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
+                      image::Image<boost::uint16_t>::Ptr argmin,
+                      image::Image<boost::uint16_t>::Ptr dist)
+{
+    /*
+     * insert the footprints into an image, set all the pixels to the Manhatten distance from the
+     * nearest set pixel.
+     */
+    typedef boost::uint16_t dtype;
+    typedef boost::uint16_t itype;
+
+    itype nil = 0xffff;
+
+    geom::Box2I bbox = argmin->getBBox(image::PARENT);
+    *argmin = 0;
+    //image::Image<dtype>::Ptr dist(new image::Image<dtype>(bbox));
+    *dist = 0;
+
+    int x0 = bbox.getMinX();
+    int y0 = bbox.getMinY();
+
+    for (size_t i=0; i<foots.size(); i++) {
+        // Set all the pixels in the footprint to 1
+        set_footprint_id<itype>(argmin, *foots[i], i, -x0, -y0);
+        set_footprint_id<dtype>(dist,   *foots[i], 1, -x0, -y0);
+    }
+
+    int const height = dist->getHeight();
+    int const width  = dist->getWidth();
+
+    // traverse from bottom left to top right
+    for (int y = 0; y != height; ++y) {
+        image::Image<dtype>::xy_locator dim = dist->xy_at(0, y);
+        image::Image<itype>::xy_locator aim = argmin->xy_at(0, y);
+        for (int x = 0; x != width; ++x, ++dim.x(), ++aim.x()) {
+            if (dim(0, 0) == 1) {
+                // first pass and pixel was on, it gets a zero
+                dim(0, 0) = 0;
+                // its argmin is already set
+            } else {
+                // pixel was off. It is at most the sum of lengths of the array away from a pixel that is on
+                dim(0, 0) = width + height;
+                aim(0, 0) = nil;
+                // or one more than the pixel to the north
+                if (y > 0) {
+                    dtype ndist = dim(0,-1) + 1;
+                    if (ndist < dim(0,0)) {
+                        dim(0,0) = ndist;
+                        aim(0,0) = aim(0,-1);
+                    }
+                }
+                // or one more than the pixel to the west
+                if (x > 0) {
+                    dtype ndist = dim(-1,0) + 1;
+                    if (ndist < dim(0,0)) {
+                        dim(0,0) = ndist;
+                        aim(0,0) = aim(-1,0);
+                    }
+                }
+            }
+        }
+    }
+    // traverse from top right to bottom left
+    for (int y = height - 1; y >= 0; --y) {
+        image::Image<dtype>::xy_locator dim = dist->xy_at(width-1, y);
+        image::Image<itype>::xy_locator aim = argmin->xy_at(width-1, y);
+        for (int x = width - 1; x >= 0; --x, --dim.x(), --aim.x()) {
+            // either what we had on the first pass or one more than the pixel to the south
+            if (y + 1 < height) {
+                dtype ndist = dim(0,1) + 1;
+                if (ndist < dim(0,0)) {
+                    dim(0,0) = ndist;
+                    aim(0,0) = aim(0,1);
+                }
+            }
+            // or one more than the pixel to the east
+            if (x + 1 < width) {
+                dtype ndist = dim(1,0) + 1;
+                if (ndist < dim(0,0)) {
+                    dim(0,0) = ndist;
+                    aim(0,0) = aim(1,0);
+                }
+            }
+        }
+    }
+}
+
+
 /**
  * Grow a Footprint by ngrow pixels, returning a new Footprint
  */
@@ -2179,6 +2268,10 @@ template								\
 
 INSTANTIATE_FLOAT(float);
 INSTANTIATE_FLOAT(double);
+// There's no reason these shouldn't have setImageFromFootprint(), etc, instantiated
+INSTANTIATE_FLOAT(boost::uint16_t);
+INSTANTIATE_FLOAT(int);
+INSTANTIATE_FLOAT(boost::uint64_t);
 
 
 #define INSTANTIATE_MASK(PIXEL)                                         \
