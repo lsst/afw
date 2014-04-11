@@ -34,7 +34,7 @@
 #ifndef LSST_AFW_MATH_DETAIL_CUDALANCZOSWRAPPER_H
 #define LSST_AFW_MATH_DETAIL_CUDALANCZOSWRAPPER_H
 
-#include "lsst/afw/math/detail/SrcPosFunctor.h"
+#include "lsst/afw/math/detail/PositionFunctor.h"
 #include "lsst/afw/math/warpExposure.h"
 
 namespace lsst {
@@ -90,7 +90,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     SrcImageT const &srcImage,              ///< source %image
     lsst::afw::math::LanczosWarpingKernel const &warpingKernel,   ///< warping kernel
     lsst::afw::math::SeparableKernel const &maskWarpingKernel,    ///< mask warping kernel (can be the same as warping kernel)
-    SrcPosFunctor const &computeSrcPos,      ///< Functor to compute source position
+    PositionFunctor const &computeSrcPos,      ///< Functor to compute source position
     int const interpLength,                  ///< Distance over which WCS can be linearily interpolated
                                              ///< must be >0
     typename DestImageT::SinglePixel padValue, ///< value to use for undefined pixels

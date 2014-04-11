@@ -31,8 +31,8 @@
  *
  * @ingroup afw
  */
-#ifndef LSST_AFW_MATH_DETAIL_SRCPOSFUNCTOR_H
-#define LSST_AFW_MATH_DETAIL_SRCPOSFUNCTOR_H
+#ifndef LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H
+#define LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/AffineTransform.h"
@@ -44,33 +44,48 @@ namespace afw {
 namespace math {
 namespace detail {
 
-    class SrcPosFunctor {
+    /**
+     * @brief Base class to transform pixel position for a destination image
+     *        to its position in the original source image.
+     *
+     * The different possible transform definitions (from WCS to WCS, or via AffineTransform) are handled
+     * through derived classes, and are used in warping.  When computing a warped image, one
+     * iterates over the pixels in the destination image and must ask 'for the value I wish to
+     * put *here*, where should I go to find it in the source image?'.  Instantiating a Functor derived from
+     * this base class creates a callable function which accepts (destination) col,row and returns
+     * (source image) col,row (in the form of a Point2D).
+     */    
+    class PositionFunctor {
     public:
-        typedef boost::shared_ptr<SrcPosFunctor> Ptr;
+        typedef boost::shared_ptr<PositionFunctor> Ptr;
 
-        explicit SrcPosFunctor() {};
-        virtual ~SrcPosFunctor() {};
+        explicit PositionFunctor() {};
+        virtual ~PositionFunctor() {};
 
         virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const = 0;
     };
 
 
-    class WcsSrcPosFunctor : public SrcPosFunctor {
+    /**
+     * @brief Derived functor class to transform pixel position for a destination image
+     *        to its position in the source image.  The transform is from one WCS to another.
+     */    
+    class WcsPositionFunctor : public PositionFunctor {
     public:
-        typedef boost::shared_ptr<WcsSrcPosFunctor> Ptr;
+        typedef boost::shared_ptr<WcsPositionFunctor> Ptr;
 
-        explicit WcsSrcPosFunctor(
+        explicit WcsPositionFunctor(
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
             lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
             lsst::afw::image::Wcs const &srcWcs         ///< WCS of source %image
         ) :
-            SrcPosFunctor(),
+            PositionFunctor(),
             _destXY0(destXY0),
             _destWcs(destWcs),
             _srcWcs(srcWcs)
         {}
         
-        virtual ~WcsSrcPosFunctor() {};
+        virtual ~WcsPositionFunctor() {};
 
         virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
             double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
@@ -87,17 +102,21 @@ namespace detail {
     };
 
 
-    class AffineTransformSrcPosFunctor : public SrcPosFunctor {
+    /**
+     * @brief Derived functor class to transform pixel position for a destination image
+     *        to its position in the source image via an AffineTransform.
+     */    
+    class AffineTransformPositionFunctor : public PositionFunctor {
     public:
         // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
-        // ... so we actually want to use the *inverse* transform of the affineTransform we we're given.
+        // ... so we actually want to use the *inverse* transform of the affineTransform we were given.
         // Thus _affineTransform is initialized to affineTransform.invert()
-        AffineTransformSrcPosFunctor(
+        AffineTransformPositionFunctor(
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
             lsst::afw::geom::AffineTransform const &affineTransform
                 ///< affine transformation mapping source position to destination position
         ) :
-            SrcPosFunctor(),
+            PositionFunctor(),
             _destXY0(destXY0),
             _affineTransform() {
             _affineTransform = affineTransform.invert();
@@ -116,4 +135,4 @@ namespace detail {
 
 }}}} // namespace lsst::afw::math::detail
 
-#endif // !defined(LSST_AFW_MATH_DETAIL_SRCPOSFUNCTOR_H)
+#endif // !defined(LSST_AFW_MATH_DETAIL_POSITIONFUNCTOR_H)
