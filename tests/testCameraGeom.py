@@ -227,14 +227,27 @@ class CameraGeomTestCase(unittest.TestCase):
             cp = camera.makeCameraPoint(afwGeom.Point2D(1e6,1e6), FOCAL_PLANE)
             #Way off the focal plane
             self.assertRaises(RuntimeError, camera.transform, cp, PIXELS)
-            #non-existant camera sys in makeCameraPoint
-            self.assertRaises(RuntimeError, camera.makeCameraPoint, afwGeom.Point2D(0,0), CameraSys('abcd'))
-            #CameraSysPrefix camera sys in makeCameraPoint
-            self.assertRaises(TypeError, camera.makeCameraPoint, afwGeom.Point2D(0,0), CameraSysPrefix('PIXELS'))
             #non-existant destination camera system
             cp = camera.makeCameraPoint(afwGeom.Point2D(0,0), FOCAL_PLANE)
             self.assertRaises(RuntimeError, camera.transform, cp, CameraSys('abcd'))
 
+    def checkCamPoint(self, cp, testPt, testSys):
+        return (cp.getCameraSys().getSysName() == testSys.getSysName()) and\
+               (cp.getPoint() == testPt)
+
+    def testMakeCameraPoint(self):
+        point = afwGeom.Point2D(0,0)
+        for cw in self.cameraList:
+            camera = cw.camera
+            det = camera[camera.getNameIter().next()]
+            cp = camera.makeCameraPoint(point, FOCAL_PLANE)
+            self.assertTrue(self.checkCamPoint(cp, point, FOCAL_PLANE))
+            cp = camera.makeCameraPoint(point, det.makeCameraSys(PIXELS))
+            self.assertTrue(self.checkCamPoint(cp, point, det.makeCameraSys(PIXELS)))
+            #non-existant camera sys in makeCameraPoint
+            self.assertRaises(RuntimeError, camera.makeCameraPoint, point, CameraSys('abcd'))
+            #CameraSysPrefix camera sys in makeCameraPoint
+            self.assertRaises(TypeError, camera.makeCameraPoint, point, PIXELS)
         
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

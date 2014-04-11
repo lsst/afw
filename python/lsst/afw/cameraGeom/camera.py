@@ -42,38 +42,30 @@ class Camera(DetectorCollection):
     def getName(self):
         return self._name
 
-    def _transformToNativeSys(self, cameraPoint):
-        """Transform from the point's system to the camera native system (usually FOCAL_PLANE)
-        @param[in] cameraPoint: Point to transform
-        @return CameraPoint in camera native system
-        """
-        fromSys = cameraPoint.getCameraSys()
-        if not isinstance(fromSys, CameraSys):
-            raise TypeError("CameraSystem must be fully qualified in order to convert to native coordinates.")
-        return self._transformQualifiedSys(cameraPoint, self._nativeCameraSys)
-
-    def _tranformFromNativeSys(self, nativeCoord, toSys):
+    def _tranformFromNativeSys(self, nativePoint, toSys):
         """ Transform a point in the native coordinate system to another point in an
         arbitrary coordinate system.
-        @param[in] nativeCoord: CameraPoint in the native system for the camera
+        @param[in] nativePoint: CameraPoint in the native system for the camera
         @param[in] toSys: destination CameraSys
         @return CameraPoint in the destination CameraSys
         """
         if isinstance(toSys, CameraSysPrefix):
             # Must be in a detector.  Find the detector and transform it.
-            detList = self.findDetectors(nativeCoord)
+            detList = self.findDetectors(nativePoint)
             if len(detList) == 0:
                 raise RuntimeError("No detectors found")
             elif len(detList) > 1:
                 raise RuntimeError("More than one detector found")
             else:
                 det = detList[0]
-                return det.transform(nativeCoord, toSys)
+                return det.transform(nativePoint, toSys)
         else:
-            return self._transformQualifiedSys(nativeCoord, toSys)
+            return self._transformSingleSys(nativePoint, toSys)
 
-    def _transformQualifiedSys(self, cameraPoint, toSys):
-        """Transform a CameraPoint with a fully qualified CameraSys to another CameraSys
+    def _transformSingleSys(self, cameraPoint, toSys):
+        """Transform a CameraPoint with a CameraSys to another CameraSys. 
+        This method only handles a single jump, not a transform linked by a common native
+        sys.
         @param[in] cameraPoint: CameraPoint to transform
         @param[in] toSys: Destination coordinate system
         """
@@ -95,12 +87,12 @@ class Camera(DetectorCollection):
         """
         
         # first convert to focalPlane since the point may be in another overlapping detector
-        nativeCoord = self._transformToNativeSys(cameraPoint)
+        nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
         
         detectorList = []
         for detector in self:
             cameraSys = detector.makeCameraSys(PIXELS)
-            detPoint = detector.transform(nativeCoord, cameraSys)
+            detPoint = detector.transform(nativePoint, cameraSys)
             #This is safe because CameraPoint is not templated and getPoint() returns a Point2D.
             if afwGeom.Box2D(detector.getBBox()).contains(detPoint.getPoint()):
                 detectorList.append(detector)
@@ -122,8 +114,8 @@ class Camera(DetectorCollection):
         @return a CameraPoint in the new CameraSys
         """
         # All transform maps should know about the native coordinate system
-        nativeCoord = self._transformToNativeSys(cameraPoint)
-        return self._tranformFromNativeSys(nativeCoord, toSys)
+        nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
+        return self._tranformFromNativeSys(nativePoint, toSys)
 
 
     def makeCameraPoint(self, point, cameraSys):
@@ -137,7 +129,7 @@ class Camera(DetectorCollection):
             raise TypeError("Use the detector method to make a camera point from a CameraSysPrefix.")
         if cameraSys in self._transformMap:
             return CameraPoint(point, cameraSys)
-        for det in self:
-            if cameraSys in det.getTransformMap():
-                return CamereaPoint(point, cameraSys)
+        if cameraSys.hasDetectorName():
+            if cameraSys in self[cameraSys.getDetectorName()].getTransformMap():
+                return CameraPoint(point, cameraSys)
         raise RuntimeError("Could not find %s in any transformMap"%(cameraSys))
