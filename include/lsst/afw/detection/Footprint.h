@@ -209,6 +209,10 @@ private:
     bool _normalized;                    //!< Are the spans sorted?
 };
 
+void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
+                      lsst::afw::image::Image<boost::uint16_t>::Ptr argmin,
+                      lsst::afw::image::Image<boost::uint16_t>::Ptr dist);
+
 Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2);
 Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2);
 
