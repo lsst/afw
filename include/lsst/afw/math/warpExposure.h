@@ -592,12 +592,17 @@ namespace math {
             ///< Specifies whether to use CPU or GPU device
      );
 
+
+    /**
+     * @brief Warp an image with a LinearTranform about a specified point.
+     *        This enables warping an image of e.g. a PSF without translating the centroid.
+     */    
     template<typename DestImageT, typename SrcImageT>
     int warpCenteredImage(
         DestImageT &destImage,              ///< remapped %image
         SrcImageT const &srcImage,          ///< source %image
         lsst::afw::geom::LinearTransform const &linearTransform, ///< linear transformation to apply
-        lsst::afw::geom::Point2D const &centerPixel,   ///< pixel corresponding to location of linearTransform
+        lsst::afw::geom::Point2D const &centerPosition, ///< pixel position for location of linearTransform
         WarpingControl const &control,      ///< control parameters
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
             typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
@@ -613,7 +618,7 @@ namespace math {
         SrcImageT const &srcImage,          ///< source %image
         SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
         lsst::afw::geom::LinearTransform const &linearTransform, ///< linear transformation to apply
-        lsst::afw::geom::Point2D const &centerPixel,   ///< pixel corresponding to location of linearTransform
+        lsst::afw::geom::Point2D const &centerPosition,   ///< pixel corresponding to location of linearTransform
         int const interpLength = 0,         ///< Distance over which WCS can be linearily interpolated
             ///< 0 means no interpolation and uses an optimized branch of the code
             ///< 1 also performs no interpolation but it runs the interpolation code branch

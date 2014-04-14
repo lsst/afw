@@ -397,7 +397,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     SrcImageT const &srcImage,          ///< source %image
     afwMath::LanczosWarpingKernel const &lanczosKernel,     ///< warping kernel
     lsst::afw::math::SeparableKernel const &maskWarpingKernel,    ///< mask warping kernel
-    SrcPosFunctor const &computeSrcPos,      ///< Functor to compute source position
+    PositionFunctor const &computeSrcPos,      ///< Functor to compute source position
     int const interpLength,              ///< Distance over which WCS can be linearily interpolated, must be >0
     typename DestImageT::SinglePixel padValue, ///< value to use for undefined pixels
     const bool forceProcessing
@@ -517,7 +517,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwMath::LanczosWarpingKernel const &warpingKernel, \
         afwMath::SeparableKernel const &maskWarpingKernel, \
-        SrcPosFunctor const &computeSrcPos, \
+        PositionFunctor const &computeSrcPos, \
         int const interpLength, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         const bool forceProcessing); NL    \
@@ -526,7 +526,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwMath::LanczosWarpingKernel const &warpingKernel, \
         afwMath::SeparableKernel const &maskWarpingKernel, \
-        SrcPosFunctor const &computeSrcPos, \
+        PositionFunctor const &computeSrcPos, \
         int const interpLength, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue, \
         const bool forceProcessing);
