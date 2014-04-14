@@ -587,6 +587,7 @@ class SimpleTableTestCase(unittest.TestCase):
         catalog.writeFits("test.fits")
         # now read the table just written to disk, and see if it reads back correctly
         catalog = catalog.readFits("test.fits")
+        os.unlink("test.fits")
         metadata = catalog.getTable().getMetadata()
         self.assertEqual(catalog.getTable().getVersion(),5)
         self.assertFalse(metadata == None)
@@ -603,6 +604,7 @@ class SimpleTableTestCase(unittest.TestCase):
         catalog.writeFits("test.fits")
         # now read the table just written to disk, and see if it reads back correctly
         catalog = catalog.readFits("test.fits")
+        os.unlink("test.fits")
         metadata = catalog.getTable().getMetadata()
         self.assertEqual(catalog.getTable().getVersion(),5)
         self.assertFalse(metadata == None)
@@ -619,6 +621,7 @@ class SimpleTableTestCase(unittest.TestCase):
         catalog.writeFits("test.fits")
         # now read the table just written to disk, and see if it reads back correctly
         catalog = catalog.readFits("test.fits")
+        os.unlink("test.fits")
         metadata = catalog.getTable().getMetadata()
         self.assertEqual(catalog.getTable().getVersion(),5)
         self.assertFalse(metadata == None)
