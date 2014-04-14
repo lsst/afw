@@ -326,11 +326,11 @@ void FitsReader::_startRecords(BaseTable & table) {
     // remove it from the metadata while the table is in memory
     int version = 0;
     if (metadata) {
+        if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
         version = metadata->get<int>("AFW_TABLE_VERSION", 0);
         if (metadata->exists("AFW_TABLE_VERSION")) metadata->remove("AFW_TABLE_VERSION");
     }
     table.setVersion(version);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
 
     _row = -1;
     _nRows = _fits->countRows();
