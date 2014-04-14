@@ -164,6 +164,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
     int version = table->getVersion();
     metadata->set<int>("AFW_TABLE_VERSION", version);
     _fits->writeMetadata(*metadata);
+    // In case the metadata was attached to the table, clean it up.
     metadata->remove("AFW_TABLE_VERSION");
     _row = -1;
     _fits->addRows(nRows);

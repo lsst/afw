@@ -111,9 +111,8 @@ PTR(BaseTable) SimpleFitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     PTR(SimpleTable) table =  SimpleTable::make(schema, PTR(IdFactory)());
-    _startRecords(*table);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
+    _startRecords(*table);
     return table;
 }
 

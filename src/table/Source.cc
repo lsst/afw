@@ -292,7 +292,6 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
         metadata->remove((boost::format("TFORM%d") % _heavyVarCol).str());
     }
 
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     --_spanCol; // switch to 0-indexed rather than 1-indexed convention.
     --_peakCol;
     --_heavyPixCol;
@@ -300,19 +299,15 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     --_heavyVarCol;
     Schema schema(*metadata, true);
     PTR(SourceTable) table =  SourceTable::make(schema, PTR(IdFactory)());
+    table->setMetadata(metadata);
+    _startRecords(*table);
+    // None of the code below depends on _startRecords?
     LOAD_FLUX_SLOT(PSF, Psf);
     LOAD_FLUX_SLOT(MODEL, Model);
     LOAD_FLUX_SLOT(AP, Ap);
     LOAD_FLUX_SLOT(INST, Inst);
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
-    _startRecords(*table);
-    // get the version number from the metadata.  If the entry is not there, set to 0
-    // remove it from the metadata while the table is in memory
-    int version = metadata->get<int>("AFW_TABLE_VERSION", 0);
-    table->setVersion(version);
-    metadata->remove("AFW_TABLE_VERSION");
-    table->setMetadata(metadata);
     return table;
 }
 
@@ -459,6 +454,7 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
 PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
     return boost::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
+
 
 //-----------------------------------------------------------------------------------------------------------
 //----- Convenience functions for adding common measurements to Schemas -------------------------------------

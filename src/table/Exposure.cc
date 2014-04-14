@@ -218,9 +218,8 @@ PTR(BaseTable) ExposureFitsReader::_readTable() {
     _inTable = BaseTable::make(schema);
     _mapper = PersistenceSchema::get().makeReadMapper(schema);
     PTR(ExposureTable) table = ExposureTable::make(_mapper.getOutputSchema());
-    _startRecords(*table);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
+    _startRecords(*table);
     return table;
 }
 
