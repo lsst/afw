@@ -320,6 +320,18 @@ void FitsReader::_readSchema(
 }
 
 void FitsReader::_startRecords(BaseTable & table) {
+
+    PTR(daf::base::PropertyList) metadata = table.getMetadata();
+    // get the version number from the metadata.  If the entry is not there, set to 0
+    // remove it from the metadata while the table is in memory
+    int version = 0;
+    if (metadata) {
+        if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
+        version = metadata->get<int>("AFW_TABLE_VERSION", 0);
+        if (metadata->exists("AFW_TABLE_VERSION")) metadata->remove("AFW_TABLE_VERSION");
+    }
+    table.setVersion(version);
+
     _row = -1;
     _nRows = _fits->countRows();
     _processor = boost::make_shared<ProcessRecords>(_fits, _row);
@@ -331,9 +343,8 @@ PTR(BaseTable) FitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     PTR(BaseTable) table = BaseTable::make(schema);
-    _startRecords(*table);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
+    _startRecords(*table);
     return table;
 }
 

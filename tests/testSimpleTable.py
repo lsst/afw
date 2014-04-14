@@ -573,6 +573,60 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(k3a, k3b)
         self.assertEqual(schema.find(k3a).field.getDoc(), "f3b")
 
+    def testDM384(self):
+        """Test the versioning persistence in FitsReader and FitsWriter
+        """
+        # Now test with a BaseTable
+        schema = lsst.afw.table.Schema()
+        schema.addField("f1", doc="f1a", type="I")
+        schema.addField("f2", doc="f2a", type="Flag")
+        schema.addField("f3", doc="f3a", type="ArrayF", size=4)
+        catalog = lsst.afw.table.BaseCatalog(schema)
+        catalog.getTable().setVersion(5)
+        self.assertEqual(catalog.getTable().getVersion(), 5)
+        catalog.writeFits("test.fits")
+        # now read the table just written to disk, and see if it reads back correctly
+        catalog = catalog.readFits("test.fits")
+        os.unlink("test.fits")
+        metadata = catalog.getTable().getMetadata()
+        self.assertEqual(catalog.getTable().getVersion(),5)
+        self.assertFalse(metadata == None)
+        self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
+
+        # Now test with a SimpleTable
+        schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
+        schema.addField("f1", doc="f1a", type="I")
+        schema.addField("f2", doc="f2a", type="Flag")
+        schema.addField("f3", doc="f3a", type="ArrayF", size=4)
+        catalog = lsst.afw.table.SimpleCatalog(schema)
+        catalog.getTable().setVersion(5)
+        self.assertEqual(catalog.getTable().getVersion(), 5)
+        catalog.writeFits("test.fits")
+        # now read the table just written to disk, and see if it reads back correctly
+        catalog = catalog.readFits("test.fits")
+        os.unlink("test.fits")
+        metadata = catalog.getTable().getMetadata()
+        self.assertEqual(catalog.getTable().getVersion(),5)
+        self.assertFalse(metadata == None)
+        self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
+
+        #  Now a SourceTable
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        schema.addField("f1", doc="f1a", type="I")
+        schema.addField("f2", doc="f2a", type="Flag")
+        schema.addField("f3", doc="f3a", type="ArrayF", size=4)
+        catalog = lsst.afw.table.SourceCatalog(schema)
+        catalog.getTable().setVersion(5)
+        self.assertEqual(catalog.getTable().getVersion(), 5)
+        catalog.writeFits("test.fits")
+        # now read the table just written to disk, and see if it reads back correctly
+        catalog = catalog.readFits("test.fits")
+        os.unlink("test.fits")
+        metadata = catalog.getTable().getMetadata()
+        self.assertEqual(catalog.getTable().getVersion(),5)
+        self.assertFalse(metadata == None)
+        self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

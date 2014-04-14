@@ -109,9 +109,8 @@ PTR(BaseTable) AmpInfoFitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     PTR(AmpInfoTable) table = AmpInfoTable::make(schema);
-    _startRecords(*table);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
+    _startRecords(*table);
     return table;
 }
 
