@@ -79,6 +79,11 @@ CovarianceMatrixKey<T,N>::CovarianceMatrixKey(
             pex::exceptions::LengthErrorException,
             "Size of cov array (%d) is does not match with size inferred from sigma array (%d)"
         );
+        bool haveCov = false;
+        for (typename CovarianceKeyArray::const_iterator i = _cov.begin(); i != _cov.end(); ++i) {
+            if (i->isValid()) haveCov = true;
+        }
+        if (!haveCov) _cov.resize(0);
     }
 }
 
@@ -165,6 +170,7 @@ void CovarianceMatrixKey<T,N>::set(BaseRecord & record, Eigen::Matrix<T,N,N> con
 template <typename T, int N>
 bool CovarianceMatrixKey<T,N>::isValid() const {
     int const n = _sigma.size();
+    if (n < 1) return false;
     for (int i = 0; i < n; ++i) {
         if (!_sigma[i].isValid()) return false;
     }
@@ -173,21 +179,22 @@ bool CovarianceMatrixKey<T,N>::isValid() const {
 
 template <typename T, int N>
 bool CovarianceMatrixKey<T,N>::operator==(CovarianceMatrixKey const & other) const {
-    if (_sigma.size() != other._sigma.size()) return false;
+    if (_sigma.size() != other._sigma.size()) {
+        return false;
+    }
+    if (_cov.size() != other._cov.size()) {
+        return false;
+    }
     int const n = _sigma.size();
     int k = 0;
     for (int i = 0; i < n; ++i) {
-        if (_sigma[i] != other._sigma[i]) return false;
-        if (_cov.empty()) {
-            if (!other._cov.empty()) {
-                return false;
-            }
-        } else {
-            if (other._cov.empty()) {
-                return false;
-            } else {
-                for (int j = 0; j < i; ++j, ++k) {
-                    if (_cov[k] != other._cov[k]) return false;
+        if (_sigma[i] != other._sigma[i]) {
+            return false;
+        }
+        if (!_cov.empty()) {
+            for (int j = 0; j < i; ++j, ++k) {
+                if (_cov[k] != other._cov[k]) {
+                    return false;
                 }
             }
         }
