@@ -47,6 +47,8 @@ try:
 except NameError:
     display = False
 
+numpy.random.seed(5)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class FunctorKeysTestCase(lsst.utils.tests.TestCase):
@@ -116,6 +118,74 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(xxKey), p.getIxx())
         self.assertEqual(record.get(yyKey), p.getIyy())
         self.assertEqual(record.get(xyKey), p.getIxy())
+
+    def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
+        schema = lsst.afw.table.Schema()
+        sigmaKeys = []
+        covKeys = []
+        for i, pi in enumerate(parameterNames):
+            sigmaKeys.append(schema.addField("a.%sSigma" % pi, type=fieldType, doc="uncertainty on %s" % pi))
+            if varianceOnly:
+                continue
+            for pj in parameterNames[:i]:
+                # intentionally be inconsistent about whether we store the lower or upper triangle,
+                # and occasionally don't store anything at all
+                r = numpy.random.rand()
+                if r < 0.3:
+                    k = schema.addField("a.%s_%s_Cov" % (pi, pj), type=fieldType,
+                                        doc="%s,%s covariance" % (pi, pj))
+                elif r < 0.6:
+                    k = schema.addField("a.%s_%s_Cov" % (pj, pi), type=fieldType,
+                                        doc="%s,%s covariance" % (pj, pi))
+                else:
+                    k = lsst.afw.table.Key[fieldType]()
+                covKeys.append(k)
+        if dynamicSize:
+            FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrix%d%sKey"
+                                     % (len(parameterNames), fieldType.lower()))
+        else:
+            FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrixX%sKey"
+                                     % fieldType.lower())
+        fKey1 = FunctorKeyType(sigmaKeys, covKeys)
+        fKey2 = FunctorKeyType(schema["a"], parameterNames)
+        self.assertTrue(fKey1.isValid())
+        self.assertTrue(fKey2.isValid())
+        self.assertEqual(fKey1, fKey2)
+        fKey3 = FunctorKeyType()
+        self.assertNotEqual(fKey3, fKey1)
+        self.assertFalse(fKey3.isValid())
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        k = 0
+        for i in range(len(parameterNames)):
+            record.set(sigmaKeys[i], ((i+1)*10 + (i+1))**0.5)
+            if varianceOnly: continue
+            for j in range(i):
+                if covKeys[k].isValid():
+                    record.set(covKeys[k], (i+1)*10 + (j+1))
+                k += 1
+        matrix1 = record.get(fKey1)
+        matrix2 = record.get(fKey2)
+        self.assertClose(matrix1, matrix2)
+        k = 0
+        for i in range(len(parameterNames)):
+            self.assertClose(matrix1[i,i], (i+1)*10 + (i+1), rtol=1E-7)
+            if varianceOnly: continue
+            for j in range(i):
+                if covKeys[k].isValid():
+                    self.assertClose(matrix1[i,j], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(matrix2[i,j], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(matrix1[j,i], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(matrix2[j,i], (i+1)*10 + (j+1), rtol=1E-7)
+                k += 1
+
+    def testCovarianceMatrixKey(self):
+        for fieldType in ("F", "D"):
+            for parameterNames in (["x", "y"], ["xx", "yy", "xy"]):
+                for varianceOnly in (True, False):
+                    for dynamicSize in (True, False):
+                        self.doTestCovarianceMatrixKey(fieldType, parameterNames, varianceOnly, dynamicSize)
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
