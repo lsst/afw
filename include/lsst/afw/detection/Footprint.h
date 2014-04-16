@@ -293,6 +293,15 @@ public:
         bool doClip=true
     ) const;
 
+    /**
+     *  @brief Update the Footprint in-place to be the union of itself and all its children
+     *
+     *  Only spans will be modified; peaks will be left unchanged.
+     *
+     *  If the union of all children with this is disjoint, throw RuntimeErrorException.
+     */
+    void include(std::vector<PTR(Footprint)> const & children);
+
     bool isPersistable() const { return true; }
 
 protected:

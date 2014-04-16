@@ -39,6 +39,7 @@ import unittest
 import numpy
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
+import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
 import lsst.afw.coord as afwCoord
@@ -170,7 +171,7 @@ class ThresholdTestCase(unittest.TestCase):
         except:
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
         
-class FootprintTestCase(unittest.TestCase):
+class FootprintTestCase(tests.TestCase):
     """A test case for Footprint"""
     def setUp(self):
         self.foot = afwDetect.Footprint()
@@ -837,7 +838,6 @@ class FootprintTestCase(unittest.TestCase):
         self.assertTrue(numpy.all(dm[4, :3] == 0))
         self.assertTrue(numpy.all(dm[4, 7:] == 0))
 
-
     def testMergeFootprints(self):
         f1 = self.foot
         f2 = afwDetect.Footprint()
@@ -974,6 +974,29 @@ class FootprintTestCase(unittest.TestCase):
             plt.imshow(img.getArray(), **ima)
             plt.savefig('clipnz3.png')
         
+    def testInclude(self):
+        """Test that we can expand a Footprint to include its neighbors."""
+        region = afwGeom.Box2I(afwGeom.Point2I(-6, -6), afwGeom.Point2I(6, 6))
+        parent = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-2, -2), afwGeom.Point2I(2, 2)), region)
+        parent.getPeaks().push_back(afwDetect.Peak(0, 0))
+        child1 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-3, 0), afwGeom.Point2I(0, 3)), region)
+        child1.getPeaks().push_back(afwDetect.Peak(-1, 1))
+        child2 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-4, -3), afwGeom.Point2I(-1, 0)), region)
+        child3 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(4, -1), afwGeom.Point2I(6, 1)))
+        merge12 = afwDetect.Footprint(parent)
+        merge12.include([child1, child2])
+        self.assertTrue(merge12.getBBox().contains(parent.getBBox()))
+        self.assertTrue(merge12.getBBox().contains(child1.getBBox()))
+        self.assertTrue(merge12.getBBox().contains(child2.getBBox()))
+        mask12a = afwImage.MaskU(region)
+        mask12b = afwImage.MaskU(region)
+        afwDetect.setMaskFromFootprint(mask12a, parent, 1)
+        afwDetect.setMaskFromFootprint(mask12a, child1, 1)
+        afwDetect.setMaskFromFootprint(mask12a, child2, 1)
+        afwDetect.setMaskFromFootprint(mask12b, merge12, 1)
+        self.assertEqual(mask12a.getArray().sum(), merge12.getArea())
+        self.assertClose(mask12a.getArray(), mask12b.getArray(), rtol=0, atol=0)
+        self.assertRaisesLsstCpp(pexExcept.RuntimeErrorException, parent.include, [child1, child2, child3])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
