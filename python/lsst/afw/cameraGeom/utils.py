@@ -48,7 +48,7 @@ try:
 except NameError:
     display = False
 
-def prepareWcsData(wcs, amp):
+def prepareWcsData(wcs, amp, isTrimmed=True):
     """
     Put Wcs from an Amp image into CCD coordinates
     @param wcs: WCS object to modify in place
@@ -56,8 +56,14 @@ def prepareWcsData(wcs, amp):
     """
     if not amp.getHasRawInfo():
         raise RuntimeError("Cannot modify wcs without raw amp information")
-    ampDims = amp.getRawDataBBox().getDimensions()
-    wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampDims)
+    if isTrimmed:
+        ampBox = amp.getRawDataBBox()
+    else:
+        ampBox = amp.getRawBBox()
+    wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampBox.getDimensions())
+    #Shift WCS for trimming
+    wcs.shiftReferencePixel(-ampBox.getMinX(), -ampBox.getMinY())
+    #Account for shift of amp data in larger ccd matrix
     offset = amp.getRawXYOffset()
     wcs.shiftReferencePixel(offset.getX(), offset.getY())
     
