@@ -113,6 +113,8 @@ public:
     const Span& addSpan(Span const& span);
     const Span& addSpan(Span const& span, int dx, int dy);
 
+    const Span& addSpanInSeries(const int y, const int x0, const int x1);
+
     void shift(int dx, int dy);
     void shift(geom::ExtentI d) {shift(d.getX(), d.getY());}
 
@@ -127,6 +129,9 @@ public:
     void setRegion(geom::Box2I const & region) { _region = region; }
 
     void clipTo(geom::Box2I const & bbox);
+
+    template<typename PixelT>
+    void clipToNonzero(lsst::afw::image::Image<PixelT> const& img);
 
     bool contains(geom::Point2I const& pix) const;
 
@@ -212,6 +217,13 @@ private:
     mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
     bool _normalized;                    //!< Are the spans sorted?
 };
+
+void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
+                      lsst::afw::image::Image<boost::uint16_t>::Ptr argmin,
+                      lsst::afw::image::Image<boost::uint16_t>::Ptr dist);
+
+Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2);
+Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2);
 
 Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);

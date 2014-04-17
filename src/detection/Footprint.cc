@@ -400,6 +400,47 @@ const Span& Footprint::addSpan(
 ) {
     return addSpan(span._y + dy, span._x0 + dx, span._x1 + dx);
 }
+
+/**
+ * Add a Span to a Footprint, where the Spans MUST be added in order
+ * (first in increasing y, then increasing x), and MUST NOT be
+ * overlapping.  This method does NOT reset the _normalized boolean.
+ */
+const Span& Footprint::addSpanInSeries(
+    int const y, //!< row value
+    int const x0, //!< starting column
+    int const x1 //!< ending column
+) {
+    if (x1 < x0) {
+        return this->addSpanInSeries(y, x1, x0);
+    }
+    if (_spans.size() == 0) {
+      const Span& s = this->addSpan(y, x0, x1);
+      _normalized = true;
+      return s;
+    }
+    // merge contiguous spans
+    Span::Ptr lastspan = _spans.back();
+    if ((y == lastspan->getY()) &&
+        (x0 == (lastspan->getX1() + 1))) {
+      // contiguous.
+      lastspan->_x1 = x1;
+      _area += (1 + x1 - x0);
+      _bbox.include(geom::Point2I(x1,y));
+      return *lastspan;
+    }
+    if (!((y  >  lastspan->getY()) ||
+          (x0 > (lastspan->getX1() + 1)))) {
+        throw LSST_EXCEPT
+            (lsst::pex::exceptions::InvalidParameterException,
+             str(boost::format("addSpanInSeries: new span %i,[%i,%i] is NOT in series after last span %i,[%i,%i]") %
+                 y % x0 % x1 % lastspan->getY() % lastspan->getX0() % lastspan->getX1()));
+    }
+    const Span& s = this->addSpan(y, x0, x1);
+    _normalized = true;
+    return s;
+}
+
 /**
  * Shift a Footprint by <tt>(dx, dy)</tt>
  */
@@ -548,6 +589,63 @@ namespace {
                 }
             }
         }
+    }
+}
+
+/**
+   Clips the given *Footprint* to the region in the *Image* containing
+   non-zero values.  The clipping drops spans that are totally zero,
+   and moves endpoints to non-zero; it does not split spans that have
+   internal zeros.
+*/
+template<typename PixelT>
+void
+Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
+    typedef typename lsst::afw::image::Image<PixelT> ImageT;
+    int ix0 = img.getX0();
+    int iy0 = img.getY0();
+    PixelT zero = 0;
+
+    for (SpanList::iterator s = _spans.begin(); s < _spans.end(); s++) {
+        int y = (*s)->getY();
+        int x0 = (*s)->getX0();
+        int x1 = (*s)->getX1();
+        typename ImageT::x_iterator img_it = img.row_begin(y - iy0) + (x0 - ix0);
+        int leftx, rightx;
+        // find zero pixels on the left...
+        for (leftx = x0; leftx <= x1; ++leftx, ++img_it) {
+            if (*img_it != zero) {
+                break;
+            }
+        }
+        if (leftx > x1) {
+            // whole span is zero; drop it.
+            _normalized = false;
+            _spans.erase(s);
+            s--;
+            continue;
+        }
+        // find zero pixels on the right...
+        img_it = img.row_begin(y - iy0) + (x1 - ix0);
+        for (rightx = x1; rightx >= leftx; --rightx, --img_it) {
+            if (*img_it != zero) {
+                break;
+            }
+        }
+        if (leftx != x0) {
+            (*s)->_x0 = leftx;
+            _normalized = false;
+        }
+        if (rightx != x1) {
+            (*s)->_x1 = rightx;
+            _normalized = false;
+        }
+    }
+
+    if (_spans.empty()) {
+        _bbox = geom::Box2I();
+        _area = 0;
+        _normalized = true;
     }
 }
 
@@ -918,6 +1016,41 @@ PTR(Footprint) Footprint::transform(
     }
     return fpNew;
 }
+
+/**
+   Returns *true* iff this Footprint satisfies the "normalized" conditions.
+
+   Useful as an "assert" during algorithm development.
+ */
+bool _checkNormalized(Footprint const& foot) {
+  // Ugly!
+  Footprint copy(foot);
+  copy.normalize();
+  if (copy.getArea() != foot.getArea()) {
+    return false;
+  }
+  if (copy.getSpans().size() != foot.getSpans().size()) {
+    return false;
+  }
+  const Footprint::SpanList& spansa = foot.getSpans();
+  const Footprint::SpanList& spansb = copy.getSpans();
+  Footprint::SpanList::const_iterator spa = spansa.begin();
+  Footprint::SpanList::const_iterator spb = spansb.begin();
+  for (; spa != spansa.end(); spa++, spb++) {
+    if ((*spa)->getY() != (*spb)->getY()) {
+      return false;
+    }
+    if ((*spa)->getX0() != (*spb)->getX0()) {
+      return false;
+    }
+    if ((*spa)->getX1() != (*spb)->getX1()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 
 /************************************************************************************************************/
 /**
@@ -1295,6 +1428,206 @@ Footprint::Ptr growFootprintSlow(
 }
 
 /************************************************************************************************************/
+
+namespace {
+    Footprint::Ptr _mergeFootprints(Footprint const& foota, Footprint const& footb) {
+        PTR(Footprint) foot(new Footprint());
+
+        const Footprint::PeakList& pka = foota.getPeaks();
+        const Footprint::PeakList& pkb = footb.getPeaks();
+        Footprint::PeakList& pk = foot->getPeaks();
+        pk.reserve(pka.size() + pkb.size());
+        pk.insert(pk.begin(), pka.begin(), pka.end());
+        pk.insert(pk.end()-1, pkb.begin(), pkb.end());
+        assert(pk.size() == (pka.size() + pkb.size()));
+
+        const Footprint::SpanList& spansa = foota.getSpans();
+        const Footprint::SpanList& spansb = footb.getSpans();
+        Footprint::SpanList::const_iterator spa = spansa.begin();
+        Footprint::SpanList::const_iterator spb = spansb.begin();
+        Footprint::SpanList::const_iterator enda = spansa.end();
+        Footprint::SpanList::const_iterator endb = spansb.end();
+
+        foot->getSpans().reserve(std::max(spansa.size(), spansb.size()));
+
+        while ((spa != enda) && (spb != endb)) {
+            int y = (*spa)->getY();
+            int x0 = (*spa)->getX0();
+            int x1 = (*spa)->getX1();
+            int yb  = (*spb)->getY();
+            int xb0 = (*spb)->getX0();
+            int xb1 = (*spb)->getX1();
+
+            if ((y < yb) || (y == yb && (x1 < (xb0-1)))) {
+                // A is earlier -- add A
+                foot->addSpanInSeries(y, x0, x1);
+                spa++;
+                continue;
+            }
+            if ((yb < y) || (y == yb && (xb1 < (x0-1)))) {
+                // B is earlier -- add B
+                foot->addSpanInSeries(yb, xb0, xb1);
+                spb++;
+                continue;
+            }
+
+            assert(yb == y);
+            // Overlap -- find connected spans from both iterators.
+            x0 = std::min(x0, xb0);
+            x1 = std::max(x1, xb1);
+            // Union all connected spans
+            spa++;
+            spb++;
+            while (1) {
+                if ((spa != enda) &&
+                    ((*spa)->getY() == y) &&
+                    ((*spa)->getX0() <= (x1+1))) {
+                    // *spa continues this span.
+                    x1 = std::max(x1, (*spa)->getX1());
+                    spa++;
+                    continue;
+                }
+                if ((spb != endb) &&
+                    ((*spb)->getY() == y) &&
+                    ((*spb)->getX0() <= (x1+1))) {
+                    // *spb continues this span.
+                    x1 = std::max(x1, (*spb)->getX1());
+                    spb++;
+                    continue;
+                }
+                break;
+            }
+            foot->addSpanInSeries(y, x0, x1);
+        }
+        // At this point either "spa" or "spb" is at the end.
+
+        // Add any remaining spans from "A".
+        for (; spa != enda; spa++) {
+            foot->addSpanInSeries((*spa)->getY(), (*spa)->getX0(), (*spa)->getX1());
+        }
+        // Add any remaining spans from "B".
+        for (; spb != endb; spb++) {
+            foot->addSpanInSeries((*spb)->getY(), (*spb)->getX0(), (*spb)->getX1());
+        }
+        return foot;
+    }
+}
+
+/**
+   Merges two Footprints -- appends their peaks, and unions their
+   spans, returning a new Footprint.
+ */
+Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2) {
+    foot1.normalize();
+    foot2.normalize();
+    return _mergeFootprints(foot1, foot2);
+}
+/**
+   Merges two Footprints -- appends their peaks, and unions their
+   spans, returning a new Footprint.
+
+   This const version requires that both input footprints are
+   normalized (and will raise an exception if not).
+ */
+Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
+    if (!foot1.isNormalized() || !foot2.isNormalized()) {
+        throw LSST_EXCEPT
+            (lsst::pex::exceptions::InvalidParameterException,
+             "mergeFootprints(const Footprints) requires normalize()d Footprints.");
+    }
+    return _mergeFootprints(foot1, foot2);
+}
+
+/************************************************************************************************************/
+
+void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
+                      image::Image<boost::uint16_t>::Ptr argmin,
+                      image::Image<boost::uint16_t>::Ptr dist)
+{
+    /*
+     * insert the footprints into an image, set all the pixels to the Manhatten distance from the
+     * nearest set pixel.
+     */
+    typedef boost::uint16_t dtype;
+    typedef boost::uint16_t itype;
+
+    itype nil = 0xffff;
+
+    geom::Box2I bbox = argmin->getBBox(image::PARENT);
+    *argmin = 0;
+    //image::Image<dtype>::Ptr dist(new image::Image<dtype>(bbox));
+    *dist = 0;
+
+    int x0 = bbox.getMinX();
+    int y0 = bbox.getMinY();
+
+    for (size_t i=0; i<foots.size(); i++) {
+        // Set all the pixels in the footprint to 1
+        set_footprint_id<itype>(argmin, *foots[i], i, -x0, -y0);
+        set_footprint_id<dtype>(dist,   *foots[i], 1, -x0, -y0);
+    }
+
+    int const height = dist->getHeight();
+    int const width  = dist->getWidth();
+
+    // traverse from bottom left to top right
+    for (int y = 0; y != height; ++y) {
+        image::Image<dtype>::xy_locator dim = dist->xy_at(0, y);
+        image::Image<itype>::xy_locator aim = argmin->xy_at(0, y);
+        for (int x = 0; x != width; ++x, ++dim.x(), ++aim.x()) {
+            if (dim(0, 0) == 1) {
+                // first pass and pixel was on, it gets a zero
+                dim(0, 0) = 0;
+                // its argmin is already set
+            } else {
+                // pixel was off. It is at most the sum of lengths of the array away from a pixel that is on
+                dim(0, 0) = width + height;
+                aim(0, 0) = nil;
+                // or one more than the pixel to the north
+                if (y > 0) {
+                    dtype ndist = dim(0,-1) + 1;
+                    if (ndist < dim(0,0)) {
+                        dim(0,0) = ndist;
+                        aim(0,0) = aim(0,-1);
+                    }
+                }
+                // or one more than the pixel to the west
+                if (x > 0) {
+                    dtype ndist = dim(-1,0) + 1;
+                    if (ndist < dim(0,0)) {
+                        dim(0,0) = ndist;
+                        aim(0,0) = aim(-1,0);
+                    }
+                }
+            }
+        }
+    }
+    // traverse from top right to bottom left
+    for (int y = height - 1; y >= 0; --y) {
+        image::Image<dtype>::xy_locator dim = dist->xy_at(width-1, y);
+        image::Image<itype>::xy_locator aim = argmin->xy_at(width-1, y);
+        for (int x = width - 1; x >= 0; --x, --dim.x(), --aim.x()) {
+            // either what we had on the first pass or one more than the pixel to the south
+            if (y + 1 < height) {
+                dtype ndist = dim(0,1) + 1;
+                if (ndist < dim(0,0)) {
+                    dim(0,0) = ndist;
+                    aim(0,0) = aim(0,1);
+                }
+            }
+            // or one more than the pixel to the east
+            if (x + 1 < width) {
+                dtype ndist = dim(1,0) + 1;
+                if (ndist < dim(0,0)) {
+                    dim(0,0) = ndist;
+                    aim(0,0) = aim(1,0);
+                }
+            }
+        }
+    }
+}
+
+
 /**
  * Grow a Footprint by ngrow pixels, returning a new Footprint
  */
@@ -1928,11 +2261,17 @@ void copyWithinFootprint(Footprint const&,                          \
 template \
 void copyWithinFootprint(Footprint const&,                          \
                          PTR(lsst::afw::image::MaskedImage<TYPE>) const,  \
-                         PTR(lsst::afw::image::MaskedImage<TYPE>));       \
+                         PTR(lsst::afw::image::MaskedImage<TYPE>));	\
+template								\
+ void Footprint::clipToNonzero(lsst::afw::image::Image<TYPE> const&);	\
 
 
 INSTANTIATE_FLOAT(float);
 INSTANTIATE_FLOAT(double);
+// There's no reason these shouldn't have setImageFromFootprint(), etc, instantiated
+INSTANTIATE_FLOAT(boost::uint16_t);
+INSTANTIATE_FLOAT(int);
+INSTANTIATE_FLOAT(boost::uint64_t);
 
 
 #define INSTANTIATE_MASK(PIXEL)                                         \
