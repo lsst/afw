@@ -59,7 +59,13 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateVi
                           str(boost::format("Both width and height must be non-negative: %d, %d")
                               % dimensions.getX() % dimensions.getY()));
     }
-
+    if (dimensions.getX() != 0 && dimensions.getY() > std::numeric_limits<int>::max()/dimensions.getX()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LengthErrorException,
+            str(boost::format("Image dimensions (%d x %d) too large; int overflow detected.")
+                % dimensions.getX() % dimensions.getY())
+        );
+    }
     std::pair<Manager::Ptr,PixelT*> r = ndarray::SimpleManager<PixelT>::allocate(
         dimensions.getX() * dimensions.getY()
     );
