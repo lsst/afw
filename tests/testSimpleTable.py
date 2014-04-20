@@ -37,6 +37,12 @@ import os
 import unittest
 import numpy
 
+try:
+    import pyfits
+except ImportError:
+    pyfits = None
+    print "WARNING: pyfits not available; some tests will not be run"
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
@@ -626,6 +632,66 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertEqual(catalog.getTable().getVersion(),5)
         self.assertFalse(metadata == None)
         self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
+
+    def testReplacePeriods(self):
+        """Test version-dependent replacement of periods with underscores.
+        """
+        schema1 = lsst.afw.table.Schema()
+        schema1.addField("a.b.c", type=float, doc="test field 1")
+        schema1.addField("a.b.d", type="Flag", doc="test field 2")
+        schema1.addField("a.b.e", type=str, doc="test field 3", size=16)
+        schema2 = lsst.afw.table.Schema()
+        schema2.addField("a_b_c", type=float, doc="test field 1")
+        schema2.addField("a_b_d", type="Flag", doc="test field 2")
+        schema2.addField("a_b_e", type=str, doc="test field 3", size=16)
+        filename = "ReplacePeriods.fits"
+
+        # For version 0, we should replace periods with underscores when we write
+        # and do the reverse when we read
+        cat = lsst.afw.table.BaseCatalog(schema1)
+        cat.setVersion(0)
+        cat.writeFits(filename)
+        if pyfits is not None:
+            fits = pyfits.open(filename)
+            print repr(fits[1].header)
+            self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
+            self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
+            self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
+        cat = lsst.afw.table.BaseCatalog.readFits(filename)
+        self.assertTrue("a.b.c" in cat.schema)
+        self.assertTrue("a.b.d" in cat.schema)
+        self.assertTrue("a.b.e" in cat.schema)
+        os.remove(filename)
+
+        # For version 1, we shouldn't do any such replacement
+        cat = lsst.afw.table.BaseCatalog(schema1)
+        cat.setVersion(1)
+        cat.writeFits(filename)
+        if pyfits is not None:
+            fits = pyfits.open(filename)
+            self.assertEqual(fits[1].header["TTYPE2"], "a.b.c")
+            self.assertEqual(fits[1].header["TTYPE3"], "a.b.e")
+            self.assertEqual(fits[1].header["TFLAG1"], "a.b.d")
+        cat = lsst.afw.table.BaseCatalog.readFits(filename)
+        self.assertTrue("a.b.c" in cat.schema)
+        self.assertTrue("a.b.d" in cat.schema)
+        self.assertTrue("a.b.e" in cat.schema)
+        os.remove(filename)
+
+        # Also make sure that version 1 underscores are preserved
+        cat = lsst.afw.table.BaseCatalog(schema2)
+        cat.setVersion(1)
+        cat.writeFits(filename)
+        if pyfits is not None:
+            fits = pyfits.open(filename)
+            self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
+            self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
+            self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
+        cat = lsst.afw.table.BaseCatalog.readFits(filename)
+        self.assertTrue("a_b_c" in cat.schema)
+        self.assertTrue("a_b_d" in cat.schema)
+        self.assertTrue("a_b_e" in cat.schema)
+        os.remove(filename)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

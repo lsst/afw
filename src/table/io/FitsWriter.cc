@@ -23,7 +23,9 @@ struct ProcessSchema {
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         std::string name = item.field.getName();
-        std::replace(name.begin(), name.end(), '.', '_');
+        if (version < 1) {
+            std::replace(name.begin(), name.end(), '.', '_');
+        }
         int n = fits->addColumn<typename Field<T>::Element>(
             name, item.field.getElementCount(),
             item.field.getDoc()
@@ -39,7 +41,9 @@ struct ProcessSchema {
 
     void operator()(SchemaItem<std::string> const & item) const {
         std::string name = item.field.getName();
-        std::replace(name.begin(), name.end(), '.', '_');
+        if (version < 1) {
+            std::replace(name.begin(), name.end(), '.', '_');
+        }
         int n = fits->addColumn<std::string>(
             name, item.field.getElementCount(),
             item.field.getDoc()
@@ -52,7 +56,9 @@ struct ProcessSchema {
 
     void operator()(SchemaItem<Flag> const & item) const {
         std::string name = item.field.getName();
-        std::replace(name.begin(), name.end(), '.', '_');
+        if (version < 1) {
+            std::replace(name.begin(), name.end(), '.', '_');
+        }
         fits->writeColumnKey("TFLAG", nFlags, name);
         if (!item.field.getDoc().empty()) {
             // We use a separate key TFDOCn for documentation instead of the comment on TFLAGn so
@@ -64,8 +70,8 @@ struct ProcessSchema {
     }
 
     // Create and apply the functor to a schema.
-    static void apply(Fits & fits, Schema const & schema) {
-        ProcessSchema f = { &fits, 0 };
+    static void apply(Fits & fits, Schema const & schema, int version) {
+        ProcessSchema f = { &fits, 0, version };
         schema.forEach(boost::ref(f));
     }
 
@@ -141,6 +147,7 @@ struct ProcessSchema {
 
     Fits * fits;
     mutable int nFlags;
+    int version;
 };
 
 } // anonymous
@@ -155,7 +162,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
-    ProcessSchema::apply(*_fits, schema);
+    ProcessSchema::apply(*_fits, schema, table->getVersion());
     // write the version number to the fits header, plus any other metadata
     PTR(daf::base::PropertyList) metadata = table->getMetadata();
     if (!metadata) {
