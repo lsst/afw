@@ -705,14 +705,17 @@ void Footprint::include(std::vector<PTR(Footprint)> const & others) {
         setMaskFromFootprint(&mask, **i, bits);
     }
     FootprintSet fpSet(mask, Threshold(bits, Threshold::BITMASK));
-    if (fpSet.getFootprints()->size() != 1u) {
-        throw LSST_EXCEPT(
-            pex::exceptions::RuntimeErrorException,
-            (boost::format("Footprint::include() result is disjoint; got %d distinct Footprints")
-             % fpSet.getFootprints()->size()).str()
-        );
+    if (fpSet.getFootprints()->empty()) {
+        _spans.clear();
+    } else if (fpSet.getFootprints()->size() == 1u) {
+        _spans.swap(fpSet.getFootprints()->front()->getSpans());
+    } else {
+        _spans.clear();
+        for (std::vector<PTR(Footprint)>::const_iterator i = fpSet.getFootprints()->begin();
+             i != fpSet.getFootprints()->end(); ++i) {
+            _spans.insert(_spans.end(), (**i).getSpans().begin(), (**i).getSpans().end());
+        }
     }
-    _spans.swap(fpSet.getFootprints()->front()->getSpans());
     _normalized = false;
     normalize();
 }
