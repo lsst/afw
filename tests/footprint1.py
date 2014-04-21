@@ -986,9 +986,7 @@ class FootprintTestCase(utilsTests.TestCase):
             plt.savefig('clipnz3.png')
 
     def testInclude(self):
-        """Test that we can expand a Footprint to include the union of itself and all others
-        provided (must be non-disjoint).
-        """
+        """Test that we can expand a Footprint to include the union of itself and all others provided."""
         region = afwGeom.Box2I(afwGeom.Point2I(-6, -6), afwGeom.Point2I(6, 6))
         parent = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-2, -2), afwGeom.Point2I(2, 2)), region)
         parent.addPeak(0, 0, float("NaN"))
@@ -996,20 +994,21 @@ class FootprintTestCase(utilsTests.TestCase):
         child1.addPeak(-1, 1, float("NaN"))
         child2 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-4, -3), afwGeom.Point2I(-1, 0)), region)
         child3 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(4, -1), afwGeom.Point2I(6, 1)))
-        merge12 = afwDetect.Footprint(parent)
-        merge12.include([child1, child2])
-        self.assertTrue(merge12.getBBox().contains(parent.getBBox()))
-        self.assertTrue(merge12.getBBox().contains(child1.getBBox()))
-        self.assertTrue(merge12.getBBox().contains(child2.getBBox()))
-        mask12a = afwImage.MaskU(region)
-        mask12b = afwImage.MaskU(region)
-        afwDetect.setMaskFromFootprint(mask12a, parent, 1)
-        afwDetect.setMaskFromFootprint(mask12a, child1, 1)
-        afwDetect.setMaskFromFootprint(mask12a, child2, 1)
-        afwDetect.setMaskFromFootprint(mask12b, merge12, 1)
-        self.assertEqual(mask12a.getArray().sum(), merge12.getArea())
-        self.assertClose(mask12a.getArray(), mask12b.getArray(), rtol=0, atol=0)
-        self.assertRaisesLsstCpp(pexExcept.RuntimeError, parent.include, [child1, child2, child3])
+        merge123 = afwDetect.Footprint(parent)
+        merge123.include([child1, child2, child3])
+        self.assertTrue(merge123.getBBox().contains(parent.getBBox()))
+        self.assertTrue(merge123.getBBox().contains(child1.getBBox()))
+        self.assertTrue(merge123.getBBox().contains(child2.getBBox()))
+        self.assertTrue(merge123.getBBox().contains(child3.getBBox()))
+        mask123a = afwImage.MaskU(region)
+        mask123b = afwImage.MaskU(region)
+        afwDetect.setMaskFromFootprint(mask123a, parent, 1)
+        afwDetect.setMaskFromFootprint(mask123a, child1, 1)
+        afwDetect.setMaskFromFootprint(mask123a, child2, 1)
+        afwDetect.setMaskFromFootprint(mask123a, child3, 1)
+        afwDetect.setMaskFromFootprint(mask123b, merge123, 1)
+        self.assertEqual(mask123a.getArray().sum(), merge123.getArea())
+        self.assertClose(mask123a.getArray(), mask123b.getArray(), rtol=0, atol=0)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
