@@ -230,6 +230,7 @@ void FitsReader::_readSchema(
     bool stripMetadata
 ) {
     FitsSchema intermediate;
+    int version = metadata.get("AFW_TABLE_VERSION", 0);
     int flagCol = metadata.get("FLAGCOL", 0);
     if (flagCol > 0) {
         metadata.remove("FLAGCOL");
@@ -246,7 +247,9 @@ void FitsReader::_readSchema(
                 i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
             std::string v = metadata.get<std::string>(*key);
-            std::replace(v.begin(), v.end(), '_', '.');
+            if (version < 1) {
+                std::replace(v.begin(), v.end(), '_', '.');
+            }
             intermediate.asColSet().modify(i, FitsSchema::SetName(v));
             if (i->doc.empty()) // don't overwrite if already set with TDOCn
                 intermediate.asColSet().modify(i, FitsSchema::SetDoc(metadata.getComment(*key)));
@@ -258,7 +261,9 @@ void FitsReader::_readSchema(
                 i = intermediate.asBitSet().insert(i, FitsSchemaItem(-1, bit));
             }
             std::string v = metadata.get<std::string>(*key);
-            std::replace(v.begin(), v.end(), '_', '.');
+            if (version < 1) {
+                std::replace(v.begin(), v.end(), '_', '.');
+            }
             intermediate.asBitSet().modify(i, FitsSchema::SetName(v));
             if (i->doc.empty()) // don't overwrite if already set with TFDOCn
                 intermediate.asBitSet().modify(i, FitsSchema::SetDoc(metadata.getComment(*key)));
