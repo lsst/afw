@@ -336,6 +336,32 @@ def asKey(self):
 %template(SchemaVector) std::vector<lsst::afw::table::Schema>;
 %template(SchemaMapperVector) std::vector<lsst::afw::table::SchemaMapper>;
 
+// =============== FunctorKeys ==============================================================================
+
+// We need the extend blocks in the macros below because we've removed the FunctorKey overloads of
+// get() and set() in the .h file via an #ifdef SWIG.  We had to do that to avoid instantiating the
+// FunctorKey overloads for the same types we instantiate the non-FunctorKey overloads (when you use
+// Swig's %template statement on a templated function or member function, if instantiates all
+// overloads).
+
+%include "lsst/afw/table/FunctorKey.h"
+
+%define %declareOutputFunctorKey(PYNAME, U...)
+%shared_ptr(lsst::afw::table::OutputFunctorKey< U >);
+%template(OutputFunctorKey ## PYNAME) lsst::afw::table::OutputFunctorKey< U >;
+%enddef
+
+%define %declareInputFunctorKey(PYNAME, U...)
+%shared_ptr(lsst::afw::table::InputFunctorKey< U >);
+%template(InputFunctorKey ## PYNAME) lsst::afw::table::InputFunctorKey< U >;
+%enddef
+
+%define %declareFunctorKey(PYNAME, U...)
+%declareOutputFunctorKey(PYNAME, U)
+%declareInputFunctorKey(PYNAME, U)
+%shared_ptr(lsst::afw::table::FunctorKey< U >);
+%template(FunctorKey ## PYNAME) lsst::afw::table::FunctorKey< U >;
+%enddef
 
 // =============== BaseTable and BaseRecord =================================================================
 
@@ -373,15 +399,28 @@ def asKey(self):
             self[self.schema.find(args[0]).key] = args[1]
             return
     %}
-    %pythonprepend get %{
-        if isinstance(args[0], basestring):
-            return self.get(self.schema.find(args[0]).key)
+    %feature("shadow") get %{
+    def get(self, key):
+        if isinstance(key, basestring):
+            return self.get(self.schema.find(key).key)
+        try:
+            return $action(self, key)
+        except NotImplementedError:
+            # If this doesn't work as a regular key, try it as a FunctorKey
+            return key.get(self)
     %}
-    %pythonprepend set %{
-        if isinstance(args[0], basestring):
-            self.set(self.schema.find(args[0]).key, args[1])
+    %feature("shadow") set %{
+    def set(self, key, value):
+        if isinstance(key, basestring):
+            self.set(self.schema.find(key).key, value)
             return
+        try:
+            $action(self, key, value)
+        except NotImplementedError:
+            # If this doesn't work as a regular key, try it as a FunctorKey
+            return key.set(self, value)
     %}
+
 }
 
 %addCastMethod(lsst::afw::table::BaseTable, lsst::afw::table::BaseTable)

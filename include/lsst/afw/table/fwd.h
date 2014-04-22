@@ -47,6 +47,9 @@ template <typename T> struct SchemaItem;
 class Schema;
 class SchemaMapper;
 
+template <typename T> class OutputFunctorKey;
+template <typename T> class InputFunctorKey;
+
 template <typename T> class ColumnViewT;
 template <typename RecordT> class CatalogT;
 template <typename RecordT> class SortedCatalogT;
