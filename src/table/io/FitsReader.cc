@@ -50,7 +50,7 @@ struct FitsSchemaItem {
 
     // Add the field defined by the strings to a schema.
     void addField(Schema & schema) const {
-        static boost::regex const regex("(\\d*)(\\u)(\\d)*", boost::regex::perl);
+        static boost::regex const regex("(\\d+)?(\\u)(\\d)*", boost::regex::perl);
         // start by parsing the format; this tells the element type of the field and the number of elements
         boost::smatch m;
         if (!boost::regex_match(format, m, regex)) {

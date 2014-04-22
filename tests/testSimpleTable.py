@@ -693,6 +693,11 @@ class SimpleTableTestCase(unittest.TestCase):
         self.assertTrue("a_b_e" in cat.schema)
         os.remove(filename)
 
+    def testDM352(self):
+        filename = os.path.join(os.path.split(__file__)[0], "data", "great3.fits")
+        cat = lsst.afw.table.BaseCatalog.readFits(filename)
+        self.assertEqual(len(cat), 1)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
