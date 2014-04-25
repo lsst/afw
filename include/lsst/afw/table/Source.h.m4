@@ -765,7 +765,25 @@ inline Centroid::ErrValue SourceRecord::getCentroidErr() const {
         return this->get(getTable()->getCentroidErrKey());
     }
     else {
-        return Centroid::ErrValue(0,0); 
+        Centroid::ErrValue retval = Centroid::ErrValue();
+        float temp;
+        Key<float> key;
+        key = getTable()->getCentroidxSigmaKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(0,0) = temp * temp;
+        }
+        key = getTable()->getCentroidySigmaKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(1,1) = temp * temp;
+        }
+        key = getTable()->getCentroidxyCovKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(0,1) = retval(1,0) = temp;
+        }
+        return retval;
     }
 }
 
@@ -791,7 +809,40 @@ inline Shape::ErrValue SourceRecord::getShapeErr() const {
         return this->get(getTable()->getShapeErrKey());
     }
     else {
-        return Shape::ErrValue();
+        Shape::ErrValue retval = Shape::ErrValue();
+        float temp;
+        Key<float> key;
+        key = getTable()->getShapexxSigmaKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(0,0) = temp * temp;
+        }
+        key = getTable()->getShapeyySigmaKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(1,1) = temp * temp;
+        }
+        key = getTable()->getShapexySigmaKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(2,2) = temp * temp;
+        }
+        key = getTable()->getShapexxyyCovKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(0,1) = retval(1,0) = temp;
+        }
+        key = getTable()->getShapexxxyCovKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(0,2) = retval(2,0) = temp;
+        }
+        key = getTable()->getShapeyyxyCovKey();
+        if (key.isValid()) {
+            temp = this->get(key);
+            retval(1,2) = retval(2,1) = temp;
+        }
+        return retval;
     }
 }
 
