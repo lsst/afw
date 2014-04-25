@@ -16,55 +16,74 @@ typedef float HeavyFootprintPixelT;
 // Some boilerplate macros for saving/loading Source slot aliases to/from FITS headers.
 // Didn't seem to be quite enough to give the file the full M4 treatment.
 
-#define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
-    if (table->get ## Name ## Type ## Key().isValid()) {                \
-        std::string s = table->getSchema().find(table->get ## Name ## Type ## Key()).field.getName(); \
-        std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME #TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
-    }                                                                   \
-    if (table->get ## Name ## Type ## ErrKey().isValid()) {             \
-        std::string s = table->getSchema().find(table->get ## Name ## Type ## ErrKey()).field.getName(); \
-        std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME #TYPE "_ERR_SLOT", s.c_str(),         \
-                        "Defines the " #Name #Type "Err slot");         \
-    }                                                                   \
-    if (table->get ## Name ## Type ## Flag ## Key().isValid()) {        \
-        std::string s = table->getSchema().find(table->get ## Name ## Type ## FlagKey()).field.getName(); \
-        std::replace(s.begin(), s.end(), '.', '_');                     \
-        _fits->writeKey(#NAME #TYPE "_FLAG_SLOT", s.c_str(),        \
-                        "Defines the " #Name #Type "Flag slot");        \
+#define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type)                              \
+    if (table->getVersion() == 0) {                                         \
+        if (table->get ## Name ## Type ## Key().isValid()) {                \
+            std::string s = table->getSchema().find(table->get ## Name ## Type ## Key()).field.getName(); \
+            std::replace(s.begin(), s.end(), '.', '_');                     \
+            _fits->writeKey(#NAME #TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
+        }                                                                   \
+        if (table->get ## Name ## Type ## ErrKey().isValid()) {             \
+            std::string s = table->getSchema().find(table->get ## Name ## Type ## ErrKey()).field.getName(); \
+            std::replace(s.begin(), s.end(), '.', '_');                     \
+            _fits->writeKey(#NAME #TYPE "_ERR_SLOT", s.c_str(),             \
+                            "Defines the " #Name #Type "Err slot");         \
+        }                                                                   \
+        if (table->get ## Name ## Type ## Flag ## Key().isValid()) {        \
+            std::string s = table->getSchema().find(table->get ## Name ## Type ## FlagKey()).field.getName(); \
+            std::replace(s.begin(), s.end(), '.', '_');                     \
+            _fits->writeKey(#NAME #TYPE "_FLAG_SLOT", s.c_str(),            \
+                            "Defines the " #Name #Type "Flag slot");        \
+        }                                                                   \
+    }                                                                       \
+    else {                                                                  \
+        std::string s = table->get ## Name ## Type ## Definition();         \
+        if (s.size() > 0) {                                                 \
+            _fits->writeKey(#NAME #TYPE "_SLOT", s.c_str(),                 \
+                            "Defines the " #Name #Type " slot");            \
+        }                                                                   \
     }
-
 #define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME ## _, Name, FLUX, Flux)
 #define SAVE_CENTROID_SLOT() SAVE_MEAS_SLOT(, , CENTROID, Centroid)
 #define SAVE_SHAPE_SLOT() SAVE_MEAS_SLOT(, , SHAPE, Shape)
 
 #define LOAD_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
     {                                                                   \
-        _fits->behavior &= ~fits::Fits::AUTO_CHECK;                     \
-        std::string s, sErr, sFlag;                                     \
-        _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
-        _fits->readKey(#NAME #TYPE "_ERR_SLOT", sErr);                  \
-        _fits->readKey(#NAME #TYPE "_FLAG_SLOT", sFlag);                \
-        if (_fits->status == 0) {                                       \
-            metadata->remove(#NAME #TYPE "_SLOT");                      \
-            metadata->remove(#NAME #TYPE "_ERR_SLOT");                  \
-            metadata->remove(#NAME #TYPE "_FLAG_SLOT");                 \
-            std::replace(s.begin(), s.end(), '_', '.');                 \
-            std::replace(sErr.begin(), sErr.end(), '_', '.');           \
-            std::replace(sFlag.begin(), sFlag.end(), '_', '.');         \
-            table->define ## Name ## Type(schema[s], schema[sErr], schema[sFlag]); \
-        } else {                                                        \
-            _fits->status = 0;                                          \
-        }                                                               \
-        _fits->behavior |= fits::Fits::AUTO_CHECK;                      \
+        if (table->getVersion() == 0) {                                     \
+            _fits->behavior &= ~fits::Fits::AUTO_CHECK;                     \
+            std::string s, sErr, sFlag;                                     \
+            _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
+            _fits->readKey(#NAME #TYPE "_ERR_SLOT", sErr);                  \
+            _fits->readKey(#NAME #TYPE "_FLAG_SLOT", sFlag);                \
+            if (_fits->status == 0) {                                       \
+                metadata->remove(#NAME #TYPE "_SLOT");                      \
+                metadata->remove(#NAME #TYPE "_ERR_SLOT");                  \
+                metadata->remove(#NAME #TYPE "_FLAG_SLOT");                 \
+                std::replace(s.begin(), s.end(), '_', '.');                 \
+                std::replace(sErr.begin(), sErr.end(), '_', '.');           \
+                std::replace(sFlag.begin(), sFlag.end(), '_', '.');         \
+                table->define ## Name ## Type(schema[s], schema[sErr], schema[sFlag]); \
+            } else {                                                        \
+                _fits->status = 0;                                          \
+            }                                                               \
+            _fits->behavior |= fits::Fits::AUTO_CHECK;                      \
+        }                                                                   \
+        else {                                                              \
+            _fits->behavior &= ~fits::Fits::AUTO_CHECK;                     \
+            std::string s;                                                  \
+            _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
+            if (_fits->status == 0) {                                       \
+                metadata->remove(#NAME #TYPE "_SLOT");                      \
+                table->define ## Name ## Type(s);                           \
+            } else {                                                        \
+                _fits->status = 0;                                          \
+            }                                                               \
+            _fits->behavior |= fits::Fits::AUTO_CHECK;                      \
+        }                                                                   \
     }
-    
-
 #define LOAD_FLUX_SLOT(NAME, Name) LOAD_MEAS_SLOT(NAME ## _, Name, FLUX, Flux)
 #define LOAD_CENTROID_SLOT() LOAD_MEAS_SLOT(, , CENTROID, Centroid)
 #define LOAD_SHAPE_SLOT() LOAD_MEAS_SLOT(, , SHAPE, Shape)
-
 namespace lsst { namespace afw { namespace table {
 
 //-----------------------------------------------------------------------------------------------------------

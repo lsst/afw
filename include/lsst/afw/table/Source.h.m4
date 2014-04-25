@@ -85,32 +85,70 @@ m4def(`DECLARE_SLOT_DEFINERS',
      */
     void define$1$2(std::string const & name) {
         Schema schema = getSchema();
-        _slot$2$3.meas = schema[name];
-        try {
-            _slot$2$3.err = schema[name]["err"];
-        } catch (pex::exceptions::NotFoundException) {}
-        try {
-            _slot$2$3.flag = schema[name]["flags"];
-        } catch (pex::exceptions::NotFoundException) {}
+        if (getVersion() == 0) {
+            _slot$2$3.meas = schema[name];
+            try {
+                _slot$2$3.err = schema[name]["err"];
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
+                _slot$2$3.flag = schema[name]["flags"];
+            } catch (pex::exceptions::NotFoundException) {}
+        }
+        else {
+            _newSlot$2$3.name = name;
+            _newSlot$2$3.$4 = schema[name + "_$4"];
+            _newSlot$2$3.uncertainty = NO_UNCERTAINTY;
+            try {
+                _newSlot$2$3.$4Sigma = schema[name + "_$4Sigma"];
+                _newSlot$2$3.uncertainty = SIGMA_ONLY;
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
+                _newSlot$2$3.flag = schema[name + "_flag"];
+            } catch (pex::exceptions::NotFoundException) {}
+        }
     }
 
     /// @brief Return the name of the field used for the $1$2 slot.
     std::string get$1$2Definition() const {
-        return getSchema().find(_slot$2$3.meas).field.getName();
+        if (getVersion() == 0) {
+            return getSchema().find(_slot$2$3.meas).field.getName();
+        }
+        else {
+            return _newSlot$2$3.name;
+        }
     }
 
     /// @brief Return the key used for the $1$2 slot.
-    $2::MeasKey get$1$2Key() const { return _slot$2$3.meas; }
+    $2::MeasKey get$1$2Key() const { 
+        if (getVersion() == 0) {
+            return _slot$2$3.meas;
+        }
+        else {
+            return _newSlot$2$3.$4;
+        }
+    }
 
     /// @brief Return the key used for $1$2 slot error or covariance.
-    $2::ErrKey get$1$2ErrKey() const { return _slot$2$3.err; }
+    $2::ErrKey get$1$2ErrKey() const {
+        if (getVersion() == 0) {
+            return _slot$2$3.err;
+        }
+        else {
+            return _newSlot$2$3.$4Sigma;
+        }
+    }
 
     /// @brief Return the key used for the $1$2 slot success flag.
-    Key<Flag> get$1$2FlagKey() const { return _slot$2$3.flag; }
+    Key<Flag> get$1$2FlagKey() const {
+        if (getVersion() == 0) {
+            return _slot$2$3.flag;
+        }
+        else {
+            return _newSlot$2$3.flag;
+        }
+    }
 ')dnl
-m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]')')dnl
-m4def(`DECLARE_CENTROID_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Centroid', `')')dnl
-m4def(`DECLARE_SHAPE_DEFINERS', `DECLARE_SLOT_DEFINERS(`', `Shape', `')')dnl
+m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]', `flux')')dnl
 define(`m4def', defn(`define'))dnl
 m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 `/// @brief Get the value of the $1Flux slot measurement.
@@ -154,6 +192,15 @@ enum SourceFitsFlags {
     SOURCE_IO_NO_HEAVY_FOOTPRINTS = 0x2  ///< Read/write heavy footprints as non-heavy footprints
 };
 
+/**
+ *  @brief An enum used to specify how much uncertainty information measurement algorithms provide.
+ */
+enum UncertaintyEnum {
+    NO_UNCERTAINTY = 0, ///< Algorithm provides no uncertainy information at all
+    SIGMA_ONLY = 1,     ///< Only the diagonal elements of the covariance matrix are provided
+    FULL_COVARIANCE = 2 ///< The full covariance matrix is provided
+};
+
 typedef lsst::afw::detection::Footprint Footprint;
 
 class SourceRecord;
@@ -173,7 +220,7 @@ struct Measurement {
 #ifndef SWIG
 
 /// A collection of types useful for flux measurement algorithms.
-struct Flux : public Measurement<double,double> {};
+struct Flux : public Measurement<double, double> {}; //pgee temporary
 
 /// A collection of types useful for centroid measurement algorithms.
 struct Centroid : public Measurement< Point<double>, Covariance< Point<float> > > {};
@@ -189,6 +236,39 @@ enum FluxSlotEnum {
     FLUX_SLOT_INST,
     N_FLUX_SLOTS
 };
+
+struct FluxKeys {
+    std::string name;
+    Key<double> flux;
+    Key<double> fluxSigma;
+    Key<Flag> flag;
+    UncertaintyEnum uncertainty;
+};
+struct CentroidKeys {
+    std::string name;
+    Key<double> x;
+    Key<double> y;
+    Key<float> xSigma;
+    Key<float> ySigma;
+    Key<float> xyCov;
+    Key<Flag> flag;
+    UncertaintyEnum uncertainty;
+};
+struct ShapeKeys {
+    std::string name;
+    Key<double> xx;
+    Key<double> yy;
+    Key<double> xy;
+    Key<float> xxSigma;
+    Key<float> yySigma;
+    Key<float> xySigma;
+    Key<float> xxyyCov;
+    Key<float> xxxyCov;
+    Key<float> yyxyCov;
+    Key<Flag> flag;
+    UncertaintyEnum uncertainty;
+};
+
 /**
  *  @brief A three-element tuple of measurement, uncertainty, and flag keys.
  *
@@ -379,8 +459,189 @@ public:
     DECLARE_FLUX_DEFINERS(`Model')
     DECLARE_FLUX_DEFINERS(`Ap')
     DECLARE_FLUX_DEFINERS(`Inst')
-    DECLARE_CENTROID_DEFINERS
-    DECLARE_SHAPE_DEFINERS
+
+    /**
+     * @brief Set the measurement used for the Centroid slot using Keys.
+     */
+    void defineCentroid(
+        Centroid::MeasKey const & meas,
+        Centroid::ErrKey const & err = Centroid::ErrKey(),
+        Key<Flag> const & flag = Key<Flag>()
+    ) {
+        _slotCentroid = KeyTuple<Centroid>(meas, err, flag);
+    }
+
+    /**
+     * @brief Set the measurement used for the Centroid slot using Keys.
+     */
+    void defineCentroid(
+        Centroid::MeasKey const & meas,
+        Key<Flag> const & flag
+    ) {
+        _slotCentroid = KeyTuple<Centroid>(meas, Centroid::ErrKey(), flag);
+    }
+
+    /**
+     *  @brief Set the measurement used for the Centroid slot with a field name.
+     *
+     *  This requires that the measurement adhere to the convention of having
+     *  "<name>", "<name>.err", and "<name>.flags" fields for all three fields
+     *  to be attached to slots.  Only the main measurement field is required.
+     */
+    void defineCentroid(std::string const & name) {
+        Schema schema = getSchema();
+        if (getVersion() == 0) {
+           _slotCentroid.meas = schema[name];
+           try {
+               _slotCentroid.err = schema[name]["err"];
+           } catch (pex::exceptions::NotFoundException) {}
+           try {
+               _slotCentroid.flag = schema[name]["flags"];
+           } catch (pex::exceptions::NotFoundException) {}
+        }
+        else {
+            _newSlotCentroid.name = name;
+            _newSlotCentroid.x = schema[name + "_x"];
+            _newSlotCentroid.y = schema[name + "_y"];
+            _newSlotCentroid.uncertainty = NO_UNCERTAINTY;
+            try {
+                _newSlotCentroid.xSigma = schema[name + "_xSigma"];
+                _newSlotCentroid.ySigma = schema[name + "_ySigma"];
+                _newSlotCentroid.uncertainty = SIGMA_ONLY;
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
+                _newSlotCentroid.xyCov = schema[name + "_xyCov"];
+                _newSlotCentroid.uncertainty = FULL_COVARIANCE;
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
+                _newSlotCentroid.flag = schema[name + "_flag"];
+            } catch (pex::exceptions::NotFoundException) {}
+        }
+    }
+    
+    /// @brief Return the name of the field used for the Centroid slot.
+    std::string getCentroidDefinition() const {
+        if (getVersion() == 0) {
+            return getSchema().find(_slotCentroid.meas).field.getName();
+        }
+        else {
+            return _newSlotCentroid.name;
+        }
+    }
+
+    /// @brief Return the key used for the Centroid slot.
+    Centroid::MeasKey getCentroidKey() const { return _slotCentroid.meas; }
+
+    Key<double>  getCentroidxKey() const { return _newSlotCentroid.x; }
+    Key<double>  getCentroidyKey() const { return _newSlotCentroid.y; }
+    Key<float>  getCentroidxSigmaKey() const { return _newSlotCentroid.xSigma; }
+    Key<float>  getCentroidySigmaKey() const { return _newSlotCentroid.ySigma; }
+    Key<float>  getCentroidxyCovKey() const { return _newSlotCentroid.xyCov; }
+
+
+    /// @brief Return the key used for Centroid slot error or covariance.
+    Centroid::ErrKey getCentroidErrKey() const { return _slotCentroid.err; }
+
+    /// @brief Return the key used for the Centroid slot success flag.
+    Key<Flag> getCentroidFlagKey() const {
+            if (getVersion() == 0) return _slotCentroid.flag; 
+            else return _newSlotCentroid.flag;
+    }
+    /**
+     * @brief Set the measurement used for the Shape slot using Keys.
+     */
+    void defineShape(
+        Shape::MeasKey const & meas,
+        Shape::ErrKey const & err = Shape::ErrKey(),
+        Key<Flag> const & flag = Key<Flag>()
+    ) {
+        _slotShape = KeyTuple<Shape>(meas, err, flag);
+    }
+
+    /**
+     * @brief Set the measurement used for the Shape slot using Keys.
+     */
+    void defineShape(
+        Shape::MeasKey const & meas,
+        Key<Flag> const & flag
+    ) {
+        _slotShape = KeyTuple<Shape>(meas, Shape::ErrKey(), flag);
+    }
+
+    /**
+     *  @brief Set the measurement used for the Shape slot with a field name.
+     *
+     *  This requires that the measurement adhere to the convention of having
+     *  "<name>", "<name>.err", and "<name>.flags" fields for all three fields
+     *  to be attached to slots.  Only the main measurement field is required.
+     */
+    void defineShape(std::string const & name) {
+        Schema schema = getSchema();
+        if (getVersion() == 0) {
+            _slotShape.meas = schema[name];
+            try {
+                _slotShape.err = schema[name]["err"];
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
+                _slotShape.flag = schema[name]["flags"];
+            } catch (pex::exceptions::NotFoundException) {}
+        }
+        else {
+            _newSlotShape.name = name;
+            _newSlotShape.xx = schema[name + "_xx"];
+            _newSlotShape.yy = schema[name + "_yy"];
+            _newSlotShape.xy = schema[name + "_xy"];
+            _newSlotShape.uncertainty = NO_UNCERTAINTY;
+            try {
+                _newSlotShape.xxSigma = schema[name + "_xxSigma"];
+                _newSlotShape.yySigma = schema[name + "_yySigma"];
+                _newSlotShape.xySigma = schema[name + "_xySigma"];
+                _newSlotShape.uncertainty = SIGMA_ONLY;
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
+                _newSlotShape.xxyyCov = schema[name + "_xx_yy_Cov"];
+                _newSlotShape.xxxyCov = schema[name + "_xx_xy_Cov"];
+                _newSlotShape.yyxyCov = schema[name + "_yy_xy_Cov"];
+                _newSlotShape.uncertainty = FULL_COVARIANCE;
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
+                _newSlotShape.flag = schema[name + "_flag"];
+            } catch (pex::exceptions::NotFoundException) {}
+        }
+    }
+            
+    /// @brief Return the name of the field used for the Shape slot.
+    std::string getShapeDefinition() const {
+        if (getVersion() == 0) {
+            return getSchema().find(_slotShape.meas).field.getName();
+        }
+        else {
+            return _newSlotShape.name;
+        }
+    }
+
+    /// @brief Return the key used for the Shape slot.
+    Shape::MeasKey getShapeKey() const { return _slotShape.meas; }
+
+    /// @brief Return the key used for Shape slot error or covariance.
+    Shape::ErrKey getShapeErrKey() const { return _slotShape.err; }
+
+    /// @brief Return the key used for the Shape slot success flag.
+    Key<Flag> getShapeFlagKey() const {
+        if (getVersion() == 0) return _slotShape.flag; 
+        else return _newSlotCentroid.flag;
+    }
+
+    Key<double>  getShapexxKey() const { return _newSlotShape.xx; }
+    Key<double>  getShapeyyKey() const { return _newSlotShape.yy; }
+    Key<double>  getShapexyKey() const { return _newSlotShape.xy; }
+    Key<float>  getShapexxSigmaKey() const { return _newSlotShape.xxSigma; }
+    Key<float>  getShapeyySigmaKey() const { return _newSlotShape.yySigma; }
+    Key<float>  getShapexySigmaKey() const { return _newSlotShape.xySigma; }
+    Key<float>  getShapexxyyCovKey() const { return _newSlotShape.xxyyCov; }
+    Key<float>  getShapexxxyCovKey() const { return _newSlotShape.xxxyCov; }
+    Key<float>  getShapeyyxyCovKey() const { return _newSlotShape.yyxyCov; }
+
 
 protected:
 
@@ -409,6 +670,9 @@ private:
     boost::array< KeyTuple<Flux>, N_FLUX_SLOTS > _slotFlux; // aliases for flux measurements
     KeyTuple<Centroid> _slotCentroid;  // alias for a centroid measurement
     KeyTuple<Shape> _slotShape;  // alias for a shape measurement
+    boost::array< FluxKeys, N_FLUX_SLOTS > _newSlotFlux; // aliases for flux measurements
+    CentroidKeys _newSlotCentroid;  // alias for a centroid measurement
+    ShapeKeys _newSlotShape;  // alias for a shape measurement
 };
 
 template <typename RecordT>
@@ -427,20 +691,45 @@ public:
     DEFINE_FLUX_COLUMN_GETTERS(`Inst')
 
     ndarray::Array<double,1> const getX() const {
-        return this->operator[](this->getTable()->getCentroidKey().getX());
+        if (this->getTable()->getVersion() == 0) {
+            return this->operator[](this->getTable()->getCentroidKey().getX());
+        }
+        else {
+            return this->operator[](this->getTable()->getCentroidxKey());
+        }
     }
     ndarray::Array<double,1> const getY() const {
-        return this->operator[](this->getTable()->getCentroidKey().getY());
+        if (this->getTable()->getVersion() == 0) {
+            return this->operator[](this->getTable()->getCentroidKey().getY());
+        }
+        else {
+            return this->operator[](this->getTable()->getCentroidyKey());
+        }
     }
 
     ndarray::Array<double,1> const getIxx() const {
-        return this->operator[](this->getTable()->getShapeKey().getIxx());
+        if (this->getTable()->getVersion() == 0) {
+            return this->operator[](this->getTable()->getShapeKey().getIxx());
+        }
+        else {
+            return this->operator[](this->getTable()->getShapexxKey());
+        }
     }
     ndarray::Array<double,1> const getIyy() const {
+        if (this->getTable()->getVersion() == 0) {
         return this->operator[](this->getTable()->getShapeKey().getIyy());
+        }
+        else {
+            return this->operator[](this->getTable()->getShapeyyKey());
+        }
     }
     ndarray::Array<double,1> const getIxy() const {
+        if (this->getTable()->getVersion() == 0) {
         return this->operator[](this->getTable()->getShapeKey().getIxy());
+        }
+        else {
+            return this->operator[](this->getTable()->getShapexyKey());
+        }
     }
 
     /// @brief @copydoc BaseColumnView::make
@@ -461,18 +750,65 @@ DEFINE_FLUX_GETTERS(`Psf')
 DEFINE_FLUX_GETTERS(`Model')
 DEFINE_FLUX_GETTERS(`Ap')
 DEFINE_FLUX_GETTERS(`Inst')
-DEFINE_CENTROID_GETTERS
-DEFINE_SHAPE_GETTERS
+
+inline Centroid::MeasValue SourceRecord::getCentroid() const {
+    if (getTable()->getVersion() == 0) {
+        return this->get(getTable()->getCentroidKey());
+    }
+    else {
+        return Centroid::MeasValue(this->get(getTable()->getCentroidxKey()), this->get(getTable()->getCentroidyKey()));
+    }
+}
+
+inline Centroid::ErrValue SourceRecord::getCentroidErr() const {
+    if (getTable()->getVersion() == 0) {
+        return this->get(getTable()->getCentroidErrKey());
+    }
+    else {
+        return Centroid::ErrValue(0,0); 
+    }
+}
+
+inline bool SourceRecord::getCentroidFlag() const {
+    return this->get(getTable()->getCentroidFlagKey());
+}
+
+inline Shape::MeasValue SourceRecord::getShape() const {
+    if (getTable()->getVersion() == 0) {
+        return this->get(getTable()->getShapeKey());
+    }
+    else {
+        return Shape::MeasValue(
+           this->get(getTable()->getShapexxKey()),
+           this->get(getTable()->getShapeyyKey()), 
+           this->get(getTable()->getShapexyKey())
+        );
+    }
+}
+
+inline Shape::ErrValue SourceRecord::getShapeErr() const {
+    if (getTable()->getVersion() == 0) {
+        return this->get(getTable()->getShapeErrKey());
+    }
+    else {
+        return Shape::ErrValue();
+    }
+}
+
+inline bool SourceRecord::getShapeFlag() const {
+    return this->get(getTable()->getShapeFlagKey());
+}
+
 
 inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
 inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
 
-inline double SourceRecord::getX() const { return get(getTable()->getCentroidKey().getX()); }
-inline double SourceRecord::getY() const { return get(getTable()->getCentroidKey().getY()); }
+inline double SourceRecord::getX() const { return get(getTable()->getCentroidxKey()); }
+inline double SourceRecord::getY() const { return get(getTable()->getCentroidyKey()); }
 
-inline double SourceRecord::getIxx() const { return get(getTable()->getShapeKey().getIxx()); }
-inline double SourceRecord::getIyy() const { return get(getTable()->getShapeKey().getIyy()); }
-inline double SourceRecord::getIxy() const { return get(getTable()->getShapeKey().getIxy()); }
+inline double SourceRecord::getIxx() const { return get(getTable()->getShapexxKey()); }
+inline double SourceRecord::getIyy() const { return get(getTable()->getShapeyyKey()); }
+inline double SourceRecord::getIxy() const { return get(getTable()->getShapexyKey()); }
 
 #endif // !SWIG
 
