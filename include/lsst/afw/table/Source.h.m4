@@ -168,6 +168,7 @@ m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/Simple.h"
+#include "lsst/afw/table/aggregates.h"
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
@@ -246,25 +247,15 @@ struct FluxKeys {
 };
 struct CentroidKeys {
     std::string name;
-    Key<double> x;
-    Key<double> y;
-    Key<float> xSigma;
-    Key<float> ySigma;
-    Key<float> xyCov;
+    lsst::afw::table::Point2DKey pos;
+    lsst::afw::table::CovarianceMatrixKey<float,2> posErr;
     Key<Flag> flag;
     UncertaintyEnum uncertainty;
 };
 struct ShapeKeys {
     std::string name;
-    Key<double> xx;
-    Key<double> yy;
-    Key<double> xy;
-    Key<float> xxSigma;
-    Key<float> yySigma;
-    Key<float> xySigma;
-    Key<float> xxyyCov;
-    Key<float> xxxyCov;
-    Key<float> yyxyCov;
+    lsst::afw::table::QuadrupoleKey quadrupole;
+    lsst::afw::table::CovarianceMatrixKey<float,3> quadrupoleErr;
     Key<Flag> flag;
     UncertaintyEnum uncertainty;
 };
@@ -501,21 +492,20 @@ public:
         }
         else {
             _newSlotCentroid.name = name;
-            _newSlotCentroid.x = schema[name + "_x"];
-            _newSlotCentroid.y = schema[name + "_y"];
+            _newSlotCentroid.pos = lsst::afw::table::Point2DKey(schema[name+"_x"], schema[name+"_y"]);
             _newSlotCentroid.uncertainty = NO_UNCERTAINTY;
+            std::vector< Key<float> > sigma = std::vector< Key<float> >();
+            std::vector< Key<float> > cov = std::vector< Key<float> >();
             try {
-                _newSlotCentroid.xSigma = schema[name + "_xSigma"];
-                _newSlotCentroid.ySigma = schema[name + "_ySigma"];
+                sigma.push_back(schema[name+"_xSigma"]);
+                sigma.push_back(schema[name+"_ySigma"]);
                 _newSlotCentroid.uncertainty = SIGMA_ONLY;
             } catch (pex::exceptions::NotFoundException) {}
             try {
-                _newSlotCentroid.xyCov = schema[name + "_xyCov"];
+                cov.push_back(schema[name+"_xyCov"]);
                 _newSlotCentroid.uncertainty = FULL_COVARIANCE;
             } catch (pex::exceptions::NotFoundException) {}
-            try {
-                _newSlotCentroid.flag = schema[name + "_flag"];
-            } catch (pex::exceptions::NotFoundException) {}
+            _newSlotCentroid.posErr = lsst::afw::table::CovarianceMatrixKey<float,2>(sigma, cov);
         }
     }
     
@@ -532,11 +522,9 @@ public:
     /// @brief Return the key used for the Centroid slot.
     Centroid::MeasKey getCentroidKey() const { return _slotCentroid.meas; }
 
-    Key<double>  getCentroidxKey() const { return _newSlotCentroid.x; }
-    Key<double>  getCentroidyKey() const { return _newSlotCentroid.y; }
-    Key<float>  getCentroidxSigmaKey() const { return _newSlotCentroid.xSigma; }
-    Key<float>  getCentroidySigmaKey() const { return _newSlotCentroid.ySigma; }
-    Key<float>  getCentroidxyCovKey() const { return _newSlotCentroid.xyCov; }
+    lsst::afw::table::Point2DKey getCentroidPosKey() const { return _newSlotCentroid.pos; }
+
+    lsst::afw::table::CovarianceMatrixKey<float,2> getCentroidPosErrKey() const { return _newSlotCentroid.posErr; }
 
 
     /// @brief Return the key used for Centroid slot error or covariance.
@@ -588,25 +576,24 @@ public:
         }
         else {
             _newSlotShape.name = name;
-            _newSlotShape.xx = schema[name + "_xx"];
-            _newSlotShape.yy = schema[name + "_yy"];
-            _newSlotShape.xy = schema[name + "_xy"];
+            _newSlotShape.quadrupole = lsst::afw::table::QuadrupoleKey(
+                schema[name + "_xx"],schema[name + "_yy"],schema[name + "_xy"]);
             _newSlotShape.uncertainty = NO_UNCERTAINTY;
+            std::vector< Key<float> > sigma = std::vector< Key<float> >();
+            std::vector< Key<float> > cov = std::vector< Key<float> >();
             try {
-                _newSlotShape.xxSigma = schema[name + "_xxSigma"];
-                _newSlotShape.yySigma = schema[name + "_yySigma"];
-                _newSlotShape.xySigma = schema[name + "_xySigma"];
+                sigma.push_back(schema[name+"_xxSigma"]);
+                sigma.push_back(schema[name+"_yySigma"]);
+                sigma.push_back(schema[name+"_xySigma"]);
                 _newSlotShape.uncertainty = SIGMA_ONLY;
             } catch (pex::exceptions::NotFoundException) {}
             try {
-                _newSlotShape.xxyyCov = schema[name + "_xx_yy_Cov"];
-                _newSlotShape.xxxyCov = schema[name + "_xx_xy_Cov"];
-                _newSlotShape.yyxyCov = schema[name + "_yy_xy_Cov"];
+                cov.push_back(schema[name + "_xx_yy_Cov"]);
+                cov.push_back(schema[name + "_xx_xy_Cov"]);
+                cov.push_back(schema[name + "_yy_xy_Cov"]);
                 _newSlotShape.uncertainty = FULL_COVARIANCE;
             } catch (pex::exceptions::NotFoundException) {}
-            try {
-                _newSlotShape.flag = schema[name + "_flag"];
-            } catch (pex::exceptions::NotFoundException) {}
+            _newSlotShape.quadrupoleErr = lsst::afw::table::CovarianceMatrixKey<float,3>(sigma, cov);
         }
     }
             
@@ -632,16 +619,9 @@ public:
         else return _newSlotCentroid.flag;
     }
 
-    Key<double>  getShapexxKey() const { return _newSlotShape.xx; }
-    Key<double>  getShapeyyKey() const { return _newSlotShape.yy; }
-    Key<double>  getShapexyKey() const { return _newSlotShape.xy; }
-    Key<float>  getShapexxSigmaKey() const { return _newSlotShape.xxSigma; }
-    Key<float>  getShapeyySigmaKey() const { return _newSlotShape.yySigma; }
-    Key<float>  getShapexySigmaKey() const { return _newSlotShape.xySigma; }
-    Key<float>  getShapexxyyCovKey() const { return _newSlotShape.xxyyCov; }
-    Key<float>  getShapexxxyCovKey() const { return _newSlotShape.xxxyCov; }
-    Key<float>  getShapeyyxyCovKey() const { return _newSlotShape.yyxyCov; }
+    lsst::afw::table::QuadrupoleKey getShapeQuadrupoleKey() const { return _newSlotShape.quadrupole; }
 
+    lsst::afw::table::CovarianceMatrixKey<float,3> getShapeQuadrupoleErrKey() const { return _newSlotShape.quadrupoleErr; }
 
 protected:
 
@@ -695,7 +675,7 @@ public:
             return this->operator[](this->getTable()->getCentroidKey().getX());
         }
         else {
-            return this->operator[](this->getTable()->getCentroidxKey());
+            return this->operator[](this->getTable()->getCentroidPosKey().getX());
         }
     }
     ndarray::Array<double,1> const getY() const {
@@ -703,7 +683,7 @@ public:
             return this->operator[](this->getTable()->getCentroidKey().getY());
         }
         else {
-            return this->operator[](this->getTable()->getCentroidyKey());
+            return this->operator[](this->getTable()->getCentroidPosKey().getY());
         }
     }
 
@@ -712,7 +692,7 @@ public:
             return this->operator[](this->getTable()->getShapeKey().getIxx());
         }
         else {
-            return this->operator[](this->getTable()->getShapexxKey());
+            return this->operator[](this->getTable()->getShapeQuadrupoleKey().getIxx());
         }
     }
     ndarray::Array<double,1> const getIyy() const {
@@ -720,7 +700,7 @@ public:
         return this->operator[](this->getTable()->getShapeKey().getIyy());
         }
         else {
-            return this->operator[](this->getTable()->getShapeyyKey());
+            return this->operator[](this->getTable()->getShapeQuadrupoleKey().getIyy());
         }
     }
     ndarray::Array<double,1> const getIxy() const {
@@ -728,7 +708,7 @@ public:
         return this->operator[](this->getTable()->getShapeKey().getIxy());
         }
         else {
-            return this->operator[](this->getTable()->getShapexyKey());
+            return this->operator[](this->getTable()->getShapeQuadrupoleKey().getIxy());
         }
     }
 
@@ -756,7 +736,7 @@ inline Centroid::MeasValue SourceRecord::getCentroid() const {
         return this->get(getTable()->getCentroidKey());
     }
     else {
-        return Centroid::MeasValue(this->get(getTable()->getCentroidxKey()), this->get(getTable()->getCentroidyKey()));
+        return Centroid::MeasValue(this->get(getTable()->getCentroidPosKey()));
     }
 }
 
@@ -765,25 +745,7 @@ inline Centroid::ErrValue SourceRecord::getCentroidErr() const {
         return this->get(getTable()->getCentroidErrKey());
     }
     else {
-        Centroid::ErrValue retval = Centroid::ErrValue();
-        float temp;
-        Key<float> key;
-        key = getTable()->getCentroidxSigmaKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(0,0) = temp * temp;
-        }
-        key = getTable()->getCentroidySigmaKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(1,1) = temp * temp;
-        }
-        key = getTable()->getCentroidxyCovKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(0,1) = retval(1,0) = temp;
-        }
-        return retval;
+        return Centroid::ErrValue(this->get(getTable()->getCentroidPosErrKey()));
     }
 }
 
@@ -796,11 +758,7 @@ inline Shape::MeasValue SourceRecord::getShape() const {
         return this->get(getTable()->getShapeKey());
     }
     else {
-        return Shape::MeasValue(
-           this->get(getTable()->getShapexxKey()),
-           this->get(getTable()->getShapeyyKey()), 
-           this->get(getTable()->getShapexyKey())
-        );
+        return Shape::MeasValue(this->get(getTable()->getShapeQuadrupoleKey()));
     }
 }
 
@@ -809,40 +767,7 @@ inline Shape::ErrValue SourceRecord::getShapeErr() const {
         return this->get(getTable()->getShapeErrKey());
     }
     else {
-        Shape::ErrValue retval = Shape::ErrValue();
-        float temp;
-        Key<float> key;
-        key = getTable()->getShapexxSigmaKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(0,0) = temp * temp;
-        }
-        key = getTable()->getShapeyySigmaKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(1,1) = temp * temp;
-        }
-        key = getTable()->getShapexySigmaKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(2,2) = temp * temp;
-        }
-        key = getTable()->getShapexxyyCovKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(0,1) = retval(1,0) = temp;
-        }
-        key = getTable()->getShapexxxyCovKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(0,2) = retval(2,0) = temp;
-        }
-        key = getTable()->getShapeyyxyCovKey();
-        if (key.isValid()) {
-            temp = this->get(key);
-            retval(1,2) = retval(2,1) = temp;
-        }
-        return retval;
+        return Shape::ErrValue(this->get(getTable()->getShapeQuadrupoleErrKey()));
     }
 }
 
@@ -853,13 +778,26 @@ inline bool SourceRecord::getShapeFlag() const {
 
 inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
 inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
-
-inline double SourceRecord::getX() const { return get(getTable()->getCentroidxKey()); }
-inline double SourceRecord::getY() const { return get(getTable()->getCentroidyKey()); }
-
-inline double SourceRecord::getIxx() const { return get(getTable()->getShapexxKey()); }
-inline double SourceRecord::getIyy() const { return get(getTable()->getShapeyyKey()); }
-inline double SourceRecord::getIxy() const { return get(getTable()->getShapexyKey()); }
+inline double SourceRecord::getX() const {
+    if (getTable()->getVersion() == 0) return get(getTable()->getCentroidKey().getX());
+    else return get(getTable()->getCentroidPosKey().getX());
+}
+inline double SourceRecord::getY() const {
+    if (getTable()->getVersion() == 0) return get(getTable()->getCentroidKey().getY()); 
+    else return get(getTable()->getCentroidPosKey().getY()); 
+}
+inline double SourceRecord::getIxx() const {
+    if (getTable()->getVersion() == 0) return get(getTable()->getShapeKey().getIxx()); 
+    else  return get(getTable()->getShapeQuadrupoleKey().getIxx()); 
+}
+inline double SourceRecord::getIyy() const {
+    if (getTable()->getVersion() == 0) return get(getTable()->getShapeKey().getIyy()); 
+    else  return get(getTable()->getShapeQuadrupoleKey().getIyy()); 
+}
+inline double SourceRecord::getIxy() const {
+    if (getTable()->getVersion() == 0) return get(getTable()->getShapeKey().getIxy()); 
+    else  return get(getTable()->getShapeQuadrupoleKey().getIxy()); 
+}
 
 #endif // !SWIG
 
