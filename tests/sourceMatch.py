@@ -261,10 +261,8 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(m1.second.getDec(), m2.second.getDec())
             self.assertEqual(m1.distance, m2.distance)
             if checkSlots:
-                t1 = m1.first.getTable()
-                t2 = m2.first.getTable()
-                #self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
-                #self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
+                self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
+                self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
 
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN"""

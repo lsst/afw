@@ -97,10 +97,8 @@ m4def(`DECLARE_SLOT_DEFINERS',
         else {
             _newSlot$2$3.name = name;
             _newSlot$2$3.$4 = schema[name + "_$4"];
-            _newSlot$2$3.uncertainty = NO_UNCERTAINTY;
             try {
                 _newSlot$2$3.$4Sigma = schema[name + "_$4Sigma"];
-                _newSlot$2$3.uncertainty = SIGMA_ONLY;
             } catch (pex::exceptions::NotFoundException) {}
             try {
                 _newSlot$2$3.flag = schema[name + "_flag"];
@@ -193,15 +191,6 @@ enum SourceFitsFlags {
     SOURCE_IO_NO_HEAVY_FOOTPRINTS = 0x2  ///< Read/write heavy footprints as non-heavy footprints
 };
 
-/**
- *  @brief An enum used to specify how much uncertainty information measurement algorithms provide.
- */
-enum UncertaintyEnum {
-    NO_UNCERTAINTY = 0, ///< Algorithm provides no uncertainy information at all
-    SIGMA_ONLY = 1,     ///< Only the diagonal elements of the covariance matrix are provided
-    FULL_COVARIANCE = 2 ///< The full covariance matrix is provided
-};
-
 typedef lsst::afw::detection::Footprint Footprint;
 
 class SourceRecord;
@@ -216,6 +205,8 @@ struct Measurement {
     typedef typename Field<ErrTag>::Value ErrValue;   ///< the value type used for the uncertainty
     typedef Key<MeasTag> MeasKey;  ///< the Key type for the actual measurement
     typedef Key<ErrTag> ErrKey;    ///< the Key type for the error on the measurement
+    typedef FunctorKey<MeasTag> MeasFunctorKey;  ///< the Key type for the actual measurement
+    typedef FunctorKey<ErrTag> ErrFunctorKey;    ///< the Key type for the error on the measurement
 };
 
 #ifndef SWIG
@@ -243,21 +234,54 @@ struct FluxKeys {
     Key<double> flux;
     Key<double> fluxSigma;
     Key<Flag> flag;
-    UncertaintyEnum uncertainty;
 };
 struct CentroidKeys {
     std::string name;
     lsst::afw::table::Point2DKey pos;
     lsst::afw::table::CovarianceMatrixKey<float,2> posErr;
     Key<Flag> flag;
-    UncertaintyEnum uncertainty;
+
+    /// Default-constructor; all keys will be invalid.
+    CentroidKeys() {}
+
+    /// Main constructor.
+    CentroidKeys(
+    std::string const & name_,
+    lsst::afw::table::Point2DKey const & pos_,
+    lsst::afw::table::CovarianceMatrixKey<float,2> const & posErr_,
+    Key<Flag> const & flag_
+    ) : name(name_), pos(pos_), posErr(posErr_), flag(flag_) {}
+
+    // No error constructor
+    CentroidKeys(
+    std::string const & name_,
+    lsst::afw::table::Point2DKey const & pos_,
+    Key<Flag> const & flag_
+    ) : name(name_), pos(pos_), flag(flag_) {}
 };
 struct ShapeKeys {
     std::string name;
     lsst::afw::table::QuadrupoleKey quadrupole;
     lsst::afw::table::CovarianceMatrixKey<float,3> quadrupoleErr;
     Key<Flag> flag;
-    UncertaintyEnum uncertainty;
+    
+    /// Default-constructor; all keys will be invalid.
+    ShapeKeys() {}
+
+    /// Main constructor.
+    ShapeKeys(
+    std::string const & name_,
+    lsst::afw::table::QuadrupoleKey const & quadrupole_,
+    lsst::afw::table::CovarianceMatrixKey<float,3> const & quadrupoleErr_,
+    Key<Flag> flag_
+    ) : name(name_), quadrupole(quadrupole_), quadrupoleErr(quadrupoleErr_), flag(flag_) {}
+
+    /// No error constructor.
+    ShapeKeys(
+    std::string const & name_,
+    lsst::afw::table::QuadrupoleKey const & quadrupole_,
+    Key<Flag> flag_
+    ) : name(name_), quadrupole(quadrupole_), flag(flag_) {}
 };
 
 /**
@@ -473,6 +497,29 @@ public:
     }
 
     /**
+     * @brief Set the measurement used for the Centroid slot using FunctorKeys.
+     */
+    void defineCentroid(
+        std::string const & name,
+        lsst::afw::table::Point2DKey const & pos,
+        lsst::afw::table::CovarianceMatrixKey<float,2> const & posErr,
+        Key<Flag> const & flag
+    ) {
+        _newSlotCentroid = CentroidKeys(name, pos, posErr, flag);
+    }
+
+    /**
+     * @brief Set the measurement used for the Centroid slot using FunctorKeys.
+     */
+    void defineCentroid(
+        std::string const & name,
+        lsst::afw::table::Point2DKey const & pos,
+        Key<Flag> const & flag
+    ) {
+        _newSlotCentroid = CentroidKeys(name, pos, flag);
+    }
+
+    /**
      *  @brief Set the measurement used for the Centroid slot with a field name.
      *
      *  This requires that the measurement adhere to the convention of having
@@ -493,19 +540,16 @@ public:
         else {
             _newSlotCentroid.name = name;
             _newSlotCentroid.pos = lsst::afw::table::Point2DKey(schema[name+"_x"], schema[name+"_y"]);
-            _newSlotCentroid.uncertainty = NO_UNCERTAINTY;
             std::vector< Key<float> > sigma = std::vector< Key<float> >();
             std::vector< Key<float> > cov = std::vector< Key<float> >();
             try {
                 sigma.push_back(schema[name+"_xSigma"]);
                 sigma.push_back(schema[name+"_ySigma"]);
-                _newSlotCentroid.uncertainty = SIGMA_ONLY;
+                try {
+                    cov.push_back(schema[name+"_xyCov"]);
+                } catch (pex::exceptions::NotFoundException) {}
+                _newSlotCentroid.posErr = lsst::afw::table::CovarianceMatrixKey<float,2>(sigma, cov);
             } catch (pex::exceptions::NotFoundException) {}
-            try {
-                cov.push_back(schema[name+"_xyCov"]);
-                _newSlotCentroid.uncertainty = FULL_COVARIANCE;
-            } catch (pex::exceptions::NotFoundException) {}
-            _newSlotCentroid.posErr = lsst::afw::table::CovarianceMatrixKey<float,2>(sigma, cov);
         }
     }
     
@@ -557,6 +601,29 @@ public:
     }
 
     /**
+     * @brief Set the measurement used for the Shape slot using FunctorKeys.
+     */
+    void defineShape(
+        std::string const & name,
+        lsst::afw::table::QuadrupoleKey const & quadrupole,
+        lsst::afw::table::CovarianceMatrixKey<float,3> const & quadrupoleErr,
+        Key<Flag> const & flag
+    ) {
+        _newSlotShape = ShapeKeys(name, quadrupole, quadrupoleErr, flag);
+    }
+
+    /**
+     * @brief Set the measurement used for the Shape slot using FunctorKeys.
+     */
+    void defineShape(
+        std::string const & name,
+        lsst::afw::table::QuadrupoleKey const & quadrupole,
+        Key<Flag> const & flag
+    ) {
+        _newSlotShape = ShapeKeys(name, quadrupole, flag);
+    }
+
+    /**
      *  @brief Set the measurement used for the Shape slot with a field name.
      *
      *  This requires that the measurement adhere to the convention of having
@@ -578,22 +645,19 @@ public:
             _newSlotShape.name = name;
             _newSlotShape.quadrupole = lsst::afw::table::QuadrupoleKey(
                 schema[name + "_xx"],schema[name + "_yy"],schema[name + "_xy"]);
-            _newSlotShape.uncertainty = NO_UNCERTAINTY;
             std::vector< Key<float> > sigma = std::vector< Key<float> >();
             std::vector< Key<float> > cov = std::vector< Key<float> >();
             try {
                 sigma.push_back(schema[name+"_xxSigma"]);
                 sigma.push_back(schema[name+"_yySigma"]);
                 sigma.push_back(schema[name+"_xySigma"]);
-                _newSlotShape.uncertainty = SIGMA_ONLY;
+                try {
+                    cov.push_back(schema[name + "_xx_yy_Cov"]);
+                    cov.push_back(schema[name + "_xx_xy_Cov"]);
+                    cov.push_back(schema[name + "_yy_xy_Cov"]);
+                } catch (pex::exceptions::NotFoundException) {}
+                _newSlotShape.quadrupoleErr = lsst::afw::table::CovarianceMatrixKey<float,3>(sigma, cov);
             } catch (pex::exceptions::NotFoundException) {}
-            try {
-                cov.push_back(schema[name + "_xx_yy_Cov"]);
-                cov.push_back(schema[name + "_xx_xy_Cov"]);
-                cov.push_back(schema[name + "_yy_xy_Cov"]);
-                _newSlotShape.uncertainty = FULL_COVARIANCE;
-            } catch (pex::exceptions::NotFoundException) {}
-            _newSlotShape.quadrupoleErr = lsst::afw::table::CovarianceMatrixKey<float,3>(sigma, cov);
         }
     }
             
