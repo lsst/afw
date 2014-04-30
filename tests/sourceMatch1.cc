@@ -60,6 +60,7 @@ PTR(afwTable::SourceTable) getGlobalTable() {
         afwTable::Schema schema = afwTable::SourceTable::makeMinimalSchema();
         afwTable::addCentroidFields(schema, "centroid", "dummy centroid");
         table = afwTable::SourceTable::make(schema);
+        table->setVersion(0);
         table->defineCentroid("centroid");
     }
     return table;

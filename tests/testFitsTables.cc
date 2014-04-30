@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     KeyTuple<Flux> flux = addFluxFields(schema, "flux", "flux doc");
     KeyTuple<Centroid> centroid = addCentroidFields(schema, "centroid", "centroid doc");
     SourceCatalog vector(SourceTable::make(schema));
-
+    vector.getTable()->setVersion(0);
     vector.getTable()->defineModelFlux(flux.meas, flux.err, flux.flag);
     vector.getTable()->defineCentroid(centroid.meas, centroid.err, centroid.flag);
 

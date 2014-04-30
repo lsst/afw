@@ -91,6 +91,7 @@ class SourceTableTestCase(unittest.TestCase):
         self.shapeErrKey = self.schema.addField("c.err", type="CovMomentsF")
         self.shapeFlagKey = self.schema.addField("c.flags", type="Flag")
         self.table = lsst.afw.table.SourceTable.make(self.schema)
+        self.table.setVersion(0)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
         self.record = self.catalog.addNew()
         self.fillRecord(self.record)
@@ -105,6 +106,7 @@ class SourceTableTestCase(unittest.TestCase):
         del self.catalog
 
     def checkCanonical(self):
+        
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
@@ -114,6 +116,26 @@ class SourceTableTestCase(unittest.TestCase):
         self.assertEqual(self.table.getShapeDefinition(), "c")
         self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
         self.assert_(numpy.all(self.record.get(self.shapeErrKey) == self.record.getShapeErr()))
+
+    def testPersisted(self):
+        self.table.definePsfFlux("a")
+        self.table.defineCentroid("b")
+        self.table.defineShape("c")
+        self.catalog.writeFits("test.fits")
+        catalog = lsst.afw.table.SourceCatalog.readFits("test.fits")
+        table = catalog.getTable()
+        record = catalog[0]
+        # I'm using the keys from the non-persisted table.  They should work at least in the current implementation
+        self.assertEqual(table.getPsfFluxDefinition(), "a")
+        self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
+        self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
+        self.assertEqual(table.getCentroidDefinition(), "b")
+        self.assertEqual(record.get(self.centroidKey), record.getCentroid())
+        self.assert_(numpy.all(record.get(self.centroidErrKey) == record.getCentroidErr()))
+        self.assertEqual(table.getShapeDefinition(), "c")
+        self.assertEqual(record.get(self.shapeKey), record.getShape())
+        self.assert_(numpy.all(record.get(self.shapeErrKey) == record.getShapeErr()))
+        os.unlink("test.fits")
 
     def testCanonical1(self):
         self.table.definePsfFlux(self.fluxKey, self.fluxErrKey, self.fluxFlagKey)
@@ -143,6 +165,7 @@ class SourceTableTestCase(unittest.TestCase):
         fluxKey2 = schema2.addField("a", type="D")
         fluxFlagKey2 = schema2.addField("a.flags", type="Flag")
         table2 = lsst.afw.table.SourceTable.make(schema2)
+        table2.setVersion(0)
         table2.definePsfFlux("a")
         self.assertEqual(table2.getPsfFluxDefinition(), "a")
         self.assertEqual(table2.getPsfFluxKey(), fluxKey2)
