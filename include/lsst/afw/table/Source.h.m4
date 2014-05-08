@@ -158,6 +158,7 @@ m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 #include "boost/array.hpp"
 #include "boost/type_traits/is_convertible.hpp"
 
+#include "lsst/utils/ieee.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/aggregates.h"
@@ -774,7 +775,17 @@ inline Centroid::MeasValue SourceRecord::getCentroid() const {
     if (getTable()->getVersion() == 0) {
         return this->get(getTable()->getCentroidKey());
     } else {
-        return Centroid::MeasValue(this->get(getTable()->getCentroidPosKey()));
+        Centroid::MeasValue value = Centroid::MeasValue(this->get(getTable()->getCentroidPosKey()));
+        if (!lsst::utils::isnan(value.getX())) {
+            return value;
+        } else {
+            PTR(Footprint) footprint = this->getFootprint();
+            if (footprint->getPeaks().size() > 0) {
+                float x = footprint->getPeaks()[0]->getFx();
+                float y = footprint->getPeaks()[0]->getFx();
+                return Centroid::MeasValue(lsst::afw::geom::Point2D(x,y));
+            }
+        }
     }
 }
 
