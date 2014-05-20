@@ -158,6 +158,7 @@ m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 #include "boost/array.hpp"
 #include "boost/type_traits/is_convertible.hpp"
 
+#include "lsst/utils/ieee.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/aggregates.h"
@@ -519,6 +520,9 @@ public:
             std::vector< Key<float> > sigma = std::vector< Key<float> >();
             std::vector< Key<float> > cov = std::vector< Key<float> >();
             try {
+                _newSlotCentroid.flag = schema[name + "_flag"];
+            } catch (pex::exceptions::NotFoundException) {}
+            try {
                 sigma.push_back(schema[name+"_xSigma"]);
                 sigma.push_back(schema[name+"_ySigma"]);
                 try {
@@ -549,6 +553,13 @@ public:
         }
     }
 
+    bool hasCentroid() const {
+        if (getVersion() == 0) {
+            return _slotCentroid.meas.isValid();
+        } else {
+            return _newSlotCentroid.pos.isValid();
+        }
+    }
     /// @brief Return the key used for the Centroid slot.
     Centroid::MeasKey getCentroidKey() const { return _slotCentroid.meas; }
 
@@ -614,6 +625,9 @@ public:
             _newSlotShape.name = name;
             _newSlotShape.quadrupole = lsst::afw::table::QuadrupoleKey(
                 schema[name + "_xx"],schema[name + "_yy"],schema[name + "_xy"]);
+            try {
+                _newSlotShape.flag = schema[name + "_flag"];
+            } catch (pex::exceptions::NotFoundException) {}
             std::vector< Key<float> > sigma = std::vector< Key<float> >();
             std::vector< Key<float> > cov = std::vector< Key<float> >();
             try {
@@ -660,7 +674,7 @@ public:
     /// @brief Return the key used for the Shape slot success flag.
     Key<Flag> getShapeFlagKey() const {
         if (getVersion() == 0) return _slotShape.flag; 
-        else return _newSlotCentroid.flag;
+        else return _newSlotShape.flag;
     }
 
     lsst::afw::table::QuadrupoleKey getShapeQuadrupoleKey() const { return _newSlotShape.quadrupole; }
