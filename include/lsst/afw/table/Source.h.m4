@@ -788,17 +788,7 @@ inline Centroid::MeasValue SourceRecord::getCentroid() const {
     if (getTable()->getVersion() == 0) {
         return this->get(getTable()->getCentroidKey());
     } else {
-        Centroid::MeasValue value = Centroid::MeasValue(this->get(getTable()->getCentroidPosKey()));
-        if (!lsst::utils::isnan(value.getX())) {
-            return value;
-        } else {
-            PTR(Footprint) footprint = this->getFootprint();
-            if (footprint->getPeaks().size() > 0) {
-                float x = footprint->getPeaks()[0]->getFx();
-                float y = footprint->getPeaks()[0]->getFy();
-                return Centroid::MeasValue(lsst::afw::geom::Point2D(x,y));
-            }
-        }
+        return Centroid::MeasValue(this->get(getTable()->getCentroidPosKey()));
     }
 }
 
