@@ -140,9 +140,9 @@ class WarpExposureTestCase(unittest.TestCase):
         
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
-        edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+        edgeBitMask = afwWarpedMask.getPlaneBitMask("NO_DATA")
         if edgeBitMask == 0:
-            self.fail("warped mask has no EDGE bit")
+            self.fail("warped mask has no NO_DATA bit")
         afwWarpedMaskedImageArrSet = afwWarpedMaskedImage.getArrays()
         afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
         
@@ -423,7 +423,7 @@ class WarpExposureTestCase(unittest.TestCase):
         imArr, maskArr, varArr = toExp.getMaskedImage().getArrays()
         self.assertTrue(numpy.alltrue(numpy.isnan(imArr)))
         self.assertTrue(numpy.alltrue(numpy.isinf(varArr)))
-        edgeMask = afwImage.MaskU.getPlaneBitMask("EDGE")
+        edgeMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
         self.assertTrue(numpy.alltrue(maskArr == edgeMask))
     
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
@@ -566,9 +566,9 @@ class WarpExposureTestCase(unittest.TestCase):
                 ds9.mtv(afwWarpedExposure, frame=1, title="Warped")
     
             afwWarpedMask = afwWarpedMaskedImage.getMask()
-            edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+            edgeBitMask = afwWarpedMask.getPlaneBitMask("NO_DATA")
             if edgeBitMask == 0:
-                self.fail("warped mask has no EDGE bit")
+                self.fail("warped mask has no NO_DATA bit")
             afwWarpedMaskedImageArrSet = afwWarpedMaskedImage.getArrays()
             afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
     

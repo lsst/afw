@@ -92,7 +92,7 @@ class WarpExposureTestCase(unittest.TestCase):
         warpedExposure3 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
         # assert that warpedExposure and warpedExposure2 have the same number of non-edge pixels
         # and that warpedExposure3 has fewer
-        edgeMask = 1 << afwImage.MaskU.getMaskPlane("EDGE")
+        edgeMask = 1 << afwImage.MaskU.getMaskPlane("NO_DATA")
         mask1Arr = warpedExposure1.getMaskedImage().getMask().getArray()
         mask2Arr = warpedExposure2.getMaskedImage().getMask().getArray()
         mask3Arr = warpedExposure3.getMaskedImage().getMask().getArray()
@@ -196,9 +196,9 @@ class WarpExposureTestCase(unittest.TestCase):
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
 
         afwWarpedMask = afwWarpedMaskedImage.getMask()
-        edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+        edgeBitMask = afwWarpedMask.getPlaneBitMask("NO_DATA")
         if edgeBitMask == 0:
-            self.fail("warped mask has no EDGE bit")
+            self.fail("warped mask has no NO_DATA bit")
         afwWarpedImagArr = afwWarpedMaskedImage.getImage().getArray()
         afwWarpedMaskArr = afwWarpedMaskedImage.getMask().getArray()
 
