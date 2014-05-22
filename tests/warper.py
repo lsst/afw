@@ -94,13 +94,13 @@ class WarpExposureTestCase(unittest.TestCase):
         warpedExposure3 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
         # assert that warpedExposure and warpedExposure2 have the same number of non-edge pixels
         # and that warpedExposure3 has fewer
-        edgeMask = 1 << afwImage.MaskU.getMaskPlane("EDGE")
+        mask = (1 << afwImage.MaskU.getMaskPlane("NO_DATA")) + (1 << afwImage.MaskU.getMaskPlane("EDGE"))
         mask1Arr = warpedExposure1.getMaskedImage().getMask().getArray()
         mask2Arr = warpedExposure2.getMaskedImage().getMask().getArray()
         mask3Arr = warpedExposure3.getMaskedImage().getMask().getArray()
-        nGood1 = (mask1Arr & edgeMask == 0).sum()
-        nGood2 = (mask2Arr & edgeMask == 0).sum()
-        nGood3 = (mask3Arr & edgeMask == 0).sum()
+        nGood1 = (mask1Arr & mask == 0).sum()
+        nGood2 = (mask2Arr & mask == 0).sum()
+        nGood3 = (mask3Arr & mask == 0).sum()
         self.assertEqual(nGood1, nGood2)
         self.assertTrue(nGood3 < nGood1)
 

@@ -383,6 +383,7 @@ namespace {
         dict->add("DETECTED", ++i);      // 
         dict->add("DETECTED_NEGATIVE", ++i);
         dict->add("SUSPECT", ++i);
+        dict->add("NO_DATA", ++i);
     }
 }
 

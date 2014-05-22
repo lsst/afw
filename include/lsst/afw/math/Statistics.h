@@ -113,9 +113,9 @@ public:
         _maskPropagationThresholds()
     {
         try {
-            _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("EDGE");
+            _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("NO_DATA");
         } catch(lsst::pex::exceptions::InvalidParameterError) {
-            ;                           // Mask has no EDGE plane defined
+            ;                           // Mask has no NO_DATA plane defined
         }
 
         assert(_numSigmaClip > 0);
