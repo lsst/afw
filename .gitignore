@@ -135,6 +135,7 @@ tests/stacker
 tests/statistics
 tests/statisticsSpeed
 tests/testLib.py
+tests/testTrapezoidalPacker
 tests/testWcs
 tests/testWarpGpu
 tests/ticket1145
