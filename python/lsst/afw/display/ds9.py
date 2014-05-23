@@ -97,7 +97,8 @@ BLUE = "blue"
 CYAN = "cyan"
 MAGENTA = "magenta"
 YELLOW = "yellow"
-_maskColors = [WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW]
+ORANGE = "orange"
+_maskColors = [WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, ORANGE]
 
 def setMaskPlaneColor(name, color=None):
     """Request that mask plane name be displayed as color; name may be a dictionary
@@ -129,6 +130,7 @@ setMaskPlaneColor({
     "DETECTED" : BLUE,
     "DETECTED_NEGATIVE" : CYAN,
     "SUSPECT" : YELLOW,
+    "NO_DATA": ORANGE,
     # deprecated names
     "INTRP" : GREEN,
     "SAT" : GREEN,
