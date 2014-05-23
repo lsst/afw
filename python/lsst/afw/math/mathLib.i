@@ -81,6 +81,7 @@ Python interface to lsst::afw::math classes
 
 %include "LeastSquares.i"
 %include "BoundedField.i"
+%include "ChebyshevBoundedField.i"
 
 
 
