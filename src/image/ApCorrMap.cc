@@ -36,7 +36,7 @@ std::size_t const ApCorrMap::MAX_NAME_LENGTH;
 
 PTR(math::BoundedField) const ApCorrMap::operator[](std::string const & name) const {
     Iterator i = _internal.find(name);
-    if (i != _internal.end()) {
+    if (i == _internal.end()) {
         throw LSST_EXCEPT(
             pex::exceptions::NotFoundException,
             (boost::format("Aperture correction with name '%s' not found") % name).str()
@@ -47,7 +47,7 @@ PTR(math::BoundedField) const ApCorrMap::operator[](std::string const & name) co
 
 PTR(math::BoundedField) const ApCorrMap::get(std::string const & name) const {
     Iterator i = _internal.find(name);
-    if (i != _internal.end()) {
+    if (i == _internal.end()) {
         return PTR(math::BoundedField)();
     }
     return i->second;
