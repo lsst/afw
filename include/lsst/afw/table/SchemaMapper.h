@@ -147,7 +147,13 @@ public:
     explicit SchemaMapper();
 
     /**
-     *  @brief Construct a mapper from the given input Schema and optional output Schema
+     *  @brief Construct a mapper from the given input Schema and optional initial output Schema
+     *
+     *  @param[in] input    The Schema that fields will be mapped from.
+     *  @param[in] output   The starting point for the Schema that fields will be mapped to (no
+     *                      mappings will be created automaticaly).  Use addMapping() with
+     *                      doReplace=true to connect input fields to preexisting fields in
+     *                      the output schema.
      *
      *  Note that the addMapping() methods will not connect input schema fields to existing
      *  output schema fields unless doReplace=true; instead, these will by default append
