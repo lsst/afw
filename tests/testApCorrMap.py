@@ -95,6 +95,23 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
                              rtol=0.0)
         os.remove(filename)
 
+    def testExposurePersistence(self):
+        """Test that the ApCorrMap is saved with an Exposure"""
+        filename = "testApCorrMap.fits"
+        exposure1 = lsst.afw.image.ExposureF(self.bbox)
+        exposure1.getInfo().setApCorrMap(self.map)
+        exposure1.writeFits(filename)
+        exposure2 = lsst.afw.image.ExposureF(filename)
+        map2 = exposure2.getInfo().getApCorrMap()
+        for name, value in self.map.items():
+            value2 = map2.get(name)
+            self.assertIsNotNone(value2)
+            self.assertEqual(value.getBBox(), value2.getBBox())
+            self.assertClose(lsst.afw.math.ChebyshevBoundedField.cast(value).getCoefficients(),
+                             lsst.afw.math.ChebyshevBoundedField.cast(value2).getCoefficients(),
+                             rtol=0.0)
+        os.remove(filename)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
