@@ -63,6 +63,19 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         del self.map
         del self.bbox
 
+    def compare(self, a, b):
+        """Compare two ApCorrMaps for equality, without assuming that their BoundedFields have the
+        same addresses (i.e. so we can compare after serialization).
+        """
+        self.assertEqual(len(a), len(b))
+        for name, value in a.items():
+            value2 = b.get(name)
+            self.assertIsNotNone(value2)
+            self.assertEqual(value.getBBox(), value2.getBBox())
+            self.assertClose(lsst.afw.math.ChebyshevBoundedField.cast(value).getCoefficients(),
+                             lsst.afw.math.ChebyshevBoundedField.cast(value2).getCoefficients(),
+                             rtol=0.0)
+
     def testAccessors(self):
         """Test the accessors and other custom Swig code we've added to make ApCorrMap behave like a Python
         mapping."""
@@ -86,13 +99,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         filename = "testApCorrMap.fits"
         self.map.writeFits(filename)
         map2 = lsst.afw.image.ApCorrMap.readFits(filename)
-        for name, value in self.map.items():
-            value2 = map2.get(name)
-            self.assertIsNotNone(value2)
-            self.assertEqual(value.getBBox(), value2.getBBox())
-            self.assertClose(lsst.afw.math.ChebyshevBoundedField.cast(value).getCoefficients(),
-                             lsst.afw.math.ChebyshevBoundedField.cast(value2).getCoefficients(),
-                             rtol=0.0)
+        self.compare(self.map, map2)
         os.remove(filename)
 
     def testExposurePersistence(self):
@@ -103,14 +110,28 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         exposure1.writeFits(filename)
         exposure2 = lsst.afw.image.ExposureF(filename)
         map2 = exposure2.getInfo().getApCorrMap()
-        for name, value in self.map.items():
-            value2 = map2.get(name)
-            self.assertIsNotNone(value2)
-            self.assertEqual(value.getBBox(), value2.getBBox())
-            self.assertClose(lsst.afw.math.ChebyshevBoundedField.cast(value).getCoefficients(),
-                             lsst.afw.math.ChebyshevBoundedField.cast(value2).getCoefficients(),
-                             rtol=0.0)
+        self.compare(self.map, map2)
         os.remove(filename)
+
+    def testExposureRecordPersistence(self):
+        """Test that the ApCorrMap is saved with an ExposureRecord"""
+        filename = "testApCorrMap.fits"
+        cat1 = lsst.afw.table.ExposureCatalog(lsst.afw.table.ExposureTable.makeMinimalSchema())
+        record1 = cat1.addNew()
+        record1.setApCorrMap(self.map)
+        cat1.writeFits(filename)
+        cat2 = lsst.afw.table.ExposureCatalog.readFits(filename)
+        record2 = cat2[0]
+        map2 = record2.getApCorrMap()
+        self.compare(self.map, map2)
+        os.remove(filename)
+
+    def testExposureCatalogBackwardsCompatibility(self):
+        """Test that we can read an ExposureCatalog written with an old version of the code."""
+        filename = os.path.join(os.environ["AFW_DIR"], "tests", "data", "version-0-ExposureCatalog.fits")
+        cat = lsst.afw.table.ExposureCatalog.readFits(filename)
+        record = cat[0]
+        self.assertIsNone(record.getApCorrMap())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
