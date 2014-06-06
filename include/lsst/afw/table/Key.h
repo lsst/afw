@@ -20,8 +20,11 @@ class Access;
  *  know (via an internal offset) how to address and cast the internal
  *  data buffer of a record or table.
  *
- *  Keys can be obtained from a Schema by name, and are also returned
- *  when a new field is added.  Compound and array keys also provide
+ *  Keys can be obtained from a Schema by name:
+ *  @code
+ *   schema.find("myfield").key
+ *  @endcode
+ *  and are also returned when a new field is added.  Compound and array keys also provide
  *  accessors to retrieve scalar keys to their elements (see the
  *  documentation for the KeyBase specializations), even though these
  *  element keys do not correspond to a field that exists in any Schema.
