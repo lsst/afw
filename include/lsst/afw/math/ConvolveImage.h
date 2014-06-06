@@ -130,7 +130,7 @@ namespace math {
             bool doCopyEdge = false);
 
     /**
-     * \brief Return an edge pixel appropriate for a given Image type
+     * \brief Return an off-the-edge pixel appropriate for a given Image type
      *
      * The value is quiet_NaN if that exists for the pixel type, else 0
      */
@@ -146,11 +146,11 @@ namespace math {
     }
 
     /**
-     * \brief Return an edge pixel appropriate for a given MaskedImage type
+     * \brief Return an off-the-edge pixel appropriate for a given MaskedImage type
      *
      * The components are:
      * - %image = quiet_NaN if that exists for the pixel type, else 0
-     * - mask = EDGE bit set
+     * - mask = NO_DATA bit set
      * - variance = infinity
      */
     template <typename MaskedImageT>
@@ -164,7 +164,7 @@ namespace math {
         return typename MaskedImageT::SinglePixel(
             std::numeric_limits<ImagePixelT>::has_quiet_NaN ?
                 std::numeric_limits<ImagePixelT>::quiet_NaN() : 0,
-            MaskedImageT::Mask::getPlaneBitMask("EDGE"),
+            MaskedImageT::Mask::getPlaneBitMask("NO_DATA"),
             std::numeric_limits<VariancePixelT>::infinity());
     }
 }}}   // lsst::afw::math

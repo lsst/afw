@@ -69,6 +69,7 @@ ShiftedBBox = afwGeom.Box2I(afwGeom.Point2I(0, 460), afwGeom.Extent2I(76, 80))
 FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
+NoDataMaskPixel = afwImage.MaskU.getPlaneBitMask("NO_DATA")
 
 # Ignore kernel pixels whose value is exactly 0 when smearing the mask plane?
 # Set this to match the afw code
@@ -109,7 +110,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
         retImage = numpy.zeros(image.shape, dtype=image.dtype)
         retImage[:, :] = numpy.nan
         retMask = numpy.zeros(mask.shape, dtype=mask.dtype)
-        retMask[:, :] = EdgeMaskPixel
+        retMask[:, :] = NoDataMaskPixel
         retVariance = numpy.zeros(variance.shape, dtype=image.dtype)
         retVariance[:, :] = numpy.inf
     
@@ -174,14 +175,6 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
 
 class ConvolveTestCase(unittest.TestCase):
     def setUp(self):
-        tmp = afwImage.MaskU()          # clearMaskPlaneDict isn't static
-        tmp.clearMaskPlaneDict()        # reset so tests will be deterministic
-
-        for p in ("BAD", "SAT", "INTRP", "CR", "EDGE"):
-            afwImage.MaskU_addMaskPlane(p)
-            
-        del tmp
-        
         self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, afwImage.LOCAL, True)
         # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
         self.maskedImage.setXY0(300, 200)
