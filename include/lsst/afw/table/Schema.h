@@ -70,7 +70,7 @@ public:
     SchemaItem<T> find(std::string const & name) const;
 
     /**
-     *  @brief Find a SchemaItem in the Schema by name.
+     *  @brief Find a SchemaItem in the Schema by key.
      *
      *  Keys corresponding to named subfields are accepted, and will
      *  return a SchemaItem whose field is copied from the parent field
