@@ -76,9 +76,13 @@ class SourceMatchTestCase(unittest.TestCase):
             s.setId(2*nobj + i)
             s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
-
+        # Old API (pre DM-855)
         mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
-
+        self.assertEqual(len(mat), nobj)
+        # New API
+        mc = afwTable.MatchControl()
+        mc.findOnlyClosest = False
+        mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0*afwGeom.arcseconds, mc)
         self.assertEqual(len(mat), nobj)
 
         cat = afwTable.packMatches(mat)
@@ -117,7 +121,9 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(afwTable.SourceTable.getCoordKey().getRa(), float('nan') * afwGeom.radians)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), float('nan') * afwGeom.radians)
 
-        mat = afwTable.matchRaDec(ss1, ss2, 1.0 * afwGeom.arcseconds, False)
+        mc = afwTable.MatchControl()
+        mc.findOnlyClosest = False
+        mat = afwTable.matchRaDec(ss1, ss2, 1.0*afwGeom.arcseconds, mc)
         self.assertEqual(len(mat), 1)
         self.checkPickle(mat)
 
@@ -197,7 +203,10 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Actually do the match
         #
-        matches = afwTable.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
+        mc = afwTable.MatchControl()
+        mc.findOnlyClosest = False
+
+        matches = afwTable.matchRaDec(sdss, template, 1.0*afwGeom.arcseconds, mc)
 
         self.assertEqual(len(matches), 901)
         self.checkPickle(matches)
@@ -214,7 +223,9 @@ class SourceMatchTestCase(unittest.TestCase):
         for s in sdssSecondary:
             sdss.append(s)
 
-        matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, False)
+        mc = afwTable.MatchControl()
+        mc.symmetricMatch = False
+        matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds, mc)
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         self.checkPickle(matches)
@@ -231,7 +242,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 if s.getId() not in matchIds:
                     print "RHL", s.getId()
 
-        matches = afwTable.matchRaDec(sdss, 1.0 * afwGeom.arcseconds, True)
+        matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
         self.checkPickle(matches)
 
