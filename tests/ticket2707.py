@@ -44,14 +44,20 @@ class MatchXyTest(unittest.TestCase):
         idKey = self.table.getIdKey()
         self.cat1 = afwTable.SourceCatalog(self.table)
         self.cat2 = afwTable.SourceCatalog(self.table)
-        for i in xrange(10):
-            j = 9 - i
+        self.nobj = 10
+        self.nUniqueMatch = 0
+        for i in range(self.nobj):
+            j = self.nobj - i - 1
             r1, r2 = self.cat1.addNew(), self.cat2.addNew()
             r1.set(idKey, i)
-            r2.set(idKey, 10 + j)
+            r2.set(idKey, self.nobj + j)
             if i % 3 != 0:
                 r1.set(centroidKey, afwGeom.Point2D(i,i))
                 r2.set(centroidKey, afwGeom.Point2D(j,j))
+                self.nUniqueMatch += 1
+            elif i == 3:
+                r1.set(centroidKey, afwGeom.Point2D(i,i))
+                r2.set(centroidKey, afwGeom.Point2D(j + 2,j + 2))
             else:
                 r1.set(centroidKey, afwGeom.Point2D(nan,nan))
                 r2.set(centroidKey, afwGeom.Point2D(nan,nan))
@@ -64,11 +70,41 @@ class MatchXyTest(unittest.TestCase):
 
     def testMatchXy(self):
         matches = afwTable.matchXy(self.cat1, self.cat2, 0.01)
-        self.assertEquals(len(matches), 6)
+        self.assertEquals(len(matches), self.nUniqueMatch)
+        
         for m in matches:
-            self.assertEquals(m.first.getId() + 10, m.second.getId())
+            self.assertEquals(m.first.getId() + self.nobj, m.second.getId())
             self.assertEquals(m.distance, 0.0)
 
+    def testMatchXyMatchControl(self):
+        """Test using MatchControl to return all matches, and add a test for closest==False at the same time"""
+        for closest in (True, False):
+            mc = afwTable.MatchControl()
+            mc.findOnlyClosest = closest
+            matches = afwTable.matchXy(self.cat1, self.cat2, 0.01, mc)
+
+            if False:
+                for m in matches:
+                    print closest, m.first.getId(), m.second.getId(), m.distance
+
+            self.assertEquals(len(matches), self.nUniqueMatch if closest else self.nUniqueMatch + 1)
+            for m in matches:
+                if closest:
+                    self.assertEquals(m.first.getId() + self.nobj, m.second.getId())
+                self.assertEquals(m.distance, 0.0)
+
+    def testSelfMatchXy(self):
+        """Test doing a self-matches"""
+        for symmetric in (True, False):
+            mc = afwTable.MatchControl()
+            mc.symmetricMatch = symmetric
+            matches = afwTable.matchXy(self.cat2, 0.01, mc)
+
+            if False:
+                for m in matches:
+                    print m.first.getId(), m.second.getId(), m.distance
+
+            self.assertEquals(len(matches), 2 if symmetric else 1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
