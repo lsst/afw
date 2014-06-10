@@ -21,6 +21,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
+%include "lsst/pex/config.h"            // LSST_CONTROL_FIELD
+
 /*
  * Wrappers for the Match object and matching functions, including instantiation of SimpleMatch, SourceMatch,
  * and ReferenceMatch.
@@ -136,6 +138,11 @@ NAME##MatchVector matchRaDec(
     R2##Catalog const & cat2,
     Angle radius, bool closest=true
 );
+NAME##MatchVector matchRaDec(
+    R1##Catalog const & cat1,
+    R2##Catalog const & cat2,
+    Angle radius, MatchControl const& mc=MatchControl()
+);
 
 NAME##MatchVector unpackMatches(
     BaseCatalog const & matches,
@@ -155,23 +162,22 @@ namespace lsst { namespace afw { namespace table {
 
 SimpleMatchVector matchRaDec(
     SimpleCatalog const & cat,
-    Angle radius, bool symmetric=true
+    Angle radius, MatchControl const& mc=MatchControl()
 );
 
 SourceMatchVector matchRaDec(
     SourceCatalog const & cat,
-    Angle radius, bool symmetric=true
+    Angle radius, MatchControl const& mc=MatchControl()
 );
 
-SourceMatchVector matchXy(
-    SourceCatalog const & cat1,
-    SourceCatalog const & cat2,
-    double radius, bool closest=true
+SimpleMatchVector matchRaDec(
+    SimpleCatalog const & cat,
+    Angle radius, bool symmetric
 );
 
-SourceMatchVector matchXy(
+SourceMatchVector matchRaDec(
     SourceCatalog const & cat,
-    double radius, bool symmetric=true
+    Angle radius, bool symmetric
 );
 
 }}} // namespace lsst::afw::table
