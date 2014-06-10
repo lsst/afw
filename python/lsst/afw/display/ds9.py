@@ -783,6 +783,12 @@ def interact():
 
     while True:
         vals = ds9Cmd("imexam key coordinate", get=True).split()
+        if vals[0] == "XPA$ERROR":
+            if vals[1:4] == ['unknown', 'option', '"-state"']:
+                pass                    # a ds9 bug --- you get this by hitting TAB
+            else:
+                print >> sys.stderr, "Error return from imexam:", " ".join(vals)
+            continue
 
         k = vals.pop(0)
         try:
@@ -839,7 +845,7 @@ except NameError:
         setCallback(k, noRaise=True)
         setCallback(k.upper(), noRaise=True)
 
-    for k in ('Return', 'XPA$ERROR'):
+    for k in ('Return', 'XPA$ERROR', 'Shift_L', 'Shift_R'):
         setCallback(k)
 
     for k in ('q', 'Escape'):
