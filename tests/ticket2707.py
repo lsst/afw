@@ -79,19 +79,35 @@ class MatchXyTest(unittest.TestCase):
     def testMatchXyMatchControl(self):
         """Test using MatchControl to return all matches, and add a test for closest==False at the same time"""
         for closest in (True, False):
-            mc = afwTable.MatchControl()
-            mc.findOnlyClosest = closest
-            matches = afwTable.matchXy(self.cat1, self.cat2, 0.01, mc)
+            for includeMismatches in (True, False):
+                mc = afwTable.MatchControl()
+                mc.findOnlyClosest = closest
+                mc.includeMismatches = includeMismatches
+                matches = afwTable.matchXy(self.cat1, self.cat2, 0.01, mc)
 
-            if False:
+                if False:
+                    for m in matches:
+                        print closest, m.first.getId(), m.second.getId(), m.distance
+    
+                if includeMismatches:
+                    catMatches = afwTable.SourceCatalog(self.table)
+                    catMismatches = afwTable.SourceCatalog(self.table)
+                    for m in matches:
+                        if m[1] != None:
+                            if not any(x == m[0] for x in catMatches):
+                                catMatches.append(m[0])
+                        else:
+                            catMismatches.append(m[0])
+                    matches = afwTable.matchXy(catMatches, self.cat2, 0.01, mc)
+                    mc.includeMismatches = False
+                    noMatches = afwTable.matchXy(catMismatches, self.cat2, 0.01, mc)
+                    self.assertEquals(len(noMatches), 0)
+
+                self.assertEquals(len(matches), self.nUniqueMatch if closest else self.nUniqueMatch + 1)
                 for m in matches:
-                    print closest, m.first.getId(), m.second.getId(), m.distance
-
-            self.assertEquals(len(matches), self.nUniqueMatch if closest else self.nUniqueMatch + 1)
-            for m in matches:
-                if closest:
-                    self.assertEquals(m.first.getId() + self.nobj, m.second.getId())
-                self.assertEquals(m.distance, 0.0)
+                    if closest:
+                        self.assertEquals(m.first.getId() + self.nobj, m.second.getId())
+                    self.assertEquals(m.distance, 0.0)
 
     def testSelfMatchXy(self):
         """Test doing a self-matches"""

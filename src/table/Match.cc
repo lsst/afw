@@ -168,6 +168,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
     boost::scoped_array<Pos2> pos2(new Pos2[len2]);
     len1 = makeRecordPositions(cat1, pos1.get());
     len2 = makeRecordPositions(cat2, pos2.get());
+    PTR(typename Cat2::Record) nullRecord = boost::shared_ptr<typename Cat2::Record>();
     
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double minDec = pos1[i].dec - radius.asRadians();
@@ -179,6 +180,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
         size_t closestIndex = -1;          // Index of closest match (if any)
         double d2Include = d2Limit;     // Squared distance for inclusion of match
         bool found = false;             // Found anything?
+        size_t nMatches = 0;            // Number of matches
         for (size_t j = start; j < len2 && pos2[j].dec <= maxDec; ++j) {
             double dx = pos1[i].x - pos2[j].x;
             double dy = pos1[i].y - pos2[j].y;
@@ -194,7 +196,11 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
                         MatchT(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
                     );
                 }
+                ++nMatches;
             }
+        }
+        if (mc.includeMismatches && nMatches == 0) {
+            matches.push_back(MatchT(pos1[i].src, nullRecord, NAN));
         }
         if (mc.findOnlyClosest && found) {
             matches.push_back(
@@ -302,6 +308,7 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     size_t len2 = cat2.size();
     boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
     boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
+    PTR(SourceRecord) nullRecord = boost::shared_ptr<SourceRecord>();
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i) {
         if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
@@ -338,6 +345,7 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
         size_t closestIndex = -1;          // Index of closest match (if any)
         double r2Include = r2;          // Squared radius for inclusion of match
         bool found = false;             // Found anything?
+        size_t nMatches = 0;            // Number of matches
         for (size_t j = start; j < len2 && (y2 = pos2[j]->getY()) <= maxY; ++j) {
             double dx = x - pos2[j]->getX();
             double dy = y - y2;
@@ -350,7 +358,11 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
                 } else {
                     matches.push_back(SourceMatch(pos1[i], pos2[j], std::sqrt(d2)));
                 }
+                ++nMatches;
             }
+        }
+        if (mc.includeMismatches && nMatches == 0) {
+            matches.push_back(SourceMatch(pos1[i], nullRecord, NAN));
         }
         if (mc.findOnlyClosest && found) {
             matches.push_back(SourceMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
