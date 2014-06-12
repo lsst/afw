@@ -212,9 +212,6 @@ class Mosaic(object):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
         specified by Mosaic.append()"""
 
-        if frame is None:
-            return
-
         if not labels:
             labels = self.labels
 
