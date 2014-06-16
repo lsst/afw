@@ -26,6 +26,7 @@
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
@@ -50,15 +51,24 @@ int popInt(daf::base::PropertySet & metadata, std::string const & name) {
 // Clone various components; defined here so that we don't have to expose their insides in Exposure.h
 
 PTR(Calib) ExposureInfo::_cloneCalib(CONST_PTR(Calib) calib) {
-    if (calib)
+    if (calib) {
         return PTR(Calib)(new Calib(*calib));
+    }
     return PTR(Calib)();
 }
 
 PTR(Wcs) ExposureInfo::_cloneWcs(CONST_PTR(Wcs) wcs) {
-    if (wcs)
+    if (wcs) {
         return wcs->clone();
+    }
     return PTR(Wcs)();
+}
+
+PTR(ApCorrMap) ExposureInfo::_cloneApCorrMap(PTR(ApCorrMap const) apCorrMap) {
+    if (apCorrMap) {
+        return boost::make_shared<ApCorrMap>(*apCorrMap);
+    }
+    return PTR(ApCorrMap)();
 }
 
 ExposureInfo::ExposureInfo(
@@ -68,14 +78,16 @@ ExposureInfo::ExposureInfo(
     CONST_PTR(cameraGeom::Detector) const & detector,
     Filter const & filter,
     PTR(daf::base::PropertySet) const & metadata,
-    PTR(CoaddInputs) const & coaddInputs
+    PTR(CoaddInputs) const & coaddInputs,
+    PTR(ApCorrMap) const & apCorrMap
 ) : _wcs(_cloneWcs(wcs)),
     _psf(boost::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
     _filter(filter),
     _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList())),
-    _coaddInputs(coaddInputs)
+    _coaddInputs(coaddInputs),
+    _apCorrMap(_cloneApCorrMap(apCorrMap))
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
@@ -85,7 +97,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
     _detector(other._detector),
     _filter(other._filter),
     _metadata(other._metadata),
-    _coaddInputs(other._coaddInputs)
+    _coaddInputs(other._coaddInputs),
+    _apCorrMap(_cloneApCorrMap(other._apCorrMap))
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
@@ -95,7 +108,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _detector(other._detector),
     _filter(other._filter),
     _metadata(other._metadata),
-    _coaddInputs(other._coaddInputs)
+    _coaddInputs(other._coaddInputs),
+    _apCorrMap(_cloneApCorrMap(other._apCorrMap))
 {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
@@ -109,8 +123,13 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
         _filter = other._filter;
         _metadata = other._metadata;
         _coaddInputs = other._coaddInputs;
+        _apCorrMap = _cloneApCorrMap(other._apCorrMap);
     }
     return *this;
+}
+
+void ExposureInfo::initApCorrMap() {
+    _apCorrMap = boost::make_shared<ApCorrMap>();
 }
 
 ExposureInfo::~ExposureInfo() {}
@@ -133,6 +152,10 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     if (hasCoaddInputs()) {
         int coaddInputsId = data.archive.put(getCoaddInputs());
         data.metadata->set("COADD_INPUTS_ID", coaddInputsId, "archive ID for coadd inputs catalogs");
+    }
+    if (hasApCorrMap()) {
+        int apCorrMapId = data.archive.put(getApCorrMap());
+        data.metadata->set("AP_CORR_MAP_ID", apCorrMapId, "archive ID for aperture correction map");
     }
     if (hasPsf() && getPsf()->isPersistable()) {
         int psfId = data.archive.put(getPsf());
@@ -245,6 +268,14 @@ void ExposureInfo::_readFits(
         } catch (pex::exceptions::NotFoundException & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read CoaddInputs; setting to null: %s") % err.what()
+            );
+        }
+        int apCorrMapId = popInt(*metadata, "AP_CORR_MAP_ID");
+        try {
+            _apCorrMap = archive.get<ApCorrMap>(apCorrMapId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read ApCorrMap; setting to null: %s") % err.what()
             );
         }
     }

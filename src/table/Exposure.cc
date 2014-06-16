@@ -8,6 +8,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -58,17 +59,40 @@ private:
 // Schema prepended when saving an Exposure table
 struct PersistenceSchema : private boost::noncopyable {
     Schema schema;
+    int version;
     Key<int> wcs;
     Key<int> psf;
     Key<int> calib;
+    Key<int> apCorrMap;
 
-    static PersistenceSchema const & get() {
-        static PersistenceSchema const instance;
-        return instance;
+    static PersistenceSchema const & get(int version=1) {
+        static PersistenceSchema const instance0(0);
+        static PersistenceSchema const instance1(1);
+        switch (version) {
+        case 0:
+            return instance0;
+        case 1:
+            return instance1;
+        default:
+            assert(false);
+        }
+    }
+
+    static PersistenceSchema const & getMatching(Schema const & schema) {
+        if (schema.contains(PersistenceSchema::get(1).schema)) {
+            return PersistenceSchema::get(1);
+        } else if (schema.contains(PersistenceSchema::get(0).schema)) {
+            return PersistenceSchema::get(0);
+        }
+        throw LSST_EXCEPT(
+            afw::table::io::PersistenceError,
+            "Unrecognized schema for ExposureCatalog"
+        );
     }
 
     // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
     SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
+        assert(version > 0); // should only be writing version 1 catalogs
         std::vector<Schema> inSchemas;
         inSchemas.push_back(PersistenceSchema::get().schema);
         inSchemas.push_back(inputSchema);
@@ -77,6 +101,12 @@ struct PersistenceSchema : private boost::noncopyable {
 
     // Create a SchemaMapper that maps a BaseRecord with IDs for Psf and Wcs to an ExposureRecord
     SchemaMapper makeReadMapper(Schema const & inputSchema) const {
+        if (!inputSchema.contains(schema)) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Cannot read ExposureCatalog instances written with an older version of the pipeline"
+            );
+        }
         return SchemaMapper::removeMinimalSchema(inputSchema, schema);
     }
 
@@ -87,10 +117,12 @@ struct PersistenceSchema : private boost::noncopyable {
         SchemaMapper const & mapper, OutputArchiveIsh & archive,
         bool permissive
     ) const {
+        assert(version > 0); // should only be writing version 1 catalogs
         output.assign(input, mapper);
         output.set(psf, archive.put(input.getPsf(), permissive));
         output.set(wcs, archive.put(input.getWcs(), permissive));
         output.set(calib, archive.put(input.getCalib(), permissive));
+        output.set(apCorrMap, archive.put(input.getApCorrMap(), permissive));
     }
 
     void readRecord(
@@ -101,17 +133,26 @@ struct PersistenceSchema : private boost::noncopyable {
         output.setPsf(archive.get<detection::Psf>(input.get(psf)));
         output.setWcs(archive.get<image::Wcs>(input.get(wcs)));
         output.setCalib(archive.get<image::Calib>(input.get(calib)));
+        if (version > 0) {
+            output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
+        }
     }
 
 private:
-    PersistenceSchema() :
+
+    PersistenceSchema(int version_) :
         schema(),
+        version(version_),
         wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
         psf(schema.addField<int>("psf", "archive ID for Psf object")),
         calib(schema.addField<int>("calib", "archive ID for Calib object"))
     {
+        if (version > 0) {
+            apCorrMap = schema.addField<int>("apCorrMap", "archive ID for ApCorrMap object");
+        }
         schema.getCitizen().markPersistent();
     }
+
 };
 
 } // anonymous
@@ -190,7 +231,7 @@ class ExposureFitsReader : public io::FitsReader {
 public:
 
     explicit ExposureFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
-        io::FitsReader(fits, archive, flags), _archive(archive)
+        io::FitsReader(fits, archive, flags), _archive(archive), _helper(NULL)
     {
         if (!_archive) {
             int oldHdu = _fits->getHdu();
@@ -209,6 +250,7 @@ protected:
     PTR(BaseTable) _inTable;
     PTR(io::InputArchive) _archive;
     SchemaMapper _mapper;
+    PersistenceSchema const * _helper;
 };
 
 PTR(BaseTable) ExposureFitsReader::_readTable() {
@@ -216,7 +258,8 @@ PTR(BaseTable) ExposureFitsReader::_readTable() {
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
     _inTable = BaseTable::make(schema);
-    _mapper = PersistenceSchema::get().makeReadMapper(schema);
+    _helper = &PersistenceSchema::getMatching(schema);
+    _mapper = _helper->makeReadMapper(schema);
     PTR(ExposureTable) table = ExposureTable::make(_mapper.getOutputSchema());
     _startRecords(*table);
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
@@ -230,7 +273,7 @@ PTR(BaseRecord) ExposureFitsReader::_readRecord(PTR(BaseTable) const & t) {
     PTR(BaseRecord) inRecord = io::FitsReader::_readRecord(_inTable);
     if (inRecord) {
         record = table->makeRecord();
-        PersistenceSchema::get().readRecord(*inRecord, *record, _mapper, *_archive);
+        _helper->readRecord(*inRecord, *record, _mapper, *_archive);
     }
     return record;
 }
