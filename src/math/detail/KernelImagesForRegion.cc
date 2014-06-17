@@ -54,7 +54,7 @@ namespace mathDetail = lsst::afw::math::detail;
 /**
  * Construct a KernelImagesForRegion
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if kernelPtr is null
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernelPtr is null
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr kernelPtr,               ///< kernel
@@ -72,7 +72,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     _imagePtrList(4)
 {
     if (!_kernelPtr) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
     pexLog::TTrace<6>("lsst.afw.math.convolve",
     "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
@@ -86,8 +86,8 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
  *
  * @warning: if any images are incorrect you will get a mess.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if kernelPtr is null
- * @throw lsst::pex::exceptions::InvalidParameterException if an image has the wrong dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernelPtr is null
+ * @throw lsst::pex::exceptions::InvalidParameterError if an image has the wrong dimensions
  */
 mathDetail::KernelImagesForRegion::KernelImagesForRegion(
         KernelConstPtr const kernelPtr,         ///< kernel
@@ -109,7 +109,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     _imagePtrList(4)
 {
     if (!_kernelPtr) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelPtr is null");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
     _insertImage(BOTTOM_LEFT, bottomLeftImagePtr);
     _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
@@ -161,7 +161,7 @@ const {
         default: {
             std::ostringstream os;
             os << "Bug: unhandled location = " << location;
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
         }
     }
 }
@@ -245,14 +245,14 @@ const {
 /**
  * Compute image at a particular location
  *
- * @throw lsst::pex::exceptions::NotFoundException if there is no pointer at that location
+ * @throw lsst::pex::exceptions::NotFoundError if there is no pointer at that location
  */
 void mathDetail::KernelImagesForRegion::_computeImage(Location location) const {
     ImagePtr imagePtr = _imagePtrList[location];
     if (!imagePtr) {
         std::ostringstream os;
         os << "Null imagePtr at location " << location;
-        throw LSST_EXCEPT(pexExcept::NotFoundException, os.str());
+        throw LSST_EXCEPT(pexExcept::NotFoundError, os.str());
     }
 
     afwGeom::Point2I pixelIndex = getPixelIndex(location);
@@ -269,7 +269,7 @@ void mathDetail::KernelImagesForRegion::_computeImage(Location location) const {
  *
  * @return a list of subspan lengths
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if nDivisions >= length
+ * @throw lsst::pex::exceptions::InvalidParameterError if nDivisions >= length
  */
 std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     int length,     ///< length of region
@@ -278,7 +278,7 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
     if ((nDivisions > length) || (nDivisions < 1)) {
         std::ostringstream os;
         os << "nDivisions = " << nDivisions << " not in range [1, " << length << " = length]";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     std::vector<int> regionLengths;
     int remLength = length;
@@ -288,7 +288,7 @@ std::vector<int> mathDetail::KernelImagesForRegion::_computeSubregionLengths(
             std::ostringstream os;
             os << "Bug! _computeSubregionLengths(length=" << length << ", nDivisions=" << nDivisions <<
                 ") computed sublength = " << subLength << " < 0; remLength = " << remLength;
-            throw LSST_EXCEPT(pexExcept::RuntimeErrorException, os.str());
+            throw LSST_EXCEPT(pexExcept::RuntimeError, os.str());
         }
         regionLengths.push_back(subLength);
         remLength -= subLength;
@@ -344,6 +344,6 @@ mathDetail::RowOfKernelImagesForRegion::RowOfKernelImagesForRegion(
     if ((nx < 1) || (ny < 1)) {
         std::ostringstream os;
         os << "nx = " << nx << " and/or ny = " << ny << " < 1";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     };
 }

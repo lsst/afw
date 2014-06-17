@@ -312,8 +312,8 @@ inline int lsst::afw::math::detail::KernelImagesForRegion::_computeNextSubregion
 /**
  * Insert an image in the cache.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if image pointer is null
- * @throw lsst::pex::exceptions::InvalidParameterException if image has the wrong dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if image pointer is null
+ * @throw lsst::pex::exceptions::InvalidParameterError if image has the wrong dimensions
  */
 inline void lsst::afw::math::detail::KernelImagesForRegion::_insertImage(
         Location location,      ///< location at which to insert image
@@ -326,7 +326,7 @@ const {
                 << imagePtr->getWidth() << ", " << imagePtr->getHeight()
                 << ") != (" << _kernelPtr->getWidth() << ", " << _kernelPtr->getHeight()
                 << ") = kernel dimensions";
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
         }
         _imagePtrList[location] = imagePtr;
     }

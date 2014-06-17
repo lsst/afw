@@ -82,7 +82,7 @@ afwMath::SeparableKernel::SeparableKernel(
         os << "kernelColFunction.getNParameters() + kernelRowFunction.getNParameters() = "
             << kernelColFunction.getNParameters() << " + " << kernelRowFunction.getNParameters()
             << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 
     _setKernelXY();
@@ -116,7 +116,7 @@ double afwMath::SeparableKernel::computeVectors(
             << colList.size() << ", " << rowList.size()
             << ") != ("<< this->getWidth() << ", " << this->getHeight()
             << ") = " << "kernel dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     if (this->isSpatiallyVarying()) {
         this->setKernelParametersFromSpatialModel(x, y);
@@ -246,7 +246,7 @@ double afwMath::SeparableKernel::basicComputeVectors(
     double imSum = colSum * rowSum;
     if (doNormalize) {
         if ((colSum == 0) || (rowSum == 0)) {
-            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+            throw LSST_EXCEPT(pexExcept::OverflowError, "Cannot normalize; kernel sum is 0");
         }
         for (std::vector<Pixel>::iterator colIter = colList.begin(); colIter != colList.end(); ++colIter) {
             *colIter /= colSum;

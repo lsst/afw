@@ -52,9 +52,9 @@ afwImage::ImageSlice<PixelT>::ImageSlice(
 
     // verify the img is a slice (row or column)
     if (img.getWidth() != 1 && img.getHeight() != 1) {
-        throw LSST_EXCEPT(ex::OutOfRangeException, "Input image must be a slice (width or height == 1)");
+        throw LSST_EXCEPT(ex::OutOfRangeError, "Input image must be a slice (width or height == 1)");
     }  else if (img.getWidth() == 1 && img.getHeight() == 1) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, 
+        throw LSST_EXCEPT(ex::InvalidParameterError, 
                           "1x1 image ambiguous (could be row or column).  "
                           "Perhaps a constant would be better than a slice? ");
     } else if (img.getWidth() == 1 && img.getHeight() != 1) {

@@ -169,14 +169,14 @@ using boost::serialization::make_nvp;
         /**
          * @brief Set all function parameters
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException
+         * @throw lsst::pex::exceptions::InvalidParameterError
          *        if the wrong number of parameters is supplied.
          */
         void setParameters(
             std::vector<double> const &params)   ///< vector of function parameters
         {
             if (_params.size() != params.size()) {
-                throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                     (boost::format("params has %d entries instead of %d") % \
                     params.size() % _params.size()).str());
             }
@@ -349,7 +349,7 @@ using boost::serialization::make_nvp;
          * Return the derivative of the Function with respect to its parameters
          */
         virtual std::vector<double> getDFuncDParameters(double, double) const {
-            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                               "getDFuncDParameters is not implemented for this class");
         }
 
@@ -405,7 +405,7 @@ using boost::serialization::make_nvp;
          * The order of the polynomial is determined from the length of the params vector
          * (see orderFromNParameters) and only certain lengths are suitable: 1, 3, 6, 10, 15...
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if params length is unsuitable
+         * @throw lsst::pex::exceptions::InvalidParameterError if params length is unsuitable
          */
         explicit BasePolynomialFunction2(
             std::vector<double> params) ///< polynomial coefficients
@@ -426,13 +426,13 @@ using boost::serialization::make_nvp;
         /**
          * @brief Compute number of parameters from polynomial order.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if order < 0
+         * @throw lsst::pex::exceptions::InvalidParameterError if order < 0
          */
         static int nParametersFromOrder(int order) {
             if (order < 0) {
                 std::ostringstream os;
                 os << "order=" << order << " invalid: must be >= 0";
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
             }
             return (order + 1) * (order + 2) / 2;
         }
@@ -449,7 +449,7 @@ using boost::serialization::make_nvp;
          *     15        4
          *    ...
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if nParameters is invalid
+         * @throw lsst::pex::exceptions::InvalidParameterError if nParameters is invalid
          */
         static int orderFromNParameters(int nParameters) {
             int order = static_cast<int>(
@@ -457,7 +457,7 @@ using boost::serialization::make_nvp;
             if (nParameters != BasePolynomialFunction2::nParametersFromOrder(order)) {
                 std::ostringstream os;
                 os << "nParameters=" << nParameters << " invalid: order is not an integer";
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
             }
             return order;
         }

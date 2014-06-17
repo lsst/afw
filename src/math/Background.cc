@@ -67,12 +67,12 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
 {
     if (_imgBBox.isEmpty()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "Image contains no pixels");
     }
 
     // Check that an int's large enough to hold the number of pixels
     if (_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) > std::numeric_limits<int>::max()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowError,
                           str(boost::format("Image %dx%d has more pixels than fit in an int (%d)")
                               % _imgBBox.getWidth() % _imgBBox.getHeight() % std::numeric_limits<int>::max()));
     }
@@ -99,12 +99,12 @@ Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image 
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
 {
     if (_imgBBox.isEmpty()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "Image contains no pixels");
     }
 
     // Check that an int's large enough to hold the number of pixels
     if (_imgBBox.getWidth()*static_cast<double>(_imgBBox.getHeight()) > std::numeric_limits<int>::max()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::OverflowError,
                           str(boost::format("Image %dx%d has more pixels than fit in an int (%d)")
                               % _imgBBox.getWidth() % _imgBBox.getHeight() % std::numeric_limits<int>::max()));
     }
@@ -154,7 +154,7 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
     }
 
     if (undersampleStrings.find(style) == undersampleStrings.end()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Understample style not defined: "+style);
+        throw LSST_EXCEPT(ex::InvalidParameterError, "Understample style not defined: "+style);
     }
     return undersampleStrings[style];
 }

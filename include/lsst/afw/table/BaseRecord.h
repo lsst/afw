@@ -61,7 +61,7 @@ public:
     typename Field<T>::Element * getElement(Key<T> const & key) {
         if (!key.isValid()) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "Key is not valid (if this is a SourceRecord, make sure slot aliases have been setup)."
             );
         }
@@ -81,7 +81,7 @@ public:
     typename Field<T>::Element const * getElement(Key<T> const & key) const {
         if (!key.isValid()) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "Key is not valid (if this is a SourceRecord, make sure slot aliases have been setup)."
             );
         }

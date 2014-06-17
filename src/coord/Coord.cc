@@ -118,7 +118,7 @@ afwCoord::CoordSystem afwCoord::makeCoordEnum(std::string const system) {
     if (idmap.find(system) != idmap.end()) {
         return idmap[system];
     } else {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "System " + system + " not defined.");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "System " + system + " not defined.");
     }
 }
 
@@ -308,13 +308,13 @@ static afwGeom::Angle xmsStringToAngle(
     afwGeom::AngleUnit unit
     ) {
     if (dms.find(":") == std::string::npos) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("String is not in xx:mm:ss format: %s") % dms).str());
     }
     std::vector<std::string> elements;
     boost::split(elements, dms, boost::is_any_of(":"));
     if (elements.size() != 3) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Could not parse string as xx:mm:ss format: %s") % dms).str());
     }
     int const deg   = abs(atoi(elements[0].c_str()));
@@ -445,7 +445,7 @@ afwCoord::Coord::Coord() : _longitude(afwGeom::Angle(NaN)), _latitude(afwGeom::A
  */
 void afwCoord::Coord::_verifyValues() const {
     if (_latitude.asRadians() < -afwGeom::HALFPI || _latitude.asRadians() > afwGeom::HALFPI) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Latitude coord must be: -PI/2 <= lat <= PI/2 (%f).") %
                            _latitude).str());
     }
@@ -667,12 +667,12 @@ afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) const {
         }
         break;
       case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Cannot make Topocentric with convert() (must also specify Observatory).\n"
                           "Instantiate TopocentricCoord() directly.");
         break;
       default:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC allowed.");
         break;
         
@@ -1165,11 +1165,11 @@ afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
                                                                     ) const
 {
     if (obs != _obs) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Expected observatory %s, saw %s") % _obs % obs).str());
     }
     if (fabs(date.get() - getEpoch()) > std::numeric_limits<double>::epsilon()) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Expected date %g, saw %g") % getEpoch() % date.get()).str());
     }
         
@@ -1219,23 +1219,23 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
         return boost::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
         break;
       case ICRS:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "ICRS has no epoch, use overloaded makeCoord with args (system, ra, dec).");
         break;
       case GALACTIC:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Galactic has no epoch, use overloaded makeCoord with (system, ra, dec).");
         break;
       case ECLIPTIC:
         return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
         break;
       case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
                           "Instantiate TopocentricCoord() directly.");
         break;
       default:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
             "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
         break;
         
@@ -1271,12 +1271,12 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
         return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, 2000.0));
         break;
       case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
                           "Instantiate TopocentricCoord() directly.");
         break;
       default:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
             "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
         break;
         
@@ -1402,12 +1402,12 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
         return boost::shared_ptr<EclipticCoord>(new EclipticCoord());
         break;
       case TOPOCENTRIC:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Cannot make Topocentric with makeCoord() (must also specify Observatory).\n"
                           "Instantiate TopocentricCoord() directly.");
         break;
       default:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, allowed.");
         break;
         

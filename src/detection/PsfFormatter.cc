@@ -64,7 +64,7 @@ void afwDetect::PsfFormatter::write(
     execTrace("PsfFormatter write start");
     afwDetect::Psf const* ps = dynamic_cast<afwDetect::Psf const*>(persistable);
     if (ps == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Psf");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Psf");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("PsfFormatter write BoostStorage");
@@ -82,7 +82,7 @@ void afwDetect::PsfFormatter::write(
         execTrace("PsfFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Psf");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
 }
 
 dafBase::Persistable* afwDetect::PsfFormatter::read(
@@ -105,13 +105,13 @@ dafBase::Persistable* afwDetect::PsfFormatter::read(
         execTrace("PsfFormatter read end");
         return ps;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Psf");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
 }
 
 void afwDetect::PsfFormatter::update(dafBase::Persistable* ,
                                    dafPersist::Storage::Ptr,
                                    dafBase::PropertySet::Ptr) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Psf");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Psf");
 }
 
 /** Serialize a Psf to a Boost archive.  Handles text or XML
@@ -126,7 +126,7 @@ void afwDetect::PsfFormatter::delegateSerialize(
     execTrace("PsfFormatter delegateSerialize start");
     afwDetect::Psf* ps = dynamic_cast<afwDetect::Psf*>(persistable);
     if (ps == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Psf");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Psf");
     }
 #if 0                                   // not present in baseclass
     ar & make_nvp("width", ps->_width) & make_nvp("height", ps->_height);

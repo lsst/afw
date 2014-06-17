@@ -42,7 +42,7 @@ struct FieldBase<Flag> {
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
         );
     }

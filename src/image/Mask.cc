@@ -707,7 +707,7 @@ int Mask<MaskPixelT>::addMaskPlane(const std::string& name)
     // build new entry, adding the plane to all Masks where this is no contradiction
 
     if (id >= getNumPlanesMax()) {      // Max number of planes is already allocated
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+        throw LSST_EXCEPT(pexExcept::RuntimeError,
                           str(boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()));
     }
 
@@ -727,7 +727,7 @@ int Mask<MaskPixelT>::addMaskPlane(
     int planeId         ///< ID of mask plane to be (re)named
 ) {
     if (planeId < 0 || planeId >= getNumPlanesMax()) {
-        throw LSST_EXCEPT(pexExcept::RangeErrorException,
+        throw LSST_EXCEPT(pexExcept::RangeError,
                      str(boost::format("mask plane ID must be between 0 and %1%") % (getNumPlanesMax() - 1)));
     }
 
@@ -750,7 +750,7 @@ template<typename MaskPixelT>
 void Mask<MaskPixelT>::removeMaskPlane(const std::string& name)
 {
     if (detail::MaskDict::makeMaskDict()->getMaskPlane(name) < 0) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           str(boost::format("Plane %s doesn't exist in the default Mask") % name));
     }
 
@@ -762,7 +762,7 @@ void Mask<MaskPixelT>::removeMaskPlane(const std::string& name)
  * \brief Clear all pixels of the specified mask and remove the plane from the mask plane dictionary;
  * optionally remove the plane from the default dictionary too
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if plane is invalid
+ * @throw lsst::pex::exceptions::InvalidParameterError if plane is invalid
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::removeAndClearMaskPlane(const std::string& name, ///< name of maskplane
@@ -796,7 +796,7 @@ MaskPixelT Mask<MaskPixelT>::getBitMaskNoThrow(int planeId) {
 /**
  * \brief Return the bitmask corresponding to plane ID
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if plane is invalid
+ * @throw lsst::pex::exceptions::InvalidParameterError if plane is invalid
  */
 template<typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getBitMask(int planeId) {
@@ -811,21 +811,21 @@ MaskPixelT Mask<MaskPixelT>::getBitMask(int planeId) {
             return bitmask;
         }
     }
-    throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+    throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                       str(boost::format("Invalid mask plane ID: %d") % planeId));
 }
 
 /**
  * \brief Return the mask plane number corresponding to a plane name
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if plane is invalid
+ * @throw lsst::pex::exceptions::InvalidParameterError if plane is invalid
  */
 template<typename MaskPixelT>
 int Mask<MaskPixelT>::getMaskPlane(const std::string& name) {
     int const plane = getMaskPlaneNoThrow(name);
     
     if (plane < 0) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           str(boost::format("Invalid mask plane name: %s") % name));
     } else {
         return plane;
@@ -843,7 +843,7 @@ int Mask<MaskPixelT>::getMaskPlaneNoThrow(const std::string& name) {
 /**
  * \brief Return the bitmask corresponding to a plane name
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if plane is invalid
+ * @throw lsst::pex::exceptions::InvalidParameterError if plane is invalid
  */
 template<typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::string& name) {
@@ -853,7 +853,7 @@ MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::string& name) {
 /**
  * \brief Return the bitmask corresponding to a vector of plane names OR'd together
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if plane is invalid
+ * @throw lsst::pex::exceptions::InvalidParameterError if plane is invalid
  */
 template<typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getPlaneBitMask(const std::vector<std::string> &name) {
@@ -1046,12 +1046,12 @@ bool Mask<MaskPixelT>::operator()(
 //
 // Check that masks have the same dictionary version
 //
-// @throw lsst::pex::exceptions::RuntimeErrorException
+// @throw lsst::pex::exceptions::RuntimeError
 //
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::checkMaskDictionaries(Mask<MaskPixelT> const &other) {
     if (*_maskDict != *other._maskDict) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Mask dictionaries do not match");
+        throw LSST_EXCEPT(pexExcept::RuntimeError, "Mask dictionaries do not match");
     }
 }        
 
@@ -1081,7 +1081,7 @@ void Mask<MaskPixelT>::operator|=(Mask const &rhs) {
     checkMaskDictionaries(rhs);
 
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::LengthErrorException,
+        throw LSST_EXCEPT(pexExcept::LengthError,
                           str(boost::format("Images are of different size, %dx%d v %dx%d") %
                               this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()));
     }
@@ -1104,7 +1104,7 @@ void Mask<MaskPixelT>::operator&=(Mask const &rhs) {
     checkMaskDictionaries(rhs);
 
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::LengthErrorException,
+        throw LSST_EXCEPT(pexExcept::LengthError,
                           str(boost::format("Images are of different size, %dx%d v %dx%d") %
                               this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()));
     }
@@ -1127,7 +1127,7 @@ void Mask<MaskPixelT>::operator^=(Mask const &rhs) {
     checkMaskDictionaries(rhs);
 
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(pexExcept::LengthErrorException,
+        throw LSST_EXCEPT(pexExcept::LengthError,
                           str(boost::format("Images are of different size, %dx%d v %dx%d") %
                               this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()));
     }
@@ -1153,7 +1153,7 @@ void Mask<MaskPixelT>::setMaskPlaneValues(int const planeId,
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::addMaskPlanesToMetadata(PTR(dafBase::PropertySet) metadata) {
     if (!metadata) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Null PTR(PropertySet)");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Null PTR(PropertySet)");
     }
 
     // First, clear existing MaskPlane metadata
@@ -1203,12 +1203,12 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
 
             MaskPlaneDict::const_iterator plane = newDict.find(planeName);
             if (plane != newDict.end() && planeId != plane->second) {
-               throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+               throw LSST_EXCEPT(pexExcept::RuntimeError,
                                  "File specifies plane " + planeName + " twice"); 
             }
             for (MaskPlaneDict::const_iterator j = newDict.begin(); j != newDict.end(); ++j) {
                 if (planeId == j->second) {
-                    throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+                    throw LSST_EXCEPT(pexExcept::RuntimeError,
                                       str(boost::format("File specifies plane %s has same value (%d) as %s") %
                                           planeName % planeId % j->first));
                 }
@@ -1216,7 +1216,7 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
             // build new entry
             if (numPlanesUsed >= getNumPlanesMax()) {
                 // Max number of planes already allocated
-                throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+                throw LSST_EXCEPT(pexExcept::RuntimeError,
                                   str(boost::format("Max number of planes (%1%) already used") %
                                       getNumPlanesMax()));
             }

@@ -84,7 +84,7 @@ detail::EllipticityBase::Jacobian Distortion::dAssign(ReducedShear const & other
 void Distortion::normalize() {
     if (getE() > 1.0) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             "Distortion magnitude cannot be greater than one."
         );
     }

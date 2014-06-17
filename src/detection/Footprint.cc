@@ -93,7 +93,7 @@ int Footprint::id = 0;
 /**
  * Create a Footprint
  *
- * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
+ * \throws lsst::pex::exceptions::InvalidParameterError in nspan is < 0
  */
 Footprint::Footprint(
     int nspan,         //!< initial number of Span%s in this Footprint
@@ -107,7 +107,7 @@ Footprint::Footprint(
 {
     if (nspan < 0) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             str(boost::format("Number of spans requested is -ve: %d") % nspan));
     }
 }
@@ -505,14 +505,14 @@ namespace {
         }
 
         if (width != idImage.getWidth() || height != idImage.getHeight()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Image of size (%dx%d) doesn't match "
                                                 "Footprint's host Image of size (%dx%d)") %
                                   idImage.getWidth() % idImage.getHeight() % width % height));
         }
 
         if (id & mask) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % id % mask));
         }
 
@@ -583,7 +583,7 @@ Footprint::insertIntoImage(
 {
     if (id > std::size_t(std::numeric_limits<PixelT>::max())) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::OutOfRangeException,
+            lsst::pex::exceptions::OutOfRangeError,
             "id out of range for image type"
         );
     }
@@ -1164,7 +1164,7 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
     std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin();
     if (fiter == footprints.end()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             "You didn't provide any footprints"
         );
     }

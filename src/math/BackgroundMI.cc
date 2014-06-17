@@ -166,7 +166,7 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
     PTR(Interpolate) intobj;
     try {
         intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
-    } catch(pex::exceptions::OutOfRangeException &e) {
+    } catch(pex::exceptions::OutOfRangeError &e) {
         switch (undersampleStyle) {
           case THROW_EXCEPTION:
             LSST_EXCEPT_ADD(e, "setting _gridcolumns");
@@ -263,7 +263,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
                                                 ) const
 {
     if (!_imgBBox.contains(bbox)) {
-        throw LSST_EXCEPT(ex::LengthErrorException,
+        throw LSST_EXCEPT(ex::LengthError,
                           str(boost::format("BBox (%d:%d,%d:%d) out of range (%d:%d,%d:%d)") %
                               bbox.getMinX() % bbox.getMaxX() % bbox.getMinY() % bbox.getMaxY() %
                               _imgBBox.getMinX() % _imgBBox.getMaxX() %
@@ -292,13 +292,13 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     switch (undersampleStyle) {
       case THROW_EXCEPTION:
         if (isXundersampled && isYundersampled) {
-            throw LSST_EXCEPT(ex::InvalidParameterException,
+            throw LSST_EXCEPT(ex::InvalidParameterError,
                               "nxSample and nySample have too few points for requested interpolation style.");
         } else if (isXundersampled) {
-            throw LSST_EXCEPT(ex::InvalidParameterException,
+            throw LSST_EXCEPT(ex::InvalidParameterError,
                               "nxSample has too few points for requested interpolation style.");
         } else if (isYundersampled) {
-            throw LSST_EXCEPT(ex::InvalidParameterException,
+            throw LSST_EXCEPT(ex::InvalidParameterError,
                               "nySample has too few points for requested interpolation style.");
         }
         break;
@@ -312,12 +312,12 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         break;
       case INCREASE_NXNYSAMPLE:
         if (isXundersampled || isYundersampled) {
-            throw LSST_EXCEPT(ex::InvalidParameterException,
+            throw LSST_EXCEPT(ex::InvalidParameterError,
                               "The BackgroundControl UndersampleStyle INCREASE_NXNYSAMPLE is not supported.");
         }
         break;
       default:
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           str(boost::format("The selected BackgroundControl "
                                             "UndersampleStyle %d is not defined.") % undersampleStyle));
     }
@@ -366,7 +366,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         PTR(Interpolate) intobj;
         try {
             intobj = makeInterpolate(xcenTmp, bgTmp, interpStyle);
-        } catch(pex::exceptions::OutOfRangeException &e) {
+        } catch(pex::exceptions::OutOfRangeError &e) {
             switch (undersampleStyle) {
               case THROW_EXCEPTION:
                 LSST_EXCEPT_ADD(e, str(boost::format("Interpolating in y (iY = %d)") % iY));

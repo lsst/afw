@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
 
     {
         math::Statistics stats = math::makeStatistics(img, math::NPOINT);
-        BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterException);
+        BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterError);
     }
 
     // ===============================================================================

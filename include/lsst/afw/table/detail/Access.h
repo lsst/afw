@@ -34,7 +34,7 @@ public:
     static Key<typename Key<T>::Element> extractElement(KeyBase<T> const & kb, int n) {
         if (!static_cast<Key<T> const &>(kb).isValid()) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 (boost::format("Cannot extract subfield key from invalid key of type '%s' "
                               "(most often this is caused by failing to setup centroid or shape slots)")
                  % Key<T>::getTypeString()).str()
@@ -50,7 +50,7 @@ public:
     static Key< Array<T> > extractRange(KeyBase< Array<T> > const & kb, int begin, int end) {
         if (!static_cast<Key< Array<T> > const &>(kb).isValid()) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 (boost::format("Cannot extract subfield key from invalid key of type '%s' ")
                  % Key<T>::getTypeString()).str()
             );

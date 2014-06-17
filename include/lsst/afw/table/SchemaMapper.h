@@ -119,7 +119,7 @@ public:
     template <typename T>
     bool isMapped(Key<T> const & inputKey) const;
 
-    /// @brief Return the output Key corresponding to the given input Key, or raise NotFoundException.
+    /// @brief Return the output Key corresponding to the given input Key, or raise NotFoundError.
     template <typename T>
     Key<T> getMapping(Key<T> const & inputKey) const;
 

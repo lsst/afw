@@ -38,7 +38,7 @@ MultiXYTransform::MultiXYTransform(std::vector<CONST_PTR(XYTransform)> const &tr
     for (TransformList::const_iterator trIter = _transformList.begin();
         trIter != _transformList.end(); ++trIter) {
         if (!bool(*trIter)) {
-            throw LSST_EXCEPT(pexEx::InvalidParameterException, "One or more transforms is null");
+            throw LSST_EXCEPT(pexEx::InvalidParameterError, "One or more transforms is null");
         }
     }
 }

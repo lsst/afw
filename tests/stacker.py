@@ -144,7 +144,7 @@ class StackTestCase(unittest.TestCase):
         def tst():
             imgStackBad = afwMath.statisticsStack(imgList, afwMath.MEAN | afwMath.MEANCLIP, sctrl)
             
-        utilsTests.assertRaisesLsstCpp(self, pexEx.InvalidParameterException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexEx.InvalidParameterError, tst)
 
 
     def testReturnInputs(self):

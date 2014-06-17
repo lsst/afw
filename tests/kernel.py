@@ -170,9 +170,9 @@ class KernelTestCase(unittest.TestCase):
                         if errStr:
                             self.fail(errStr)
 
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                     afwMath.DeltaFunctionKernel, 0, kHeight, afwGeom.Point2I(kWidth, kHeight))
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                     afwMath.DeltaFunctionKernel, kWidth, 0, afwGeom.Point2I(kWidth, kHeight))
                             
         kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.Point2I(1, 1))
@@ -701,14 +701,14 @@ class KernelTestCase(unittest.TestCase):
         if nSpatialParams == 0:
             self.assert_(not kernel.isSpatiallyVarying())
             for ii in range(nKernelParams+5):
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                     kernel.getSpatialFunction, ii)
         else:
             self.assert_(kernel.isSpatiallyVarying())
             for ii in range(nKernelParams):
                 kernel.getSpatialFunction(ii)
             for ii in range(nKernelParams, nKernelParams+5):
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                     kernel.getSpatialFunction, ii)
         for nsp in range(nSpatialParams + 2):
             spatialParamsForOneKernel = (1.0,)*nsp
@@ -718,7 +718,7 @@ class KernelTestCase(unittest.TestCase):
                     kernel.setSpatialParameters(spatialParams)
                     self.assert_(numpy.alltrue(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
                 else:
-                    utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+                    utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                         kernel.setSpatialParameters, spatialParams)
 
         kernelDim = kernel.getDimensions()

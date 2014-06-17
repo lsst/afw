@@ -61,7 +61,7 @@ int main() {
         math::Statistics stats = math::makeStatistics(img, math::NPOINT);
         try {
             stats.getValue(math::MEAN);
-        } catch (lsst::pex::exceptions::InvalidParameterException &e) {
+        } catch (lsst::pex::exceptions::InvalidParameterError &e) {
             cout << "You didn't ask for the mean, so we caught an exception: " << e.what() << endl;
         }
     }

@@ -77,7 +77,7 @@ public:
         if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Catalog index %d out of range.") % i).str()
             );
         }
@@ -141,7 +141,7 @@ public:
         if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Catalog index %d out of range.") % i).str()
             );
         }
@@ -151,7 +151,7 @@ public:
         if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Catalog index %d out of range.") % i).str()
             );
         }
@@ -162,7 +162,7 @@ public:
         if (i < 0) i = self->size() + i;
         if (std::size_t(i) > self->size()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Catalog index %d out of range.") % i).str()
             );
         }

@@ -76,7 +76,7 @@ public:
         try {
             img = new PixelT [width*height];
         } catch(...) {
-            throw LSST_EXCEPT(pexExcept::MemoryException, "GpuBuffer2D:Init - not enough memory");
+            throw LSST_EXCEPT(pexExcept::MemoryError, "GpuBuffer2D:Init - not enough memory");
         }
 
         //copy input image data to buffer
@@ -98,7 +98,7 @@ public:
         try {
             img = new PixelT [width*height];
         } catch(...) {
-            throw LSST_EXCEPT(pexExcept::MemoryException, "GpuBuffer2D:Init - not enough memory");
+            throw LSST_EXCEPT(pexExcept::MemoryError, "GpuBuffer2D:Init - not enough memory");
         }
     }
 

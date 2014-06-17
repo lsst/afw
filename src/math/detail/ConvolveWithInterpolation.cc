@@ -65,7 +65,7 @@ namespace mathDetail = lsst::afw::math::detail;
  *
  * Note that this routine will also work with spatially invariant kernels, but not efficiently.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if outImage is not the same size as inImage
+ * @throw lsst::pex::exceptions::InvalidParameterError if outImage is not the same size as inImage
  */
 template <typename OutImageT, typename InImageT>
 void mathDetail::convolveWithInterpolation(
@@ -79,7 +79,7 @@ void mathDetail::convolveWithInterpolation(
         os << "outImage dimensions = ( "
             << outImage.getWidth() << ", " << outImage.getHeight()
             << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 
     // compute region covering good area of output image

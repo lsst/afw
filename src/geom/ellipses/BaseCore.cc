@@ -45,7 +45,7 @@ BaseCore::Ptr getRegistryCopy(std::string const & name) {
     RegistryMap::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             (boost::format("Ellipse core with name '%s' not found in registry.") % name).str()
         );
     }

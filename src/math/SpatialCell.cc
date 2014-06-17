@@ -69,7 +69,7 @@ void SpatialCellCandidate::setStatus(Status status) {
         return;
     }
     
-    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+    throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                       (boost::format("Saw unknown status %d") % status).str());
 }
 
@@ -115,7 +115,7 @@ void SpatialCell::removeCandidate(SpatialCellCandidate::Ptr candidate)
 {
     CandidateList::iterator pos = std::find(_candidateList.begin(), _candidateList.end(), candidate);
     if (pos == _candidateList.end()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                           (boost::format("Unable to find candidate with ID == %d") %
                            candidate->getId()).str());
     }
@@ -154,7 +154,7 @@ size_t SpatialCell::size() const {
 /**
  * Return the SpatialCellCandidate with the specified id
  *
- * @throw lsst::pex::exceptions::NotFoundException if no candidate matches the id
+ * @throw lsst::pex::exceptions::NotFoundError if no candidate matches the id
  */
 SpatialCellCandidate::Ptr SpatialCell::getCandidateById(int id, ///< The desired ID
                                                         bool noThrow ///< Return NULL in case of error
@@ -168,7 +168,7 @@ SpatialCellCandidate::Ptr SpatialCell::getCandidateById(int id, ///< The desired
     if (noThrow) {
         return SpatialCellCandidate::Ptr();
     } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                           (boost::format("Unable to find object with ID == %d") % id).str());
     }
 }
@@ -241,7 +241,7 @@ void SpatialCell::visitCandidates(
         
         try {
             visitor->processCandidate((*candidate).get());
-        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+        } catch(lsst::pex::exceptions::LengthError &e) {
             if (ignoreExceptions) {
                 ;
             } else {
@@ -271,7 +271,7 @@ void SpatialCell::visitAllCandidates(CandidateVisitor *visitor, ///< Pass this o
          candidate != candidateEnd; ++candidate, ++i) {
         try {
             visitor->processCandidate((*candidate).get());
-        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+        } catch(lsst::pex::exceptions::LengthError &e) {
             if (ignoreExceptions) {
                 ;
             } else {
@@ -307,7 +307,7 @@ void SpatialCell::visitAllCandidates(
          candidate != candidateEnd; ++candidate, ++i) {
         try {
             visitor->processCandidate((*candidate).get());
-        } catch(lsst::pex::exceptions::LengthErrorException &e) {
+        } catch(lsst::pex::exceptions::LengthError &e) {
             if (ignoreExceptions) {
                 ;
             } else {
@@ -384,11 +384,11 @@ size_t SpatialCellCandidateIterator::operator-(SpatialCellCandidateIterator cons
 /**
  * Dereference the iterator to return the Candidate (if there is one)
  *
- * @throw lsst::pex::exceptions::NotFoundException if no candidate is available
+ * @throw lsst::pex::exceptions::NotFoundError if no candidate is available
  */
 SpatialCellCandidate::ConstPtr SpatialCellCandidateIterator::operator*() const {
     if (_iterator == _end) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Iterator points to end");
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError, "Iterator points to end");
     }
 
     return *_iterator;
@@ -397,7 +397,7 @@ SpatialCellCandidate::ConstPtr SpatialCellCandidateIterator::operator*() const {
 /// Return the CellCandidate::Ptr
 SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
     if (_iterator == _end) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException, "Iterator points to end");
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError, "Iterator points to end");
     }
 
     return *_iterator;
@@ -408,7 +408,7 @@ SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
 /**
  * Constructor
  *
- * @throw lsst::pex::exceptions::LengthErrorException if nx or ny is non-positive
+ * @throw lsst::pex::exceptions::LengthError if nx or ny is non-positive
  */
 SpatialCellSet::SpatialCellSet(geom::Box2I const& region, ///< Bounding box for %image
                                int xSize,              ///< size of cells in the column direction
@@ -420,7 +420,7 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const& region, ///< Bounding box for 
     }
     
     if (xSize <= 0 || ySize <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Please specify cells that contain pixels, not %dx%d") %
                            xSize % ySize).str());
     }
@@ -479,7 +479,7 @@ void SpatialCellSet::insertCandidate(SpatialCellCandidate::Ptr candidate) {
     CellList::iterator pos = std::find_if(_cellList.begin(), _cellList.end(), CellContains(candidate));
 
     if (pos == _cellList.end()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError,
                           (boost::format("Unable to insert a candidate at (%.2f, %.2f)") %
                            candidate->getXCenter() % candidate->getYCenter()).str());
     }
@@ -575,7 +575,7 @@ void SpatialCellSet::visitAllCandidates(
 /**
  * Return the SpatialCellCandidate with the specified id
  *
- * @throw lsst::pex::exceptions::NotFoundException if no candidate matches the id (unless noThrow
+ * @throw lsst::pex::exceptions::NotFoundError if no candidate matches the id (unless noThrow
  * is true, in which case a Ptr(NULL) is returned
  */
 SpatialCellCandidate::Ptr SpatialCellSet::getCandidateById(int id, ///< The desired ID
@@ -592,7 +592,7 @@ SpatialCellCandidate::Ptr SpatialCellSet::getCandidateById(int id, ///< The desi
     if (noThrow) {
         return SpatialCellCandidate::Ptr();
     } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::NotFoundError,
                           (boost::format("Unable to find object with ID == %d") % id).str());
     }
 }

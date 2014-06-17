@@ -465,7 +465,7 @@ PTR(FitsReader) FitsReader::make(Fits * fits, PTR(io::InputArchive) archive, int
     Registry::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::NotFoundException,
+            lsst::pex::exceptions::NotFoundError,
             (boost::format("FitsReader with name '%s' does not exist; check AFW_TYPE keyword.") % name).str()
         );
     }

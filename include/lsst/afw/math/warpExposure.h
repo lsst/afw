@@ -245,9 +245,9 @@ namespace math {
          * a separate kernel. Thus if maskWarpingKernelName is provided
          * the GPU is disabled (or an exception is raised if the GPU is required)
          *
-         * @throw pex_exceptions InvalidParameterException if the warping kernel
+         * @throw pex_exceptions InvalidParameterError if the warping kernel
          * is smaller than the mask warping kernel.
-         * @throw pex_exceptions InvalidParameterException if GPU is required
+         * @throw pex_exceptions InvalidParameterError if GPU is required
          * and maskWarpingKernelName supplied.
          */
         explicit WarpingControl(
@@ -366,7 +366,7 @@ namespace math {
         /**
          * @brief set the warping kernel
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if new kernel pointer is empty.
+         * @throw lsst::pex::exceptions::InvalidParameterError if new kernel pointer is empty.
          */
         void setWarpingKernel(
             SeparableKernel const &warpingKernel   ///< warping kernel
@@ -415,7 +415,7 @@ namespace math {
         /**
          * @brief Throw an exception if the two kernels are not compatible in shape
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if the two kernels
+         * @throw lsst::pex::exceptions::InvalidParameterError if the two kernels
          * are not compatible in shape
          */
         void _testWarpingKernels(
@@ -426,7 +426,7 @@ namespace math {
         /**
          * @brief test if GPU device preference and main warping kernel are compatible
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if the parameters are incompatible
+         * @throw lsst::pex::exceptions::InvalidParameterError if the parameters are incompatible
          */
         void _testDevicePreference(
             lsst::afw::gpu::DevicePreference const &devicePreference,   ///< GPU device preference
@@ -516,10 +516,10 @@ namespace math {
      * separated by interpLen pixels along rows and columns. All other source pixel positions are determined
      * by linear interpolation between those grid points. Everything else remains the same.
      *
-     * \throw lsst::pex::exceptions::InvalidParameterException if destImage is srcImage
-     * \throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
-     * \throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
-     * \throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+     * \throw lsst::pex::exceptions::InvalidParameterError if destImage is srcImage
+     * \throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+     * \throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+     * \throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
      *
      * \todo Should support an additional color-based position correction in the remapping
      *   (differential chromatic refraction). This can be done either object-by-object or pixel-by-pixel.

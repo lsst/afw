@@ -721,7 +721,7 @@ public:
     ) :
         lsst::daf::base::Citizen(typeid(this)), _image(), _mask(), _variance() {
         if (!deep) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                 "Only deep copies are permitted for MaskedImages with different pixel types");
         }
 
@@ -869,7 +869,7 @@ public:
     ImagePtr getImage(bool const noThrow=false) const {
         if (!_image && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
+                lsst::pex::exceptions::RuntimeError,
                 "MaskedImage's Image is NULL"
             );
         }
@@ -879,7 +879,7 @@ public:
     MaskPtr getMask(bool const noThrow=false) const {
         if (!_mask && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
+                lsst::pex::exceptions::RuntimeError,
                 "MaskedImage's Mask is NULL"
             );
         }
@@ -890,7 +890,7 @@ public:
     VariancePtr getVariance(bool const noThrow=false) const {
         if (!_variance && !noThrow) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
+                lsst::pex::exceptions::RuntimeError,
                 "MaskedImage's Variance is NULL"
             );
         }

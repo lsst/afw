@@ -114,7 +114,7 @@ public:
      *  The returned object contains both the int64 array and accessors to obtain a mask given
      *  a Key or field name.
      *
-     *  @throw pex::exceptions::LengthErrorException if keys.size() > 64
+     *  @throw pex::exceptions::LengthError if keys.size() > 64
      */
     BitsColumn getBits(std::vector< Key<Flag> > const & keys) const;
 
@@ -124,7 +124,7 @@ public:
      *  The returned object contains both the int64 array and accessors to obtain a mask given
      *  a Key or field name.
      *
-     *  @throw pex::exceptions::LengthErrorException if the schema has more than 64 Flag fields.
+     *  @throw pex::exceptions::LengthError if the schema has more than 64 Flag fields.
      */
     BitsColumn getAllBits() const;
 
@@ -132,7 +132,7 @@ public:
      *  @brief Construct a BaseColumnView from an iterator range.
      *
      *  The iterators must dereference to a reference or const reference to a record.
-     *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeErrorException.
+     *  If the record data is not contiguous in memory, throws lsst::pex::exceptions::RuntimeError.
      */
     template <typename InputIterator>
     static BaseColumnView make(PTR(BaseTable) const & table, InputIterator first, InputIterator last);
@@ -200,7 +200,7 @@ BaseColumnView BaseColumnView::make(PTR(BaseTable) const & table, InputIterator 
     for (++first; first != last; ++first, ++recordCount, expected += recordSize) {
         if (first->_data != expected || first->_manager != manager) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
+                lsst::pex::exceptions::RuntimeError,
                 "Record data is not contiguous in memory."
             );
         }

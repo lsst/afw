@@ -46,7 +46,7 @@ public:
     /// Return a (Ptr to) the MaskedImage's %image
     boost::shared_ptr<std::vector<EntryT> > getVector(bool const noThrow=false) const {
         if (!this->getImage() && !noThrow) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "MaskedVector's Image is NULL");
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "MaskedVector's Image is NULL");
         }
 
         boost::shared_ptr<std::vector<EntryT> > imgcp(new std::vector<EntryT>(0));

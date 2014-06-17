@@ -30,7 +30,7 @@ public:
         if (++_lower & _upperMask) {
             --_lower;
             throw LSST_EXCEPT(
-                pex::exceptions::LengthErrorException,
+                pex::exceptions::LengthError,
                 (boost::format("Next ID '%s' is too large for the number of reserved bits")
                  % (_lower + 1)).str()
             );
@@ -42,7 +42,7 @@ public:
         RecordId newLower = id & (~_upper);   // chop off the exact exposure ID
         if (newLower & _upperMask) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 (boost::format("Explicit ID '%s' does not have the correct form.") % newLower).str()
             );
         }
@@ -58,7 +58,7 @@ public:
     {
         if (_upper >> reserved != expId) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 (boost::format("Exposure ID '%s' is too large.") % expId).str()
             );            
         }

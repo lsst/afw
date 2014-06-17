@@ -48,36 +48,36 @@ namespace detail {
 
 
 void SetCudaDevice(int devId) {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 void CudaReserveDevice() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 void CudaThreadExit() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 bool SelectPreferredCudaDevice()
 {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with gpu support");
 }
 void AutoSelectCudaDevice()
 {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with gpu support");
 }
 void VerifyCudaDevice()
 {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with gpu support");
 }
 bool TryToSelectCudaDevice(bool noExceptions, bool reselect)
 {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with gpu support");
 }
 int GetPrefferedCudaDevice()
 {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with gpu support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with gpu support");
 }
 
 }
@@ -121,7 +121,7 @@ bool SelectPreferredCudaDevice()
             cudaGetLastError(); //clear error code
             char errorStr[1000];
             sprintf(errorStr, "Error selecting device %d:\n %s\n", devId, cudaGetErrorString(err));
-            throw LSST_EXCEPT(GpuRuntimeErrorException, errorStr);
+            throw LSST_EXCEPT(GpuRuntimeError, errorStr);
         }
         return true;
     }
@@ -159,7 +159,7 @@ void AutoSelectCudaDevice()
     int cudaDevicesN = 0;
     cudaGetDeviceCount(&cudaDevicesN);
     if (cudaDevicesN == 0) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "No CUDA capable GPUs found");
+        throw LSST_EXCEPT(GpuRuntimeError, "No CUDA capable GPUs found");
     }
 
     cudaDeviceProp prop = GetDesiredDeviceProperties();
@@ -169,7 +169,7 @@ void AutoSelectCudaDevice()
     cudaError_t cudaError = cudaChooseDevice(&devId, &prop);
     //printf("Error device %d:\n %s\n", devId, cudaGetErrorString(err));
     if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Error choosing device automatically");
+        throw LSST_EXCEPT(GpuRuntimeError, "Error choosing device automatically");
     }
     cudaError = cudaSetDevice(devId);
     if (cudaError == cudaErrorSetOnActiveProcess) {
@@ -179,7 +179,7 @@ void AutoSelectCudaDevice()
         cudaGetLastError(); //clear error
         sprintf(errorStr, "Error automatically selecting device %d:\n %s\n",
                 devId, cudaGetErrorString(cudaError));
-        throw LSST_EXCEPT(GpuRuntimeErrorException, errorStr);
+        throw LSST_EXCEPT(GpuRuntimeError, errorStr);
     }
 }
 
@@ -191,33 +191,33 @@ void VerifyCudaDevice()
     int devId;
     cudaError_t cudaError = cudaGetDevice(&devId);
     if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Could not get selected CUDA device ID");
+        throw LSST_EXCEPT(GpuRuntimeError, "Could not get selected CUDA device ID");
     }
     cudaDeviceProp deviceProp;
     cudaError = cudaGetDeviceProperties(&deviceProp, devId);
     if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Could not get CUDA device properties");
+        throw LSST_EXCEPT(GpuRuntimeError, "Could not get CUDA device properties");
     }
     if (deviceProp.major < prop.major ||
             (deviceProp.major == prop.major && deviceProp.minor < prop.minor)
        ) {
         sprintf(errorStr, "Only SM %d.%d or better GPU devices are currently allowed", prop.major, prop.minor);
-        throw LSST_EXCEPT(GpuRuntimeErrorException, errorStr );
+        throw LSST_EXCEPT(GpuRuntimeError, errorStr );
     }
 
     if (deviceProp.major == prop.major && deviceProp.minor < prop.minor) {
         if (deviceProp.totalGlobalMem < prop.totalGlobalMem) {
-            throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough global memory on GPU");
+            throw LSST_EXCEPT(GpuRuntimeError, "Not enough global memory on GPU");
         }
     }
     if (deviceProp.sharedMemPerBlock < 16 * 1000) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough shared memory on GPU");
+        throw LSST_EXCEPT(GpuRuntimeError, "Not enough shared memory on GPU");
     }
     if (deviceProp.regsPerBlock < prop.regsPerBlock) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough registers per block available on GPU");
+        throw LSST_EXCEPT(GpuRuntimeError, "Not enough registers per block available on GPU");
     }
     if (deviceProp.maxThreadsPerBlock < prop.maxThreadsPerBlock) {
-        throw LSST_EXCEPT(GpuRuntimeErrorException, "Not enough threads per block available on GPU");
+        throw LSST_EXCEPT(GpuRuntimeError, "Not enough threads per block available on GPU");
     }
 }
 

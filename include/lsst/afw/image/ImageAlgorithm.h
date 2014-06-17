@@ -157,7 +157,7 @@ namespace lsst { namespace afw { namespace image {
                        )
     {
         if (lhs.getDimensions() != rhs.getDimensions()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               (boost::format("Images are of different size, %dx%d v %dx%d") %
                                lhs.getWidth() % lhs.getHeight() % rhs.getWidth() % rhs.getHeight()).str());
         }
@@ -182,7 +182,7 @@ namespace lsst { namespace afw { namespace image {
                        )
     {
         if (lhs.getDimensions() != rhs.getDimensions()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               (boost::format("Images are of different size, %dx%d v %dx%d") %
                                lhs.getWidth() % lhs.getHeight() % rhs.getWidth() % rhs.getHeight()).str());
         }
@@ -208,7 +208,7 @@ namespace lsst { namespace afw { namespace image {
                        )
     {
         if (lhs.getDimensions() != rhs.getDimensions()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               (boost::format("Images are of different size, %dx%d v %dx%d") %
                                lhs.getWidth() % lhs.getHeight() % rhs.getWidth() % rhs.getHeight()).str());
         }

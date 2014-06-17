@@ -64,7 +64,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
         std::ostringstream os;
         os << "kernelList.size() = " << kernelList.size()
             << " != " << kernelParameters.size() << " = " << "kernelParameters.size()";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     checkKernelList(kernelList);
     _setKernelList(kernelList);
@@ -100,7 +100,7 @@ afwMath::LinearCombinationKernel::LinearCombinationKernel(
         std::ostringstream os;
         os << "kernelList.size() = " << kernelList.size()
             << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     checkKernelList(kernelList);
     _setKernelList(kernelList);
@@ -119,7 +119,7 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::clone() const {
 
 void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelList) const {
     if (kernelList.size() < 1) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernelList has no elements");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelList has no elements");
     }
 
     afwGeom::Extent2I const dim0 = kernelList[0]->getDimensions();
@@ -127,15 +127,15 @@ void afwMath::LinearCombinationKernel::checkKernelList(const KernelList &kernelL
 
     for (unsigned int ii = 0; ii < kernelList.size(); ++ii) {
         if (kernelList[ii]->getDimensions() != dim0) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                 (boost::format("kernel %d has different size than kernel 0") % ii).str());
         }
         if (kernelList[ii]->getCtr() != ctr0) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                 (boost::format("kernel %d has different center than kernel 0") % ii).str());
         }
         if (kernelList[ii]->isSpatiallyVarying()) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                 (boost::format("kernel %d is spatially varying") % ii).str());
         }
     }
@@ -251,7 +251,7 @@ double afwMath::LinearCombinationKernel::doComputeImage(
 
     if (doNormalize) {
         if (imSum == 0) {
-            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+            throw LSST_EXCEPT(pexExcept::OverflowError, "Cannot normalize; kernel sum is 0");
         }
         image /= imSum;
         imSum = 1;

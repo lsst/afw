@@ -35,7 +35,7 @@ std::string Persistable::getPythonModule() const { return std::string(); }
 void Persistable::write(OutputArchiveHandle &) const {
     assert(!isPersistable());
     throw LSST_EXCEPT(
-        pex::exceptions::LogicErrorException,
+        pex::exceptions::LogicError,
         "afw::table-based persistence is not supported for this object."
     );
 }
@@ -81,7 +81,7 @@ PersistableFactory const & PersistableFactory::lookup(std::string const & name, 
             bool success = base::ModuleImporter::import(module);
             if (!success) {
                 throw LSST_EXCEPT(
-                    pex::exceptions::NotFoundException,
+                    pex::exceptions::NotFoundError,
                     (boost::format("PersistableFactory with name '%s' not found, and import of module "
                                    "'%s' failed (possibly because Python calls were not available from C++).")
                      % name % module).str()
@@ -90,7 +90,7 @@ PersistableFactory const & PersistableFactory::lookup(std::string const & name, 
             i = getRegistry().find(name);
             if (i == getRegistry().end()) {
                 throw LSST_EXCEPT(
-                    pex::exceptions::LogicErrorException,
+                    pex::exceptions::LogicError,
                     (boost::format("PersistableFactory with name '%s' not found even after successful import "
                                    "of module '%s'.  Please report this as a bug in the persistence "
                                    "implementation for this object.")
@@ -99,7 +99,7 @@ PersistableFactory const & PersistableFactory::lookup(std::string const & name, 
             }
         } else {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 (boost::format("PersistableFactory with name '%s' not found, and no Python module to import "
                                "was provided.  Please report this as a bug in the persistence implementation "
                                "for this object.")

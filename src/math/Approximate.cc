@@ -51,7 +51,7 @@ ApproximateControl::ApproximateControl(Style style, ///< Type of approximation
                                        ) :
     _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY) {
     if (_orderX != _orderY) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           str(boost::format("X- and Y-orders must be equal (%d != %d) "
                                             "due to a limitation in math::Chebyshev1Function2")
                               % _orderX % _orderY));
@@ -292,7 +292,7 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
       case ApproximateControl::CHEBYSHEV:
         return PTR(Approximate<PixelT>)(new ApproximateChebyshev<PixelT>(x, y, im, bbox, ctrl));
       default:
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           str(boost::format("Unknown ApproximationStyle: %d") % ctrl.getStyle()));
     }
 }

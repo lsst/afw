@@ -49,7 +49,7 @@ namespace math {
  * In the special case that the offset in both x and y lies in the range (-1, 1) the origin is not changed.
  * Otherwise the pixels are shifted by (-0.5, 0.5] pixels and the origin shifted accordingly.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if the algorithm is invalid
+ * @throw lsst::pex::exceptions::InvalidParameterError if the algorithm is invalid
  */
 template<typename ImageT>
 typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offset
@@ -79,7 +79,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
 
     if (offsetKernel->getWidth() > buffImage->getWidth() || 
         offsetKernel->getHeight() > buffImage->getHeight()) {
-        throw LSST_EXCEPT(pexExcept::LengthErrorException,
+        throw LSST_EXCEPT(pexExcept::LengthError,
                           (boost::format("Image of size %dx%d is too small to offset using a %s kernel"
                                          "(minimum %dx%d)") %
                            buffImage->getWidth() % buffImage->getHeight() % algorithmName %

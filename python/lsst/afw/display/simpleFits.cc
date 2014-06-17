@@ -116,7 +116,7 @@ int Card::write(int fd,
  */
     if (++ncard == 36) {
         if (posix::write(fd, record, FITS_SIZE) != FITS_SIZE) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Cannot write header record");
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Cannot write header record");
             }
             ncard = 0;
     }
@@ -135,7 +135,7 @@ namespace {
     void flip_high_bit(char *arr,              // array that needs bits swapped
                        const int n) {          // number of bytes in arr
         if (n%2 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               (boost::format("Attempt to bit flip odd number of bytes: %d") % n).str());
         }
 
@@ -153,7 +153,7 @@ namespace {
     void swap_2(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if (n%2 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               (boost::format("Attempt to byte swap odd number of bytes: %d") % n).str());
         }
 
@@ -169,7 +169,7 @@ namespace {
     void swap_4(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if (n%4 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               (boost::format("Attempt to byte swap non-multiple of 4 bytes: %d") % n).str());
         }
 
@@ -189,7 +189,7 @@ namespace {
     void swap_8(char *arr,              // array to swap
                 const int n) {          // number of bytes
         if (n%8 != 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               (boost::format("Attempt to byte swap non-multiple of 8 bytes: %d") % n).str());
         }
 
@@ -283,7 +283,7 @@ namespace {
             nbyte = FITS_SIZE - nbyte%FITS_SIZE;
             memset(record, ' ', nbyte);
             if (write(fd, record, nbyte) != nbyte) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                                   "error padding file to multiple of fits block size");
             }
         }
@@ -376,7 +376,7 @@ void writeBasicFits(int fd,                                      // file descrip
         cards.push_back(Card("BSCALE", 1.0,     ""));
         bitpix = 16;
     } else if (bitpix == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unsupported image type");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unsupported image type");
     }
     /*
      * Generate WcsA, pixel coordinates, allowing for X0 and Y0
@@ -462,7 +462,7 @@ void writeBasicFits(int fd,                                      // file descrip
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
     for (int y = 0; y != data.getHeight(); ++y) {
         if (write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               (boost::format("Error writing data for row %d") % y).str());
         }
     }
@@ -491,7 +491,7 @@ void writeBasicFits(std::string const& filename,                 // file to writ
     }
 
     if (fd < 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           (boost::format("Cannot open \"%s\"") % filename).str());
     }
 

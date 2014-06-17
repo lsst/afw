@@ -106,7 +106,7 @@ void MaskFormatter<MaskPixelT>::write(
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Mask");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Mask");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskFormatter write BoostStorage");
@@ -124,7 +124,7 @@ void MaskFormatter<MaskPixelT>::write(
         execTrace("MaskFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Mask");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Mask");
 }
 
 template <typename MaskPixelT>
@@ -147,7 +147,7 @@ Persistable* MaskFormatter<MaskPixelT>::read(
         execTrace("MaskFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Mask");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Mask");
 }
 
 template <typename MaskPixelT>
@@ -155,7 +155,7 @@ void MaskFormatter<MaskPixelT>::update(
     Persistable*,
     Storage::Ptr,
     lsst::daf::base::PropertySet::Ptr) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Mask");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Mask");
 }
 
 template <typename MaskPixelT> template <class Archive>
@@ -164,7 +164,7 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
     execTrace("MaskFormatter delegateSerialize start");
     Mask<MaskPixelT>* ip = dynamic_cast<Mask<MaskPixelT>*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Mask");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Mask");
     }
     ar & ip->_offsetRows & ip->_offsetCols;
     ar & ip->_maskPlaneDict;

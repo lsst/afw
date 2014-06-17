@@ -46,7 +46,7 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs)
     else {
         if ((coeffs.size() == 1) || (coeffs[0] != 0.0) || (coeffs[1] == 0.0)) {
             // Discontinuous or singular transformation; presumably unintentional so throw exception
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, 
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, 
                 "invalid parameters for radial distortion: need coeffs.size() != 1, coeffs[0]==0, coeffs[1]!=0");
         }
         _coeffs = coeffs;
@@ -105,7 +105,7 @@ std::vector<double> RadialXYTransform::polyInvert(std::vector<double> const &coe
     // Some sanity checks.  The formulas for the inversion below assume c0 == 0 and c1 != 0
     //
     if (coeffs.size() <= 1 || coeffs.size() > maxN || coeffs[0] != 0.0 || coeffs[1] == 0.0)
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+        throw LSST_EXCEPT(pexEx::InvalidParameterError, 
                           "invalid parameters in RadialXYTransform::polyInvert");
 
     std::vector<double> c = coeffs;
@@ -160,7 +160,7 @@ Point2D RadialXYTransform::polyEval(std::vector<double> const &coeffs, Point2D c
     }
 
     if (coeffs.size() == 0 || coeffs[0] != 0.0) {
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+        throw LSST_EXCEPT(pexEx::InvalidParameterError, 
                           "invalid parameters for radial distortion");
     }
 
@@ -200,7 +200,7 @@ double RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
         if (fabs(dx) <= tolerance)
             return r;
         if (iter++ > maxIter) {
-            throw LSST_EXCEPT(pexEx::RuntimeErrorException, 
+            throw LSST_EXCEPT(pexEx::RuntimeError, 
                               "max iteration count exceeded in RadialXYTransform::polyEvalInverse");
         }
         r += dx / polyEvalDeriv(coeffs,r);   // Newton-Raphson iteration
@@ -219,7 +219,7 @@ Point2D RadialXYTransform::polyEvalInverse(std::vector<double> const &coeffs,
     }
 
     if (coeffs.size() == 0 || coeffs[0] != 0.0) {
-        throw LSST_EXCEPT(pexEx::InvalidParameterException, 
+        throw LSST_EXCEPT(pexEx::InvalidParameterError, 
                           "invalid parameters for radial distortion");
     }
 
