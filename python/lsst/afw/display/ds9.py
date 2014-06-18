@@ -616,6 +616,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         color = ""                       # the default
     else:
         color = 'color=%s' % ctype
+        extra = " # "+color
 
     cmd = selectFrame(frame) + "; "
     r += 1
@@ -632,22 +633,22 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
 
         symb = afwGeom.ellipses.Axes(symb)
         cmd += 'regions command {ellipse %g %g %g %g %g%s}; ' % (c, r, symb.getA(), symb.getB(),
-                                                                 math.degrees(symb.getTheta()), color)
+                                                                 math.degrees(symb.getTheta()), extra)
     elif symb == '+':
-        cmd += 'regions command {line %g %g %g %g%s}; ' % (c, r+size, c, r-size, color)
-        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r, c+size, r, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c, r+size, c, r-size, extra)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r, c+size, r, extra)
     elif symb == 'x':
         size = size/math.sqrt(2)
-        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, color)
-        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r+size, c-size, r-size, extra)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size, r+size, c+size, r-size, extra)
     elif symb == '*':
         size30 = 0.5*size
         size60 = 0.5*math.sqrt(3)*size
-        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r, c-size, r, color)
-        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size30, r+size60, c+size30, r-size60, color)
-        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size30, r+size60, c-size30, r-size60, color)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size, r, c-size, r, extra)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c-size30, r+size60, c+size30, r-size60, extra)
+        cmd += 'regions command {line %g %g %g %g%s}; ' % (c+size30, r+size60, c-size30, r-size60, extra)
     elif symb == 'o':
-        cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, color)
+        cmd += 'regions command {circle %g %g %g%s}; ' % (c, r, size, extra)
     else:
         try:
             # We have to check for the frame's existance with show() as the text command crashed ds9 5.4
@@ -676,6 +677,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         except Exception, e:
             print >> sys.stderr, ("Ds9 frame %d doesn't exist" % frame), e
 
+    print cmd
     ds9Cmd(cmd, silent=silent)
 
 def line(points, frame=None, symbs=False, ctype=None):
