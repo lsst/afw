@@ -42,10 +42,13 @@
 
     def __str__(self):
         s1, s2 = self.first, self.second
-        return "((id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n (id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n dist %g [pix or radians])" % (
-            s1.getId(), s1.getRa().asDegrees(), s1.getDec().asDegrees(), s1.getX(), s1.getY(),
-            s2.getId(), s2.getRa().asDegrees(), s2.getDec().asDegrees(), s2.getX(), s2.getY(),
-            self.distance)
+        nan = float("NAN")
+        getData = lambda s: (s.getRa().asDegrees() if hasattr(s, "getRa") else nan,
+                             s.getDec().asDegrees() if hasattr(s, "getDec") else nan,
+                             s.getX() if hasattr(s, "getX") else nan,
+                             s.getY() if hasattr(s, "getY") else nan,
+            )
+        return "((id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n (id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n dist %g [pix or radians])" % ((s1.getId(),) + getData(s1) + getData(s2) + (self.distance,))
 
     def __getitem__(self, i):
         """Treat a Match as a tuple of length 3:
