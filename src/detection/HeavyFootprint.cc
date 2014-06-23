@@ -70,17 +70,11 @@ namespace {
     };
 }
 
-/**
- * Create a HeavyFootprint from a regular Footprint and the image that provides the pixel values
- *
- * \note: the HeavyFootprintCtrl is passed by const* not const& so that we needn't provide a definition
- * in Footprint.h
- */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
-    Footprint const& foot,              ///< The Footprint defining the pixels to set
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage, ///< The pixel values
-    HeavyFootprintCtrl const *ctrl     ///< Control how we manipulate HeavyFootprints
+    Footprint const& foot,
+    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
+    HeavyFootprintCtrl const *ctrl
         ) : Footprint(foot),
             _image(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
             _mask(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
@@ -115,11 +109,6 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     }
 }
 
-/**
- * Create a HeavyFootprint from a regular Footprint, allocating space
- * to hold foot.getArea() pixels, but not initializing them.  This is
- * used when unpersisting a HeavyFootprint.
- */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
     Footprint const& foot,              ///< The Footprint defining the pixels to set
@@ -131,9 +120,6 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
 {
 }
 
-/**
- * Replace all the pixels in the image with the values in the HeavyFootprint
- */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
         lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage ///< Image to set
@@ -144,23 +130,13 @@ void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
     expandArray(*this, _variance, mimage.getVariance()->getArray(), mimage.getXY0());
 }
 
-/**
- * Replace all the pixels in the image with the values in the HeavyFootprint
- */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::insert(
-                                                                     lsst::afw::image::Image<ImagePixelT> & image ///< Image to set
-                                                                     ) const
+    lsst::afw::image::Image<ImagePixelT> & image) const
 {
     expandArray(*this, _image,    image.getArray(),    image.getXY0());
 }
 
-
-/**
- Sums the two given HeavyFootprints *h1* and *h2*, returning a
- HeavyFootprint with the union footprint, and summed pixels where they
- overlap.  The peak list is the union of the two inputs.
- */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)
 mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const& h1,
@@ -184,8 +160,6 @@ mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const
     // Build new HeavyFootprint from the merged spans and summed pixels.
     return PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>)
         (new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(*foot, im1));
-    //PTR(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>) x(new HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>(*foot, im1));
-    //return x;
 }
 
 
