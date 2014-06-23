@@ -69,6 +69,7 @@ class MatchFitsTestCase(unittest.TestCase):
             matches = self.matches
         self.assertEqual(len(matches), self.numMatches)
         for m in matches:
+            str(m) # Check __str__ works
             if debug: print "Test:", m.first.getId(), m.second.getId()
             self.assertEqual(m.first.getId(), m.second.getId())
 
