@@ -147,7 +147,7 @@ typedef lsst::afw::geom::Span Span;
 
 
 
-%define %footprintImageOperations(NAME, PIXEL_TYPE)
+%define %footprintImageOperations(PIXEL_TYPE)
     %template(setImageFromFootprint) lsst::afw::detection::setImageFromFootprint<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(setImageFromFootprintList)
     lsst::afw::detection::setImageFromFootprintList<lsst::afw::image::Image<PIXEL_TYPE> >;
@@ -155,14 +155,14 @@ typedef lsst::afw::geom::Span Span;
     lsst::afw::detection::copyWithinFootprint<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(copyWithinFootprintMaskedImage)
     lsst::afw::detection::copyWithinFootprint<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
-    %template(clipToNonzero ##NAME) lsst::afw::detection::Footprint::clipToNonzero<PIXEL_TYPE>;
+    %template(clipToNonzero) lsst::afw::detection::Footprint::clipToNonzero<PIXEL_TYPE>;
 %enddef
 
 %define %imageOperations(NAME, PIXEL_TYPE)
     %template(FootprintFunctor ##NAME) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Image<PIXEL_TYPE> >;
     %template(FootprintFunctorMI ##NAME)
                        lsst::afw::detection::FootprintFunctor<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
-    %footprintImageOperations(NAME, PIXEL_TYPE);
+    %footprintImageOperations(PIXEL_TYPE);
 %enddef
 
 %define %maskOperations(PIXEL_TYPE)
@@ -180,9 +180,9 @@ typedef lsst::afw::geom::Span Span;
 %thresholdOperations(lsst::afw::image::MaskedImage);
 %imageOperations(F, float);
 %imageOperations(D, double);
-%footprintImageOperations(U, boost::uint16_t);
-%footprintImageOperations(I, int);
-%footprintImageOperations(L, boost::uint64_t);
+%footprintImageOperations(boost::uint16_t);
+%footprintImageOperations(int);
+%footprintImageOperations(boost::uint64_t);
 %maskOperations(lsst::afw::image::MaskPixel);
 %template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
 

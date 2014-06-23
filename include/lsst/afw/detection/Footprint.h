@@ -82,39 +82,111 @@ public:
     typedef std::vector<Span::Ptr> SpanList;
     typedef std::vector<Peak::Ptr> PeakList;
 
+    /**
+     * Create a Footprint
+     *
+     * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
+     *
+     * nspan: initial number of Span%s in this Footprint
+     * region: Bounding box of MaskedImage footprint
+     */
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
+
+    /**
+     * Create a rectangular Footprint
+     */
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
     Footprint(geom::Point2I const & center, double const radius, geom::Box2I const & = geom::Box2I());
     explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
 
     explicit Footprint(SpanList const & spans, geom::Box2I const & region=geom::Box2I());
+
+    /**
+     * Construct a footprint from a list of spans. Resulting Footprint is
+     * not normalized.
+     */
     Footprint(Footprint const & other);
+
     virtual ~Footprint();
 
+    /**
+     * Is this a HeavyFootprint?
+     */
     virtual bool isHeavy() const { return false; }
 
-    int getId() const { return _fid; }   //!< Return the Footprint's unique ID
-    SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
-    const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
+    /** Return the Footprint's unique ID. */
+    int getId() const { return _fid; }
+
+    /** Return the Span%s contained in this Footprint. */
+    SpanList& getSpans() { return _spans; }
+
+    /** Return the Span%s contained in this Footprint. */
+    const SpanList& getSpans() const { return _spans; }
+
     /**
      * Return the Peak%s contained in this Footprint
      *
-     * The peaks are ordered by decreasing pixel intensity at the peak position (so the most negative
-     * peak appears last).
+     * The peaks are ordered by decreasing pixel intensity at the peak
+     * position (so the most negative peak appears last).
      */
     PeakList & getPeaks() { return _peaks; }
-    const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
-    int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
+    const PeakList & getPeaks() const { return _peaks; }
+
+    /**
+     * Return the number of pixels in this Footprint (the real number
+     * of pixels, not the area of the bbox.
+     */
+    int getNpix() const { return _area; }
+
     int getArea() const { return _area; }
+
+    /**
+     * Return the Footprint's centroid
+     *
+     * The centroid is calculated as the mean of the pixel centers
+     */
     geom::Point2D getCentroid() const;
+
+    /**
+     * Return the Footprint's shape (interpreted as an ellipse)
+     *
+     * The shape is determined by measuring the moments of the pixel
+     * centers about its centroid (cf. getCentroid)
+     */
     geom::ellipses::Quadrupole getShape() const;
 
+    /**
+     * Add a Span to a footprint, returning a reference to the new Span.
+     */
     const Span& addSpan(const int y, const int x0, const int x1);
+    /**
+     * Add a Span to a Footprint returning a reference to the new Span
+     */
     const Span& addSpan(Span const& span);
+    /**
+     * Add a Span to a Footprint returning a reference to the new Span
+     */
     const Span& addSpan(Span const& span, int dx, int dy);
 
+    /**
+     * Add a Span to a Footprint, where the Spans MUST be added in order
+     * (first in increasing y, then increasing x), and MUST NOT be
+     * overlapping.  This method does NOT reset the _normalized boolean.
+     *
+     * This method is useful when a Footprint is being constructed in
+     * such a way that Spans are guaranteed to be produced in order.
+     * In that case, it is not necessary to normalize() the Footprint
+     * after all the Spans have been added.  This can save some
+     * computation.
+     */
     const Span& addSpanInSeries(const int y, const int x0, const int x1);
 
+    /**
+     * Shift a Footprint by <tt>(dx, dy)</tt>
+     *
+     * dx: How much to move footprint in column direction
+     * dy: How much to move in row direction
+     */
     void shift(int dx, int dy);
     void shift(geom::ExtentI d) {shift(d.getX(), d.getY());}
 
@@ -130,19 +202,54 @@ public:
 
     void clipTo(geom::Box2I const & bbox);
 
+    /**
+     * Clips the given *Footprint* to the region in the *Image*
+     * containing non-zero values.  The clipping drops spans that are
+     * totally zero, and moves endpoints to non-zero; it does not
+     * split spans that have internal zeros.
+     */
     template<typename PixelT>
     void clipToNonzero(lsst::afw::image::Image<PixelT> const& img);
 
+    /**
+     * Does this Footprint contain this pixel?
+     */
     bool contains(geom::Point2I const& pix) const;
 
+    /**
+     * Normalise a Footprint, sorting spans and setting the BBox
+     */
     void normalize();
     bool isNormalized() const {return _normalized;}
 
+    /**
+     * Set the pixels in idImage that are in Footprint by adding the
+     * specified value to the Image.
+     *
+     * idImage: Image to contain the footprint
+     * id: Add id to idImage for pixels in the Footprint
+     * region: Footprint's region (default: getRegion())
+     */
     template<typename PixelT>
     void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
                          boost::uint64_t const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
+
+    /**
+     * Set the pixels in idImage which are in Footprint by adding the
+     * specified value to the Image.
+     *
+     * The list of ids found under the new Footprint are returned.
+     *
+     * idImage: Image to contain the footprint
+     * id: Add id to idImage for pixels in the Footprint
+     * overwriteId: should id replace any value already in idImage?
+     * idMask: Don't overwrite ID bits in this mask
+     * oldIds: if non-NULL, set the IDs that were overwritten
+     * region: Footprint's region (default: getRegion())
+     
+     */
     template<typename PixelT>
     void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
                          boost::uint64_t const id,
@@ -151,8 +258,19 @@ public:
                          geom::Box2I const& region=geom::Box2I()
     ) const;
 
+    /**
+     * Assignment operator. Will not change the id
+     */
     Footprint & operator=(Footprint & other);
 
+    /**
+     * \brief Intersect the Footprint with a Mask
+     *
+     * The resulting Footprint contains only pixels for which (mask & bitMask) == 0;
+     * it may have disjoint pieces. Any part of the footprint that falls outside the
+     * bounds of the mask will be clipped.
+     *
+     */
     template <typename MaskPixelT>
     void intersectMask(
         image::Mask<MaskPixelT> const & mask,
@@ -177,12 +295,7 @@ public:
 
     bool isPersistable() const { return true; }
 
-    Footprint::Ptr mergeWith(Footprint const& foot2) const;
-    Footprint::Ptr mergeWith(Footprint& foot2);
-
 protected:
-
-    Footprint::Ptr _mergeWith(Footprint const& foot2) const;
 
     virtual std::string getPersistenceName() const;
 
@@ -214,41 +327,133 @@ private:
     bool _normalized;                    //!< Are the spans sorted?
 };
 
-void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
+/**
+ Given a vector of Footprints, fills the output "argmin" and "dist"
+ images to contain the Manhattan distance to the nearest footprint (in
+ "dist") and the identity of the nearest footprint (in "argmin").
+
+ For example, if there are two footprints at y=0 covering x=[1,2] and [7,7],
+
+ Index     :  0 1 2 3 4 5 6 7
+
+ Footprints:  . 0 0 . . . . 1
+
+ Argmin    :  0 0 0 0 0 1 1 1
+
+ Dist      :  1 0 0 1 2 2 1 0
+
+ "argmin" gives the index of the nearest footprint, and "dist" its
+ Manhattan (L_1 norm) distance.  The pixel at index 4 is closest to
+ footprint 0, and its distance is 2.
+ */
+void nearestFootprint(std::vector<PTR(Footprint)> const& foots,
                       lsst::afw::image::Image<boost::uint16_t>::Ptr argmin,
                       lsst::afw::image::Image<boost::uint16_t>::Ptr dist);
 
-Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2);
-Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2);
+/**
+   Merges two Footprints -- appends their peaks, and unions their
+   spans, returning a new Footprint.
 
-Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
-Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
-Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
+   This const version requires that both input footprints are
+   normalized (and will raise an exception if not).
+ */
+PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2);
+
+/**
+   Merges two Footprints -- appends their peaks, and unions their
+   spans, returning a new Footprint.
+ */
+PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2);
+
+/**
+ * Grow a Footprint by ngrow pixels, returning a new Footprint
+ */
+PTR(Footprint) growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
+
+/**
+ * \note Deprecated interface; use the Footprint const& version
+ */
+PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int ngrow, bool isotropic=true);
+
+/**
+ * \brief Grow a Footprint in at least one of the cardinal directions,
+ * returning a new Footprint
+ *
+ * Note that any left/right grow is done prior to the up/down grow, so
+ * any left/right grown pixels \em are subject to a further up/down
+ * grow (i.e. an initial single pixel Footprint will end up as a
+ * square, not a cross.
+ */
+PTR(Footprint) growFootprint(Footprint const& foot, int ngrow,
                              bool left, bool right, bool up, bool down);
 
+/**
+ * Return a list of BBox%s, whose union contains exactly the pixels in
+ * foot, neither more nor less
+ *
+ * Useful in generating sets of meas::algorithms::Defects for the ISR
+ */
 std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);
 
+/**
+ * \brief Set all image pixels in a Footprint to a given value
+ *
+ * \return value
+ */
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprint(ImageT *image,
                                              Footprint const& footprint,
                                              typename ImageT::Pixel const value);
+
+/**
+ * \brief Set all image pixels in a set of Footprint%s to a given value
+ *
+ * \return value
+ */
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
-                                                 CONST_PTR(std::vector<Footprint::Ptr>) footprints,
+                                                 CONST_PTR(std::vector<PTR(Footprint)>) footprints,
                                                  typename ImageT::Pixel  const value);
+
+/**
+ * \brief Set all image pixels in a set of Footprint%s to a given value
+ *
+ * \return value
+ */
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
-                                                 std::vector<Footprint::Ptr> const& footprints,
+                                                 std::vector<PTR(Footprint)> const& footprints,
                                                  typename ImageT::Pixel  const value);
+
+/**
+ * \brief OR bitmask into all the Mask's pixels that are in the Footprint
+ *
+ * \return bitmask
+ */
 template<typename MaskT>
 MaskT setMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                            Footprint const& footprint,
                            MaskT const bitmask);
+
+/**
+ * \brief (AND ~bitmask) all the Mask's pixels that are in the
+ * Footprint; that is, set to zero in the Mask-intersecting-Footprint
+ * all bits that are 1 in then bitmask.
+ *
+ * \return bitmask
+ */
 template<typename MaskT>
 MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                              Footprint const& footprint,
                              MaskT const bitmask);
 
+/**
+ Copies pixels from input image to output image within the Footprint's
+ area.
+
+ The input and output image must be the same type -- either Image or
+ MaskedImage.
+ */
 template <typename ImageOrMaskedImageT>
 void copyWithinFootprint(Footprint const& foot,
                          PTR(ImageOrMaskedImageT) const input,
@@ -262,15 +467,36 @@ void copyWithinFootprint(Footprint const& foot,
  */
 template<typename MaskT>
 MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
-                               std::vector<Footprint::Ptr> const& footprints,
+                               std::vector<PTR(Footprint)> const& footprints,
                                MaskT const bitmask);
+
+/**
+ * \brief OR bitmask into all the Mask's pixels which are in the set of Footprint%s
+ *
+ * \return bitmask
+ */
 template<typename MaskT>
 MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
-                               CONST_PTR(std::vector<Footprint::Ptr>) const & footprints,
+                               CONST_PTR(std::vector<PTR(Footprint)>) const& footprints,
                                MaskT const bitmask);
+
+/**
+ * \brief Return a Footprint that's the intersection of a Footprint with a Mask
+ *
+ * The resulting Footprint contains only pixels for which (mask & bitMask) != 0;
+ * it may have disjoint pieces
+ *
+ * \note This isn't a member of Footprint as Footprint isn't templated over MaskT
+ *
+ * foot: The initial Footprint
+ * mask: The mask to & with foot
+ * bitmask: Only consider these bits
+ *
+ * \returns Returns the new Footprint
+ */
 template<typename MaskT>
-Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
-                                typename image::Mask<MaskT>::Ptr const&  mask,
+PTR(Footprint) footprintAndMask(PTR(Footprint) const& foot,
+                                typename image::Mask<MaskT>::Ptr const& mask,
                                 MaskT const bitmask);
 
 /************************************************************************************************************/
