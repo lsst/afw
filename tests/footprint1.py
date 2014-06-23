@@ -846,10 +846,10 @@ class FootprintTestCase(unittest.TestCase):
         source.getArray()[:,:] = 1.
         source.getArray()[:,0:10] = 0.
 
-        foot.clipToNonzeroF(source)
+        foot.clipToNonzero(source)
         foot.normalize()
         a1 = foot.getArea()
-        self.assertTrue(a1 < a0)
+        self.assertLess(a1, a0)
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
@@ -864,11 +864,11 @@ class FootprintTestCase(unittest.TestCase):
             plt.savefig('clipnz2.png')
 
         source.getArray()[:12,:] = 0.
-        foot.clipToNonzeroF(source)
+        foot.clipToNonzero(source)
         foot.normalize()
 
         a2 = foot.getArea()
-        self.assertTrue(a2 < a1)
+        self.assertLess(a2, a1)
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
