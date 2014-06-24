@@ -295,12 +295,7 @@ public:
 
     bool isPersistable() const { return true; }
 
-    Footprint::Ptr mergeWith(Footprint const& foot2) const;
-    Footprint::Ptr mergeWith(Footprint& foot2);
-
 protected:
-
-    Footprint::Ptr _mergeWith(Footprint const& foot2) const;
 
     virtual std::string getPersistenceName() const;
 
@@ -351,7 +346,7 @@ private:
  Manhattan (L_1 norm) distance.  The pixel at index 4 is closest to
  footprint 0, and its distance is 2.
  */
-void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
+void nearestFootprint(std::vector<PTR(Footprint)> const& foots,
                       lsst::afw::image::Image<boost::uint16_t>::Ptr argmin,
                       lsst::afw::image::Image<boost::uint16_t>::Ptr dist);
 
@@ -362,23 +357,23 @@ void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
    This const version requires that both input footprints are
    normalized (and will raise an exception if not).
  */
-Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2);
+PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2);
 
 /**
    Merges two Footprints -- appends their peaks, and unions their
    spans, returning a new Footprint.
  */
-Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2);
+PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2);
 
 /**
  * Grow a Footprint by ngrow pixels, returning a new Footprint
  */
-Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
+PTR(Footprint) growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
 
 /**
  * \note Deprecated interface; use the Footprint const& version
  */
-Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
+PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int ngrow, bool isotropic=true);
 
 /**
  * \brief Grow a Footprint in at least one of the cardinal directions,
@@ -389,7 +384,7 @@ Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotrop
  * grow (i.e. an initial single pixel Footprint will end up as a
  * square, not a cross.
  */
-Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
+PTR(Footprint) growFootprint(Footprint const& foot, int ngrow,
                              bool left, bool right, bool up, bool down);
 
 /**
@@ -417,7 +412,7 @@ typename ImageT::Pixel setImageFromFootprint(ImageT *image,
  */
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
-                                                 CONST_PTR(std::vector<Footprint::Ptr>) footprints,
+                                                 CONST_PTR(std::vector<PTR(Footprint)>) footprints,
                                                  typename ImageT::Pixel  const value);
 
 /**
@@ -427,7 +422,7 @@ typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
  */
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(ImageT *image,
-                                                 std::vector<Footprint::Ptr> const& footprints,
+                                                 std::vector<PTR(Footprint)> const& footprints,
                                                  typename ImageT::Pixel  const value);
 
 /**
@@ -472,7 +467,7 @@ void copyWithinFootprint(Footprint const& foot,
  */
 template<typename MaskT>
 MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
-                               std::vector<Footprint::Ptr> const& footprints,
+                               std::vector<PTR(Footprint)> const& footprints,
                                MaskT const bitmask);
 
 /**
@@ -482,7 +477,7 @@ MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
  */
 template<typename MaskT>
 MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
-                               CONST_PTR(std::vector<Footprint::Ptr>) const & footprints,
+                               CONST_PTR(std::vector<PTR(Footprint)>) const& footprints,
                                MaskT const bitmask);
 
 /**
@@ -493,11 +488,15 @@ MaskT setMaskFromFootprintList(lsst::afw::image::Mask<MaskT> *mask,
  *
  * \note This isn't a member of Footprint as Footprint isn't templated over MaskT
  *
+ * foot: The initial Footprint
+ * mask: The mask to & with foot
+ * bitmask: Only consider these bits
+ *
  * \returns Returns the new Footprint
  */
 template<typename MaskT>
-Footprint::Ptr footprintAndMask(Footprint::Ptr const&  foot,
-                                typename image::Mask<MaskT>::Ptr const&  mask,
+PTR(Footprint) footprintAndMask(PTR(Footprint) const& foot,
+                                typename image::Mask<MaskT>::Ptr const& mask,
                                 MaskT const bitmask);
 
 /************************************************************************************************************/

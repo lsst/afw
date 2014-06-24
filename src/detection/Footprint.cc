@@ -205,7 +205,7 @@ Footprint::Footprint(Footprint const & other)
     //deep copy peaks
     _peaks.reserve(other._peaks.size());
     for(PeakList::const_iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
-        _peaks.push_back(Peak::Ptr(new Peak(**i)));
+        _peaks.push_back(PTR(Peak)(new Peak(**i)));
     }
 }
 
@@ -346,7 +346,7 @@ Span const& Footprint::addSpan(
         return addSpan(y, x1, x0);
     }
 
-    Span::Ptr sp(new Span(y, x0, x1));
+    PTR(Span) sp(new Span(y, x0, x1));
     _spans.push_back(sp);
 
     _area += sp->getWidth();
@@ -386,7 +386,7 @@ const Span& Footprint::addSpanInSeries(
       return s;
     }
     // merge contiguous spans
-    Span::Ptr lastspan = _spans.back();
+    PTR(Span) lastspan = _spans.back();
     if ((y == lastspan->getY()) &&
         (x0 == (lastspan->getX1() + 1))) {
       // contiguous.
@@ -413,7 +413,7 @@ void Footprint::shift(
     int dy
 ) {
     for (SpanList::iterator i = _spans.begin(); i != _spans.end(); ++i){
-        Span::Ptr span = *i;
+        PTR(Span) span = *i;
 
         span->_y += dy;
         span->_x0 += dx;
@@ -429,7 +429,7 @@ Footprint::getCentroid() const
     int n = 0;
     double xc = 0, yc = 0;
     for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter) {
-        Span::Ptr const span = *siter;
+        CONST_PTR(Span) span = *siter;
         int const y = span->getY();
         int const x0 = span->getX0();
         int const x1 = span->getX1();
@@ -453,7 +453,7 @@ Footprint::getShape() const
 
     double sumxx = 0, sumxy = 0, sumyy = 0;
     for (Footprint::SpanList::const_iterator siter = _spans.begin(); siter != _spans.end(); ++siter) {
-        Span::Ptr const span = *siter;
+        CONST_PTR(Span) span = *siter;
         int const y = span->getY();
         int const x0 = span->getX0();
         int const x1 = span->getX1();
@@ -517,7 +517,7 @@ namespace {
             pos = oldIds->begin();
         }
         for (Footprint::SpanList::const_iterator spi = _spans.begin(); spi != _spans.end(); ++spi) {
-            Span::Ptr const span = *spi;
+            CONST_PTR(Span) span = *spi;
 
             int const sy0 = span->getY() - y0;
             if (sy0 < 0 || sy0 >= height) {
@@ -794,7 +794,7 @@ Footprint & Footprint::operator=(Footprint & other) {
     _peaks = PeakList();
     _peaks.reserve(other._peaks.size());
     for(PeakList::iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
-        _peaks.push_back(Peak::Ptr(new Peak(**i)));
+        _peaks.push_back(PTR(Peak)(new Peak(**i)));
     }
     return *this;
 }
@@ -851,7 +851,7 @@ void Footprint::intersectMask(
                     //add beginning of span to the output
                     //the fixed span contains all the unmasked pixels up to,
                     //but not including this masked pixel
-                    Span::Ptr maskedSpan(new Span(y, x0, x- 1));
+                    PTR(Span) maskedSpan(new Span(y, x0, x- 1));
                     maskedSpans.push_back(maskedSpan);
                     maskedArea += maskedSpan->getWidth();
                 }
@@ -862,7 +862,7 @@ void Footprint::intersectMask(
 
         //add last section of span
         if(x0 <= x1) {
-            Span::Ptr maskedSpan(new Span(y, x0, x1));
+            PTR(Span) maskedSpan(new Span(y, x0, x1));
             maskedSpans.push_back(maskedSpan);
             maskedArea += maskedSpan->getWidth();
         }
@@ -958,12 +958,12 @@ bool _checkNormalized(Footprint const& foot) {
 /************************************************************************************************************/
 
 template<typename MaskT>
-Footprint::Ptr footprintAndMask(
-        Footprint::Ptr const& fp,                                   ///< The initial Footprint
-        typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,    ///< The mask to & with foot
-        MaskT const bitmask                                       ///< Only consider these bits
+PTR(Footprint) footprintAndMask(
+        PTR(Footprint) const& fp,
+        typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,
+        MaskT const bitmask
 ) {
-    Footprint::Ptr newFp(new Footprint());
+    PTR(Footprint) newFp(new Footprint());
     return newFp;
 }
 
@@ -981,7 +981,7 @@ MaskT setMaskFromFootprint(
 
     for (Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
          siter != foot.getSpans().end(); ++siter) {
-        Span::Ptr const span = *siter;
+        CONST_PTR(Span) span = *siter;
         int const y = span->getY() - mask->getY0();
         if (y < 0 || y >= height) {
             continue;
@@ -1014,7 +1014,7 @@ MaskT clearMaskFromFootprint(
 
     for (Footprint::SpanList::const_iterator siter = foot.getSpans().begin();
          siter != foot.getSpans().end(); ++siter) {
-        Span::Ptr const span = *siter;
+        CONST_PTR(Span) span = *siter;
         int const y = span->getY() - mask->getY0();
         if (y < 0 || y >= height) {
             continue;
@@ -1039,10 +1039,10 @@ MaskT clearMaskFromFootprint(
 template<typename MaskT>
 MaskT setMaskFromFootprintList(
         image::Mask<MaskT> *mask,                        ///< Mask to set
-        std::vector<Footprint::Ptr> const& footprints,  ///< Footprint list specifying desired pixels
+        std::vector<PTR(Footprint)> const& footprints,  ///< Footprint list specifying desired pixels
         MaskT const bitmask                                 ///< Bitmask to OR into mask
 ) {
-    for (std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin();
+    for (std::vector<PTR(Footprint)>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
         (void)setMaskFromFootprint(mask, **fiter, bitmask);
     }
@@ -1055,7 +1055,7 @@ MaskT setMaskFromFootprintList(
 template<typename MaskT>
 MaskT setMaskFromFootprintList(
         image::Mask<MaskT> *mask,                        ///< Mask to set
-        CONST_PTR(std::vector<Footprint::Ptr>) const & footprints,  ///< Footprint list specifying desired pixels
+        CONST_PTR(std::vector<PTR(Footprint)>) const & footprints,  ///< Footprint list specifying desired pixels
         MaskT const bitmask                                 ///< Bitmask to OR into mask
                                          ) {
     return setMaskFromFootprintList(mask, *footprints, bitmask);
@@ -1094,7 +1094,7 @@ typename ImageT::Pixel setImageFromFootprint(
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(
         ImageT *image,                                  ///< image to set
-        CONST_PTR(std::vector<Footprint::Ptr>) footprints,  ///< Footprint list specifying desired pixels
+        CONST_PTR(std::vector<PTR(Footprint)>) footprints,  ///< Footprint list specifying desired pixels
         typename ImageT::Pixel const value              ///< value to set Image to
                                                            ) {
     return setImageFromFootprintList(image, *footprints, value);
@@ -1103,11 +1103,11 @@ typename ImageT::Pixel setImageFromFootprintList(
 template<typename ImageT>
 typename ImageT::Pixel setImageFromFootprintList(
         ImageT *image,                                  ///< image to set
-        std::vector<Footprint::Ptr> const& footprints,  ///< Footprint list specifying desired pixels
+        std::vector<PTR(Footprint)> const& footprints,  ///< Footprint list specifying desired pixels
         typename ImageT::Pixel const value              ///< value to set Image to
 ) {
     SetFootprint<ImageT> setit(*image, value);
-    for (std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin(),
+    for (std::vector<PTR(Footprint)>::const_iterator fiter = footprints.begin(),
              end = footprints.end(); fiter != end; ++fiter) {
         setit.apply(**fiter);
     }
@@ -1128,7 +1128,7 @@ static void set_footprint_id(
 ) {
     for (Footprint::SpanList::const_iterator i = foot.getSpans().begin();
          i != foot.getSpans().end(); ++i) {
-        Span::Ptr const span = *i;
+        CONST_PTR(Span) span = *i;
         for (typename image::Image<IDPixelT>::x_iterator ptr =
                  idImage->x_at(span->getX0() + dx, span->getY() + dy),
                  end = ptr + span->getWidth(); ptr != end; ++ptr) {
@@ -1141,14 +1141,14 @@ template <typename IDPixelT>
 static void
 set_footprint_array_ids(
     typename image::Image<IDPixelT>::Ptr idImage, // the image to set
-    std::vector<Footprint::Ptr> const& footprints, // the footprints to insert
+    std::vector<PTR(Footprint)> const& footprints, // the footprints to insert
     bool const relativeIDs // show IDs starting at 0, not Footprint->id
 ) {
     int id = 0;                         // first index will be 1
 
-    for (std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin();
+    for (std::vector<PTR(Footprint)>::const_iterator fiter = footprints.begin();
          fiter != footprints.end(); ++fiter) {
-        Footprint::Ptr const foot = *fiter;
+        CONST_PTR(Footprint) foot = *fiter;
 
         if (relativeIDs) {
             ++id;
@@ -1162,7 +1162,7 @@ set_footprint_array_ids(
 
 template void set_footprint_array_ids<int>(
     image::Image<int>::Ptr idImage,
-    std::vector<Footprint::Ptr> const& footprints,
+    std::vector<PTR(Footprint)> const& footprints,
     bool const relativeIDs);
 
 /******************************************************************************/
@@ -1174,17 +1174,17 @@ template void set_footprint_array_ids<int>(
  */
 template <typename IDImageT>
 typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
-    std::vector<Footprint::Ptr> const& footprints,
+    std::vector<PTR(Footprint)> const& footprints,
     bool const relativeIDs
 ) {
-    std::vector<Footprint::Ptr>::const_iterator fiter = footprints.begin();
+    std::vector<PTR(Footprint)>::const_iterator fiter = footprints.begin();
     if (fiter == footprints.end()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
             "You didn't provide any footprints"
         );
     }
-    Footprint::Ptr const foot = *fiter;
+    CONST_PTR(Footprint) foot = *fiter;
 
     typename image::Image<IDImageT>::Ptr idImage(
         new image::Image<IDImageT>(foot->getRegion())
@@ -1199,14 +1199,14 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
 }
 
 template image::Image<int>::Ptr setFootprintArrayIDs(
-    std::vector<Footprint::Ptr> const& footprints,
+    std::vector<PTR(Footprint)> const& footprints,
     bool const relativeIDs);
 /*
  * Set an image to the value of Footprint's ID wherever it may fall
  */
 template <typename IDImageT>
 typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(
-                                          Footprint::Ptr const& foot, // the Footprint to insert
+                                          CONST_PTR(Footprint)& foot, // the Footprint to insert
                                           int const id // the desired ID
                                                                      ) {
     typename image::Image<IDImageT>::Ptr idImage(new image::Image<IDImageT>(foot->getBBox()));
@@ -1219,7 +1219,7 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(
     return idImage;
 }
 
-template image::Image<int>::Ptr setFootprintID(Footprint::Ptr const& foot, int const id);
+template image::Image<int>::Ptr setFootprintID(CONST_PTR(Footprint)& foot, int const id);
 
 /************************************************************************************************************/
 /*
@@ -1228,7 +1228,7 @@ template image::Image<int>::Ptr setFootprintID(Footprint::Ptr const& foot, int c
  * N.b. this is slow, as it uses a convolution with a disk
  */
 namespace {
-Footprint::Ptr growFootprintSlow(
+PTR(Footprint) growFootprintSlow(
         Footprint const& foot, //!< The Footprint to grow
         int ngrow                              //!< how much to grow foot
                                                  ) {
@@ -1237,7 +1237,7 @@ Footprint::Ptr growFootprintSlow(
     }
 
     if (foot.getNpix() == 0) {          // an empty Footprint
-        return Footprint::Ptr(new Footprint);
+        return PTR(Footprint)(new Footprint);
     }
 
     /*
@@ -1274,7 +1274,7 @@ Footprint::Ptr growFootprintSlow(
     PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1));
 
     assert (grownList->getFootprints()->size() > 0);
-    Footprint::Ptr grown = *grownList->getFootprints()->begin();
+    PTR(Footprint) grown = *grownList->getFootprints()->begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -1288,7 +1288,7 @@ Footprint::Ptr growFootprintSlow(
 /************************************************************************************************************/
 
 namespace {
-    Footprint::Ptr _mergeFootprints(Footprint const& aFoot, Footprint const& bFoot) {
+    PTR(Footprint) _mergeFootprints(Footprint const& aFoot, Footprint const& bFoot) {
         PTR(Footprint) foot(new Footprint());
 
         Footprint::PeakList const& aPeaks = aFoot.getPeaks();
@@ -1371,13 +1371,13 @@ namespace {
     }
 }
 
-Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2) {
+PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2) {
     foot1.normalize();
     foot2.normalize();
     return _mergeFootprints(foot1, foot2);
 }
 
-Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
+PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
     if (!foot1.isNormalized() || !foot2.isNormalized()) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::InvalidParameterException,
@@ -1388,7 +1388,7 @@ Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
 
 /************************************************************************************************************/
 
-void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
+void nearestFootprint(std::vector<PTR(Footprint)> const& foots,
                       image::Image<boost::uint16_t>::Ptr argmin,
                       image::Image<boost::uint16_t>::Ptr dist)
 {
@@ -1476,7 +1476,7 @@ void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
     }
 }
 
-Footprint::Ptr growFootprint(
+PTR(Footprint) growFootprint(
         Footprint const& foot,          //!< The Footprint to grow
         int ngrow,                      //!< how much to grow foot
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
@@ -1553,7 +1553,7 @@ Footprint::Ptr growFootprint(
     // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
     PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(-ngrow, Threshold::VALUE, false)));
     assert (grownList->getFootprints()->size() > 0);
-    Footprint::Ptr grown = *grownList->getFootprints()->begin();
+    PTR(Footprint) grown = *grownList->getFootprints()->begin();
     //
     // Fix the coordinate system to be that of foot
     //
@@ -1563,7 +1563,7 @@ Footprint::Ptr growFootprint(
     return grown;
 }
 
-Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic) {
+PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int ngrow, bool isotropic) {
     return growFootprint(*foot, ngrow, isotropic);
 }
 
@@ -1575,7 +1575,7 @@ PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
                              bool down             ///< grow down
                             )
 {
-    Footprint::Ptr grown(new Footprint(0, old.getRegion()));
+    PTR(Footprint) grown(new Footprint(0, old.getRegion()));
 
     for (Footprint::SpanList::const_iterator siter = old.getSpans().begin();
             siter != old.getSpans().end(); ++siter) {
@@ -2051,20 +2051,20 @@ void Footprint::intersectMask(
     image::MaskPixel bitMask);
 
 template
-Footprint::Ptr footprintAndMask(
-    Footprint::Ptr const& foot,
+PTR(Footprint) footprintAndMask(
+    PTR(Footprint) const& foot,
     image::Mask<image::MaskPixel>::Ptr const& mask,
     image::MaskPixel bitMask);
 
 template
 image::MaskPixel setMaskFromFootprintList(
     image::Mask<image::MaskPixel> *mask,
-    CONST_PTR(std::vector<Footprint::Ptr>) const& footprints,
+    CONST_PTR(std::vector<PTR(Footprint)>) const& footprints,
     image::MaskPixel const bitmask);
 template
 image::MaskPixel setMaskFromFootprintList(
     image::Mask<image::MaskPixel> *mask,
-    std::vector<Footprint::Ptr> const& footprints,
+    std::vector<PTR(Footprint)> const& footprints,
     image::MaskPixel const bitmask);
 template image::MaskPixel setMaskFromFootprint(
     image::Mask<image::MaskPixel> *mask,
@@ -2080,11 +2080,11 @@ TYPE setImageFromFootprint(image::Image<TYPE> *image,        \
                                       TYPE const value);                \
 template \
 TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
-                                          std::vector<Footprint::Ptr> const& footprints, \
+                                          std::vector<PTR(Footprint)> const& footprints, \
                                           TYPE const value); \
 template \
 TYPE setImageFromFootprintList(image::Image<TYPE> *image, \
-                                          CONST_PTR(std::vector<Footprint::Ptr>) footprints, \
+                                          CONST_PTR(std::vector<PTR(Footprint)>) footprints, \
                                           TYPE const value); \
 template \
 void copyWithinFootprint(Footprint const&,                          \
