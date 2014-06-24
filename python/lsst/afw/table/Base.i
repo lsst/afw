@@ -114,38 +114,6 @@ from . import _syntax
 
 // ---------------------------------------------------------------------------------------------------------
 
-// We prefer to convert std::set<std::string> to a Python tuple, because SWIG's std::set wrapper
-// doesn't do many of the things a we want it do (pretty printing, comparison operators, ...),
-// and the expense of a deep copy shouldn't matter in this case.  And it's easier to just do
-// the conversion than get involved in the internals's of SWIG's set wrapper to fix it.
-
-%{
-    inline PyObject * convertNameSet(std::set<std::string> const & input) {
-        ndarray::PyPtr result(PyTuple_New(input.size()));
-        if (!result) return 0;
-        Py_ssize_t n = 0;
-        for (std::set<std::string>::const_iterator i = input.begin(); i != input.end(); ++i, ++n) {
-            PyObject * s = PyString_FromStringAndSize(i->data(), i->size());
-            if (!s) return 0;
-            PyTuple_SET_ITEM(result.get(), n, s);
-        }
-        Py_INCREF(result.get());
-        return result.get();
-    }
-
-%}
-
-%typemap(out) std::set<std::string> {
-    $result = convertNameSet($1);
-}
-
-%typemap(out)
-std::set<std::string> const &, std::set<std::string> &, std::set<std::string> const*, std::set<std::string>*
-{
-    // I'll never understand why swig passes pointers to reference typemaps, but it does.
-    $result = convertNameSet(*$1);
-}
-
 // SWIG doesn't understand Schema::forEach, but the Schema interface provides no other
 // way of getting field names in definition order. This forEach functor records field names,
 // allowing the python asList Schema method to return schema items in an order consistent
@@ -192,6 +160,9 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 %include "lsst/afw/table/KeyBase.h"
 %include "lsst/afw/table/Key.h"
 %include "lsst/afw/table/detail/SchemaImpl.h"
+
+%include "std_set.i"
+%template(NameSet) std::set<std::string>;
 
 %rename("__eq__") lsst::afw::table::Schema::operator==;
 %rename("__ne__") lsst::afw::table::Schema::operator!=;
