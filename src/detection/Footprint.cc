@@ -550,7 +550,7 @@ namespace {
 template<typename PixelT>
 void
 Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
-    typedef typename lsst::afw::image::Image<PixelT> ImageT;
+    typedef lsst::afw::image::Image<PixelT> ImageT;
     int const ix0 = img.getX0();
     int const iy0 = img.getY0();
     const PixelT zero = 0;
