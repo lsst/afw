@@ -1,0 +1,69 @@
+// -*- lsst-c++ -*-
+
+namespace lsst { namespace afw { namespace cameraGeom {
+
+/**
+@page afwCameraGeom CameraGeom
+
+@section afwCameraGeomBasicUsage Basic Usage
+
+Normally you get a camera from a data butler using butler.get("camera"). However, the following
+self-contained example uses a mock camera. You can get detectors from the camera (as shown in the example)
+or from an exposure using getDetector(), though not all exposures have detectors.
+
+\include examples/cameraGeomExample.py
+
+@section afwCameraGeomOverview Overview
+
+CameraGeom provides a representation of the geometry of a camera, including the location and orientation of each detector, coordinate transforms between various camera-based coordinate systems, and an approximate model of optical distortion. CameraGeom also provides utility functions to assemble amplifier images into a larger image and to create overview images of the focal plane.
+
+CameraGeom supports the following camera-based 2-dimensional coordinate systems, and it is possible to add others:
+<ul>
+    <li>FOCAL_PLANE: position on a 2-d planar approximation to the focal plane (x,y mm).
+      The origin and orientation may be defined by the camera team, but we strongly recommend
+      that the origin be on the optical axis and (if using CCD detectors) that the X axis be aligned along CCD rows.
+      Note: location and orientation of detectors are defined in a 3-d version of FOCAL_PLANE coordinates
+      (i.e. the z axis is also relevant).
+    <li>PUPIL: angle of a ray relative to the optical axis (x,y radians).
+    <li>PIXELS: nominal position on the entry surface of a given detector (x, y unbinned pixels). For CCD detectors the x axis <b>must</b> be along rows (the direction of the serial register). This is required for our interpolation algorithm to interpolate across bad columns.
+    <li>ACTUAL_PIXELS: like PIXELS, but takes into account pixel-level distortions (e.g. tree rings).
+</ul>
+
+@section afwCameraGeomObject Objects
+
+Objects in lsst::afw::cameraGeom include the following; unless otherwise noted, all are available in C++ and Python:
+
+<h3>Camera</h3> (Python only)
+
+A collection of Detectors, plus supports coordinate transformation between all camera-based 2-d coordinate systems.
+
+<h3>Detector</h3>
+
+Information about a given detector, including its position and orientation in the focal plane, information about amplifiers (such as the image region, overscan and readout corner), and coordinate transforms between Focal plane, Pixel and DistortedPixel coordinates. Amplifier data is stored as an afw table, and Detector acts as a collection of amplifier data.
+
+<h3>CameraSys</h3>
+
+A camera-based coordinate system; used as the key for CameraTransformMap. A constant is provided for each non-detector-specific coordinate system, including FOCAL_PLANE and PUPIL. Note that CameraSysPrefix is used for detector-specific coordinate system prefixes.
+
+<h3>CameraSysPrefix</h3>
+
+An incomplete camera coordinate system that only has a coordinate system name (no detector name). This is used by Detector.getCameraSys to expand a detector coordinate prefix into a full CameraSys (at Jim Bosch's excellent suggestion).
+
+A constant will be provided for each detector-specific coordinate system, including PIXELS and ACTUAL_PIXELS (non-detector-specific coordinate systems are handled by CameraSys).
+
+<h3>CameraTransformMap</h3>
+
+A map of CameraSys: lsst::afw::geom::XYTransform. Each CameraTransformMap has a native (aka "reference") coordinate system, and each lsst::afw::geom::XYTransform transforms a 2-d point from the native system to the named system in the forward direction (and the opposite in the reverse direction). The CameraTransformMap.transform method transforms a point between any two supported coordinate systems. Note: CameraTransformMap is another name for lsst::afw::geom::TransformMap<CameraSys>.
+
+<h3>CameraPoint</h3>
+
+A struct-ish class that holds:
+<ul>
+    <li>point: an lsst::afw::geom::Point2D
+    <li>cameraSys: a CameraSys
+</ul>
+
+The intent is to make transformation more robust and less confusing by keeping a 2-d point and its coordinate system together. This is appropriate for transforming small numbers of points. However, it does not scale well to large numbers of points, so CameraTransformMap also supports a version of transform that takes and returns a vector of lsst::afw::geom::Point2D.
+ */
+ 
+}}} // namespace lsst::afw::cameraGeom
