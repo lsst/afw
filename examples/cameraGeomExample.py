@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-# Example usage of CameraGeom. In tests/ instead of examples/ so it will be exercised during build.
 import lsst.afw.cameraGeom.testUtils as testUtils
 lsstCamWrapper = testUtils.CameraWrapper(isLsstLike=True)
 camera = lsstCamWrapper.camera
