@@ -61,7 +61,7 @@ afwMath::AnalyticKernel::AnalyticKernel(
         std::ostringstream os;
         os << "kernelFunction.getNParameters() = " << kernelFunction.getNParameters()
             << " != " << spatialFunctionList.size() << " = " << "spatialFunctionList.size()";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 }
 
@@ -131,7 +131,7 @@ double afwMath::AnalyticKernel::doComputeImage(
 
     if (doNormalize && (imSum != 1)) {
         if (imSum == 0) {
-            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+            throw LSST_EXCEPT(pexExcept::OverflowError, "Cannot normalize; kernel sum is 0");
         }
         image /= imSum;
         imSum = 1;

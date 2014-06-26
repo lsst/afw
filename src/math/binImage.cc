@@ -52,11 +52,11 @@ PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
                     )
 {
     if (flags != lsst::afw::math::MEAN) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           (boost::format("Only afwMath::MEAN is supported, saw 0x%x") % flags).str());
     }
     if (binX <= 0 || binY <= 0) {
-        throw LSST_EXCEPT(pexExcept::DomainErrorException,
+        throw LSST_EXCEPT(pexExcept::DomainError,
                           (boost::format("Binning must be >= 0, saw %dx%d") % binX % binY).str());
     }
 

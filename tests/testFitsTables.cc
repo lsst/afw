@@ -198,6 +198,6 @@ BOOST_AUTO_TEST_CASE(ticket2164) {
     cat.addNew();
     cat.addNew();
     ConstBaseCatalog constCat(cat);
-    BOOST_CHECK_THROW( constCat.getColumnView(), lsst::pex::exceptions::LogicErrorException );
+    BOOST_CHECK_THROW( constCat.getColumnView(), lsst::pex::exceptions::LogicError );
 
 }

@@ -85,7 +85,7 @@ inline void fits_read_array(
             bbox.getWidth() > dimensions.getX() || bbox.getHeight() > dimensions.getY()
         ) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthErrorException,
+                lsst::pex::exceptions::LengthError,
                 (boost::format("BBox (%d,%d) %dx%d doesn't fit in image %dx%d") %
                  bbox.getMinX() % bbox.getMinY() % bbox.getWidth() % bbox.getHeight() %
                  dimensions.getX() % dimensions.getY()).str()

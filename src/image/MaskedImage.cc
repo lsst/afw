@@ -146,12 +146,12 @@ void checkExtType(
     try {
         std::string exttype = boost::algorithm::trim_right_copy(metadata->getAsString("EXTTYPE"));
         if (exttype != "" && exttype != expected) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               (boost::format("Reading %s (hdu %d) Expected EXTTYPE==\"%s\", saw \"%s\"") %
                                expected % fitsfile.getFileName() % fitsfile.getHdu() % exttype).str());
         }
         metadata->remove("EXTTYPE");
-    } catch(lsst::pex::exceptions::NotFoundException) {}
+    } catch(lsst::pex::exceptions::NotFoundError) {}
 }
 
 void ensureMetadata(PTR(lsst::daf::base::PropertySet) & metadata) {
@@ -569,7 +569,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::writeFits(
 
     if (fitsfile.countHdus() != 0) {
         throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
+            pex::exceptions::LogicError,
             "MaskedImage::writeFits can only write to an empty file"
         );
     }
@@ -605,7 +605,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     } else {
         if (_mask->getDimensions() != _image->getDimensions()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthErrorException,
+                lsst::pex::exceptions::LengthError,
                 (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
                     _image->getWidth() % _image->getHeight() % 
                     _mask->getWidth() % _mask->getHeight()
@@ -620,7 +620,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     } else {
         if (_variance->getDimensions() != _image->getDimensions()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthErrorException,
+                lsst::pex::exceptions::LengthError,
                 (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
                     _image->getWidth() % _image->getHeight() % 
                     _variance->getWidth() % _variance->getHeight()

@@ -45,7 +45,7 @@ afwMath::DeltaFunctionKernel::DeltaFunctionKernel(
         std::ostringstream os;
         os << "point (" << point.getX() << ", " << point.getY() << ") lies outside "
             << width << "x" << height << " sized kernel";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 }
 

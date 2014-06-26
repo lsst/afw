@@ -67,7 +67,7 @@ struct FieldBase {
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
         );
     }
@@ -126,7 +126,7 @@ struct FieldBase< Coord > {
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
         );
     }
@@ -188,7 +188,7 @@ struct FieldBase< Point<U> > {
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
         );
     }
@@ -238,7 +238,7 @@ struct FieldBase< Moments<U> > {
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
         );
     }
@@ -294,7 +294,7 @@ struct FieldBase< Array<U> > {
      */
     FieldBase(int size=-1) : _size(size) {
         if (size < 0) throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
+            lsst::pex::exceptions::LengthError,
             "Size must be provided when constructing an array field."
         );
     }
@@ -338,7 +338,7 @@ protected:
     ) const {
         if (value.template getSize<0>() != _size) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthErrorException,
+                lsst::pex::exceptions::LengthError,
                 "Incorrect size in array field assignment."
             );
         }
@@ -382,7 +382,7 @@ struct FieldBase< Covariance<U> > {
      */
     FieldBase(int size=-1) : _size(size) {
         if (size < 0) throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
+            lsst::pex::exceptions::LengthError,
             "Size must be provided when constructing a covariance field."
         );
     }
@@ -425,7 +425,7 @@ protected:
     ) const {
         if (value.rows() != _size || value.cols() != _size) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthErrorException,
+                lsst::pex::exceptions::LengthError,
                 "Incorrect size in covariance field assignment."
             );
         }
@@ -476,7 +476,7 @@ struct FieldBase< Covariance< Point<U> > > {
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
         );
     }
@@ -554,7 +554,7 @@ struct FieldBase< Covariance< Moments<U> > > {
     FieldBase() {}
     FieldBase(int) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Constructor disabled (it only appears to exist as a workaround for a SWIG bug)."
         );
     }

@@ -10,7 +10,8 @@ by an image processing system.  In particular:
    - \ref afwSecDisplay : How to display images
    - \ref afwSecMath :  Mathematical functions such as convolution and image statistics
    - \ref afwSecDetection : Detection of sources in images
-   - \ref afwTable : Table and record classes for catalog data 
+   - \ref afwTable : Table and record classes for catalog data
+   - \ref afwCameraGeom : Camera geometry, including transformation between camera-based coordinate systems
 */
 
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

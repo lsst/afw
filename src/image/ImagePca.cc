@@ -59,7 +59,7 @@ ImagePca<ImageT>::ImagePca(bool constantWeight ///< Should all stars be weighted
 /**
  * Add an image to the set to be analyzed
  *
- * @throw lsst::pex::exceptions::LengthErrorException if all the images aren't the same size
+ * @throw lsst::pex::exceptions::LengthError if all the images aren't the same size
  */
 template <typename ImageT>
 void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to set
@@ -70,7 +70,7 @@ void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to s
     } else {
         if (getDimensions() != img->getDimensions()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthErrorException,
+                lsst::pex::exceptions::LengthError,
                 (boost::format("Dimension mismatch: saw %dx%d; expected %dx%d") %
                     img->getWidth() % img->getHeight() %
                     _dimensions.getX() % _dimensions.getY()
@@ -80,7 +80,7 @@ void ImagePca<ImageT>::addImage(typename ImageT::Ptr img, ///< Image to add to s
     }
 
     if (flux == 0.0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeException, "Flux may not be zero");
+        throw LSST_EXCEPT(lsst::pex::exceptions::OutOfRangeError, "Flux may not be zero");
     }
 
     _imageList.push_back(img);
@@ -100,7 +100,7 @@ typename ImagePca<ImageT>::ImageList ImagePca<ImageT>::getImageList() const {
 template <typename ImageT>
 typename ImageT::Ptr ImagePca<ImageT>::getMean() const {
     if (_imageList.empty()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException, "You haven't provided any images");
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "You haven't provided any images");
     }
 
     typename ImageT::Ptr mean(new ImageT(getDimensions()));
@@ -137,7 +137,7 @@ void ImagePca<ImageT>::analyze()
     int const nImage = _imageList.size();
 
     if (nImage == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException, "No images provided for PCA analysis");
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError, "No images provided for PCA analysis");
     }
     /*
      * Eigen doesn't like 1x1 matrices, but we don't really need it to handle a single matrix...
@@ -243,10 +243,10 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     typedef typename MaskedImageT::Image ImageT;
 
     if (nEigen == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           "You must have at least one eigen image");
     } else if (nEigen > static_cast<int>(eigenImages.size())) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("You only have %d eigen images (you asked for %d)")
                            % eigenImages.size() % nEigen).str());
     }
@@ -307,7 +307,7 @@ double do_updateBadPixels(
 {
     int const nImage = imageList.size();
     if (nImage == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           "Please provide at least one Image for me to update");
     }
     geom::Extent2I dimensions = imageList[0]->getDimensions();
@@ -376,7 +376,7 @@ double do_updateBadPixels(
         }
     } else {
         if (ncomp > static_cast<int>(eigenImages.size())) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               (boost::format("You only have %d eigen images (you asked for %d)")
                                % eigenImages.size() % ncomp).str());
         }
@@ -448,7 +448,7 @@ namespace {
 /**
  * Calculate the inner product of two %images
  * @return The inner product
- * @throw lsst::pex::exceptions::LengthErrorException if all the images aren't the same size
+ * @throw lsst::pex::exceptions::LengthError if all the images aren't the same size
  */
 template <typename Image1T, typename Image2T>
 double innerProduct(Image1T const& lhs, ///< first image
@@ -456,7 +456,7 @@ double innerProduct(Image1T const& lhs, ///< first image
                     int border          ///< number of pixels to ignore around the edge
                    ) {
     if (lhs.getWidth() <= 2*border || lhs.getHeight() <= 2*border) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("All image pixels are in the border of width %d: %dx%d") %
                            border % lhs.getWidth() % lhs.getHeight()).str());
     }
@@ -477,7 +477,7 @@ double innerProduct(Image1T const& lhs, ///< first image
         }
     } else {
         if (lhs.getDimensions() != rhs.getDimensions()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               (boost::format("Dimension mismatch: %dx%d v. %dx%d") %
                                lhs.getWidth() % lhs.getHeight() % rhs.getWidth() % rhs.getHeight()).str());
         }

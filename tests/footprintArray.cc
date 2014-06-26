@@ -79,22 +79,22 @@ BOOST_AUTO_TEST_CASE(conversion) {
 
     BOOST_CHECK_THROW( 
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(1, 0), geom::Extent2I(9, 10))),
-        lsst::pex::exceptions::InvalidParameterException
+        lsst::pex::exceptions::InvalidParameterError
     );
 
     BOOST_CHECK_THROW( 
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(0, 5), geom::Extent2I(10, 5))),
-        lsst::pex::exceptions::InvalidParameterException
+        lsst::pex::exceptions::InvalidParameterError
     );
 
     BOOST_CHECK_THROW( 
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(9, 10))),
-        lsst::pex::exceptions::InvalidParameterException
+        lsst::pex::exceptions::InvalidParameterError
     );
 
     BOOST_CHECK_THROW( 
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(10, 9))),
-        lsst::pex::exceptions::InvalidParameterException
+        lsst::pex::exceptions::InvalidParameterError
     );
 
     footprint.shift(20, 30);

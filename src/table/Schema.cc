@@ -212,7 +212,7 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
                 return boost::get< SchemaItem<T> const >(_items[i->second]);
             } catch (boost::bad_get & err) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterException,
+                    lsst::pex::exceptions::InvalidParameterError,
                     (boost::format("Field '%s' does not have the given type.") % name).str()
                 );
             }
@@ -227,7 +227,7 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
         if (extractor.result) return *extractor.result;
     }
     throw LSST_EXCEPT(
-        lsst::pex::exceptions::NotFoundException,
+        lsst::pex::exceptions::NotFoundError,
         (boost::format("Field or subfield withname '%s' not found with type '%s'.")
          % name % Field<T>::getTypeString()).str()
     );
@@ -316,7 +316,7 @@ SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
         }
     }
     throw LSST_EXCEPT(
-        lsst::pex::exceptions::NotFoundException,
+        lsst::pex::exceptions::NotFoundError,
         (boost::format("Field or subfield with offset %d not found with type '%s'.")
          % key.getOffset() % Field<T>::getTypeString()).str()
     );
@@ -331,7 +331,7 @@ SchemaItem<Flag> SchemaImpl::find(Key<Flag> const & key) const {
                 return boost::get< SchemaItem<Flag> const >(_items[i->second]);
             } catch (boost::bad_get & err) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::NotFoundException,
+                    lsst::pex::exceptions::NotFoundError,
                     (boost::format("Flag field with offset %d and bit %d not found.")
                      % key.getOffset() % key.getBit()).str()
                 );
@@ -340,7 +340,7 @@ SchemaItem<Flag> SchemaImpl::find(Key<Flag> const & key) const {
     }
     // Flag keys are never subfields, so we require an exact match.
     throw LSST_EXCEPT(
-        lsst::pex::exceptions::NotFoundException,
+        lsst::pex::exceptions::NotFoundError,
         (boost::format("Flag field with offset %d and bit %d not found.")
          % key.getOffset() % key.getBit()).str()
     );
@@ -366,7 +366,7 @@ inline int findKey(
     if (i == offsets.end()) {
         if (throwIfMissing) {
             throw LSST_EXCEPT(
-                pex::exceptions::NotFoundException,
+                pex::exceptions::NotFoundError,
                 (boost::format("Key of type %s with offset %d not found in Schema")
                  % Field<T>::getTypeString() % key.getOffset()).str()
             );
@@ -388,7 +388,7 @@ inline int findKey(
     if (i == flags.end()) {
         if (throwIfMissing) {
             throw LSST_EXCEPT(
-                pex::exceptions::NotFoundException,
+                pex::exceptions::NotFoundError,
                 (boost::format("Key of type Flag with offset %d and bit %d not found in Schema")
                  % key.getOffset() % key.getBit()).str()
             );
@@ -411,7 +411,7 @@ void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
         item = boost::get< SchemaItem<T> >(&_items[j->second]);
         if (!item || key != item->key) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Field with name '%s' already present in schema with a different key.")
                  % field.getName()).str()
             );
@@ -422,7 +422,7 @@ void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
         item = boost::get< SchemaItem<T> >(&_items[index]);
         if (!item) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Incorrect key type '%s'.") % key).str()
             );
         }
@@ -439,7 +439,7 @@ template <typename T>
 int SchemaImpl::contains(SchemaItem<T> const & item, int flags) const {
     if (!(flags & Schema::EQUAL_KEYS)) {
         throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
+            pex::exceptions::LogicError,
             "Can only check whether item is in schema if flags & EQUAL_KEYS"
         );
     }
@@ -523,14 +523,14 @@ Key<T> SchemaImpl::addField(Field<T> const & field, bool doReplace) {
             SchemaItem<T> * item = boost::get< SchemaItem<T> >(&_items[result.first->second]);
             if (!item) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterException,
+                    lsst::pex::exceptions::InvalidParameterError,
                     (boost::format("Cannot replace field with name '%s' because types differ.")
                      % field.getName()).str()
                 );
             }
             if (item->field.getElementCount() != field.getElementCount()) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterException,
+                    lsst::pex::exceptions::InvalidParameterError,
                     (boost::format("Cannot replace field with name '%s' because sizes differ.")
                      % field.getName()).str()
                 );
@@ -539,7 +539,7 @@ Key<T> SchemaImpl::addField(Field<T> const & field, bool doReplace) {
             return item->key;
         } else {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
             );
         }
@@ -565,7 +565,7 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
             SchemaItem<Flag> * item = boost::get< SchemaItem<Flag> >(&_items[result.first->second]);
             if (!item) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterException,
+                    lsst::pex::exceptions::InvalidParameterError,
                     (boost::format("Cannot replace field with name '%s' because types differ.")
                      % field.getName()).str()
                 );
@@ -574,7 +574,7 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
             return item->key;
         } else {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
             );
         }

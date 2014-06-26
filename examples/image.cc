@@ -210,7 +210,7 @@ int main() {
 
     try {
         afwImage::Image<float> fl32(u16, false);  // will throw
-    } catch(lsst::pex::exceptions::InvalidParameterException &e) {
+    } catch(lsst::pex::exceptions::InvalidParameterError &e) {
         printf("Correctly threw exception: %s\n", e.what());
     }
 

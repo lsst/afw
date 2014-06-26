@@ -76,7 +76,7 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
     if (ampIter == _ampNameIterMap.end()) {
         std::ostringstream os;
         os << "Unknown amplifier \"" << name << "\"";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     return *(ampIter->second);
 }
@@ -88,7 +88,7 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
         _ampNameIterMap.insert(std::make_pair(ampIter->getName(), ampIter));
     }
     if (_ampNameIterMap.size() != _ampInfoCatalog.size()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
             "Invalid ampInfoCatalog: not all amplifier names are unique");
     }
 
@@ -98,7 +98,7 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
             if (trIter->first.hasDetectorName() && trIter->first.getDetectorName() != _name) {
                 std::ostringstream os;
                 os << "Invalid transformMap: " << trIter->first << " detector name != \"" << _name << "\"";
-                throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+                throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
             }
     }
 }

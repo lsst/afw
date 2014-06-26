@@ -46,11 +46,11 @@ TransformMap<CoordSysT>::TransformMap(
         if (_transforms.count(trIter->first) > 0) {
             std::ostringstream os;
             os << "Duplicate coordSys \"" << trIter->first << "\"";
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
         } else if (trIter->first == _nativeCoordSys) {
             std::ostringstream os;
             os << "coordSys \"" << trIter->first << "\" matches nativeCoordSys";
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
         }
         _transforms.insert(*trIter);
     }
@@ -137,7 +137,7 @@ CONST_PTR(XYTransform) TransformMap<CoordSysT>::operator[](
     if (foundIter == _transforms.end()) {
         std::ostringstream os;
         os << "Registry does not support coordSys \"" << coordSys << "\"";
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
     }
     return foundIter->second;
 }

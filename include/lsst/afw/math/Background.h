@@ -73,7 +73,7 @@ public:
           _sctrl(new StatisticsControl(sctrl)),
           _prop(prop) {
         if (nxSample <= 0 || nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               str(boost::format("You must specify at least one point, not %dx%d")
                                   % nxSample % nySample)
                              );
@@ -95,7 +95,7 @@ public:
           _sctrl(new StatisticsControl(sctrl)),
           _prop(stringToStatisticsProperty(prop)) {
         if (nxSample <= 0 || nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               str(boost::format("You must specify at least one point, not %dx%d")
                                   % nxSample % nySample)
                              );
@@ -119,7 +119,7 @@ public:
           _sctrl(new StatisticsControl(sctrl)),
           _prop(prop) {
         if (nxSample <= 0 || nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               str(boost::format("You must specify at least one point, not %dx%d")
                                   % nxSample % nySample)
                              );
@@ -145,7 +145,7 @@ public:
           _sctrl(new StatisticsControl(sctrl)),
           _prop(stringToStatisticsProperty(prop)) {
         if (nxSample <= 0 || nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               str(boost::format("You must specify at least one point, not %dx%d")
                                   % nxSample % nySample)
                              );
@@ -155,14 +155,14 @@ public:
     virtual ~BackgroundControl() {}
     void setNxSample (int nxSample) {
         if (nxSample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               str(boost::format("nxSample must be position, not %d") % nxSample));
         }
         _nxSample = nxSample;
     }
     void setNySample (int nySample) {
         if (nySample <= 0) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                               str(boost::format("nySample must be position, not %d") % nySample));
         }
         _nySample = nySample;
@@ -184,7 +184,7 @@ public:
     int getNySample() const { return _nySample; }
     Interpolate::Style getInterpStyle() const {
         if (_style < 0 || _style >= Interpolate::NUM_STYLES) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Style %d is invalid") % _style));
 
         }

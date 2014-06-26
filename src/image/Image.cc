@@ -55,7 +55,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateVi
     Manager::Ptr & manager
 ) {
     if (dimensions.getX() < 0 || dimensions.getY() < 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           str(boost::format("Both width and height must be non-negative: %d, %d")
                               % dimensions.getX() % dimensions.getY()));
     }
@@ -79,7 +79,7 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
         offset.getY() + dimensions.getY() > view.height()
     ) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
+            lsst::pex::exceptions::LengthError,
             (boost::format("Box2I(Point2I(%d,%d),Extent2I(%d,%d)) doesn't fit in image %dx%d") %
                 offset.getX() % offset.getY() % 
                 dimensions.getX() % dimensions.getY() %
@@ -221,7 +221,7 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 template<typename PixelT>
 void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
     if (getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Dimension mismatch: %dx%d v. %dx%d") %
                               getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -245,7 +245,7 @@ typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::oper
                                                                                       )
 {
     if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
                            x % y % (getWidth() - 1) % (getHeight() - 1)).str());
     }
@@ -267,7 +267,7 @@ template<typename PixelT>
 typename image::ImageBase<PixelT>::PixelConstReference
     image::ImageBase<PixelT>::operator()(int x, int y, image::CheckIndices const& check) const {
     if (check && (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
                            x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
     }
@@ -356,11 +356,11 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::begin
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Only contiguous == true makes sense");
     }
     if (!this->isContiguous()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Image's pixels are not contiguous");
     }
 
@@ -376,11 +376,11 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
     bool contiguous         ///< Pixels are contiguous (must be true)
 ) const {
     if (!contiguous) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Only contiguous == true makes sense"); 
     }
     if (!this->isContiguous()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, 
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, 
                           "Image's pixels are not contiguous");
     }
 
@@ -645,7 +645,7 @@ void image::Image<PixelT>::operator+=(PixelT const rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -673,7 +673,7 @@ void image::Image<PixelT>::operator+=(
 template<typename PixelT>
 void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -691,7 +691,7 @@ void image::Image<PixelT>::operator-=(PixelT const rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -702,7 +702,7 @@ void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -737,7 +737,7 @@ void image::Image<PixelT>::operator*=(PixelT const rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -748,7 +748,7 @@ void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -784,7 +784,7 @@ void Image<float>::operator/=(float const rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
@@ -795,7 +795,7 @@ void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
 template<typename PixelT>
 void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }

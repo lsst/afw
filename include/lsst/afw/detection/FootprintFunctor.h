@@ -69,7 +69,7 @@ public:
         if (!region.isEmpty() &&
             (!region.contains(bbox.getMin()) || !region.contains(bbox.getMax()))) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LengthErrorException,
+                lsst::pex::exceptions::LengthError,
                 (boost::format("Footprint with BBox (%d,%d) -- (%dx%d)"
                                "doesn't fit in image with BBox (%d,%d) -- (%dx%d)"
                                ) % bbox.getMinX() % bbox.getMinY() 

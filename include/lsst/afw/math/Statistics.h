@@ -113,7 +113,7 @@ public:
     {
         try {
             _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("EDGE");
-        } catch(lsst::pex::exceptions::InvalidParameterException) {
+        } catch(lsst::pex::exceptions::InvalidParameterError) {
             ;                           // Mask has no EDGE plane defined
         }
 

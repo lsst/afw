@@ -53,7 +53,7 @@ struct MapMinimalSchema {
             try {
                 SchemaItem<U> inputItem = _mapper->getInputSchema().find(item.key);
                 outputKey = _mapper->addMapping(item.key);
-            } catch (pex::exceptions::NotFoundException &) {
+            } catch (pex::exceptions::NotFoundError &) {
                 outputKey = _mapper->addOutputField(item.field);
             }
         } else {
@@ -193,7 +193,7 @@ Key<T> SchemaMapper::addMapping(Key<T> const & inputKey, std::string const & out
 void SchemaMapper::addMinimalSchema(Schema const & minimal, bool doMap) {
     if (getOutputSchema().getFieldCount() > 0) {
         throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
+            pex::exceptions::LogicError,
             "Must add minimal schema to mapper before adding any other fields"
         );
     }
@@ -231,7 +231,7 @@ Key<T> SchemaMapper::getMapping(Key<T> const & inputKey) const {
     );
     if (i == _impl->_map.end()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::NotFoundException,
+            lsst::pex::exceptions::NotFoundError,
             "Input Key is not mapped."
         );
     }
@@ -245,7 +245,7 @@ std::vector<SchemaMapper> SchemaMapper::join(
     std::size_t const size = inputs.size();
     if (!prefixes.empty() && prefixes.size() != inputs.size()) {
         throw LSST_EXCEPT(
-            pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthError,
             (boost::format("prefix vector size (%d) must be the same as input vector size (%d)")
              % prefixes.size() % inputs.size()).str()
         );

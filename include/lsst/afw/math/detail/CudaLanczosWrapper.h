@@ -76,12 +76,12 @@ namespace WarpImageGpuStatus
  * Calls CalculateInterpolationData() to calculate interpolation data from values of coordinate transformation fn.
  * Calls WarpImageGpuWrapper() to perform the wapring.
  *
- * \throw lsst::pex::exceptions::InvalidParameterException if interpLength < 1
- * \throw lsst::pex::exceptions::InvalidParameterException if maskWarpingKernel is neither Lanczos, bilinear
+ * \throw lsst::pex::exceptions::InvalidParameterError if interpLength < 1
+ * \throw lsst::pex::exceptions::InvalidParameterError if maskWarpingKernel is neither Lanczos, bilinear
  *        nor nearest neighbor
- * \throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
- * \throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
- * \throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+ * \throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * \throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+ * \throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  */
 template<typename DestImageT, typename SrcImageT>

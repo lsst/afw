@@ -50,7 +50,7 @@ Threshold::ThresholdType Threshold::parseTypeString(std::string const & typeStr)
         return Threshold::PIXEL_STDEV;
     } else {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             (boost::format("Unsupported Threshold type: %s") % typeStr).str()
         );
     }    
@@ -65,7 +65,7 @@ std::string Threshold::getTypeString(ThresholdType const & type) {
         return "variance";
     } else {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             (boost::format("Unsopported Threshold type: %d") % type).str()
         );
     }
@@ -81,7 +81,7 @@ double Threshold::getValue(const double param) const {
       case STDEV:
         if (param <= 0) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("St. dev. must be > 0: %g") % param).str()
             );
         }
@@ -93,14 +93,14 @@ double Threshold::getValue(const double param) const {
       case VARIANCE:
         if (param <= 0) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterException,
+                lsst::pex::exceptions::InvalidParameterError,
                 (boost::format("Variance must be > 0: %g") % param).str()
             );
         }
         return _value*std::sqrt(param);
       default:
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             (boost::format("Unsupported type: %d") % _type).str()
         );
     }

@@ -53,7 +53,7 @@
 %extend lsst::afw::table::BaseColumnView {
     void __getitem__(Key< Point<U> > const & key) const {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get column view to Point field."
         );
     }
@@ -89,7 +89,7 @@
 %extend lsst::afw::table::BaseColumnView {
     void __getitem__(Key< Moments<U> > const & key) const {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get column view to Moments field."
         );
     }
@@ -210,7 +210,7 @@
 %extend lsst::afw::table::BaseColumnView {
     void __getitem__(Key< lsst::afw::table::Covariance<U> > const & key) const {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get column view to Covariance field."
         );
     }
@@ -258,7 +258,7 @@
 %extend lsst::afw::table::BaseColumnView {
     void __getitem__(Key< lsst::afw::table::Covariance< lsst::afw::table::Point<U> > > const & key) const {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get column view to Covariance field."
         );
     }
@@ -306,7 +306,7 @@
 %extend lsst::afw::table::BaseColumnView {
     void __getitem__(Key< lsst::afw::table::Covariance< lsst::afw::table::Moments<U> > > const & key) const {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get column view to Covariance field."
         );
     }
@@ -389,7 +389,7 @@
 %extend lsst::afw::table::BaseColumnView {
     void __getitem__(Key< lsst::afw::coord::Coord > const & key) const {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get column view to Coord field."
         );
     }

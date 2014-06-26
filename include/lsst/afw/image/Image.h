@@ -193,7 +193,7 @@ namespace image {
         ImageBase(const ImageBase<OtherPixelT>& rhs, const bool deep) :
             lsst::daf::base::Citizen(typeid(this)) {
             if (!deep) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                     "Only deep copies are permitted for ImageBases with different pixel types");
             }
 

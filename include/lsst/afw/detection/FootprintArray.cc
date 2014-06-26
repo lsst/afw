@@ -62,14 +62,14 @@ namespace {
         geom::Box2I imBox(xy0, geom::Extent2I(dest.template getSize<1>(), dest.template getSize<0>()));
         
         if (src.template getSize<0>() != fp.getArea()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Array outer size (%d) does not match"
                                                 " footprint area (%d)."
                                                ) % dest.template getSize<0>() % fp.getArea()));
         }
 
         if (!imBox.contains(fpBox)) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Array bounding box (%d) does not contain footprint "
                                                 "bounding box (%d)") % imBox % fpBox));
         }

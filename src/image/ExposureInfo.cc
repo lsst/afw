@@ -226,7 +226,7 @@ void ExposureInfo::_readFits(
         int psfId = popInt(*metadata, "PSF_ID");
         try {
             _psf = archive.get<detection::Psf>(psfId);
-        } catch (pex::exceptions::NotFoundException & err) {
+        } catch (pex::exceptions::NotFoundError & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read PSF; setting to null: %s") % err.what()
             );
@@ -234,7 +234,7 @@ void ExposureInfo::_readFits(
         int wcsId = popInt(*metadata, "WCS_ID");
         try {
             _wcs = archive.get<Wcs>(wcsId);
-        } catch (pex::exceptions::NotFoundException & err) {
+        } catch (pex::exceptions::NotFoundError & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read WCS; setting to null: %s") % err.what()
             );
@@ -242,7 +242,7 @@ void ExposureInfo::_readFits(
         int coaddInputsId = popInt(*metadata, "COADD_INPUTS_ID");
         try {
             _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
-        } catch (pex::exceptions::NotFoundException & err) {
+        } catch (pex::exceptions::NotFoundError & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read CoaddInputs; setting to null: %s") % err.what()
             );

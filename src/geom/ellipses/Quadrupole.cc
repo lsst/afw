@@ -32,11 +32,11 @@ std::string Quadrupole::getName() const { return "Quadrupole"; }
 
 void Quadrupole::normalize() {
     if (_matrix(0, 1) != _matrix(1, 0))
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix must be symmetric.");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, "Quadrupole matrix must be symmetric.");
     if (getIxx() < 0 || getIyy() < 0)
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix cannot have negative diagonal elements.");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, "Quadrupole matrix cannot have negative diagonal elements.");
     if (getDeterminant() < 0) 
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, "Quadrupole matrix cannot have negative determinant.");
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, "Quadrupole matrix cannot have negative determinant.");
 }
 
 void Quadrupole::readParameters(double const * iter) {

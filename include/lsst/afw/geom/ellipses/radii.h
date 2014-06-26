@@ -59,7 +59,7 @@ public:
 
     void normalize() {
         if (_value < 0)
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, 
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, 
                               "Ellipse radius cannot be negative.");
     }
 
@@ -119,7 +119,7 @@ public:
 
     void normalize() {
         if (_value < 0)
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "Ellipse radius cannot be negative.");
     }
 

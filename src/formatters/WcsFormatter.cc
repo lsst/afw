@@ -92,7 +92,7 @@ void afwForm::WcsFormatter::write(
     afwImg::Wcs const* ip =
         dynamic_cast<afwImg::Wcs const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Persisting non-Wcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-Wcs");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("WcsFormatter write BoostStorage");
@@ -101,7 +101,7 @@ void afwForm::WcsFormatter::write(
         execTrace("WcsFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
 }
 
 dafBase::Persistable* afwForm::WcsFormatter::read(
@@ -126,14 +126,14 @@ dafBase::Persistable* afwForm::WcsFormatter::read(
         execTrace("WcsFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
 }
 
 void afwForm::WcsFormatter::update(
     dafBase::Persistable*,
     dafPersist::Storage::Ptr,
     dafBase::PropertySet::Ptr) {
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for Wcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unexpected call to update for Wcs");
 }
 
 dafBase::PropertyList::Ptr
@@ -171,7 +171,7 @@ void afwForm::WcsFormatter::delegateSerialize(
     execTrace("WcsFormatter delegateSerialize start");
     afwImg::Wcs* ip = dynamic_cast<afwImg::Wcs*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Serializing non-Wcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-Wcs");
     }
 
     // Serialize most fields normally

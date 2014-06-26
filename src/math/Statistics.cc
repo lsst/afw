@@ -723,7 +723,7 @@ afwMath::Statistics::Statistics(
 {
     if (!isEmpty(weights)) {
         if (_sctrl.getWeightedIsSet() && !_sctrl.getWeighted()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "You must use the weights if you provide them");
         }
 
@@ -744,7 +744,7 @@ void afwMath::Statistics::doStatistics(
 {
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Image contains no pixels");
     }
     
     // Check that an int's large enough to hold the number of pixels
@@ -837,7 +837,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
         static_cast<afwMath::Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
     
     if (!(prop & _flags)) {             // we didn't calculate it
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException,
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError,
                           (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
 
@@ -938,7 +938,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
         // default: redundant as 'ret' is initialized to NaN, NaN
       default:                          // we must have set prop to _flags
         assert (iProp == 0);
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "getValue() may only be called without a parameter"
                           " if you asked for only one statistic");
     }
@@ -986,14 +986,14 @@ Statistics::Statistics(
     _sctrl(sctrl) {
     
     if ((flags & ~(NPOINT | SUM)) != 0x0) {
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Statistics<Mask> only supports NPOINT and SUM");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Statistics<Mask> only supports NPOINT and SUM");
     }
     
     typedef afwImage::Mask<afwImage::MaskPixel> Mask;
     
     _n = msk.getWidth()*msk.getHeight();
     if (_n == 0) {
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Image contains no pixels");
     }
     
     // Check that an int's large enough to hold the number of pixels

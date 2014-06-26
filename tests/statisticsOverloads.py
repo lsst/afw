@@ -171,7 +171,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         def tst():
             stats = afwMath.makeStatistics(mask, afwMath.MEAN)
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException, tst)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError, tst)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

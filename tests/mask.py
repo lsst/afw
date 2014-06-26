@@ -161,13 +161,13 @@ class MaskTestCase(unittest.TestCase):
         i2.set(10)
         
         def tst(i1, i2): i1 |= i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst, i1, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthError, tst, i1, i2)
 
         def tst2(i1, i2): i1 &= i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst2, i1, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthError, tst2, i1, i2)
     
         def tst2(i1, i2): i1 ^= i2
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst2, i1, i2)
+        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthError, tst2, i1, i2)
     
     def testMaskPlanes(self):
         planes = self.Mask().getMaskPlaneDict()
@@ -309,7 +309,7 @@ class MaskTestCase(unittest.TestCase):
         tsts.append(tst)
 
         for tst in tsts:
-            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthErrorException, tst)
+            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthError, tst)
 
     def testCtorWithPlaneDefs(self):
         """Test that we can create a Mask with a given MaskPlaneDict"""
@@ -467,11 +467,11 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.Mask.removeMaskPlane("BP") # remove from default mask too
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, checkPlaneBP)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError, checkPlaneBP)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                                        lambda: self.Mask.removeMaskPlane("BP")) # Plane is already removed
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                                        lambda: self.testMask.removeMaskPlane("RHL gets names right"))
         #
         self.Mask.clearMaskPlaneDict()
@@ -493,7 +493,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.addMaskPlane("BP")
         self.testMask.removeAndClearMaskPlane("BP", True)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException, checkPlaneBP)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError, checkPlaneBP)
 
     def testInvalidPlaneOperations(self):
         """Test mask plane operations invalidated by Mask changes"""
@@ -510,7 +510,7 @@ class OldMaskTestCase(unittest.TestCase):
         def tst():
             self.testMask |= testMask3
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeError, tst)
 
         self.Mask.addMaskPlane(name)    # The dictionary should be back to the same state, so ...
         tst                             # ... assertion should not fail
@@ -519,7 +519,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.Mask.addMaskPlane("Mario") # takes name's slot
         self.Mask.addMaskPlane(name)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeError, tst)
 
     def testInvalidPlaneOperations2(self):
         """Test mask plane operations invalidated by Mask changes"""
@@ -545,7 +545,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.testMask.removeAndClearMaskPlane("BP")
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeError, tst)
         #
         # OK, that failed as it should.  Fixup the dictionaries and try again
         #

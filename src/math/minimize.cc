@@ -191,7 +191,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
  * Uses the Minuit fitting package with a standard definition of chiSq
  * (see MinimizerFunctionBase1).
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if any input vector is the wrong length 
+ * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length 
  *
  * To do:
  * - Document stepSizeList better
@@ -210,20 +210,20 @@ afwMath::FitResults afwMath::minimize(
 ) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "xPositionList is the wrong length");
     }
 
@@ -275,7 +275,7 @@ afwMath::FitResults afwMath::minimize(
  *
  * @return true if minimum is valid, false otherwise
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if any input vector is the wrong length 
+ * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length 
  *
  * To do:
  * - Document stepSizeList better
@@ -295,24 +295,24 @@ afwMath::FitResults afwMath::minimize(
 ) {
     unsigned int const nParameters = function.getNParameters();
     if (initialParameterList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "initialParameterList is the wrong length");
     }
     if (stepSizeList.size() != nParameters) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "stepSizeList is the wrong length");
     }
     unsigned int const nMeasurements = measurementList.size();
     if (varianceList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "varianceList is the wrong length");
     }
     if (xPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "xPositionList is the wrong length");
     }
     if (yPositionList.size() != nMeasurements) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "yPositionList is the wrong length");
     }
 

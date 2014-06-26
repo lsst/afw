@@ -93,7 +93,7 @@ std::string FieldBase< Covariance< Moments<U> > >::getTypeString() {
 
 FieldBase< std::string >::FieldBase(int size) : _size(size) {
     if (size < 0) throw LSST_EXCEPT(
-        lsst::pex::exceptions::LengthErrorException,
+        lsst::pex::exceptions::LengthError,
         "Size must be provided when constructing a string field."
     );
 }
@@ -111,7 +111,7 @@ void FieldBase< std::string >::setValue(
 ) const {
     if (value.size() > std::size_t(_size)) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthErrorException,
+            lsst::pex::exceptions::LengthError,
             (boost::format("String (%d) is too large for field (%d).") % value.size() % _size).str()
         );
     }

@@ -125,13 +125,13 @@ class InterpolateTestCase(unittest.TestCase):
     def testInvalidInputs(self):
         """Test that invalid inputs cause an abort"""
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                                        lambda : afwMath.makeInterpolate([], [],
                                                                         afwMath.Interpolate.CONSTANT))
 
         interp = afwMath.makeInterpolate([0], [1], afwMath.Interpolate.CONSTANT)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeException,
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeError,
                                        lambda : afwMath.makeInterpolate([0], [1],
                                                                         afwMath.Interpolate.LINEAR))
 

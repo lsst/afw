@@ -36,7 +36,7 @@ BitsColumn::IntT BitsColumn::getBit(Key<Flag> const & key) const {
     IntT r = std::find_if(_items.begin(), _items.end(), MatchKey(key)) - _items.begin();
     if (std::size_t(r) == _items.size()) {
         throw LSST_EXCEPT(
-            pex::exceptions::NotFoundException,
+            pex::exceptions::NotFoundError,
             (boost::format("'%s' not found in BitsColumn") % key).str()
         );
     }
@@ -47,7 +47,7 @@ BitsColumn::IntT BitsColumn::getBit(std::string const & name) const {
     IntT r = std::find_if(_items.begin(), _items.end(), MatchName(name)) - _items.begin();
     if (std::size_t(r) == _items.size()) {
         throw LSST_EXCEPT(
-            pex::exceptions::NotFoundException,
+            pex::exceptions::NotFoundError,
             (boost::format("'%s' not found in BitsColumn") % name).str()
         );
     }
@@ -123,7 +123,7 @@ BitsColumn BaseColumnView::getBits(std::vector< Key<Flag> > const & keys) const 
     ndarray::ArrayRef<BitsColumn::IntT,1,1> array = result._array.deep();
     if (keys.size() > sizeof(BitsColumn::IntT)) {
         throw LSST_EXCEPT(
-            pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthError,
             (boost::format("Too many keys passed to getBits(); %d > %d.") 
              % keys.size() % sizeof(BitsColumn::IntT)).str()
         );
@@ -158,7 +158,7 @@ BitsColumn BaseColumnView::getAllBits() const {
     getSchema().forEach(func);
     if (result._items.size() > sizeof(BitsColumn::IntT)) {
         throw LSST_EXCEPT(
-            pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthError,
             (boost::format("Too many Flag keys in schema; %d > %d.") 
              % result._items.size() % sizeof(BitsColumn::IntT)).str()
         );

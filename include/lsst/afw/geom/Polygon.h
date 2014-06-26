@@ -45,7 +45,7 @@ namespace lsst { namespace afw { namespace geom {
 ///
 /// The single-polygon assumption is used in Polygon::intersectionSingle and
 /// Polygon::unionSingle.
-LSST_EXCEPTION_TYPE(SinglePolygonException, lsst::pex::exceptions::RuntimeErrorException,
+LSST_EXCEPTION_TYPE(SinglePolygonException, lsst::pex::exceptions::RuntimeError,
                     lsst::afw::geom::SinglePolygonException);
 
 /// Cartesian polygons

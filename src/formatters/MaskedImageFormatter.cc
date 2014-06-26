@@ -128,7 +128,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     MaskedImage<ImagePixelT, MaskPixelT> const* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT> const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-MaskedImage");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-MaskedImage");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("MaskedImageFormatter write BoostStorage");
@@ -144,7 +144,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         execTrace("MaskedImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for MaskedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -169,7 +169,7 @@ Persistable* MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read
         execTrace("MaskedImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for MaskedImage");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for MaskedImage");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -179,7 +179,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update(
     lsst::daf::base::PropertySet::Ptr
                                                                           )
 {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "Unexpected call to update for MaskedImage");
 }
 
@@ -190,7 +190,7 @@ void MaskedImageFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delegateSeri
     MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
         dynamic_cast<MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-MaskedImage");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-MaskedImage");
     }
     ar & ip->_image & ip->_variance & ip->_mask;
     execTrace("MaskedImageFormatter delegateSerialize end");

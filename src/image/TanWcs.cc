@@ -75,7 +75,7 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
     //Check that the header isn't empty
     if(fitsMetadata->nameCount() == 0) {
         std::string msg = "Fits metadata contains no cards";
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, msg);
     }
 
     //Check for tangent plane projection
@@ -84,7 +84,7 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
 
     if((ctype1.substr(5, 3) != "TAN") || (ctype2.substr(5, 3) != "TAN") ) {
         std::string msg = "One or more axes isn't in TAN projection (ctype1 = \"" + ctype1 + "\", ctype2 = \"" + ctype2 + "\")";
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, msg);
     }
 
     //Check for distorton terms. With two ctypes, there are 4 alternatives, only
@@ -113,7 +113,7 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
         case 1:
             {//Invalid case. Throw an exception
                 std::string msg = "Distortion key found for only one CTYPE";
-                throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, msg);
             }
             break;  //Not necessary, but looks naked without it.
         case 2:
@@ -142,12 +142,12 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
     if (_hasDistortion) {
         if (_sipA.rows() <= 1 || _sipB.rows() <= 1) {
                 std::string msg = "Existence of forward distorton matrices suggested, but not found";
-                throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, msg);
         }
 
         if (_sipAp.rows() <= 1 || _sipBp.rows() <= 1) {
                 std::string msg = "Forward distorton matrices present, but no reverse matrices";
-                throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, msg);
+                throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, msg);
         }
     }
 
@@ -254,7 +254,7 @@ geom::Point2D TanWcs::skyToPixelImpl(
     geom::Angle sky2  // Dec
 ) const {
     if(_wcsInfo == NULL) {
-        throw(LSST_EXCEPT(pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(pex::exceptions::RuntimeError, "Wcs structure not initialised"));
     }
 
     double skyTmp[2];
@@ -271,7 +271,7 @@ geom::Point2D TanWcs::skyToPixelImpl(
 
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
-        throw LSST_EXCEPT(pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(pex::exceptions::RuntimeError,
             (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
             status % sky1.asDegrees() % sky2.asDegrees() % wcs_errmsg[status]).str());
     }
@@ -395,7 +395,7 @@ void
 TanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const
 {
     if(_wcsInfo == NULL) {
-        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Wcs structure not initialised"));
+        throw(LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Wcs structure not initialised"));
     }
 
     // wcslib assumes 1-indexed coordinates
@@ -415,7 +415,7 @@ TanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const
     int status = 0;
 	double skyTmp[2];
     if (wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, skyTmp, &status) > 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
             (boost::format("Error: wcslib returned a status code of %d at pixel %s, %s: %s") %
             status % pixel1 % pixel2 % wcs_errmsg[status]).str());
     }
@@ -441,22 +441,22 @@ void TanWcs::setDistortionMatrices(
 ) {
 
     if (sipA.rows() != sipA.cols() ){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Error: Matrix sipA must be square");
     }
 
     if (sipB.rows() != sipB.cols() ){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Error: Matrix sipB must be square");
     }
 
     if (sipAp.rows() != sipAp.cols() ){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Error: Matrix sipAp must be square");
     }
 
     if (sipBp.rows() != sipBp.cols() ){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Error: Matrix sipBp must be square");
     }
 

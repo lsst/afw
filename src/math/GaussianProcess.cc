@@ -140,7 +140,7 @@ void KdTree < T > ::Initialize(ndarray::Array < T,2,2 >  const &dt)
 
     i = _testTree();
     if (i == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Failed to properly initialize KdTree\n");
     }
 
@@ -228,7 +228,7 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
 
     if(_data[node][i] > v[i]){
         if(_tree[node][LT] >= 0){
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
             "Trying to add to KdTree in a node that is already occupied\n");
         }
         _tree[node][LT] = _pts;
@@ -236,7 +236,7 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
     }
     else{
         if(_tree[node][GEQ] >= 0){
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
             "Trying to add to KdTree in a node that is already occupied\n");
         }
         _tree[node][GEQ] = _pts;
@@ -253,7 +253,7 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
 
     i = _walkUpTree(_tree[_pts-1][PARENT], dir, _pts-1);
     if (i != _masterParent){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
         "Adding to KdTree failed\n");
     }
 
@@ -665,7 +665,7 @@ void KdTree < T > ::removePoint(int target)
 
     i = _testTree();
     if (i == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
         "Subtracting from KdTree failed\n");
     }
 
@@ -902,12 +902,12 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
 {
     
     if(numberOfNeighbors <= 0){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
     
     if(numberOfNeighbors > _kdTree.getPoints()){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
     
@@ -1015,12 +1015,12 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
 
 
     if(numberOfNeighbors <= 0){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
     
     if(numberOfNeighbors > _kdTree.getPoints()){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
 
@@ -1128,12 +1128,12 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
 {
 
     if(numberOfNeighbors <= 0){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
     
     if(numberOfNeighbors > _kdTree.getPoints()){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
 
@@ -1170,7 +1170,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
     _timer.addToSearch();
 
     if(selfNeighbors[0]!= dex) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
         "Nearest neighbor search in selfInterpolate did not find self\n");
     }
 
@@ -1242,17 +1242,17 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
                                              int numberOfNeighbors) const{
 
     if(numberOfNeighbors <= 0){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
     
     if(numberOfNeighbors + 1 > _kdTree.getPoints()){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
     
     if(dex < 0 || dex >=_kdTree.getPoints()){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked to self interpolate on a point that does not exist\n");
     }
     
@@ -1290,7 +1290,7 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
 
     if(selfNeighbors[0]!= dex) {
 
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
         "Nearest neighbor search in selfInterpolate did not find self\n");
     }
 
@@ -1701,7 +1701,7 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
 
     if(_nFunctions!= 1){
 
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
         "You are calling the wrong addPoint; you need a vector of functions\n");
 
     }

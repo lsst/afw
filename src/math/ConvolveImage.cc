@@ -210,7 +210,7 @@ namespace {
  *   fracDist = -------------------------------------------
  *              location of inImage2 - location of inImage1
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if outImage is not same dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if outImage is not same dimensions
  * as inImage1 and inImage2.
  */
 template <typename OutImageT, typename InImageT>
@@ -226,13 +226,13 @@ void afwMath::scaledPlus(
         os << "outImage dimensions = ( " << outImage.getWidth() << ", " << outImage.getHeight()
             << ") != (" << inImage1.getWidth() << ", " << inImage1.getHeight()
             << ") = inImage1 dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     } else if (inImage1.getDimensions() != inImage2.getDimensions()) {
         std::ostringstream os;
         os << "inImage1 dimensions = ( " << inImage1.getWidth() << ", " << inImage1.getHeight()
             << ") != (" << inImage2.getWidth() << ", " << inImage2.getHeight()
             << ") = inImage2 dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 
     typedef typename InImageT::const_x_iterator InConstXIter;
@@ -315,12 +315,12 @@ void afwMath::scaledPlus(
  *       There is a limit on maximum kernel size, but kernels sized at most 17x17 should be accelerated
  *       on all supported GPU hardware (SM 1.3 and better). SM 2.x can accelerate kernels sized up to 22x22.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage is not the same size as inImage
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage is smaller than kernel
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage is not the same size as inImage
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage is smaller than kernel
  *  in columns and/or rows.
- * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */

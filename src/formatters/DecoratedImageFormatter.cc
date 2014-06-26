@@ -127,7 +127,7 @@ void DecoratedImageFormatter<ImagePixelT>::write(
     execTrace("DecoratedImageFormatter write start");
     DecoratedImage<ImagePixelT> const* ip = dynamic_cast<DecoratedImage<ImagePixelT> const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-DecoratedImage");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-DecoratedImage");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("DecoratedImageFormatter write BoostStorage");
@@ -153,7 +153,7 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         execTrace("DecoratedImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "Unrecognized Storage for DecoratedImage");
 }
 
@@ -190,7 +190,7 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
         execTrace("DecoratedImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "Unrecognized Storage for DecoratedImage");
 }
 
@@ -201,7 +201,7 @@ void DecoratedImageFormatter<ImagePixelT>::update(
         lsst::daf::base::PropertySet::Ptr
                                                  )
 {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "Unexpected call to update for DecoratedImage");
 }
 
@@ -215,9 +215,9 @@ void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
     execTrace("DecoratedImageFormatter delegateSerialize start");
     DecoratedImage<ImagePixelT>* ip = dynamic_cast<DecoratedImage<ImagePixelT>*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-DecoratedImage");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-DecoratedImage");
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                       "DecoratedImage serialization not yet implemented");
 }
 

@@ -134,7 +134,7 @@ readImage() {
         lsst::daf::base::PropertySet::Ptr md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, md, bbox));
         
-    } catch (lsst::pex::exceptions::NotFoundException &e) {
+    } catch (lsst::pex::exceptions::NotFoundError &e) {
         std::cerr << e << std::endl;
         exit(1);
     }

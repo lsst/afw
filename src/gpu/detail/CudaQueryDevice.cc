@@ -54,27 +54,27 @@ void PrintCudaDeviceInfo() {
 }
 
 int GetCudaCurDeviceId() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 int GetCudaCurSMSharedMemorySize() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 int GetCudaCurGlobalMemorySize() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 int GetCudaCurSMRegisterCount() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 int GetCudaCurSMCount() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 bool GetCudaCurIsDoublePrecisionSupported() {
-    throw LSST_EXCEPT(GpuRuntimeErrorException, "AFW not built with GPU support");
+    throw LSST_EXCEPT(GpuRuntimeError, "AFW not built with GPU support");
 }
 
 }

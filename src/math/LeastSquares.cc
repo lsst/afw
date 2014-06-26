@@ -163,7 +163,7 @@ public:
     virtual void updateDiagnostic() {
         if (whichDiagnostic == LeastSquares::NORMAL_CHOLESKY) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "Cannot compute NORMAL_CHOLESKY diagnostic from NORMAL_EIGENSYSTEM factorization."
             );
         }
@@ -232,7 +232,7 @@ public:
     virtual void updateDiagnostic() {
         if (whichDiagnostic != LeastSquares::NORMAL_CHOLESKY) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "Can only compute NORMAL_CHOLESKY diagnostic from NORMAL_CHOLESKY factorization."
             );
         }
@@ -259,7 +259,7 @@ public:
     virtual void factor() {
         if (!(state & DESIGN_AND_DATA)) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 "Cannot initialize DIRECT_SVD solver with normal equations."
             );
         }
@@ -277,7 +277,7 @@ public:
             break;
         case LeastSquares::NORMAL_CHOLESKY:
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "Can only compute NORMAL_CHOLESKY diagnostic from DIRECT_SVD factorization."
             );
         case LeastSquares::DIRECT_SVD:
@@ -387,7 +387,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
     if (haveNormalEquations) {
         if (_getFisherMatrix().rows() != _impl->dimension) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 (boost::format("Number of rows of Fisher matrix (%d) does not match"
                                " dimension of LeastSquares solver.")
                  % _getFisherMatrix().rows() % _impl->dimension).str()
@@ -395,7 +395,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
         }
         if (_getFisherMatrix().cols() != _impl->dimension) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 (boost::format("Number of columns of Fisher matrix (%d) does not match"
                                " dimension of LeastSquares solver.")
                  % _getFisherMatrix().cols() % _impl->dimension).str()
@@ -403,7 +403,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
         }
         if (_getRhsVector().size() != _impl->dimension) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 (boost::format("Number of elements in RHS vector (%d) does not match"
                                " dimension of LeastSquares solver.")
                  % _getRhsVector().size() % _impl->dimension).str()
@@ -413,13 +413,13 @@ void LeastSquares::_factor(bool haveNormalEquations) {
     } else {
         if (_getDesignMatrix().cols() != _impl->dimension) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 "Number of columns of design matrix does not match dimension of LeastSquares solver."
             );
         }
         if (_getDesignMatrix().rows() != _getDataVector().size()) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 (boost::format("Number of rows of design matrix (%d) does not match number of "
                                "data points (%d)") % _getDesignMatrix().rows() % _getDataVector().size()
                 ).str()
@@ -427,7 +427,7 @@ void LeastSquares::_factor(bool haveNormalEquations) {
         }
         if (_getDesignMatrix().cols() > _getDataVector().size()) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 (boost::format("Number of columns of design matrix (%d) must be smaller than number of "
                                "data points (%d)") % _getDesignMatrix().cols() % _getDataVector().size()
                 ).str()

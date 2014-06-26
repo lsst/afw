@@ -90,6 +90,14 @@ geom::Point2D transformPoint(double x, double y,
 /// Counter for Footprint IDs
 int Footprint::id = 0;
 
+<<<<<<< HEAD
+=======
+/**
+ * Create a Footprint
+ *
+ * \throws lsst::pex::exceptions::InvalidParameterError in nspan is < 0
+ */
+>>>>>>> tickets/DM-764
 Footprint::Footprint(
     int nspan,
     geom::Box2I const & region
@@ -398,7 +406,7 @@ const Span& Footprint::addSpanInSeries(
     if (!((y  >  lastspan->getY()) ||
           (x0 > (lastspan->getX1() + 1)))) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterError,
+            lsst::pex::exceptions::InvalidParameterException,
             str(boost::format("addSpanInSeries: new span %i,[%i,%i] is NOT in series after last span "
                               "%i,[%i,%i]") %
                 y % x0 % x1 % lastspan->getY() % lastspan->getX0() % lastspan->getX1()));
@@ -1380,7 +1388,7 @@ PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2) {
 PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
     if (!foot1.isNormalized() || !foot2.isNormalized()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterError,
+            lsst::pex::exceptions::InvalidParameterException,
             "mergeFootprints(const Footprints) requires normalize()d Footprints.");
     }
     return _mergeFootprints(foot1, foot2);

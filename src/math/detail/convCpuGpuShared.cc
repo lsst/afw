@@ -49,9 +49,9 @@ namespace mathDetail = lsst::afw::math::detail;
 /*
  * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dim.
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or h.
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dim.
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or h.
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
  *
  * @note Same as assertDimensionsOK in basicConvolve.cc, copy-pasted
  */
@@ -66,7 +66,7 @@ void mathDetail::assertDimensionsOK(
         os << "convolvedImage dimensions = ( "
         << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
         << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     if (inImage.getWidth() < kernel.getWidth() || inImage.getHeight() < kernel.getHeight()) {
         std::ostringstream os;
@@ -74,14 +74,14 @@ void mathDetail::assertDimensionsOK(
         << inImage.getWidth() << ", " << inImage.getHeight()
         << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
         << ") = kernel dimensions in width and/or height";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     if ((kernel.getWidth() < 1) || (kernel.getHeight() < 1)) {
         std::ostringstream os;
         os << "kernel dimensions = ( "
         << kernel.getWidth() << ", " << kernel.getHeight()
         << ") smaller than (1, 1) in width and/or height";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
 }
 

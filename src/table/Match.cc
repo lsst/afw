@@ -136,7 +136,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
     if (doSelfMatchIfSame(matches, cat1, cat2, radius)) return matches;
 
     if (radius < 0.0 || (radius > (45. * geom::degrees))) {
-        throw LSST_EXCEPT(pex::exceptions::RangeErrorException, 
+        throw LSST_EXCEPT(pex::exceptions::RangeError, 
                           "match radius out of range (0 to 45 degrees)");
     }
     if (cat1.size() == 0 || cat2.size() == 0) {
@@ -205,7 +205,7 @@ matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric) {
     std::vector<MatchT> matches;
 
     if (radius < 0.0 || radius > (45.0 * geom::degrees)) {
-        throw LSST_EXCEPT(pex::exceptions::RangeErrorException,
+        throw LSST_EXCEPT(pex::exceptions::RangeError,
                           "match radius out of range (0 to 45 degrees)");
     }
     if (cat.size() == 0) {
@@ -390,7 +390,7 @@ unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & seco
     Key<double> keyD = matches.getSchema()["distance"];
     if (!first.isSorted() || !second.isSorted()) 
         throw LSST_EXCEPT(
-            pex::exceptions::InvalidParameterException,
+            pex::exceptions::InvalidParameterError,
             "Catalogs passed to unpackMatches must be sorted."
         );
     typedef Match< typename Cat1::Record, typename Cat2::Record> MatchT;
