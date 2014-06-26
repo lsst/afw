@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-# Example usage of CameraGeom. In tests/ instead of examples/ so it will be exercised during build.
 import lsst.afw.cameraGeom.testUtils as testUtils
 lsstCamWrapper = testUtils.CameraWrapper(isLsstLike=True)
 camera = lsstCamWrapper.camera
@@ -15,14 +14,15 @@ fpPoint = det.transform(detPoint, cameraGeom.FOCAL_PLANE) # position in focal pl
 pupilPoint = camera.transform(detPoint, cameraGeom.PUPIL) # position in pupil, in radians
 
 # convert PUPIL to PIXELS. The target system (PIXELS) is detector-based, so you may specify a detector
-# or let the Camera find a detector.
-# * To specify a particular detector, specify the target coordinate system as a CameraSys;
-#   this is faster than finding a detector, and the resulting point is allowed to be off the detector.
+# or let the Camera find a detector:
+# * To specify a particular detector, specify the target coordinate system as a CameraSys
+#   with the specified detectorName filled in (e.g. use detector.makeCameraSys).
+#   This is faster than finding a detector, and the resulting point is allowed to be off the detector.
 # * To have the Camera find a detector, specify the target coordinate system as a CameraSysPrefix
-#   (e.g. cameraGeom.PIXELS). It will search for a detector that overlaps the point;
+#   (e.g. cameraGeom.PIXELS). Camera will search for a detector that overlaps the point;
 #   if it finds 0 or more than 1 then it will raise an exception.
 detPixelsSys = det.makeCameraSys(cameraGeom.PIXELS)
-# detPointOnSpecifiedDetector = camera.transform(pupilPoint, detPixelsSys)
+detPointOnSpecifiedDetector = camera.transform(pupilPoint, detPixelsSys)
 detPointOnFoundDetector = camera.transform(pupilPoint, cameraGeom.PIXELS)
 assert detPointOnFoundDetector.getCameraSys() == detPixelsSys # same detector
 # find a detector given a camera point (in this case find the detector we already have)
