@@ -152,24 +152,22 @@ class CameraGeomTestCase(unittest.TestCase):
         for cw in self.cameraList:
             numOffUsable = 0
             camera = cw.camera
-            print "camera=", camera
             detNameList = list(camera.getNameIter())
             for detName in detNameList[0:numDetToTest]:
                 det = camera[detName]
                 pixCP = det.makeCameraPoint(afwGeom.Point2D(10, 10), PIXELS)
                 fpCP = camera.transform(pixCP, FOCAL_PLANE)
-                pixRoundTripCP = camera.transform(fpCP, det.makeCameraSys(PIXELS))
-                self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP)
+                pupilCP = camera.transform(pixCP, PUPIL)
 
-                pixFindRoundTripCP = camera.transform(fpCP, PIXELS)
-                self.assertCamPointAlmostEquals(pixCP, pixFindRoundTripCP)
-
-                pupilCP1 = camera.transform(pixCP, PUPIL)
                 pupilCP2 = camera.transform(fpCP, PUPIL)
-                self.assertCamPointAlmostEquals(pupilCP1, pupilCP2)
+                self.assertCamPointAlmostEquals(pupilCP, pupilCP2)
 
-                pixRoundTripCP2 = camera.transform(pupilCP1, PIXELS)
-                self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP2)
+                for intermedCP in (pixCP, fpCP, pupilCP):
+                    pixRoundTripCP = camera.transform(intermedCP, det.makeCameraSys(PIXELS))
+                    self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP)
+
+                    pixFindRoundTripCP = camera.transform(intermedCP, PIXELS)
+                    self.assertCamPointAlmostEquals(pixCP, pixFindRoundTripCP)
 
                 pixOffDetCP = det.makeCameraPoint(afwGeom.Point2D(0, -10), PIXELS)
                 pixOffDetRoundTripCP = camera.transform(pixOffDetCP, det.makeCameraSys(PIXELS))
@@ -180,6 +178,11 @@ class CameraGeomTestCase(unittest.TestCase):
                     numOffUsable += 1
                     pixFindOffCP = camera.transform(pixOffDetCP, PIXELS)
                     self.assertNotEqual(pixCP.getCameraSys(), pixFindOffCP.getCameraSys())
+
+                    # convert point on other detector to pixels on the main detector
+                    # the result should not be on the main detector
+                    pixToPixCP = camera.transform(pixFindOffCP, det.makeCameraSys(PIXELS))
+                    self.assertFalse(afwGeom.Box2D(det.getBBox()).contains(pixToPixCP.getPoint()))
             print "found a neighboring detector in %d of %d cases" % (numOffUsable, numDetToTest)
 
     def testFindDetectors(self):
@@ -280,7 +283,7 @@ class CameraGeomTestCase(unittest.TestCase):
     def checkCamPoint(self, cp, testPt, testSys):
         """Assert that a CameraPoint contains the specified Point2D and CameraSys"""
         self.assertEquals(cp.getCameraSys(), testSys)
-        self.assertEquqls(cp.getPoint(), testPt)
+        self.assertEquals(cp.getPoint(), testPt)
 
     def assertCamPointAlmostEquals(self, cp1, cp2, ndig=6):
         """Assert that two CameraPoints are nearly equal
