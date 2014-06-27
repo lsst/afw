@@ -30,12 +30,11 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 
-from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, Camera, Detector,\
-                                CameraSysPrefix, assembleAmplifierImage, assembleAmplifierRawImage
+from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, Camera, Detector, \
+                                assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
-from lsst.pex.exceptions import LsstCppException
 try:
     type(display)
 except NameError:
@@ -73,6 +72,7 @@ class CameraGeomTestCase(unittest.TestCase):
                 self.assertEqual(cw.ampInfoDict[det.getName()]['namps'], len(det))
             
     def testMakeCameraPoint(self):
+        point = afwGeom.Point2D(0,0)
         for cw in self.cameraList:
             camera = cw.camera
             for coordSys in (PUPIL, FOCAL_PLANE):
@@ -86,6 +86,16 @@ class CameraGeomTestCase(unittest.TestCase):
                     self.assertEquals(cp.getPoint(), pt)
                     self.assertEquals(cp.getCameraSys().getSysName(), coordSys.getSysName())
 
+            det = camera[camera.getNameIter().next()]
+            cp = camera.makeCameraPoint(point, FOCAL_PLANE)
+            self.checkCamPoint(cp, point, FOCAL_PLANE)
+            cp = camera.makeCameraPoint(point, det.makeCameraSys(PIXELS))
+            self.checkCamPoint(cp, point, det.makeCameraSys(PIXELS))
+            #non-existant camera sys in makeCameraPoint
+            self.assertRaises(RuntimeError, camera.makeCameraPoint, point, CameraSys('abcd'))
+            #CameraSysPrefix camera sys in makeCameraPoint
+            self.assertRaises(TypeError, camera.makeCameraPoint, point, PIXELS)
+
     def testAccessor(self):
         for cw in self.cameraList:
             camera = cw.camera
@@ -94,9 +104,12 @@ class CameraGeomTestCase(unittest.TestCase):
             for detId in cw.detectorIdList:
                 self.assertTrue(isinstance(camera[detId], Detector))
 
-    def testTransform(self):
-        #These test data come from SLALIB using SLA_PCD with 0.925 and
-        #a plate scale of 20 arcsec/mm
+    def testTransformSlalib(self):
+        """Test Camera.transform against data computed using SLALIB
+
+        These test data come from SLALIB using SLA_PCD with 0.925 and
+        a plate scale of 20 arcsec/mm
+        """
         testData = [(-1.84000000, 1.04000000, -331.61689069, 187.43563387),
                     (-1.64000000, 0.12000000, -295.42491556, 21.61645724),
                     (-1.44000000, -0.80000000, -259.39818797, -144.11010443),
@@ -121,16 +134,53 @@ class CameraGeomTestCase(unittest.TestCase):
         for cw in self.cameraList:
             camera = cw.camera
             for point in testData:
-                fpTestPt = afwGeom.Point2D(point[2], point[3])
-                pupilTestPt = afwGeom.Point2D(afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
-                cp = camera.makeCameraPoint(pupilTestPt, PUPIL)
-                ncp = camera.transform(cp, FOCAL_PLANE)
-                self.assertAlmostEquals(ncp.getPoint()[0], fpTestPt[0], 6)
-                self.assertAlmostEquals(ncp.getPoint()[1], fpTestPt[1], 6)
-                cp = camera.makeCameraPoint(fpTestPt, FOCAL_PLANE)
-                ncp = camera.transform(cp, PUPIL)
-                self.assertAlmostEquals(ncp.getPoint()[0], pupilTestPt[0], 6)
-                self.assertAlmostEquals(ncp.getPoint()[1], pupilTestPt[1], 6)
+                fpGivenPos = afwGeom.Point2D(point[2], point[3])
+                fpGivenCP = camera.makeCameraPoint(fpGivenPos, FOCAL_PLANE)
+                pupilGivenPos = afwGeom.Point2D(afwGeom.degToRad(point[0]), afwGeom.degToRad(point[1]))
+                pupilGivenCP = camera.makeCameraPoint(pupilGivenPos, PUPIL)
+
+                fpComputedCP = camera.transform(pupilGivenCP, FOCAL_PLANE)
+                self.assertCamPointAlmostEquals(fpComputedCP, fpGivenCP)
+
+                pupilComputedCP = camera.transform(fpGivenCP, PUPIL)
+                self.assertCamPointAlmostEquals(pupilComputedCP, pupilGivenCP)
+
+    def testTransformDet(self):
+        """Test Camera.transform with detector-based coordinate systems (PIXELS)        
+        """
+        numDetToTest = 3
+        for cw in self.cameraList:
+            numOffUsable = 0
+            camera = cw.camera
+            print "camera=", camera
+            detNameList = list(camera.getNameIter())
+            for detName in detNameList[0:numDetToTest]:
+                det = camera[detName]
+                pixCP = det.makeCameraPoint(afwGeom.Point2D(10, 10), PIXELS)
+                fpCP = camera.transform(pixCP, FOCAL_PLANE)
+                pixRoundTripCP = camera.transform(fpCP, det.makeCameraSys(PIXELS))
+                self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP)
+
+                pixFindRoundTripCP = camera.transform(fpCP, PIXELS)
+                self.assertCamPointAlmostEquals(pixCP, pixFindRoundTripCP)
+
+                pupilCP1 = camera.transform(pixCP, PUPIL)
+                pupilCP2 = camera.transform(fpCP, PUPIL)
+                self.assertCamPointAlmostEquals(pupilCP1, pupilCP2)
+
+                pixRoundTripCP2 = camera.transform(pupilCP1, PIXELS)
+                self.assertCamPointAlmostEquals(pixCP, pixRoundTripCP2)
+
+                pixOffDetCP = det.makeCameraPoint(afwGeom.Point2D(0, -10), PIXELS)
+                pixOffDetRoundTripCP = camera.transform(pixOffDetCP, det.makeCameraSys(PIXELS))
+                self.assertCamPointAlmostEquals(pixOffDetCP, pixOffDetRoundTripCP)
+
+                detList = camera.findDetectors(pixOffDetCP)
+                if len(detList) == 1:
+                    numOffUsable += 1
+                    pixFindOffCP = camera.transform(pixOffDetCP, PIXELS)
+                    self.assertNotEqual(pixCP.getCameraSys(), pixFindOffCP.getCameraSys())
+            print "found a neighboring detector in %d of %d cases" % (numOffUsable, numDetToTest)
 
     def testFindDetectors(self):
         for cw in self.cameraList:
@@ -144,7 +194,6 @@ class CameraGeomTestCase(unittest.TestCase):
                 detList = cw.camera.findDetectors(cp)
                 self.assertEquals(len(detList), 1)
                 self.assertEquals(det.getName(), detList[0].getName())
-        
 
     def testFpBbox(self):
         for cw in self.cameraList:
@@ -196,9 +245,6 @@ class CameraGeomTestCase(unittest.TestCase):
                         for amp, im in zip(det, imList):
                             assemble(outImage, im, amp)
                     self.assertTrue((outImage.getArray() == compMap[trim].getArray()).all())
-                    
-                    
-        
 
     def testCameraGeomUtils(self):
         if not display:
@@ -232,23 +278,16 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertRaises(RuntimeError, camera.transform, cp, CameraSys('abcd'))
 
     def checkCamPoint(self, cp, testPt, testSys):
-        return (cp.getCameraSys().getSysName() == testSys.getSysName()) and\
-               (cp.getPoint() == testPt)
+        """Assert that a CameraPoint contains the specified Point2D and CameraSys"""
+        self.assertEquals(cp.getCameraSys(), testSys)
+        self.assertEquqls(cp.getPoint(), testPt)
 
-    def testMakeCameraPoint(self):
-        point = afwGeom.Point2D(0,0)
-        for cw in self.cameraList:
-            camera = cw.camera
-            det = camera[camera.getNameIter().next()]
-            cp = camera.makeCameraPoint(point, FOCAL_PLANE)
-            self.assertTrue(self.checkCamPoint(cp, point, FOCAL_PLANE))
-            cp = camera.makeCameraPoint(point, det.makeCameraSys(PIXELS))
-            self.assertTrue(self.checkCamPoint(cp, point, det.makeCameraSys(PIXELS)))
-            #non-existant camera sys in makeCameraPoint
-            self.assertRaises(RuntimeError, camera.makeCameraPoint, point, CameraSys('abcd'))
-            #CameraSysPrefix camera sys in makeCameraPoint
-            self.assertRaises(TypeError, camera.makeCameraPoint, point, PIXELS)
-        
+    def assertCamPointAlmostEquals(self, cp1, cp2, ndig=6):
+        """Assert that two CameraPoints are nearly equal
+        """
+        self.assertEquals(cp1.getCameraSys(), cp2.getCameraSys())
+        for i in range(2):
+            self.assertAlmostEquals(cp1.getPoint()[i], cp2.getPoint()[i], 6)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
