@@ -615,7 +615,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
     if ctype == None:
         color = ""                       # the default
     else:
-        color = 'color=%s' % ctype
+        color = ' # color=%s' % ctype
 
     cmd = selectFrame(frame) + "; "
     r += 1
@@ -654,6 +654,9 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
             # if it doesn't
             if needShow:
                 show(frame)
+
+            color = re.sub("^ # ", "", color) # skip the leading " # "
+
             angle = ""
             if textAngle is not None:
                 angle += " textangle=%.1f"%(textAngle) 
