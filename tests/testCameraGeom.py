@@ -183,7 +183,7 @@ class CameraGeomTestCase(unittest.TestCase):
                     # the result should not be on the main detector
                     pixToPixCP = camera.transform(pixFindOffCP, det.makeCameraSys(PIXELS))
                     self.assertFalse(afwGeom.Box2D(det.getBBox()).contains(pixToPixCP.getPoint()))
-            print "found a neighboring detector in %d of %d cases" % (numOffUsable, numDetToTest)
+            self.assertTrue(numOffUsable > 0)
 
     def testFindDetectors(self):
         for cw in self.cameraList:
