@@ -69,8 +69,13 @@ class Camera(DetectorCollection):
         @param[in] cameraPoint: CameraPoint to transform
         @param[in] toSys: Destination coordinate system
         """
-        if toSys.hasDetectorName():
-            # use the detctor to transform
+        fromSys = cameraPoint.getCameraSys()
+        if fromSys.hasDetectorName():
+            # use from detector to transform 
+            det = self[fromSys.getDetectorName()]
+            return det.transform(cameraPoint, toSys)
+        elif toSys.hasDetectorName():
+            # use the to detector to transform
             det = self[toSys.getDetectorName()]
             return det.transform(cameraPoint, toSys)
         elif toSys in self._transformMap:

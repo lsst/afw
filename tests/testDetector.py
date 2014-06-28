@@ -94,6 +94,16 @@ class DetectorTestCase(unittest.TestCase):
             for i in range(2):
                 self.assertAlmostEquals(fpPoint[i], fpPoint2[i])
 
+            # test pix to pix
+            pixCamPoint2 = dw.detector.transform(pixCamPoint, cameraGeom.PIXELS)
+            for i in range(2):
+                self.assertAlmostEquals(pixCamPoint.getPoint()[i], pixCamPoint2.getPoint()[i])
+
+        # make sure you cannot transform to a different detector
+        pixCamPoint = dw.detector.makeCameraPoint(afwGeom.Point2D(1, 1), cameraGeom.PIXELS)
+        otherCamSys = cameraGeom.CameraSys(cameraGeom.PIXELS, "other detector")
+        self.assertRaises(LsstCppException, dw.detector.transform, pixCamPoint, otherCamSys)
+
     def testIteration(self):
         """Test iteration over amplifiers and __getitem__
         """
