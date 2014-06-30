@@ -254,6 +254,47 @@ class SourceMatchTestCase(unittest.TestCase):
                 print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
                 print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
                 
+    def testMismatches(self):
+        """ Chech that matchRaDec works as expected when using
+            the includeMismatches option
+        """
+        cat1 = afwTable.SourceCatalog(self.table)
+        cat2 = afwTable.SourceCatalog(self.table)
+        nobj = 100
+        for i in range(nobj):
+            s1 = cat1.addNew()
+            s2 = cat2.addNew()
+            s1.setId(i)
+            s2.setId(i)
+            s1.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.0001*i) * afwGeom.degrees)
+            s2.set(afwTable.SourceTable.getCoordKey().getRa(), (10.005 + 0.0001*i) * afwGeom.degrees)
+            s1.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.0001*i) * afwGeom.degrees)
+            s2.set(afwTable.SourceTable.getCoordKey().getDec(), (10.005 + 0.0001*i) * afwGeom.degrees)
+
+        for closest in (True, False):
+            mc = afwTable.MatchControl()
+            mc.findOnlyClosest = closest
+            mc.includeMismatches = False
+            matches = afwTable.matchRaDec(cat1, cat2, 1.0*afwGeom.arcseconds, mc)
+            mc.includeMismatches = True
+            matchesMismatches = afwTable.matchRaDec(cat1, cat2, 1.0*afwGeom.arcseconds, mc)
+
+            catMatches = afwTable.SourceCatalog(self.table)
+            catMismatches = afwTable.SourceCatalog(self.table)
+            for m in matchesMismatches:
+                if m[1] != None:
+                    if not any(x == m[0] for x in catMatches):
+                        catMatches.append(m[0])
+                else:
+                    catMismatches.append(m[0])
+            if closest:
+                self.assertEquals(len(catMatches), len(matches))
+            matches2 = afwTable.matchRaDec(catMatches, cat2, 1.0*afwGeom.arcseconds, mc)
+            self.assertEquals(len(matches), len(matches2))
+            mc.includeMismatches = False
+            noMatches = afwTable.matchRaDec(catMismatches, cat2, 1.0*afwGeom.arcseconds, mc)
+            self.assertEquals(len(noMatches), 0)
+
     def checkPickle(self, matches, checkSlots=True):
         """Check that a match list pickles
 
