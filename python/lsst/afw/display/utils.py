@@ -74,7 +74,6 @@ class Mosaic(object):
 
     def reset(self):
         """Reset the list of images to be mosaiced"""
-        self.nImage = 0                 # number of images
         self.images = []                # images to mosaic together
         self.labels = []                # labels for images
         
@@ -106,7 +105,6 @@ class Mosaic(object):
         if not images:
             images = self.images
 
-        self.nImage = len(images)
         if self.nImage == 0:
             raise RuntimeError, "You must provide at least one image"
 
@@ -236,6 +234,10 @@ class Mosaic(object):
 
                     ds9.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(),
                             frame=frame, ctype=ctype)
+    @property
+    def nImage(self):
+        """Number of images"""
+        return len(self.images)
 
 def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
     """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
