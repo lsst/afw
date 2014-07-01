@@ -74,6 +74,7 @@ class Mosaic(object):
 
     def reset(self):
         """Reset the list of images to be mosaiced"""
+        self.nImage = 0                 # number of images
         self.images = []                # images to mosaic together
         self.labels = []                # labels for images
         
