@@ -42,6 +42,8 @@
 #include <cmath>
 #include <ctime>
 
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/utils/ieee.h"
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
@@ -136,29 +138,24 @@ void PrintSeparator()
     cout << endl;
 }
 
-string GetInputFileName(int argc, char **argv)
+string GetInputImagePath(int argc, char **argv)
 {
-    string imgBaseFileName;
+    string inImagePath;
     if (argc < 2) {
-        string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "Usage: convolveGPU fitsFile" << endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << endl;
-            std::cerr << "Is afwdata set up?\n" << endl;
+        try {
+            string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/med.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            cerr << "Usage: convolveGPU [fitsFile]" << endl;
+            cerr << "fitsFile is the path to a masked image" << endl;
+            cerr << "\nError: setup afwdata or specify fitsFile.\n" << endl;
             exit(EXIT_FAILURE);
-        }
-        else {
-            imgBaseFileName = afwdata + "/data/med";
-            //imgBaseFileName = afwdata + "/data/medsub";
-            //imgBaseFileName = afwdata + "/data/871034p_1_MI";
-            cout << "Using image: " << imgBaseFileName << endl;
         }
     }
     else {
-        imgBaseFileName = string(argv[1]);
+        inImagePath = string(argv[1]);
     }
-    return imgBaseFileName;
+    return inImagePath;
 }
 
 string Sel(bool b, const char* onTrue, const char* onFalse)
@@ -378,10 +375,10 @@ void TestWarpGpu(
 
 void TimeGpu(int argc, char**argv)
 {
-    string baseFileName = GetInputFileName(argc, argv);
+    string inImagePath = GetInputImagePath(argc, argv);
 
-    const afwImage::MaskedImage<float>    inImgFlt(baseFileName);
-    const afwImage::MaskedImage<double>   inImgDbl(baseFileName);
+    const afwImage::MaskedImage<float>    inImgFlt(inImagePath);
+    const afwImage::MaskedImage<double>   inImgDbl(inImagePath);
 
     TestWarpGpu(inImgDbl, inImgFlt);
 }

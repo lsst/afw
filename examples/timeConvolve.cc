@@ -24,6 +24,8 @@
 #include <sstream>
 #include <ctime>
 
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -97,28 +99,21 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
 }
 
 int main(int argc, char **argv) {
-
-
-    std::string mimg;
+    std::string inImagePath;
     if (argc < 2) {
-        std::string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cout << "Time convolution with a spatially invariant kernel" << std::endl << std::endl;
-            std::cout << "Usage: timeConvolve fitsFile [nIter]" << std::endl;
-            std::cout << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-            std::cout << "nIter (default " << DefNIter
+        try {
+            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/small.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cerr << "Usage: timeConvolve [fitsFile [nIter]]" << std::endl;
+            std::cerr << "fitsFile is the path to a masked image" << std::endl;
+            std::cerr << "nIter (default " << DefNIter
                       << ") is the number of iterations per kernel size" << std::endl;
-            std::cout << "Kernel size ranges from " << MinKernelSize << " to " << MaxKernelSize
-                      << " in steps of " << DeltaKernelSize << " pixels on a side" << std::endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
-            std::cerr << "Is afwdata set up?\n" << std::endl;
+            std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
             exit(EXIT_FAILURE);
-        } else {
-            mimg = afwdata + "/small_MI";
-            std::cerr << "Using " << mimg << std::endl;
         }
     } else {
-        mimg = std::string(argv[1]);
+        inImagePath = std::string(argv[1]);
     }
 
     unsigned int nIter = DefNIter;
@@ -135,14 +130,11 @@ int main(int argc, char **argv) {
     std::cout << "  * four pixel pointer increments (for image, variance, mask and kernel)" << std::endl;
     std::cout << "* CnvSec: time to perform one convolution (sec)" << std::endl;
 
-    std::string maskedImagePath(mimg);
-    std::string imagePath = maskedImagePath + "_img.fits";
-
-    std::cout << std::endl << "Image " << imagePath << std::endl;
-    afwImage::Image<ImageType> image(imagePath);
+    std::cout << std::endl << "Image " << inImagePath << std::endl;
+    afwImage::Image<ImageType> image(inImagePath);
     timeConvolution(image, nIter);
     
-    std::cout << std::endl << "MaskedImage " << maskedImagePath << std::endl;
-    afwImage::MaskedImage<ImageType> mImage(mimg);
+    std::cout << std::endl << "MaskedImage " << inImagePath << std::endl;
+    afwImage::MaskedImage<ImageType> mImage(inImagePath);
     timeConvolution(mImage, nIter);
 }

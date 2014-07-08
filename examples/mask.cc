@@ -24,8 +24,9 @@
 #include <string>
 #include <algorithm>
 
-#include "lsst/afw/image/Mask.h"
-#include "lsst/afw/image/LsstImageTypes.h"
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/image.h"
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
@@ -79,23 +80,20 @@ int main() {
         std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));
     }
 
-    
-    std::string afwdata(getenv("AFWDATA_DIR"));
-    std::string smallMaskFile;
-    if (afwdata.empty()) {
-        std::cerr << "AFWDATA_DIR not set." << std::endl;
+    std::string maskedImagePath;
+    try {
+        std::string dataDir = lsst::utils::eups::productDir("afwdata");
+        maskedImagePath = dataDir + "/data/small.fits";
+    } catch (lsst::pex::exceptions::NotFoundError) {
+        std::cerr << "Usage: mask [fitsFile]" << std::endl;
+        std::cerr << "fitsFile is the path to a masked image" << std::endl;
+        std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
         exit(EXIT_FAILURE);
-    } else {
-        smallMaskFile = afwdata + "/small_MI_msk.fits";
     }
 
-    
-    afwImage::Mask<afwImage::MaskPixel> msk(smallMaskFile);
-    printf("msk(0,0) = %d\n", msk(0,0));
-    
-    afwImage::DecoratedImage<unsigned short> dimg(smallMaskFile);
-    //Image<unsigned short>::Ptr img = dimg.getImage();
-    printf("dimg(0,0) = %d\n", (*(dimg.getImage()))(0,0));
+    afwImage::MaskedImage<float> mi = afwImage::MaskedImage<float>(maskedImagePath);
+    printf("mask(0,0) = %d\n", (*(mi.getMask()))(0,0));
+    printf("image(0,0) = %f\n", (*(mi.getImage()))(0,0));
 
     return 0;
 }
