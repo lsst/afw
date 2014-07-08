@@ -626,6 +626,13 @@ void Schema::_edit() {
     }
 }
 
+void Schema::_editAliases() const {
+    if (!_aliases.unique()) {
+        boost::shared_ptr<AliasMap> tmp(boost::make_shared<AliasMap>(*_aliases));
+        _aliases.swap(tmp);
+    }
+}
+
 std::set<std::string> Schema::getNames(bool topOnly) const {
     return _impl->getNames(topOnly);
 }
@@ -634,7 +641,7 @@ template <typename T>
 SchemaItem<T> Schema::find(std::string name) const {
     AliasMap::const_iterator i = _aliases->lower_bound(name);
     if (i != _aliases->end()) {
-        // if name.startswith(alias)
+        // equivalent to "if name.startswith(alias)" in Python
         if (name.size() >= i->first.size() && name.compare(0, i->first.size(), i->first) == 0) {
             name.replace(0, i->first.size(), i->second);
         }
@@ -688,23 +695,19 @@ int Schema::contains(SchemaItem<T> const & item, int flags) const {
     return _impl->contains(item, flags);
 }
 
-void Schema::setAlias(std::string const & alias, std::string const & target) {
+void Schema::setAlias(std::string const & alias, std::string const & target) const {
+    _editAliases();
     _aliases->insert(std::make_pair(alias, target));
 }
 
-void Schema::dropAlias(std::string const & alias) {
+void Schema::dropAlias(std::string const & alias) const {
+    _editAliases();
     _aliases->erase(alias);
 }
 
-void Schema::clearAliases() {
+void Schema::clearAliases() const {
+    _editAliases();
     _aliases->clear();
-}
-
-void Schema::disconnectAliases() {
-    if (!_aliases.unique()) {
-        boost::shared_ptr<AliasMap> tmp(boost::make_shared<AliasMap>(*_aliases));
-        _aliases.swap(tmp);
-    }
 }
 
 //----- Stringification -------------------------------------------------------------------------------------

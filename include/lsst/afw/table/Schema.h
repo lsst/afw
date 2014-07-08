@@ -235,19 +235,16 @@ public:
      *  Aliases are not checked to see if they match any existing fields, and if an alias has the same
      *  name as a field name, it will take precedence and hide the true field.
      *
-     *  Unlike the other components of a Schema, aliases can be modified and removed, and they are
-     *  shared between Schemas after copying unless the the disconnectAliases() method is called.
+     *  Unlike the other components of a Schema, aliases can be modified and removed, even on a const
+     *  Schema instance (this allows aliases to be modified even after a Table has been constructed).
      */
-    void setAlias(std::string const & alias, std::string const & target);
+    void setAlias(std::string const & alias, std::string const & target) const;
 
     /// @brief Remove an alias from the schema if it is present.
-    void dropAlias(std::string const & alias);
+    void dropAlias(std::string const & alias) const;
 
     /// @brief Remove all aliases from the schema.
-    void clearAliases();
-
-    /// @brief Ensure this Schema does not share aliases with any other Schemas.
-    void disconnectAliases();
+    void clearAliases() const;
 
     /// @brief Construct an empty Schema.
     explicit Schema();
@@ -302,11 +299,14 @@ private:
     // A map from aliases to field names.
     typedef std::map<std::string,std::string> AliasMap;
 
-    /// @brief Copy on write; should be called by all mutators.
+    /// @brief Copy on write; should be called by all mutators (except for alias mutators).
     void _edit();
 
+    /// @brief Copy on write; should be called by alias mutators.
+    void _editAliases() const;
+
     boost::shared_ptr<Impl> _impl;
-    boost::shared_ptr<AliasMap> _aliases;
+    mutable boost::shared_ptr<AliasMap> _aliases;
 };
 
 /**
