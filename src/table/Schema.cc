@@ -633,12 +633,7 @@ void Schema::_editAliases() const {
     }
 }
 
-std::set<std::string> Schema::getNames(bool topOnly) const {
-    return _impl->getNames(topOnly);
-}
-
-template <typename T>
-SchemaItem<T> Schema::find(std::string name) const {
+void Schema::_applyAliases(std::string & name) const {
     AliasMap::const_iterator i = _aliases->lower_bound(name);
     if (i != _aliases->end()) {
         // equivalent to "if name.startswith(alias)" in Python
@@ -646,6 +641,15 @@ SchemaItem<T> Schema::find(std::string name) const {
             name.replace(0, i->first.size(), i->second);
         }
     }
+}
+
+std::set<std::string> Schema::getNames(bool topOnly) const {
+    return _impl->getNames(topOnly);
+}
+
+template <typename T>
+SchemaItem<T> Schema::find(std::string name) const {
+    _applyAliases(name);
     return _impl->find<T>(name);
 }
 
@@ -693,6 +697,11 @@ int Schema::compare(Schema const & other, int flags) const {
 template <typename T>
 int Schema::contains(SchemaItem<T> const & item, int flags) const {
     return _impl->contains(item, flags);
+}
+
+std::string Schema::applyAliases(std::string name) const {
+    _applyAliases(name);
+    return name;
 }
 
 void Schema::setAlias(std::string const & alias, std::string const & target) const {

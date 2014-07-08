@@ -225,6 +225,9 @@ public:
     template <typename T>
     int contains(SchemaItem<T> const & item, int flags=EQUAL_KEYS) const;
 
+    /// @brief Apply any aliases that match the given field name and return a de-aliased name.
+    std::string applyAliases(std::string name) const;
+
     /*
      *  @brief Add an alias to the schema or replace an existing one.
      *
@@ -304,6 +307,9 @@ private:
 
     /// @brief Copy on write; should be called by alias mutators.
     void _editAliases() const;
+
+    /// @brief Internal in-place implementation of applyAliases()
+    void _applyAliases(std::string & name) const;
 
     boost::shared_ptr<Impl> _impl;
     mutable boost::shared_ptr<AliasMap> _aliases;
