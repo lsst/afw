@@ -27,17 +27,17 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"
 
-const std::string outFile("rwfitsOut");
+const std::string outImagePath("rwfitsOut.fits");
 
 int main(int argc, char **argv) {
 
-    std::string maskedImagePath;
+    std::string inImagePath;
     if (argc == 2) {
-        maskedImagePath = std::string(argv[1]);
+        inImagePath = std::string(argv[1]);
     } else {
         try {
             std::string dataDir = lsst::utils::eups::productDir("afwdata");
-            maskedImagePath = dataDir + "/data/small.fits";
+            inImagePath = dataDir + "/data/small.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
             std::cerr << "Usage: maskedImageFitsIO [fitsFile]" << std::endl;
             std::cerr << "fitsFile is the path to a masked image" << std::endl;
@@ -45,8 +45,9 @@ int main(int argc, char **argv) {
             exit(EXIT_FAILURE);
         }
     }
-    std::cout << "Running with: " <<  maskedImagePath << std::endl;
+    std::cout << "Running with: " <<  inImagePath << std::endl;
 
-    lsst::afw::image::MaskedImage<float> mImage(maskedImagePath);
-    mImage.writeFits(outFile);
+    lsst::afw::image::MaskedImage<float> mImage(inImagePath);
+    mImage.writeFits(outImagePath);
+    std::cout << "Wrote masked image: " << outImagePath << std::endl;
 }

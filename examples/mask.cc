@@ -80,10 +80,10 @@ int main() {
         std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));
     }
 
-    std::string maskedImagePath;
+    std::string inImagePath;
     try {
         std::string dataDir = lsst::utils::eups::productDir("afwdata");
-        maskedImagePath = dataDir + "/data/small.fits";
+        inImagePath = dataDir + "/data/small.fits";
     } catch (lsst::pex::exceptions::NotFoundError) {
         std::cerr << "Usage: mask [fitsFile]" << std::endl;
         std::cerr << "fitsFile is the path to a masked image" << std::endl;
@@ -91,7 +91,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    afwImage::MaskedImage<float> mi = afwImage::MaskedImage<float>(maskedImagePath);
+    afwImage::MaskedImage<float> mi = afwImage::MaskedImage<float>(inImagePath);
     printf("mask(0,0) = %d\n", (*(mi.getMask()))(0,0));
     printf("image(0,0) = %f\n", (*(mi.getImage()))(0,0));
 
