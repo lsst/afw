@@ -166,7 +166,7 @@ public:
      */
     static PTR(BaseTable) make(Schema const & schema);
 
-    virtual ~BaseTable() {}
+    virtual ~BaseTable();
 
 protected:
 
@@ -181,6 +181,8 @@ protected:
     CONST_PTR(Derived) getSelf() const {
         return boost::static_pointer_cast<Derived const>(shared_from_this());
     }
+
+    virtual void handleAliasChange(std::string const & alias) {}
 
     /// @brief Clone implementation with noncovariant return types.
     virtual PTR(BaseTable) _clone() const = 0;
@@ -201,9 +203,10 @@ protected:
     }
 
 private:
-    
+
     friend class BaseRecord;
     friend class io::FitsWriter;
+    friend class AliasMap;
 
     // Called by BaseRecord ctor to fill in its _data, _table, and _manager members.
     void _initialize(BaseRecord & record);

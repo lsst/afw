@@ -201,3 +201,7 @@ BOOST_AUTO_TEST_CASE(ticket2164) {
     BOOST_CHECK_THROW( constCat.getColumnView(), lsst::pex::exceptions::LogicError );
 
 }
+
+BOOST_AUTO_TEST_CASE(aliasMapLinks) {
+    // Not actually a FITS-related test, but one we need to do in C++, and this file is already here
+}

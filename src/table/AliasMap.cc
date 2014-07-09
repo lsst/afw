@@ -1,5 +1,6 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/AliasMap.h"
+#include "lsst/afw/table/BaseTable.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -31,14 +32,16 @@ std::string AliasMap::get(std::string const & name) const {
 
 void AliasMap::set(std::string const & alias, std::string const & target) {
     _internal.insert(std::make_pair(alias, target));
+    if (_table) {
+        _table->handleAliasChange(alias);
+    }
 }
 
 void AliasMap::remove(std::string const & alias) {
     _internal.erase(alias);
-}
-
-void AliasMap::clear() {
-    _internal.clear();
+    if (_table) {
+        _table->handleAliasChange(alias);
+    }
 }
 
 }}} // namespace lsst::afw::table
