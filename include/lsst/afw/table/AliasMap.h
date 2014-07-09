@@ -5,9 +5,9 @@
 #include <map>
 #include <string>
 
-#include "boost/shared_ptr.hpp"
-
 namespace lsst { namespace afw { namespace table {
+
+class BaseTable;
 
 /**
  *  @brief Mapping class that holds aliases for a Schema
@@ -21,9 +21,28 @@ namespace lsst { namespace afw { namespace table {
  *
  *  Unlike the other components of a Schema, aliases can be modified and removed, even after a Table
  *  has been constructed from the Schema.
+ *
+ *  AliasMaps are shared when Schemas are copy-constructed, but can be separated manually
+ *  by calling Schema::disconnectAliases() or Schema::setAliases().  In addition, the AliasMap
+ *  is deep-copied when used to construct a Table (or Catalog).
+ *
+ *  In order to allow Tables to react to changes in aliases (which may be used to define cached Keys
+ *  held by the table, as in SourceTable's "slots" mechanism), an AliasMap that is part of a Schema held
+ *  by a Table will hold a pointer to that Table, and call BaseTable::handleAliasChanges() when its
+ *  aliases are set or removed.
  */
 class AliasMap {
 public:
+
+    // Create an empty AliasMap
+    AliasMap() : _internal(), _table(0) {}
+
+    /**
+     *  Deep-copy an AliasMap
+     *
+     *  The new AliasMap will not be linked to any tables, even if other is.
+     */
+    AliasMap(AliasMap const & other) : _internal(other._internal), _table(0) {}
 
     // A map from aliases to field names (only public to appease Swig)
     typedef std::map<std::string,std::string> Internal;
@@ -53,18 +72,21 @@ public:
     /// Remove an alias from the schema if it is present.
     void remove(std::string const & alias);
 
-    /// Remove all aliases from the schema.
-    void clear();
-
 private:
 
     friend class Schema;
     friend class SubSchema;
+    friend class BaseTable;
 
     // Internal in-place implementation of apply()
     void _apply(std::string & name) const;
 
     Internal _internal;
+
+    // Table to notify of any changes.  We can't use a shared_ptr here because the Table needs to set
+    // this in its own constructor, but the Table does guarantee that this pointer is either valid or
+    // null.
+    BaseTable * _table;
 };
 
 }}} // namespace lsst::afw::table
