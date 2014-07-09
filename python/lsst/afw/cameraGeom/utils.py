@@ -28,7 +28,6 @@ Support for cameraGeom
 import math
 import numpy
 import itertools
-import os
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -342,7 +341,7 @@ def showCcd(ccd, ccdImage=None, isTrimmed=True, showAmpGain=True, frame=None, ov
     @param ccdImage: Not used.  Will allow an image to be displayed.  If None an image is synthesized from the Detector properties.
     @param isTrimmed: Is the displayed Detector trimmed?
     @param showAmpGain: Show the amps colored proportional to the gain?  Only used if ccdImage is None
-    @param fram: ds9 frame to use
+    @param frame: ds9 frame to use
     @param overlay: Show amp bounding boxes on the displayed image?
     @param binSize: Binning factor
     @param inCameraCoords: Show the Detector in camera coordinates?
