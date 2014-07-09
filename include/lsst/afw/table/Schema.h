@@ -8,10 +8,12 @@
 #include "boost/ref.hpp"
 
 #include "ndarray.h"
+#include "lsst/base.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
 #include "lsst/afw/table/detail/SchemaImpl.h"
 #include "lsst/afw/table/Flag.h"
+#include "lsst/afw/table/AliasMap.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -225,35 +227,35 @@ public:
     template <typename T>
     int contains(SchemaItem<T> const & item, int flags=EQUAL_KEYS) const;
 
-    /// @brief Apply any aliases that match the given field name and return a de-aliased name.
-    std::string applyAliases(std::string name) const;
-
-    /*
-     *  @brief Add an alias to the schema or replace an existing one.
+    /**
+     *  Return the map of aliases
      *
-     *  Aliases need not be complete, but they must map to the beginning of a field name to be useful.
-     *  For example, if "a.b.c" is a true field name, "x.y->a.b" is a valid alias that will cause
-     *  "x.y.c" to map to "a.b.c", but "y.z->b.c" will not cause "a.y.z" to be matched.
+     *  Note that while this is a const method, it does allow the Schema's aliases to be
+     *  edited - this allows the aliases to be modified even after a Table has been constructed
+     *  from the Schema.
      *
-     *  Aliases are not checked to see if they match any existing fields, and if an alias has the same
-     *  name as a field name, it will take precedence and hide the true field.
-     *
-     *  Unlike the other components of a Schema, aliases can be modified and removed, even on a const
-     *  Schema instance (this allows aliases to be modified even after a Table has been constructed).
+     *  See AliasMap for more information on schema aliases.
      */
-    void setAlias(std::string const & alias, std::string const & target) const;
+    PTR(AliasMap) getAliases() const { return _aliases; }
 
-    /// @brief Remove an alias from the schema if it is present.
-    void dropAlias(std::string const & alias) const;
+    /**
+     *  Set the alias map
+     *
+     *  This resets the internal pointer to the alias map, disconnecting
+     *  this schema from any others it shares aliases with.
+     *
+     *  Passing a null pointer is equivalent to passing an empty map.
+     */
+    void setAliases(PTR(AliasMap) aliases);
 
-    /// @brief Remove all aliases from the schema.
-    void clearAliases() const;
+    /// Sever the connection between this schema and any others with which it shares aliases
+    void disconnectAliases();
 
     /// @brief Construct an empty Schema.
     explicit Schema();
 
     /// @brief Copy constructor.
-    Schema(Schema const & other) : _impl(other._impl), _aliases(other._aliases) {}
+    Schema(Schema const & other);
 
     /**
      *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
@@ -299,20 +301,11 @@ private:
     friend class detail::Access;
     friend class SubSchema;
 
-    // A map from aliases to field names.
-    typedef std::map<std::string,std::string> AliasMap;
-
     /// @brief Copy on write; should be called by all mutators (except for alias mutators).
     void _edit();
 
-    /// @brief Copy on write; should be called by alias mutators.
-    void _editAliases() const;
-
-    /// @brief Internal in-place implementation of applyAliases()
-    void _applyAliases(std::string & name) const;
-
-    boost::shared_ptr<Impl> _impl;
-    mutable boost::shared_ptr<AliasMap> _aliases;
+    PTR(Impl) _impl;
+    PTR(AliasMap) _aliases;
 };
 
 /**
@@ -392,14 +385,15 @@ private:
 
     friend class Schema;
 
-    SubSchema(boost::shared_ptr<Impl> const & data, std::string const & name) : _impl(data), _name(name) {}
+    SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & name);
 
-    boost::shared_ptr<Impl> _impl;
+    PTR(Impl) _impl;
+    PTR(AliasMap) _aliases;
     std::string _name;
 };
 
 inline SubSchema Schema::operator[](std::string const & name) const {
-    return SubSchema(_impl, name);
+    return SubSchema(_impl, _aliases, name);
 }
 
 }}} // namespace lsst::afw::table
