@@ -45,6 +45,7 @@ except ImportError:
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.daf.base
 import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.coord
@@ -68,7 +69,7 @@ def makeCov(size, dtype):
             r[i,j] = r[j,i]
     return r
 
-class SimpleTableTestCase(unittest.TestCase):
+class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def checkScalarAccessors(self, record, key, name, value1, value2):
         fastSetter = getattr(record, "set" + key.getTypeString())
