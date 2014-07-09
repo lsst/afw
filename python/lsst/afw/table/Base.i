@@ -193,6 +193,9 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 %include "lsst/afw/table/Key.h"
 %include "lsst/afw/table/detail/SchemaImpl.h"
 
+%shared_ptr(lsst::afw::table::AliasMap);
+%include "lsst/afw/table/AliasMap.h"
+
 %rename("__eq__") lsst::afw::table::Schema::operator==;
 %rename("__ne__") lsst::afw::table::Schema::operator!=;
 %rename("__getitem__") lsst::afw::table::Schema::operator[];
