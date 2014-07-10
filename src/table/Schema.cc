@@ -690,7 +690,7 @@ int Schema::contains(SchemaItem<T> const & item, int flags) const {
     return _impl->contains(item, flags);
 }
 
-void Schema::setAliases(PTR(AliasMap) aliases) {
+void Schema::setAliasMap(PTR(AliasMap) aliases) {
     if (!aliases) {
         aliases = boost::make_shared<AliasMap>();
     }

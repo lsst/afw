@@ -251,7 +251,7 @@ void FitsReader::_readSchema(
                     (boost::format("Malformed alias definition: '%s'") % (*i)).str()
                 );
             }
-            schema.getAliases()->set(i->substr(0, pos), i->substr(pos+1, std::string::npos));
+            schema.getAliasMap()->set(i->substr(0, pos), i->substr(pos+1, std::string::npos));
         }
     } catch (pex::exceptions::NotFoundError &) {
         // if there are no aliases, just move on
