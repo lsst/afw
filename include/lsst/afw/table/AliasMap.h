@@ -32,6 +32,7 @@ class BaseTable;
  *  aliases are set or removed.
  */
 class AliasMap {
+    typedef std::map<std::string,std::string> Internal;
 public:
 
     // Create an empty AliasMap
@@ -44,17 +45,20 @@ public:
      */
     AliasMap(AliasMap const & other) : _internal(other._internal), _table(0) {}
 
-    // A map from aliases to field names (only public to appease Swig)
-    typedef std::map<std::string,std::string> Internal;
-
     /// An iterator over alias->target pairs.
-    typedef Internal::const_iterator Iterator;
+    typedef std::map<std::string,std::string>::const_iterator Iterator;
 
     /// Return a iterator to the beginning of the map
     Iterator begin() const { return _internal.begin(); }
 
     /// Return a iterator to one past the end of the map
     Iterator end() const { return _internal.end(); }
+
+    /// Return the number of aliases
+    std::size_t size() const { return _internal.size(); }
+
+    /// Return the true if there are no aliases
+    bool empty() const { return _internal.empty(); }
 
     /// Apply any aliases that match the given field name and return a de-aliased name.
     std::string apply(std::string name) const;
