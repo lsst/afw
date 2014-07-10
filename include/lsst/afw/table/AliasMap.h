@@ -23,7 +23,7 @@ class BaseTable;
  *  has been constructed from the Schema.
  *
  *  AliasMaps are shared when Schemas are copy-constructed, but can be separated manually
- *  by calling Schema::disconnectAliases() or Schema::setAliases().  In addition, the AliasMap
+ *  by calling Schema::disconnectAliases() or Schema::setAliasMap().  In addition, the AliasMap
  *  is deep-copied when used to construct a Table (or Catalog).
  *
  *  In order to allow Tables to react to changes in aliases (which may be used to define cached Keys

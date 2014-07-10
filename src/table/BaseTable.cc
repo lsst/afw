@@ -185,11 +185,11 @@ PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile, int flags) 
 BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), _schema(schema), _version(0) {
     Block::padSchema(_schema);
     _schema.disconnectAliases();
-    _schema.getAliases()->_table = this;
+    _schema.getAliasMap()->_table = this;
 }
 
 BaseTable::~BaseTable() {
-    _schema.getAliases()->_table = 0;
+    _schema.getAliasMap()->_table = 0;
 }
 
 namespace {

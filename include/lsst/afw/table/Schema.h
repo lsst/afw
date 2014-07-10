@@ -236,7 +236,7 @@ public:
      *
      *  See AliasMap for more information on schema aliases.
      */
-    PTR(AliasMap) getAliases() const { return _aliases; }
+    PTR(AliasMap) getAliasMap() const { return _aliases; }
 
     /**
      *  Set the alias map
@@ -246,7 +246,7 @@ public:
      *
      *  Passing a null pointer is equivalent to passing an empty map.
      */
-    void setAliases(PTR(AliasMap) aliases);
+    void setAliasMap(PTR(AliasMap) aliases);
 
     /// Sever the connection between this schema and any others with which it shares aliases
     void disconnectAliases();

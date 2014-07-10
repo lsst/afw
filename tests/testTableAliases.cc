@@ -59,12 +59,12 @@ TestRecord::TestRecord(PTR(TestTable) const & table) : lsst::afw::table::BaseRec
 BOOST_AUTO_TEST_CASE(aliasMapLinks) {
     lsst::afw::table::Schema schema;
     schema.addField<int>("a", "doc for a");
-    schema.getAliases()->set("b", "a");
+    schema.getAliasMap()->set("b", "a");
     PTR(TestTable) table = TestTable::make(schema);
 
     // Should have deep-copied the AliasMap, so pointers should not be equal
-    PTR(lsst::afw::table::AliasMap) aliases = table->getSchema().getAliases();
-    BOOST_CHECK(schema.getAliases() != aliases);
+    PTR(lsst::afw::table::AliasMap) aliases = table->getSchema().getAliasMap();
+    BOOST_CHECK(schema.getAliasMap() != aliases);
 
     // If we set an alias in the map attached to the table, the table should be notified
     aliases->set("c", "a");
