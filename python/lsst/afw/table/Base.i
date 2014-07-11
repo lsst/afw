@@ -185,6 +185,47 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
     %}
 }
 
+// =============== AliasMap =================================================================================
+
+%include "std_map.i"
+%include "std_pair.i"
+%include "lsst/afw/utils.i"
+%template(AliasMapPair) std::pair<std::string,std::string>;
+%template(AliasMapInternal) std::map<std::string,std::string>;
+%shared_ptr(lsst::afw::table::AliasMap);
+%include "lsst/afw/table/AliasMap.h"
+%extend lsst::afw::table::AliasMap {
+%pythoncode %{
+
+def iteritems(self):
+    i = self.begin()
+    end = self.end()
+    while i != end:
+        yield i.value()
+        i.incr()
+def iterkeys(self):
+    for k, v in self.iteritems():
+        yield k
+def itervalues(self):
+    for k, v in self.iteritems():
+        yield v
+def __iter__(self):
+    return self.iterkeys()
+
+def items(self): return list(self.iteritems())
+def keys(self): return list(self.iterkeys())
+def values(self): return list(self.itervalues())
+
+def __getitem__(self, alias): return self.get(alias)
+def __setitem__(self, alias, target): self.set(alias, target)
+def __delitem__(self, alias):
+    if not self.erase(alias):
+        raise KeyError(alias)
+def __len__(self): return self.size()
+def __nonzero__(self): return not self.empty()
+%}
+}
+
 // =============== Schemas and their components =============================================================
 
 %include "lsst/afw/table/FieldBase.h"
@@ -192,6 +233,7 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 %include "lsst/afw/table/KeyBase.h"
 %include "lsst/afw/table/Key.h"
 %include "lsst/afw/table/detail/SchemaImpl.h"
+
 
 %rename("__eq__") lsst::afw::table::Schema::operator==;
 %rename("__ne__") lsst::afw::table::Schema::operator!=;

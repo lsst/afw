@@ -150,6 +150,12 @@ struct ProcessSchema {
     int version;
 };
 
+void writeAliasMap(Fits & fits, AliasMap const & aliases) {
+    for (AliasMap::Iterator i = aliases.begin(); i != aliases.end(); ++i) {
+        fits.writeKey("ALIAS", i->first + ":" + i->second);
+    }
+}
+
 } // anonymous
 
 // the driver for all the above machinery
@@ -163,6 +169,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
     ProcessSchema::apply(*_fits, schema, table->getVersion());
+    writeAliasMap(*_fits, *schema.getAliasMap());
     // write the version number to the fits header, plus any other metadata
     PTR(daf::base::PropertyList) metadata = table->getMetadata();
     if (!metadata) {

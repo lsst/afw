@@ -248,12 +248,12 @@ public:
     template <typename T>
     void writeKey(std::string const & key, T const & value, std::string const & comment);
     void writeKey(std::string const & key, char const * value, std::string const & comment) {
-        updateKey(key, std::string(value), comment);
+        writeKey(key, std::string(value), comment);
     }
     template <typename T>
     void writeKey(std::string const & key, T const & value);
     void writeKey(std::string const & key, char const * value) {
-        updateKey(key, std::string(value));
+        writeKey(key, std::string(value));
     }
     //@}
 
