@@ -639,9 +639,10 @@ std::set<std::string> Schema::getNames(bool topOnly) const {
 }
 
 template <typename T>
-SchemaItem<T> Schema::find(std::string name) const {
-    _aliases->_apply(name);
-    return _impl->find<T>(name);
+SchemaItem<T> Schema::find(std::string const & name) const {
+    std::string tmp(name);
+    _aliases->_apply(tmp);
+    return _impl->find<T>(tmp);
 }
 
 template <typename T>
@@ -759,8 +760,8 @@ std::set<std::string> SubSchema::getNames(bool topOnly) const {
 
 #define INSTANTIATE_LAYOUT(r, data, elem)                               \
     template Key< elem > Schema::addField(Field< elem > const &, bool);            \
-    template SchemaItem< elem > Schema::find(std::string) const; \
-    template SchemaItem< elem > Schema::find(Key< elem > const & ) const; \
+    template SchemaItem< elem > Schema::find(std::string const &) const; \
+    template SchemaItem< elem > Schema::find(Key< elem > const &) const; \
     template SchemaItem< elem > detail::SchemaImpl::find(std::string const & name ) const; \
     template int Schema::contains(SchemaItem< elem > const &, int) const;   \
     template void Schema::replaceField(Key< elem > const &, Field< elem > const &); \

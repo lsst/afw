@@ -31,10 +31,8 @@ or
    >>> import testTableAliases; testTableAliases.run()
 """
 
-import sys
-import os
 import unittest
-import numpy
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
@@ -92,7 +90,7 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(aliases.values(), [v for k, v in aliases.iteritems()])
 
         # Try removing something using the C++-named methods
-        aliases.remove("q")
+        self.assertTrue(aliases.erase("q"))
         del self.dict["q"]
         self.assertEqual(dict(aliases), self.dict)
 

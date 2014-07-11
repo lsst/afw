@@ -218,7 +218,9 @@ def values(self): return list(self.itervalues())
 
 def __getitem__(self, alias): return self.get(alias)
 def __setitem__(self, alias, target): self.set(alias, target)
-def __delitem__(self, alias): self.remove(alias)
+def __delitem__(self, alias):
+    if not self.erase(alias):
+        raise KeyError(alias)
 def __len__(self): return self.size()
 def __nonzero__(self): return not self.empty()
 %}

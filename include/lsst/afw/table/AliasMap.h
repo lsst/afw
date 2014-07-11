@@ -12,9 +12,9 @@ class BaseTable;
 /**
  *  @brief Mapping class that holds aliases for a Schema
  *
- *  Aliases need not be complete, but they must map to the beginning of a field name to be useful.
- *  For example, if "a.b.c" is a true field name, "x.y->a.b" is a valid alias that will cause
- *  "x.y.c" to map to "a.b.c", but "y.z->b.c" will not cause "a.y.z" to be matched.
+ *  Aliases need not be complete, but they must match to the beginning of a field name to be useful.
+ *  For example, if "a_b_c" is a true field name, "x_->a_b" is a valid alias that will cause
+ *  "x_y_c" to map to "a_b_c", but "y_z->b_c" will not cause "a_y_z" to be matched.
  *
  *  Aliases are not checked to see if they match any existing fields, and if an alias has the same
  *  name as a field name, it will take precedence and hide the true field.
@@ -60,21 +60,42 @@ public:
     /// Return the true if there are no aliases
     bool empty() const { return _internal.empty(); }
 
-    /// Apply any aliases that match the given field name and return a de-aliased name.
-    std::string apply(std::string name) const;
+    /**
+     *  Apply any aliases that match the given field name and return a de-aliased name.
+     *
+     *  Given a string that starts with any alias in the map, this returns a string
+     *  with the part of the string that matches the alias replaced by that alias's
+     *  target.  The longest such alias is used.
+     *
+     *  For example:
+     *  @code
+     *  m = AliasMap();
+     *  m.set("q", "a");
+     *  m.set("q1", "b");
+     *  assert(m.apply("q3") == "a3");
+     *  assert(m.apply("q12") == "b2");
+     *  @endcode
+     */
+    std::string apply(std::string const & name) const;
 
     /**
      *  @brief Return the target of the given alias
      *
      *  Unlike apply(), this will not return partial matches.
+     *
+     *  @throw pex::exceptions::NotFoundError if no alias with the given name exists
      */
-    std::string get(std::string const & name) const;
+    std::string get(std::string const & alias) const;
 
     /// Add an alias to the schema or replace an existing one.
     void set(std::string const & alias, std::string const & target);
 
-    /// Remove an alias from the schema if it is present.
-    void remove(std::string const & alias);
+    /**
+     *  @brief Remove an alias from the schema if it is present.
+     *
+     *  @return True if an alias was erased, and false if no such alias was found.
+     */
+    bool erase(std::string const & alias);
 
 private:
 

@@ -27,15 +27,6 @@
 
 namespace lsst { namespace afw { namespace table {
 
-namespace {
-
-// equivalent to a.startswith(b) in Python
-bool startsWith(std::string const & a, std::string const & b) {
-    return a.size() >= b.size() && a.compare(0, b.size(), b) == 0;
-}
-
-} // anonymous
-
 void AliasMap::_apply(std::string & name) const {
     Iterator i = _internal.lower_bound(name);
     if (i != _internal.end() && i->first.size() == name.size()) {
@@ -53,9 +44,10 @@ void AliasMap::_apply(std::string & name) const {
     }
 }
 
-std::string AliasMap::apply(std::string name) const {
-    _apply(name);
-    return name;
+std::string AliasMap::apply(std::string const & name) const {
+    std::string result(name);
+    _apply(result);
+    return result;
 }
 
 std::string AliasMap::get(std::string const & name) const {
@@ -76,11 +68,12 @@ void AliasMap::set(std::string const & alias, std::string const & target) {
     }
 }
 
-void AliasMap::remove(std::string const & alias) {
-    _internal.erase(alias);
+bool AliasMap::erase(std::string const & alias) {
+    bool result = _internal.erase(alias);
     if (_table) {
         _table->handleAliasChange(alias);
     }
+    return result;
 }
 
 }}} // namespace lsst::afw::table

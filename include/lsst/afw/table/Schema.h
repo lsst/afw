@@ -69,7 +69,7 @@ public:
      *  with only the name changed.
      */
     template <typename T>
-    SchemaItem<T> find(std::string name) const;
+    SchemaItem<T> find(std::string const & name) const;
 
     /**
      *  @brief Find a SchemaItem in the Schema by key.
