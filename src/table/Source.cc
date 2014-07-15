@@ -18,19 +18,19 @@ typedef float HeavyFootprintPixelT;
 
 #define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type)                              \
     if (table->getVersion() == 0) {                                         \
-        if (table->get ## Name ## Type ## Key().isValid()) {                \
-            std::string s = table->getSchema().find(table->get ## Name ## Type ## Key()).field.getName(); \
+        if (table->has ## Name ## Type ## Slot()) {                \
+            std::string s = table->get ## Name ## Type ## Definition(); \
             std::replace(s.begin(), s.end(), '.', '_');                     \
             _fits->writeKey(#NAME #TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
         }                                                                   \
-        if (table->get ## Name ## Type ## ErrKey().isValid()) {             \
-            std::string s = table->getSchema().find(table->get ## Name ## Type ## ErrKey()).field.getName(); \
+        if (table->has ## Name ## Type ## Slot()) {             \
+            std::string s = table->get ## Name ## Type ## Definition() + ".err"; \
             std::replace(s.begin(), s.end(), '.', '_');                     \
             _fits->writeKey(#NAME #TYPE "_ERR_SLOT", s.c_str(),             \
                             "Defines the " #Name #Type "Err slot");         \
         }                                                                   \
         if (table->get ## Name ## Type ## Flag ## Key().isValid()) {        \
-            std::string s = table->getSchema().find(table->get ## Name ## Type ## FlagKey()).field.getName(); \
+            std::string s = table->get ## Name ## Type ## Definition() + ".flags"; \
             std::replace(s.begin(), s.end(), '.', '_');                     \
             _fits->writeKey(#NAME #TYPE "_FLAG_SLOT", s.c_str(),            \
                             "Defines the " #Name #Type "Flag slot");        \
@@ -43,6 +43,7 @@ typedef float HeavyFootprintPixelT;
                             "Defines the " #Name #Type " slot");            \
         }                                                                   \
     }
+
 #define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME ## _, Name, FLUX, Flux)
 #define SAVE_CENTROID_SLOT() SAVE_MEAS_SLOT(, , CENTROID, Centroid)
 #define SAVE_SHAPE_SLOT() SAVE_MEAS_SLOT(, , SHAPE, Shape)
@@ -53,16 +54,12 @@ typedef float HeavyFootprintPixelT;
             _fits->behavior &= ~fits::Fits::AUTO_CHECK;                     \
             std::string s, sErr, sFlag;                                     \
             _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
-            _fits->readKey(#NAME #TYPE "_ERR_SLOT", sErr);                  \
-            _fits->readKey(#NAME #TYPE "_FLAG_SLOT", sFlag);                \
+            std::replace(s.begin(), s.end(), '_', '.');                 \
             if (_fits->status == 0) {                                       \
                 metadata->remove(#NAME #TYPE "_SLOT");                      \
                 metadata->remove(#NAME #TYPE "_ERR_SLOT");                  \
                 metadata->remove(#NAME #TYPE "_FLAG_SLOT");                 \
-                std::replace(s.begin(), s.end(), '_', '.');                 \
-                std::replace(sErr.begin(), sErr.end(), '_', '.');           \
-                std::replace(sFlag.begin(), sFlag.end(), '_', '.');         \
-                table->define ## Name ## Type(schema[s], schema[sErr], schema[sFlag]); \
+                table->define ## Name ## Type(s); \
             } else {                                                        \
                 _fits->status = 0;                                          \
             }                                                               \
@@ -456,7 +453,8 @@ SourceTable::SourceTable(
 
 SourceTable::SourceTable(SourceTable const & other) :
     SimpleTable(other),
-    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
+    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape),
+    _newSlotFlux(other._newSlotFlux), _newSlotCentroid(other._newSlotCentroid), _newSlotShape(other._newSlotShape)
 {}
 
 SourceTable::MinimalSchema::MinimalSchema() {
