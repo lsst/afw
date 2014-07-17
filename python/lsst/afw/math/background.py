@@ -131,10 +131,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             md = dafBase.PropertyList()
             try:
                 img = afwImage.ImageF(fileName, hdu, md); hdu += 1
-            except pexExcept.LsstCppException, e:
-                if isinstance(e.args[0], FitsError):
-                    break
-                raise
+            except FitsError as e:
+                break
 
             msk = afwImage.MaskU( fileName, hdu);     hdu += 1
             var = afwImage.ImageF(fileName, hdu)

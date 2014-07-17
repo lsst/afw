@@ -117,7 +117,7 @@ class ApproximateTestCase(unittest.TestCase):
     def testChebyshevEqualOrder(self):
         """Check that we enforce the condition orderX == orderY"""
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
+        self.assertRaises(pexExcept.InvalidParameterError,
                                        lambda : 
                                        afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, 1, 2))
 
@@ -157,7 +157,7 @@ class ApproximateTestCase(unittest.TestCase):
         #
         # Check that we can't "truncate" the expansion to a higher order than we requested
         #
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
+        self.assertRaises(pexExcept.InvalidParameterError,
                                        lambda : approx.getImage(orderMax + 1, orderMax + 1))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

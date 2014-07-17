@@ -104,7 +104,7 @@ class Ticket1045TestCase(unittest.TestCase):
             stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
             median = stat.getValue(afwMath.MEDIAN)
             return median
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError, tst)
+        self.assertRaises(pexExcept.InvalidParameterError, tst)
 
         
     def testUnexpectedNan1051(self):

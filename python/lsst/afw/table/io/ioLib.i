@@ -38,6 +38,7 @@ Python interface to lsst::afw::table::io classes
 
 %{
 #include "lsst/afw/table/io/Persistable.h"
+#include "lsst/pex/exceptions.h"
 %}
 
 %include "boost_shared_ptr.i"
@@ -60,6 +61,9 @@ Python interface to lsst::afw::table::io classes
 %include "lsst/afw/table/io/Persistable.h"
 
 // =============== Utility code =============================================================================
+
+%declareException(PersistenceError, lsst.pex.exceptions.IoError, lsst::afw::table::io::PersistenceError)
+%declareException(MalformedArchiveError, PersistenceError, lsst::afw::table::io::MalformedArchiveError)
 
 %inline %{
 

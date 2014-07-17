@@ -31,25 +31,24 @@ Python interface to lsst::afw::gpu classes
 %feature("autodoc", "1");
 %module(package="lsst.afw.gpu",docstring=gpuLib_DOCSTRING) gpuLib
 
+%{
+#include "lsst/afw/gpu/DevicePreference.h"
+#include "lsst/afw/gpu/GpuExceptions.h"
+#include "lsst/afw/gpu/IsGpuBuild.h"
+#include "lsst/pex/exceptions.h"
+%}
+
+%import "lsst/pex/exceptions/exceptionsLib.i"
 
 %include "lsst/p_lsstSwig.i"
 
 %lsst_exceptions();
 
-%import "lsst/pex/exceptions/exceptionsLib.i"
-
-%{
-#include "lsst/afw/gpu/DevicePreference.h"
-#include "lsst/afw/gpu/GpuExceptions.h"
-#include "lsst/afw/gpu/IsGpuBuild.h"
-%}
-
 %include "lsst/afw/gpu/DevicePreference.h"
 %include "lsst/afw/gpu/GpuExceptions.h"
 %include "lsst/afw/gpu/IsGpuBuild.h"
 
-
-
-
-
-
+%declareException(GpuMemoryError, lsst.pex.exceptions.RuntimeError,
+                  lsst::afw::gpu::GpuMemoryError)
+%declareException(GpuRuntimeError, lsst.pex.exceptions.RuntimeError,
+                  lsst::afw::gpu::GpuRuntimeError)

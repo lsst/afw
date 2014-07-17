@@ -170,9 +170,9 @@ class KernelTestCase(unittest.TestCase):
                         if errStr:
                             self.fail(errStr)
 
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
+                self.assertRaises(pexExcept.InvalidParameterError,
                     afwMath.DeltaFunctionKernel, 0, kHeight, afwGeom.Point2I(kWidth, kHeight))
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
+                self.assertRaises(pexExcept.InvalidParameterError,
                     afwMath.DeltaFunctionKernel, kWidth, 0, afwGeom.Point2I(kWidth, kHeight))
                             
         kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.Point2I(1, 1))
@@ -404,7 +404,7 @@ class KernelTestCase(unittest.TestCase):
             try:
                 afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc2, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
-            except pexExcept.LsstCppException:
+            except pexExcept.Exception:
                 pass
         
         for numKernelParams in (1, 3):
@@ -414,18 +414,18 @@ class KernelTestCase(unittest.TestCase):
             try:
                 afwMath.LinearCombinationKernel(kernelList, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
-            except pexExcept.LsstCppException:
+            except pexExcept.Exception:
                 pass
             kParamList = [0.2]*numKernelParams
             try:
                 afwMath.LinearCombinationKernel(kernelList, kParamList)
                 self.fail("Should have failed with wrong # of kernel parameters")
-            except pexExcept.LsstCppException:
+            except pexExcept.Exception:
                 pass
             try:
                 afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1, spFuncList)
                 self.fail("Should have failed with wrong # of spatial functions")
-            except pexExcept.LsstCppException:
+            except pexExcept.Exception:
                 pass
 
         for pointX in range(-1, kWidth+2):
@@ -435,7 +435,7 @@ class KernelTestCase(unittest.TestCase):
                 try:
                     afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(pointX, pointY))
                     self.fail("Should have failed with point not on kernel")
-                except pexExcept.LsstCppException, e:
+                except pexExcept.Exception, e:
                     pass
                     
 
@@ -701,14 +701,14 @@ class KernelTestCase(unittest.TestCase):
         if nSpatialParams == 0:
             self.assert_(not kernel.isSpatiallyVarying())
             for ii in range(nKernelParams+5):
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
+                self.assertRaises(pexExcept.InvalidParameterError,
                     kernel.getSpatialFunction, ii)
         else:
             self.assert_(kernel.isSpatiallyVarying())
             for ii in range(nKernelParams):
                 kernel.getSpatialFunction(ii)
             for ii in range(nKernelParams, nKernelParams+5):
-                utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
+                self.assertRaises(pexExcept.InvalidParameterError,
                     kernel.getSpatialFunction, ii)
         for nsp in range(nSpatialParams + 2):
             spatialParamsForOneKernel = (1.0,)*nsp
@@ -718,7 +718,7 @@ class KernelTestCase(unittest.TestCase):
                     kernel.setSpatialParameters(spatialParams)
                     self.assert_(numpy.alltrue(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
                 else:
-                    utilsTests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
+                    self.assertRaises(pexExcept.InvalidParameterError,
                         kernel.setSpatialParameters, spatialParams)
 
         kernelDim = kernel.getDimensions()
@@ -747,7 +747,7 @@ class KernelTestCase(unittest.TestCase):
             kernel.computeImage(kImage, True)
             if doRaise:
                 self.fail(kernelDescr + ".computeImage should have raised an exception")
-        except pexExcept.LsstCppException, e:
+        except pexExcept.Exception, e:
             if not doRaise:
                 self.fail(kernelDescr + ".computeImage should not have raised an exception")
 

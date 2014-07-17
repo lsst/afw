@@ -102,8 +102,8 @@ class Box2ITestCase(unittest.TestCase):
     def testOverflowDetection(self):
         try:
             box = geom.Box2I(geom.Point2I(2147483645, 149), geom.Extent2I(8,8))
-        except lsst.pex.exceptions.LsstCppException as err:
-            self.assert_(isinstance(err.args[0], lsst.pex.exceptions.OverflowError))
+        except lsst.pex.exceptions.OverflowError as err:
+            pass
         else:
             # On some platforms, sizeof(int) may be > 4, so this test doesn't overflow.
             # In that case, we just verify that there was in fact no overflow.
@@ -149,7 +149,7 @@ class Box2ITestCase(unittest.TestCase):
             self.assertEqual(geom.Box2I(fpBoxBig, geom.Box2I.EXPAND), intBoxBig)
             self.assertEqual(geom.Box2I(fpBoxSmall, geom.Box2I.SHRINK), intBoxSmall)
         self.assert_(geom.Box2I(geom.Box2D()).isEmpty())
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError, geom.Box2I,
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, geom.Box2I,
                                        geom.Box2D(geom.Point2D(), geom.Point2D(float("inf"), float("inf"))))
 
     def testAccessors(self):

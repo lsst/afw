@@ -138,7 +138,7 @@ class MaskedImageTestCase(unittest.TestCase):
         def tst(mask=mask):
             mask |= testMask
 
-        utilsTests.assertRaisesLsstCpp(self, pexEx.RuntimeError, tst)
+        self.assertRaises(pexEx.RuntimeError, tst)
 
     def testTicket617(self):
         """Test reading an F64 image and converting it to a MaskedImage"""
