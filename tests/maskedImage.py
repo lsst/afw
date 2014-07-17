@@ -289,11 +289,11 @@ class MaskedImageTestCase(unittest.TestCase):
 
         tsts12 = [tst1, tst3, tst5, tst7]
         for tst in tsts12:
-            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthError, tst, i1, i2)
+            self.assertRaises(lsst.pex.exceptions.LengthError, tst, i1, i2)
 
         tsts21 = [tst2, tst4, tst6, tst8]
         for tst in tsts21:
-            utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthError, tst, i2, i1)
+            self.assertRaises(lsst.pex.exceptions.LengthError, tst, i2, i1)
 
             
     def testMultiplyImages(self):

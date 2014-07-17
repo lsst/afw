@@ -337,10 +337,9 @@ class SourceTableTestCase(unittest.TestCase):
         id2 = factory()
         self.assertEqual(id2 - id1, 1)
         factory.notify(0xFFFFFFFF)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LengthError, factory)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
-                                             factory.notify, 0x1FFFFFFFF)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
+        self.assertRaises(lsst.pex.exceptions.LengthError, factory)
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, factory.notify, 0x1FFFFFFFF)
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
                                              lsst.afw.table.IdFactory.makeSource, 0x1FFFFFFFF, reserved)
 
     def testFamilies(self):

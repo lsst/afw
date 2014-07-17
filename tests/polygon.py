@@ -165,8 +165,8 @@ class PolygonTest(utilsTests.TestCase):
         # intersectionSingle: assumes there's a single intersection (convex polygons)
         self.assertEqual(poly1.intersectionSingle(poly2), poly3)
         self.assertEqual(poly2.intersectionSingle(poly1), poly3)
-        self.assertRaisesLsstCpp(SinglePolygonException, poly1.intersectionSingle, poly4)
-        self.assertRaisesLsstCpp(SinglePolygonException, poly4.intersectionSingle, poly1)
+        self.assertRaises(SinglePolygonException, poly1.intersectionSingle, poly4)
+        self.assertRaises(SinglePolygonException, poly4.intersectionSingle, poly1)
 
         # intersection: no assumptions
         polyList1 = poly1.intersection(poly2)
@@ -191,8 +191,8 @@ class PolygonTest(utilsTests.TestCase):
         # unionSingle: assumes there's a single union (intersecting polygons)
         self.assertEqual(poly1.unionSingle(poly2), poly3)
         self.assertEqual(poly2.unionSingle(poly1), poly3)
-        self.assertRaisesLsstCpp(SinglePolygonException, poly1.unionSingle, poly4)
-        self.assertRaisesLsstCpp(SinglePolygonException, poly4.unionSingle, poly1)
+        self.assertRaises(SinglePolygonException, poly1.unionSingle, poly4)
+        self.assertRaises(SinglePolygonException, poly4.unionSingle, poly1)
 
         # union: no assumptions
         polyList1 = poly1.union(poly2)

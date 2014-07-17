@@ -25,8 +25,8 @@ Python interface to lsst::afw::fits exception classes
 
 %include "lsst/afw/fits.h"
 
-%types(lsst::afw::fits::FitsError *);
-%types(lsst::afw::fits::FitsTypeError *);
+%declareException(FitsError, lsst.pex.exceptions.IoError, lsst::afw::fits::FitsError)
+%declareException(FitsTypeError, FitsError, lsst::afw::fits::FitsTypeError)
 
 namespace lsst { namespace afw { namespace fits {
 

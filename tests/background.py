@@ -429,7 +429,7 @@ class BackgroundTestCase(unittest.TestCase):
         def tst(img, bctrl):
             backobj = afwMath.makeBackground(img, bctrl)
             backobj.getImageF("CUBIC_SPLINE") # only now do we see that we have too few points
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
                                        tst, img, bctrl)
 
         
@@ -545,7 +545,7 @@ class BackgroundTestCase(unittest.TestCase):
         #
         # Should throw if we don't permit REDUCE_INTERP_ORDER
         #
-        utilsTests.assertRaisesLsstCpp(self, lsst.pex.exceptions.OutOfRangeError,
+        self.assertRaises(lsst.pex.exceptions.OutOfRangeError,
                                        bkgd.getImageF, afwMath.Interpolate.NATURAL_SPLINE)
         #
         # The interpolation should fall back to linear for the right part of the image

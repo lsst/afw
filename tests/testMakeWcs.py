@@ -91,7 +91,7 @@ class MakeWcsTestCase(unittest.TestCase):
         """Test than an exception is thrown if we try to upcast to a TanWcs inappropriately"""
         wcs = afwImage.makeWcs(self.metadata)
         
-        excpt = lsst.pex.exceptions.exceptionsLib.LsstCppException
+        excpt = lsst.pex.exceptions.Exception
         self.assertRaises(excpt, afwImage.cast_TanWcs, wcs)
         
     def testCreateTanWcs(self):

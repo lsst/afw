@@ -28,7 +28,7 @@ import itertools
 import unittest
 
 import lsst.utils.tests
-from lsst.pex.exceptions import LsstCppException
+import lsst.pex.exceptions
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
@@ -74,8 +74,8 @@ class DetectorTestCase(unittest.TestCase):
     def testConstructorErrors(self):
         """Test constructor errors
         """
-        self.assertRaises(LsstCppException, DetectorWrapper, tryDuplicateAmpNames=True)
-        self.assertRaises(LsstCppException, DetectorWrapper, tryBadCameraSys=True)
+        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, tryDuplicateAmpNames=True)
+        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, tryBadCameraSys=True)
 
     def testTransform(self):
         """Test the transform method
@@ -102,7 +102,7 @@ class DetectorTestCase(unittest.TestCase):
         # make sure you cannot transform to a different detector
         pixCamPoint = dw.detector.makeCameraPoint(afwGeom.Point2D(1, 1), cameraGeom.PIXELS)
         otherCamSys = cameraGeom.CameraSys(cameraGeom.PIXELS, "other detector")
-        self.assertRaises(LsstCppException, dw.detector.transform, pixCamPoint, otherCamSys)
+        self.assertRaises(lsst.pex.exceptions.Exception, dw.detector.transform, pixCamPoint, otherCamSys)
 
     def testIteration(self):
         """Test iteration over amplifiers and __getitem__

@@ -104,7 +104,7 @@ class ImagePcaTestCase(unittest.TestCase):
             """Try adding an image with no flux"""
             self.ImageSet.addImage(im, 0.0)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeError, tst)
+        self.assertRaises(pexExcept.OutOfRangeError, tst)
         
     def testMean(self):
         """Test calculating mean image"""

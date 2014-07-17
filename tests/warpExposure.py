@@ -256,26 +256,26 @@ class WarpExposureTestCase(unittest.TestCase):
             ("bilinear", "lanczos4"),
             ("lanczos3", "lanczos4"),
         ):
-            self.assertRaises(pexExcept.LsstCppException,
+            self.assertRaises(pexExcept.Exception,
                 afwMath.WarpingControl, kernelName, maskKernelName)
         
         # error: new mask kernel larger than main kernel
         warpingControl = afwMath.WarpingControl("bilinear")
         for maskKernelName in ("lanczos3", "lanczos4"):
-            self.assertRaises(pexExcept.LsstCppException,
+            self.assertRaises(pexExcept.Exception,
                 warpingControl.setMaskWarpingKernelName, maskKernelName)
 
         # error: new kernel smaller than mask kernel
         warpingControl = afwMath.WarpingControl("lanczos4", "lanczos4")
         for kernelName in ("bilinear", "lanczos3"):
-            self.assertRaises(pexExcept.LsstCppException,
+            self.assertRaises(pexExcept.Exception,
                 warpingControl.setWarpingKernelName, kernelName)
         
         # error: GPU only works with Lanczos kernels
-        self.assertRaises(pexExcept.LsstCppException,
+        self.assertRaises(pexExcept.Exception,
             afwMath.WarpingControl, "bilinear", "", 0, 0, afwGpu.USE_GPU)
         warpingControl = afwMath.WarpingControl("bilinear")
-        self.assertRaises(pexExcept.LsstCppException,
+        self.assertRaises(pexExcept.Exception,
             warpingControl.setDevicePreference, afwGpu.USE_GPU)
 
         # OK: GPU works with Lanczos kernels
@@ -301,7 +301,7 @@ class WarpExposureTestCase(unittest.TestCase):
             ("lanczos3", "badname"),
             ("lanczos3", "lanczos"),
         ):
-            self.assertRaises(pexExcept.LsstCppException,
+            self.assertRaises(pexExcept.Exception,
                 afwMath.WarpingControl, kernelName, maskKernelName)
 
     def testWarpMask(self):

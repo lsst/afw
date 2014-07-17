@@ -30,7 +30,7 @@ import os
 import unittest
 
 import lsst.utils.tests
-from lsst.pex.exceptions import LsstCppException
+import lsst.pex.exceptions
 from lsst.afw.geom import Extent2D, Point2D, xyTransformRegistry, OneXYTransformConfig, \
     IdentityXYTransform, AffineXYTransform, RadialXYTransform
 
@@ -247,7 +247,7 @@ class XYTransformTestCase(unittest.TestCase):
             (0.0, 0.0), # coeffs[1] must be nonzero
             (0.0, 0.0, 0.1), # coeffs[1] must be nonzero
         ):
-            self.assertRaises(LsstCppException, RadialXYTransform, badCoeffs)
+            self.assertRaises(lsst.pex.exceptions.Exception, RadialXYTransform, badCoeffs)
 
             radialClass = xyTransformRegistry["radial"]
             radialConfig = radialClass.ConfigClass()

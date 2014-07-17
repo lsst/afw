@@ -111,15 +111,15 @@ class CoordTestCase(unittest.TestCase):
 
 
         # verify that makeCoord throws when given an epoch for an epochless system
-        self.assertRaises(pexEx.LsstCppException,
+        self.assertRaises(pexEx.Exception,
                           lambda: afwCoord.makeCoord(afwCoord.GALACTIC, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0))
-        self.assertRaises(pexEx.LsstCppException,
+        self.assertRaises(pexEx.Exception,
                           lambda: afwCoord.makeCoord(afwCoord.ICRS, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0))
 
 
     def testCoordEnum(self):
         """Verify that makeCoordEnum throws an exception for non-existant systems."""
-        self.assertRaises(pexEx.LsstCppException, lambda: afwCoord.makeCoordEnum("FOO"))
+        self.assertRaises(pexEx.Exception, lambda: afwCoord.makeCoordEnum("FOO"))
         
         
     def testPosition(self):
@@ -605,8 +605,8 @@ class CoordTestCase(unittest.TestCase):
 
     def testTicket2915(self):
         """SegFault in construction of Coord from strings"""
-        self.assertRaises(pexEx.LsstCppException, afwCoord.IcrsCoord, "79.891963", "-10.110075")
-        self.assertRaises(pexEx.LsstCppException, afwCoord.IcrsCoord, "01:23", "45:67")
+        self.assertRaises(pexEx.Exception, afwCoord.IcrsCoord, "79.891963", "-10.110075")
+        self.assertRaises(pexEx.Exception, afwCoord.IcrsCoord, "01:23", "45:67")
 
     def testTicket3093(self):
         """Declination -1 < delta < 0 always prints positive as a string"""
