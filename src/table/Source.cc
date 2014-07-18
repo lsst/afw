@@ -529,6 +529,31 @@ KeyTuple<Flux> addFluxFields(
     return keys;
 }
 
+/// Convenience function to setup fields for centroid measurement algorithms.
+Point2DKey addCentroidMeasFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    Point2DKey key = Point2DKey(schema.addField<double>(name+"_x", doc + ", x coordinate", "pixels"),
+        schema.addField<double>(name+"_y", doc+", y coordinate", "pixels")
+    );
+    return key;
+}
+
+/// Convenience function to setup fields for shape measurement algorithms.
+QuadrupoleKey addShapeMeasFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    QuadrupoleKey key = QuadrupoleKey(schema.addField<double>(name+"_xx", doc + ", x-x moment", "pixels^2"),
+        schema.addField<double>(name+"_yy", doc + ", x-x moment", "pixels^2"),
+        schema.addField<double>(name+"_xy", doc + ", x-y moment", "pixels^2")
+    );
+    return key;
+}
+
 template class CatalogT<SourceRecord>;
 template class CatalogT<SourceRecord const>;
 

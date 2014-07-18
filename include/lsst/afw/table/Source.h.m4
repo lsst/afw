@@ -319,6 +319,11 @@ KeyTuple<Shape> addShapeFields(Schema & schema, std::string const & name, std::s
 /// Convenience function to setup fields for flux measurement algorithms.
 KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::string const & doc);
 
+/// Convenience function to setup fields for centroid measurement algorithms.
+Point2DKey addCentroidMeasFields(Schema & schema, std::string const & name, std::string const & doc);
+
+/// Convenience function to setup fields for shape measurement algorithms.
+QuadrupoleKey addShapeMeasFields(Schema & schema, std::string const & name, std::string const & doc);
 #endif // !SWIG
 
 template <typename RecordT> class SourceColumnViewT;
