@@ -157,12 +157,12 @@ void CopyToImage(afwImage::MaskedImage<PixelT, MskPixel, VarPixel>& outImage,
  * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
- * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+ * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -174,7 +174,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::basicConvolveGPU(
     afwMath::ConvolutionControl const& convolutionControl)  ///< convolution control parameters
 {
     if (!afwGpu::isGpuBuild()) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
     }
 
     // Because convolve isn't a method of Kernel we can't always use Kernel's vtbl to dynamically
@@ -212,13 +212,13 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::basicConvolveGPU(
  * - kernels don't match each other
  * - there are too many kernels ( > maxGpuSfCount=100)
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
- * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+ * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -230,7 +230,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     if (!afwGpu::isGpuBuild()) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
     }
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
@@ -404,13 +404,13 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
  *       (image blocks are larger than kernels)
  * - kernels don't match each other
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
- * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+ * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -422,7 +422,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     if (!afwGpu::isGpuBuild()) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
     }
     typedef typename afwMath::Kernel::Pixel KernelPixel;
     typedef afwImage::Image<KernelPixel> KernelImage;
@@ -601,12 +601,12 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
  * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
- * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+ * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -618,7 +618,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     if (!afwGpu::isGpuBuild()) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
     }
     const bool doNormalize = convolutionControl.getDoNormalize();
 
@@ -702,12 +702,12 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
  * - kernel.getWidth()  - 1 - kernel.getCtrX() along the right edge
  * - kernel.getHeight() - 1 - kernel.getCtrY() along the top edge
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if convolvedImage dimensions != inImage dimensions
- * @throw lsst::pex::exceptions::InvalidParameterException if inImage smaller than kernel in width or height
- * @throw lsst::pex::exceptions::InvalidParameterException if kernel width or height < 1
- * @throw lsst::afw::gpu::GpuMemoryException when allocation or transfer to/from GPU memory fails
- * @throw lsst::pex::exceptions::MemoryException when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeErrorException when GPU code run fails
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
+ * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
+ * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -719,7 +719,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
     afwMath::ConvolutionControl const & convolutionControl) ///< convolution control parameters
 {
     if (!afwGpu::isGpuBuild()) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
     }
     bool doNormalize = convolutionControl.getDoNormalize();
 

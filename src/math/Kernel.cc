@@ -76,13 +76,13 @@ afwMath::Kernel::Kernel(
     if ((width < 1) || (height < 1)) {
         std::ostringstream os;
         os << "kernel height = " << height << " and/or width = " << width << " < 1";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     if (dynamic_cast<const NullSpatialFunction*>(&spatialFunction)) {
         // spatialFunction is not really present
     } else {
         if (nKernelParams == 0) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Kernel function has no parameters");
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Kernel function has no parameters");
         }
         for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
             SpatialFunctionPtr spatialFunctionCopy = spatialFunction.clone();
@@ -101,7 +101,7 @@ double afwMath::Kernel::computeImage(
         std::ostringstream os;
         os << "image dimensions = ( " << image.getWidth() << ", " << image.getHeight()
             << ") != (" << this->getWidth() << ", " << this->getHeight() << ") = kernel dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     image.setXY0(-_ctrX, -_ctrY);
     if (this->isSpatiallyVarying()) {
@@ -125,7 +125,7 @@ afwMath::Kernel::Kernel(
     if ((width < 1) || (height < 1)) {
         std::ostringstream os;
         os << "kernel height = " << height << " and/or width = " << width << " < 1";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     for (unsigned int ii = 0; ii < spatialFunctionList.size(); ++ii) {
         SpatialFunctionPtr spatialFunctionCopy = spatialFunctionList[ii]->clone();
@@ -140,13 +140,13 @@ void afwMath::Kernel::setSpatialParameters(const std::vector<std::vector<double>
     // Check params size before changing anything
     unsigned int nKernelParams = this->getNKernelParameters();
     if (params.size() != nKernelParams) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
             (boost::format("params has %d entries instead of %d") % params.size() % nKernelParams).str());
     }
     unsigned int nSpatialParams = this->getNSpatialParameters();
     for (unsigned int ii = 0; ii < nKernelParams; ++ii) {
         if (params[ii].size() != nSpatialParams) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                 (boost::format("params[%d] has %d entries instead of %d") %
                 ii % params[ii].size() % nSpatialParams).str());
         }
@@ -173,11 +173,11 @@ afwMath::Kernel::SpatialFunctionPtr afwMath::Kernel::getSpatialFunction(
 ) const {
     if (index >= _spatialFunctionList.size()) {
         if (!this->isSpatiallyVarying()) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "kernel is not spatially varying");
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernel is not spatially varying");
         } else {
             std::ostringstream errStream;
             errStream << "index = " << index << "; must be < , " << _spatialFunctionList.size();
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, errStream.str());
         }
     }
     return _spatialFunctionList[index]->clone();
@@ -209,7 +209,7 @@ afwGeom::Box2I afwMath::Kernel::shrinkBBox(afwGeom::Box2I const &bbox) const {
         std::ostringstream os;
         os << "bbox dimensions = " << bbox.getDimensions() << " < ("
            << getWidth() << ", " << getHeight() << ") in one or both dimensions";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, os.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
     return afwGeom::Box2I(
         afwGeom::Point2I(
@@ -251,7 +251,7 @@ void afwMath::Kernel::toFile(std::string fileName) const {
 //
 
 void afwMath::Kernel::setKernelParameter(unsigned int, double) const {
-    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Kernel has no kernel parameters");
+    throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Kernel has no kernel parameters");
 }
 
 void afwMath::Kernel::setKernelParametersFromSpatialModel(double x, double y) const {

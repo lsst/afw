@@ -86,7 +86,7 @@ GaussianPsfFactory registration("GaussianPsf");
 void checkDimensions(geom::Extent2I const & dimensions) {
     if (dimensions.getX() % 2 == 0 || dimensions.getY() % 2 == 2) {
         throw LSST_EXCEPT(
-            pex::exceptions::InvalidParameterException,
+            pex::exceptions::InvalidParameterError,
             "GaussianPsf dimensions must be odd"
         );
     }

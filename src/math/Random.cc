@@ -90,17 +90,17 @@ char const * const math::Random::_seedEnvVarName = "LSST_RNG_SEED";
 /**
  * @internal
  * @brief   Initializes the underlying GSL random number generator.
- * @throw lsst::pex::exceptions::InvalidParameterException
+ * @throw lsst::pex::exceptions::InvalidParameterError
  *      Thrown if a seed value of zero (corresponding to an algorithm specific seed) is chosen.
  */
 void math::Random::initialize() {
     if (_seed == 0) {
-        throw LSST_EXCEPT(ex::InvalidParameterException,
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Invalid RNG seed: %lu") % _seed).str());
     }
     ::gsl_rng * rng = ::gsl_rng_alloc(_gslRngTypes[_algorithm]);
     if (rng == 0) {
-        throw LSST_EXCEPT(ex::MemoryException, "gsl_rng_alloc() failed");
+        throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_alloc() failed");
     }
     ::gsl_rng_set(rng, _seed);
     _rng.reset(rng, ::gsl_rng_free);
@@ -112,7 +112,7 @@ void math::Random::initialize() {
  *
  * @param[in] algorithm     the algorithm to use for random number generation
  *
- * @throw lsst::pex::exceptions::InvalidParameterException
+ * @throw lsst::pex::exceptions::InvalidParameterError
  *      Thrown if the requested algorithm is not supported or a seed value of zero
  *      (corresponding to an algorithm specific seed) is chosen.
  */
@@ -125,7 +125,7 @@ void math::Random::initialize(std::string const & algorithm) {
             return;
         }
     }
-    throw LSST_EXCEPT(ex::InvalidParameterException, "RNG algorithm " +
+    throw LSST_EXCEPT(ex::InvalidParameterError, "RNG algorithm " +
                       algorithm + " is not supported");
 }
 
@@ -142,17 +142,17 @@ void math::Random::initialize(std::string const & algorithm) {
  * @param[in] algorithm     the algorithm to use for random number generation
  * @param[in] seed          the seed value to initialize the generator with
  *
- * @throw lsst::pex::exceptions::InvalidParameterException
+ * @throw lsst::pex::exceptions::InvalidParameterError
  *      Thrown if the requested algorithm is not supported or a seed value of zero
  *      (corresponding to an algorithm specific seed) is chosen.
- * @throw lsst::pex::exceptions::MemoryException
+ * @throw lsst::pex::exceptions::MemoryError
  *      Thrown if memory allocation for internal generator state fails.
  */
 math::Random::Random(Algorithm const algorithm, unsigned long seed)
     : _rng(), _seed(seed), _algorithm(algorithm)
 {
     if (_algorithm < 0 || _algorithm >= NUM_ALGORITHMS) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Invalid RNG algorithm");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "Invalid RNG algorithm");
     }
     initialize();
 }
@@ -166,10 +166,10 @@ math::Random::Random(Algorithm const algorithm, unsigned long seed)
  * @param[in] algorithm     the name of the algorithm to use for random number generation
  * @param[in] seed          the seed value to initialize the generator with
  *
- * @throw lsst::pex::exceptions::InvalidParameterException
+ * @throw lsst::pex::exceptions::InvalidParameterError
  *      Thrown if the requested algorithm is not supported or a seed value of zero
  *      (corresponding to an algorithm specific seed) is chosen.
- * @throw lsst::pex::exceptions::MemoryException
+ * @throw lsst::pex::exceptions::MemoryError
  *      Thrown if memory allocation for internal generator state fails.
  */
 math::Random::Random(std::string const & algorithm, unsigned long seed)
@@ -190,11 +190,11 @@ math::Random::Random(std::string const & algorithm, unsigned long seed)
  *                      to use for random number generation 
  * @return              a newly created random number generator
  *
- * @throw lsst::pex::exceptions::InvalidParameterException
+ * @throw lsst::pex::exceptions::InvalidParameterError
  *      Thrown if the requested algorithm is not supported.
- * @throw lsst::pex::exceptions::MemoryException
+ * @throw lsst::pex::exceptions::MemoryError
  *      Thrown if memory allocation for internal generator state fails.
- * @throw lsst::pex::exceptions::RuntimeErrorException
+ * @throw lsst::pex::exceptions::RuntimeError
  *      Thrown if the "rngSeed" policy value cannot be converted to an unsigned long int.
  */
 math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
@@ -204,7 +204,7 @@ math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
     try {
         _seed = boost::lexical_cast<unsigned long>(seed);
     } catch(boost::bad_lexical_cast &) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException,
+        throw LSST_EXCEPT(ex::RuntimeError,
         (boost::format("Invalid \"rngSeed\" policy value: \"%1%\"") % seed).str());
     }
     initialize(policy->getString("rngAlgorithm"));
@@ -217,14 +217,14 @@ math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
  * 
  * @return  a deep copy of this random number generator
  *
- * @throw lsst::pex::exceptions::MemoryException
+ * @throw lsst::pex::exceptions::MemoryError
  *      Thrown if memory allocation for internal generator state fails.
  */
 math::Random math::Random::deepCopy() const {
     Random rng = *this;
     rng._rng.reset(::gsl_rng_clone(_rng.get()), ::gsl_rng_free);
     if (!rng._rng) {
-        throw LSST_EXCEPT(ex::MemoryException, "gsl_rng_clone() failed");
+        throw LSST_EXCEPT(ex::MemoryError, "gsl_rng_clone() failed");
     }
     return rng;
 }
@@ -236,7 +236,7 @@ math::Random::State math::Random::getState() const {
 void math::Random::setState(State const & state) {
     if (state.size() != getStateSize()) {
         throw LSST_EXCEPT(
-            pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthError,
             (boost::format("Size of given state vector (%d) does not match expected size (%d)")
              % state.size() % getStateSize()).str()
         );
@@ -331,7 +331,7 @@ double math::Random::uniformPos() {
  * @param[in] n     specifies the range of allowable return values (0 to @a n-1)
  * @return          a uniformly distributed random integer
  *
- * @throw lsst::pex::exceptions::RangeErrorException
+ * @throw lsst::pex::exceptions::RangeError
  *      Thrown if @a n is larger than the algorithm specific range of the generator.
  *
  * @sa get()
@@ -340,7 +340,7 @@ double math::Random::uniformPos() {
  */
 unsigned long math::Random::uniformInt(unsigned long n) {
     if (n > ::gsl_rng_max(_rng.get()) - ::gsl_rng_min(_rng.get())) {
-        throw LSST_EXCEPT(ex::RangeErrorException,
+        throw LSST_EXCEPT(ex::RangeError,
                           "Desired random number range exceeds generator range");
     }
     return ::gsl_rng_uniform_int(_rng.get(), n);

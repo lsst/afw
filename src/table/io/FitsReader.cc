@@ -229,8 +229,10 @@ void FitsReader::_readSchema(
     daf::base::PropertyList & metadata,
     bool stripMetadata
 ) {
+
     FitsSchema intermediate;
     int version = metadata.get("AFW_TABLE_VERSION", 0);
+
     int flagCol = metadata.get("FLAGCOL", 0);
     if (flagCol > 0) {
         metadata.remove("FLAGCOL");
@@ -238,6 +240,24 @@ void FitsReader::_readSchema(
         metadata.remove((boost::format("TFORM%d") % flagCol).str());
     }
     --flagCol; // switch from 1-indexed to 0-indexed
+
+    try {
+        std::vector<std::string> rawAliases = metadata.getArray<std::string>("ALIAS");
+        for (std::vector<std::string>::const_iterator i = rawAliases.begin(); i != rawAliases.end(); ++i) {
+            std::size_t pos = i->find_first_of(':');
+            if (pos == std::string::npos) {
+                throw LSST_EXCEPT(
+                    afw::fits::FitsError,
+                    (boost::format("Malformed alias definition: '%s'") % (*i)).str()
+                );
+            }
+            schema.getAliasMap()->set(i->substr(0, pos), i->substr(pos+1, std::string::npos));
+        }
+    } catch (pex::exceptions::NotFoundError &) {
+        // if there are no aliases, just move on
+    }
+    metadata.remove("ALIAS");
+
     std::vector<std::string> keyList = metadata.getOrderedNames();
     for (std::vector<std::string>::const_iterator key = keyList.begin(); key != keyList.end(); ++key) {
         if (key->compare(0, 5, "TTYPE") == 0) {
@@ -465,7 +485,7 @@ PTR(FitsReader) FitsReader::make(Fits * fits, PTR(io::InputArchive) archive, int
     Registry::iterator i = getRegistry().find(name);
     if (i == getRegistry().end()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::NotFoundException,
+            lsst::pex::exceptions::NotFoundError,
             (boost::format("FitsReader with name '%s' does not exist; check AFW_TYPE keyword.") % name).str()
         );
     }

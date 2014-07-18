@@ -114,7 +114,7 @@
                 second.append(match.second)
                 distance.append(match.distance)
 
-            from lsst.pex.exceptions import LsstCppException, NotFoundException
+            from lsst.pex.exceptions import LsstCppException, NotFoundError
             def getSlot(table, name):
                 """Return key for a slot, specified by name, or None"""
                 getter = getattr(table, "get" + name + "Key", None)
@@ -123,7 +123,7 @@
                 try:
                     return getter()
                 except LsstCppException as e:
-                    if isinstance(e.message, NotFoundException):
+                    if isinstance(e.message, NotFoundError):
                         return None
                     raise
 

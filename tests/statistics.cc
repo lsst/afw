@@ -35,6 +35,8 @@
 #pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
 
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/utils/ieee.h"
@@ -76,7 +78,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
 
     {
         math::Statistics stats = math::makeStatistics(img, math::NPOINT);
-        BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterException);
+        BOOST_CHECK_THROW(stats.getValue(math::MEAN), lsst::pex::exceptions::InvalidParameterError);
     }
 
     // ===============================================================================
@@ -260,7 +262,13 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) { /* parasoft-suppress  LsstDm-3-2a L
         imgfiles.push_back("v2_i2_p_m9_f.fits");
         imgfiles.push_back("v2_i2_p_m9_u16.fits");
 
-        string afwdata_dir = getenv("AFWDATA_DIR");
+        std::string afwdata_dir;
+        try {
+            afwdata_dir = lsst::utils::eups::productDir("afwdata");
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cout << "Warning: test skipped because afwdata is not setup" << std::endl;
+            return;
+        }
         for (vector<string>::iterator imgfile = imgfiles.begin(); imgfile != imgfiles.end(); ++imgfile) {
             
             string img_path = afwdata_dir + "/Statistics/" + *imgfile;

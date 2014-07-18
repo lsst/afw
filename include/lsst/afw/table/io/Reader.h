@@ -47,7 +47,7 @@ public:
 #endif
         if (!table) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::RuntimeErrorException,
+                lsst::pex::exceptions::RuntimeError,
                 "Container's table type is not compatible with on-disk table type."
             );
         }

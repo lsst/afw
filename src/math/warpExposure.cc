@@ -82,21 +82,21 @@ namespace afwMath = lsst::afw::math;
 static inline void checkWarpingKernelParameter(const afwMath::SeparableKernel *p, unsigned int ind, double value)
 {
     if (ind > 1) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ind argument in WarpingKernel::setKernelParameter()");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad ind argument in WarpingKernel::setKernelParameter()");
     }
     int ctr = p->getCtr()[ind];
     int size = p->getDimensions()[ind];
 
     if (ctr == (size-1)/2) {
         if (value < -1e-6 || value > 1+1e-6) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad coordinate in WarpingKernel::setKernelParameter()");
         }
     } else if (ctr == (size+1)/2) {
         if (value < -1-1e-6 || value > 1e-6) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad coordinate in WarpingKernel::setKernelParameter()");
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad coordinate in WarpingKernel::setKernelParameter()");
         }
     } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "bad ctr value in WarpingKernel::setKernelParameter()");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "bad ctr value in WarpingKernel::setKernelParameter()");
     }
 }
 
@@ -208,7 +208,7 @@ boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::stri
     } else if (name == "nearest") {
         return KernelPtr(new NearestWarpingKernel());
     } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
             "unknown warping kernel name: \"" + name + "\"");
     }
 }
@@ -280,7 +280,7 @@ void afwMath::WarpingControl::_testWarpingKernels(
         maskWarpingKernel.getDimensions()
     );
     if (!kernelBBox.contains(maskKernelBBox)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
             "warping kernel is smaller than mask warping kernel");
     }
 }
@@ -292,7 +292,7 @@ void afwMath::WarpingControl::_testDevicePreference(
     CONST_PTR(LanczosWarpingKernel) const lanczosKernelPtr =
         boost::dynamic_pointer_cast<const LanczosWarpingKernel>(warpingKernelPtr);
     if (devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
             "devicePreference = USE_GPU, but warping kernel not Lanczos");
     }
 }
@@ -308,10 +308,10 @@ int afwMath::warpExposure(
     )
 {
     if (!destExposure.hasWcs()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "destExposure has no Wcs");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destExposure has no Wcs");
     }
     if (!srcExposure.hasWcs()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "srcExposure has no Wcs");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "srcExposure has no Wcs");
     }
     typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
     boost::shared_ptr<afwImage::Calib> calibCopy(new afwImage::Calib(*srcExposure.getCalib()));
@@ -332,10 +332,10 @@ int afwMath::warpExposure(
     )
 {
     if (!destExposure.hasWcs()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "destExposure has no Wcs");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "destExposure has no Wcs");
     }
     if (!srcExposure.hasWcs()) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, "srcExposure has no Wcs");
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, "srcExposure has no Wcs");
     }
     typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
     boost::shared_ptr<afwImage::Calib> calibCopy(new afwImage::Calib(*srcExposure.getCalib()));
@@ -385,7 +385,7 @@ namespace {
         typename DestImageT::SinglePixel padValue   ///< value to use for undefined pixels
     ) {
         if (afwMath::details::isSameObject(destImage, srcImage)) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                 "destImage is srcImage; cannot warp in place");
         }
         if (destImage.getBBox(afwImage::LOCAL).isEmpty()) {
@@ -414,7 +414,7 @@ namespace {
         if (lsst::afw::gpu::isGpuEnabled()) {
             if(!lanczosKernelPtr) {
                 if (devPref == lsst::afw::gpu::USE_GPU) {
-                    throw LSST_EXCEPT(pexExcept::InvalidParameterException, "Gpu can process only Lanczos kernels");
+                    throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Gpu can process only Lanczos kernels");
                 }
             } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
                 PTR(afwMath::SeparableKernel) maskWarpingKernelPtr = control.getWarpingKernel();
@@ -428,9 +428,9 @@ namespace {
                                                              computeSrcPos,  interpLength, padValue, false);
                         if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
                     }
-                    catch(lsst::afw::gpu::GpuMemoryException) { }
-                    catch(pexExcept::MemoryException) { }
-                    catch(lsst::afw::gpu::GpuRuntimeErrorException) { }
+                    catch(lsst::afw::gpu::GpuMemoryError) { }
+                    catch(pexExcept::MemoryError) { }
+                    catch(lsst::afw::gpu::GpuRuntimeError) { }
                 } else if (devPref != lsst::afw::gpu::USE_CPU) {
                     std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
                                            afwMath::detail::warpImageGPU(destImage, srcImage, 
@@ -439,7 +439,7 @@ namespace {
                                                                       devPref == lsst::afw::gpu::USE_GPU);
                     if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
                     if (devPref == lsst::afw::gpu::USE_GPU) {
-                        throw LSST_EXCEPT(pexExcept::RuntimeErrorException,
+                        throw LSST_EXCEPT(pexExcept::RuntimeError,
                                           "Gpu cannot perform this warp (kernel too big?)");
                     }
                 }
@@ -693,7 +693,7 @@ int afwMath::warpCenteredImage(
        ) {
         std::ostringstream errStream;
         errStream << "src and dest images must have same size and xy0.";
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException, errStream.str());
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, errStream.str());
     }
 
     // set the xy0 coords to 0,0 to make life easier

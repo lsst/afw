@@ -747,6 +747,142 @@ class FootprintTestCase(unittest.TestCase):
         self.assertTrue(numpy.all(dm[4, :3] == 0))
         self.assertTrue(numpy.all(dm[4, 7:] == 0))
 
+
+    def testMergeFootprints(self):
+        f1 = self.foot
+        f2 = afwDetect.Footprint()
+
+        f1.addSpan(10, 10, 20)
+        f1.addSpan(10, 30, 40)
+        f1.addSpan(10, 50, 60)
+
+        f1.addSpan(11, 30, 50)
+        f1.addSpan(12, 30, 50)
+
+        f1.addSpan(13, 10, 20)
+        f1.addSpan(13, 30, 40)
+        f1.addSpan(13, 50, 60)
+
+        f1.addSpan(15, 10,20)
+        f1.addSpan(15, 31,40)
+        f1.addSpan(15, 51,60)
+
+        f2.addSpan(8,  10, 20)
+        f2.addSpan(9,  20, 30)
+        f2.addSpan(10,  0,  9)
+        f2.addSpan(10, 35, 65)
+        f2.addSpan(10, 70, 80)
+
+        f2.addSpan(13, 49, 54)
+        f2.addSpan(14, 10, 30)
+
+        f2.addSpan(15, 21,30)
+        f2.addSpan(15, 41,50)
+        f2.addSpan(15, 61,70)
+
+        f1.normalize()
+        f2.normalize()
+
+        fA = afwDetect.mergeFootprints(f1, f2)
+        fB = afwDetect.mergeFootprints(f2, f1)
+
+        ims = []
+        for i,f in enumerate([f1,f2,fA,fB]):
+            im1 = afwImage.ImageU(100, 100)
+            im1.set(0)
+            imbb = im1.getBBox(afwImage.PARENT)
+            f.setRegion(imbb)
+            f.insertIntoImage(im1, 1)
+            ims.append(im1)
+
+        for i,merged in enumerate([ims[2],ims[3]]):
+            m = merged.getArray()
+            a1 = ims[0].getArray()
+            a2 = ims[1].getArray()
+            # Slightly looser tests to start...
+            # Every pixel in f1 is in f[AB]
+            self.assertTrue(numpy.all(m.flat[numpy.flatnonzero(a1)] == 1))
+            # Every pixel in f2 is in f[AB]
+            self.assertTrue(numpy.all(m.flat[numpy.flatnonzero(a2)] == 1))
+            # merged == a1 | a2.
+            self.assertTrue(numpy.all(m == numpy.maximum(a1, a2)))
+
+        if False:
+            import matplotlib
+            matplotlib.use('Agg')
+            import pylab as plt
+            plt.clf()
+            for i,im1 in enumerate(ims):
+                plt.subplot(4,1, i+1)
+                plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
+                plt.axis([0, 100, 0, 20])
+            plt.savefig('merge2.png')
+
+
+    def testClipToNonzero(self):
+
+        # create a circular footprint
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
+                                          afwGeom.Point2D(9,15))
+        bb = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30))
+        foot = afwDetect.Footprint(ellipse, bb)
+
+        a0 = foot.getArea()
+
+        plots = False
+        if plots:
+            import matplotlib
+            matplotlib.use('Agg')
+            import pylab as plt
+            
+            plt.clf()
+            img = afwImage.ImageU(bb)
+            foot.insertIntoImage(img, 1)
+            ima = dict(interpolation='nearest', origin='lower', cmap='gray')
+            plt.imshow(img.getArray(), **ima)
+            plt.savefig('clipnz1.png')
+
+        source = afwImage.ImageF(bb)
+        source.getArray()[:,:] = 1.
+        source.getArray()[:,0:10] = 0.
+
+        foot.clipToNonzero(source)
+        foot.normalize()
+        a1 = foot.getArea()
+        self.assertLess(a1, a0)
+
+        img = afwImage.ImageU(bb)
+        foot.insertIntoImage(img, 1)
+        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+
+        if plots:
+            plt.clf()
+            plt.subplot(1,2,1)
+            plt.imshow(source.getArray(), **ima)
+            plt.subplot(1,2,2)
+            plt.imshow(img.getArray(), **ima)
+            plt.savefig('clipnz2.png')
+
+        source.getArray()[:12,:] = 0.
+        foot.clipToNonzero(source)
+        foot.normalize()
+
+        a2 = foot.getArea()
+        self.assertLess(a2, a1)
+
+        img = afwImage.ImageU(bb)
+        foot.insertIntoImage(img, 1)
+        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+
+        if plots:
+            plt.clf()
+            plt.subplot(1,2,1)
+            plt.imshow(source.getArray(), **ima)
+            plt.subplot(1,2,2)
+            img = afwImage.ImageU(bb)
+            foot.insertIntoImage(img, 1)
+            plt.imshow(img.getArray(), **ima)
+            plt.savefig('clipnz3.png')
         
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

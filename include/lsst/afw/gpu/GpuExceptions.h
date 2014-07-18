@@ -40,8 +40,8 @@ namespace lsst {
 namespace afw {
 namespace gpu {
 
-LSST_EXCEPTION_TYPE(GpuMemoryException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::gpu::GpuMemoryException)
-LSST_EXCEPTION_TYPE(GpuRuntimeErrorException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::gpu::GpuRuntimeErrorException)
+LSST_EXCEPTION_TYPE(GpuMemoryError, lsst::pex::exceptions::RuntimeError, lsst::afw::gpu::GpuMemoryError)
+LSST_EXCEPTION_TYPE(GpuRuntimeError, lsst::pex::exceptions::RuntimeError, lsst::afw::gpu::GpuRuntimeError)
 
 }
 }

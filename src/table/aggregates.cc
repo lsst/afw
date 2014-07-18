@@ -69,14 +69,14 @@ CovarianceMatrixKey<T,N>::CovarianceMatrixKey(
     if (N != Eigen::Dynamic) {
         LSST_THROW_IF_NE(
             sigma.size(), std::size_t(N),
-            pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthError,
             "Size of sigma array (%d) does not match template argument (%d)"
         );
     }
     if (!cov.empty()) {
         LSST_THROW_IF_NE(
             cov.size(), sigma.size()*(sigma.size() - 1)/2,
-            pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthError,
             "Size of cov array (%d) is does not match with size inferred from sigma array (%d)"
         );
         bool haveCov = false;
@@ -100,11 +100,11 @@ CovarianceMatrixKey<T,N>::CovarianceMatrixKey(SubSchema const & s, NameArray con
             try {
                 _cov[k] = s[names[i] + "_" + names[j] + "_Cov"];
                 haveCov = true;
-            } catch (pex::exceptions::NotFoundException &) {
+            } catch (pex::exceptions::NotFoundError &) {
                 try {
                     _cov[k] = s[names[j] + "_" + names[i] + "_Cov"];
                     haveCov = true;
-                } catch (pex::exceptions::NotFoundException &) {}
+                } catch (pex::exceptions::NotFoundError &) {}
             }
         }
     }

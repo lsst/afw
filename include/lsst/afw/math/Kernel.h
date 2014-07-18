@@ -158,9 +158,9 @@ using boost::serialization::make_nvp;
          * @brief Construct a spatially invariant Kernel or a spatially varying Kernel with one spatial function
          * that is duplicated as needed.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if a spatial function is specified
+         * @throw lsst::pex::exceptions::InvalidParameterError if a spatial function is specified
          * and the kernel has no parameters.
-         * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
+         * @throw lsst::pex::exceptions::InvalidParameterError if a width or height < 1
          */
         explicit Kernel(
             int width,                      ///< number of columns
@@ -175,7 +175,7 @@ using boost::serialization::make_nvp;
          *
          * Note: if the list of spatial functions is empty then the kernel is not spatially varying.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if a width or height < 1
+         * @throw lsst::pex::exceptions::InvalidParameterError if a width or height < 1
          */
         explicit Kernel(
             int width,  ///< number of columns
@@ -208,8 +208,8 @@ using boost::serialization::make_nvp;
          *
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if the image is the wrong size
-         * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+         * @throw lsst::pex::exceptions::InvalidParameterError if the image is the wrong size
+         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
          * exactly 0
          */
         double computeImage(
@@ -303,8 +303,8 @@ using boost::serialization::make_nvp;
          * @return a shared pointer to a spatial function. The function is a deep copy, so setting its parameters
          * has no effect on the kernel.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if kernel not spatially varying
-         * @throw lsst::pex::exceptions::InvalidParameterException if index out of range
+         * @throw lsst::pex::exceptions::InvalidParameterError if kernel not spatially varying
+         * @throw lsst::pex::exceptions::InvalidParameterError if index out of range
          */
         SpatialFunctionPtr getSpatialFunction(
             unsigned int index  ///< index of desired spatial function;
@@ -350,7 +350,7 @@ using boost::serialization::make_nvp;
          *
          * @return the bbox shrunk by the kernel.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if the resulting box would have
+         * @throw lsst::pex::exceptions::InvalidParameterError if the resulting box would have
          * dimension < 1 in either axis
          */
         lsst::afw::geom::Box2I shrinkBBox(lsst::afw::geom::Box2I const &bbox) const;
@@ -406,17 +406,17 @@ using boost::serialization::make_nvp;
         /**
          * @brief Set the kernel parameters of a spatially invariant kernel.
          *
-         * @throw lsst::pex::exceptions::RuntimeErrorException if the kernel has a spatial function
-         * @throw lsst::pex::exceptions::InvalidParameterException if the params vector is the wrong length
+         * @throw lsst::pex::exceptions::RuntimeError if the kernel has a spatial function
+         * @throw lsst::pex::exceptions::InvalidParameterError if the params vector is the wrong length
          */
         inline void setKernelParameters(std::vector<double> const &params) {
             if (this->isSpatiallyVarying()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+                throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                     "Kernel is spatially varying");
             }
             const unsigned int nParams = this->getNKernelParameters();
             if (nParams != params.size()) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                   (boost::format("Number of parameters is wrong, saw %d expected %d") %
                                    nParams % params.size()).str());
             }
@@ -441,7 +441,7 @@ using boost::serialization::make_nvp;
          *
          * Params is indexed as [kernel parameter][spatial parameter]
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if params is the wrong shape
+         * @throw lsst::pex::exceptions::InvalidParameterError if params is the wrong shape
          *  (if this exception is thrown then no parameters are changed)
          */
         void setSpatialParameters(const std::vector<std::vector<double> > params);
@@ -493,7 +493,7 @@ using boost::serialization::make_nvp;
          * This function is marked "const", despite modifying unimportant internals,
          * so that computeImage can be const.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException always (unless subclassed)
+         * @throw lsst::pex::exceptions::InvalidParameterError always (unless subclassed)
          */
         virtual void setKernelParameter(unsigned int ind, double value) const;
 
@@ -655,7 +655,7 @@ using boost::serialization::make_nvp;
          * @brief Construct a spatially varying AnalyticKernel, where the spatial model
          * is described by a list of functions (one per analytic function parameter).
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException
+         * @throw lsst::pex::exceptions::InvalidParameterError
          *        if the length of spatialFunctionList != # kernel function parameters.
          */
         explicit AnalyticKernel(
@@ -683,8 +683,8 @@ using boost::serialization::make_nvp;
          *
          * @note computeNewImage has been retired; it doesn't need to be a member
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if the image is the wrong size
-         * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+         * @throw lsst::pex::exceptions::InvalidParameterError if the image is the wrong size
+         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
          * exactly 0
          */
         double computeImage(
@@ -753,7 +753,7 @@ using boost::serialization::make_nvp;
         /**
          * @brief Construct a spatially invariant DeltaFunctionKernel
          *
-         * @throw pexExcept::InvalidParameterException if active pixel is off the kernel
+         * @throw pexExcept::InvalidParameterError if active pixel is off the kernel
          */
         explicit DeltaFunctionKernel(
             int width,              ///< kernel size (columns)
@@ -845,7 +845,7 @@ using boost::serialization::make_nvp;
          * @brief Construct a spatially varying LinearCombinationKernel, where the spatial model
          * is described by a list of functions (one per basis kernel).
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if the length of spatialFunctionList != # kernels
+         * @throw lsst::pex::exceptions::InvalidParameterError if the length of spatialFunctionList != # kernels
          */
         explicit LinearCombinationKernel(
             KernelList const &kernelList,    ///< list of (shared pointers to const) kernels
@@ -877,7 +877,7 @@ using boost::serialization::make_nvp;
         /**
          * @brief Check that all kernels have the same size and center and that none are spatially varying
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if the check fails
+         * @throw lsst::pex::exceptions::InvalidParameterError if the check fails
          */
         void checkKernelList(const KernelList &kernelList) const;
         
@@ -1012,7 +1012,7 @@ using boost::serialization::make_nvp;
         /**
          * @brief Construct a spatially varying SeparableKernel
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException
+         * @throw lsst::pex::exceptions::InvalidParameterError
          *  if the length of spatialFunctionList != # kernel function parameters.
          */
         explicit SeparableKernel(
@@ -1034,8 +1034,8 @@ using boost::serialization::make_nvp;
          *
          * @return the kernel sum (1.0 if doNormalize true)
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if colList or rowList is the wrong size
-         * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+         * @throw lsst::pex::exceptions::InvalidParameterError if colList or rowList is the wrong size
+         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
          * exactly 0
          */
         double computeVectors(
@@ -1101,7 +1101,7 @@ using boost::serialization::make_nvp;
          *
          * Warning: the length of colList and rowList are not verified!
          *
-         * @throw lsst::pex::exceptions::OverflowErrorException if doNormalize is true and the kernel sum is
+         * @throw lsst::pex::exceptions::OverflowError if doNormalize is true and the kernel sum is
          * exactly 0
          */
         double basicComputeVectors(

@@ -37,7 +37,6 @@ import unittest
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 
@@ -115,7 +114,7 @@ class SpatialCellTestCase(unittest.TestCase):
             self.cell.getCandidateById(-1) # non-existent ID
 
         self.assertEqual(self.cell.getCandidateById(-1, True), None)
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundError, tst)
 
     def testSetIteratorBad(self):
         """Setting a candidate BAD shouldn't stop us seeing the rest of the candidates"""
@@ -182,7 +181,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
         def tst():
             afwMath.SpatialCellSet(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(500, 500)), 0, 3)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthError, tst)
 
     def testInsertCandidate(self):
         """Insert candidates into the SpatialCellSet"""
@@ -191,7 +190,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         def tst():
             self.cellSet.insertCandidate(testLib.TestCandidate(501, 501, 100))      # Doesn't fit
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.OutOfRangeError, tst)
         #
         # OK, the SpatialCellList is populated
         #
@@ -209,7 +208,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         def tst2():
             self.cellSet.getCellList()[2].begin().__deref__()
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst2)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundError, tst2)
 
         self.assertFalse(self.cellSet.getCellList()[5].empty())
 
@@ -240,7 +239,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
             self.cellSet.getCandidateById(-1) # non-existent ID
             
         self.assertEqual(self.cellSet.getCandidateById(-1, True), None)
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundException, tst)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.NotFoundError, tst)
 
     def testSpatialCell(self):
         dx, dy, sx, sy = 100, 100, 50, 50

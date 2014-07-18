@@ -80,7 +80,7 @@ geom::Box2I::Box2I(Point2I const & minimum, Extent2I const & dimensions, bool in
     }
     if (!isEmpty() && any(getMin().gt(getMax()))) {
         throw LSST_EXCEPT(
-            pex::exceptions::OverflowErrorException,
+            pex::exceptions::OverflowError,
             "Box dimensions too large; integer overflow detected."
         );
     }
@@ -109,7 +109,7 @@ geom::Box2I::Box2I(Box2D const & other, EdgeHandlingEnum edgeHandling) : _minimu
     if (!utils::isfinite(other.getMinX()) || !utils::isfinite(other.getMinY())
         || !utils::isfinite(other.getMaxX()) || !utils::isfinite(other.getMaxY())) {
         throw LSST_EXCEPT(
-            pex::exceptions::InvalidParameterException,
+            pex::exceptions::InvalidParameterError,
             "Cannot convert non-finite Box2D to Box2I"
         );
     }

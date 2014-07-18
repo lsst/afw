@@ -71,7 +71,7 @@ public:
         }
         if (iter == _catalogs.end()) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "All catalogs passed to saveCatalog must be created by makeCatalog"
             );
         }
@@ -154,7 +154,7 @@ BaseCatalog const & OutputArchive::getCatalog(int n) const {
     if (n == 0) return _impl->_index;
     if (std::size_t(n) > _impl->_catalogs.size() || n < 0) {
         throw LSST_EXCEPT(
-            pex::exceptions::LengthErrorException,
+            pex::exceptions::LengthError,
             (boost::format("Catalog number %d is out of range [0,%d]") % n % _impl->_catalogs.size()).str()
         );
     }

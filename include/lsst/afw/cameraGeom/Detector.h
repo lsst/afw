@@ -70,7 +70,7 @@ public:
      * * The keys for the detector-specific coordinate systems in the transform registry
      *   must include the detector name (even though this is redundant).
      *
-     * @throw lsst::pex::exceptions::InvalidParameterException if:
+     * @throw lsst::pex::exceptions::InvalidParameterError if:
      * - any amplifier names are not unique
      * - any CamerSys in transformMap has a detector name other than "" or this detector's name
      */
@@ -143,7 +143,7 @@ public:
     /**
      * Get the amplifier specified by name
      *
-     * @throw lst::pex::exceptions::InvalidParameterException if no such amplifier
+     * @throw lst::pex::exceptions::InvalidParameterError if no such amplifier
      */
     lsst::afw::table::AmpInfoRecord const & operator[](std::string const &name) const;
 
@@ -191,7 +191,7 @@ public:
     /**
      * Convert a CameraPoint from one coordinate system to another
      *
-     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
+     * @throw pexExcept::InvalidParameterError if from or to coordinate system is unknown
      */
     CameraPoint transform(
         CameraPoint const &fromCameraPoint, ///< camera point to transform
@@ -207,7 +207,7 @@ public:
      *
      * The coordinate system prefix is filled in with this detector's name
      *
-     * @throw pexExcept::InvalidParameterException if from or to coordinate system is unknown
+     * @throw pexExcept::InvalidParameterError if from or to coordinate system is unknown
      */
     CameraPoint transform(
         CameraPoint const &fromCameraPoint, ///< camera point to transform
@@ -224,7 +224,7 @@ private:
      * Set _ampNameIterMap from _ampInfoCatalog
      * Check detector name in the CoordSys in the transform registry
      *
-     * @throw lsst::pex::exceptions::InvalidParameterException if:
+     * @throw lsst::pex::exceptions::InvalidParameterError if:
      * - any amplifier names are not unique
      * - any CamerSys in transformMap has a detector name other than "" or this detector's name
      */

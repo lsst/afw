@@ -138,7 +138,7 @@ public:
         _info(new ExposureInfo(*rhs.getInfo(), deep))
     {
         if (not deep) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "Exposure's converting copy constructor must make a deep copy");
         }
     }

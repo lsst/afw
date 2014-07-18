@@ -81,7 +81,7 @@ double afwMath::FixedKernel::doComputeImage(
     double imSum = this->_sum;
     if (doNormalize) {
         if (imSum == 0) {
-            throw LSST_EXCEPT(pexExcept::OverflowErrorException, "Cannot normalize; kernel sum is 0");
+            throw LSST_EXCEPT(pexExcept::OverflowError, "Cannot normalize; kernel sum is 0");
         }
         multFactor = 1.0/static_cast<double>(this->_sum);
         imSum = 1.0;

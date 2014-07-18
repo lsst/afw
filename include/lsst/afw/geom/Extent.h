@@ -49,7 +49,7 @@ double computeExtentNorm(Extent<double,N> const & s) {
 template <int N>
 int computeExtentNorm(Extent<int,N> const & s) {
     throw LSST_EXCEPT(
-        pex::exceptions::LogicErrorException,
+        pex::exceptions::LogicError,
         "Cannot compute norm of integer extent"
     );
 #if 1                                   // make compilers happy in non-void function

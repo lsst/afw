@@ -182,14 +182,14 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                                       )
                 {
                     if(x.size() != y.size()) {
-                        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                           (boost::format("TautSpline: x and y must have the same size; saw %d %d\n")
                                            % x.size() % y.size()).str());
                     }
 
                     int const ntau = x.size();		/* size of tau and gtau, must be >= 2*/
                     if(ntau < 2) {
-                        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                           (boost::format("TautSpline: ntau = %d, should be >= 2\n")
                                            % ntau).str());
                     }
@@ -228,7 +228,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                         for (int i = 1; i < nknot;i++) {
                             _knots[i] = tau[i];
                             if(tau[i - 1] >= tau[i]) {
-                                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                                   (boost::format("point %d and the next, %f %f, are out of order")
                                                    % (i - 1)  % tau[i - 1] % tau[i]).str());
                             }
@@ -287,7 +287,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                     for (int i = 0; i < ntau - 1; i++) {
                         s[0][i] = tau[i + 1] - tau[i];
                         if(s[0][i] <= 0.) {
-                            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                               (boost::format("point %d and the next, %f %f, are out of order")
                                                % i % tau[i] % tau[i+1]).str());
                         }

@@ -50,14 +50,14 @@ Calib::Calib() : _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0) 
 /**
  * ctor from a vector of Calibs
  *
- * \note All the input calibs must have the same zeropoint; throw InvalidParameterException if this isn't true
+ * \note All the input calibs must have the same zeropoint; throw InvalidParameterError if this isn't true
  */
 Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to be merged
             ) :
     _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0)
 {
     if (calibs.empty()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "You must provide at least one input Calib");
     }
 
@@ -70,7 +70,7 @@ Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to b
 
         if (::fabs(fluxMag00 - calib._fluxMag0) > std::numeric_limits<double>::epsilon() ||
             ::fabs(fluxMag0Sigma0 - calib._fluxMag0Sigma) > std::numeric_limits<double>::epsilon()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               (boost::format("You may only combine calibs with the same fluxMag0: "
                                              "%g +- %g v %g +- %g")
                                % calib.getFluxMag0().first % calib.getFluxMag0().second
@@ -106,7 +106,7 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
     if (metadata->exists(key)) {
         try {
             exptime = metadata->getAsDouble(key);
-        } catch (daf::base::TypeMismatchException & err) {
+        } catch (lsst::pex::exceptions::TypeError & err) {
             std::string exptimeStr = metadata->getAsString(key);
             exptime = boost::lexical_cast<double>(exptimeStr);
         }
@@ -279,7 +279,7 @@ std::pair<double, double> Calib::getFluxMag0() const
 namespace {
 inline void checkNegativeFlux0(double fluxMag0) {
     if (fluxMag0 <= 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
                           (boost::format("Flux of 0-mag object must be >= 0: saw %g") % fluxMag0).str());
     }
 }
@@ -287,7 +287,7 @@ inline bool isNegativeFlux(double flux, bool doThrow)
 {
     if (flux <= 0) {
         if (doThrow) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
                               (boost::format("Flux must be >= 0: saw %g") % flux).str());
         }
         return true;
@@ -364,7 +364,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getFlux(
 ) const {
     checkNegativeFlux0(_fluxMag0);
     if (mag.size() != magErr.size()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Size of mag (%d) and magErr (%d) don't match") % 
                            mag.size() % magErr.size()).str());
     }
@@ -431,7 +431,7 @@ ndarray::Array<double,1> Calib::getMagnitude(ndarray::Array<double const,1> cons
         *magIter = convertToMag(_fluxMag0, *fluxIter);
     }
     if (nonPositive && Calib::getThrowOnNegativeFlux()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
                           (boost::format("Flux must be >= 0: %d non-positive seen") % nonPositive).str());
     }
     return mag;
@@ -443,7 +443,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitu
 ) const {
     checkNegativeFlux0(_fluxMag0);
     if (flux.size() != fluxErr.size()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Size of flux (%d) and fluxErr (%d) don't match") % 
                            flux.size() % fluxErr.size()).str());
     }
@@ -470,7 +470,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitu
         *magErrIter = df;
     }
     if (nonPositive && Calib::getThrowOnNegativeFlux()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::DomainErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
                           (boost::format("Flux must be >= 0: %d non-positive seen") % nonPositive).str());
     }
     return std::make_pair(mag, magErr);

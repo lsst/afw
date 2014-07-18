@@ -26,7 +26,7 @@ class CatalogVector;
 /**
  *  @brief An exception thrown when problems occur during persistence.
  */
-LSST_EXCEPTION_TYPE(PersistenceError, lsst::pex::exceptions::IoErrorException,
+LSST_EXCEPTION_TYPE(PersistenceError, lsst::pex::exceptions::IoError,
                     lsst::afw::table::io::PersistenceError)
 
 /**
@@ -68,7 +68,7 @@ LSST_EXCEPTION_TYPE(MalformedArchiveError, lsst::afw::table::io::PersistenceErro
  *  from Persistable.
  *
  *  Persistable has no pure virtual member functions, and instead contains a default implementation
- *  that throws LogicErrorException when the user attempts to save an object for which persistence
+ *  that throws LogicError when the user attempts to save an object for which persistence
  *  has not actually been implemented.
  */
 class Persistable {

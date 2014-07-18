@@ -180,7 +180,7 @@ protected:
  *
  * @warning reverseTransform will fail if the polynomial is too far from linear (ticket #3152)
  *
- * @throw lsst::pex::exceptions::InvalidParameterException if coeffs.size() > 0 and any of
+ * @throw lsst::pex::exceptions::InvalidParameterError if coeffs.size() > 0 and any of
  * the following are true: coeffs.size() == 1, coeffs[0] != 0 or coeffs[1] == 0
  */
 class RadialXYTransform : public XYTransform

@@ -170,7 +170,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
     CONST_PTR(SourceTable) table = boost::dynamic_pointer_cast<SourceTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot use a SourceFitsWriter on a non-Source table."
         );
     }
@@ -442,7 +442,7 @@ void SourceRecord::_assign(BaseRecord const & other) {
 PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const & idFactory) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             "Schema for Source must contain at least the keys defined by getMinimalSchema()."
         );
     }

@@ -24,16 +24,13 @@
 #include <sstream>
 #include <string>
 
-#include "lsst/daf/base.h"
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/math/FunctionLibrary.h"
-#include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/KernelFunctions.h"
+#include "lsst/afw/math.h"
+#include "lsst/afw/image.h"
 
-using namespace std;
-const std::string outFile("scOut");
+const std::string outImagePath("scOut.fits");
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
@@ -47,53 +44,41 @@ int main(int argc, char **argv) {
 
     const double DefSigma = 2.0;
     
-    std::string mimg;
+    std::string inImagePath;
     if (argc < 2) {
-        std::string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "Usage: simpleConvolve fitsFile [sigma]" << std::endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
+        try {
+            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/small.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cerr << "Usage: simpleConvolve [fitsFile [sigma]]" << std::endl;
+            std::cerr << "fitsFile is the path to a masked image" << std::endl;
             std::cerr << "sigma (default " << DefSigma << ") is the width of the gaussian kernel, in pixels"
                       << std::endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
-            std::cerr << "Is afwdata set up?\n" << std::endl;
+            std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
             exit(EXIT_FAILURE);
-        } else {
-            mimg = afwdata + "/small_MI";
-            std::cerr << "Using " << mimg << std::endl;
         }
     } else {
-        mimg = std::string(argv[1]);
+        inImagePath = std::string(argv[1]);
+    }
+    std::cerr << "Convolving masked image " << inImagePath << std::endl;
+    
+    double sigma = DefSigma;
+    if (argc > 2) {
+        std::istringstream(argv[2]) >> sigma;
     }
     
-    { // block in which to allocate and deallocate memory
+    // read in fits file
+    afwImage::MaskedImage<Pixel> mImage(inImagePath);
     
-        double sigma = DefSigma;
-        if (argc > 2) {
-            std::istringstream(argv[2]) >> sigma;
-        }
-        
-        // read in fits file
-        afwImage::MaskedImage<Pixel> mImage(mimg);
-        
-        // construct kernel
-        afwMath::GaussianFunction2<Pixel> gaussFunc(sigma, sigma, 0);
-        afwMath::AnalyticKernel kernel(kernelCols, kernelRows, gaussFunc);
-    
-        // convolve
-        afwImage::MaskedImage<Pixel> resMaskedImage(mImage.getDimensions());
-        afwMath::convolve(resMaskedImage, mImage, kernel, true);
-    
-        // write results
-        resMaskedImage.writeFits(outFile);
-    }
+    // construct kernel
+    afwMath::GaussianFunction2<Pixel> gaussFunc(sigma, sigma, 0);
+    afwMath::AnalyticKernel kernel(kernelCols, kernelRows, gaussFunc);
 
-     //
-     // Check for memory leaks
-     //
-     if (lsst::daf::base::Citizen::census(0) != 0) {
-         std::cerr << "Leaked memory blocks:" << std::endl;
-         lsst::daf::base::Citizen::census(std::cerr);
-     }
-    
+    // convolve
+    afwImage::MaskedImage<Pixel> resMaskedImage(mImage.getDimensions());
+    afwMath::convolve(resMaskedImage, mImage, kernel, true);
+
+    // write results
+    resMaskedImage.writeFits(outImagePath);
+    std::cerr << "Wrote convolved image " << outImagePath << std::endl;
 }

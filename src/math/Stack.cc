@@ -65,7 +65,7 @@ int bitcount(unsigned int x)
  */
 void checkOnlyOneFlag(unsigned int flags) {
     if (bitcount(flags & ~afwMath::ERRORS) != 1) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           "Requested more than one type of statistic to make the image stack.");
                           
     }
@@ -81,11 +81,11 @@ void checkOnlyOneFlag(unsigned int flags) {
                                )
     {
         if (objects.size() == 0) {
-            throw LSST_EXCEPT(pexExcept::LengthErrorException, "Please specify at least one object to stack");
+            throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one object to stack");
         }
 
         if (!wvector.empty() && wvector.size() != objects.size() ) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                               str(boost::format("Weight vector has different length "
                                                 "from number of objects to be stacked: %d v. %d")
                                   % wvector.size() % objects.size()));
@@ -98,7 +98,7 @@ void checkOnlyOneFlag(unsigned int flags) {
         afwGeom::Extent2I const& dim = out.getDimensions();
         for (unsigned int i = 0; i < images.size(); ++i) {
             if (images[i]->getDimensions() != dim) {
-                throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+                throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                                   (boost::format("Bad dimensions for image %d: %dx%d vs %dx%d") %
                                    i % images[i]->getDimensions().getX() % images[i]->getDimensions().getY() %
                                    dim.getX() % dim.getY()).str());
@@ -218,7 +218,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
                                                               )
 {
     if (images.size() == 0) {
-        throw LSST_EXCEPT(pexExcept::LengthErrorException, "Please specify at least one image to stack");
+        throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
     typename afwImage::MaskedImage<PixelT>::Ptr out(
         new afwImage::MaskedImage<PixelT>(images[0]->getDimensions()));
@@ -315,7 +315,7 @@ typename afwImage::Image<PixelT>::Ptr afwMath::statisticsStack(
                                                         )
 {
     if (images.size() == 0) {
-        throw LSST_EXCEPT(pexExcept::LengthErrorException, "Please specify at least one image to stack");
+        throw LSST_EXCEPT(pexExcept::LengthError, "Please specify at least one image to stack");
     }
     typename afwImage::Image<PixelT>::Ptr out(new afwImage::Image<PixelT>(images[0]->getDimensions()));
     statisticsStack(*out, images, flags, sctrl, wvector);
@@ -473,7 +473,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
                                                                   stat.getError()*stat.getError());
         }
     } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           "Can only run statisticsStack in x or y for single image.");
     }
 
@@ -521,7 +521,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
                                                                   stat.getError()*stat.getError());
         }
     } else {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           "Can only run statisticsStack in x or y for single image.");
     }
 

@@ -165,7 +165,7 @@ void afwForm::KernelFormatter::write(
     afwMath::Kernel const* kp =
         dynamic_cast<afwMath::Kernel const*>(persistable);
     if (kp == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Kernel");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Kernel");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("KernelFormatter write BoostStorage");
@@ -183,7 +183,7 @@ void afwForm::KernelFormatter::write(
         execTrace("KernelFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Kernel");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
 }
 
 dafBase::Persistable* afwForm::KernelFormatter::read(
@@ -206,13 +206,13 @@ dafBase::Persistable* afwForm::KernelFormatter::read(
         execTrace("KernelFormatter read end");
         return kp;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Kernel");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
 }
 
 void afwForm::KernelFormatter::update(dafBase::Persistable*,
                                    dafPersist::Storage::Ptr,
                                    dafBase::PropertySet::Ptr) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Kernel");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Kernel");
 }
 
 /** Serialize a Kernel to a Boost archive.  Handles text or XML
@@ -228,7 +228,7 @@ void afwForm::KernelFormatter::delegateSerialize(
     afwMath::Kernel* kp =
         dynamic_cast<afwMath::Kernel*>(persistable);
     if (kp == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Kernel");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Kernel");
     }
     ar & make_nvp("base",
                   boost::serialization::base_object<dafBase::Persistable>(*kp));

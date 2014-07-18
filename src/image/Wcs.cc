@@ -124,7 +124,7 @@ void Wcs::_initWcs()
         // and then tell it to do its internal magic.
         int status = wcsset(_wcsInfo);
         if (status != 0) {
-            throw LSST_EXCEPT(except::RuntimeErrorException,
+            throw LSST_EXCEPT(except::RuntimeError,
                               (boost::format("Failed to setup wcs structure with wcsset. Status %d: %s") %
                                status % wcs_errmsg[status] ).str());
         }
@@ -212,7 +212,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     int nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead());
     if (nCards <= 0) {
         string msg = "Could not parse FITS WCS: no header cards found";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
 
     // Scamp produces PVi_xx header cards that are inconsistent with WCS Paper 2
@@ -234,23 +234,23 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     //Check for CRPIX
     if( !access.toRead()->exists("CRPIX1") && !access.toRead()->exists("CRPIX1a")) {
         string msg = "Neither CRPIX1 not CRPIX1a found";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
 
     if( !access.toRead()->exists("CRPIX2") && !access.toRead()->exists("CRPIX2a")) {
         string msg = "Neither CRPIX2 not CRPIX2a found";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
 
     //And the same for CRVAL
     if( !access.toRead()->exists("CRVAL1") && !access.toRead()->exists("CRVAL1a")) {
         string msg = "Neither CRVAL1 not CRVAL1a found";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
 
     if( !access.toRead()->exists("CRVAL2") && !access.toRead()->exists("CRVAL2a")) {
         string msg = "Neither CRVAL2 not CRVAL2a found";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
     /*
      * According to Greisen and Calabretta (A&A 395, 1061–1075 (2002)) it's illegal to mix PCi_j and CDi_j
@@ -292,7 +292,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
     if (pihStatus != 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
+        throw LSST_EXCEPT(except::RuntimeError,
                           (boost::format("Could not parse FITS WCS: wcspih status = %d (%s)") %
                            pihStatus % wcs_errmsg[pihStatus]).str());
     }    
@@ -376,7 +376,7 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
     //Check CD is a valid size
     if( (CD.rows() != 2) || (CD.cols() != 2) ) {
         string msg = "CD is not a 2x2 matrix";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
 
     //Check that cunits are legitimate values
@@ -387,7 +387,7 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
     
     if (!isValid) {
         string msg =  "CUNITS1 must be one of {deg|arcmin|arcsec|mas}";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }        
 
     isValid = (cunits2 == "deg");
@@ -397,19 +397,19 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
     
     if (!isValid) {
         string msg =  "CUNITS2 must be one of {deg|arcmin|arcsec|mas}";
-        throw LSST_EXCEPT(except::InvalidParameterException, msg);
+        throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }        
 
     //Initialise the wcs struct
     _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
     if (_wcsInfo == NULL) {
-        throw LSST_EXCEPT(except::MemoryException, "Cannot allocate WCS info");
+        throw LSST_EXCEPT(except::MemoryError, "Cannot allocate WCS info");
     }
 
     _wcsInfo->flag = -1;
     int status = wcsini(true, 2, _wcsInfo);   //2 indicates a naxis==2, a two dimensional image
     if(status != 0) {
-        throw LSST_EXCEPT(except::MemoryException,
+        throw LSST_EXCEPT(except::MemoryError,
                           (boost::format("Failed to allocate memory with wcsini. Status %d: %s") %
                            status % wcs_errmsg[status] ).str());
     }
@@ -452,7 +452,7 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
     //Tell wcslib that we are need to set up internal values
     status=wcsset(_wcsInfo);
     if(status != 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
+        throw LSST_EXCEPT(except::RuntimeError,
                           (boost::format("Failed to setup wcs structure with wcsset. Status %d: %s") %
                            status % wcs_errmsg[status] ).str());
 
@@ -475,7 +475,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
         if (_wcsInfo == NULL) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException, "Cannot allocate WCS info");
+            throw LSST_EXCEPT(lsst::pex::exceptions::MemoryError, "Cannot allocate WCS info");
         }
 
         _wcsInfo->flag = -1;
@@ -484,7 +484,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
             int status = wcscopy(alloc, &rhs._wcsInfo[i], &_wcsInfo[i]);
             if (status != 0) {
                 wcsvfree(&i, &_wcsInfo);
-                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryException,
+                throw LSST_EXCEPT(lsst::pex::exceptions::MemoryError,
                                   (boost::format("Could not copy WCS: wcscopy status = %d : %s") %
                                    status % wcs_errmsg[status]).str());
             }
@@ -698,7 +698,7 @@ bool Wcs::isFlipped() const {
     double det = (_wcsInfo->cd[0] * _wcsInfo->cd[3]) - (_wcsInfo->cd[1] * _wcsInfo->cd[2]);
 
     if (det == 0) {
-        throw(LSST_EXCEPT(except::RuntimeErrorException, "Wcs CD matrix is singular"));
+        throw(LSST_EXCEPT(except::RuntimeError, "Wcs CD matrix is singular"));
     }
 
     return (det > 0);
@@ -771,14 +771,14 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
     int status = 0;
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status == 9) {
-        throw LSST_EXCEPT(except::DomainErrorException,
+        throw LSST_EXCEPT(except::DomainError,
             (boost::format("sky coordinates %s, %s degrees is not valid for this WCS")
              % sky1.asDegrees() % sky2.asDegrees()
              ).str()
         );
     }
     if (status > 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
+        throw LSST_EXCEPT(except::RuntimeError,
             (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
             status % sky1.asDegrees() % sky2.asDegrees() % wcs_errmsg[status]).str());
     }
@@ -837,7 +837,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
      */
     status = wcss2p(_wcsInfo, 1, 2, skyTmp, &phi, &theta, imgcrd, pixTmp, stat);
     if (status > 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
+        throw LSST_EXCEPT(except::RuntimeError,
             (boost::format("Error: wcslib returned a status code of %d at sky %s, %s deg: %s") %
             status % skyTmp[0] % skyTmp[1] % wcs_errmsg[status]).str());
     }
@@ -868,7 +868,7 @@ Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) cons
     int status = 0;
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, sky, &status);
     if (status > 0) {
-        throw LSST_EXCEPT(except::RuntimeErrorException,
+        throw LSST_EXCEPT(except::RuntimeError,
             (boost::format("Error: wcslib returned a status code of %d at pixel %s, %s: %s") %
             status % pixel1 % pixel2 % wcs_errmsg[status]).str());
     }
@@ -935,7 +935,7 @@ CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Ang
         if(strcmp(radesys, "FK5") == 0) {
             return afwCoord::makeCoord(afwCoord::FK5, sky0, sky1, equinox);
         } else {   
-            throw LSST_EXCEPT(except::RuntimeErrorException,
+            throw LSST_EXCEPT(except::RuntimeError,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
@@ -954,7 +954,7 @@ CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Ang
         if(strcmp(radesys, "FK5") == 0) {
             return afwCoord::makeCoord(afwCoord::FK5, sky1, sky0, equinox);
         } else {   
-            throw LSST_EXCEPT(except::RuntimeErrorException,
+            throw LSST_EXCEPT(except::RuntimeError,
                               (boost::format("Can't create Coord object: Unrecognised radesys %s") %
                                radesys).str());
         }
@@ -964,7 +964,7 @@ CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Ang
         return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
     } else {
     //Give up in disgust
-        throw LSST_EXCEPT(except::RuntimeErrorException,
+        throw LSST_EXCEPT(except::RuntimeError,
                           (boost::format("Can't create Coord object: Unrecognised sys %s") %
                            type).str());
     }
@@ -1276,7 +1276,7 @@ afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            
             metadata->remove("CUNIT1" + wcsName);
             metadata->remove("CUNIT2" + wcsName);
         }
-    } catch(lsst::pex::exceptions::NotFoundException &) {
+    } catch(lsst::pex::exceptions::NotFoundError &) {
         ;                               // OK, not present
     }
 

@@ -179,7 +179,7 @@ int WarpImageGpuWrapper(
     gpu::ImageDataPtr<DestPixelT> destImgGpu;
     destImgGpu.strideImg = destBufImgGpu.AllocImageBaseBuffer(destImage);
     if (destBufImgGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output image");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for output image");
     }
     destImgGpu.img = destBufImgGpu.ptr;
     destImgGpu.var = NULL;
@@ -190,7 +190,7 @@ int WarpImageGpuWrapper(
     gpu::ImageDataPtr<SrcPixelT> srcImgGpu;
     srcImgGpu.strideImg = srcBufImgGpu.TransferFromImageBase(srcImage);
     if (srcBufImgGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input image");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for input image");
     }
     srcImgGpu.img = srcBufImgGpu.ptr;
     srcImgGpu.var = NULL;
@@ -200,7 +200,7 @@ int WarpImageGpuWrapper(
 
     srcPosInterpGpu.Transfer(srcPosInterp);
     if (srcPosInterpGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException,
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError,
                           "Not enough memory on GPU for interpolation data for coorinate transformation");
     }
 
@@ -220,7 +220,7 @@ int WarpImageGpuWrapper(
 
     cudaThreadSynchronize();
     if (cudaGetLastError() != cudaSuccess) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "GPU calculation failed to run");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "GPU calculation failed to run");
     }
 
     destBufImgGpu.CopyToImageBase(destImage);
@@ -270,13 +270,13 @@ int WarpImageGpuWrapper(
     destImgGpu.strideVar = destBufVarGpu.AllocImageBaseBuffer(*dstImage.getVariance());
     destImgGpu.strideMsk = destBufMskGpu.AllocImageBaseBuffer(*dstImage.getMask());
     if (destBufImgGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output image");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for output image");
     }
     if (destBufVarGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output variance");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for output variance");
     }
     if (destBufMskGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for output mask");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for output mask");
     }
     destImgGpu.img = destBufImgGpu.ptr;
     destImgGpu.var = destBufVarGpu.ptr;
@@ -287,15 +287,15 @@ int WarpImageGpuWrapper(
     gpu::ImageDataPtr<SrcPixelT> srcImgGpu;
     srcImgGpu.strideImg = srcBufImgGpu.TransferFromImageBase(*srcImage.getImage());
     if (srcBufImgGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input image");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for input image");
     }
     srcImgGpu.strideVar = srcBufVarGpu.TransferFromImageBase(*srcImage.getVariance());
     if (srcBufVarGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input variance");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for input variance");
     }
     srcImgGpu.strideMsk = srcBufMskGpu.TransferFromImageBase(*srcImage.getMask());
     if (srcBufMskGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException, "Not enough memory on GPU for input mask");
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError, "Not enough memory on GPU for input mask");
     }
 
     srcImgGpu.img = srcBufImgGpu.ptr;
@@ -306,7 +306,7 @@ int WarpImageGpuWrapper(
 
     srcPosInterpGpu.Transfer(srcPosInterp);
     if (srcPosInterpGpu.ptr == NULL)  {
-        throw LSST_EXCEPT(afwGpu::GpuMemoryException,
+        throw LSST_EXCEPT(afwGpu::GpuMemoryError,
                           "Not enough memory on GPU for interpolation data for coorinate transformation");
     }
 
@@ -325,7 +325,7 @@ int WarpImageGpuWrapper(
 
     cudaThreadSynchronize();
     if (cudaGetLastError() != cudaSuccess) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "GPU calculation failed to run");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "GPU calculation failed to run");
     }
 
     destBufImgGpu.CopyToImageBase(*dstImage.getImage());
@@ -404,7 +404,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 )
 {
     if (interpLength < 1) {
-        throw LSST_EXCEPT(pexExcept::InvalidParameterException,
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           "GPU accelerated warping must use interpolation");
     }
 
@@ -413,7 +413,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     pexLog::TTrace<3>("lsst.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
 
     if (!lsst::afw::gpu::isGpuBuild()) {
-        throw LSST_EXCEPT(afwGpu::GpuRuntimeErrorException, "Afw not compiled with GPU support");
+        throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
     }
 
 #ifdef GPU_BUILD
@@ -426,7 +426,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
         } else if (dynamic_cast<afwMath::NearestWarpingKernel const*>(&maskWarpingKernel)) {
             maskKernelType = gpu::KERNEL_TYPE_NEAREST_NEIGHBOR;
         } else {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterException, "unknown type of mask warping kernel");
+            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "unknown type of mask warping kernel");
         }
     }
 #endif

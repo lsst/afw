@@ -32,7 +32,7 @@ std::string Axes::getName() const { return "Axes"; }
 
 void Axes::normalize() {
     if (_vector[A] < 0 || _vector[B] < 0)
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "Major and minor axes cannot be negative.");
     if (_vector[A] < _vector[B]) {
         std::swap(_vector[A], _vector[B]);

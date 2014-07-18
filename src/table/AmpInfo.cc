@@ -73,7 +73,7 @@ void AmpInfoFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t 
     CONST_PTR(AmpInfoTable) table = boost::dynamic_pointer_cast<AmpInfoTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot use a AmpInfoFitsWriter on a non-AmpInfo table."
         );
     }
@@ -128,7 +128,7 @@ AmpInfoRecord::AmpInfoRecord(PTR(AmpInfoTable) const & table) : BaseRecord(table
 PTR(AmpInfoTable) AmpInfoTable::make(Schema const & schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             "Schema for AmpInfo must contain at least the keys defined by makeMinimalSchema()."
         );
     }

@@ -32,17 +32,17 @@
 * @ingroup afw
 */
 
-
 #include <typeinfo>
 #include <cstdio>
-
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <cmath>
 
-#include "lsst/utils/ieee.h"
 #include "lsst/daf/base.h"
+#include "lsst/utils/ieee.h"
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
@@ -128,29 +128,23 @@ void PrintSeparator()
     cout << endl;
 }
 
-string GetInputFileName(int argc, char **argv)
+string GetInputImagePath(int argc, char **argv)
 {
-    string imgFileName;
+    string inImagePath;
     if (argc < 2) {
-        string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "Usage: convolveGPU fitsFile" << endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << endl;
-            std::cerr << "Is afwdata set up?\n" << endl;
+        try {
+            string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/med.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            cerr << "Usage: convolveGPU [fitsFile]" << endl;
+            cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
             exit(EXIT_FAILURE);
-        }
-        else {
-            imgFileName = afwdata + "/data/medexp.fits";
-            //imgFileName = afwdata + "/data/medsub.fits";
-            //imgFileName = afwdata + "/data/871034p_1_MI.fits";
-            cout << "Using image: " << imgFileName << endl;
         }
     }
     else {
-        imgFileName = string(argv[1]);
+        inImagePath = string(argv[1]);
     }
-    return imgFileName;
+    return inImagePath;
 }
 
 string Sel(bool b, const char* onTrue, const char* onFalse)
@@ -703,10 +697,10 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 TestResult TestGpu(int argc, char**argv)
 {
     lsst::afw::gpu::detail::PrintCudaDeviceInfo();
-    string baseFileName = GetInputFileName(argc, argv);
+    string inImagePath = GetInputImagePath(argc, argv);
 
-    const afwImage::MaskedImage<float>    inImgFlt(baseFileName);
-    const afwImage::MaskedImage<double>   inImgDbl(baseFileName);
+    const afwImage::MaskedImage<float>    inImgFlt(inImagePath);
+    const afwImage::MaskedImage<double>   inImgDbl(inImagePath);
 
     const bool isSuccess1 = GpuTestAccuracy(inImgDbl, inImgFlt);
     const bool isSuccess2 = GpuTestExceptions(inImgDbl);
@@ -717,8 +711,8 @@ TestResult TestGpu(int argc, char**argv)
 
 TestResult TestCpu(int argc, char**argv)
 {
-    string baseFileName = GetInputFileName(argc, argv);
-    const afwImage::MaskedImage<double>   inImgDbl(baseFileName);
+    string inImagePath = GetInputImagePath(argc, argv);
+    const afwImage::MaskedImage<double>   inImgDbl(inImagePath);
 
     const bool isSuccess = CpuTestExceptions(inImgDbl);
 
@@ -735,6 +729,8 @@ int main(int argc, char **argv)
     cout << "Note: Dev =  coefficient of variation of RMSD" << endl;
     cout << "Note: Interpolation length set to " << defaultInterpLen << endl;
     cout << endl;
+
+    GetInputImagePath(argc, argv); // if afwdata not setup then exit
 
     try {
         if (lsst::afw::gpu::isGpuBuild()) {

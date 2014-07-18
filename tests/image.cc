@@ -153,12 +153,12 @@ BOOST_AUTO_TEST_CASE(getset0) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Ls
 	// (0,0) in the subimage is (1,2) in the parent image
 	BOOST_CHECK_EQUAL(subimg.get0(1, 2), 102);
 	// subimage can't reference parent coord 0,0
-	BOOST_CHECK_THROW(subimg.get0(0, 0, docheck), lsst::pex::exceptions::LengthErrorException);
+	BOOST_CHECK_THROW(subimg.get0(0, 0, docheck), lsst::pex::exceptions::LengthError);
 
 	subimg.set0(3, 4, 1000000, docheck);
 	BOOST_CHECK_EQUAL(subimg.get0(3, 4, docheck), 1000000);
 	BOOST_CHECK_EQUAL(subimg(2,2), 1000000);
-	BOOST_CHECK_THROW(subimg.set0(0, 0, 1000000, docheck), lsst::pex::exceptions::LengthErrorException);
+	BOOST_CHECK_THROW(subimg.set0(0, 0, 1000000, docheck), lsst::pex::exceptions::LengthError);
 }
 
 

@@ -138,7 +138,7 @@ void ImageFormatter<ImagePixelT>::write(
     execTrace("ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Image");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Image");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
         execTrace("ImageFormatter write BoostStorage");
@@ -166,7 +166,7 @@ void ImageFormatter<ImagePixelT>::write(
         execTrace("ImageFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Image");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Image");
 }
 
 template <typename ImagePixelT>
@@ -202,7 +202,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
                 origin = afwImg::PARENT;
             } else {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::RuntimeErrorException, 
+                    lsst::pex::exceptions::RuntimeError, 
                     (boost::format("Unknown ImageOrigin type  %s specified in additional"
                                    "data for retrieving Image from fits")%originStr
                         
@@ -235,7 +235,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         execTrace("ImageFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Image");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Image");
 }
 
 template <typename ImagePixelT>
@@ -243,7 +243,7 @@ void ImageFormatter<ImagePixelT>::update(
     Persistable*,
     Storage::Ptr,
     lsst::daf::base::PropertySet::Ptr) {
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Image");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Image");
 }
 
 template <typename ImagePixelT> template <class Archive>
@@ -252,7 +252,7 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     execTrace("ImageFormatter delegateSerialize start");
     Image<ImagePixelT>* ip = dynamic_cast<Image<ImagePixelT>*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Image");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Image");
     }
     int width, height;
     if (Archive::is_saving::value) {

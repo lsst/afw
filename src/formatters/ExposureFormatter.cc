@@ -136,12 +136,12 @@ static std::string lookupFilterName(
     db->setQueryWhere("filterId = :id");
     db->query();
     if (!db->next() || db->columnIsNull(0)) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           (boost::format("Unable to get name for filter id: %d") % filterId).str());
     }
     std::string filterName = db->getColumnByPos<std::string>(0);
     if (db->next()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           (boost::format("Multiple names for filter id: %d") % filterId).str());
 
     }
@@ -194,7 +194,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
         dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Persisting non-Exposure");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Exposure");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("ExposureFormatter write BoostStorage");
@@ -221,7 +221,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         // Get the image headers.
         lsst::daf::base::PropertySet::Ptr dp = ip->getMetadata();
         if (!dp) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               "Unable to retrieve metadata from MaskedImage's Image");
         }
 
@@ -236,7 +236,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         }
         if (tableName != "Raw_Amp_Exposure" &&
             tableName != "Science_Amp_Exposure") {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               "Unknown table name for persisting Exposure to DbStorage: " +
                               tableName + "for item " + itemName);
         }
@@ -304,7 +304,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         execTrace("ExposureFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Exposure");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -340,7 +340,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
                 origin = afwImg::PARENT;
             } else {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::RuntimeErrorException, 
+                    lsst::pex::exceptions::RuntimeError, 
                     (boost::format("Unknown ImageOrigin type  %s specified in additional"
                                    "data for retrieving Exposure from fits")%originStr
                         
@@ -369,7 +369,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         }
         if (tableName != "Raw_Amp_Exposure" &&
             tableName != "Science_Amp_Exposure") {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                               "Unknown table name for retrieving Exposure from DbStorage: " +
                               tableName + " for item " + itemName);
         }
@@ -407,11 +407,11 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         // Phew!  Run the query.
         db->query();
         if (!db->next()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unable to retrieve row");
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unable to retrieve row");
         }
         // ...
         if (db->next()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Non-unique Exposure retrieved");
+            throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Non-unique Exposure retrieved");
         }
         db->finishQuery();
 
@@ -437,7 +437,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         execTrace("ExposureFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unrecognized Storage for Exposure");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -449,7 +449,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::update
 {
     //! \todo Implement update from FitsStorage, keeping DB-provided headers.
     // - KTL - 2007-11-29
-    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Unexpected call to update for Exposure");
+    throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unexpected call to update for Exposure");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> template <class Archive>
@@ -461,7 +461,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delega
     afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
         dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeErrorException, "Serializing non-Exposure");
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Exposure");
     }
     PTR(afwImg::Wcs) wcs = ip->getWcs();
     ar & *ip->getMetadata() & ip->_maskedImage & wcs;

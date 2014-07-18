@@ -88,7 +88,7 @@ void FilterProperty::_insert(
         }
 
         if (!force) {
-            throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + getName() + " is already defined");
+            throw LSST_EXCEPT(pexEx::RuntimeError, "Filter " + getName() + " is already defined");
         }
         _propertyMap->erase(keyVal);
     }
@@ -131,7 +131,7 @@ FilterProperty const& FilterProperty::lookup(std::string const& name ///< name o
     PropertyMap::iterator keyVal = _propertyMap->find(name);
 
     if (keyVal == _propertyMap->end()) {
-        throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
+        throw LSST_EXCEPT(pexEx::NotFoundError, "Unable to find filter " + name);
     }
     
     return keyVal->second;
@@ -259,7 +259,7 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
         }
 
         if (!force) {
-            throw LSST_EXCEPT(pexEx::RuntimeErrorException, "Filter " + name + " is already defined");
+            throw LSST_EXCEPT(pexEx::RuntimeError, "Filter " + name + " is already defined");
         }
         _nameMap->erase(keyVal);
         _idMap->erase(oid);
@@ -291,7 +291,7 @@ int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
     // Lookup oldName
     NameMap::iterator keyVal = _nameMap->find(oldName);
     if (keyVal == _nameMap->end()) {
-        throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + oldName);
+        throw LSST_EXCEPT(pexEx::NotFoundError, "Unable to find filter " + oldName);
     }
     int const id = keyVal->second;
 
@@ -303,7 +303,7 @@ int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
         }
 
         if (!force) {
-            throw LSST_EXCEPT(pexEx::NotFoundException, "Filter " + newName + " is already defined");
+            throw LSST_EXCEPT(pexEx::NotFoundError, "Filter " + newName + " is already defined");
         }
         _aliasMap->erase(aliasKeyVal);
     }
@@ -335,7 +335,7 @@ int Filter::_lookup(std::string const& name, // Name of filter
         if (force) {
             return UNKNOWN;
         } else {
-            throw LSST_EXCEPT(pexEx::NotFoundException, "Unable to find filter " + name);
+            throw LSST_EXCEPT(pexEx::NotFoundError, "Unable to find filter " + name);
         }
     }
     
@@ -354,7 +354,7 @@ std::string const& Filter::_lookup(int id)
     IdMap::iterator keyVal = _idMap->find(id);
 
     if (keyVal == _idMap->end()) {
-        throw LSST_EXCEPT(pexEx::NotFoundException, (boost::format("Unable to find filter %d") % id).str());
+        throw LSST_EXCEPT(pexEx::NotFoundError, (boost::format("Unable to find filter %d") % id).str());
     }
     
     return keyVal->second;

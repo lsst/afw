@@ -158,7 +158,7 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
     CONST_PTR(ExposureTable) inTable = boost::dynamic_pointer_cast<ExposureTable const>(t);
     if (!inTable) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot use a ExposureFitsWriter on a non-Exposure table."
         );
     }
@@ -255,14 +255,14 @@ void ExposureRecord::setBBox(geom::Box2I const & bbox) {
 bool ExposureRecord::contains(Coord const & coord) const {
     if (!getWcs()) {
         throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
+            pex::exceptions::LogicError,
             "ExposureRecord does not have a Wcs; cannot call contains()"
         );
     }
     try {
         geom::Point2D point = getWcs()->skyToPixel(coord);
         return geom::Box2D(getBBox()).contains(point);
-    } catch (pex::exceptions::DomainErrorException &) {
+    } catch (pex::exceptions::DomainError &) {
         // Wcs can throw if the given coordinate is outside the region
         // where the Wcs is valid.
         return false;
@@ -287,7 +287,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
 PTR(ExposureTable) ExposureTable::make(Schema const & schema) {
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             "Schema for Exposure must contain at least the keys defined by makeMinimalSchema()."
         );
     }

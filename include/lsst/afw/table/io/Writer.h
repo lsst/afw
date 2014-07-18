@@ -46,7 +46,7 @@ public:
                 != Schema::IDENTICAL
             ) {
                 throw LSST_EXCEPT(
-                    pex::exceptions::LogicErrorException,
+                    pex::exceptions::LogicError,
                     "Cannot save Catalog with heterogenous schemas"
                 );
             }

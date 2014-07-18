@@ -126,7 +126,7 @@ public:
     Impl(BaseCatalog const & index, CatalogVector const & catalogs) : _index(index), _catalogs(catalogs) {
         if (index.getSchema() != indexKeys.schema) {
             throw LSST_EXCEPT(
-                pex::exceptions::RuntimeErrorException,
+                pex::exceptions::RuntimeError,
                 "Incorrect schema for index catalog"
             );
         }

@@ -45,6 +45,7 @@ except ImportError:
 
 import lsst.utils.tests
 import lsst.pex.exceptions
+import lsst.daf.base
 import lsst.afw.table
 import lsst.afw.geom
 import lsst.afw.coord
@@ -68,7 +69,7 @@ def makeCov(size, dtype):
             r[i,j] = r[j,i]
     return r
 
-class SimpleTableTestCase(unittest.TestCase):
+class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def checkScalarAccessors(self, record, key, name, value1, value2):
         fastSetter = getattr(record, "set" + key.getTypeString())
@@ -193,8 +194,8 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkScalarAccessors(record, k20, "f20", "foo", "bar")
         k0a = lsst.afw.table.Key["D"]()
         k0b = lsst.afw.table.Key["Flag"]()
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0a)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException, record.get, k0b)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicError, record.get, k0a)
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicError, record.get, k0b)
 
     def _testBaseFits(self, target):
         schema = lsst.afw.table.Schema()
@@ -450,14 +451,14 @@ class SimpleTableTestCase(unittest.TestCase):
         t1 = lsst.afw.table.BaseTable.make(schema)
         cat.append(t1.makeRecord())
         self.assertEqual(cat[-1].getTable(), t1)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.RuntimeErrorException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.RuntimeError,
                                              cat.getColumnView)
         filename = "testTicket2938.fits"
         cat.writeFits(filename)  # shouldn't throw
         schema.addField("d", type=float, doc="doc for d")
         t2 = lsst.afw.table.BaseTable.make(schema)
         cat.append(t2.makeRecord())
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicErrorException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.LogicError,
                                              cat.writeFits, filename)
         os.remove(filename)
 
@@ -554,19 +555,19 @@ class SimpleTableTestCase(unittest.TestCase):
         k1a = schema.addField("f1", doc="f1a", type="I")
         k2a = schema.addField("f2", doc="f2a", type="Flag")
         k3a = schema.addField("f3", doc="f3a", type="ArrayF", size=4)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f1", doc="f1b", type="I")
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f2", doc="f2b", type="Flag")
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f1", doc="f1b", type="F")
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f2", doc="f2b", type="F")
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f1", doc="f1b", type="F", doReplace=True)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f2", doc="f2b", type="F", doReplace=True)
-        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterException,
+        lsst.utils.tests.assertRaisesLsstCpp(self, lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f3", doc="f3b", type="ArrayF",
                                              size=3, doReplace=True)
         k1b = schema.addField("f1", doc="f1b", type="I", doReplace=True)

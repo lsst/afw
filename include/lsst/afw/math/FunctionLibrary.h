@@ -460,7 +460,7 @@ using boost::serialization::make_nvp;
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                   "PolynomialFunction1 called with empty vector");
             }
         }
@@ -547,7 +547,7 @@ using boost::serialization::make_nvp;
          *   order = (sqrt(1 + 8 * length) - 3) / 2
          * and if this is not an integer then the length is unsuitable
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if params length is unsuitable
+         * @throw lsst::pex::exceptions::InvalidParameterError if params length is unsuitable
          * @throw lsst::pex::exceptions::Exception if an internal sanity check fails
          */
         explicit PolynomialFunction2(
@@ -690,7 +690,7 @@ using boost::serialization::make_nvp;
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if params is empty
+         * @throw lsst::pex::exceptions::InvalidParameterError if params is empty
          */
         explicit Chebyshev1Function1(
             std::vector<double> params, ///< polynomial coefficients
@@ -700,7 +700,7 @@ using boost::serialization::make_nvp;
             Function1<ReturnT>(params)
         {
             if (params.size() < 1) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                                   "Chebyshev1Function1 called with empty vector");
             }
             _initialize(minX, maxX);
@@ -848,7 +848,7 @@ using boost::serialization::make_nvp;
          *
          * The order of the polynomial is set to the length of the params vector.
          *
-         * @throw lsst::pex::exceptions::InvalidParameterException if params is empty
+         * @throw lsst::pex::exceptions::InvalidParameterError if params is empty
          */
         explicit Chebyshev1Function2(
             std::vector<double> params, ///< polynomial coefficients
@@ -890,7 +890,7 @@ using boost::serialization::make_nvp;
             if (truncOrder > this->_order) {
                 std::ostringstream os;
                 os << "truncated order=" << truncOrder << " must be <= original order=" << this->_order;
-                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException, os.str());
+                throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, os.str());
             }
             int truncNParams = this->nParametersFromOrder(truncOrder);
             std::vector<double> truncParams(this->_params.begin(), this->_params.begin() + truncNParams);

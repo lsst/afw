@@ -203,7 +203,7 @@ namespace {
 
         geom::Box2I const region = lhs.getRegion();
         if (region != rhs.getRegion()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               boost::format("The two FootprintSets must have the same region").str());
         }
         
@@ -223,7 +223,7 @@ namespace {
         int const lhsIdMask = (lhsIdNbit == 0) ? 0x0 : (1 << lhsIdNbit) - 1;
 
         if (std::size_t(nRhs << lhsIdNbit) > std::numeric_limits<IdPixelT>::max() - 1) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::OverflowErrorException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::OverflowError,
                               (boost::format("%d + %d footprints need too many bits; change IdPixelT typedef")
                                % nLhs % nRhs).str());
         }
@@ -788,7 +788,7 @@ detection::FootprintSet::FootprintSet(
         break;
 
       default:
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "You must specify a numerical threshold value with a Mask");
     }
 }
@@ -906,7 +906,7 @@ detection::FootprintSet::FootprintSet(
     _region(geom::Point2I(img.getX0(), img.getY0()),
             geom::Extent2I(img.getWidth(), img.getHeight())) 
 {
-    throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException, "NOT IMPLEMENTED");
+    throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "NOT IMPLEMENTED");
 }
 
 
@@ -1396,7 +1396,7 @@ detection::FootprintSet::FootprintSet(
         swap(fs);                       // Swap the new FootprintSet into place
         return;
     } else if (r < 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           (boost::format("I cannot grow by negative numbers: %d") % r).str());
     }
 
@@ -1417,7 +1417,7 @@ detection::FootprintSet::FootprintSet(detection::FootprintSet const& rhs,
         swap(fs);                       // Swap the new FootprintSet into place
         return;
     } else if (ngrow < 0) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           str(boost::format("I cannot grow by negative numbers: %d") % ngrow));
     }
 
@@ -1441,7 +1441,7 @@ detection::FootprintSet::FootprintSet(
       _region(fs1._region)
 {
     _region.include(fs2._region);
-    throw LSST_EXCEPT(lsst::pex::exceptions::LogicErrorException, "NOT IMPLEMENTED");
+    throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "NOT IMPLEMENTED");
 }
 
 /************************************************************************************************************/

@@ -117,7 +117,7 @@ class CalibTestCase(unittest.TestCase):
         # Test context manager; shouldn't raise an exception within the block, should outside
         with imageUtils.CalibNoThrow():
             self.assert_(numpy.isnan(self.calib.getMagnitude(-50.0)))
-        tests.assertRaisesLsstCpp(self, pexExcept.DomainErrorException, self.calib.getMagnitude, -50.0)
+        tests.assertRaisesLsstCpp(self, pexExcept.DomainError, self.calib.getMagnitude, -50.0)
 
     def testPhotomMulti(self):
         self.calib.setFluxMag0(1e12, 1e10)
@@ -219,7 +219,7 @@ class CalibTestCase(unittest.TestCase):
         # Check that we can only merge Calibs with the same fluxMag0 values
         #
         calibs[0].setFluxMag0(1.001*mag0, mag0Sigma)
-        tests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterException,
+        tests.assertRaisesLsstCpp(self, pexExcept.InvalidParameterError,
                                   lambda : afwImage.Calib(calibs))
 
     def testCalibNegativeFlux(self):
@@ -229,7 +229,7 @@ class CalibTestCase(unittest.TestCase):
         funcs = [lambda : self.calib.getMagnitude(-10), lambda : self.calib.getMagnitude(-10, 1)]
 
         for func in funcs:
-            tests.assertRaisesLsstCpp(self, pexExcept.DomainErrorException, func)
+            tests.assertRaisesLsstCpp(self, pexExcept.DomainError, func)
 
         afwImage.Calib.setThrowOnNegativeFlux(False)
         for func in funcs:
@@ -246,7 +246,7 @@ class CalibTestCase(unittest.TestCase):
         afwImage.Calib.setThrowOnNegativeFlux(True)
 
         for func in funcs:
-            tests.assertRaisesLsstCpp(self, pexExcept.DomainErrorException, func)
+            tests.assertRaisesLsstCpp(self, pexExcept.DomainError, func)
 
 
 def defineSdssFilters():
@@ -327,7 +327,7 @@ class FilterTestCase(unittest.TestCase):
         badFilter = "rhl"               # an undefined filter
         metadata.add("FILTER", badFilter)
         # Not defined
-        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundError,
                                   lambda : afwImage.Filter(metadata))
         # Force definition
         f = afwImage.Filter(metadata, True)
@@ -380,7 +380,7 @@ class FilterTestCase(unittest.TestCase):
         def tst():
             gprime = self.defineFilterProperty("g", self.g_lambdaEff + 10)
 
-        tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
+        tests.assertRaisesLsstCpp(self, pexExcept.RuntimeError, tst)
         gprime = self.defineFilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
         gprime = self.defineFilterProperty("g", self.g_lambdaEff, True)
         #
@@ -388,7 +388,7 @@ class FilterTestCase(unittest.TestCase):
         #
         def tst():
             self.defineFilterProperty("g", self.g_lambdaEff + 10) # changing definition is not allowed
-        tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
+        tests.assertRaisesLsstCpp(self, pexExcept.RuntimeError, tst)
 
         self.defineFilterProperty("g", self.g_lambdaEff) # identical redefinition is allowed
         #
@@ -400,19 +400,19 @@ class FilterTestCase(unittest.TestCase):
         def tst():
             afwImage.Filter.define(g, afwImage.Filter("g").getId() + 10) # different ID
             
-        tests.assertRaisesLsstCpp(self, pexExcept.RuntimeErrorException, tst)
+        tests.assertRaisesLsstCpp(self, pexExcept.RuntimeError, tst)
 
     def testUnknownFilter(self):
         """Test that we can define, but not use, an unknown filter"""
         badFilter = "rhl"               # an undefined filter
         # Not defined
-        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundError,
                                   lambda : afwImage.Filter(badFilter))
         # Force definition
         f = afwImage.Filter(badFilter, True)
         self.assertEqual(f.getName(), badFilter) # name is correctly defined
         
-        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundError,
                                   lambda : f.getFilterProperty().getLambdaEff()) # can't use Filter f
         #
         # Now define badFilter
@@ -423,7 +423,7 @@ class FilterTestCase(unittest.TestCase):
         #
         # Check that we didn't accidently define the unknown filter
         #
-        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundException,
+        tests.assertRaisesLsstCpp(self, pexExcept.NotFoundError,
                                   lambda : afwImage.Filter().getFilterProperty().getLambdaEff())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

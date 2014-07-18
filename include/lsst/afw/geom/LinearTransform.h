@@ -35,7 +35,7 @@ namespace afw {
 namespace geom {
 
 #ifndef SWIG
-    LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeErrorException, lsst::afw::geom::SingularTransformException)
+    LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeError, lsst::afw::geom::SingularTransformException)
 #endif
 
 /**

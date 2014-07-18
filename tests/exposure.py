@@ -276,7 +276,7 @@ class ExposureTestCase(unittest.TestCase):
         def getSubRegion():
             self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3, afwImage.LOCAL)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthError, getSubRegion)
 
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class only for the MaskedImage small_MI.
@@ -286,7 +286,7 @@ class ExposureTestCase(unittest.TestCase):
         def getSubRegion():
             self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4, afwImage.LOCAL)
 
-        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthErrorException, getSubRegion)
+        utilsTests.assertRaisesLsstCpp(self, pexExcept.LengthError, getSubRegion)
 
         #check the sub- and parent- exposures are using the same Wcs transformation
         subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))

@@ -172,7 +172,7 @@ public:
     CatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const {
         if (size_type(mask.size()) != size()) {
             throw LSST_EXCEPT(
-                pex::exceptions::LengthErrorException,
+                pex::exceptions::LengthError,
                 (boost::format("Mask array with %d elements applied to catalog with %d elements")
                  % mask.size() % size()).str()
             );
@@ -216,7 +216,7 @@ public:
         // Python doesn't allow step == 0
         if (step == 0) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 "Step cannot be zero"
             );
         }
@@ -366,12 +366,12 @@ public:
     /**
      *  @brief Return a ColumnView of this catalog's records.
      *
-     *  Will throw RuntimeErrorException if records are not contiguous.
+     *  Will throw RuntimeError if records are not contiguous.
      */
     ColumnView getColumnView() const {
         if (boost::is_const<RecordT>::value) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
                 "non-const views)."
             );
@@ -519,7 +519,7 @@ public:
     void insert(SchemaMapper const & mapper, iterator pos, InputIterator first, InputIterator last) {
         if (!_table->getSchema().contains(mapper.getOutputSchema())) {
             throw LSST_EXCEPT(
-                pex::exceptions::InvalidParameterException,
+                pex::exceptions::InvalidParameterError,
                 "SchemaMapper's output schema does not match catalog's schema"
             );
         }

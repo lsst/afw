@@ -80,7 +80,7 @@ public:
      *  @brief Return true if the bounding box contains the given celestial coordinate point, taking
      *         into account the Wcs of the ExposureRecord.
      *
-     *  @throw LogicErrorException if the ExposureRecord has no Wcs.
+     *  @throw LogicError if the ExposureRecord has no Wcs.
      */
     bool contains(Coord const & coord) const;
 
@@ -88,7 +88,7 @@ public:
      *  @brief Return true if the bounding box contains the given point, taking into account its Wcs
      *         (given) and the Wcs of the ExposureRecord.
      *
-     *  @throw LogicErrorException if the ExposureRecord has no Wcs.
+     *  @throw LogicError if the ExposureRecord has no Wcs.
      */
     bool contains(geom::Point2D const & point, image::Wcs const & wcs) const;
 

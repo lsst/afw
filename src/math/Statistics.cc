@@ -365,7 +365,7 @@ namespace {
         }
     }
 
-    /* =========================================================================
+    /** =========================================================================
      * @brief Compute the standard stats: mean, variance, min, max
      *
      * @param img    an afw::Image to compute the stats over
@@ -436,7 +436,7 @@ namespace {
         }
     }
 
-    /* ==========================================================
+    /** ==========================================================
      *
      * @brief A routine to get standard stats: mean, variance, min, max with
      *   clipping on std::pair<double,double> = center, cliplimit
@@ -487,7 +487,7 @@ namespace {
         }
     }
 
-    /* percentile()
+    /** percentile()
      *
      * @brief A wrapper using the nth_element() built-in to compute percentiles for an image
      *
@@ -540,7 +540,7 @@ namespace {
     }
 
 
-/* medianAndQuartiles()
+/** medianAndQuartiles()
  *
  * @brief A wrapper using the nth_element() built-in to compute median and Quartiles for an image
  *
@@ -723,7 +723,7 @@ afwMath::Statistics::Statistics(
 {
     if (!isEmpty(weights)) {
         if (_sctrl.getWeightedIsSet() && !_sctrl.getWeighted()) {
-            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+            throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               "You must use the weights if you provide them");
         }
 
@@ -744,7 +744,7 @@ void afwMath::Statistics::doStatistics(
 {
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Image contains no pixels");
     }
     
     // Check that an int's large enough to hold the number of pixels
@@ -815,13 +815,10 @@ void afwMath::Statistics::doStatistics(
 }
 
 /************************************************************************************************************/
-/* @brief Return the value and error in the specified statistic (e.g. MEAN)
+/** @brief Return the value and error in the specified statistic (e.g. MEAN)
  *
- * @param prop the property (see Statistics.h header) to retrieve.
- * If NOTHING (default) and you only asked for one
- * property (and maybe its error), that property is returned
- *
- * @note Only quantities requested in the constructor may be retrieved
+ * @note Only quantities requested in the constructor may be retrieved; in particular
+ * errors may not be available if you didn't specify ERROR in the constructor
  *
  * @sa getValue and getError
  *
@@ -829,7 +826,10 @@ void afwMath::Statistics::doStatistics(
  *
  */
 std::pair<double, double> afwMath::Statistics::getResult(
-                                                         afwMath::Property const iProp ///< Desired property
+		afwMath::Property const iProp ///< the afw::math::Property to retrieve.
+                                        ///< If NOTHING (default) and you only asked for one
+                                        ///< property (and maybe its error) in the constructor,
+                                        ///< that property is returned
                                                         ) const {
     
     // if iProp == NOTHING try to return their heart's delight, as specified in the constructor
@@ -837,7 +837,7 @@ std::pair<double, double> afwMath::Statistics::getResult(
         static_cast<afwMath::Property>(((iProp == NOTHING) ? _flags : iProp) & ~ERRORS);
     
     if (!(prop & _flags)) {             // we didn't calculate it
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException,
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError,
                           (boost::format("You didn't ask me to calculate %d") % prop).str());
     }
 
@@ -938,26 +938,31 @@ std::pair<double, double> afwMath::Statistics::getResult(
         // default: redundant as 'ret' is initialized to NaN, NaN
       default:                          // we must have set prop to _flags
         assert (iProp == 0);
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "getValue() may only be called without a parameter"
                           " if you asked for only one statistic");
     }
     return ret;
 }
 
-/* @brief Return the value of the desired property (if specified in the constructor)
- * @param prop - the property (see Statistics.h) to retrieve
+/** @brief Return the value of the desired property (if specified in the constructor)
  */
-double afwMath::Statistics::getValue(afwMath::Property const prop ///< Desired property
+double afwMath::Statistics::getValue(
+		afwMath::Property const prop ///< the afw::math::Property to retrieve.
+                                        ///< If NOTHING (default) and you only asked for one
+                                        ///< property in the constructor, that property is returned
                                      ) const {
     return getResult(prop).first;
 }
 
 
-/* @brief Return the error in the desired property (if specified in the constructor)
- * @param prop - the property (see Statistics.h) to retrieve
+/** @brief Return the error in the desired property (if specified in the constructor)
  */
-double afwMath::Statistics::getError(afwMath::Property const prop ///< Desired property
+double afwMath::Statistics::getError(
+		afwMath::Property const prop ///< the afw::math::Property to retrieve.
+                                        ///< If NOTHING (default) and you only asked for one
+                                        ///< property in the constructor, that property's error is returned
+                                        ///< \note You may have needed to specify ERROR to the ctor
                                      ) const {
     return getResult(prop).second;
 }
@@ -986,14 +991,14 @@ Statistics::Statistics(
     _sctrl(sctrl) {
     
     if ((flags & ~(NPOINT | SUM)) != 0x0) {
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Statistics<Mask> only supports NPOINT and SUM");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Statistics<Mask> only supports NPOINT and SUM");
     }
     
     typedef afwImage::Mask<afwImage::MaskPixel> Mask;
     
     _n = msk.getWidth()*msk.getHeight();
     if (_n == 0) {
-        throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Image contains no pixels");
+        throw LSST_EXCEPT(pexExceptions::InvalidParameterError, "Image contains no pixels");
     }
     
     // Check that an int's large enough to hold the number of pixels
@@ -1008,7 +1013,7 @@ Statistics::Statistics(
     _sum = sum;
 }
 
-/*
+/**
  * @brief Specialization to handle Masks
  * @note Although short, the definition can't be in the header as it must
  *       follow the specialization definition

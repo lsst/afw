@@ -8,10 +8,12 @@
 #include "boost/ref.hpp"
 
 #include "ndarray.h"
+#include "lsst/base.h"
 #include "lsst/afw/table/Key.h"
 #include "lsst/afw/table/Field.h"
 #include "lsst/afw/table/detail/SchemaImpl.h"
 #include "lsst/afw/table/Flag.h"
+#include "lsst/afw/table/AliasMap.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -81,7 +83,7 @@ public:
     SchemaItem<T> find(Key<T> const & key) const;
 
     /**
-     *  @brief Lookup a (possibly incomplete) name in the Schema.
+     *  @brief Look up a (possibly incomplete) name in the Schema.
      *
      *  See SubSchema for more information.
      *
@@ -102,6 +104,8 @@ public:
      *  topOnly==true will return ['a', 'e'].
      *
      *  Returns an instance of Python's builtin set in Python.
+     *
+     *  Aliases are not returned.
      */
     std::set<std::string> getNames(bool topOnly=false) const;
 
@@ -223,11 +227,35 @@ public:
     template <typename T>
     int contains(SchemaItem<T> const & item, int flags=EQUAL_KEYS) const;
 
+    /**
+     *  Return the map of aliases
+     *
+     *  Note that while this is a const method, it does allow the Schema's aliases to be
+     *  edited - this allows the aliases to be modified even after a Table has been constructed
+     *  from the Schema.
+     *
+     *  See AliasMap for more information on schema aliases.
+     */
+    PTR(AliasMap) getAliasMap() const { return _aliases; }
+
+    /**
+     *  Set the alias map
+     *
+     *  This resets the internal pointer to the alias map, disconnecting
+     *  this schema from any others it shares aliases with.
+     *
+     *  Passing a null pointer is equivalent to passing an empty map.
+     */
+    void setAliasMap(PTR(AliasMap) aliases);
+
+    /// Sever the connection between this schema and any others with which it shares aliases
+    void disconnectAliases();
+
     /// @brief Construct an empty Schema.
     explicit Schema();
 
     /// @brief Copy constructor.
-    Schema(Schema const & other) : _impl(other._impl) {}
+    Schema(Schema const & other);
 
     /**
      *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
@@ -272,11 +300,12 @@ private:
 
     friend class detail::Access;
     friend class SubSchema;
-    
-    /// @brief Copy on write; should be called by all mutators.
+
+    /// @brief Copy on write; should be called by all mutators (except for alias mutators).
     void _edit();
 
-    boost::shared_ptr<Impl> _impl;
+    PTR(Impl) _impl;
+    PTR(AliasMap) _aliases;
 };
 
 /**
@@ -356,14 +385,15 @@ private:
 
     friend class Schema;
 
-    SubSchema(boost::shared_ptr<Impl> const & data, std::string const & name) : _impl(data), _name(name) {}
+    SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & name);
 
-    boost::shared_ptr<Impl> _impl;
+    PTR(Impl) _impl;
+    PTR(AliasMap) _aliases;
     std::string _name;
 };
 
 inline SubSchema Schema::operator[](std::string const & name) const {
-    return SubSchema(_impl, name);
+    return SubSchema(_impl, _aliases, name);
 }
 
 }}} // namespace lsst::afw::table

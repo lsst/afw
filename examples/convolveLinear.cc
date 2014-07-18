@@ -24,6 +24,8 @@
 #include <sstream>
 #include <string>
 
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
@@ -32,8 +34,7 @@
 namespace afwImage = lsst::afw::image;
 namespace afwMath= lsst::afw::math;
 
-const std::string outFile("clOut");
-const std::string altOutFile("clAltOut");
+const std::string outImagePath("clOut.fits");
 
 int main(int argc, char **argv) {
     lsst::pex::logging::Trace::setDestination(std::cout);
@@ -45,28 +46,25 @@ int main(int argc, char **argv) {
     double const MinSigma = 1.5;
     double const MaxSigma = 4.5;
 
-    std::string mimg;
+    std::string inImagePath;
     if (argc < 2) {
-        std::string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "Usage: linearConvolve fitsFile" << std::endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
-            std::cerr << "Is afwdata set up?\n" << std::endl;
+        try {
+            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/med.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cerr << "Usage: linearConvolve [fitsFile]" << std::endl;
+            std::cerr << "fitsFile is the path to a masked image" << std::endl;
+            std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
             exit(EXIT_FAILURE);
-        } else {
-            mimg = afwdata + "/med_MI";
-            std::cerr << "Using " << mimg << std::endl;
         }
-        
     } else {
-        mimg = std::string(argv[1]);
+        inImagePath = std::string(argv[1]);
     }
 
     // block in which to allocate and deallocate memory
     {
         // read in fits file
-        afwImage::MaskedImage<ImagePixel> mImage(mimg);
+        afwImage::MaskedImage<ImagePixel> mImage(inImagePath);
         
         // construct basis kernels
         
@@ -104,6 +102,7 @@ int main(int argc, char **argv) {
         // Set spatial function parameters for kernel parameter 1
         kernel.setSpatialParameters(polyParams);
 
+        std::cerr << "Image: " << inImagePath << std::endl;
         std::cout << "Image size: " << mImage.getWidth() << " x " << mImage.getHeight() << std::endl;
         std::cout << "Kernel size: " << KernelCols << " x " << KernelRows << std::endl;
         std::cout << "Number of basis kernels: " << kernel.getNBasisKernels() << std::endl;
@@ -114,8 +113,8 @@ int main(int argc, char **argv) {
         afwMath::convolve(resMaskedImage, mImage, kernel, false);
         
         // write results
-        resMaskedImage.writeFits(outFile);
-        std::cout << "Wrote " << outFile << "_img.fits, etc." << std::endl;
+        resMaskedImage.writeFits(outImagePath);
+        std::cout << "Saved convolved image as " << outImagePath << std::endl;
     }
 
      // Check for memory leaks

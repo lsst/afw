@@ -29,7 +29,7 @@ namespace lsst { namespace afw { namespace fits {
 /**
  * @brief An exception thrown when problems are found when reading or writing FITS files.
  */
-LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::IoErrorException, lsst::afw::fits::FitsError)
+LSST_EXCEPTION_TYPE(FitsError, lsst::pex::exceptions::IoError, lsst::afw::fits::FitsError)
 
 /**
  * @brief An exception thrown when a FITS file has the wrong type.
@@ -248,12 +248,12 @@ public:
     template <typename T>
     void writeKey(std::string const & key, T const & value, std::string const & comment);
     void writeKey(std::string const & key, char const * value, std::string const & comment) {
-        updateKey(key, std::string(value), comment);
+        writeKey(key, std::string(value), comment);
     }
     template <typename T>
     void writeKey(std::string const & key, T const & value);
     void writeKey(std::string const & key, char const * value) {
-        updateKey(key, std::string(value));
+        writeKey(key, std::string(value));
     }
     //@}
 

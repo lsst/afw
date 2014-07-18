@@ -412,7 +412,7 @@ inline lsst::afw::geom::Angle lsst::afw::coord::Coord::operator[](int const inde
         return _latitude;
         break;
       default:
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "Index must be 0 or 1.");
         break;
     }
@@ -433,7 +433,7 @@ inline std::string lsst::afw::coord::Coord::getLongitudeStr(lsst::afw::geom::Ang
     } else if (unit == lsst::afw::geom::degrees) {
         return angleToDmsString(getLongitude());
     } else {
-        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterException,
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           "Units must be 'degrees' or 'hours'");
     }
 }

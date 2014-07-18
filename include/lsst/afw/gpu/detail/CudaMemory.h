@@ -83,7 +83,7 @@ T* AllocOnGpu(int size)
  * A failure to copy is generaly not expected. It could be due to invalid arguments,
  * or due to CUDA or GPu device not being initialized properly, or not in a correct state.
  *
- * \throw lsst::afw::math::detail::GpuMemoryException if data copying fails
+ * \throw lsst::afw::math::detail::GpuMemoryError if data copying fails
  */
 template<typename T>
 void CopyFromGpu(T* destCpu, T* sourceGpu, int size)
@@ -95,7 +95,7 @@ void CopyFromGpu(T* destCpu, T* sourceGpu, int size)
                                 /* Direction   */    cudaMemcpyDeviceToHost
                             );
     if (cudaError != cudaSuccess)
-        throw LSST_EXCEPT(GpuMemoryException, "CopyFromGpu: failed");
+        throw LSST_EXCEPT(GpuMemoryError, "CopyFromGpu: failed");
 }
 
 /**
@@ -110,7 +110,7 @@ void CopyFromGpu(T* destCpu, T* sourceGpu, int size)
  * A failure to copy is generaly not expected. It could be due to invalid arguments,
  * or due to CUDA or GPU device not being initialized properly, or not in a correct state.
  *
- * \throw lsst::afw::math::GpuMemoryException if data copying fails
+ * \throw lsst::afw::math::GpuMemoryError if data copying fails
  */
 template<typename T>
 void CopyToGpu(T* destGpu, T* sourceCpu, int size)
@@ -123,7 +123,7 @@ void CopyToGpu(T* destGpu, T* sourceCpu, int size)
                     /* Direction   */    cudaMemcpyHostToDevice
                 );
     if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuMemoryException, "CopyToGpu: failed");
+        throw LSST_EXCEPT(GpuMemoryError, "CopyToGpu: failed");
     }
 }
 
@@ -144,7 +144,7 @@ void CopyToGpu(T* destGpu, T* sourceCpu, int size)
  * Throws exception if data copying fails. A failure to copy is generaly not expected. It could be due to
  * invalid arguments, or due to CUDA or GPU device not being initialized properly, or not in a correct state.
  *
- * \throw lsst::afw::math::GpuMemoryException if data copying fails
+ * \throw lsst::afw::math::GpuMemoryError if data copying fails
  */
 template<typename T>
 T* TransferToGpu(const T* sourceCpu, int size)
@@ -161,7 +161,7 @@ T* TransferToGpu(const T* sourceCpu, int size)
                     /* Direction   */    cudaMemcpyHostToDevice
                 );
     if (cudaError != cudaSuccess) {
-        throw LSST_EXCEPT(GpuMemoryException, "TransferToGpu: transfer failed");
+        throw LSST_EXCEPT(GpuMemoryError, "TransferToGpu: transfer failed");
     }
     return dataGpu;
 }
@@ -230,7 +230,7 @@ public:
      * Throws exception if data copying fails. A failure to copy is generaly not expected. It could be due to invalid
      * arguments, or due to CUDA or GPU device not being initialized properly, or not in a correct state.
      *
-     * \throw lsst::afw::math::GpuMemoryException if data copying fails
+     * \throw lsst::afw::math::GpuMemoryError if data copying fails
      */
     T* Transfer(const T* source, int size_p) {
         assert(ptr == NULL);
@@ -248,7 +248,7 @@ public:
      *
      * \copydetails GpuMemOwner::Transfer(const T* source, int size_p)
      *
-     * \throw lsst::afw::math::GpuMemoryException if data copying fails
+     * \throw lsst::afw::math::GpuMemoryError if data copying fails
      */
     T* Transfer(const GpuBuffer2D<T>& source) {
         assert(ptr == NULL);
@@ -266,7 +266,7 @@ public:
      *
      * \copydetails GpuMemOwner::Transfer(const T* source, int size_p)
      *
-     * \throw lsst::afw::math::GpuMemoryException if data copying fails
+     * \throw lsst::afw::math::GpuMemoryError if data copying fails
      */
     T* TransferVec(const std::vector<T>& source) {
         assert(ptr == NULL);

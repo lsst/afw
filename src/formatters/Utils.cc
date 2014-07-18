@@ -51,16 +51,16 @@ namespace formatters {
 
 int extractSliceId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("sliceId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"sliceId\" property has multiple values");
+        throw LSST_EXCEPT(ex::RuntimeError, "\"sliceId\" property has multiple values");
     }
     int sliceId = properties->getAsInt("sliceId");
     if (sliceId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"sliceId\"");
+        throw LSST_EXCEPT(ex::RangeError, "negative \"sliceId\"");
     }
     if (properties->exists("universeSize") && !properties->isArray("universeSize")) {
         int universeSize = properties->getAsInt("universeSize");
         if (sliceId >= universeSize) {
-            throw LSST_EXCEPT(ex::RangeErrorException, "\"sliceId\" must be less than \"universeSize \"");
+            throw LSST_EXCEPT(ex::RangeError, "\"sliceId\" must be less than \"universeSize \"");
         }
     }
     return sliceId;
@@ -68,75 +68,75 @@ int extractSliceId(CONST_PTR(PropertySet) const& properties) {
                         
 int extractVisitId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("visitId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"visitId\" property has multiple values");
+        throw LSST_EXCEPT(ex::RuntimeError, "\"visitId\" property has multiple values");
     }
     int visitId = properties->getAsInt("visitId");
     if (visitId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"visitId\"");
+        throw LSST_EXCEPT(ex::RangeError, "negative \"visitId\"");
     }
     return visitId;
 }
 
 int64_t extractFpaExposureId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("fpaExposureId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"fpaExposureId\" property has multiple values");
+        throw LSST_EXCEPT(ex::RuntimeError, "\"fpaExposureId\" property has multiple values");
     }
     int64_t fpaExposureId = properties->getAsInt64("fpaExposureId");
     if (fpaExposureId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"fpaExposureId\"");
+        throw LSST_EXCEPT(ex::RangeError, "negative \"fpaExposureId\"");
     }
     if ((fpaExposureId & 0xfffffffe00000000LL) != 0LL) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "\"fpaExposureId\" is too large");
+        throw LSST_EXCEPT(ex::RangeError, "\"fpaExposureId\" is too large");
     }
     return fpaExposureId;
 }
 
 int extractCcdId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ccdId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ccdId\" property has multiple values");
+        throw LSST_EXCEPT(ex::RuntimeError, "\"ccdId\" property has multiple values");
     }
     int ccdId = properties->getAsInt("ccdId");
     if (ccdId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ccdId\"");
+        throw LSST_EXCEPT(ex::RangeError, "negative \"ccdId\"");
     }
     if (ccdId > 255) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "\"ccdId\" is too large");
+        throw LSST_EXCEPT(ex::RangeError, "\"ccdId\" is too large");
     }
     return static_cast<int>(ccdId);
 }
 
 int extractAmpId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ampId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampId\" property has multiple values");
+        throw LSST_EXCEPT(ex::RuntimeError, "\"ampId\" property has multiple values");
     }
     int ampId = properties->getAsInt("ampId");
     if (ampId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ampId\"");
+        throw LSST_EXCEPT(ex::RangeError, "negative \"ampId\"");
     }
     if (ampId > 63) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "\"ampId\" is too large");
+        throw LSST_EXCEPT(ex::RangeError, "\"ampId\" is too large");
     }
     return (extractCcdId(properties) << 6) + ampId;
 }
 
 int64_t extractCcdExposureId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ccdExposureId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ccdExposureId\" property has multiple values");
+        throw LSST_EXCEPT(ex::RuntimeError, "\"ccdExposureId\" property has multiple values");
     }
     int64_t ccdExposureId = properties->getAsInt64("ccdExposureId");
     if (ccdExposureId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ccdExposureId\"");
+        throw LSST_EXCEPT(ex::RangeError, "negative \"ccdExposureId\"");
     }
     return ccdExposureId;
 }
 
 int64_t extractAmpExposureId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("ampExposureId")) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException, "\"ampExposureId\" property has multiple values");
+        throw LSST_EXCEPT(ex::RuntimeError, "\"ampExposureId\" property has multiple values");
     }
     int64_t ampExposureId = properties->getAsInt64("ampExposureId");
     if (ampExposureId < 0) {
-        throw LSST_EXCEPT(ex::RangeErrorException, "negative \"ampExposureId\"");
+        throw LSST_EXCEPT(ex::RangeError, "negative \"ampExposureId\"");
     }
     return ampExposureId;
 }
@@ -144,16 +144,16 @@ int64_t extractAmpExposureId(CONST_PTR(PropertySet) const& properties) {
 /**
  * Extracts and returns the string-valued @c "itemName" property from the given data property object.
  *  
- * @throw lsst::pex::exceptions::InvalidParameterException
+ * @throw lsst::pex::exceptions::InvalidParameterError
  *        If the given pointer is null, or the @c PropertySet pointed
  *        to does not contain a unique property named @c "itemName".
  */
 std::string const getItemName(CONST_PTR(PropertySet) const& properties) {
     if (!properties) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "Null PropertySet::Ptr");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "Null PropertySet::Ptr");
     }
     if (properties->isArray("itemName")) {
-        throw LSST_EXCEPT(ex::InvalidParameterException, "\"itemName\" property has multiple values");
+        throw LSST_EXCEPT(ex::InvalidParameterError, "\"itemName\" property has multiple values");
     } 
     return properties->getAsString("itemName");
 }
@@ -231,7 +231,7 @@ std::vector<std::string> getAllSliceTableNames(
         numSlices = properties->getAsInt(itemName + ".numSlices");
     }
     if (numSlices <= 0) {
-        throw LSST_EXCEPT(ex::RuntimeErrorException,
+        throw LSST_EXCEPT(ex::RuntimeError,
                           itemName + " \".numSlices\" property value must be positive");
     }
     std::vector<std::string> names;

@@ -87,7 +87,7 @@ public:
     Ptr clone() const { return _clone(); }
 
     /**
-     *  @brief Put the parameters into a "standard form", and throw InvalidParameterException
+     *  @brief Put the parameters into a "standard form", and throw InvalidParameterError
      *         if they cannot be normalized.
      */
     virtual void normalize() = 0;

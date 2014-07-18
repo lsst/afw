@@ -71,7 +71,7 @@ namespace {
             _xpa = XPAOpen((char *)mode);
 
             if (_xpa == NULL) {
-                throw LSST_EXCEPT(lsst::pex::exceptions::IoErrorException, "Unable to open XPA");
+                throw LSST_EXCEPT(lsst::pex::exceptions::IoError, "Unable to open XPA");
             }
         }
         

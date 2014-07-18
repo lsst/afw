@@ -90,7 +90,7 @@ void afwForm::TanWcsFormatter::write(
     execTrace("TamWcsFormatter write start");
     afwImg::TanWcs const* ip = dynamic_cast<afwImg::TanWcs const*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Persisting non-TanWcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-TanWcs");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         execTrace("TanWcsFormatter write BoostStorage");
@@ -99,7 +99,7 @@ void afwForm::TanWcsFormatter::write(
         execTrace("TanWcsFormatter write end");
         return;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for TanWcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
 }
 
 dafBase::Persistable* afwForm::TanWcsFormatter::read(
@@ -124,14 +124,14 @@ dafBase::Persistable* afwForm::TanWcsFormatter::read(
         execTrace("TanWcsFormatter read end");
         return ip;
     }
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unrecognized Storage for TanWcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
 }
 
 void afwForm::TanWcsFormatter::update(
     dafBase::Persistable*,
     dafPersist::Storage::Ptr,
     dafBase::PropertySet::Ptr) {
-    throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Unexpected call to update for TanWcs");
+    throw LSST_EXCEPT(pexExcept::RuntimeError, "Unexpected call to update for TanWcs");
 }
 
 
@@ -157,7 +157,7 @@ static void encodeSipHeader(lsst::daf::base::PropertySet::Ptr wcsProps,
                             Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> const& m) {
     int order = m.rows();
     if (m.cols() != order) {
-        throw LSST_EXCEPT(pexExcept::DomainErrorException,
+        throw LSST_EXCEPT(pexExcept::DomainError,
             "sip" + which + " matrix is not square");
     }
     if (order > 0) {
@@ -231,7 +231,7 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     execTrace("TanWcsFormatter delegateSerialize start");
     afwImg::TanWcs* ip = dynamic_cast<afwImg::TanWcs*>(persistable);
     if (ip == 0) {
-        throw LSST_EXCEPT(pexExcept::RuntimeErrorException, "Serializing non-TanWcs");
+        throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-TanWcs");
     }
 
     // Serialize most fields normally
