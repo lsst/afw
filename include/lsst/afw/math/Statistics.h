@@ -182,7 +182,7 @@ private:
  * @note Factory function: We used a helper function, \c makeStatistics, rather that the constructor
  *       directly so that the compiler could deduce the types -- cf. \c std::make_pair)
  *
- * @note Inputs: The class Statistics is templatized, and makeStatistics() can take either:
+ * @note Inputs: The class Statistics is templated, and makeStatistics() can take either:
  *       (1) an image, (2) a maskedImage, or (3) a std::vector<>
  *       Overloaded makeStatistics() functions then wrap what they were passed in Image/Mask-like classes
  *       and call the Statistics constructor.
