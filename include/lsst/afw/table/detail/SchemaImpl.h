@@ -134,7 +134,7 @@ public:
     /// Default constructor.
     explicit SchemaImpl() : 
         daf::base::Citizen(typeid(this)), 
-        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items()
+        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items(), _version(0)
     {}
 
     /**
@@ -173,6 +173,13 @@ public:
         F _func;
     };
 
+    /// @brief Return the table's version.
+    int getVersion() const { return _version; }
+
+    /// @brief Set the table's version.
+    void setVersion(int version) { _version = version; }
+
+
 private:
 
     friend class detail::Access;
@@ -184,6 +191,7 @@ private:
     NameMap _names;       // Field name to vector-index map.
     OffsetMap _offsets;       // Offset to vector-index map.
     FlagMap _flags;       // Offset to vector-index map.
+    int _version;         // temporary flag for version 0/1 tables
 };
 
 #endif
