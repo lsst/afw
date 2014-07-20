@@ -58,26 +58,6 @@ m4def(`DEFINE_SHAPE_GETTERS', `DEFINE_SLOT_GETTERS(`', `Shape')')dnl
 // with the current state of the slots, this macro is only used for flux slots - pgee
 m4def(`DECLARE_SLOT_DEFINERS',
 `/**
-//     * @brief Set the measurement used for the $1$2 slot using Keys.
-//     */
-//    void define$1$2(
-//        $2::MeasKey const & meas,
-//        $2::ErrKey const & err = $2::ErrKey(),
-//        Key<Flag> const & flag = Key<Flag>()
-//    ) {
-//        _slot$2$3 = KeyTuple<$2>(meas, err, flag);
-//    }
-//
-//    /**
-//     * @brief Set the measurement used for the $1$2 slot using Keys.
-//     */
-//    void define$1$2(
-//        $2::MeasKey const & meas,
-//        Key<Flag> const & flag
-//    ) {
-//        _slot$2$3 = KeyTuple<$2>(meas, $2::ErrKey(), flag);
-//    }
-
     /**
      *  @brief Set the measurement used for the $1$2 slot with a field name.
      *
@@ -481,31 +461,6 @@ public:
     DECLARE_FLUX_DEFINERS(`Ap')
     DECLARE_FLUX_DEFINERS(`Inst')
 
-//    /**
-//     * @brief Set the measurement used for the Centroid slot using Keys.
-//     *
-//     * This routine works only for tables with compound fields (version 0)
-//     */
-//    void defineCentroid(
-//        Centroid::MeasKey const & meas,
-//        Centroid::ErrKey const & err = Centroid::ErrKey(),
-//        Key<Flag> const & flag = Key<Flag>()
-//    ) {
-//        _slotCentroid = KeyTuple<Centroid>(meas, err, flag);
-//    }
-//
-//    /**
-//     * @brief Set the measurement used for the Centroid slot using Keys.
-//     *
-//     * This routine works only for tables with compound fields (version 0)
-//     */
-//    void defineCentroid(
-//        Centroid::MeasKey const & meas,
-//        Key<Flag> const & flag
-//    ) {
-//        _slotCentroid = KeyTuple<Centroid>(meas, Centroid::ErrKey(), flag);
-//    }
-
     /**
      *  @brief Set the measurement used for the Centroid slot with a field name.
      *
@@ -589,30 +544,6 @@ public:
             if (getVersion() == 0) return _slotCentroid.flag; 
             return _newSlotCentroid.flag;
     }
-//    /**
-//     * @brief Set the measurement used for the Shape slot using Keys.
-//     *
-//     * This routine works only for tables with compound fields (version 0)
-//     */
-//    void defineShape(
-//        Shape::MeasKey const & meas,
-//        Shape::ErrKey const & err = Shape::ErrKey(),
-//        Key<Flag> const & flag = Key<Flag>()
-//    ) {
-//        _slotShape = KeyTuple<Shape>(meas, err, flag);
-//    }
-//
-//    /**
-//     * @brief Set the measurement used for the Shape slot using Keys.
-//     *
-//     * This routine works only for tables with compound fields (version 0)
-//     */
-//    void defineShape(
-//        Shape::MeasKey const & meas,
-//        Key<Flag> const & flag
-//    ) {
-//        _slotShape = KeyTuple<Shape>(meas, Shape::ErrKey(), flag);
-//    }
 
     /**
      *  @brief Set the measurement used for the Shape slot with a field name.
