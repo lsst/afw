@@ -528,12 +528,10 @@ public:
         return _newSlotCentroid.pos.isValid();
     }
     /// @brief Return the key used for the Centroid slot.
-//    Centroid::MeasKey getCentroidKey() const { return _slotCentroid.meas; }
     lsst::afw::table::Point2DKey getCentroidKey() const {
         return _newSlotCentroid.pos; 
     }
 
-//    Centroid::ErrKey getCentroidErrKey() const { return _slotCentroid.err; }
     /// @brief Return the key used for Centroid slot error or covariance.
     lsst::afw::table::CovarianceMatrixKey<float,2> getCentroidErrKey() const {
         return _newSlotCentroid.posErr; 
@@ -620,12 +618,10 @@ public:
     }
 
     /// @brief Return the key used for the Shape slot.
-    //Shape::MeasKey getShapeKey() const { return _slotShape.meas; }
     lsst::afw::table::QuadrupoleKey getShapeKey() const {
         return _newSlotShape.quadrupole; 
     }
 
-    // Shape::ErrKey getShapeErrKey() const { return _slotShape.err; }
     /// @brief Return the key used for Shape slot error or covariance.
     lsst::afw::table::CovarianceMatrixKey<float,3> getShapeErrKey() const {
         return _newSlotShape.quadrupoleErr;
