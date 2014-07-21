@@ -57,7 +57,7 @@ m4def(`DEFINE_SHAPE_GETTERS', `DEFINE_SLOT_GETTERS(`', `Shape')')dnl
 
 // with the current state of the slots, this macro is only used for flux slots - pgee
 m4def(`DECLARE_SLOT_DEFINERS',
-`/**
+`
     /**
      *  @brief Set the measurement used for the $1$2 slot with a field name.
      *
