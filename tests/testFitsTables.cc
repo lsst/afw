@@ -2,6 +2,7 @@
 #define BOOST_TEST_MODULE table-fits
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
+#include "lsst/afw/table/aggregates.h"
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
@@ -73,8 +74,8 @@ BOOST_AUTO_TEST_CASE(testFits) {
     KeyTuple<Centroid> centroid = addCentroidFields(schema, "centroid", "centroid doc");
     SourceCatalog vector(SourceTable::make(schema));
     vector.getTable()->setVersion(0);
-    vector.getTable()->defineModelFlux(flux.meas, flux.err, flux.flag);
-    vector.getTable()->defineCentroid(centroid.meas, centroid.err, centroid.flag);
+    vector.getTable()->defineModelFlux("flux");
+    vector.getTable()->defineCentroid("centroid");
 
     vector.getTable()->setMetadata(boost::make_shared<lsst::daf::base::PropertyList>());
     vector.getTable()->getMetadata()->add("SHEEP", 7.3, "total number of sheep on the farm");
@@ -139,11 +140,11 @@ BOOST_AUTO_TEST_CASE(testFits) {
     BOOST_CHECK( func1.docs == func2.docs );
     BOOST_CHECK( func1.units == func2.units );
     
-    BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxKey(), readVector.getTable()->getModelFluxKey() );
-    BOOST_CHECK_EQUAL( vector.getTable()->getModelFluxErrKey(), readVector.getTable()->getModelFluxErrKey() );
+    BOOST_CHECK( vector.getTable()->getModelFluxKey() == readVector.getTable()->getModelFluxKey() );
+    BOOST_CHECK( vector.getTable()->getModelFluxErrKey() == readVector.getTable()->getModelFluxErrKey() );
 
-    BOOST_CHECK_EQUAL( vector.getTable()->getCentroidKey(), readVector.getTable()->getCentroidKey() );
-    BOOST_CHECK_EQUAL( vector.getTable()->getCentroidErrKey(), readVector.getTable()->getCentroidErrKey() );
+    BOOST_CHECK( vector.getTable()->getCentroidKey() == readVector.getTable()->getCentroidKey() );
+    BOOST_CHECK( vector.getTable()->getCentroidErrKey() == readVector.getTable()->getCentroidErrKey() );
 
     {
         SourceRecord const & a1 = vector[0];
