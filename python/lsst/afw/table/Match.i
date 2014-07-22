@@ -114,19 +114,6 @@
                 second.append(match.second)
                 distance.append(match.distance)
 
-            from lsst.pex.exceptions import LsstCppException, NotFoundError
-            def getSlot(table, name):
-                """Return key for a slot, specified by name, or None"""
-                getter = getattr(table, "get" + name + "Key", None)
-                if getter is None:
-                    return None
-                try:
-                    return getter()
-                except LsstCppException as e:
-                    if isinstance(e.message, NotFoundError):
-                        return None
-                    raise
-
             def copySlots(tableFrom, tableTo):
                 """Copy slots from one table to another
 
@@ -139,13 +126,13 @@
                     m = re.search(r"define(?P<name>.+)", method)
                     if not m:
                         continue
-                    name = m.group("name")
-                    meas = getSlot(tableFrom, name)
-                    err = getSlot(tableFrom, name + "Err")
-                    flag = getSlot(tableFrom, name + "Flag")
-                    setter = getattr(tableTo, "define" + name, None)
+                    slotName = m.group("name")
+                    fieldName = getattr(tableFrom, "get%sDefinition" % slotName)()
+                    if not fieldName:
+                        continue
+                    setter = getattr(tableTo, "define" + slotName)
                     if setter is not None:
-                        setter(meas, err, flag)
+                        setter(fieldName)
 
             copySlots(firstTable, first.table)
             copySlots(secondTable, second.table)
