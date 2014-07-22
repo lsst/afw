@@ -37,15 +37,13 @@
 #include "boost/format.hpp"
 #include "boost/shared_ptr.hpp"
 
-/************************************************************************************************************/
+#include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h" // turn off by recompiling with 'LSST_NO_TRACE 0'
 #include "lsst/afw/image.h"
 
 /**
- * @brief This test code incorporates some very simple tests of the Wcs Class
- * and its related classes.
- * 
+ * @brief This test code incorporates some very simple tests of the Wcs class and related classes.
  */
 
 namespace afwCoord = lsst::afw::coord;
@@ -57,33 +55,34 @@ using lsst::daf::base::PropertySet;
 int main(int argc, char **argv) {
     typedef double Pixel;
 
-    std::string mimg;
+    std::string inImagePath;
     if (argc < 2) {
-        std::string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
-            std::cerr << "Is afwdata set up?\n" << std::endl;
+        try {
+            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/medexp.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cerr << "Usage: wcsTest [fitsFile]" << std::endl;
+            std::cerr << "fitsFile is the path to an exposure" << std::endl;
+            std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
             exit(EXIT_FAILURE);
-        } else {
-            mimg = afwdata + "/small_MI.fits";
-            std::cerr << "Using " << mimg << std::endl;
         }
     } else {
-        mimg = std::string(argv[1]);
+        inImagePath = std::string(argv[1]);
     }
-
-    const std::string inFilename(mimg);
-    
-    std::cout << "Opening file " << inFilename << std::endl;
+    std::cout << "Opening exposure " << inImagePath << std::endl;
 
     PropertySet::Ptr miMetadata(new PropertySet);
-    afwImage::MaskedImage<Pixel> mskdImage(inFilename, miMetadata);
-    afwImage::Wcs::Ptr wcs = afwImage::makeWcs(miMetadata);
+    afwImage::Exposure<Pixel> exposure(inImagePath);
+    if (!exposure.hasWcs()) {
+            std::cerr << "Exposure does not have a WCS." << std::endl;
+            exit(EXIT_FAILURE);
+    }
+    PTR(afwImage::Wcs) wcs = exposure.getWcs();
     
     // Testing input col, row values 
 
     afwGeom::Point2D minCoord = afwGeom::Point2D(1.0, 1.0);
-    afwGeom::Point2D xy = afwGeom::Point2D(mskdImage.getWidth(), mskdImage.getHeight());
+    afwGeom::Point2D xy = afwGeom::Point2D(exposure.getWidth(), exposure.getHeight());
 
     afwCoord::Coord::ConstPtr sky1 = wcs->pixelToSky(minCoord);
     afwCoord::Coord::ConstPtr sky2 = wcs->pixelToSky(xy);
@@ -93,10 +92,10 @@ int main(int argc, char **argv) {
     afwGeom::Angle miRa2 = sky2->getLongitude();
     afwGeom::Angle miDecl2 = sky2->getLatitude();
 
-    std::cout << "ra, decl of " << inFilename << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
+    std::cout << "ra, decl of " << inImagePath << " at ("<< minCoord[0] << " " << minCoord[1] <<") = "
               << "ra: " << miRa1.asDegrees() << " decl: " << miDecl1.asDegrees() << std::endl << std::endl;
  
-    std::cout << "ra, decl of " << inFilename << " at ("<< xy[0] << " " << xy[1]<<") = "
+    std::cout << "ra, decl of " << inImagePath << " at ("<< xy[0] << " " << xy[1]<<") = "
         << "ra: " << miRa2.asDegrees() << " decl: " << miDecl2.asDegrees() << std::endl << std::endl;
 
     double pixArea0 = wcs->pixArea(minCoord);
@@ -109,10 +108,10 @@ int main(int argc, char **argv) {
     afwGeom::Point2D pix1 = wcs->skyToPixel(miRa1, miDecl1);
     afwGeom::Point2D pix2 = wcs->skyToPixel(miRa2, miDecl2);
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa1.asDegrees() << " " << miDecl1.asDegrees() <<") = "
+    std::cout << "col, row of " << inImagePath << " at ("<< miRa1.asDegrees() << " " << miDecl1.asDegrees() <<") = "
         << "col: " << pix1[0] << " row: " << pix1[1] << std::endl << std::endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< miRa2.asDegrees() << " " << miDecl2.asDegrees() <<") = "
+    std::cout << "col, row of " << inImagePath << " at ("<< miRa2.asDegrees() << " " << miDecl2.asDegrees() <<") = "
         << "col: " << pix2[0] << " row: " << pix2[1] << std::endl << std::endl;
 
     afwCoord::Coord::ConstPtr raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
@@ -121,10 +120,10 @@ int main(int argc, char **argv) {
     afwGeom::Point2D pix3 = wcs->skyToPixel(*raDecl1);
     afwGeom::Point2D pix4 = wcs->skyToPixel(*raDecl2);
 
-    std::cout << "col, row of " << inFilename << " at ("<< (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
+    std::cout << "col, row of " << inImagePath << " at ("<< (*raDecl1)[0] << " " << (*raDecl1)[1] << ") = "
         << "col: " << pix3[0] << " row: " << pix3[1] << std::endl << std::endl;
 
-    std::cout << "col, row of " << inFilename << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
+    std::cout << "col, row of " << inImagePath << " at ("<< (*raDecl2)[0] << " " << (*raDecl2)[1] << ") = "
               << "col: " << pix4[0] << " row: " << pix4[1] << std::endl << std::endl;
 
 }

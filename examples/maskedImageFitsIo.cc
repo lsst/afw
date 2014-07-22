@@ -23,29 +23,31 @@
 #include <iostream>
 #include <sstream>
 
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"
 
-const std::string outFile("rwfitsOut");
+const std::string outImagePath("rwfitsOut.fits");
 
 int main(int argc, char **argv) {
 
-    std::string file;
+    std::string inImagePath;
     if (argc == 2) {
-        file = std::string(argv[1]);
+        inImagePath = std::string(argv[1]);
     } else {
-        std::string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "Usage: maskedImageFitsIO fitsFile" << std::endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-            std::cerr << "AFWDATA_DIR not set.  Provide fits file as argument or setup afwdata.\n"
-                      << std::endl;
+        try {
+            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/small.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cerr << "Usage: maskedImageFitsIO [fitsFile]" << std::endl;
+            std::cerr << "fitsFile is the path to a masked image" << std::endl;
+            std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
             exit(EXIT_FAILURE);
-        } else {
-            file = afwdata + "/small_MI";
         }
     }
-    std::cout << "Running with: " <<  file << std::endl;
+    std::cout << "Running with: " <<  inImagePath << std::endl;
 
-    lsst::afw::image::MaskedImage<float> mImage(file);
-    mImage.writeFits(outFile);
+    lsst::afw::image::MaskedImage<float> mImage(inImagePath);
+    mImage.writeFits(outImagePath);
+    std::cout << "Wrote masked image: " << outImagePath << std::endl;
 }

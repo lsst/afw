@@ -3,67 +3,117 @@
 namespace lsst { namespace afw { namespace cameraGeom {
 
 /**
-@page afwCameraGeom CameraGeom
+\page afwCameraGeom CameraGeom
 
-@section afwCameraGeomBasicUsage Basic Usage
+\section afwCameraGeomOverview Overview
 
-Normally you get a camera from a data butler using butler.get("camera"). However, the following
-self-contained example uses a mock camera. You can get detectors from the camera (as shown in the example)
-or from an exposure using getDetector(), though not all exposures have detectors.
+The cameraGeom package describes the geometry of an imaging camera, including the location of each detector
+(e.g. CCD) on the focal plane, information about the amplifier subregions of each detector, and the location
+of known bad pixels in each detector. The cameraGeom package supports operations such as:
+- Assemble images from raw data (combining amplifier subregions and trimming overscan). CameraGeom does not
+ assemble an entire image (see ip_isr AssembleCcdTask for that) but includes functions in
+ \ref assembleImage "assembleImage" that do much of the work.
+- Transform 2-d coordinates between various \ref afwCameraGeomCoordSys "camera coordinate systems",
+  using \ref camera.Camera.transform "Camera.transform". This can be used as part of generating a
+  \ref image::Wcs "WCS" or to examine the effects of optical distortion.
+- Create a graphic showing the layout of detectors on the focal plane, using utils.plotFocalPlane.
+- Display a mosaic image in ds9 that combines all detector images, using utils.showMosaic.
+
+Data for constructing a \ref camera.Camera "Camera" comes from the appropriate observatory-specific
+obs_ package. For example obs_lsstSim contains data for the LSST camera simulator, obs_sdss contains
+data for the SDSS imager, and obs_subaru contains data for both Suprime-Cam and Hyper Suprime-Cam (HSC).
+
+\section afwCameraGeomCoordSys Camera Coordinate Systems
+
+The cameraGeom package supports the following camera-based 2-dimensional coordinate systems, and it is
+possible to add others:
+- \anchor afwCameraGeomFOCAL_PLANE __FOCAL_PLANE__: position on a 2-d planar approximation to the focal plane
+  (x,y mm). The origin and orientation may be defined by the camera team, but we strongly recommend
+  that the origin be on the optical axis and (if using CCD detectors) that the X axis be aligned along
+  CCD rows.
+  Note: location and orientation of detectors are defined in a 3-d version of FOCAL_PLANE coordinates
+  (the z axis is also relevant).
+- \anchor afwCameraGeomPUPIL __PUPIL__: angle of a ray relative to the optical axis (x,y radians).
+- \anchor afwCameraGeomPIXELS __PIXELS__: nominal position on the entry surface of a given detector
+  (x, y unbinned pixels).
+  For CCD detectors the x axis __must__ be along rows (the direction of the serial register).
+  This is required for our interpolation algorithm to interpolate across bad columns.
+- \anchor afwCameraGeomACTUAL_PIXELS __ACTUAL_PIXELS__: like PIXELS, but takes into account pixel-level
+  distortions (deviations from the nominal model of uniformly spaced rectangular pixels).
+
+\section afwCameraGeomBasicUsage Basic Usage
+
+The file examples/cameraGeomExample.py shows some basic usage of the cameraGeom package
 
 \include examples/cameraGeomExample.py
 
-@section afwCameraGeomOverview Overview
+\section afwCameraGeomObject Objects
 
-CameraGeom provides a representation of the geometry of a camera, including the location and orientation of each detector, coordinate transforms between various camera-based coordinate systems, and an approximate model of optical distortion. CameraGeom also provides utility functions to assemble amplifier images into a larger image and to create overview images of the focal plane.
+The cameraGeom package contains the following important objects; unless otherwise noted, all are available
+in both C++ and Python:
 
-CameraGeom supports the following camera-based 2-dimensional coordinate systems, and it is possible to add others:
-<ul>
-    <li>FOCAL_PLANE: position on a 2-d planar approximation to the focal plane (x,y mm).
-      The origin and orientation may be defined by the camera team, but we strongly recommend
-      that the origin be on the optical axis and (if using CCD detectors) that the X axis be aligned along CCD rows.
-      Note: location and orientation of detectors are defined in a 3-d version of FOCAL_PLANE coordinates
-      (i.e. the z axis is also relevant).
-    <li>PUPIL: angle of a ray relative to the optical axis (x,y radians).
-    <li>PIXELS: nominal position on the entry surface of a given detector (x, y unbinned pixels). For CCD detectors the x axis <b>must</b> be along rows (the direction of the serial register). This is required for our interpolation algorithm to interpolate across bad columns.
-    <li>ACTUAL_PIXELS: like PIXELS, but takes into account pixel-level distortions (e.g. tree rings).
-</ul>
+### Camera (Python only)
 
-@section afwCameraGeomObject Objects
+\ref camera.Camera "Camera" is a collection of \ref Detector "Detectors". \ref camera.Camera "Camera"
+also supports coordinate transformation between all \ref afwCameraGeomCoordSys "camera coordinate systems".
 
-Objects in lsst::afw::cameraGeom include the following; unless otherwise noted, all are available in C++ and Python:
+### Detector
 
-<h3>Camera</h3> (Python only)
+Detector contains information about a given imaging detector (typically a CCD), including its position and
+orientation in the focal plane and information about amplifiers (such as the image region, overscan and
+readout corner). Amplifier data is stored as records in an \ref table::AmpInfoTable "amp info table",
+and Detector acts as a collection of \ref table::AmpInfoRecord "amp info records".
 
-A collection of Detectors, plus supports coordinate transformation between all camera-based 2-d coordinate systems.
+Detector also supports coordinate transforms between \ref afwCameraGeomFOCAL_PLANE "focal plane",
+\ref afwCameraGeomPIXELS "pixels", and \ref afwCameraGeomACTUAL_PIXELS "actual pixels" coordinates.
 
-<h3>Detector</h3>
+### CameraSys and CameraSysPrefix
 
-Information about a given detector, including its position and orientation in the focal plane, information about amplifiers (such as the image region, overscan and readout corner), and coordinate transforms between Focal plane, Pixel and DistortedPixel coordinates. Amplifier data is stored as an afw table, and Detector acts as a collection of amplifier data.
+CameraSys represents a \ref afwCameraGeomCoordSys "camera coordinate system". It contains
+a coordinate system name and a detector name. The detector name is blank for non-detector-based
+\ref afwCameraGeomCoordSys "camera coordinate systems" such as
+\ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" and \ref afwCameraGeomPUPIL "PUPIL",
+but must always name a specific detector for detector-based coordinate systems.
 
-<h3>CameraSys</h3>
+CameraSysPrefix is a specialized variant of CameraSys that represents a detector-based coordinate system
+when the detector is not specified. CameraSysPrefix contains a coordinate system name but no detector name.
 
-A camera-based coordinate system; used as the key for CameraTransformMap. A constant is provided for each non-detector-specific coordinate system, including FOCAL_PLANE and PUPIL. Note that CameraSysPrefix is used for detector-specific coordinate system prefixes.
+A constant is provided each \ref afwCameraGeomCoordSys "camera coordinate system":
+- __FOCAL_PLANE__ (a CoordSys) for the \ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" system
+- __PUPIL__ (a CoordSys) for the \ref afwCameraGeomPUPIL "PUPIL" system
+- __PIXELS__ (a CoordSysPrefix) for the \ref afwCameraGeomPIXELS "PIXELS" system
+- __ACTUAL_PIXELS__ (a CoordSysPrefix) for the \ref afwCameraGeomACTUAL_PIXELS "ACTUAL_PIXELS" system
 
-<h3>CameraSysPrefix</h3>
+CameraSys and CameraSysPrefix are closely related and most methods that take one type
+are overloaded to also take the other. For example
+\ref camera.Camera.transform "Camera.transform(fromCameraPoint, toSys)" transforms a point from one
+coordinate system to another. ToSys may be either a CameraSys or a CameraSysPrefix, and this affects
+whether tranform will use the specified detector or search for a suitable detector.
+See the \ref afwCameraGeomBasicUsage "basic usage" for for a concrete example.
 
-An incomplete camera coordinate system that only has a coordinate system name (no detector name). This is used by Detector.getCameraSys to expand a detector coordinate prefix into a full CameraSys (at Jim Bosch's excellent suggestion).
+### CameraPoint
 
-A constant will be provided for each detector-specific coordinate system, including PIXELS and ACTUAL_PIXELS (non-detector-specific coordinate systems are handled by CameraSys).
+A class that holds a 2-dimensional location and its associated
+\ref afwCameraGeomCoordSys "camera coordinate system":
+- point: a 2-dimensional location in some camera coordinate system (a geom::Point2D).
+- cameraSys: the associated \ref afwCameraGeomCoordSys "camera coordinate system" (a CameraSys,
+never a CameraSysPrefix)
 
-<h3>CameraTransformMap</h3>
+The intent is to make transformation more robust and less confusing by keeping a 2-d point and its camera
+coordinate system together. This is appropriate for transforming small numbers of points, but does not
+scale well when transforming large numbers of points, so CameraTransformMap also supports a version of
+transform that takes and returns a vector of geom::Point2D.
 
-A map of CameraSys: lsst::afw::geom::XYTransform. Each CameraTransformMap has a native (aka "reference") coordinate system, and each lsst::afw::geom::XYTransform transforms a 2-d point from the native system to the named system in the forward direction (and the opposite in the reverse direction). The CameraTransformMap.transform method transforms a point between any two supported coordinate systems. Note: CameraTransformMap is another name for lsst::afw::geom::TransformMap<CameraSys>.
+### \anchor afwCameraGeomCameraTransformMap CameraTransformMap
 
-<h3>CameraPoint</h3>
+A registry of \ref afwCameraGeomCoordSys "camera coordinate system" transforms, keyed by CameraSys.
+Specifically CameraTransformMap is geom::TransformMap&lt;CameraSys&gt;. Each CameraTransformMap has a native
+(aka "reference") coordinate system, and each transform in CameraTransformMap is an geom::XYTransform that
+transforms a 2-d point from the native system to the key's coordinate system in the forward direction.
+\ref geom::TransformMap.transform "CameraTransformMap.transform" transforms a point between any two
+supported coordinate systems.
 
-A struct-ish class that holds:
-<ul>
-    <li>point: an lsst::afw::geom::Point2D
-    <li>cameraSys: a CameraSys
-</ul>
-
-The intent is to make transformation more robust and less confusing by keeping a 2-d point and its coordinate system together. This is appropriate for transforming small numbers of points. However, it does not scale well to large numbers of points, so CameraTransformMap also supports a version of transform that takes and returns a vector of lsst::afw::geom::Point2D.
+\ref camera.Camera "Camera" and Detector both contain CameraTransformMaps.
  */
  
 }}} // namespace lsst::afw::cameraGeom

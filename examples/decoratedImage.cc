@@ -24,6 +24,8 @@
 #include <string>
 #include <algorithm>
 
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 
 namespace afwImage = lsst::afw::image;
@@ -61,13 +63,12 @@ int main(int argc, char *argv[]) {
     if (argc == 2) {
         file_u16 = std::string(argv[1]);
     } else {
-        std::string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "AFWDATA_DIR not set.  Provide fits file as argument or setup afwdata.\n"
-                      << std::endl;
+        try {
+            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            file_u16 = dataDir + "/data/small.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cerr << "Error: provide fits file path as argument or setup afwdata.\n" << std::endl;
             exit(EXIT_FAILURE);
-        } else {
-            file_u16 = afwdata + "/small_img.fits";
         }
     }
     std::cout << "Running with: " <<  file_u16 << std::endl;

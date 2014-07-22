@@ -23,19 +23,17 @@
 #include <iostream>
 #include <sstream>
 
-#include "lsst/afw/math/FunctionLibrary.h"
-#include "lsst/afw/image/Image.h"
-#include "lsst/afw/image/MaskedImage.h"
+#include "lsst/utils/Utils.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
-#include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/math/KernelFunctions.h"
+#include "lsst/afw/math.h"
+#include "lsst/afw/image.h"
 
-using namespace std;
 namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
-const std::string outFile("svcOut");
+const std::string outImagePath("svcOut.fits");
 
 /**
  * Demonstrate convolution with a spatially varying kernel
@@ -55,25 +53,24 @@ int main(int argc, char **argv) {
     unsigned int kernelCols = 5;
     unsigned int kernelRows = 5;
 
-    std::string mimg;
+    std::string inImagePath;
     if (argc < 2) {
-        std::string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "Usage: simpleConvolve fitsFile" << std::endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << std::endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << std::endl;
-            std::cerr << "Is afwdata set up?\n" << std::endl;
+        try {
+            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/small.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            std::cerr << "Usage: spatiallyVaryingConvolve [fitsFile]" << std::endl;
+            std::cerr << "fitsFile is the path to a masked image" << std::endl;
+            std::cerr << "\nError: setup afwdata or specify fitsFile.\n" << std::endl;
             exit(EXIT_FAILURE);
-        } else {
-            mimg = afwdata + "/small_MI";
-            std::cerr << "Using " << mimg << std::endl;
         }
     } else {
-        mimg = std::string(argv[1]);
+        inImagePath = std::string(argv[1]);
     }
+    std::cerr << "Convolving masked image " << inImagePath << std::endl;
     
     // read in fits file
-    afwImage::MaskedImage<Pixel> mImage(mimg);
+    afwImage::MaskedImage<Pixel> mImage(inImagePath);
     
     // construct kernel
     afwMath::GaussianFunction2<Pixel> gaussFunc(1, 1, 0);
@@ -82,7 +79,7 @@ int main(int argc, char **argv) {
     afwMath::AnalyticKernel gaussSpVarKernel(kernelCols, kernelRows, gaussFunc, polyFunc);
 
     // Get copy of spatial parameters (all zeros), set and feed back to the kernel
-    vector<vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
+    std::vector<std::vector<double> > polyParams = gaussSpVarKernel.getSpatialParameters();
     // Set spatial parameters for kernel parameter 0
     polyParams[0][0] = minSigma;
     polyParams[0][1] = (maxSigma - minSigma)/static_cast<double>(mImage.getWidth());
@@ -93,24 +90,25 @@ int main(int argc, char **argv) {
     polyParams[1][2] = (maxSigma - minSigma)/static_cast<double>(mImage.getHeight());
     gaussSpVarKernel.setSpatialParameters(polyParams);
     
-    cout << "Spatial Parameters:" << endl;
+    std::cout << "Spatial Parameters:" << std::endl;
     for (unsigned int row = 0; row < polyParams.size(); ++row) {
         if (row == 0) {
-            cout << "xSigma";
+            std::cout << "xSigma";
         } else {
-            cout << "ySigma";
+            std::cout << "ySigma";
         }
         for (unsigned int col = 0; col < polyParams[row].size(); ++col) {
-            cout << boost::format("%7.1f") % polyParams[row][col];
+            std::cout << boost::format("%7.1f") % polyParams[row][col];
         }
-        cout << endl;
+        std::cout << std::endl;
     }
-    cout << endl;
+    std::cout << std::endl;
 
     // convolve
     afwImage::MaskedImage<Pixel> resMaskedImage(mImage.getDimensions());
     afwMath::convolve(resMaskedImage, mImage, gaussSpVarKernel, true);
 
     // write results
-    resMaskedImage.writeFits(outFile);
+    resMaskedImage.writeFits(outImagePath);
+    std::cerr << "Wrote convolved image " << outImagePath << std::endl;
 }

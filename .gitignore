@@ -151,6 +151,7 @@ tests/testSimpleTable
 tests/testDistortion
 tests/testSchema
 tests/testFitsTables
+tests/testTableAliases
 testTable.fits
 tests/data/*
 ups/*.cfgc

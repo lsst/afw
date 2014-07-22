@@ -42,9 +42,9 @@
 #include <cmath>
 #include <ctime>
 
-#include "lsst/utils/ieee.h"
-
 #include "lsst/daf/base.h"
+#include "lsst/utils/ieee.h"
+#include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
@@ -251,29 +251,23 @@ afwMath::LinearCombinationKernel::Ptr  ConstructLinearCombinationKernel(
     return kernelPtr;
 }
 
-string GetInputFileName(int argc, char **argv)
+string GetInputImagePath(int argc, char **argv)
 {
-    string imgFileName;
+    string inImagePath;
     if (argc < 2) {
-        string afwdata = getenv("AFWDATA_DIR");
-        if (afwdata.empty()) {
-            std::cerr << "Usage: convolveGPU fitsFile" << endl;
-            std::cerr << "fitsFile excludes the \"_img.fits\" suffix" << endl;
-            std::cerr << "I can take a default file from AFWDATA_DIR, but it's not defined." << endl;
-            std::cerr << "Is afwdata set up?\n" << endl;
+        try {
+            string dataDir = lsst::utils::eups::productDir("afwdata");
+            inImagePath = dataDir + "/data/med.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            cerr << "Usage: convolveGPU [fitsFile]" << endl;
+            cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
             exit(EXIT_FAILURE);
-        }
-        else {
-            imgFileName = afwdata + "/data/medexp.fits";
-            //imgFileName = afwdata + "/data/medsub.fits";
-            //imgFileName = afwdata + "/data/871034p_1_MI.fits";
-            cout << "Using image: " << imgFileName << endl;
         }
     }
     else {
-        imgFileName = string(argv[1]);
+        inImagePath = string(argv[1]);
     }
-    return imgFileName;
+    return inImagePath;
 }
 
 afwMath::FixedKernel::Ptr ConstructKernel(
@@ -779,10 +773,10 @@ bool CpuTestExceptions(const string imgFileName)
 TestResult TestGpu(int argc, char**argv)
 {
     lsst::afw::gpu::detail::PrintCudaDeviceInfo();
-    string baseFileName = GetInputFileName(argc, argv);
+    string inImageName = GetInputImagePath(argc, argv);
 
-    const bool isSuccess1 = GpuTestAccuracy(baseFileName);
-    const bool isSuccess2 = GpuTestExceptions(baseFileName);
+    const bool isSuccess1 = GpuTestAccuracy(inImageName);
+    const bool isSuccess2 = GpuTestExceptions(inImageName);
     const bool isSuccess = isSuccess1 && isSuccess2;
 
     return isSuccess ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -790,9 +784,9 @@ TestResult TestGpu(int argc, char**argv)
 
 TestResult TestCpu(int argc, char**argv)
 {
-    string baseFileName = GetInputFileName(argc, argv);
+    string inImageName = GetInputImagePath(argc, argv);
 
-    const bool isSuccess = CpuTestExceptions(baseFileName);
+    const bool isSuccess = CpuTestExceptions(inImageName);
 
     return isSuccess ? EXIT_SUCCESS : EXIT_FAILURE;
 }
@@ -803,6 +797,8 @@ int main(int argc, char **argv)
     cout << endl;
     cout << "Note: Dev =  coefficient of variation of RMSD" << endl;
     cout << endl;
+
+    GetInputImagePath(argc, argv); // if afwdata not setup then exit
 
     int status = EXIT_SUCCESS;
     try {
