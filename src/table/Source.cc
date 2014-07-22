@@ -453,8 +453,7 @@ SourceTable::SourceTable(
 
 SourceTable::SourceTable(SourceTable const & other) :
     SimpleTable(other),
-    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape),
-    _newSlotFlux(other._newSlotFlux), _newSlotCentroid(other._newSlotCentroid), _newSlotShape(other._newSlotShape)
+    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
 {}
 
 SourceTable::MinimalSchema::MinimalSchema() {
@@ -527,31 +526,6 @@ KeyTuple<Flux> addFluxFields(
         name + ".flags", "set if the " + name + " measurement failed"
     );
     return keys;
-}
-
-/// Convenience function to setup fields for centroid measurement algorithms.
-Point2DKey addCentroidMeasFields(
-    Schema & schema,
-    std::string const & name,
-    std::string const & doc
-) {
-    Point2DKey key = Point2DKey(schema.addField<double>(name+"_x", doc + ", x coordinate", "pixels"),
-        schema.addField<double>(name+"_y", doc+", y coordinate", "pixels")
-    );
-    return key;
-}
-
-/// Convenience function to setup fields for shape measurement algorithms.
-QuadrupoleKey addShapeMeasFields(
-    Schema & schema,
-    std::string const & name,
-    std::string const & doc
-) {
-    QuadrupoleKey key = QuadrupoleKey(schema.addField<double>(name+"_xx", doc + ", x-x moment", "pixels^2"),
-        schema.addField<double>(name+"_yy", doc + ", x-x moment", "pixels^2"),
-        schema.addField<double>(name+"_xy", doc + ", x-y moment", "pixels^2")
-    );
-    return key;
 }
 
 template class CatalogT<SourceRecord>;
