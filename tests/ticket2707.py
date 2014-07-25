@@ -41,7 +41,7 @@ class MatchXyTest(unittest.TestCase):
         centroidKey = self.schema.addField("cen", type="PointD")
         self.table = afwTable.SourceTable.make(self.schema)
         self.table.setVersion(0)
-        self.table.defineCentroid(centroidKey)
+        self.table.defineCentroid("cen")
         idKey = self.table.getIdKey()
         self.cat1 = afwTable.SourceCatalog(self.table)
         self.cat2 = afwTable.SourceCatalog(self.table)

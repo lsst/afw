@@ -51,6 +51,17 @@ numpy.random.seed(5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def makePositiveSymmetricMatrix(size):
+    """Return a random symmetric matrix with only positive eigenvalues, suitable
+    for use as a covariance matrix.
+    """
+    a = numpy.random.randn(size, size+1).astype(numpy.float32)
+    m = numpy.dot(a, a.transpose())
+    for i in range(size):
+        for j in range(i):
+            m[i, j] = m[j, i]
+    return m
+
 class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
@@ -210,6 +221,58 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                     for dynamicSize in (True, False):
                         self.doTestCovarianceMatrixKey(fieldType, parameterNames, varianceOnly, dynamicSize)
 
+    def testCompoundKeyConverters(self):
+        """Test that FunctorKeys that convert from old-style compound Keys work
+        """
+        schema = lsst.afw.table.Schema()
+
+        # Create a schema full of old-style Keys
+        pi1 = schema.addField("pi", type="PointI", doc="old-style Point field")
+        pd1 = schema.addField("pd", type="PointD", doc="old-style Point field")
+        q1 = schema.addField("q", type="MomentsD", doc="old-style Moments field")
+        c1 = schema.addField("cov", type="CovF", doc="old-style Covariance field", size=4)
+        cp1 = schema.addField("cov_p", type="CovPointF", doc="old-style Covariance<Point> field")
+        cq1 = schema.addField("cov_q", type="CovMomentsF", doc="old-style Covariance<Moments> field")
+
+        # Create FunctorKeys from the old-style Keys
+        pi2 = lsst.afw.table.Point2IKey(pi1)
+        pd2 = lsst.afw.table.Point2DKey(pd1)
+        q2 = lsst.afw.table.QuadrupoleKey(q1)
+        c2 = lsst.afw.table.makeCovarianceMatrixKey(c1)
+        cp2 = lsst.afw.table.makeCovarianceMatrixKey(cp1)
+        cq2 = lsst.afw.table.makeCovarianceMatrixKey(cq1)
+
+        # Check that they're the same
+        self.assertEqual(pi1.getX(), pi2.getX())
+        self.assertEqual(pi1.getY(), pi2.getY())
+        self.assertEqual(pd1.getX(), pd2.getX())
+        self.assertEqual(pd1.getY(), pd2.getY())
+        self.assertEqual(q1.getIxx(), q2.getIxx())
+        self.assertEqual(q1.getIyy(), q2.getIyy())
+        self.assertEqual(q1.getIxy(), q2.getIxy())
+
+        # Covariance matrices are a little trickier; actually try getting/setting records to compare
+        table = lsst.afw.table.BaseTable.make(schema)
+        record1 = table.makeRecord()
+        record2 = table.makeRecord()
+
+        matrix = makePositiveSymmetricMatrix(4)
+        record1.set(c1, matrix)
+        self.assertClose(record1.get(c2), matrix)
+        record2.set(c2, matrix)
+        self.assertClose(record2.get(c1), matrix)
+
+        matrix = makePositiveSymmetricMatrix(2)
+        record1.set(cp1, matrix)
+        self.assertClose(record1.get(cp2), matrix)
+        record2.set(cp2, matrix)
+        self.assertClose(record2.get(cp1), matrix)
+
+        matrix = makePositiveSymmetricMatrix(3)
+        record1.set(cq1, matrix)
+        self.assertClose(record1.get(cq2), matrix)
+        record2.set(cq2, matrix)
+        self.assertClose(record2.get(cq1), matrix)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
