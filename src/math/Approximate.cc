@@ -47,9 +47,10 @@ namespace math {
 /// \brief ctor
 ApproximateControl::ApproximateControl(Style style, ///< Type of approximation
                                        int orderX,  ///< Order of approximation to use in x-direction
-                                       int orderY   ///< Order of approximation to use in y-direction
+                                       int orderY,  ///< Order of approximation to use in y-direction
+                                       bool weighting ///< Use inverse variance weighting?
                                        ) :
-    _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY) {
+    _style(style), _orderX(orderX), _orderY(orderY < 0 ? orderX : orderY), _weighting(weighting) {
     if (_orderX != _orderY) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                           str(boost::format("X- and Y-orders must be equal (%d != %d) "
@@ -162,7 +163,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
         for (typename image::MaskedImage<PixelT>::const_x_iterator ptr = im.row_begin(iy),
                  end = im.row_end(iy); ptr != end; ++ptr, ++alpha) {
             double const val = ptr.image();
-            double const ivar = 1/ptr.variance();
+            double const ivar = ctrl.getWeighting() ? 1/ptr.variance() : 1.0;
             if (!lsst::utils::isfinite(val + ivar)) {
                 continue;
             }
