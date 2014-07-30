@@ -53,17 +53,20 @@ public:
         NUM_STYLES
     };
 
-    ApproximateControl(Style style, int orderX, int orderY=-1);
+    ApproximateControl(Style style, int orderX, int orderY=-1, bool weighting=true);
     /// Return the Style
     Style getStyle() const { return _style; }
     /// Return the order of approximation to use in the x-direction
     int getOrderX() const { return _orderX; }
     /// Return the order of approximation to use in the y-direction
     int getOrderY() const { return _orderY; }
+    /// Return whether inverse variance weighting will be used in calculation
+    bool getWeighting() const { return _weighting; }
 private:
     Style const _style;
     int const _orderX;
     int const _orderY;
+    bool const _weighting;
 };
 
 /**
