@@ -181,9 +181,9 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
             }
         }
     }
-    if (A.isZero()){
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-        "No valid points to fit. Variance is likely zero. Try weighting=False");
+    if (A.isZero()) {
+        throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                          "No valid points to fit. Variance is likely zero. Try weighting=False");
     }
     // We only filled out the lower triangular part of A
     for (int j = 0; j != nTerm; ++j) {
