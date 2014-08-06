@@ -49,6 +49,8 @@ import lsst.afw.display.ds9 as ds9
 
 import numpy
 
+numpy.random.seed(1)
+
 try:
     type(display)
 except NameError:
