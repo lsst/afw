@@ -47,6 +47,8 @@ import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
 
+numpy.random.seed(1)
+
 try:
     type(display)
 except NameError:

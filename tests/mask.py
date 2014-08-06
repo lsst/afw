@@ -47,6 +47,8 @@ import lsst.afw.geom as afwGeom
 import eups
 import lsst.afw.display.ds9 as ds9
 
+numpy.random.seed(1)
+
 try:
     type(display)
 except NameError:
