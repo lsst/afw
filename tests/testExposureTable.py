@@ -47,6 +47,8 @@ import lsst.afw.image
 import lsst.afw.detection
 from testTableArchivesLib import DummyPsf
 
+numpy.random.seed(1)
+
 try:
     type(display)
 except NameError:
