@@ -95,12 +95,8 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         logicalLocation = dafPers.LogicalLocation(miPath)
         storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
         storageList = dafPers.StorageList([storage])
-        try:
-            self.persistence.persist(self.maskedImage, storageList, self.additionalData)
-        except pexExceptions.LsstCppException, e:
-            print e.args[0].what()
-            raise
-        
+        self.persistence.persist(self.maskedImage, storageList, self.additionalData)
+      
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

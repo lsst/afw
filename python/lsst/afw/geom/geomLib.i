@@ -41,6 +41,7 @@ Python interface to lsst::afw::geom classes
 #include <vector>
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom.h"
+#include "lsst/pex/exceptions.h"
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
 #include "ndarray/swig.h"
@@ -173,3 +174,10 @@ Python interface to lsst::afw::geom classes
 %include "XYTransform.i"
 %include "Polygon.i"
 %include "TransformMap.i"
+
+%import "lsst/pex/exceptions/exceptionsLib.i"
+
+%declareException(SingularTransformException, lsst.pex.exceptions.RuntimeError,
+                  lsst::afw::geom::SingularTransformException)
+%declareException(SinglePolygonException, lsst.pex.exceptions.RuntimeError,
+                  lsst::afw::geom::SinglePolygonException)

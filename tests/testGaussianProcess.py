@@ -43,20 +43,20 @@ class GaussianProcessTestCase(unittest.TestCase):
         sigma = np.empty(1)
         mu_arr = np.empty(1)
 
-        self.assertRaises(pex.LsstCppException,gg.interpolate,sigma,test,2*nData)
-        self.assertRaises(pex.LsstCppException,gg.interpolate,sigma,test,-5)
-        self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,0,2*nData)
-        self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,0,-5)
-        self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,-1,nData-1)
+        self.assertRaises(pex.Exception,gg.interpolate,sigma,test,2*nData)
+        self.assertRaises(pex.Exception,gg.interpolate,sigma,test,-5)
+        self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,0,2*nData)
+        self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,0,-5)
+        self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,-1,nData-1)
         # the following segfaults, for unknown reasons, so run directly instead
-        #self.assertRaises(pex.LsstCppException,gg.selfInterpolate,sigma,nData,nData-1)
+        #self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
         try:
             gg.interpolate(mu_arr,sigma,2*nData)
             self.fail("gg.interpolate(mu_arr,sigma,2*nData) did not fail")
-        except pex.LsstCppException:
+        except pex.Exception:
             pass
-        self.assertRaises(pex.LsstCppException,gg.interpolate,mu_arr,sigma,2*nData)
-        self.assertRaises(pex.LsstCppException,gg.interpolate,mu_arr,sigma,-5)
+        self.assertRaises(pex.Exception,gg.interpolate,mu_arr,sigma,2*nData)
+        self.assertRaises(pex.Exception,gg.interpolate,mu_arr,sigma,-5)
 
     def testInterpolate(self):
         """
@@ -98,8 +98,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         #first try the squared exponential covariogram (the default)
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         gg.setLambda(0.001)
 
@@ -248,8 +248,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         maxs[2] = 10.0
         try:
             gg = gp.GaussianProcessD(data,mins,maxs,fn,nn)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         gg.setLambda(0.0045)
 
@@ -326,8 +326,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         #establish the Gaussian Process
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         gg.setLambda(0.002)
 
@@ -343,8 +343,8 @@ class GaussianProcessTestCase(unittest.TestCase):
                 mushld = float(s[dd])
             try:
                 gg.addPoint(test,mushld)
-            except pex.LsstCppException,e:
-                print e.args[0].what()
+            except pex.Exception as e:
+                print e.what()
 
 
         f = open("tests/data/gp_additive_test_solutions.sav")
@@ -410,20 +410,20 @@ class GaussianProcessTestCase(unittest.TestCase):
         kd = gp.KdTreeD()
         try:
             kd.Initialize(data)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         kds = gp.KdTreeD()
 
         try:
             kds.Initialize(data)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         try:
             kds.removePoint(2)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         worstErr=-1.0
         for i in range(100):
@@ -437,13 +437,13 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         try:
             kd.removePoint(2)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         try:
             kds.removePoint(10)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         for i in range(99):
             if i > 10:
@@ -456,13 +456,13 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         try:
             kd.removePoint(10)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         try:
             kds.removePoint(21)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         for i in range(98):
             if i > 21:
@@ -501,8 +501,8 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         gg.setLambda(0.0032)
 
@@ -592,8 +592,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         xx.setEllSquared(20.0)
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         gg.setKrigingParameter(30.0)
         gg.setLambda(0.00002)
@@ -613,8 +613,8 @@ class GaussianProcessTestCase(unittest.TestCase):
 
             try:
                 mu = gg.selfInterpolate(variance,i,kk)
-            except pex.LsstCppException, e:
-                print e.args[0].what()
+            except pex.Exception as e:
+                print e.what()
 
 
             err = mu - mushld
@@ -670,8 +670,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         nn.setSigma1(0.76)
         try:
             gg=gp.GaussianProcessD(data,fn,nn);
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         gg.setLambda(0.0045)
 
@@ -719,8 +719,8 @@ class GaussianProcessTestCase(unittest.TestCase):
             s=ff[i].split()
             try:
                 gg.selfInterpolate(mu,sig,i,kk);
-            except pex.LsstCppException, e:
-                print e.args[0].what()
+            except pex.Exception as e:
+                print e.what()
 
             for j in range(4):
                 mushld[j]=float(s[j])
@@ -768,8 +768,8 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         try:
             ggbatch=gp.GaussianProcessD(batchData,batchFunctions,nn)
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         ggbatch.setLambda(0.0045)
 
@@ -839,8 +839,8 @@ class GaussianProcessTestCase(unittest.TestCase):
                 vvf[j]=float(s[j+10])
             try:
                 gg.addPoint(vv,vvf)
-            except pex.LsstCppException, e:
-                print e.args[0].what()
+            except pex.Exception as e:
+                print e.what()
 
         f=open("tests/data/gp_vector_add_solutions.sav","r")
         ff=f.readlines()
@@ -849,8 +849,8 @@ class GaussianProcessTestCase(unittest.TestCase):
             s=ff[i].split()
             try:
                 gg.selfInterpolate(mu,sig,i,kk);
-            except pex.LsstCppException, e:
-                print e.args[0].what()
+            except pex.Exception as e:
+                print e.what()
 
             for j in range(4):
                 mushld[j]=float(s[j])
@@ -906,8 +906,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         xx.setEllSquared(2.3)
         try:
             gg=gp.GaussianProcessD(data,fn,xx);
-        except pex.LsstCppException, e:
-            print e.args[0].what()
+        except pex.Exception as e:
+            print e.what()
 
         gg.setLambda(0.002)
 
@@ -915,8 +915,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         for i in range(1000):
             try:
                 gg.removePoint(j)
-            except pex.LsstCppException, e:
-                print e.args[0].what()
+            except pex.Exception as e:
+                print e.what()
 
             j=j+1
 
@@ -964,8 +964,8 @@ class GaussianProcessTestCase(unittest.TestCase):
             s=ff[i].split()
             try:
                 gg.selfInterpolate(mu,sig,i,kk);
-            except pex.LsstCppException, e:
-                print e.args[0].what()
+            except pex.Exception as e:
+                print e.what()
 
             for j in range(4):
                 mushld[j]=float(s[j])

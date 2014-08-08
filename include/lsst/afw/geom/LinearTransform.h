@@ -34,9 +34,7 @@ namespace lsst {
 namespace afw {
 namespace geom {
 
-#ifndef SWIG
-    LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeError, lsst::afw::geom::SingularTransformException)
-#endif
+LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeError, lsst::afw::geom::SingularTransformException)
 
 /**
  *  \brief A 2D linear coordinate transformation.

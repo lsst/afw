@@ -71,7 +71,7 @@ class TanSipTestCases(unittest.TestCase):
         del self.metadata
 
     def testExcept(self):
-        self.assertRaises(pexExcept.LsstCppException, afwImage.makeWcs, self.metadata)
+        self.assertRaises(pexExcept.Exception, afwImage.makeWcs, self.metadata)
 
 #####
         

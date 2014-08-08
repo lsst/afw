@@ -35,7 +35,7 @@ import eups
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions.exceptionsLib as exceptions
+import lsst.pex.exceptions
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -173,7 +173,7 @@ class SavingSubImagesTest(unittest.TestCase):
         #This subsub image should fail. Although it's big enough to fit in the parent image
         #it's too small for the sub-image
         bbox = afwGeom.Box2I(llc2, afwGeom.Extent2I(100, 110))
-        self.assertRaises(exceptions.LsstCppException, afwImage.ExposureF, subImg, bbox, afwImage.LOCAL)
+        self.assertRaises(lsst.pex.exceptions.Exception, afwImage.ExposureF, subImg, bbox, afwImage.LOCAL)
         
         bbox = afwGeom.Box2I(llc2, afwGeom.Extent2I(10, 11))
         subSubImg = afwImage.ExposureF(subImg, bbox, afwImage.LOCAL)

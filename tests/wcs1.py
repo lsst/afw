@@ -241,7 +241,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         quite right as the result is invalid, but make sure that it still is"""
         raDec = afwCoord.makeCoord(afwCoord.ICRS, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
 
-        self.assertRaises(lsst.pex.exceptions.exceptionsLib.LsstCppException, self.wcs.skyToPixel, raDec)
+        self.assertRaises(lsst.pex.exceptions.Exception, self.wcs.skyToPixel, raDec)
 
     def testCD(self):
         self.wcs.getCDMatrix()

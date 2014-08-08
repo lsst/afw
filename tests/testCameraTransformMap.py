@@ -28,7 +28,7 @@ import itertools
 import unittest
 
 import lsst.utils.tests
-from lsst.pex.exceptions import LsstCppException
+import lsst.pex.exceptions
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 
@@ -129,7 +129,7 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.compare2DFunctions(pupilTr.reverseTransform, self.pupilTransform.reverseTransform)
 
         missingCamSys = cameraGeom.CameraSys("missing")
-        self.assertRaises(LsstCppException, self.transformMap.__getitem__, missingCamSys)
+        self.assertRaises(lsst.pex.exceptions.Exception, self.transformMap.__getitem__, missingCamSys)
 
     def testGet(self):
         """Test the get method
