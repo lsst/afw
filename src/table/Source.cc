@@ -540,6 +540,13 @@ SourceTable::SourceTable(SourceTable const & other) :
     _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
 {}
 
+void SourceTable::handleAliasChange(std::string const & alias) {
+    if (alias.compare(0, 5, "slot_") != 0) {
+        return;
+    }
+    // TODO
+}
+
 SourceTable::MinimalSchema::MinimalSchema() {
     schema = SimpleTable::makeMinimalSchema();
     parent = schema.addField<RecordId>("parent", "unique ID of parent source");
