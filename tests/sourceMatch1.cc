@@ -58,9 +58,9 @@ PTR(afwTable::SourceTable) getGlobalTable() {
     static PTR(afwTable::SourceTable) table;
     if (!table) {
         afwTable::Schema schema = afwTable::SourceTable::makeMinimalSchema();
+        schema.setVersion(0);
         afwTable::addCentroidFields(schema, "centroid", "dummy centroid");
         table = afwTable::SourceTable::make(schema);
-        table->setVersion(0);
         table->defineCentroid("centroid");
     }
     return table;
