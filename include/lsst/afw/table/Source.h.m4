@@ -1,9 +1,9 @@
 changecom(`###')dnl
 // -*- lsst-c++ -*-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010, 2011 LSST Corporation.
- * 
+ * Copyright 2008-2014, 2011 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@ changecom(`###')dnl
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -67,7 +67,6 @@ m4def(`DECLARE_SLOT_DEFINERS',
      */
     void define$1$2(std::string const & name) {
         Schema schema = getSchema();
-        _slot$2$3.name = name;
         if (getVersion() == 0) {
             _slot$2$3.$4 = schema[name];
             try {
@@ -78,27 +77,28 @@ m4def(`DECLARE_SLOT_DEFINERS',
             } catch (pex::exceptions::NotFoundError) {}
             return;
         }
-        _slot$2$3.$4 = schema[name + "_$4"];
-        try {
-            _slot$2$3.$4Sigma = schema[name + "_$4Sigma"];
-        } catch (pex::exceptions::NotFoundError) {}
-        try {
-            _slot$2$3.flag = schema[name + "_flag"];
-        } catch (pex::exceptions::NotFoundError) {}
+        schema.getAliasMap()->set("slot_$1$2", name);
     }
 
-    /// @brief Return the name of the field used for the $1$2 slot.
+    /**
+     *  @brief Return the name of the field used for the $1$2 slot.
+     *
+     *  @throw pex::exceptions::NotFoundError if the slot is not defined
+     */
     std::string get$1$2Definition() const {
-        return _slot$2$3.name;
+        if (getVersion() == 0) {
+            return _slot$2$3.name; // valid for version > 0, too, but we plan to remove .name eventually.
+        }
+        return getSchema().getAliasMap()->get("slot_$1$2");
     }
-    /// @brief Return the true if the Centroid slot is valid
 
+    /// @brief Return the true if the Centroid slot is valid
     bool has$1$2Slot() const {
         return _slot$2$3.flux.isValid();
     }
 
     /// @brief Return the key used for the $1$2 slot.
-    $2::MeasKey get$1$2Key() const { 
+    $2::MeasKey get$1$2Key() const {
         return _slot$2$3.$4;
     }
 
@@ -202,6 +202,7 @@ struct FluxKeys {
     Key<double> fluxSigma;
     Key<Flag> flag;
 };
+
 struct CentroidKeys {
     std::string name;
     lsst::afw::table::Point2DKey pos;
@@ -213,43 +214,45 @@ struct CentroidKeys {
 
     /// Main constructor.
     CentroidKeys(
-    std::string const & name_,
-    lsst::afw::table::Point2DKey const & pos_,
-    lsst::afw::table::CovarianceMatrixKey<float,2> const & posErr_,
-    Key<Flag> const & flag_
+        std::string const & name_,
+        lsst::afw::table::Point2DKey const & pos_,
+        lsst::afw::table::CovarianceMatrixKey<float,2> const & posErr_,
+        Key<Flag> const & flag_
     ) : name(name_), pos(pos_), posErr(posErr_), flag(flag_) {}
 
     // No error constructor
     CentroidKeys(
-    std::string const & name_,
-    lsst::afw::table::Point2DKey const & pos_,
-    Key<Flag> const & flag_
+        std::string const & name_,
+        lsst::afw::table::Point2DKey const & pos_,
+        Key<Flag> const & flag_
     ) : name(name_), pos(pos_), flag(flag_) {}
 };
+
 struct ShapeKeys {
     std::string name;
     lsst::afw::table::QuadrupoleKey quadrupole;
     lsst::afw::table::CovarianceMatrixKey<float,3> quadrupoleErr;
     Key<Flag> flag;
-    
+
     /// Default-constructor; all keys will be invalid.
     ShapeKeys() {}
 
     /// Main constructor.
     ShapeKeys(
-    std::string const & name_,
-    lsst::afw::table::QuadrupoleKey const & quadrupole_,
-    lsst::afw::table::CovarianceMatrixKey<float,3> const & quadrupoleErr_,
-    Key<Flag> flag_
+        std::string const & name_,
+        lsst::afw::table::QuadrupoleKey const & quadrupole_,
+        lsst::afw::table::CovarianceMatrixKey<float,3> const & quadrupoleErr_,
+        Key<Flag> flag_
     ) : name(name_), quadrupole(quadrupole_), quadrupoleErr(quadrupoleErr_), flag(flag_) {}
 
     /// No error constructor.
     ShapeKeys(
-    std::string const & name_,
-    lsst::afw::table::QuadrupoleKey const & quadrupole_,
-    Key<Flag> flag_
+        std::string const & name_,
+        lsst::afw::table::QuadrupoleKey const & quadrupole_,
+        Key<Flag> flag_
     ) : name(name_), quadrupole(quadrupole_), flag(flag_) {}
 };
+
 /**
  *  @brief A three-element tuple of measurement, uncertainty, and flag keys.
  *
@@ -409,7 +412,7 @@ public:
 
     /**
      *  @brief Return true if the given schema is a valid SourceTable schema.
-     *  
+     *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
@@ -465,36 +468,15 @@ public:
            } catch (pex::exceptions::NotFoundError) {}
             return;
         }
-        _slotCentroid.pos = lsst::afw::table::Point2DKey(schema[name+"_x"], schema[name+"_y"]);
-        std::vector< Key<float> > sigma = std::vector< Key<float> >();
-        std::vector< Key<float> > cov = std::vector< Key<float> >();
-        try {
-            _slotCentroid.flag = schema[name + "_flag"];
-        } catch (pex::exceptions::NotFoundError) {}
-        try {
-            sigma.push_back(schema[name+"_xSigma"]);
-            sigma.push_back(schema[name+"_ySigma"]);
-            try {
-                cov.push_back(schema[name+"_xyCov"]);
-            } catch (pex::exceptions::NotFoundError) {}
-            _slotCentroid.posErr = lsst::afw::table::CovarianceMatrixKey<float,2>(sigma, cov);
-        } catch (pex::exceptions::NotFoundError) {}
-/*  This code will go in place of the else clause immediately above when the SubSchema change is made
-            _slotCentroid.name = name;
-            _slotCentroid.pos = lsst::afw::table::Point2DKey(name);
-            SubSchema sub = schema[name];
-            try {
-                CovarianceMatrixKey<float,2>::NameArray names = CovarianceMatrixKey<float,2>::NameArray(); 
-                names.push_back("x");
-                names.push_back("y");
-                _slotCentroid.posErr = CovarianceMatrixKey<float,2>(sub, names);
-            } catch (pex::exceptions::NotFoundError) {}
-*/
+        schema.getAliasMap()->set("slot_Centroid", name);
     }
-    
+
     /// @brief Return the name of the field used for the Centroid slot.
     std::string getCentroidDefinition() const {
-        return _slotCentroid.name;
+        if (getVersion() == 0) {
+            return _slotCentroid.name; // valid for version > 0, too, but we plan to remove .name eventually.
+        }
+        return getSchema().getAliasMap()->get("slot_Centroid");
     }
 
     /// @brief Return the true if the Centroid slot is valid
@@ -503,17 +485,17 @@ public:
     }
     /// @brief Return the key used for the Centroid slot.
     lsst::afw::table::Point2DKey getCentroidKey() const {
-        return _slotCentroid.pos; 
+        return _slotCentroid.pos;
     }
 
     /// @brief Return the key used for Centroid slot error or covariance.
     lsst::afw::table::CovarianceMatrixKey<float,2> getCentroidErrKey() const {
-        return _slotCentroid.posErr; 
+        return _slotCentroid.posErr;
     }
 
     /// @brief Return the key used for the Centroid slot success flag.
     Key<Flag> getCentroidFlagKey() const {
-            return _slotCentroid.flag;
+        return _slotCentroid.flag;
     }
 
     /**
@@ -542,41 +524,15 @@ public:
             } catch (pex::exceptions::NotFoundError) {}
             return;
         }
-        _slotShape.quadrupole = lsst::afw::table::QuadrupoleKey(
-            schema[name + "_xx"],schema[name + "_yy"],schema[name + "_xy"]);
-        try {
-            _slotShape.flag = schema[name + "_flag"];
-        } catch (pex::exceptions::NotFoundError) {}
-        std::vector< Key<float> > sigma = std::vector< Key<float> >();
-        std::vector< Key<float> > cov = std::vector< Key<float> >();
-        try {
-            sigma.push_back(schema[name+"_xxSigma"]);
-            sigma.push_back(schema[name+"_yySigma"]);
-            sigma.push_back(schema[name+"_xySigma"]);
-            try {
-                cov.push_back(schema[name + "_xx_yy_Cov"]);
-                cov.push_back(schema[name + "_xx_xy_Cov"]);
-                cov.push_back(schema[name + "_yy_xy_Cov"]);
-            } catch (pex::exceptions::NotFoundError) {}
-            _slotShape.quadrupoleErr = lsst::afw::table::CovarianceMatrixKey<float,3>(sigma, cov);
-        } catch (pex::exceptions::NotFoundError) {}
+        schema.getAliasMap()->set("slot_Shape", name);
     }
-            
-/*  This code will go in place of the else clause immediately above when the SubSchema change is made
-            _slotShape.name = name;
-            _slotShape.quadrupole = lsst::afw::table::QuadrupoleKey(name);
-            SubSchema sub = schema[name];
-            try {
-                CovarianceMatrixKey<float,3>::NameArray names = CovarianceMatrixKey<float,3>::NameArray(); 
-                names.push_back("xx");
-                names.push_back("yy");
-                names.push_back("xy");
-                _slotShape.quadrupoleErr = CovarianceMatrixKey<float,3>(sub, names);
-            } catch (pex::exceptions::NotFoundError) {}
-*/
+
     /// @brief Return the name of the field used for the Shape slot.
     std::string getShapeDefinition() const {
-        return _slotShape.name;
+        if (getVersion() == 0) {
+            return _slotShape.name; // valid for version > 0, too, but we plan to remove .name eventually.
+        }
+        return getSchema().getAliasMap()->get("slot_Shape");
     }
 
     /// @brief Return the true if the Centroid slot is valid
@@ -586,7 +542,7 @@ public:
 
     /// @brief Return the key used for the Shape slot.
     lsst::afw::table::QuadrupoleKey getShapeKey() const {
-        return _slotShape.quadrupole; 
+        return _slotShape.quadrupole;
     }
 
     /// @brief Return the key used for Shape slot error or covariance.
@@ -605,6 +561,8 @@ protected:
 
     SourceTable(SourceTable const & other);
 
+    virtual void handleAliasChange(std::string const & alias);
+
 private:
 
     // Struct that holds the minimal schema and the special keys we've added to it.
@@ -614,7 +572,7 @@ private:
 
         MinimalSchema();
     };
-    
+
     // Return the singleton minimal schema.
     static MinimalSchema & getMinimalSchema();
 
@@ -710,16 +668,16 @@ inline double SourceRecord::getX() const {
     return get(getTable()->getCentroidKey().getX());
 }
 inline double SourceRecord::getY() const {
-    return get(getTable()->getCentroidKey().getY()); 
+    return get(getTable()->getCentroidKey().getY());
 }
 inline double SourceRecord::getIxx() const {
-    return get(getTable()->getShapeKey().getIxx()); 
+    return get(getTable()->getShapeKey().getIxx());
 }
 inline double SourceRecord::getIyy() const {
-    return get(getTable()->getShapeKey().getIyy()); 
+    return get(getTable()->getShapeKey().getIyy());
 }
 inline double SourceRecord::getIxy() const {
-    return get(getTable()->getShapeKey().getIxy()); 
+    return get(getTable()->getShapeKey().getIxy());
 }
 
 #endif // !SWIG
