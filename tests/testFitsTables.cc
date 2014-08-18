@@ -61,6 +61,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     std::string filename = "tests/data/testTable.fits";
 
     Schema schema = SourceTable::makeMinimalSchema();
+    schema.setVersion(0);
     Key<int> a_b_i = schema.addField<int>("a.b.i", "int");
     Key<Flag> a_b_i_valid = schema.addField<Flag>("a.b.i.valid", "is field a.b.i valid?");
     Key<float> a_c_f = schema.addField<float>("a.c.f", "an extremely long string for documenting this float field that will require use of the FITS long-string convention that splits long values up and puts them on different keys using CONTINUE.", "femtoseamonkeys");
@@ -73,7 +74,6 @@ BOOST_AUTO_TEST_CASE(testFits) {
     KeyTuple<Flux> flux = addFluxFields(schema, "flux", "flux doc");
     KeyTuple<Centroid> centroid = addCentroidFields(schema, "centroid", "centroid doc");
     SourceCatalog vector(SourceTable::make(schema));
-    vector.getTable()->setVersion(0);
     vector.getTable()->defineModelFlux("flux");
     vector.getTable()->defineCentroid("centroid");
 

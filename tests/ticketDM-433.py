@@ -129,11 +129,11 @@ class SourceTableTestCase(unittest.TestCase):
 
     def setUp(self):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        self.schema.setVersion(1)
         self.makeFlux(self.schema, "a", 1) 
         self.makeCentroid(self.schema, "b", 2) 
         self.makeShape(self.schema, "c", 2) 
         self.table = lsst.afw.table.SourceTable.make(self.schema)
-        self.table.setVersion(1)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
         self.record = self.catalog.addNew()
         self.fillRecord(self.record)
