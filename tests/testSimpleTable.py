@@ -585,11 +585,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         """
         # Now test with a BaseTable
         schema = lsst.afw.table.Schema()
+        schema.setVersion(5)
         schema.addField("f1", doc="f1a", type="I")
         schema.addField("f2", doc="f2a", type="Flag")
         schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         catalog = lsst.afw.table.BaseCatalog(schema)
-        catalog.getTable().setVersion(5)
         self.assertEqual(catalog.getTable().getVersion(), 5)
         catalog.writeFits("test.fits")
         # now read the table just written to disk, and see if it reads back correctly
@@ -602,11 +602,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
         # Now test with a SimpleTable
         schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
+        schema.setVersion(5)
         schema.addField("f1", doc="f1a", type="I")
         schema.addField("f2", doc="f2a", type="Flag")
         schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         catalog = lsst.afw.table.SimpleCatalog(schema)
-        catalog.getTable().setVersion(5)
         self.assertEqual(catalog.getTable().getVersion(), 5)
         catalog.writeFits("test.fits")
         # now read the table just written to disk, and see if it reads back correctly
@@ -619,11 +619,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
         #  Now a SourceTable
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        schema.setVersion(5)
         schema.addField("f1", doc="f1a", type="I")
         schema.addField("f2", doc="f2a", type="Flag")
         schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         catalog = lsst.afw.table.SourceCatalog(schema)
-        catalog.getTable().setVersion(5)
         self.assertEqual(catalog.getTable().getVersion(), 5)
         catalog.writeFits("test.fits")
         # now read the table just written to disk, and see if it reads back correctly
@@ -638,10 +638,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         """Test version-dependent replacement of periods with underscores.
         """
         schema1 = lsst.afw.table.Schema()
+        schema1.setVersion(0)
         schema1.addField("a.b.c", type=float, doc="test field 1")
         schema1.addField("a.b.d", type="Flag", doc="test field 2")
         schema1.addField("a.b.e", type=str, doc="test field 3", size=16)
         schema2 = lsst.afw.table.Schema()
+        schema2.setVersion(0)
         schema2.addField("a_b_c", type=float, doc="test field 1")
         schema2.addField("a_b_d", type="Flag", doc="test field 2")
         schema2.addField("a_b_e", type=str, doc="test field 3", size=16)
@@ -650,7 +652,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         # For version 0, we should replace periods with underscores when we write
         # and do the reverse when we read
         cat = lsst.afw.table.BaseCatalog(schema1)
-        cat.setVersion(0)
         cat.writeFits(filename)
         if pyfits is not None:
             fits = pyfits.open(filename)
@@ -666,7 +667,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
         # For version 1, we shouldn't do any such replacement
         cat = lsst.afw.table.BaseCatalog(schema1)
-        cat.setVersion(1)
         cat.writeFits(filename)
         if pyfits is not None:
             fits = pyfits.open(filename)
@@ -681,7 +681,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
         # Also make sure that version 1 underscores are preserved
         cat = lsst.afw.table.BaseCatalog(schema2)
-        cat.setVersion(1)
         cat.writeFits(filename)
         if pyfits is not None:
             fits = pyfits.open(filename)
