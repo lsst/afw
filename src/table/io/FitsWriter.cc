@@ -70,8 +70,8 @@ struct ProcessSchema {
     }
 
     // Create and apply the functor to a schema.
-    static void apply(Fits & fits, Schema const & schema) {
-        ProcessSchema f = { &fits, 0, schema.getVersion() };
+    static void apply(Fits & fits, Schema const & schema, int version) {
+        ProcessSchema f = { &fits, 0, version };
         schema.forEach(boost::ref(f));
     }
 
@@ -168,7 +168,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
-    ProcessSchema::apply(*_fits, schema);
+    ProcessSchema::apply(*_fits, schema, schema.getVersion());
     writeAliasMap(*_fits, *schema.getAliasMap());
     // write the version number to the fits header, plus any other metadata
     PTR(daf::base::PropertyList) metadata = table->getMetadata();
