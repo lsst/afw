@@ -233,6 +233,7 @@ void FitsReader::_readSchema(
     FitsSchema intermediate;
     int version = metadata.get("AFW_TABLE_VERSION", 0);
     schema.setVersion(version);
+    if (stripMetadata && metadata.exists("AFW_TABLE_VERSION")) metadata.remove("AFW_TABLE_VERSION");
     int flagCol = metadata.get("FLAGCOL", 0);
     if (flagCol > 0) {
         metadata.remove("FLAGCOL");
@@ -363,9 +364,6 @@ PTR(BaseTable) FitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
     Schema schema(*metadata, true);
-    int version = metadata->get<int>("AFW_TABLE_VERSION", 0);
-    if (metadata->exists("AFW_TABLE_VERSION")) metadata->remove("AFW_TABLE_VERSION");
-    schema.setVersion(version);
     PTR(BaseTable) table = BaseTable::make(schema);
     table->setMetadata(metadata);
     _startRecords(*table);
