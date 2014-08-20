@@ -157,11 +157,26 @@ class SchemaTestCase(unittest.TestCase):
         self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_UNITS)
         self.assertFalse(schema1.compare(schema3, lsst.afw.table.Schema.EQUAL_NAMES))
 
+    def testDelimiter(self):
+        s0 = lsst.afw.table.Schema(0)
+        s1 = lsst.afw.table.Schema(1)
+        k0abc = s0.addField("a.b.c", type=int, doc="version 0: period separators")
+        k1abc = s1.addField("a_b_c", type=int, doc="version 1: underscore separators")
+        # Note: eventually we'll remove compound types like Point2I, but in the meantime we want subfields
+        #       to be accessed properly
+        k0d = s0.addField("d", type="PointI", doc="version 0: period separators")
+        k1d = s1.addField("d", type="PointI", doc="version 1: underscore separators")
+        self.assertEqual(s0["a"]["b"].find("c").key, k0abc)
+        self.assertEqual(s1["a"]["b"].find("c").key, k1abc)
+        self.assertEqual(s0.find("d.x").key, k0d.getX())
+        self.assertEqual(s1.find("d_x").key, k1d.getX())
+
     def testVersions(self):
         s0 = lsst.afw.table.Schema(0)
         s1 = lsst.afw.table.Schema(1)
         self.assertEqual(s0.getVersion(), 0)
         self.assertEqual(s1.getVersion(), 1)
+
         s0.setVersion(1)
         s1.setVersion(0)
         self.assertEqual(s0.getVersion(), 1)
