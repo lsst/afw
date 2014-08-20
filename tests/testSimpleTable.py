@@ -666,6 +666,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         os.remove(filename)
 
         # For version 1, we shouldn't do any such replacement
+        schema1.setVersion(1)
         cat = lsst.afw.table.BaseCatalog(schema1)
         cat.writeFits(filename)
         if pyfits is not None:
@@ -680,6 +681,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         os.remove(filename)
 
         # Also make sure that version 1 underscores are preserved
+        schema2.setVersion(1)
         cat = lsst.afw.table.BaseCatalog(schema2)
         cat.writeFits(filename)
         if pyfits is not None:
