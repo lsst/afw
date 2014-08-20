@@ -23,12 +23,13 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-// Concatenate two strings with a period between them.
-std::string join(std::string const & a, std::string const & b) {
+// Concatenate two strings with a period or underscore between them, depending on the version
+std::string join(std::string const & a, std::string const & b, int version) {
+    char delimiter = (version > 0) ? '_' : '.';
     std::string full;
     full.reserve(a.size() + b.size() + 1);
     full += a;
-    full.push_back('.');
+    full.push_back(delimiter);
     full += b;
     return full;
 }
@@ -146,7 +147,7 @@ inline int findNamedSubfield(
 // subfield and put it in the result smart pointer.
 template <typename T, typename U>
 inline void makeSubfieldItem(
-    SchemaItem<T> const & item, int index,
+    SchemaItem<T> const & item, int index, int version,
     boost::scoped_ptr< SchemaItem<U> > & result,
     boost::mpl::true_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {
@@ -154,7 +155,7 @@ inline void makeSubfieldItem(
         new SchemaItem<U>(
             detail::Access::extractElement(item.key, index),
             Field<U>(
-                join(item.field.getName(), Key<T>::subfields[index]),
+                join(item.field.getName(), Key<T>::subfields[index], version),
                 item.field.getDoc(),
                 item.field.getUnits()
             )
@@ -165,7 +166,7 @@ inline void makeSubfieldItem(
 // An overload of makeSubfieldItem that always fails because we know T and U aren't compatible.
 template <typename T, typename U>
 inline void makeSubfieldItem(
-    SchemaItem<T> const & item, int index,
+    SchemaItem<T> const & item, int index, int version,
     boost::scoped_ptr< SchemaItem<U> > & result,
     boost::mpl::false_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {}
@@ -190,11 +191,12 @@ struct ExtractItemByName : public boost::static_visitor<> {
         // We use that type to dispatch one of the two overloads of findNamedSubfield.
         int n = findNamedSubfield(item, name, (IsMatchPossible*)0);
         // If we have a match, we call another overloaded template to make the subfield.
-        if (n >= 0) makeSubfieldItem(item, n, result, (IsMatchPossible*)0);
+        if (n >= 0) makeSubfieldItem(item, n, version, result, (IsMatchPossible*)0);
     }
 
-    explicit ExtractItemByName(std::string const & name_) : name(name_) {}
+    explicit ExtractItemByName(std::string const & name_, int version_) : version(version_), name(name_) {}
 
+    int version;
     std::string name; // name we're looking for
     mutable boost::scoped_ptr< SchemaItem<U> > result; // where we put the result to signal that we're done
 };
@@ -220,7 +222,7 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
     }
     // We didn't get an exact match, but we might be searching for "a.x" and "a" might be a point field.
     // Because the names are sorted, we know we overshot it, so we work backwards.
-    ExtractItemByName<T> extractor(name);
+    ExtractItemByName<T> extractor(name, _version);
     while (i != _names.begin()) {
         --i;
         boost::apply_visitor(extractor, _items[i->second]); // see if the current item is a match
@@ -283,11 +285,12 @@ struct ExtractItemByKey : public boost::static_visitor<> {
         int n = findKeySubfield(item, key, (IsMatchPossible*)0);
         // If we have a match, we call another overloaded template to make the subfield.
         // (this is the same  makeSubfieldItem used in ExtractItemByName, so it's defined up there)
-        if (n >= 0) makeSubfieldItem(item, n, result, (IsMatchPossible*)0);
+        if (n >= 0) makeSubfieldItem(item, n, version, result, (IsMatchPossible*)0);
     }
 
-    explicit ExtractItemByKey(Key<U> const & key_) : key(key_) {}
+    explicit ExtractItemByKey(Key<U> const & key_, int version_) : version(version_), key(key_) {}
 
+    int version;
     Key<U> key;
     mutable boost::scoped_ptr< SchemaItem<U> > result;
 };
@@ -308,7 +311,7 @@ SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
         }
         // We didn't get an exact match, but we might be searching for a subfield.
         // Because the offsets are sorted, we know we overshot it, so we work backwards.
-        ExtractItemByKey<T> extractor(key);
+        ExtractItemByKey<T> extractor(key, _version);
         while (i != _offsets.begin()) {
             --i;
             boost::apply_visitor(extractor, _items[i->second]);
@@ -747,11 +750,11 @@ SubSchema::SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & 
 
 template <typename T>
 SchemaItem<T> SubSchema::find(std::string const & name) const {
-    return _impl->find<T>(_aliases->apply(join(_name, name)));
+    return _impl->find<T>(_aliases->apply(join(_name, name, _impl->getVersion())));
 }
 
 SubSchema SubSchema::operator[](std::string const & name) const {
-    return SubSchema(_impl, _aliases, join(_name, name));
+    return SubSchema(_impl, _aliases, join(_name, name, _impl->getVersion()));
 }
 
 std::set<std::string> SubSchema::getNames(bool topOnly) const {
