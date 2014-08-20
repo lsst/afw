@@ -47,6 +47,8 @@ class Schema {
     typedef detail::SchemaImpl Impl;
 public:
 
+    static int const DEFAULT_VERSION = 0;
+
     /**
      *  @brief Bit flags used when comparing schemas.
      *
@@ -252,7 +254,10 @@ public:
     void disconnectAliases();
 
     /// @brief Construct an empty Schema.
-    explicit Schema();
+    Schema();
+
+    /// @brief Construct an empty Schema with the given version.
+    explicit Schema(int version);
 
     /// @brief Copy constructor.
     Schema(Schema const & other);
