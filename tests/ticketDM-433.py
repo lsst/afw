@@ -66,7 +66,7 @@ def makeWcs():
     crpix = lsst.afw.geom.Point2D(2036., 2000.)
     return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
 
-class SourceTableTestCase(unittest.TestCase):
+class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def fillRecord(self, record):
         record.set(self.fluxKey, numpy.random.randn())
@@ -96,7 +96,7 @@ class SourceTableTestCase(unittest.TestCase):
             sigmaArray.append(self.centroidXErrKey)
             sigmaArray.append(self.centroidYErrKey)
         if uncertainty > 1:
-            self.centroidXYCovKey = self.schema.addField(prefix+"_xyCov", type="F")
+            self.centroidXYCovKey = self.schema.addField(prefix+"_x_y_Cov", type="F")
             covArray.append(self.centroidXYCovKey)
         self.centroidKey = lsst.afw.table.Point2DKey(self.centroidXKey, self.centroidYKey)
    
@@ -158,16 +158,17 @@ class SourceTableTestCase(unittest.TestCase):
         catalog = lsst.afw.table.SourceCatalog.readFits("test.fits")
         table = catalog.getTable()
         record = catalog[0]
-        # I'm using the keys from the non-persisted table.  They should work at least in the current implementation
+        # I'm using the keys from the non-persisted table.  They should work at least in the
+        # current implementation
         self.assertEqual(table.getPsfFluxDefinition(), "a")
         self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
         self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
         self.assertEqual(table.getCentroidDefinition(), "b")
         self.assertEqual(record.get(self.centroidKey), record.getCentroid())
-        self.assert_(numpy.all(record.get(self.centroidErrKey) == record.getCentroidErr()))
+        self.assertClose(record.get(self.centroidErrKey), record.getCentroidErr())
         self.assertEqual(table.getShapeDefinition(), "c")
         self.assertEqual(record.get(self.shapeKey), record.getShape())
-        self.assert_(numpy.all(record.get(self.shapeErrKey) == record.getShapeErr()))
+        self.assertClose(record.get(self.shapeErrKey), record.getShapeErr())
         os.unlink("test.fits")
 
     def testDefiner1(self):
@@ -179,10 +180,10 @@ class SourceTableTestCase(unittest.TestCase):
         self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
         self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
-        self.assert_(numpy.all(self.record.get(self.centroidErrKey) == self.record.getCentroidErr()))
+        self.assertClose(self.record.get(self.centroidErrKey), self.record.getCentroidErr())
         self.assertEqual(self.table.getShapeDefinition(), "c")
         self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
-        self.assert_(numpy.all(self.record.get(self.shapeErrKey) == self.record.getShapeErr()))
+        self.assertClose(self.record.get(self.shapeErrKey), self.record.getShapeErr())
 
     def testCoordUpdate(self):
         self.table.defineCentroid("b")
