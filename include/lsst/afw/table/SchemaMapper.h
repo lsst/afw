@@ -147,7 +147,7 @@ public:
     explicit SchemaMapper();
 
     /**
-     *  @brief Construct a mapper from the given input Schema and optional initial output Schema
+     *  @brief Construct a mapper from the given input Schema and initial output Schema
      *
      *  @param[in] input    The Schema that fields will be mapped from.
      *  @param[in] output   The starting point for the Schema that fields will be mapped to (no
@@ -161,7 +161,22 @@ public:
      *  output schema and construct it as fields are mapped from the input schema, or be sure
      *  to always pass doReplace=true to addMapping.
      */
-    explicit SchemaMapper(Schema const & input, Schema const & output=Schema());
+    explicit SchemaMapper(Schema const & input, Schema const & output);
+
+    /**
+     *  @brief Construct a mapper from the given input Schema
+     *
+     *  @param[in] input    The Schema that fields will be mapped from.
+     *
+     *  Note that the addMapping() methods will not connect input schema fields to existing
+     *  output schema fields unless doReplace=true; instead, these will by default append
+     *  new fields to the output schema.  So most often you'll want to start with an empty
+     *  output schema and construct it as fields are mapped from the input schema, or be sure
+     *  to always pass doReplace=true to addMapping.
+     *
+     *  The initial (empty) output schema will have the same version as the input schema.
+     */
+    explicit SchemaMapper(Schema const & input);
 
     /// @brief Copy construct (copy-on-write).
     SchemaMapper(SchemaMapper const & other);
