@@ -13,74 +13,6 @@
 // We ASSUME, for FITS persistence:
 typedef float HeavyFootprintPixelT;
 
-// Some boilerplate macros for saving/loading Source slot aliases to/from FITS headers.
-// Didn't seem to be quite enough to give the file the full M4 treatment.
-
-#define SAVE_MEAS_SLOT(NAME, Name, TYPE, Type)                              \
-    if (table->getVersion() == 0) {                                         \
-        if (table->has ## Name ## Type ## Slot()) {                \
-            std::string s = table->get ## Name ## Type ## Definition(); \
-            std::replace(s.begin(), s.end(), '.', '_');                     \
-            _fits->writeKey(#NAME #TYPE "_SLOT", s.c_str(), "Defines the " #Name #Type " slot"); \
-        }                                                                   \
-        if (table->has ## Name ## Type ## Slot()) {             \
-            std::string s = table->get ## Name ## Type ## Definition() + ".err"; \
-            std::replace(s.begin(), s.end(), '.', '_');                     \
-            _fits->writeKey(#NAME #TYPE "_ERR_SLOT", s.c_str(),             \
-                            "Defines the " #Name #Type "Err slot");         \
-        }                                                                   \
-        if (table->get ## Name ## Type ## Flag ## Key().isValid()) {        \
-            std::string s = table->get ## Name ## Type ## Definition() + ".flags"; \
-            std::replace(s.begin(), s.end(), '.', '_');                     \
-            _fits->writeKey(#NAME #TYPE "_FLAG_SLOT", s.c_str(),            \
-                            "Defines the " #Name #Type "Flag slot");        \
-        }                                                                   \
-    }                                                                       \
-    else {                                                                  \
-        std::string s = table->get ## Name ## Type ## Definition();         \
-        if (s.size() > 0) {                                                 \
-            _fits->writeKey(#NAME #TYPE "_SLOT", s.c_str(),                 \
-                            "Defines the " #Name #Type " slot");            \
-        }                                                                   \
-    }
-
-#define SAVE_FLUX_SLOT(NAME, Name) SAVE_MEAS_SLOT(NAME ## _, Name, FLUX, Flux)
-#define SAVE_CENTROID_SLOT() SAVE_MEAS_SLOT(, , CENTROID, Centroid)
-#define SAVE_SHAPE_SLOT() SAVE_MEAS_SLOT(, , SHAPE, Shape)
-
-#define LOAD_MEAS_SLOT(NAME, Name, TYPE, Type)                          \
-    {                                                                   \
-        if (table->getVersion() == 0) {                                     \
-            _fits->behavior &= ~fits::Fits::AUTO_CHECK;                     \
-            std::string s, sErr, sFlag;                                     \
-            _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
-            std::replace(s.begin(), s.end(), '_', '.');                 \
-            if (_fits->status == 0) {                                       \
-                metadata->remove(#NAME #TYPE "_SLOT");                      \
-                metadata->remove(#NAME #TYPE "_ERR_SLOT");                  \
-                metadata->remove(#NAME #TYPE "_FLAG_SLOT");                 \
-                table->define ## Name ## Type(s); \
-            } else {                                                        \
-                _fits->status = 0;                                          \
-            }                                                               \
-            _fits->behavior |= fits::Fits::AUTO_CHECK;                      \
-        }                                                                   \
-        else {                                                              \
-            _fits->behavior &= ~fits::Fits::AUTO_CHECK;                     \
-            std::string s;                                                  \
-            _fits->readKey(#NAME #TYPE "_SLOT", s);                         \
-            if (_fits->status == 0) {                                       \
-                metadata->remove(#NAME #TYPE "_SLOT");                      \
-                table->define ## Name ## Type(s);                           \
-            } else {                                                        \
-                _fits->status = 0;                                          \
-            }                                                               \
-            _fits->behavior |= fits::Fits::AUTO_CHECK;                      \
-        }                                                                   \
-    }
-#define LOAD_FLUX_SLOT(NAME, Name) LOAD_MEAS_SLOT(NAME ## _, Name, FLUX, Flux)
-#define LOAD_CENTROID_SLOT() LOAD_MEAS_SLOT(, , CENTROID, Centroid)
-#define LOAD_SHAPE_SLOT() LOAD_MEAS_SLOT(, , SHAPE, Shape)
 namespace lsst { namespace afw { namespace table {
 
 //-----------------------------------------------------------------------------------------------------------
@@ -150,7 +82,7 @@ public:
     {}
 
 protected:
-    
+
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
     virtual void _writeRecord(BaseRecord const & record);
@@ -187,12 +119,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         }
     }
     _fits->writeKey("AFW_TYPE", "SOURCE", "Tells lsst::afw to load this as a Source table.");
-    SAVE_FLUX_SLOT(PSF, Psf);
-    SAVE_FLUX_SLOT(MODEL, Model);
-    SAVE_FLUX_SLOT(AP, Ap);
-    SAVE_FLUX_SLOT(INST, Inst);
-    SAVE_CENTROID_SLOT();
-    SAVE_SHAPE_SLOT();
+    table->writeSlots(*_fits);
 }
 
 void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
@@ -315,15 +242,9 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     --_heavyVarCol;
     Schema schema(*metadata, true);
     PTR(SourceTable) table =  SourceTable::make(schema, PTR(IdFactory)());
+    table->readSlots(*metadata, true);
     table->setMetadata(metadata);
     _startRecords(*table);
-    // None of the code below depends on _startRecords?
-    LOAD_FLUX_SLOT(PSF, Psf);
-    LOAD_FLUX_SLOT(MODEL, Model);
-    LOAD_FLUX_SLOT(AP, Ap);
-    LOAD_FLUX_SLOT(INST, Inst);
-    LOAD_CENTROID_SLOT();
-    LOAD_SHAPE_SLOT();
     return table;
 }
 
@@ -449,18 +370,17 @@ PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const &
 SourceTable::SourceTable(
     Schema const & schema,
     PTR(IdFactory) const & idFactory
-) : SimpleTable(schema, idFactory) {}
+) : SimpleTable(schema, idFactory), _slots(schema.getVersion()) {}
 
 SourceTable::SourceTable(SourceTable const & other) :
-    SimpleTable(other),
-    _slotFlux(other._slotFlux), _slotCentroid(other._slotCentroid), _slotShape(other._slotShape)
+    SimpleTable(other), _slots(other._slots)
 {}
 
 void SourceTable::handleAliasChange(std::string const & alias) {
-    if (alias.compare(0, 5, "slot_") != 0) {
+    if (getVersion() == 0 || alias.compare(0, 5, "slot_") != 0) {
         return;
     }
-    // TODO
+    _slots.handleAliasChange(alias, getSchema());
 }
 
 SourceTable::MinimalSchema::MinimalSchema() {
