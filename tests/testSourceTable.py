@@ -81,6 +81,7 @@ class SourceTableTestCase(unittest.TestCase):
 
     def setUp(self):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        self.schema.setVersion(0)
         self.fluxKey = self.schema.addField("a", type="D")
         self.fluxErrKey = self.schema.addField("a.err", type="D")
         self.fluxFlagKey = self.schema.addField("a.flags", type="Flag")
@@ -91,7 +92,6 @@ class SourceTableTestCase(unittest.TestCase):
         self.shapeErrKey = self.schema.addField("c.err", type="CovMomentsF")
         self.shapeFlagKey = self.schema.addField("c.flags", type="Flag")
         self.table = lsst.afw.table.SourceTable.make(self.schema)
-        self.table.setVersion(0)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
         self.record = self.catalog.addNew()
         self.fillRecord(self.record)

@@ -157,6 +157,16 @@ class SchemaTestCase(unittest.TestCase):
         self.assertTrue(cmp2 & lsst.afw.table.Schema.EQUAL_UNITS)
         self.assertFalse(schema1.compare(schema3, lsst.afw.table.Schema.EQUAL_NAMES))
 
+    def testVersions(self):
+        s0 = lsst.afw.table.Schema(0)
+        s1 = lsst.afw.table.Schema(1)
+        self.assertEqual(s0.getVersion(), 0)
+        self.assertEqual(s1.getVersion(), 1)
+        s0.setVersion(1)
+        s1.setVersion(0)
+        self.assertEqual(s0.getVersion(), 1)
+        self.assertEqual(s1.getVersion(), 0)
+
 class SchemaMapperTestCase(unittest.TestCase):
     
     def testJoin(self):
@@ -254,6 +264,19 @@ class SchemaMapperTestCase(unittest.TestCase):
         mapper3 = lsst.afw.table.SchemaMapper(inSchema, outSchema)
         mapper3.addMapping(ka, "c", True)
         self.assertEqual(mapper3.getMapping(ka), kc)
+
+    def testVersions(self):
+        s0 = lsst.afw.table.Schema(0)
+        s1 = lsst.afw.table.Schema(1)
+        sm0 = lsst.afw.table.SchemaMapper(s0)
+        sm1 = lsst.afw.table.SchemaMapper(s1)
+        self.assertEqual(sm0.getOutputSchema().getVersion(), 0)
+        self.assertEqual(sm1.getOutputSchema().getVersion(), 1)
+        sm0.editOutputSchema().setVersion(1)
+        sm1.editOutputSchema().setVersion(0)
+        self.assertEqual(sm0.getOutputSchema().getVersion(), 1)
+        self.assertEqual(sm1.getOutputSchema().getVersion(), 0)
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

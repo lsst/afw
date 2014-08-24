@@ -125,6 +125,10 @@ SchemaMapper::SchemaMapper(Schema const & input, Schema const & output) :
     _impl(new Impl(input, output))
 {}
 
+SchemaMapper::SchemaMapper(Schema const & input) :
+    _impl(new Impl(input, Schema(input.getVersion())))
+{}
+
 SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {
     boost::scoped_ptr<Impl> tmp(new Impl(*other._impl));
     _impl.swap(tmp);

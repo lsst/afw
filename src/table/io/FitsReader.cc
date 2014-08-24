@@ -232,7 +232,8 @@ void FitsReader::_readSchema(
 
     FitsSchema intermediate;
     int version = metadata.get("AFW_TABLE_VERSION", 0);
-
+    schema.setVersion(version);
+    if (stripMetadata && metadata.exists("AFW_TABLE_VERSION")) metadata.remove("AFW_TABLE_VERSION");
     int flagCol = metadata.get("FLAGCOL", 0);
     if (flagCol > 0) {
         metadata.remove("FLAGCOL");
@@ -349,13 +350,9 @@ void FitsReader::_startRecords(BaseTable & table) {
     PTR(daf::base::PropertyList) metadata = table.getMetadata();
     // get the version number from the metadata.  If the entry is not there, set to 0
     // remove it from the metadata while the table is in memory
-    int version = 0;
     if (metadata) {
         if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
-        version = metadata->get<int>("AFW_TABLE_VERSION", 0);
-        if (metadata->exists("AFW_TABLE_VERSION")) metadata->remove("AFW_TABLE_VERSION");
     }
-    table.setVersion(version);
 
     _row = -1;
     _nRows = _fits->countRows();

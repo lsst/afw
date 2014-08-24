@@ -607,7 +607,15 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
 //----- Schema implementation -------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-Schema::Schema() : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {};
+int const Schema::DEFAULT_VERSION;
+
+Schema::Schema() : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {
+    _impl->setVersion(DEFAULT_VERSION);
+}
+
+Schema::Schema(int version) : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {
+    _impl->setVersion(version);
+}
 
 Schema::Schema(Schema const & other) :
     _impl(other._impl),
