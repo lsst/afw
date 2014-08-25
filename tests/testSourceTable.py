@@ -66,7 +66,7 @@ def makeWcs():
     crpix = lsst.afw.geom.Point2D(2036., 2000.)
     return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
 
-class SourceTableTestCase(unittest.TestCase):
+class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def fillRecord(self, record):
         record.set(self.fluxKey, numpy.random.randn())
@@ -106,16 +106,15 @@ class SourceTableTestCase(unittest.TestCase):
         del self.catalog
 
     def checkCanonical(self):
-        
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
         self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
-        self.assert_(numpy.all(self.record.get(self.centroidErrKey) == self.record.getCentroidErr()))
+        self.assertClose(self.record.get(self.centroidErrKey), self.record.getCentroidErr())
         self.assertEqual(self.table.getShapeDefinition(), "c")
         self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
-        self.assert_(numpy.all(self.record.get(self.shapeErrKey) == self.record.getShapeErr()))
+        self.assertClose(self.record.get(self.shapeErrKey), self.record.getShapeErr())
 
     def testPersisted(self):
         self.table.definePsfFlux("a")
@@ -125,7 +124,8 @@ class SourceTableTestCase(unittest.TestCase):
         catalog = lsst.afw.table.SourceCatalog.readFits("test.fits")
         table = catalog.getTable()
         record = catalog[0]
-        # I'm using the keys from the non-persisted table.  They should work at least in the current implementation
+        # I'm using the keys from the non-persisted table.  They should work at least in the
+        # current implementation
         self.assertEqual(table.getPsfFluxDefinition(), "a")
         self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
         self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
@@ -154,7 +154,6 @@ class SourceTableTestCase(unittest.TestCase):
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertTrue(r1[k1] == r2[k2])
-
 
     def testCoordUpdate(self):
         wcs = makeWcs()
