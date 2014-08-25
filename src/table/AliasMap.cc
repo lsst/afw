@@ -29,7 +29,7 @@ namespace lsst { namespace afw { namespace table {
 
 void AliasMap::_apply(std::string & name) const {
     Iterator i = _internal.lower_bound(name);
-    if (i != _internal.end() && i->first.size() == name.size()) {
+    if (i != _internal.end() && i->first.size() == name.size() && i->first == name) {
         // We have a complete match: alias matches the full name we were given
         name = i->second;
     } else if (i != _internal.begin()) {
