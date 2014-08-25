@@ -265,16 +265,23 @@ void FitsReader::_readSchema(
         // slot definition to the AliasMap.
         static boost::array<std::pair<std::string,std::string>,6> oldSlotKeys = {
             {
-                std::make_pair("PSF_FLUX_SLOT", "slots.PsfFlux"),
-                std::make_pair("AP_FLUX_SLOT", "slots.ApFlux"),
-                std::make_pair("INST_FLUX_SLOT", "slots.InstFlux"),
-                std::make_pair("MODEL_FLUX_SLOT", "slots.ModelFlux")
+                std::make_pair("PSF_FLUX", "slot.PsfFlux"),
+                std::make_pair("AP_FLUX", "slot.ApFlux"),
+                std::make_pair("INST_FLUX", "slot.InstFlux"),
+                std::make_pair("MODEL_FLUX", "slot.ModelFlux"),
+                std::make_pair("CENTROID", "slot.Centroid"),
+                std::make_pair("SHAPE", "slot.Shape")
             }
         };
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
-            std::string target = metadata.get(oldSlotKeys[i].first, std::string(""));
+            std::string target = metadata.get(oldSlotKeys[i].first + "_SLOT", std::string(""));
             if (!target.empty()) {
                 schema.getAliasMap()->set(oldSlotKeys[i].second, target);
+                if (stripMetadata) {
+                    metadata.remove(oldSlotKeys[i].first);
+                    metadata.remove(oldSlotKeys[i].first + "_ERR_SLOT");
+                    metadata.remove(oldSlotKeys[i].first + "_FLAG_SLOT");
+                }
             }
         }
     }
