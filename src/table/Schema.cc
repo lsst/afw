@@ -43,13 +43,13 @@ class ItemFunctors {
     // Compares keys - must be initialized with one ItemVariant and passed the other.
     struct KeyHelper : public boost::static_visitor<bool> {
 
+        explicit KeyHelper(ItemVariant const * other_) : other(other_) {}
+
         template <typename T>
         bool operator()(SchemaItem<T> const & a) const {
             SchemaItem<T> const * b = boost::get< SchemaItem<T> >(other);
             return (b) && a.key == b->key;
         }
-
-        explicit KeyHelper(ItemVariant const * other_) : other(other_) {}
 
         ItemVariant const * other;
     };
@@ -181,6 +181,9 @@ inline void makeSubfieldItem(
 template <typename U>
 struct ExtractItemByName : public boost::static_visitor<> {
 
+    explicit ExtractItemByName(std::string const & name_, char delimiter_) :
+        delimiter(delimiter_), name(name_) {}
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         // We want to find out if 'item' has a subfield whose fully-qualified name matches our
@@ -196,9 +199,6 @@ struct ExtractItemByName : public boost::static_visitor<> {
         // If we have a match, we call another overloaded template to make the subfield.
         if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible*)0);
     }
-
-    explicit ExtractItemByName(std::string const & name_, char delimiter_) :
-        delimiter(delimiter_), name(name_) {}
 
     char delimiter;
     std::string name; // name we're looking for
@@ -276,6 +276,8 @@ inline int findKeySubfield(
 template <typename U>
 struct ExtractItemByKey : public boost::static_visitor<> {
 
+    explicit ExtractItemByKey(Key<U> const & key_, char delimiter_) : delimiter(delimiter_), key(key_) {}
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         // We want to find out if 'item' has a subfield whose  matches our key data member.
@@ -291,8 +293,6 @@ struct ExtractItemByKey : public boost::static_visitor<> {
         // (this is the same  makeSubfieldItem used in ExtractItemByName, so it's defined up there)
         if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible*)0);
     }
-
-    explicit ExtractItemByKey(Key<U> const & key_, char delimiter_) : delimiter(delimiter_), key(key_) {}
 
     char delimiter;
     Key<U> key;
