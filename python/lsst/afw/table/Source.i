@@ -30,6 +30,7 @@
 %include "lsst/afw/table/Simple.i"
 
 %{
+#include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/Source.h"
 %}
 
@@ -47,6 +48,7 @@ class Footprint;
 
 %shared_ptr(lsst::afw::table::SourceTable)
 %shared_ptr(lsst::afw::table::SourceRecord)
+
 // Workarounds for SWIG's failure to parse the Measurement template correctly.
 // Otherwise we'd have one place in the code that controls all the canonical measurement types.
 namespace lsst { namespace afw { namespace table {
@@ -70,30 +72,7 @@ namespace lsst { namespace afw { namespace table {
      };
 }}}
 
-%define %enableSlotKwArgs(SLOT)
-%extend lsst::afw::table::SourceTable {
-    %feature("shadow") define ## SLOT %{
-    def define ## SLOT(self, meas, err=None, flag=None):
-        if err is None:
-            if flag is None:
-                $action(self, meas)
-            else:
-                $action(self, meas, flag)
-        else:
-            if flag is None:
-                $action(self, meas, err)
-            else:
-                $action(self, meas, err, flag)
-    %}
-}
-%enddef
-
-%enableSlotKwArgs(PsfFlux)
-%enableSlotKwArgs(ApFlux)
-%enableSlotKwArgs(InstFlux)
-%enableSlotKwArgs(ModelFlux)
-%enableSlotKwArgs(Centroid)
-%enableSlotKwArgs(Shape)
+%include "lsst/afw/table/slots.h"
 
 %include "lsst/afw/table/Source.h"
 
