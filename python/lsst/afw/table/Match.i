@@ -113,29 +113,6 @@
                 first.append(match.first)
                 second.append(match.second)
                 distance.append(match.distance)
-
-            def copySlots(tableFrom, tableTo):
-                """Copy slots from one table to another
-
-                Slots are identified from the method names ("define<name>")
-                and assumed to carry measurement, error and flag parts.
-                """
-                import re
-                getKey = lambda x: getattr(tableFrom, x)() if hasattr(tableFrom, x) else None
-                for method in dir(tableTo):
-                    m = re.search(r"define(?P<name>.+)", method)
-                    if not m:
-                        continue
-                    slotName = m.group("name")
-                    fieldName = getattr(tableFrom, "get%sDefinition" % slotName)()
-                    if not fieldName:
-                        continue
-                    setter = getattr(tableTo, "define" + slotName)
-                    if setter is not None:
-                        setter(fieldName)
-
-            copySlots(firstTable, first.table)
-            copySlots(secondTable, second.table)
             return (first, second, distance)
 
         def __setstate__(self, state):
