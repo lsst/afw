@@ -1,40 +1,41 @@
-#include "lsst/afw/table/slots.h"
 #include "lsst/pex/exceptions.h"
+#include "lsst/afw/table/slots.h"
 
 namespace lsst { namespace afw { namespace table {
 
-void FluxSlotDefinition::define0(std::string const & name, Schema const & schema) {
-    SubSchema s = schema[_target];
-    _measKey = s;
-    try {
-        _errKey = s["err"];
-    } catch (pex::exceptions::NotFoundError &) {}
-    try {
-        _flagKey = s["flags"];
-    } catch (pex::exceptions::NotFoundError &) {}
+namespace {
+
+// Return true if 'a' starts with 'b'
+bool startsWith(std::string const & a, std::string const b) {
+    return a.compare(0, b.size(), b) == 0;
 }
 
-void FluxSlotDefinition::handleAliasChange(std::string const & alias, Schema const & schema) {
-    if (alias.compare(0, _target.size(), _target) != 0) return;
-    SubSchema s = schema[_target];
-    _measKey = s["flux"];
-    try {
-        _errKey = s["fluxSigma"];
-    } catch (pex::exceptions::NotFoundError &) {}
-    try {
-        _flagKey = s["flag"];
-    } catch (pex::exceptions::NotFoundError &) {}
-}
+} // anonymous
 
-void CentroidSlotDefinition::define0(std::string const & name, Schema const & schema) {
-    SubSchema s = schema[_target];
-    _measKey = MeasKey(Key< Point<double> >(s));
+void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+    SubSchema s = schema["slot"][_name];
+    if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     try {
-        _errKey = ErrKey(Key< Covariance< Point<float> > >(s["err"]));
-    } catch (pex::exceptions::NotFoundError &) {}
-    try {
-        _flagKey = s["flags"];
-    } catch (pex::exceptions::NotFoundError &) {}
+        if (schema.getVersion() == 0) {
+            _measKey = s;
+            try {
+                _errKey = s["err"];
+            } catch (pex::exceptions::NotFoundError &) {}
+            try {
+                _flagKey = s["flags"];
+            } catch (pex::exceptions::NotFoundError &) {}
+        } else {
+            _measKey = s["flux"];
+            try {
+                _errKey = s["fluxSigma"];
+            } catch (pex::exceptions::NotFoundError &) {}
+            try {
+                _flagKey = s["flag"];
+            } catch (pex::exceptions::NotFoundError &) {}
+        }
+    } catch (pex::exceptions::NotFoundError & err) {
+        if (!alias.empty()) throw;
+    }
 }
 
 namespace {
@@ -48,28 +49,36 @@ CentroidSlotDefinition::ErrKey::NameArray makeCentroidNameArray() {
 
 } // anonymous
 
-void CentroidSlotDefinition::handleAliasChange(std::string const & alias, Schema const & schema) {
+void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+    SubSchema s = schema["slot"][_name];
+    std::cerr << "Setting centroid slot with name '" << _name << "' and prefix '" << s.getPrefix() << "'\n";
+    if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeCentroidNameArray();
-    if (alias.compare(0, _target.size(), _target) != 0) return;
-    SubSchema s = schema[_target];
-    _measKey = s;
     try {
-        _errKey = ErrKey(s, names);
-    } catch (pex::exceptions::NotFoundError &) {}
-    try {
-        _flagKey = s["flag"];
-    } catch (pex::exceptions::NotFoundError &) {}
-}
-
-void ShapeSlotDefinition::define0(std::string const & name, Schema const & schema) {
-    SubSchema s = schema[_target];
-    _measKey = MeasKey(Key< Moments<double> >(s));
-    try {
-        _errKey = ErrKey(Key< Covariance< Moments<float> > >(s["err"]));
-    } catch (pex::exceptions::NotFoundError &) {}
-    try {
-        _flagKey = s["flags"];
-    } catch (pex::exceptions::NotFoundError &) {}
+        if (schema.getVersion() == 0) {
+            std::cerr << "  version == 0\n";
+            _measKey = MeasKey(Key< Point<double> >(s));
+            try {
+                _errKey = ErrKey(Key< Covariance< Point<float> > >(s["err"]));
+            } catch (pex::exceptions::NotFoundError &) {}
+            try {
+                _flagKey = s["flags"];
+            } catch (pex::exceptions::NotFoundError &) {}
+        } else {
+            std::cerr << "  version != 0\n";
+            _measKey = s;
+            try {
+                _errKey = ErrKey(s, names);
+            } catch (pex::exceptions::NotFoundError &) {}
+            try {
+                _flagKey = s["flag"];
+            } catch (pex::exceptions::NotFoundError &) {}
+            std::cerr << "  success\n";
+        }
+    } catch (pex::exceptions::NotFoundError & err) {
+        std::cerr << "  failure: '" << err.what() << "'\n";
+        if (!alias.empty()) throw;
+    }
 }
 
 namespace {
@@ -84,43 +93,110 @@ ShapeSlotDefinition::ErrKey::NameArray makeShapeNameArray() {
 
 } // anonymous
 
-void ShapeSlotDefinition::handleAliasChange(std::string const & alias, Schema const & schema) {
+void ShapeSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+    SubSchema s = schema["slot"][_name];
+    if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeShapeNameArray();
-    if (alias.compare(0, _target.size(), _target) != 0) return;
-    SubSchema s = schema[_target];
-    _measKey = s;
     try {
-        _errKey = ErrKey(s, names);
-    } catch (pex::exceptions::NotFoundError &) {}
-    try {
-        _flagKey = s["flag"];
-    } catch (pex::exceptions::NotFoundError &) {}
+        if (schema.getVersion() == 0) {
+            _measKey = MeasKey(Key< Moments<double> >(s));
+            try {
+                _errKey = ErrKey(Key< Covariance< Moments<float> > >(s["err"]));
+            } catch (pex::exceptions::NotFoundError &) {}
+            try {
+                _flagKey = s["flags"];
+            } catch (pex::exceptions::NotFoundError &) {}
+        } else {
+            _measKey = s;
+            try {
+                _errKey = ErrKey(s, names);
+            } catch (pex::exceptions::NotFoundError &) {}
+            try {
+                _flagKey = s["flag"];
+            } catch (pex::exceptions::NotFoundError &) {}
+        }
+    } catch (pex::exceptions::NotFoundError &) {
+        if (!alias.empty()) throw;
+    }
 }
 
 void SlotSuite::handleAliasChange(std::string const & alias, Schema const & schema) {
-    defPsfFlux.handleAliasChange(alias, schema);
-    defApFlux.handleAliasChange(alias, schema);
-    defInstFlux.handleAliasChange(alias, schema);
-    defModelFlux.handleAliasChange(alias, schema);
-    defCentroid.handleAliasChange(alias, schema);
-    defShape.handleAliasChange(alias, schema);
+    defPsfFlux.setKeys(alias, schema);
+    defApFlux.setKeys(alias, schema);
+    defInstFlux.setKeys(alias, schema);
+    defModelFlux.setKeys(alias, schema);
+    defCentroid.setKeys(alias, schema);
+    defShape.setKeys(alias, schema);
 }
 
-void SlotSuite::writeSlots(afw::fits::Fits & fits) const {
-    // TODO
+SlotSuite::SlotSuite(Schema const & schema) :
+    defPsfFlux("PsfFlux"),
+    defApFlux("ApFlux"),
+    defInstFlux("InstFlux"),
+    defModelFlux("ModelFlux"),
+    defCentroid("Centroid"),
+    defShape("Shape")
+{
+    defPsfFlux.setKeys("", schema);
+    defApFlux.setKeys("", schema);
+    defInstFlux.setKeys("", schema);
+    defModelFlux.setKeys("", schema);
+    defCentroid.setKeys("", schema);
+    defShape.setKeys("", schema);
 }
 
-void SlotSuite::readSlots(daf::base::PropertySet & metadata, bool strip) {
-    // TODO
+//------ deprecated functions for verison=0 measurement algorithms ------------------------------------------
+
+KeyTuple<Centroid> addCentroidFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    KeyTuple<Centroid> keys;
+    keys.meas = schema.addField<Centroid::MeasTag>(name, doc, "pixels");
+    keys.err = schema.addField<Centroid::ErrTag>(
+        name + ".err", "covariance matrix for " + name, "pixels^2"
+    );
+    keys.flag = schema.addField<Flag>(
+        name + ".flags", "set if the " + name + " measurement did not fully succeed"
+    );
+    return keys;
 }
 
-SlotSuite::SlotSuite(int version) :
-    defPsfFlux(version > 0 ? "slot_PsfFlux" : ""),
-    defApFlux(version > 0 ? "slot_ApFlux" : ""),
-    defInstFlux(version > 0 ? "slot_InstFlux" : ""),
-    defModelFlux(version > 0 ? "slot_ModelFlux" : ""),
-    defCentroid(version > 0 ? "slot_Centroid" : ""),
-    defShape(version > 0 ? "slot_Shape" : "")
-{}
+KeyTuple<Shape> addShapeFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    KeyTuple<Shape> keys;
+    keys.meas = schema.addField<Shape::MeasTag>(
+        name, doc, "pixels^2"
+    );
+    keys.err = schema.addField<Shape::ErrTag>(
+        name + ".err", "covariance matrix for " + name, "pixels^4"
+    );
+    keys.flag = schema.addField<Flag>(
+        name + ".flags", "set if the " + name + " measurement failed"
+    );
+    return keys;
+}
+
+KeyTuple<Flux> addFluxFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    KeyTuple<Flux> keys;
+    keys.meas = schema.addField<Flux::MeasTag>(
+        name, doc, "dn"
+    );
+    keys.err = schema.addField<Flux::ErrTag>(
+        name + ".err", "uncertainty for " + name, "dn"
+    );
+    keys.flag = schema.addField<Flag>(
+        name + ".flags", "set if the " + name + " measurement failed"
+    );
+    return keys;
+}
 
 }}} // namespace lsst::afw::table

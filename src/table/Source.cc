@@ -119,7 +119,6 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         }
     }
     _fits->writeKey("AFW_TYPE", "SOURCE", "Tells lsst::afw to load this as a Source table.");
-    table->writeSlots(*_fits);
 }
 
 void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
@@ -200,6 +199,8 @@ private:
 PTR(BaseTable) SourceFitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
+
+
     _spanCol = metadata->get("SPANCOL", 0);
     if (_spanCol > 0) {
         // we remove these from the metadata so the Schema constructor doesn't try to parse
@@ -242,7 +243,6 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     --_heavyVarCol;
     Schema schema(*metadata, true);
     PTR(SourceTable) table =  SourceTable::make(schema, PTR(IdFactory)());
-    table->readSlots(*metadata, true);
     table->setMetadata(metadata);
     _startRecords(*table);
     return table;
@@ -370,14 +370,14 @@ PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const &
 SourceTable::SourceTable(
     Schema const & schema,
     PTR(IdFactory) const & idFactory
-) : SimpleTable(schema, idFactory), _slots(schema.getVersion()) {}
+) : SimpleTable(schema, idFactory), _slots(schema) {}
 
 SourceTable::SourceTable(SourceTable const & other) :
     SimpleTable(other), _slots(other._slots)
 {}
 
 void SourceTable::handleAliasChange(std::string const & alias) {
-    if (getVersion() == 0 || alias.compare(0, 5, "slot_") != 0) {
+    if (alias.compare(0, 4, "slot") != 0) {
         return;
     }
     _slots.handleAliasChange(alias, getSchema());
@@ -398,62 +398,6 @@ PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags
     return boost::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
 
-
-//-----------------------------------------------------------------------------------------------------------
-//----- Convenience functions for adding common measurements to Schemas -------------------------------------
-//-----------------------------------------------------------------------------------------------------------
-
-KeyTuple<Centroid> addCentroidFields(
-    Schema & schema,
-    std::string const & name,
-    std::string const & doc
-) {
-    KeyTuple<Centroid> keys;
-    keys.meas = schema.addField<Centroid::MeasTag>(name, doc, "pixels");
-    keys.err = schema.addField<Centroid::ErrTag>(
-        name + ".err", "covariance matrix for " + name, "pixels^2"
-    );
-    keys.flag = schema.addField<Flag>(
-        name + ".flags", "set if the " + name + " measurement did not fully succeed"
-    );
-    return keys;
-}
-
-KeyTuple<Shape> addShapeFields(
-    Schema & schema,
-    std::string const & name,
-    std::string const & doc
-) {
-    KeyTuple<Shape> keys;
-    keys.meas = schema.addField<Shape::MeasTag>(
-        name, doc, "pixels^2"
-    );
-    keys.err = schema.addField<Shape::ErrTag>(
-        name + ".err", "covariance matrix for " + name, "pixels^4"
-    );
-    keys.flag = schema.addField<Flag>(
-        name + ".flags", "set if the " + name + " measurement failed"
-    );
-    return keys;
-}
-
-KeyTuple<Flux> addFluxFields(
-    Schema & schema,
-    std::string const & name,
-    std::string const & doc
-) {
-    KeyTuple<Flux> keys;
-    keys.meas = schema.addField<Flux::MeasTag>(
-        name, doc, "dn"
-    );
-    keys.err = schema.addField<Flux::ErrTag>(
-        name + ".err", "uncertainty for " + name, "dn"
-    );
-    keys.flag = schema.addField<Flag>(
-        name + ".flags", "set if the " + name + " measurement failed"
-    );
-    return keys;
-}
 
 template class CatalogT<SourceRecord>;
 template class CatalogT<SourceRecord const>;

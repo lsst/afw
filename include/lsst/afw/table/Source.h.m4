@@ -63,30 +63,21 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *  name.  See $2SlotDefinition for more information.
      */
     void define$1$2(std::string const & name) {
-        if (getVersion() == 0) {
-            _slots.def$1$2.define0(name, getSchema());
-            return;
-        }
-        getSchema().getAliasMap()->set(get$1$2Slot().getTarget(), name);
+        getSchema().getAliasMap()->set(get$1$2Slot().getAlias(getSchema().getVersion()), name);
     }
 
     /**
      *  @brief Return the name of the field used for the $1$2 slot.
      *
-     *  For version 0 tables, returns an empty string if the slot is not defined.
-     *  For version 1 tables, throws NotFoundError is the slot is not defined.
+     *  @throw NotFoundError is the slot is not defined.
      *
-     *  @deprecated For version 0 tables, use @c get$1$2Slot().getTarget().
-     *  For version>0 tables, use
+     *  @deprecated in favor of (substitute "." for "_" in version 0 tables):
      *  @code
      *  getSchema().getAliasMap()->get("slot_$1$2")
      *  @endcode
      */
     std::string get$1$2Definition() const {
-        if (getVersion() == 0) {
-            return get$1$2Slot().getTarget();
-        }
-        return getSchema().getAliasMap()->get("slot_$1$2");
+        return getSchema().getAliasMap()->get(get$1$2Slot().getAlias(getSchema().getVersion()));
     }
 
     /**
@@ -332,10 +323,6 @@ public:
     DECLARE_SLOT_DEFINERS(`Inst', `Flux')
     DECLARE_SLOT_DEFINERS(`', `Centroid')
     DECLARE_SLOT_DEFINERS(`', `Shape')
-
-    void writeSlots(afw::fits::Fits & fits) const { _slots.writeSlots(fits); }
-
-    void readSlots(daf::base::PropertySet & metadata, bool strip) { _slots.readSlots(metadata, strip); }
 
 protected:
 

@@ -21,22 +21,16 @@ namespace table {
 class SlotDefinition {
 public:
 
-    explicit SlotDefinition(std::string const & target) : _target(target) {}
+    explicit SlotDefinition(std::string const & name) : _name(name) {}
 
-    /**
-     *  @brief Return the prefix of the fields the slot points to.
-     *
-     *  For version=0 tables, this is modified whenever the slot is redefined.
-     *  That means it actually takes values like "flux.sinc" or "centroid.sdss".
-     *
-     *  For version>0 tables, this is the alias used to define the field,
-     *  and is hence constant after construction.  It takes values like "slot_PsfFlux" or
-     *  "slot_Centroid", with the mapping to the actual measurements held by the schema's AliasMap.
-     */
-    std::string getTarget() const { return _target; }
+    std::string getName() const { return _name; }
+
+    std::string getAlias(int version) const {
+        return (version > 0 ? "slot_" : "slot.") + _name;
+    }
 
 protected:
-    std::string _target;
+    std::string _name;
 };
 
 class FluxSlotDefinition : public SlotDefinition {
@@ -47,7 +41,7 @@ public:
     typedef Key<double> MeasKey;
     typedef Key<double> ErrKey;
 
-    explicit FluxSlotDefinition(std::string const & target_) : SlotDefinition(target_) {}
+    explicit FluxSlotDefinition(std::string const & name) : SlotDefinition(name) {}
 
     bool isValid() const { return _measKey.isValid(); }
 
@@ -57,9 +51,7 @@ public:
 
     Key<Flag> getFlagKey() const { return _flagKey; }
 
-    void define0(std::string const & name, Schema const & schema);
-
-    void handleAliasChange(std::string const & alias, Schema const & schema);
+    void setKeys(std::string const & alias, Schema const & schema);
 
 private:
     MeasKey _measKey;
@@ -71,11 +63,11 @@ class CentroidSlotDefinition : public SlotDefinition {
 public:
 
     typedef geom::Point2D MeasValue;
-    typedef Eigen::Matrix2f ErrValue;
+    typedef Eigen::Matrix<float,2,2> ErrValue;
     typedef Point2DKey MeasKey;
     typedef CovarianceMatrixKey<float,2> ErrKey;
 
-    explicit CentroidSlotDefinition(std::string const & target) : SlotDefinition(target) {}
+    explicit CentroidSlotDefinition(std::string const & name) : SlotDefinition(name) {}
 
     bool isValid() const { return _measKey.isValid(); }
 
@@ -85,9 +77,7 @@ public:
 
     Key<Flag> getFlagKey() const { return _flagKey; }
 
-    void define0(std::string const & name, Schema const & schema);
-
-    void handleAliasChange(std::string const & alias, Schema const & schema);
+    void setKeys(std::string const & alias, Schema const & schema);
 
 private:
     MeasKey _measKey;
@@ -99,11 +89,11 @@ class ShapeSlotDefinition : public SlotDefinition {
 public:
 
     typedef geom::ellipses::Quadrupole MeasValue;
-    typedef Eigen::Matrix3f ErrValue;
+    typedef Eigen::Matrix<float,3,3> ErrValue;
     typedef QuadrupoleKey MeasKey;
     typedef CovarianceMatrixKey<float,3> ErrKey;
 
-    explicit ShapeSlotDefinition(std::string const & target) : SlotDefinition(target) {}
+    explicit ShapeSlotDefinition(std::string const & name) : SlotDefinition(name) {}
 
     bool isValid() const { return _measKey.isValid(); }
 
@@ -113,9 +103,7 @@ public:
 
     Key<Flag> getFlagKey() const { return _flagKey; }
 
-    void define0(std::string const & name, Schema const & schema);
-
-    void handleAliasChange(std::string const & alias, Schema const & schema);
+    void setKeys(std::string const & alias, Schema const & schema);
 
 private:
     MeasKey _measKey;
@@ -134,11 +122,7 @@ struct SlotSuite {
 
     void handleAliasChange(std::string const & alias, Schema const & schema);
 
-    void writeSlots(afw::fits::Fits & fits) const;
-
-    void readSlots(daf::base::PropertySet & metadata, bool strip);
-
-    SlotSuite(int version);
+    explicit SlotSuite(Schema const & schema);
 };
 
 
