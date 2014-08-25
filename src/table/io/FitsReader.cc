@@ -242,6 +242,7 @@ void FitsReader::_readSchema(
     }
     --flagCol; // switch from 1-indexed to 0-indexed
 
+    // read aliases stored in the new, expected way
     try {
         std::vector<std::string> rawAliases = metadata.getArray<std::string>("ALIAS");
         for (std::vector<std::string>::const_iterator i = rawAliases.begin(); i != rawAliases.end(); ++i) {
@@ -258,6 +259,25 @@ void FitsReader::_readSchema(
         // if there are no aliases, just move on
     }
     metadata.remove("ALIAS");
+
+    if (schema.getVersion() == 0) {
+        // Read slots saved using an old mechanism in as aliases, since the new slot mechanism delegates
+        // slot definition to the AliasMap.
+        static boost::array<std::pair<std::string,std::string>,6> oldSlotKeys = {
+            {
+                std::make_pair("PSF_FLUX_SLOT", "slots.PsfFlux"),
+                std::make_pair("AP_FLUX_SLOT", "slots.ApFlux"),
+                std::make_pair("INST_FLUX_SLOT", "slots.InstFlux"),
+                std::make_pair("MODEL_FLUX_SLOT", "slots.ModelFlux")
+            }
+        };
+        for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
+            std::string target = metadata.get(oldSlotKeys[i].first, std::string(""));
+            if (!target.empty()) {
+                schema.getAliasMap()->set(oldSlotKeys[i].second, target);
+            }
+        }
+    }
 
     std::vector<std::string> keyList = metadata.getOrderedNames();
     for (std::vector<std::string>::const_iterator key = keyList.begin(); key != keyList.end(); ++key) {
