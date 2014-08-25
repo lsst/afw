@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2008-2014 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,25 +10,19 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
 """
-Tests for table.SourceTable
-
-Run with:
-   ./testSourceTable.py
-or
-   python
-   >>> import testSourceTable; testSourceTable.run()
+Tests for SourceTable slots with version > 0
 """
 
 import sys
@@ -89,7 +82,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.centroidXKey = self.schema.addField(prefix+"_x", type="D")
         self.centroidYKey = self.schema.addField(prefix+"_y", type="D")
         sigmaArray = []
-        covArray = [] 
+        covArray = []
         if uncertainty > 0:
             self.centroidXErrKey = self.schema.addField(prefix+"_xSigma", type="F")
             self.centroidYErrKey = self.schema.addField(prefix+"_ySigma", type="F")
@@ -99,7 +92,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self.centroidXYCovKey = self.schema.addField(prefix+"_x_y_Cov", type="F")
             covArray.append(self.centroidXYCovKey)
         self.centroidKey = lsst.afw.table.Point2DKey(self.centroidXKey, self.centroidYKey)
-   
         self.centroidErrKey = lsst.afw.table.CovarianceMatrix2fKey(sigmaArray, covArray)
         self.centroidFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
 
@@ -109,7 +101,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.shapeXYKey = self.schema.addField(prefix+"_xy", type="D")
         self.shapeKey = lsst.afw.table.QuadrupoleKey(self.shapeXXKey, self.shapeYYKey, self.shapeXYKey)
         sigmaArray = []
-        covArray = [] 
+        covArray = []
         if uncertainty > 0:
             self.shapeXXErrKey = self.schema.addField(prefix+"_xxSigma", type="F")
             self.shapeYYErrKey = self.schema.addField(prefix+"_yySigma", type="F")
@@ -130,9 +122,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.schema.setVersion(1)
-        self.makeFlux(self.schema, "a", 1) 
-        self.makeCentroid(self.schema, "b", 2) 
-        self.makeShape(self.schema, "c", 2) 
+        self.makeFlux(self.schema, "a", 1)
+        self.makeCentroid(self.schema, "b", 2)
+        self.makeShape(self.schema, "c", 2)
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
         self.record = self.catalog.addNew()
