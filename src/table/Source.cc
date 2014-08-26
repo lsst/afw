@@ -419,6 +419,90 @@ static io::FitsReader::FactoryT<SourceFitsReader> sourceFitsReaderFactory("SOURC
 //----- SourceTable/Record member function implementations --------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
+// some helpers for centroid/slot defines
+namespace {
+
+// goes away entirely in C++11
+std::vector<std::string> makePointNames() {
+    std::vector<std::string> v;
+    v.push_back("x");
+    v.push_back("y");
+    return v;
+}
+
+std::vector<std::string> const & getPointNames() {
+    static std::vector<std::string> v = makePointNames();
+    return v;
+}
+
+// goes away entirely in C++11
+std::vector<std::string> makeQuadrupoleNames() {
+    std::vector<std::string> v;
+    v.push_back("xx");
+    v.push_back("yy");
+    v.push_back("xy");
+    return v;
+}
+
+std::vector<std::string> const & getQuadrupoleNames() {
+    static std::vector<std::string> v = makeQuadrupoleNames();
+    return v;
+}
+
+} // anonymous
+
+void SourceTable::defineCentroid(std::string const & name) {
+    Schema schema = getSchema();
+    _slotCentroid.name = name;
+    SubSchema sub = schema[name];
+    if (getVersion() == 0) { // this block will be retired someday
+        Centroid::MeasKey measKey = sub;
+        _slotCentroid.pos = lsst::afw::table::Point2DKey(measKey);
+        try {
+            Centroid::ErrKey errKey = sub["err"];
+            _slotCentroid.posErr = lsst::afw::table::CovarianceMatrixKey<float,2>(errKey);
+        } catch (pex::exceptions::NotFoundError) {}
+        try {
+            _slotCentroid.flag = sub["flags"];
+        } catch (pex::exceptions::NotFoundError) {}
+        return;
+    }
+    _slotCentroid.pos = lsst::afw::table::Point2DKey(sub);
+    try {
+        _slotCentroid.posErr = CovarianceMatrixKey<float,2>(sub, getPointNames());
+    } catch (pex::exceptions::NotFoundError) {}
+    try {
+        _slotCentroid.flag = sub["flag"];
+    } catch (pex::exceptions::NotFoundError) {}
+}
+
+void SourceTable::defineShape(std::string const & name) {
+    Schema schema = getSchema();
+    _slotShape.name = name;
+    SubSchema sub = schema[name];
+    if (getVersion() == 0) { // this block will be retired someday
+        Shape::MeasKey measKey = sub;
+        _slotShape.quadrupole = lsst::afw::table::QuadrupoleKey(
+            measKey.getIxx(), measKey.getIyy(), measKey.getIxy()
+        );
+        try {
+            Shape::ErrKey errKey = sub["err"];
+            _slotShape.quadrupoleErr = lsst::afw::table::CovarianceMatrixKey<float,3>(errKey);
+        } catch (pex::exceptions::NotFoundError) {}
+        try {
+            _slotShape.flag = sub["flags"];
+        } catch (pex::exceptions::NotFoundError) {}
+        return;
+    }
+    _slotShape.quadrupole = lsst::afw::table::QuadrupoleKey(sub);
+    try {
+        _slotShape.quadrupoleErr = CovarianceMatrixKey<float,3>(sub, getQuadrupoleNames());
+    } catch (pex::exceptions::NotFoundError) {}
+    try {
+        _slotShape.flag = sub["flag"];
+    } catch (pex::exceptions::NotFoundError) {}
+}
+
 SourceRecord::SourceRecord(PTR(SourceTable) const & table) : SimpleRecord(table) {}
 
 void SourceRecord::updateCoord(image::Wcs const & wcs) {

@@ -23,12 +23,14 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-// Concatenate two strings with a period between them.
-std::string join(std::string const & a, std::string const & b) {
+inline char getDelimiter(int version) { return (version > 0) ? '_' : '.'; }
+
+// Concatenate two strings with a single-character delimiter between them
+std::string join(std::string const & a, std::string const & b, char delimiter) {
     std::string full;
     full.reserve(a.size() + b.size() + 1);
     full += a;
-    full.push_back('.');
+    full.push_back(delimiter);
     full += b;
     return full;
 }
@@ -41,13 +43,13 @@ class ItemFunctors {
     // Compares keys - must be initialized with one ItemVariant and passed the other.
     struct KeyHelper : public boost::static_visitor<bool> {
 
+        explicit KeyHelper(ItemVariant const * other_) : other(other_) {}
+
         template <typename T>
         bool operator()(SchemaItem<T> const & a) const {
             SchemaItem<T> const * b = boost::get< SchemaItem<T> >(other);
             return (b) && a.key == b->key;
         }
-
-        explicit KeyHelper(ItemVariant const * other_) : other(other_) {}
 
         ItemVariant const * other;
     };
@@ -111,13 +113,14 @@ template <typename T>
 inline int findNamedSubfield(
     SchemaItem<T> const & item,
     std::string const & name,
+    char delimiter,
     boost::mpl::true_ * // whether a match is possible based on the type of T; computed by caller
 ) {
     if (name.size() <= item.field.getName().size()) return -1;
 
     if ( // compare invocation is equivalent to "name.startswith(item.field.getName())" in Python
         name.compare(0, item.field.getName().size(), item.field.getName()) == 0
-        && name[item.field.getName().size()] == '.'
+        && name[item.field.getName().size()] == delimiter
     ) {
         int const position = item.field.getName().size() + 1;
         int const size = name.size() - position;
@@ -137,6 +140,7 @@ template <typename T>
 inline int findNamedSubfield(
     SchemaItem<T> const & item,
     std::string const & name,
+    char delimiter,
     boost::mpl::false_ * // whether a match is possible based on the type of T; computed by caller
 ) {
     return -1;
@@ -146,7 +150,7 @@ inline int findNamedSubfield(
 // subfield and put it in the result smart pointer.
 template <typename T, typename U>
 inline void makeSubfieldItem(
-    SchemaItem<T> const & item, int index,
+    SchemaItem<T> const & item, int index, char delimiter,
     boost::scoped_ptr< SchemaItem<U> > & result,
     boost::mpl::true_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {
@@ -154,7 +158,7 @@ inline void makeSubfieldItem(
         new SchemaItem<U>(
             detail::Access::extractElement(item.key, index),
             Field<U>(
-                join(item.field.getName(), Key<T>::subfields[index]),
+                join(item.field.getName(), Key<T>::subfields[index], delimiter),
                 item.field.getDoc(),
                 item.field.getUnits()
             )
@@ -165,7 +169,7 @@ inline void makeSubfieldItem(
 // An overload of makeSubfieldItem that always fails because we know T and U aren't compatible.
 template <typename T, typename U>
 inline void makeSubfieldItem(
-    SchemaItem<T> const & item, int index,
+    SchemaItem<T> const & item, int index, char delimiter,
     boost::scoped_ptr< SchemaItem<U> > & result,
     boost::mpl::false_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {}
@@ -176,6 +180,9 @@ inline void makeSubfieldItem(
 // field in its own right.
 template <typename U>
 struct ExtractItemByName : public boost::static_visitor<> {
+
+    explicit ExtractItemByName(std::string const & name_, char delimiter_) :
+        delimiter(delimiter_), name(name_) {}
 
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
@@ -188,13 +195,12 @@ struct ExtractItemByName : public boost::static_visitor<> {
             boost::mpl::bool_<KeyBase<T>::HAS_NAMED_SUBFIELDS>
         >::type IsMatchPossible;
         // We use that type to dispatch one of the two overloads of findNamedSubfield.
-        int n = findNamedSubfield(item, name, (IsMatchPossible*)0);
+        int n = findNamedSubfield(item, name, delimiter, (IsMatchPossible*)0);
         // If we have a match, we call another overloaded template to make the subfield.
-        if (n >= 0) makeSubfieldItem(item, n, result, (IsMatchPossible*)0);
+        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible*)0);
     }
 
-    explicit ExtractItemByName(std::string const & name_) : name(name_) {}
-
+    char delimiter;
     std::string name; // name we're looking for
     mutable boost::scoped_ptr< SchemaItem<U> > result; // where we put the result to signal that we're done
 };
@@ -218,9 +224,9 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
             }
         }
     }
-    // We didn't get an exact match, but we might be searching for "a.x" and "a" might be a point field.
+    // We didn't get an exact match, but we might be searching for "a.x/a_x" and "a" might be a point field.
     // Because the names are sorted, we know we overshot it, so we work backwards.
-    ExtractItemByName<T> extractor(name);
+    ExtractItemByName<T> extractor(name, getDelimiter(_version));
     while (i != _names.begin()) {
         --i;
         boost::apply_visitor(extractor, _items[i->second]); // see if the current item is a match
@@ -270,6 +276,8 @@ inline int findKeySubfield(
 template <typename U>
 struct ExtractItemByKey : public boost::static_visitor<> {
 
+    explicit ExtractItemByKey(Key<U> const & key_, char delimiter_) : delimiter(delimiter_), key(key_) {}
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         // We want to find out if 'item' has a subfield whose  matches our key data member.
@@ -283,11 +291,10 @@ struct ExtractItemByKey : public boost::static_visitor<> {
         int n = findKeySubfield(item, key, (IsMatchPossible*)0);
         // If we have a match, we call another overloaded template to make the subfield.
         // (this is the same  makeSubfieldItem used in ExtractItemByName, so it's defined up there)
-        if (n >= 0) makeSubfieldItem(item, n, result, (IsMatchPossible*)0);
+        if (n >= 0) makeSubfieldItem(item, n, delimiter, result, (IsMatchPossible*)0);
     }
 
-    explicit ExtractItemByKey(Key<U> const & key_) : key(key_) {}
-
+    char delimiter;
     Key<U> key;
     mutable boost::scoped_ptr< SchemaItem<U> > result;
 };
@@ -308,7 +315,7 @@ SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
         }
         // We didn't get an exact match, but we might be searching for a subfield.
         // Because the offsets are sorted, we know we overshot it, so we work backwards.
-        ExtractItemByKey<T> extractor(key);
+        ExtractItemByKey<T> extractor(key, getDelimiter(_version));
         while (i != _offsets.begin()) {
             --i;
             boost::apply_visitor(extractor, _items[i->second]);
@@ -747,11 +754,11 @@ SubSchema::SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & 
 
 template <typename T>
 SchemaItem<T> SubSchema::find(std::string const & name) const {
-    return _impl->find<T>(_aliases->apply(join(_name, name)));
+    return _impl->find<T>(_aliases->apply(join(_name, name, getDelimiter(_impl->getVersion()))));
 }
 
 SubSchema SubSchema::operator[](std::string const & name) const {
-    return SubSchema(_impl, _aliases, join(_name, name));
+    return SubSchema(_impl, _aliases, join(_name, name, getDelimiter(_impl->getVersion())));
 }
 
 std::set<std::string> SubSchema::getNames(bool topOnly) const {
