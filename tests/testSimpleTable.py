@@ -699,6 +699,20 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat = lsst.afw.table.BaseCatalog.readFits(filename)
         self.assertEqual(len(cat), 1)
 
+    def testDM590(self):
+        # create a simple fits table using pyfits, and tests is version number
+        # when it is read into a catalog
+        if pyfits is not None:
+            c1 = pyfits.Column(name='id', format='J', array=(1,2,3))
+            c2 = pyfits.Column(name='flux', format='K', array=(1000,2000,3000))
+            c3 = pyfits.Column(name='star', format='20A', array=('Vega', 'Denebola', 'Arcturus'))
+            columns = pyfits.ColDefs([c1, c2, c3])
+            tbhdu = pyfits.new_table(columns)
+            tbhdu.writeto("testNonLsst.fits", clobber=True)
+            cat = lsst.afw.table.BaseCatalog.readFits("testNonLsst.fits")
+            self.assertEqual(cat.getVersion(), lsst.afw.table.Schema.DEFAULT_VERSION)
+            os.remove("testNonLsst.fits")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
