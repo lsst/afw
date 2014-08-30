@@ -296,6 +296,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         
     def testExtract(self):
         schema = lsst.afw.table.Schema()
+        schema.setVersion(0)
         schema.addField("a.b.c1", type=numpy.float64)
         schema.addField("a.b.c2", type="Flag")
         schema.addField("a.d1", type=numpy.int32)

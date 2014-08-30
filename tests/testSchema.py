@@ -53,6 +53,7 @@ class SchemaTestCase(unittest.TestCase):
 
     def testSchema(self):
         schema = lsst.afw.table.Schema();
+        schema.setVersion(0)
         ab_k = schema.addField("a.b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a.b.i", type=int, doc="int")
         acf_k = schema.addField("a.c.f", type=numpy.float32, doc="float")

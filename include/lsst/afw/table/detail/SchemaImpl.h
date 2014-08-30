@@ -66,6 +66,8 @@ private:
 
 public:
 
+    static int const DEFAULT_VERSION = 1;
+
     /// An MPL sequence of all the allowed SchemaItem templates.
     typedef boost::mpl::transform<FieldTypes,MakeItem>::type ItemTypes;
     /// A Boost.Variant type that can hold any one of the allowed SchemaItem types.
