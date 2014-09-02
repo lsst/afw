@@ -32,7 +32,7 @@ m4def(`DECLARE_SLOT_GETTERS',
     /// @brief Get the uncertainty on the $1$2 slot measurement.
     $2SlotDefinition::ErrValue get$1$2Err() const;
 
-    /// @brief Return true if the measurement in the $1$2 slot was successful.
+    /// @brief Return true if the measurement in the $1$2 slot failed.
     bool get$1$2Flag() const;
 ')dnl
 m4def(`DEFINE_SLOT_GETTERS',
@@ -53,14 +53,11 @@ m4def(`DECLARE_SLOT_DEFINERS',
     $2SlotDefinition const & get$1$2Slot() const { return _slots.def$1$2; }
 
     /**
-     *  @brief Set the measurement used for the $1$2 slot with a field name.
+     *  @brief Set the measurement used for the $1$2 slot.
      *
-     *  For version 0 tables, requires that the measurement adhere to the convention
-     *  of having "<name>", "<name>.err", and "<name>.flags" fields for all three fields
-     *  to be attached to slots.
-     *
-     *  For version 1 tables, this simply sets the "slot_$1$2" alias to point to the given
-     *  name.  See $2SlotDefinition for more information.
+     *  The definitions for slots are actually managed by the Schema object, and its associated
+     *  AliasMap, so this simply sets the "slot_$1$2" alias (or "slot.$1$2" for version 0 tables)
+     *  to point to the given field name prefix.  See $2SlotDefinition for more information.
      */
     void define$1$2(std::string const & name) {
         getSchema().getAliasMap()->set(get$1$2Slot().getAlias(getSchema().getVersion()), name);
@@ -71,9 +68,9 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *
      *  @throw NotFoundError is the slot is not defined.
      *
-     *  @deprecated in favor of (substitute "." for "_" in version 0 tables):
+     *  @deprecated in favor of
      *  @code
-     *  getSchema().getAliasMap()->get("slot_$1$2")
+     *  getSchema().getAliasMap()->get("slot_$1$2")  # or "slot.$1$2" for version 0 tables
      *  @endcode
      */
     std::string get$1$2Definition() const {
@@ -81,7 +78,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     }
 
     /**
-     *  @brief Return the true if the Centroid slot is valid
+     *  @brief Return the true if the $1$2 slot corresponds to a valid field.
      *
      *  @deprecated in favor of get$1$2Slot().isValid().
      */
@@ -99,7 +96,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     }
 
     /**
-     *  @brief Return the key used for the $1$2 slot uncertainty
+     *  @brief Return the key used for the $1$2 slot uncertainty.
      *
      *  @deprecated in favor of get$1$2Slot().getErrKey().
      */
@@ -180,7 +177,7 @@ template <typename RecordT> class SourceColumnViewT;
  *   - A system of aliases (called slots) in which a SourceTable instance stores keys for particular
  *     measurements (a centroid, a shape, and a number of different fluxes) and SourceRecord uses
  *     this keys to provide custom getters and setters.  These are not separate fields, but rather
- *     aliases that can point to custom fields.
+ *     aliases that can point to custom fields.  See the SlotDefinition hierarchy for more information.
  */
 class SourceRecord : public SimpleRecord {
 public:
