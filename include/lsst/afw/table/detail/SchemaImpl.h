@@ -136,7 +136,7 @@ public:
     /// Default constructor.
     explicit SchemaImpl() : 
         daf::base::Citizen(typeid(this)), 
-        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items(), _version(0)
+        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items(), _version(DEFAULT_VERSION)
     {}
 
     /**
