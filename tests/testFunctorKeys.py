@@ -66,6 +66,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
         schema = lsst.afw.table.Schema();
+        schema.setVersion(0)
         xKey = schema.addField("a.x", type=fieldType, doc="x")
         yKey = schema.addField("a.y", type=fieldType, doc="y")
         # we create two equivalent functor keys, using the two different constructors
@@ -104,6 +105,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema();
+        schema.setVersion(0)
         xxKey = schema.addField("a.xx", type=float, doc="xx")
         yyKey = schema.addField("a.yy", type=float, doc="yy")
         xyKey = schema.addField("a.xy", type=float, doc="xy")
@@ -144,6 +146,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
+        schema.setVersion(0)
         sigmaKeys = []
         covKeys = []
         # we generate a schema with a complete set of fields for the diagonal and some (but not all)

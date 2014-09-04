@@ -231,7 +231,13 @@ void FitsReader::_readSchema(
 ) {
 
     FitsSchema intermediate;
-    int version = metadata.get("AFW_TABLE_VERSION", 0);
+    // Set the table version.  If AFW_TABLE_VERSION tag exists, use that
+    // If not, set to 0 if it has an AFW_TYPE, Schema default otherwise (DM-590)
+    int version = 0;
+    if (!metadata.exists("AFW_TYPE")) {
+        version = lsst::afw::table::Schema::DEFAULT_VERSION;
+    }
+    version = metadata.get("AFW_TABLE_VERSION", version);
     schema.setVersion(version);
     if (stripMetadata && metadata.exists("AFW_TABLE_VERSION")) metadata.remove("AFW_TABLE_VERSION");
     int flagCol = metadata.get("FLAGCOL", 0);

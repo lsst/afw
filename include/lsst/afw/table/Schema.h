@@ -47,7 +47,9 @@ class Schema {
     typedef detail::SchemaImpl Impl;
 public:
 
-    static int const DEFAULT_VERSION = 0;
+    // This variable is defined in SchemaImpl, but is replicated here as
+    // a static so that it is available to SWIG.
+    static int const DEFAULT_VERSION = detail::SchemaImpl::DEFAULT_VERSION;
 
     /**
      *  @brief Bit flags used when comparing schemas.
