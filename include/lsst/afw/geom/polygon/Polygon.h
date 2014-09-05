@@ -22,8 +22,8 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#if !defined(LSST_AFW_GEOM_POLYGON_H)
-#define LSST_AFW_GEOM_POLYGON_H
+#if !defined(LSST_AFW_GEOM_POLYGON_POLYGON_H)
+#define LSST_AFW_GEOM_POLYGON_POLYGON_H
 
 #include <vector>
 #include <utility> // for std::pair
@@ -39,7 +39,7 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 
-namespace lsst { namespace afw { namespace geom {
+namespace lsst { namespace afw { namespace geom { namespace polygon {
 
 /// An exception that indicates the single-polygon assumption has been violated
 ///
@@ -51,7 +51,8 @@ LSST_EXCEPTION_TYPE(SinglePolygonException, lsst::pex::exceptions::RuntimeError,
 /// Cartesian polygons
 ///
 /// Polygons are defined by a set of vertices
-class Polygon {
+
+class Polygon: public afw::table::io::PersistableFacade<Polygon>, public afw::table::io::Persistable {
 public:
     typedef Box2D Box;
     typedef Point2D Point;
@@ -67,6 +68,7 @@ public:
         );
     explicit Polygon(std::vector<Point> const& vertices);
     //@}
+
 
     /// Swap two polygons
     void swap(Polygon& other) {
@@ -127,16 +129,16 @@ public:
     /// Does not handle non-convex polygons (which might have multiple independent
     /// intersections), and is provided as a convenience for when the polygons are
     /// known to be convex (e.g., image borders) and overlapping.
-    Polygon intersectionSingle(Polygon const& other) const;
-    Polygon intersectionSingle(Box const& box) const;
+    PTR(Polygon) intersectionSingle(Polygon const& other) const;
+    PTR(Polygon) intersectionSingle(Box const& box) const;
     //@}
 
     //@{
     /// Returns the intersection of two polygons
     ///
     /// Handles the full range of possibilities.
-    std::vector<Polygon> intersection(Polygon const& other) const;
-    std::vector<Polygon> intersection(Box const& box) const;
+    std::vector<PTR(Polygon)> intersection(Polygon const& other) const;
+    std::vector<PTR(Polygon)> intersection(Box const& box) const;
     //@}
 
     //@{
@@ -144,8 +146,8 @@ public:
     ///
     /// Does not handle non-overlapping polygons, the union of which would be
     /// disjoint.
-    Polygon unionSingle(Polygon const& other) const;
-    Polygon unionSingle(Box const& box) const;
+    PTR(Polygon) unionSingle(Polygon const& other) const;
+    PTR(Polygon) unionSingle(Box const& box) const;
     //@}
 
     //@{
@@ -154,33 +156,33 @@ public:
     /// Handles the full range of possibilities.
     ///
     /// Note the trailing underscore in C++, due to "union" being a reserved word.
-    std::vector<Polygon> union_(Polygon const& other) const;
-    std::vector<Polygon> union_(Box const& box) const;
+    std::vector<PTR(Polygon)> union_(Polygon const& other) const;
+    std::vector<PTR(Polygon)> union_(Box const& box) const;
     //@}
 
     //@{
     /// Return the symmetric difference of two polygons
-    std::vector<Polygon> symDifference(Polygon const& other) const;
-    std::vector<Polygon> symDifference(Box const& box) const;
+    std::vector<PTR(Polygon)> symDifference(Polygon const& other) const;
+    std::vector<PTR(Polygon)> symDifference(Box const& box) const;
     //@}
 
     /// Return a simplified polygon
     ///
     /// Removes unnecessary points (using the Douglas-Peucker algorithm).
-    Polygon simplify(double const distance) const;
+    PTR(Polygon) simplify(double const distance) const;
 
     //@{
     /// Operators for syntactic sugar
-    std::vector<Polygon> operator&(Polygon const& rhs) const { return intersection(rhs); }
-    std::vector<Polygon> operator&(Box const& rhs) const { return intersection(rhs); }
-    std::vector<Polygon> operator|(Polygon const& rhs) const { return union_(rhs); }
-    std::vector<Polygon> operator|(Box const& rhs) const { return union_(rhs); }
-    std::vector<Polygon> operator^(Polygon const& rhs) const { return symDifference(rhs); }
-    std::vector<Polygon> operator^(Box const& rhs) const { return symDifference(rhs); }
+    std::vector<PTR(Polygon)> operator&(Polygon const& rhs) const { return intersection(rhs); }
+    std::vector<PTR(Polygon)> operator&(Box const& rhs) const { return intersection(rhs); }
+    std::vector<PTR(Polygon)> operator|(Polygon const& rhs) const { return union_(rhs); }
+    std::vector<PTR(Polygon)> operator|(Box const& rhs) const { return union_(rhs); }
+    std::vector<PTR(Polygon)> operator^(Polygon const& rhs) const { return symDifference(rhs); }
+    std::vector<PTR(Polygon)> operator^(Box const& rhs) const { return symDifference(rhs); }
     //@}
 
     /// Produce a polygon from the convex hull
-    Polygon convexHull() const;
+    PTR(Polygon) convexHull() const;
 
     //@{
     /// Transform the polygon
@@ -188,10 +190,10 @@ public:
     /// The transformation is only applied to the vertices.  If the transformation
     /// is non-linear, the edges will not reflect that, but simply join the vertices.
     /// Greater fidelity might be achieved by using "subSample" before transforming.
-    Polygon transform(
+    PTR(Polygon) transform(
         CONST_PTR(XYTransform) const& transform ///< Transform from original to target frame
         ) const;
-    Polygon transform(
+    PTR(Polygon) transform(
         AffineTransform const& transform ///< Transform from original to target frame
         ) const;
     //@}
@@ -200,8 +202,8 @@ public:
     /// Sub-sample each edge
     ///
     /// This should provide greater fidelity when transforming with a non-linear transform.
-    Polygon subSample(size_t num) const;
-    Polygon subSample(double maxLength) const;
+    PTR(Polygon) subSample(size_t num) const;
+    PTR(Polygon) subSample(double maxLength) const;
     //@}
 
     //@{
@@ -219,6 +221,16 @@ public:
     }
     //@}
 
+    //@{
+    /// Whether Polygon is persistable which is always true
+    virtual bool isPersistable() const { return true; }
+
+protected:
+
+    virtual std::string getPersistenceName() const;
+
+    virtual void write(OutputArchiveHandle & handle) const;
+
 private:
     //@{
     /// pImpl pattern to hide implementation
@@ -231,6 +243,6 @@ private:
 /// Stream polygon
 std::ostream& operator<<(std::ostream& os, Polygon const& poly);
 
-}}} // namespace lsst::afw::geom
+}}}} // namespace lsst::afw::geom::polygon
 
 #endif

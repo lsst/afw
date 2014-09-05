@@ -1,3 +1,5 @@
+// -*- lsst-c++ -*-
+
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -20,28 +22,30 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-/**
- * \file
- * \brief An include file to include the header files for lsst::afw::geom
- *
- * Does not include lsst/afw/geom/ellipses.h.
- */
-#ifndef LSST_GEOM_H
-#define LSST_GEOM_H
 
-#include "lsst/afw/geom/CoordinateBase.h"
-#include "lsst/afw/geom/CoordinateExpr.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/geom/LinearTransform.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Span.h"
-#include "lsst/afw/geom/XYTransform.h"
-#include "lsst/afw/geom/Functor.h"
-#include "lsst/afw/geom/SeparableXYTransform.h"
-#include "lsst/afw/geom/polygon/Polygon.h"
-#include "lsst/afw/geom/TransformMap.h"
+%define polygonLib_DOCSTRING
+"
+Python interface to lsst::afw::geom::polygon class
+"
+%enddef
 
-#endif // LSST_GEOM_H
+%feature("autodoc", "1");
+%module(package="lsst.afw.geom.polygon",docstring=polygonLib_DOCSTRING) polygonLib
+
+#pragma SWIG nowarn=381                 // operator&&  ignored
+#pragma SWIG nowarn=382                 // operator||  ignored
+#pragma SWIG nowarn=361                 // operator!  ignored
+#pragma SWIG nowarn=503                 // comparison operators ignored
+
+%{
+#include "lsst/daf/base.h"
+#include "lsst/afw/geom.h"
+%}
+
+%include "lsst/p_lsstSwig.i"
+%import "lsst/daf/base/baseLib.i"
+
+%lsst_exceptions();
+
+%import "lsst/afw/geom/geomLib.i"
+%include "lsst/afw/geom/polygon/Polygon.i"

@@ -25,13 +25,14 @@ from __future__ import absolute_import, division
 import numpy
 import pickle
 import unittest
+import os
 import lsst.utils.tests as utilsTests
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.coord as afwCoord
 
-from lsst.afw.geom import Polygon, SinglePolygonException
+from lsst.afw.geom.polygon import Polygon, SinglePolygonException
 
 DEBUG = False
 
@@ -334,6 +335,15 @@ class PolygonTest(utilsTests.TestCase):
                 expected.plot(axes, c='r')
                 plt.show()
 
+    def testReadWrite(self):
+        """Test that polygons can be read and written to fits files"""
+        for num in range(3, 30):
+            poly = self.polygon(num)
+            filename='polygon.fits'
+            poly.writeFits(filename)
+            poly2=Polygon.readFits(filename)
+            self.assertEqual(poly, poly2)
+            os.remove(filename)
 
 def suite():
     """Returns a suite containing all the test cases in this module."""

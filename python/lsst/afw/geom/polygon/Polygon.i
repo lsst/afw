@@ -23,29 +23,30 @@
 %include "std_pair.i"
 %include "std_vector.i"
 
-%include "lsst/p_lsstSwig.i"
+%include "lsst/base.h"
 %include "lsst/afw/utils.i"
 
 %template(PairPoint) std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D>;
 %template(VectorPairPoint) std::vector<std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D> >;
 
-%include "lsst/afw/geom/Point.i"
-
 %{
-#include "lsst/afw/geom/Polygon.h"
+#include "lsst/afw/geom/polygon/Polygon.h"
+#include "lsst/afw/table/io/Persistable.h"
 %}
 
-%ignore std::vector<lsst::afw::geom::Polygon>::vector(size_type); // Polygon doesn't have a default Ctor
-%ignore std::vector<lsst::afw::geom::Polygon>::resize; // Polygon doesn't have a default Ctor
-%template(VectorPolygon) std::vector<lsst::afw::geom::Polygon>;
+%import "lsst/afw/table/io/ioLib.i"
+%declareTablePersistable(Polygon, lsst::afw::geom::polygon::Polygon);
 
-%include "lsst/afw/geom/Polygon.h"
+%template(VectorPolygon) std::vector<PTR(lsst::afw::geom::polygon::Polygon)>;
 
-%useValueEquality(lsst::afw::geom::Polygon);
-%definePythonIterator(lsst::afw::geom::Polygon);
-%ignore lsst::afw::geom::Polygon::swap(lsst::afw::geom::Polygon&); // not needed in python
+%include "lsst/afw/geom/polygon/Polygon.h"
 
-%extend lsst::afw::geom::Polygon {
+%useValueEquality(lsst::afw::geom::polygon::Polygon);
+%definePythonIterator(lsst::afw::geom::polygon::Polygon);
+%ignore lsst::afw::geom::Polygon::swap(lsst::afw::geom::polygon::Polygon&); // not needed in python
+
+
+%extend lsst::afw::geom::polygon::Polygon {
 %pythoncode %{
     union = union_ # Because this is python, not C++
 
@@ -103,4 +104,3 @@
         return self.__class__, ([p for p in self],)
 %}
 }
-
