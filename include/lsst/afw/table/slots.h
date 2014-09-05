@@ -219,7 +219,7 @@ struct SlotSuite {
  *  Utilities for version 0 tables and measurement algorithms that fill them.
  *
  *  These are deprecated and should not be used by new code; they will be removed when
- *  the new measurement framework in meas_base is complete and the old on in meas_algorithms
+ *  the new measurement framework in meas_base is complete and the old one in meas_algorithms
  *  is retired.
  */
 
@@ -236,7 +236,7 @@ struct Measurement {
 };
 
 /// A collection of types useful for flux measurement algorithms.
-struct Flux : public Measurement<double, double> {}; //pgee temporary
+struct Flux : public Measurement<double, double> {};
 
 /// A collection of types useful for centroid measurement algorithms.
 struct Centroid : public Measurement< Point<double>, Covariance< Point<float> > > {};

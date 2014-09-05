@@ -66,7 +66,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     /**
      *  @brief Return the name of the field used for the $1$2 slot.
      *
-     *  @throw NotFoundError is the slot is not defined.
+     *  @throw NotFoundError if the slot is not defined.
      *
      *  @deprecated in favor of
      *  @code
@@ -78,7 +78,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
     }
 
     /**
-     *  @brief Return the true if the $1$2 slot corresponds to a valid field.
+     *  @brief Return true if the $1$2 slot corresponds to a valid field.
      *
      *  @deprecated in favor of get$1$2Slot().isValid().
      */
