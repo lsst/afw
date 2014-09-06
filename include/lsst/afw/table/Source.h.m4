@@ -1,9 +1,9 @@
 changecom(`###')dnl
 // -*- lsst-c++ -*-
-/* 
+/*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010, 2011 LSST Corporation.
- * 
+ * Copyright 2008-2014, 2011 LSST Corporation.
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@ changecom(`###')dnl
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -27,101 +27,101 @@ changecom(`###')dnl
 define(`m4def', defn(`define'))dnl
 m4def(`DECLARE_SLOT_GETTERS',
 `/// @brief Get the value of the $1$2 slot measurement.
-    $2::MeasValue get$1$2() const;
+    $2SlotDefinition::MeasValue get$1$2() const;
 
     /// @brief Get the uncertainty on the $1$2 slot measurement.
-    $2::ErrValue get$1$2Err() const;
+    $2SlotDefinition::ErrValue get$1$2Err() const;
 
-    /// @brief Return true if the measurement in the $1$2 slot was successful.
+    /// @brief Return true if the measurement in the $1$2 slot failed.
     bool get$1$2Flag() const;
 ')dnl
-m4def(`DECLARE_FLUX_GETTERS', `DECLARE_SLOT_GETTERS($1, `Flux')')dnl
-m4def(`DECLARE_CENTROID_GETTERS', `DECLARE_SLOT_GETTERS(`', `Centroid')')dnl
-m4def(`DECLARE_SHAPE_GETTERS', `DECLARE_SLOT_GETTERS(`', `Shape')')dnl
 m4def(`DEFINE_SLOT_GETTERS',
-`inline $2::MeasValue SourceRecord::get$1$2() const {
-    return this->get(getTable()->get$1$2Key());
+`inline $2SlotDefinition::MeasValue SourceRecord::get$1$2() const {
+    return this->get(getTable()->get$1$2Slot().getMeasKey());
 }
 
-inline $2::ErrValue SourceRecord::get$1$2Err() const {
-    return this->get(getTable()->get$1$2ErrKey());
+inline $2SlotDefinition::ErrValue SourceRecord::get$1$2Err() const {
+    return this->get(getTable()->get$1$2Slot().getErrKey());
 }
 
 inline bool SourceRecord::get$1$2Flag() const {
-    return this->get(getTable()->get$1$2FlagKey());
+    return this->get(getTable()->get$1$2Slot().getFlagKey());
 }
 ')dnl
-m4def(`DEFINE_FLUX_GETTERS', `DEFINE_SLOT_GETTERS($1, `Flux')')dnl
-m4def(`DEFINE_CENTROID_GETTERS', `DEFINE_SLOT_GETTERS(`', `Centroid')')dnl
-m4def(`DEFINE_SHAPE_GETTERS', `DEFINE_SLOT_GETTERS(`', `Shape')')dnl
-
-// with the current state of the slots, this macro is only used for flux slots - pgee
 m4def(`DECLARE_SLOT_DEFINERS',
 `
+    $2SlotDefinition const & get$1$2Slot() const { return _slots.def$1$2; }
+
     /**
-     *  @brief Set the measurement used for the $1$2 slot with a field name.
+     *  @brief Set the measurement used for the $1$2 slot.
      *
-     *  For version 0 tables, requires that the measurement adhere to the convention
-     *  of having "<name>", "<name>.err", and "<name>.flags" fields for all three fields
-     *  to be attached to slots.  Only the main measurement field is required.
+     *  The definitions for slots are actually managed by the Schema object, and its associated
+     *  AliasMap, so this simply sets the "slot_$1$2" alias (or "slot.$1$2" for version 0 tables)
+     *  to point to the given field name prefix.  See $2SlotDefinition for more information.
      */
     void define$1$2(std::string const & name) {
-        Schema schema = getSchema();
-        _slot$2$3.name = name;
-        if (getVersion() == 0) {
-            _slot$2$3.$4 = schema[name];
-            try {
-                _slot$2$3.$4Sigma = schema[name]["err"];
-            } catch (pex::exceptions::NotFoundError) {}
-            try {
-                _slot$2$3.flag = schema[name]["flags"];
-            } catch (pex::exceptions::NotFoundError) {}
-            return;
-        }
-        _slot$2$3.$4 = schema[name + "_$4"];
-        try {
-            _slot$2$3.$4Sigma = schema[name + "_$4Sigma"];
-        } catch (pex::exceptions::NotFoundError) {}
-        try {
-            _slot$2$3.flag = schema[name + "_flag"];
-        } catch (pex::exceptions::NotFoundError) {}
+        getSchema().getAliasMap()->set(get$1$2Slot().getAlias(getSchema().getVersion()), name);
     }
 
-    /// @brief Return the name of the field used for the $1$2 slot.
+    /**
+     *  @brief Return the name of the field used for the $1$2 slot.
+     *
+     *  @throw NotFoundError if the slot is not defined.
+     *
+     *  @deprecated in favor of
+     *  @code
+     *  getSchema().getAliasMap()->get("slot_$1$2")  # or "slot.$1$2" for version 0 tables
+     *  @endcode
+     */
     std::string get$1$2Definition() const {
-        return _slot$2$3.name;
+        return getSchema().getAliasMap()->get(get$1$2Slot().getAlias(getSchema().getVersion()));
     }
-    /// @brief Return the true if the Centroid slot is valid
 
+    /**
+     *  @brief Return true if the $1$2 slot corresponds to a valid field.
+     *
+     *  @deprecated in favor of get$1$2Slot().isValid().
+     */
     bool has$1$2Slot() const {
-        return _slot$2$3.flux.isValid();
+        return get$1$2Slot().isValid();
     }
 
-    /// @brief Return the key used for the $1$2 slot.
-    $2::MeasKey get$1$2Key() const { 
-        return _slot$2$3.$4;
+    /**
+     *  @brief Return the key used for the $1$2 slot measurement value.
+     *
+     *  @deprecated in favor of get$1$2Slot().getMeasKey().
+     */
+    $2SlotDefinition::MeasKey get$1$2Key() const {
+        return get$1$2Slot().getMeasKey();
     }
 
-    /// @brief Return the key used for $1$2 slot error or covariance.
-    $2::ErrKey get$1$2ErrKey() const {
-        return _slot$2$3.$4Sigma;
+    /**
+     *  @brief Return the key used for the $1$2 slot uncertainty.
+     *
+     *  @deprecated in favor of get$1$2Slot().getErrKey().
+     */
+    $2SlotDefinition::ErrKey get$1$2ErrKey() const {
+        return get$1$2Slot().getErrKey();
     }
 
-    /// @brief Return the key used for the $1$2 slot success flag.
+    /**
+     *  @brief Return the key used for the $1$2 slot failure flag.
+     *
+     *  @deprecated in favor of get$1$2Slot().getFlagKey().
+     */
     Key<Flag> get$1$2FlagKey() const {
-        return _slot$2$3.flag;
+        return get$1$2Slot().getFlagKey();
     }
 ')dnl
-m4def(`DECLARE_FLUX_DEFINERS', `DECLARE_SLOT_DEFINERS($1, `Flux', `[FLUX_SLOT_`'translit($1, `a-z', `A-Z')]', `flux')')dnl
 define(`m4def', defn(`define'))dnl
 m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 `/// @brief Get the value of the $1Flux slot measurement.
     ndarray::Array<double,1> get$1Flux() const {
-        return this->operator[](this->getTable()->get$1FluxKey());
+        return this->operator[](this->getTable()->get$1FluxSlot().getMeasKey());
     }
     /// @brief Get the uncertainty on the $1Flux slot measurement.
     ndarray::Array<double,1> get$1FluxErr() const {
-        return this->operator[](this->getTable()->get$1FluxErrKey());
+        return this->operator[](this->getTable()->get$1FluxSlot().getErrKey());
     }
 ')dnl
 #ifndef AFW_TABLE_Source_h_INCLUDED
@@ -137,6 +137,7 @@ m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 #include "lsst/afw/table/IdFactory.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
+#include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 
 namespace lsst { namespace afw {
@@ -163,129 +164,6 @@ typedef lsst::afw::detection::Footprint Footprint;
 class SourceRecord;
 class SourceTable;
 
-/// @brief A collection of types that correspond to common measurements.
-template <typename MeasTagT, typename ErrTagT>
-struct Measurement {
-    typedef MeasTagT MeasTag;  ///< the tag (template parameter) type used for the measurement
-    typedef ErrTagT ErrTag;    ///< the tag (template parameter) type used for the uncertainty
-    typedef typename Field<MeasTag>::Value MeasValue; ///< the value type used for the measurement
-    typedef typename Field<ErrTag>::Value ErrValue;   ///< the value type used for the uncertainty
-    typedef Key<MeasTag> MeasKey;  ///< the Key type for the actual measurement
-    typedef Key<ErrTag> ErrKey;    ///< the Key type for the error on the measurement
-    typedef FunctorKey<MeasTag> MeasFunctorKey;  ///< the Key type for the actual measurement
-    typedef FunctorKey<ErrTag> ErrFunctorKey;    ///< the Key type for the error on the measurement
-};
-
-#ifndef SWIG
-
-/// A collection of types useful for flux measurement algorithms.
-struct Flux : public Measurement<double, double> {}; //pgee temporary
-
-/// A collection of types useful for centroid measurement algorithms.
-struct Centroid : public Measurement< Point<double>, Covariance< Point<float> > > {};
-
-/// A collection of types useful for shape measurement algorithms.
-struct Shape : public Measurement< Moments<double>, Covariance< Moments<float> > > {};
-
-/// An enum for all the special flux aliases in Source.
-enum FluxSlotEnum {
-    FLUX_SLOT_PSF=0,
-    FLUX_SLOT_MODEL,
-    FLUX_SLOT_AP,
-    FLUX_SLOT_INST,
-    N_FLUX_SLOTS
-};
-
-struct FluxKeys {
-    std::string name;
-    Key<double> flux;
-    Key<double> fluxSigma;
-    Key<Flag> flag;
-};
-struct CentroidKeys {
-    std::string name;
-    lsst::afw::table::Point2DKey pos;
-    lsst::afw::table::CovarianceMatrixKey<float,2> posErr;
-    Key<Flag> flag;
-
-    /// Default-constructor; all keys will be invalid.
-    CentroidKeys() {}
-
-    /// Main constructor.
-    CentroidKeys(
-    std::string const & name_,
-    lsst::afw::table::Point2DKey const & pos_,
-    lsst::afw::table::CovarianceMatrixKey<float,2> const & posErr_,
-    Key<Flag> const & flag_
-    ) : name(name_), pos(pos_), posErr(posErr_), flag(flag_) {}
-
-    // No error constructor
-    CentroidKeys(
-    std::string const & name_,
-    lsst::afw::table::Point2DKey const & pos_,
-    Key<Flag> const & flag_
-    ) : name(name_), pos(pos_), flag(flag_) {}
-};
-struct ShapeKeys {
-    std::string name;
-    lsst::afw::table::QuadrupoleKey quadrupole;
-    lsst::afw::table::CovarianceMatrixKey<float,3> quadrupoleErr;
-    Key<Flag> flag;
-    
-    /// Default-constructor; all keys will be invalid.
-    ShapeKeys() {}
-
-    /// Main constructor.
-    ShapeKeys(
-    std::string const & name_,
-    lsst::afw::table::QuadrupoleKey const & quadrupole_,
-    lsst::afw::table::CovarianceMatrixKey<float,3> const & quadrupoleErr_,
-    Key<Flag> flag_
-    ) : name(name_), quadrupole(quadrupole_), quadrupoleErr(quadrupoleErr_), flag(flag_) {}
-
-    /// No error constructor.
-    ShapeKeys(
-    std::string const & name_,
-    lsst::afw::table::QuadrupoleKey const & quadrupole_,
-    Key<Flag> flag_
-    ) : name(name_), quadrupole(quadrupole_), flag(flag_) {}
-};
-/**
- *  @brief A three-element tuple of measurement, uncertainty, and flag keys.
- *
- *  Most measurement should have more than one flag key to indicate different kinds of failures.
- *  This flag key should usually be set to be a logical OR of all of them, so it is set whenever
- *  a measurement cannot be fully trusted.
- */
-template <typename MeasurementT>
-struct KeyTuple {
-    typename MeasurementT::MeasKey meas; ///< Key used for the measured value.
-    typename MeasurementT::ErrKey err;   ///< Key used for the uncertainty.
-    Key<Flag> flag;                      ///< Failure bit; set if the measurement did not fully succeed.
-
-    /// Default-constructor; all keys will be invalid.
-    KeyTuple() {}
-
-    /// Main constructor.
-    KeyTuple(
-        typename MeasurementT::MeasKey const & meas_,
-        typename MeasurementT::ErrKey const & err_,
-        Key<Flag> const & flag_
-    ) : meas(meas_), err(err_), flag(flag_) {}
-
-};
-
-/// Convenience function to setup fields for centroid measurement algorithms.
-KeyTuple<Centroid> addCentroidFields(Schema & schema, std::string const & name, std::string const & doc);
-
-/// Convenience function to setup fields for shape measurement algorithms.
-KeyTuple<Shape> addShapeFields(Schema & schema, std::string const & name, std::string const & doc);
-
-/// Convenience function to setup fields for flux measurement algorithms.
-KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::string const & doc);
-
-#endif // !SWIG
-
 template <typename RecordT> class SourceColumnViewT;
 
 /**
@@ -299,7 +177,7 @@ template <typename RecordT> class SourceColumnViewT;
  *   - A system of aliases (called slots) in which a SourceTable instance stores keys for particular
  *     measurements (a centroid, a shape, and a number of different fluxes) and SourceRecord uses
  *     this keys to provide custom getters and setters.  These are not separate fields, but rather
- *     aliases that can point to custom fields.
+ *     aliases that can point to custom fields.  See the SlotDefinition hierarchy for more information.
  */
 class SourceRecord : public SimpleRecord {
 public:
@@ -323,12 +201,12 @@ public:
     void setParent(RecordId id);
     //@}
 
-    DECLARE_FLUX_GETTERS(`Psf')
-    DECLARE_FLUX_GETTERS(`Model')
-    DECLARE_FLUX_GETTERS(`Ap')
-    DECLARE_FLUX_GETTERS(`Inst')
-    DECLARE_CENTROID_GETTERS
-    DECLARE_SHAPE_GETTERS
+    DECLARE_SLOT_GETTERS(`Psf', `Flux')
+    DECLARE_SLOT_GETTERS(`Model', `Flux')
+    DECLARE_SLOT_GETTERS(`Ap', `Flux')
+    DECLARE_SLOT_GETTERS(`Inst', `Flux')
+    DECLARE_SLOT_GETTERS(`', `Centroid')
+    DECLARE_SLOT_GETTERS(`', `Shape')
 
     /// @brief Return the centroid slot x coordinate.
     double getX() const;
@@ -409,7 +287,7 @@ public:
 
     /**
      *  @brief Return true if the given schema is a valid SourceTable schema.
-     *  
+     *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */
@@ -436,88 +314,20 @@ public:
         return boost::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other, mapper));
     }
 
-    DECLARE_FLUX_DEFINERS(`Psf')
-    DECLARE_FLUX_DEFINERS(`Model')
-    DECLARE_FLUX_DEFINERS(`Ap')
-    DECLARE_FLUX_DEFINERS(`Inst')
-
-    /**
-     *  @brief Set the measurement used for the Centroid slot with a field name.
-     *
-     *  For version 0 tables, requires that the measurement adhere to the convention
-     *  of having "<name>", "<name>.err", and "<name>.flags" fields for all three fields
-     *  to be attached to slots.  Only the main measurement field is required.
-     *  For version 1 tables: "<name>_x", "<name>_y", "<name>_xSigma", "<name>_ySigma"
-     *  are the naming conventions
-     */
-    void defineCentroid(std::string const & name);
-
-    /// @brief Return the name of the field used for the Centroid slot.
-    std::string getCentroidDefinition() const {
-        return _slotCentroid.name;
-    }
-
-    /// @brief Return the true if the Centroid slot is valid
-    bool hasCentroidSlot() const {
-        return _slotCentroid.pos.isValid();
-    }
-    /// @brief Return the key used for the Centroid slot.
-    lsst::afw::table::Point2DKey getCentroidKey() const {
-        return _slotCentroid.pos;
-    }
-
-    /// @brief Return the key used for Centroid slot error or covariance.
-    lsst::afw::table::CovarianceMatrixKey<float,2> getCentroidErrKey() const {
-        return _slotCentroid.posErr;
-    }
-
-    /// @brief Return the key used for the Centroid slot success flag.
-    Key<Flag> getCentroidFlagKey() const {
-            return _slotCentroid.flag;
-    }
-
-    /**
-     *  @brief Set the measurement used for the Shape slot with a field name.
-     *
-     *  For version 0 tables, requires that the measurement adhere to the convention
-     *  of having "<name>", "<name>.err", and "<name>.flags" fields for all three fields
-     *  to be attached to slots.  Only the main measurement field is required.
-     *  For version 1 tables: "<name>_xx", "<name>_yy", "<name>_xy"
-     *                sigmas: "<name>_xxSigma", "<name>_yySigma", "<name>_xySigma"
-     *                covariance: "<name>_xx_yy_Cov", "<name>_xx_xyCov", etc.
-     */
-    void defineShape(std::string const & name);
-
-    /// @brief Return the name of the field used for the Shape slot.
-    std::string getShapeDefinition() const {
-        return _slotShape.name;
-    }
-
-    /// @brief Return the true if the Centroid slot is valid
-    bool hasShapeSlot() const {
-        return _slotShape.quadrupole.isValid();
-    }
-
-    /// @brief Return the key used for the Shape slot.
-    lsst::afw::table::QuadrupoleKey getShapeKey() const {
-        return _slotShape.quadrupole;
-    }
-
-    /// @brief Return the key used for Shape slot error or covariance.
-    lsst::afw::table::CovarianceMatrixKey<float,3> getShapeErrKey() const {
-        return _slotShape.quadrupoleErr;
-    }
-
-    /// @brief Return the key used for the Shape slot success flag.
-    Key<Flag> getShapeFlagKey() const {
-        return _slotShape.flag;
-    }
+    DECLARE_SLOT_DEFINERS(`Psf', `Flux')
+    DECLARE_SLOT_DEFINERS(`Model', `Flux')
+    DECLARE_SLOT_DEFINERS(`Ap', `Flux')
+    DECLARE_SLOT_DEFINERS(`Inst', `Flux')
+    DECLARE_SLOT_DEFINERS(`', `Centroid')
+    DECLARE_SLOT_DEFINERS(`', `Shape')
 
 protected:
 
     SourceTable(Schema const & schema, PTR(IdFactory) const & idFactory);
 
     SourceTable(SourceTable const & other);
+
+    virtual void handleAliasChange(std::string const & alias);
 
 private:
 
@@ -528,18 +338,17 @@ private:
 
         MinimalSchema();
     };
-    
+
     // Return the singleton minimal schema.
     static MinimalSchema & getMinimalSchema();
 
     friend class io::FitsWriter;
+    friend class SourceRecord;
 
      // Return a writer object that knows how to save in FITS format.  See also FitsWriter.
     virtual PTR(io::FitsWriter) makeFitsWriter(fits::Fits * fitsfile, int flags) const;
 
-    boost::array< FluxKeys, N_FLUX_SLOTS > _slotFlux; // aliases for flux measurements
-    CentroidKeys _slotCentroid;  // alias for a centroid measurement
-    ShapeKeys _slotShape;  // alias for a shape measurement
+    SlotSuite _slots;
 };
 
 template <typename RecordT>
@@ -588,35 +397,12 @@ typedef SourceColumnViewT<SourceRecord> SourceColumnView;
 
 #ifndef SWIG
 
-DEFINE_FLUX_GETTERS(`Psf')
-DEFINE_FLUX_GETTERS(`Model')
-DEFINE_FLUX_GETTERS(`Ap')
-DEFINE_FLUX_GETTERS(`Inst')
-
-inline Centroid::MeasValue SourceRecord::getCentroid() const {
-    return this->get(getTable()->getCentroidKey());
-}
-
-inline Centroid::ErrValue SourceRecord::getCentroidErr() const {
-    return this->get(getTable()->getCentroidErrKey());
-}
-
-inline bool SourceRecord::getCentroidFlag() const {
-    return this->get(getTable()->getCentroidFlagKey());
-}
-
-inline Shape::MeasValue SourceRecord::getShape() const {
-    return this->get(getTable()->getShapeKey());
-}
-
-inline Shape::ErrValue SourceRecord::getShapeErr() const {
-        return this->get(getTable()->getShapeErrKey());
-}
-
-inline bool SourceRecord::getShapeFlag() const {
-    return this->get(getTable()->getShapeFlagKey());
-}
-
+DEFINE_SLOT_GETTERS(`Psf', `Flux')
+DEFINE_SLOT_GETTERS(`Model', `Flux')
+DEFINE_SLOT_GETTERS(`Ap', `Flux')
+DEFINE_SLOT_GETTERS(`Inst', `Flux')
+DEFINE_SLOT_GETTERS(`', `Centroid')
+DEFINE_SLOT_GETTERS(`', `Shape')
 
 inline RecordId SourceRecord::getParent() const { return get(SourceTable::getParentKey()); }
 inline void SourceRecord::setParent(RecordId id) { set(SourceTable::getParentKey(), id); }
@@ -624,16 +410,16 @@ inline double SourceRecord::getX() const {
     return get(getTable()->getCentroidKey().getX());
 }
 inline double SourceRecord::getY() const {
-    return get(getTable()->getCentroidKey().getY()); 
+    return get(getTable()->getCentroidKey().getY());
 }
 inline double SourceRecord::getIxx() const {
-    return get(getTable()->getShapeKey().getIxx()); 
+    return get(getTable()->getShapeKey().getIxx());
 }
 inline double SourceRecord::getIyy() const {
-    return get(getTable()->getShapeKey().getIyy()); 
+    return get(getTable()->getShapeKey().getIyy());
 }
 inline double SourceRecord::getIxy() const {
-    return get(getTable()->getShapeKey().getIxy()); 
+    return get(getTable()->getShapeKey().getIxy());
 }
 
 #endif // !SWIG

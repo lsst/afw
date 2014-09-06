@@ -383,7 +383,7 @@ public:
      *  wrappers provide an equivalent asKey() method.
      */
     template <typename T>
-    operator Key<T>() const { return _impl->find<T>(_name).key; }
+    operator Key<T>() const { return _impl->find<T>(_aliases->apply(_name)).key; }
 
     /**
      *  @brief Implicit conversion to the appropriate Key type.
@@ -392,7 +392,7 @@ public:
      *  wrappers provide an equivalent asField() method.
      */
     template <typename T>
-    operator Field<T>() const { return _impl->find<T>(_name).field; }
+    operator Field<T>() const { return _impl->find<T>(_aliases->apply(_name)).field; }
 
 private:
 
