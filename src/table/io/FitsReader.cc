@@ -275,6 +275,7 @@ void FitsReader::_readSchema(
         };
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
             std::string target = metadata.get(oldSlotKeys[i].first + "_SLOT", std::string(""));
+            std::replace(target.begin(), target.end(), '_', '.');
             if (!target.empty()) {
                 schema.getAliasMap()->set(oldSlotKeys[i].second, target);
                 if (stripMetadata) {
