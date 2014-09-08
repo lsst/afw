@@ -60,7 +60,7 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
                        BackgroundControl const& bgCtrl ///< Control how the Background is estimated
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
-    _imgBBox(img.getBBox()),
+    _imgBBox(img.getBBox(image::LOCAL)),
     _bctrl(bgCtrl),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
     _asUsedUndersampleStyle(THROW_EXCEPTION),
@@ -158,10 +158,10 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
     }
     return undersampleStrings[style];
 }
+/// \cond
 /*
  * Explicit instantiations
  *
- * \cond
  */
 #define INSTANTIATE_BACKGROUND(TYPE)                                    \
     template Background::Background(image::Image<TYPE> const& img,  \
@@ -176,6 +176,5 @@ INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)
 INSTANTIATE_BACKGROUND(int)
 
-// \endcond
+/// \endcond
 }}}
-

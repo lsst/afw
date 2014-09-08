@@ -166,7 +166,9 @@ image::ImageBase<PixelT>::ImageBase(
     _manager(rhs._manager), // reference counted pointer, don't copy pixels
     _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
 {
-    
+    if (!bbox.isEmpty() && origin==UNDEFINED) {
+        throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,"bbox not empty and origin undefined");
+    }
     if (deep) {
         ImageBase tmp(getBBox(PARENT));        
         tmp <<= *this;                  // now copy the pixels

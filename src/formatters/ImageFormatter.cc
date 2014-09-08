@@ -193,10 +193,21 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
 
         execTrace("ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
-               afwImg::ImageOrigin origin = afwImg::LOCAL;
-        if(additionalData->exists("imageOrigin")){
+        geom::Box2I box;
+        if (additionalData->exists("llcX")) {
+            int llcX = additionalData->get<int>("llcX");
+            int llcY = additionalData->get<int>("llcY");
+            int width = additionalData->get<int>("width");
+            int height = additionalData->get<int>("height");
+            box = geom::Box2I(
+                geom::Point2I(llcX, llcY), 
+                geom::Extent2I(width, height)
+            );
+        }
+        afwImg::ImageOrigin origin = afwImg::UNDEFINED;
+        if (additionalData->exists("imageOrigin")) {
             std::string originStr = additionalData->get<std::string>("imageOrigin");
-            if(originStr == "LOCAL") {
+            if (originStr == "LOCAL") {
                 origin = afwImg::LOCAL;
             } else if (originStr == "PARENT") {
                 origin = afwImg::PARENT;
@@ -209,17 +220,6 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
                     ).str()
                 );
             }
-        } 
-        geom::Box2I box;
-        if (additionalData->exists("llcX")) {
-            int llcX = additionalData->get<int>("llcX");
-            int llcY = additionalData->get<int>("llcY");
-            int width = additionalData->get<int>("width");
-            int height = additionalData->get<int>("height");
-            box = geom::Box2I(
-                geom::Point2I(llcX, llcY), 
-                geom::Extent2I(width, height)
-            );
         }
         lsst::daf::base::PropertySet::Ptr metadata;
 

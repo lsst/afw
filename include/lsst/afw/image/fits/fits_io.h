@@ -51,6 +51,7 @@ inline void fits_read_array(
             "Incorrect image type for FITS image"
         );  
     }
+    if (!bbox.isEmpty() && origin==UNDEFINED) throw std::runtime_error("bbox not empty; must specify origin");
 
     int nAxis = fitsfile.getImageDim();
     ndarray::Vector<int,2> shape;

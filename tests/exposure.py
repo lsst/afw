@@ -264,7 +264,7 @@ class ExposureTestCase(unittest.TestCase):
         # This subExposure is valid
         #
         subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))
-        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.PARENT)
         
         self.checkWcs(self.exposureCrWcs, subExposure)
 
@@ -274,7 +274,7 @@ class ExposureTestCase(unittest.TestCase):
         
         subRegion3 = afwGeom.Box2I(afwGeom.Point2I(100, 100), afwGeom.Extent2I(10, 10))
         def getSubRegion():
-            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3, afwImage.LOCAL)
+            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3, afwImage.PARENT)
 
         self.assertRaises(pexExcept.LengthError, getSubRegion)
 
@@ -284,13 +284,13 @@ class ExposureTestCase(unittest.TestCase):
 
         subRegion4 = afwGeom.Box2I(afwGeom.Point2I(250, 250), afwGeom.Extent2I(10, 10))
         def getSubRegion():
-            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4, afwImage.LOCAL)
+            self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4, afwImage.PARENT)
 
         self.assertRaises(pexExcept.LengthError, getSubRegion)
 
         #check the sub- and parent- exposures are using the same Wcs transformation
         subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))
-        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
+        subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.PARENT)
         parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
         
         parentPos = parentPos.getPosition()
@@ -308,7 +308,7 @@ class ExposureTestCase(unittest.TestCase):
         mainExposure.setDetector(self.detector)
         
         subBBox = afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.Extent2I(40, 50))
-        subExposure = mainExposure.Factory(mainExposure, subBBox, afwImage.LOCAL)
+        subExposure = mainExposure.Factory(mainExposure, subBBox, afwImage.PARENT)
         self.checkWcs(mainExposure, subExposure)
         det = subExposure.getDetector()
         self.assertTrue(det)

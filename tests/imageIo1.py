@@ -99,7 +99,7 @@ class ReadFitsTestCase(unittest.TestCase):
         im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
         im.set(666)
         im.writeFits(imPath)
-        newIm = afwImage.ImageD(imPath)
+        afwImage.ImageD(imPath)
         os.remove(imPath)
 
     def testSubimage(self):
@@ -108,9 +108,9 @@ class ReadFitsTestCase(unittest.TestCase):
         im = afwImage.ImageF(fileName, hdu)
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120), afwGeom.Extent2I(20, 15))
-        sim = im.Factory(im, bbox, afwImage.LOCAL) 
+        sim = im.Factory(im, bbox, afwImage.PARENT) 
 
-        im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.LOCAL)
+        im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.PARENT)
 
         self.assertEqual(im2.getDimensions(), sim.getDimensions())
         self.assertEqual(im2.get(1, 1), sim.get(1, 1))

@@ -104,7 +104,7 @@ namespace image {
         typedef typename boost::gil::channel_traits<PixelT>::const_reference type; ///< const reference type
     };
     
-    enum ImageOrigin {PARENT, LOCAL};
+    enum ImageOrigin {PARENT, LOCAL, UNDEFINED};
 
     /// \brief The base class for all %image classed (Image, Mask, MaskedImage, ...)
     //
@@ -374,7 +374,7 @@ namespace image {
             setXY0(geom::Point2I(x0,y0));
         }
 
-        geom::Box2I getBBox(ImageOrigin origin=LOCAL) const {
+        geom::Box2I getBBox(ImageOrigin origin) const {
             if (origin == PARENT) {
                 return geom::Box2I(_origin, getDimensions());
             }

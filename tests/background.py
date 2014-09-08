@@ -237,7 +237,7 @@ class BackgroundTestCase(unittest.TestCase):
         # Check creation of sub-image
         box = afwGeom.Box2I(afwGeom.Point2I(123, 45), afwGeom.Extent2I(45, 123))
         bgImage = bg.getImageF("AKIMA_SPLINE")
-        bgSubImage = afwImage.ImageF(bgImage, box)
+        bgSubImage = afwImage.ImageF(bgImage, box, afwImage.PARENT)
         testImage = bg.getImageF(box, "AKIMA_SPLINE")
         self.assertEqual(testImage.getXY0(), bgSubImage.getXY0())
         self.assertEqual(testImage.getDimensions(), bgSubImage.getDimensions())
@@ -342,7 +342,7 @@ class BackgroundTestCase(unittest.TestCase):
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
                                                 "CFHT", "D4", "cal-53535-i-797722_1.fits"))
-        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
+        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.PARENT)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
         bctrl.setNxSample(16)
@@ -371,7 +371,7 @@ class BackgroundTestCase(unittest.TestCase):
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
                                                 "CFHT", "D4", "cal-53535-i-797722_1.fits"))
-        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
+        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.PARENT)
 
         bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
         bctrl.getStatisticsControl().setNumSigmaClip(3.0)  
@@ -496,7 +496,7 @@ class BackgroundTestCase(unittest.TestCase):
         image = afwImage.MaskedImageF(800, 800)
         msk = image.getMask()
         bbox = afwGeom.BoxI(afwGeom.PointI(560, 0), afwGeom.PointI(799, 335))
-        smsk = msk.Factory(msk, bbox)
+        smsk = msk.Factory(msk, bbox, afwImage.PARENT)
         smsk.set(msk.getPlaneBitMask("DETECTED"))
         
         binSize = 256
@@ -678,7 +678,7 @@ class BackgroundTestCase(unittest.TestCase):
         #
         # OK, we have our background.  Make a copy
         #
-        bkgd2 = afwMath.BackgroundMI(self.image.getBBox(), bkgd.getStatsImage())
+        bkgd2 = afwMath.BackgroundMI(self.image.getBBox(afwImage.PARENT), bkgd.getStatsImage())
         del bkgd; bkgd = None           # we should be handling the memory correctly, but let's check
         bkgdImage2 = bkgd2.getImageF(interpStyle)
 

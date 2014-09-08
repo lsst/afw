@@ -331,7 +331,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
             int height = additionalData->get<int>("height");
             box = afwGeom::Box2I(afwGeom::Point2I(llcX, llcY), afwGeom::Extent2I(width, height));
         }
-        afwImg::ImageOrigin origin = afwImg::LOCAL;
+        afwImg::ImageOrigin origin = afwImg::UNDEFINED;
         if(additionalData->exists("imageOrigin")){
             std::string originStr = additionalData->get<std::string>("imageOrigin");
             if(originStr == "LOCAL") {

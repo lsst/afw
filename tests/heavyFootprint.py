@@ -33,7 +33,6 @@ or
 """
 
 import numpy as np
-import math, sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
@@ -164,7 +163,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
         fs.makeHeavy(self.mi)
 
         bbox = afwGeom.BoxI(afwGeom.PointI(9, 1), afwGeom.ExtentI(7, 4))
-        omi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL, True)
+        omi = self.mi.Factory(self.mi, bbox, afwImage.PARENT, True)
         omi.set((0, 0x0, 0))
 
         for foot in fs.getFootprints():

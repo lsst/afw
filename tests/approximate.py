@@ -110,8 +110,8 @@ class ApproximateTestCase(unittest.TestCase):
                     for x in xVec:
                         for y in yVec:
                             ds9.dot('+', x, y, size=0.4, frame=1)
-                
-            for x, y in aim.getBBox().getCorners():
+            
+            for x, y in aim.getBBox(afwImage.PARENT).getCorners():
                 self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
     def testChebyshevEqualOrder(self):
@@ -149,7 +149,7 @@ class ApproximateTestCase(unittest.TestCase):
                 if display and (i == 0 and order == 1):
                     ds9.mtv(aim, title="Interpolated", frame=1)
 
-                for x, y in aim.getBBox().getCorners():
+                for x, y in aim.getBBox(afwImage.PARENT).getCorners():
                     val = np.mean(aim.getArray()) if order == 0 else \
                         rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y
 
