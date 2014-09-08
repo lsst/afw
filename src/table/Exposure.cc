@@ -385,11 +385,12 @@ template <typename RecordT>
 ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
     io::InputArchive const & archive, BaseCatalog const & catalog
 ) {
-    SchemaMapper mapper = PersistenceSchema::get().makeReadMapper(catalog.getSchema());
+    PersistenceSchema const & helper = PersistenceSchema::getMatching(catalog.getSchema());
+    SchemaMapper mapper = helper.makeReadMapper(catalog.getSchema());
     ExposureCatalogT<ExposureRecord> result(mapper.getOutputSchema());
     result.reserve(catalog.size());
     for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-        PersistenceSchema::get().readRecord(*i, *result.addNew(), mapper, archive);
+        helper.readRecord(*i, *result.addNew(), mapper, archive);
     }
     return result;
 }
