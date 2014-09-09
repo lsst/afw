@@ -645,8 +645,8 @@ class FootprintTestCase(unittest.TestCase):
         imTarget = afwImage.ImageU(dims)
         fpTarget.insertIntoImage(imTarget, 1)
 
-        subSource = imSource.Factory(imSource, fpSource.getBBox())
-        subTarget = imTarget.Factory(imTarget, fpTarget.getBBox())
+        subSource = imSource.Factory(imSource, fpSource.getBBox(), afwImage.PARENT)
+        subTarget = imTarget.Factory(imTarget, fpTarget.getBBox(), afwImage.PARENT)
         self.assertTrue(numpy.all(subSource.getArray() == subTarget.getArray()))
 
         # make a bbox smaller than the target footprint

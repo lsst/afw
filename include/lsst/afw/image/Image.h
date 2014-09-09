@@ -184,7 +184,7 @@ namespace image {
         explicit ImageBase(const geom::Box2I &bbox);
         ImageBase(const ImageBase& src, const bool deep=false);
         explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox,
-                           const ImageOrigin origin=LOCAL, const bool deep=false);
+                           const ImageOrigin origin=UNDEFINED, const bool deep=false);
         /// generalised copy constructor
         ///
         /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
@@ -434,7 +434,7 @@ namespace image {
         explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
         explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
-        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=LOCAL, 
+        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=UNDEFINED, 
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
 
@@ -454,7 +454,7 @@ namespace image {
             std::string const & fileName, int hdu=0,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(), 
-            ImageOrigin origin=LOCAL
+            ImageOrigin origin=UNDEFINED
         );
 
         /**
@@ -473,7 +473,7 @@ namespace image {
             fits::MemFileManager & manager, int hdu=0,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(), 
-            ImageOrigin origin=LOCAL
+            ImageOrigin origin=UNDEFINED
         );
 
         /**
@@ -489,7 +489,7 @@ namespace image {
             fits::Fits & fitsfile,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(), 
-            ImageOrigin origin=LOCAL
+            ImageOrigin origin=UNDEFINED
         );
 
         // generalised copy constructor
@@ -631,7 +631,7 @@ namespace image {
             std::string const& fileName, 
             const int hdu=0, 
             geom::Box2I const& bbox=geom::Box2I(), 
-            ImageOrigin const origin = LOCAL
+            ImageOrigin const origin = UNDEFINED
         );
 
         DecoratedImage& operator=(const DecoratedImage& image);

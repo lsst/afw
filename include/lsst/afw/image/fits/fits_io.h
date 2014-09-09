@@ -42,7 +42,7 @@ inline void fits_read_array(
     geom::Point2I & xy0,
     lsst::daf::base::PropertySet & metadata,
     geom::Box2I bbox = geom::Box2I(),
-    ImageOrigin origin = LOCAL
+    ImageOrigin origin = UNDEFINED
 ) {
     if (!fitsfile.checkImageType<PixelT>()) {
         throw LSST_FITS_EXCEPT(
