@@ -82,7 +82,7 @@ public:
      */
     explicit Exposure(
         std::string const & fileName, geom::Box2I const& bbox=geom::Box2I(),
-        ImageOrigin origin=LOCAL, bool conformMasks=false
+        ImageOrigin origin=UNDEFINED, bool conformMasks=false
     );
 
     /**
@@ -96,7 +96,7 @@ public:
      */
     explicit Exposure(
         fits::MemFileManager & manager, geom::Box2I const & bbox=geom::Box2I(),
-        ImageOrigin origin=LOCAL, bool conformMasks=false
+        ImageOrigin origin=UNDEFINED, bool conformMasks=false
     );
 
     /**
@@ -110,7 +110,7 @@ public:
      */
     explicit Exposure(
         fits::Fits & fitsfile, geom::Box2I const & bbox=geom::Box2I(),
-        ImageOrigin origin=LOCAL, bool conformMasks=false
+        ImageOrigin origin=UNDEFINED, bool conformMasks=false
     );
 
     Exposure(
@@ -121,7 +121,7 @@ public:
     Exposure(
         Exposure const &src,
         lsst::afw::geom::Box2I const& bbox,
-        ImageOrigin const origin=LOCAL,
+        ImageOrigin const origin=UNDEFINED,
         bool const deep=false
     );
 
@@ -191,7 +191,7 @@ public:
      */
     geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::Box2I getBBox(ImageOrigin const origin=LOCAL) const {
+    geom::Box2I getBBox(ImageOrigin const origin=UNDEFINED) const {
         return _maskedImage.getBBox(origin);
     }
     /**

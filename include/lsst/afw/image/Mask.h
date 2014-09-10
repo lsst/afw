@@ -216,7 +216,7 @@ public:
     Mask(
         const Mask& src, 
         const geom::Box2I & bbox,  
-        ImageOrigin const origin=LOCAL, 
+        ImageOrigin const origin=UNDEFINED, 
         const bool deep=false
     );
     
