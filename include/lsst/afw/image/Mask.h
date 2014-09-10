@@ -152,9 +152,9 @@ public:
     explicit Mask(
         std::string const & fileName, int hdu=0,
         PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
-        geom::Box2I const & bbox = geom::Box2I(),
-        ImageOrigin origin = LOCAL,
-        bool conformMasks = false
+        geom::Box2I const & bbox=geom::Box2I(),
+        ImageOrigin origin=UNDEFINED,
+        bool conformMasks=false
     );
 
     /**
@@ -178,9 +178,9 @@ public:
     explicit Mask(
         fits::MemFileManager & manager, int hdu=0,
         PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
-        geom::Box2I const & bbox = geom::Box2I(),
-        ImageOrigin origin = LOCAL,
-        bool conformMasks = false
+        geom::Box2I const & bbox=geom::Box2I(),
+        ImageOrigin origin=UNDEFINED,
+        bool conformMasks=false
     );
 
     /**
@@ -201,9 +201,9 @@ public:
     explicit Mask(
         fits::Fits & fitsfile,
         PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
-        geom::Box2I const & bbox = geom::Box2I(),
-        ImageOrigin origin = LOCAL,
-        bool conformMasks = false
+        geom::Box2I const & bbox=geom::Box2I(),
+        ImageOrigin origin=UNDEFINED,
+        bool conformMasks=false
     );
 
     // generalised copy constructor
