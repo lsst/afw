@@ -41,6 +41,8 @@ import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.afw.geom as geom
 
+numpy.random.seed(1)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class Box2ITestCase(unittest.TestCase):

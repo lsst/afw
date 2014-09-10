@@ -51,6 +51,8 @@ import lsst.afw.geom
 import lsst.afw.coord
 import lsst.afw.fits
 
+numpy.random.seed(1)
+
 try:
     type(display)
 except NameError:
