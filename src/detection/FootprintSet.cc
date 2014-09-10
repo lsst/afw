@@ -745,7 +745,7 @@ detection::FootprintSet::FootprintSet(
     bool const setPeaks            //!< should I set the Peaks list?
 ) : lsst::daf::base::Citizen(typeid(this)),
     _footprints(new FootprintList()),
-    _region(img.getBBox(image::PARENT))
+    _region(img.getBBox())
 {
     typedef float VariancePixelT;
      
@@ -772,7 +772,7 @@ detection::FootprintSet::FootprintSet(
     int const npixMin               //!< minimum number of pixels in an object
 ) : lsst::daf::base::Citizen(typeid(this)),
     _footprints(new FootprintList()),
-    _region(msk.getBBox(image::PARENT))
+    _region(msk.getBBox())
 {
     switch (threshold.getType()) {
       case Threshold::BITMASK:

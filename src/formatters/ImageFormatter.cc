@@ -204,7 +204,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
                 geom::Extent2I(width, height)
             );
         }
-        afwImg::ImageOrigin origin = afwImg::UNDEFINED;
+        afwImg::ImageOrigin origin = afwImg::PARENT;
         if (additionalData->exists("imageOrigin")) {
             std::string originStr = additionalData->get<std::string>("imageOrigin");
             if (originStr == "LOCAL") {

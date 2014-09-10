@@ -362,7 +362,7 @@ def showCcd(ccd, ccdImage=None, isTrimmed=True, showAmpGain=True, frame=None, ov
         if not isTrimmed and not ccdImage.getBBox() == rawBbox:
             raise ValueError("Image is not same size as amp bounding box: %s -- %s" % \
                 (ccdImageBBox, rawBbox))
-    ccdBbox = ccdImage.getBBox(afwImage.PARENT)
+    ccdBbox = ccdImage.getBBox()
     if inCameraCoords:
         nQuarter = ccd.getOrientation().getNQuarter()
         ccdImage = afwMath.rotateImageBy90(ccdImage, nQuarter)

@@ -108,9 +108,9 @@ class ReadFitsTestCase(unittest.TestCase):
         im = afwImage.ImageF(fileName, hdu)
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(110, 120), afwGeom.Extent2I(20, 15))
-        sim = im.Factory(im, bbox, afwImage.PARENT) 
+        sim = im.Factory(im, bbox) 
 
-        im2 = afwImage.ImageF(fileName, hdu, None, bbox, afwImage.PARENT)
+        im2 = afwImage.ImageF(fileName, hdu, None, bbox)
 
         self.assertEqual(im2.getDimensions(), sim.getDimensions())
         self.assertEqual(im2.get(1, 1), sim.get(1, 1))

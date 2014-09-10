@@ -299,13 +299,12 @@ class ImageTestCase(unittest.TestCase):
         simage1 = afwImage.ImageF(
             self.image1, 
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
-            afwImage.PARENT)
+        )
         
         
         simage = afwImage.ImageF(
                 simage1, 
                 afwGeom.Box2I(afwGeom.Point2I(2, 2), afwGeom.Extent2I(3, 2)),
-                afwImage.PARENT
         )
         self.assertEqual(simage.getX0(), 2)
         self.assertEqual(simage.getY0(), 2)
@@ -328,14 +327,12 @@ class ImageTestCase(unittest.TestCase):
         simage1 = afwImage.ImageF(
             self.image1, 
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
-            afwImage.PARENT
         )
         simage1.setXY0(afwGeom.Point2I(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
         simage = afwImage.ImageF(
             simage1, 
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
-            afwImage.PARENT
         )
         self.assertEqual(simage.getX0(), 1)
         self.assertEqual(simage.getY0(), 1)
@@ -354,7 +351,6 @@ class ImageTestCase(unittest.TestCase):
             simage1 = afwImage.ImageF(
                 self.image1, 
                 afwGeom.Box2I(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
-                afwImage.PARENT
             )
 
         self.assertRaises(lsst.pex.exceptions.LengthError, tst)
@@ -607,7 +603,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         image.set(2, 2, 100)
 
         bbox    = afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
-        subImage = image.Factory(image, bbox, afwImage.PARENT)
+        subImage = image.Factory(image, bbox)
         subImageF = subImage.convertFloat()
         
         if display:

@@ -451,7 +451,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
                 geom::Point2I(x0, y), 
                 geom::Extent2I(image.getWidth(), 1)
             );
-            afwImage::Image<PixelT> subImage(image, bbox, afwImage::PARENT);
+            afwImage::Image<PixelT> subImage(image, bbox);
             Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(
                 stat.getValue(), 0x0, 
@@ -467,7 +467,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
             geom::Box2I bbox = geom::Box2I(
                 geom::Point2I(x, y0), geom::Extent2I(1, image.getHeight())
             );
-            afwImage::Image<PixelT> subImage(image, bbox, afwImage::PARENT);
+            afwImage::Image<PixelT> subImage(image, bbox);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());
@@ -503,7 +503,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         typename MImage::y_iterator oEnd = imgOut->col_end(0);
         for (typename MImage::y_iterator oPtr = imgOut->col_begin(0); oPtr != oEnd; ++oPtr, ++y) {
             afwGeom::Box2I bbox = afwGeom::Box2I(afwGeom::Point2I(x0, y), geom::Extent2I(image.getWidth(), 1));
-            afwImage::MaskedImage<PixelT> subImage(image, bbox, afwImage::PARENT);
+            afwImage::MaskedImage<PixelT> subImage(image, bbox);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());
@@ -515,7 +515,7 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
         typename MImage::x_iterator oEnd = imgOut->row_end(0);
         for (typename MImage::x_iterator oPtr = imgOut->row_begin(0); oPtr != oEnd; ++oPtr, ++x) {
             afwGeom::Box2I bbox = afwGeom::Box2I(afwGeom::Point2I(x, y0), geom::Extent2I(1, image.getHeight()));
-            afwImage::MaskedImage<PixelT> subImage(image, bbox, afwImage::PARENT);
+            afwImage::MaskedImage<PixelT> subImage(image, bbox);
             afwMath::Statistics stat = makeStatistics(subImage, flags | afwMath::ERRORS, sctrl);
             *oPtr = typename afwImage::MaskedImage<PixelT>::Pixel(stat.getValue(), 0x0, 
                                                                   stat.getError()*stat.getError());

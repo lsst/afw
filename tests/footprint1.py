@@ -200,7 +200,7 @@ class FootprintTestCase(unittest.TestCase):
         mask = afwImage.MaskU(maskBBox)
         innerBBox = afwGeom.BoxI(maskBBox)
         innerBBox.grow(-2)
-        subMask = mask.Factory(mask, innerBBox, afwImage.PARENT)
+        subMask = mask.Factory(mask, innerBBox)
         subMask.set(1)
 
         fp.intersectMask(mask)
@@ -645,8 +645,8 @@ class FootprintTestCase(unittest.TestCase):
         imTarget = afwImage.ImageU(dims)
         fpTarget.insertIntoImage(imTarget, 1)
 
-        subSource = imSource.Factory(imSource, fpSource.getBBox(), afwImage.PARENT)
-        subTarget = imTarget.Factory(imTarget, fpTarget.getBBox(), afwImage.PARENT)
+        subSource = imSource.Factory(imSource, fpSource.getBBox())
+        subTarget = imTarget.Factory(imTarget, fpTarget.getBBox())
         self.assertTrue(numpy.all(subSource.getArray() == subTarget.getArray()))
 
         # make a bbox smaller than the target footprint
@@ -790,7 +790,7 @@ class FootprintTestCase(unittest.TestCase):
         for i,f in enumerate([f1,f2,fA,fB]):
             im1 = afwImage.ImageU(100, 100)
             im1.set(0)
-            imbb = im1.getBBox(afwImage.PARENT)
+            imbb = im1.getBBox()
             f.setRegion(imbb)
             f.insertIntoImage(im1, 1)
             ims.append(im1)

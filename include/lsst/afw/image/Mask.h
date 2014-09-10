@@ -153,7 +153,7 @@ public:
         std::string const & fileName, int hdu=0,
         PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
-        ImageOrigin origin=UNDEFINED,
+        ImageOrigin origin=PARENT,
         bool conformMasks=false
     );
 
@@ -179,7 +179,7 @@ public:
         fits::MemFileManager & manager, int hdu=0,
         PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
-        ImageOrigin origin=UNDEFINED,
+        ImageOrigin origin=PARENT,
         bool conformMasks=false
     );
 
@@ -202,7 +202,7 @@ public:
         fits::Fits & fitsfile,
         PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
-        ImageOrigin origin=UNDEFINED,
+        ImageOrigin origin=PARENT,
         bool conformMasks=false
     );
 
@@ -216,7 +216,7 @@ public:
     Mask(
         const Mask& src, 
         const geom::Box2I & bbox,  
-        ImageOrigin const origin=UNDEFINED, 
+        ImageOrigin const origin=PARENT, 
         const bool deep=false
     );
     

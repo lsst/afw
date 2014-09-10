@@ -42,7 +42,7 @@ inline void fits_read_array(
     geom::Point2I & xy0,
     lsst::daf::base::PropertySet & metadata,
     geom::Box2I bbox = geom::Box2I(),
-    ImageOrigin origin = UNDEFINED
+    ImageOrigin origin = PARENT
 ) {
     if (!fitsfile.checkImageType<PixelT>()) {
         throw LSST_FITS_EXCEPT(
@@ -51,8 +51,6 @@ inline void fits_read_array(
             "Incorrect image type for FITS image"
         );  
     }
-    if (!bbox.isEmpty() && origin==UNDEFINED) throw std::runtime_error("bbox not empty; must specify origin");
-
     int nAxis = fitsfile.getImageDim();
     ndarray::Vector<int,2> shape;
     if (nAxis == 2) {
@@ -77,7 +75,7 @@ inline void fits_read_array(
     geom::Extent2I dimensions = geom::Extent2I(shape[1], shape[0]);
 
     if (!bbox.isEmpty()) {
-        if(origin == PARENT) {
+        if (origin == PARENT) {
             bbox.shift(-xyOffset);
         }
         xy0 = bbox.getMin();

@@ -32,7 +32,6 @@ or
    >>> import testGaussianPsf; testGaussianPsf.run()
 """
 
-import sys
 import os
 import unittest
 import numpy
@@ -60,7 +59,7 @@ def makeGaussianImage(bbox, sigma, xc=0.0, yc=0.0):
     return image
 
 def computeNaiveApertureFlux(image, radius, xc=0.0, yc=0.0):
-    bbox = image.getBBox(lsst.afw.image.PARENT)
+    bbox = image.getBBox()
     array = image.getArray()
     s = 0.0
     for yi, yv in enumerate(xrange(bbox.getBeginY(), bbox.getEndY())):
@@ -79,13 +78,13 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def testKernelImage(self):
         image = self.psf.computeKernelImage()
-        check = makeGaussianImage(image.getBBox(lsst.afw.image.PARENT), self.psf.getSigma())
+        check = makeGaussianImage(image.getBBox(), self.psf.getSigma())
         self.assertClose(image.getArray(), check.getArray())
         self.assertClose(image.getArray().sum(), 1.0, atol=1E-14)
 
     def testOffsetImage(self):
         image = self.psf.computeImage(lsst.afw.geom.Point2D(0.25, 0.25))
-        check = makeGaussianImage(image.getBBox(lsst.afw.image.PARENT), self.psf.getSigma(), 0.25, 0.25)
+        check = makeGaussianImage(image.getBBox(), self.psf.getSigma(), 0.25, 0.25)
         self.assertClose(image.getArray(), check.getArray(), atol=1E-4, rtol=1E-4, plotOnFailure=True)
 
     def testApertureFlux(self):

@@ -104,7 +104,7 @@ namespace image {
         typedef typename boost::gil::channel_traits<PixelT>::const_reference type; ///< const reference type
     };
     
-    enum ImageOrigin {PARENT, LOCAL, UNDEFINED};
+    enum ImageOrigin {PARENT, LOCAL};
 
     /// \brief The base class for all %image classed (Image, Mask, MaskedImage, ...)
     //
@@ -184,7 +184,7 @@ namespace image {
         explicit ImageBase(const geom::Box2I &bbox);
         ImageBase(const ImageBase& src, const bool deep=false);
         explicit ImageBase(const ImageBase& src, const geom::Box2I& bbox,
-                           const ImageOrigin origin=UNDEFINED, const bool deep=false);
+                           const ImageOrigin origin=PARENT, const bool deep=false);
         /// generalised copy constructor
         ///
         /// defined here in the header so that the compiler can instantiate N(N-1) conversions between N
@@ -197,7 +197,7 @@ namespace image {
                     "Only deep copies are permitted for ImageBases with different pixel types");
             }
 
-            ImageBase<PixelT> tmp(rhs.getBBox(PARENT));
+            ImageBase<PixelT> tmp(rhs.getBBox());
             copy_and_convert_pixels(rhs._gilView, tmp._gilView); // from boost::gil
 
             using std::swap;                           // See Meyers, Effective C++, Item 25
@@ -374,7 +374,7 @@ namespace image {
             setXY0(geom::Point2I(x0,y0));
         }
 
-        geom::Box2I getBBox(ImageOrigin origin) const {
+        geom::Box2I getBBox(ImageOrigin origin=PARENT) const {
             if (origin == PARENT) {
                 return geom::Box2I(_origin, getDimensions());
             }
@@ -434,7 +434,7 @@ namespace image {
         explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
         explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
-        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=UNDEFINED, 
+        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=PARENT, 
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
 
@@ -454,7 +454,7 @@ namespace image {
             std::string const & fileName, int hdu=0,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(), 
-            ImageOrigin origin=UNDEFINED
+            ImageOrigin origin=PARENT
         );
 
         /**
@@ -473,7 +473,7 @@ namespace image {
             fits::MemFileManager & manager, int hdu=0,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(), 
-            ImageOrigin origin=UNDEFINED
+            ImageOrigin origin=PARENT
         );
 
         /**
@@ -489,7 +489,7 @@ namespace image {
             fits::Fits & fitsfile,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
             geom::Box2I const & bbox=geom::Box2I(), 
-            ImageOrigin origin=UNDEFINED
+            ImageOrigin origin=PARENT
         );
 
         // generalised copy constructor
@@ -631,7 +631,7 @@ namespace image {
             std::string const& fileName, 
             const int hdu=0, 
             geom::Box2I const& bbox=geom::Box2I(), 
-            ImageOrigin const origin = UNDEFINED
+            ImageOrigin const origin = PARENT
         );
 
         DecoratedImage& operator=(const DecoratedImage& image);

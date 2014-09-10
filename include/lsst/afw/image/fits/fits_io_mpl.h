@@ -88,7 +88,7 @@ void fits_read_image(
     fits::Fits & fitsfile, ImageT& img,
     lsst::daf::base::PropertySet &metadata,
     geom::Box2I const& bbox=geom::Box2I(),
-    ImageOrigin const origin=UNDEFINED
+    ImageOrigin const origin=PARENT
 ) {
     ndarray::Array<typename ImageT::Pixel,2,2> array;
     geom::Point2I xy0;
@@ -114,7 +114,7 @@ void fits_read_image(
     fits::Fits & fitsfile, ImageT& img,
     PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
     geom::Box2I const& bbox=geom::Box2I(),
-    ImageOrigin const origin=UNDEFINED
+    ImageOrigin const origin=PARENT
 ) {
     lsst::daf::base::PropertySet metadata_s;
     fits_read_image<supported_fits_types, ImageT>(fitsfile, img, (metadata ? *metadata : metadata_s),

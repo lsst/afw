@@ -642,7 +642,7 @@ public:
     explicit MaskedImage(
         std::string const & fileName,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=UNDEFINED,
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=PARENT,
         bool conformMasks=false, bool needAllHdus=false,
         PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
         PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
@@ -667,7 +667,7 @@ public:
     explicit MaskedImage(
         fits::MemFileManager & manager,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=UNDEFINED,
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=PARENT,
         bool conformMasks=false, bool needAllHdus=false,
         PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
         PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
@@ -692,7 +692,7 @@ public:
     explicit MaskedImage(
         fits::Fits & fitsfile,
         PTR(daf::base::PropertySet) metadata=PTR(daf::base::PropertySet)(),
-        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=UNDEFINED,
+        geom::Box2I const & bbox=geom::Box2I(), ImageOrigin origin=PARENT,
         bool conformMasks=false, bool needAllHdus=false,
         PTR(daf::base::PropertySet) imageMetadata=PTR(daf::base::PropertySet)(),
         PTR(daf::base::PropertySet) maskMetadata=PTR(daf::base::PropertySet)(),
@@ -706,7 +706,7 @@ public:
     MaskedImage(
         MaskedImage const & rhs,
         geom::Box2I const & bbox,
-        ImageOrigin const origin=UNDEFINED,
+        ImageOrigin const origin=PARENT,
         bool const deep=false
     );
     /// generalised copy constructor; defined here in the header so that the compiler can instantiate
@@ -902,7 +902,7 @@ public:
     /// Return the number of rows in the %image
     int getHeight() const { return _image->getHeight(); }
     geom::Extent2I getDimensions() const {return _image->getDimensions();}
-    geom::Box2I getBBox(ImageOrigin const origin=UNDEFINED) const {return _image->getBBox(origin);}
+    geom::Box2I getBBox(ImageOrigin const origin=PARENT) const {return _image->getBBox(origin);}
     /**
      * Return the %image's row-origin
      *
