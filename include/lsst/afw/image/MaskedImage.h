@@ -902,7 +902,7 @@ public:
     /// Return the number of rows in the %image
     int getHeight() const { return _image->getHeight(); }
     geom::Extent2I getDimensions() const {return _image->getDimensions();}
-    geom::Box2I getBBox(ImageOrigin const origin=UNDEFINED) const {return _image->getBBox(origin);}
+    geom::Box2I getBBox(ImageOrigin const origin) const {return _image->getBBox(origin);}
     /**
      * Return the %image's row-origin
      *

@@ -191,7 +191,7 @@ public:
      */
     geom::Point2I getXY0() const { return _maskedImage.getXY0(); }
 
-    geom::Box2I getBBox(ImageOrigin const origin=UNDEFINED) const {
+    geom::Box2I getBBox(ImageOrigin const origin) const {
         return _maskedImage.getBBox(origin);
     }
     /**
