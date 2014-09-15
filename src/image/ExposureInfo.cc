@@ -26,6 +26,7 @@
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -76,6 +77,7 @@ ExposureInfo::ExposureInfo(
     CONST_PTR(detection::Psf) const & psf,
     CONST_PTR(Calib) const & calib,
     CONST_PTR(cameraGeom::Detector) const & detector,
+    CONST_PTR(geom::polygon::Polygon) const & polygon,
     Filter const & filter,
     PTR(daf::base::PropertySet) const & metadata,
     PTR(CoaddInputs) const & coaddInputs,
@@ -84,6 +86,7 @@ ExposureInfo::ExposureInfo(
     _psf(boost::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
+    _validPolygon(polygon),
     _filter(filter),
     _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList())),
     _coaddInputs(coaddInputs),
@@ -95,6 +98,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
     _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
+    _validPolygon(other._validPolygon),
     _filter(other._filter),
     _metadata(other._metadata),
     _coaddInputs(other._coaddInputs),
@@ -106,6 +110,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
+    _validPolygon(other._validPolygon),
     _filter(other._filter),
     _metadata(other._metadata),
     _coaddInputs(other._coaddInputs),
@@ -120,6 +125,7 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
         _psf = other._psf;
         _calib = _cloneCalib(other._calib);
         _detector = other._detector;
+        _validPolygon = other._validPolygon;
         _filter = other._filter;
         _metadata = other._metadata;
         _coaddInputs = other._coaddInputs;
@@ -164,6 +170,10 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     if (hasWcs() && getWcs()->isPersistable()) {
         int wcsId = data.archive.put(getWcs());
         data.metadata->set("WCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
+    }
+    if (hasValidPolygon() && getValidPolygon()->isPersistable()) {
+        int polygonId = data.archive.put(getValidPolygon());
+        data.metadata->set("VALID_POLYGON_ID", polygonId, "archive ID for the Exposure's valid polygon");
     }
 
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
@@ -276,6 +286,14 @@ void ExposureInfo::_readFits(
         } catch (pex::exceptions::NotFoundException & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read ApCorrMap; setting to null: %s") % err.what()
+            );
+        }
+        int validPolygonId = popInt(*metadata, "VALID_POLYGON_ID");
+        try {
+            _validPolygon = archive.get<geom::polygon::Polygon>(validPolygonId);
+        } catch (pex::exceptions::NotFoundException & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read ValidPolygon; setting to null: %s") % err.what()
             );
         }
     }

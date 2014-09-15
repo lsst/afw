@@ -10,6 +10,7 @@
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
+#include "lsst/afw/geom/polygon/Polygon.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -64,22 +65,28 @@ struct PersistenceSchema : private boost::noncopyable {
     Key<int> psf;
     Key<int> calib;
     Key<int> apCorrMap;
+    Key<int> validPolygon;
 
-    static PersistenceSchema const & get(int version=1) {
+    static PersistenceSchema const & get(int version=2) {
         static PersistenceSchema const instance0(0);
         static PersistenceSchema const instance1(1);
+        static PersistenceSchema const instance2(2);
         switch (version) {
         case 0:
             return instance0;
         case 1:
             return instance1;
+        case 2:
+            return instance2;
         default:
             assert(false);
         }
     }
 
     static PersistenceSchema const & getMatching(Schema const & schema) {
-        if (schema.contains(PersistenceSchema::get(1).schema)) {
+        if (schema.contains(PersistenceSchema::get(2).schema)) {
+            return PersistenceSchema::get(2);
+        } else if (schema.contains(PersistenceSchema::get(1).schema)) {
             return PersistenceSchema::get(1);
         } else if (schema.contains(PersistenceSchema::get(0).schema)) {
             return PersistenceSchema::get(0);
@@ -90,9 +97,10 @@ struct PersistenceSchema : private boost::noncopyable {
         );
     }
 
-    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
+    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord 
+    // with IDs for Psf and Wcs and ValidPolygon.
     SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
-        assert(version > 0); // should only be writing version 1 catalogs
+        assert(version > 1); // should only be writing version 2 catalogs
         std::vector<Schema> inSchemas;
         inSchemas.push_back(PersistenceSchema::get().schema);
         inSchemas.push_back(inputSchema);
@@ -117,12 +125,13 @@ struct PersistenceSchema : private boost::noncopyable {
         SchemaMapper const & mapper, OutputArchiveIsh & archive,
         bool permissive
     ) const {
-        assert(version > 0); // should only be writing version 1 catalogs
+        assert(version > 1); // should only be writing version 2 catalogs
         output.assign(input, mapper);
         output.set(psf, archive.put(input.getPsf(), permissive));
         output.set(wcs, archive.put(input.getWcs(), permissive));
         output.set(calib, archive.put(input.getCalib(), permissive));
         output.set(apCorrMap, archive.put(input.getApCorrMap(), permissive));
+        output.set(validPolygon, archive.put(input.getValidPolygon(), permissive));
     }
 
     void readRecord(
@@ -135,6 +144,9 @@ struct PersistenceSchema : private boost::noncopyable {
         output.setCalib(archive.get<image::Calib>(input.get(calib)));
         if (version > 0) {
             output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
+        }
+        if (version > 1) {
+            output.setValidPolygon(archive.get<geom::polygon::Polygon>(input.get(validPolygon)));
         }
     }
 
@@ -149,6 +161,9 @@ private:
     {
         if (version > 0) {
             apCorrMap = schema.addField<int>("apCorrMap", "archive ID for ApCorrMap object");
+        }
+        if (version > 1) {
+            validPolygon = schema.addField<int>("validPolygon", "archive ID for Polygon object");
         }
         schema.getCitizen().markPersistent();
     }
@@ -326,6 +341,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
         _wcs = s._wcs;
         _calib = s._calib;
         _apCorrMap = s._apCorrMap;
+        _validPolygon = s._validPolygon;
     } catch (std::bad_cast&) {}
 }
 

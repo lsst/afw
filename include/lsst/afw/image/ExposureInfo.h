@@ -41,6 +41,10 @@ namespace detection {
 class Psf;
 }
 
+namespace geom { namespace polygon {
+class Polygon;
+}}
+
 namespace fits {
 class Fits;
 }
@@ -134,6 +138,15 @@ public:
         _psf = boost::const_pointer_cast<detection::Psf>(psf);
     }
 
+    /// Does this exposure have a valid Polygon
+    bool hasValidPolygon() const { return static_cast<bool>(_validPolygon);}
+
+    /// Return the valid Polygon
+    CONST_PTR(geom::polygon::Polygon) getValidPolygon() const { return _validPolygon;}
+
+    /// Set the exposure's valid Polygon
+    void setValidPolygon(CONST_PTR(geom::polygon::Polygon) polygon) { _validPolygon = polygon; }
+
     /// Return true if the exposure has an aperture correction map
     bool hasApCorrMap() const { return static_cast<bool>(_apCorrMap); }
 
@@ -175,6 +188,7 @@ public:
         CONST_PTR(detection::Psf) const & psf = CONST_PTR(detection::Psf)(),
         CONST_PTR(Calib) const & calib = CONST_PTR(Calib)(),
         CONST_PTR(cameraGeom::Detector) const & detector = CONST_PTR(cameraGeom::Detector)(),
+        CONST_PTR(geom::polygon::Polygon) const & polygon = CONST_PTR(geom::polygon::Polygon)(),
         Filter const & filter = Filter(),
         PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)(),
         PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)(),
@@ -263,6 +277,7 @@ private:
     PTR(detection::Psf) _psf;
     PTR(Calib) _calib;
     CONST_PTR(cameraGeom::Detector) _detector;
+    CONST_PTR(geom::polygon::Polygon) _validPolygon;
     Filter _filter;
     PTR(daf::base::PropertySet) _metadata;
     PTR(CoaddInputs) _coaddInputs;
