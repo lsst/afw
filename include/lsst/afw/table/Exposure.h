@@ -84,19 +84,23 @@ public:
 
     /**
      *  @brief Return true if the bounding box contains the given celestial coordinate point, taking
-     *         into account the Wcs of the ExposureRecord.
+     *         into account the Wcs of the ExposureRecord. If includeValidPolygon is true it will also check
+     *         that the point is within the validPolygon of this ExpoureRecord if it has one; otherwise,
+     *         this argument is ignored.
      *
      *  @throw LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(Coord const & coord) const;
+    bool contains(Coord const & coord, bool includeValidPolygon=false) const;
 
     /**
      *  @brief Return true if the bounding box contains the given point, taking into account its Wcs
-     *         (given) and the Wcs of the ExposureRecord.
+     *         (given) and the Wcs of the ExposureRecord. If includeValidPolygon is true it will also check
+     *         that the point is within the validPolygon of this ExposureRecord if present if it has one;
+     *         otherwise, this argument is ignored.
      *
      *  @throw LogicError if the ExposureRecord has no Wcs.
      */
-    bool contains(geom::Point2D const & point, image::Wcs const & wcs) const;
+    bool contains(geom::Point2D const & point, image::Wcs const & wcs, bool includeValidPolygon=false) const;
 
     //@{
     /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
@@ -385,20 +389,23 @@ public:
     }
 
     /**
-     *  @brief Return a shallow subset of the catalog with only those records that contain the
-     *         given point.
+     *  @brief Return a shallow subset of the catalog with only those records that contain the given point.
+     *         If includeValidPolygon is true we check that the point is within the validPolygon of those
+     *         records which have one; if they don't, this argument is ignored.
      *
      *  @sa ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(Coord const & coord) const;
+    ExposureCatalogT subsetContaining(Coord const & coord, bool includeValidPolygon=false) const;
 
     /**
-     *  @brief Return a shallow subset of the catalog with only those records that contain the
-     *         given point.
+     *  @brief Return a shallow subset of the catalog with only those records that contain the given point.
+     *         If includeValidPolygon is true we check that the point is within the validPolygon of those
+     *         records which have one; if they don't, this argument is ignored.
      *
      *  @sa ExposureRecord::contains
      */
-    ExposureCatalogT subsetContaining(geom::Point2D const & point, image::Wcs const & wcs) const;
+    ExposureCatalogT subsetContaining(geom::Point2D const & point, image::Wcs const & wcs,
+                                      bool includeValidPolygon=false) const;
 
 protected:
     explicit ExposureCatalogT(Base const & other) : Base(other) {}
