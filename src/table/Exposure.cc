@@ -325,6 +325,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
         _psf = s._psf;
         _wcs = s._wcs;
         _calib = s._calib;
+        _apCorrMap = s._apCorrMap;
     } catch (std::bad_cast&) {}
 }
 
