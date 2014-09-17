@@ -1851,9 +1851,9 @@ copyWithinFootprint(Footprint const& foot,
     int const xMax = std::min(input->getWidth() + input->getX0(), output->getWidth() + output->getX0()) - 1;
     for (Footprint::SpanList::iterator sp = spans.begin();
          sp != spans.end(); ++sp) {
-        int y  = (*sp)->getY();
-        int x0 = (*sp)->getX0();
-        int x1 = (*sp)->getX1();
+        int const y  = (*sp)->getY();
+        int const x0 = (*sp)->getX0();
+        int const x1 = (*sp)->getX1();
 
         int const yInput = y - input->getY0(), yOutput = y - output->getY0();
         if (yInput < 0 || yInput >= input->getHeight() || yOutput < 0 || yOutput >= output->getHeight()) {
