@@ -477,6 +477,12 @@ MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
 
  The input and output image must be the same type -- either Image or
  MaskedImage.
+
+ Respects image xy0, so the footprints should be defined in the
+ "PARENT" frame.
+
+ Pixels that are in the footprint but do not overlap with both
+ images are not copied.
  */
 template <typename ImageOrMaskedImageT>
 void copyWithinFootprint(Footprint const& foot,

@@ -793,6 +793,27 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertTrue(numpy.all(da[:4,:] == 0))
         self.assertTrue(numpy.all(da[6:,:] == 0))
 
+    def testCopyWithinFootprintOutside(self):
+        """Copy a footprint that is larger than the image"""
+        target = afwImage.ImageF(100, 100)
+        target.set(0)
+        subTarget = afwImage.ImageF(target, afwGeom.Box2I(afwGeom.Point2I(40, 40), afwGeom.Extent2I(20, 20)))
+        source = afwImage.ImageF(10, 30)
+        source.setXY0(45, 45)
+        source.set(1.0)
+
+        foot = afwDetect.Footprint()
+        foot.addSpan(50, 50, 60) # Oversized on the source image, right; only some pixels overlap
+        foot.addSpan(60, 0, 100) # Oversized on the source, left and right; and on sub-target image, top
+        foot.addSpan(99, 0, 1000) # Oversized on the source image, top, left and right; aiming for segfault
+
+        afwDetect.copyWithinFootprintImage(foot, source, subTarget)
+
+        expected = numpy.zeros((100, 100))
+        expected[50,50:55] = 1.0
+
+        self.assertTrue(numpy.all(target.getArray() == expected))
+
     def testCopyWithinFootprintMaskedImage(self):
         W,H = 10,10
         dims = afwGeom.Extent2I(W,H)
