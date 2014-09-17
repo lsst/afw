@@ -1,3 +1,5 @@
+// -*- lsst-c++ -*-
+
 /* 
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
@@ -20,24 +22,14 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+#ifndef LSST_AFW_GEOM_POLYGON_H
+#define LSST_AFW_GEOM_POLYGON_H
+
 /**
- * \file
- * \brief An include file to include the header files for lsst::afw::geom
- *
- * Does not include lsst/afw/geom/ellipses.h.
+ *  \file
+ *  \brief Public header class for polygon library.
  */
-#ifndef LSST_GEOM_H
-#define LSST_GEOM_H
 
-#include "lsst/afw/geom/CoordinateBase.h"
-#include "lsst/afw/geom/CoordinateExpr.h"
-#include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/geom/Point.h"
-#include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/AffineTransform.h"
-#include "lsst/afw/geom/LinearTransform.h"
-#include "lsst/afw/geom/Box.h"
-#include "lsst/afw/geom/Span.h"
-#include "lsst/afw/geom/XYTransform.h"
+#include "lsst/afw/geom/polygon/Polygon.h"
 
-#endif // LSST_GEOM_H
+#endif // !LSST_AFW_GEOM_POLYGON_H
