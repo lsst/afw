@@ -224,6 +224,46 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                     for dynamicSize in (True, False):
                         self.doTestCovarianceMatrixKey(fieldType, parameterNames, varianceOnly, dynamicSize)
 
+    def doTestArrayKey(self, fieldType, numpyType):
+        FunctorKeyType = getattr(lsst.afw.table, "Array%sKey" % fieldType)
+        self.assertFalse(FunctorKeyType().isValid())
+        schema = lsst.afw.table.Schema()
+        a0 = schema.addField("a_0", type=fieldType, doc="valid array element")
+        a1 = schema.addField("a_1", type=fieldType, doc="valid array element")
+        a2 = schema.addField("a_2", type=fieldType, doc="valid array element")
+        b0 = schema.addField("b_0", type=fieldType, doc="invalid out-of-order array element")
+        b2 = schema.addField("b_2", type=fieldType, doc="invalid out-of-order array element")
+        b1 = schema.addField("b_1", type=fieldType, doc="invalid out-of-order array element")
+        c = schema.addField("c", type="Array%s" % fieldType, doc="old-style array", size=4)
+        k1 = FunctorKeyType([a0, a1, a2])
+        k2 = FunctorKeyType(schema["a"])
+        k3 = FunctorKeyType(c)
+        self.assertTrue(k1.isValid())
+        self.assertTrue(k2.isValid())
+        self.assertTrue(k3.isValid())
+        self.assertEqual(k1, k2)
+        self.assertEqual(k1[2], a2)
+        self.assertEqual(k1[1:3], FunctorKeyType([a1, a2]))
+        self.assertEqual(k1.getSize(), 3)
+        self.assertEqual(k2.getSize(), 3)
+        self.assertEqual(k3.getSize(), 4)
+        self.assertNotEqual(k1, k3)
+        self.assertRaises(IndexError, lambda k: k[1:3:2], k1)
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, FunctorKeyType, schema["b"])
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, FunctorKeyType, [b0, b1, b2])
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        array = numpy.random.randn(3).astype(numpyType)
+        record.set(k1, array)
+        self.assertClose(record.get(k1), array)
+        self.assertClose(record.get(k2), array)
+        self.assertClose(record[k1], array)
+        self.assertEqual(record.get(k1).dtype, numpy.dtype(numpyType))
+
+    def testArrayKey(self):
+        self.doTestArrayKey("F", numpy.float32)
+        self.doTestArrayKey("D", numpy.float64)
+
     def testCompoundKeyConverters(self):
         """Test that FunctorKeys that convert from old-style compound Keys work
         """
