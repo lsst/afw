@@ -63,6 +63,12 @@ public:
 
     /// @internal @brief Access to the private Key constructor.
     template <typename T>
+    static Key<T> makeKey(int offset) {
+        return Key<T>(offset);
+    }
+
+    /// @internal @brief Access to the private Key constructor.
+    template <typename T>
     static Key<T> makeKey(Field<T> const & field, int offset) {
         return Key<T>(offset, field);
     }
