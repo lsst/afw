@@ -38,7 +38,7 @@ import lsst.daf.base as dafBase
 from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
 from .camera import Camera
-from .cameraGeomLib import PUPIL, PIXELS, FOCAL_PLANE
+from .cameraGeomLib import PUPIL, FOCAL_PLANE
 
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
