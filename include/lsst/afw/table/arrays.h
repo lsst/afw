@@ -32,7 +32,7 @@ namespace lsst { namespace afw { namespace table {
  *  @brief A FunctorKey used to get or set a ndarray::Array from a sequence of scalar Keys.
  */
 template <typename T>
-class ArrayKey : public FunctorKey< ndarray::Array<T,1,1> > {
+class ArrayKey : public FunctorKey< ndarray::Array<T const,1,1> > {
 public:
 
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
@@ -47,11 +47,7 @@ public:
      *  Key< Array<T> > is now deprecated in favor of ArrayKey; this factory function is intended to
      *  aid in the transition.
      */
-    template <typename T>
     explicit ArrayKey(Key< Array<T> > const & other);
-
-    /// Return the number of elements in the array.
-    int getSize() const { return _size; }
 
     /**
      *  @brief Construct from a subschema, assuming *_0, *_1, *_2, etc. subfields
@@ -64,44 +60,31 @@ public:
      */
     ArrayKey(SubSchema const & s);
 
+    /// Return the number of elements in the array.
+    int getSize() const { return _size; }
+
     /// Get an array from the given record
-    virtual ndarray::Array<T,1,1> get(BaseRecord const & record) const;
+    virtual ndarray::Array<T const,1,1> get(BaseRecord const & record) const;
 
     /// Set an array in the given record
-    virtual void set(BaseRecord & record, ndarray::Array<T,1,1> const & value) const;
+    virtual void set(BaseRecord & record, ndarray::Array<T const,1,1> const & value) const;
 
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
     bool operator==(ArrayKey<T> const & other) const {
         return other._begin == _begin && other._size == _size;
     }
-    bool operator!=(ArrayKey<T> const & other) const { return !operator==(other);
+    bool operator!=(ArrayKey<T> const & other) const { return !operator==(other); }
     //@}
 
     /// Return True if both the x and y Keys are valid.
     bool isValid() const { return _begin.isValid(); }
 
     /// Return a scalar Key for an element of the array
-    Key<T> operator[](int i) const {
-        if (i < 0 || i >= size) {
-            throw LSST_EXCEPT(
-                pex::exceptions::LengthError,
-                "ArrayKey index does not fit within valid range"
-            );
-        }
-        return detail::Access::makeKey(_begin.getOffset() + i*sizeof(T));
-    }
+    Key<T> operator[](int i) const;
 
     /// @brief Return a FunctorKey corresponding to a range of elements
-    ArrayKey slice(int begin, int end) const {
-        if (begin < 0 || end > size) {
-            throw LSST_EXCEPT(
-                pex::exceptions::LengthError,
-                "ArrayKey slice range does not fit within valid range"
-            );
-        }
-        return ArrayKey((*this)[begin], end-begin);
-    }
+    ArrayKey slice(int begin, int end) const;
 
 private:
 
