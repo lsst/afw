@@ -133,7 +133,8 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
     if showFig:
         plt.show()
 
-def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0):
+def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0,
+                     scaleGain = lambda gain: (gain*1000)//10):
     """Make an image from an amp object
     @param[in] amp: Amp record to use for constructing the raw amp image
     @param[in] imValue: Value to assign to the constructed image set to (gain*1000)//10 if not set
@@ -148,7 +149,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
     dbbox = amp.getRawDataBBox()
     img = imageFactory(bbox)
     if imValue is None:
-        img.set((amp.getGain()*1000)//10)
+        img.set(scaleGain(amp.getGain()))
     else:
         img.set(imValue)
     #Set the first pixel read to a different value
