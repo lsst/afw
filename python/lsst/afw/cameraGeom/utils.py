@@ -137,10 +137,11 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
                      scaleGain = lambda gain: (gain*1000)//10):
     """Make an image from an amp object
     @param[in] amp: Amp record to use for constructing the raw amp image
-    @param[in] imValue: Value to assign to the constructed image set to (gain*1000)//10 if not set
+    @param[in] imValue: Value to assign to the constructed image scaleGain(gain) is used if not set
     @param[in] imageFactory: Type of image to construct
     @param[in] markSize: Size of mark at read corner in pixels
     @param[in] markValue: Value of pixels in the read corner mark
+    @param[in] scaleGain: The function by which to scale the gain
     @return an untrimmed amp image
     """
     if not amp.getHasRawInfo():
@@ -178,7 +179,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
 def calcRawCcdBBox(ccd):
     """Calculate the raw ccd bounding box
     @param[in] ccd: Detector for with to calculate the un-trimmed bounding box
-    @return Box2I of the un-trimmed Detector
+    @return Box2I of the un-trimmed Detector or None if there is not enough information to calculate raw BBox
     """
     bbox = afwGeom.Box2I()
     for amp in ccd:
@@ -228,8 +229,17 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
     return ccdImage
 
 class FakeImageDataSource(object):
+    """A class to retrieve synthetic images for display by the show* methods"""
     def __init__(self, isTrimmed=True, showAmpGain=True, markSize=10, markValue=0,
             ampImValue=None, scaleGain = lambda gain: (gain*1000)//10):
+        """Construct a FakeImageDataSource
+        @param[in] isTrimmed: Should amps be trimmed?
+        @param[in] showAmpGain: color the amp segments with the gain of the amp
+        @param[in] markSize: size of the side of the box used to mark the read corner
+        @param[in] markValue: value to assing the read corner mark
+        @param[in] ampImValue: Value to assing to amps.  scaleGain(gain) is used if None
+        @param[in] scaleGain: function to scale the gain by
+        """
         self.isTrimmed = isTrimmed
         self.showAmpGain = showAmpGain
         self.markSize = markSize
@@ -238,9 +248,18 @@ class FakeImageDataSource(object):
         self.scaleGain = scaleGain
 
     def getCcdImage(self, det, imageFactory, binSize):
+        """Return a CCD image for the detector
+        @param[in] det: Detector to use for making the image
+        @param[in] imageFactory: image constructor for making the image
+        @param[in] binSize: number of pixels per bin axis
+        """
         return makeImageFromCcd(det, isTrimmed=self.isTrimmed, showAmpGain=self.showAmpGain, imageFactory=imageFactory, binSize=binSize)
 
     def getAmpImage(self, amp, imageFactory):
+        """Return an amp segment image
+        @param[in] amp: AmpInfoTable for this amp
+        @param[in] imageFactory: image constructor fo making the imag
+        """
         ampImage = makeImageFromAmp(amp, imValue=self.ampImValue, imageFactory=imageFactory, markSize=self.markSize,
                 markValue=self.markValue, scaleGain=self.scaleGain)
         if self.isTrimmed:
@@ -316,13 +335,10 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
 def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), frame=None, overlay=True, imageFactory=afwImage.ImageU):
     """Show an amp in a ds9 frame
     @param[in] amp: amp record to use in display
-    @param[in] ampImage: Not used.  Will allow for passing an amp image to display.
-    @param[in] isTrimmed: Display a trimmed amp image
+    @param[in] imageSource: Source for getting the amp image.  Must have a getAmpImage method.
     @param[in] frame: ds9 frame to display on; defaults to frame zero
     @param[in] overlay: Overlay bounding boxes?
     @param[in] imageFactory: Type of image to display (only used if ampImage is None)
-    @param[in] markSize: Size of make to make at the read corner (only used if ampImage is None)
-    @param[in] markValue: Value of pixels in read corner mark
     """
 
     ampImage = imageSource.getAmpImage(amp, imageFactory=imageFactory)
@@ -352,11 +368,10 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), frame=None, o
 def showCcd(ccd, imageSource=FakeImageDataSource(), frame=None, overlay=True, imageFactory=afwImage.ImageU, binSize=1, inCameraCoords=False):
     """Show a CCD on ds9.  
     @param[in] ccd: Detector to use in display
-    @param[in] ccdImage: Not used.  Will allow an image to be displayed.  If None an image is synthesized from the Detector properties.
-    @param[in] isTrimmed: Is the displayed Detector trimmed?
-    @param[in] showAmpGain: Show the amps colored proportional to the gain?  Only used if ccdImage is None
+    @param[in] imageSource: Source for producing images to display.  Must have a getCcdImage method.
     @param[in] frame: ds9 frame to use, defaults to frame zero
     @param[in] overlay: Show amp bounding boxes on the displayed image?
+    @param[in] imageFactory: The image factory to use in generating the images.
     @param[in] binSize: Binning factor
     @param[in] inCameraCoords: Show the Detector in camera coordinates?
     """
@@ -429,11 +444,9 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     @param[in] detectorNameList: List of detector names to use in building the image.
                Use all Detectors if None.
     @param[in] background: Value to use where there is no Detector
-    @param[in] imageSource: Not Used.  Will allow sending a set of images to display
-                            instead of the synthetic ones.
+    @param[in] imageSource: Source to get ccd images.  Must have a getCcdImage method
     @param[in] imageFactory: Type of image to build
     @param[in] binSize: bin factor
-    @param[in] showGains: Show the gain value of each amp?  Ignored if imageSource is not None.
     @return an image of the camera
     """
     if detectorNameList is None:
@@ -471,7 +484,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                 textSize=1.25, originAtCenter=True, **kwargs):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
     @param[in] camera: Camera to show
-    @param[in] imageSource: Not used.  Will allow passing images to assemble into a Camera
+    @param[in] imageSource: Source to get Ccd images from.  Must have a getCcdImage method.
     @param[in] imageFactory: Type of image to make
     @param[in] detectorNameList: List of names of Detectors to use. If None use all
     @param[in] binSize: bin factor
