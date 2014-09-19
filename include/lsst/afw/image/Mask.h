@@ -110,26 +110,26 @@ public:
     // Constructors        
     explicit Mask(
         unsigned int width, unsigned int height,
-        MaskPlaneDict const& planeDefs = MaskPlaneDict()
+        MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(
         unsigned int width, unsigned int height,
         MaskPixelT initialValue, 
-        MaskPlaneDict const& planeDefs = MaskPlaneDict()
+        MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(
         geom::Extent2I const & dimensions=geom::Extent2I(),
-        MaskPlaneDict const& planeDefs = MaskPlaneDict()
+        MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(
         geom::Extent2I const & dimensions, 
         MaskPixelT initialValue, 
-        MaskPlaneDict const& planeDefs = MaskPlaneDict()
+        MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(geom::Box2I const & bbox,
-                  MaskPlaneDict const& planeDefs = MaskPlaneDict());
+                  MaskPlaneDict const& planeDefs=MaskPlaneDict());
     explicit Mask(geom::Box2I const & bbox, MaskPixelT initialValue,
-                  MaskPlaneDict const& planeDefs = MaskPlaneDict());
+                  MaskPlaneDict const& planeDefs=MaskPlaneDict());
 
     /**
      *  @brief Construct a Mask by reading a regular FITS file.
@@ -151,7 +151,7 @@ public:
      */
     explicit Mask(
         std::string const & fileName, int hdu=0,
-        PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
+        PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
         bool conformMasks=false
@@ -177,7 +177,7 @@ public:
      */
     explicit Mask(
         fits::MemFileManager & manager, int hdu=0,
-        PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
+        PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
         bool conformMasks=false
@@ -200,7 +200,7 @@ public:
      */
     explicit Mask(
         fits::Fits & fitsfile,
-        PTR(lsst::daf::base::PropertySet) metadata = PTR(lsst::daf::base::PropertySet)(),
+        PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
         geom::Box2I const & bbox=geom::Box2I(),
         ImageOrigin origin=PARENT,
         bool conformMasks=false
@@ -220,8 +220,8 @@ public:
         const bool deep=false
     );
     
-    explicit Mask(ndarray::Array<MaskPixelT,2,1> const & array, bool deep = false,
-                  geom::Point2I const & xy0 = geom::Point2I());
+    explicit Mask(ndarray::Array<MaskPixelT,2,1> const & array, bool deep=false,
+                  geom::Point2I const & xy0=geom::Point2I());
 
     void swap(Mask& rhs);
     // Operators
@@ -281,7 +281,7 @@ public:
      */
     void writeFits(
         fits::Fits & fitsfile,
-        CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)()
+        CONST_PTR(lsst::daf::base::PropertySet) metadata=CONST_PTR(lsst::daf::base::PropertySet)()
     ) const;
 
     /**

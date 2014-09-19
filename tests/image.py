@@ -299,15 +299,16 @@ class ImageTestCase(unittest.TestCase):
         simage1 = afwImage.ImageF(
             self.image1, 
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
-        )
+            afwImage.LOCAL)
         
         
         simage = afwImage.ImageF(
                 simage1, 
-                afwGeom.Box2I(afwGeom.Point2I(2, 2), afwGeom.Extent2I(3, 2)),
+                afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+                afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 2)
-        self.assertEqual(simage.getY0(), 2)
+        self.assertEqual(simage.getY0(), 2) # i.e. wrt self.image1
 
         image2 = afwImage.ImageF(simage.getDimensions())
         image2.set(666)
@@ -327,12 +328,14 @@ class ImageTestCase(unittest.TestCase):
         simage1 = afwImage.ImageF(
             self.image1, 
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
+            afwImage.LOCAL
         )
         simage1.setXY0(afwGeom.Point2I(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
         simage = afwImage.ImageF(
             simage1, 
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
+            afwImage.LOCAL
         )
         self.assertEqual(simage.getX0(), 1)
         self.assertEqual(simage.getY0(), 1)
@@ -351,6 +354,7 @@ class ImageTestCase(unittest.TestCase):
             simage1 = afwImage.ImageF(
                 self.image1, 
                 afwGeom.Box2I(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
+                afwImage.LOCAL
             )
 
         self.assertRaises(lsst.pex.exceptions.LengthError, tst)

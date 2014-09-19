@@ -342,7 +342,7 @@ class BackgroundTestCase(unittest.TestCase):
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
                                                 "CFHT", "D4", "cal-53535-i-797722_1.fits"))
-        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)))
+        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(afwMath.Interpolate.AKIMA_SPLINE)
         bctrl.setNxSample(16)
@@ -371,7 +371,7 @@ class BackgroundTestCase(unittest.TestCase):
 
         mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
                                                 "CFHT", "D4", "cal-53535-i-797722_1.fits"))
-        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)))
+        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
         bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
         bctrl.getStatisticsControl().setNumSigmaClip(3.0)  

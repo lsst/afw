@@ -422,8 +422,8 @@ bool GpuTestAccuracy(string imgFileName)
         bool doNormalizeKernel = i % 2 == 0;
         bool isBoundedBoxKernel = i / 2 == 0;
 
-        const afwImage::MaskedImage<double>  inMIDblBoxed(inImgDbl, inputBBox, afwImage::PARENT, true);
-        const afwImage::MaskedImage<float>   inMIFltBoxed(inImgFlt, inputBBox, afwImage::PARENT, true);
+        const afwImage::MaskedImage<double>  inMIDblBoxed(inImgDbl, inputBBox, afwImage::LOCAL, true);
+        const afwImage::MaskedImage<float>   inMIFltBoxed(inImgFlt, inputBBox, afwImage::LOCAL, true);
 
         const afwImage::MaskedImage<double> inMIDbl =
             isBoundedBoxKernel ? inMIDblBoxed : inImgDbl;;

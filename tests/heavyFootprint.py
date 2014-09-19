@@ -163,7 +163,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
         fs.makeHeavy(self.mi)
 
         bbox = afwGeom.BoxI(afwGeom.PointI(9, 1), afwGeom.ExtentI(7, 4))
-        omi = self.mi.Factory(self.mi, bbox, afwImage.PARENT, True)
+        omi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL, True)
         omi.set((0, 0x0, 0))
 
         for foot in fs.getFootprints():
@@ -173,7 +173,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
             ds9.mtv(self.mi, frame=0, title="input")
             ds9.mtv(omi, frame=1, title="sub")
 
-        submi = self.mi.Factory(self.mi, bbox, afwImage.PARENT)
+        submi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL)
         self.assertTrue(np.all(np.equal(submi.getImage().getArray(), omi.getImage().getArray())))
 
     def testCast_HeavyFootprint(self):

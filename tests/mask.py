@@ -185,7 +185,9 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(smask.get(0, 0), self.val1 | 32767)
 
     def testSubmasks(self):
-        smask = afwImage.MaskU(self.mask1, afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(3, 2)))
+        smask = afwImage.MaskU(self.mask1, 
+                               afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(3, 2)),
+                               afwImage.LOCAL)
         mask2 = afwImage.MaskU(smask.getDimensions())
 
         mask2.set(666)
@@ -219,7 +221,7 @@ class MaskTestCase(unittest.TestCase):
             return
         
         hdu = 3
-        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.PARENT, True)
+        mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
 
         if False:
             import lsst.afw.display.ds9 as ds9
@@ -373,7 +375,7 @@ class OldMaskTestCase(unittest.TestCase):
             self.Mask.addMaskPlane(p)
 
         self.region = afwGeom.Box2I(afwGeom.Point2I(100, 300), afwGeom.Extent2I(10, 40))
-        self.subTestMask = self.Mask(self.testMask, self.region)
+        self.subTestMask = self.Mask(self.testMask, self.region, afwImage.LOCAL)
 
         if False:
             self.pixelList = afwImage.listPixelCoord()
