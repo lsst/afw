@@ -67,7 +67,7 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
     #Account for shift of amp data in larger ccd matrix
     offset = amp.getRawXYOffset()
     wcs.shiftReferencePixel(offset.getX(), offset.getY())
-    
+
 def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsize=(10., 10.), showFig=True, savePath=None):
     """
     Make a plot of the focal plane along with a set points that sample the Pupil
@@ -526,7 +526,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     if title == "":
         title = camera.getName()
     ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
-     
+
     if overlay:
         with ds9.Buffering():
             camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize)
@@ -562,11 +562,6 @@ def makeFocalPlaneWcs(pixelSize, referencePixel):
     md.set("CUNIT2", "mm")
 
     return afwImage.makeWcs(md)
-
-def showMosaic(fileName, geomPolicy=None, camera=None,
-               display=True, what=Camera, id=None, overlay=False, describe=False, doTrim=False,
-               imageFactory=afwImage.ImageU, binSize=1, frame=None):
-    raise NotImplementedError("This function has not been updated to the new CameraGeom.  This will be done in the Summer 2014 work period")
 
 def findAmp(ccd, pixelPosition):
     """Find the Amp with the specified pixel position within the composite
