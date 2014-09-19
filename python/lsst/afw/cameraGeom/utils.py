@@ -183,7 +183,7 @@ def calcRawCcdBBox(ccd):
     bbox = afwGeom.Box2I()
     for amp in ccd:
         if not amp.getHasRawInfo():
-            raise RuntimeError("Cannot build a raw CCD bounding box without raw amp information")
+            return None
         tbbox = amp.getRawBBox()
         tbbox.shift(amp.getRawXYOffset())
         bbox.include(tbbox)
