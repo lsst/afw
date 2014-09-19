@@ -25,6 +25,7 @@
 """
 Support for cameraGeom
 """
+from __future__ import division
 import math
 import numpy
 import itertools
@@ -514,7 +515,11 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                 camBbox.include(corner)
     pixelSize = ccdList[0].getPixelSize()
     if originAtCenter:
-        wcsReferencePixel = cameraImage.getDimensions()/2
+        #Can't divide SWIGGED extent type things when division is imported
+        #from future.  This is DM-83
+        ext = cameraImage.getBBox().getDimensions()
+
+        wcsReferencePixel = afwGeom.PointI(ext.getX()//2, ext.getY()//2)
     else:
         wcsReferencePixel = afwGeom.Point2I(0,0)
     wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
