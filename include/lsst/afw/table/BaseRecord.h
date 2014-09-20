@@ -155,6 +155,16 @@ public:
         return key.set(*this, value);
     }
 
+    template <typename Ref>
+    Ref operator[](ReferenceFunctorKey<Ref> const & key) {
+        return key.getReference(*this);
+    }
+
+    template <typename ConstRef>
+    ConstRef operator[](ConstReferenceFunctorKey<ConstRef> const & key) {
+        return key.getConstReference(*this);
+    }
+
 #endif // !SWIG
 
     /// @brief Copy all field values from other to this, requiring that they have equal schemas.
