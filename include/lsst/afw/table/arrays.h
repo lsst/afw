@@ -32,7 +32,10 @@ namespace lsst { namespace afw { namespace table {
  *  @brief A FunctorKey used to get or set a ndarray::Array from a sequence of scalar Keys.
  */
 template <typename T>
-class ArrayKey : public FunctorKey< ndarray::Array<T const,1,1> > {
+class ArrayKey : public FunctorKey< ndarray::Array<T const,1,1> >,
+                 public ReferenceFunctorKey< ndarray::ArrayRef<T,1,1> >,
+                 public ConstReferenceFunctorKey< ndarray::ArrayRef<T const,1,1> >
+{
 public:
 
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
@@ -69,6 +72,14 @@ public:
     /// Set an array in the given record
     virtual void set(BaseRecord & record, ndarray::Array<T const,1,1> const & value) const;
 
+#ifndef SWIG
+    /// Get non-const reference array from the given record
+    virtual ndarray::ArrayRef<T,1,1> getReference(BaseRecord & record) const;
+
+    /// Get const reference array from the given record
+    virtual ndarray::ArrayRef<T const,1,1> getConstReference(BaseRecord const & record) const;
+#endif
+
     //@{
     /// Compare the FunctorKey for equality with another, using the underlying x and y Keys
     bool operator==(ArrayKey<T> const & other) const {
@@ -93,7 +104,6 @@ private:
     Key<T> _begin;
     int _size;
 };
-
 
 }}} // namespace lsst::afw::table
 

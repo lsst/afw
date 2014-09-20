@@ -56,7 +56,7 @@ ArrayKey<T>::ArrayKey(SubSchema const & s) : _begin(s["0"]), _size(1) {
         } catch (pex::exceptions::NotFoundError &) {
             return;
         }
-        if (current.getOffset() - _begin.getOffset() != _size*sizeof(T)) {
+        if (current.getOffset() - _begin.getOffset() != static_cast<int>(_size*sizeof(T))) {
             throw LSST_EXCEPT(
                 pex::exceptions::InvalidParameterError,
                 "Keys discovered in Schema are not contiguous"
@@ -84,6 +84,26 @@ void ArrayKey<T>::set(BaseRecord & record, ndarray::Array<T const,1,1> const & v
         "Size of input array (%d) does not match size of array field (%d)"
     );
     std::copy(value.begin(), value.end(), record.getElement(_begin));
+}
+
+template <typename T>
+ndarray::ArrayRef<T,1,1> ArrayKey<T>::getReference(BaseRecord & record) const {
+    return ndarray::external(
+        record.getElement(_begin),
+        ndarray::makeVector(_size),
+        ndarray::ROW_MAJOR,
+        record.getManager()
+    );
+}
+
+template <typename T>
+ndarray::ArrayRef<T const,1,1> ArrayKey<T>::getConstReference(BaseRecord const & record) const {
+    return ndarray::external(
+        record.getElement(_begin),
+        ndarray::makeVector(_size),
+        ndarray::ROW_MAJOR,
+        record.getManager()
+    );
 }
 
 template <typename T>

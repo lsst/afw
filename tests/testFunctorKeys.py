@@ -257,6 +257,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         record.set(k1, array)
         self.assertClose(record.get(k1), array)
         self.assertClose(record.get(k2), array)
+        self.assertClose(record[k1], array)
         self.assertEqual(record.get(k1).dtype, numpy.dtype(numpyType))
 
     def testArrayKey(self):

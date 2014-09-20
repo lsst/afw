@@ -35,11 +35,17 @@
 
 %define %declareArrayKey1(SUFFIX, T)
 %declareFunctorKey(Array ## SUFFIX, ndarray::Array<T const,1,1>)
+%declareReferenceFunctorKey(Array ## SUFFIX, ndarray::ArrayRef<T,1,1>)
+%declareConstReferenceFunctorKey(Array ## SUFFIX, ndarray::ArrayRef<T const,1,1>)
 %shared_ptr(lsst::afw::table::ArrayKey<T>)
 %declareNumPyConverters(ndarray::Array<T const,1,1>);
+%declareNumPyConverters(ndarray::Array<T,1,1>);
 %extend lsst::afw::table::ArrayKey<T> {
 lsst::afw::table::Key<T> _get(int i) {
     return (*self)[i];
+}
+ndarray::Array<T,1,1> getReference(lsst::afw::table::BaseRecord & record) {
+    return self->getReference(record).shallow();
 }
 %pythoncode %{
 def __getitem__(self, index):
