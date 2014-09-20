@@ -51,6 +51,30 @@ public:
 template <typename T>
 class FunctorKey : public OutputFunctorKey<T>, public InputFunctorKey<T> {};
 
+template <typename T>
+class ReferenceFunctorKey {
+public:
+
+#ifndef SWIG
+    virtual T getReference(BaseRecord & record) const = 0;
+#endif
+
+    virtual ~ReferenceFunctorKey() {}
+
+};
+
+template <typename T>
+class ConstReferenceFunctorKey {
+public:
+
+#ifndef SWIG
+    virtual T getConstReference(BaseRecord const & record) const = 0;
+#endif
+
+    virtual ~ConstReferenceFunctorKey() {}
+
+};
+
 }}} // namespace lsst::afw::table
 
 #endif // !AFW_TABLE_FunctorKey_h_INCLUDED
