@@ -30,6 +30,10 @@ namespace lsst { namespace afw { namespace table {
 
 /**
  *  @brief A FunctorKey used to get or set a ndarray::Array from a sequence of scalar Keys.
+ *
+ *  ArrayKey operates on the convention that arrays are defined by a set of contiguous scalar fields
+ *  (i.e. added to the Schema in order, with no interruption) of the same type, with a common field
+ *  name prefix and "_0", "_1" etc. suffixes.
  */
 template <typename T>
 class ArrayKey : public FunctorKey< ndarray::Array<T const,1,1> >,
@@ -37,6 +41,46 @@ class ArrayKey : public FunctorKey< ndarray::Array<T const,1,1> >,
                  public ConstReferenceFunctorKey< ndarray::ArrayRef<T const,1,1> >
 {
 public:
+
+    /**
+     *  Add an array of fields to a Schema, and return an ArrayKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_0", "_1", etc. will be appended to this
+     *                         to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.  Should include a single
+     *                         boost::format template string, which will be substituted with the
+     *                         appropriate element from the docData array to form the full documentation
+     *                         string.
+     *  @param[in]     unit    String used as the unit for all fields.
+     *  @param[in]     docData Vector of values substituted into the doc fields.  The length of the vector
+     *                         determines the number of fields added.
+     */
+    static ArrayKey addFields(
+        Schema & schema,
+        std::string const & name,
+        std::string const & doc,
+        std::string const & unit,
+        std::vector<T> const & docData
+    );
+
+    /**
+     *  Add an array of fields to a Schema, and return an ArrayKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_0", "_1", etc. will be appended to this
+     *                         to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for all fields.
+     *  @param[in]     size    Number of fields to add.
+     */
+    static ArrayKey addFields(
+        Schema & schema,
+        std::string const & name,
+        std::string const & doc,
+        std::string const & unit,
+        int size
+    );
 
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
     ArrayKey() : _begin() {}
