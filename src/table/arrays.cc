@@ -28,6 +28,58 @@
 namespace lsst { namespace afw { namespace table {
 
 template <typename T>
+ArrayKey<T> ArrayKey<T>::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit,
+    std::vector<T> const & docData
+) {
+    ArrayKey<T> result;
+    if (docData.empty()) return result;
+    result._size = docData.size();
+    result._begin = schema.addField<T>(
+        schema[name]["0"].getPrefix(), // we use getPrefix in order to get the version-dependent delimiter
+        (boost::format(doc) % docData.front()).str(),
+        unit
+    );
+    for (int i = 1; i < result._size; ++i) {
+        schema.addField<T>(
+            schema[name][boost::lexical_cast<std::string>(i)].getPrefix(),
+            (boost::format(doc) % docData[i]).str(),
+            unit
+        );
+    }
+    return result;
+}
+
+template <typename T>
+ArrayKey<T> ArrayKey<T>::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit,
+    int size
+) {
+    ArrayKey result;
+    if (size == 0) return result;
+    result._size = size;
+    result._begin = schema.addField<T>(
+        schema[name]["0"].getPrefix(), // we use getPrefix in order to get the version-dependent delimiter
+        doc,
+        unit
+    );
+    for (int i = 1; i < result._size; ++i) {
+        schema.addField<T>(
+            schema[name][boost::lexical_cast<std::string>(i)].getPrefix(),
+            doc,
+            unit
+        );
+    }
+    return result;
+}
+
+template <typename T>
 ArrayKey<T>::ArrayKey(std::vector< Key<T> > const & keys) :
     _begin(),
     _size(keys.size())
