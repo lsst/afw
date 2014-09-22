@@ -110,7 +110,7 @@ class ApproximateTestCase(unittest.TestCase):
                     for x in xVec:
                         for y in yVec:
                             ds9.dot('+', x, y, size=0.4, frame=1)
-                
+            
             for x, y in aim.getBBox().getCorners():
                 self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 

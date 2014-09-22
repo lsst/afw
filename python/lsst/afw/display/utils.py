@@ -25,7 +25,6 @@
 
 from __future__ import with_statement
 
-import math
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9

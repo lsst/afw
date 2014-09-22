@@ -227,7 +227,6 @@ class ExposureTestCase(unittest.TestCase):
         #
         # Psfs next
         #
-        w, h = 11, 11
         self.assertFalse(exposure.hasPsf())
         exposure.setPsf(self.psf)
         self.assertTrue(exposure.hasPsf())
@@ -313,7 +312,7 @@ class ExposureTestCase(unittest.TestCase):
         det = subExposure.getDetector()
         self.assertTrue(det)
         
-        subExposure = afwImage.ExposureF(inFilePathSmall, subBBox)
+        subExposure = afwImage.ExposureF(inFilePathSmall, subBBox, afwImage.LOCAL)
         
         self.checkWcs(mainExposure, subExposure)
         
@@ -360,7 +359,6 @@ class ExposureTestCase(unittest.TestCase):
         """
         subMI = subExposure.getMaskedImage()
         subDim = subMI.getDimensions()
-        subXY0 = subMI.getXY0()
 
         # Note: pixel positions must be computed relative to XY0 when working with WCS
         mainWcs = parentExposure.getWcs()
@@ -425,14 +423,12 @@ class ExposureTestCase(unittest.TestCase):
         mi.getImage().set(100)
         mi.getMask().set(5)
         mi.getVariance().set(200)
-        miArrays = mi.getArrays()
 
         expCopy = exp.clone()
         miCopy = expCopy.getMaskedImage()
         miCopy.getImage().set(-50)
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
-        miCopyArrays = miCopy.getArrays()
 
         self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
         self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
@@ -451,7 +447,6 @@ class ExposureTestCase(unittest.TestCase):
         mi.getImage().set(100)
         mi.getMask().set(5)
         mi.getVariance().set(200)
-        miArrays = mi.getArrays()
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(1,0), afwGeom.Extent2I(5, 4))
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
@@ -459,7 +454,6 @@ class ExposureTestCase(unittest.TestCase):
         miCopy.getImage().set(-50)
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
-        miCopyArrays = miCopy.getArrays()
 
         self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
         self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))

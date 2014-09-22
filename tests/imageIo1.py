@@ -99,7 +99,7 @@ class ReadFitsTestCase(unittest.TestCase):
         im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
         im.set(666)
         im.writeFits(imPath)
-        newIm = afwImage.ImageD(imPath)
+        afwImage.ImageD(imPath)
         os.remove(imPath)
 
     def testSubimage(self):

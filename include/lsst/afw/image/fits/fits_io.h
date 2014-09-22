@@ -41,8 +41,8 @@ inline void fits_read_array(
     ndarray::Array<PixelT,2,2> & array,
     geom::Point2I & xy0,
     lsst::daf::base::PropertySet & metadata,
-    geom::Box2I bbox = geom::Box2I(),
-    ImageOrigin origin = LOCAL
+    geom::Box2I bbox=geom::Box2I(),
+    ImageOrigin origin=PARENT
 ) {
     if (!fitsfile.checkImageType<PixelT>()) {
         throw LSST_FITS_EXCEPT(
@@ -51,7 +51,6 @@ inline void fits_read_array(
             "Incorrect image type for FITS image"
         );  
     }
-
     int nAxis = fitsfile.getImageDim();
     ndarray::Vector<int,2> shape;
     if (nAxis == 2) {
@@ -76,7 +75,7 @@ inline void fits_read_array(
     geom::Extent2I dimensions = geom::Extent2I(shape[1], shape[0]);
 
     if (!bbox.isEmpty()) {
-        if(origin == PARENT) {
+        if (origin == PARENT) {
             bbox.shift(-xyOffset);
         }
         xy0 = bbox.getMin();
@@ -104,7 +103,7 @@ inline void fits_read_array(
 template <typename ImageT>
 inline void fits_write_image(
     fits::Fits & fitsfile, const ImageT & image,
-    CONST_PTR(daf::base::PropertySet) metadata = CONST_PTR(daf::base::PropertySet)()
+    CONST_PTR(daf::base::PropertySet) metadata=CONST_PTR(daf::base::PropertySet)()
 ) {
     fitsfile.createImage<typename ImageT::Pixel>(image.getArray().getShape());
     if (metadata) {

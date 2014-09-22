@@ -26,8 +26,6 @@ import os
 import unittest
 import warnings
 
-import numpy
-
 import eups
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -42,10 +40,12 @@ VERBOSITY = 0                       # increase to see trace
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-dataDir = os.path.join(eups.productDir("afwdata"), "data")
-if dataDir == None:
+afwDataDir = eups.productDir("afwdata")
+if afwDataDir == None:
     warnings.warn("skipping all tests because afwdata is not setup")
+    dataDir = None
 else:
+    dataDir = os.path.join(afwDataDir, "data")
     originalExposureName = "medexp.fits"
     originalExposurePath = os.path.join(dataDir, originalExposureName)
     subExposureName = "medsub.fits"
@@ -183,8 +183,6 @@ class WarpExposureTestCase(unittest.TestCase):
         maxBBox = afwGeom.Box2I(
             afwGeom.Point2I(swarpedImage.getX0(), swarpedImage.getY0()),
             afwGeom.Extent2I(swarpedImage.getWidth(), swarpedImage.getHeight()))
-        # path for saved afw-warped image
-        afwWarpedImagePath = "afwWarpedExposure1%s" % (kernelName,)
 
         # warning: this test assumes that the swarped image is smaller than it needs to be
         # to hold all of the warped pixels
@@ -201,8 +199,6 @@ class WarpExposureTestCase(unittest.TestCase):
             self.fail("warped mask has no EDGE bit")
         afwWarpedImagArr = afwWarpedMaskedImage.getImage().getArray()
         afwWarpedMaskArr = afwWarpedMaskedImage.getMask().getArray()
-
-        swarpedImageArr = swarpedImage.getArray()
 
         errStr = imageTestUtils.imagesDiffer(afwWarpedImagArr, swarpedImage.getArray(),
             skipMaskArr=afwWarpedMaskArr, rtol=rtol, atol=atol)

@@ -297,10 +297,10 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
                           str(boost::format("Unknown ApproximationStyle: %d") % ctrl.getStyle()));
     }
 }
+/// \cond
 /*
  * Explicit instantiations
  *
- * \cond
  */
 #define INSTANTIATE(PIXEL_T)                                          \
     template                                                          \
@@ -313,6 +313,6 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
 INSTANTIATE(float);
 //INSTANTIATE(int);
 
-// \endcond
+/// \endcond
 
 }}}

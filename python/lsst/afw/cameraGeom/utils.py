@@ -37,7 +37,7 @@ import lsst.daf.base as dafBase
 from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
 from .camera import Camera
-from .cameraGeomLib import PUPIL, PIXELS, FOCAL_PLANE
+from .cameraGeomLib import PUPIL, FOCAL_PLANE
 
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
@@ -293,7 +293,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
 def showAmp(amp, ampImage=None, isTrimmed=False, frame=None, overlay=True, imageFactory=afwImage.ImageU, markSize=10, markValue=0):
     """Show an amp in a ds9 frame
     @param amp: amp record to use in display
-    @param ampImage: Not used.  Will allow for passing an amp image to display.
+    @param ampImage: amp image to display, or None to synthesize an image from amp info
     @param isTrimmed: Display a trimmed amp image
     @param frame: ds9 frame to display on
     @param overlay: Overlay bounding boxes?
@@ -305,10 +305,13 @@ def showAmp(amp, ampImage=None, isTrimmed=False, frame=None, overlay=True, image
     if ampImage is None:
         ampImage = makeImageFromAmp(amp, imageFactory=imageFactory, markSize=markSize, markValue=markValue)
     else:
-        if isTrimmed and not ampImage.getBBox() == amp.getBBox():
-            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ampImage.getBBox(), amp.getBBox()))
-        if not isTrimmed and not ampImage.getBBox() == amp.getRawBBox():
-            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ampImage.getBBox(), amp.getRawBBox()))
+        ampImageBBox = ampImage.getBBox(afwImage.LOCAL)
+        if isTrimmed and not ampImageBBox == amp.getBBox():
+            raise ValueError("Image is not same size as amp bounding box: %s -- %s" % \
+                (ampImageBBox, amp.getBBox()))
+        if not isTrimmed and not ampImageBBox == amp.getRawBBox():
+            raise ValueError("Image is not same size as amp bounding box: %s -- %s" % \
+                (ampImageBBox, amp.getRawBBox()))
     title = amp.getName()
     if isTrimmed:
         ampImage = ampImage.Factory(ampImage, amp.getRawDataBBox(), False)
@@ -338,7 +341,7 @@ def showAmp(amp, ampImage=None, isTrimmed=False, frame=None, overlay=True, image
 def showCcd(ccd, ccdImage=None, isTrimmed=True, showAmpGain=True, frame=None, overlay=True, binSize=1, inCameraCoords=False):
     """Show a CCD on ds9.  
     @param ccd: Detector to use in display
-    @param ccdImage: Not used.  Will allow an image to be displayed.  If None an image is synthesized from the Detector properties.
+    @param ccdImage: image to be displayed.  If None an image is synthesized from the Detector properties.
     @param isTrimmed: Is the displayed Detector trimmed?
     @param showAmpGain: Show the amps colored proportional to the gain?  Only used if ccdImage is None
     @param frame: ds9 frame to use
@@ -352,11 +355,14 @@ def showCcd(ccd, ccdImage=None, isTrimmed=True, showAmpGain=True, frame=None, ov
         ccdImage = makeImageFromCcd(ccd, isTrimmed=isTrimmed, showAmpGain=showAmpGain, binSize=binSize)
     else:
         rawBbox = calcRawCcdBBox(ccd)
-        if isTrimmed and not ccdImage.getBBox() == ccd.getBBox():
-            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ccdImage.getBBox(), ccd.getBBox()))
+        ccdImageBBox = ccdImage.getBBox(afwImage.LOCAL)
+        if isTrimmed and not ccdImageBBox == ccd.getBBox():
+            raise ValueError("Image is not same size as amp bounding box: %s -- %s" % \
+                (ccdImageBBox, ccd.getBBox()))
         if not isTrimmed and not ccdImage.getBBox() == rawBbox:
-            raise ValueError("Image is not same size as amp bounding box: %s -- %s"%(ccdImage.getBBox(), rawBbox))
-    ccdBbox = ccdImage.getBBox()
+            raise ValueError("Image is not same size as amp bounding box: %s -- %s" % \
+                (ccdImageBBox, rawBbox))
+    ccdBbox = ccdImage.getBBox(afwImage.LOCAL)
     if inCameraCoords:
         nQuarter = ccd.getOrientation().getNQuarter()
         ccdImage = afwMath.rotateImageBy90(ccdImage, nQuarter)
@@ -483,7 +489,7 @@ def showCamera(camera, imageSource=None, imageFactory=afwImage.ImageU, detectorN
                 camBbox.include(corner)
     pixelSize = ccdList[0].getPixelSize()
     if originAtCenter:
-        wcsReferencePixel = cameraImage.getBBox().getDimensions()/2
+        wcsReferencePixel = cameraImage.getDimensions()/2
     else:
         wcsReferencePixel = afwGeom.Point2I(0,0)
     wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)

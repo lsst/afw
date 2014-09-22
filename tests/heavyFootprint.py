@@ -33,7 +33,6 @@ or
 """
 
 import numpy as np
-import math, sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
@@ -174,7 +173,7 @@ class HeavyFootprintTestCase(unittest.TestCase):
             ds9.mtv(self.mi, frame=0, title="input")
             ds9.mtv(omi, frame=1, title="sub")
 
-        submi = self.mi.Factory(self.mi, bbox)
+        submi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL)
         self.assertTrue(np.all(np.equal(submi.getImage().getArray(), omi.getImage().getArray())))
 
     def testCast_HeavyFootprint(self):
