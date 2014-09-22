@@ -253,6 +253,13 @@ MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                              Footprint const& footprint,
                              MaskT const bitmask);
 
+/// Copy pixels defined by a footprint between images
+///
+/// Respects image xy0, so the footprints should be defined in the
+/// "PARENT" frame.
+///
+/// Pixels that are in the footprint but do not overlap with both
+/// images are not copied.
 template <typename ImageOrMaskedImageT>
 void copyWithinFootprint(Footprint const& foot,
                          PTR(ImageOrMaskedImageT) const input,
