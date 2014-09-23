@@ -150,8 +150,8 @@ public:
     /**
      *  @brief Set a calculated or aggregate field.
      */
-    template <typename T>
-    void set(InputFunctorKey<T> const & key, T const & value) {
+    template <typename T, typename U>
+    void set(InputFunctorKey<T> const & key, U const & value) {
         return key.set(*this, value);
     }
 
