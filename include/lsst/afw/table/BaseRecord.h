@@ -161,7 +161,7 @@ public:
     }
 
     template <typename ConstRef>
-    ConstRef operator[](ConstReferenceFunctorKey<ConstRef> const & key) {
+    ConstRef operator[](ConstReferenceFunctorKey<ConstRef> const & key) const {
         return key.getConstReference(*this);
     }
 
