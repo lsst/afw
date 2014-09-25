@@ -1088,7 +1088,6 @@ Fits::Fits(MemFileManager & manager, std::string const & mode, int behavior_)
             &status
         );
     } else if (mode == "w" || mode == "wb") {
-        if (!manager._ptr) manager.reset(2880);
         Reallocator reallocator = 0;
         if (manager._managed) reallocator = &std::realloc;
         fits_create_memfile(
