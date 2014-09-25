@@ -224,6 +224,61 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                     for dynamicSize in (True, False):
                         self.doTestCovarianceMatrixKey(fieldType, parameterNames, varianceOnly, dynamicSize)
 
+    def doTestArrayKey(self, fieldType, numpyType):
+        FunctorKeyType = getattr(lsst.afw.table, "Array%sKey" % fieldType)
+        self.assertFalse(FunctorKeyType().isValid())
+        schema = lsst.afw.table.Schema()
+        a0 = schema.addField("a_0", type=fieldType, doc="valid array element")
+        a1 = schema.addField("a_1", type=fieldType, doc="valid array element")
+        a2 = schema.addField("a_2", type=fieldType, doc="valid array element")
+        b0 = schema.addField("b_0", type=fieldType, doc="invalid out-of-order array element")
+        b2 = schema.addField("b_2", type=fieldType, doc="invalid out-of-order array element")
+        b1 = schema.addField("b_1", type=fieldType, doc="invalid out-of-order array element")
+        c = schema.addField("c", type="Array%s" % fieldType, doc="old-style array", size=4)
+        k1 = FunctorKeyType([a0, a1, a2])  # construct from a vector of keys
+        k2 = FunctorKeyType(schema["a"])   # construct from SubSchema
+        k3 = FunctorKeyType(c)             # construct from old-style Key<Array<T>>
+        k4 = FunctorKeyType.addFields(schema, "d", "doc for d", "camels", 4)
+        k5 = FunctorKeyType.addFields(schema, "e", "doc for e %3.1f", "camels", [2.1, 2.2])
+        self.assertTrue(k1.isValid())
+        self.assertTrue(k2.isValid())
+        self.assertTrue(k3.isValid())
+        self.assertTrue(k4.isValid())
+        self.assertTrue(k5.isValid())
+        self.assertEqual(k1, k2)      # k1 and k2 point to the same underlying fields
+        self.assertEqual(k1[2], a2)   # test that we can extract an element
+        self.assertEqual(k1[1:3], FunctorKeyType([a1, a2]))  # test that we can slice ArrayKeys
+        self.assertEqual(k1.getSize(), 3)
+        self.assertEqual(k2.getSize(), 3)
+        self.assertEqual(k3.getSize(), 4)
+        self.assertEqual(k4.getSize(), 4)
+        self.assertEqual(k5.getSize(), 2)
+        self.assertNotEqual(k1, k3)   # none of these point to the same underlying fields;
+        self.assertNotEqual(k1, k4)   # they should all be unequal
+        self.assertNotEqual(k1, k5)
+        self.assertEqual(schema.find(k5[0]).field.getDoc(), "doc for e 2.1")  # test that the fields we added
+        self.assertEqual(schema.find(k5[1]).field.getDoc(), "doc for e 2.2")  # got the right docs
+        self.assertRaises(IndexError, lambda k: k[1:3:2], k1)  # test that invalid slices raise exceptions
+        # test that trying to construct from a SubSchema with badly ordered fields doesn't work
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, FunctorKeyType, schema["b"])
+        # test that trying to construct from a list of keys that are not ordered doesn't work
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, FunctorKeyType, [b0, b1, b2])
+        self.assertEqual(k4, FunctorKeyType(schema["d"]))
+        self.assertEqual(k5, FunctorKeyType(schema["e"]))
+        # finally, we create a record, fill it with random data, and verify that get/set/__getitem__ work
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        array = numpy.random.randn(3).astype(numpyType)
+        record.set(k1, array)
+        self.assertClose(record.get(k1), array)
+        self.assertClose(record.get(k2), array)
+        self.assertClose(record[k1], array)
+        self.assertEqual(record.get(k1).dtype, numpy.dtype(numpyType))
+
+    def testArrayKey(self):
+        self.doTestArrayKey("F", numpy.float32)
+        self.doTestArrayKey("D", numpy.float64)
+
     def testCompoundKeyConverters(self):
         """Test that FunctorKeys that convert from old-style compound Keys work
         """

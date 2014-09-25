@@ -63,9 +63,9 @@ public:
     explicit PointKey(Key< Point<T> > const & other) : _x(other.getX()), _y(other.getY()) {}
 
     /**
-     *  @brief Construct from a subschema, assuming .x and .y subfields
+     *  @brief Construct from a subschema, assuming x and y subfields
      *
-     *  If a schema has "a.x" and "a.y" fields, this constructor allows you to construct
+     *  If a schema has "a_x" and "a_y" fields, this constructor allows you to construct
      *  a PointKey via:
      *  @code
      *  PointKey<T> k(schema["a"]);
@@ -127,9 +127,9 @@ public:
     {}
 
     /**
-     *  @brief Construct from a subschema, assuming .xx, .yy, and .xy subfields
+     *  @brief Construct from a subschema, assuming xx, yy, and xy subfields
      *
-     *  If a schema has "a.xx", "a.yy", and "a.xy" fields, this constructor allows you to construct
+     *  If a schema has "a_xx", "a_yy", and "a_xy" fields, this constructor allows you to construct
      *  a QuadrupoleKey via:
      *  @code
      *  QuadrupoleKey k(schema["a"]);

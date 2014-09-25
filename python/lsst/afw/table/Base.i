@@ -405,6 +405,18 @@ def asKey(self):
 %template(FunctorKey ## PYNAME) lsst::afw::table::FunctorKey< U >;
 %enddef
 
+%define %declareReferenceFunctorKey(PYNAME, U...)
+%shared_ptr(lsst::afw::table::ReferenceFunctorKey< U >);
+%nodefaultctor lsst::afw::table::ReferenceFunctorKey< U >;
+%template(ReferenceFunctorKey ## PYNAME) lsst::afw::table::ReferenceFunctorKey< U >;
+%enddef
+
+%define %declareConstReferenceFunctorKey(PYNAME, U...)
+%shared_ptr(lsst::afw::table::ConstReferenceFunctorKey< U >);
+%nodefaultctor lsst::afw::table::ConstReferenceFunctorKey< U >;
+%template(ConstReferenceFunctorKey ## PYNAME) lsst::afw::table::ConstReferenceFunctorKey< U >;
+%enddef
+
 // =============== BaseTable and BaseRecord =================================================================
 
 %shared_ptr(lsst::afw::table::BaseTable);
@@ -431,16 +443,22 @@ def asKey(self):
         def cast(self, type_):
             return type_._cast(self)
     %}
-    // Allow field name strings be used in place of keys (but only in Python)
-    %pythonprepend __getitem__ %{
-        if isinstance(args[0], basestring):
-            return self[self.schema.find(args[0]).key]
+    %feature("shadow") __getitem__ %{
+    def __getitem__(self, key):
+        if isinstance(key, basestring):
+            return self[self.schema.find(key).key]
+        try:
+            return $action(self, key)
+        except NotImplementedError:
+            # If this doesn't work as a regular key, try it as a FunctorKey
+            return key.get(self)
     %}
     %pythonprepend __setitem__ %{
         if isinstance(args[0], basestring):
             self[self.schema.find(args[0]).key] = args[1]
             return
     %}
+    // Allow field name strings be used in place of keys (but only in Python)
     %feature("shadow") get %{
     def get(self, key):
         if isinstance(key, basestring):
