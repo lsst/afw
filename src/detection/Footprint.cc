@@ -242,6 +242,17 @@ bool Footprint::contains(
     return false;
 }
 
+namespace {
+/// Predicate for removing peaks outside a bbox
+struct ClipPredicate : public std::unary_function<PTR(Peak) const&, bool> {
+    geom::Box2I const& bbox;
+    ClipPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+    bool operator()(PTR(Peak) const& peak) const {
+        return bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
+    }
+};
+}
+
 void Footprint::clipTo(geom::Box2I const& bbox) {
     Footprint::SpanList::iterator it = _spans.begin();
     for (; it != _spans.end();) {
@@ -273,15 +284,8 @@ void Footprint::clipTo(geom::Box2I const& bbox) {
         it++;
     }
 
-    Footprint::PeakList::iterator pit = _peaks.begin();
-    for (; pit != _peaks.end();) {
-        Peak *pk = pit->get();
-        if (!bbox.contains(geom::Point2I(pk->getIx(), pk->getIy()))) {
-            pit = _peaks.erase(pit);
-            continue;
-        }
-        pit++;
-    }
+    // Remove peaks not in the new bbox
+    _peaks.erase(std::remove_if(_peaks.begin(), _peaks.end(), ClipPredicate(bbox)), _peaks.end());
 
     if (_spans.empty()) {
         _bbox = geom::Box2I();
