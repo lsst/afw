@@ -1892,24 +1892,28 @@ copyWithinFootprint(Footprint const& foot,
                     PTR(ImageOrMaskedImageT) output) {
     Footprint::SpanList spans = foot.getSpans();
 
-    int const xMin = std::max(input->getX0(), output->getX0());
-    int const xMax = std::min(input->getWidth() + input->getX0(), output->getWidth() + output->getX0()) - 1;
+    int const inX0 = input->getX0(), inY0 = input->getY0();
+    int const outX0 = output->getX0(), outY0 = output->getY0();
+
+    int const xMin = std::max(inX0, outX0);
+    int const xMax = std::min(input->getWidth() + inX0, output->getWidth() + outX0) - 1;
     for (Footprint::SpanList::iterator sp = spans.begin();
          sp != spans.end(); ++sp) {
         int const y  = (*sp)->getY();
         int const x0 = (*sp)->getX0();
         int const x1 = (*sp)->getX1();
 
-        int const yInput = y - input->getY0(), yOutput = y - output->getY0();
+        int const yInput = y - inY0, yOutput = y - outY0;
         if (yInput < 0 || yInput >= input->getHeight() || yOutput < 0 || yOutput >= output->getHeight()) {
             continue;
         }
 
-        typename ImageOrMaskedImageT::const_x_iterator initer = input->x_at(
-            x0 - input->getX0(),  y - input->getY0());
-        typename ImageOrMaskedImageT::x_iterator outiter = output->x_at(
-            x0 - output->getX0(), y - output->getY0());
-        for (int x = std::max(x0, xMin); x <= std::min(x1, xMax); ++x, ++initer, ++outiter) {
+        int const xStart = std::max(x0, xMin); // Starting position in x, parent frame
+        int const xStop = std::min(x1, xMax);  // Stopping position (inclusive) in x, parent frame
+
+        typename ImageOrMaskedImageT::const_x_iterator initer = input->x_at(xStart - inX0, yInput);
+        typename ImageOrMaskedImageT::x_iterator outiter = output->x_at(xStart - outX0, yOutput);
+        for (int x = xStart; x <= xStop; ++x, ++initer, ++outiter) {
             *outiter = *initer;
         }
     }
