@@ -41,11 +41,14 @@
         (repr(self.first), repr(self.second), self.distance)
 
     def __str__(self):
-        s1, s2 = self.first, self.second
-        return "((id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n (id %d, RA,Dec (%g,%g) deg; X,Y (%g,%g))\n dist %g [pix or radians])" % (
-            s1.getId(), s1.getRa().asDegrees(), s1.getDec().asDegrees(), s1.getX(), s1.getY(),
-            s2.getId(), s2.getRa().asDegrees(), s2.getDec().asDegrees(), s2.getX(), s2.getY(),
-            self.distance)
+        sourceRaDec = lambda s: ((" RA,Dec=(%g,%g) deg" % (s.getRa().asDegrees(), s.getDec().asDegrees())) if
+                                 hasattr(s, "getRa") and hasattr(s, "getDec") else "")
+        sourceXy = lambda s: ((" x,y=(%g,%g)" % (s.getX(), s.getY())) if
+                              hasattr(s, "getX") and hasattr(s, "getY") else "")
+        sourceStr = lambda s: (s.__class__.__name__ + ("(id %d" % s.getId()) + sourceRaDec(s) +
+                               sourceXy(s) + ")")
+
+        return "Match(%s, %s, dist %g)" % (sourceStr(self.first), sourceStr(self.second), self.distance,)
 
     def __getitem__(self, i):
         """Treat a Match as a tuple of length 3:
