@@ -311,16 +311,21 @@ void ExposureRecord::setBBox(geom::Box2I const & bbox) {
     set(ExposureTable::getBBoxMaxKey(), bbox.getMax());
 }
 
-bool ExposureRecord::contains(Coord const & coord) const {
+bool ExposureRecord::contains(Coord const & coord, bool includeValidPolygon) const {
     if (!getWcs()) {
         throw LSST_EXCEPT(
             pex::exceptions::LogicErrorException,
             "ExposureRecord does not have a Wcs; cannot call contains()"
         );
     }
+    // If there is no valid polygon set to false
+    if (includeValidPolygon && !getValidPolygon()) includeValidPolygon = false;
+
     try {
         geom::Point2D point = getWcs()->skyToPixel(coord);
-        return geom::Box2D(getBBox()).contains(point);
+        if (includeValidPolygon) return (geom::Box2D(getBBox()).contains(point) && 
+                                 getValidPolygon()->contains(point));
+        else return geom::Box2D(getBBox()).contains(point);
     } catch (pex::exceptions::DomainErrorException &) {
         // Wcs can throw if the given coordinate is outside the region
         // where the Wcs is valid.
@@ -328,8 +333,8 @@ bool ExposureRecord::contains(Coord const & coord) const {
     }
 }
 
-bool ExposureRecord::contains(geom::Point2D const & point, image::Wcs const & wcs) const {
-    return contains(*wcs.pixelToSky(point));
+bool ExposureRecord::contains(geom::Point2D const & point, image::Wcs const & wcs, bool includeValidPolygon) const {
+    return contains(*wcs.pixelToSky(point), includeValidPolygon);
 }
 
 ExposureRecord::ExposureRecord(PTR(ExposureTable) const & table) : BaseRecord(table) {}
@@ -414,20 +419,22 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
 
 template <typename RecordT>
 ExposureCatalogT<RecordT>
-ExposureCatalogT<RecordT>::subsetContaining(Coord const & coord) const {
+ExposureCatalogT<RecordT>::subsetContaining(Coord const & coord, bool includeValidPolygon) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
-        if (i->contains(coord)) result.push_back(i);
+        if (i->contains(coord, includeValidPolygon)) result.push_back(i);
     }
     return result;
 }
 
 template <typename RecordT>
 ExposureCatalogT<RecordT>
-ExposureCatalogT<RecordT>::subsetContaining(geom::Point2D const & point, image::Wcs const & wcs) const {
+ExposureCatalogT<RecordT>::subsetContaining(
+    geom::Point2D const & point, image::Wcs const & wcs, bool includeValidPolygon
+    ) const {
     ExposureCatalogT result(this->getTable());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
-        if (i->contains(point, wcs)) result.push_back(i);
+        if (i->contains(point, wcs,includeValidPolygon)) result.push_back(i);
     }
     return result;
 }
