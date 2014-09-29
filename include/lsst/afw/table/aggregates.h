@@ -124,6 +124,22 @@ typedef PointKey<double> Point2DKey;
 class QuadrupoleKey : public FunctorKey< lsst::afw::geom::ellipses::Quadrupole > {
 public:
 
+    /**
+     *  Add a set of _xx, _yy, _xy fields to a Schema, and return a QuadrupoleKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_xx", "_yy", "_xy", will be appended to this
+     *                         to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for all fields.
+     */
+    static QuadrupoleKey addFields(
+        Schema & schema,
+        std::string const & name,
+        std::string const & doc,
+        std::string const & unit
+    );
+
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
     QuadrupoleKey() : _ixx(), _iyy(), _ixy() {}
 
@@ -135,7 +151,7 @@ public:
     /**
      *  Construct from a compound Key<Moments<double>>
      *
-     *  Key<Moments> is now deprecated in favor of PointKey; this constructor is intended to
+     *  Key<Moments> is now deprecated in favor of QuadrupoleKey; this constructor is intended to
      *  aid in the transition.
      */
     explicit QuadrupoleKey(Key< Moments<double> > const & other) :
