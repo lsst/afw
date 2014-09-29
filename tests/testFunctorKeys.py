@@ -67,17 +67,22 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
         schema = lsst.afw.table.Schema();
         schema.setVersion(0)
-        xKey = schema.addField("a.x", type=fieldType, doc="x")
-        yKey = schema.addField("a.y", type=fieldType, doc="y")
+        fKey0 = functorKeyType.addFields(schema, "a", "x or y", "pixels")
+        xKey = schema.find("a.x").key
+        yKey = schema.find("a.y").key
         # we create two equivalent functor keys, using the two different constructors
         fKey1 = functorKeyType(xKey, yKey)
         fKey2 = functorKeyType(schema["a"])
         # test that they're equivalent, and that their constituent keys are what we expect
+        self.assertEqual(fKey0.getX(), xKey)
+        self.assertEqual(fKey0.getY(), yKey)
         self.assertEqual(fKey1.getX(), xKey)
         self.assertEqual(fKey2.getX(), xKey)
         self.assertEqual(fKey1.getY(), yKey)
         self.assertEqual(fKey2.getY(), yKey)
+        self.assertEqual(fKey0, fKey1)
         self.assertEqual(fKey1, fKey2)
+        self.assertTrue(fKey0.isValid())
         self.assertTrue(fKey1.isValid())
         self.assertTrue(fKey2.isValid())
         # check that a default-constructed functor key is invalid

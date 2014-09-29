@@ -30,6 +30,18 @@ namespace lsst { namespace afw { namespace table {
 //============ PointKey =====================================================================================
 
 template <typename T>
+PointKey<T> PointKey<T>::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit
+) {
+    Key<T> xKey = schema.addField<T>(schema.join(name, "x"), doc, unit);
+    Key<T> yKey = schema.addField<T>(schema.join(name, "y"), doc, unit);
+    return PointKey<T>(xKey, yKey);
+}
+
+template <typename T>
 geom::Point<T,2> PointKey<T>::get(BaseRecord const & record) const {
     return geom::Point<T,2>(record.get(_x), record.get(_y));
 }
