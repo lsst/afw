@@ -48,6 +48,22 @@ template <typename T>
 class PointKey : public FunctorKey< lsst::afw::geom::Point<T,2> > {
 public:
 
+    /**
+     *  Add a pair of _x, _y fields to a Schema, and return a PointKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_x", "_y", will be appended to this
+     *                         to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for all fields.
+     */
+    static PointKey addFields(
+        Schema & schema,
+        std::string const & name,
+        std::string const & doc,
+        std::string const & unit
+    );
+
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
     PointKey() : _x(), _y() {}
 
