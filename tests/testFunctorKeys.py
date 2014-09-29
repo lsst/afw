@@ -155,6 +155,53 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(yyKey), p.getIyy())
         self.assertEqual(record.get(xyKey), p.getIxy())
 
+    def testEllipseKey(self):
+        schema = lsst.afw.table.Schema();
+        schema.setVersion(1)
+        fKey0 = lsst.afw.table.EllipseKey.addFields(schema, "a", "ellipse", "pixels")
+        qKey = lsst.afw.table.QuadrupoleKey(schema["a"])
+        pKey = lsst.afw.table.Point2DKey(schema["a"])
+        # we create two more equivalent functor keys, using the two different constructors
+        fKey1 = lsst.afw.table.EllipseKey(qKey, pKey)
+        fKey2 = lsst.afw.table.EllipseKey(schema["a"])
+        # test that they're equivalent, and tha=t their constituent keys are what we expect
+        self.assertEqual(fKey0.getCore(), qKey)
+        self.assertEqual(fKey1.getCore(), qKey)
+        self.assertEqual(fKey2.getCore(), qKey)
+        self.assertEqual(fKey0.getCenter(), pKey)
+        self.assertEqual(fKey1.getCenter(), pKey)
+        self.assertEqual(fKey2.getCenter(), pKey)
+        self.assertEqual(fKey0, fKey1)
+        self.assertEqual(fKey1, fKey2)
+        self.assertTrue(fKey0.isValid())
+        self.assertTrue(fKey1.isValid())
+        self.assertTrue(fKey2.isValid())
+        # check that a default-constructed functor key is invalid
+        fKey3 = lsst.afw.table.EllipseKey()
+        self.assertNotEqual(fKey3, fKey1)
+        self.assertFalse(fKey3.isValid())
+        # create a record from the test schema, and fill it using the constituent keys
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        record.set(qKey, lsst.afw.geom.ellipses.Quadrupole(4,3,1))
+        record.set(pKey, lsst.afw.geom.Point2D(5,6))
+        # test that the return type and value is correct
+        self.assertIsInstance(record.get(fKey1), lsst.afw.geom.ellipses.Ellipse)
+        self.assertClose(record.get(fKey1).getCore().getIxx(), record.get(qKey).getIxx(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIyy(), record.get(qKey).getIyy(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIxy(), record.get(qKey).getIxy(), rtol=1E-14)
+        self.assertEqual(record.get(fKey1).getCenter().getX(), record.get(pKey).getX())
+        self.assertEqual(record.get(fKey1).getCenter().getX(), record.get(pKey).getX())
+        # test that we can set using the functor key
+        e = lsst.afw.geom.ellipses.Ellipse(lsst.afw.geom.ellipses.Quadrupole(8, 16, 4),
+                                           lsst.afw.geom.Point2D(5,6))
+        record.set(fKey1, e)
+        self.assertClose(record.get(fKey1).getCore().getIxx(), e.getCore().getIxx(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIyy(), e.getCore().getIyy(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIxy(), e.getCore().getIxy(), rtol=1E-14)
+        self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
+        self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
+
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
         schema.setVersion(0)

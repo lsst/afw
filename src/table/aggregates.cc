@@ -79,6 +79,28 @@ void QuadrupoleKey::set(BaseRecord & record, geom::ellipses::Quadrupole const & 
     record.set(_ixy, value.getIxy());
 }
 
+//============ EllipseKey ================================================================================
+
+EllipseKey EllipseKey::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit
+) {
+    QuadrupoleKey qKey = QuadrupoleKey::addFields(schema, name, doc, unit + "^2");
+    PointKey<double> pKey = PointKey<double>::addFields(schema, name, doc, unit);
+    return EllipseKey(qKey, pKey);
+}
+
+geom::ellipses::Ellipse EllipseKey::get(BaseRecord const & record) const {
+    return geom::ellipses::Ellipse(record.get(_qKey), record.get(_pKey));
+}
+
+void EllipseKey::set(BaseRecord & record, geom::ellipses::Ellipse const & value) const {
+    _qKey.set(record, value.getCore());
+    _pKey.set(record, value.getCenter());
+}
+
 //============ CovarianceMatrixKey ==========================================================================
 
 template <typename T, int N>

@@ -39,13 +39,13 @@ ArrayKey<T> ArrayKey<T>::addFields(
     if (docData.empty()) return result;
     result._size = docData.size();
     result._begin = schema.addField<T>(
-        schema[name]["0"].getPrefix(), // we use getPrefix in order to get the version-dependent delimiter
+        schema.join(name, "0"), // we use getPrefix in order to get the version-dependent delimiter
         (boost::format(doc) % docData.front()).str(),
         unit
     );
     for (int i = 1; i < result._size; ++i) {
         schema.addField<T>(
-            schema[name][boost::lexical_cast<std::string>(i)].getPrefix(),
+            schema.join(name, boost::lexical_cast<std::string>(i)),
             (boost::format(doc) % docData[i]).str(),
             unit
         );
@@ -65,13 +65,13 @@ ArrayKey<T> ArrayKey<T>::addFields(
     if (size == 0) return result;
     result._size = size;
     result._begin = schema.addField<T>(
-        schema[name]["0"].getPrefix(), // we use getPrefix in order to get the version-dependent delimiter
+        schema.join(name, "0"), // we use getPrefix in order to get the version-dependent delimiter
         doc,
         unit
     );
     for (int i = 1; i < result._size; ++i) {
         schema.addField<T>(
-            schema[name][boost::lexical_cast<std::string>(i)].getPrefix(),
+            schema.join(name, boost::lexical_cast<std::string>(i)),
             doc,
             unit
         );
