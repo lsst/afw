@@ -111,20 +111,26 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema();
         schema.setVersion(0)
-        xxKey = schema.addField("a.xx", type=float, doc="xx")
-        yyKey = schema.addField("a.yy", type=float, doc="yy")
-        xyKey = schema.addField("a.xy", type=float, doc="xy")
+        fKey0 = lsst.afw.table.QuadrupoleKey.addFields(schema, "a", "moments", "pixels^2")
+        xxKey = schema.find("a.xx").key
+        yyKey = schema.find("a.yy").key
+        xyKey = schema.find("a.xy").key
         # we create two equivalent functor keys, using the two different constructors
         fKey1 = lsst.afw.table.QuadrupoleKey(xxKey, yyKey, xyKey)
         fKey2 = lsst.afw.table.QuadrupoleKey(schema["a"])
-        # test that they're equivalent, and that their constituent keys are what we expect
+        # test that they're equivalent, and tha=t their constituent keys are what we expect
+        self.assertEqual(fKey0.getIxx(), xxKey)
         self.assertEqual(fKey1.getIxx(), xxKey)
         self.assertEqual(fKey2.getIxx(), xxKey)
+        self.assertEqual(fKey0.getIyy(), yyKey)
         self.assertEqual(fKey1.getIyy(), yyKey)
         self.assertEqual(fKey2.getIyy(), yyKey)
+        self.assertEqual(fKey0.getIxy(), xyKey)
         self.assertEqual(fKey1.getIxy(), xyKey)
         self.assertEqual(fKey2.getIxy(), xyKey)
+        self.assertEqual(fKey0, fKey1)
         self.assertEqual(fKey1, fKey2)
+        self.assertTrue(fKey0.isValid())
         self.assertTrue(fKey1.isValid())
         self.assertTrue(fKey2.isValid())
         # check that a default-constructed functor key is invalid

@@ -57,6 +57,18 @@ template class PointKey<double>;
 
 //============ QuadrupoleKey ================================================================================
 
+QuadrupoleKey QuadrupoleKey::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit
+) {
+    Key<double> xxKey = schema.addField<double>(schema.join(name, "xx"), doc, unit);
+    Key<double> yyKey = schema.addField<double>(schema.join(name, "yy"), doc, unit);
+    Key<double> xyKey = schema.addField<double>(schema.join(name, "xy"), doc, unit);
+    return QuadrupoleKey(xxKey, yyKey, xyKey);
+}
+
 geom::ellipses::Quadrupole QuadrupoleKey::get(BaseRecord const & record) const {
     return geom::ellipses::Quadrupole(record.get(_ixx), record.get(_iyy), record.get(_ixy));
 }
