@@ -132,8 +132,8 @@ class ApproximateTestCase(unittest.TestCase):
                                                                      binsize*ramp.getHeight() - 1))
             order = 2
             actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
-            utilsTests.assertRaisesLsstCpp(self, pexExcept.RuntimeError,
-                                           lambda : afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl))
+            self.assertRaises(pexExcept.RuntimeError,
+                              lambda : afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl))
 
     def testLinearRampAsBackground(self):
         """Fit a ramp"""
