@@ -642,6 +642,11 @@ Schema::Schema(daf::base::PropertyList const & metadata) :
     io::FitsReader::_readSchema(*this, const_cast<daf::base::PropertyList &>(metadata), false);
 }
 
+std::string Schema::join(std::string const & a, std::string const & b) const {
+    // delegate to utility funcs at top of this file
+    return afw::table::join(a, b, getDelimiter(getVersion()));
+}
+
 void Schema::_edit() {
     if (!_impl.unique()) {
         boost::shared_ptr<Impl> data(boost::make_shared<Impl>(*_impl));
