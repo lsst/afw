@@ -445,6 +445,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     @param[in] detectorNameList: List of detector names to use in building the image.
                Use all Detectors if None.
     @param[in] background: Value to use where there is no Detector
+    @param[in] bufferSize: Size of border in binned pixels to make around the camera image
     @param[in] imageSource: Source to get ccd images.  Must have a getCcdImage method
     @param[in] imageFactory: Type of image to build
     @param[in] binSize: bin factor
@@ -484,18 +485,18 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                 binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
                 textSize=1.25, originAtCenter=True, **kwargs):
     """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
-    @param[in] camera: Camera to show
-    @param[in] imageSource: Source to get Ccd images from.  Must have a getCcdImage method.
-    @param[in] imageFactory: Type of image to make
-    @param[in] detectorNameList: List of names of Detectors to use. If None use all
-    @param[in] binSize: bin factor
-    @param[in] bufferSize: size of border to make around camera image
-    @param[in] frame: ds9 frame in which to display
-    @param[in] overlay: Overlay Detector boundaries?
-    @param[in] title: Title in ds9 frame
-    @param[in] ctype: Color to use when drawing Detector boundaries
-    @param[in] textSize: Size of detector labels
-    @param[in] originAtCenter: Put the origin of the camera WCS at the center of the image? Else it will be LL
+    @param[in] Camera: Camera to show
+    @param[in] ImageSource: Source to get Ccd images from.  Must have a getCcdImage method.
+    @param[in] ImageFactory: Type of image to make
+    @param[in] DetectorNameList: List of names of Detectors to use. If None use all
+    @param[in] BinSize: bin factor
+    @param[in] BufferSize: size of border in binned pixels to make around camera image.
+    @param[in] Frame: ds9 frame in which to display
+    @param[in] Overlay: Overlay Detector boundaries?
+    @param[in] Title: Title in ds9 frame
+    @param[in] Ctype: Color to use when drawing Detector boundaries
+    @param[in] TextSize: Size of detector labels
+    @param[in] OriginAtCenter: Put the origin of the camera WCS at the center of the image? Else it will be LL
     @return the mosaic image
     """
     if binSize < 1:
