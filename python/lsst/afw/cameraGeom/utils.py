@@ -464,7 +464,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
                 camBbox.include(corner)
 
     pixelSize_o = camera[camera.getNameIter().next()].getPixelSize()
-    camBbox = getCameraImageBBox(camBbox, pixelSize_o, bufferSize)
+    camBbox = getCameraImageBBox(camBbox, pixelSize_o, bufferSize*binSize)
     origin = camBbox.getMin()
     # This segfaults for large images.  It seems better to throw instead of segfaulting, but maybe that's not easy.
     # This is DM-89
@@ -498,6 +498,8 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     @param[in] originAtCenter: Put the origin of the camera WCS at the center of the image? Else it will be LL
     @return the mosaic image
     """
+    if binSize < 1:
+        binSize = 1
     cameraImage = makeImageFromCamera(camera, detectorNameList=detectorNameList, bufferSize=bufferSize,
                                       imageSource=imageSource, imageFactory=imageFactory, binSize=binSize, **kwargs)
 
@@ -529,7 +531,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
 
     if overlay:
         with ds9.Buffering():
-            camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize)
+            camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize*binSize)
             bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
             for bbox, ccd in itertools.izip(bboxList, ccdList):
                 nQuarter = ccd.getOrientation().getNQuarter()
