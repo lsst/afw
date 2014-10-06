@@ -525,7 +525,7 @@ void Fits::forEachKey(HeaderIterationFunctor & functor) {
         while (valueStr.size() > 2 && valueStr[valueStr.size() - 2] == '&' && i <= nKeys) {
             // we're using key to hold the entire record here; the actual key is safe in keyStr
             fits_read_record(reinterpret_cast<fitsfile*>(fptr), i, key, &status);
-            if (!strncmp(key, "CONTINUE", 8) == 0) {
+            if (strncmp(key, "CONTINUE", 8) != 0) {
                 // require both trailing '&' and CONTINUE to invoke long-string handling
                 break;
             }
