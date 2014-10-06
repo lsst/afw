@@ -3,6 +3,7 @@
 #define AFW_TABLE_Key_h_INCLUDED
 
 #include "lsst/afw/table/FieldBase.h"
+#include "lsst/afw/table/Flag.h"
 #include "lsst/afw/table/KeyBase.h"
 
 namespace lsst { namespace afw { namespace table {
