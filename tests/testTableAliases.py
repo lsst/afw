@@ -121,6 +121,23 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.schema.find("s12").key, self.ab12)
         self.assertEqual(self.schema.find("t").key, self.ab11)
 
+    def testRecursiveAliases(self):
+        """Test that multi-level alias replacement works.
+        """
+        self.schema.setAliasMap(None) # remove all current aliases
+        # applying the following aliases recursively should let us use 'u1' to get to the 'a11' field
+        self.schema.getAliasMap().set("t2", "a1")
+        self.schema.getAliasMap().set("u", "t2")
+        self.assertEqual(self.schema.find("u1").key, self.a11)
+
+    def testCycle(self):
+        """Test that multi-level aliases that form a cycle produce an exception, not an infinite loop.
+        """
+        self.schema.setAliasMap(None) # remove all current aliases
+        self.schema.getAliasMap().set("t", "a")
+        self.schema.getAliasMap().set("a", "t")
+        self.assertRaises(lsst.pex.exceptions.RuntimeError, self.schema.find, "t")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
