@@ -218,7 +218,7 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
                 return boost::get< SchemaItem<T> const >(_items[i->second]);
             } catch (boost::bad_get & err) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterError,
+                    lsst::pex::exceptions::TypeError,
                     (boost::format("Field '%s' does not have the given type.") % name).str()
                 );
             }
@@ -429,7 +429,7 @@ void SchemaImpl::replaceField(Key<T> const & key, Field<T> const & field) {
         item = boost::get< SchemaItem<T> >(&_items[index]);
         if (!item) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterError,
+                lsst::pex::exceptions::TypeError,
                 (boost::format("Incorrect key type '%s'.") % key).str()
             );
         }
@@ -530,14 +530,14 @@ Key<T> SchemaImpl::addField(Field<T> const & field, bool doReplace) {
             SchemaItem<T> * item = boost::get< SchemaItem<T> >(&_items[result.first->second]);
             if (!item) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterError,
+                    lsst::pex::exceptions::TypeError,
                     (boost::format("Cannot replace field with name '%s' because types differ.")
                      % field.getName()).str()
                 );
             }
             if (item->field.getElementCount() != field.getElementCount()) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterError,
+                    lsst::pex::exceptions::TypeError,
                     (boost::format("Cannot replace field with name '%s' because sizes differ.")
                      % field.getName()).str()
                 );
@@ -572,7 +572,7 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
             SchemaItem<Flag> * item = boost::get< SchemaItem<Flag> >(&_items[result.first->second]);
             if (!item) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterError,
+                    lsst::pex::exceptions::TypeError,
                     (boost::format("Cannot replace field with name '%s' because types differ.")
                      % field.getName()).str()
                 );
