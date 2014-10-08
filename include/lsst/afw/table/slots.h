@@ -53,8 +53,20 @@ public:
     /// Return the name of the slot (e.g. "Centroid" or "PsfFlux")
     std::string getName() const { return _name; }
 
-    /// Return the cached key for the Flag field that indicates failure
-    Key<Flag> getFlagKey() const { return _flagKey; }
+    /**
+     *  Return the cached key for the general failure Flag
+     *
+     *  This is provided for backwards compatibility only, and simply delegates to getSuspectKey().
+     *
+     *  @deprecated in favor of getFailureKey() and getSuspectKey()
+     */
+    Key<Flag> getFlagKey() const { return getSuspectKey(); }
+
+    /// Return the cached key for the Flag field that indicates complete failure
+    Key<Flag> getFailureKey() const { return _failureKey; }
+
+    /// Return the cached key for the Flag field that indicates a less-than-perfect result
+    Key<Flag> getSuspectKey() const { return _suspectKey; }
 
     /**
      *  Return the alias field prefix used to lookup Keys for the slot.
@@ -70,7 +82,8 @@ protected:
     void setKeys(std::string const & alias, Schema const & schema);
 
     std::string _name;
-    Key<Flag> _flagKey;
+    Key<Flag> _failureKey;
+    Key<Flag> _suspectKey;
 };
 
 /// SlotDefinition specialization for fluxes

@@ -32,8 +32,18 @@ m4def(`DECLARE_SLOT_GETTERS',
     /// @brief Get the uncertainty on the $1$2 slot measurement.
     $2SlotDefinition::ErrValue get$1$2Err() const;
 
-    /// @brief Return true if the measurement in the $1$2 slot failed.
+    /**
+     *  Return true if the measurement in the $1$2 slot did not succeed
+     *
+     *  @deprecated in favor of get$1$2Failure and get$1$2Suspect.
+     */
     bool get$1$2Flag() const;
+
+    /// @brief Return true if the measurement in the $1$2 slot failed completely.
+    bool get$1$2Failure() const;
+
+    /// @brief Return true if the measurement in the $1$2 slot failed.
+    bool get$1$2Suspect() const;
 ')dnl
 m4def(`DEFINE_SLOT_GETTERS',
 `inline $2SlotDefinition::MeasValue SourceRecord::get$1$2() const {
@@ -46,6 +56,14 @@ inline $2SlotDefinition::ErrValue SourceRecord::get$1$2Err() const {
 
 inline bool SourceRecord::get$1$2Flag() const {
     return this->get(getTable()->get$1$2Slot().getFlagKey());
+}
+
+inline bool SourceRecord::get$1$2Failure() const {
+    return this->get(getTable()->get$1$2Slot().getFailureKey());
+}
+
+inline bool SourceRecord::get$1$2Suspect() const {
+    return this->get(getTable()->get$1$2Slot().getSuspectKey());
 }
 ')dnl
 m4def(`DECLARE_SLOT_DEFINERS',

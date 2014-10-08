@@ -17,9 +17,14 @@ void SlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     try {
         if (schema.getVersion() == 0) {
-            _flagKey = s["flags"];
+            _suspectKey = s["flags"];
+            _failureKey = s["flags"];
+        } else if (schema.getVersion() == 1) {
+            _suspectKey = s["flag"];
+            _failureKey = s["flag"];
         } else {
-            _flagKey = s["flag"];
+            _suspectKey = s["flag"]["suspect"];
+            _failureKey = s["flag"]["failure"];
         }
     } catch (pex::exceptions::NotFoundError &) {}
 }
