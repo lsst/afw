@@ -12,6 +12,18 @@ bool startsWith(std::string const & a, std::string const b) {
 
 } // anonymous
 
+void SlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+    SubSchema s = schema["slot"][_name];
+    if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
+    try {
+        if (schema.getVersion() == 0) {
+            _flagKey = s["flags"];
+        } else {
+            _flagKey = s["flag"];
+        }
+    } catch (pex::exceptions::NotFoundError &) {}
+}
+
 void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
@@ -21,21 +33,16 @@ void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schem
             try {
                 _errKey = s["err"];
             } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flags"];
-            } catch (pex::exceptions::NotFoundError &) {}
         } else {
             _measKey = s["flux"];
             try {
                 _errKey = s["fluxSigma"];
             } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flag"];
-            } catch (pex::exceptions::NotFoundError &) {}
         }
     } catch (pex::exceptions::NotFoundError & err) {
         if (!alias.empty()) throw;
     }
+    SlotDefinition::setKeys(alias, schema);
 }
 
 namespace {
@@ -59,21 +66,16 @@ void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & s
             try {
                 _errKey = ErrKey(Key< Covariance< Point<float> > >(s["err"]));
             } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flags"];
-            } catch (pex::exceptions::NotFoundError &) {}
         } else {
             _measKey = s;
             try {
                 _errKey = ErrKey(s, names);
             } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flag"];
-            } catch (pex::exceptions::NotFoundError &) {}
         }
     } catch (pex::exceptions::NotFoundError & err) {
         if (!alias.empty()) throw;
     }
+    SlotDefinition::setKeys(alias, schema);
 }
 
 namespace {
@@ -98,21 +100,16 @@ void ShapeSlotDefinition::setKeys(std::string const & alias, Schema const & sche
             try {
                 _errKey = ErrKey(Key< Covariance< Moments<float> > >(s["err"]));
             } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flags"];
-            } catch (pex::exceptions::NotFoundError &) {}
         } else {
             _measKey = s;
             try {
                 _errKey = ErrKey(s, names);
             } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flag"];
-            } catch (pex::exceptions::NotFoundError &) {}
         }
     } catch (pex::exceptions::NotFoundError &) {
         if (!alias.empty()) throw;
     }
+    SlotDefinition::setKeys(alias, schema);
 }
 
 void SlotSuite::handleAliasChange(std::string const & alias, Schema const & schema) {

@@ -53,6 +53,9 @@ public:
     /// Return the name of the slot (e.g. "Centroid" or "PsfFlux")
     std::string getName() const { return _name; }
 
+    /// Return the cached key for the Flag field that indicates failure
+    Key<Flag> getFlagKey() const { return _flagKey; }
+
     /**
      *  Return the alias field prefix used to lookup Keys for the slot.
      *
@@ -63,7 +66,11 @@ public:
     }
 
 protected:
+
+    void setKeys(std::string const & alias, Schema const & schema);
+
     std::string _name;
+    Key<Flag> _flagKey;
 };
 
 /// SlotDefinition specialization for fluxes
@@ -86,9 +93,6 @@ public:
 
     /// Return the cached Key used to access the slot uncertainty
     ErrKey getErrKey() const { return _errKey; }
-
-    /// Return the cached Key used to access the slot failure flag
-    Key<Flag> getFlagKey() const { return _flagKey; }
 
     /**
      *  Update the cached Keys following an change of aliases in the given Schema
@@ -129,9 +133,6 @@ public:
     /// Return the cached Key used to access the slot uncertainty
     ErrKey getErrKey() const { return _errKey; }
 
-    /// Return the cached Key used to access the slot failure flag
-    Key<Flag> getFlagKey() const { return _flagKey; }
-
     /**
      *  Update the cached Keys following an change of aliases in the given Schema
      *
@@ -147,7 +148,6 @@ public:
 private:
     MeasKey _measKey;
     ErrKey _errKey;
-    Key<Flag> _flagKey;
 };
 
 /// SlotDefinition specialization for shapes
@@ -171,9 +171,6 @@ public:
     /// Return the cached Key used to access the slot uncertainty
     ErrKey getErrKey() const { return _errKey; }
 
-    /// Return the cached Key used to access the slot failure flag
-    Key<Flag> getFlagKey() const { return _flagKey; }
-
     /**
      *  Update the cached Keys following an change of aliases in the given Schema
      *
@@ -189,7 +186,6 @@ public:
 private:
     MeasKey _measKey;
     ErrKey _errKey;
-    Key<Flag> _flagKey;
 };
 
 /**
