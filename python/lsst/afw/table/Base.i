@@ -305,7 +305,7 @@ def find(self, k):
          method = getattr(self, attr)
          try:
              return method(k)
-         except Exception:
+         except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
              pass
     raise KeyError("Field '%s' not found in Schema." % k)
 
@@ -344,7 +344,7 @@ def find(self, k):
          method = getattr(self, attr)
          try:
              return method(k)
-         except Exception:
+         except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
              pass
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 
@@ -354,7 +354,7 @@ def asField(self):
          method = getattr(self, attr)
          try:
              return method()
-         except Exception:
+         except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
              pass
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 
@@ -364,7 +364,7 @@ def asKey(self):
          method = getattr(self, attr)
          try:
              return method()
-         except Exception:
+         except (lsst.pex.exceptions.TypeError, lsst.pex.exceptions.NotFoundError):
              pass
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 
