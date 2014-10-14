@@ -594,12 +594,11 @@ class BackgroundTestCase(unittest.TestCase):
         #
         # Check that we can fix the NaNs in the statsImage
         #
-        defaultValue = 10
         sim = statsImage.getImage().getArray()
-        sim[np.isnan(sim)] = defaultValue # replace NaN by defaultValue
+        sim[np.isnan(sim)] = initialValue # replace NaN by defaultValue
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
-        self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), defaultValue)
+        self.assertAlmostEqual(np.mean(bkgdImage[0:100, 0:100].getArray(), dtype=np.float64), initialValue)
             
     def testBadRows(self):
         """Test that a bad set of rows in an image doesn't cause a failure"""
