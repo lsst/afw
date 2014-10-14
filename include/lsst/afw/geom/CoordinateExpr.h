@@ -78,14 +78,14 @@ public:
 /// \brief Return true if all elements are true.
 template <int N>
 inline bool all(CoordinateExpr<N> const & expr) {
-    for (register int n=0; n<N; ++n) if (!expr[n]) return false;
+    for (int n=0; n<N; ++n) if (!expr[n]) return false;
     return true;
 }
 
 /// \brief Return true if any elements are true.
 template <int N>
 inline bool any(CoordinateExpr<N> const & expr) {
-    for (register int n=0; n<N; ++n) if (expr[n]) return true;
+    for (int n=0; n<N; ++n) if (expr[n]) return true;
     return false;
 }
 

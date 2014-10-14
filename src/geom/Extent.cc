@@ -49,42 +49,42 @@ geom::Extent<T,3>::Extent(Point<T,3> const & other) :
 template <typename T, int N>
 geom::CoordinateExpr<N> geom::ExtentBase<T,N>::eq(Extent<T,N> const & other) const {
     CoordinateExpr<N> r;
-    for (register int n=0; n<N; ++n) r[n] = this->_vector[n] == other[n];
+    for (int n=0; n<N; ++n) r[n] = this->_vector[n] == other[n];
     return r;
 }
 
 template <typename T, int N>
 geom::CoordinateExpr<N> geom::ExtentBase<T,N>::ne(Extent<T,N> const & other) const {
     CoordinateExpr<N> r;
-    for (register int n=0; n<N; ++n) r[n] = this->_vector[n] != other[n];
+    for (int n=0; n<N; ++n) r[n] = this->_vector[n] != other[n];
     return r;
 }
 
 template <typename T, int N>
 geom::CoordinateExpr<N> geom::ExtentBase<T,N>::lt(Extent<T,N> const & other) const {
     CoordinateExpr<N> r;
-    for (register int n=0; n<N; ++n) r[n] = this->_vector[n] < other[n];
+    for (int n=0; n<N; ++n) r[n] = this->_vector[n] < other[n];
     return r;
 }
 
 template <typename T, int N>
 geom::CoordinateExpr<N> geom::ExtentBase<T,N>::le(Extent<T,N> const & other) const {
     CoordinateExpr<N> r;
-    for (register int n=0; n<N; ++n) r[n] = this->_vector[n] <= other[n];
+    for (int n=0; n<N; ++n) r[n] = this->_vector[n] <= other[n];
     return r;
 }
 
 template <typename T, int N>
 geom::CoordinateExpr<N> geom::ExtentBase<T,N>::gt(Extent<T,N> const & other) const {
     CoordinateExpr<N> r;
-    for (register int n=0; n<N; ++n) r[n] = this->_vector[n] > other[n];
+    for (int n=0; n<N; ++n) r[n] = this->_vector[n] > other[n];
     return r;
 }
 
 template <typename T, int N>
 geom::CoordinateExpr<N> geom::ExtentBase<T,N>::ge(Extent<T,N> const & other) const {
     CoordinateExpr<N> r;
-    for (register int n=0; n<N; ++n) r[n] = this->_vector[n] >= other[n];
+    for (int n=0; n<N; ++n) r[n] = this->_vector[n] >= other[n];
     return r;
 }
 

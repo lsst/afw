@@ -1270,7 +1270,7 @@ TautSpline::calculateTautSplineEvenOdd(std::vector<double> const& _tau,
 static int
 search_array(double z, double const *x, int n, int i)
 {
-   register int lo, hi, mid;
+   int lo, hi, mid;
    double xm;
 
    if(i < 0 || i >= n) {		/* initial guess is useless */
