@@ -80,7 +80,11 @@ public:
                  int y,
                  std::vector<PTR(Peak)> const* peaks = NULL);
 
-#else // ugly workaround for https://github.com/swig/swig/issues/245
+#else // workaround for https://github.com/swig/swig/issues/245
+    // if that bug is fixed then you may update footprintset.i by uncommenting two lines
+    // and removing this section. However, you must continue to provide SWIG
+    // the alternate version of the template <typename MaskPixelT> constructor, because
+    // SWIG cannot disambiguate that from the template <typename ImagePixelT> constructor.
 
     FootprintSet(image::Mask<image::MaskPixel> const& img,
                  Threshold const& threshold,

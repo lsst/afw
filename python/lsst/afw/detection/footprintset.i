@@ -12,8 +12,8 @@
 %include "lsst/afw/detection/FootprintSet.h"
 
 %define %footprintSetOperations(PIXEL)
-// restore once https://github.com/swig/swig/issues/245 is fixed
-// and the corresponding ugly hack is removed from FootprintSet.h
+// uncomment the following two lines and update FootprintSet.h accordingly
+// once https://github.com/swig/swig/issues/245 is fixed
 // %template(FootprintSet) FootprintSet<PIXEL>;
 // %template(FootprintSet) FootprintSet<PIXEL,lsst::afw::image::MaskPixel>;
 %template(makeHeavy) makeHeavy<PIXEL,lsst::afw::image::MaskPixel>;
