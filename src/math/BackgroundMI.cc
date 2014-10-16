@@ -339,6 +339,20 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         _setGridColumns(interpStyle, undersampleStyle, iX, ypix);
     }
 
+    if (_bctrl.getApproximateControl().getStyle() != ApproximateControl::UNKNOWN) {
+        PTR(image::Image<float>) apx = doGetApproximate<float>(_bctrl.getApproximateControl(),
+                                                               _asUsedUndersampleStyle)->getImage();
+        PTR(image::Image<PixelT>) bg =
+            PTR(image::Image<PixelT>)(new image::Image<PixelT>(bbox.getDimensions()));
+
+        for (int iX = 0; iX<bbox.getWidth(); ++iX) {
+            std::copy(bg->col_begin(iX), bg->col_end(iX), apx->col_begin(iX));
+        }
+
+        //bg = apx->getImage();
+        return bg;
+    }
+
     // create a shared_ptr to put the background image in and return to caller
     // start with xy0 = 0 and set final xy0 later
     PTR(image::Image<PixelT>) bg =

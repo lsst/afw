@@ -36,12 +36,11 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/math/Interpolate.h"
+#include "lsst/afw/math/Approximate.h"
 
 namespace lsst {
 namespace afw {
 namespace math {
-class ApproximateControl;
-template<typename T> class Approximate;
 
 //
 // Remember to update stringToUndersampleStyle if you change this.
@@ -71,6 +70,7 @@ public:
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(THROW_EXCEPTION),
           _sctrl(new StatisticsControl(sctrl)),
+          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
           _prop(prop) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
@@ -93,6 +93,7 @@ public:
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(THROW_EXCEPTION),
           _sctrl(new StatisticsControl(sctrl)),
+          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
           _prop(stringToStatisticsProperty(prop)) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
@@ -117,6 +118,7 @@ public:
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(undersampleStyle),
           _sctrl(new StatisticsControl(sctrl)),
+          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
           _prop(prop) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
@@ -143,6 +145,7 @@ public:
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)),
           _sctrl(new StatisticsControl(sctrl)),
+          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
           _prop(stringToStatisticsProperty(prop)) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
@@ -197,6 +200,12 @@ public:
     Property getStatisticsProperty() const { return _prop; }
     void setStatisticsProperty(Property prop) { _prop = prop; }
     void setStatisticsProperty(std::string prop) { _prop = stringToStatisticsProperty(prop); }
+
+    void setApproximateControl(ApproximateControl actrl) {
+        _actrl = PTR(ApproximateControl)(new ApproximateControl(actrl.getStyle(), actrl.getOrderX()));
+    }
+    ApproximateControl getApproximateControl() { return *_actrl; }
+    ApproximateControl getApproximateControl() const { return *_actrl; }
     
 private:
     Interpolate::Style _style;          // style of interpolation to use
@@ -204,6 +213,7 @@ private:
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
     PTR(StatisticsControl) _sctrl;           // statistics control object
+    PTR(ApproximateControl) _actrl;          // approximate control object
     Property _prop;                          // statistics Property
 };
     
@@ -305,6 +315,8 @@ public:
      * Return the input image's (PARENT) bounding box
      */
     geom::Box2I getImageBBox() const { return _imgBBox; }
+
+    BackgroundControl getBackgroundControl() { return _bctrl; }
 
 protected:
     geom::Box2I _imgBBox;                             ///< size and origin of input image
