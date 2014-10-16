@@ -86,14 +86,14 @@ public:
                  Threshold const& threshold,
                  int const npixMin=1);
 
-    FootprintSet(image::Image<boost::uint16> const& img,
+    FootprintSet(image::Image<boost::uint16_t> const& img,
                  Threshold const& threshold,
                  int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<boost::uint16, image::MaskPixel> const& img,
+    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<boost::uint16, image::MaskPixel> const& img,
+    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
                  Threshold const& threshold,
                  int x,
                  int y,
