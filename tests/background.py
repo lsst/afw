@@ -689,13 +689,16 @@ class BackgroundTestCase(unittest.TestCase):
         bgCtrl = afwMath.BackgroundControl(10, 10)
         interpStyle = afwMath.Interpolate.AKIMA_SPLINE
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+        approxStyle = afwMath.ApproximateControl.UNKNOWN
+        approxOrder = 0
 
         backgroundList = afwMath.BackgroundList()
         backImage = afwImage.ImageF(self.image.getDimensions())
         for i in range(2):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
             if i == 0:
-                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+                # no need to call getImage
+                backgroundList.append((bkgd, interpStyle, undersampleStyle, approxStyle, approxOrder))
             else:
                 backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
@@ -703,8 +706,8 @@ class BackgroundTestCase(unittest.TestCase):
             self.assertEqual(len(bgl), 2) # check that len() works
             for a in bgl:                 # check that we can iterate
                 pass
-            self.assertEqual(len(bgl[0]), 3) # check that we can index
-            self.assertEqual(len(bgl[1]), 3) # check that we always have a tuple (bkgd, interp, under)
+            self.assertEqual(len(bgl[0]), 5) # check that we can index
+            self.assertEqual(len(bgl[1]), 5) # check that we always have a tuple (bkgd, interp, under)
 
         assertBackgroundList(backgroundList)
 
@@ -728,13 +731,16 @@ class BackgroundTestCase(unittest.TestCase):
         bgCtrl = afwMath.BackgroundControl(10, 10)
         interpStyle = afwMath.Interpolate.AKIMA_SPLINE
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
+        approxStyle = afwMath.ApproximateControl.UNKNOWN
+        approxOrder = 0
 
         backgroundList = afwMath.BackgroundList()
         backImage = afwImage.ImageF(self.image.getDimensions())
         for i in range(2):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
             if i == 0:
-                backgroundList.append((bkgd, interpStyle, undersampleStyle,)) # no need to call getImage
+                # no need to call getImage
+                backgroundList.append((bkgd, interpStyle, undersampleStyle, approxStyle, approxOrder))
             else:
                 backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 

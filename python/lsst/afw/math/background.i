@@ -26,6 +26,7 @@
 %}
 
 %shared_ptr(lsst::afw::math::Background);
+//%shared_ptr(lsst::afw::math::ApproximateControl);
 %shared_ptr(lsst::afw::math::BackgroundMI);
 
 %include "lsst/afw/math/Background.h"
