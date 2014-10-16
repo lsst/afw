@@ -56,21 +56,16 @@ public:
     /// The FootprintSet's set of Footprint%s
     typedef std::vector<Footprint::Ptr> FootprintList;
 
+#ifndef SWIG
     template <typename ImagePixelT>
     FootprintSet(image::Image<ImagePixelT> const& img,
                  Threshold const& threshold,
                  int const npixMin=1, bool const setPeaks=true);
 
-#ifndef SWIG
     template <typename MaskPixelT>
     FootprintSet(image::Mask<MaskPixelT> const& img,
                  Threshold const& threshold,
                  int const npixMin=1);
-#else // SWIG can't disambiguate this from the Image version when doing %template.
-    FootprintSet(image::Mask<image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1);
-#endif
 
     template <typename ImagePixelT, typename MaskPixelT>
     FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
@@ -84,6 +79,70 @@ public:
                  int x,
                  int y,
                  std::vector<PTR(Peak)> const* peaks = NULL);
+
+#else // workaround for https://github.com/swig/swig/issues/245
+    // if that bug is fixed then you may update footprintset.i by uncommenting two lines
+    // and removing this section. However, you must continue to provide SWIG
+    // the alternate version of the template <typename MaskPixelT> constructor, because
+    // SWIG cannot disambiguate that from the template <typename ImagePixelT> constructor.
+
+    FootprintSet(image::Mask<image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1);
+
+    FootprintSet(image::Image<boost::uint16_t> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 std::string const& planeName = "",
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 int x,
+                 int y,
+                 std::vector<PTR(Peak)> const* peaks = NULL);
+
+    FootprintSet(image::Image<int> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<int, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 std::string const& planeName = "",
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<int, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 int x,
+                 int y,
+                 std::vector<PTR(Peak)> const* peaks = NULL);
+
+    FootprintSet(image::Image<float> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<float, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 std::string const& planeName = "",
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<float, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 int x,
+                 int y,
+                 std::vector<PTR(Peak)> const* peaks = NULL);
+
+    FootprintSet(image::Image<double> const& img,
+                 Threshold const& threshold,
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<double, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 std::string const& planeName = "",
+                 int const npixMin=1, bool const setPeaks=true);
+    FootprintSet(image::MaskedImage<double, image::MaskPixel> const& img,
+                 Threshold const& threshold,
+                 int x,
+                 int y,
+                 std::vector<PTR(Peak)> const* peaks = NULL);
+
+#endif
 
     FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
