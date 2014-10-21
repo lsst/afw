@@ -48,6 +48,22 @@ template <typename T>
 class PointKey : public FunctorKey< lsst::afw::geom::Point<T,2> > {
 public:
 
+    /**
+     *  Add a pair of _x, _y fields to a Schema, and return a PointKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_x", "_y", will be appended to this
+     *                         to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for all fields.
+     */
+    static PointKey addFields(
+        Schema & schema,
+        std::string const & name,
+        std::string const & doc,
+        std::string const & unit
+    );
+
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
     PointKey() : _x(), _y() {}
 
@@ -63,9 +79,9 @@ public:
     explicit PointKey(Key< Point<T> > const & other) : _x(other.getX()), _y(other.getY()) {}
 
     /**
-     *  @brief Construct from a subschema, assuming .x and .y subfields
+     *  @brief Construct from a subschema, assuming x and y subfields
      *
-     *  If a schema has "a.x" and "a.y" fields, this constructor allows you to construct
+     *  If a schema has "a_x" and "a_y" fields, this constructor allows you to construct
      *  a PointKey via:
      *  @code
      *  PointKey<T> k(schema["a"]);
@@ -102,11 +118,28 @@ private:
 typedef PointKey<int> Point2IKey;
 typedef PointKey<double> Point2DKey;
 
+
 /**
  *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from an (xx,yy,xy) tuple of Keys.
  */
 class QuadrupoleKey : public FunctorKey< lsst::afw::geom::ellipses::Quadrupole > {
 public:
+
+    /**
+     *  Add a set of _xx, _yy, _xy fields to a Schema, and return a QuadrupoleKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_xx", "_yy", "_xy", will be appended to this
+     *                         to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for all fields.
+     */
+    static QuadrupoleKey addFields(
+        Schema & schema,
+        std::string const & name,
+        std::string const & doc,
+        std::string const & unit
+    );
 
     /// Default constructor; instance will not be usuable unless subsequently assigned to.
     QuadrupoleKey() : _ixx(), _iyy(), _ixy() {}
@@ -119,7 +152,7 @@ public:
     /**
      *  Construct from a compound Key<Moments<double>>
      *
-     *  Key<Moments> is now deprecated in favor of PointKey; this constructor is intended to
+     *  Key<Moments> is now deprecated in favor of QuadrupoleKey; this constructor is intended to
      *  aid in the transition.
      */
     explicit QuadrupoleKey(Key< Moments<double> > const & other) :
@@ -127,9 +160,9 @@ public:
     {}
 
     /**
-     *  @brief Construct from a subschema, assuming .xx, .yy, and .xy subfields
+     *  @brief Construct from a subschema, assuming xx, yy, and xy subfields
      *
-     *  If a schema has "a.xx", "a.yy", and "a.xy" fields, this constructor allows you to construct
+     *  If a schema has "a_xx", "a_yy", and "a_xy" fields, this constructor allows you to construct
      *  a QuadrupoleKey via:
      *  @code
      *  QuadrupoleKey k(schema["a"]);
@@ -166,6 +199,78 @@ private:
     Key<double> _iyy;
     Key<double> _ixy;
 };
+
+
+/**
+ *  @brief A FunctorKey used to get or set a geom::ellipses::Ellipse from an (xx,yy,xy,x,y) tuple of Keys.
+ */
+class EllipseKey : public FunctorKey< lsst::afw::geom::ellipses::Ellipse > {
+public:
+
+    /**
+     *  Add a set of _xx, _yy, _xy, _x, _y fields to a Schema, and return an EllipseKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_xx", "_yy", "_xy", "_x" ,"_y", will be
+     *                         appended to this to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     *  @param[in]     unit    String used as the unit for x and y fields; "<unit>^2" will be used for
+     *                         xx, yy, and xy fields.
+     */
+    static EllipseKey addFields(
+        Schema & schema,
+        std::string const & name,
+        std::string const & doc,
+        std::string const & unit
+    );
+
+    /// Default constructor; instance will not be usuable unless subsequently assigned to.
+    EllipseKey() : _qKey(), _pKey() {}
+
+    /// Construct from individual Keys
+    EllipseKey(QuadrupoleKey const & qKey, PointKey<double> const & pKey) :
+        _qKey(qKey), _pKey(pKey)
+    {}
+
+    /**
+     *  @brief Construct from a subschema, assuming (xx, yy, xy, x, y) subfields
+     *
+     *  If a schema has "a_xx", "a_yy", "a_xy", "a_x", and "a_y" fields, this constructor allows you to
+     *  construct an EllipseKey via:
+     *  @code
+     *  EllipseKey k(schema["a"]);
+     *  @endcode
+     */
+    EllipseKey(SubSchema const & s) : _qKey(s), _pKey(s) {}
+
+    /// Get an Ellipse from the given record
+    virtual geom::ellipses::Ellipse get(BaseRecord const & record) const;
+
+    /// Set an Ellipse in the given record
+    virtual void set(BaseRecord & record, geom::ellipses::Ellipse const & value) const;
+
+    //@{
+    /// Compare the FunctorKey for equality with another, using the underlying Ixx, Iyy, Ixy Keys
+    bool operator==(EllipseKey const & other) const {
+        return _qKey == other._qKey && _pKey == other._pKey;
+    }
+    bool operator!=(EllipseKey const & other) const { return !(*this == other); }
+    //@}
+
+    /// Return True if all the constituent Keys are valid.
+    bool isValid() const { return _qKey.isValid() && _pKey.isValid(); }
+
+    //@{
+    /// Return constituent FunctorKeys
+    QuadrupoleKey getCore() const { return _qKey; }
+    PointKey<double> getCenter() const { return _pKey; }
+    //@}
+
+private:
+    QuadrupoleKey _qKey;
+    PointKey<double> _pKey;
+};
+
 
 template <typename T, int N>
 class CovarianceMatrixKey : public FunctorKey< Eigen::Matrix<T,N,N> > {

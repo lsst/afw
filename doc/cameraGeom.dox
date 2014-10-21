@@ -23,6 +23,41 @@ Data for constructing a \ref camera.Camera "Camera" comes from the appropriate o
 obs_ package. For example obs_lsstSim contains data for the LSST camera simulator, obs_sdss contains
 data for the SDSS imager, and obs_subaru contains data for both Suprime-Cam and Hyper Suprime-Cam (HSC).
 
+\section afwCameraGeomUtils Camera Geometry Utilities
+
+There are a few utilities available for visualizing and debugging \ref camera.Camera objects.  Examples of
+available utility methods are: display a particular amp, display an assembled sensor, display a
+the full camera modaic, plot the sensor boundaries with a grid of test points in
+\ref afwCameraGeomFOCAL_PLANE "FOCAL_PLANE" coordinates.  An example of how to use the utilities
+to visualize a camera is available in the obs_lsstSim package as $OBS_LSSTSIM_DIR/bin/displayCamera.py.
+Following is the help from displayCamera.py:
+\verbatim
+usage: displayCamera.py [-h] [--showAmp SHOWAMP [SHOWAMP ...]]
+                        [--showCcd SHOWCCD [SHOWCCD ...]]
+                        [--showRaft SHOWRAFT [SHOWRAFT ...]] [--showCamera]
+                        [--cameraBinSize CAMERABINSIZE] [--plotFocalPlane]
+
+Display the lsstSim camera
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --showAmp SHOWAMP [SHOWAMP ...]
+                        Show an amplifier segment in ds9 May occur multiple
+                        times. Format like R:Rx,Ry S:Sx,Sy A:Ax,Ay e.g. "R:2,2
+                        S:1,1 A:0,0"
+  --showCcd SHOWCCD [SHOWCCD ...]
+                        Show a CCD from the mosaic in ds9. May occur multiple
+                        times. Format like R:Rx,Ry S:Sx,Sy e.g. "R:2,2 S:1,1"
+  --showRaft SHOWRAFT [SHOWRAFT ...]
+                        Show a Raft from the mosaic in ds9. May occur multiple
+                        times. Format like R:Rx,Ry e.g. "R:2,2"
+  --showCamera          Show the camera mosaic in ds9.
+  --cameraBinSize CAMERABINSIZE
+                        Size of binning when displaying the full camera mosaic
+  --plotFocalPlane      Plot the focalplane in an interactive matplotlib
+                        window
+\endverbatim
+
 \section afwCameraGeomCoordSys Camera Coordinate Systems
 
 The cameraGeom package supports the following camera-based 2-dimensional coordinate systems, and it is

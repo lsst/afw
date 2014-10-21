@@ -804,7 +804,7 @@ void Footprint::intersectMask(
     lsst::afw::image::Mask<MaskT> const & mask,
     MaskT const bitmask
 ) {
-    geom::Box2I maskBBox = mask.getBBox(image::PARENT);
+    geom::Box2I maskBBox = mask.getBBox();
 
     //this operation makes no sense on non-normalized footprints.
     //make sure this is normalized
@@ -1401,7 +1401,7 @@ void nearestFootprint(std::vector<PTR(Footprint)> const& foots,
 
     const itype nil = 0xffff;
 
-    const geom::Box2I bbox = argmin->getBBox(image::PARENT);
+    const geom::Box2I bbox = argmin->getBBox();
     *argmin = 0;
     *dist = 0;
 

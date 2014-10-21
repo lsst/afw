@@ -419,10 +419,10 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
     return makeApproximate(_xcen, _ycen, _statsImage, _imgBBox, actrl);
 }
 
+/// \cond
 /*
  * Create the versions we need of _get{Approximate,Image} and Explicit instantiations
  *
- * \cond
  */
 #define CREATE_BACKGROUND(m, v, TYPE)                              \
     template BackgroundMI::BackgroundMI(image::Image<TYPE> const& img, \

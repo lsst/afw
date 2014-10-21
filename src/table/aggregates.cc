@@ -30,6 +30,18 @@ namespace lsst { namespace afw { namespace table {
 //============ PointKey =====================================================================================
 
 template <typename T>
+PointKey<T> PointKey<T>::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit
+) {
+    Key<T> xKey = schema.addField<T>(schema.join(name, "x"), doc, unit);
+    Key<T> yKey = schema.addField<T>(schema.join(name, "y"), doc, unit);
+    return PointKey<T>(xKey, yKey);
+}
+
+template <typename T>
 geom::Point<T,2> PointKey<T>::get(BaseRecord const & record) const {
     return geom::Point<T,2>(record.get(_x), record.get(_y));
 }
@@ -45,6 +57,18 @@ template class PointKey<double>;
 
 //============ QuadrupoleKey ================================================================================
 
+QuadrupoleKey QuadrupoleKey::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit
+) {
+    Key<double> xxKey = schema.addField<double>(schema.join(name, "xx"), doc, unit);
+    Key<double> yyKey = schema.addField<double>(schema.join(name, "yy"), doc, unit);
+    Key<double> xyKey = schema.addField<double>(schema.join(name, "xy"), doc, unit);
+    return QuadrupoleKey(xxKey, yyKey, xyKey);
+}
+
 geom::ellipses::Quadrupole QuadrupoleKey::get(BaseRecord const & record) const {
     return geom::ellipses::Quadrupole(record.get(_ixx), record.get(_iyy), record.get(_ixy));
 }
@@ -53,6 +77,28 @@ void QuadrupoleKey::set(BaseRecord & record, geom::ellipses::Quadrupole const & 
     record.set(_ixx, value.getIxx());
     record.set(_iyy, value.getIyy());
     record.set(_ixy, value.getIxy());
+}
+
+//============ EllipseKey ================================================================================
+
+EllipseKey EllipseKey::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc,
+    std::string const & unit
+) {
+    QuadrupoleKey qKey = QuadrupoleKey::addFields(schema, name, doc, unit + "^2");
+    PointKey<double> pKey = PointKey<double>::addFields(schema, name, doc, unit);
+    return EllipseKey(qKey, pKey);
+}
+
+geom::ellipses::Ellipse EllipseKey::get(BaseRecord const & record) const {
+    return geom::ellipses::Ellipse(record.get(_qKey), record.get(_pKey));
+}
+
+void EllipseKey::set(BaseRecord & record, geom::ellipses::Ellipse const & value) const {
+    _qKey.set(record, value.getCore());
+    _pKey.set(record, value.getCenter());
 }
 
 //============ CovarianceMatrixKey ==========================================================================

@@ -197,7 +197,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             LSST_EXCEPT_ADD(e, "Reading Mask");
             throw e;
         }
-        _mask.reset(new Mask(_image->getBBox(PARENT)));
+        _mask.reset(new Mask(_image->getBBox()));
     }
 
     try {
@@ -210,7 +210,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
             LSST_EXCEPT_ADD(e, "Reading Variance");
             throw e;
         }
-        _variance.reset(new Variance(_image->getBBox(PARENT)));
+        _variance.reset(new Variance(_image->getBBox()));
     }
 }
 
@@ -600,7 +600,7 @@ template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes() {
 
     if (!_mask || _mask->getWidth() == 0 || _mask->getHeight() == 0) {
-        _mask = MaskPtr(new Mask(_image->getBBox(PARENT)));
+        _mask = MaskPtr(new Mask(_image->getBBox()));
         *_mask = 0;
     } else {
         if (_mask->getDimensions() != _image->getDimensions()) {
@@ -615,7 +615,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
     }
 
     if (!_variance || _variance->getWidth() == 0 || _variance->getHeight() == 0) {
-        _variance = VariancePtr(new Variance(_image->getBBox(PARENT)));
+        _variance = VariancePtr(new Variance(_image->getBBox()));
         *_variance = 0;
     } else {
         if (_variance->getDimensions() != _image->getDimensions()) {

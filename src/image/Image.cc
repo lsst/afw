@@ -139,7 +139,7 @@ image::ImageBase<PixelT>::ImageBase(
     _gilView(rhs._gilView)
 {
     if (deep) {
-        ImageBase tmp(getBBox(PARENT));
+        ImageBase tmp(getBBox());
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }
@@ -166,9 +166,8 @@ image::ImageBase<PixelT>::ImageBase(
     _manager(rhs._manager), // reference counted pointer, don't copy pixels
     _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
 {
-    
     if (deep) {
-        ImageBase tmp(getBBox(PARENT));        
+        ImageBase tmp(getBBox());        
         tmp <<= *this;                  // now copy the pixels
         swap(tmp);
     }

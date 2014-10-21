@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2008-2014 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +10,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -47,6 +46,8 @@ import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
 
+numpy.random.seed(1)
+
 try:
     type(display)
 except NameError:
@@ -66,7 +67,7 @@ def makeWcs():
     crpix = lsst.afw.geom.Point2D(2036., 2000.)
     return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
 
-class SourceTableTestCase(unittest.TestCase):
+class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def fillRecord(self, record):
         record.set(self.fluxKey, numpy.random.randn())
@@ -106,16 +107,15 @@ class SourceTableTestCase(unittest.TestCase):
         del self.catalog
 
     def checkCanonical(self):
-        
         self.assertEqual(self.table.getPsfFluxDefinition(), "a")
         self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
         self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
-        self.assert_(numpy.all(self.record.get(self.centroidErrKey) == self.record.getCentroidErr()))
+        self.assertClose(self.record.get(self.centroidErrKey), self.record.getCentroidErr())
         self.assertEqual(self.table.getShapeDefinition(), "c")
         self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
-        self.assert_(numpy.all(self.record.get(self.shapeErrKey) == self.record.getShapeErr()))
+        self.assertClose(self.record.get(self.shapeErrKey), self.record.getShapeErr())
 
     def testPersisted(self):
         self.table.definePsfFlux("a")
@@ -125,7 +125,8 @@ class SourceTableTestCase(unittest.TestCase):
         catalog = lsst.afw.table.SourceCatalog.readFits("test.fits")
         table = catalog.getTable()
         record = catalog[0]
-        # I'm using the keys from the non-persisted table.  They should work at least in the current implementation
+        # I'm using the keys from the non-persisted table.  They should work at least in the
+        # current implementation
         self.assertEqual(table.getPsfFluxDefinition(), "a")
         self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
         self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
@@ -154,7 +155,6 @@ class SourceTableTestCase(unittest.TestCase):
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertTrue(r1[k1] == r2[k2])
-
 
     def testCoordUpdate(self):
         wcs = makeWcs()
@@ -361,6 +361,38 @@ class SourceTableTestCase(unittest.TestCase):
             for child, id in zip(children, ids):
                 self.assertEqual(child.getParent(), parent.getId())
                 self.assertEqual(child.getId(), id)
+
+    def testFitsReadBackwardsCompatibility(self):
+        cat = lsst.afw.table.SourceCatalog.readFits("tests/data/slotsVersion0.fits")
+        self.assertTrue(cat.getPsfFluxSlot().isValid())
+        self.assertTrue(cat.getApFluxSlot().isValid())
+        self.assertTrue(cat.getInstFluxSlot().isValid())
+        self.assertTrue(cat.getModelFluxSlot().isValid())
+        self.assertTrue(cat.getCentroidSlot().isValid())
+        self.assertTrue(cat.getShapeSlot().isValid())
+        self.assertEqual(cat.getPsfFluxSlot().getMeasKey(), cat.schema.find("flux").key)
+        self.assertEqual(cat.getApFluxSlot().getMeasKey(), cat.schema.find("flux").key)
+        self.assertEqual(cat.getInstFluxSlot().getMeasKey(), cat.schema.find("flux").key)
+        self.assertEqual(cat.getModelFluxSlot().getMeasKey(), cat.schema.find("flux").key)
+        self.assertEqual(cat.getCentroidSlot().getMeasKey().getX(), cat.schema.find("centroid.x").key)
+        self.assertEqual(cat.getCentroidSlot().getMeasKey().getY(), cat.schema.find("centroid.y").key)
+        self.assertEqual(cat.getShapeSlot().getMeasKey().getIxx(), cat.schema.find("shape.xx").key)
+        self.assertEqual(cat.getShapeSlot().getMeasKey().getIyy(), cat.schema.find("shape.yy").key)
+        self.assertEqual(cat.getShapeSlot().getMeasKey().getIxy(), cat.schema.find("shape.xy").key)
+        self.assertEqual(cat.getPsfFluxSlot().getErrKey(), cat.schema.find("flux.err").key)
+        self.assertEqual(cat.getApFluxSlot().getErrKey(), cat.schema.find("flux.err").key)
+        self.assertEqual(cat.getInstFluxSlot().getErrKey(), cat.schema.find("flux.err").key)
+        self.assertEqual(cat.getModelFluxSlot().getErrKey(), cat.schema.find("flux.err").key)
+        self.assertEqual(cat.getCentroidSlot().getErrKey(),
+                         lsst.afw.table.makeCovarianceMatrixKey(cat.schema.find("centroid.err").key))
+        self.assertEqual(cat.getShapeSlot().getErrKey(),
+                         lsst.afw.table.makeCovarianceMatrixKey(cat.schema.find("shape.err").key))
+        self.assertEqual(cat.getPsfFluxSlot().getFlagKey(), cat.schema.find("flux.flags").key)
+        self.assertEqual(cat.getApFluxSlot().getFlagKey(), cat.schema.find("flux.flags").key)
+        self.assertEqual(cat.getInstFluxSlot().getFlagKey(), cat.schema.find("flux.flags").key)
+        self.assertEqual(cat.getModelFluxSlot().getFlagKey(), cat.schema.find("flux.flags").key)
+        self.assertEqual(cat.getCentroidSlot().getFlagKey(), cat.schema.find("centroid.flags").key)
+        self.assertEqual(cat.getShapeSlot().getFlagKey(), cat.schema.find("shape.flags").key)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

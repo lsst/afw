@@ -51,6 +51,8 @@ import lsst.afw.geom
 import lsst.afw.coord
 import lsst.afw.fits
 
+numpy.random.seed(1)
+
 try:
     type(display)
 except NameError:
@@ -564,11 +566,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
                                              schema.addField, "f1", doc="f1b", type="F")
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
                                              schema.addField, "f2", doc="f2b", type="F")
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
+        self.assertRaises(lsst.pex.exceptions.TypeError,
                                              schema.addField, "f1", doc="f1b", type="F", doReplace=True)
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
+        self.assertRaises(lsst.pex.exceptions.TypeError,
                                              schema.addField, "f2", doc="f2b", type="F", doReplace=True)
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
+        self.assertRaises(lsst.pex.exceptions.TypeError,
                                              schema.addField, "f3", doc="f3b", type="ArrayF",
                                              size=3, doReplace=True)
         k1b = schema.addField("f1", doc="f1b", type="I", doReplace=True)

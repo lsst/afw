@@ -110,7 +110,7 @@ class ApproximateTestCase(unittest.TestCase):
                     for x in xVec:
                         for y in yVec:
                             ds9.dot('+', x, y, size=0.4, frame=1)
-                
+            
             for x, y in aim.getBBox().getCorners():
                 self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
@@ -120,6 +120,20 @@ class ApproximateTestCase(unittest.TestCase):
         self.assertRaises(pexExcept.InvalidParameterError,
                                        lambda : 
                                        afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, 1, 2))
+
+    def testNoFinitePoints(self):
+        """Check that makeApproximate throws a RuntimeError if grid has no finite points and weights to fit
+        """
+        binsize = 1
+        for badValue in [(3, 0x1, 0), (np.nan, 0x1, 1)]:
+            ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
+            ramp.set(badValue)
+            bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth()  - 1,
+                                                                     binsize*ramp.getHeight() - 1))
+            order = 2
+            actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
+            self.assertRaises(pexExcept.RuntimeError,
+                              lambda : afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl))
 
     def testLinearRampAsBackground(self):
         """Fit a ramp"""

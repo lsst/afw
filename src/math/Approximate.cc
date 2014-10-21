@@ -181,6 +181,10 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
             }
         }
     }
+    if (A.isZero()) {
+        throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                          "No valid points to fit. Variance is likely zero. Try weighting=False");
+    }
     // We only filled out the lower triangular part of A
     for (int j = 0; j != nTerm; ++j) {
         for (int i = j + 1; i != nTerm; ++i) {
@@ -297,10 +301,10 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
                           str(boost::format("Unknown ApproximationStyle: %d") % ctrl.getStyle()));
     }
 }
+/// \cond
 /*
  * Explicit instantiations
  *
- * \cond
  */
 #define INSTANTIATE(PIXEL_T)                                          \
     template                                                          \
@@ -313,6 +317,6 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
 INSTANTIATE(float);
 //INSTANTIATE(int);
 
-// \endcond
+/// \endcond
 
 }}}

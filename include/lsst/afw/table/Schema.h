@@ -65,6 +65,19 @@ public:
         IDENTICAL          =0x0F  ///< Everything is the same.
     };
 
+    //@{
+    /// Join strings using the field delimiter appropriate for this Schema's version
+    std::string join(std::string const & a, std::string const & b) const;
+    std::string join(std::string const & a, std::string const & b, std::string const & c) const {
+        return join(join(a, b), c);
+    }
+    std::string join(
+        std::string const & a, std::string const & b, std::string const & c, std::string const & d
+    ) const {
+        return join(join(a, b), join(c, d));
+    }
+    //@}
+
     /**
      *  @brief Find a SchemaItem in the Schema by name.
      *
@@ -383,7 +396,7 @@ public:
      *  wrappers provide an equivalent asKey() method.
      */
     template <typename T>
-    operator Key<T>() const { return _impl->find<T>(_name).key; }
+    operator Key<T>() const { return _impl->find<T>(_aliases->apply(_name)).key; }
 
     /**
      *  @brief Implicit conversion to the appropriate Key type.
@@ -392,7 +405,7 @@ public:
      *  wrappers provide an equivalent asField() method.
      */
     template <typename T>
-    operator Field<T>() const { return _impl->find<T>(_name).field; }
+    operator Field<T>() const { return _impl->find<T>(_aliases->apply(_name)).field; }
 
 private:
 

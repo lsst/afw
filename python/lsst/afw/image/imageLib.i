@@ -214,13 +214,13 @@ namespace boost {
         """
         __getitem__(self, imageSlice) -> NAME""" + """PIXEL_TYPES
         """
-        return self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
+        return self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice), LOCAL)
 
     def __setitem__(self, imageSlice, rhs):
         """
         __setitem__(self, imageSlice, value)
         """
-        lhs = self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice))
+        lhs = self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice), LOCAL)
         try:
             lhs <<= rhs
         except TypeError:

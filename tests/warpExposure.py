@@ -128,7 +128,7 @@ class WarpExposureTestCase(unittest.TestCase):
         originalExposure.setFilter(originalFilter)
         originalExposure.setCalib(originalCalib)
         afwWarpedExposure = afwImage.ExposureF(
-            originalExposure.getBBox(afwImage.PARENT),
+            originalExposure.getBBox(),
             originalExposure.getWcs())
         warpingControl = afwMath.WarpingControl("lanczos4", "", 0, interpLength)
         afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl)
@@ -499,11 +499,6 @@ class WarpExposureTestCase(unittest.TestCase):
             doImage=True, doMask=True, doVariance=True,
             rtol=rtol, atol=atol)
         if errStr:
-            if SAVE_FAILED_FITS_FILES:
-                computedExposure.writeFits(computedExposurePath)
-                expectedExposure.writeFits(expectedExposurePath)
-                print "Saved failed afw-warped exposures as: %s and %s" % \
-                    (computedExposurePath, expectedExposure)
             self.fail("Separate mask warping failed; warpingKernel=%s; maskWarpingKernel=%s; error=%s" % \
                 (kernelName, maskKernelName, errStr))
 

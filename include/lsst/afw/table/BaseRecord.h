@@ -150,9 +150,19 @@ public:
     /**
      *  @brief Set a calculated or aggregate field.
      */
-    template <typename T>
-    void set(InputFunctorKey<T> const & key, T const & value) {
+    template <typename T, typename U>
+    void set(InputFunctorKey<T> const & key, U const & value) {
         return key.set(*this, value);
+    }
+
+    template <typename Ref>
+    Ref operator[](ReferenceFunctorKey<Ref> const & key) {
+        return key.getReference(*this);
+    }
+
+    template <typename ConstRef>
+    ConstRef operator[](ConstReferenceFunctorKey<ConstRef> const & key) const {
+        return key.getConstReference(*this);
     }
 
 #endif // !SWIG
@@ -162,6 +172,8 @@ public:
 
     /// @brief Copy field values from other to this, using a mapper.
     void assign(BaseRecord const & other, SchemaMapper const & mapper);
+
+    ndarray::Manager::Ptr getManager() const { return _manager; }
 
     virtual ~BaseRecord() { _table->_destroy(*this); }
 

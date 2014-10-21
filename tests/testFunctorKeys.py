@@ -67,17 +67,22 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
         schema = lsst.afw.table.Schema();
         schema.setVersion(0)
-        xKey = schema.addField("a.x", type=fieldType, doc="x")
-        yKey = schema.addField("a.y", type=fieldType, doc="y")
+        fKey0 = functorKeyType.addFields(schema, "a", "x or y", "pixels")
+        xKey = schema.find("a.x").key
+        yKey = schema.find("a.y").key
         # we create two equivalent functor keys, using the two different constructors
         fKey1 = functorKeyType(xKey, yKey)
         fKey2 = functorKeyType(schema["a"])
         # test that they're equivalent, and that their constituent keys are what we expect
+        self.assertEqual(fKey0.getX(), xKey)
+        self.assertEqual(fKey0.getY(), yKey)
         self.assertEqual(fKey1.getX(), xKey)
         self.assertEqual(fKey2.getX(), xKey)
         self.assertEqual(fKey1.getY(), yKey)
         self.assertEqual(fKey2.getY(), yKey)
+        self.assertEqual(fKey0, fKey1)
         self.assertEqual(fKey1, fKey2)
+        self.assertTrue(fKey0.isValid())
         self.assertTrue(fKey1.isValid())
         self.assertTrue(fKey2.isValid())
         # check that a default-constructed functor key is invalid
@@ -106,20 +111,26 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema();
         schema.setVersion(0)
-        xxKey = schema.addField("a.xx", type=float, doc="xx")
-        yyKey = schema.addField("a.yy", type=float, doc="yy")
-        xyKey = schema.addField("a.xy", type=float, doc="xy")
+        fKey0 = lsst.afw.table.QuadrupoleKey.addFields(schema, "a", "moments", "pixels^2")
+        xxKey = schema.find("a.xx").key
+        yyKey = schema.find("a.yy").key
+        xyKey = schema.find("a.xy").key
         # we create two equivalent functor keys, using the two different constructors
         fKey1 = lsst.afw.table.QuadrupoleKey(xxKey, yyKey, xyKey)
         fKey2 = lsst.afw.table.QuadrupoleKey(schema["a"])
-        # test that they're equivalent, and that their constituent keys are what we expect
+        # test that they're equivalent, and tha=t their constituent keys are what we expect
+        self.assertEqual(fKey0.getIxx(), xxKey)
         self.assertEqual(fKey1.getIxx(), xxKey)
         self.assertEqual(fKey2.getIxx(), xxKey)
+        self.assertEqual(fKey0.getIyy(), yyKey)
         self.assertEqual(fKey1.getIyy(), yyKey)
         self.assertEqual(fKey2.getIyy(), yyKey)
+        self.assertEqual(fKey0.getIxy(), xyKey)
         self.assertEqual(fKey1.getIxy(), xyKey)
         self.assertEqual(fKey2.getIxy(), xyKey)
+        self.assertEqual(fKey0, fKey1)
         self.assertEqual(fKey1, fKey2)
+        self.assertTrue(fKey0.isValid())
         self.assertTrue(fKey1.isValid())
         self.assertTrue(fKey2.isValid())
         # check that a default-constructed functor key is invalid
@@ -143,6 +154,53 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(xxKey), p.getIxx())
         self.assertEqual(record.get(yyKey), p.getIyy())
         self.assertEqual(record.get(xyKey), p.getIxy())
+
+    def testEllipseKey(self):
+        schema = lsst.afw.table.Schema();
+        schema.setVersion(1)
+        fKey0 = lsst.afw.table.EllipseKey.addFields(schema, "a", "ellipse", "pixels")
+        qKey = lsst.afw.table.QuadrupoleKey(schema["a"])
+        pKey = lsst.afw.table.Point2DKey(schema["a"])
+        # we create two more equivalent functor keys, using the two different constructors
+        fKey1 = lsst.afw.table.EllipseKey(qKey, pKey)
+        fKey2 = lsst.afw.table.EllipseKey(schema["a"])
+        # test that they're equivalent, and tha=t their constituent keys are what we expect
+        self.assertEqual(fKey0.getCore(), qKey)
+        self.assertEqual(fKey1.getCore(), qKey)
+        self.assertEqual(fKey2.getCore(), qKey)
+        self.assertEqual(fKey0.getCenter(), pKey)
+        self.assertEqual(fKey1.getCenter(), pKey)
+        self.assertEqual(fKey2.getCenter(), pKey)
+        self.assertEqual(fKey0, fKey1)
+        self.assertEqual(fKey1, fKey2)
+        self.assertTrue(fKey0.isValid())
+        self.assertTrue(fKey1.isValid())
+        self.assertTrue(fKey2.isValid())
+        # check that a default-constructed functor key is invalid
+        fKey3 = lsst.afw.table.EllipseKey()
+        self.assertNotEqual(fKey3, fKey1)
+        self.assertFalse(fKey3.isValid())
+        # create a record from the test schema, and fill it using the constituent keys
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        record.set(qKey, lsst.afw.geom.ellipses.Quadrupole(4,3,1))
+        record.set(pKey, lsst.afw.geom.Point2D(5,6))
+        # test that the return type and value is correct
+        self.assertIsInstance(record.get(fKey1), lsst.afw.geom.ellipses.Ellipse)
+        self.assertClose(record.get(fKey1).getCore().getIxx(), record.get(qKey).getIxx(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIyy(), record.get(qKey).getIyy(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIxy(), record.get(qKey).getIxy(), rtol=1E-14)
+        self.assertEqual(record.get(fKey1).getCenter().getX(), record.get(pKey).getX())
+        self.assertEqual(record.get(fKey1).getCenter().getX(), record.get(pKey).getX())
+        # test that we can set using the functor key
+        e = lsst.afw.geom.ellipses.Ellipse(lsst.afw.geom.ellipses.Quadrupole(8, 16, 4),
+                                           lsst.afw.geom.Point2D(5,6))
+        record.set(fKey1, e)
+        self.assertClose(record.get(fKey1).getCore().getIxx(), e.getCore().getIxx(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIyy(), e.getCore().getIyy(), rtol=1E-14)
+        self.assertClose(record.get(fKey1).getCore().getIxy(), e.getCore().getIxy(), rtol=1E-14)
+        self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
+        self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
 
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
@@ -223,6 +281,61 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                 for varianceOnly in (True, False):
                     for dynamicSize in (True, False):
                         self.doTestCovarianceMatrixKey(fieldType, parameterNames, varianceOnly, dynamicSize)
+
+    def doTestArrayKey(self, fieldType, numpyType):
+        FunctorKeyType = getattr(lsst.afw.table, "Array%sKey" % fieldType)
+        self.assertFalse(FunctorKeyType().isValid())
+        schema = lsst.afw.table.Schema()
+        a0 = schema.addField("a_0", type=fieldType, doc="valid array element")
+        a1 = schema.addField("a_1", type=fieldType, doc="valid array element")
+        a2 = schema.addField("a_2", type=fieldType, doc="valid array element")
+        b0 = schema.addField("b_0", type=fieldType, doc="invalid out-of-order array element")
+        b2 = schema.addField("b_2", type=fieldType, doc="invalid out-of-order array element")
+        b1 = schema.addField("b_1", type=fieldType, doc="invalid out-of-order array element")
+        c = schema.addField("c", type="Array%s" % fieldType, doc="old-style array", size=4)
+        k1 = FunctorKeyType([a0, a1, a2])  # construct from a vector of keys
+        k2 = FunctorKeyType(schema["a"])   # construct from SubSchema
+        k3 = FunctorKeyType(c)             # construct from old-style Key<Array<T>>
+        k4 = FunctorKeyType.addFields(schema, "d", "doc for d", "camels", 4)
+        k5 = FunctorKeyType.addFields(schema, "e", "doc for e %3.1f", "camels", [2.1, 2.2])
+        self.assertTrue(k1.isValid())
+        self.assertTrue(k2.isValid())
+        self.assertTrue(k3.isValid())
+        self.assertTrue(k4.isValid())
+        self.assertTrue(k5.isValid())
+        self.assertEqual(k1, k2)      # k1 and k2 point to the same underlying fields
+        self.assertEqual(k1[2], a2)   # test that we can extract an element
+        self.assertEqual(k1[1:3], FunctorKeyType([a1, a2]))  # test that we can slice ArrayKeys
+        self.assertEqual(k1.getSize(), 3)
+        self.assertEqual(k2.getSize(), 3)
+        self.assertEqual(k3.getSize(), 4)
+        self.assertEqual(k4.getSize(), 4)
+        self.assertEqual(k5.getSize(), 2)
+        self.assertNotEqual(k1, k3)   # none of these point to the same underlying fields;
+        self.assertNotEqual(k1, k4)   # they should all be unequal
+        self.assertNotEqual(k1, k5)
+        self.assertEqual(schema.find(k5[0]).field.getDoc(), "doc for e 2.1")  # test that the fields we added
+        self.assertEqual(schema.find(k5[1]).field.getDoc(), "doc for e 2.2")  # got the right docs
+        self.assertRaises(IndexError, lambda k: k[1:3:2], k1)  # test that invalid slices raise exceptions
+        # test that trying to construct from a SubSchema with badly ordered fields doesn't work
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, FunctorKeyType, schema["b"])
+        # test that trying to construct from a list of keys that are not ordered doesn't work
+        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, FunctorKeyType, [b0, b1, b2])
+        self.assertEqual(k4, FunctorKeyType(schema["d"]))
+        self.assertEqual(k5, FunctorKeyType(schema["e"]))
+        # finally, we create a record, fill it with random data, and verify that get/set/__getitem__ work
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        array = numpy.random.randn(3).astype(numpyType)
+        record.set(k1, array)
+        self.assertClose(record.get(k1), array)
+        self.assertClose(record.get(k2), array)
+        self.assertClose(record[k1], array)
+        self.assertEqual(record.get(k1).dtype, numpy.dtype(numpyType))
+
+    def testArrayKey(self):
+        self.doTestArrayKey("F", numpy.float32)
+        self.doTestArrayKey("D", numpy.float64)
 
     def testCompoundKeyConverters(self):
         """Test that FunctorKeys that convert from old-style compound Keys work
