@@ -136,7 +136,9 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
 
 def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=10, markValue=0,
                      scaleGain = lambda gain: (gain*1000)//10):
-    """Make an image from an amp object
+    """Make an image from an amp object.  Since images are integer images by default, the gain needs
+    to be scaled to give enough dynamic range to see variation from amp to amp.  The scaling algorithm
+    is assignable.
     @param[in] amp: Amp record to use for constructing the raw amp image
     @param[in] imValue: Value to assign to the constructed image scaleGain(gain) is used if not set
     @param[in] imageFactory: Type of image to construct
@@ -484,7 +486,10 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, detectorNameList=None,
                 binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
                 textSize=1.25, originAtCenter=True, **kwargs):
-    """Show a Camera on ds9 (with the specified frame); if overlay show the IDs and detector boundaries
+    """Show a Camera on ds9 (with the specified frame).  The rotation of the sensors is snapped to the nearest
+    multiple of 90 deg.  Also note that the pixel size is constant over the image array.  The LLC of each
+    sensor amp is snapped to the LLC of the pixel containing the LLC of the image.; 
+    if overlay show the IDs and detector boundaries
     @param[in] Camera: Camera to show
     @param[in] ImageSource: Source to get Ccd images from.  Must have a getCcdImage method.
     @param[in] ImageFactory: Type of image to make
