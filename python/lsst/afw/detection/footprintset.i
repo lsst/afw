@@ -12,8 +12,10 @@
 %include "lsst/afw/detection/FootprintSet.h"
 
 %define %footprintSetOperations(PIXEL)
-%template(FootprintSet) FootprintSet<PIXEL>;
-%template(FootprintSet) FootprintSet<PIXEL,lsst::afw::image::MaskPixel>;
+// uncomment the following two lines and update FootprintSet.h accordingly
+// once https://github.com/swig/swig/issues/245 is fixed
+// %template(FootprintSet) FootprintSet<PIXEL>;
+// %template(FootprintSet) FootprintSet<PIXEL,lsst::afw::image::MaskPixel>;
 %template(makeHeavy) makeHeavy<PIXEL,lsst::afw::image::MaskPixel>;
 %template(setMask) setMask<lsst::afw::image::MaskPixel>;
 %enddef
