@@ -1,5 +1,5 @@
-#if !defined(ANGLE_H)
-#define ANGLE_H
+#if !defined(LSST_AFW_GEOM_ANGLE_H)
+#define LSST_AFW_GEOM_ANGLE_H
 
 #include <limits>
 #include <iostream>
