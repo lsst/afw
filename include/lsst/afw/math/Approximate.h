@@ -56,14 +56,17 @@ public:
     ApproximateControl(Style style, int orderX, int orderY=-1);
     /// Return the Style
     Style getStyle() const { return _style; }
+    void setStyle(Style const style) { _style = style; }
     /// Return the order of approximation to use in the x-direction
     int getOrderX() const { return _orderX; }
+    void setOrderX(int const orderX) { _orderX = orderX; }
     /// Return the order of approximation to use in the y-direction
     int getOrderY() const { return _orderY; }
+    void setOrderY(int const orderY) { _orderY = orderY; }
 private:
-    Style const _style;
-    int const _orderX;
-    int const _orderY;
+    Style _style;
+    int _orderX;
+    int _orderY;
 };
 
 /**

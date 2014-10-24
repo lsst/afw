@@ -25,8 +25,8 @@
 #include "lsst/afw/math/Background.h"
 %}
 
+%shared_ptr(lsst::afw::math::BackgroundControl);
 %shared_ptr(lsst::afw::math::Background);
-//%shared_ptr(lsst::afw::math::ApproximateControl);
 %shared_ptr(lsst::afw::math::BackgroundMI);
 
 %include "lsst/afw/math/Background.h"
@@ -95,8 +95,6 @@
     %template(getImage ## SUFFIX) lsst::afw::math::BackgroundMI::getImage<PIXTYPE>;
 %enddef
 
-%declareBack(double, D)
 %declareBack(float, F)
-%declareBack(int, I)
 
 

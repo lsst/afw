@@ -233,7 +233,7 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
                             int const y ///< y-pixel coordinate (row)
                            ) const
 {
-    (void)getImage<double>(interpStyle);        // setup the interpolation
+    (void)getImage<InternalPixelT>(interpStyle);        // setup the interpolation
 
     // build an interpobj along the row y and get the x'th value
     int const nxSample = _statsImage.getWidth();
@@ -321,7 +321,12 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
                           str(boost::format("The selected BackgroundControl "
                                             "UndersampleStyle %d is not defined.") % undersampleStyle));
     }
-       
+
+    // if we're approximating, don't bother with the rest of the interp-related work.  Return from here.
+    if (_bctrl->getApproximateControl()->getStyle() != ApproximateControl::UNKNOWN) {
+        return doGetApproximate<PixelT>(*_bctrl->getApproximateControl(), _asUsedUndersampleStyle)->getImage();
+    }
+    
     // =============================================================
     // --> We'll store nxSample fully-interpolated columns to interpolate the rows over
     // make a vector containing the y pixel coords for the column
@@ -338,20 +343,6 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     _gridColumns.resize(width);
     for (int iX = 0; iX < nxSample; ++iX) {
         _setGridColumns(interpStyle, undersampleStyle, iX, ypix);
-    }
-
-    if (_bctrl.getApproximateControl().getStyle() != ApproximateControl::UNKNOWN) {
-        PTR(image::Image<float>) apx = doGetApproximate<float>(_bctrl.getApproximateControl(),
-                                                               _asUsedUndersampleStyle)->getImage();
-        PTR(image::Image<PixelT>) bg =
-            PTR(image::Image<PixelT>)(new image::Image<PixelT>(bbox.getDimensions()));
-
-        for (int iX = 0; iX<bbox.getWidth(); ++iX) {
-            std::copy(bg->col_begin(iX), bg->col_end(iX), apx->col_begin(iX));
-        }
-
-        //bg = apx->getImage();
-        return bg;
     }
 
     // create a shared_ptr to put the background image in and return to caller
@@ -467,5 +458,5 @@ PTR(Approximate<TYPE>) BackgroundMI::_getApproximate(                   \
 BOOST_PP_SEQ_FOR_EACH(CREATE_BACKGROUND, , LSST_makeBackground_getImage_types)
 BOOST_PP_SEQ_FOR_EACH(CREATE_getApproximate, , LSST_makeBackground_getApproximate_types)
 
-// \endcond
+/// \endcond
 }}}

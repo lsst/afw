@@ -64,14 +64,16 @@ public:
         int const nxSample,                                  ///< Num. grid samples in x
         int const nySample,                                  ///< Num. grid samples in y
         StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
-        Property const prop = MEANCLIP ///< statistical property to use for grid points
+        Property const prop = MEANCLIP, ///< statistical property to use for grid points
+        ApproximateControl const actrl =
+            ApproximateControl(ApproximateControl::UNKNOWN, 1) ///< configuration for approx to be computed
                      )
         : _style(Interpolate::AKIMA_SPLINE),
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(THROW_EXCEPTION),
           _sctrl(new StatisticsControl(sctrl)),
-          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
-          _prop(prop) {
+          _prop(prop),
+          _actrl(new ApproximateControl(actrl)) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               str(boost::format("You must specify at least one point, not %dx%d")
@@ -87,14 +89,16 @@ public:
         int const nxSample,             ///< num. grid samples in x
         int const nySample,             ///< num. grid samples in y
         StatisticsControl const &sctrl, ///< configuration for stats to be computed
-        std::string const &prop         ///< statistical property to use for grid points
+        std::string const &prop,        ///< statistical property to use for grid points
+        ApproximateControl const actrl =
+            ApproximateControl(ApproximateControl::UNKNOWN, 1) ///< configuration for approx to be computed
                      )
         : _style(Interpolate::AKIMA_SPLINE),
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(THROW_EXCEPTION),
           _sctrl(new StatisticsControl(sctrl)),
-          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
-          _prop(stringToStatisticsProperty(prop)) {
+          _prop(stringToStatisticsProperty(prop)),
+          _actrl(new ApproximateControl(actrl)) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               str(boost::format("You must specify at least one point, not %dx%d")
@@ -112,14 +116,17 @@ public:
         int const nySample = 10,        ///< Num. grid samples in y
         UndersampleStyle const undersampleStyle = THROW_EXCEPTION, ///< Behaviour if there are too few points
         StatisticsControl const sctrl = StatisticsControl(), ///< Configuration for Stats to be computed
-        Property const prop = MEANCLIP ///< statistical property to use for grid points
+        Property const prop = MEANCLIP, ///< statistical property to use for grid points
+        ApproximateControl const actrl =
+            ApproximateControl(ApproximateControl::UNKNOWN, 1) ///< configuration for approx to be computed
+
                      )
         : _style(style),
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(undersampleStyle),
           _sctrl(new StatisticsControl(sctrl)),
-          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
-          _prop(prop) {
+          _prop(prop),
+          _actrl(new ApproximateControl(actrl)) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               str(boost::format("You must specify at least one point, not %dx%d")
@@ -139,14 +146,16 @@ public:
         int const nySample = 10, ///< num. grid samples in y
         std::string const &undersampleStyle = "THROW_EXCEPTION", ///< behaviour if there are too few points
         StatisticsControl const sctrl = StatisticsControl(), ///< configuration for stats to be computed
-        std::string const &prop = "MEANCLIP" ///< statistical property to use for grid points
+        std::string const &prop = "MEANCLIP", ///< statistical property to use for grid points
+        ApproximateControl const actrl =
+            ApproximateControl(ApproximateControl::UNKNOWN, 1)  ///< configuration for approx to be computed
                      )
         : _style(math::stringToInterpStyle(style)),
           _nxSample(nxSample), _nySample(nySample),
           _undersampleStyle(math::stringToUndersampleStyle(undersampleStyle)),
           _sctrl(new StatisticsControl(sctrl)),
-          _actrl(new ApproximateControl(ApproximateControl::UNKNOWN, 1)),
-          _prop(stringToStatisticsProperty(prop)) {
+          _prop(stringToStatisticsProperty(prop)),
+          _actrl(new ApproximateControl(actrl)) {
         if (nxSample <= 0 || nySample <= 0) {
             throw LSST_EXCEPT(lsst::pex::exceptions::LengthErrorException,
                               str(boost::format("You must specify at least one point, not %dx%d")
@@ -201,11 +210,9 @@ public:
     void setStatisticsProperty(Property prop) { _prop = prop; }
     void setStatisticsProperty(std::string prop) { _prop = stringToStatisticsProperty(prop); }
 
-    void setApproximateControl(ApproximateControl actrl) {
-        _actrl = PTR(ApproximateControl)(new ApproximateControl(actrl.getStyle(), actrl.getOrderX()));
-    }
-    ApproximateControl getApproximateControl() { return *_actrl; }
-    ApproximateControl getApproximateControl() const { return *_actrl; }
+    void setApproximateControl(PTR(ApproximateControl) actrl) { _actrl = actrl; }
+    PTR(ApproximateControl) getApproximateControl() { return _actrl; }
+    CONST_PTR(ApproximateControl) getApproximateControl() const { return _actrl; }
     
 private:
     Interpolate::Style _style;          // style of interpolation to use
@@ -213,8 +220,8 @@ private:
     int _nySample;                      // number of grid squares to divide image into to sample in y
     UndersampleStyle _undersampleStyle; // what to do when nx,ny are too small for the requested interp style
     PTR(StatisticsControl) _sctrl;           // statistics control object
-    PTR(ApproximateControl) _actrl;          // approximate control object
     Property _prop;                          // statistics Property
+    PTR(ApproximateControl) _actrl;          // approximate control object
 };
     
 /**
@@ -285,7 +292,7 @@ public:
      */
     template<typename PixelT>
     PTR(lsst::afw::image::Image<PixelT>) getImage() const {
-        return getImage<PixelT>(_bctrl.getInterpStyle(), _bctrl.getUndersampleStyle());
+        return getImage<PixelT>(_bctrl->getInterpStyle(), _bctrl->getUndersampleStyle());
     }
     /**
      * Return the Interpolate::Style that we actually used in the last call to getImage()
@@ -316,11 +323,12 @@ public:
      */
     geom::Box2I getImageBBox() const { return _imgBBox; }
 
-    BackgroundControl getBackgroundControl() { return _bctrl; }
+    PTR(BackgroundControl) getBackgroundControl() { return _bctrl; }
+    CONST_PTR(BackgroundControl) getBackgroundControl() const { return _bctrl; }
 
 protected:
     geom::Box2I _imgBBox;                             ///< size and origin of input image
-    BackgroundControl _bctrl;                         ///< control info set by user.
+    PTR(BackgroundControl) _bctrl;                    ///< control info set by user.
     mutable Interpolate::Style _asUsedInterpStyle;    ///< the style we actually used
     mutable UndersampleStyle _asUsedUndersampleStyle; ///< the undersampleStyle we actually used
 
@@ -341,7 +349,7 @@ protected:
 // setting v to the second arg (i.e. "= 0" for the first invocation).  The first agument, m, is ignores
 
 // Desired types
-#define LSST_makeBackground_getImage_types            (double)(float)(int)
+#define LSST_makeBackground_getImage_types            (Background::InternalPixelT)
 #define LSST_makeBackground_getApproximate_types      (Background::InternalPixelT)
 #define LSST_makeBackground_getImage(m, v, T)                \
     virtual PTR(lsst::afw::image::Image<T>) _getImage( \
@@ -412,7 +420,7 @@ public:
      * \deprecated New code should specify the interpolation style in getPixel, not the ctor
      */
     double getPixel(int const x, int const y) const {
-        return getPixel(_bctrl.getInterpStyle(), x, y);
+        return getPixel(_bctrl->getInterpStyle(), x, y);
     }
     /**
      * \brief Return the image of statistical quantities extracted from the image
