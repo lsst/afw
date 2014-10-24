@@ -38,6 +38,7 @@ import os.path
 import unittest
 import numpy as np
 import pickle
+import numpy
 
 import lsst.utils
 import lsst.utils.tests as utilsTests
@@ -102,7 +103,7 @@ class BackgroundTestCase(unittest.TestCase):
                 else:
                     image.set(x,y,B+(y-B)*-1.) #0.5)
         bobj = afwMath.makeBackground(image, bgCtrl)
-        back = bobj.getImageD()
+        back = bobj.getImageF()
         
         for iy,by in zip([image.get(0,y) for y in range(H)],
                          [ back.get(0,y) for y in range(H)]):
@@ -167,7 +168,7 @@ class BackgroundTestCase(unittest.TestCase):
             imgPath = os.path.join(AfwdataDir, "Statistics", imgfile)
 
             # get the image and header
-            dimg = afwImage.DecoratedImageD(imgPath)
+            dimg = afwImage.DecoratedImageF(imgPath)
             img = dimg.getImage()
             fitsHdr = dimg.getMetadata() # the FITS header
 
@@ -194,7 +195,7 @@ class BackgroundTestCase(unittest.TestCase):
             self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
             # test getImage() by checking the center pixel
-            bimg = backobj.getImageD()
+            bimg = backobj.getImageF()
             testImgval = bimg.get(naxis1//2, naxis2//2)
             self.assertTrue( abs(testImgval - reqMean) < 2*stdevInterp )
             
@@ -204,7 +205,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make a ramping image (spline should be exact for linear increasing image
         nx = 512
         ny = 512
-        rampimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
+        rampimg = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
 
         for x in range(nx):
@@ -241,9 +242,9 @@ class BackgroundTestCase(unittest.TestCase):
         self.assertEqual(testImage.getDimensions(), bgSubImage.getDimensions())
         self.assertTrue(np.all(testImage.getArray() == bgSubImage.getArray()))
 
-    def getParabolaImage(self, nx, ny):
-        parabimg = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
-        d2zdx2, d2zdy2, dzdx, dzdy, z0 = -1.0e-4, -1.0e-4, 0.1, 0.2, 10000.0  # no cross-terms
+    def getParabolaImage(self, nx, ny, pars=(1.0e-4, 1.0e-4, 0.1, 0.2, 10.0)):
+        parabimg = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
+        d2zdx2, d2zdy2, dzdx, dzdy, z0 = pars  # no cross-terms
         for x in range(nx):
             for y in range(ny):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
@@ -307,7 +308,7 @@ class BackgroundTestCase(unittest.TestCase):
         backobj = afwMath.makeBackground(parabimg, bctrl)
 
         # debug
-        #bimg = backobj.getImageD()
+        #bimg = backobj.getImageF()
         #ds9.mtv(parabimg)
         #ds9.mtv(bimg, frame=1)
         #parabimg.writeFits("a.fits")
@@ -440,7 +441,7 @@ class BackgroundTestCase(unittest.TestCase):
         # make an image
         nx = 64
         ny = 64
-        img = afwImage.ImageD(afwGeom.Extent2I(nx, ny))
+        img = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
         
         # make a background control object
         bctrl = afwMath.BackgroundControl(10, 10)
@@ -480,7 +481,7 @@ class BackgroundTestCase(unittest.TestCase):
         # try a ramping image ... has an easy analytic solution
         nx = 64
         ny = 64
-        img = afwImage.ImageD(afwGeom.Extent2I(nx, ny), 10)
+        img = afwImage.ImageF(afwGeom.Extent2I(nx, ny), 10)
         
         dzdx, dzdy, z0 = 0.1, 0.2, 10000.0
         mean = z0 + dzdx*(nx - 1)/2 + dzdy*(ny - 1)/2  # the analytic solution
@@ -730,14 +731,16 @@ class BackgroundTestCase(unittest.TestCase):
         interpStyle = afwMath.Interpolate.AKIMA_SPLINE
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
         approxStyle = afwMath.ApproximateControl.UNKNOWN
-        approxOrder = 0
+        approxOrderX = 0
+        approxOrderY = 0
 
         backgroundList = afwMath.BackgroundList()
         for i in range(2):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
             if i == 0:
                 # no need to call getImage
-                backgroundList.append((bkgd, interpStyle, undersampleStyle, approxStyle, approxOrder))
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,
+                                       approxStyle, approxOrderX, approxOrderY))
             else:
                 backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
@@ -745,8 +748,9 @@ class BackgroundTestCase(unittest.TestCase):
             self.assertEqual(len(bgl), 2) # check that len() works
             for a in bgl:                 # check that we can iterate
                 pass
-            self.assertEqual(len(bgl[0]), 5) # check that we can index
-            self.assertEqual(len(bgl[1]), 5) # check that we always have a tuple (bkgd, interp, under)
+            self.assertEqual(len(bgl[0]), 6) # check that we can index
+            # check that we always have a tuple (bkgd, interp, under, approxStyle, orderX, orderY)
+            self.assertEqual(len(bgl[1]), 6) 
 
         assertBackgroundList(backgroundList)
 
@@ -765,13 +769,69 @@ class BackgroundTestCase(unittest.TestCase):
         self.assertTrue(np.all(lhsStats.getMask().getArray() == rhsStats.getMask().getArray()))
         self.assertTrue(np.all(lhsStats.getVariance().getArray() == rhsStats.getVariance().getArray()))
 
+
+    def testApproximate(self):
+        """Test I/O for BackgroundLists with Approximate"""
+
+        # approx and interp should be very close, but not the same
+        img = self.getParabolaImage(256, 256)
+
+        # try regular interpolated image (the default)
+        bgCtrl = afwMath.BackgroundControl(6, 6)
+        bgCtrl.setInterpStyle(afwMath.Interpolate.AKIMA_SPLINE)
+        bgCtrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
+        bkgd = afwMath.makeBackground(img, bgCtrl)
+        interpImage = bkgd.getImageF()
+        bglInterp = afwMath.BackgroundList()
+        bglInterp.append(bkgd)
+        bgiFile = "tests/bgInterp.fits"
+        bglInterp.writeFits(bgiFile)
+
+        # try an approx background
+        approxStyle = afwMath.ApproximateControl.CHEBYSHEV
+        approxOrder = 2
+        actrl = afwMath.ApproximateControl(approxStyle, approxOrder)
+        bkgd.getBackgroundControl().setApproximateControl(actrl)
+        approxImage = bkgd.getImageF()
+        bglApprox = afwMath.BackgroundList()
+        bglApprox.append(bkgd)
+        bgaFile = "tests/bgApprox.fits"
+        bglApprox.writeFits(bgaFile)
+
+        # take a difference and make sure the two are very similar
+        interpNp = interpImage.getArray()
+        diff = numpy.abs(interpNp - approxImage.getArray())/interpNp
+
+        # the image and interp/approx parameters are chosen so these limits
+        # will be greater than machine precision for float.  The two methods
+        # should be measurably different (so we know we're not just getting the
+        # same thing from the getImage() method.  But they should be very close
+        # since they're both doing the same sort of thing.
+        tolSame = 1.0e-3  # should be the same to this order
+        tolDiff = 1.0e-4  # should be different here
+        self.assertLess(diff.max(), tolSame)
+        self.assertGreater(diff.max(), tolDiff)
+        #print "Interp/Approx diff min and max:", diff.min(), diff.max()
+
+        # now see if we can reload them from files and get the same images we wrote
+        interpImage2 = afwMath.BackgroundList().readFits(bgiFile).getImage()
+        approxImage2 = afwMath.BackgroundList().readFits(bgaFile).getImage()
+
+        idiff = interpImage.getArray() - interpImage2.getArray()
+        adiff = approxImage.getArray() - approxImage2.getArray()
+
+        self.assertEqual(idiff.max(), 0.0)
+        self.assertEqual(adiff.max(), 0.0)
+        #print "Reloaded interp and approx diff max:", idiff.max(), adiff.max()
+
     def testBackgroundListIO(self):
         """Test I/O for BackgroundLists"""
         bgCtrl = afwMath.BackgroundControl(10, 10)
         interpStyle = afwMath.Interpolate.AKIMA_SPLINE
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
         approxStyle = afwMath.ApproximateControl.UNKNOWN
-        approxOrder = 0
+        approxOrderX = 0
+        approxOrderY = -1
 
         backgroundList = afwMath.BackgroundList()
         backImage = afwImage.ImageF(self.image.getDimensions())
@@ -779,7 +839,8 @@ class BackgroundTestCase(unittest.TestCase):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
             if i == 0:
                 # no need to call getImage
-                backgroundList.append((bkgd, interpStyle, undersampleStyle, approxStyle, approxOrder))
+                backgroundList.append((bkgd, interpStyle, undersampleStyle,
+                                       approxStyle, approxOrderX, approxOrderY))
             else:
                 backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 

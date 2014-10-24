@@ -61,7 +61,7 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(img.getBBox()),
-    _bctrl(bgCtrl),
+    _bctrl(new BackgroundControl(bgCtrl)),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
     _asUsedUndersampleStyle(THROW_EXCEPTION),
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
@@ -93,7 +93,7 @@ Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image 
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(imageBBox),
-    _bctrl(nx, ny),
+    _bctrl(new BackgroundControl(nx, ny)),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
     _asUsedUndersampleStyle(THROW_EXCEPTION),
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
@@ -172,9 +172,7 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
                                                                     UndersampleStyle const) const;
 
 
-INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)
-INSTANTIATE_BACKGROUND(int)
 
 /// \endcond
 }}}

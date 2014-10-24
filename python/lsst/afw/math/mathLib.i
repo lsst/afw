@@ -66,6 +66,7 @@ Python interface to lsst::afw::math classes
 %lsst_exceptions();
 
 
+%include "approximate.i"
 %include "function.i"
 %include "kernel.i"
 %include "minimize.i"

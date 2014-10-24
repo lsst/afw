@@ -149,15 +149,15 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         // make a ramping image (spline should be exact for linear increasing image
         int const nX = 512;
         int const nY = 512;
-        image::Image<double> rampimg = image::Image<double>(geom::Extent2I(nX, nY));
-        double dzdx = 0.1;
-        double dzdy = 0.2;
-        double z0 = 10000.0;
+        image::Image<float> rampimg = image::Image<float>(geom::Extent2I(nX, nY));
+        float dzdx = 0.1;
+        float dzdy = 0.2;
+        float z0 = 10000.0;
 
         for (int i = 0; i < nX; ++i) {
-            double x = static_cast<double>(i);
+            float x = static_cast<float>(i);
             for ( int j = 0; j < nY; ++j) {
-                double y = static_cast<double>(j);
+                float y = static_cast<float>(j);
                 *rampimg.xy_at(i, j) = dzdx*x + dzdy*y + z0;
             }
         }
@@ -192,12 +192,12 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         // make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         int const nX = 512;
         int const nY = 512;
-        image::Image<double> parabimg = image::Image<double>(geom::Extent2I(nX, nY));
-        double d2zdx2 = -1.0e-4;
-        double d2zdy2 = -1.0e-4;
-        double dzdx   = 0.1;
-        double dzdy   = 0.2;
-        double z0 = 10000.0;  // no cross-terms
+        image::Image<float> parabimg = image::Image<float>(geom::Extent2I(nX, nY));
+        float d2zdx2 = -1.0e-4;
+        float d2zdy2 = -1.0e-4;
+        float dzdx   = 0.1;
+        float dzdy   = 0.2;
+        float z0 = 10000.0;  // no cross-terms
 
         for ( int i = 0; i < nX; ++i ) {
             for ( int j = 0; j < nY; ++j ) {
