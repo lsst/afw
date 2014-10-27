@@ -912,7 +912,7 @@ void Footprint::intersectMask(
     normalize();
 
     SpanList::iterator s(_spans.begin());
-    while((*s)->getY() < maskBBox.getMinY() && s != _spans.end()){
+    while(s != _spans.end() && (*s)->getY() < maskBBox.getMinY()){
         ++s;
     }
 
