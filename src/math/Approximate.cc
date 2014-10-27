@@ -312,6 +312,6 @@ makeApproximate(std::vector<double> const &x,            ///< the x-values of po
 INSTANTIATE(float);
 //INSTANTIATE(int);
 
-// \endcond
+/// \endcond
 
 }}}

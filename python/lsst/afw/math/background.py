@@ -46,11 +46,16 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         # Set any previously-unknown Styles (they are set by bkgd.getImage())
         #
         for i, val in enumerate(self._backgrounds):
-            bkgd, interpStyle, undersampleStyle = val
+            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY = val
             if interpStyle is None or undersampleStyle is None:
                 interpStyle = bkgd.getAsUsedInterpStyle()
                 undersampleStyle = bkgd.getAsUsedUndersampleStyle()
-                self._backgrounds[i] = (bkgd, interpStyle, undersampleStyle)
+                actrl = bkgd.getBackgroundControl().getApproximateControl()
+                approxStyle = actrl.getStyle()
+                approxOrderX = actrl.getOrderX()
+                approxOrderY = actrl.getOrderY()
+                self._backgrounds[i] = (bkgd, interpStyle, undersampleStyle,
+                                        approxStyle, approxOrderX, approxOrderY)
         #
         # And return what they wanted
         #
@@ -61,11 +66,14 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
     def append(self, val):
         try:
-            bkgd, interpStyle, undersampleStyle = val
+            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY = val
         except TypeError:
             bkgd = val
             interpStyle = None
             undersampleStyle = None
+            approxStyle = None
+            approxOrderX = None
+            approxOrderY = None
 
         # Check to see if the Background is actually a BackgroundMI.
         # Such special treatment is not generally a good idea as it is against the whole idea of subclassing.
@@ -81,7 +89,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             from lsst.pex.logging import getDefaultLog
             getDefaultLog().warn("Unrecognised Background object %s may be unpersistable." % (bkgd,))
 
-        self._backgrounds.append((bkgd, interpStyle, undersampleStyle))
+        bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY)
+        self._backgrounds.append(bgInfo)
 
     def writeFits(self, fileName, flags=0):
         """Save our list of Backgrounds to a file
@@ -92,13 +101,16 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         """
 
         for i, bkgd in enumerate(self):
-            bkgd, interpStyle, undersampleStyle = bkgd
+            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY = bkgd
 
             statsImage = bkgd.getStatsImage()
 
             md = dafBase.PropertyList()
             md.set("INTERPSTYLE", interpStyle)
             md.set("UNDERSAMPLESTYLE", undersampleStyle)
+            md.set("APPROXSTYLE", approxStyle)
+            md.set("APPROXORDERX", approxOrderX)
+            md.set("APPROXORDERY", approxOrderY)
             bbox = bkgd.getImageBBox()
             md.set("BKGD_X0", bbox.getMinX())
             md.set("BKGD_Y0", bbox.getMinY())
@@ -150,8 +162,20 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             interpStyle =      md.get("INTERPSTYLE")
             undersampleStyle = md.get("UNDERSAMPLESTYLE")
 
+            # older outputs won't have APPROX* settings.  Provide alternative defaults.
+            approxStyle = md.get("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
+                          else afwMath.ApproximateControl.UNKNOWN
+            approxOrderX = md.get("APPROXORDERX") if "APPROXORDERX" in md.names() else 1
+            approxOrderY = md.get("APPROXORDERY") if "APPROXORDERY" in md.names() else -1
+
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
-            self.append((bkgd, interpStyle, undersampleStyle,))
+            bctrl = bkgd.getBackgroundControl()
+            bctrl.setInterpStyle(interpStyle)
+            bctrl.setUndersampleStyle(undersampleStyle)
+            actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY)
+            bctrl.setApproximateControl(actrl)
+            bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY)
+            self.append(bgInfo)
 
         return self
 
@@ -161,11 +185,17 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         """
 
         bkgdImage = None
-        for bkgd, interpStyle, undersampleStyle in self:
+        for bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY in self:
             if not bkgdImage:
-                bkgdImage =  bkgd.getImageF(interpStyle, undersampleStyle)
+                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
+                    bkgdImage = bkgd.getImageF()
+                else:
+                    bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
             else:
-                bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
+                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
+                    bkgdImage += bkgd.getImageF()
+                else:
+                    bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
 
         return bkgdImage
 
