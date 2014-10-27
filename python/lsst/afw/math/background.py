@@ -186,12 +186,16 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
         bkgdImage = None
         for bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY in self:
-            if approxStyle != afwMath.ApproximateControl.UNKNOWN:
-                bkgdImage = bkgd.getImageF()
-            elif not bkgdImage:
-                bkgdImage =  bkgd.getImageF(interpStyle, undersampleStyle)
+            if not bkgdImage:
+                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
+                    bkgdImage = bkgd.getImageF()
+                else:
+                    bkgdImage = bkgd.getImageF(interpStyle, undersampleStyle)
             else:
-                bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
+                if approxStyle != afwMath.ApproximateControl.UNKNOWN:
+                    bkgdImage += bkgd.getImageF()
+                else:
+                    bkgdImage += bkgd.getImageF(interpStyle, undersampleStyle)
 
         return bkgdImage
 
