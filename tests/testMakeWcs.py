@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -22,18 +23,12 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
-import math
-import pdb                          # we may want to say pdb.set_trace()
 import unittest
 
-import eups
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
-import lsst.afw.display.ds9 as ds9
-import lsst.pex.exceptions.exceptionsLib as exceptions
 import lsst.daf.base as dafBase
 
 import lsst

@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -37,12 +38,10 @@ import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
-import lsst.afw.image.testUtils as imTestUtils
 
 try:
     type(display)
@@ -261,7 +260,7 @@ class binImageTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.MIN), 1)
         self.assertEqual(stats.getValue(afwMath.MAX), 1)
 
-    def testBin(self):
+    def testBin2(self):
         """Test that we can bin images anisotropically"""
 
         inImage = afwImage.ImageF(203, 131)

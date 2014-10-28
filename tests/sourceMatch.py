@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -36,11 +37,9 @@ import os, re, sys
 import numpy
 import unittest
 import eups
-from math import radians
 import pickle
 
 import lsst.utils.tests as utilsTests
-import lsst.afw.detection as afwDetect
 import lsst.afw.table as afwTable
 import lsst.afw.geom as afwGeom
 

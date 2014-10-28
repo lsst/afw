@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -31,7 +32,6 @@ or
    >>> import testSourceTable; testSourceTable.run()
 """
 
-import sys
 import os
 import unittest
 import numpy

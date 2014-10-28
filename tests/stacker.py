@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -75,11 +76,11 @@ class StackTestCase(unittest.TestCase):
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         knownMean /= self.nImg
-        self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)
+        self.assertEqual(imgStack.get(self.nX//2, self.nY//2), knownMean)
 
         # Test in-place stacking
         afwMath.statisticsStack(imgStack, imgList, afwMath.MEAN)
-        self.assertEqual(imgStack.get(self.nX/2, self.nY/2), knownMean)
+        self.assertEqual(imgStack.get(self.nX//2, self.nY//2), knownMean)
         
     def testStatistics(self):
         """ Test the statisticsStack() function """
@@ -90,11 +91,11 @@ class StackTestCase(unittest.TestCase):
             
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         mean = reduce(lambda x, y: x+y, self.values)/float(len(self.values))
-        self.assertAlmostEqual(imgStack.get(self.nX/2, self.nY/2), mean)
+        self.assertAlmostEqual(imgStack.get(self.nX//2, self.nY//2), mean)
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEDIAN)
         median = sorted(self.values)[len(self.values)//2]
-        self.assertEqual(imgStack.get(self.nX/2, self.nY/2), median)
+        self.assertEqual(imgStack.get(self.nX//2, self.nY//2), median)
 
     def testWeightedStack(self):
         """ Test statisticsStack() function when weighting by a variance plane"""
@@ -110,11 +111,11 @@ class StackTestCase(unittest.TestCase):
 
         wvalues = [1.0/q for q in self.values]
         wmean = float(len(self.values)) / reduce(lambda x, y: x + y, wvalues)
-        self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
+        self.assertAlmostEqual(mimgStack.getImage().get(self.nX//2, self.nY//2), wmean)
 
         # Test in-place stacking
         afwMath.statisticsStack(mimgStack, mimgList, afwMath.MEAN, sctrl)
-        self.assertAlmostEqual(mimgStack.getImage().get(self.nX/2, self.nY/2), wmean)
+        self.assertAlmostEqual(mimgStack.getImage().get(self.nX//2, self.nY//2), wmean)
 
     def testConstantWeightedStack(self):
         """ Test statisticsStack() function when weighting by a vector of weights"""
@@ -131,7 +132,7 @@ class StackTestCase(unittest.TestCase):
         wsum = reduce(lambda x, y: x + y, self.values)
         wvalues = [x*x for x in self.values]
         wmean = reduce(lambda x, y: x + y, wvalues)/float(wsum)
-        self.assertAlmostEqual(imgStack.get(self.nX/2, self.nY/2), wmean)
+        self.assertAlmostEqual(imgStack.get(self.nX//2, self.nY//2), wmean)
 
 
     def testRequestMoreThanOneStat(self):

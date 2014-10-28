@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -29,8 +30,6 @@ import numpy
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.math as afwMath
-
-__all__ = ["computePsfMatchingKernelForMaskedImage"]
 
 class MinimizeTestCase(unittest.TestCase):
     def testMinimize2(self):

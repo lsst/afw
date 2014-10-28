@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -22,14 +23,9 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
-
 import unittest
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
-import lsst.daf.base as dafBase
-import lsst.daf.persistence as dafPers
-import eups
 
 class ImageIoTestCase(unittest.TestCase):
     """A test case for Image Persistence"""

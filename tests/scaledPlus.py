@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -22,13 +23,9 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import math
 import unittest
 
-import numpy
-
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage

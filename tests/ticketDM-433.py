@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -25,12 +26,9 @@
 Tests for SourceTable slots with version > 0
 """
 
-import sys
 import os
 import unittest
 import numpy
-import tempfile
-import pickle
 
 import lsst.utils.tests
 import lsst.pex.exceptions

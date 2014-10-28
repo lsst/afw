@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -26,7 +27,6 @@ import pickle
 import unittest
 import lsst.utils.tests as utilsTests
 
-import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.coord as afwCoord
@@ -297,7 +297,7 @@ class PolygonTest(utilsTests.TestCase):
             self.assertAlmostEqual(polyCenter[1], subCenter[1])
 
 
-    def testTransform(self):
+    def testTransform2(self):
         scale = 2.0
         shift = afwGeom.Extent2D(3.0, 4.0)
         transform = afwGeom.AffineTransform.makeTranslation(shift)*afwGeom.AffineTransform.makeScaling(scale)

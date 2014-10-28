@@ -74,6 +74,9 @@
         __div__(self, NAME inputImage)
         """
         return _imageLib.__div__(*args)
+
+    # support "__from__ future import division" in Python 2 (not needed for Python 3)
+    __truediv__ = __div__
     }
 
 }
@@ -114,6 +117,9 @@
         __div__(self, NAME inputImage)
         """
         return _imageLib.__div__(*args)
+
+    # support "__from__ future import division" in Python 2 (not needed for Python 3)
+    __truediv__ = __div__
     }
 
 }

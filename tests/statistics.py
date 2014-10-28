@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -253,7 +254,7 @@ class StatisticsTestCase(unittest.TestCase):
     
         z0 = 10.0
         dzdx = 1.0
-        mean = z0 + (nx/2)*dzdx
+        mean = z0 + (nx//2)*dzdx
         stdev = 0.0
         for y in range(ny):
             for x in range(nx):
@@ -275,7 +276,7 @@ class StatisticsTestCase(unittest.TestCase):
         mean, meanErr = stats.getResult(afwMath.MEAN)
         sd = stats.getValue(afwMath.STDEV)
         
-        self.assertEqual(mean, img.get(nx/2, ny/2))
+        self.assertEqual(mean, img.get(nx//2, ny//2))
         self.assertEqual(meanErr, sd/math.sqrt(img.getWidth()*img.getHeight()))
         
         # ===============================================================================

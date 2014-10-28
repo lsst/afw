@@ -55,6 +55,8 @@
                  return NotImplemented
          def __ne__(self, rhs):
              return not self == rhs
+         # support "__from__ future import division" in Python 2; not needed for Python 3
+         __truediv__ = __div__
 
     %}
 }

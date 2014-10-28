@@ -123,6 +123,10 @@
         """
         _imageLib.NAME##TYPE##___idiv__(*args)
         return args[0]
+
+    # support "__from__ future import division" in Python 2; not needed for Python 3
+    __itruediv__ = __idiv__
+
     }
 }
 %defineClone(NAME##TYPE, lsst::afw::image::Image, PIXEL_TYPE);

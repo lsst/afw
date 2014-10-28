@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-
-import sys
-import os
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 import unittest
 
 import lsst.utils.tests

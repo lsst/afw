@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -32,7 +33,6 @@ or
    >>> import testSimpleTable; testSimpleTable.run()
 """
 
-import sys
 import os
 import unittest
 import numpy

@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -32,15 +33,12 @@ or
    >>> import footprint2; footprint2.run()
 """
 
-import sys
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
-import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
-import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
 
 try:

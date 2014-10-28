@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -53,8 +54,8 @@ class StatisticsTestCase(unittest.TestCase):
         self.n = self.nRow*self.nCol
 
         self.bboxL = afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                                   afwGeom.Point2I(self.nRow/2 - 1, self.nCol - 1))
-        self.bboxR = afwGeom.Box2I(afwGeom.Point2I(self.nRow/2, 0),
+                                   afwGeom.Point2I(self.nRow//2 - 1, self.nCol - 1))
+        self.bboxR = afwGeom.Box2I(afwGeom.Point2I(self.nRow//2, 0),
                                    afwGeom.Point2I(self.nRow - 1, self.nCol - 1))
 
         # create masked images and set the left side to valL, and right to valR
