@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -22,7 +23,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os, os.path
 import unittest
 
 import lsst.afw.geom as afwGeom

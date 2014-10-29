@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -28,7 +29,7 @@
 ##$Id$
 ##\author Fergal Mullally
 
-import math, os
+import os
 import unittest
 
 import eups

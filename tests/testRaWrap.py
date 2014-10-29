@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -27,7 +28,6 @@ import unittest
 import eups
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
-import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
 from math import sqrt
 

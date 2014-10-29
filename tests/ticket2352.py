@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -24,11 +25,9 @@
 
 import os, os.path
 import unittest
-import pickle
 
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions.exceptionsLib as exceptions
 
 DATA = os.path.join("tests", "data", "ticket2352.fits")
 

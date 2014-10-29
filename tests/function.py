@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -103,7 +104,6 @@ class FunctionTestCase(unittest.TestCase):
         """A test for Chebyshev1Function1D"""
         maxOrder = 6
         deltaParam = 0.3
-        allParams = numpy.arange(deltaParam, deltaParam * (maxOrder + 1) + (deltaParam / 2.0), deltaParam)
         ranges = ((-1, 1), (-1, 0), (0, 1), (-17, -2), (-65.3, 2.132))
         rangeIter = itertools.cycle(ranges)
         nPoints = 9
@@ -129,9 +129,6 @@ class FunctionTestCase(unittest.TestCase):
             self.assertEqual(g.getMinX(), xMin)
             self.assertEqual(g.getMaxX(), xMax)
             self.assertEqual(g.getOrder(), order)
-
-#             self.assertEqual(h.getMinX(), xMin)
-#             self.assertEqual(h.getMaxX(), xMax)
 
             minXNorm = None
             maxXNorm = None
@@ -198,9 +195,6 @@ class FunctionTestCase(unittest.TestCase):
             self.assertEqual(g.getXYRange(), xyRange)
             self.assertEqual(g.getOrder(), order)
 
-#             self.assertEqual(h.getXYRange(), xyRange)
-#             self.assertEqual(h.getOrder(), order)
-
             # vary x in the inner loop to exercise the caching
             minYNorm = None
             maxYNorm = None
@@ -246,7 +240,7 @@ class FunctionTestCase(unittest.TestCase):
 
         # test that the number of parameters is correct for the given order
         def numParamsFromOrder(order):
-            return (order + 1) * (order + 2) / 2
+            return (order + 1) * (order + 2) // 2
         MaxOrder = 13
         for order in range(MaxOrder+1):
             f = afwMath.Chebyshev1Function2D(order)
@@ -309,6 +303,7 @@ class FunctionTestCase(unittest.TestCase):
 
             for truncOrder in range(order + 1):
                 truncNParams = fullPoly.nParametersFromOrder(truncOrder)
+                truncParams = fullParams[0:truncNParams]
 
                 f = fullPoly.truncate(truncOrder)
                 self.assertEqual(f.getNParameters(), truncNParams)
@@ -343,8 +338,8 @@ class FunctionTestCase(unittest.TestCase):
     
                             if not numpy.allclose(f(x, y), g(x, y)):
                                 self.fail(
-    "%s = %s != %s = %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, params=%s; order constructor" % \
-    (type(f).__name__, f(x, y), g(x, y), type(g).__name__, x, xMin, xMax, xNorm, yMin, yMax, yNorm, params))
+    "%s = %s != %s = %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, truncParams=%s; order constructor" % \
+    (type(f).__name__, f(x, y), g(x, y), type(g).__name__, x, xMin, xMax, xNorm, yMin, yMax, yNorm, truncParams))
     
                     if not numpy.allclose((minYNorm, maxYNorm), (-1.0, 1.0)):
                         raise RuntimeError(
@@ -555,7 +550,6 @@ class FunctionTestCase(unittest.TestCase):
             
             self.assertEqual(f.getOrder(), order)
             self.assertEqual(g.getOrder(), order)
-#             self.assertEqual(h.getOrder(), order)
             
             for x in numpy.arange(-10.0, 10.1, 1.0):
                 predVal = basic1DPoly(x, params)
@@ -590,7 +584,6 @@ class FunctionTestCase(unittest.TestCase):
                 order += 1
         
         numParamsList = (1, 3, 6, 10)
-        maxParams = numParamsList[-1]
         deltaParam = 0.3
         
         # test function values
@@ -603,7 +596,6 @@ class FunctionTestCase(unittest.TestCase):
 
             self.assertEqual(f.getOrder(), order)
             self.assertEqual(g.getOrder(), order)
-#             self.assertEqual(h.getOrder(), order)
             
             # vary x in the inner loop to exercise the caching
             for y in numpy.arange(-10.0, 10.1, 2.5):
@@ -621,7 +613,7 @@ class FunctionTestCase(unittest.TestCase):
         
         # test that the number of parameters is correct for the given order
         def numParamsFromOrder(order):
-            return (order + 1) * (order + 2) / 2
+            return (order + 1) * (order + 2) // 2
         MaxOrder = 13
         for order in range(MaxOrder+1):
             f = afwMath.PolynomialFunction2D(order)

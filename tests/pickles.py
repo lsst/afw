@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -26,11 +27,7 @@
 Tests for pickles of some afw types
 """
 
-import math
-import os
-import sys
 import unittest
-import eups
 import pickle
 
 import lsst.daf.base as dafBase

@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -41,7 +42,6 @@ import itertools
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
-import lsst.daf.base
 import lsst.afw.geom as afwGeom
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.display.utils as displayUtils

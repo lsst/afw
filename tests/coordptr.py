@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -35,11 +36,9 @@ import unittest
 
 import eups
 import lsst.afw.image            as image
-import lsst.afw.geom             as geom
 import lsst.afw.geom             as afwGeom
 import lsst.afw.coord.coordLib   as coord
 import lsst.utils.tests          as utilsTests
-import lsst.daf.base             as dafBase
 
 
 class CoordPtrTestCase(unittest.TestCase):

@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -37,7 +38,6 @@ import numpy
 import math
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions
 import lsst.afw.geom as geom
 
 numpy.random.seed(1)
@@ -223,7 +223,11 @@ class ExtentTestCase(CoordinateTestCase):
             p1 = cls(*vector1)
             self.assertClose(tuple(p1*scalar), tuple([v1*scalar for v1 in vector1]))
             self.assertEqual(type(p1*scalar), cls)
-            self.assertClose(tuple(p1/scalar), tuple([v1/scalar for v1 in vector1]))
+            if type(p1[0]) == int:
+                desDivTuple = tuple(v1//scalar for v1 in vector1)
+            else:
+                desDivTuple = tuple(v1/scalar for v1 in vector1)
+            self.assertClose(tuple(p1/scalar), desDivTuple)
             self.assertEqual(type(p1/scalar), cls)
             p1 *= scalar
             vector1 = [v1*scalar for v1 in vector1]

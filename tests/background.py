@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -191,13 +192,13 @@ class BackgroundTestCase(unittest.TestCase):
             stdevInterp = reqStdev/math.sqrt(pixPerSubimage)
             
             # test getPixel()
-            testval = afwMath.cast_BackgroundMI(backobj).getPixel(naxis1/2, naxis2/2)
+            testval = afwMath.cast_BackgroundMI(backobj).getPixel(naxis1//2, naxis2//2)
             self.assertAlmostEqual(testval/centerValue, 1, places=7)
             self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
 
             # test getImage() by checking the center pixel
             bimg = backobj.getImageD()
-            testImgval = bimg.get(naxis1/2, naxis2/2)
+            testImgval = bimg.get(naxis1//2, naxis2//2)
             self.assertTrue( abs(testImgval - reqMean) < 2*stdevInterp )
             
 
@@ -222,8 +223,8 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.makeBackground(rampimg, bctrl)
 
-        xpixels = [0, nx/2, nx - 1]
-        ypixels = [0, ny/2, ny - 1]
+        xpixels = [0, nx//2, nx - 1]
+        ypixels = [0, ny//2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = afwMath.cast_BackgroundMI(backobj).getPixel(xpix, ypix)
@@ -320,8 +321,8 @@ class BackgroundTestCase(unittest.TestCase):
         #bimg.writeFits("b.fits")
 
         segmentCenter = int(0.5*nx/bctrl.getNxSample())
-        xpixels = [segmentCenter, nx/2, nx - segmentCenter]
-        ypixels = [segmentCenter, ny/2, ny - segmentCenter]
+        xpixels = [segmentCenter, nx//2, nx - segmentCenter]
+        ypixels = [segmentCenter, ny//2, ny - segmentCenter]
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = afwMath.cast_BackgroundMI(backobj).getPixel(bctrl.getInterpStyle(), xpix, ypix)
@@ -455,8 +456,8 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl.setUndersampleStyle(afwMath.THROW_EXCEPTION)
         backobj = afwMath.makeBackground(img, bctrl)
         
-        xpixels = [0, nx/2, nx - 1]
-        ypixels = [0, ny/2, ny - 1]
+        xpixels = [0, nx//2, nx - 1]
+        ypixels = [0, ny//2, ny - 1]
         for xpix in xpixels:
             for ypix in ypixels:
                 testval = afwMath.cast_BackgroundMI(backobj).getPixel(bctrl.getInterpStyle(), xpix, ypix)

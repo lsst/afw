@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
@@ -32,7 +33,6 @@ import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
-import lsst.pex.exceptions as pexExceptions
 import eups
 
 dataDir = os.path.join(eups.productDir("afwdata"), "data")

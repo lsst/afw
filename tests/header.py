@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from __future__ import absolute_import, division
 
 #
 # LSST Data Management System
@@ -25,7 +26,6 @@
 import numpy
 import unittest
 
-import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 
