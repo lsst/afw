@@ -130,9 +130,6 @@ class FunctionTestCase(unittest.TestCase):
             self.assertEqual(g.getMaxX(), xMax)
             self.assertEqual(g.getOrder(), order)
 
-#             self.assertEqual(h.getMinX(), xMin)
-#             self.assertEqual(h.getMaxX(), xMax)
-
             minXNorm = None
             maxXNorm = None
             for x in numpy.arange(xMin, xMax + xDelta/2.0, xDelta):
@@ -197,9 +194,6 @@ class FunctionTestCase(unittest.TestCase):
 
             self.assertEqual(g.getXYRange(), xyRange)
             self.assertEqual(g.getOrder(), order)
-
-#             self.assertEqual(h.getXYRange(), xyRange)
-#             self.assertEqual(h.getOrder(), order)
 
             # vary x in the inner loop to exercise the caching
             minYNorm = None
@@ -556,7 +550,6 @@ class FunctionTestCase(unittest.TestCase):
             
             self.assertEqual(f.getOrder(), order)
             self.assertEqual(g.getOrder(), order)
-#             self.assertEqual(h.getOrder(), order)
             
             for x in numpy.arange(-10.0, 10.1, 1.0):
                 predVal = basic1DPoly(x, params)
@@ -603,7 +596,6 @@ class FunctionTestCase(unittest.TestCase):
 
             self.assertEqual(f.getOrder(), order)
             self.assertEqual(g.getOrder(), order)
-#             self.assertEqual(h.getOrder(), order)
             
             # vary x in the inner loop to exercise the caching
             for y in numpy.arange(-10.0, 10.1, 2.5):
