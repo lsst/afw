@@ -63,7 +63,7 @@ template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT=d
 class SinglePixel : public detail::MaskedImagePixel_tag {
 public:
     template<typename, typename, typename> friend class Pixel;
-    template<typename T> friend T std::numeric_limits<T>::quiet_NaN();
+    template<typename T> friend class PixelTypeTraits;
 
     typedef _ImagePixelT ImagePixelT;
     typedef _MaskPixelT MaskPixelT;
@@ -80,10 +80,11 @@ public:
     ImagePixelT image() const { return _image; }
     MaskPixelT mask() const { return _mask; }
     VariancePixelT variance() const { return _variance; }
+
 private:
     /// Default Ctor
     ///
-    /// Can be called by std::numeric_limits<SinglePixel>::quiet_NaN()
+    /// Can be called by PixelTypeTraits<SinglePixel>::padValue()
     SinglePixel() :
         _image(std::numeric_limits<_ImagePixelT>::has_quiet_NaN ?
                std::numeric_limits<_ImagePixelT>::quiet_NaN() : 0),
@@ -95,6 +96,31 @@ private:
     ImagePixelT _image;
     MaskPixelT _mask;
     VariancePixelT _variance;
+};
+
+/// Pixel type traits
+template<typename PixelT>
+struct PixelTypeTraits
+{
+    /// The quantity to use when a pixel value is undefined
+    static inline const PixelT padValue() {
+        return
+            std::numeric_limits<PixelT>::has_quiet_NaN ?
+            std::numeric_limits<PixelT>::quiet_NaN()
+            : 0;
+    }
+};
+
+/// Specialization for a %pixel of a MaskedImage
+template<typename _ImagePixelT, typename _MaskPixelT, typename _VariancePixelT>
+struct PixelTypeTraits<SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT> >
+{
+    typedef SinglePixel<_ImagePixelT, _MaskPixelT, _VariancePixelT> PixelT;
+
+    /// The quantity to use when a pixel value is undefined
+    static inline const PixelT padValue() {
+        return PixelT();
+    }
 };
 
 /// Return a SinglePixel
