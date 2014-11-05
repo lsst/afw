@@ -6,7 +6,7 @@ from .cameraGeomLib import FOCAL_PLANE, PUPIL, PIXELS, TAN_PIXELS, ACTUAL_PIXELS
 from .camera import Camera
 from .makePixelToTanPixel import makePixelToTanPixel
 
-__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs"]
+__all__ = ["makeCameraFromPath", "makeCameraFromCatalogs", "makeDetector"]
 
 cameraSysList = [PUPIL, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
