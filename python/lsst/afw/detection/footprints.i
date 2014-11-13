@@ -25,7 +25,6 @@
 %{
 #include "boost/shared_ptr.hpp"
 #include "lsst/afw/detection/Threshold.h"
-#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
@@ -52,7 +51,6 @@ typedef lsst::afw::geom::Span Span;
 // already in image.i.
 // %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
-%shared_ptr(lsst::afw::detection::Peak);
 %declareTablePersistable(Footprint, lsst::afw::detection::Footprint);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
@@ -69,12 +67,10 @@ typedef lsst::afw::geom::Span Span;
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
-%template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
 %template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::geom::Span> >;
 %template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
 
 %include "lsst/afw/detection/Threshold.h"
-%include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
 %include "lsst/afw/detection/FootprintCtrl.h"
 %include "lsst/afw/detection/HeavyFootprint.h"

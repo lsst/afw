@@ -216,14 +216,13 @@ class FootprintTestCase(tests.TestCase):
     def testTablePersistence(self):
         ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25), afwGeom.Point2D(9,15))
         fp1 = afwDetect.Footprint(ellipse)
-        fp1.getPeaks().push_back(afwDetect.Peak(6,7,2))
-        fp1.getPeaks().push_back(afwDetect.Peak(8,9,3))
+        fp1.addPeak(6, 7, 2)
+        fp1.addPeak(8, 9, 3)
         filename = "testFootprintTablePersistence.fits"
         fp1.writeFits(filename)
         fp2 = afwDetect.Footprint.readFits(filename)
         self.assertEqual(fp1.getArea(), fp2.getArea())
         self.assertEqual(list(fp1.getSpans()), list(fp2.getSpans()))
-        # can't use Peak operator== for comparison because it compares IDs, not positions/values
         self.assertEqual(len(fp1.getPeaks()), len(fp2.getPeaks()))
         for peak1, peak2 in zip(fp1.getPeaks(), fp2.getPeaks()):
             self.assertEqual(peak1.getIx(), peak2.getIx())

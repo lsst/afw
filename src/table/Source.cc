@@ -405,7 +405,7 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
                 float x = *j++;
                 float y = *j++;
                 float value = *j++;
-                fp->getPeaks().push_back(boost::make_shared<detection::Peak>(x, y, value));
+                fp->addPeak(x, y, value);
             }
         }
         record->setFootprint(fp);
