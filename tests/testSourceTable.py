@@ -121,7 +121,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        filename = "testpersisted.fits"
+        filename = "testPersisted.fits"
         self.catalog.writeFits(filename)
         catalog = lsst.afw.table.SourceCatalog.readFits(filename)
         table = catalog.getTable()
