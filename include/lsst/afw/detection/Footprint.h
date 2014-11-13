@@ -71,7 +71,6 @@ public:
 
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
-    typedef std::vector<Peak::Ptr> PeakList;
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
@@ -87,14 +86,19 @@ public:
     int getId() const { return _fid; }   //!< Return the Footprint's unique ID
     SpanList& getSpans() { return _spans; } //!< return the Span%s contained in this Footprint
     const SpanList& getSpans() const { return _spans; } //!< return the Span%s contained in this Footprint
+
     /**
-     * Return the Peak%s contained in this Footprint
+     * Return the Peaks contained in this Footprint
      *
-     * The peaks are ordered by decreasing pixel intensity at the peak position (so the most negative
-     * peak appears last).
+     * The peaks should be ordered by decreasing pixel intensity at the peak position (so the most negative
+     * peak appears last).  Users that add new Peaks manually are responsible for maintaining this sorting.
      */
-    PeakList & getPeaks() { return _peaks; }
-    const PeakList & getPeaks() const { return _peaks; } //!< Return the Peak%s contained in this Footprint
+    PeakCatalog & getPeaks() { return _peaks; }
+    const PeakCatalog & getPeaks() const { return _peaks; }
+
+    /// Convenience function to add a peak (since that'd now be multiple lines without this function)
+    PTR(PeakRecord) addPeak(float fx, float fy, float value);
+
     int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
     geom::Point2D getCentroid() const;
@@ -201,7 +205,7 @@ private:
 
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
-    PeakList _peaks;                     //!< the Peaks lying in this footprint
+    PeakCatalog _peaks;                     //!< the Peaks lying in this footprint
     mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
     bool _normalized;                    //!< Are the spans sorted?
 };

@@ -46,6 +46,7 @@ Python interface to lsst::afw::detection classes
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
+#include "lsst/afw/table.h"
 
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
 #include "numpy/arrayobject.h"
@@ -55,6 +56,10 @@ Python interface to lsst::afw::detection classes
 
 %init %{
     import_array();
+%}
+
+%pythoncode %{
+import numpy  # used by some afw.table stuff we invoked here, but not included by %import
 %}
 
 %include "std_string.i"
@@ -69,10 +74,12 @@ Python interface to lsst::afw::detection classes
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/geom/ellipses/ellipsesLib.i"
 %import "lsst/afw/math/mathLib.i"
+%import "lsst/afw/table/tableLib.i"
 %include "ndarray.i"
 
 %lsst_exceptions()
 
+%include "Peak.i"
 %include "footprints.i"
 %include "psf.i"
 %include "footprintset.i"

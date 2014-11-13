@@ -32,7 +32,6 @@
 #include "boost/format.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
@@ -91,6 +90,7 @@ Footprint::Footprint(
     _fid(++id),
     _area(0),
     _bbox(geom::Box2I()),
+    _peaks(PeakTable::makeMinimalSchema()),
     _region(region),
     _normalized(true)
 {
@@ -110,6 +110,7 @@ Footprint::Footprint(
     _fid(++id),
     _area(0),
     _bbox(bbox),
+    _peaks(PeakTable::makeMinimalSchema()),
     _region(region)
 {
     int const x0 = bbox.getMinX();
@@ -130,6 +131,7 @@ Footprint::Footprint(
     _fid(++id),
     _area(0),
     _bbox(geom::BoxI()),
+    _peaks(PeakTable::makeMinimalSchema()),
     _region(region)
 {
     int const r2 = static_cast<int>(radius*radius + 0.5); // rounded radius^2
@@ -148,6 +150,7 @@ Footprint::Footprint(
     _fid(++id),
     _area(0),
     _bbox(geom::Box2I()),
+    _peaks(PeakTable::makeMinimalSchema()),
     _region(region),
     _normalized(true)
 {
@@ -175,6 +178,7 @@ Footprint::Footprint(
     _fid(++id),
     _area(0),
     _bbox(geom::Box2I()),
+    _peaks(PeakTable::makeMinimalSchema()),
     _region(region),
     _normalized(false)
 {
@@ -188,6 +192,8 @@ Footprint::Footprint(Footprint const & other)
   : lsst::daf::base::Citizen(typeid(this)),
     _fid(++id),
     _bbox(other._bbox),
+    // peaks are deep-copied, but use the same Table as other
+    _peaks(other.getPeaks().getTable(), other.getPeaks().begin(), other.getPeaks().end(), true),
     _region(other._region)
 {
     //deep copy spans
@@ -200,17 +206,23 @@ Footprint::Footprint(Footprint const & other)
     _area = other._area;
     _normalized = other._normalized;
 
-    //deep copy peaks
-    _peaks.reserve(other._peaks.size());
-    for(PeakList::const_iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
-        _peaks.push_back(Peak::Ptr(new Peak(**i)));
-    }
 }
 
 /**
  * Destroy a Footprint
  */
 Footprint::~Footprint() {
+}
+
+
+PTR(PeakRecord) Footprint::addPeak(float fx, float fy, float value) {
+    PTR(PeakRecord) p = getPeaks().addNew();
+    p->setIx(fx);
+    p->setIy(fy);
+    p->setFx(fx);
+    p->setFy(fy);
+    p->setPeakValue(value);
+    return p;
 }
 
 /**
@@ -233,10 +245,10 @@ bool Footprint::contains(
 
 namespace {
 /// Predicate for removing peaks outside a bbox
-struct ClipPredicate : public std::unary_function<PTR(Peak) const&, bool> {
+struct ClipPredicate : public std::unary_function<PeakRecord const&, bool> {
     geom::Box2I const& bbox;
     ClipPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
-    bool operator()(PTR(Peak) const& peak) const {
+    bool operator()(PTR(PeakRecord) const& peak) const {
         return bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
     }
 };
@@ -274,7 +286,8 @@ void Footprint::clipTo(geom::Box2I const& bbox) {
     }
 
     // Remove peaks not in the new bbox
-    _peaks.erase(std::remove_if(_peaks.begin(), _peaks.end(), ClipPredicate(bbox)), _peaks.end());
+    _peaks.getInternal().erase(std::remove_if(_peaks.getInternal().begin(), _peaks.getInternal().end(),
+                                              ClipPredicate(bbox)), _peaks.getInternal().end());
 
     if (_spans.empty()) {
         _bbox = geom::Box2I();
@@ -739,10 +752,6 @@ public:
     table::Key<int> spanY;
     table::Key<int> spanX0;
     table::Key<int> spanX1;
-    table::Schema peakSchema;
-    table::Key<float> peakX;
-    table::Key<float> peakY;
-    table::Key<float> peakValue;
 
     static FootprintPersistenceHelper const & get() {
         static FootprintPersistenceHelper instance;
@@ -754,14 +763,9 @@ private:
         spanSchema(),
         spanY(spanSchema.addField<int>("y", "row position of span", "pixels")),
         spanX0(spanSchema.addField<int>("x0", "first column of span (inclusive)", "pixels")),
-        spanX1(spanSchema.addField<int>("x1", "first column of span (inclusive)", "pixels")),
-        peakSchema(),
-        peakX(peakSchema.addField<float>("x", "column position of peak", "pixels")),
-        peakY(peakSchema.addField<float>("y", "column position of peak", "pixels")),
-        peakValue(peakSchema.addField<float>("value", "value of peak pixel", "pixels"))
+        spanX1(spanSchema.addField<int>("x1", "first column of span (inclusive)", "pixels"))
     {
         spanSchema.getCitizen().markPersistent();
-        peakSchema.getCitizen().markPersistent();
     }
 };
 
@@ -788,14 +792,8 @@ void Footprint::write(OutputArchiveHandle & handle) const {
         record->set(keys.spanX1, (**i).getX1());
     }
     handle.saveCatalog(spanCat);
-    afw::table::BaseCatalog peakCat = handle.makeCatalog(keys.peakSchema);
-    peakCat.reserve(_peaks.size());
-    for (PeakList::const_iterator i = _peaks.begin(); i != _peaks.end(); ++i) {
-        PTR(afw::table::BaseRecord) record = peakCat.addNew();
-        record->set(keys.peakX, (**i).getFx());
-        record->set(keys.peakY, (**i).getFy());
-        record->set(keys.peakValue, (**i).getPeakValue());
-    }
+    afw::table::BaseCatalog peakCat = handle.makeCatalog(_peaks.getSchema());
+    peakCat.insert(peakCat.end(), _peaks.begin(), _peaks.end(), true);
     handle.saveCatalog(peakCat);
 }
 
@@ -807,11 +805,30 @@ void Footprint::readSpans(afw::table::BaseCatalog const & spanCat) {
 }
 
 void Footprint::readPeaks(afw::table::BaseCatalog const & peakCat) {
-    FootprintPersistenceHelper const & keys = FootprintPersistenceHelper::get();
+    if (!peakCat.getSchema().contains(PeakTable::makeMinimalSchema())) {
+        // need to handle an older form of Peak persistence for backwards compatibility
+        afw::table::SchemaMapper mapper(peakCat.getSchema());
+        mapper.addMinimalSchema(PeakTable::makeMinimalSchema());
+        afw::table::Key<float> oldX = peakCat.getSchema()["x"];
+        afw::table::Key<float> oldY = peakCat.getSchema()["y"];
+        afw::table::Key<float> oldPeakValue = peakCat.getSchema()["value"];
+        mapper.addMapping(oldX, "f.x");
+        mapper.addMapping(oldY, "f.y");
+        mapper.addMapping(oldPeakValue, "peakValue");
+        _peaks = PeakCatalog(mapper.getOutputSchema());
+        _peaks.reserve(peakCat.size());
+        for (afw::table::BaseCatalog::const_iterator i = peakCat.begin(); i != peakCat.end(); ++i) {
+            PTR(PeakRecord) newPeak = _peaks.addNew();
+            newPeak->assign(*i, mapper);
+            newPeak->setIx(int(newPeak->getFx()));
+            newPeak->setIy(int(newPeak->getFy()));
+        }
+        return;
+    }
+    _peaks = PeakCatalog(peakCat.getSchema());
+    _peaks.reserve(peakCat.size());
     for (afw::table::BaseCatalog::const_iterator i = peakCat.begin(); i != peakCat.end(); ++i) {
-        _peaks.push_back(
-            boost::make_shared<Peak>(i->get(keys.peakX), i->get(keys.peakY), i->get(keys.peakValue))
-        );
+        _peaks.addNew()->assign(*i);
     }
 }
 
@@ -834,11 +851,7 @@ Footprint & Footprint::operator=(Footprint & other) {
     _bbox = other._bbox;
 
     //deep copy peaks
-    _peaks = PeakList();
-    _peaks.reserve(other._peaks.size());
-    for(PeakList::iterator i(other._peaks.begin()); i != other._peaks.end(); ++i) {
-        _peaks.push_back(Peak::Ptr(new Peak(**i)));
-    }
+    _peaks = PeakCatalog(other.getPeaks().getTable(), other.getPeaks().begin(), other.getPeaks().end(), true);
     return *this;
 }
 
@@ -1390,13 +1403,31 @@ namespace {
     Footprint::Ptr _mergeFootprints(Footprint const& foota, Footprint const& footb) {
         PTR(Footprint) foot(new Footprint());
 
-        const Footprint::PeakList& pka = foota.getPeaks();
-        const Footprint::PeakList& pkb = footb.getPeaks();
-        Footprint::PeakList& pk = foot->getPeaks();
-        pk.reserve(pka.size() + pkb.size());
-        pk.insert(pk.begin(), pka.begin(), pka.end());
-        pk.insert(pk.end()-1, pkb.begin(), pkb.end());
-        assert(pk.size() == (pka.size() + pkb.size()));
+        const PeakCatalog & pka = foota.getPeaks();
+        const PeakCatalog& pkb = footb.getPeaks();
+        PeakCatalog& pk = foot->getPeaks();
+        if (pka.empty()) {
+            if (!pkb.empty()) {
+                pk = PeakCatalog(pkb.getTable(), pkb.begin(), pkb.end(), true);
+            }
+        } else {
+            if (pkb.empty()) {
+                pk = PeakCatalog(pka.getTable(), pka.begin(), pka.end(), true);
+            } else {
+                if (pka.getSchema() == pkb.getSchema()) {
+                    // use schema A, as it's the same as schema B
+                    pk = PeakCatalog(pka.getTable());
+                    pk.reserve(pka.size() + pkb.size());
+                    pk.insert(pk.end(), pka.begin(), pka.end(), true);
+                    pk.insert(pk.end(), pkb.begin(), pkb.end(), true);
+                } else {
+                    throw LSST_EXCEPT(
+                        pex::exceptions::InvalidParameterException,
+                        "Cannot merge Footprints when Peaks have different Schemas"
+                    );
+                }
+            }
+        }
 
         const Footprint::SpanList& spansa = foota.getSpans();
         const Footprint::SpanList& spansb = footb.getSpans();
