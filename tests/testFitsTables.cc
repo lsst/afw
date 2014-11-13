@@ -30,12 +30,12 @@ struct EqualityCompare {
     }
 
     bool operator()(
-        lsst::afw::detection::Peak::Ptr const & a, 
-        lsst::afw::detection::Peak::Ptr const & b
+        lsst::afw::detection::PeakRecord const & a,
+        lsst::afw::detection::PeakRecord const & b
     ) const {
-        return (*this)(a->getFx(), b->getFx())
-            && (*this)(a->getFy(), b->getFy())
-            && (*this)(a->getPeakValue(), b->getPeakValue());
+        return (*this)(a.getFx(), b.getFx())
+            && (*this)(a.getFy(), b.getFy())
+            && (*this)(a.getPeakValue(), b.getPeakValue());
     }
 
 };
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(testFits) {
         fp1->addSpan(0, 5, 8);
         fp1->addSpan(1, 4, 9);
         fp1->addSpan(2, 6, 7);
-        fp1->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.5f, 1.2f, 25.6f));
-        fp1->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(6.8f, 0.8f, 23.2f));
+        fp1->addPeak(4.5f, 1.2f, 25.6f);
+        fp1->addPeak(6.8f, 0.8f, 23.2f);
         PTR(SourceRecord) r1 = vector.getTable()->makeRecord();
         r1->setFootprint(fp1);
         
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         PTR(Footprint) fp2 = boost::make_shared<Footprint>();
         fp2->addSpan(3, 2, 7);
         fp2->addSpan(4, 3, 5);
-        fp2->getPeaks().push_back(boost::make_shared<lsst::afw::detection::Peak>(4.2f, 3.3f, 32.1f));
+        fp2->addPeak(4.2f, 3.3f, 32.1f);
         r2->setFootprint(fp2);
         vector.push_back(r2);
 
