@@ -27,6 +27,7 @@
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/FootprintMerge.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/detection/FootprintFunctor.h"
@@ -76,6 +77,7 @@ typedef lsst::afw::geom::Span Span;
 %include "lsst/afw/detection/Threshold.h"
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
+%include "lsst/afw/detection/FootprintMerge.h"
 %include "lsst/afw/detection/FootprintCtrl.h"
 %include "lsst/afw/detection/HeavyFootprint.h"
 %include "lsst/afw/detection/FootprintFunctor.h"
@@ -266,3 +268,28 @@ typedef lsst::afw::geom::Span Span;
 makeHeavyFootprint = makeHeavyFootprintF
 }
 
+%extend lsst::afw::detection::FootprintMergeList {
+%pythoncode %{
+
+        def getMergedSourceCatalog(self, catalogs, filters,
+                                   peakDist, schema, idFactory):
+            """Add multiple catalogs and get the SourceCatalog with merged Footprints"""
+            import lsst.afw.table as afwTable
+
+            table = afwTable.SourceTable.make(schema, idFactory)
+            mergedList = afwTable.SourceCatalog(table)
+
+            # if peak is not an array, create an array the size of catalogs
+            try:
+               len(peakDist)
+            except:
+               peakDist = [peakDist] * len(catalogs)
+
+            self.clearCatalog()
+            for cat, filter, dist in zip(catalogs, filters, peakDist):
+               self.addCatalog(table, cat, filter, dist)
+
+            self.getFinalSources(mergedList)
+            return mergedList
+%}
+}
