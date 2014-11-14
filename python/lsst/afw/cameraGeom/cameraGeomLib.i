@@ -79,6 +79,8 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %useValueEquality(lsst::afw::cameraGeom::CameraSysPrefix)
 %addStreamRepr(lsst::afw::cameraGeom::CameraSys)
 %useValueEquality(lsst::afw::cameraGeom::CameraSys)
+%addStreamRepr(lsst::afw::cameraGeom::CameraPoint)
+%useValueEquality(lsst::afw::cameraGeom::CameraPoint)
 
 %extend lsst::afw::cameraGeom::CameraSys {
     %pythoncode { 

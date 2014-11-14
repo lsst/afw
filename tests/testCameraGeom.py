@@ -87,6 +87,11 @@ class CameraGeomTestCase(unittest.TestCase):
                     self.assertEquals(cp.getPoint(), pt)
                     self.assertEquals(cp.getCameraSys().getSysName(), coordSys.getSysName())
 
+                    # test == and !=
+                    cp2 = camera.makeCameraPoint(pt, coordSys)
+                    self.assertTrue(cp == cp2)
+                    self.assertFalse(cp != cp2)
+
             det = camera[camera.getNameIter().next()]
             cp = camera.makeCameraPoint(point, FOCAL_PLANE)
             self.checkCamPoint(cp, point, FOCAL_PLANE)
