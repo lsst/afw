@@ -31,8 +31,8 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
 
-from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, Camera, Detector, \
-                                assembleAmplifierImage, assembleAmplifierRawImage
+from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
+    CameraPoint, Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
 
@@ -101,6 +101,31 @@ class CameraGeomTestCase(unittest.TestCase):
             self.assertRaises(RuntimeError, camera.makeCameraPoint, point, CameraSys('abcd'))
             #CameraSysPrefix camera sys in makeCameraPoint
             self.assertRaises(TypeError, camera.makeCameraPoint, point, PIXELS)
+
+    def testCameraSysRepr(self):
+        """Test CameraSys.__repr__ and CameraSysPrefix.__repr__
+        """
+        for sysName in ("FocalPlane", "Pupil", "Pixels", "foo"):
+            cameraSys = CameraSys(sysName)
+            predRepr = "CameraSys(%s)" % (sysName)
+            self.assertEqual(repr(cameraSys), predRepr)
+
+            cameraSysPrefix = CameraSysPrefix(sysName)
+            predCSPRepr = "CameraSysPrefix(%s)" % (sysName)
+            self.assertEqual(repr(cameraSysPrefix), predCSPRepr)
+            for detectorName in ("Detector 1", "bar"):
+                cameraSys2 = CameraSys(sysName, detectorName)
+                predRepr2 = "CameraSys(%s, %s)" % (sysName, detectorName)
+                self.assertEqual(repr(cameraSys2), predRepr2)
+
+    def testCameraPointRepr(self):
+        """Test CameraPoint.__repr__
+        """
+        point = afwGeom.Point2D(1.5, -23.4)
+        cameraSys = FOCAL_PLANE
+        cameraPoint = CameraPoint(point, cameraSys)
+        predRepr = "CameraPoint(%s, %s)" % (point, cameraSys)
+        self.assertEqual(repr(cameraPoint), predRepr)
 
     def testAccessor(self):
         for cw in self.cameraList:

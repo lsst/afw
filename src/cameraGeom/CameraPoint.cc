@@ -27,9 +27,7 @@ namespace afw {
 namespace cameraGeom {
 
 std::ostream &operator<< (std::ostream &os, CameraPoint const &cameraPoint) {
-    os << "CameraPoint(("
-        << cameraPoint.getPoint()[0] << ", " << cameraPoint.getPoint()[1]
-        << "), " << cameraPoint.getCameraSys().getSysName() << ")";
+    os << "CameraPoint(" << cameraPoint.getPoint() << ", " << cameraPoint.getCameraSys() << ")";
     return os;
 }
 
