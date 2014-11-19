@@ -1225,61 +1225,42 @@ template image::Image<int>::Ptr setFootprintID(CONST_PTR(Footprint)& foot, int c
 /*
  * Grow a Footprint isotropically by r pixels, returning a new Footprint
  *
- * N.b. this is slow, as it uses a convolution with a disk
+ * See Kim et al., ETRI Journal 27, Dec 2005.
  */
 namespace {
-PTR(Footprint) growFootprintSlow(
+PTR(Footprint) growFootprintRLE(
         Footprint const& foot, //!< The Footprint to grow
-        int ngrow                              //!< how much to grow foot
-                                                 ) {
-    if (ngrow < 0) {
-        ngrow = 0;                      // ngrow == 0 => no grow
+        int ngrow              //!< how much to grow foot
+) {
+    if (ngrow <= 0 || foot.getNpix() == 0 ) {
+        // Return a new footprint equal to the input.
+        return PTR(Footprint)(new Footprint(foot));
     }
 
-    if (foot.getNpix() == 0) {          // an empty Footprint
-        return PTR(Footprint)(new Footprint);
+    // Create and later populate an empty  footprint with bbox equal to foot.
+    PTR(Footprint) grown(new Footprint(foot.getBBox(), foot.getRegion()));
+
+    // Our structuring element is a circle with radius ngrow. At any given y
+    // coordinate, the width of the circle comes from Pythagoras.
+    std::vector<int> offsets;
+    for (auto dy = 0; dy <= ngrow; dy++) {
+        offsets.push_back(static_cast<int>(sqrt(ngrow * ngrow - dy * dy)));
     }
 
-    /*
-     * We'll insert the footprints into an image, then convolve with a disk,
-     * then extract a footprint from the result --- this is magically what we want.
-     */
-    geom::Box2I bbox = foot.getBBox();
-    bbox.grow(2*ngrow);
-    image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
-    *idImage = 0;
-    idImage->setXY0(0, 0);
-
-    set_footprint_id<int>(idImage, foot, 1, -bbox.getMinX(), -bbox.getMinY());
-
-
-    image::Image<double>::Ptr circle_im(
-        new image::Image<double>(geom::Extent2I(2*ngrow + 1, 2*ngrow + 1))
-    );
-    *circle_im = 0;
-    for (int r = -ngrow; r <= ngrow; ++r) {
-        image::Image<double>::x_iterator row = circle_im->x_at(0, r + ngrow);
-        for (int c = -ngrow; c <= ngrow; ++c, ++row) {
-            if (r*r + c*c <= ngrow*ngrow) {
-                *row = 8;
+    // Iterate over foot & structuring element adding spans to the empty
+    // footprint.
+    for (auto spanIter = foot.getSpans().begin(); spanIter < foot.getSpans().end(); spanIter++) {
+        for (auto dy = 0; dy <= ngrow; dy++) {
+            auto xmin = (*spanIter)->getX0() - offsets[dy];
+            auto xmax = (*spanIter)->getX1() + offsets[dy];
+            grown->addSpan((*spanIter)->getY() + dy, xmin, xmax);
+            if (dy != 0) {
+                grown->addSpan((*spanIter)->getY() - dy, xmin, xmax);
             }
         }
     }
 
-    math::FixedKernel::Ptr circle(new math::FixedKernel(*circle_im));
-    // Here's the actual grow step
-    image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
-    math::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
-
-    PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1));
-
-    assert (grownList->getFootprints()->size() > 0);
-    PTR(Footprint) grown = *grownList->getFootprints()->begin();
-    //
-    // Fix the coordinate system to be that of foot
-    //
-    grown->shift(bbox.getMinX(), bbox.getMinY());
-    grown->setRegion(foot.getRegion());
+    grown->normalize();
 
     return grown;
 }
@@ -1484,7 +1465,7 @@ PTR(Footprint) growFootprint(
                             )
 {
     if (isotropic) {
-        return growFootprintSlow(foot, ngrow);
+        return growFootprintRLE(foot, ngrow);
     }
 
     if (ngrow < 0) {
