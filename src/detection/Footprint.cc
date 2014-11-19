@@ -1229,34 +1229,23 @@ template image::Image<int>::Ptr setFootprintID(CONST_PTR(Footprint)& foot, int c
  */
 namespace {
 PTR(Footprint) growFootprintRLE(
-        Footprint const& foot, //!< The Footprint to grow
-        int ngrow              //!< how much to grow foot
+        Footprint const& foot,    //!< The Footprint to grow
+        std::map<int,int> element //!< The structuring element
 ) {
-    if (ngrow <= 0 || foot.getNpix() == 0 ) {
-        // Return a new footprint equal to the input.
-        return PTR(Footprint)(new Footprint(foot));
-    }
+    // The structuring element is stored as a map of y position to width of
+    // span. Note that this means we support only one span per value of y,
+    // which is all we need for isotropic & Manhattan dilation.
 
     // Create and later populate an empty  footprint with bbox equal to foot.
     PTR(Footprint) grown(new Footprint(foot.getBBox(), foot.getRegion()));
 
-    // Our structuring element is a circle with radius ngrow. At any given y
-    // coordinate, the width of the circle comes from Pythagoras.
-    std::vector<int> offsets;
-    for (auto dy = 0; dy <= ngrow; dy++) {
-        offsets.push_back(static_cast<int>(sqrt(ngrow * ngrow - dy * dy)));
-    }
-
     // Iterate over foot & structuring element adding spans to the empty
     // footprint.
-    for (auto spanIter = foot.getSpans().begin(); spanIter < foot.getSpans().end(); spanIter++) {
-        for (auto dy = 0; dy <= ngrow; dy++) {
-            auto xmin = (*spanIter)->getX0() - offsets[dy];
-            auto xmax = (*spanIter)->getX1() + offsets[dy];
-            grown->addSpan((*spanIter)->getY() + dy, xmin, xmax);
-            if (dy != 0) {
-                grown->addSpan((*spanIter)->getY() - dy, xmin, xmax);
-            }
+    for (auto spanIter = foot.getSpans().begin(); spanIter != foot.getSpans().end(); spanIter++) {
+        for (auto it = element.begin(); it != element.end(); it++) {
+            auto xmin = (*spanIter)->getX0() - it->second;
+            auto xmax = (*spanIter)->getX1() + it->second;
+            grown->addSpan((*spanIter)->getY() + it->first, xmin, xmax);
         }
     }
 
@@ -1461,87 +1450,28 @@ PTR(Footprint) growFootprint(
         Footprint const& foot,          //!< The Footprint to grow
         int ngrow,                      //!< how much to grow foot
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
-                                        //!< @note Isotropic grows are significantly slower
-                            )
-{
+) {
+    if (ngrow <= 0 || foot.getNpix() == 0 ) {
+        // Return a new footprint equal to the input.
+        return PTR(Footprint)(new Footprint(foot));
+    }
+
+    // Map of y position in structuring element to width of element.
+    std::map<int,int> element;
     if (isotropic) {
-        return growFootprintRLE(foot, ngrow);
-    }
-
-    if (ngrow < 0) {
-        ngrow = 0;                      // ngrow == 0 => no grow
-    }
-    /*
-     * We'll insert the footprints into an image, set all the pixels
-     * to the Manhattan distance from the nearest set pixel, then
-     * extract a footprint from the result
-     *
-     * Cf. http://ostermiller.org/dilate_and_erode.html
-     */
-    geom::Box2I bbox = foot.getBBox();
-    bbox.grow(ngrow);
-    image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
-    *idImage = 0;
-    idImage->setXY0(0, 0);
-
-    // Set all the pixels in the footprint to 1
-    set_footprint_id<int>(idImage, foot, 1, -bbox.getMinX(), -bbox.getMinY());
-    //
-    // Set the idImage to the Manhattan distance from the nearest set pixel
-    //
-    int const height = idImage->getHeight();
-    int const width = idImage->getWidth();
-
-    // traverse from bottom left to top right
-    for (int y = 0; y != height; ++y) {
-        image::Image<int>::xy_locator im = idImage->xy_at(0, y);
-
-        for (int x = 0; x != width; ++x, ++im.x()) {
-            if (im(0, 0) == 1) {
-                // first pass and pixel was on, it gets a zero
-                im(0, 0) = 0;
-            } else {
-                // pixel was off. It is at most the sum of lengths of the array away from a pixel that is on
-                im(0, 0) = width + height;
-                // or one more than the pixel to the north
-                if (y > 0) {
-                    // im(0, 0)[0] == static_cast<int>(im(0, 0))
-                    im(0, 0) = std::min(im(0, 0)[0], im(0, -1) + 1);
-                }
-                // or one more than the pixel to the west
-                if (x > 0) {
-                    im(0, 0) = std::min(im(0, 0)[0], im(-1, 0) + 1);
-                }
-            }
+        // An isotropic grow is equivalent to growing with a circular
+        // structuring element.
+        for (auto dy = -ngrow; dy <= ngrow; dy++) {
+            element[dy] = static_cast<int>(sqrt(ngrow * ngrow - dy * dy));
+        }
+    } else {
+        // A Manhattan grow is equivalent to growing with a diamond-shaped
+        // structuring element.
+        for (auto dy = -ngrow; dy <= ngrow; dy++) {
+            element[dy] = ngrow - abs(dy);
         }
     }
-    // traverse from top right to bottom left
-    for (int y = height - 1; y >= 0; --y) {
-        image::Image<int>::xy_locator im = idImage->xy_at(width - 1, y);
-        for (int x = width - 1; x >= 0; --x, --im.x()) {
-            // either what we had on the first pass or one more than the pixel to the south
-            if (y + 1 < height) {
-                im(0, 0) = std::min(im(0, 0)[0], im(0, 1) + 1);
-            }
-            // or one more than the pixel to the east
-            if (x + 1 < width) {
-                im(0, 0) = std::min(im(0, 0)[0], im(1, 0) + 1);
-            }
-        }
-    }
-
-    image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
-    // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
-    PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(-ngrow, Threshold::VALUE, false)));
-    assert (grownList->getFootprints()->size() > 0);
-    PTR(Footprint) grown = *grownList->getFootprints()->begin();
-    //
-    // Fix the coordinate system to be that of foot
-    //
-    grown->shift(bbox.getMinX(), bbox.getMinY());
-    grown->setRegion(foot.getRegion());
-
-    return grown;
+    return growFootprintRLE(foot, element);
 }
 
 PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int ngrow, bool isotropic) {
