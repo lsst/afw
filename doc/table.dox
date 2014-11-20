@@ -261,6 +261,10 @@ namespace lsst { namespace afw { namespace table {
  *  <td>No</td> <td>No</td> <td>No</td> <td>xx, yy, xy</td> <td></td>
  *  </tr>
  *  <tr>
+ *  <td>Array<int></td> <td>"ArrayI"</td> <td></td> <td>ndarray::Array<int,1></td>
+ *  <td>Yes</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an ndarray::ArrayRef</td>
+ *  </tr>
+ *  <tr>
  *  <td>Array<float></td> <td>"ArrayF"</td> <td></td> <td>ndarray::Array<float,1></td>
  *  <td>Yes</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an ndarray::ArrayRef</td>
  *  </tr>
