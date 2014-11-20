@@ -47,7 +47,10 @@ class HeavyFootprintCtrl;
  */
 template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
           typename VariancePixelT=lsst::afw::image::VariancePixel>
-class HeavyFootprint : public Footprint {
+class HeavyFootprint :
+    public afw::table::io::PersistableFacade< HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> >,
+    public Footprint
+{
 public:
 
     /**
@@ -107,7 +110,17 @@ public:
         return maskbits;
     }
 
+protected:
+
+    class Factory;  // factory class used for persistence, public only so we can instantiate it in .cc file
+
+    virtual std::string getPersistenceName() const;
+
+    virtual void write(OutputArchiveHandle & handle) const;
+
 private:
+    HeavyFootprint() {}  // private constructor, only used for persistence.
+
     ndarray::Array<ImagePixelT, 1, 1> _image;
     ndarray::Array<MaskPixelT, 1, 1> _mask;
     ndarray::Array<VariancePixelT, 1, 1> _variance;

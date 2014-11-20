@@ -59,13 +59,13 @@ typedef lsst::afw::geom::Span Span;
 %declareNumPyConverters(ndarray::Array<unsigned short,1,1>);
 %declareNumPyConverters(ndarray::Array<float,1,1>);
 
-%define %HeavyFootprintPtr(PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
-%shared_ptr(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>);
+%define %HeavyFootprintPtr(NAME, PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
+%declareTablePersistable(HeavyFootprint ## NAME, lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>);
 %declareNumPyConverters(ndarray::Array<PIXEL_TYPE,1,1>);
 %enddef
 
-%HeavyFootprintPtr(int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
-%HeavyFootprintPtr(float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+%HeavyFootprintPtr(I, int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+%HeavyFootprintPtr(F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
