@@ -1397,23 +1397,75 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(
 
 template image::Image<int>::Ptr setFootprintID(Footprint::Ptr const& foot, int const id);
 
-/************************************************************************************************************/
-/*
- * Grow a Footprint isotropically by r pixels, returning a new Footprint
- *
- * See Kim et al., ETRI Journal 27, Dec 2005.
- */
 namespace {
-PTR(Footprint) growFootprintImpl(
-        Footprint const& foot,    //!< The Footprint to grow
-        std::map<int,int> element //!< The structuring element
-) {
-    // The structuring element is stored as a map of y position to half width
-    // of span. Note that this means we support only one symmetric span per
-    // value of y, which is all we need for isotropic & Manhattan dilation.
+/** Define a structuring element for use in RLE-baed grows
+ *
+ * Provides pre-canned definition of circular & diamond shapes for use in
+ * isotropic and non-isotropic dilation respectively, as well as elements which
+ * can be used to grow in one or more of up/down/left/right.
+ */
+class StructuringElement
+{
+public:
+    enum Shape { CIRCLE, DIAMOND };
+    typedef std::vector<Span>::const_iterator const_iterator;
+    StructuringElement(Shape shape, int radius);
+    StructuringElement(int left, int right, int up, int down);
+    const_iterator begin() const { return widths.begin(); }
+    const_iterator end() const { return widths.end(); }
 
-    // Create and later populate an empty  footprint with bbox equal to foot.
-    PTR(Footprint) grown(new Footprint(foot.getBBox(), foot.getRegion()));
+private:
+    std::vector<Span> widths;
+};
+
+/** Create a shape-based StructuringElement
+ *
+ * Circles and diamonds are used in isotropic and non-isotropic grows,
+ * respetively.
+ */
+StructuringElement::StructuringElement(Shape shape, int radius) {
+    widths.reserve(2 * radius + 1);
+    switch (shape) {
+    case CIRCLE:
+        for (int dy = -radius; dy <= radius; dy++) {
+            int dx = static_cast<int>(sqrt(radius * radius - dy * dy));
+            widths.push_back(Span(dy, dx, dx));
+        }
+        break;
+    case DIAMOND:
+        for (int dy = -radius; dy <= radius; dy++) {
+            int dx = radius - abs(dy);
+            widths.push_back(Span(dy, dx, dx));
+        }
+        break;
+    }
+}
+
+/** Create a direction-based StructuringElement
+ *
+ * Used to grow in one or more of the left/right/up/down directions.
+ */
+StructuringElement::StructuringElement(int left, int right, int up, int down) {
+    widths.reserve(up + down + 1);
+    for (int dy = 1; dy <= up; dy++) {
+        widths.push_back(Span(dy, 0, 0));
+    }
+    for (int dy = -1; dy >= -down; dy--) {
+        widths.push_back(Span(dy, 0, 0));
+    }
+    widths.push_back(Span(0, left, right));
+}
+
+/** RLE based implementation of Footprint dilation.
+  *
+  * See Kim et al., ETRI Journal 27, Dec 2005.
+  */
+PTR(Footprint) growFootprintImpl(
+        Footprint const& foot,            //!< The Footprint to grow
+        StructuringElement const& element //!< The structuring element
+) {
+    // Create an empty footprint covering foot's region.
+    PTR(Footprint) grown(new Footprint(0, foot.getRegion()));
 
     // Iterate over foot & structuring element adding spans to the empty
     // footprint.
@@ -1421,10 +1473,10 @@ PTR(Footprint) growFootprintImpl(
          spanIter != foot.getSpans().end();
          spanIter++
     ) {
-        for (std::map<int,int>::const_iterator it = element.begin(); it != element.end(); it++) {
-            int xmin = (*spanIter)->getX0() - it->second;
-            int xmax = (*spanIter)->getX1() + it->second;
-            grown->addSpan((*spanIter)->getY() + it->first, xmin, xmax);
+        for (StructuringElement::const_iterator it = element.begin(); it != element.end(); it++) {
+            int xmin = (*spanIter)->getX0() - it->getX0();
+            int xmax = (*spanIter)->getX1() + it->getX1();
+            grown->addSpan((*spanIter)->getY() + it->getY(), xmin, xmax);
         }
     }
 
@@ -1661,78 +1713,39 @@ void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
 
 PTR(Footprint) growFootprint(
         Footprint const& foot,          //!< The Footprint to grow
-        int ngrow,                      //!< how much to grow foot
+        int nGrow,                      //!< how much to grow foot
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
 ) {
-    if (ngrow <= 0 || foot.getNpix() == 0 ) {
+    if (nGrow <= 0 || foot.getNpix() == 0 ) {
         // Return a new footprint equal to the input.
         return PTR(Footprint)(new Footprint(foot));
     }
 
-    // Map of y position in structuring element to width of element.
-    std::map<int,int> element;
-    if (isotropic) {
-        // An isotropic grow is equivalent to growing with a circular
-        // structuring element.
-        for (int dy = -ngrow; dy <= ngrow; dy++) {
-            element[dy] = static_cast<int>(sqrt(ngrow * ngrow - dy * dy));
-        }
-    } else {
-        // A Manhattan grow is equivalent to growing with a diamond-shaped
-        // structuring element.
-        for (int dy = -ngrow; dy <= ngrow; dy++) {
-            element[dy] = ngrow - abs(dy);
-        }
-    }
-    return growFootprintImpl(foot, element);
+    // An isotropic grow is equivalent to growing with a circular structuring
+    // element, while a Manhattan grow is equivalent to growing with a
+    // diamond-shaped element.
+    StructuringElement::Shape shape = isotropic ? StructuringElement::CIRCLE : StructuringElement::DIAMOND;
+    return growFootprintImpl(foot, StructuringElement(shape, nGrow));
 }
 
-/**
- * \note Deprecated interface; use the Footprint const& version
- */
-Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic) {
-    return growFootprint(*foot, ngrow, isotropic);
+PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int nGrow, bool isotropic) {
+    return growFootprint(*foot, nGrow, isotropic);
 }
 
-/**
- * \brief Grow a Foorprint in at least one of the cardinal directions, returning a new Footprint
- *
- * Note that any left/right grow is done prior to the up/down grow, so any left/right grown pixels
- * \em are subject to a further up/down grow (i.e. an initial single pixel Footprint will end up
- * as a square, not a cross.
- */
-PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
-                             int nGrow,            ///< How many pixels to grow it
-                             bool left,            ///< grow to the left
-                             bool right,           ///< grow to the right
-                             bool up,              ///< grow up
-                             bool down             ///< grow down
+PTR(Footprint) growFootprint(Footprint const& foot, ///< Footprint to grow
+                             int nGrow,             ///< How many pixels to grow it
+                             bool left,             ///< grow to the left
+                             bool right,            ///< grow to the right
+                             bool up,               ///< grow up
+                             bool down              ///< grow down
                             )
 {
-    Footprint::Ptr grown(new Footprint(old.getPeaks().getSchema(), 0, old.getRegion()));
-
-    for (Footprint::SpanList::const_iterator siter = old.getSpans().begin();
-            siter != old.getSpans().end(); ++siter) {
-        CONST_PTR(Span) span = *siter;
-        int y=span->getY();
-        int x0 = (left) ? span->getX0() - nGrow : span->getX0();
-        int x1 = (right) ? span->getX1() + nGrow : span->getX1();
-        grown->addSpan(y, x0, x1);
-        if (up) {
-            for(int i=1; i <=nGrow; i++) {
-                grown->addSpan(y+i,span->getX0(), span->getX1());
-            }
-        }
-        if (down) {
-            for(int i=1; i <=nGrow; i++) {
-                grown->addSpan(y-i, span->getX0(), span->getX1());
-            }
-        }
+    if (nGrow <= 0 || foot.getNpix() == 0 ) {
+        // Return a new footprint equal to the input.
+        return PTR(Footprint)(new Footprint(foot));
     }
-
-    //normalize to remove overlapped spans and correct bbox
-    grown->normalize();
-    return grown;
+    return growFootprintImpl(foot, StructuringElement(left ? nGrow: 0, right ? nGrow : 0,
+                                                      up ? nGrow : 0, down ? nGrow : 0));
 }
 
 /************************************************************************************************************/
