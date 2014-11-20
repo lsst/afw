@@ -594,16 +594,18 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         catalog = lsst.afw.table.BaseCatalog(schema)
         self.assertEqual(catalog.getTable().getVersion(), 5)
-        catalog.writeFits("test.fits")
+        filename = "testDM384a.fits"
+        catalog.writeFits(filename)
         # now read the table just written to disk, and see if it reads back correctly
-        catalog = catalog.readFits("test.fits")
-        os.unlink("test.fits")
+        catalog = catalog.readFits(filename)
+        os.unlink(filename)
         metadata = catalog.getTable().getMetadata()
         self.assertEqual(catalog.schema.getVersion(), 5)
         self.assertFalse(metadata == None)
         self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
 
         # Now test with a SimpleTable
+        filename = "testDM384b.fits"
         schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
         schema.setVersion(5)
         schema.addField("f1", doc="f1a", type="I")
@@ -611,16 +613,17 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         catalog = lsst.afw.table.SimpleCatalog(schema)
         self.assertEqual(catalog.getTable().getVersion(), 5)
-        catalog.writeFits("test.fits")
+        catalog.writeFits(filename)
         # now read the table just written to disk, and see if it reads back correctly
-        catalog = catalog.readFits("test.fits")
-        os.unlink("test.fits")
+        catalog = catalog.readFits(filename)
+        os.unlink(filename)
         metadata = catalog.getTable().getMetadata()
         self.assertEqual(catalog.getTable().getVersion(),5)
         self.assertFalse(metadata == None)
         self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
 
         #  Now a SourceTable
+        filename = "testDM384c.fits"
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         schema.setVersion(5)
         schema.addField("f1", doc="f1a", type="I")
@@ -628,10 +631,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         catalog = lsst.afw.table.SourceCatalog(schema)
         self.assertEqual(catalog.getTable().getVersion(), 5)
-        catalog.writeFits("test.fits")
+        catalog.writeFits(filename)
         # now read the table just written to disk, and see if it reads back correctly
-        catalog = catalog.readFits("test.fits")
-        os.unlink("test.fits")
+        catalog = catalog.readFits(filename)
+        os.unlink(filename)
         metadata = catalog.getTable().getMetadata()
         self.assertEqual(catalog.getTable().getVersion(),5)
         self.assertFalse(metadata == None)

@@ -146,8 +146,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.catalog.writeFits("test.fits")
-        catalog = lsst.afw.table.SourceCatalog.readFits("test.fits")
+        filename = "testDM433.fits"
+        self.catalog.writeFits(filename)
+        catalog = lsst.afw.table.SourceCatalog.readFits(filename)
         table = catalog.getTable()
         record = catalog[0]
         # I'm using the keys from the non-persisted table.  They should work at least in the
@@ -161,7 +162,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(table.getShapeDefinition(), "c")
         self.assertEqual(record.get(self.shapeKey), record.getShape())
         self.assertClose(record.get(self.shapeErrKey), record.getShapeErr())
-        os.unlink("test.fits")
+        os.unlink(filename)
 
     def testDefiner1(self):
         self.table.definePsfFlux("a")
