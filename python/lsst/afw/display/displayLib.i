@@ -52,6 +52,7 @@ Basic routines to talk to ds9
 %include "simpleFits.h"
 
 %template(writeFitsImage) lsst::afw::display::writeBasicFits<lsst::afw::image::Image<boost::uint16_t> >;
+%template(writeFitsImage) lsst::afw::display::writeBasicFits<lsst::afw::image::Image<boost::uint64_t> >;
 %template(writeFitsImage) lsst::afw::display::writeBasicFits<lsst::afw::image::Image<int> >;
 %template(writeFitsImage) lsst::afw::display::writeBasicFits<lsst::afw::image::Image<float> >;
 %template(writeFitsImage) lsst::afw::display::writeBasicFits<lsst::afw::image::Image<double> >;

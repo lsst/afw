@@ -358,7 +358,7 @@ class FootprintTestCase(unittest.TestCase):
         if display:
             ds9.mtv(idImage, frame=2)
             displayUtils.drawFootprint(foot, frame=2)
-            shape = foot.getShape(cen)
+            shape = foot.getShape()
             shape.scale(2)              # <r^2> = 1/2 for a disk
             ds9.dot(shape, *cen, frame=2, ctype=ds9.RED)
 
