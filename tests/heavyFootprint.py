@@ -33,7 +33,7 @@ or
 """
 
 import numpy as np
-import math, sys
+import math, sys, os
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
@@ -55,7 +55,7 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         
-class HeavyFootprintTestCase(unittest.TestCase):
+class HeavyFootprintTestCase(tests.TestCase):
     """A test case for HeavyFootprint"""
     def setUp(self):
         self.mi = afwImage.MaskedImageF(20, 10)
@@ -263,8 +263,23 @@ class HeavyFootprintTestCase(unittest.TestCase):
             plt.subplot(1,3,3)
             plt.imshow(im3.getArray(), interpolation='nearest', origin='lower')
             plt.savefig('merge.png')
-        
-        
+
+    def testFitsPersistence(self):
+        heavy1 = afwDetect.HeavyFootprintF(self.foot)
+        heavy1.getImageArray()[:] = np.random.randn(self.foot.getArea()).astype(np.float32)
+        heavy1.getMaskArray()[:] =  np.random.randint(low=0, high=2,
+                                                      size=self.foot.getArea()).astype(np.uint16)
+        heavy1.getVarianceArray()[:] = np.random.randn(self.foot.getArea()).astype(np.float32)
+        filename = "heavyFootprint-testFitsPersistence.fits"
+        heavy1.writeFits(filename)
+        heavy2 = afwDetect.HeavyFootprintF.readFits(filename)
+        self.assertEqual(heavy1.getArea(), heavy2.getArea())
+        self.assertEqual(list(heavy1.getSpans()), list(heavy2.getSpans()))
+        self.assertEqual(list(heavy1.getPeaks()), list(heavy2.getPeaks()))
+        self.assertClose(heavy1.getImageArray(), heavy2.getImageArray(), rtol=0.0, atol=0.0)
+        self.assertClose(heavy1.getMaskArray(), heavy2.getMaskArray(), rtol=0.0, atol=0.0)
+        self.assertClose(heavy1.getVarianceArray(), heavy2.getVarianceArray(), rtol=0.0, atol=0.0)
+        os.remove(filename)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
