@@ -441,6 +441,7 @@
 %specializeMoments(float, F, lsst::afw::geom::ellipses::Quadrupole)
 %specializeMoments(double, D, lsst::afw::geom::ellipses::Quadrupole)
 
+%specializeArray(int, I)
 %specializeArray(float, F)
 %specializeArray(double, D)
 %specializeCovariance(float, F)

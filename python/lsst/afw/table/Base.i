@@ -75,16 +75,22 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %declareNumPyConverters(ndarray::Array<boost::int64_t,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t const,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t const,1,1>);
+%declareNumPyConverters(ndarray::Array<int,1>);
 %declareNumPyConverters(ndarray::Array<float,1>);
 %declareNumPyConverters(ndarray::Array<double,1>);
+%declareNumPyConverters(ndarray::Array<int const,1>);
 %declareNumPyConverters(ndarray::Array<float const,1>);
 %declareNumPyConverters(ndarray::Array<double const,1>);
+%declareNumPyConverters(ndarray::Array<int,1,1>);
 %declareNumPyConverters(ndarray::Array<float,1,1>);
 %declareNumPyConverters(ndarray::Array<double,1,1>);
+%declareNumPyConverters(ndarray::Array<int const,1,1>);
 %declareNumPyConverters(ndarray::Array<float const,1,1>);
 %declareNumPyConverters(ndarray::Array<double const,1,1>);
+%declareNumPyConverters(ndarray::Array<int,2>);
 %declareNumPyConverters(ndarray::Array<float,2>);
 %declareNumPyConverters(ndarray::Array<double,2>);
+%declareNumPyConverters(ndarray::Array<int const,2>);
 %declareNumPyConverters(ndarray::Array<float const,2>);
 %declareNumPyConverters(ndarray::Array<double const,2>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::geom::Angle,1>);
@@ -518,6 +524,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::table::Moments<float>, MomentsF)
 %declareFieldType(lsst::afw::table::Moments<double>, MomentsD)
 
+%declareFieldType(lsst::afw::table::Array<int>, ArrayI)
 %declareFieldType(lsst::afw::table::Array<float>, ArrayF)
 %declareFieldType(lsst::afw::table::Array<double>, ArrayD)
 
