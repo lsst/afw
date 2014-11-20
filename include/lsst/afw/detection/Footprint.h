@@ -366,14 +366,14 @@ PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2);
 PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2);
 
 /**
- * Grow a Footprint by ngrow pixels, returning a new Footprint
+ * Grow a Footprint by nGrow pixels, returning a new Footprint
  */
-PTR(Footprint) growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
+PTR(Footprint) growFootprint(Footprint const& foot, int nGrow, bool isotropic=true);
 
 /**
  * \note Deprecated interface; use the Footprint const& version
  */
-PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int ngrow, bool isotropic=true);
+PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int nGrow, bool isotropic=true);
 
 /**
  * \brief Grow a Footprint in at least one of the cardinal directions,
@@ -384,7 +384,7 @@ PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int ngrow, bool isotrop
  * grow (i.e. an initial single pixel Footprint will end up as a
  * square, not a cross.
  */
-PTR(Footprint) growFootprint(Footprint const& foot, int ngrow,
+PTR(Footprint) growFootprint(Footprint const& foot, int nGrow,
                              bool left, bool right, bool up, bool down);
 
 /**
