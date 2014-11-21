@@ -50,7 +50,7 @@ struct FitsSchemaItem {
 
     // Add the field defined by the strings to a schema.
     void addField(Schema & schema) const {
-        static boost::regex const regex("(\\d+)?(\\u)(\\d)*", boost::regex::perl);
+        static boost::regex const regex("(\\d+)?([PQ])?(\\u)\\(?(\\d)*\\)?", boost::regex::perl);
         // start by parsing the format; this tells the element type of the field and the number of elements
         boost::smatch m;
         if (!boost::regex_match(format, m, regex)) {
@@ -60,9 +60,15 @@ struct FitsSchemaItem {
             );
         }
         int size = 1;
-        if (m[1].matched)
-            size = boost::lexical_cast<int>(m[1].str());        
-        char code = m[2].str()[0];
+        if (m[1].matched) {
+            size = boost::lexical_cast<int>(m[1].str());
+        }
+        char code = m[3].str()[0];
+        if (m[2].matched) {
+            // P or Q presence indicates a variable-length array, which we can get by just setting the
+            // size to zero and letting the rest of the logic run its course.
+            size = 0;
+        }
         // switch code over FITS codes that correspond to different element types
         switch (code) {
         case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
@@ -422,6 +428,20 @@ struct FitsReader::ProcessRecords {
     void operator()(SchemaItem<T> const & item) const {
         if (col == flagCol) ++col;
         fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        ++col;
+    }
+
+    template <typename T>
+    void operator()(SchemaItem< Array<T> > const & item) const {
+        if (col == flagCol) ++col;
+        if (item.key.isVariableLength()) {
+            int size = fits->getTableArraySize(row, col);
+            ndarray::Array<T,1,1> array = ndarray::allocate(size);
+            fits->readTableArray(row, col, size, array.getData());
+            record->set(item.key, array);
+        } else {
+            fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        }
         ++col;
     }
 

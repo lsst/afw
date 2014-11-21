@@ -194,9 +194,10 @@ BaseTable::~BaseTable() {
 
 namespace {
 
-// A Schema Functor used to set floating point-fields to NaN.  All others are left 0.
+// A Schema Functor used to set floating point-fields to NaN and initialize variable-length arrays
+// using placement new.  All other fields are left alone, as they should already be zero.
 struct RecordInitializer {
-    
+
     template <typename T>
     static void fill(T * element, int size) {} // this matches all non-floating-point-element fields.
 
@@ -220,7 +221,37 @@ struct RecordInitializer {
         );
     }
 
+    template <typename T>
+    void operator()(SchemaItem< Array<T> > const & item) const {
+        if (item.key.isVariableLength()) {
+            new (data + item.key.getOffset()) ndarray::Array<T,1,1>();
+        } else {
+            fill(
+                reinterpret_cast<typename Field<T>::Element *>(data + item.key.getOffset()),
+                item.key.getElementCount()
+            );
+        }
+    }
+
     void operator()(SchemaItem<Flag> const & item) const {} // do nothing for Flag fields; already 0
+
+    char * data;
+};
+
+// A Schema Functor used to set destroy variable-length array fields using an explicit call to their
+// destructor (necessary since we used placement new).  All other fields are ignored, as they're POD.
+struct RecordDestroyer {
+
+    template <typename T>
+    void operator()(SchemaItem<T> const & item) const {}
+
+    template <typename T>
+    void operator()(SchemaItem< Array<T> > const & item) const {
+        typedef ndarray::Array<T,1,1> Element;
+        if (item.key.isVariableLength()) {
+            (*reinterpret_cast< Element * >(data + item.key.getOffset())).~Element();
+        }
+    }
 
     char * data;
 };
@@ -236,6 +267,8 @@ void BaseTable::_initialize(BaseRecord & record) {
 
 void BaseTable::_destroy(BaseRecord & record) {
     assert(record._table.get() == this);
+    RecordDestroyer f = { reinterpret_cast<char*>(record._data) };
+    _schema.forEach(f);
     if (record._manager == _manager) Block::reclaim(_schema.getRecordSize(), record._data, _manager);
 }
 
