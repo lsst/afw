@@ -267,6 +267,12 @@ protected:
 
 /**
  *  @brief Field base class specialization for arrays.
+ *
+ *  The Array tag is used for both fixed-length (same size in every record, accessible via ColumnView)
+ *  and variable-length arrays; variable-length arrays are initialized with a negative size.  Ideally,
+ *  we'd use complete different tag classes for those two very different types, but boost::variant and
+ *  boost::mpl put a limit of 20 on the number of field types, and we're running out.  In a future
+ *  reimplementation of afw::table, we should fix this.
  */
 template <typename U>
 struct FieldBase< Array<U> > {
@@ -284,7 +290,9 @@ struct FieldBase< Array<U> > {
     /**
      *  @brief Construct a FieldBase with the given size.
      *
-     *  This constructor is implicit and has an invalid default so it can be used in the Field
+     *  A size == 0 indicates a variable-length array.  Negative sizes are not permitted.
+     *
+     *  This constructor is implicit with a default so it can be used in the Field
      *  constructor (as if it were an int argument) without specializing Field.  In other words,
      *  it allows one to construct a 25-element array field like this:
      *  @code
@@ -292,10 +300,10 @@ struct FieldBase< Array<U> > {
      *  @endcode
      *  ...even though the third argument to the Field constructor takes a FieldBase, not an int.
      */
-    FieldBase(int size=-1) : _size(size) {
+    FieldBase(int size=0) : _size(size) {
         if (size < 0) throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthError,
-            "Size must be provided when constructing an array field."
+            "A non-negative size must be provided when constructing an array field."
         );
     }
 
@@ -308,6 +316,9 @@ struct FieldBase< Array<U> > {
     /// @brief Return the size of the array (equal to the number of subfield elements).
     int getSize() const { return _size; }
 
+    /// @brief Return true if the field is variable-length (each record can have a different size array).
+    bool isVariableLength() const { return _size == 0; }
+
 protected:
 
     /// Needed to allow Keys to be default-constructed.
@@ -318,17 +329,40 @@ protected:
 
     /// Used to implement RecordBase::operator[] (non-const).
     Reference getReference(Element * p, ndarray::Manager::Ptr const & m) const {
+        if (isVariableLength()) {
+            return reinterpret_cast< ndarray::Array<Element,1,1> * >(p)->deep();
+        }
         return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
     /// Used to implement RecordBase::operator[] (const).
     ConstReference getConstReference(Element const * p, ndarray::Manager::Ptr const & m) const {
+        if (isVariableLength()) {
+            return reinterpret_cast< ndarray::Array<Element,1,1> const * >(p)->deep();
+        }
         return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
     }
 
     /// Used to implement RecordBase::get.
     Value getValue(Element const * p, ndarray::Manager::Ptr const & m) const {
+        if (isVariableLength()) {
+            return *reinterpret_cast< ndarray::Array<Element,1,1> const * >(p);
+        }
         return ndarray::external(p, ndarray::makeVector(_size), ndarray::ROW_MAJOR, m);
+    }
+
+    /// Used to implement RecordBase::set; accepts only non-const arrays of the right type,
+    /// and allows shallow assignment of variable-length arrays (which is the only kind of
+    /// assignment allowed for variable-length arrays - if you want deep assignment, use
+    /// operator[] to get a reference and assign to that.
+    void setValue(
+        Element * p, ndarray::Manager::Ptr const &, ndarray::Array<Element,1,1> const & value
+    ) const {
+        if (isVariableLength()) {
+            *reinterpret_cast< ndarray::Array<Element,1,1>* >(p) = value;
+        } else {
+            setValueDeep(p, value);
+        }
     }
 
     /// Used to implement RecordBase::set; accepts any ndarray expression.
@@ -336,6 +370,19 @@ protected:
     void setValue(
         Element * p, ndarray::Manager::Ptr const &, ndarray::ExpressionBase<Derived> const & value
     ) const {
+        if (isVariableLength()) {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::LogicErrorException,
+                "Assignment to a variable-length array must use a non-const array of the correct type."
+            );
+        }
+        setValueDeep(p, value);
+    }
+
+private:
+
+    template <typename Derived>
+    void setValueDeep(Element * p, ndarray::ExpressionBase<Derived> const & value) const {
         if (value.template getSize<0>() != _size) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthError,
@@ -345,7 +392,6 @@ protected:
         for (int i = 0; i < _size; ++i) p[i] = value[i];
     }
 
-private:
     int _size;
 };
 
