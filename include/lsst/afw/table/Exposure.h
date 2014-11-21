@@ -143,7 +143,11 @@ public:
      *  but many operations on ExposureRecords will assume that at least the fields
      *  provided by this routine are present.
      */
-    static Schema makeMinimalSchema() { return getMinimalSchema().schema; }
+    static Schema makeMinimalSchema() {
+        Schema r = getMinimalSchema().schema;
+        r.disconnectAliases();
+        return r;
+    }
 
     /**
      *  @brief Return true if the given schema is a valid ExposureTable schema.

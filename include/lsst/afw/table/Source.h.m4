@@ -283,7 +283,11 @@ public:
      *  Keys for the standard fields added by this routine can be obtained
      *  from other static member functions of the SourceTable class.
      */
-    static Schema makeMinimalSchema() { return getMinimalSchema().schema; }
+    static Schema makeMinimalSchema() {
+        Schema r = getMinimalSchema().schema;
+        r.disconnectAliases();
+        return r;
+    }
 
     /**
      *  @brief Return true if the given schema is a valid SourceTable schema.
