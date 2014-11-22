@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key<double> e_g_d = schema.addField<double>("e.g.d", "double", "bargles^2");
     Key<Flag> e_g_d_flag1 = schema.addField<Flag>("e.g.d.flag1", "flag1 for e.g.d");
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e.g.d.flag2", "flag2 for e.g.d");
-    Key< Point<float> > a_b_p = schema.addField< Point<float> >("a.b.p", "point", "pixels");
+    Key< Point<double> > a_b_p = schema.addField< Point<double> >("a.b.p", "point", "pixels");
     Key< std::string > a_s = schema.addField< std::string >("a.s", "string", 5);
 
     KeyTuple<Flux> flux = addFluxFields(schema, "flux", "flux doc");

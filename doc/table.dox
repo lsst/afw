@@ -265,16 +265,8 @@ namespace lsst { namespace afw { namespace table {
  *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
  *  </tr>
  *  <tr>
- *  <td>Point<float></td> <td>"PointF"</td> <td></td> <td>afw::geom::Point2D</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
- *  </tr>
- *  <tr>
  *  <td>Point<double></td> <td>"PointD"</td> <td>afw.geom.Point2D</td> <td>afw::geom::Point2D</td>
  *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
- *  </tr>
- *  <tr>
- *  <td>Moments<float></td> <td>"MomentsF"</td> <td></td> <td>afw::geom::ellipses::Quadrupole</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>xx, yy, xy</td> <td></td>
  *  </tr>
  *  <tr>
  *  <td>Moments<double></td> <td>"MomentsD"</td> <td>afw.geom.ellipses.Quadrupole</td>

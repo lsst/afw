@@ -56,7 +56,7 @@ class SchemaTestCase(unittest.TestCase):
         abi_k = schema.addField("a_b_i", type=int, doc="int")
         acf_k = schema.addField("a_c_f", type=numpy.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
-        abp_k = schema.addField("a_b_p", type="PointF", doc="point")
+        abp_k = schema.addField("a_b_p", type="PointD", doc="point")
         ab_si = schema.find("a_b")
         self.assertEqual(ab_si.key, ab_k)
         self.assertEqual(ab_si.field.getName(), "a_b")
@@ -83,7 +83,7 @@ class SchemaTestCase(unittest.TestCase):
         schema3.addField("i", type="I", doc="int")
         schema3.addField("f", type="F", doc="float")
         schema3.addField("d", type="Angle", doc="angle")
-        schema3.addField("p", type="PointF", doc="point")
+        schema3.addField("p", type="PointD", doc="point")
         self.assertEqual(schema3, schema)
         schema4 = lsst.afw.table.Schema()
         keys = []
@@ -124,12 +124,12 @@ class SchemaTestCase(unittest.TestCase):
         covKey = schema.addField("c", type="CovF", doc="doc for cov field", size=5)
         covElementKey = covKey[1,2]
         self.assertEqual(lsst.afw.table.Key["F"], type(covElementKey))
-        pointKey = schema.addField("p", type="PointF", doc="doc for point field")
+        pointKey = schema.addField("p", type="PointD", doc="doc for point field")
         pointElementKey = pointKey.getX()
-        self.assertEqual(lsst.afw.table.Key["F"], type(pointElementKey))
-        shapeKey = schema.addField("s", type="MomentsF", doc="doc for shape field")
+        self.assertEqual(lsst.afw.table.Key["D"], type(pointElementKey))
+        shapeKey = schema.addField("s", type="MomentsD", doc="doc for shape field")
         shapeElementKey = shapeKey.getIxx()
-        self.assertEqual(lsst.afw.table.Key["F"], type(shapeElementKey))
+        self.assertEqual(lsst.afw.table.Key["D"], type(shapeElementKey))
 
     def testComparison(self):
         schema1 = lsst.afw.table.Schema()

@@ -450,9 +450,7 @@
 %specializeScalar(lsst::afw::geom::Angle, Angle)
 
 %specializePoint(boost::int32_t, I, lsst::afw::geom::Point<int,2>)
-%specializePoint(float, F, lsst::afw::geom::Point<double,2>)
 %specializePoint(double, D, lsst::afw::geom::Point<double,2>)
-%specializeMoments(float, F, lsst::afw::geom::ellipses::Quadrupole)
 %specializeMoments(double, D, lsst::afw::geom::ellipses::Quadrupole)
 
 %specializeArray(int, I)

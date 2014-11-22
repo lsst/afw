@@ -647,10 +647,8 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(lsst::afw::coord::Coord, Coord)
 
 %declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI)
-%declareFieldType(lsst::afw::table::Point<float>, PointF)
 %declareFieldType(lsst::afw::table::Point<double>, PointD)
 
-%declareFieldType(lsst::afw::table::Moments<float>, MomentsF)
 %declareFieldType(lsst::afw::table::Moments<double>, MomentsD)
 
 %declareFieldType(lsst::afw::table::Array<int>, ArrayI)
