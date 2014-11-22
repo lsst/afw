@@ -443,6 +443,7 @@
     %}
 }
 
+%specializeScalar(boost::uint16_t, U)
 %specializeScalar(boost::int32_t, I)
 %specializeScalar(boost::int64_t, L)
 %specializeScalar(float, F)
@@ -453,6 +454,7 @@
 %specializePoint(double, D, lsst::afw::geom::Point<double,2>)
 %specializeMoments(double, D, lsst::afw::geom::ellipses::Quadrupole)
 
+%specializeArray(boost::uint16_t, U)
 %specializeArray(int, I)
 %specializeArray(float, F)
 %specializeArray(double, D)
