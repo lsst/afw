@@ -64,12 +64,16 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 
 %declareNumPyConverters(ndarray::Array<bool const,1>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::table::RecordId const,1>);
+%declareNumPyConverters(ndarray::Array<boost::uint16_t const,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t const,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t const,1>);
+%declareNumPyConverters(ndarray::Array<boost::uint16_t,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t,1>);
+%declareNumPyConverters(ndarray::Array<boost::uint16_t,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::uint16_t const,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t const,1,1>);
 %declareNumPyConverters(ndarray::Array<boost::int64_t const,1,1>);
 %declareNumPyConverters(ndarray::Array<int,1>);
@@ -84,9 +88,11 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %declareNumPyConverters(ndarray::Array<int const,1,1>);
 %declareNumPyConverters(ndarray::Array<float const,1,1>);
 %declareNumPyConverters(ndarray::Array<double const,1,1>);
+%declareNumPyConverters(ndarray::Array<boost::uint16_t,2>);
 %declareNumPyConverters(ndarray::Array<int,2>);
 %declareNumPyConverters(ndarray::Array<float,2>);
 %declareNumPyConverters(ndarray::Array<double,2>);
+%declareNumPyConverters(ndarray::Array<boost::uint16_t const,2>);
 %declareNumPyConverters(ndarray::Array<int const,2>);
 %declareNumPyConverters(ndarray::Array<float const,2>);
 %declareNumPyConverters(ndarray::Array<double const,2>);
@@ -580,6 +586,7 @@ aliases = {
     long: "L",
     float: "D",
     str: "String",
+    numpy.uint16: "U",
     numpy.int32: "I",
     numpy.int64: "L",
     numpy.float32: "F",
@@ -634,6 +641,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %implicitconv FieldBase_ ## PYNAME;
 %enddef
 
+%declareFieldType(boost::uint16_t, U)
 %declareFieldType(boost::int32_t, I)
 %declareFieldType(boost::int64_t, L)
 %declareFieldType(float, F)
@@ -648,6 +656,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 
 %declareFieldType(lsst::afw::table::Moments<double>, MomentsD)
 
+%declareFieldType(lsst::afw::table::Array<boost::uint16_t>, ArrayU)
 %declareFieldType(lsst::afw::table::Array<int>, ArrayI)
 %declareFieldType(lsst::afw::table::Array<float>, ArrayF)
 %declareFieldType(lsst::afw::table::Array<double>, ArrayD)

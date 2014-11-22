@@ -15,6 +15,9 @@ namespace {
 
 template <typename T> struct TypeTraits;
 
+template <> struct TypeTraits<boost::uint16_t> {
+    static char const * getName() { return "U"; }
+};
 template <> struct TypeTraits<boost::int32_t> {
     static char const * getName() { return "I"; }
 };
