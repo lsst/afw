@@ -134,7 +134,7 @@ struct FitsSchemaItem {
             return;
         } else if (size == 2) {
             if (cls == "Point") {
-                schema.addField< Point<U> >(name, doc, units);
+                schema.addField< Point<double> >(name, doc, units);
                 return;
             }
             if (cls == "Coord") {
@@ -143,7 +143,7 @@ struct FitsSchemaItem {
             }
         } else if (size == 3) {
             if (cls == "Moments") {
-                schema.addField< Moments<U> >(name, doc, units);
+                schema.addField< Moments<double> >(name, doc, units);
                 return;
             }
             if (cls == "Covariance(Point)") {
