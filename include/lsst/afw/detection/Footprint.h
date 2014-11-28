@@ -368,7 +368,7 @@ PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2);
 /**
  * Shrink a footprint isotropically by nGrow pixels, returning a FootprintSet.
  */
-PTR(Footprint) shrinkFootprint(Footprint const& foot, int nGrow);
+PTR(Footprint) shrinkFootprint(Footprint const& foot, int nGrow, bool isotropic);
 
 /**
  * Grow a Footprint by nGrow pixels, returning a new Footprint
