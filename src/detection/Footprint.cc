@@ -1237,9 +1237,11 @@ public:
     StructuringElement(int left, int right, int up, int down);
     const_iterator begin() const { return widths.begin(); }
     const_iterator end() const { return widths.end(); }
+    int getYRange() const { return yRange; }
 
 private:
     std::vector<Span> widths;
+    int yRange;
 };
 
 /** Create a shape-based StructuringElement
@@ -1248,7 +1250,8 @@ private:
  * respetively.
  */
 StructuringElement::StructuringElement(Shape shape, int radius) {
-    widths.reserve(2 * radius + 1);
+    yRange = 2 * radius + 1;
+    widths.reserve(yRange);
     switch (shape) {
     case Shape::CIRCLE:
         for (auto dy = -radius; dy <= radius; dy++) {
@@ -1270,7 +1273,8 @@ StructuringElement::StructuringElement(Shape shape, int radius) {
  * Used to grow in one or more of the left/right/up/down directions.
  */
 StructuringElement::StructuringElement(int left, int right, int up, int down) {
-    widths.reserve(up + down + 1);
+    yRange = up + down + 1;
+    widths.reserve(yRange);
     for (auto dy = 1; dy <= up; dy++) {
         widths.push_back(Span(dy, 0, 0));
     }
@@ -1304,6 +1308,154 @@ PTR(Footprint) growFootprintImpl(
     grown->normalize();
 
     return grown;
+}
+
+/**
+ * Represents a "primary run", as defined by Kim et al. A primary run is an
+ * intermediate result from the erosion operation; the represent potential
+ * spans in the output footprint, but are not normalized.
+ *
+ * The 'm' value tracks the row in the structuring element which was
+ * responsible for a particular primary run; it is required to implement the
+ * algorithm.
+ */
+struct PrimaryRun {
+    int m, y, xmin, xmax;
+};
+
+/**
+ * Compare primary runs such that they are sorted primarily by y, then by m,
+ * then by xmin.
+ */
+bool comparePrimaryRun(PrimaryRun const& first, PrimaryRun const& second) {
+    if (first.y != second.y) {
+        return first.y < second.y;
+    } else if (first.m != second.m) {
+        return first.m < second.m;
+    } else {
+        return first.xmin < second.xmin;
+    }
+}
+
+class ComparePrimaryRunY{
+public:
+    bool operator()(PrimaryRun const& pr, int yval) {
+        return pr.y < yval;
+    }
+    bool operator()(int yval, PrimaryRun const& pr) {
+        return yval < pr.y;
+    }
+};
+
+class ComparePrimaryRunM{
+public:
+    bool operator()(PrimaryRun const& pr, int mval) {
+        return pr.m < mval;
+    }
+    bool operator()(int mval, PrimaryRun const& pr) {
+        return mval < pr.m;
+    }
+};
+
+/** RLE based implementation of Footprint erosion.
+  *
+  * See Kim et al., ETRI Journal 27, Dec 2005.
+  */
+PTR(Footprint) shrinkFootprintImpl(
+            Footprint const& foot,            //!< The Footprint to shrink
+            StructuringElement const& element //!< The structuring element
+) {
+    // Create an empty FootprintSet covering the input region
+    PTR(Footprint) shrunk(new Footprint(0, foot.getRegion()));
+
+    // Calculate all possible primary runs.
+    std::vector<PrimaryRun> primaryRuns;
+    for (auto spanIter = foot.getSpans().begin(); spanIter != foot.getSpans().end(); ++spanIter) {
+        int m = 0;
+        for (auto it = element.begin(); it != element.end(); ++it, ++m) {
+            if ((it->getX1() - it->getX0()) <= ((*spanIter)->getX1() - (*spanIter)->getX0())) {
+                int xmin = (*spanIter)->getX0() - it->getX0();
+                int xmax = (*spanIter)->getX1() - it->getX1();
+                int y = (*spanIter)->getY() - it->getY();
+                primaryRuns.push_back(PrimaryRun({m, y, xmin, xmax}));
+            }
+        }
+    }
+
+    // Iterate over the primary runs in such a way that we consider all values
+    // of m for given y, then all m for y+1, etc.
+    std::sort(primaryRuns.begin(), primaryRuns.end(), comparePrimaryRun);
+
+    for (int y = primaryRuns.front().y; y <= primaryRuns.back().y; ++y) {
+        auto yRange = std::equal_range(primaryRuns.begin(), primaryRuns.end(), y, ComparePrimaryRunY());
+
+        // Discard runs for any value of y for which we find fewer groups than
+        // M, the total Y range of the structuring element. This is step 3.1
+        // of the Kim et al. algorithm.
+        if (std::distance(yRange.first, yRange.second) < element.getYRange()) {
+            continue;
+        }
+
+        // "good" runs are those which are covered by each value of m, ie by
+        // each row in the structuring element. Our algorithm will consider
+        // each value of m in turn, gradually whittling down the list of good
+        // runs, then finally convert the remainder into Spans and add them to
+        // the shrunken Footprint.
+        std::vector<PrimaryRun> goodRuns;
+
+        for (int m = 0; m < element.getYRange(); ++m) {
+            auto mRange = std::equal_range(yRange.first, yRange.second, m, ComparePrimaryRunM());
+            if (mRange.first == mRange.second) {
+                // If a particular m is missing, we know that this y contains
+                // no good runs; this is equivalent to Kim et al. step 3.2.
+                goodRuns.clear();
+            } else {
+                // Consolidate all primary runs at this m so that they
+                // don't overlap.
+                std::vector<PrimaryRun> candidateRuns;
+                int start_x = mRange.first->xmin;
+                int end_x = mRange.first->xmax;
+                for (auto run = mRange.first+1; run < mRange.second; ++run) {
+                    if (run->xmin > end_x) {
+                        // Start of a new run
+                        candidateRuns.push_back(PrimaryRun{m, y, start_x, end_x});
+                        start_x = run->xmin;
+                        end_x = run->xmax;
+                    } else {
+                        // Continuation of an existing run
+                        end_x = run->xmax;
+                    }
+                }
+                candidateRuns.push_back(PrimaryRun{m, y, start_x, end_x});
+
+                // Otherwise, calculate the intersection of candidate runs at
+                // this m with good runs from all previous m.
+                if (m == 0) {
+                    // For m = 0 we have nothing to compare to; all runs are
+                    // accepted.
+                    std::swap(goodRuns, candidateRuns);
+                } else {
+                    std::vector<PrimaryRun> newlist;
+                    for (auto good = goodRuns.begin(); good < goodRuns.end(); ++good) {
+                        for (auto cand = candidateRuns.begin(); cand < candidateRuns.end(); ++cand) {
+                            int start = std::max(good->xmin, cand->xmin);
+                            int end = std::min(good->xmax, cand->xmax);
+                            if (end >= start) {
+                                newlist.push_back(PrimaryRun({m, y, start, end}));
+                            }
+                        }
+                    }
+                    std::swap(newlist, goodRuns);
+                }
+            }
+        }
+        for (auto run = goodRuns.begin(); run < goodRuns.end(); ++run) {
+            shrunk->addSpan(run->y, run->xmin, run->xmax);
+        }
+    }
+
+    shrunk->normalize();
+    return shrunk;
 }
 }
 
@@ -1534,6 +1686,13 @@ PTR(Footprint) growFootprint(Footprint const& foot, ///< Footprint to grow
     }
     return growFootprintImpl(foot, StructuringElement(left ? nGrow: 0, right ? nGrow : 0,
                                                       up ? nGrow : 0, down ? nGrow : 0));
+}
+
+PTR(Footprint) shrinkFootprint(
+        Footprint const& foot,          //!< The Footprint to shrink
+        int nShrink                     //!< How much to grow foot
+) {
+    return shrinkFootprintImpl(foot, StructuringElement(StructuringElement::Shape::CIRCLE, nShrink));
 }
 
 /************************************************************************************************************/
