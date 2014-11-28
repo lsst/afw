@@ -1398,7 +1398,7 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(
 template image::Image<int>::Ptr setFootprintID(Footprint::Ptr const& foot, int const id);
 
 namespace {
-/** Define a structuring element for use in RLE-baed grows
+/** Define a structuring element for use in RLE-based morphological operations
  *
  * Provides pre-canned definition of circular & diamond shapes for use in
  * isotropic and non-isotropic dilation respectively, as well as elements which
@@ -1429,13 +1429,13 @@ StructuringElement::StructuringElement(Shape shape, int radius) {
     case CIRCLE:
         for (int dy = -radius; dy <= radius; dy++) {
             int dx = static_cast<int>(sqrt(radius * radius - dy * dy));
-            widths.push_back(Span(dy, dx, dx));
+            widths.push_back(Span(dy, -dx, dx));
         }
         break;
     case DIAMOND:
         for (int dy = -radius; dy <= radius; dy++) {
             int dx = radius - abs(dy);
-            widths.push_back(Span(dy, dx, dx));
+            widths.push_back(Span(dy, -dx, dx));
         }
         break;
     }
@@ -1453,7 +1453,7 @@ StructuringElement::StructuringElement(int left, int right, int up, int down) {
     for (int dy = -1; dy >= -down; dy--) {
         widths.push_back(Span(dy, 0, 0));
     }
-    widths.push_back(Span(0, left, right));
+    widths.push_back(Span(0, -left, right));
 }
 
 /** RLE based implementation of Footprint dilation.
@@ -1474,7 +1474,7 @@ PTR(Footprint) growFootprintImpl(
          spanIter++
     ) {
         for (StructuringElement::const_iterator it = element.begin(); it != element.end(); it++) {
-            int xmin = (*spanIter)->getX0() - it->getX0();
+            int xmin = (*spanIter)->getX0() + it->getX0();
             int xmax = (*spanIter)->getX1() + it->getX1();
             grown->addSpan((*spanIter)->getY() + it->getY(), xmin, xmax);
         }
