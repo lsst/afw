@@ -1926,9 +1926,11 @@ PTR(Footprint) growFootprint(Footprint const& foot, ///< Footprint to grow
 
 PTR(Footprint) shrinkFootprint(
         Footprint const& foot,          //!< The Footprint to shrink
-        int nShrink                     //!< How much to grow foot
+        int nShrink,                    //!< How much to grow foot
+        bool isotropic                  //!< Shrink isotropically (as opposed to a Manhattan metric)
 ) {
-    return shrinkFootprintImpl(foot, StructuringElement(StructuringElement::CIRCLE, nShrink));
+    StructuringElement::Shape shape = isotropic ? StructuringElement::CIRCLE : StructuringElement::DIAMOND;
+    return shrinkFootprintImpl(foot, StructuringElement(shape, nShrink));
 }
 
 /************************************************************************************************************/
