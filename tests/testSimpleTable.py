@@ -121,6 +121,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testRecordAccess(self):
         schema = lsst.afw.table.Schema()
+        k0 = schema.addField("f0", type="U")
         k1 = schema.addField("f1", type="I")
         k2 = schema.addField("f2", type="L")
         k3 = schema.addField("f3", type="F")
@@ -128,6 +129,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         k5 = schema.addField("f5", type="PointI")
         k7 = schema.addField("f7", type="PointD")
         k9 = schema.addField("f9", type="MomentsD")
+        k10b = schema.addField("f10b", type="ArrayU", size=2)
         k10a = schema.addField("f10a", type="ArrayI", size=3)
         k10 = schema.addField("f10", type="ArrayF", size=4)
         k11 = schema.addField("f11", type="ArrayD", size=5)
@@ -146,6 +148,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(k5), lsst.afw.geom.Point2I())
         self.assert_(numpy.isnan(record[k7.getX()]))
         self.assert_(numpy.isnan(record[k7.getY()]))
+        self.checkScalarAccessors(record, k0, "f0", 5, 6)
         self.checkScalarAccessors(record, k1, "f1", 2, 3)
         self.checkScalarAccessors(record, k2, "f2", 2, 3)
         self.checkScalarAccessors(record, k3, "f3", 2.5, 3.5)
@@ -155,6 +158,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         for k in (k5, k7): self.assertEqual(k.subfields, ("x", "y"))
         self.checkGeomAccessors(record, k9, "f9", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
         self.assertEqual(k9.subfields, ("xx", "yy", "xy"))
+        self.checkArrayAccessors(record, k10b, "f10b", makeArray(k10b.getSize(), dtype=numpy.uint16))
         self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=numpy.int32))
         self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
@@ -210,6 +214,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testColumnView(self):
         schema = lsst.afw.table.Schema()
+        k0 = schema.addField("f0", type="U")
         k1 = schema.addField("f1", type="I")
         kb1 = schema.addField("fb1", type="Flag")
         k2 = schema.addField("f2", type="F")
@@ -219,8 +224,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         k4 = schema.addField("f4", type="ArrayF", size=2)
         k5 = schema.addField("f5", type="ArrayD", size=3)
         k6 = schema.addField("f6", type="Angle")
+        k7 = schema.addField("f7", type="ArrayU", size=4)
         catalog = lsst.afw.table.BaseCatalog(schema)
         catalog.addNew()
+        catalog[0].set(k0, 1)
         catalog[0].set(k1, 2)
         catalog[0].set(k2, 0.5)
         catalog[0].set(k3, 0.25)
@@ -230,9 +237,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
         catalog[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
         catalog[0].set(k6, lsst.afw.geom.Angle(0.25))
+        catalog[0].set(k7, numpy.array([2,3,4,1], dtype=numpy.uint16))
         col1a = catalog[k1]
         self.assertEqual(col1a.shape, (1,))
         catalog.addNew()
+        catalog[1].set(k0, 4)
         catalog[1].set(k1, 3)
         catalog[1].set(k2, 2.5)
         catalog[1].set(k3, 0.75)
@@ -242,14 +251,15 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
         catalog[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
         catalog[1].set(k6, lsst.afw.geom.Angle(0.15))
+        catalog[1].set(k7, numpy.array([5,6,8,7], dtype=numpy.uint16))
         col1b = catalog[k1]
         self.assertEqual(col1b.shape, (2,))
         columns = catalog.getColumnView()
-        for key in [k1, k2, k3, kb1, kb2, kb3]:
+        for key in [k0, k1, k2, k3, kb1, kb2, kb3]:
             array = columns[key]
             for i in [0, 1]:
                 self.assertEqual(array[i], catalog[i].get(key))
-        for key in [k4, k5]:
+        for key in [k4, k5, k7]:
             array = columns[key]
             for i in [0, 1]:
                 self.assert_(numpy.all(array[i] == catalog[i].get(key)))
@@ -265,6 +275,26 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             for i in [0, 1]:
                 self.assertEqual(catalog[i].get(key), vals[i])
                 self.assertEqual(array[i], vals[i])
+
+    def testUnsignedFitsPersistence(self):
+        """Test FITS round-trip of unsigned short ints, since FITS handles unsigned columns differently
+        from signed columns
+        """
+        schema = lsst.afw.table.Schema()
+        k1 = schema.addField("f1", type=numpy.uint16, doc="scalar uint16")
+        k2 = schema.addField("f2", type="ArrayU", doc="array uint16", size=4)
+        cat1 = lsst.afw.table.BaseCatalog(schema)
+        record1 = cat1.addNew()
+        record1.set(k1, 4)
+        record1.set(k2, numpy.array([5, 6, 7, 8], dtype=numpy.uint16))
+        filename = "testSimpleTable-testUnsignedFitsPersistence.fits"
+        cat1.writeFits(filename)
+        cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
+        record2 = cat2[0]
+        self.assertEqual(cat1.schema, cat2.schema)
+        self.assertEqual(record1.get(k1), record2.get(k1))
+        self.assertTrue(numpy.all(record1.get(k2) == record2.get(k2)))
+        os.remove(filename)
 
     def testIteration(self):
         schema = lsst.afw.table.Schema()
