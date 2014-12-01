@@ -59,6 +59,12 @@ void KeyBase< Array<U> >::assignVector(BaseRecord & record, std::vector<U> const
 template <typename U>
 Key<U> KeyBase< Array<U> >::operator[](int i) const {
     Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);
+    if (self->isVariableLength()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get Keys to elements of variable-length arrays."
+        );
+    }
     if (i >= self->getSize() || i < 0) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,
@@ -71,6 +77,12 @@ Key<U> KeyBase< Array<U> >::operator[](int i) const {
 template <typename U>
 Key< Array<U> > KeyBase< Array<U> >::slice(int begin, int end) const {
     Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);
+    if (self->isVariableLength()) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::LogicErrorException,
+            "Cannot get Keys to slices of variable-length arrays."
+        );
+    }
     if (begin > self->getSize() || begin < 0) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthErrorException,

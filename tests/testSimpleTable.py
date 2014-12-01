@@ -62,7 +62,7 @@ def makeCov(size, dtype):
             r[i,j] = r[j,i]
     return r
 
-class SimpleTableTestCase(unittest.TestCase):
+class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def checkScalarAccessors(self, record, key, name, value1, value2):
         fastSetter = getattr(record, "set" + key.getTypeString())
@@ -130,6 +130,7 @@ class SimpleTableTestCase(unittest.TestCase):
         k7 = schema.addField("f7", type="PointD")
         k8 = schema.addField("f8", type="MomentsF")
         k9 = schema.addField("f9", type="MomentsD")
+        k10a = schema.addField("f10a", type="ArrayI", size=3)
         k10 = schema.addField("f10", type="ArrayF", size=4)
         k11 = schema.addField("f11", type="ArrayD", size=5)
         k12 = schema.addField("f12", type="CovF", size=3)
@@ -160,6 +161,7 @@ class SimpleTableTestCase(unittest.TestCase):
         self.checkGeomAccessors(record, k8, "f8", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
         self.checkGeomAccessors(record, k9, "f9", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
         for k in (k8, k9): self.assertEqual(k.subfields, ("xx", "yy", "xy"))
+        self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=numpy.int32))
         self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
         for k in (k10, k11): self.assertEqual(k.subfields, tuple(range(k.getSize())))
@@ -618,6 +620,60 @@ class SimpleTableTestCase(unittest.TestCase):
         filename = os.path.join(os.path.split(__file__)[0], "data", "great3.fits")
         cat = lsst.afw.table.BaseCatalog.readFits(filename)
         self.assertEqual(len(cat), 1)
+
+    def testVariableLengthArrays(self):
+        schema = lsst.afw.table.Schema()
+        ka = schema.addField("a", doc="integer", type="ArrayI", size=0)
+        kb = schema.addField("b", doc="single-precision", type="ArrayF")
+        kc = schema.addField("c", doc="double-precision", type="ArrayD")
+        cat1 = lsst.afw.table.BaseCatalog(schema)
+        record1 = cat1.addNew()
+        self.assertEqual(list(record1.get(ka)), [])
+        self.assertEqual(list(record1.get(kb)), [])
+        self.assertEqual(list(record1.get(kc)), [])
+        a1 = numpy.random.randint(low=3, high=6, size=4).astype(numpy.int32)
+        b1 = numpy.random.randn(5).astype(numpy.float32)
+        c1 = numpy.random.randn(6).astype(numpy.float64)
+        # Test get/set
+        record1.set(ka, a1)
+        record1.set(kb, b1)
+        record1.set(kc, c1)
+        self.assertTrue(numpy.all(record1.get(ka) == a1))
+        self.assertTrue(numpy.all(record1.get(kb) == b1))
+        self.assertTrue(numpy.all(record1.get(kc) == c1))
+        # Test __getitem__ and view semantics
+        record1[kb][2] = 3.5
+        self.assertEqual(b1[2], 3.5)
+        # Check that we throw when we try to index a variable-length array Key
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException, lambda x: ka[x], 0)
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException, lambda x, y: ka[x:y], 0, 1)
+        # Test copying records, both with and without SchemaMapper
+        record2 = cat1.addNew()
+        record2.assign(record1)
+        self.assertTrue(numpy.all(record1.get(ka) == a1))
+        self.assertTrue(numpy.all(record1.get(kb) == b1))
+        self.assertTrue(numpy.all(record1.get(kc) == c1))
+        record1[kb][2] = 4.5
+        self.assertEqual(record2[kb][2], 3.5) # copy in assign() should be deep
+        mapper = lsst.afw.table.SchemaMapper(schema)
+        kb2 = mapper.addMapping(kb)
+        cat2 = lsst.afw.table.BaseCatalog(mapper.getOutputSchema())
+        record3 = cat2.addNew()
+        record3.assign(record1, mapper)
+        self.assertTrue(numpy.all(record3.get(kb2) == b1))
+        # Test that we throw if we try to get a column view of a variable-length arry
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException, cat1.get, ka)
+        # Test that we can round-trip variable-length arrays through FITS
+        filename = "testSimpleTable_testVariableLengthArrays.fits"
+        cat1.writeFits(filename)
+        cat3 = lsst.afw.table.BaseCatalog.readFits(filename)
+        self.assertEqual(schema.compare(cat3.schema, lsst.afw.table.Schema.IDENTICAL),
+                         lsst.afw.table.Schema.IDENTICAL)
+        record4 = cat3[0]
+        self.assertTrue(numpy.all(record4.get(ka) == a1))
+        self.assertTrue(numpy.all(record4.get(kb) == b1))
+        self.assertTrue(numpy.all(record4.get(kc) == c1))
+        os.remove(filename)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

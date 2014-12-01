@@ -179,6 +179,17 @@ struct FitsWriter::ProcessRecords {
         ++col;
     }
 
+    template <typename T>
+    void operator()(SchemaItem< Array<T> > const & item) const {
+        if (item.key.isVariableLength()) {
+            ndarray::Array<T const,1,1> array = record->get(item.key);
+            fits->writeTableArray(row, col, array.template getSize<0>(), array.getData());
+        } else {
+            fits->writeTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        }
+        ++col;
+    }
+
     void operator()(SchemaItem<std::string> const & item) const {
         fits->writeTableScalar(row, col, record->get(item.key));
         ++col;

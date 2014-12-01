@@ -10,7 +10,7 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-// A SchemaMapper::forEach functor that copies data from one record to another.
+// A Schema::forEach and SchemaMapper::forEach functor that copies data from one record to another.
 struct CopyValue {
 
     template <typename U>
@@ -19,8 +19,25 @@ struct CopyValue {
         std::copy(inputElem, inputElem + inputKey.getElementCount(), _outputRecord->getElement(outputKey));
     }
 
+    template <typename U>
+    void operator()(Key< Array<U> > const & inputKey, Key< Array<U> > const & outputKey) const {
+        if (inputKey.isVariableLength()) {
+            assert(outputKey.isVariableLength());
+            ndarray::Array<U,1,1> value = ndarray::copy(_inputRecord->get(inputKey));
+            _outputRecord->set(outputKey, value);
+            return;
+        }
+        typename Field<U>::Element const * inputElem = _inputRecord->getElement(inputKey);
+        std::copy(inputElem, inputElem + inputKey.getElementCount(), _outputRecord->getElement(outputKey));
+    }
+
     void operator()(Key<Flag> const & inputKey, Key<Flag> const & outputKey) const {
         _outputRecord->set(outputKey, _inputRecord->get(inputKey));
+    }
+
+    template <typename U>
+    void operator()(SchemaItem<U> const & item) const {
+        (*this)(item.key, item.key);
     }
 
     CopyValue(BaseRecord const * inputRecord, BaseRecord * outputRecord) :
@@ -41,8 +58,7 @@ void BaseRecord::assign(BaseRecord const & other) {
             "Unequal schemas in record assignment."
         );
     }
-    // Schemas are identical and they're all POD, so we can just copy the raw data.
-    std::memcpy(_data, other._data, this->getSchema().getRecordSize());
+    this->getSchema().forEach(CopyValue(&other, this));
     this->_assign(other); // let derived classes assign their own stuff
 }
 
