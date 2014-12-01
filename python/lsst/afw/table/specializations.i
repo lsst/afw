@@ -118,6 +118,7 @@
 }
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Array< U > > {
     int getSize() const { return self->getSize(); }
+    bool isVariableLength() const { return self->isVariableLength(); }
 }
 %extend lsst::afw::table::BaseRecord {
 
@@ -126,7 +127,20 @@
 
     ndarray::Array<U const,1,1> getArray##PYNAME(lsst::afw::table::Key< Array< U > > const & key) const
     { return self->get(key); }
-    
+
+    void set(
+        lsst::afw::table::Key< Array< U > > const & key,
+        ndarray::Array<U,1,1> const & v
+    ) {
+        self->set(key, v);
+    }
+    void setArray##PYNAME(
+        lsst::afw::table::Key< Array< U > > const & key,
+        ndarray::Array<U,1,1> const & v
+    ) {
+        self->set(key, v);
+    }
+
     void set(
         lsst::afw::table::Key< Array< U > > const & key,
         ndarray::Array<U const,1> const & v
