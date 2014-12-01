@@ -26,15 +26,15 @@
  */
 
 // Scalar types: those that can serve as elements for other types, and use the default FieldBase template.
-#define AFW_TABLE_SCALAR_FIELD_TYPE_N 5
+#define AFW_TABLE_SCALAR_FIELD_TYPE_N 6
 #define AFW_TABLE_SCALAR_FIELD_TYPES                                    \
-    RecordId, boost::int32_t, float, double, Angle
+    RecordId, boost::uint16_t, boost::int32_t, float, double, Angle
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Arrays types: the types we allow for Array fields.
-#define AFW_TABLE_ARRAY_FIELD_TYPE_N 3
+#define AFW_TABLE_ARRAY_FIELD_TYPE_N 4
 #define AFW_TABLE_ARRAY_FIELD_TYPES             \
-    int, float, double
+    boost::uint16_t, int, float, double
 #define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Field types: all the types we allow for fields.
@@ -42,9 +42,9 @@
 #define AFW_TABLE_FIELD_TYPES                                   \
     AFW_TABLE_SCALAR_FIELD_TYPES,                               \
     Flag, Coord, std::string,                                   \
-    Array<int>, Array<float>, Array<double>,                    \
-    Point<int>, Point<float>, Point<double>,                    \
-    Moments<float>, Moments<double>,                            \
+    Array<boost::uint16_t>, Array<int>, Array<float>, Array<double>, \
+    Point<int>, Point<double>,                                  \
+    Moments<double>,                                            \
     Covariance<float>,                      \
     Covariance< Point<float> >,    \
     Covariance< Moments<float> >

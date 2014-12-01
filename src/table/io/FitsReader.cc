@@ -71,11 +71,19 @@ struct FitsSchemaItem {
         }
         // switch code over FITS codes that correspond to different element types
         switch (code) {
+        case 'I': // 16-bit integers - can only be scalars or Arrays (we assume they're unsigned, since
+                  // that's all we ever write, and CFITSIO will complain later if they aren't)
+            if (size == 1 && cls != "Array") {
+                schema.addField<boost::uint16_t>(name, doc, units);
+            } else {
+                schema.addField< Array<boost::uint16_t> >(name, doc, units, size);
+            }
+            break;
         case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
             if (size == 1) {
                 if (cls == "Array") {
                     schema.addField< Array<boost::int32_t> >(name, doc, units, size);
-                } else { 
+                } else {
                     schema.addField<boost::int32_t>(name, doc, units);
                 }
             } else if (size == 2) {
@@ -134,7 +142,7 @@ struct FitsSchemaItem {
             return;
         } else if (size == 2) {
             if (cls == "Point") {
-                schema.addField< Point<U> >(name, doc, units);
+                schema.addField< Point<double> >(name, doc, units);
                 return;
             }
             if (cls == "Coord") {
@@ -143,7 +151,7 @@ struct FitsSchemaItem {
             }
         } else if (size == 3) {
             if (cls == "Moments") {
-                schema.addField< Moments<U> >(name, doc, units);
+                schema.addField< Moments<double> >(name, doc, units);
                 return;
             }
             if (cls == "Covariance(Point)") {
@@ -308,6 +316,14 @@ void FitsReader::_readSchema(
                 i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
             intermediate.asColSet().modify(i, FitsSchema::SetFormat(metadata.get<std::string>(*key)));
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TZERO") == 0) {
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TSCAL") == 0) {
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TNULL") == 0) {
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TDISP") == 0) {
             if (stripMetadata) metadata.remove(*key);
         }
     }
