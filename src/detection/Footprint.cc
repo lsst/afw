@@ -46,17 +46,6 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/utils/ieee.h"
 
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
-
-using boost::serialization::make_nvp;
-
 namespace lsst {
 namespace afw {
 namespace detection {
@@ -825,45 +814,6 @@ void Footprint::readPeaks(afw::table::BaseCatalog const & peakCat) {
         );
     }
 }
-
-template <typename Archive>
-void Footprint::serialize(Archive & ar, const unsigned int version) {
-    ar & make_nvp("spans", _spans);
-    ar & make_nvp("peaks", _peaks);
-    ar & make_nvp("area", _area);
-    ar & make_nvp("normalized", _normalized);
-
-    int x0, y0, width, height;
-    int rx0, ry0, rwidth, rheight;
-    if(Archive::is_saving::value) {
-        geom::Box2I const & bbox = getBBox();
-        x0 = bbox.getMinX();
-        y0 = bbox.getMinY();
-        width = bbox.getWidth();
-        height = bbox.getHeight();
-
-        geom::Box2I const & region = getRegion();
-        rx0 = region.getMinX();
-        ry0 = region.getMinY();
-        rwidth = region.getWidth();
-        rheight = region.getHeight();
-    }
-
-    ar & make_nvp("x0", x0) & make_nvp("y0", y0) & make_nvp("width", width) & make_nvp("height", height);
-    ar & make_nvp("rx0", rx0) & make_nvp("ry0", ry0) & make_nvp("rwidth", rwidth) & make_nvp("rheight", rheight);
-
-    if(Archive::is_loading::value) {
-        _bbox = geom::BoxI(geom::Point2I(x0, y0), geom::Extent2I(width, height));
-        _region = geom::BoxI(geom::Point2I(rx0, ry0), geom::Extent2I(rwidth, rheight));
-    }
-}
-
-template void Footprint::serialize(boost::archive::text_oarchive &, unsigned int const);
-template void Footprint::serialize(boost::archive::text_iarchive &, unsigned int const);
-template void Footprint::serialize(boost::archive::xml_oarchive &, unsigned int const);
-template void Footprint::serialize(boost::archive::xml_iarchive &, unsigned int const);
-template void Footprint::serialize(boost::archive::binary_oarchive &, unsigned int const);
-template void Footprint::serialize(boost::archive::binary_iarchive &, unsigned int const);
 
 /**
  * Assignment operator. Will not change the id

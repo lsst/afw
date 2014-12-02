@@ -46,15 +46,6 @@
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace boost{
-namespace serialization{
-    class access;
-}}
-
-#ifndef SWIG
-using boost::serialization::make_nvp;
-#endif
-
 namespace lsst {
 namespace afw { 
 namespace detection {
@@ -203,9 +194,6 @@ protected:
     friend class FootprintFactory;
 
 private:
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive & ar, const unsigned int version);
 
     static int id;
     mutable int _fid;                    //!< unique ID
