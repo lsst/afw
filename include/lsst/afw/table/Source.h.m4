@@ -205,6 +205,7 @@ public:
     DECLARE_SLOT_GETTERS(`Model', `Flux')
     DECLARE_SLOT_GETTERS(`Ap', `Flux')
     DECLARE_SLOT_GETTERS(`Inst', `Flux')
+    DECLARE_SLOT_GETTERS(`Calib', `Flux')
     DECLARE_SLOT_GETTERS(`', `Centroid')
     DECLARE_SLOT_GETTERS(`', `Shape')
 
@@ -322,6 +323,7 @@ public:
     DECLARE_SLOT_DEFINERS(`Model', `Flux')
     DECLARE_SLOT_DEFINERS(`Ap', `Flux')
     DECLARE_SLOT_DEFINERS(`Inst', `Flux')
+    DECLARE_SLOT_DEFINERS(`Calib', `Flux')
     DECLARE_SLOT_DEFINERS(`', `Centroid')
     DECLARE_SLOT_DEFINERS(`', `Shape')
 
@@ -369,6 +371,7 @@ public:
     DEFINE_FLUX_COLUMN_GETTERS(`Ap')
     DEFINE_FLUX_COLUMN_GETTERS(`Model')
     DEFINE_FLUX_COLUMN_GETTERS(`Inst')
+    DEFINE_FLUX_COLUMN_GETTERS(`Calib')
 
     ndarray::Array<double,1> const getX() const {
         return this->operator[](this->getTable()->getCentroidKey().getX());
@@ -405,6 +408,7 @@ DEFINE_SLOT_GETTERS(`Psf', `Flux')
 DEFINE_SLOT_GETTERS(`Model', `Flux')
 DEFINE_SLOT_GETTERS(`Ap', `Flux')
 DEFINE_SLOT_GETTERS(`Inst', `Flux')
+DEFINE_SLOT_GETTERS(`Calib', `Flux')
 DEFINE_SLOT_GETTERS(`', `Centroid')
 DEFINE_SLOT_GETTERS(`', `Shape')
 

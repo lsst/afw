@@ -161,9 +161,6 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
     if (_impl->version == 0) {
         // Read slots saved using an old mechanism in as aliases, since the new slot mechanism delegates
         // slot definition to the AliasMap.
-        // Note that the CalibFlux slot is only present on the HSC fork now, but we still want to let
-        // future versions of the LSST stack read files saved by older versions of the HSC stack, if
-        // it's not too hard.
         static std::array<std::pair<std::string,std::string>,7> oldSlotKeys = {
             std::make_pair("PSF_FLUX", "slot_PsfFlux"),
             std::make_pair("AP_FLUX", "slot_ApFlux"),

@@ -113,6 +113,7 @@ void SlotSuite::handleAliasChange(std::string const & alias, Schema const & sche
     defApFlux.setKeys(alias, schema);
     defInstFlux.setKeys(alias, schema);
     defModelFlux.setKeys(alias, schema);
+    defCalibFlux.setKeys(alias, schema);
     defCentroid.setKeys(alias, schema);
     defShape.setKeys(alias, schema);
 }
@@ -122,6 +123,7 @@ SlotSuite::SlotSuite(Schema const & schema) :
     defApFlux("ApFlux"),
     defInstFlux("InstFlux"),
     defModelFlux("ModelFlux"),
+    defCalibFlux("CalibFlux"),
     defCentroid("Centroid"),
     defShape("Shape")
 {
@@ -129,6 +131,7 @@ SlotSuite::SlotSuite(Schema const & schema) :
     defApFlux.setKeys("", schema);
     defInstFlux.setKeys("", schema);
     defModelFlux.setKeys("", schema);
+    defCalibFlux.setKeys("", schema);
     defCentroid.setKeys("", schema);
     defShape.setKeys("", schema);
 }
