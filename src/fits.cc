@@ -640,7 +640,7 @@ void MetadataIterationFunctor::operator()(
             add(key, str, comment);
         }
     } else if (key == "HISTORY" || key == "COMMENT") {
-      add(key, comment, "");
+        add(key, comment, "");
     } else if (value.empty()) {
         // do nothing for empty values
     } else {
