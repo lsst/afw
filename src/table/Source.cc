@@ -175,6 +175,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
     SAVE_FLUX_SLOT(MODEL, Model);
     SAVE_FLUX_SLOT(AP, Ap);
     SAVE_FLUX_SLOT(INST, Inst);
+    SAVE_FLUX_SLOT(INST, Calib);
     SAVE_CENTROID_SLOT();
     SAVE_SHAPE_SLOT();
 }
@@ -304,6 +305,7 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
     LOAD_FLUX_SLOT(MODEL, Model);
     LOAD_FLUX_SLOT(AP, Ap);
     LOAD_FLUX_SLOT(INST, Inst);
+    LOAD_FLUX_SLOT(INST, Calib);
     LOAD_CENTROID_SLOT();
     LOAD_SHAPE_SLOT();
     _startRecords(*table);
