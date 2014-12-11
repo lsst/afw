@@ -100,6 +100,8 @@ public:
           mapper -------- a SchemaMapper object used to translate records
         """
         self._columns = None
+        if isinstance(deep, SchemaMapper):
+            mapper = deep
         if isinstance(iterable, type(self)):
             if mapper is not None:
                 $action(self, iterable, mapper)
