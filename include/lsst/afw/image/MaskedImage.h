@@ -1064,12 +1064,12 @@ private:
  * A function to return a MaskedImage of the correct type (cf. std::make_pair)
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>* makeMaskedImage(
-    typename Image<ImagePixelT>::Ptr image, ///< %image
-    typename Mask<MaskPixelT>::Ptr mask = typename Mask<MaskPixelT>::Ptr(),    ///< mask
-    typename Image<VariancePixelT>::Ptr variance = typename Image<VariancePixelT>::Ptr() ///< variance
-                                                                     ) {
-    return new MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
+MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> makeMaskedImage(
+    PTR(Image<ImagePixelT>) image, ///< %image
+    PTR(Mask<MaskPixelT>) mask = PTR(Mask<MaskPixelT>)(),    ///< mask
+    PTR(Image<VariancePixelT>) variance = PTR(Image<VariancePixelT>)() ///< variance
+) {
+    return MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>(image, mask, variance);
 }
 
 /*
