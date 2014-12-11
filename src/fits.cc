@@ -639,17 +639,10 @@ void MetadataIterationFunctor::operator()(
         } else {
             add(key, str, comment);
         }
+    } else if (key == "HISTORY" || key == "COMMENT") {
+        add(key, comment, "");
     } else if (value.empty()) {
         // do nothing for empty values
-    } else if (key == "HISTORY" ||
-               (key == "COMMENT" &&
-                comment != "  FITS (Flexible Image Transport System) format is defined in 'Astronomy" &&
-                comment != "  and Astrophysics', volume 376, page 359; bibcode: 2001A&A...376..359H")) {
-        if (list) {
-            list->add(key, comment);
-        } else {
-            set->add(key, comment);
-        }
     } else {
         throw LSST_EXCEPT(
             afw::fits::FitsError,
