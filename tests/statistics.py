@@ -56,9 +56,18 @@ except NameError:
 class StatisticsTestCase(unittest.TestCase):
     """A test case for Statistics"""
     def setUp(self):
-        self.val = 10
-        self.image = afwImage.ImageF(afwGeom.Extent2I(100, 200))
-        self.image.set(self.val)
+        self.mu = 10                    # population
+        self.sigma = 1.0                # population
+        self.image = afwImage.ImageF(afwGeom.Extent2I(4000, 2000))
+        seed = 123                      # do not change.  Some tests at the edge of precision may fail
+        afwMath.randomGaussianImage(self.image, afwMath.Random(afwMath.Random.MT19937, seed))
+        self.image *= self.sigma
+        self.image += self.mu
+
+        self.mean = np.mean(self.image.getArray(), dtype=np.float64)   # sample
+        self.stdev = np.std(self.image.getArray(), dtype=np.float64) # sample
+        n = 3                                                        # we're trimming at 3-sigma
+        self._3sigmaClipFac = np.sqrt(1 - n/np.sqrt(2*np.pi)*np.exp(-n**2/2)/np.math.erf(n/np.sqrt(2)))
 
     def tearDown(self):
         del self.image
@@ -86,19 +95,22 @@ class StatisticsTestCase(unittest.TestCase):
                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM)
 
         self.assertEqual(stats.getValue(afwMath.NPOINT), self.image.getWidth()*self.image.getHeight())
-        self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
-                         stats.getValue(afwMath.SUM))
-        self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
-        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN))) # didn't ask for error, so it's a NaN
-        self.assertEqual(stats.getValue(afwMath.STDEV), 0)
+        self.assertAlmostEqual(
+            stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN)/stats.getValue(afwMath.SUM),
+            1.0)
+        self.assertAlmostEqual(stats.getValue(afwMath.MEAN), self.mean)
+        self.assertAlmostEqual(stats.getValue(afwMath.MEAN), self.mu, 3)
+        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN))) # didn't ask for error, so it's a NaN 
+        self.assertAlmostEqual(stats.getValue(afwMath.STDEV), self.stdev, 6)
+        self.assertAlmostEqual(stats.getValue(afwMath.STDEV), self.sigma, 3)
 
     def testStats2(self):
         stats = afwMath.makeStatistics(self.image, afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
         mean = stats.getResult(afwMath.MEAN)
         sd = stats.getValue(afwMath.STDEV)
         
-        self.assertEqual(mean[0], self.image.get(0, 0))
-        self.assertEqual(mean[1], sd/math.sqrt(self.image.getWidth()*self.image.getHeight()))
+        self.assertAlmostEqual(mean[0], self.mean)
+        self.assertAlmostEqual(mean[1], sd/math.sqrt(self.image.getWidth()*self.image.getHeight()))
 
     def testStats3(self):
         stats = afwMath.makeStatistics(self.image, afwMath.NPOINT)
@@ -110,7 +122,8 @@ class StatisticsTestCase(unittest.TestCase):
 
     def testStatsZebra(self):
         """Add 1 to every other row"""
-        image2 = self.image.Factory(self.image, True)
+        image2 = self.image.clone()
+        image2.set(self.mu)
         #
         # Add 1 to every other row, so the variance is 1/4
         #
@@ -131,7 +144,7 @@ class StatisticsTestCase(unittest.TestCase):
         n = stats.getValue(afwMath.NPOINT)
         sd = stats.getValue(afwMath.STDEV)
 
-        self.assertEqual(mean[0],  image2.get(0, 0) + 0.5)
+        self.assertEqual(mean[0],  self.mu + 0.5)
         self.assertEqual(sd, 1/math.sqrt(4.0)*math.sqrt(n/(n - 1)))
         self.assertAlmostEqual(mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
@@ -140,22 +153,26 @@ class StatisticsTestCase(unittest.TestCase):
 
     def testStatsStdevclip(self):
         """Test STDEVCLIP; cf. #611"""
-        image2 = self.image.Factory(self.image, True)
+        image2 = self.image.clone()
+        image2[100, 100] = 1e10
 
         stats = afwMath.makeStatistics(image2, afwMath.STDEVCLIP | afwMath.NPOINT | afwMath.SUM)
-        self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
+
+        self.assertAlmostEqual(afwMath.makeStatistics(self.image, afwMath.STDEVCLIP).getValue(),
+                               stats.getValue(afwMath.STDEVCLIP), 6)
+        self.assertNotEqual(afwMath.makeStatistics(self.image, afwMath.STDEV).getValue(),
+                            afwMath.makeStatistics(image2,     afwMath.STDEV).getValue())
         #
         # Check we get the correct sum even when clipping
         #
-        self.assertEqual(stats.getValue(afwMath.NPOINT)*
-                         afwMath.makeStatistics(image2, afwMath.MEAN).getValue(),
-                         stats.getValue(afwMath.SUM))
+        self.assertAlmostEqual(stats.getValue(afwMath.SUM)/(
+            stats.getValue(afwMath.NPOINT)* afwMath.makeStatistics(image2, afwMath.MEAN).getValue()), 1.0)
 
     def testMedian(self):
         """Test the median code"""
         stats = afwMath.makeStatistics(self.image, afwMath.MEDIAN)
 
-        self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
+        self.assertAlmostEqual(stats.getValue(afwMath.MEDIAN), self.mu, 4)
 
         values = [1.0, 2.0, 3.0, 2.0 ]
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2.0)
@@ -163,22 +180,28 @@ class StatisticsTestCase(unittest.TestCase):
     def testIqrange(self):
         """Test the inter-quartile range"""
         stats = afwMath.makeStatistics(self.image, afwMath.IQRANGE)
-        self.assertEqual(stats.getValue(afwMath.IQRANGE), 0)
+        IQ_TO_STDEV = 0.741301109252802 # 1 sigma in units of interquartile range for a Gaussian
+        q25, q75 = np.percentile(self.image.getArray(), [25, 75])
+        iqr = q75 - q25
+        self.assertEqual(stats.getValue(afwMath.IQRANGE), iqr)
+        self.assertAlmostEqual(stats.getValue(afwMath.IQRANGE), self.sigma/IQ_TO_STDEV, 3) # noisy
 
     def testMeanClip(self):
         """Test the 3-sigma clipped mean"""
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
-        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.mu)
 
     def testStdevClip(self):
         """Test the 3-sigma clipped standard deviation"""
         stats = afwMath.makeStatistics(self.image, afwMath.STDEVCLIP)
-        self.assertEqual(stats.getValue(afwMath.STDEVCLIP), 0)
+        rat = stats.getValue(afwMath.STDEVCLIP)/(self.stdev*self._3sigmaClipFac)
+        tol = 9e-3
+        self.assertTrue(np.abs(1 - rat) < tol, "abs(1 - %g) < %g" % (rat, tol))
 
     def testVarianceClip(self):
         """Test the 3-sigma clipped variance"""
-        stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
-        self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
+        stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP | afwMath.STDEVCLIP)
+        self.assertAlmostEqual(stats.getValue(afwMath.STDEVCLIP)**2, stats.getValue(afwMath.VARIANCECLIP))
 
     def testMaxWithNan(self):
         """Test that we can handle NaNs correctly"""
@@ -187,15 +210,15 @@ class StatisticsTestCase(unittest.TestCase):
         for useImage in [True, False]:
             if useImage:
                 self.image = afwImage.ImageF(100, 100)
-                self.image.set(self.val)
+                self.image.set(self.mu)
                 self.image.set(x, y, np.nan)
             else:
                 self.image = afwImage.MaskedImageF(100, 100)            
-                self.image.set(self.val, 0x0, 1.0)
+                self.image.set(self.mu, 0x0, 1.0)
                 self.image.set(x, y, (np.nan, 0x0, 1.0))
 
-            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MAX).getValue(), self.val)
-            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(), self.val)
+            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MAX).getValue(), self.mu)
+            self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(), self.mu)
             
             sctrl = afwMath.StatisticsControl()
 
@@ -338,7 +361,7 @@ class StatisticsTestCase(unittest.TestCase):
         ctrl.setAndMask(~0x0)
         
         mimg = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
-        mimg.set([self.val, 0x1, self.val])
+        mimg.set([self.mu, 0x1, self.mu])
 
         # test the case with no valid pixels ... both mean and stdev should be nan
         stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
@@ -352,7 +375,7 @@ class StatisticsTestCase(unittest.TestCase):
         stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
-        self.assertEqual(mean, self.val)
+        self.assertEqual(mean, self.mu)
         self.assertNotEqual(stdev, stdev) # NaN does not equal itself
 
         # test the case with two valid pixels ... both mean and stdev are ok
@@ -360,14 +383,14 @@ class StatisticsTestCase(unittest.TestCase):
         stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
         mean  = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
-        self.assertEqual(mean, self.val)
+        self.assertEqual(mean, self.mu)
         self.assertEqual(stdev, 0.0)
 
 
     def testTicket1125(self):
         """Ticket 1125 reported that the clipped routines were aborting when called with no valid pixels. """
         mimg = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
-        mimg.set([self.val, 0x1, self.val])
+        mimg.set([self.mu, 0x1, self.mu])
 
         ctrl = afwMath.StatisticsControl()
         ctrl.setAndMask(~0x0)
@@ -440,7 +463,7 @@ class StatisticsTestCase(unittest.TestCase):
     def testMeanClip(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
-        self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
+        self.assertTrue(np.isfinite(stats.getValue(afwMath.MEANCLIP)))
 
         # this bug was caused by the iterative nature of the MEANCLIP.
         # With only one point, the sample variance returns NaN to avoid a divide by zero error
