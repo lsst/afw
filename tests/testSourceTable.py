@@ -369,6 +369,42 @@ class SourceTableTestCase(unittest.TestCase):
                 self.assertEqual(child.getParent(), parent.getId())
                 self.assertEqual(child.getId(), id)
 
+    def testOldFootprintPersistence(self):
+        """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
+        version of the pipeline with a different format.
+        """
+        filename = os.path.join("tests", "data", "old-footprint-persistence.fits")
+        catalog1 = lsst.afw.table.SourceCatalog.readFits(filename)
+        self.assertEqual(len(catalog1), 2)
+        self.assertRaises(KeyError, catalog1.schema.find, "footprint")
+        fp1 = catalog1[0].getFootprint()
+        fp2 = catalog1[1].getFootprint()
+        self.assertEqual(fp1.getArea(), 495)
+        self.assertEqual(fp2.getArea(), 767)
+        self.assertFalse(fp1.isHeavy())
+        self.assertTrue(fp2.isHeavy())
+        self.assertEqual(len(fp1.getSpans()), 29)
+        self.assertEqual(len(fp2.getSpans()), 44)
+        self.assertEqual(len(fp1.getPeaks()), 1)
+        self.assertEqual(len(fp2.getPeaks()), 1)
+        self.assertEqual(fp1.getBBox(),
+                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(129,2), lsst.afw.geom.Extent2I(25, 29)))
+        self.assertEqual(fp2.getBBox(),
+                         lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(1184,2), lsst.afw.geom.Extent2I(78, 38)))
+        hfp = lsst.afw.detection.cast_HeavyFootprintF(fp2)
+        self.assertEqual(len(hfp.getImageArray()), fp2.getArea())
+        self.assertEqual(len(hfp.getMaskArray()), fp2.getArea())
+        self.assertEqual(len(hfp.getVarianceArray()), fp2.getArea())
+        catalog2 = lsst.afw.table.SourceCatalog.readFits(filename, 0,
+                                                         lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+        self.assertEqual(list(fp1.getSpans()), list(catalog2[0].getFootprint().getSpans()))
+        self.assertEqual(list(fp2.getSpans()), list(catalog2[1].getFootprint().getSpans()))
+        self.assertFalse(catalog2[1].getFootprint().isHeavy())
+        catalog3 = lsst.afw.table.SourceCatalog.readFits(filename, 0,
+                                                         lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+        self.assertEqual(catalog3[0].getFootprint(), None)
+        self.assertEqual(catalog3[1].getFootprint(), None)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
