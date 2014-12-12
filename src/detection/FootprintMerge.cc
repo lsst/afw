@@ -48,6 +48,7 @@ FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) 
 FootprintMerge::FootprintMerge():
     _merge(PTR(Footprint)())
 {
+    _merge->getPeaks() = PeakCatalog(PeakTable::makeMinimalSchema());
 }
 
 FootprintMerge::FootprintMerge(PTR(Footprint) foot):
@@ -77,26 +78,26 @@ void FootprintMerge::add(PTR(Footprint) foot, float minNewPeakDist)
     PeakCatalog &otherPeaks = foot->getPeaks();
 
     // Create new list of peaks
-    PeakCatalog newPeaks;
+    PeakCatalog newPeaks(currentPeaks.getTable());
     float minNewPeakDist2 = minNewPeakDist*minNewPeakDist;
-    for (Footprint::PeakList::const_iterator otherIter = otherPeaks.begin();
+    for (PeakCatalog::const_iterator otherIter = otherPeaks.begin();
          otherIter != otherPeaks.end(); ++otherIter) {
 
         float minDist2 = std::numeric_limits<float>::infinity();
-        for (Footprint::PeakList::const_iterator currentIter = currentPeaks.begin();
+        for (PeakCatalog::const_iterator currentIter = currentPeaks.begin();
              currentIter != currentPeaks.end(); ++currentIter) {
-            float dist2 = (*otherIter)->getI().distanceSquared((*currentIter)->getI());
+            float dist2 = otherIter->getI().distanceSquared(currentIter->getI());
             if (dist2 < minDist2) {
                 minDist2 = dist2;
             }
         }
 
         if (minDist2 > minNewPeakDist2) {
-            newPeaks.push_back(*otherIter);
+            newPeaks.push_back(otherIter);
         }
     }
 
-    _merge->getPeaks().insert(_merge->getPeaks().end(), newPeaks.begin(), newPeaks.end());
+    _merge->getPeaks().insert(_merge->getPeaks().end(), newPeaks.begin(), newPeaks.end(), true);
 }
 
 

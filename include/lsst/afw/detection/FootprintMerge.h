@@ -45,7 +45,8 @@ class FootprintMerge {
 public:
 
     FootprintMerge();
-    FootprintMerge(PTR(Footprint) foot);
+
+    explicit FootprintMerge(PTR(Footprint) foot);
 
     /**
      *  @brief Does this Footprint overlap the merged Footprint.
