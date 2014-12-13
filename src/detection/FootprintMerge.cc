@@ -46,57 +46,58 @@ FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) 
 } // anonymous namespace
 
 FootprintMerge::FootprintMerge():
-    merge(PTR(Footprint)())
+    _merge(PTR(Footprint)())
 {
+    _merge->getPeaks() = PeakCatalog(PeakTable::makeMinimalSchema());
 }
 
 FootprintMerge::FootprintMerge(PTR(Footprint) foot):
     _footprints(1,foot),
-    merge(boost::make_shared<Footprint>(*foot))
+    _merge(boost::make_shared<Footprint>(*foot))
 {
 }
 
-bool FootprintMerge::overlaps(Footprint const &foot)
+bool FootprintMerge::overlaps(Footprint const &foot) const
 {
 
-    return mergeFootprintPair(*merge, foot).getFootprints()->size() == 1u;
+    return mergeFootprintPair(*_merge, foot).getFootprints()->size() == 1u;
 }
 
 void FootprintMerge::add(PTR(Footprint) foot, float minNewPeakDist)
 {
-    FootprintSet fpSet = mergeFootprintPair(*merge, *foot);
+    FootprintSet fpSet = mergeFootprintPair(*_merge, *foot);
     if (fpSet.getFootprints()->size() != 1u) return;
 
-    merge->getBBox().include(foot->getBBox());
-    merge->getSpans().swap(fpSet.getFootprints()->front()->getSpans());
+    _merge->getBBox().include(foot->getBBox());
+    _merge->getSpans().swap(fpSet.getFootprints()->front()->getSpans());
     _footprints.push_back(foot);
 
     if (minNewPeakDist < 0) return;
 
-    Footprint::PeakList &currentPeaks = merge->getPeaks();
-    Footprint::PeakList &otherPeaks = foot->getPeaks();
+    PeakCatalog &currentPeaks = _merge->getPeaks();
+    PeakCatalog &otherPeaks = foot->getPeaks();
 
     // Create new list of peaks
-    Footprint::PeakList newPeaks;
+    PeakCatalog newPeaks(currentPeaks.getTable());
     float minNewPeakDist2 = minNewPeakDist*minNewPeakDist;
-    for (Footprint::PeakList::const_iterator otherIter = otherPeaks.begin();
+    for (PeakCatalog::const_iterator otherIter = otherPeaks.begin();
          otherIter != otherPeaks.end(); ++otherIter) {
 
         float minDist2 = std::numeric_limits<float>::infinity();
-        for (Footprint::PeakList::const_iterator currentIter = currentPeaks.begin();
+        for (PeakCatalog::const_iterator currentIter = currentPeaks.begin();
              currentIter != currentPeaks.end(); ++currentIter) {
-            float dist2 = (*otherIter)->getI().distanceSquared((*currentIter)->getI());
+            float dist2 = otherIter->getI().distanceSquared(currentIter->getI());
             if (dist2 < minDist2) {
                 minDist2 = dist2;
             }
         }
 
         if (minDist2 > minNewPeakDist2) {
-            newPeaks.push_back(*otherIter);
+            newPeaks.push_back(otherIter);
         }
     }
 
-    merge->getPeaks().insert(merge->getPeaks().end(), newPeaks.begin(), newPeaks.end());
+    _merge->getPeaks().insert(_merge->getPeaks().end(), newPeaks.begin(), newPeaks.end(), true);
 }
 
 

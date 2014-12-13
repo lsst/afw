@@ -1,3 +1,4 @@
+// -*- lsst-c++ -*-
 /*
  * LSST Data Management System
  * Copyright 2008-2014 LSST Corporation.
@@ -44,7 +45,8 @@ class FootprintMerge {
 public:
 
     FootprintMerge();
-    FootprintMerge(PTR(Footprint) foot);
+
+    explicit FootprintMerge(PTR(Footprint) foot);
 
     /**
      *  @brief Does this Footprint overlap the merged Footprint.
@@ -53,7 +55,7 @@ public:
      *  detects the number of peaks.  This is not very efficient and will be changed
      *  within the Footprint class in the future.
      */
-    bool overlaps(Footprint const &rhs);
+    bool overlaps(Footprint const &rhs) const;
 
     /**
      *  @brief Add this Footprint to the merge.
@@ -67,17 +69,17 @@ public:
     void add(PTR(Footprint) foot, float minNewPeakDist=-1.);
 
     // Get the bounding box of the merge
-    afw::geom::Box2I getBBox() const { return merge->getBBox(); }
-    afw::geom::Box2I & getBBox() { return merge->getBBox(); }
+    afw::geom::Box2I getBBox() const { return _merge->getBBox(); }
+    afw::geom::Box2I & getBBox() { return _merge->getBBox(); }
 
     std::vector<PTR(Footprint)> & getFootprints() { return _footprints; }
 
-    PTR(Footprint) getMergedFootprint() const { return merge; }
+    PTR(Footprint) getMergedFootprint() const { return _merge; }
 
 private:
 
     std::vector<PTR(Footprint)> _footprints;
-    PTR(Footprint) merge;
+    PTR(Footprint) _merge;
 };
 
 

@@ -50,6 +50,8 @@ public:
 
     void reserve(std::size_t n);
 
+    void clear();
+
     %pythonappend getColumnView %{
         self._columns = val
     %}

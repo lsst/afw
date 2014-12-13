@@ -78,13 +78,6 @@ public:
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
 
-    template <typename ImagePixelT, typename MaskPixelT>
-    FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
-
     FootprintSet(geom::Box2I region);
     FootprintSet(FootprintSet const&);
     FootprintSet(FootprintSet const& set, int rGrow, FootprintControl const& ctrl);
