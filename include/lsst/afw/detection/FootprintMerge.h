@@ -144,7 +144,6 @@ private:
      typedef std::vector<SourceMerge> FootprintMergeVec;
 
      FootprintMergeVec _mergeList;
-     afw::table::Schema _schema;
      std::map<std::string, afw::table::Key<afw::table::Flag> > _filterMap;
  };
 
