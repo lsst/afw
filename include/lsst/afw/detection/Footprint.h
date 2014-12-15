@@ -183,8 +183,7 @@ public:
 
     /// Return the Footprint's bounding box
     geom::Box2I getBBox() const { return _bbox; }
-    /// Return the Footprint's bounding box
-    geom::Box2I & getBBox() { return _bbox; }
+
     /// Return the corners of the MaskedImage the footprints live in
     geom::Box2I const & getRegion() const { return _region; }
 
@@ -312,6 +311,8 @@ protected:
     friend class FootprintFactory;
 
 private:
+
+    friend class FootprintMerge;
 
     static int id;
     mutable int _fid;                    //!< unique ID

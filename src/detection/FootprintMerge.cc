@@ -68,7 +68,7 @@ void FootprintMerge::add(PTR(Footprint) foot, float minNewPeakDist)
     FootprintSet fpSet = mergeFootprintPair(*_merge, *foot);
     if (fpSet.getFootprints()->size() != 1u) return;
 
-    _merge->getBBox().include(foot->getBBox());
+    _merge->_bbox.include(foot->getBBox());
     _merge->getSpans().swap(fpSet.getFootprints()->front()->getSpans());
     _footprints.push_back(foot);
 
