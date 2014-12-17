@@ -267,6 +267,51 @@ bool CovarianceMatrixKey<T,N>::operator==(CovarianceMatrixKey const & other) con
     return true;
 }
 
+template <typename T, int N>
+T CovarianceMatrixKey<T,N>::getElement(BaseRecord const & record, int i, int j) const {
+    if (i == j) {
+        if (_isDiagonalVariance) {
+            return record.get(_sigma[i]);
+        } else {
+            T sigma = record.get(_sigma[i]);
+            return sigma*sigma;
+        }
+    }
+    if (_cov.empty()) {
+        return 0.0;
+    }
+    Key<T> key = (i < j) ? _cov[j*(j-1)/2 + i] : _cov[i*(i-1)/2 + j];
+    return key.isValid() ? record.get(key) : 0.0;
+}
+
+template <typename T, int N>
+void CovarianceMatrixKey<T,N>::setElement(BaseRecord & record, int i, int j, T value) const {
+    if (i == j) {
+        if (_isDiagonalVariance) {
+            record.set(_sigma[i], value);
+        } else {
+            record.set(_sigma[i], std::sqrt(value));
+        }
+    } else {
+        if (_cov.empty()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicError,
+                (boost::format("Cannot set covariance element %d,%d; no fields for covariance")
+                 % i % j).str()
+            );
+        }
+        Key<T> key = (i < j) ? _cov[j*(j-1)/2 + i] : _cov[i*(i-1)/2 + j];
+        if (!key.isValid()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicError,
+                (boost::format("Cannot set covariance element %d,%d; no field for this element")
+                 % i % j).str()
+            );
+        }
+        record.set(key, value);
+    }
+}
+
 template class CovarianceMatrixKey<float,2>;
 template class CovarianceMatrixKey<float,3>;
 template class CovarianceMatrixKey<float,4>;

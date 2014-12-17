@@ -341,6 +341,12 @@ public:
     /// Set a covariance matrix in the given record (uses only the lower triangle of the given matrix)
     virtual void set(BaseRecord & record, Eigen::Matrix<T,N,N> const & value) const;
 
+    /// Return the element in row i and column j
+    T getElement(BaseRecord const & record, int i, int j) const;
+
+    /// Set the element in row i and column j
+    void setElement(BaseRecord & record, int i, int j, T value) const;
+
     /**
      *  @brief Return True if all the constituent sigma Keys are valid
      *
