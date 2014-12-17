@@ -43,7 +43,8 @@ class HeaderDetectorMap(HeaderMap):
         obj.__setattr__(attrName, transform(value))
 
 class CameraGeomBuilder(object):
-    def __init__(self, fileNameList):
+    def __init__(self, fileNameList, clobberHeader=False):
+        self._sanitizeHeaderMetadata(clobber=clobberHeader)
         self.defaultAmpMap = self._makeDefaultAmpMap()
         self.defaultDetectorMap = self._makeDefaultDetectorMap()
         self.mdList = []
@@ -53,7 +54,14 @@ class CameraGeomBuilder(object):
             self.detectorList.append(CameraGeomBuilder.buildDetector(self.mdList[-1]))
         self.camera = self.buildCamera()
 
-    def _makeDefaultAmpMap(self):
+    def _sanitizeHeaderMetadata(self, clobber):
+        #Deal with DTM to get read corner and add as 'RDCRNR'
+        #Deal with DMT to get flipX and flipY add as 'FLIPX', 'FLIPY'
+        #Deal with NAXIS1, NAXIS2 to make rawBBox as 'RAWBBOX'
+        #Deal with DTV1, DTV2 to make 'XYOFF
+        #map biassec[1] to HOSCAN
+        #map biassec[3] to VOSCAN
+        #map biassec[2] to PRESCAN
         raise NotImplementedError()
 
     def _makeDefaultAmpMap(self):
