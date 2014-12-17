@@ -92,15 +92,13 @@ private:
  *  are operating on smallish number of objects, such as at the tract level.
  *
  */
- class FootprintMergeList
- {
- public:
+class FootprintMergeList {
+public:
 
+    FootprintMergeList(afw::table::Schema &schema,
+                       std::vector<std::string> const &filterList);
 
-     FootprintMergeList(afw::table::Schema &schema,
-                        std::vector<std::string> const &filterList);
-
-     /**
+    /**
      *  @brief Add objects from a SourceCatalog in the specified filter
      *
      *  Iterate over all objects that have not been deblendend and search for an overlapping
@@ -111,37 +109,37 @@ private:
      *
      *  The SourceTable is used to create new SourceRecords that store the filter information.
      */
-     void addCatalog(PTR(afw::table::SourceTable) &table, afw::table::SourceCatalog const &inputCat,
-                     std::string filter, float minNewPeakDist=-1., bool doMerge=true);
+    void addCatalog(PTR(afw::table::SourceTable) &table, afw::table::SourceCatalog const &inputCat,
+                    std::string filter, float minNewPeakDist=-1., bool doMerge=true);
 
-     /**
+    /**
      *  @brief Clear entries in the current vector
      */
-     void clearCatalog() { _mergeList.clear(); }
+    void clearCatalog() { _mergeList.clear(); }
 
-     /**
+    /**
      *  @brief Get SourceCatalog with entries that contain the final Footprint and SourceRecord for each entry
      *
      *  The resulting Footprints will be normalized, meaning that there peaks are sorted, and
      *  areas are calculated.
      */
-     void getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm=true);
+    void getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm=true);
 
 #ifndef SWIG
-     // Class to store SourceRecord and FootprintMerge.
-     struct SourceMerge{
-         PTR(afw::table::SourceRecord) src;
-         PTR(FootprintMerge) merge;
-     };
+    // Class to store SourceRecord and FootprintMerge.
+    struct SourceMerge{
+        PTR(afw::table::SourceRecord) src;
+        PTR(FootprintMerge) merge;
+    };
 #endif
 
- private:
+private:
 
-     typedef std::vector<SourceMerge> FootprintMergeVec;
+    typedef std::vector<SourceMerge> FootprintMergeVec;
 
-     FootprintMergeVec _mergeList;
-     std::map<std::string, afw::table::Key<afw::table::Flag> > _filterMap;
- };
+    FootprintMergeVec _mergeList;
+    std::map<std::string, afw::table::Key<afw::table::Flag> > _filterMap;
+};
 
 }}} // namespace lsst::afw::detection
 
