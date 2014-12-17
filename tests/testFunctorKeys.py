@@ -272,6 +272,15 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                     self.assertClose(matrix2[i,j], (i+1)*10 + (j+1), rtol=1E-7)
                     self.assertClose(matrix1[j,i], (i+1)*10 + (j+1), rtol=1E-7)
                     self.assertClose(matrix2[j,i], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(fKey1.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(fKey2.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
+                    v = numpy.random.randn()
+                    fKey1.setElement(record, i, j, v)
+                    self.assertClose(fKey2.getElement(record, i, j), v, rtol=1E-7)
+                    fKey2.setElement(record, i, j, (i+1)*10 + (j+1))
+                else:
+                    self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError,
+                                             fKey1.setElement, record, i, j, 0.0)
                 k += 1
 
     def testCovarianceMatrixKey(self):
