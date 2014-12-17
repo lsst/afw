@@ -277,9 +277,17 @@ makeHeavyFootprint = makeHeavyFootprintF
 
             # if peak is not an array, create an array the size of catalogs
             try:
-               len(peakDist)
+                len(peakDist)
             except:
-               peakDist = [peakDist] * len(catalogs)
+                peakDist = [peakDist] * len(catalogs)
+
+            if len(peakDist) != len(catalogs):
+                raise ValueError("Number of catalogs (%d) does not match length of peakDist (%d)"
+                                 % (len(catalogs), len(peakDist)))
+
+            if len(filters) != len(catalogs):
+                raise ValueError("Number of catalogs (%d) does not match number of filters (%d)"
+                                 % (len(catalogs), len(filters)))
 
             self.clearCatalog()
             for cat, filter, dist in zip(catalogs, filters, peakDist):
