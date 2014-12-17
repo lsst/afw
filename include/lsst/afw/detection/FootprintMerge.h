@@ -71,8 +71,6 @@ public:
     // Get the bounding box of the merge
     afw::geom::Box2I getBBox() const { return _merge->getBBox(); }
 
-    std::vector<PTR(Footprint)> & getFootprints() { return _footprints; }
-
     PTR(Footprint) getMergedFootprint() const { return _merge; }
 
 private:
