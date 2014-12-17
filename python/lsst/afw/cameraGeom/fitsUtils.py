@@ -121,3 +121,20 @@ class CameraGeomBuilder(object):
 
     def buildCamera(self):
         raise NotImplementedError()
+
+    def makeCalib(metadata):
+        raise NotImplementedError()
+
+    @classmethod
+    def makeExposure(cls, im, metadata, mask=None, variance=None):
+        if mask is None:
+            mask = afwImage.MaskU(im.getDimensions())
+        if variance is None:
+            variance = im
+        mi = afwImage.makeMaskedImage(im, mask, variance)
+        detector = cls.makeDetector(metadata)
+
+        wcs = afwImage.makeWcsFromMetadata(metadata)
+        calib = cls.makeCalib(metadata)
+        exp = afwImage.makeExposure(mi, calib, wcs, detector)
+        return exp
