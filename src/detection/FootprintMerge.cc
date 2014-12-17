@@ -28,7 +28,6 @@
 
 namespace lsst { namespace afw { namespace detection {
 
-
 namespace {
 
 FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) {
@@ -43,7 +42,45 @@ FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) 
     FootprintSet fpSet(mask, Threshold(bits, Threshold::BITMASK));
     return fpSet;
 }
+
 } // anonymous namespace
+
+class FootprintMerge {
+public:
+
+    FootprintMerge();
+
+    explicit FootprintMerge(PTR(Footprint) foot);
+
+    /*
+     *  Does this Footprint overlap the merged Footprint.
+     *
+     *  The current implementation just builds an image from the two Footprints and
+     *  detects the number of peaks.  This is not very efficient and will be changed
+     *  within the Footprint class in the future.
+     */
+    bool overlaps(Footprint const &rhs) const;
+
+    /*
+     *  Add this Footprint to the merge.
+     *
+     *  If minNewPeakDist >= 0, it will add all peaks from foot to the merged Footprint
+     *  that are greater than minNewPeakDist away from the closest existing peak.
+     *  If minNewPeakDist < 0, no peaks will be added from foot.
+     *
+     *  If foot does not overlap it will do nothing.
+     */
+    void add(PTR(Footprint) foot, float minNewPeakDist=-1.);
+
+    // Get the bounding box of the merge
+    afw::geom::Box2I getBBox() const { return _merge->getBBox(); }
+
+    PTR(Footprint) getMergedFootprint() const { return _merge; }
+
+private:
+    std::vector<PTR(Footprint)> _footprints;
+    PTR(Footprint) _merge;
+};
 
 FootprintMerge::FootprintMerge():
     _merge(PTR(Footprint)())

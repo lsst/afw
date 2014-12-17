@@ -30,54 +30,13 @@
 #include "lsst/afw/table/Source.h"
 
 namespace lsst { namespace afw { namespace detection {
+
 /**
- *  @brief Object that represents a merge of Footprints.
- *
- *  Contains a vector of individual Footprints and a composite Footprint that is the union of them.
- *  The merging and overlap functions are currently not very efficient for large Footprints as
- *  they draw Footprints into a mask and then detect the results as a FootprintSet.  Improvements to
- *  these Functions will be addressed in future changes of the Footprint code.
- *
- *  Given a set of overlapping Footprints, the final merged Footprint will depend on the order
- *  that they are added.
+ *  FootprintMerge is a private helper class for FootprintMergeList; it's only declared here (it's defined
+ *  in the .cc file) so FootprintMergeList can hold a vector without an extra PImpl layer, and so Footprint
+ *  can friend it.
  */
-class FootprintMerge {
-public:
-
-    FootprintMerge();
-
-    explicit FootprintMerge(PTR(Footprint) foot);
-
-    /**
-     *  @brief Does this Footprint overlap the merged Footprint.
-     *
-     *  The current implementation just builds an image from the two Footprints and
-     *  detects the number of peaks.  This is not very efficient and will be changed
-     *  within the Footprint class in the future.
-     */
-    bool overlaps(Footprint const &rhs) const;
-
-    /**
-     *  @brief Add this Footprint to the merge.
-     *
-     *  If minNewPeakDist >= 0, it will add all peaks from foot to the merged Footprint
-     *  that are greater than minNewPeakDist away from the closest existing peak.
-     *  If minNewPeakDist < 0, no peaks will be added from foot.
-     *
-     *  If foot does not overlap it will do nothing.
-     */
-    void add(PTR(Footprint) foot, float minNewPeakDist=-1.);
-
-    // Get the bounding box of the merge
-    afw::geom::Box2I getBBox() const { return _merge->getBBox(); }
-
-    PTR(Footprint) getMergedFootprint() const { return _merge; }
-
-private:
-    std::vector<PTR(Footprint)> _footprints;
-    PTR(Footprint) _merge;
-};
-
+class FootprintMerge;
 
 /**
  *  @brief List of Merged Footprints.
