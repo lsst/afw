@@ -48,7 +48,20 @@ FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) 
 class FootprintMerge {
 public:
 
-    explicit FootprintMerge(PTR(Footprint) foot);
+    typedef FootprintMergeList::FlagKey FlagKey;
+    typedef FootprintMergeList::FilterMap FilterMap;
+
+    explicit FootprintMerge(
+        PTR(Footprint) footprint,
+        PTR(afw::table::SourceTable) sourceTable,
+        FlagKey const & flagKey
+    ) :
+        _footprints(1, footprint),
+        _source(sourceTable->makeRecord())
+    {
+        _source->setFootprint(boost::make_shared<Footprint>(*footprint));
+        _source->set(flagKey, true);
+    }
 
     /*
      *  Does this Footprint overlap the merged Footprint.
@@ -57,7 +70,9 @@ public:
      *  detects the number of peaks.  This is not very efficient and will be changed
      *  within the Footprint class in the future.
      */
-    bool overlaps(Footprint const &rhs) const;
+    bool overlaps(Footprint const &rhs) const {
+        return mergeFootprintPair(*getMergedFootprint(), rhs).getFootprints()->size() == 1u;
+    }
 
     /*
      *  Add this Footprint to the merge.
@@ -68,43 +83,60 @@ public:
      *
      *  If foot does not overlap it will do nothing.
      */
-    void add(PTR(Footprint) foot, float minNewPeakDist=-1.);
+    void add(PTR(Footprint) footprint, FlagKey const & flagKey, float minNewPeakDist=-1.) {
+        if (_addImpl(footprint, minNewPeakDist)) {
+            _footprints.push_back(footprint);
+            _source->set(flagKey, true);
+        }
+    }
+
+    /*
+     *  Merge an already-merged clump of Footprints into this
+     *
+     *  If minNewPeakDist >= 0, it will add all peaks from foot to the merged Footprint
+     *  that are greater than minNewPeakDist away from the closest existing peak.
+     *  If minNewPeakDist < 0, no peaks will be added from foot.
+     *
+     *  If foot does not overlap it will do nothing.
+     */
+    void add(FootprintMerge const & other, FilterMap const & keys, float minNewPeakDist=-1.) {
+        if (_addImpl(other.getMergedFootprint(), minNewPeakDist)) {
+            _footprints.insert(_footprints.end(), other._footprints.begin(), other._footprints.end());
+            // Set source flags to the OR of the flags of the two inputs
+            for (FilterMap::const_iterator i = keys.begin(); i != keys.end(); ++i) {
+                _source->set(i->second, _source->get(i->second) || other._source->get(i->second));
+            }
+        }
+    }
 
     // Get the bounding box of the merge
-    afw::geom::Box2I getBBox() const { return _merge->getBBox(); }
+    afw::geom::Box2I getBBox() const { return getMergedFootprint()->getBBox(); }
 
-    PTR(Footprint) getMergedFootprint() const { return _merge; }
+    PTR(Footprint) getMergedFootprint() const { return _source->getFootprint(); }
+
+    PTR(afw::table::SourceRecord) getSource() const { return _source; }
 
 private:
+
+    // Implementation helper for add() methods; returns true if the Footprint actually overlapped
+    // and was merged, and false otherwise.
+    bool _addImpl(PTR(Footprint) footprint, float minNewPeakDist);
+
     std::vector<PTR(Footprint)> _footprints;
-    PTR(Footprint) _merge;
+    PTR(afw::table::SourceRecord) _source;
 };
 
-FootprintMerge::FootprintMerge(PTR(Footprint) foot):
-    _footprints(1,foot),
-    _merge(boost::make_shared<Footprint>(*foot))
-{
-}
+bool FootprintMerge::_addImpl(PTR(Footprint) footprint, float minNewPeakDist) {
+    FootprintSet fpSet = mergeFootprintPair(*getMergedFootprint(), *footprint);
+    if (fpSet.getFootprints()->size() != 1u) return false;
 
-bool FootprintMerge::overlaps(Footprint const &foot) const
-{
+    getMergedFootprint()->_bbox.include(footprint->getBBox());
+    getMergedFootprint()->getSpans().swap(fpSet.getFootprints()->front()->getSpans());
 
-    return mergeFootprintPair(*_merge, foot).getFootprints()->size() == 1u;
-}
+    if (minNewPeakDist < 0) return true;
 
-void FootprintMerge::add(PTR(Footprint) foot, float minNewPeakDist)
-{
-    FootprintSet fpSet = mergeFootprintPair(*_merge, *foot);
-    if (fpSet.getFootprints()->size() != 1u) return;
-
-    _merge->_bbox.include(foot->getBBox());
-    _merge->getSpans().swap(fpSet.getFootprints()->front()->getSpans());
-    _footprints.push_back(foot);
-
-    if (minNewPeakDist < 0) return;
-
-    PeakCatalog &currentPeaks = _merge->getPeaks();
-    PeakCatalog &otherPeaks = foot->getPeaks();
+    PeakCatalog &currentPeaks = getMergedFootprint()->getPeaks();
+    PeakCatalog &otherPeaks = footprint->getPeaks();
 
     // Create new list of peaks
     PeakCatalog newPeaks(currentPeaks.getTable());
@@ -126,7 +158,13 @@ void FootprintMerge::add(PTR(Footprint) foot, float minNewPeakDist)
         }
     }
 
-    _merge->getPeaks().insert(_merge->getPeaks().end(), newPeaks.begin(), newPeaks.end(), true);
+    getMergedFootprint()->getPeaks().insert(
+        getMergedFootprint()->getPeaks().end(),
+        newPeaks.begin(), newPeaks.end(),
+        true // deep-copy
+    );
+
+    return true;
 }
 
 
@@ -144,21 +182,27 @@ FootprintMergeList::FootprintMergeList(afw::table::Schema & schema,
 }
 
 namespace {
+
 bool ContainsId(std::vector<afw::table::RecordId> const &idList,
-                FootprintMergeList::SourceMerge const &merge) {
-    return std::find(idList.begin(), idList.end(), merge.src->getId()) != idList.end();
+                PTR(FootprintMerge) const & merge) {
+    return std::find(idList.begin(), idList.end(), merge->getSource()->getId()) != idList.end();
 }
+
 } // anonymous namespace
- 
-void FootprintMergeList::addCatalog(PTR(afw::table::SourceTable) &table,
-                                    afw::table::SourceCatalog const &inputCat, std::string filter,
-                                    float minNewPeakDist, bool doMerge)
-{
+
+void FootprintMergeList::addCatalog(
+    PTR(afw::table::SourceTable) table,
+    afw::table::SourceCatalog const &inputCat,
+    std::string const & filter,
+    float minNewPeakDist, bool doMerge
+) {
     pex::logging::Debug log("afw.detection.FootprintMerge");
-    if (_filterMap.find(filter) == _filterMap.end()) {
+
+    FilterMap::const_iterator keyIter = _filterMap.find(filter);
+    if (keyIter == _filterMap.end()) {
         pex::logging::Log::getDefaultLog().warn(
             boost::format("Filter %s is not in inital filter List: %s") % filter
-            );
+        );
         return;
     }
 
@@ -184,30 +228,31 @@ void FootprintMergeList::addCatalog(PTR(afw::table::SourceTable) &table,
             for (FootprintMergeVec::iterator iter = _mergeList.begin(); iter != _mergeList.end(); ++iter)  {
 
                 // skip this entry if we are going to remove it
-                if (std::find(removeList.begin(), removeList.end(), iter->src->getId()) != removeList.end()) {
+                if (
+                    std::find(removeList.begin(), removeList.end(), (**iter).getSource()->getId())
+                    != removeList.end()
+                ) {
                     continue;
                 }
 
                 // Grow by one pixel to allow for touching
-                geom::Box2I box(iter->merge->getBBox());
+                geom::Box2I box((**iter).getBBox());
                 box.grow(geom::Extent2I(1,1));
 
                 if (!box.overlaps(foot->getBBox())) continue;
 
-                if (iter->merge->overlaps(*foot)) {
+                if ((**iter).overlaps(*foot)) {
                     if (!first) {
-                        first = iter->merge;
+                        first = *iter;
                         // Add Footprint to existing merge and set flag for this band
-                        if(doMerge) {
-                            first->add(foot, minNewPeakDist);
-                            iter->src->set(_filterMap[filter], true);
+                        if (doMerge) {
+                            first->add(foot, keyIter->second, minNewPeakDist);
                         }
-                    }
-                    else {
+                    } else {
                         // Add merged Footprint to first
-                        if(doMerge) {
-                            first->add(iter->merge->getMergedFootprint(), minNewPeakDist);
-                            removeList.push_back(iter->src->getId());
+                        if (doMerge) {
+                            first->add(**iter, _filterMap, minNewPeakDist);
+                            removeList.push_back((**iter).getSource()->getId());
                         }
                     }
                 }
@@ -216,18 +261,13 @@ void FootprintMergeList::addCatalog(PTR(afw::table::SourceTable) &table,
             // Remove entries that were merged to other objects
             _mergeList.erase(
                 std::remove_if(_mergeList.begin(), _mergeList.end(),
-                               boost::bind(ContainsId,removeList, _1)),
+                               boost::bind(ContainsId, removeList, _1)),
                 _mergeList.end()
-                );
+            );
         }
 
         if (!first) {
-            SourceMerge newSource;
-            newSource.src = table->makeRecord();
-            newSource.src->set(_filterMap[filter], true);
-
-            newSource.merge = boost::make_shared<FootprintMerge>(foot);
-            _mergeList.push_back(newSource);
+            _mergeList.push_back(boost::make_shared<FootprintMerge>(foot, table, keyIter->second));
         }
     }
 }
@@ -236,9 +276,8 @@ void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat, b
 {
     // Now set the merged footprint as the footprint of the SourceRecord
     for (FootprintMergeVec::iterator iter = _mergeList.begin(); iter != _mergeList.end(); ++iter)  {
-        if (doNorm) iter->merge->getMergedFootprint()->normalize();
-        iter->src->setFootprint(iter->merge->getMergedFootprint());
-        outputCat.push_back(iter->src);
+        if (doNorm) (**iter).getMergedFootprint()->normalize();
+        outputCat.push_back((**iter).getSource());
     }
 }
 

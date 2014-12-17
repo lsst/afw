@@ -54,7 +54,7 @@ class FootprintMerge;
 class FootprintMergeList {
 public:
 
-    FootprintMergeList(afw::table::Schema &schema,
+    FootprintMergeList(afw::table::Schema & sourceSchema,
                        std::vector<std::string> const &filterList);
 
     /**
@@ -68,8 +68,8 @@ public:
      *
      *  The SourceTable is used to create new SourceRecords that store the filter information.
      */
-    void addCatalog(PTR(afw::table::SourceTable) &table, afw::table::SourceCatalog const &inputCat,
-                    std::string filter, float minNewPeakDist=-1., bool doMerge=true);
+    void addCatalog(PTR(afw::table::SourceTable) sourceTable, afw::table::SourceCatalog const &inputCat,
+                    std::string const & filter, float minNewPeakDist=-1., bool doMerge=true);
 
     /**
      *  @brief Clear entries in the current vector
@@ -84,20 +84,16 @@ public:
      */
     void getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm=true);
 
-#ifndef SWIG
-    // Class to store SourceRecord and FootprintMerge.
-    struct SourceMerge{
-        PTR(afw::table::SourceRecord) src;
-        PTR(FootprintMerge) merge;
-    };
-#endif
-
 private:
 
-    typedef std::vector<SourceMerge> FootprintMergeVec;
+    typedef afw::table::Key<afw::table::Flag> FlagKey;
+    typedef std::vector<PTR(FootprintMerge)> FootprintMergeVec;
+    typedef std::map<std::string,FlagKey> FilterMap;
+
+    friend class FootprintMerge;
 
     FootprintMergeVec _mergeList;
-    std::map<std::string, afw::table::Key<afw::table::Flag> > _filterMap;
+    FilterMap _filterMap;
 };
 
 }}} // namespace lsst::afw::detection
