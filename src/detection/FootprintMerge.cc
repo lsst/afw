@@ -180,15 +180,6 @@ FootprintMergeList::FootprintMergeList(afw::table::Schema & schema,
     }
 }
 
-namespace {
-
-bool ContainsId(std::vector<afw::table::RecordId> const &idList,
-                PTR(FootprintMerge) const & merge) {
-    return std::find(idList.begin(), idList.end(), merge->getSource()->getId()) != idList.end();
-}
-
-} // anonymous namespace
-
 void FootprintMergeList::addCatalog(
     PTR(afw::table::SourceTable) table,
     afw::table::SourceCatalog const &inputCat,
@@ -219,26 +210,12 @@ void FootprintMergeList::addCatalog(
         PTR(FootprintMerge) first = PTR(FootprintMerge)();
 
         if (checkForMatches) {
-
-            // This is a list of objects that have been merged to others and need to be deleted
-            std::vector<afw::table::RecordId> removeList;
-            for (FootprintMergeVec::iterator iter = _mergeList.begin(); iter != _mergeList.end(); ++iter)  {
-
-                // skip this entry if we are going to remove it
-                if (
-                    std::find(removeList.begin(), removeList.end(), (**iter).getSource()->getId())
-                    != removeList.end()
-                ) {
-                    continue;
-                }
-
+            FootprintMergeVec::iterator iter = _mergeList.begin();
+            while (iter != _mergeList.end()) {
                 // Grow by one pixel to allow for touching
                 geom::Box2I box((**iter).getBBox());
                 box.grow(geom::Extent2I(1,1));
-
-                if (!box.overlaps(foot->getBBox())) continue;
-
-                if ((**iter).overlaps(*foot)) {
+                if (box.overlaps(foot->getBBox()) && (**iter).overlaps(*foot)) {
                     if (!first) {
                         first = *iter;
                         // Add Footprint to existing merge and set flag for this band
@@ -249,18 +226,13 @@ void FootprintMergeList::addCatalog(
                         // Add merged Footprint to first
                         if (doMerge) {
                             first->add(**iter, _filterMap, minNewPeakDist);
-                            removeList.push_back((**iter).getSource()->getId());
+                            iter = _mergeList.erase(iter);
+                            continue;
                         }
                     }
                 }
+                ++iter;
             }
-
-            // Remove entries that were merged to other objects
-            _mergeList.erase(
-                std::remove_if(_mergeList.begin(), _mergeList.end(),
-                               boost::bind(ContainsId, removeList, _1)),
-                _mergeList.end()
-            );
         }
 
         if (!first) {
