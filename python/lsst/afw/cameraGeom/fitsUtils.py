@@ -1,3 +1,8 @@
+import lsst.afw.image as afwImage
+import lsst.pex.config as pexConfig
+import lsst.afw.cameraGeom as afwCameraGeom
+import lsst.afw.geom as afwGeom
+
 class CameraGeomBuilderConfig(pexConfig.Config):
     raise NotImplementedError()
 
@@ -37,3 +42,26 @@ class HeaderDetectorMap(HeaderMap):
     def _applyVal(self, obj, value, attrName, transform):
         obj.__setattr__(attrName, transform(value))
 
+class CameraGeomBuilder(object):
+    def __init__(self, fileNameList):
+        self.defaultAmpMap = self._makeDefaultAmpMap()
+        self.defaultDetectorMap = self._makeDefaultDetectorMap()
+        self.mdList = []
+        self.detectorList = []
+        for fileName in fileNameList:
+            self.mdList.append(afwImage.readFitsMetadata(fileName))
+            self.detectorList.append(CameraGeomBuilder.buildDetector(self.mdList[-1]))
+        self.camera = self.buildCamera()
+
+    def _makeDefaultAmpMap(self):
+        raise NotImplementedError()
+
+    def _makeDefaultDetectorMap(self):
+        raise NotImplementedError()
+
+    @staticmethod
+    def buildDetector(metadata):
+        raise NotImplementedError()
+
+    def buildCamera(self):
+        raise NotImplementedError()
