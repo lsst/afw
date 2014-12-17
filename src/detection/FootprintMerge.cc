@@ -48,8 +48,6 @@ FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) 
 class FootprintMerge {
 public:
 
-    FootprintMerge();
-
     explicit FootprintMerge(PTR(Footprint) foot);
 
     /*
@@ -81,12 +79,6 @@ private:
     std::vector<PTR(Footprint)> _footprints;
     PTR(Footprint) _merge;
 };
-
-FootprintMerge::FootprintMerge():
-    _merge(PTR(Footprint)())
-{
-    _merge->getPeaks() = PeakCatalog(PeakTable::makeMinimalSchema());
-}
 
 FootprintMerge::FootprintMerge(PTR(Footprint) foot):
     _footprints(1,foot),
