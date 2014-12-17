@@ -56,7 +56,55 @@ class CameraGeomBuilder(object):
     def _makeDefaultAmpMap(self):
         raise NotImplementedError()
 
+    def _makeDefaultAmpMap(self):
+        hMap = HeaderAmpMap()
+        emptyBBox = afwGeom.Box2()
+        mapList = [('EXTNAME', 'setName', None, None),
+                   ('DETSEC', 'setBBox', None, self.makeBbox),
+                   ('GAIN', 'setGain', 1., None),
+                   ('RDNOISE', 'setReadnoise', 0., None),
+                   ('SATURATE', 'setSatruration', 2<<15, None),
+                   ('RDCRNR', 'setReadCorner', afwCameraGeom.LLC, None),
+                   ('LINCOEFF', 'setLinearityCoeffs', [0., 1.], None),
+                   ('LINTYPE', 'setLinearityType', 'POLY', None),
+                   ('RAWBBOX', 'setRawBBox', None, self.makeBbox),
+                   ('DATASIC', 'setRawDataBBox', None, self.makeBbox),
+                   ('FLIPX', 'setFlipX', False, None),
+                   ('FLIPY', 'setFlipY', False, None),
+                   ('XYOFF', 'setRawXYOffset', [0,0], None),
+                   ('HOSCAN', 'setRawHorizontalOverscanBbox', emptyBBox, self.makeBbox),
+                   ('VOSCAN', 'setRawHorizontalOverscanBbox', emptyBBox, self.makeBbox),
+                   ('PRESCAN', 'setRawHorizontalOverscanBbox', emptyBBox, self.makeBbox),
+                   ]
+        for tup in mapList:
+            hMap.addEntry(*tup)
+        return hMap
+
     def _makeDefaultDetectorMap(self):
+        hMap = HeaderDetectorMap()
+        mapList = [('CCDNAME', 'name', None, None),
+                   ('DETSIZE', 'bbox_x0', None, self._getBboxX0),
+                   ('DETSIZE', 'bbox_y0', None, self._getBboxY0),
+                   ('DETSIZE', 'bbox_x1', None, self._getBboxX1),
+                   ('DETSIZE', 'bbox_y1', None, self._getBboxY1),
+                   ('OBSTYPE', 'detectorType', afwCameraGeom.SCIENCE, None),
+                   ('SERSTR', 'serial', 'none', None),
+                   ('XPOS', 'offset_x', 0., None),
+                   ('YPOS', 'offset_y', 0., None),
+                   ('XPIX', 'refpos_x', 0., None),
+                   ('YPIX', 'refpos_y', 0., None),
+                   ('YAWDEG', 'yawDeg', 0., None),
+                   ('PITCHDEG', 'pitchDeg', 0., None),
+                   ('ROLLDEG', 'rollDeg', 0., None),
+                   ('XPIXSIZE', 'pixelSize_x', None),
+                   ('YPIXSIZE', 'pixelSize_y', None),
+                   ('TRNSPOSE', 'transposeDetector', False),
+                   ]
+        for tup in mapList:
+            hMap.addEntry(*tup)
+        return hMap
+
+    def _makeBbox(boxString):
         raise NotImplementedError()
 
     @staticmethod
