@@ -24,7 +24,6 @@
 #include "lsst/afw/detection/FootprintMerge.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/table/IdFactory.h"
-#include "lsst/pex/logging/Debug.h"
 
 namespace lsst { namespace afw { namespace detection {
 
@@ -196,14 +195,12 @@ void FootprintMergeList::addCatalog(
     std::string const & filter,
     float minNewPeakDist, bool doMerge
 ) {
-    pex::logging::Debug log("afw.detection.FootprintMerge");
-
     FilterMap::const_iterator keyIter = _filterMap.find(filter);
     if (keyIter == _filterMap.end()) {
-        pex::logging::Log::getDefaultLog().warn(
-            boost::format("Filter %s is not in inital filter List: %s") % filter
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicErrorException,
+            (boost::format("Filter %s not in original list") % filter).str()
         );
-        return;
     }
 
     // If list is empty don't check for any matches, just add all the objects
