@@ -123,7 +123,7 @@ bool ContainsId(std::vector<afw::table::RecordId> const &idList,
  
 void FootprintMergeList::addCatalog(PTR(afw::table::SourceTable) &table,
                                     afw::table::SourceCatalog const &inputCat, std::string filter,
-                                    float minNewPeakDist)
+                                    float minNewPeakDist, bool doMerge)
 {
     pex::logging::Debug log("afw.detection.FootprintMerge");
     if (_filterMap.find(filter) == _filterMap.end()) {
@@ -169,13 +169,17 @@ void FootprintMergeList::addCatalog(PTR(afw::table::SourceTable) &table,
                     if (!first) {
                         first = iter->merge;
                         // Add Footprint to existing merge and set flag for this band
-                        first->add(foot, minNewPeakDist);
-                        iter->src->set(_filterMap[filter], true);
+                        if(doMerge) {
+                            first->add(foot, minNewPeakDist);
+                            iter->src->set(_filterMap[filter], true);
+                        }
                     }
                     else {
                         // Add merged Footprint to first
-                        first->add(iter->merge->getMergedFootprint(), minNewPeakDist);
-                        removeList.push_back(iter->src->getId());
+                        if(doMerge) {
+                            first->add(iter->merge->getMergedFootprint(), minNewPeakDist);
+                            removeList.push_back(iter->src->getId());
+                        }
                     }
                 }
             }
@@ -199,11 +203,11 @@ void FootprintMergeList::addCatalog(PTR(afw::table::SourceTable) &table,
     }
 }
 
-void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat)
+void FootprintMergeList::getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm)
 {
     // Now set the merged footprint as the footprint of the SourceRecord
     for (FootprintMergeVec::iterator iter = _mergeList.begin(); iter != _mergeList.end(); ++iter)  {
-        iter->merge->getMergedFootprint()->normalize();
+        if (doNorm) iter->merge->getMergedFootprint()->normalize();
         iter->src->setFootprint(iter->merge->getMergedFootprint());
         outputCat.push_back(iter->src);
     }

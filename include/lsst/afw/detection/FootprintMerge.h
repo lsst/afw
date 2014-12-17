@@ -116,7 +116,7 @@ private:
      *  The SourceTable is used to create new SourceRecords that store the filter information.
      */
      void addCatalog(PTR(afw::table::SourceTable) &table, afw::table::SourceCatalog const &inputCat,
-                     std::string filter, float minNewPeakDist=-1.);
+                     std::string filter, float minNewPeakDist=-1., bool doMerge=true);
 
      /**
      *  @brief Clear entries in the current vector
@@ -129,7 +129,7 @@ private:
      *  The resulting Footprints will be normalized, meaning that there peaks are sorted, and
      *  areas are calculated.
      */
-     void getFinalSources(afw::table::SourceCatalog &outputCat);
+     void getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm=true);
 
 #ifndef SWIG
      // Class to store SourceRecord and FootprintMerge.
