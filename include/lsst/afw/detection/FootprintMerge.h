@@ -65,6 +65,8 @@ public:
         std::vector<std::string> const & filterList
     );
 
+    afw::table::Schema getPeakSchema() const { return _peakTable->getSchema(); }
+
     /**
      *  @brief Add objects from a SourceCatalog in the specified filter
      *
