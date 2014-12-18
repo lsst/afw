@@ -54,8 +54,16 @@ class FootprintMerge;
 class FootprintMergeList {
 public:
 
-    FootprintMergeList(afw::table::Schema & sourceSchema,
-                       std::vector<std::string> const &filterList);
+    FootprintMergeList(
+        afw::table::Schema & sourceSchema,
+        std::vector<std::string> const & filterList,
+        afw::table::Schema const & initialPeakSchema
+    );
+
+    FootprintMergeList(
+        afw::table::Schema & sourceSchema,
+        std::vector<std::string> const & filterList
+    );
 
     /**
      *  @brief Add objects from a SourceCatalog in the specified filter
@@ -87,13 +95,26 @@ public:
 private:
 
     typedef afw::table::Key<afw::table::Flag> FlagKey;
+
+    struct KeyTuple {
+        FlagKey footprint;
+        FlagKey peak;
+    };
+
     typedef std::vector<PTR(FootprintMerge)> FootprintMergeVec;
-    typedef std::map<std::string,FlagKey> FilterMap;
+    typedef std::map<std::string,KeyTuple> FilterMap;
 
     friend class FootprintMerge;
 
+    void _initialize(
+        afw::table::Schema & sourceSchema,
+        std::vector<std::string> const & filterList
+    );
+
     FootprintMergeVec _mergeList;
     FilterMap _filterMap;
+    afw::table::SchemaMapper _peakSchemaMapper;
+    PTR(PeakTable) _peakTable;
 };
 
 }}} // namespace lsst::afw::detection
