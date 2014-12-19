@@ -54,17 +54,42 @@ class FootprintMerge;
 class FootprintMergeList {
 public:
 
+    /**
+     *  Initialize the merge with a custom initial peak schema
+     *
+     *  @param[in,out]  sourceSchema    Input schema for SourceRecords to be merged, modified on return
+     *                                  to include 'merge.footprint.<filter>' Flag fields that will
+     *                                  indicate the origin of the source.
+     *  @param[in]      filterList      Sequence of filter names to be used in Flag fields.
+     *  @param[in]      initialPeakSchema    Input schema of PeakRecords in Footprints to be merged.
+     *
+     *  The output schema for PeakRecords will include additional 'merge.peak.<filter>' Flag fields that
+     *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
+     */
     FootprintMergeList(
         afw::table::Schema & sourceSchema,
         std::vector<std::string> const & filterList,
         afw::table::Schema const & initialPeakSchema
     );
 
+    /**
+     *  Initialize the merge with the default peak schema
+     *
+     *  @param[in,out]  sourceSchema    Input schema for SourceRecords to be merged, modified on return
+     *                                  to include 'merge.footprint.<filter>' Flag fields that will
+     *                                  indicate the origin of the source.
+     *  @param[in]      filterList      Sequence of filter names to be used in Flag fields.
+     *  @param[in]      initialPeakSchema    Input schema of PeakRecords in Footprints to be merged.
+     *
+     *  The output schema for PeakRecords will include additional 'merge.peak.<filter>' Flag fields that
+     *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
+     */
     FootprintMergeList(
         afw::table::Schema & sourceSchema,
         std::vector<std::string> const & filterList
     );
 
+    /// Return the schema for PeakRecords in the merged footprints.
     afw::table::Schema getPeakSchema() const { return _peakTable->getSchema(); }
 
     /**
