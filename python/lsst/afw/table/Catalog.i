@@ -90,7 +90,7 @@ public:
         self->insert(mapper, self->end(), other.begin(), other.end());
     }
     %feature("shadow") extend %{
-    def extend(self, iterable, deep=None, mapper=None):
+    def extend(self, iterable, deep=False, mapper=None):
         """Append all records in the given iterable to the catalog.
 
         Arguments:

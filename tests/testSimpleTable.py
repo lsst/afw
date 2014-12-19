@@ -3,7 +3,7 @@ from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2014 AURA/LSST
 # 
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -718,6 +718,14 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             cat = lsst.afw.table.BaseCatalog.readFits("testNonLsst.fits")
             self.assertEqual(cat.getVersion(), lsst.afw.table.Schema.DEFAULT_VERSION)
             os.remove("testNonLsst.fits")
+
+    def testDM1710(self):
+        # Extending without specifying a mapper or a deep argument should not
+        # raise.
+        schema = lsst.afw.table.Schema()
+        cat1 = lsst.afw.table.BaseCatalog(schema)
+        cat2 = lsst.afw.table.BaseCatalog(schema)
+        cat1.extend(cat2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
