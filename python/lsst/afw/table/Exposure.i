@@ -89,8 +89,9 @@ public:
     ExposureCatalogT<RecordT> subset(ndarray::Array<bool const,1> const & mask) const;
     ExposureCatalogT<RecordT> subset(std::ptrdiff_t start, std::ptrdiff_t stop, std::ptrdiff_t step) const;
 
-    ExposureCatalogT subsetContaining(Coord const & coord) const;
-    ExposureCatalogT subsetContaining(geom::Point2D const & point, image::Wcs const & wcs) const;
+    ExposureCatalogT subsetContaining(Coord const & coord, bool includeValidPolygon=false) const;
+    ExposureCatalogT subsetContaining(geom::Point2D const & point, image::Wcs const & wcs,
+                                      bool includeValidPolygon=false) const;
 };
 
 %pythondynamic;
