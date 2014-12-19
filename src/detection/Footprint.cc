@@ -915,7 +915,7 @@ PTR(Footprint) Footprint::transform(
     geom::Box2I tBoxI(tBoxD);
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
-    PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, region);
+    PTR(Footprint) fpNew = boost::make_shared<Footprint>(getPeaks().getSchema(), 0, region);
 
     for (int y = tBoxI.getBeginY(); y < tBoxI.getEndY(); ++y) {
         bool inSpan = false;            // Are we in a span?
@@ -986,7 +986,7 @@ PTR(Footprint) footprintAndMask(
         typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,
         MaskT const bitmask
 ) {
-    PTR(Footprint) newFp(new Footprint());
+    PTR(Footprint) newFp(new Footprint(fp->getPeaks().getSchema()));
     return newFp;
 }
 
@@ -1728,6 +1728,7 @@ PTR(Footprint) growFootprint(Footprint const& foot, ///< Footprint to grow
     return growFootprintImpl(foot, StructuringElement(left ? nGrow: 0, right ? nGrow : 0,
                                                       up ? nGrow : 0, down ? nGrow : 0));
 }
+
 
 PTR(Footprint) shrinkFootprint(
         Footprint const& foot,          //!< The Footprint to shrink
