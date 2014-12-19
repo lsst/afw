@@ -100,6 +100,30 @@ Footprint::Footprint(
             str(boost::format("Number of spans requested is -ve: %d") % nspan));
     }
 }
+
+/**
+ * Create a Footprint, using a custom Schema for Peaks
+ *
+ * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
+ */
+Footprint::Footprint(
+    afw::table::Schema const & peakSchema, //!< Schema to use for PeakRecords
+    int nspan,         //!< initial number of Span%s in this Footprint
+    geom::Box2I const & region //!< Bounding box of MaskedImage footprint
+) : lsst::daf::base::Citizen(typeid(this)),
+    _fid(++id),
+    _area(0),
+    _bbox(geom::Box2I()),
+    _peaks(peakSchema),
+    _region(region),
+    _normalized(true)
+{
+    if (nspan < 0) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            str(boost::format("Number of spans requested is -ve: %d") % nspan));
+    }
+}
 /**
  * Create a rectangular Footprint
  */
