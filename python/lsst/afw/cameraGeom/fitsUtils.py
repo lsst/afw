@@ -43,13 +43,14 @@ class HeaderDetectorMap(HeaderMap):
         obj.__setattr__(attrName, transform(value))
 
 class CameraGeomBuilder(object):
-    def __init__(self, fileNameList, clobberHeader=False):
-        self._sanitizeHeaderMetadata(clobber=clobberHeader)
+    !!!!!O.K. I think there should be a DetectorBuilder class and a CameraBuilder class
+    !!!!!fileNameList will contain one file name per amp.
+    def __init__(self, detectorFileName, ampFileNameList):
         self.defaultAmpMap = self._makeDefaultAmpMap()
         self.defaultDetectorMap = self._makeDefaultDetectorMap()
         self.mdList = []
         self.detectorList = []
-        for fileName in fileNameList:
+        for fileName in ampFileNameList:
             self.mdList.append(afwImage.readFitsMetadata(fileName))
             self.detectorList.append(CameraGeomBuilder.buildDetector(self.mdList[-1]))
         self.camera = self.buildCamera()
@@ -62,6 +63,7 @@ class CameraGeomBuilder(object):
         #map biassec[1] to HOSCAN
         #map biassec[3] to VOSCAN
         #map biassec[2] to PRESCAN
+
         raise NotImplementedError()
 
     def _makeDefaultAmpMap(self):
@@ -112,8 +114,20 @@ class CameraGeomBuilder(object):
             hMap.addEntry(*tup)
         return hMap
 
-    def _makeBbox(boxString):
+    def _makeBbox(self, boxString):
         raise NotImplementedError()
+
+    def _getBboxX0(self, boxString):
+        return self._makeBbox(boxString).getMinX()
+
+    def _getBboxX1(self, boxString):
+        return self._makeBbox(boxString).getMaxX()
+
+    def _getBboxY0(self, boxString):
+        return self._makeBbox(boxString).getMinY()
+
+    def _getBboxY1(self, boxString):
+        return self._makeBbox(boxString).getMaxY()
 
     @staticmethod
     def buildDetector(metadata):
