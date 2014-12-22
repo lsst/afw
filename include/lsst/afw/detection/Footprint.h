@@ -73,6 +73,10 @@ public:
     typedef std::vector<Span::Ptr> SpanList;
 
     explicit Footprint(int nspan = 0, geom::Box2I const & region=geom::Box2I());
+
+    explicit Footprint(afw::table::Schema const & peakSchema, int nspan=0,
+                       geom::Box2I const & region=geom::Box2I());
+
     explicit Footprint(geom::Box2I const & bbox, geom::Box2I const & region=geom::Box2I());
     Footprint(geom::Point2I const & center, double const radius, geom::Box2I const & = geom::Box2I());
     explicit Footprint(geom::ellipses::Ellipse const & ellipse, geom::Box2I const & region=geom::Box2I());
@@ -99,6 +103,18 @@ public:
     /// Convenience function to add a peak (since that'd now be multiple lines without this function)
     PTR(PeakRecord) addPeak(float fx, float fy, float value);
 
+    /// Set the Schema used by the PeakCatalog (will throw if PeakCatalog is not empty).
+    void setPeakSchema(afw::table::Schema const & peakSchema) {
+        if (!getPeaks().empty()) {
+            throw LSST_EXCEPT(
+                pex::exceptions::LogicErrorException,
+                "Cannot change the PeakCatalog schema unless it is empty"
+            );
+        }
+        // this syntax doesn't work in Python, which is why this method has to exist
+        getPeaks() = PeakCatalog(peakSchema);
+    }
+
     int getNpix() const { return _area; }     //!< Return the number of pixels in this Footprint (the real number of pixels, not the area of the bbox)
     int getArea() const { return _area; }
     geom::Point2D getCentroid() const;
@@ -115,8 +131,7 @@ public:
 
     /// Return the Footprint's bounding box
     geom::Box2I getBBox() const { return _bbox; }
-    /// Return the Footprint's bounding box
-    geom::Box2I & getBBox() { return _bbox; }
+
     /// Return the corners of the MaskedImage the footprints live in
     geom::Box2I const & getRegion() const { return _region; }
 
@@ -198,6 +213,8 @@ protected:
     friend class FootprintFactory;
 
 private:
+
+    friend class FootprintMerge;
 
     static int id;
     mutable int _fid;                    //!< unique ID

@@ -30,58 +30,13 @@
 #include "lsst/afw/table/Source.h"
 
 namespace lsst { namespace afw { namespace detection {
+
 /**
- *  @brief Object that represents a merge of Footprints.
- *
- *  Contains a vector of individual Footprints and a composite Footprint that is the union of them.
- *  The merging and overlap functions are currently not very efficient for large Footprints as
- *  they draw Footprints into a mask and then detect the results as a FootprintSet.  Improvements to
- *  these Functions will be addressed in future changes of the Footprint code.
- *
- *  Given a set of overlapping Footprints, the final merged Footprint will depend on the order
- *  that they are added.
+ *  FootprintMerge is a private helper class for FootprintMergeList; it's only declared here (it's defined
+ *  in the .cc file) so FootprintMergeList can hold a vector without an extra PImpl layer, and so Footprint
+ *  can friend it.
  */
-class FootprintMerge {
-public:
-
-    FootprintMerge();
-
-    explicit FootprintMerge(PTR(Footprint) foot);
-
-    /**
-     *  @brief Does this Footprint overlap the merged Footprint.
-     *
-     *  The current implementation just builds an image from the two Footprints and
-     *  detects the number of peaks.  This is not very efficient and will be changed
-     *  within the Footprint class in the future.
-     */
-    bool overlaps(Footprint const &rhs) const;
-
-    /**
-     *  @brief Add this Footprint to the merge.
-     *
-     *  If minNewPeakDist >= 0, it will add all peaks from foot to the merged Footprint
-     *  that are greater than minNewPeakDist away from the closest existing peak.
-     *  If minNewPeakDist < 0, no peaks will be added from foot.
-     *
-     *  If foot does not overlap it will do nothing.
-     */
-    void add(PTR(Footprint) foot, float minNewPeakDist=-1.);
-
-    // Get the bounding box of the merge
-    afw::geom::Box2I getBBox() const { return _merge->getBBox(); }
-    afw::geom::Box2I & getBBox() { return _merge->getBBox(); }
-
-    std::vector<PTR(Footprint)> & getFootprints() { return _footprints; }
-
-    PTR(Footprint) getMergedFootprint() const { return _merge; }
-
-private:
-
-    std::vector<PTR(Footprint)> _footprints;
-    PTR(Footprint) _merge;
-};
-
+class FootprintMerge;
 
 /**
  *  @brief List of Merged Footprints.
@@ -96,15 +51,48 @@ private:
  *  are operating on smallish number of objects, such as at the tract level.
  *
  */
- class FootprintMergeList
- {
- public:
+class FootprintMergeList {
+public:
 
+    /**
+     *  Initialize the merge with a custom initial peak schema
+     *
+     *  @param[in,out]  sourceSchema    Input schema for SourceRecords to be merged, modified on return
+     *                                  to include 'merge.footprint.<filter>' Flag fields that will
+     *                                  indicate the origin of the source.
+     *  @param[in]      filterList      Sequence of filter names to be used in Flag fields.
+     *  @param[in]      initialPeakSchema    Input schema of PeakRecords in Footprints to be merged.
+     *
+     *  The output schema for PeakRecords will include additional 'merge.peak.<filter>' Flag fields that
+     *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
+     */
+    FootprintMergeList(
+        afw::table::Schema & sourceSchema,
+        std::vector<std::string> const & filterList,
+        afw::table::Schema const & initialPeakSchema
+    );
 
-     FootprintMergeList(afw::table::Schema &schema,
-                        std::vector<std::string> const &filterList);
+    /**
+     *  Initialize the merge with the default peak schema
+     *
+     *  @param[in,out]  sourceSchema    Input schema for SourceRecords to be merged, modified on return
+     *                                  to include 'merge.footprint.<filter>' Flag fields that will
+     *                                  indicate the origin of the source.
+     *  @param[in]      filterList      Sequence of filter names to be used in Flag fields.
+     *  @param[in]      initialPeakSchema    Input schema of PeakRecords in Footprints to be merged.
+     *
+     *  The output schema for PeakRecords will include additional 'merge.peak.<filter>' Flag fields that
+     *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
+     */
+    FootprintMergeList(
+        afw::table::Schema & sourceSchema,
+        std::vector<std::string> const & filterList
+    );
 
-     /**
+    /// Return the schema for PeakRecords in the merged footprints.
+    afw::table::Schema getPeakSchema() const { return _peakTable->getSchema(); }
+
+    /**
      *  @brief Add objects from a SourceCatalog in the specified filter
      *
      *  Iterate over all objects that have not been deblendend and search for an overlapping
@@ -115,38 +103,46 @@ private:
      *
      *  The SourceTable is used to create new SourceRecords that store the filter information.
      */
-     void addCatalog(PTR(afw::table::SourceTable) &table, afw::table::SourceCatalog const &inputCat,
-                     std::string filter, float minNewPeakDist=-1.);
+    void addCatalog(PTR(afw::table::SourceTable) sourceTable, afw::table::SourceCatalog const &inputCat,
+                    std::string const & filter, float minNewPeakDist=-1., bool doMerge=true);
 
-     /**
+    /**
      *  @brief Clear entries in the current vector
      */
-     void clearCatalog() { _mergeList.clear(); }
+    void clearCatalog() { _mergeList.clear(); }
 
-     /**
+    /**
      *  @brief Get SourceCatalog with entries that contain the final Footprint and SourceRecord for each entry
      *
      *  The resulting Footprints will be normalized, meaning that there peaks are sorted, and
      *  areas are calculated.
      */
-     void getFinalSources(afw::table::SourceCatalog &outputCat);
+    void getFinalSources(afw::table::SourceCatalog &outputCat, bool doNorm=true);
 
-#ifndef SWIG
-     // Class to store SourceRecord and FootprintMerge.
-     struct SourceMerge{
-         PTR(afw::table::SourceRecord) src;
-         PTR(FootprintMerge) merge;
-     };
-#endif
+private:
 
- private:
+    typedef afw::table::Key<afw::table::Flag> FlagKey;
 
-     typedef std::vector<SourceMerge> FootprintMergeVec;
+    struct KeyTuple {
+        FlagKey footprint;
+        FlagKey peak;
+    };
 
-     FootprintMergeVec _mergeList;
-     afw::table::Schema _schema;
-     std::map<std::string, afw::table::Key<afw::table::Flag> > _filterMap;
- };
+    typedef std::vector<PTR(FootprintMerge)> FootprintMergeVec;
+    typedef std::map<std::string,KeyTuple> FilterMap;
+
+    friend class FootprintMerge;
+
+    void _initialize(
+        afw::table::Schema & sourceSchema,
+        std::vector<std::string> const & filterList
+    );
+
+    FootprintMergeVec _mergeList;
+    FilterMap _filterMap;
+    afw::table::SchemaMapper _peakSchemaMapper;
+    PTR(PeakTable) _peakTable;
+};
 
 }}} // namespace lsst::afw::detection
 

@@ -1,5 +1,8 @@
+#!/usr/bin/env python
+
 import unittest
 import lsst.utils.tests as tests
+import lsst.pex.exceptions
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
@@ -17,7 +20,7 @@ def insertPsf(pos, im, psf, kernelSize, flux):
         tmp *= flux
         im.getImage()[tmpbox] += tmp
 
-def mergeCatalogsPython(catList, names, peakDist, idFactory, indivNames=[]):
+def mergeCatalogs(catList, names, peakDist, idFactory, indivNames=[]):
     schema = afwTable.SourceTable.makeMinimalSchema()
     merged = afwDetect.FootprintMergeList(schema, names)
 
@@ -31,30 +34,16 @@ def mergeCatalogsPython(catList, names, peakDist, idFactory, indivNames=[]):
 
     return mergedList, nob, npeaks
 
-
-def mergeCatalogs(catList, names, peakDist, idFactory, indivNames=[]):
-
-    schema = afwTable.SourceTable.makeMinimalSchema()
-    merged = afwDetect.FootprintMergeList(schema, names)
-
-    if not indivNames: indivNames = names
-    table = afwTable.SourceTable.make(schema, idFactory)
-    mergedList = afwTable.SourceCatalog(table)
-    merged.clearCatalog()
-
-    for cat, name, dist in zip(catList, names, peakDist):
-        merged.addCatalog(table, cat, name, dist)
-
-    merged.getFinalSources(mergedList)
-    # Count the number of objects and peaks in this list
-    nob = len(mergedList)
-    npeaks = sum([ len(ob.getFootprint().getPeaks()) for ob in mergedList])
-
-    return mergedList, nob, npeaks
+def isPeakInCatalog(peak, catalog):
+    for record in catalog:
+        for p in record.getFootprint().getPeaks():
+            if p.getI() == peak.getI():
+                return True
+    return False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class FootprintMergeCatalogTestCase(unittest.TestCase):
+class FootprintMergeCatalogTestCase(tests.TestCase):
 
     def setUp(self):
 
@@ -117,9 +106,14 @@ class FootprintMergeCatalogTestCase(unittest.TestCase):
     def testMerge1(self):
         # Add the first catalog only
         merge, nob, npeak = mergeCatalogs([self.catalog1], ["1"], [-1],
-                                         self.idFactory)
+                                          self.idFactory)
         self.assertEqual(nob, 14)
         self.assertEqual(npeak, 15)
+
+        for record in merge:
+            self.assertTrue(record.get("merge.footprint.1"))
+            for peak in record.getFootprint().getPeaks():
+                self.assertTrue(peak.get("merge.peak.1"))
 
         # area for each object
         pixArea = np.empty(14)
@@ -128,18 +122,26 @@ class FootprintMergeCatalogTestCase(unittest.TestCase):
         measArea = [i.getFootprint().getArea() for i in merge]
         self.assert_(np.all(pixArea == measArea))
 
-        # Add the first catalog and second catalog with the wrong name so it should not be added
-        merge, nob, npeak = mergeCatalogs([self.catalog1,self.catalog2], ["1","2"], [0],
-                                         self.idFactory, ["1","3"])
-        self.assertEqual(nob, 14)
-        self.assertEqual(npeak, 15)
-        measArea = [i.getFootprint().getArea() for i in merge]
-        self.assert_(np.all(pixArea == measArea))
+        # Add the first catalog and second catalog with the wrong name, which should result
+        # an exception being raised
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException,
+                                 mergeCatalogs, [self.catalog1,self.catalog2], ["1","2"], [0, 0],
+                                 self.idFactory, ["1","3"])
+
+        # Add the first catalog and second catalog with the wrong number of peakDist elements,
+        # which should raise an exception
+        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1,self.catalog2], ["1","2"], [0],
+                          self.idFactory, ["1","3"])
+
+        # Add the first catalog and second catalog with the wrong number of filters,
+        # which should raise an exception
+        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1,self.catalog2], ["1"], [0],
+                          self.idFactory, ["1","3"])
 
         # Add the first catalog and second catalog with minPeak < 1 so it will not add new peaks
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2],
-                                         ["1", "2"], [0, -1],
-                                         self.idFactory)
+                                          ["1", "2"], [0, -1],
+                                          self.idFactory)
         self.assertEqual(nob, 22)
         self.assertEqual(npeak, 23)
         # area for each object
@@ -155,10 +157,20 @@ class FootprintMergeCatalogTestCase(unittest.TestCase):
         measArea = [i.getFootprint().getArea() for i in merge]
         self.assert_(np.all(pixArea == measArea))
 
+        for record in merge:
+            for peak in record.getFootprint().getPeaks():
+                # Should only get peaks from catalog2 if catalog1 didn't contribute to the footprint
+                if record.get("merge.footprint.1"):
+                    self.assertTrue(peak.get("merge.peak.1"))
+                    self.assertFalse(peak.get("merge.peak.2"))
+                else:
+                    self.assertFalse(peak.get("merge.peak.1"))
+                    self.assertTrue(peak.get("merge.peak.2"))
+
         # Same as previous with another catalog
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
-                                         ["1", "2", "3"], [0, -1, -1],
-                                         self.idFactory)
+                                          ["1", "2", "3"], [0, -1, -1],
+                                          self.idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 20)
         pixArea = np.ones(19)
@@ -175,32 +187,68 @@ class FootprintMergeCatalogTestCase(unittest.TestCase):
         measArea = [i.getFootprint().getArea() for i in merge]
         self.assert_(np.all(pixArea == measArea))
 
+        for record in merge:
+            for peak in record.getFootprint().getPeaks():
+                # Should only get peaks from catalog2 if catalog1 didn't contribute to the footprint
+                if record.get("merge.footprint.1"):
+                    self.assertTrue(peak.get("merge.peak.1"))
+                    self.assertFalse(peak.get("merge.peak.2"))
+                else:
+                    self.assertFalse(peak.get("merge.peak.1"))
+                    self.assertTrue(peak.get("merge.peak.2"))
+
         # Add all the catalogs with minPeak = 0 so all peaks will not be added
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
-                                         ["1", "2", "3"], [0, 0, 0],
-                                         self.idFactory)
+                                          ["1", "2", "3"], [0, 0, 0],
+                                          self.idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 30)
         measArea = [i.getFootprint().getArea() for i in merge]
         self.assert_(np.all(pixArea == measArea))
 
         # Add all the catalogs with minPeak = 10 so some peaks will be added to the footprint
-        # Use the python merging call
-        merge, nob, npeak = mergeCatalogsPython([self.catalog1, self.catalog2, self.catalog3],
-                                                ["1", "2", "3"], 10, self.idFactory)
+        merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
+                                          ["1", "2", "3"], 10, self.idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 25)
         measArea = [i.getFootprint().getArea() for i in merge]
         self.assert_(np.all(pixArea == measArea))
 
+        for record in merge:
+            for peak in record.getFootprint().getPeaks():
+                if peak.get("merge.peak.1"):
+                    self.assertTrue(record.get("merge.footprint.1"))
+                    self.assertTrue(isPeakInCatalog(peak, self.catalog1))
+                elif peak.get("merge.peak.2"):
+                    self.assertTrue(record.get("merge.footprint.2"))
+                    self.assertTrue(isPeakInCatalog(peak, self.catalog2))
+                elif peak.get("merge.peak.3"):
+                    self.assertTrue(record.get("merge.footprint.3"))
+                    self.assertTrue(isPeakInCatalog(peak, self.catalog3))
+                else:
+                    self.fail("At least one merge.peak flag must be set")
+
         # Add all the catalogs with minPeak = 100 so no new peaks will be added
-        # Use the python merging call
-        merge, nob, npeak = mergeCatalogsPython([self.catalog1, self.catalog2, self.catalog3],
-                                                ["1", "2", "3"], 100, self.idFactory)
+        merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
+                                          ["1", "2", "3"], 100, self.idFactory)
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 20)
         measArea = [i.getFootprint().getArea() for i in merge]
         self.assert_(np.all(pixArea == measArea))
+
+        for record in merge:
+            for peak in record.getFootprint().getPeaks():
+                if peak.get("merge.peak.1"):
+                    self.assertTrue(record.get("merge.footprint.1"))
+                    self.assertTrue(isPeakInCatalog(peak, self.catalog1))
+                elif peak.get("merge.peak.2"):
+                    self.assertTrue(record.get("merge.footprint.2"))
+                    self.assertTrue(isPeakInCatalog(peak, self.catalog2))
+                elif peak.get("merge.peak.3"):
+                    self.assertTrue(record.get("merge.footprint.3"))
+                    self.assertTrue(isPeakInCatalog(peak, self.catalog3))
+                else:
+                    self.fail("At least one merge.peak flag must be set")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

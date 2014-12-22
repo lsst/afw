@@ -100,6 +100,30 @@ Footprint::Footprint(
             str(boost::format("Number of spans requested is -ve: %d") % nspan));
     }
 }
+
+/**
+ * Create a Footprint, using a custom Schema for Peaks
+ *
+ * \throws lsst::pex::exceptions::InvalidParameterException in nspan is < 0
+ */
+Footprint::Footprint(
+    afw::table::Schema const & peakSchema, //!< Schema to use for PeakRecords
+    int nspan,         //!< initial number of Span%s in this Footprint
+    geom::Box2I const & region //!< Bounding box of MaskedImage footprint
+) : lsst::daf::base::Citizen(typeid(this)),
+    _fid(++id),
+    _area(0),
+    _bbox(geom::Box2I()),
+    _peaks(peakSchema),
+    _region(region),
+    _normalized(true)
+{
+    if (nspan < 0) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterException,
+            str(boost::format("Number of spans requested is -ve: %d") % nspan));
+    }
+}
 /**
  * Create a rectangular Footprint
  */
@@ -123,6 +147,7 @@ Footprint::Footprint(
     }
     _normalized=true;
 }
+
 Footprint::Footprint(
     geom::Point2I const & center,
     double const radius,
@@ -956,7 +981,7 @@ PTR(Footprint) Footprint::transform(
     geom::Box2I tBoxI(tBoxD);
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
-    PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, region);
+    PTR(Footprint) fpNew = boost::make_shared<Footprint>(getPeaks().getSchema(), 0, region);
 
     for (int y = tBoxI.getBeginY(); y < tBoxI.getEndY(); ++y) {
         bool inSpan = false;            // Are we in a span?
@@ -1039,7 +1064,7 @@ Footprint::Ptr footprintAndMask(
         typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,    ///< The mask to & with foot
         MaskT const bitmask                                       ///< Only consider these bits
 ) {
-    Footprint::Ptr newFp(new Footprint());
+    Footprint::Ptr newFp(new Footprint(fp->getPeaks().getSchema()));
     return newFp;
 }
 
@@ -1349,7 +1374,7 @@ Footprint::Ptr growFootprintSlow(
     }
 
     if (foot.getNpix() == 0) {          // an empty Footprint
-        return Footprint::Ptr(new Footprint);
+        return Footprint::Ptr(new Footprint(foot));
     }
 
     /*
@@ -1383,10 +1408,18 @@ Footprint::Ptr growFootprintSlow(
     image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
     math::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
 
-    PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1));
+    PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1, false));
 
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
+
+    // Copy over peaks from the original footprint
+    grown->getPeaks() = PeakCatalog(
+        foot.getPeaks().getTable(),
+        foot.getPeaks().begin(), foot.getPeaks().end(),
+        true
+    );
+
     //
     // Fix the coordinate system to be that of foot
     //
@@ -1696,6 +1729,14 @@ Footprint::Ptr growFootprint(
     PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(-ngrow, Threshold::VALUE, false)));
     assert (grownList->getFootprints()->size() > 0);
     Footprint::Ptr grown = *grownList->getFootprints()->begin();
+
+    // Copy over peaks from the original footprint
+    grown->getPeaks() = PeakCatalog(
+        foot.getPeaks().getTable(),
+        foot.getPeaks().begin(), foot.getPeaks().end(),
+        true
+    );
+
     //
     // Fix the coordinate system to be that of foot
     //
@@ -1727,7 +1768,7 @@ PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
                              bool down             ///< grow down
                             )
 {
-    Footprint::Ptr grown(new Footprint(0, old.getRegion()));
+    Footprint::Ptr grown(new Footprint(old.getPeaks().getSchema(), 0, old.getRegion()));
 
     for (Footprint::SpanList::const_iterator siter = old.getSpans().begin();
             siter != old.getSpans().end(); ++siter) {

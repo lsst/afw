@@ -95,7 +95,12 @@ public:
         rhs.setRegion(getRegion());
         setRegion(rhsRegion);
     }
-    
+
+    void swapFootprintList(FootprintList& rhs) {
+        using std::swap;
+        swap(*_footprints, rhs);
+    }
+
     /**:
      * Return the Footprint%s of detected objects
      */

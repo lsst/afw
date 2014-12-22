@@ -31,12 +31,33 @@
 #include "lsst/afw/detection/Peak.h"
 %}
 
-// =============== SimpleTable and SimpleRecord =============================================================
+// =============== PeakTable and PeakRecord =============================================================
 
 %shared_ptr(lsst::afw::detection::PeakTable)
 %shared_ptr(lsst::afw::detection::PeakRecord)
 
 %include "lsst/afw/detection/Peak.h"
+
+// These %extend blocks are a workaround for HSC-1117: Swig doesn't recognize PeakTable/PeakRecord
+// as subclasses of BaseTable/BaseRecord, and I'm completely mystified as to why.
+%extend lsst::afw::detection::PeakRecord {
+    lsst::afw::table::BaseRecord * asBaseRecord() {
+        return self;
+    }
+    %pythoncode %{
+    def __getattr__(self, name):
+        return getattr(self.asBaseRecord(), name)
+    %}
+}
+%extend lsst::afw::detection::PeakTable {
+    lsst::afw::table::BaseTable * asBaseTable() {
+        return self;
+    }
+    %pythoncode %{
+    def __getattr__(self, name):
+        return getattr(self.asBaseTable(), name)
+    %}
+}
 
 %template(PeakColumnView) lsst::afw::table::ColumnViewT<lsst::afw::detection::PeakRecord>;
 
