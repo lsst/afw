@@ -263,7 +263,7 @@ struct ClipPredicate : public std::unary_function<PeakRecord const&, bool> {
     geom::Box2I const& bbox;
     ClipPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
     bool operator()(PTR(PeakRecord) const& peak) const {
-        return bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
+        return !bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
     }
 };
 }
@@ -925,11 +925,11 @@ PTR(Footprint) Footprint::transform(
         int start = -1;                  // Start of span
 
         for (int x = tBoxI.getBeginX(); x < tBoxI.getEndX(); ++x) {
-            lsst::afw::geom::Point2D const& p = transformPoint(x, y, target, source);
+            geom::Point2D p = transformPoint(x, y, target, source);
             int const xSource = std::floor(0.5 + p.getX());
             int const ySource = std::floor(0.5 + p.getY());
 
-            if (contains(lsst::afw::geom::Point2I(xSource, ySource))) {
+            if (contains(geom::Point2I(xSource, ySource))) {
                 if (!inSpan) {
                     inSpan = true;
                     start = x;
@@ -943,6 +943,17 @@ PTR(Footprint) Footprint::transform(
             fpNew->addSpan(y, start, tBoxI.getMaxX());
         }
     }
+
+    // Copy over peaks to new Footprint
+    for (
+        PeakCatalog::const_iterator iter = this->getPeaks().begin();
+        iter != this->getPeaks().end();
+        ++iter
+        ) {
+            geom::Point2D tp = transformPoint(iter->getFx(), iter->getFy(), source, target);
+            fpNew->addPeak(tp.getX(), tp.getY(), iter->getPeakValue());
+        }
+
     if (doClip) {
         fpNew->clipTo(region);
     }
