@@ -858,7 +858,10 @@ void Fits::writeTableArray(std::size_t row, int col, int nElements, T const * va
         &status
     );
     if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, boost::format("Writing value at table cell (%d, %d)") % row % col);
+        LSST_FITS_CHECK_STATUS(
+            *this,
+            boost::format("Writing %d-element array at table cell (%d, %d)") % nElements % row % col
+        );
     }
 }
 
