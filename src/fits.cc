@@ -63,10 +63,10 @@ std::string makeColumnFormat(int size = 1) {
         return (boost::format("%d%c") % size % getFormatCode((T*)0)).str();
     } else if (size < 0) {
         // variable length, max size given as -size
-        return (boost::format("1P%c(%d)") % getFormatCode((T*)0) % (-size)).str();
+        return (boost::format("1Q%c(%d)") % getFormatCode((T*)0) % (-size)).str();
     } else {
         // variable length, max size unknown
-        return (boost::format("1P%c") % getFormatCode((T*)0)).str();
+        return (boost::format("1Q%c") % getFormatCode((T*)0)).str();
     }
 }
 
