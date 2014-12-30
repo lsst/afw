@@ -77,7 +77,7 @@ std::string AliasMap::get(std::string const & name) const {
 }
 
 void AliasMap::set(std::string const & alias, std::string const & target) {
-    _internal.insert(std::make_pair(alias, target));
+    _internal[alias] = target;
     if (_table) {
         _table->handleAliasChange(alias);
     }
