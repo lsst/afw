@@ -145,6 +145,14 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         aliases.set("q", "a1")
         self.assertEqual(aliases.get("q"), "a1")
 
+    def testPartialMatchErase(self):
+        aliases = self.schema.getAliasMap()
+        self.assertEqual(aliases.apply("qz"), "az")
+        aliases.set("qz", "a1")
+        self.assertEqual(aliases.apply("qz"), "a1")
+        self.assertEqual(aliases.erase("q", True), 2)
+        self.assertEqual(aliases.apply("qz"), "qz")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

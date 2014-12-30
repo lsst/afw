@@ -93,9 +93,16 @@ public:
     /**
      *  @brief Remove an alias from the schema if it is present.
      *
-     *  @return True if an alias was erased, and false if no such alias was found.
+     *  @param[in] alias                  The alias to be erased, or its prefix.
+     *  @param[in] erasePartialMatches    If true, erase all aliases in the map that start with
+     *                                    the given alias, not just one that matches exactly.
+     *
+     *  If the AliasMap is attached to a Table, BaseTable::handleAliasChange will be called only
+     *  once with the given alias, not multiple times for each alias actually removed.
+     *
+     *  @return the number of aliases alias erased.
      */
-    bool erase(std::string const & alias);
+    std::size_t erase(std::string const & alias, bool erasePartialMatches=false);
 
 private:
 

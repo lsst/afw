@@ -27,6 +27,15 @@
 
 namespace lsst { namespace afw { namespace table {
 
+namespace {
+
+// equivalent to longer.startswith(shorter) in Python
+bool startsWith(std::string const & longer, std::string const & shorter) {
+    return shorter.size() <= longer.size() && longer.compare(0, shorter.size(), shorter) == 0;
+}
+
+} // anonymous
+
 void AliasMap::_apply(std::string & name) const {
     // Loop in order to keep replacing as long as we keep finding matches,
     // but we count how many replacements we've made to avoid an infinite loop
@@ -44,7 +53,7 @@ void AliasMap::_apply(std::string & name) const {
             // smaller strings are considered "less than" longer strings
             // that they share the same initial charaters with.
             --i;
-            if (i->first.size() < name.size() && name.compare(0, i->first.size(), i->first) == 0) {
+            if (startsWith(name, i->first)) {
                 name.replace(0, i->first.size(), i->second);
             } else {
                 return;  // no match; exit
@@ -83,8 +92,19 @@ void AliasMap::set(std::string const & alias, std::string const & target) {
     }
 }
 
-bool AliasMap::erase(std::string const & alias) {
-    bool result = _internal.erase(alias);
+std::size_t AliasMap::erase(std::string const & alias, bool erasePartialMatches) {
+    std::size_t result = 0;
+    if (!erasePartialMatches) {
+        result = _internal.erase(alias);
+    } else {
+        Internal::iterator i1 = _internal.lower_bound(alias);
+        Internal::iterator i2 = i1;
+        while (i2 != _internal.end() && startsWith(i2->first, alias)) {
+            ++i2;
+            ++result;
+        }
+        _internal.erase(i1, i2);
+    }
     if (_table) {
         _table->handleAliasChange(alias);
     }
