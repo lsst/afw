@@ -60,7 +60,9 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *  to point to the given field name prefix.  See $2SlotDefinition for more information.
      */
     void define$1$2(std::string const & name) {
-        getSchema().getAliasMap()->set(get$1$2Slot().getAlias(getSchema().getVersion()), name);
+        std::string slotAlias = get$1$2Slot().getAlias(getSchema().getVersion());
+        getSchema().getAliasMap()->erase(slotAlias, true);
+        getSchema().getAliasMap()->set(slotAlias, name);
     }
 
     /**

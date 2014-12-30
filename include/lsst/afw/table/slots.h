@@ -43,6 +43,15 @@ namespace table {
  *  used to inspect the slots via SourceTable::getXxxSlot(), which is now the preferred way
  *  to access the Keys that slots correspond to.  SlotDefinition objects should only be
  *  constructed by SourceTable, however.
+ *
+ *  If a measurement algorithms uses the standard naming conventions for its output fields,
+ *  an single alias that points from the slot name (e.g. "slot_Centroid") to the measurement
+ *  algorithm name (e.g. "base_SdssCentroid") will be sufficient to define the measurement,
+ *  uncertainty, and flag keys, because the alias replacement will be applied just to those
+ *  prefixes.  Individual aliases can also be set up for each field, however, to support
+ *  algorithms that cannot follow the standard naming conventions.  SourceTable's
+ *  defineXxSlot methods only support the simpler, single-alias approach, though they will
+ *  remove multiple old aliases when changing the definition of a slot.
  */
 class SlotDefinition {
 public:
