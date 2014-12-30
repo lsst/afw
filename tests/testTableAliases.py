@@ -139,6 +139,12 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.schema.getAliasMap().set("a", "t")
         self.assertRaises(lsst.pex.exceptions.RuntimeError, self.schema.find, "t")
 
+    def testReplace(self):
+        aliases = self.schema.getAliasMap()
+        self.assertEqual(aliases.get("q"), "a")
+        aliases.set("q", "a1")
+        self.assertEqual(aliases.get("q"), "a1")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
