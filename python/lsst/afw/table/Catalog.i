@@ -90,14 +90,14 @@ public:
         self->insert(mapper, self->end(), other.begin(), other.end());
     }
     %feature("shadow") extend %{
-    def extend(self, iterable, deep=None, mapper=None):
+    def extend(self, iterable, mapper=None, deep=None):
         """Append all records in the given iterable to the catalog.
 
         Arguments:
           iterable ------ any Python iterable containing records
+          mapper -------- a SchemaMapper object used to translate records
           deep ---------- if True, the records will be deep-copied; ignored
                           if mapper is not None (that always implies True).
-          mapper -------- a SchemaMapper object used to translate records
         """
         self._columns = None
         if isinstance(iterable, type(self)):
@@ -106,6 +106,9 @@ public:
             else:
                 $action(self, iterable, deep)
         else:
+            if not isinstance(mapper, SchemaMapper):
+                deep = mapper
+                mapper = None
             for record in iterable:
                 if mapper is not None:
                     self.append(self.table.copyRecord(record, mapper))
