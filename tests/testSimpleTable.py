@@ -395,7 +395,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat7 = lsst.afw.table.SourceCatalog(schema2)
         cat7.reserve(len(cat1) * 2)
         cat7.extend(list(cat1), mapper=mapper)
-        cat7.extend(cat1, mapper=mapper)
+        cat7.extend(cat1, mapper)
         self.assert_(cat7.isContiguous())
 
     def testTicket2308(self):
