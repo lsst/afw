@@ -393,10 +393,14 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat6.extend(list(cat1), mapper=mapper)
         self.assertFalse(cat6.isContiguous())
         cat7 = lsst.afw.table.SourceCatalog(schema2)
-        cat7.reserve(len(cat1) * 2)
+        cat7.reserve(len(cat1) * 3)
         cat7.extend(list(cat1), mapper=mapper)
-        cat7.extend(cat1, mapper=mapper)
+        cat7.extend(cat1, mapper)
+        cat7.extend(list(cat1), mapper)
         self.assert_(cat7.isContiguous())
+        cat8 = lsst.afw.table.BaseCatalog(schema2)
+        cat8.extend(list(cat7), True)
+        cat8.extend(list(cat7), deep=True)
 
     def testTicket2308(self):
         inputSchema = lsst.afw.table.SourceTable.makeMinimalSchema()
