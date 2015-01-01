@@ -100,7 +100,9 @@ public:
           mapper -------- a SchemaMapper object used to translate records
         """
         self._columns = None
-        if isinstance(deep, SchemaMapper):
+        # We can't use isinstance here, because the SchemaMapper symbol isn't available
+        # when this code is part of a subclass of Catalog in another package.
+        if type(deep).__name__ == "SchemaMapper":
             mapper = deep
             deep = None
         if isinstance(iterable, type(self)):
