@@ -395,6 +395,18 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(cat.getCentroidSlot().getFlagKey(), cat.schema.find("centroid.flags").key)
         self.assertEqual(cat.getShapeSlot().getFlagKey(), cat.schema.find("shape.flags").key)
 
+    def testDM1083(self):
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        st = lsst.afw.table.SourceTable.make(schema)
+        cat = lsst.afw.table.SourceCatalog(st)
+        tmp = lsst.afw.table.SourceCatalog(cat.getTable())
+        record = tmp.addNew()
+        cat.extend(tmp)
+        self.assertEqual(cat[0].getId(), record.getId())
+        # check that the same record is in both catalogs (not a copy)
+        record.setId(15)
+        self.assertEqual(cat[0].getId(), record.getId())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
