@@ -29,7 +29,7 @@ public:
 
 } // anonymous
 
-void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+void FluxSlot::setKeys(std::string const & alias, Schema const & schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     if (schema.getVersion() == 0) {
@@ -57,8 +57,8 @@ void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schem
 
 namespace {
 
-CentroidSlotDefinition::ErrKey::NameArray makeCentroidNameArray() {
-    CentroidSlotDefinition::ErrKey::NameArray v;
+CentroidSlot::ErrKey::NameArray makeCentroidNameArray() {
+    CentroidSlot::ErrKey::NameArray v;
     v.push_back("x");
     v.push_back("y");
     return v;
@@ -66,7 +66,7 @@ CentroidSlotDefinition::ErrKey::NameArray makeCentroidNameArray() {
 
 } // anonymous
 
-void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+void CentroidSlot::setKeys(std::string const & alias, Schema const & schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeCentroidNameArray();
@@ -93,8 +93,8 @@ void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & s
 
 namespace {
 
-ShapeSlotDefinition::ErrKey::NameArray makeShapeNameArray() {
-    ShapeSlotDefinition::ErrKey::NameArray v;
+ShapeSlot::ErrKey::NameArray makeShapeNameArray() {
+    ShapeSlot::ErrKey::NameArray v;
     v.push_back("xx");
     v.push_back("yy");
     v.push_back("xy");
@@ -103,7 +103,7 @@ ShapeSlotDefinition::ErrKey::NameArray makeShapeNameArray() {
 
 } // anonymous
 
-void ShapeSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
+void ShapeSlot::setKeys(std::string const & alias, Schema const & schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeShapeNameArray();

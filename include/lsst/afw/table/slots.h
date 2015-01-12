@@ -22,7 +22,7 @@ namespace table {
 /**
  *  Base class for helper classes that define slots on SourceTable/SourceRecord.
  *
- *  Each type of slot corresponds to a subclass of SlotDefinition, and each actual
+ *  Each type of slot corresponds to a subclass of Slot, and each actual
  *  slot corresponds to a particular field name prefix.  For instance, to look up
  *  the centroid slot, we look for fields named "slot_Centroid_x" and "slot_Centroid_y"
  *  (or a single compound "slot.Centroid" field in version 0).  Instead of actually
@@ -32,16 +32,16 @@ namespace table {
  *  object will cache Keys for the various slots to make sure accessing slot values is
  *  efficient (more precisely, when you set an alias related to a slot on an AliasMap, any
  *  table it corresponds to will receive a notification that it should update its Keys).
- *  These cached Keys are actually stored within the SlotDefinition (as data members of
+ *  These cached Keys are actually stored within the Slot (as data members of
  *  derived classes).
  *
  *  Note that the uncertainty and failure flag components of slots are not required; a slot
  *  may have only a measurement defined, or a measurement and either one of these (but not both).
  *  A slot may not have only an uncertainty and/or a a failure flag, however.
  *
- *  A SlotDefinition instance is not just an internal object used by SourceTable; it can also be
+ *  A Slot instance is not just an internal object used by SourceTable; it can also be
  *  used to inspect the slots via SourceTable::getXxxSlot(), which is now the preferred way
- *  to access the Keys that slots correspond to.  SlotDefinition objects should only be
+ *  to access the Keys that slots correspond to.  Slot objects should only be
  *  constructed by SourceTable, however.
  *
  *  If a measurement algorithms uses the standard naming conventions for its output fields,
@@ -53,11 +53,11 @@ namespace table {
  *  defineXxSlot methods only support the simpler, single-alias approach, though they will
  *  remove multiple old aliases when changing the definition of a slot.
  */
-class SlotDefinition {
+class Slot {
 public:
 
-    /// Construct a SlotDefinition from the name of the slot (e.g. "Centroid" or "PsfFlux")
-    explicit SlotDefinition(std::string const & name) : _name(name) {}
+    /// Construct a Slot from the name of the slot (e.g. "Centroid" or "PsfFlux")
+    explicit Slot(std::string const & name) : _name(name) {}
 
     /// Return the name of the slot (e.g. "Centroid" or "PsfFlux")
     std::string getName() const { return _name; }
@@ -75,8 +75,8 @@ protected:
     std::string _name;
 };
 
-/// SlotDefinition specialization for fluxes
-class FluxSlotDefinition : public SlotDefinition {
+/// Slot specialization for fluxes
+class FluxSlot : public Slot {
 public:
 
     typedef double MeasValue;    ///< Type returned by accessing the slot measurement
@@ -84,8 +84,8 @@ public:
     typedef Key<double> MeasKey; ///< Key type used to access the slot measurement
     typedef Key<double> ErrKey;  ///< Key type used to access the slot uncertainty
 
-    /// Construct a SlotDefinition from the name of the slot (e.g. "PsfFlux")
-    explicit FluxSlotDefinition(std::string const & name) : SlotDefinition(name) {}
+    /// Construct a Slot from the name of the slot (e.g. "PsfFlux")
+    explicit FluxSlot(std::string const & name) : Slot(name) {}
 
     /// Return true if the key associated with the measurement is valid.
     bool isValid() const { return _measKey.isValid(); }
@@ -117,8 +117,8 @@ private:
     Key<Flag> _flagKey;
 };
 
-/// SlotDefinition specialization for centroids
-class CentroidSlotDefinition : public SlotDefinition {
+/// Slot specialization for centroids
+class CentroidSlot : public Slot {
 public:
 
     typedef geom::Point2D MeasValue;             ///< Type returned by accessing the slot measurement
@@ -126,8 +126,8 @@ public:
     typedef Point2DKey MeasKey;                  ///< Key type used to access the slot measurement
     typedef CovarianceMatrixKey<float,2> ErrKey; ///< Key type used to access the slot uncertainty
 
-    /// Construct a SlotDefinition from the name of the slot (e.g. "Centroid")
-    explicit CentroidSlotDefinition(std::string const & name) : SlotDefinition(name) {}
+    /// Construct a Slot from the name of the slot (e.g. "Centroid")
+    explicit CentroidSlot(std::string const & name) : Slot(name) {}
 
     /// Return true if the key associated with the measurement is valid.
     bool isValid() const { return _measKey.isValid(); }
@@ -159,8 +159,8 @@ private:
     Key<Flag> _flagKey;
 };
 
-/// SlotDefinition specialization for shapes
-class ShapeSlotDefinition : public SlotDefinition {
+/// Slot specialization for shapes
+class ShapeSlot : public Slot {
 public:
 
     typedef geom::ellipses::Quadrupole MeasValue; ///< Type returned by accessing the slot measurement
@@ -168,8 +168,8 @@ public:
     typedef QuadrupoleKey MeasKey;                ///< Key type used to access the slot measurement
     typedef CovarianceMatrixKey<float,3> ErrKey;  ///< Key type used to access the slot uncertainty
 
-    /// Construct a SlotDefinition from the name of the slot (e.g. "Shape")
-    explicit ShapeSlotDefinition(std::string const & name) : SlotDefinition(name) {}
+    /// Construct a Slot from the name of the slot (e.g. "Shape")
+    explicit ShapeSlot(std::string const & name) : Slot(name) {}
 
     /// Return true if the key associated with the measurement is valid.
     bool isValid() const { return _measKey.isValid(); }
@@ -208,12 +208,12 @@ private:
  *  the source code for the slot mechanism in one place as much as possible.
  */
 struct SlotSuite {
-    FluxSlotDefinition defPsfFlux;
-    FluxSlotDefinition defApFlux;
-    FluxSlotDefinition defInstFlux;
-    FluxSlotDefinition defModelFlux;
-    CentroidSlotDefinition defCentroid;
-    ShapeSlotDefinition defShape;
+    FluxSlot defPsfFlux;
+    FluxSlot defApFlux;
+    FluxSlot defInstFlux;
+    FluxSlot defModelFlux;
+    CentroidSlot defCentroid;
+    ShapeSlot defShape;
 
     /// Handle a callback from an AliasMap informing the table that an alias has changed.
     void handleAliasChange(std::string const & alias, Schema const & schema);

@@ -27,20 +27,20 @@ changecom(`###')dnl
 define(`m4def', defn(`define'))dnl
 m4def(`DECLARE_SLOT_GETTERS',
 `/// @brief Get the value of the $1$2 slot measurement.
-    $2SlotDefinition::MeasValue get$1$2() const;
+    $2Slot::MeasValue get$1$2() const;
 
     /// @brief Get the uncertainty on the $1$2 slot measurement.
-    $2SlotDefinition::ErrValue get$1$2Err() const;
+    $2Slot::ErrValue get$1$2Err() const;
 
     /// @brief Return true if the measurement in the $1$2 slot failed.
     bool get$1$2Flag() const;
 ')dnl
 m4def(`DEFINE_SLOT_GETTERS',
-`inline $2SlotDefinition::MeasValue SourceRecord::get$1$2() const {
+`inline $2Slot::MeasValue SourceRecord::get$1$2() const {
     return this->get(getTable()->get$1$2Slot().getMeasKey());
 }
 
-inline $2SlotDefinition::ErrValue SourceRecord::get$1$2Err() const {
+inline $2Slot::ErrValue SourceRecord::get$1$2Err() const {
     return this->get(getTable()->get$1$2Slot().getErrKey());
 }
 
@@ -50,14 +50,14 @@ inline bool SourceRecord::get$1$2Flag() const {
 ')dnl
 m4def(`DECLARE_SLOT_DEFINERS',
 `
-    $2SlotDefinition const & get$1$2Slot() const { return _slots.def$1$2; }
+    $2Slot const & get$1$2Slot() const { return _slots.def$1$2; }
 
     /**
      *  @brief Set the measurement used for the $1$2 slot.
      *
      *  The definitions for slots are actually managed by the Schema object, and its associated
      *  AliasMap, so this simply sets the "slot_$1$2" alias (or "slot.$1$2" for version 0 tables)
-     *  to point to the given field name prefix.  See $2SlotDefinition for more information.
+     *  to point to the given field name prefix.  See $2Slot for more information.
      */
     void define$1$2(std::string const & name) {
         std::string slotAlias = get$1$2Slot().getAlias(getSchema().getVersion());
@@ -93,7 +93,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *
      *  @deprecated in favor of get$1$2Slot().getMeasKey().
      */
-    $2SlotDefinition::MeasKey get$1$2Key() const {
+    $2Slot::MeasKey get$1$2Key() const {
         return get$1$2Slot().getMeasKey();
     }
 
@@ -102,7 +102,7 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *
      *  @deprecated in favor of get$1$2Slot().getErrKey().
      */
-    $2SlotDefinition::ErrKey get$1$2ErrKey() const {
+    $2Slot::ErrKey get$1$2ErrKey() const {
         return get$1$2Slot().getErrKey();
     }
 
@@ -179,7 +179,7 @@ template <typename RecordT> class SourceColumnViewT;
  *   - A system of aliases (called slots) in which a SourceTable instance stores keys for particular
  *     measurements (a centroid, a shape, and a number of different fluxes) and SourceRecord uses
  *     this keys to provide custom getters and setters.  These are not separate fields, but rather
- *     aliases that can point to custom fields.  See the SlotDefinition hierarchy for more information.
+ *     aliases that can point to custom fields.  See the Slot hierarchy for more information.
  */
 class SourceRecord : public SimpleRecord {
 public:
