@@ -4,6 +4,8 @@ from lsst.afw.geom import TransformMapConfig
 __all__ = ["CameraConfig", "DetectorConfig"]
 
 class DetectorConfig(pexConfig.Config):
+    """!A configuration that represents (and can be used to construct) a Detector 
+    """
     transformDict = pexConfig.ConfigField("Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
     name = pexConfig.Field("Name of detector slot", str)
     id = pexConfig.Field("ID of detector slot", int)
@@ -32,6 +34,8 @@ class DetectorConfig(pexConfig.Config):
     transposeDetector = pexConfig.Field("Transpose the pixel grid before orienting in focal plane?", bool)
     
 class CameraConfig(pexConfig.Config):
+    """!A configuration that represents (and can be used to construct) a Camera
+    """
     detectorList = pexConfig.ConfigDictField("List of detector configs", keytype=int, itemtype=DetectorConfig)
     transformDict = pexConfig.ConfigField("Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
     name = pexConfig.Field("Name of this camera", str)

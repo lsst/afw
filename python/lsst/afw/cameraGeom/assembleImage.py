@@ -49,12 +49,12 @@ def _insertPixelChunk(outView, inView, amplifier, hasArrays):
         outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):
-    """Assemble the amplifier region of an image from a raw image
+    """!Assemble the amplifier region of an image from a raw image
 
-    @param[in,out] destImage: assembled image (lsst.afw.image.Image or MaskedImage);
+    @param[in,out] destImage  assembled image (lsst.afw.image.Image or MaskedImage);
         the region amplifier.getBBox() is overwritten with the assembled amplifier image
-    @param[in] rawImage: raw image (same type as destImage)
-    @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
+    @param[in] rawImage  raw image (same type as destImage)
+    @param[in] amplifier  amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
 
     @throw RuntimeError if:
     - image types do not match
@@ -71,15 +71,15 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
 
 def assembleAmplifierRawImage(destImage, rawImage, amplifier):
-    """Assemble the amplifier region of a raw CCD image
+    """!Assemble the amplifier region of a raw CCD image
 
     For most cameras this is a no-op: the raw image already is an assembled CCD image.
     However, it is useful for camera such as LSST for which each amplifier image is a separate image.
 
-    @param[in,out] destImage: CCD image (lsst.afw.image.Image or MaskedImage);
+    @param[in,out] destImage  CCD image (lsst.afw.image.Image or MaskedImage);
         the region amplifier.getRawAmplifier().getBBox() is overwritten with the raw amplifier image
-    @param[in] rawImage: raw image (same type as destImage)
-    @param[in] amplifier: amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
+    @param[in] rawImage  raw image (same type as destImage)
+    @param[in] amplifier  amplifier geometry: lsst.afw.cameraGeom.Amplifier with raw amplifier info
 
     @throw RuntimeError if:
     - image types do not match

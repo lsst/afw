@@ -13,7 +13,7 @@ __all__ = ["DetectorWrapper", "CameraWrapper"]
 
 
 class DetectorWrapper(object):
-    """A Detector and the data used to construct it
+    """!A Detector and the data used to construct it
 
     Intended for use with unit tests, thus saves a copy of all input parameters.
     Does not support setting details of amplifiers.
@@ -33,24 +33,24 @@ class DetectorWrapper(object):
         tryDuplicateAmpNames=False,
         tryBadCameraSys=False,
     ):
-        """Construct a DetectorWrapper
+        """!Construct a DetectorWrapper
 
-        @param[in] name: detector name
-        @param[in] id: detector ID (int)
-        @param[in] detType: detector type (an lsst.afw.cameraGeom.DetectorType)
-        @param[in] serial: serial "number" (a string)
-        @param[in] bbox: bounding box; defaults to (0, 0), (1024x1024) (an lsst.afw.geom.Box2I)
-        @param[in] numAmps: number of amplifiers (int)
-        @param[in] pixelSize: pixel size (mm) (an lsst.afw.geom.Point2D)
-        @param[in] ampExtent: dimensions of amplifier image bbox (an lsst.afw.geom.Extent2I)
-        @param[in] orientation: orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
-        @param[in] plateScale: plate scale in arcsec/mm; 20.0 is for LSST
-        @param[in] radialDistortion: radial distortion, in mm/rad^2
+        @param[in] name  detector name
+        @param[in] id  detector ID (int)
+        @param[in] detType  detector type (an lsst.afw.cameraGeom.DetectorType)
+        @param[in] serial  serial "number" (a string)
+        @param[in] bbox  bounding box; defaults to (0, 0), (1024x1024) (an lsst.afw.geom.Box2I)
+        @param[in] numAmps  number of amplifiers (int)
+        @param[in] pixelSize  pixel size (mm) (an lsst.afw.geom.Point2D)
+        @param[in] ampExtent  dimensions of amplifier image bbox (an lsst.afw.geom.Extent2I)
+        @param[in] orientation  orientation of CCC in focal plane (lsst.afw.cameraGeom.Orientation)
+        @param[in] plateScale  plate scale in arcsec/mm; 20.0 is for LSST
+        @param[in] radialDistortion  radial distortion, in mm/rad^2
             (the r^3 coefficient of the radial distortion polynomial
             that converts PUPIL in radians to FOCAL_PLANE in mm);
             0.925 is the value Dave Monet measured for lsstSim data
-        @param[in] tryDuplicateAmpNames: create 2 amps with the same name (should result in an error)
-        @param[in] tryBadCameraSys: add a transform for an unsupported coord. system (should result in an error)
+        @param[in] tryDuplicateAmpNames  create 2 amps with the same name (should result in an error)
+        @param[in] tryBadCameraSys  add a transform for an unsupported coord. system (should result in an error)
         """
         # note that (0., 0.) for the reference position is the center of the first pixel
         self.name = name
@@ -116,14 +116,14 @@ class CameraWrapper(object):
     Intended for use with unit tests, thus saves some interesting information.
     """
     def __init__(self, plateScale=20.0, radialDistortion=0.925, isLsstLike=False):
-        """Construct a CameraWrapper
+        """!Construct a CameraWrapper
 
-        @param[in] plateScale: plate scale in arcsec/mm; 20.0 is for LSST
-        @param[in] radialDistortion: radial distortion, in mm/rad^2
+        @param[in] plateScale  plate scale in arcsec/mm; 20.0 is for LSST
+        @param[in] radialDistortion  radial distortion, in mm/rad^2
             (the r^3 coefficient of the radial distortion polynomial
             that converts PUPIL in radians to FOCAL_PLANE in mm);
             0.925 is the value Dave Monet measured for lsstSim data
-        @param[in] isLsstLike: make repository products with one raw image per amplifier (True)
+        @param[in] isLsstLike  make repository products with one raw image per amplifier (True)
             or with one raw image per detector (False)
         """
         afwDir = eups.productDir("afw")
@@ -143,10 +143,11 @@ class CameraWrapper(object):
 
     @property
     def nDetectors(self):
+        """!Return the number of detectors"""
         return len(self.detectorNameList)
 
     def makeDetectorConfigs(self, detFile):
-        """Construct a list of DetectorConfig, one per detector
+        """!Construct a list of DetectorConfig, one per detector
         """
         detectors = []
         self.detectorNameList = []
@@ -187,7 +188,11 @@ class CameraWrapper(object):
         return detectorConfigs
 
     def makeAmpCatalogs(self, ampFile, isLsstLike=False):
-        """Construct a list of AmpInfoCatalog, one per detector
+        """!Construct a list of AmpInfoCatalog, one per detector
+
+        @param[in] ampFile  path to amplifier data file
+        @param[in] isLsstLike  if True then there is one raw image per amplifier;
+            if False then there is one raw image per detector
         """
         readoutMap = {'LL':0, 'LR':1, 'UR':2, 'UL':3}
         amps = []
@@ -295,7 +300,10 @@ class CameraWrapper(object):
         return ampTablesDict
 
     def makeTestRepositoryItems(self, isLsstLike=False):
-        """Make camera config and amp catalog dictionary, using default detector and amp files
+        """!Make camera config and amp catalog dictionary, using default detector and amp files
+
+        @param[in] isLsstLike  if True then there is one raw image per amplifier;
+            if False then there is one raw image per detector
         """
         detFile = os.path.join(self._afwTestDir, "testCameraDetectors.dat")
         detectorConfigs = self.makeDetectorConfigs(detFile)

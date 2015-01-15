@@ -26,10 +26,13 @@ import lsst.afw.geom as afwGeom
 __all__ = ["rotateBBoxBy90"]
 
 def rotateBBoxBy90(bbox, n90, dimensions):
-    """ This is a direct translation of the method by the same name in the previous camera geom
-    @param bbox -- bbox to rotate
-    @param n90 -- number of quarter rotations to perform
-    @param dimensions -- The dimensions of the parent grid.  If None, rotate about LLC
+    """!Rotate a bounding box by an integer multiple of 90 degrees
+
+    @todo document dimensions better; what does it specify?
+
+    @param bbox  bbox to rotate
+    @param n90  number of quarter rotations to perform
+    @param dimensions  dimensions of the parent grid
     @return rotated bounding box
     """
     while n90 < 0:
@@ -91,4 +94,4 @@ def rotateBBoxBy90(bbox, n90, dimensions):
     if n90%2 == 1 and not dxy0 == 0:
         newBbox.shift(afwGeom.Extent2I(-dxy0, dxy0))
         
-    return newBbox;
+    return newBbox
