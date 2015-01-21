@@ -100,8 +100,6 @@ double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
 template <typename T>
 double DiffCnt(afwImage::Mask<T> const& imgA, afwImage::Mask<T> const& imgB)
 {
-    typedef long long unsigned int Bitint;
-
     int const dimX = imgA.getWidth();
     int const dimY = imgA.getHeight();
 

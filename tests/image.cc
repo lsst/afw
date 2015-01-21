@@ -218,11 +218,9 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     *ptr -= *ptr2;
     BOOST_CHECK_EQUAL(*ptr,    10);
 
-    typedef ImageT::SinglePixel SinglePixel;
     *ptr = *ptr + *ptr2;
     BOOST_CHECK_EQUAL(*ptr,    14);
 
-    //*ptr += SinglePixel(36);
     *ptr += 36;
     *ptr = *ptr + 25;
     *ptr = 25 + *ptr;

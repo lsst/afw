@@ -1035,11 +1035,8 @@ namespace {
         
         /**********************************************************************************************/
         
-        typedef typename std::vector<typename Startspan<MaskPixelT>::Ptr> StartspanListT;
-        typedef typename std::vector<typename Startspan<MaskPixelT>::Ptr>::iterator StartspanListIterT;
-
         Startspan<MaskPixelT> *sspan = NULL;
-        for (StartspanListIterT iter = _spans.begin(); iter != _spans.end(); iter++) {
+        for (auto iter = _spans.begin(); iter != _spans.end(); iter++) {
             *sspan = *iter;
             if (sspan->getDirection() != DONE) {
                 break;
