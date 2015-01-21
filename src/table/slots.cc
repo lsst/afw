@@ -10,31 +10,53 @@ bool startsWith(std::string const & a, std::string const b) {
     return a.compare(0, b.size(), b) == 0;
 }
 
+// helper class that resolves aliases for a slot's main measurement field, while
+// distiguishing between two cases where the field can't be found:
+//  - if the alias points to an invalid field, we should throw an exception.
+//  - if the alias simply isn't defined, we should just reset the slot with invalid keys
+class MeasFieldNameGetter {
+public:
+
+    MeasFieldNameGetter(SubSchema const & s, Schema const & schema) :
+        replaced(schema[schema.getAliasMap()->apply(s.getPrefix())]),
+        defined(replaced.getPrefix() != s.getPrefix()) // slot is defined if applying alias wasn't a no-op
+    {}
+
+    SubSchema replaced; // a SubSchema that includes alias replacement
+    bool defined;     // whether the slot is defined at all
+
+};
+
 } // anonymous
 
 void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schema) {
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
-    try {
-        if (schema.getVersion() == 0) {
-            _measKey = s;
-            try {
-                _errKey = s["err"];
-            } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flags"];
-            } catch (pex::exceptions::NotFoundError &) {}
-        } else {
-            _measKey = s["flux"];
-            try {
-                _errKey = s["fluxSigma"];
-            } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flag"];
-            } catch (pex::exceptions::NotFoundError &) {}
+    _measKey = MeasKey();
+    _errKey = ErrKey();
+    _flagKey = Key<Flag>();
+    if (schema.getVersion() == 0) {
+        MeasFieldNameGetter helper(s, schema);
+        if (!helper.defined) return;
+        _measKey = helper.replaced;
+        try {
+            _errKey = s["err"];
+        } catch (pex::exceptions::NotFoundError &) {}
+        try {
+            _flagKey = s["flags"];
+        } catch (pex::exceptions::NotFoundError &) {}
+    } else {
+        MeasFieldNameGetter helper(s["flux"], schema);
+        if (!helper.defined) {
+            return;
         }
-    } catch (pex::exceptions::NotFoundError & err) {
-        if (!alias.empty()) throw;
+        _measKey = helper.replaced;
+        try {
+            _errKey = s["fluxSigma"];
+        } catch (pex::exceptions::NotFoundError &) {}
+        try {
+            _flagKey = s["flag"];
+        } catch (pex::exceptions::NotFoundError &) {}
     }
 }
 
@@ -53,26 +75,27 @@ void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & s
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeCentroidNameArray();
-    try {
-        if (schema.getVersion() == 0) {
-            _measKey = MeasKey(Key< Point<double> >(s));
-            try {
-                _errKey = ErrKey(Key< Covariance< Point<float> > >(s["err"]));
-            } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flags"];
-            } catch (pex::exceptions::NotFoundError &) {}
-        } else {
-            _measKey = s;
-            try {
-                _errKey = ErrKey(s, names);
-            } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flag"];
-            } catch (pex::exceptions::NotFoundError &) {}
-        }
-    } catch (pex::exceptions::NotFoundError & err) {
-        if (!alias.empty()) throw;
+    _measKey = MeasKey();
+    _errKey = ErrKey();
+    _flagKey = Key<Flag>();
+    MeasFieldNameGetter helper(s, schema);
+    if (!helper.defined) return;
+    if (schema.getVersion() == 0) {
+        _measKey = MeasKey(Key< Point<double> >(helper.replaced));
+        try {
+            _errKey = ErrKey(Key< Covariance< Point<float> > >(s["err"]));
+        } catch (pex::exceptions::NotFoundError &) {}
+        try {
+            _flagKey = s["flags"];
+        } catch (pex::exceptions::NotFoundError &) {}
+    } else {
+        _measKey = helper.replaced;
+        try {
+            _errKey = ErrKey(s, names);
+        } catch (pex::exceptions::NotFoundError &) {}
+        try {
+            _flagKey = s["flag"];
+        } catch (pex::exceptions::NotFoundError &) {}
     }
 }
 
@@ -92,26 +115,27 @@ void ShapeSlotDefinition::setKeys(std::string const & alias, Schema const & sche
     SubSchema s = schema["slot"][_name];
     if (!alias.empty() && !startsWith(alias, s.getPrefix())) return;
     static ErrKey::NameArray names = makeShapeNameArray();
-    try {
-        if (schema.getVersion() == 0) {
-            _measKey = MeasKey(Key< Moments<double> >(s));
-            try {
-                _errKey = ErrKey(Key< Covariance< Moments<float> > >(s["err"]));
-            } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flags"];
-            } catch (pex::exceptions::NotFoundError &) {}
-        } else {
-            _measKey = s;
-            try {
-                _errKey = ErrKey(s, names);
-            } catch (pex::exceptions::NotFoundError &) {}
-            try {
-                _flagKey = s["flag"];
-            } catch (pex::exceptions::NotFoundError &) {}
-        }
-    } catch (pex::exceptions::NotFoundError &) {
-        if (!alias.empty()) throw;
+    _measKey = MeasKey();
+    _errKey = ErrKey();
+    _flagKey = Key<Flag>();
+    MeasFieldNameGetter helper(s, schema);
+    if (!helper.defined) return;
+    if (schema.getVersion() == 0) {
+        _measKey = MeasKey(Key< Moments<double> >(helper.replaced));
+        try {
+            _errKey = ErrKey(Key< Covariance< Moments<float> > >(s["err"]));
+        } catch (pex::exceptions::NotFoundError &) {}
+        try {
+            _flagKey = s["flags"];
+        } catch (pex::exceptions::NotFoundError &) {}
+    } else {
+        _measKey = helper.replaced;
+        try {
+            _errKey = ErrKey(s, names);
+        } catch (pex::exceptions::NotFoundError &) {}
+        try {
+            _flagKey = s["flag"];
+        } catch (pex::exceptions::NotFoundError &) {}
     }
 }
 
