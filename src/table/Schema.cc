@@ -746,6 +746,9 @@ struct Stream {
 std::ostream & operator<<(std::ostream & os, Schema const & schema) {
     os << "Schema(\n";
     schema.forEach(Stream(&os));
+    for (auto item : *schema.getAliasMap()) {
+        os << "    '" << item.first << "'->'" << item.second << "'\n";
+    }
     return os << ")\n";
 }
 
