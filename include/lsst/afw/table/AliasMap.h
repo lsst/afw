@@ -97,6 +97,17 @@ public:
      */
     bool erase(std::string const & alias);
 
+    //@{
+    /**
+     *  Equality comparison
+     */
+    bool operator==(AliasMap const & other) const;
+    bool operator!=(AliasMap const & other) const { return !(other == *this); }
+    //@}
+
+    /// Return true if all aliases in this are also in other (with the same targets).
+    bool contains(AliasMap const & other) const;
+
 private:
 
     friend class Schema;

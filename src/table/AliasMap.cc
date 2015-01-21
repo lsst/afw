@@ -91,4 +91,12 @@ bool AliasMap::erase(std::string const & alias) {
     return result;
 }
 
+bool AliasMap::operator==(AliasMap const & other) const {
+    return _internal == other._internal;
+}
+
+bool AliasMap::contains(AliasMap const & other) const {
+    return std::includes(begin(), end(), other.begin(), other.end());
+}
+
 }}} // namespace lsst::afw::table

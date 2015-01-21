@@ -139,6 +139,20 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.schema.getAliasMap().set("a", "t")
         self.assertRaises(lsst.pex.exceptions.RuntimeError, self.schema.find, "t")
 
+    def testSchemaComparison(self):
+        self.assertEqual(self.schema.compare(self.schema, self.schema.EQUAL_ALIASES),
+                         self.schema.EQUAL_ALIASES)
+        self.assertEqual(self.schema.compare(self.schema, self.schema.IDENTICAL), self.schema.IDENTICAL)
+        copy = lsst.afw.table.Schema(self.schema)
+        copy.disconnectAliases()
+        self.assertEqual(self.schema.getAliasMap(), copy.getAliasMap())
+        copy.getAliasMap().erase("q")
+        self.assertNotEqual(self.schema.getAliasMap(), copy.getAliasMap())
+        self.assertEqual(self.schema.compare(copy, self.schema.EQUAL_ALIASES), 0)
+        self.assertEqual(self.schema.compare(copy, self.schema.IDENTICAL), self.schema.EQUAL_FIELDS)
+        self.assertEqual(self.schema.contains(copy, self.schema.EQUAL_ALIASES), self.schema.EQUAL_ALIASES)
+        self.assertEqual(self.schema.contains(copy, self.schema.IDENTICAL), self.schema.IDENTICAL)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
