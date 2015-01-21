@@ -407,6 +407,19 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         record.setId(15)
         self.assertEqual(cat[0].getId(), record.getId())
 
+    def testSlotUndefine(self):
+        """Test that we can correctly define and undefine a slot after a SourceTable has been created"""
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        schema.setVersion(1)
+        key = schema.addField("a_flux", type=float, doc="flux field")
+        table = lsst.afw.table.SourceTable.make(schema)
+        table.definePsfFlux("a")
+        self.assertEqual(table.getPsfFluxKey(), key)
+        table.schema.getAliasMap().erase("slot_PsfFlux")
+        print dict(table.schema.getAliasMap())
+
+        self.assertFalse(table.getPsfFluxKey().isValid())
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
