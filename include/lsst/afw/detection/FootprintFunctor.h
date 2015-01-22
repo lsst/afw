@@ -125,7 +125,7 @@ public:
     /// if it exists (i.e. they obey getX0/getY0)
     virtual void operator()(typename ImageT::xy_locator loc, int x, int y) = 0;
 private:
-    ImageT const& _image;               // The image that the Footprints live in
+    ImageT const _image;               // The image that the Footprints live in
 };
 
 ///
