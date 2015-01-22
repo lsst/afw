@@ -448,8 +448,6 @@ namespace {
         
         int numGoodPixels = 0;
 
-        typedef afwImage::Image<afwMath::Kernel::Pixel> KernelImageT;
-
         // Get the source MaskedImage and a pixel accessor to it.
         int const srcWidth = srcImage.getWidth();
         int const srcHeight = srcImage.getHeight();

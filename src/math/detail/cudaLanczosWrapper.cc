@@ -453,9 +453,6 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     int const maxCol = destWidth - 1;
     int const maxRow = destHeight - 1;
 
-    typedef typename DestImageT::SinglePixel DestPixelT;
-    typedef typename  SrcImageT::SinglePixel SrcPixelT;
-
 #ifdef GPU_BUILD
     // Compute borders; use to prevent applying kernel outside of srcImage
     afwGeom::Box2I srcGoodBBox = lanczosKernel.shrinkBBox(srcImage.getBBox(afwImage::LOCAL));
