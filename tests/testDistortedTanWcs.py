@@ -75,17 +75,51 @@ class DistortedTanWcsTestCase(unittest.TestCase):
     def tearDown(self):
         del self.tanWcs
 
-    def testTransform(self):
+    def testBasics(self):
         pixelToTanPixel = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
         distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelToTanPixel)
+        tanWcsCopy = distortedWcs.getTanWcs()
+
+        self.assertEqual(self.tanWcs, tanWcsCopy)
+        self.assertFalse(self.tanWcs.hasDistortion())
+        self.assertTrue(distortedWcs.hasDistortion())
+        try:
+            self.tanWcs == distortedWcs
+            self.fail("== should not be implemented for DistortedTanWcs")
+        except Exception:
+            pass
+        try:
+            distortedWcs == self.tanWcs
+            self.fail("== should not be implemented for DistortedTanWcs")
+        except Exception:
+            pass
+
+    def testTransform(self):
+        """Test pixelToSky, skyToPixel, getTanWcs and getPixelToTanPixel
+        """
+        pixelToTanPixel = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
+        distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelToTanPixel)
+        tanWcsCopy = distortedWcs.getTanWcs()
+        pixToTanCopy = distortedWcs.getPixelToTanPixel()
 
         for x in (0, 1000, 5000):
             for y in (0, 560, 2000):
                 pixPos = afwGeom.Point2D(x, y)
                 tanPixPos = pixelToTanPixel.forwardTransform(pixPos)
+
+                tanPixPosCopy = pixToTanCopy.forwardTransform(pixPos)
+                self.assertEqual(tanPixPos, tanPixPosCopy)
+
                 predSky = self.tanWcs.pixelToSky(tanPixPos)
+                predSkyCopy = tanWcsCopy.pixelToSky(tanPixPos)
+                self.assertEqual(predSky, predSkyCopy)
+
                 measSky = distortedWcs.pixelToSky(pixPos)
                 self.assertLess(predSky.angularSeparation(measSky).asRadians(), 1e-7)
+
+                pixPosRoundTrip = distortedWcs.skyToPixel(measSky)
+                for i in range(2):
+                    self.assertAlmostEqual(pixPos[i], pixPosRoundTrip[i])
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
