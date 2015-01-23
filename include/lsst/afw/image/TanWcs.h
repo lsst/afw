@@ -161,6 +161,13 @@ public:
         Eigen::MatrixXd const & sipBp
     );
 
+protected:
+
+    TanWcs(TanWcs const & rhs);
+
+    virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
+    virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
+
 private:
 
     friend PTR(Wcs) makeWcs(PTR(daf::base::PropertySet) const& metadata, bool);
@@ -184,14 +191,9 @@ private:
      */
     TanWcs(CONST_PTR(daf::base::PropertySet) const & fitsMetadata);
 
-    TanWcs(TanWcs const & rhs);
-
     TanWcs(afw::table::BaseRecord const & mainRecord, CONST_PTR(afw::table::BaseRecord) sipRecord);
 
     TanWcs & operator = (const TanWcs &);
-
-    virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
-    virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
     //Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::TanWcsFormatter)
