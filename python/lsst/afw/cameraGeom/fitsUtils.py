@@ -105,8 +105,8 @@ class DetectorBuilder(object):
 
         if self.inAmpCoords:
             #Deal with DMT to get flipX and flipY for assembly and add as 'FLIPX', 'FLIPY'
-            dmt1 = getByKey('DTM0_0', metadata)
-            dmt2 = getByKey('DTM1_1', metadata)
+            dmt1 = getByKey('DTM1_1', metadata)
+            dmt2 = getByKey('DTM2_2', metadata)
             if dmt1 is not None and dmt2 is not None:
                 setByKey('FLIPX', dmt1 < 0, metadata, clobber)
                 setByKey('FLIPY', dmt2 < 0, metadata, clobber)
@@ -160,8 +160,8 @@ class DetectorBuilder(object):
                    ('FLIPY', 'setRawFlipY', False),
                    ('XYOFF', 'setRawXYOffset', [0,0], self._makeExt),
                    ('HOSCAN', 'setRawHorizontalOverscanBBox', emptyBBox, self._makeBbox),
-                   ('VOSCAN', 'setRawHorizontalOverscanBBox', emptyBBox, self._makeBbox),
-                   ('PRESCAN', 'setRawHorizontalOverscanBBox', emptyBBox, self._makeBbox),
+                   ('VOSCAN', 'setRawVerticalOverscanBBox', emptyBBox, self._makeBbox),
+                   ('PRESCAN', 'setRawPrescanBBox', emptyBBox, self._makeBbox),
                    ]
         for tup in mapList:
             hMap.addEntry(*tup)
@@ -211,7 +211,7 @@ class DetectorBuilder(object):
         xmin, xmax, ymin, ymax = [int(el) for el in re.split('[:,]', boxString.strip()[1:-1])]
         xext = xmax - xmin
         yext = ymax - ymin
-        return afwGeom.BoxI(afwGeom.PointI(xmin-1, ymin-1), afwGeom.ExtentI(xext, yext))
+        return afwGeom.BoxI(afwGeom.PointI(xmin-1, ymin-1), afwGeom.ExtentI(xext+1, yext+1))
 
     def _getBboxX0(self, boxString):
         return self._makeBbox(boxString).getMinX()
@@ -248,6 +248,7 @@ class DetectorBuilder(object):
         for ampMetadata in self.ampMetadataList:
             record = ampInfo.addNew()
             self.defaultAmpMap.setAttributes(record, ampMetadata)
+            record.setHasRawInfo(True)
 
         detConfig = afwCameraGeom.DetectorConfig()
         self.defaultDetectorMap.setAttributes(detConfig, self.detectorMetadata)
@@ -271,11 +272,13 @@ class DetectorBuilder(object):
         if variance is None:
             variance = im
         mi = afwImage.makeMaskedImage(im, mask, variance)
-        detector = self.makeDetector()
+        detector = self.buildDetector()
 
-        wcs = afwImage.makeWcsFromMetadata(self.detectorMetadata)
-        calib = self.makeCalib()
-        exp = afwImage.makeExposure(mi, calib, wcs, detector)
+        wcs = afwImage.makeWcs(self.detectorMetadata)
+        #calib = self.makeCalib()
+        exp = afwImage.makeExposure(mi, wcs)
+        #exp.setCalib(calib)
+        exp.setDetector(detector)
         return exp
 
 def makeCamera(detectorList, camConfig):
