@@ -297,9 +297,6 @@ private:
                     std::string const & cunits1, std::string const & cunits2
                    );
 
-    virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
-    virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
-
 protected:
 
     friend class WcsFactory;
@@ -324,6 +321,9 @@ protected:
     
     Wcs(Wcs const & rhs);
     Wcs& operator= (const Wcs &);        
+
+    virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
+    virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
     
     afw::coord::Coord::Ptr makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
 

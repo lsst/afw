@@ -35,12 +35,15 @@
 #include "boost/shared_ptr.hpp"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/DistortedTanWcs.h"
 %}
 
 %shared_ptr(lsst::afw::image::XYTransformFromWcsPair);
+%shared_ptr(lsst::afw::image::DistortedTanWcs);
 
 %include "lsst/afw/image/Wcs.h"
 %include "lsst/afw/image/TanWcs.h"
+%include "lsst/afw/image/DistortedTanWcs.h"
 
 %lsst_persistable(lsst::afw::image::Wcs);
 %lsst_persistable(lsst::afw::image::TanWcs);
@@ -102,3 +105,4 @@
 // ----------------------------------------------------------
 
 %castShared(lsst::afw::image::TanWcs, lsst::afw::image::Wcs)
+%castShared(lsst::afw::image::DistortedTanWcs, lsst::afw::image::Wcs)

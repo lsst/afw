@@ -5,6 +5,7 @@
 *.pyc
 *_wrap.cc
 *Lib.py
+_build.*
 *~
 core.*
 .sconf_temp

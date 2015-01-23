@@ -34,6 +34,7 @@
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/DistortedTanWcs.h"
 #include "lsst/afw/image/Exposure.h"    // Exposure.h brings in almost everything
 #include "lsst/afw/image/ImageAlgorithm.h"
 #include "lsst/afw/image/ImagePca.h"
