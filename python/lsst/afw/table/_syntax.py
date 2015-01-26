@@ -81,18 +81,23 @@ def Schema_extract(self, *patterns, **kwds):
     if kwds:
         raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
     for item in self:
-        name = item.field.getName()
-        if regex is not None:
-            m = re.match(regex, name)
-            if m is not None:
-                if sub is not None:
-                    name = m.expand(sub)
-                d[name] = item
-                continue # continue outer loop so we don't match the same name twice
-        for pattern in patterns:
-            if fnmatch.fnmatchcase(item.field.getName(), pattern):
-                d[name] = item
-                break # break inner loop so we don't match the same name twice
+        trueName = item.field.getName()
+        names = [trueName]
+        for alias, target in self.getAliasMap().iteritems():
+            if trueName.startswith(target):
+                names.append(trueName.replace(target, alias, 1))
+        for name in names:
+            if regex is not None:
+                m = re.match(regex, name)
+                if m is not None:
+                    if sub is not None:
+                        name = m.expand(sub)
+                    d[name] = item
+                    continue # continue middle loop so we don't match the same name twice
+            for pattern in patterns:
+                if fnmatch.fnmatchcase(item.field.getName(), pattern):
+                    d[name] = item
+                    break # break inner loop so we don't match the same name twice
     return d
 
 def BaseRecord_extract(self, *patterns, **kwds):
