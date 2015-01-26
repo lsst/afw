@@ -353,6 +353,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             if "copy" in kwds or idx is boolIdx:
                 for col in d.values():
                     self.assert_(col.flags.c_contiguous)
+        # Test that aliases are included in extract()
+        schema.getAliasMap().set("b_f", "a_b")
+        d = schema.extract("b_f*")
+        self.assertEqual(sorted(d.keys()), ["b_f_c1", "b_f_c2"])
 
     def testExtend(self):
         schema1 = lsst.afw.table.SourceTable.makeMinimalSchema()
@@ -660,7 +664,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat.writeFits(filename)
         if pyfits is not None:
             fits = pyfits.open(filename)
-            print repr(fits[1].header)
             self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
             self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
             self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
