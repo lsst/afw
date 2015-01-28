@@ -208,10 +208,12 @@ class DetectorBuilder(object):
            @return    Box2I for the bounding box
         """
         #strip off brackets and split into parts
-        xmin, xmax, ymin, ymax = [int(el) for el in re.split('[:,]', boxString.strip()[1:-1])]
-        xext = xmax - xmin
-        yext = ymax - ymin
-        return afwGeom.BoxI(afwGeom.PointI(xmin-1, ymin-1), afwGeom.ExtentI(xext+1, yext+1))
+        x1, x2, y1, y2 = [int(el) for el in re.split('[:,]', boxString.strip()[1:-1])]
+        box = afwGeom.BoxI(afwGeom.PointI(x1, y1), afwGeom.PointI(x2, y2))
+        #account for the differenc in 
+        box.shift(afwGeom.Extent2I(-1, -1))
+        return box
+
 
     def _getBboxX0(self, boxString):
         return self._makeBbox(boxString).getMinX()
