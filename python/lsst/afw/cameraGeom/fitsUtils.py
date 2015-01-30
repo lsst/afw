@@ -264,3 +264,52 @@ class DetectorBuilder(object):
         """
         pScaleRad = afwGeom.arcsecToRad(self.plateScale)
         return afwGeom.RadialXYTransform([el/pScaleRad for el in radialCoeffs])
+
+    def buildDetector(self):
+        """Take all the information and build a Detector object.  The Detector object is necessary for doing
+        things like assembly.
+        @return  Detector object
+        """
+        if self.detector is not None:
+            return self.detector
+
+        schema = afwTable.AmpInfoTable.makeMinimalSchema()
+        ampInfo = afwTable.AmpInfoCatalog(schema)
+        for ampMetadata in self.ampMetadataList:
+            record = ampInfo.addNew()
+            self.defaultAmpMap.setAttributes(record, ampMetadata, self.doRaise)
+            record.setHasRawInfo(True)
+
+        detConfig = afwCameraGeom.DetectorConfig()
+        self.defaultDetectorMap.setAttributes(detConfig, self.detectorMetadata, self.doRaise)
+        self.detector = afwCameraGeom.makeDetector(detConfig, ampInfo, self.focalPlaneToPupil,
+                self.plateScale)
+        return self.detector
+
+    def makeCalib(self):
+        """PLaceholder for subclasses to implement construction of a calib to associate with the exposure.
+        @return empty afwImage.Calib object
+        """
+        return afwImage.Calib()
+
+    def makeExposure(self, im, mask=None, variance=None):
+        """Method for constructing an exposure object from an image and the information contained in this
+           class to construct the Detector and Calib objects.
+           @param[in]  im        Image used to construct the exposure
+           @param[in]  mask      Optional mask plane as a <askU
+           @param[in]  variance  Optional variance plance as an image of the same type as im
+           @param[out] Exposure object
+        """
+        if mask is None:
+            mask = afwImage.MaskU(im.getDimensions())
+        if variance is None:
+            variance = im
+        mi = afwImage.makeMaskedImage(im, mask, variance)
+        detector = self.buildDetector()
+
+        wcs = afwImage.makeWcs(self.detectorMetadata)
+        calib = self.makeCalib()
+        exp = afwImage.makeExposure(mi, wcs)
+        exp.setCalib(calib)
+        exp.setDetector(detector)
+        return exp
