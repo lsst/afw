@@ -1,4 +1,4 @@
-import re
+import re, warnings
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 import lsst.afw.cameraGeom as afwCameraGeom
@@ -30,41 +30,48 @@ class HeaderMap(dict):
                                          'default':default,
                                          'transform':transform})
 
-    def setAttributes(self, obj, metadata):
+    def setAttributes(self, obj, metadata, doRaise):
         """Sets the attributes on the give object given a metadata object.
            @param[in, out] obj       Object on which to operate in place
            @param[in]      metadata  Metadata object used for applying the mapping
+           @param[in]      doRaise   Raise exceptions on calling methods on the input object that do not exist?
         """
         for key, attrDict in self.iteritems():
-            value = getByKey(attrDict['keyName'], metadata)
-            if value is not None:
-                self._applyVal(obj, value, key, attrDict['transform'])
-            else:
-                #Only apply transform if the metadata has a value for this key
-                #otherwise assume the default value is transformed.
-                value = attrDict['default']
-                self._applyVal(obj, value, key, lambda x: x)
+            try:
+                value = getByKey(attrDict['keyName'], metadata)
+                if value is not None:
+                    self._applyVal(obj, value, key, attrDict['transform'])
+                else:
+                    #Only apply transform if the metadata has a value for this key
+                    #otherwise assume the default value is transformed.
+                    value = attrDict['default']
+                    self._applyVal(obj, value, key, lambda x: x)
+            except Exception, e:
+                if doRaise:
+                    raise
+                else:
+                    warnings.warn('WARNING: Failed to set %s attribute with %s value'%(key, value))
 
-    def _applyVal(self, obj, value, attrName, transform):
+    def _applyVal(self, obj, value, attrName, transform, doRaise):
         raise NotImplementedError('Must be implemented in sub-class')
 
 class HeaderAmpMap(HeaderMap):
     """ Class to hold mapping of header cards to AmpInfoTable attributes
         The amp info is stored using setters, thus calling the attribute as a function.
     """
-    def _applyVal(self, obj, value, attrName, transform):
+    def _applyVal(self, obj, value, attrName, transform, doRaise):
         getattr(obj, attrName)(transform(value))
 
 class HeaderDetectorMap(HeaderMap):
     """ Class to hold mapping of header cards to Detector attributes
         Detector information is stored as attributes on a Config object.
     """
-    def _applyVal(self, obj, value, attrName, transform):
+    def _applyVal(self, obj, value, attrName, transform, doRaise):
         obj.__setattr__(attrName, transform(value))
 
 class DetectorBuilder(object):
     def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1., 
-                 radialCoeffs=(0., 1.), clobberMetadata=False):
+                 radialCoeffs=(0., 1.), clobberMetadata=False, doRaise=True):
         ''' @param[in] detectorFileName  FITS file containing the detector description. 
                                          May use [] notation to specify an extension in an MEF.
             @param[in] ampFileNameList   List of FITS file names to use in building the amps.
@@ -74,6 +81,8 @@ class DetectorBuilder(object):
             @param[in] plateScale        Nominal platescale (arcsec/mm)
             @param[in] radialCoeffs      Radial distortion coefficients for a radial polynomial in normalized
                                          units.
+            @param[in] clobberMetadata   Clobber metadata from input files if overridden in the _sanitizeMetadata method
+            @param[in] doRaise           Raise exception if not all non-defaulted keywords are defined?  Default is True.
         '''
         self.inAmpCoords = inAmpCoords
         self.defaultAmpMap = self._makeDefaultAmpMap()
@@ -82,6 +91,7 @@ class DetectorBuilder(object):
         self._sanitizeHeaderMetadata(self.detectorMetadata, clobber=clobberMetadata)
         self.ampMetadataList = []
         self.detector = None
+        self.doRaise = doRaise
         for fileName in ampFileNameList:
             self.ampMetadataList.append(afwImage.readMetadata(fileName))
             self._sanitizeHeaderMetadata(self.ampMetadataList[-1], clobber=clobberMetadata)
@@ -249,11 +259,11 @@ class DetectorBuilder(object):
         ampInfo = afwTable.AmpInfoCatalog(schema)
         for ampMetadata in self.ampMetadataList:
             record = ampInfo.addNew()
-            self.defaultAmpMap.setAttributes(record, ampMetadata)
+            self.defaultAmpMap.setAttributes(record, ampMetadata, self.doRaise)
             record.setHasRawInfo(True)
 
         detConfig = afwCameraGeom.DetectorConfig()
-        self.defaultDetectorMap.setAttributes(detConfig, self.detectorMetadata)
+        self.defaultDetectorMap.setAttributes(detConfig, self.detectorMetadata, self.doRaise)
         self.detector = afwCameraGeom.makeDetector(detConfig, ampInfo, self.focalPlaneToPupil,
                 self.plateScale)
         return self.detector
