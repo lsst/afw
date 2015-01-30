@@ -259,7 +259,10 @@ class DetectorBuilder(object):
         return self.detector
 
     def makeCalib(self):
-        raise NotImplementedError()
+        """PLaceholder for subclasses to implement construction of a calib to associate with the exposure.
+        @return empty afwImage.Calib object
+        """
+        return afwImage.Calib()
 
     def makeExposure(self, im, mask=None, variance=None):
         """Method for constructing an exposure object from an image and the information contained in this
@@ -277,11 +280,8 @@ class DetectorBuilder(object):
         detector = self.buildDetector()
 
         wcs = afwImage.makeWcs(self.detectorMetadata)
-        #calib = self.makeCalib()
+        calib = self.makeCalib()
         exp = afwImage.makeExposure(mi, wcs)
-        #exp.setCalib(calib)
+        exp.setCalib(calib)
         exp.setDetector(detector)
         return exp
-
-def makeCamera(detectorList, camConfig):
-    raise NotImplementedError()
