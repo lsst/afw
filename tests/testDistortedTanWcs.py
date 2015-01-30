@@ -51,21 +51,14 @@ class DistortedTanWcsTestCase(unittest.TestCase):
 
         metadata = dafBase.PropertySet()
 
-        metadata.set("SIMPLE",                    "T") 
-        metadata.set("BITPIX",                  -32) 
-        metadata.set("NAXIS",                    2) 
-        metadata.set("NAXIS1",                 1024) 
-        metadata.set("NAXIS2",                 1153) 
         metadata.set("RADECSYS", 'FK5')
         metadata.set("EQUINOX",                2000.)
-
         metadata.setDouble("CRVAL1",     215.604025685476)
         metadata.setDouble("CRVAL2",     53.1595451514076)
         metadata.setDouble("CRPIX1",     1109.99981456774)
         metadata.setDouble("CRPIX2",     560.018167811613)
         metadata.set("CTYPE1", "RA---TAN")
         metadata.set("CTYPE2", "DEC--TAN")
-
         metadata.setDouble("CD1_1", 5.10808596133527E-05)
         metadata.setDouble("CD1_2", 1.85579539217196E-07)
         metadata.setDouble("CD2_2", -5.10281493481982E-05)
@@ -76,8 +69,8 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         del self.tanWcs
 
     def testBasics(self):
-        pixelToTanPixel = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
-        distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelToTanPixel)
+        pixelsToTanPixels = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
+        distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelsToTanPixels)
         tanWcsCopy = distortedWcs.getTanWcs()
 
         self.assertEqual(self.tanWcs, tanWcsCopy)
@@ -97,15 +90,15 @@ class DistortedTanWcsTestCase(unittest.TestCase):
     def testTransform(self):
         """Test pixelToSky, skyToPixel, getTanWcs and getPixelToTanPixel
         """
-        pixelToTanPixel = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
-        distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelToTanPixel)
+        pixelsToTanPixels = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
+        distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelsToTanPixels)
         tanWcsCopy = distortedWcs.getTanWcs()
         pixToTanCopy = distortedWcs.getPixelToTanPixel()
 
         for x in (0, 1000, 5000):
             for y in (0, 560, 2000):
                 pixPos = afwGeom.Point2D(x, y)
-                tanPixPos = pixelToTanPixel.forwardTransform(pixPos)
+                tanPixPos = pixelsToTanPixels.forwardTransform(pixPos)
 
                 tanPixPosCopy = pixToTanCopy.forwardTransform(pixPos)
                 self.assertEqual(tanPixPos, tanPixPosCopy)

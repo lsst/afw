@@ -30,10 +30,10 @@ namespace image {
 
     DistortedTanWcs::DistortedTanWcs(
         TanWcs const &tanWcs,
-        geom::XYTransform const &pixelToTanPixel
+        geom::XYTransform const &pixelsToTanPixels
     ) : 
         TanWcs(tanWcs),
-        _pixelToTanPixelPtr(pixelToTanPixel.clone())
+        _pixelsToTanPixelsPtr(pixelsToTanPixels.clone())
     {
         if (tanWcs.hasDistortion()) {
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "tanWcs has distortion terms");
@@ -64,7 +64,7 @@ namespace image {
     */
     geom::Point2D DistortedTanWcs::skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const {
         geom::Point2D tanPos = TanWcs::skyToPixelImpl(sky1, sky2);
-        return _pixelToTanPixelPtr->reverseTransform(tanPos);
+        return _pixelsToTanPixelsPtr->reverseTransform(tanPos);
     }
 
     /**
@@ -76,7 +76,7 @@ namespace image {
     */
     void DistortedTanWcs::pixelToSkyImpl(double pixel1, double pixel2, geom::Angle sky[2]) const {
         auto pos = geom::Point2D(pixel1, pixel2);
-        auto tanPos = _pixelToTanPixelPtr->forwardTransform(pos);
+        auto tanPos = _pixelsToTanPixelsPtr->forwardTransform(pos);
         TanWcs::pixelToSkyImpl(tanPos[0], tanPos[1], sky);
     }
 

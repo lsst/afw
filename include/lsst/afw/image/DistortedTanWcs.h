@@ -52,16 +52,16 @@ public:
      * @brief Construct a DistortedTanWcs
      *
      * @param[in] tanWcs  pure tangent-plane WCS
-     * @param[in] pixelToTanPixel  an XYTransform that converts from PIXEL to TAN_PIXEL coordinates
+     * @param[in] pixelsToTanPixels  an XYTransform that converts from PIXELS to TAN_PIXELS coordinates
      *              in the forward direction. This can be obtained from an exposure using:
      *                  detector = exposure.getDetector()
-     *                  pixelToTanPixel = detector.getTransformMap()[lsst.afw.cameraGeom.TAN_PIXEL]
+     *                  pixelsToTanPixels = detector.getTransformMap()[lsst.afw.cameraGeom.TAN_PIXELS]
      *
      * @throw pex::exceptions::InvalidParameterError if tanWcs.hasDistortion()
      */
     DistortedTanWcs(
         TanWcs const &tanWcs,
-        geom::XYTransform const &pixelToTanPixel
+        geom::XYTransform const &pixelsToTanPixels
     );
 
     virtual ~DistortedTanWcs() {};
@@ -85,8 +85,8 @@ public:
     /// return the pure tan WCS component
     PTR(Wcs) getTanWcs() const { return TanWcs::clone(); }
 
-    /// return the PIXEL to TAN_PIXEL XYTransform
-    PTR(geom::XYTransform) getPixelToTanPixel() const { return _pixelToTanPixelPtr->clone(); }
+    /// return the PIXELS to TAN_PIXELS XYTransform
+    PTR(geom::XYTransform) getPixelToTanPixel() const { return _pixelsToTanPixelsPtr->clone(); }
 
 protected:
 
@@ -95,7 +95,7 @@ protected:
 
 private:
 
-    PTR(geom::XYTransform) _pixelToTanPixelPtr;     /// XYTransform that converts from PIXEL to TAN_PIXEL
+    PTR(geom::XYTransform) _pixelsToTanPixelsPtr;     /// XYTransform that converts from PIXELS to TAN_PIXELS
         /// coordinates in the forward direction
 
 };
