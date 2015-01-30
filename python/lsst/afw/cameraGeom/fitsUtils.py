@@ -30,7 +30,7 @@ class HeaderMap(dict):
                                          'default':default,
                                          'transform':transform})
 
-    def setAttributes(self, obj, metadata, doRaise):
+    def setAttributes(self, obj, metadata, doRaise=True):
         """Sets the attributes on the give object given a metadata object.
            @param[in, out] obj       Object on which to operate in place
            @param[in]      metadata  Metadata object used for applying the mapping
@@ -52,21 +52,21 @@ class HeaderMap(dict):
                 else:
                     warnings.warn('WARNING: Failed to set %s attribute with %s value'%(key, value))
 
-    def _applyVal(self, obj, value, attrName, transform, doRaise):
+    def _applyVal(self, obj, value, attrName, transform):
         raise NotImplementedError('Must be implemented in sub-class')
 
 class HeaderAmpMap(HeaderMap):
     """ Class to hold mapping of header cards to AmpInfoTable attributes
         The amp info is stored using setters, thus calling the attribute as a function.
     """
-    def _applyVal(self, obj, value, attrName, transform, doRaise):
+    def _applyVal(self, obj, value, attrName, transform):
         getattr(obj, attrName)(transform(value))
 
 class HeaderDetectorMap(HeaderMap):
     """ Class to hold mapping of header cards to Detector attributes
         Detector information is stored as attributes on a Config object.
     """
-    def _applyVal(self, obj, value, attrName, transform, doRaise):
+    def _applyVal(self, obj, value, attrName, transform):
         obj.__setattr__(attrName, transform(value))
 
 class DetectorBuilder(object):
@@ -168,7 +168,7 @@ class DetectorBuilder(object):
                    ('DATASEC', 'setRawDataBBox', None, self._makeBbox),
                    ('FLIPX', 'setRawFlipX', False),
                    ('FLIPY', 'setRawFlipY', False),
-                   ('XYOFF', 'setRawXYOffset', [0,0], self._makeExt),
+                   ('XYOFF', 'setRawXYOffset', afwGeom.ExtentI(0,0), self._makeExt),
                    ('HOSCAN', 'setRawHorizontalOverscanBBox', emptyBBox, self._makeBbox),
                    ('VOSCAN', 'setRawVerticalOverscanBBox', emptyBBox, self._makeBbox),
                    ('PRESCAN', 'setRawPrescanBBox', emptyBBox, self._makeBbox),
@@ -183,10 +183,10 @@ class DetectorBuilder(object):
         """
         hMap = HeaderDetectorMap()
         mapList = [('CCDNAME', 'name', 'ccdName'),
-                   ('DETSIZE', 'bbox_x0', None, self._getBboxX0),
-                   ('DETSIZE', 'bbox_y0', None, self._getBboxY0),
-                   ('DETSIZE', 'bbox_x1', None, self._getBboxX1),
-                   ('DETSIZE', 'bbox_y1', None, self._getBboxY1),
+                   ('DETSIZE', 'bbox_x0', 0, self._getBboxX0),
+                   ('DETSIZE', 'bbox_y0', 0, self._getBboxY0),
+                   ('DETSIZE', 'bbox_x1', 0, self._getBboxX1),
+                   ('DETSIZE', 'bbox_y1', 0, self._getBboxY1),
                    ('DETID', 'id', 0),
                    ('OBSTYPE', 'detectorType', afwCameraGeom.SCIENCE),
                    ('SERSTR', 'serial', 'none'),

@@ -110,7 +110,7 @@ class FitsUtilsTestCase(unittest.TestCase):
         #test that it raises without setting non-defaulted keywords
         self.assertRaises(Exception, DetectorBuilder('testfitsutils.fits', ['testfitsutils.fits', 'testfitsutils.fits']))
         #ignore non-defaulted keywords
-        DetectorBuilder('testfitsutils.fits', ['testfitsutils.fits', 'testfitsutils.fits'], doRaise=False)
+        detBuilder = DetectorBuilder('testfitsutils.fits', ['testfitsutils.fits', ], doRaise=False)
         calib = detBuilder.makeCalib()
         exp = detBuilder.makeExposure(afwImage.ImageF(10,10), afwImage.MaskU(10,10), afwImage.ImageF(10,10))
 
