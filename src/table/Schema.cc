@@ -686,24 +686,33 @@ int Schema::contains(Schema const & other, int flags) const {
     if (_impl == other._impl) return flags;
     if (_impl->getItems().size() < other._impl->getItems().size()) return 0;
     int result = flags;
-    for (
-        Impl::ItemContainer::const_iterator i1 = _impl->getItems().begin(),
-            i2 = other._impl->getItems().begin();
-        i2 != other._impl->getItems().end();
-        ++i1, ++i2
-    ) {
-        if ((result & EQUAL_KEYS) && !ItemFunctors::compareKeys(*i1, *i2)) result &= ~EQUAL_KEYS;
-        if ((result & EQUAL_NAMES) && !ItemFunctors::compareNames(*i1, *i2)) result &= ~EQUAL_NAMES;
-        if ((result & EQUAL_DOCS) && !ItemFunctors::compareDocs(*i1, *i2)) result &= ~EQUAL_DOCS;
-        if ((result & EQUAL_UNITS) && !ItemFunctors::compareUnits(*i1, *i2)) result &= ~EQUAL_UNITS;
-        if (!result) break;
+    if (result & EQUAL_FIELDS) {
+        for (
+            Impl::ItemContainer::const_iterator i1 = _impl->getItems().begin(),
+                i2 = other._impl->getItems().begin();
+            i2 != other._impl->getItems().end();
+            ++i1, ++i2
+        ) {
+            if ((result & EQUAL_KEYS) && !ItemFunctors::compareKeys(*i1, *i2)) result &= ~EQUAL_KEYS;
+            if ((result & EQUAL_NAMES) && !ItemFunctors::compareNames(*i1, *i2)) result &= ~EQUAL_NAMES;
+            if ((result & EQUAL_DOCS) && !ItemFunctors::compareDocs(*i1, *i2)) result &= ~EQUAL_DOCS;
+            if ((result & EQUAL_UNITS) && !ItemFunctors::compareUnits(*i1, *i2)) result &= ~EQUAL_UNITS;
+            if (!result) break;
+        }
     }
-
+    if ((result & EQUAL_ALIASES) && !getAliasMap()->contains(*other.getAliasMap())) result &= ~EQUAL_ALIASES;
     return result;
 }
 
 int Schema::compare(Schema const & other, int flags) const {
-    return _impl->getItems().size() == other._impl->getItems().size() ? contains(other, flags) : 0;
+    int result = contains(other, flags);
+    if (_impl->getItems().size() != other._impl->getItems().size()) {
+        result &= ~EQUAL_FIELDS;
+    }
+    if (getAliasMap()->size() != other.getAliasMap()->size()) {
+        result &= ~EQUAL_ALIASES;
+    }
+    return result;
 }
 
 template <typename T>
@@ -746,6 +755,9 @@ struct Stream {
 std::ostream & operator<<(std::ostream & os, Schema const & schema) {
     os << "Schema(\n";
     schema.forEach(Stream(&os));
+    for (auto item : *schema.getAliasMap()) {
+        os << "    '" << item.first << "'->'" << item.second << "'\n";
+    }
     return os << ")\n";
 }
 

@@ -62,7 +62,9 @@ public:
         EQUAL_NAMES        =0x02, ///< Fields have the same names (ordered).
         EQUAL_DOCS         =0x04, ///< Fields have the same documentation (ordered).
         EQUAL_UNITS        =0x08, ///< Fields have the same units (ordered).
-        IDENTICAL          =0x0F  ///< Everything is the same.
+        EQUAL_FIELDS       =0x0F, ///< Fields are identical (but aliases may not be).
+        EQUAL_ALIASES      =0x10, ///< Schemas have identical AliasMaps
+        IDENTICAL          =0x1F  ///< Everything is the same.
     };
 
     //@{

@@ -194,6 +194,7 @@ std::set<std::string> const &, std::set<std::string> &, std::set<std::string> co
 %template(AliasMapInternal) std::map<std::string,std::string>;
 %shared_ptr(lsst::afw::table::AliasMap);
 %include "lsst/afw/table/AliasMap.h"
+%useValueEquality(lsst::afw::table::AliasMap)
 %extend lsst::afw::table::AliasMap {
 %pythoncode %{
 
