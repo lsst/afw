@@ -279,8 +279,9 @@ public:
         geom::AngleUnit skyUnit = geom::degrees
     ) const;
 
-    //Mutators
-    void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
+    // Mutators; the first one is virtual, even though it will never be overridden,
+    // to make sure subclasses use the correct version of both
+    virtual void shiftReferencePixel(geom::Extent2D const & d) { shiftReferencePixel(d.getX(), d.getY()); }
     virtual void shiftReferencePixel(double dx, double dy);
 
     /// @brief Whether the Wcs is persistable using afw::table::io archives.
