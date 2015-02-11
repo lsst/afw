@@ -78,6 +78,9 @@ public:
     /// @warning not implemented
     virtual void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const;
 
+    /// @warning not implemented
+    virtual void shiftReferencePixel(double dx, double dy);
+
     bool isPersistable() const { return false; }
 
     bool hasDistortion() const { return true; }
@@ -90,13 +93,27 @@ public:
 
 protected:
 
+    /**
+    Worker routine for skyToPixel
+
+    @param[in] sky1  sky position, longitude (e.g. RA)
+    @param[in] sky2  sky position, latitude (e.g. dec)
+    */
     virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
+
+    /**
+    Worker routine for pixelToSky
+
+    @param[in] pixel1  pixel position, x
+    @param[in] pixel2  pixel position, y
+    @param[out] sky  sky position (longitude, latitude, e.g. RA, Dec)
+    */
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 
 private:
 
-    PTR(geom::XYTransform) _pixelsToTanPixelsPtr;     /// XYTransform that converts from PIXELS to TAN_PIXELS
-        /// coordinates in the forward direction
+    PTR(geom::XYTransform) _pixelsToTanPixelsPtr;   // XYTransform that converts from PIXELS to TAN_PIXELS 
+                                                    // coordinates in the forward direction
 
 };
 

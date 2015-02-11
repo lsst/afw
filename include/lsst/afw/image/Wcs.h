@@ -281,7 +281,7 @@ public:
 
     //Mutators
     void shiftReferencePixel(geom::Extent2D const & d) {shiftReferencePixel(d.getX(), d.getY());}
-    void shiftReferencePixel(double dx, double dy);
+    virtual void shiftReferencePixel(double dx, double dy);
 
     /// @brief Whether the Wcs is persistable using afw::table::io archives.
     virtual bool isPersistable() const;
