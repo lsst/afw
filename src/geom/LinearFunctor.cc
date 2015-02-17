@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2015 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -21,28 +21,30 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-/************************************************************************************************************/
 
-%{
+#include "boost/make_shared.hpp"
 #include "lsst/afw/geom/Functor.h"
-#include "lsst/afw/geom/XYTransform.h"
-#include "lsst/afw/geom/SeparableXYTransform.h"
-%}
 
-%shared_ptr(lsst::afw::geom::Functor);
-%shared_ptr(lsst::afw::geom::LinearFunctor);
+namespace lsst {
+namespace afw {
+namespace geom {
 
-%shared_ptr(lsst::afw::geom::XYTransform);
-%shared_ptr(lsst::afw::geom::IdentityXYTransform);
-%shared_ptr(lsst::afw::geom::InvertedXYTransform);
-%shared_ptr(lsst::afw::geom::AffineXYTransform);
-%shared_ptr(lsst::afw::geom::RadialXYTransform);
-%shared_ptr(lsst::afw::geom::MultiXYTransform);
-%shared_ptr(lsst::afw::geom::SeparableXYTransform);
+LinearFunctor::LinearFunctor(double slope, double intercept) 
+   : Functor("LinearFunctor"), _slope(slope), _intercept(intercept) {
+}
 
-%template(XYTransformVector) std::vector<CONST_PTR(lsst::afw::geom::XYTransform)>;
+PTR(Functor) LinearFunctor::clone() const {
+   return boost::make_shared<LinearFunctor>(_slope, _intercept);
+}
 
-%include "lsst/afw/geom/Functor.h"
-%include "lsst/afw/geom/XYTransform.h"
-%include "lsst/afw/geom/SeparableXYTransform.h"
+double LinearFunctor::operator()(double x) const {
+   return _slope*x + _intercept;
+}
+
+double LinearFunctor::derivative(double x) const {
+   return _slope;
+}
+
+} // namespace geom
+} // namespace afw
+} // namespace lsst

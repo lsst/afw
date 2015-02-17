@@ -39,6 +39,8 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/XYTransform.h"
+#include "lsst/afw/geom/Functor.h"
+#include "lsst/afw/geom/SeparableXYTransform.h"
 #include "lsst/afw/geom/Polygon.h"
 #include "lsst/afw/geom/TransformMap.h"
 
