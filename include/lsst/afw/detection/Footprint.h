@@ -467,6 +467,12 @@ MaskT setMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
  * \return bitmask
  */
 template<typename MaskT>
+int countMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
+                           Footprint const& footprint,
+                           MaskT const bitmask,
+                           MaskT const ignoreMask);
+
+template<typename MaskT>
 MaskT clearMaskFromFootprint(lsst::afw::image::Mask<MaskT> *mask,
                              Footprint const& footprint,
                              MaskT const bitmask);

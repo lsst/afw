@@ -168,6 +168,7 @@ typedef lsst::afw::geom::Span Span;
     %template(setMaskFromFootprint) lsst::afw::detection::setMaskFromFootprint<PIXEL_TYPE>;
     %template(clearMaskFromFootprint) lsst::afw::detection::clearMaskFromFootprint<PIXEL_TYPE>;
     %template(setMaskFromFootprintList) lsst::afw::detection::setMaskFromFootprintList<PIXEL_TYPE>;
+    %template(countMaskFromFootprint) lsst::afw::detection::countMaskFromFootprint<PIXEL_TYPE>;
 %enddef
 
 %heavyFootprints(I, int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
