@@ -36,7 +36,9 @@ or
 import os
 import os.path
 
+import shutil
 import sys
+import tempfile
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -618,6 +620,19 @@ class DecoratedImageTestCase(unittest.TestCase):
             ds9.mtv(subImageF, frame=1, title="converted subImage")
 
         self.assertEqual(subImage.get(1, 1), subImageF.get(1, 1))
+
+    def testDM882(self):
+        """Test that we can write a dotted header unit to a FITS file. See DM-882."""
+        self.dimage1.getMetadata().add("A.B.C.D", 12345)
+        tempdir = tempfile.mkdtemp()
+        testfile = os.path.join(tempdir, "test.fits")
+        try:
+            self.dimage1.writeFits(testfile)
+            meta = afwImage.readMetadata(testfile)
+            self.assertEqual(meta.get("A.B.C.D"), 12345)
+        finally:
+            shutil.rmtree(tempdir)
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
