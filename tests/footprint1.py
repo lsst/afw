@@ -996,7 +996,7 @@ class FootprintTestCase(tests.TestCase):
         afwDetect.setMaskFromFootprint(mask12b, merge12, 1)
         self.assertEqual(mask12a.getArray().sum(), merge12.getArea())
         self.assertClose(mask12a.getArray(), mask12b.getArray(), rtol=0, atol=0)
-        self.assertRaisesLsstCpp(pexExcept.RuntimeErrorException, parent.include, [child1, child2, child3])
+        self.assertRaisesLsstCpp(pexExcept.RuntimeError, parent.include, [child1, child2, child3])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

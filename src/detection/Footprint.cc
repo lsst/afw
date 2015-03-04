@@ -648,7 +648,7 @@ void Footprint::include(std::vector<PTR(Footprint)> const & others) {
     FootprintSet fpSet(mask, Threshold(bits, Threshold::BITMASK));
     if (fpSet.getFootprints()->size() != 1u) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeErrorException,
+            pex::exceptions::RuntimeError,
             (boost::format("Footprint::include() result is disjoint; got %d distinct Footprints")
              % fpSet.getFootprints()->size()).str()
         );
