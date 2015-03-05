@@ -65,10 +65,9 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
         schema = lsst.afw.table.Schema();
-        schema.setVersion(0)
         fKey0 = functorKeyType.addFields(schema, "a", "x or y", "pixels")
-        xKey = schema.find("a.x").key
-        yKey = schema.find("a.y").key
+        xKey = schema.find("a_x").key
+        yKey = schema.find("a_y").key
         # we create two equivalent functor keys, using the two different constructors
         fKey1 = functorKeyType(xKey, yKey)
         fKey2 = functorKeyType(schema["a"])
@@ -109,11 +108,10 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema();
-        schema.setVersion(0)
         fKey0 = lsst.afw.table.QuadrupoleKey.addFields(schema, "a", "moments", "pixels^2")
-        xxKey = schema.find("a.xx").key
-        yyKey = schema.find("a.yy").key
-        xyKey = schema.find("a.xy").key
+        xxKey = schema.find("a_xx").key
+        yyKey = schema.find("a_yy").key
+        xyKey = schema.find("a_xy").key
         # we create two equivalent functor keys, using the two different constructors
         fKey1 = lsst.afw.table.QuadrupoleKey(xxKey, yyKey, xyKey)
         fKey2 = lsst.afw.table.QuadrupoleKey(schema["a"])
@@ -156,7 +154,6 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testEllipseKey(self):
         schema = lsst.afw.table.Schema();
-        schema.setVersion(1)
         fKey0 = lsst.afw.table.EllipseKey.addFields(schema, "a", "ellipse", "pixels")
         qKey = lsst.afw.table.QuadrupoleKey(schema["a"])
         pKey = lsst.afw.table.Point2DKey(schema["a"])
@@ -203,13 +200,12 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
-        schema.setVersion(0)
         sigmaKeys = []
         covKeys = []
         # we generate a schema with a complete set of fields for the diagonal and some (but not all)
         # of the covariance elements
         for i, pi in enumerate(parameterNames):
-            sigmaKeys.append(schema.addField("a.%sSigma" % pi, type=fieldType, doc="uncertainty on %s" % pi))
+            sigmaKeys.append(schema.addField("a_%sSigma" % pi, type=fieldType, doc="uncertainty on %s" % pi))
             if varianceOnly:
                 continue  # in this case we have fields for only the diagonal
             for pj in parameterNames[:i]:
@@ -218,10 +214,10 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
                 # CovarianceMatrixKey constructor can handle all those possibilities.
                 r = numpy.random.rand()
                 if r < 0.3:
-                    k = schema.addField("a.%s_%s_Cov" % (pi, pj), type=fieldType,
+                    k = schema.addField("a_%s_%s_Cov" % (pi, pj), type=fieldType,
                                         doc="%s,%s covariance" % (pi, pj))
                 elif r < 0.6:
-                    k = schema.addField("a.%s_%s_Cov" % (pj, pi), type=fieldType,
+                    k = schema.addField("a_%s_%s_Cov" % (pj, pi), type=fieldType,
                                         doc="%s,%s covariance" % (pj, pi))
                 else:
                     k = lsst.afw.table.Key[fieldType]()
