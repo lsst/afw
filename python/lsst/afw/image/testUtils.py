@@ -173,8 +173,8 @@ def maskedImagesDiffer(maskedImageArrSet1, maskedImageArrSet2,
                 retStrs.append("%s planes differ: %s" % (planeName, errStr))
     return " | ".join(retStrs)
 
-def assertWcssAlmostEqual(wcs0, wcs1, bbox, maxSkyErr=0.001 * afwGeom.arcseconds, maxPixErr = 0.001,
-    nx = 5, ny = 5, msg="WCSs differ"):
+def assertWcssAlmostEqual(wcs0, wcs1, bbox, maxSkyErr=0.001*afwGeom.arcseconds, maxPixErr=0.001,
+    nx=5, ny=5, msg="WCSs differ"):
     """Assert that two WCSs give nearly equal results for pixelToSky and skyToPixel
 
     @param[in] wcs0  WCS 0 (an lsst.afw.image.Wcs)
