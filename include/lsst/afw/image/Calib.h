@@ -31,6 +31,7 @@
 #ifndef LSST_AFW_IMAGE_CALIB_H
 #define LSST_AFW_IMAGE_CALIB_H
 
+#include <cmath>
 #include <utility>
 #include "boost/shared_ptr.hpp"
 #include "ndarray_fwd.h"
@@ -51,6 +52,29 @@ namespace cameraGeom {
     class Detector;
 }
 namespace image {
+
+static double const JanskysPerABFlux = 3631.0;
+
+/// Compute AB magnitude from flux in Janskys
+inline double abMagFromFlux(double flux) {
+    return -2.5*std::log10(flux/JanskysPerABFlux);
+}
+
+/// Compute AB magnitude error from flux and flux error in Janskys
+inline double abMagErrFromFluxErr(double fluxErr, double flux) {
+    return std::abs(fluxErr/(-0.4*flux*std::log(10)));
+}
+
+/// Compute flux in Janskys from AB magnitude
+inline double fluxFromABMag(double mag) {
+    return std::pow(10.0, -0.4*mag)*JanskysPerABFlux;
+}
+
+/// Compute flux error in Janskys from AB magnitude error and AB magnitude
+inline double fluxErrFromABMagErr(double magErr, double mag) {
+    return std::abs(-0.4*magErr*fluxFromABMag(mag)*std::log(10.0));
+}
+
 /**
  * Describe an exposure's calibration
  */
