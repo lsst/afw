@@ -44,11 +44,11 @@
         return swig::make_output_iterator(self->begin(), self->begin(), self->end(), *PYTHON_SELF);
     }
 
-    %pythoncode {
+    %pythoncode %{
     def __len__(self):
         return self.getWidth()
     def __str__(self):
         """Print this Span"""
         return self.toString()
-    }
+    %}
 }

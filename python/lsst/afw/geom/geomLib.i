@@ -103,64 +103,64 @@ Python interface to lsst::afw::geom classes
 
 %extend lsst::afw::geom::Point<int,2> {
     %template(Point2I) Point<double>;
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Point2I, (self.getX(), self.getY()))
-    }
+    %}
 };
 
 %extend lsst::afw::geom::Point<int,3> {
     %template(Point3I) Point<double>;
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Point3I, (self.getX(), self.getY(), self.getZ()))
-    }
+    %}
 };
 
 %extend lsst::afw::geom::Point<double,2> {
     %template(Point2D) Point<int>;
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Point2D, (self.getX(), self.getY()))
-    }
+    %}
 };
 
 %extend lsst::afw::geom::Point<double,3> {
     %template(Point3D) Point<int>;
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Point3D, (self.getX(), self.getY(), self.getZ()))
-    }
+    %}
 };
 
 %extend lsst::afw::geom::Extent<double,2> {
     %template(Extent2D) Extent<int>;
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Extent2D, (self.getX(), self.getY()))
-    }
+    %}
 };
 
 %extend lsst::afw::geom::Extent<double,3> {
     %template(Extent3D) Extent<int>;
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Extent3D, (self.getX(), self.getY(), self.getZ()))
-    }
+    %}
 };
 
 %extend lsst::afw::geom::Extent<int,2> {
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Extent2I, (self.getX(), self.getY()))
-    }
+    %}
 };
 
 %extend lsst::afw::geom::Extent<int,3> {
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (Extent3I, (self.getX(), self.getY(), self.getZ()))
-    }
+    %}
 };
 
 %returnCopy(lsst::afw::geom::AffineTransform::getTranslation);

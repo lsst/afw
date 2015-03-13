@@ -136,25 +136,25 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %EllipseCore_POSTINCLUDE(Quadrupole);
 
 %extend lsst::afw::geom::ellipses::Axes {
-    %pythoncode {
+    %pythoncode %{
     def __repr__(self):
         return "Axes(a=%r, b=%r, theta=%r)" % (self.getA(), self.getB(), self.getTheta())
     def __reduce__(self):
         return (Axes, (self.getA(), self.getB(), self.getTheta()))
     def __str__(self):
         return "(a=%s, b=%s, theta=%s)" % (self.getA(), self.getB(), self.getTheta())
-    }
+    %}
 }
 
 %extend lsst::afw::geom::ellipses::Quadrupole {
-    %pythoncode {
+    %pythoncode %{
     def __repr__(self):
         return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIxx(), self.getIyy(), self.getIxy())
     def __reduce__(self):
         return (Quadrupole, (self.getIxx(), self.getIyy(), self.getIxy()))
     def __str__(self):
         return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIxx(), self.getIyy(), self.getIxy())
-    }
+    %}
 }
 
 %include "Separable.i"
@@ -207,14 +207,14 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     lsst::afw::geom::AffineTransform _getGridTransform() {
         return self->getGridTransform();
     }
-    %pythoncode {
+    %pythoncode %{
     def __repr__(self):
         return "Ellipse(%r, %r)" % (self.getCore(), self.getCenter())
     def __reduce__(self):
         return (Ellipse, (self.getCore(), self.getCenter()))
     def __str__(self):
         return "(%s, %s)" % (self.getCore(), self.getCenter())
-    }
+    %}
 }
 
 %include "lsst/afw/geom/ellipses/Ellipse.h"

@@ -43,7 +43,7 @@
             lsst::afw::geom::TransformMap::CoordSys const &coordSys
         ) const { return (*$self)[coordSys]; }
 
-    %pythoncode {
+    %pythoncode %{
         def __iter__(self):
             return iter(self.getCoordSysList())
 
@@ -56,5 +56,5 @@
                 return self[coordSys]
             else:
                 return default
-    }
+    %}
 }

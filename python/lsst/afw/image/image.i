@@ -82,52 +82,52 @@
         return p;
     }
 
-    %pythoncode {
-    #
-    # Deal with incorrect swig wrappers for C++ "void operator op=()"
-    #
-    def __ilshift__(*args):
-        """__ilshift__(self, NAME src) -> self"""
-        _imageLib.NAME##TYPE##Base##___ilshift__(*args)
-        return args[0]
+    %pythoncode %{
+#
+# Deal with incorrect swig wrappers for C++ "void operator op=()"
+#
+def __ilshift__(*args):
+    """__ilshift__(self, NAME src) -> self"""
+    _imageLib.NAME##TYPE##Base##___ilshift__(*args)
+    return args[0]
 
-    def __iadd__(*args):
-        """
-        __iadd__(self, float scalar) -> self
-        __iadd__(self, NAME inputImage) -> self
-        """
-        _imageLib.NAME##TYPE##___iadd__(*args)
-        return args[0]
+def __iadd__(*args):
+    """
+    __iadd__(self, float scalar) -> self
+    __iadd__(self, NAME inputImage) -> self
+    """
+    _imageLib.NAME##TYPE##___iadd__(*args)
+    return args[0]
 
-    def __isub__(*args):
-        """
-        __isub__(self, float scalar)
-        __isub__(self, NAME inputImage)
-        """
-        _imageLib.NAME##TYPE##___isub__(*args)
-        return args[0]
-    
+def __isub__(*args):
+    """
+    __isub__(self, float scalar)
+    __isub__(self, NAME inputImage)
+    """
+    _imageLib.NAME##TYPE##___isub__(*args)
+    return args[0]
 
-    def __imul__(*args):
-        """
-        __imul__(self, float scalar)
-        __imul__(self, NAME inputImage)
-        """
-        _imageLib.NAME##TYPE##___imul__(*args)
-        return args[0]
 
-    def __idiv__(*args):
-        """
-        __idiv__(self, float scalar)
-        __idiv__(self, NAME inputImage)
-        """
-        _imageLib.NAME##TYPE##___idiv__(*args)
-        return args[0]
+def __imul__(*args):
+    """
+    __imul__(self, float scalar)
+    __imul__(self, NAME inputImage)
+    """
+    _imageLib.NAME##TYPE##___imul__(*args)
+    return args[0]
 
-    # support "__from__ future import division" in Python 2; not needed for Python 3
-    __itruediv__ = __idiv__
+def __idiv__(*args):
+    """
+    __idiv__(self, float scalar)
+    __idiv__(self, NAME inputImage)
+    """
+    _imageLib.NAME##TYPE##___idiv__(*args)
+    return args[0]
 
-    }
+# support "__from__ future import division" in Python 2; not needed for Python 3
+__itruediv__ = __idiv__
+
+    %}
 }
 %defineClone(NAME##TYPE, lsst::afw::image::Image, PIXEL_TYPE);
 %supportSlicing(lsst::afw::image::Image, PIXEL_TYPE);
@@ -177,12 +177,12 @@
     lsst::afw::image::Image<float> convertF() {
        return lsst::afw::image::Image<float>(*self, true);
     }
-    %pythoncode {
+    %pythoncode %{
     def convertFloat(self, *args):
         """Alias for convertF"""
 
         return self.convertF(*args)
-    }
+    %}
 }
 
 %extend lsst::afw::image::Image<boost::uint64_t> {
@@ -190,12 +190,12 @@
     lsst::afw::image::Image<double> convertD() {
        return lsst::afw::image::Image<double>(*self, true);
     }
-    %pythoncode {
+    %pythoncode %{
     def convertDouble(self, *args):
         """Alias for convertD"""
 
         return self.convertD(*args)
-    }
+    %}
 }
 
 %extend lsst::afw::image::Image<double> {
@@ -203,12 +203,12 @@
     lsst::afw::image::Image<float> convertF() {
        return lsst::afw::image::Image<float>(*self, true);
     }
-    %pythoncode {
+    %pythoncode %{
     def convertFloat(self, *args):
         """Alias for convertF"""
 
         return self.convertF(*args)
-    }
+    %}
 }
 
 %extend lsst::afw::image::Image<float> {
@@ -220,11 +220,11 @@
     lsst::afw::image::Image<boost::uint16_t> convertU() {
         return lsst::afw::image::Image<boost::uint16_t>(*self, true);
     }
-    %pythoncode {
+    %pythoncode %{
     def convertU16(self, *args):
         """Alias for convertU"""
 
         return self.convertU(*args)
-    }
+    %}
 }
 

@@ -100,17 +100,17 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 
 
 %extend lsst::afw::math::SpatialCell {
-    %pythoncode {
+    %pythoncode %{
         def __getitem__(self, ind):
             return [c for c in self.begin()][ind]
 
         def __iter__(self):
             return self.begin().__iter__()
-    }
+    %}
 }
 
 %extend lsst::afw::math::SpatialCellCandidateIterator {
-    %pythoncode {
+    %pythoncode %{
     def __iter__(self):
         while True:
             try:
@@ -119,5 +119,5 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
                 raise StopIteration
             
             self.__incr__()
-    }
+    %}
 }

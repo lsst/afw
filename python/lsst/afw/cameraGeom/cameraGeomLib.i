@@ -83,16 +83,16 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %useValueEquality(lsst::afw::cameraGeom::CameraPoint)
 
 %extend lsst::afw::cameraGeom::CameraSys {
-    %pythoncode { 
+    %pythoncode %{ 
         def __hash__(self):
             return hash(repr(self))
-    }
+    %}
 }
 
 %extend lsst::afw::cameraGeom::Detector {
-    %pythoncode {
+    %pythoncode %{
         def __iter__(self):
             for i in xrange(len(self)):
                 yield self[i]
-    }
+    %}
 }

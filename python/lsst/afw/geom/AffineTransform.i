@@ -82,12 +82,12 @@
         return self->operator[](i);
     }   
          
-    %pythoncode {
+    %pythoncode %{
         def __str__(self):
             return str(self.getMatrix())
         def __reduce__(self):
             return (AffineTransform, (self.getMatrix(),))
         def __repr__(self):
             return "AffineTransform(\n%r\n)" % (self.getMatrix(),)
-    }
+    %}
 }

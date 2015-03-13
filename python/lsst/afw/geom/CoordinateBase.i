@@ -47,13 +47,13 @@
     CLASS clone() {
         return CLASS(static_cast<CLASS const &>(*self));
     }
-    %pythoncode {
+    %pythoncode %{
     def __len__(self):
         return N;
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, ", ".join("%0.10g" % v for v in self))
     def __str__(self):
         return "(%s)" % (", ".join("%0.5g" % v for v in self),)
-    }
+    %}
 }
 %enddef

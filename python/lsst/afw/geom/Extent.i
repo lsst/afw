@@ -48,10 +48,11 @@
 %template(Extent ## N ## SUFFIX) lsst::afw::geom::Extent<T,N>;
 %CoordinateBase_POSTINCLUDE(T, N, lsst::afw::geom::Extent<T,N>);
 %extend lsst::afw::geom::ExtentBase<T,N> {
-    %pythoncode {
-        # support "__from__ future import division" in Python 2; not needed for Python 3
-        __truediv__ = __div__
-        __itruediv__ = __idiv__
-    }
+    %pythoncode %{
+# support "__from__ future import division" in Python 2; not needed for Python 3
+# warning: this indentation level is required for SWIG 3.0.2, at least
+__truediv__ = __div__
+__itruediv__ = __idiv__
+    %}
 }
 %enddef

@@ -55,12 +55,12 @@
     void setValue(double value) {
         static_cast<double &>(*self) = value;
     }
-    %pythoncode {
+    %pythoncode %{
     def __str__(self):
         return str(float(self))
     def __repr__(self):
         return "%s(%g)" % (self.getName(), float(self))
-    }
+    %}
 }
 %enddef
 
@@ -76,12 +76,12 @@
     void setComplex(std::complex<double> other) {
         self->getComplex() = other;
     }
-    %pythoncode {
+    %pythoncode %{
     def __str__(self):
         return "(%g, %g)" % (self.getE1(), self.getE2())
     def __repr__(self):
         return "%s(%g, %g)" % (self.getName(), self.getE1(), self.getE2())
-    }
+    %}
 }
 %enddef
 
@@ -188,12 +188,12 @@
     ) {
         return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
     }
-    %pythoncode {
+    %pythoncode %{
     def __repr__(self):
         return "Separable(%r, %r)" % (self.getEllipticity(), self.getRadius())
     def __str__(self):
         return "(%s, %s)" % (self.getEllipticity(), self.getRadius())
-    }
+    %}
 }
 
 %Separable_POSTINCLUDE(Distortion, DeterminantRadius);
