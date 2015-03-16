@@ -975,7 +975,9 @@ class FootprintTestCase(tests.TestCase):
             plt.savefig('clipnz3.png')
         
     def testInclude(self):
-        """Test that we can expand a Footprint to include its neighbors."""
+        """Test that we can expand a Footprint to include the union of itself and all others 
+        provided (must be non-disjoint).
+        """
         region = afwGeom.Box2I(afwGeom.Point2I(-6, -6), afwGeom.Point2I(6, 6))
         parent = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-2, -2), afwGeom.Point2I(2, 2)), region)
         parent.getPeaks().push_back(afwDetect.Peak(0, 0))
