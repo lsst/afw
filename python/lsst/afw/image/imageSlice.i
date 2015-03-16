@@ -42,42 +42,42 @@
 %extend lsst::afw::image::ImageSlice<PIXEL_TYPE> {
 
 
-    %pythoncode {
+    %pythoncode %{
          
-    #
-    # Deal with incorrect swig wrappers for C++ "void operator op=()"
-    #
-    def __add__(*args):
-        """
-        __add__(self, float scalar) -> self
-        __add__(self, NAME inputImage) -> self
-        """
-        return _imageLib.__add__(*args)
+#
+# Deal with incorrect swig wrappers for C++ "void operator op=()"
+#
+def __add__(*args):
+    """
+    __add__(self, float scalar) -> self
+    __add__(self, NAME inputImage) -> self
+    """
+    return _imageLib.__add__(*args)
 
-    def __sub__(*args):
-        """
-        __sub__(self, float scalar)
-        __sub__(self, NAME inputImage)
-        """
-        return _imageLib.__sub__(*args)
+def __sub__(*args):
+    """
+    __sub__(self, float scalar)
+    __sub__(self, NAME inputImage)
+    """
+    return _imageLib.__sub__(*args)
 
-    def __mul__(*args):
-        """
-        __mul__(self, float scalar)
-        __mul__(self, NAME inputImage)
-        """
-        return _imageLib.__mul__(*args)
+def __mul__(*args):
+    """
+    __mul__(self, float scalar)
+    __mul__(self, NAME inputImage)
+    """
+    return _imageLib.__mul__(*args)
 
-    def __div__(*args):
-        """
-        __div__(self, float scalar)
-        __div__(self, NAME inputImage)
-        """
-        return _imageLib.__div__(*args)
+def __div__(*args):
+    """
+    __div__(self, float scalar)
+    __div__(self, NAME inputImage)
+    """
+    return _imageLib.__div__(*args)
 
-    # support "__from__ future import division" in Python 2 (not needed for Python 3)
-    __truediv__ = __div__
-    }
+# support "__from__ future import division" in Python 2 (not needed for Python 3)
+__truediv__ = __div__
+    %}
 
 }
 
@@ -85,42 +85,42 @@
 %extend lsst::afw::image::Image<PIXEL_TYPE> {
 
 
-    %pythoncode {
+    %pythoncode %{
          
-    #
-    # Deal with incorrect swig wrappers for C++ "void operator op=()"
-    #
-    def __add__(*args):
-        """
-        __add__(self, float scalar) -> self
-        __add__(self, NAME inputImage) -> self
-        """
-        return _imageLib.__add__(*args)
+#
+# Deal with incorrect swig wrappers for C++ "void operator op=()"
+#
+def __add__(*args):
+    """
+    __add__(self, float scalar) -> self
+    __add__(self, NAME inputImage) -> self
+    """
+    return _imageLib.__add__(*args)
 
-    def __sub__(*args):
-        """
-        __sub__(self, float scalar)
-        __sub__(self, NAME inputImage)
-        """
-        return _imageLib.__sub__(*args)
+def __sub__(*args):
+    """
+    __sub__(self, float scalar)
+    __sub__(self, NAME inputImage)
+    """
+    return _imageLib.__sub__(*args)
 
-    def __mul__(*args):
-        """
-        __mul__(self, float scalar)
-        __mul__(self, NAME inputImage)
-        """
-        return _imageLib.__mul__(*args)
+def __mul__(*args):
+    """
+    __mul__(self, float scalar)
+    __mul__(self, NAME inputImage)
+    """
+    return _imageLib.__mul__(*args)
 
-    def __div__(*args):
-        """
-        __div__(self, float scalar)
-        __div__(self, NAME inputImage)
-        """
-        return _imageLib.__div__(*args)
+def __div__(*args):
+    """
+    __div__(self, float scalar)
+    __div__(self, NAME inputImage)
+    """
+    return _imageLib.__div__(*args)
 
-    # support "__from__ future import division" in Python 2 (not needed for Python 3)
-    __truediv__ = __div__
-    }
+# support "__from__ future import division" in Python 2 (not needed for Python 3)
+__truediv__ = __div__
+    %}
 
 }
 

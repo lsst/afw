@@ -37,53 +37,53 @@
     }
 %}
 %extend lsst::afw::math::Background {
-    %pythoncode {
-    #
-    # Deal with incorrect swig wrappers for C++ "void operator op=()"
-    #
-    def __iadd__(*args):
-        """
-        __iadd__(self, float scalar) -> self
-        """
-        _mathLib.Background___iadd__(*args) # clears thisown as it things args[0] is returned
-        args[0].thisown = True
-        return args[0]
+    %pythoncode %{
+#
+# Deal with incorrect swig wrappers for C++ "void operator op=()"
+#
+def __iadd__(*args):
+    """
+    __iadd__(self, float scalar) -> self
+    """
+    _mathLib.Background___iadd__(*args) # clears thisown as it things args[0] is returned
+    args[0].thisown = True
+    return args[0]
 
-    def __isub__(*args):
-        """
-        __isub__(self, float scalar) -> self
-        """
-        _mathLib.Background___isub__(*args) # clears thisown as it things args[0] is returned
-        args[0].thisown = True
-        return args[0]
-    }
+def __isub__(*args):
+    """
+    __isub__(self, float scalar) -> self
+    """
+    _mathLib.Background___isub__(*args) # clears thisown as it things args[0] is returned
+    args[0].thisown = True
+    return args[0]
+    %}
 }
 
 %extend lsst::afw::math::BackgroundMI {
-    %pythoncode {
-    #
-    # Deal with incorrect swig wrappers for C++ "void operator op=()"
-    #
-    def __iadd__(*args):
-        """
-        __iadd__(self, float scalar) -> self
-        """
-        _mathLib.BackgroundMI___iadd__(*args) # clears thisown as it things args[0] is returned
-        args[0].thisown = True
-        return args[0]
+    %pythoncode %{
+#
+# Deal with incorrect swig wrappers for C++ "void operator op=()"
+#
+def __iadd__(*args):
+    """
+    __iadd__(self, float scalar) -> self
+    """
+    _mathLib.BackgroundMI___iadd__(*args) # clears thisown as it things args[0] is returned
+    args[0].thisown = True
+    return args[0]
 
-    def __isub__(*args):
-        """
-        __isub__(self, float scalar) -> self
-        """
-        _mathLib.BackgroundMI___isub__(*args) # clears thisown as it things args[0] is returned
-        args[0].thisown = True
-        return args[0]
+def __isub__(*args):
+    """
+    __isub__(self, float scalar) -> self
+    """
+    _mathLib.BackgroundMI___isub__(*args) # clears thisown as it things args[0] is returned
+    args[0].thisown = True
+    return args[0]
 
-    def __reduce__(self):
-        """Pickling"""
-        return self.__class__, (self.getImageBBox(), self.getStatsImage())
-    }
+def __reduce__(self):
+    """Pickling"""
+    return self.__class__, (self.getImageBBox(), self.getStatsImage())
+    %}
 }
 
 %define %declareBack(PIXTYPE, SUFFIX)

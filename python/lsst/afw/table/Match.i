@@ -35,7 +35,7 @@
 %include "lsst/afw/table/Match.h"
 
 %extend lsst::afw::table::Match {
-    %pythoncode {
+    %pythoncode %{
     def __repr__(self):
         return "Match(%s,\n            %s,\n            %g)" % \
         (repr(self.first), repr(self.second), self.distance)
@@ -89,7 +89,7 @@
 
     def __setstate__(self, state):
         self.__init__(*state)
-    }
+    %}
 }
 
 %define %declareMatch(NAME, R1, R2)
@@ -100,7 +100,7 @@
     std::vector< lsst::afw::table::Match<lsst::afw::table::R1##Record,lsst::afw::table::R2##Record> >;
 
 %extend std::vector< lsst::afw::table::Match<lsst::afw::table::R1##Record,lsst::afw::table::R2##Record> > {
-    %pythoncode {
+    %pythoncode %{
         def __getstate__(self):
             """Pickler"""
             if not self:
@@ -122,7 +122,7 @@
             """Unpickler"""
             first, second, distance = state
             self.__init__([NAME##Match(f,s,d) for f,s,d in zip(first, second, distance)])
-    }
+    %}
 }
 
 // swig can't parse the template declarations for these because of the nested names in the

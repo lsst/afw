@@ -10,7 +10,7 @@
 //
 %define %definePythonIterator(TYPE...)
 %extend TYPE {
-    %pythoncode {
+    %pythoncode %{
         def __iter__(self):
             ptr = self.begin()
             end = self.end()
@@ -23,6 +23,6 @@
 
         def __getitem__(self, i):
             return [e for e in self][i]
-    }
+    %}
 }
 %enddef

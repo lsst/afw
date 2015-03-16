@@ -262,7 +262,7 @@ typedef lsst::afw::geom::Span Span;
 %footprintArrayTemplates(double);
 
 
-%pythoncode {
+%pythoncode %{
 makeHeavyFootprint = makeHeavyFootprintF
-}
+%}
 

@@ -72,14 +72,14 @@
 
 %define strCoord(TYPE)
 %extend lsst::afw::coord::TYPE {
-    %pythoncode {
+    %pythoncode %{
     def __repr__(self):
         return "afwCoord.TYPE(%g*afwGeom.radians, %g*afwGeom.radians)" % \
                 (self[0].asRadians(), self[1].asRadians())
     def __str__(self):
         return "(%s, %s)" % (self[0], self[1])
 
-    }
+    %}
 }
 %enddef
 
@@ -92,11 +92,11 @@ strCoord(EclipticCoord);
 // Add __iter__ to allow  'ra,dec = coord' statement in python
 %define genCoord(TYPE)
 %extend lsst::afw::coord::TYPE {
-    %pythoncode {
+    %pythoncode %{
     def __iter__(self):
         for i in 0,1:
             yield self[i]
-    }
+    %}
 }
 %enddef
 
@@ -110,20 +110,20 @@ genCoord(EclipticCoord);
 // Add __reduce__ for Coord subclasses that take 3 arguments
 %define reduceCoord3(TYPE)
 %extend lsst::afw::coord::TYPE {
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (TYPE, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
-    }
+    %}
 }
 %enddef
 
 // Add __reduce__ for Coord subclasses that take 2 arguments
 %define reduceCoord2(TYPE)
 %extend lsst::afw::coord::TYPE {
-    %pythoncode {
+    %pythoncode %{
     def __reduce__(self):
         return (TYPE, (self.getLongitude(), self.getLatitude()))
-    }
+    %}
 }
 %enddef
 

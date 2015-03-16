@@ -36,7 +36,7 @@
 %include "lsst/afw/geom/Box.h"
 
 %extend lsst::afw::geom::Box2I {             
-    %pythoncode {
+    %pythoncode %{
     Extent = Extent2I
     Point = Point2I
 
@@ -50,11 +50,11 @@
     def getSlices(self):
         return (slice(self.getBeginY(), self.getEndY()), slice(self.getBeginX(), self.getEndX()))
 
-    }
+    %}
 }
 
 %extend lsst::afw::geom::Box2D {             
-    %pythoncode {
+    %pythoncode %{
     Extent = Extent2D
     Point = Point2D
 
@@ -65,5 +65,5 @@
     def __str__(self):
         return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
 
-    }
+    %}
 }
