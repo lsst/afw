@@ -27,7 +27,6 @@
 #include "lsst/afw/image.h"    
 #include "lsst/afw/geom.h"
 #include "lsst/daf/base.h"    
-#include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/coord/Coord.h"
 %}
 
@@ -67,7 +66,6 @@
 %castShared(lsst::afw::coord::EclipticCoord, lsst::afw::coord::Coord)
 %castShared(lsst::afw::coord::TopocentricCoord, lsst::afw::coord::Coord)
 
-%include "lsst/afw/coord/Utils.h"
 %include "lsst/afw/coord/Coord.h"
 
 %define strCoord(TYPE)
