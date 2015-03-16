@@ -40,7 +40,6 @@
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/Angle.h"
-#include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/coord/Observatory.h"
 #include "lsst/daf/base.h"
 
