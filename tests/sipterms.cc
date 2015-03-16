@@ -42,7 +42,6 @@ using namespace std;
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/coord/Coord.h"
-#include "lsst/afw/coord/Utils.h"
 
 namespace math = lsst::afw::math;
 namespace afwImg = lsst::afw::image;

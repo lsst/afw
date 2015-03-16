@@ -34,7 +34,6 @@
  */ 
 
 #include <iostream>
-#include "lsst/afw/coord/Utils.h"
 #include "lsst/afw/geom/Angle.h"
 
 namespace lsst {
