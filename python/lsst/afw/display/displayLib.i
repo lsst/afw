@@ -41,6 +41,7 @@ Basic routines to talk to ds9
 #   include "lsst/afw/image.h"
 
 #   include "simpleFits.h"
+#   include "Rgb.h"
 %}
 
 %include "lsst/p_lsstSwig.i"
@@ -57,3 +58,7 @@ Basic routines to talk to ds9
 %template(writeFitsImage) lsst::afw::display::writeBasicFits<lsst::afw::image::Image<double> >;
 %template(writeFitsImage) lsst::afw::display::writeBasicFits<lsst::afw::image::Mask<boost::uint16_t> >;
 
+%include "Rgb.h"
+
+%template(replaceSaturatedPixels)
+        lsst::afw::display::replaceSaturatedPixels<lsst::afw::image::MaskedImage<float> >;
