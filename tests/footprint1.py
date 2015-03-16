@@ -3,7 +3,7 @@ from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2015 LSST Corporation.
 # 
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -72,7 +72,7 @@ def toString(*args):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class Object(object):
-    def __init__(self, val, spans):            
+    def __init__(self, val, spans):
         self.val = val
         self.spans = spans
 
@@ -133,7 +133,7 @@ class ThresholdTestCase(unittest.TestCase):
             afwDetect.createThreshold(3.4)
         except:
             self.fail("Failed to build Threshold with proper parameters")
-        
+
         try:
             afwDetect.createThreshold(3.4, "foo bar")
         except:
@@ -155,7 +155,7 @@ class ThresholdTestCase(unittest.TestCase):
             afwDetect.createThreshold(3.4, "value")
         except:
             self.fail("Failed to build Threshold with proper parameters")
-        
+
         try:
             afwDetect.createThreshold(3.4, "value", False)
         except:
@@ -165,12 +165,12 @@ class ThresholdTestCase(unittest.TestCase):
             afwDetect.createThreshold(0x4, "bitmask")
         except:
             self.fail("Failed to build Threshold with BITMASK parameters")
-        
+
         try:
             afwDetect.createThreshold(5, "pixel_stdev")
         except:
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
-        
+
 class FootprintTestCase(tests.TestCase):
     """A test case for Footprint"""
     def setUp(self):
@@ -186,12 +186,11 @@ class FootprintTestCase(tests.TestCase):
 
     def testGC(self):
         """Check that Footprints are automatically garbage collected (when MemoryTestCase runs)"""
-        
+
         f = afwDetect.Footprint()
 
     def testId(self):
         """Test uniqueness of IDs"""
-        
         self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
 
     def testIntersectMask(self):
@@ -240,7 +239,7 @@ class FootprintTestCase(tests.TestCase):
             self.foot.addSpan(y, x0, x1)
 
         sp = self.foot.getSpans()
-        
+
         self.assertEqual(sp[-1].toString(), toString(y, x0, x1))
 
     def testBbox(self):
@@ -265,7 +264,6 @@ class FootprintTestCase(tests.TestCase):
 
     def testSpanShift(self):
         """Test our ability to shift spans"""
-
         span = afwDetect.Span(10, 100, 105)
         foot = afwDetect.Footprint()
 
@@ -303,17 +301,14 @@ class FootprintTestCase(tests.TestCase):
         self.assertEqual(bbox.getMaxX(), x0 + w - 1)
         self.assertEqual(bbox.getMaxY(), y0 + h - 1)
 
-
-
         if False:
             idImage = afwImage.ImageU(w, h)
-            idImage.set(0)        
+            idImage.set(0)
             foot.insertIntoImage(idImage, foot.getId(), bbox)
             ds9.mtv(idImage, frame=2)
 
     def testGetBBox(self):
         """Check that Footprint.getBBox() returns a copy"""
-        
         x0, y0, w, h = 9, 10, 7, 4
         foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(w, h)))
         bbox = foot.getBBox()
@@ -326,16 +321,12 @@ class FootprintTestCase(tests.TestCase):
 
     def testFootprintFromCircle(self):
         """Create an elliptical Footprint"""
-
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
-                                          afwGeom.Point2D(9,15))
-        foot = afwDetect.Footprint(
-                ellipse, 
-                afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30)))
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9,15))
+        foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30)))
 
         idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
-        
+
         foot.insertIntoImage(idImage, foot.getId())
 
         if False:
@@ -343,17 +334,14 @@ class FootprintTestCase(tests.TestCase):
 
     def testFootprintFromEllipse(self):
         """Create an elliptical Footprint"""
-
         cen = afwGeom.Point2D(23, 25)
         a, b, theta = 25, 15, 30
         ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)),  cen)
-        foot = afwDetect.Footprint(
-                ellipse, 
-                afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
+        foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
 
         idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
         idImage.set(0)
-        
+
         foot.insertIntoImage(idImage, foot.getId())
 
         if display:
@@ -369,7 +357,7 @@ class FootprintTestCase(tests.TestCase):
 
         axes = afwGeom.ellipses.Axes(foot.getShape())
         axes.scale(2)                   # <r^2> = 1/2 for a disk
-        
+
         self.assertEqual(foot.getCentroid(), cen)
         self.assertTrue(abs(a - axes.getA()) < 0.15, "a: %g v. %g" % (a, axes.getA()))
         self.assertTrue(abs(b - axes.getB()) < 0.02, "b: %g v. %g" % (b, axes.getB()))
@@ -395,7 +383,7 @@ class FootprintTestCase(tests.TestCase):
             self.assertEqual(s.getX0(), bbox.getMinX())
             self.assertEqual(s.getX1(), bbox.getMaxX())
             y+=1
-        
+
         #test assignment
         fp3 = afwDetect.Footprint()
         fp3.assign(fp)
@@ -551,10 +539,10 @@ class FootprintTestCase(tests.TestCase):
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
                           (5, 2, 3), (5, 5, 8),
-                          (6, 3, 5), 
+                          (6, 3, 5),
                           ]:
             foot.addSpan(y, x0, x1)
-        
+
         idImage = afwImage.ImageU(region.getDimensions())
         idImage.set(0)
 
@@ -592,22 +580,20 @@ class FootprintTestCase(tests.TestCase):
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
                           (5, 2, 3), (5, 5, 8),
-                          (6, 3, 5), 
+                          (6, 3, 5),
                           ]:
             foot.addSpan(y, x0, x1)
-        
+
         if True:
             fd = open("/dev/null", "w")
         else:
             fd = sys.stdout
-            
+
         afwDetectUtils.writeFootprintAsDefects(fd, foot)
 
 
     def testNormalize(self):
         """Test Footprint.normalize"""
-
-
         w, h = 12, 10
         region = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(w,h))
         im = afwImage.ImageU(afwGeom.Extent2I(w, h))
@@ -620,7 +606,7 @@ class FootprintTestCase(tests.TestCase):
                            ([(3, 3, 5), (3, 6, 9),
                              (4, 2, 3), (4, 5, 7), (4, 8, 8),
                              (5, 2, 3), (5, 5, 8), (5, 6, 7),
-                             (6, 3, 5), 
+                             (6, 3, 5),
                              ], afwGeom.Box2I(afwGeom.Point2I(2,3), afwGeom.Point2I(9,6)))
                       ):
 
@@ -654,7 +640,6 @@ class FootprintTestCase(tests.TestCase):
 
     def testSetFromFootprint(self):
         """Test setting mask/image pixels from a Footprint list"""
-        
         mi = afwImage.MaskedImageF(afwGeom.Extent2I(12, 8))
         im = mi.getImage()
         #
@@ -679,12 +664,12 @@ class FootprintTestCase(tests.TestCase):
 
         self.assertEqual(mi.getMask().get(4, 2), 0x0)
         self.assertEqual(mi.getMask().get(3, 6), 0x1)
-        
+
         self.assertEqual(mi.getImage().get(3, 6), 20)
         afwDetect.setImageFromFootprintList(mi.getImage(), objects, 5.0)
         self.assertEqual(mi.getImage().get(4, 2), 10)
         self.assertEqual(mi.getImage().get(3, 6), 5)
-        
+
         if display:
             ds9.mtv(mi, frame=1)
         #
@@ -699,7 +684,6 @@ class FootprintTestCase(tests.TestCase):
 
     def testMakeFootprintSetXY0(self):
         """Test setting mask/image pixels from a Footprint list"""
-        
         mi = afwImage.MaskedImageF(afwGeom.Extent2I(12, 8))
         im = mi.getImage()
         im.set(100)
@@ -910,10 +894,8 @@ class FootprintTestCase(tests.TestCase):
 
 
     def testClipToNonzero(self):
-
         # create a circular footprint
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), 
-                                          afwGeom.Point2D(9,15))
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9,15))
         bb = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30))
         foot = afwDetect.Footprint(ellipse, bb)
 
@@ -924,7 +906,7 @@ class FootprintTestCase(tests.TestCase):
             import matplotlib
             matplotlib.use('Agg')
             import pylab as plt
-            
+
             plt.clf()
             img = afwImage.ImageU(bb)
             foot.insertIntoImage(img, 1)
@@ -973,9 +955,9 @@ class FootprintTestCase(tests.TestCase):
             foot.insertIntoImage(img, 1)
             plt.imshow(img.getArray(), **ima)
             plt.savefig('clipnz3.png')
-        
+
     def testInclude(self):
-        """Test that we can expand a Footprint to include the union of itself and all others 
+        """Test that we can expand a Footprint to include the union of itself and all others
         provided (must be non-disjoint).
         """
         region = afwGeom.Box2I(afwGeom.Point2I(-6, -6), afwGeom.Point2I(6, 6))
@@ -1022,13 +1004,12 @@ class FootprintSetTestCase(unittest.TestCase):
 
         if False and display:
             ds9.mtv(im, frame=0)
-        
+
     def tearDown(self):
         del self.ms
 
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
-        
         ds = afwDetect.FootprintSet(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
@@ -1040,7 +1021,7 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
+
     def testFootprints2(self):
         """Check that we found the correct number of objects using FootprintSet"""
         ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10))
@@ -1050,7 +1031,7 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
+
     def testFootprints3(self):
         """Check that we found the correct number of objects using FootprintSet and PIXEL_STDEV"""
         threshold = 4.5                 # in units of sigma
@@ -1068,7 +1049,7 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
+
     def testFootprintsMasks(self):
         """Check that detectionSets have the proper mask bits set"""
         ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
@@ -1090,7 +1071,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
         idImage.set(0)
-        
+
         for foot in objects:
             foot.insertIntoImage(idImage, foot.getId())
 
@@ -1126,10 +1107,9 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
+
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
-        
         ds = afwDetect.FootprintSet(self.ms, afwDetect.Threshold(10), "OBJECT")
 
         idImage = afwImage.ImageU(self.ms.getDimensions())
@@ -1176,7 +1156,7 @@ class MaskFootprintSetTestCase(unittest.TestCase):
 
         if display:
             ds9.mtv(self.mim, frame=0)
-        
+
     def tearDown(self):
         del self.mim
 
@@ -1197,7 +1177,6 @@ class MaskFootprintSetTestCase(unittest.TestCase):
             if o.val & level:
                 self.assertEqual(o, objects[i])
                 i += 1
-            
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -1229,7 +1208,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
 
         if False and display:
             ds9.mtv(im, frame=0)
-        
+
     def tearDown(self):
         del self.ms
 
