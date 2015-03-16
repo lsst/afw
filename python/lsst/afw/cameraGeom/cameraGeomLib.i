@@ -1,9 +1,9 @@
 // -*- lsst-++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 // used by lsst/afw/image/imageLib.i to avoid circular import
 // can be removed if and when this file does not need imageLib.i
 #define CAMERA_GEOM_LIB_I
@@ -46,7 +46,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %}
 
 %include "lsst/p_lsstSwig.i"
-%include "lsst/afw/utils.i" 
+%include "lsst/afw/utils.i"
 %include "std_map.i"
 
 %import "lsst/afw/geom/geomLib.i"
@@ -59,7 +59,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %template(CameraSysList) std::vector<lsst::afw::cameraGeom::CameraSys>;
 // I would prefer to use lsst::afw::geom::TransformMap<lsst::afw::cameraGeom::CameraSys>::Transforms
 // in the following, but SIG complains of a syntax error
-%template(CameraTransforms) 
+%template(CameraTransforms)
     std::map<lsst::afw::cameraGeom::CameraSys, CONST_PTR(lsst::afw::geom::XYTransform)>;
 %template(CameraTransformMap) lsst::afw::geom::TransformMap<lsst::afw::cameraGeom::CameraSys>;
 %template(DetectorList) std::vector<CONST_PTR(lsst::afw::cameraGeom::Detector)>;
@@ -83,7 +83,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %useValueEquality(lsst::afw::cameraGeom::CameraPoint)
 
 %extend lsst::afw::cameraGeom::CameraSys {
-    %pythoncode %{ 
+    %pythoncode %{
         def __hash__(self):
             return hash(repr(self))
     %}
