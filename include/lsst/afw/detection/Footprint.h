@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -46,8 +46,7 @@
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace boost{
-namespace serialization{
+namespace boost { namespace serialization {
     class access;
 }}
 
@@ -55,9 +54,7 @@ namespace serialization{
 using boost::serialization::make_nvp;
 #endif
 
-namespace lsst {
-namespace afw { 
-namespace detection {
+namespace lsst { namespace afw { namespace detection {
 
 using geom::Span;
 
@@ -248,7 +245,6 @@ public:
      * idMask: Don't overwrite ID bits in this mask
      * oldIds: if non-NULL, set the IDs that were overwritten
      * region: Footprint's region (default: getRegion())
-     
      */
     template<typename PixelT>
     void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
@@ -292,6 +288,16 @@ public:
         geom::Box2I const & region,
         bool doClip=true
     ) const;
+
+    /**
+     *  @brief Update the Footprint in-place to be the union of itself and all others provided
+     *
+     *  Only spans will be modified; peaks will be left unchanged.
+     *
+     *  NOTE: this is for the case of contiguous sets of footprints.
+     *  If the union is disjoint, throw RuntimeErrorException.
+     */
+    void include(std::vector<PTR(Footprint)> const & others);
 
     bool isPersistable() const { return true; }
 
@@ -506,6 +512,6 @@ PTR(Footprint) footprintAndMask(PTR(Footprint) const& foot,
 
 /************************************************************************************************************/
 
-}}}
+}}} // namespace lsst::afw::detection
 
 #endif

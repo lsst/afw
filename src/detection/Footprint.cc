@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -631,6 +631,31 @@ Footprint::insertIntoImage(
     } else {
         doInsertIntoImage<false>(_region, _spans, idImage, id, region, mask, oldIds);
     }
+}
+
+void Footprint::include(std::vector<PTR(Footprint)> const & others) {
+    if (others.empty()) return;
+    geom::Box2I bbox(getBBox());
+    for (std::vector<PTR(Footprint)>::const_iterator i = others.begin(); i != others.end(); ++i) {
+        bbox.include((**i).getBBox());
+    }
+    boost::uint16_t bits = 0x1;
+    image::Mask<boost::uint16_t> mask(bbox);
+    setMaskFromFootprint(&mask, *this, bits);
+    for (std::vector<PTR(Footprint)>::const_iterator i = others.begin(); i != others.end(); ++i) {
+        setMaskFromFootprint(&mask, **i, bits);
+    }
+    FootprintSet fpSet(mask, Threshold(bits, Threshold::BITMASK));
+    if (fpSet.getFootprints()->size() != 1u) {
+        throw LSST_EXCEPT(
+            pex::exceptions::RuntimeError,
+            (boost::format("Footprint::include() result is disjoint; got %d distinct Footprints")
+             % fpSet.getFootprints()->size()).str()
+        );
+    }
+    _spans.swap(fpSet.getFootprints()->front()->getSpans());
+    _normalized = false;
+    normalize();
 }
 
 // Factory class used for table-based persistence; invoked via registry in afw::table::io

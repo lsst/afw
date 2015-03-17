@@ -69,6 +69,10 @@ typedef lsst::afw::geom::Span Span;
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
+%template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
+%template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::geom::Span> >;
+%template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
+
 %include "lsst/afw/detection/Threshold.h"
 %include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
@@ -95,10 +99,6 @@ typedef lsst::afw::geom::Span Span;
     %footprintOperations(int)
     %footprintOperations(boost::uint64_t)
 }
-
-%template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
-%template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::geom::Span> >;
-%template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
 
 %define %heavyFootprints(NAME, PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
     %template(HeavyFootprint ##NAME) lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
