@@ -45,6 +45,12 @@
 %declarePointKey1(I, int)
 %declarePointKey1(D, double)
 
+// =============== CoordKey==================================================================================
+
+%declareFunctorKey(Coord, lsst::afw::coord::Coord)
+%shared_ptr(lsst::afw::table::CoordKey)
+%useValueEquality(lsst::afw::table::CoordKey)
+
 // =============== QuadrupoleKey ============================================================================
 
 %declareFunctorKey(Quadrupole, lsst::afw::geom::ellipses::Quadrupole)

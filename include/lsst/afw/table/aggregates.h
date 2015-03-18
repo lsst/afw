@@ -118,6 +118,77 @@ private:
 typedef PointKey<int> Point2IKey;
 typedef PointKey<double> Point2DKey;
 
+/**
+ *  @brief A FunctorKey used to get or set celestial coordiantes from a pair of Angle keys.
+ *
+ *  Coords are always stored and returned in the ICRS system. Coords in other
+ *  systems may be assigned, but this will result in a conversion to ICRS.
+ */
+class CoordKey : public FunctorKey < coord::IcrsCoord > {
+public:
+    /**
+     *  Add a pair of _ra, _dec fields to a Schema, and return a CoordKey that points to them.
+     *
+     *  @param[in,out] schema  Schema to add fields to.
+     *  @param[in]     name    Name prefix for all fields; "_ra", "_dec", will be appended
+     *                         to this to form the full field names.
+     *  @param[in]     doc     String used as the documentation for the fields.
+     */
+    static CoordKey addFields(
+        afw::table::Schema & schema,
+        std::string const & name,
+        std::string const & doc
+    );
+
+    /// Default constructor; instance will not be usable unless subsequently assigned to.
+    CoordKey() : _ra(), _dec() {}
+
+    /// Construct from a pair of Keys
+    CoordKey(
+        Key<geom::Angle> const & ra,
+        Key<geom::Angle> const & dec
+    ) :
+        _ra(ra), _dec(dec)
+    {}
+
+    /**
+     *  @brief Construct from a subschema, assuming ra and dec subfields.
+     *
+     *  If a schema has "a_ra" and "a_dec" fields, this constructor allows you to
+     *  construct a CoordKey via:
+     *  @code
+     *  CoordKey k(schema["a"]);
+     *  @endcode
+     */
+    CoordKey(SubSchema const & s) : _ra(s["ra"]), _dec(s["dec"]) {}
+
+    /// Get an IcrsCoord from the given record
+    virtual coord::IcrsCoord get(BaseRecord const & record) const;
+
+    /// Set an IcrsCoord in the given record
+    virtual void set(BaseRecord & record, coord::IcrsCoord const & value) const;
+
+    /// Set a Coord of another type in the given record; must be convertable to ICRS
+    virtual void set(BaseRecord & record, coord::Coord const & value) const;
+
+    bool isValid() const { return _ra.isValid() && _dec.isValid(); }
+
+    //@{
+    /// Return a constituent Key
+    Key<geom::Angle> getRa() const { return _ra; }
+    Key<geom::Angle> getDec() const { return _dec; }
+    //@}
+
+private:
+    Key<geom::Angle> _ra;
+    Key<geom::Angle> _dec;
+};
+
+//@{
+/// Compare CoordKeys for equality using the constituent Keys
+bool operator==(CoordKey const & lhs, CoordKey const & rhs);
+bool operator!=(CoordKey const & lhs, CoordKey const & rhs);
+//@}
 
 /**
  *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from an (xx,yy,xy) tuple of Keys.

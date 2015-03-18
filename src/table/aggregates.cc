@@ -55,6 +55,39 @@ void PointKey<T>::set(BaseRecord & record, geom::Point<T,2> const & value) const
 template class PointKey<int>;
 template class PointKey<double>;
 
+//============ CoordKey =====================================================================================
+
+CoordKey CoordKey::addFields(
+    Schema & schema,
+    std::string const & name,
+    std::string const & doc
+) {
+    Key<geom::Angle> ra = schema.addField<geom::Angle>(schema.join(name, "ra"), doc);
+    Key<geom::Angle> dec = schema.addField<geom::Angle>(schema.join(name, "dec"), doc);
+    return CoordKey(ra, dec);
+}
+
+coord::IcrsCoord CoordKey::get(BaseRecord const & record) const {
+    return coord::IcrsCoord(record.get(_ra), record.get(_dec));
+}
+
+void CoordKey::set(BaseRecord & record, coord::IcrsCoord const & value) const {
+    record.set(_ra, value.getLongitude());
+    record.set(_dec, value.getLatitude());
+}
+
+void CoordKey::set(BaseRecord & record, coord::Coord const & value) const {
+    set(record, value.toIcrs());
+}
+
+bool operator==(CoordKey const & lhs, CoordKey const & rhs) {
+    return lhs.getRa() == rhs.getRa() && lhs.getDec() == rhs.getDec();
+}
+
+bool operator!=(CoordKey const & lhs, CoordKey const & rhs) {
+    return !(lhs == rhs);
+}
+
 //============ QuadrupoleKey ================================================================================
 
 QuadrupoleKey QuadrupoleKey::addFields(

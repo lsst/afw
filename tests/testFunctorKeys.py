@@ -106,6 +106,52 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.doTestPointKey("I", lsst.afw.table.Point2IKey, lsst.afw.geom.Point2I)
         self.doTestPointKey("D", lsst.afw.table.Point2DKey, lsst.afw.geom.Point2D)
 
+    def testCoordKey(self):
+        schema = lsst.afw.table.Schema()
+        fKey0 = lsst.afw.table.CoordKey.addFields(schema, "a", "position")
+        longKey = schema.find("a_ra").key
+        latKey = schema.find("a_dec").key
+        # create two equivalent functor keys using the two different constructors
+        fKey1 = lsst.afw.table.CoordKey(longKey, latKey)
+        fKey2 = lsst.afw.table.CoordKey(schema["a"])
+        # test that they are equivalent
+        self.assertEqual(fKey0.getRa(), longKey)
+        self.assertEqual(fKey0.getRa(), fKey1.getRa())
+        self.assertEqual(fKey0.getRa(), fKey2.getRa())
+        self.assertEqual(fKey0.getDec(), latKey)
+        self.assertEqual(fKey0.getDec(), fKey1.getDec())
+        self.assertEqual(fKey0.getDec(), fKey2.getDec())
+        self.assertEqual(fKey0, fKey1)
+        self.assertEqual(fKey0, fKey2)
+        self.assertEqual(fKey1, fKey2)
+        # a default-constructed key is invalid
+        fKey3 = lsst.afw.table.CoordKey()
+        self.assertFalse(fKey3.isValid())
+        # create a record from the test schema, and fill it using the constituent keys
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        record.set(longKey, lsst.afw.geom.Angle(0))
+        record.set(latKey, lsst.afw.geom.Angle(1))
+        self.assertIsInstance(record.get(fKey1), lsst.afw.coord.IcrsCoord)
+        self.assertEqual(record.get(fKey1).getRa(), record.get(longKey))
+        self.assertEqual(record.get(fKey1).getDec(), record.get(latKey))
+        # Test that we can set using the functor key
+        coord = lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(0), lsst.afw.geom.Angle(1))
+        record.set(fKey1, coord)
+        self.assertEqual(record.get(longKey), coord.getRa())
+        self.assertEqual(record.get(latKey), coord.getDec())
+        # Check for inequality with a different key
+        fKey3 = lsst.afw.table.CoordKey.addFields(schema, "b", "position")
+        self.assertNotEqual(fKey0, fKey3)
+        # test that we can assign a non-ICRS coordinate
+        coord = lsst.afw.coord.Coord("11:11:11", "22:22:22", 1950)
+        record.set(fKey0, coord)
+        self.assertNotEqual(coord.getLongitude(), record.get(fKey0).getRa())
+        self.assertEqual(coord.toIcrs().getRa(), record.get(fKey0).getRa())
+        self.assertNotEqual(coord.getLatitude(), record.get(fKey0).getDec())
+        self.assertEqual(coord.toIcrs().getDec(), record.get(fKey0).getDec())
+
+
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema();
         fKey0 = lsst.afw.table.QuadrupoleKey.addFields(schema, "a", "moments", "pixels^2")
