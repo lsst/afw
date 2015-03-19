@@ -37,6 +37,7 @@ import unittest
 import numpy
 import tempfile
 import pickle
+import math
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -72,26 +73,41 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def fillRecord(self, record):
         record.set(self.fluxKey, numpy.random.randn())
         record.set(self.fluxErrKey, numpy.random.randn())
-        record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
-        record.set(self.centroidErrKey, makeCov(2, numpy.float32))
-        record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
-        record.set(self.shapeErrKey, makeCov(3, numpy.float32))
+        record.set(self.centroidKey.getX(), numpy.random.randn())
+        record.set(self.centroidKey.getY(), numpy.random.randn())
+        record.set(self.xErrKey, numpy.random.randn())
+        record.set(self.yErrKey, numpy.random.randn())
+        record.set(self.shapeKey.getIxx(), numpy.random.randn())
+        record.set(self.shapeKey.getIyy(), numpy.random.randn())
+        record.set(self.shapeKey.getIxy(), numpy.random.randn())
+        record.set(self.xxErrKey, numpy.random.randn())
+        record.set(self.yyErrKey, numpy.random.randn())
+        record.set(self.xyErrKey, numpy.random.randn())
         record.set(self.fluxFlagKey, numpy.random.randn() > 0)
         record.set(self.centroidFlagKey, numpy.random.randn() > 0)
         record.set(self.shapeFlagKey, numpy.random.randn() > 0)
 
     def setUp(self):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.schema.setVersion(0)
-        self.fluxKey = self.schema.addField("a", type="D")
-        self.fluxErrKey = self.schema.addField("a.err", type="D")
-        self.fluxFlagKey = self.schema.addField("a.flags", type="Flag")
-        self.centroidKey = self.schema.addField("b", type="PointD")
-        self.centroidErrKey = self.schema.addField("b.err", type="CovPointF")
-        self.centroidFlagKey = self.schema.addField("b.flags", type="Flag")
-        self.shapeKey = self.schema.addField("c", type="MomentsD")
-        self.shapeErrKey = self.schema.addField("c.err", type="CovMomentsF")
-        self.shapeFlagKey = self.schema.addField("c.flags", type="Flag")
+        self.fluxKey = self.schema.addField("a_flux", type = "D")
+        self.fluxErrKey = self.schema.addField("a_fluxSigma", type = "D")
+        self.fluxFlagKey = self.schema.addField("a_flag", type="Flag")
+
+        # the meas field is added using a functor key, but the error is added
+        # as scalars, as we lack a ResultKey functor as exists in meas_base
+        self.centroidKey = lsst.afw.table.Point2DKey.addFields(self.schema,
+            "b", "", "pixels")
+        self.xErrKey = self.schema.addField("b_xSigma", type = "F")
+        self.yErrKey = self.schema.addField("b_ySigma", type = "F")
+        self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")
+
+        self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(self.schema,
+            "c", "", "pixels^2")
+        self.xxErrKey = self.schema.addField("c_xxSigma", type = "F")
+        self.xyErrKey = self.schema.addField("c_xySigma", type = "F")
+        self.yyErrKey = self.schema.addField("c_yySigma", type = "F")
+        self.shapeFlagKey = self.schema.addField("c_flag", type="Flag")
+
         self.table = lsst.afw.table.SourceTable.make(self.schema)
         self.catalog = lsst.afw.table.SourceCatalog(self.table)
         self.record = self.catalog.addNew()
@@ -111,11 +127,19 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.record.get(self.fluxKey), self.record.getPsfFlux())
         self.assertEqual(self.record.get(self.fluxFlagKey), self.record.getPsfFluxFlag())
         self.assertEqual(self.table.getCentroidDefinition(), "b")
-        self.assertEqual(self.record.get(self.centroidKey), self.record.getCentroid())
-        self.assertClose(self.record.get(self.centroidErrKey), self.record.getCentroidErr())
+        self.assertEqual(self.centroidKey.get(self.record), self.record.getCentroid())
+        self.assertClose(math.fabs(self.record.get(self.xErrKey)),
+            math.sqrt(self.record.getCentroidErr()[0,0]), rtol=1e-6)
+        self.assertClose(math.fabs(self.record.get(self.yErrKey)),
+            math.sqrt(self.record.getCentroidErr()[1,1]), rtol=1e-6)
         self.assertEqual(self.table.getShapeDefinition(), "c")
-        self.assertEqual(self.record.get(self.shapeKey), self.record.getShape())
-        self.assertClose(self.record.get(self.shapeErrKey), self.record.getShapeErr())
+        self.assertEqual(self.shapeKey.get(self.record), self.record.getShape())
+        self.assertClose(math.fabs(self.record.get(self.xxErrKey)),
+            math.sqrt(self.record.getShapeErr()[0,0]), rtol=1e-6)
+        self.assertClose(math.fabs(self.record.get(self.yyErrKey)),
+            math.sqrt(self.record.getShapeErr()[1,1]), rtol=1e-6)
+        self.assertClose(math.fabs(self.record.get(self.xyErrKey)),
+            math.sqrt(self.record.getShapeErr()[2,2]), rtol=1e-6)
 
     def testPersisted(self):
         self.table.definePsfFlux("a")
@@ -132,11 +156,21 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
         self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
         self.assertEqual(table.getCentroidDefinition(), "b")
-        self.assertEqual(record.get(self.centroidKey), record.getCentroid())
-        self.assert_(numpy.all(record.get(self.centroidErrKey) == record.getCentroidErr()))
+        centroid = self.centroidKey.get(self.record)
+        self.assertEqual(centroid, record.getCentroid())
+        self.assertClose(math.fabs(self.record.get(self.xErrKey)),
+            math.sqrt(self.record.getCentroidErr()[0,0]), rtol=1e-6)
+        self.assertClose(math.fabs(self.record.get(self.yErrKey)),
+            math.sqrt(self.record.getCentroidErr()[1,1]), rtol=1e-6)
+        shape = self.shapeKey.get(self.record)
         self.assertEqual(table.getShapeDefinition(), "c")
-        self.assertEqual(record.get(self.shapeKey), record.getShape())
-        self.assert_(numpy.all(record.get(self.shapeErrKey) == record.getShapeErr()))
+        self.assertEqual(shape, record.getShape())
+        self.assertClose(math.fabs(self.record.get(self.xxErrKey)),
+            math.sqrt(self.record.getShapeErr()[0,0]), rtol=1e-6)
+        self.assertClose(math.fabs(self.record.get(self.yyErrKey)),
+            math.sqrt(self.record.getShapeErr()[1,1]), rtol=1e-6)
+        self.assertClose(math.fabs(self.record.get(self.xyErrKey)),
+            math.sqrt(self.record.getShapeErr()[2,2]), rtol=1e-6)
         os.unlink(filename)
 
     def testCanonical2(self):
@@ -152,14 +186,15 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.catalog.schema.getNames(), new.schema.getNames())
         self.assertEqual(len(self.catalog), len(new))
         for r1, r2 in zip(self.catalog, new):
-            for field in ("a", "a.err", "id"): # Columns that are easy to test
+            for field in ("a_flux", "a_fluxSigma", "id"): # Columns that are easy to test
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
                 self.assertTrue(r1[k1] == r2[k2])
 
     def testCoordUpdate(self):
+        self.table.defineCentroid("b")
         wcs = makeWcs()
-        self.record.updateCoord(wcs, self.centroidKey)
+        self.record.updateCoord(wcs)
         coord1 = self.record.getCoord()
         coord2 = wcs.pixelToSky(self.record.get(self.centroidKey))
         self.assertEqual(coord1, coord2)
@@ -198,20 +233,20 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assert_((cols2["a"] == cols2.getPsfFlux()).all())
-        self.assert_((cols2["a.err"] == cols2.getPsfFluxErr()).all())
-        self.assert_((cols2["b.x"] == cols2.getX()).all())
-        self.assert_((cols2["b.y"] == cols2.getY()).all())
-        self.assert_((cols2["c.xx"] == cols2.getIxx()).all())
-        self.assert_((cols2["c.yy"] == cols2.getIyy()).all())
-        self.assert_((cols2["c.xy"] == cols2.getIxy()).all())
+        self.assert_((cols2["a_flux"] == cols2.getPsfFlux()).all())
+        self.assert_((cols2["a_fluxSigma"] == cols2.getPsfFluxErr()).all())
+        self.assert_((cols2["b_x"] == cols2.getX()).all())
+        self.assert_((cols2["b_y"] == cols2.getY()).all())
+        self.assert_((cols2["c_xx"] == cols2.getIxx()).all())
+        self.assert_((cols2["c_yy"] == cols2.getIyy()).all())
+        self.assert_((cols2["c_xy"] == cols2.getIxy()).all())
 
     def testForwarding(self):
         """Verify that Catalog forwards unknown methods to its table and/or columns."""
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assert_((self.catalog.columns["a"] == self.catalog["a"]).all())
+        self.assert_((self.catalog.columns["a_flux"] == self.catalog["a_flux"]).all())
         self.assert_((self.catalog.columns[self.fluxKey] == self.catalog.get(self.fluxKey)).all())
         self.assert_((self.catalog.columns.get(self.fluxKey) == self.catalog.getPsfFlux()).all())
         self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
@@ -219,17 +254,17 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def testBitsColumn(self):
         allBits = self.catalog.getBits()
-        someBits = self.catalog.getBits(["a.flags", "c.flags"])
-        self.assertEqual(allBits.getMask("a.flags"), 0x1)
-        self.assertEqual(allBits.getMask("b.flags"), 0x2)
-        self.assertEqual(allBits.getMask("c.flags"), 0x4)
+        someBits = self.catalog.getBits(["a_flag", "c_flag"])
+        self.assertEqual(allBits.getMask("a_flag"), 0x1)
+        self.assertEqual(allBits.getMask("b_flag"), 0x2)
+        self.assertEqual(allBits.getMask("c_flag"), 0x4)
         self.assertEqual(someBits.getMask(self.fluxFlagKey), 0x1)
         self.assertEqual(someBits.getMask(self.shapeFlagKey), 0x2)
-        self.assert_(((allBits.array & 0x1 != 0) == self.catalog.columns["a.flags"]).all())
-        self.assert_(((allBits.array & 0x2 != 0) == self.catalog.columns["b.flags"]).all())
-        self.assert_(((allBits.array & 0x4 != 0) == self.catalog.columns["c.flags"]).all())
-        self.assert_(((someBits.array & 0x1 != 0) == self.catalog.columns["a.flags"]).all())
-        self.assert_(((someBits.array & 0x2 != 0) == self.catalog.columns["c.flags"]).all())
+        self.assert_(((allBits.array & 0x1 != 0) == self.catalog.columns["a_flag"]).all())
+        self.assert_(((allBits.array & 0x2 != 0) == self.catalog.columns["b_flag"]).all())
+        self.assert_(((allBits.array & 0x4 != 0) == self.catalog.columns["c_flag"]).all())
+        self.assert_(((someBits.array & 0x1 != 0) == self.catalog.columns["a_flag"]).all())
+        self.assert_(((someBits.array & 0x2 != 0) == self.catalog.columns["c_flag"]).all())
 
     def testCast(self):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
@@ -410,7 +445,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testSlotUndefine(self):
         """Test that we can correctly define and undefine a slot after a SourceTable has been created"""
         schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        schema.setVersion(1)
         key = schema.addField("a_flux", type=float, doc="flux field")
         table = lsst.afw.table.SourceTable.make(schema)
         table.definePsfFlux("a")

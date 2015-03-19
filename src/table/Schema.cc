@@ -473,13 +473,15 @@ int SchemaImpl::contains(SchemaItem<T> const & item, int flags) const {
 
 std::set<std::string> SchemaImpl::getNames(bool topOnly) const {
     std::set<std::string> result;
+    // set the separator for table ('.' if getVersion() is 0 or nan, else '_')
+    char separator = (getVersion() > 0) ? '_' : '.';
     if (topOnly) {
         for (NameMap::const_iterator i = _names.begin(); i != _names.end(); ++i) {
-            std::size_t dot = i->first.find('.');
-            if (dot == std::string::npos) {
+            std::size_t sep = i->first.find(separator);
+            if (sep == std::string::npos) {
                 result.insert(result.end(), i->first);
             } else {
-                result.insert(result.end(), i->first.substr(0, dot));
+                result.insert(result.end(), i->first.substr(0, sep));
             }
         }
     } else {
@@ -492,11 +494,13 @@ std::set<std::string> SchemaImpl::getNames(bool topOnly) const {
 
 std::set<std::string> SchemaImpl::getNames(bool topOnly, std::string const & prefix) const {
     std::set<std::string> result;
+    // set the separator for table ('.' if getVersion() is 0 or nan, else '_')
+    char separator = (getVersion() > 0) ? '_' : '.';
     if (topOnly) {
         for (NameMap::const_iterator i = _names.lower_bound(prefix); i != _names.end(); ++i) {
             if (i->first.compare(0, prefix.size(), prefix) != 0) break;
-            std::size_t dot = i->first.find('.', prefix.size() + 1);
-            if (dot == std::string::npos) {
+            std::size_t sep = i->first.find(separator, prefix.size() + 1);
+            if (sep == std::string::npos) {
                 result.insert(
                     result.end(),
                     i->first.substr(prefix.size() + 1, i->first.size() - prefix.size())
@@ -504,7 +508,7 @@ std::set<std::string> SchemaImpl::getNames(bool topOnly, std::string const & pre
             } else {
                 result.insert(
                     result.end(),
-                    i->first.substr(prefix.size() + 1, dot - prefix.size() - 1)
+                    i->first.substr(prefix.size() + 1, sep - prefix.size() - 1)
                 );
             }
         }

@@ -50,10 +50,9 @@ class SourceMatchTestCase(unittest.TestCase):
 
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
-        schema.setVersion(0)
-        fluxKey = schema.addField("flux", type=float)
-        fluxErrKey = schema.addField("flux.err", type=float)
-        fluxFlagKey = schema.addField("flux.flags", type="Flag")
+        fluxKey = schema.addField("flux_flux", type=float)
+        fluxErrKey = schema.addField("flux_fluxSigma", type=float)
+        fluxFlagKey = schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(schema)
         self.table.definePsfFlux("flux")
         self.ss1 = afwTable.SourceCatalog(self.table)
