@@ -172,7 +172,7 @@ class RgbTestCase(unittest.TestCase):
 
         def tst():
             self.writeFileLegacyAPI("rgb.unknown")
-        utilsTests.assertRaisesLsstCpp(self, ValueError, tst)
+        self.assertRaises(ValueError, tst)
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

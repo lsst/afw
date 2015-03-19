@@ -45,7 +45,7 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
     int const x0 = rim.getX0(), y0 = rim.getY0();
 
     if (width != gim.getWidth() || height != gim.getHeight() || x0 != gim.getX0() || y0 != gim.getY0()) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException,
                           str(boost::format("R image has different size/origin from G image "
                                             "(%dx%d+%d+%d v. %dx%d+%d+%d") %
                               width % height % x0 % y0 %
@@ -53,7 +53,7 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
 
     }
     if (width != bim.getWidth() || height != bim.getHeight() || x0 != bim.getX0() || y0 != bim.getY0()) {
-        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException,
                           str(boost::format("R image has different size/origin from B image "
                                             "(%dx%d+%d+%d v. %dx%d+%d+%d") %
                               width % height % x0 % y0 %
