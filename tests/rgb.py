@@ -21,6 +21,14 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.rgb as rgb
+
+try:
+    import matplotlib
+    versionInfo = tuple(int(s.strip("rc")) for s in matplotlib.__version__.split("."))
+    HAVE_MATPLOTLIB = versionInfo >= (1, 3, 1)
+except ImportError:
+    HAVE_MATPLOTLIB = False
+
 try:
     type(display)
 except NameError:
@@ -95,18 +103,17 @@ class RgbTestCase(unittest.TestCase):
         if display:
             rgb.displayRGB(rgbImage)            
 
+    @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testWriteStars(self):
         """Test writing RGB files to disk"""
         asinhMap = rgb.AsinhMapping(self.min, self.range, self.Q)
         rgbImage = asinhMap.makeRgbImage(self.images[R], self.images[G], self.images[B])
+        fileName = "rgb.png"
+        with Tempfile(fileName, remove=True):
+            rgb.writeRGB(fileName, rgbImage)
 
-        for ext in ("jpeg", "jpg", "png", "tif", "tiff"):
-            fileName = "rgb.%s" % ext
-            with Tempfile(fileName, remove=True):
-                rgb.writeRGB(fileName, rgbImage)
-
-                if False:               # you'll also want to set remove=False in Tempfile manager
-                    os.system("open %s > /dev/null 2>&1" % fileName)
+            if False:               # you'll also want to set remove=False in Tempfile manager
+                os.system("open %s > /dev/null 2>&1" % fileName)
 
     def testSaturated(self):
         """Test interpolating saturated pixels"""
@@ -161,14 +168,14 @@ class RgbTestCase(unittest.TestCase):
 
         rgbImage.write(fileName)
 
+    @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testWriteStarsLegacyAPI(self):
-        for ext in ("jpeg", "jpg", "png", "tif", "tiff"):
-            fileName = "rgb_legacyAPI.%s" % ext
-            with Tempfile(fileName, remove=True):
-                self.writeFileLegacyAPI(fileName)
+        fileName = "rgb_legacyAPI.png"
+        with Tempfile(fileName, remove=True):
+            self.writeFileLegacyAPI(fileName)
 
-                if False:
-                    os.system("open %s > /dev/null 2>&1" % fileName)
+            if False:
+                os.system("open %s > /dev/null 2>&1" % fileName)
 
         def tst():
             self.writeFileLegacyAPI("rgb.unknown")

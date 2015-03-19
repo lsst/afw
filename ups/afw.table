@@ -12,6 +12,7 @@ setupRequired(gsl)
 setupRequired(fftw)
 setupRequired(utils)
 setupOptional(pyfits)
+setupOptional(matplotlib)
 
 setupOptional(afwdata)
 
