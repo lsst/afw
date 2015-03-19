@@ -21,6 +21,14 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.rgb as rgb
+
+try:
+    import matplotlib
+    versionInfo = tuple(int(s.strip("rc")) for s in matplotlib.__version__.split("."))
+    HAVE_MATPLOTLIB = versionInfo >= (1, 3, 1)
+except ImportError:
+    HAVE_MATPLOTLIB = False
+
 try:
     type(display)
 except NameError:
@@ -95,6 +103,7 @@ class RgbTestCase(unittest.TestCase):
         if display:
             rgb.displayRGB(rgbImage)            
 
+    @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testWriteStars(self):
         """Test writing RGB files to disk"""
         asinhMap = rgb.AsinhMapping(self.min, self.range, self.Q)
@@ -161,6 +170,7 @@ class RgbTestCase(unittest.TestCase):
 
         rgbImage.write(fileName)
 
+    @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testWriteStarsLegacyAPI(self):
         for ext in ("jpeg", "jpg", "png", "tif", "tiff"):
             fileName = "rgb_legacyAPI.%s" % ext
