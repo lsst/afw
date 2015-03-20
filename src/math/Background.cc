@@ -60,7 +60,7 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
                        BackgroundControl const& bgCtrl ///< Control how the Background is estimated
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
-    _imgBBox(img.getBBox(image::LOCAL)),
+    _imgBBox(img.getBBox()),
     _bctrl(bgCtrl),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
     _asUsedUndersampleStyle(THROW_EXCEPTION),
