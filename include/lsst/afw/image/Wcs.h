@@ -70,10 +70,10 @@ namespace image {
 /// myriad of different coordinate systems.
 /// 
 /// A wcs can be constructed from a reference position (crval, crpix) and a
-/// translation matrix. Alternatively, if you have the header from a fits file,
+/// translation matrix. Alternatively, if you have the header from a FITS file,
 /// you can create a Wcs object with the makeWcs() function. This function
 /// determines whether your Wcs is one the subset of projection systems that is
-/// dealt with specially by Lsst, and creates an object of the correct
+/// dealt with specially by LSST, and creates an object of the correct
 /// class. Otherwise, a pointer to a Wcs object is returned.  Most astronomical
 /// images use tangent plane projection, so makeWcs() returns a TanWcs object
 /// pointer
@@ -97,7 +97,7 @@ namespace image {
 /// This class is implemented in by calls to the wcslib library
 /// by Mark Calabretta http://www.atnf.csiro.au/people/mcalabre/WCS/
 /// 
-/// Note that we violate the Wcs standard in one minor way. The standard states
+/// Note that we violate the WCS standard in one minor way. The standard states
 /// that none of the CRPIX or CRVAL keywords are required, for the header to be
 /// valid, and the appropriate values should be set to 0.0 if the keywords are
 /// absent. This is a recipe for painful bugs in analysis, so we violate the
@@ -114,7 +114,7 @@ public:
     typedef boost::shared_ptr<Wcs const> ConstPtr;
 
     /**
-     *  @brief Create a Wcs of the correct class using a fits header.
+     *  @brief Create a Wcs of the correct class using a FITS header.
      *
      *  Set stripMetadata=true to remove processed keywords from the PropertySet.
      */
@@ -134,13 +134,19 @@ public:
     bool operator==(Wcs const & other) const;
     bool operator!=(Wcs const & other) const { return !(*this == other); }
 
-    /// Returns CRVAL
+    /// Returns CRVAL. This need not be the centre of the image.
     lsst::afw::coord::Coord::Ptr getSkyOrigin() const;
+
     /// Returns CRPIX (corrected to LSST convention).
     lsst::afw::geom::Point2D getPixelOrigin() const;
-    /// Returns CD matrix.  You would never have guessed that from the name.
+
+    /// Returns the CD matrix.
     Eigen::Matrix2d getCDMatrix() const;
+
+    /// Flip CD matrix around the y-axis
     virtual void flipImage(int flipLR, int flipTB, lsst::afw::geom::Extent2I dimensions) const;
+
+    /// Rotate image by nQuarter times 90 degrees.
     virtual void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const;
     
     /// Return a PropertyList containing FITS header keywords that can be used to save the Wcs.x
@@ -149,8 +155,10 @@ public:
     /**
      *  Does the Wcs follow the convention of North=Up, East=Left?
      *
-     *  This actually just measures the sign of the determinant of the CD matrix
-     *  to determine the "handedness" of the coordinate system.
+     *  The conventional sense for a WCS image is to have North up and East to the left, or at least to be
+     *  able to rotate the image to that orientation. It is possible to create a "flipped" WCS, where East
+     *  points right when the image is rotated such that North is up. Flipping a WCS is akin to producing a
+     *  mirror image. This function tests whether the image is flipped or not.
      */
     bool isFlipped() const;
 
@@ -160,45 +168,62 @@ public:
     /// Returns the pixel scale [Angle/pixel]
     geom::Angle pixelScale() const;
     
-    /// Convert from celestial coordinates to pixel coordinates.
+    /**
+     *  @brief Convert from pixel position to sky coordinates (e.g. RA/dec)
+     *
+     *  Convert a pixel position (e.g. x,y) to a celestial coordinate (e.g. RA/dec). The output coordinate
+     *  system depends on the values of CTYPE used to construct the object. For RA/dec, the CTYPES should
+     *  be RA---TAN and DEC--TAN.
+     */
     PTR(coord::Coord) pixelToSky(double pix1, double pix2) const;
 
-    /// Convert from celestial coordiantes to pixel coordinates.
+    /**
+     *  @brief Convert from pixel position to sky coordinates (e.g. RA/dec)
+     *
+     *  Convert a pixel position (e.g. x,y) to a celestial coordinate (e.g. RA/dec). The output coordinate
+     *  system depends on the values of CTYPE used to construct the object. For RA/dec, the CTYPES should
+     *  be RA---TAN and DEC--TAN.
+     */
     PTR(coord::Coord) pixelToSky(lsst::afw::geom::Point2D const & pixel) const;
 
-
-    /**
-     *  @brief Convert from celestial coordiantes to pixel coordinates.
+    /*
+     *  @brief Convert from pixel position to sky coordinates (e.g. RA/dec)
      *
-     *
-     *  @note This routine is designed for the knowledgeable user in need of
-     *  performance; it's safer to call the version that returns a PTR(Coord).
+     *  @note This routine is designed for the knowledgeable user in need of performance;
+     *  it's safer to call the version that returns a PTR(Coord).
      */
     void pixelToSky(
         double pixel1, double pixel2, geom::Angle& sky1, geom::Angle& sky2
     ) const;
-    
+
     /**
-     *  @brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+     *  @brief Convert from sky coordinates (e.g. RA/dec) to pixel positions
      *
-     *  ASSUMES the angles are in the appropriate coordinate system for this WCS.
+     *  Convert a sky position (e.g. RA/dec) to a pixel position. The exact meaning of sky1, sky2
+     *  and the return value depend on the properties of the wcs (i.e. the values of CTYPE1 and
+     *  CTYPE2), but the inputs are usually RA/dec. The outputs are x and y pixel position.
+     *
+     *  ASSUMES the angles are in the appropriate coordinate system for this Wcs.
      */
     geom::Point2D skyToPixel(geom::Angle sky1, geom::Angle sky2) const;
 
-    /// @brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
+    /// @brief Convert from sky coordinates (e.g. RA/dec) to pixel positions.
     geom::Point2D skyToPixel(coord::Coord const & coord) const;
 
     /**
-     *  @brief Convert from sky coordinates (e.g ra/dec) to intermediate world coordinates
+     *  @brief Convert from sky coordinates (e.g. RA/dec) to intermediate world coordinates
      *
      *  Intermediate world coordinates are in DEGREES.
      */
     geom::Point2D skyToIntermediateWorldCoord(coord::Coord const & coord) const;
-    
+
     virtual bool hasDistortion() const {    return false;};
-    
+
+    /**
+     * Return the linear part of the Wcs, the CD matrix in FITS-speak, as an AffineTransform.
+     */
     geom::LinearTransform getLinearTransform() const;
-    
+
     /**
      * @brief Return the local linear approximation to Wcs::pixelToSky at a point given in sky coordinates.
      *
@@ -273,7 +298,7 @@ public:
      *
      * @param[in] pix     Position in pixel coordinates where transform is desired.
      * @param[in] skyUnit Units to use for sky coordinates; units of matrix elements will be pixels/skyUnit.
-     */        
+     */
     geom::AffineTransform linearizeSkyToPixel(
         geom::Point2D const & pix,
         geom::AngleUnit skyUnit = geom::degrees
@@ -281,8 +306,19 @@ public:
 
     // Mutators; the first one is virtual, even though it will never be overridden,
     // to make sure subclasses use the correct version of both
-    virtual void shiftReferencePixel(geom::Extent2D const & d) { shiftReferencePixel(d.getX(), d.getY()); }
+
+    /**
+     *  @brief Move the pixel reference position by (dx, dy)
+     *
+     *  Used when persisting and retrieving sub-images. The LSST convention is that Wcs returns pixel position
+     *  (which is based on position in the parent image), but the FITS convention is to return pixel index
+     *  (which is bases on position in the sub-image). In order that the FITS files we create make sense
+     *  to other FITS viewers, we change to the FITS convention when writing out images.
+     */
     virtual void shiftReferencePixel(double dx, double dy);
+
+    // Virtual to make sure subclasses use the correct version of both shiftReferencePixel mutators.
+    virtual void shiftReferencePixel(geom::Extent2D const & d) { shiftReferencePixel(d.getX(), d.getY()); }
 
     /// @brief Whether the Wcs is persistable using afw::table::io archives.
     virtual bool isPersistable() const;
@@ -313,7 +349,7 @@ protected:
     // Default constructor, only used by WcsFormatter
     Wcs();
 
-    //If you want to create a Wcs from a fits header, use makeWcs(). 
+    //If you want to create a Wcs from a FITS header, use makeWcs().
     //This is protected because the derived classes need to be able to see it.
     Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
 
@@ -383,7 +419,7 @@ namespace detail {
 
 
 /**
- * @brief XYTransformFromWcsPair: Represents an XYTransform obtained by putting two Wcs's "back to back".
+ * @brief XYTransformFromWcsPair: An XYTransform obtained by putting two Wcs objects "back to back".
  *
  * Eventually there will be an XYTransform subclass which represents a camera distortion.
  * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair

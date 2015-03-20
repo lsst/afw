@@ -567,13 +567,11 @@ Wcs::Ptr Wcs::clone(void) const {
 // Accessors
 //
 
-///Return crval. Note that this need not be the centre of the image
 CoordPtr Wcs::getSkyOrigin() const {
     assert(_wcsInfo);
     return makeCorrectCoord(_wcsInfo->crval[0] * afwGeom::degrees, _wcsInfo->crval[1] * afwGeom::degrees);
 }
 
-///Return crpix in the lsst convention. Note that this need not be the centre of the image
 GeomPoint Wcs::getPixelOrigin() const {
     assert(_wcsInfo);
     //Convert from fits units back to lsst units
@@ -582,8 +580,6 @@ GeomPoint Wcs::getPixelOrigin() const {
     return afwGeom::Point2D(p1, p2);
 }
 
-
-///Return the CD matrix
 Eigen::Matrix2d Wcs::getCDMatrix() const {
     assert(_wcsInfo);
     int const naxis = _wcsInfo->naxis;
@@ -601,7 +597,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
 
     return C;
 }
-///Flip CD matrix around the y-axis
+
 void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const {
     assert(_wcsInfo);
     
@@ -674,26 +670,17 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
     // tells libwcs to invalidate cached data, since transformation has been modified
     _wcsInfo->flag = 0;
 }
-///Return the Wcs as a fits header
+
 PropertyList::Ptr Wcs::getFitsMetadata() const {
     return lsst::afw::formatters::WcsFormatter::generatePropertySet(*this);
 }
 
-
-
-
-///
-/// Returns the orientation of the Wcs
-///
-/// The conventional sense for a Wcs image is to have North up and East to the left, or at least to be
-/// able to rotate the image to that orientation. It is possible to create a "flipped" Wcs, where East
-/// points right when the image is rotated such that North is up. Flipping a Wcs is akin to producing a mirror
-/// image. This function tests whether the image is flipped or not.
-///
-/// It does so by calculating the determinant of the CD (i.e the rotation and scaling) matrix. If this
-/// determinant is positive, then the image can be rotated to a position where increasing the right ascension
-/// and declination increases the horizontal and vertical pixel position. In this case the image is flipped.
 bool Wcs::isFlipped() const {
+    // We calculate the determinant of the CD (i.e the rotation and scaling)
+    // matrix. If this determinant is positive, then the image can be rotated
+    // to a position where increasing the right ascension and declination
+    // increases the horizontal and vertical pixel position. In this case the
+    // image is flipped.
     assert(_wcsInfo);
     double det = (_wcsInfo->cd[0] * _wcsInfo->cd[3]) - (_wcsInfo->cd[1] * _wcsInfo->cd[2]);
 
@@ -708,7 +695,6 @@ static double square(double x) {
     return x*x;
 }
 
-///Sky area covered by a pixel at position \c pix00. In units of square degrees.
 double Wcs::pixArea(GeomPoint pix00     ///< The pixel point where the area is desired
                    ) const {
     //
@@ -799,12 +785,6 @@ Wcs::convertCoordToSky(afwCoord::Coord const & coord) const {
     return coord.convert(_coordSystem);
 }
 
-///\brief Convert from sky coordinates (e.g ra/dec) to pixel positions.
-///
-///Convert a sky position (e.g RA/Dec) to a pixel position. The exact meaning of sky1, sky2 
-///and the return value depend on the properties of the wcs (i.e the values of CTYPE1 and
-///CTYPE2), but the inputs are usually RA/Dec. The outputs are x and y pixel position.
-
 GeomPoint Wcs::skyToPixel(afwGeom::Angle sky1, afwGeom::Angle sky2) const {
     return skyToPixelImpl(sky1, sky2);
 }
@@ -877,20 +857,10 @@ Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) cons
     skyTmp[1] = sky[1] * afwGeom::degrees;
 }
 
-///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
-///
-///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
-///be RA--TAN and DEC-TAN. 
 CoordPtr Wcs::pixelToSky(GeomPoint const & pixel) const {
     return pixelToSky(pixel.getX(), pixel.getY());
 }
 
-///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
-///
-///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec). The output coordinate
-///system depends on the values of CTYPE used to construct the object. For ra/dec, the CTYPES should
-///be RA--TAN and DEC-TAN. 
 CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
     assert(_wcsInfo);
 
@@ -899,13 +869,6 @@ CoordPtr Wcs::pixelToSky(double pixel1, double pixel2) const {
     return makeCorrectCoord(skyTmp[0], skyTmp[1]);
 }
 
-///\brief Convert from pixel position to sky coordinates (e.g ra/dec)
-///
-///Convert a pixel position (e.g x,y) to a celestial coordinate (e.g ra/dec)
-///
-/// \note This routine is designed for the knowledgeable user in need of performance; it's safer to call
-/// the version that returns a CoordPtr
-///
 void Wcs::pixelToSky(double pixel1, double pixel2, afwGeom::Angle& sky1, afwGeom::Angle& sky2) const {
     afwGeom::Angle skyTmp[2];
     // HACK -- we shouldn't need to initialize these -- pixelToSkyImpl() sets them unless an
@@ -1048,13 +1011,6 @@ lsst::afw::geom::AffineTransform Wcs::linearizeSkyToPixelInternal(
     return inverse.invert();
 }
 
-
-
-/**
- * Return the linear part of the Wcs, the CD matrix in FITS speak, as an AffineTransform
- *
- * \sa 
- */
 lsst::afw::geom::LinearTransform Wcs::getLinearTransform() const
 {
     return lsst::afw::geom::LinearTransform(getCDMatrix());
