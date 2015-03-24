@@ -23,210 +23,133 @@
  
 #if !defined(LSST_DETECTION_FOOTPRINT_SET_H)
 #define LSST_DETECTION_FOOTPRINT_SET_H
+
+namespace lsst { namespace afw { namespace detection {
+
 /**
- * \file
- * \brief Represent a collections of footprints associated with image data
- */
-#include "lsst/afw/geom.h"
-#include "lsst/afw/detection/Threshold.h"
-#include "lsst/afw/detection/Footprint.h"
-#include "lsst/afw/detection/FootprintCtrl.h"
-#include "lsst/afw/image/MaskedImage.h"
-#include "lsst/afw/table/Source.h"
-
-namespace lsst {
-namespace afw {
-namespace detection {
-
-/// Pixel type for FootprintSet::insertIntoImage()
-///
-/// This is independent of the template parameters for FootprintSet, and
-/// including it within FootprintSet makes it difficult for SWIG to interpret
-/// the type.
-typedef boost::uint64_t FootprintIdPixel;
-
-/************************************************************************************************************/
-/*!
- * \brief A set of Footprints, associated with a MaskedImage
+ *  A set of non-overlapping Footprints.
  *
+ *  FootprintSet is a special container that maintains the property that all of
+ *  its constituent Footprints are distinct (non-overlapping, non-touching),
+ *  automatically merging or splitting Footprints as necessary to maintain this
+ *  condition (and the requirement that Footprints be contiguous individually).
+ *
+ *  FootprintSets may not contain HeavyFootprints - there are some FootprintSet
+ *  operations (e.g. dilate) that we can't apply to HeavyFootprints, and in
+ *  general by the time we build HeavyFootprints in the pipeline, we've switched
+ *  to SourceCatalog for storing them.
  */
-class FootprintSet : public lsst::daf::base::Citizen {
+class FootprintSet {
 public:
 
-    /// The FootprintSet's set of Footprint%s
-    typedef std::vector<Footprint::Ptr> FootprintList;
+    //@{
+    /**
+     *  STL container interface.
+     *
+     *  Instead of providing accessors to its internal container of PTR(Footprint)s,
+     *  FootprintSet now just provides iterators and a bit more of the STL container
+     *  interface.
+     *
+     *  Exactly what kind of container we use under the hood is unspecified, but
+     *  the iterators will dereference to PTR(Footprint), not Footprint, as before.
+     *
+     *  It has no non-const iterator, because we don't want to have to deal with
+     *  maintaining invariants (namely, no overlapping Footprints) while exposing
+     *  references to innards.
+     *
+     *  Any mutating operation may invalidate iterators or Footprint references.
+     *
+     *  see also insert(), further below.
+     */
+    typedef <unspecified> const_iterator;
+    typedef <unspecified> size_type;
+    typedef PTR(Footprint) value_type;
+    typedef value_type const & const_reference;
+    const_iterator begin() const;   // iterators available only via __iter__ in Python
+    const_iterator end() const;
+    const_iterator cbegin() const;
+    const_iterator cend() const;
+    const_reference front() const;
+    size_type size() const;    // also available as __len__ in Python
+    bool empty() const;        // also available as !__nonzero__ in Python
+    void swap(FootprintSet & rhs);
+    //@}
+
+    /// Construct an empty FootprintSet.
+    FootprintSet();
+
+    /**
+     *  Construct a FootprintSet from an iterator over PTR(Footprints)
+     *
+     *  In Python, this is will accept any Python iterator that yields spans.
+     */
+    template <typename Iter>
+    static FootprintSet fromFootprints(Iter first, Iter last);
 
 #ifndef SWIG
-    template <typename ImagePixelT>
-    FootprintSet(image::Image<ImagePixelT> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-
-    template <typename MaskPixelT>
-    FootprintSet(image::Mask<MaskPixelT> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1);
-
-    template <typename ImagePixelT, typename MaskPixelT>
-    FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-
-    template <typename ImagePixelT, typename MaskPixelT>
-    FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
-
-#else // workaround for https://github.com/swig/swig/issues/245
-    // if that bug is fixed then you may update footprintset.i by uncommenting two lines
-    // and removing this section. However, you must continue to provide SWIG
-    // the alternate version of the template <typename MaskPixelT> constructor, because
-    // SWIG cannot disambiguate that from the template <typename ImagePixelT> constructor.
-
-    FootprintSet(image::Mask<image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1);
-
-    FootprintSet(image::Image<boost::uint16_t> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
-
-    FootprintSet(image::Image<int> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<int, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<int, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
-
-    FootprintSet(image::Image<float> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<float, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<float, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
-
-    FootprintSet(image::Image<double> const& img,
-                 Threshold const& threshold,
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<double, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 std::string const& planeName = "",
-                 int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<double, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
-
+    /// Construct a FootprintSet from an explicit list of Footprints
+    static FootprintSet fromFootprints(std::initializer_list<PTR(Footprint)> footprints);
 #endif
 
-    FootprintSet(geom::Box2I region);
-    FootprintSet(FootprintSet const&);
-    FootprintSet(FootprintSet const& set, int rGrow, FootprintControl const& ctrl);
-    FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
-    FootprintSet(FootprintSet const& footprints1, 
-                 FootprintSet const& footprints2,
-                 bool const includePeaks);
-
-    FootprintSet& operator=(FootprintSet const& rhs);
-
-    void swap(FootprintSet& rhs) {
-        using std::swap;                    // See Meyers, Effective C++, Item 25        
-        swap(*_footprints, *rhs.getFootprints());
-        geom::Box2I rhsRegion = rhs.getRegion();
-        rhs.setRegion(getRegion());
-        setRegion(rhsRegion);
-    }
-    
-    /**:
-     * Return the Footprint%s of detected objects
-     */
-    PTR(FootprintList) getFootprints() { return _footprints; } 
-
-    /**:
-     * Set the Footprint%s of detected objects
-     */
-    void setFootprints(PTR(FootprintList) footprints) { _footprints = footprints; }
+    // FootprintSet is both copyable and moveable, with no cleverness involved.
+    // (it's just a thin wrapper around an STL container).
+    FootprintSet(Footprint const &) = default;
+    FootprintSet(Footprint &&) = default;
+    FootprintSet & operator=(Footprint const &) = default;
+    FootprintSet & operator=(Footprint &&) = default;
 
     /**
-     * Retun the Footprint%s of detected objects
-     */
-    CONST_PTR(FootprintList) const getFootprints() const { return _footprints; }
-    
-    /**
-     *  @brief Add a new record corresponding to each footprint to a SourceCatalog.
+     *  Create contiguous Footprints with peaks from intermediate detection outputs.
      *
-     *  @param[in,out]  catalog     Catalog to append new sources to.
-     *
-     *  The new sources will have their footprints set to point to the footprints in the
-     *  footprint set; they will not be deep-copied.
+     *  This method takes a SpanRegion that identifies above-threshold pixels and splits
+     *  it into contiguous Footprints.  It then finds peaks within each Footprint (which
+     *  is why we need the image).
      */
-    void makeSources(afw::table::SourceCatalog & catalog) const;
+    template <typename ImagePixelT>
+    static FootprintSet makeFootprints(
+        SpanRegion const & spans,
+        image::Image<ImagePixelT> const & image,
+        bool findPeaks=true
+    );
 
-    void setRegion(geom::Box2I const& region);
+    /// Create contiguous Footprints (without peaks) from a possibly noncontiguous SpanRegion.
+    template <typename ImagePixelT>
+    static FootprintSet makeFootprints(SpanRegion const & spans);
+
+    /// Return a SpanRegion that contains all Spans in all Footprints in the FootprintSet.
+    SpanRegion asSpanRegion() const;
 
     /**
-     * Return the corners of the MaskedImage
+     *  Add a new Footprint to the set.
+     *
+     *  This method isn't guaranteed to increase the number of Footprints, and in fact it
+     *  might decrease it; if the new Footprint overlaps one or more already in the FootprintSet,
+     *  they'll be merged.
      */
-    geom::Box2I const getRegion() const { return _region; } 
+    void insert(PTR(Footprint) const & span); // also available as
 
-    PTR(image::Image<FootprintIdPixel>) insertIntoImage(
-        const bool relativeIDs
-        ) const;
+    /// Move all Footprints by the given offset.
+    FootprintSet shiftedBy(geom::Extent2I const & offset) const;     // return shifted copy
+    FootprintSet & shiftBy(geom::Extent2I const & offset);           // in-place
 
-    template <typename MaskPixelT>
-    void setMask(
-        image::Mask<MaskPixelT> *mask, ///< Set bits in the mask
-        std::string const& planeName   ///< Here's the name of the mask plane to fit
-    ) {
-        setMaskFromFootprintList(
-            mask, 
-            _footprints,                // calling getFootprints() confuses clang++ 3.0 and leaks memory
-            image::Mask<MaskPixelT>::getPlaneBitMask(planeName)
-        );        
-    }
+    /// Clip all Footprints to the given box.
+    FootprintSet clippedTo(geom::Box2I const & box) const;           // return clipped copy
+    FootprintSet & clipTo(geom::Box2I const & box);                  // in-place
 
-    template <typename MaskPixelT>
-    void setMask(
-        PTR(image::Mask<MaskPixelT>) mask, ///< Set bits in the mask
-        std::string const& planeName   ///< Here's the name of the mask plane to fit
-    ) {
-        setMask(mask.get(), planeName);
-    }
+    //@{
+    /**
+     *  Mathematical morphology operations.
+     *
+     *  These simply delegate to the implementations for SpanRegion, but they have the
+     *  potential to merge (for dilate) or split (for erode) Footprints.  The erode
+     *  methods also remove peaks that, after the operation, no longer lie within their Footprint.
+     */
+    FootprintSet dilatedBy(int r, Stencil=Stencil.CIRCLE) const; // return dilated copy
+    FootprintSet erodedBy(int r, Stencil=Stencil.CIRCLE) const;  // return eroded copy
+    FootprintSet & dilateBy(int r, Stencil=Stencil.CIRCLE);      // in-place
+    FootprintSet & erodeBy(int r, Stencil=Stencil.CIRCLE);       // in-place
+    //@}
 
-    void merge(FootprintSet const& rhs, int tGrow=0, int rGrow=0, bool isotropic=true);
-
-    template <typename ImagePixelT, typename MaskPixelT>
-    void makeHeavy(image::MaskedImage<ImagePixelT, MaskPixelT> const& mimg,
-                   HeavyFootprintCtrl const* ctrl=NULL
-                  );
-private:
-    boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
-    geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in
 };
 
 }}}
