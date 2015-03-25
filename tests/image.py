@@ -633,6 +633,10 @@ class DecoratedImageTestCase(unittest.TestCase):
         finally:
             shutil.rmtree(tempdir)
 
+    def testLargeImage(self):
+        """Test that creating an extremely large image raises, rather than segfaulting. DM-89, -527."""
+        for imtype in (afwImage.ImageD, afwImage.ImageF, afwImage.ImageI, afwImage.ImageU):
+            self.assertRaises(lsst.pex.exceptions.LengthError, imtype, 60000, 60000)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
