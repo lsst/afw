@@ -1057,6 +1057,11 @@ typedef afwImage::VariancePixel VPixel;
                               afwImage::Mask<afwImage::MaskPixel> const &msk, \
                               afwImage::Image<VPixel> const &var,               \
                               afwMath::ImageImposter<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwImage::Image<VPixel> const &var,               \
+                              afwMath::Image1DNDArrayImposter<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_MASKEDIMAGE_STATISTICS_NO_MASK(TYPE)                       \
@@ -1084,6 +1089,11 @@ typedef afwImage::VariancePixel VPixel;
                               afwImage::Mask<afwImage::MaskPixel> const &msk, \
                               afwMath::MaskImposter<VPixel> const &var,          \
                               afwMath::ImageImposter<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::Statistics(afwImage::Image<TYPE> const &img,            \
+                              afwImage::Mask<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,          \
+                              afwMath::Image1DNDArrayImposter<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_REGULARIMAGE_STATISTICS(TYPE)                      \
@@ -1101,6 +1111,15 @@ typedef afwImage::VariancePixel VPixel;
                               afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
                               afwMath::MaskImposter<VPixel> const &var,      \
                               afwMath::ImageImposter<VPixel> const &weights,   \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::Statistics(afwMath::Image1DNDArrayImposter<TYPE> const &img,     \
+                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,      \
+                              int const flags, StatisticsControl const& sctrl); \
+    template STAT::Statistics(afwMath::Image1DNDArrayImposter<TYPE> const &img,     \
+                              afwMath::MaskImposter<afwImage::MaskPixel> const &msk, \
+                              afwMath::MaskImposter<VPixel> const &var,      \
+                              afwMath::Image1DNDArrayImposter<VPixel> const &weights,   \
                               int const flags, StatisticsControl const& sctrl)
 
 #define INSTANTIATE_IMAGE_STATISTICS(T)            \

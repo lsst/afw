@@ -57,8 +57,8 @@ class Ticket1045TestCase(unittest.TestCase):
         dmean1 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean1 = dmean1.getValue(afwMath.MEAN)
         stdev1 = dmean1.getValue(afwMath.STDEV)
-        self.assertAlmostEqual(mean1, knownMean, 8)
-        self.assertAlmostEqual(stdev1, knownStdev, places=16)
+        self.assertAlmostEqual(mean1, knownMean)
+        self.assertAlmostEqual(stdev1, knownStdev)
 
         # this was reported to fail
         # (problem was due to error in median)
@@ -68,35 +68,35 @@ class Ticket1045TestCase(unittest.TestCase):
         dmean2 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEANCLIP | afwMath.STDEVCLIP)
         mean2 = dmean2.getValue(afwMath.MEANCLIP)
         stdev2 = dmean2.getValue(afwMath.STDEVCLIP)
-        self.assertEqual(mean2, knownMeanClip)
-        self.assertEqual(stdev2, knownStdevClip)
+        self.assertAlmostEqual(mean2, knownMeanClip)
+        self.assertAlmostEqual(stdev2, knownStdevClip)
 
         # check the median, just for giggles
         knownMedian = num.median(values)
         stat = afwMath.makeStatistics(values, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
-        self.assertEqual(median, knownMedian)
+        self.assertAlmostEqual(median, knownMedian)
 
         # check the median with an odd number of values
         vals = values[1:]
         knownMedian = num.median(vals)
         stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
-        self.assertEqual(median, knownMedian)
+        self.assertAlmostEqual(median, knownMedian)
 
         # check the median with only two values
         vals = values[0:2]
         knownMedian = num.median(vals)
         stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
-        self.assertEqual(median, knownMedian)
+        self.assertAlmostEqual(median, knownMedian)
 
         # check the median with only 1 value
         vals = values[0:1]
         knownMedian = num.median(vals)
         stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
-        self.assertEqual(median, knownMedian)
+        self.assertAlmostEqual(median, knownMedian)
 
         # check the median with no values
         vals = []

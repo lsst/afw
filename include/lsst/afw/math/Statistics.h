@@ -43,6 +43,7 @@
 #include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "boost/shared_ptr.hpp"
+#include "ndarray.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/MaskedVector.h"
 
@@ -408,11 +409,44 @@ private:
 };
 
 /**
+ * @brief An wrapper to provide a 1-dimesional ndarray with the necessary methods and typedefs to
+ *        be processed by Statistics as though it were an Image.
+ */
+template<typename ValueT>
+class Image1DNDArrayImposter {
+public:
+    
+    // types we'll use in Statistics
+    typedef typename ndarray::Array<ValueT, 1> Array;
+    typedef typename Array::const_iterator x_iterator;
+    typedef typename Array::const_iterator fast_iterator;
+    typedef ValueT Pixel;
+
+    // constructors for ndArray::Array<>, and copy constructor
+    // These are both shallow! ... no actual copying of values
+    explicit Image1DNDArrayImposter(Array const &v) : _v(v) { }
+    explicit Image1DNDArrayImposter(Image1DNDArrayImposter<ValueT> const &img) : _v(img._getVector()) {}
+
+    // The methods we'll use in Statistics
+    x_iterator row_begin(int) const { return _v.begin(); }
+    x_iterator row_end(int) const { return _v.end(); }
+    int getWidth() const { return _v.size(); }
+    int getHeight() const { return 1; }
+    
+    bool empty() const { return _v.empty(); }
+private:
+    Array const &_v;                  // a private reference to the data
+    Array const &_getVector() const { return _v; } // get the ref for the copyCon
+};
+
+// hide std::vector implemenations from SWIG; use ndarray versions instead for better behavior with numpy
+#ifndef SWIG 
+/**
  * @brief The makeStatistics() overload to handle std::vector<>
  * @relates Statistics
  */
 template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
+Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose properties we want
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
@@ -427,7 +461,7 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
  * @relates Statistics
  */
 template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedImage) whose properties we want
+Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose properties we want
                           std::vector<WeightPixel> const &vweights, ///< Weights
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
@@ -437,6 +471,41 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
     MaskImposter<WeightPixel> var;
 
     ImageImposter<WeightPixel> weights(vweights);
+    
+    return Statistics(img, msk, var, weights, flags, sctrl);
+}
+#endif
+
+/**
+ * @brief The makeStatistics() overload to handle 1-d ndarray::Array<>
+ * @relates Statistics
+ */
+template<typename EntryT>
+Statistics makeStatistics(ndarray::Array<EntryT, 1> const &v, ///< 1-d array whose properties we want
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
+                         ) {
+    Image1DNDArrayImposter<EntryT> img(v);            // wrap the vector in a fake image
+    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+    MaskImposter<WeightPixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
+}
+
+/**
+ * @brief The makeStatistics() overload to handle 1-d ndarray::Array<>
+ * @relates Statistics
+ */
+template<typename EntryT>
+Statistics makeStatistics(ndarray::Array<EntryT, 1> const &v, ///< 1-d array whose properties we want
+                          ndarray::Array<WeightPixel, 1> const &vweights, ///< Weights
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
+                         ) {
+    Image1DNDArrayImposter<EntryT> img(v);           // wrap the vector in a fake image
+    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+    MaskImposter<WeightPixel> var;
+
+    Image1DNDArrayImposter<WeightPixel> weights(vweights);
     
     return Statistics(img, msk, var, weights, flags, sctrl);
 }
