@@ -379,7 +379,7 @@ Statistics makeStatistics(
 
 
 /**
- * @brief A vector wrapper to provide a vector with the necessary methods and typedefs to
+ * @brief A wrapper to provide a std::vector with the necessary methods and typedefs to
  *        be processed by Statistics as though it were an Image.
  */
 template<typename ValueT>
@@ -409,7 +409,7 @@ private:
 };
 
 /**
- * @brief An wrapper to provide a 1-dimesional ndarray with the necessary methods and typedefs to
+ * @brief A wrapper to provide a 1-dimesional ndarray::Array with the necessary methods and typedefs to
  *        be processed by Statistics as though it were an Image.
  */
 template<typename ValueT>
@@ -417,7 +417,7 @@ class Image1DNDArrayImposter {
 public:
     
     // types we'll use in Statistics
-    typedef typename ndarray::Array<ValueT, 1> Array;
+    typedef typename ndarray::Array<ValueT const, 1> Array;
     typedef typename Array::const_iterator x_iterator;
     typedef typename Array::const_iterator fast_iterator;
     typedef ValueT Pixel;

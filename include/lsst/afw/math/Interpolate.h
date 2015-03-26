@@ -24,6 +24,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include "lsst/base.h"
+#include "ndarray_fwd.h"
 
 namespace lsst {
 namespace afw {
@@ -53,6 +54,8 @@ public:
     
     virtual ~Interpolate() {}
     virtual double interpolate(double const x) const = 0;
+    std::vector<double> interpolate(std::vector<double> const& x) const;
+    ndarray::Array<double, 1> interpolate(ndarray::Array<double const, 1> const& x) const;
 protected:
     /**
      * Base class ctor
@@ -74,11 +77,15 @@ private:
 
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
-    
+
+PTR(Interpolate) makeInterpolate(ndarray::Array<double const, 1> const &x,
+                                 ndarray::Array<double const, 1> const &y,
+                                 Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
+
 Interpolate::Style stringToInterpStyle(std::string const &style);
 Interpolate::Style lookupMaxInterpStyle(int const n);
 int lookupMinInterpPoints(Interpolate::Style const style);
-        
+
 }}}
                      
 #endif // LSST_AFW_MATH_INTERPOLATE_H
