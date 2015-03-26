@@ -327,8 +327,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     // make a vector containing the y pixel coords for the column
     int const width = _imgBBox.getWidth();
     int const height = _imgBBox.getHeight();
-    int const x0 = bbox.getMinX();
-    int const y0 = bbox.getMinY();
+    auto const bboxOff = bbox.getMin() - _imgBBox.getMin();
 
     std::vector<int> ypix(height);
     for (int iY = 0; iY < height; ++iY) {
@@ -341,6 +340,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     }
 
     // create a shared_ptr to put the background image in and return to caller
+    // start with xy0 = 0 and set final xy0 later
     PTR(image::Image<PixelT>) bg =
         PTR(image::Image<PixelT>)(new image::Image<PixelT>(bbox.getDimensions()));
 
@@ -355,7 +355,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     // us to put a NaN into the outputs some changes will be needed
     double defaultValue = std::numeric_limits<double>::quiet_NaN();
 
-    for (int iY = y0; iY <= bbox.getMaxY(); ++iY) {
+    for (int y = 0, iY = bboxOff.getY(); y < bbox.getHeight(); ++y, ++iY) {
         // build an interp object for this row
         std::vector<double> bg_x(nxSample);
         for (int iX = 0; iX < nxSample; iX++) {
@@ -398,12 +398,11 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
         }
 
         // fill the image with interpolated values
-        int const y = iY - y0;
-        for (int iX = x0, x = 0; iX <= bbox.getMaxX(); ++iX, ++x) {
+        for (int iX = bboxOff.getX(), x = 0; x < bbox.getWidth(); ++iX, ++x) {
             (*bg)(x, y) = static_cast<PixelT>(intobj->interpolate(iX));
         }
     }
-    bg->setXY0(x0, y0);
+    bg->setXY0(bbox.getMin());
 
     return bg;
 }
@@ -416,7 +415,8 @@ PTR(Approximate<PixelT>) BackgroundMI::doGetApproximate(
         UndersampleStyle const undersampleStyle                   /* Behaviour if there are too few points */
                                     ) const
 {
-    return makeApproximate(_xcen, _ycen, _statsImage, _imgBBox, actrl);
+    auto const localBBox = afw::geom::Box2I(afw::geom::Point2I(0, 0), _imgBBox.getDimensions());
+    return makeApproximate(_xcen, _ycen, _statsImage, localBBox, actrl);
 }
 
 /// \cond

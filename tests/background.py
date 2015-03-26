@@ -35,13 +35,13 @@ or
 
 import math
 import os
-import sys
 import unittest
 import numpy as np
 import pickle
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
+from lsst.daf.base import PropertySet
 import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
@@ -53,6 +53,7 @@ try:
 except NameError:
     display = False
 
+AfwdataDir = eups.productDir("afwdata")
 
 # ==== summary to currently implemented tests ====
 # getPixel: tests basic functionality of getPixel() method (floats)
@@ -67,7 +68,7 @@ class BackgroundTestCase(unittest.TestCase):
     """A test case for Background"""
     def setUp(self):
         self.val = 10
-        self.image = afwImage.ImageF(afwGeom.Extent2I(100, 200))
+        self.image = afwImage.ImageF(afwGeom.Box2I(afwGeom.Point2I(1000, 500), afwGeom.Extent2I(100, 200)))
         self.image.set(self.val)
 
     def tearDown(self):
@@ -141,6 +142,7 @@ class BackgroundTestCase(unittest.TestCase):
         self.assertEqual(afwMath.cast_BackgroundMI(back).getPixel(xcen, ycen), self.val)
 
 
+    @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testBackgroundTestImages(self):
 
         imginfolist = []
@@ -158,16 +160,11 @@ class BackgroundTestCase(unittest.TestCase):
         #imgfiles.append("v2_i2_p_m9_f.fits")
         #imgfiles.append("v2_i2_p_m9_u16.fits")
         
-        afwdataDir = eups.productDir("afwdata")
-        if not afwdataDir:
-            print >> sys.stderr, "Skipping testBackgroundTestImages as afwdata is not setup"
-            return
-        
         for imginfo in imginfolist:
 
             imgfile, centerValue = imginfo
 
-            imgPath = afwdataDir + "/Statistics/" + imgfile
+            imgPath = os.path.join(AfwdataDir, "Statistics", imgfile)
 
             # get the image and header
             dimg = afwImage.DecoratedImageD(imgPath)
@@ -252,14 +249,10 @@ class BackgroundTestCase(unittest.TestCase):
                 parabimg.set(x, y, d2zdx2*x*x + d2zdy2*y*y + dzdx*x + dzdy*y + z0)
         return parabimg
 
+    @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testTicket987(self):
         """This code used to abort; so the test is that it doesn't"""
-        afwdataDir = eups.productDir("afwdata")
-        if not afwdataDir:
-            print >> sys.stderr, "Skipping testTicket987 as afwdata is not setup"
-            return
-
-        imagePath = os.path.join(afwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
+        imagePath = os.path.join(AfwdataDir, "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci.fits")
         mimg      = afwImage.MaskedImageF(imagePath)
         binsize   = 512
         bctrl     = afwMath.BackgroundControl("NATURAL_SPLINE")
@@ -293,9 +286,9 @@ class BackgroundTestCase(unittest.TestCase):
         bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.makeBackground(parabimg, bctrl)
 
-        #parabimg.writeFits('in.fits')
-        #backobj.getImageF().writeFits('out.fits')
-
+        if False:
+            parabimg.writeFits('in.fits')
+            backobj.getImageF().writeFits('out.fits')
 
     def testParabola(self):
 
@@ -333,15 +326,11 @@ class BackgroundTestCase(unittest.TestCase):
                 #  is a fair (if arbitrary) test.
                 self.assertTrue( abs(testval - realval) < 0.5 )
 
+    @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testCFHT_oldAPI(self):
         """Test background subtraction on some real CFHT data"""
 
-        afwdataDir = eups.productDir("afwdata")
-        if not afwdataDir:
-            print >> sys.stderr, "Skipping testCFHT as afwdata is not setup"
-            return
-
-        mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
+        mi = afwImage.MaskedImageF(os.path.join(AfwdataDir,
                                                 "CFHT", "D4", "cal-53535-i-797722_1.fits"))
         mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
 
@@ -361,18 +350,69 @@ class BackgroundTestCase(unittest.TestCase):
         if display:
             ds9.mtv(mi, frame = 1)
 
-            
+    def getCfhtImage(self):
+        """Get a portion of a CFHT image as a MaskedImageF
+        """
+        bbox = afwGeom.Box2I(afwGeom.Point2I(500, 2000), afwGeom.Point2I(2079, 4609))
+        imagePath = os.path.join(AfwdataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+        return afwImage.MaskedImageF(imagePath, PropertySet(), bbox)
+
+    @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
+    def testXY0(self):
+        """Test fitting the background to an image with nonzero xy0
+
+        The statsImage and background image should not vary with xy0
+        """
+        bgImageList = [] # list of background images, one per xy0
+        statsImageList = [] # list of stats images, one per xy0
+        for xy0 in (afwGeom.Point2I(0, 0), afwGeom.Point2I(-100, -999), afwGeom.Point2I(1000, 500)):
+            mi = self.getCfhtImage()
+            mi.setXY0(xy0)
+
+            bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
+            backobj = afwMath.makeBackground(mi.getImage(), bctrl)
+            bgImage = backobj.getImageF()
+            self.assertEqual(bgImage.getBBox(), mi.getBBox())
+            bgImageList.append(bgImage)
+
+            statsImage = afwMath.cast_BackgroundMI(backobj).getStatsImage()
+            statsImageList.append(statsImage)
+
+        # changing the bounding box should make no difference to the pixel values,
+        # so compare pixels using exact equality
+        for bgImage in bgImageList[1:]:
+            self.assertTrue(np.all(bgImage.getArray() == bgImageList[0].getArray()))
+        for statsImage in statsImageList[1:]:
+            for i in range(3):
+                self.assertTrue(np.all(statsImage.getArrays()[i] == statsImageList[0].getArrays()[i]))
+
+    @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
+    def testSubImage(self):
+        """Test getImage on a subregion of the full background image
+
+        Using real image data is a cheap way to get a variable background
+        """
+        mi = self.getCfhtImage()
+
+        bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
+        backobj = afwMath.makeBackground(mi.getImage(), bctrl)
+        subBBox = afwGeom.Box2I(afwGeom.Point2I(1000, 3000), afwGeom.Extent2I(100, 100))
+
+        bgFullImage = backobj.getImageF()
+        self.assertEqual(bgFullImage.getBBox(), mi.getBBox())
+
+        subFullArr = afwImage.ImageF(bgFullImage, subBBox).getArray()
+
+        bgSubImage = backobj.getImageF(subBBox, bctrl.getInterpStyle())
+        subArr = bgSubImage.getArray()
+
+        # the pixels happen to be identical but it is safer not to rely on that; close is good enough
+        self.assertTrue(np.allclose(subArr, subFullArr))
+
+    @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testCFHT(self):
         """Test background subtraction on some real CFHT data"""
-
-        afwdataDir = eups.productDir("afwdata")
-        if not afwdataDir:
-            print >> sys.stderr, "Skipping testCFHT as afwdata is not setup"
-            return
-
-        mi = afwImage.MaskedImageF(os.path.join(afwdataDir,
-                                                "CFHT", "D4", "cal-53535-i-797722_1.fits"))
-        mi = mi.Factory(mi, afwGeom.Box2I(afwGeom.Point2I(32, 2), afwGeom.Point2I(2079, 4609)), afwImage.LOCAL)
+        mi = self.getCfhtImage()
 
         bctrl = afwMath.BackgroundControl(mi.getWidth()//128, mi.getHeight()//128)
         bctrl.getStatisticsControl().setNumSigmaClip(3.0)  
@@ -391,8 +431,8 @@ class BackgroundTestCase(unittest.TestCase):
         statsImage = afwMath.cast_BackgroundMI(backobj).getStatsImage()
 
         if display:
-            ds9.mtv(backobj.getStatsImage(), frame=2)
-            ds9.mtv(backobj.getStatsImage().getVariance(), frame=3)
+            ds9.mtv(statsImage, frame=2)
+            ds9.mtv(statsImage.getVariance(), frame=3)
             
     def testUndersample(self):
         """Test how the program handles nx,ny being too small for requested interp style."""
@@ -652,7 +692,7 @@ class BackgroundTestCase(unittest.TestCase):
             bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
 
             bkgd = afwMath.makeBackground(mi, bctrl)
-            statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
+            afwMath.cast_BackgroundMI(bkgd).getStatsImage()
 
             # the test is that this doesn't fail if the bug (#2297) is fixed
             bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
@@ -679,7 +719,7 @@ class BackgroundTestCase(unittest.TestCase):
         # OK, we have our background.  Make a copy
         #
         bkgd2 = afwMath.BackgroundMI(self.image.getBBox(), bkgd.getStatsImage())
-        del bkgd; bkgd = None           # we should be handling the memory correctly, but let's check
+        del bkgd           # we should be handling the memory correctly, but let's check
         bkgdImage2 = bkgd2.getImageF(interpStyle)
 
         self.assertEqual(np.mean(bkgdImage2.getArray()), self.val)
@@ -691,7 +731,6 @@ class BackgroundTestCase(unittest.TestCase):
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
 
         backgroundList = afwMath.BackgroundList()
-        backImage = afwImage.ImageF(self.image.getDimensions())
         for i in range(2):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
             if i == 0:
@@ -771,6 +810,8 @@ def suite():
 
 def run(shouldExit = False):
     """Run the tests"""
+    if AfwdataDir is None:
+        print "Warning: afwdata is not setup so some tests will be skipped"
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
