@@ -49,6 +49,18 @@ def Tempfile(fileName, remove=True):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def saturate(image, satValue):
+    """Simulate saturation on an image, so we can test 'replaceSaturatedPixels'
+
+    Takes an Image, sets saturated pixels to NAN and masks them, returning
+    a MaskedImage.
+    """
+    image = afwImage.makeMaskedImage(image)
+    afwDetect.FootprintSet(image, afwDetect.Threshold(satValue), "SAT")
+    arr = image.getImage().getArray()
+    arr[np.where(arr >= satValue)] = np.nan
+    return image
+
 R, G, B = 2, 1, 0
 
 class RgbTestCase(unittest.TestCase):
@@ -103,6 +115,39 @@ class RgbTestCase(unittest.TestCase):
         if display:
             rgb.displayRGB(rgbImage)            
 
+    def testMakeRGB(self):
+        """Test the function that does it all"""
+        fileName = "makeRGB.png"
+
+        assert "imageLib.ImageF" in repr(self.images[R]) # check that ImageF is supported
+        with Tempfile(fileName, remove=True):
+            rgb.makeRGB(self.images[R], self.images[B], self.images[B],
+                        self.min, self.range, self.Q, fileName=fileName)
+
+    def testMakeRGBU(self):
+        """Test the function that does it all works with unsigned short images"""
+
+        rgbImages = [afwImage.ImageU(_.getArray().astype('uint16')) for _ in [
+            self.images[R], self.images[G], self.images[B]]]
+
+        assert "imageLib.ImageU" in repr(rgbImages[0]) # check that ImageU is supported
+        rgbImage = rgb.makeRGB(*rgbImages, min=self.min, range=self.range, Q=self.Q)
+
+        if display:
+            rgb.displayRGB(rgbImage)            
+
+    def testMakeRGBSaturated(self):
+        """Test the function that does it all when there are saturated pixels"""
+        fileName = "makeRGB.png"
+        satValue = 1000.0
+        with Tempfile(fileName, remove=True):
+            red = saturate(self.images[R], satValue)
+            green = saturate(self.images[G], satValue)
+            blue = saturate(self.images[B], satValue)
+            assert "imageLib.MaskedImageF" in repr(red) # check that MaskedImageF is supported
+            rgb.makeRGB(red, green, blue, self.min, self.range, self.Q, fileName=fileName,
+                        saturatedBorderWidth=1, saturatedPixelValue=2000)
+
     @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testWriteStars(self):
         """Test writing RGB files to disk"""
@@ -118,23 +163,14 @@ class RgbTestCase(unittest.TestCase):
     def testSaturated(self):
         """Test interpolating saturated pixels"""
 
-        feet = {}
+        satValue = 1000.0
         for f in [R, G, B]:
-            self.images[f] = afwImage.makeMaskedImage(self.images[f])
-
-            ds = afwDetect.FootprintSet(self.images[f], afwDetect.Threshold(1000), "SAT")
-            feet[f] = ds.getFootprints()
-
-            arr = self.images[f].getImage().getArray()
-            arr[np.where(arr >= 1000)] = np.nan
+            self.images[f] = saturate(self.images[f], satValue)
 
         rgb.replaceSaturatedPixels(self.images[R], self.images[G], self.images[B], 1, 2000)
         #
         # Check that we replaced those NaNs with some reasonable value
         #
-        f0 = [k for k, v in feet.items() if v][0] # find a filter with a saturated region
-        foot = feet[f0][0]
-        s = foot.getSpans()[0]
         for f in [R, G, B]:
             self.assertTrue(np.isfinite(self.images[f].getImage().getArray()).all())
         

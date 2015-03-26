@@ -27,6 +27,8 @@ class Mapping(object):
         """
         imageRGB = [imageR, imageG, imageB]
         for i, c in enumerate(imageRGB):
+            if hasattr(c, "getImage"):
+                c = imageRGB[i] = c.getImage()
             if hasattr(c, "getArray"):
                 imageRGB[i] = c.getArray()
 
@@ -108,10 +110,13 @@ def makeRGB(imageR, imageG, imageB, min=0, range=5, Q=20, fileName=None,
             saturatedBorderWidth=0, saturatedPixelValue=None):
     """Make a set of three images into an RGB image using an asinh stretch and optionally write it to disk
 
-    If saturatedBorderWidth is non-zero, replace saturated pixels with saturatedPixelValue
+    If saturatedBorderWidth is non-zero, replace saturated pixels with saturatedPixelValue.  Note
+    that replacing saturated pixels requires that the input images be MaskedImages.
     """
-    if saturatedPixelBorder:
-        replaceSaturatedPixels(imageR, imageG, imageB, saturatedPixelBorder, saturatedPixelValue)
+    if saturatedBorderWidth:
+        if saturatedPixelValue is None:
+            raise ValueError("saturatedPixelValue must be set if saturatedBorderWidth is set")
+        replaceSaturatedPixels(imageR, imageG, imageB, saturatedBorderWidth, saturatedPixelValue)
 
     asinhMap = AsinhMapping(min, range, Q)
     rgb = asinhMap.makeRgbImage(imageR, imageG, imageB)
