@@ -456,4 +456,11 @@ inline bool lsst::afw::coord::Coord::operator==(lsst::afw::coord::Coord const &r
         (_epoch == rhs._epoch);
 }
 
+/**
+ * @brief Inequality; the complement of equality
+ */
+inline bool operator!=(lsst::afw::coord::Coord const &lhs, lsst::afw::coord::Coord const &rhs) {
+    return !(lhs == rhs);
+}
+
 #endif
