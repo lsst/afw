@@ -35,6 +35,7 @@
 #include <cmath>
 #include <cassert>
 #include "boost/shared_ptr.hpp"
+#include "ndarray.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"

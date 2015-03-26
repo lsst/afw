@@ -43,7 +43,7 @@
 #include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "boost/shared_ptr.hpp"
-#include "ndarray.h"
+#include "ndarray_fwd.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/MaskedVector.h"
 
@@ -439,8 +439,6 @@ private:
     Array const &_getVector() const { return _v; } // get the ref for the copyCon
 };
 
-// hide std::vector implemenations from SWIG; use ndarray versions instead for better behavior with numpy
-#ifndef SWIG 
 /**
  * @brief The makeStatistics() overload to handle std::vector<>
  * @relates Statistics
@@ -474,7 +472,6 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose proper
     
     return Statistics(img, msk, var, weights, flags, sctrl);
 }
-#endif
 
 /**
  * @brief The makeStatistics() overload to handle 1-d ndarray::Array<>

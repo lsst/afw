@@ -109,10 +109,16 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, getMean)
 
     def testNumpyArrays(self):
-        """Test that we can run makeStatistics on numpy arrays
+        """Test that we can run makeStatistics on numpy arrays and python lists
         """
-        for dtype in (float, np.float32, np.float64):
+        for dtype in (float, np.float32, np.float64, list):
+            castToList = False
+            if dtype == list:
+                castToList = True
+                dtype = float
             arr = np.array([1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3], dtype=dtype)
+            if castToList:
+                arr = list(arr)
 
             stats = afwMath.makeStatistics(arr, afwMath.STDEV | afwMath.MEAN)
             mean = stats.getValue(afwMath.MEAN)
@@ -122,7 +128,6 @@ class StatisticsTestCase(unittest.TestCase):
 
             self.assertAlmostEqual(mean, knownMean)
             self.assertAlmostEqual(sd, knownStdDev)
-
 
     def testStatsZebra(self):
         """Add 1 to every other row"""
