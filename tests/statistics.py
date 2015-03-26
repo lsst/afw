@@ -108,6 +108,22 @@ class StatisticsTestCase(unittest.TestCase):
 
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, getMean)
 
+    def testNumpyArrays(self):
+        """Test that we can run makeStatistics on numpy arrays
+        """
+        for dtype in (float, np.float32, np.float64):
+            arr = np.array([1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3], dtype=dtype)
+
+            stats = afwMath.makeStatistics(arr, afwMath.STDEV | afwMath.MEAN)
+            mean = stats.getValue(afwMath.MEAN)
+            sd = stats.getValue(afwMath.STDEV)
+            knownMean = 2.0
+            knownStdDev = 0.216024677071
+
+            self.assertAlmostEqual(mean, knownMean)
+            self.assertAlmostEqual(sd, knownStdDev)
+
+
     def testStatsZebra(self):
         """Add 1 to every other row"""
         image2 = self.image.Factory(self.image, True)
@@ -306,7 +322,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(0x1a, stats.getValue(afwMath.SUM))
 
         def tst():
-            stats = afwMath.makeStatistics(mask, afwMath.MEAN)
+            afwMath.makeStatistics(mask, afwMath.MEAN)
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, tst)
 
 
@@ -437,7 +453,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(weighted.getError(afwMath.MEAN)**2, variance/npix)
         self.assertAlmostEqual(weighted.getError(afwMath.MEANCLIP)**2, variance/npix)
         
-    def testMeanClip(self):
+    def testMeanClipNoNan(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)
