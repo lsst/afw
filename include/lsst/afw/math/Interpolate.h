@@ -75,8 +75,10 @@ private:
     Interpolate& operator=(Interpolate const&);
 };
 
+#ifndef SWIG // hide std::vector interface from Python; use ndarray interface, instead
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                  Interpolate::Style const style=Interpolate::AKIMA_SPLINE);
+#endif
 
 PTR(Interpolate) makeInterpolate(ndarray::Array<double const, 1> const &x,
                                  ndarray::Array<double const, 1> const &y,

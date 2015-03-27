@@ -44,12 +44,12 @@ import lsst.pex.exceptions as pexExcept
 
 class InterpolateTestCase(unittest.TestCase):
     
-    """A test case for Interpolate Lienar"""
+    """A test case for Interpolate Linear"""
     def setUp(self):
         self.n = 10
-        self.x = afwMath.vectorD(self.n)
-        self.y1 = afwMath.vectorD(self.n)
-        self.y2 = afwMath.vectorD(self.n)
+        self.x = np.zeros(self.n, dtype=float)
+        self.y1 = np.zeros(self.n, dtype=float)
+        self.y2 = np.zeros(self.n, dtype=float)
         self.y0 = 1.0
         self.dydx = 1.0
         self.d2ydx2 = 0.5
@@ -126,15 +126,25 @@ class InterpolateTestCase(unittest.TestCase):
     def testInvalidInputs(self):
         """Test that invalid inputs cause an abort"""
 
-        self.assertRaises(pexExcept.InvalidParameterError,
-                                       lambda : afwMath.makeInterpolate([], [],
-                                                                        afwMath.Interpolate.CONSTANT))
+        # no elements in the array
+        self.assertRaises(
+            pexExcept.InvalidParameterError,
+            lambda : afwMath.makeInterpolate(np.array([], dtype=float), np.array([], dtype=float),
+                                             afwMath.Interpolate.CONSTANT)
+        )
 
-        interp = afwMath.makeInterpolate([0], [1], afwMath.Interpolate.CONSTANT)
+        # data must be a numpy array, not an ordinary list
+        self.assertRaises(
+            Exception,
+            afwMath.makeInterpolate, [0.0], [1.0], afwMath.Interpolate.CONSTANT,
+        )
 
-        self.assertRaises(pexExcept.OutOfRangeError,
-                                       lambda : afwMath.makeInterpolate([0], [1],
-                                                                        afwMath.Interpolate.LINEAR))
+        # one value is acceptable for constant interpolation, but not other kinds
+        afwMath.makeInterpolate(np.array([0.0]), np.array([1.0]), afwMath.Interpolate.CONSTANT)
+        self.assertRaises(
+            pexExcept.OutOfRangeError,
+            afwMath.makeInterpolate, np.array([0.0]), np.array([1.0]), afwMath.Interpolate.LINEAR,
+        )
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
