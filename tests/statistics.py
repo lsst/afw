@@ -111,23 +111,32 @@ class StatisticsTestCase(unittest.TestCase):
     def testNumpyArrays(self):
         """Test that we can run makeStatistics on numpy arrays and python lists
         """
-        for dtype in (float, np.float32, np.float64, list):
-            castToList = False
-            if dtype == list:
-                castToList = True
-                dtype = float
-            arr = np.array([1.7, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3], dtype=dtype)
-            if castToList:
-                arr = list(arr)
+        for dtype in (int, float, np.float32, np.float64, np.uint16, np.uint64):
+            arr = np.array(range(7), dtype=dtype)
+            doCastToList=False
+            if dtype in (int, float):
+                doCastOptions = (False, True)
+            else:
+                doCastOptions = (False,)
+            for doCastToList in doCastOptions:
+                if doCastToList:
+                    arr = list(arr)
 
-            stats = afwMath.makeStatistics(arr, afwMath.STDEV | afwMath.MEAN)
-            mean = stats.getValue(afwMath.MEAN)
-            sd = stats.getValue(afwMath.STDEV)
-            knownMean = 2.0
-            knownStdDev = 0.216024677071
+                print "arr=%r; dtype=%s, doCastToList=%s" % (arr, dtype, doCastToList)
+                try:
+                    stats = afwMath.makeStatistics(arr, afwMath.STDEV | afwMath.MEAN)
+                except Exception:
+                    print "type error with arr=%r; dtype=%s, doCastToList=%s" % (arr, dtype, doCastToList)
+                    raise
 
-            self.assertAlmostEqual(mean, knownMean)
-            self.assertAlmostEqual(sd, knownStdDev)
+                mean = stats.getValue(afwMath.MEAN)
+                sd = stats.getValue(afwMath.STDEV)
+                knownMean = 3
+                knownStdDev = 2.160246899469287
+
+                self.assertAlmostEqual(mean, knownMean)
+                self.assertAlmostEqual(sd, knownStdDev)
+
 
     def testStatsZebra(self):
         """Add 1 to every other row"""
