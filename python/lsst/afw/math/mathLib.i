@@ -67,6 +67,8 @@ Python interface to lsst::afw::math classes
 %template(vectorD) std::vector<double>;
 %template(vectorF) std::vector<float>;
 %template(vectorI) std::vector<int>;
+%template(vectorU) std::vector<uint16_t>;
+%template(vectorL) std::vector<uint64_t>;
 %template(vectorVectorD) std::vector<std::vector<double> >;
 %template(vectorVectorF) std::vector<std::vector<float> >;
 %template(vectorVectorI) std::vector<std::vector<int> >;

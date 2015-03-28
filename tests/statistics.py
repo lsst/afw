@@ -108,35 +108,58 @@ class StatisticsTestCase(unittest.TestCase):
 
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, getMean)
 
+    def checkSimpleStats(self, arr):
+        """Check mean and standard deviation for a simple non-tricky 1-d array
+
+        This compares the output of Statistics to that of numpy. As such it is not
+        intended to test tricky data for which great care is required to get a valid answer.
+        It is primarily intended to check that a particular type of array can be measured
+        with the Statistics package.
+        """
+        try:
+            stats = afwMath.makeStatistics(arr, afwMath.STDEV | afwMath.MEAN)
+        except Exception:
+            if hasattr(arr, "dtype"):
+                raise AssertionError("Statistics rejected a numpy array of type %s" % (arr.dtype,))
+            else:
+                raise AssertionError("Statistics rejected arr=%r based on type" % (arr,))
+
+
+        mean = stats.getValue(afwMath.MEAN)
+        stdDev = stats.getValue(afwMath.STDEV)
+        npMean = np.mean(arr)
+        npStdDev = np.std(arr, ddof=1)
+        self.assertAlmostEqual(mean, npMean, 6)
+        self.assertAlmostEqual(stdDev, npStdDev, 6)
+
     def testNumpyArrays(self):
         """Test that we can run makeStatistics on numpy arrays and python lists
         """
         for dtype in (int, float, np.float32, np.float64, np.uint16, np.uint64):
             arr = np.array(range(7), dtype=dtype)
-            doCastToList=False
-            if dtype in (int, float):
-                doCastOptions = (False, True)
-            else:
-                doCastOptions = (False,)
-            for doCastToList in doCastOptions:
-                if doCastToList:
-                    arr = list(arr)
+            self.checkSimpleStats(arr)
 
-                print "arr=%r; dtype=%s, doCastToList=%s" % (arr, dtype, doCastToList)
-                try:
-                    stats = afwMath.makeStatistics(arr, afwMath.STDEV | afwMath.MEAN)
-                except Exception:
-                    print "type error with arr=%r; dtype=%s, doCastToList=%s" % (arr, dtype, doCastToList)
-                    raise
+    def testLists(self):
+        """Test that we can run makeStatistics on ordinary lists
+        """
+        for dtype in (int, float):
+            arr = list(np.array(range(7), dtype=dtype))
+            self.checkSimpleStats(arr)
 
-                mean = stats.getValue(afwMath.MEAN)
-                sd = stats.getValue(afwMath.STDEV)
-                knownMean = 3
-                knownStdDev = 2.160246899469287
-
-                self.assertAlmostEqual(mean, knownMean)
-                self.assertAlmostEqual(sd, knownStdDev)
-
+    def testWrappedVectors(self):
+        """Test that we can run makeStatistics on wrapped vectors
+        """
+        for dtype in (
+            afwMath.vectorD,
+            afwMath.vectorF,
+            afwMath.vectorI,
+            afwMath.vectorU,
+            afwMath.vectorL,
+        ):
+            arr = dtype()
+            for v in range(7):
+                arr.append(v)
+            self.checkSimpleStats(arr)
 
     def testStatsZebra(self):
         """Add 1 to every other row"""
