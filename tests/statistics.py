@@ -124,18 +124,27 @@ class StatisticsTestCase(unittest.TestCase):
             else:
                 raise AssertionError("Statistics rejected arr=%r based on type" % (arr,))
 
-
         mean = stats.getValue(afwMath.MEAN)
         stdDev = stats.getValue(afwMath.STDEV)
-        npMean = np.mean(arr)
-        npStdDev = np.std(arr, ddof=1)
+        # "for val in arr" confuses numpy and Python if arr is std::vector<uint16>
+        # (the values appear to be opaque objects) so manually cast the data
+        floatArr = np.array([float(arr[i]) for i in range(len(arr))], dtype=float)
+        npMean = floatArr.mean()
+        npStdDev = floatArr.std(ddof=1)
         self.assertAlmostEqual(mean, npMean, 6)
         self.assertAlmostEqual(stdDev, npStdDev, 6)
 
     def testNumpyArrays(self):
-        """Test that we can run makeStatistics on numpy arrays and python lists
+        """Test that we can run makeStatistics on numpy arrays
         """
-        for dtype in (int, float, np.float32, np.float64, np.uint16, np.uint64):
+        for dtype in (
+            float,      # C++ double
+            np.float32, # C++ float
+            np.float64, # C++ double
+            np.int32,   # C++ int
+            np.uint16,  # C++ uint16_t
+            np.uint64,  # C++ uint64_t
+        ):
             arr = np.array(range(7), dtype=dtype)
             self.checkSimpleStats(arr)
 

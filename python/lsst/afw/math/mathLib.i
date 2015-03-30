@@ -33,6 +33,7 @@ Python interface to lsst::afw::math classes
 
 %{
 #   include <cstdint>
+#   include <vector>
 #   include "lsst/daf/base.h"
 #   include "lsst/pex/logging.h"
 #   include "lsst/pex/policy.h"
@@ -67,18 +68,18 @@ Python interface to lsst::afw::math classes
 %template(vectorD) std::vector<double>;
 %template(vectorF) std::vector<float>;
 %template(vectorI) std::vector<int>;
-%template(vectorU) std::vector<uint16_t>;
-%template(vectorL) std::vector<uint64_t>;
+%template(vectorU) std::vector<std::uint16_t>;
+%template(vectorL) std::vector<std::uint64_t>;
 %template(vectorVectorD) std::vector<std::vector<double> >;
 %template(vectorVectorF) std::vector<std::vector<float> >;
 %template(vectorVectorI) std::vector<std::vector<int> >;
 // 1-d ndarray arrays of all plain types for which lsst::math:: functions exist
 // that take such types; declare other ndarray types in other .i files as needed
-%declareNumPyConverters(ndarray::Array<double,1,0>);
-%declareNumPyConverters(ndarray::Array<float,1,0>);
-%declareNumPyConverters(ndarray::Array<int,1,0>);
-%declareNumPyConverters(ndarray::Array<uint16_t,1,0>);
-%declareNumPyConverters(ndarray::Array<uint64_t,1,0>);
+%declareNumPyConverters(ndarray::Array<double,1>);
+%declareNumPyConverters(ndarray::Array<float,1>);
+%declareNumPyConverters(ndarray::Array<int,1>);
+%declareNumPyConverters(ndarray::Array<std::uint16_t,1>);
+%declareNumPyConverters(ndarray::Array<std::uint64_t,1>);
 
 %import "lsst/afw/image/imageLib.i"
 

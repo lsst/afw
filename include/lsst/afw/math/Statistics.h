@@ -440,42 +440,6 @@ private:
 };
 
 /**
- * @brief The makeStatistics() overload to handle std::vector<>
- * @relates Statistics
- */
-template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose properties we want
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-                         ) {
-    std::cout << "makeStatistics(std::vector v, flags, sctrl)" << std::endl;
-    ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
-    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
-    MaskImposter<WeightPixel> var;
-    return Statistics(img, msk, var, flags, sctrl);
-}
-
-/**
- * @brief The makeStatistics() overload to handle std::vector<>
- * @relates Statistics
- */
-template<typename EntryT>
-Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose properties we want
-                          std::vector<WeightPixel> const &vweights, ///< Weights
-                          int const flags,   ///< Describe what we want to calculate
-                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
-                         ) {
-    std::cout << "makeStatistics(std::vector v, std::vector vweights, flags, sctrl)" << std::endl;
-    ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
-    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
-    MaskImposter<WeightPixel> var;
-
-    ImageImposter<WeightPixel> weights(vweights);
-    
-    return Statistics(img, msk, var, weights, flags, sctrl);
-}
-
-/**
  * @brief The makeStatistics() overload to handle 1-d ndarray::Array<>
  * @relates Statistics
  */
@@ -507,6 +471,42 @@ Statistics makeStatistics(ndarray::Array<EntryT, 1> const &v, ///< 1-d array who
     MaskImposter<WeightPixel> var;
 
     Image1DNDArrayImposter<WeightPixel> weights(vweights);
+    
+    return Statistics(img, msk, var, weights, flags, sctrl);
+}
+
+/**
+ * @brief The makeStatistics() overload to handle std::vector<>
+ * @relates Statistics
+ */
+template<typename EntryT>
+Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose properties we want
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
+                         ) {
+    std::cout << "makeStatistics(std::vector v, flags, sctrl)" << std::endl;
+    ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
+    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+    MaskImposter<WeightPixel> var;
+    return Statistics(img, msk, var, flags, sctrl);
+}
+
+/**
+ * @brief The makeStatistics() overload to handle std::vector<>
+ * @relates Statistics
+ */
+template<typename EntryT>
+Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose properties we want
+                          std::vector<WeightPixel> const &vweights, ///< Weights
+                          int const flags,   ///< Describe what we want to calculate
+                          StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
+                         ) {
+    std::cout << "makeStatistics(std::vector v, std::vector vweights, flags, sctrl)" << std::endl;
+    ImageImposter<EntryT> img(v);           // wrap the vector in a fake image
+    MaskImposter<lsst::afw::image::MaskPixel> msk;     // instantiate a fake mask that will be compiled out.
+    MaskImposter<WeightPixel> var;
+
+    ImageImposter<WeightPixel> weights(vweights);
     
     return Statistics(img, msk, var, weights, flags, sctrl);
 }

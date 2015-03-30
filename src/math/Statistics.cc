@@ -33,6 +33,7 @@
 #include <iostream>
 #include <limits>
 #include <cmath>
+#include <cstdint>
 #include <cassert>
 #include "boost/shared_ptr.hpp"
 #include "ndarray.h"
@@ -1133,7 +1134,7 @@ typedef afwImage::VariancePixel VPixel;
 INSTANTIATE_IMAGE_STATISTICS(double);
 INSTANTIATE_IMAGE_STATISTICS(float);
 INSTANTIATE_IMAGE_STATISTICS(int);
-INSTANTIATE_IMAGE_STATISTICS(boost::uint16_t);
-INSTANTIATE_IMAGE_STATISTICS(boost::uint64_t);
+INSTANTIATE_IMAGE_STATISTICS(std::uint16_t);
+INSTANTIATE_IMAGE_STATISTICS(std::uint64_t);
 
 /// \endcond

@@ -30,7 +30,6 @@
 
 %include "lsst/afw/math/Statistics.h"
 
-
 %define %declareStats(PIXTYPE, SUFFIX)
 %template(makeStatistics) lsst::afw::math::makeStatistics<PIXTYPE>;
 %template(Statistics ## SUFFIX) lsst::afw::math::Statistics::Statistics<lsst::afw::image::Image<PIXTYPE>, lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, lsst::afw::image::Image<lsst::afw::image::VariancePixel> >;
@@ -39,8 +38,8 @@
 %declareStats(double, D)
 %declareStats(float, F)
 %declareStats(int, I)
-%declareStats(uint16_t, U)
-%declareStats(uint64_t, L)
+%declareStats(std::uint16_t, U)
+%declareStats(std::uint64_t, L)
 
 // We also support Mask<MaskPixel>
 %rename(makeStatisticsMU) lsst::afw::math::makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, int, lsst::afw::math::StatisticsControl const&);
