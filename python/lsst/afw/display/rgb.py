@@ -110,8 +110,8 @@ def makeRGB(imageR, imageG, imageB, min=0, range=5, Q=20, fileName=None,
 
     If saturatedBorderWidth is non-zero, replace saturated pixels with saturatedPixelValue
     """
-    if saturatedPixelBorder:
-        replaceSaturatedPixels(imageR, imageG, imageB, saturatedPixelBorder, saturatedPixelValue)
+    if saturatedBorderWidth:
+        replaceSaturatedPixels(imageR, imageG, imageB, saturatedBorderWidth, saturatedPixelValue)
 
     asinhMap = AsinhMapping(min, range, Q)
     rgb = asinhMap.makeRgbImage(imageR, imageG, imageB)
