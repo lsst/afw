@@ -643,6 +643,20 @@ class CoordTestCase(unittest.TestCase):
                 ra, dec, menudo = c
             self.assertRaises(ValueError, three, c)
 
+    def testEquality(self):
+        # (In)equality is determined by value, not identity. See DM-2347, -2465.
+        c1 = afwCoord.IcrsCoord(self.ra, self.dec)
+        self.assertTrue(c1 == c1)
+        self.assertFalse(c1 != c1)
+
+        c2 = afwCoord.IcrsCoord(self.ra.replace('1', '2'), self.dec)
+        self.assertFalse(c2 == c1)
+        self.assertTrue(c2 != c1)
+
+        c3 = afwCoord.IcrsCoord(self.ra, self.dec)
+        self.assertTrue(c3 == c1)
+        self.assertFalse(c3 != c1)
+
 
 #################################################################
 # Test suite boiler plate
