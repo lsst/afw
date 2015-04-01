@@ -108,7 +108,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, getMean)
 
-    def checkSimpleStats(self, arr):
+    def checkSimple1DStats(self, arr):
         """Check mean and standard deviation for a simple non-tricky 1-d array
 
         This compares the output of Statistics to that of numpy. As such it is not
@@ -117,22 +117,20 @@ class StatisticsTestCase(unittest.TestCase):
         with the Statistics package.
         """
         try:
-            stats = afwMath.makeStatistics(arr, afwMath.STDEV | afwMath.MEAN)
-        except Exception:
-            if hasattr(arr, "dtype"):
-                raise AssertionError("Statistics rejected a numpy array of type %s" % (arr.dtype,))
-            else:
-                raise AssertionError("Statistics rejected arr=%r based on type" % (arr,))
+            stats = afwMath.makeStatistics1D(arr, afwMath.STDEV | afwMath.MEAN)
 
-        mean = stats.getValue(afwMath.MEAN)
-        stdDev = stats.getValue(afwMath.STDEV)
-        # "for val in arr" confuses numpy and Python if arr is std::vector<uint16>
-        # (the values appear to be opaque objects) so manually cast the data
-        floatArr = np.array([float(arr[i]) for i in range(len(arr))], dtype=float)
-        npMean = floatArr.mean()
-        npStdDev = floatArr.std(ddof=1)
-        self.assertAlmostEqual(mean, npMean, 6)
-        self.assertAlmostEqual(stdDev, npStdDev, 6)
+            mean = stats.getValue(afwMath.MEAN)
+            stdDev = stats.getValue(afwMath.STDEV)
+            # "for val in arr" confuses numpy and Python if arr is std::vector<uint16>
+            # (the values appear to be opaque objects) so manually cast the data
+            floatArr = np.array([float(arr[i]) for i in range(len(arr))], dtype=float)
+            npMean = floatArr.mean()
+            npStdDev = floatArr.std(ddof=1)
+            self.assertAlmostEqual(mean, npMean, 6)
+            self.assertAlmostEqual(stdDev, npStdDev, 6)
+        except Exception:
+            print "checkSimple1DStats failed on arr=%r" % (arr,)
+            raise
 
     def testNumpyArrays(self):
         """Test that we can run makeStatistics on numpy arrays
@@ -146,14 +144,14 @@ class StatisticsTestCase(unittest.TestCase):
             np.uint64,  # C++ uint64_t
         ):
             arr = np.array(range(7), dtype=dtype)
-            self.checkSimpleStats(arr)
+            self.checkSimple1DStats(arr)
 
     def testLists(self):
         """Test that we can run makeStatistics on ordinary lists
         """
         for dtype in (int, float):
             arr = list(np.array(range(7), dtype=dtype))
-            self.checkSimpleStats(arr)
+            self.checkSimple1DStats(arr)
 
     def testWrappedVectors(self):
         """Test that we can run makeStatistics on wrapped vectors
@@ -168,7 +166,7 @@ class StatisticsTestCase(unittest.TestCase):
             arr = dtype()
             for v in range(7):
                 arr.append(v)
-            self.checkSimpleStats(arr)
+            self.checkSimple1DStats(arr)
 
     def testStatsZebra(self):
         """Add 1 to every other row"""
@@ -220,7 +218,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
 
         values = [1.0, 2.0, 3.0, 2.0 ]
-        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2.0)
+        self.assertEqual(afwMath.makeStatistics1D(values, afwMath.MEDIAN).getValue(), 2.0)
 
     def testIqrange(self):
         """Test the inter-quartile range"""
@@ -380,14 +378,14 @@ class StatisticsTestCase(unittest.TestCase):
         
         # check the exact example in the ticket
         values = [1.0, 2.0, 3.0, 2.0]
-        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2)
-        self.assertEqual(afwMath.makeStatistics(sorted(values), afwMath.MEDIAN).getValue(), 2)
+        self.assertEqual(afwMath.makeStatistics1D(values, afwMath.MEDIAN).getValue(), 2)
+        self.assertEqual(afwMath.makeStatistics1D(sorted(values), afwMath.MEDIAN).getValue(), 2)
 
         # check some other possible ways it could show up
         values = range(10)
-        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 4.5)
+        self.assertEqual(afwMath.makeStatistics1D(values, afwMath.MEDIAN).getValue(), 4.5)
         values = range(11)
-        self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 5.0)
+        self.assertEqual(afwMath.makeStatistics1D(values, afwMath.MEDIAN).getValue(), 5.0)
         
 
     def testTicket1123(self):

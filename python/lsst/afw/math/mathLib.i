@@ -77,6 +77,8 @@ Python interface to lsst::afw::math classes
 // that take such types; declare other ndarray types in other .i files as needed
 %declareNumPyConverters(ndarray::Array<double,1>);
 %declareNumPyConverters(ndarray::Array<float,1>);
+// needed for weights even though WeightPixel = float
+%declareNumPyConverters(ndarray::Array<lsst::afw::math::WeightPixel,1>);
 %declareNumPyConverters(ndarray::Array<int,1>);
 %declareNumPyConverters(ndarray::Array<std::uint16_t,1>);
 %declareNumPyConverters(ndarray::Array<std::uint64_t,1>);

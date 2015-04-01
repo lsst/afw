@@ -54,7 +54,7 @@ class Ticket1045TestCase(unittest.TestCase):
         knownMean, knownStdev =  num.mean(values), 0.069903889977279199
 
         # this was reported to work
-        dmean1 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
+        dmean1 = afwMath.makeStatistics1D(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean1 = dmean1.getValue(afwMath.MEAN)
         stdev1 = dmean1.getValue(afwMath.STDEV)
         self.assertAlmostEqual(mean1, knownMean)
@@ -65,7 +65,7 @@ class Ticket1045TestCase(unittest.TestCase):
         knownMeanClip = 1.097431111111111
         knownStdevClip = 0.012984991763998597
         
-        dmean2 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEANCLIP | afwMath.STDEVCLIP)
+        dmean2 = afwMath.makeStatistics1D(values, afwMath.NPOINT | afwMath.MEANCLIP | afwMath.STDEVCLIP)
         mean2 = dmean2.getValue(afwMath.MEANCLIP)
         stdev2 = dmean2.getValue(afwMath.STDEVCLIP)
         self.assertAlmostEqual(mean2, knownMeanClip)
@@ -73,35 +73,35 @@ class Ticket1045TestCase(unittest.TestCase):
 
         # check the median, just for giggles
         knownMedian = num.median(values)
-        stat = afwMath.makeStatistics(values, afwMath.MEDIAN)
+        stat = afwMath.makeStatistics1D(values, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertAlmostEqual(median, knownMedian)
 
         # check the median with an odd number of values
         vals = values[1:]
         knownMedian = num.median(vals)
-        stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
+        stat = afwMath.makeStatistics1D(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertAlmostEqual(median, knownMedian)
 
         # check the median with only two values
         vals = values[0:2]
         knownMedian = num.median(vals)
-        stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
+        stat = afwMath.makeStatistics1D(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertAlmostEqual(median, knownMedian)
 
         # check the median with only 1 value
         vals = values[0:1]
         knownMedian = num.median(vals)
-        stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
+        stat = afwMath.makeStatistics1D(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertAlmostEqual(median, knownMedian)
 
         # check the median with no values
         vals = []
         def tst():
-            stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
+            stat = afwMath.makeStatistics1D(vals, afwMath.MEDIAN)
             median = stat.getValue(afwMath.MEDIAN)
             return median
         self.assertRaises(pexExcept.InvalidParameterError, tst)
@@ -112,7 +112,7 @@ class Ticket1045TestCase(unittest.TestCase):
         values = [7824.0, 7803.0, 7871.0, 7567.0, 7813.0, 7809.0, 8011.0, 7807.0]
         npValues = num.array(values)
         
-        meanClip = afwMath.makeStatistics(values, afwMath.MEANCLIP).getValue()
+        meanClip = afwMath.makeStatistics1D(values, afwMath.MEANCLIP).getValue()
         iKept = num.array([0, 1, 2, 4, 5, 7]) # note ... it will clip indices 3 and 6
         knownMeanClip = num.mean(npValues[iKept])
         self.assertEqual(meanClip, knownMeanClip)

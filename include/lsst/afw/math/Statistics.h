@@ -444,7 +444,7 @@ private:
  * @relates Statistics
  */
 template<typename EntryT>
-Statistics makeStatistics(ndarray::Array<EntryT, 1> const &v, ///< 1-d array whose properties we want
+Statistics makeStatistics1D(ndarray::Array<EntryT, 1> const &v, ///< 1-d array whose properties we want
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
                          ) {
@@ -460,7 +460,7 @@ Statistics makeStatistics(ndarray::Array<EntryT, 1> const &v, ///< 1-d array who
  * @relates Statistics
  */
 template<typename EntryT>
-Statistics makeStatistics(ndarray::Array<EntryT, 1> const &v, ///< 1-d array whose properties we want
+Statistics makeStatistics1D(ndarray::Array<EntryT, 1> const &v, ///< 1-d array whose properties we want
                           ndarray::Array<WeightPixel, 1> const &vweights, ///< Weights
                           int const flags,   ///< Describe what we want to calculate
                           StatisticsControl const& sctrl = StatisticsControl() ///< Control calculation
@@ -475,6 +475,7 @@ Statistics makeStatistics(ndarray::Array<EntryT, 1> const &v, ///< 1-d array who
     return Statistics(img, msk, var, weights, flags, sctrl);
 }
 
+#ifndef SWIG
 /**
  * @brief The makeStatistics() overload to handle std::vector<>
  * @relates Statistics
@@ -510,6 +511,7 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< vector whose proper
     
     return Statistics(img, msk, var, weights, flags, sctrl);
 }
+#endif
 
 /**
  * @brief The makeStatistics() overload to handle lsst::afw::math::MaskedVector<>
