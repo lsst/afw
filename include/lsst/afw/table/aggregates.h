@@ -64,7 +64,7 @@ public:
         std::string const & unit
     );
 
-    /// Default constructor; instance will not be usuable unless subsequently assigned to.
+    /// Default constructor; instance will not be usable unless subsequently assigned to.
     PointKey() : _x(), _y() {}
 
     /// Construct from a pair of Keys
@@ -141,7 +141,7 @@ public:
         std::string const & unit
     );
 
-    /// Default constructor; instance will not be usuable unless subsequently assigned to.
+    /// Default constructor; instance will not be usable unless subsequently assigned to.
     QuadrupoleKey() : _ixx(), _iyy(), _ixy() {}
 
     /// Construct from individual Keys
@@ -224,7 +224,7 @@ public:
         std::string const & unit
     );
 
-    /// Default constructor; instance will not be usuable unless subsequently assigned to.
+    /// Default constructor; instance will not be usable unless subsequently assigned to.
     EllipseKey() : _qKey(), _pKey() {}
 
     /// Construct from individual Keys
