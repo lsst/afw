@@ -92,7 +92,7 @@ template <typename T>
 typename ndarray::ArrayRef<T,2,1> const BaseColumnView::operator[](Key< Array<T> > const & key) const {
     if (key.isVariableLength()) {
         throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
+            pex::exceptions::LogicError,
             "Cannot get columns for variable-length array fields"
         );
     }

@@ -61,7 +61,7 @@ Key<U> KeyBase< Array<U> >::operator[](int i) const {
     Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);
     if (self->isVariableLength()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get Keys to elements of variable-length arrays."
         );
     }
@@ -79,7 +79,7 @@ Key< Array<U> > KeyBase< Array<U> >::slice(int begin, int end) const {
     Key< Array<U> > const * self = static_cast<Key< Array<U> > const *>(this);
     if (self->isVariableLength()) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot get Keys to slices of variable-length arrays."
         );
     }

@@ -751,8 +751,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record1[kb][2] = 3.5
         self.assertEqual(b1[2], 3.5)
         # Check that we throw when we try to index a variable-length array Key
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException, lambda x: ka[x], 0)
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException, lambda x, y: ka[x:y], 0, 1)
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, lambda x: ka[x], 0)
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, lambda x, y: ka[x:y], 0, 1)
         # Test copying records, both with and without SchemaMapper
         record2 = cat1.addNew()
         record2.assign(record1)
@@ -768,7 +768,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record3.assign(record1, mapper)
         self.assertTrue(numpy.all(record3.get(kb2) == b1))
         # Test that we throw if we try to get a column view of a variable-length arry
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException, cat1.get, ka)
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, cat1.get, ka)
         # Test that we can round-trip variable-length arrays through FITS
         filename = "testSimpleTable_testVariableLengthArrays.fits"
         cat1.writeFits(filename)
