@@ -32,6 +32,8 @@ Python interface to lsst::afw::math classes
 %module(package="lsst.afw.math",docstring=mathLib_DOCSTRING) mathLib
 
 %{
+#   include <cstdint>
+#   include <vector>
 #   include "lsst/daf/base.h"
 #   include "lsst/pex/logging.h"
 #   include "lsst/pex/policy.h"
@@ -43,10 +45,15 @@ Python interface to lsst::afw::math classes
 #   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
-// Enable ndarray's NumPy typemaps; types are declared in %included files.
+// Enable ndarray's NumPy typemaps (e.g. %declareNumPyConverters);
+// a few standard 1D array types are declared below and others are declared in %included files.
+// It is safe to have duplicate declareNumPyConverters. 
 %{
 #define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_MATH_NUMPY_ARRAY_API
+// ndarray.i documentation states that the numpy headers "arrayobject.h" and "ufuncobject.h"
+// must both be included before ndarray.i or any of the files in ndarray/swig
 #include "numpy/arrayobject.h"
+#include "numpy/ufuncobject.h"
 #include "ndarray/swig.h"
 #include "ndarray/swig/eigen.h"
 %}
@@ -58,12 +65,23 @@ Python interface to lsst::afw::math classes
 %include "lsst/p_lsstSwig.i"
 
 // vectors of plain old types; template vectors of more complex types in objectVectors.i
-%template(vectorF) std::vector<float>;
 %template(vectorD) std::vector<double>;
+%template(vectorF) std::vector<float>;
 %template(vectorI) std::vector<int>;
-%template(vectorVectorF) std::vector<std::vector<float> >;
+%template(vectorU) std::vector<std::uint16_t>;
+%template(vectorL) std::vector<std::uint64_t>;
 %template(vectorVectorD) std::vector<std::vector<double> >;
+%template(vectorVectorF) std::vector<std::vector<float> >;
 %template(vectorVectorI) std::vector<std::vector<int> >;
+// 1-d ndarray arrays of all plain types for which lsst::math:: functions exist
+// that take such types; declare other ndarray types in other .i files as needed
+%declareNumPyConverters(ndarray::Array<double,1>);
+%declareNumPyConverters(ndarray::Array<float,1>);
+// needed for weights even though WeightPixel = float
+%declareNumPyConverters(ndarray::Array<lsst::afw::math::WeightPixel,1>);
+%declareNumPyConverters(ndarray::Array<int,1>);
+%declareNumPyConverters(ndarray::Array<std::uint16_t,1>);
+%declareNumPyConverters(ndarray::Array<std::uint64_t,1>);
 
 %import "lsst/afw/image/imageLib.i"
 

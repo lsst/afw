@@ -35,6 +35,7 @@
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"
+#include "ndarray.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/Interpolate.h"
 
@@ -305,6 +306,25 @@ Interpolate::Style lookupMaxInterpStyle(int const n ///< Number of points
     }
 }
 
+std::vector<double> Interpolate::interpolate(std::vector<double> const& x) const {
+    size_t const num = x.size();
+    std::vector<double> out(num);
+    for (size_t i = 0; i < num; ++i) {
+        out[i] = interpolate(x[i]);
+    }
+    return out;
+}
+
+ndarray::Array<double, 1> Interpolate::interpolate(ndarray::Array<double const, 1> const& x) const {
+    int const num = x.getShape()[0];
+    ndarray::Array<double, 1> out = ndarray::allocate(ndarray::makeVector(num));
+    for (size_t i = 0; i < num; ++i) {
+        std::cout << "Interpolating " << x[i] << std::endl;
+        out[i] = interpolate(x[i]);
+    }
+    return out;
+}
+
 /**
  * @brief Get the minimum number of points needed to use the requested interpolation style
  */
@@ -350,19 +370,28 @@ Interpolate::Interpolate(
 }
 
 /**
- * A factory function to make Interpolate objects
+ * A factory function to make Interpolate objects from std::vector
  */
 PTR(Interpolate) makeInterpolate(std::vector<double> const &x, ///< the x-values of points
                                  std::vector<double> const &y, ///< the values at x[]
                                  Interpolate::Style const style ///< desired interpolator
-                                )
-{
+                                ) {
     switch (style) {
       case Interpolate::CONSTANT:
         return PTR(Interpolate)(new InterpolateConstant(x, y, style));
       default:                            // use GSL
         return PTR(Interpolate)(new InterpolateGsl(x, y, style));
     }
+}
+
+/**
+ * A factory function to make Interpolate objects from 1-d ndarray arrays
+ */
+PTR(Interpolate) makeInterpolate(ndarray::Array<double const, 1> const &x,
+                                 ndarray::Array<double const, 1> const &y,
+                                 Interpolate::Style const style) {
+    return makeInterpolate(std::vector<double>(x.begin(), x.end()), std::vector<double>(y.begin(), y.end()),
+                           style);
 }
 
 }}}
