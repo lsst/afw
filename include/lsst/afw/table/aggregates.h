@@ -191,25 +191,27 @@ bool operator!=(CoordKey const & lhs, CoordKey const & rhs);
 //@}
 
 /**
- *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from an (xx,yy,xy) tuple of Keys.
+ *  @brief A FunctorKey used to get or set a geom::ellipses::Quadrupole from a tuple of constituent Keys.
  */
 class QuadrupoleKey : public FunctorKey< lsst::afw::geom::ellipses::Quadrupole > {
 public:
 
     /**
-     *  Add a set of _xx, _yy, _xy fields to a Schema, and return a QuadrupoleKey that points to them.
      *
-     *  @param[in,out] schema  Schema to add fields to.
-     *  @param[in]     name    Name prefix for all fields; "_xx", "_yy", "_xy", will be appended to this
-     *                         to form the full field names.
-     *  @param[in]     doc     String used as the documentation for the fields.
-     *  @param[in]     unit    String used as the unit for all fields.
+     *  Add a set of quadrupole subfields to a schema and return a QuadrupoleKey that points to them.
+     *
+     *  @param[in,out] schema     Schema to add fields to.
+     *  @param[in]     name       Name prefix for all fields; ("_xx", "_yy", "_xy") will be appended to
+     *                            this to form the full field names. In celestial coordinates, we use "x"
+     *                            as a synonym for "RA" and "y" for "dec".
+     *  @param[in]     doc        String used as the documentation for the fields.
+     *  @param[in]     coordType  Type of coordinates in use (PIXEL or CELESTIAL).
      */
     static QuadrupoleKey addFields(
         Schema & schema,
         std::string const & name,
         std::string const & doc,
-        std::string const & unit
+        CoordinateType coordType=CoordinateType::PIXEL
     );
 
     /// Default constructor; instance will not be usable unless subsequently assigned to.
@@ -231,15 +233,16 @@ public:
     {}
 
     /**
-     *  @brief Construct from a subschema, assuming xx, yy, and xy subfields
+     *  @brief Construct from a subschema with appropriate subfields
      *
-     *  If a schema has "a_xx", "a_yy", and "a_xy" fields, this constructor allows you to construct
-     *  a QuadrupoleKey via:
+     *  If the schema has "a_xx", "a_yy" and "a_xy" fields this constructor enables you to
+     *  construct a QuadrupoleKey via:
+     *
      *  @code
-     *  QuadrupoleKey k(schema["a"]);
+     *  QuadrupoleKey k(schema["a"], coordType);
      *  @endcode
      */
-    QuadrupoleKey(SubSchema const & s) : _ixx(s["xx"]), _iyy(s["yy"]), _ixy(s["xy"]) {}
+    QuadrupoleKey(SubSchema const & s): _ixx(s["xx"]), _iyy(s["yy"]), _ixy(s["xy"]) {}
 
     /// Get a Quadrupole from the given record
     virtual geom::ellipses::Quadrupole get(BaseRecord const & record) const;

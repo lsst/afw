@@ -94,8 +94,10 @@ QuadrupoleKey QuadrupoleKey::addFields(
     Schema & schema,
     std::string const & name,
     std::string const & doc,
-    std::string const & unit
+    CoordinateType coordType
 ) {
+    std::string unit = coordType == CoordinateType::PIXEL ? "pixels^2" : "radians^2";
+
     Key<double> xxKey = schema.addField<double>(schema.join(name, "xx"), doc, unit);
     Key<double> yyKey = schema.addField<double>(schema.join(name, "yy"), doc, unit);
     Key<double> xyKey = schema.addField<double>(schema.join(name, "xy"), doc, unit);
@@ -120,7 +122,7 @@ EllipseKey EllipseKey::addFields(
     std::string const & doc,
     std::string const & unit
 ) {
-    QuadrupoleKey qKey = QuadrupoleKey::addFields(schema, name, doc, unit + "^2");
+    QuadrupoleKey qKey = QuadrupoleKey::addFields(schema, name, doc, CoordinateType::PIXEL);
     PointKey<double> pKey = PointKey<double>::addFields(schema, name, doc, unit);
     return EllipseKey(qKey, pKey);
 }

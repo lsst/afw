@@ -154,7 +154,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testQuadrupoleKey(self):
         schema = lsst.afw.table.Schema();
-        fKey0 = lsst.afw.table.QuadrupoleKey.addFields(schema, "a", "moments", "pixels^2")
+        fKey0 = lsst.afw.table.QuadrupoleKey.addFields(schema, "a", "moments", lsst.afw.table.PIXEL)
         xxKey = schema.find("a_xx").key
         yyKey = schema.find("a_yy").key
         xyKey = schema.find("a_xy").key
