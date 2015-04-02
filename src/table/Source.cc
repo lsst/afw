@@ -205,7 +205,7 @@ public:
     {
         if (archive) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicErrorException,
+                pex::exceptions::LogicError,
                 "SourceCatalog does not support reading from an external archive"
             );
         }

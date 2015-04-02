@@ -96,7 +96,7 @@ void PeakFitsWriter::_writeTable(CONST_PTR(afw::table::BaseTable) const & t, std
     CONST_PTR(PeakTable) table = boost::dynamic_pointer_cast<PeakTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::LogicErrorException,
+            lsst::pex::exceptions::LogicError,
             "Cannot use a PeakFitsWriter on a non-Peak table."
         );
     }
@@ -164,7 +164,7 @@ PTR(PeakTable) PeakTable::make(
     static CachedTableList cache;
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
-            lsst::pex::exceptions::InvalidParameterException,
+            lsst::pex::exceptions::InvalidParameterError,
             "Schema for Peak must contain at least the keys defined by makeMinimalSchema()."
         );
     }
