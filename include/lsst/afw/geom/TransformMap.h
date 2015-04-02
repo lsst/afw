@@ -131,7 +131,7 @@ public:
     /**
      * Get an XYTransform that transforms from coordSys to nativeCoordSys in the forward direction
      *
-     * @return an XYTransform
+     * @return a shared_ptr to an XYTransform
      *
      * @throw pexExcept::InvalidParameterError if coordSys is unknown
      */
