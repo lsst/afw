@@ -608,7 +608,7 @@ Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> cons
             // from fixed-length arrays with a single element.
             if (item->field.getElementCount() != field.getElementCount()) {
                 throw LSST_EXCEPT(
-                    lsst::pex::exceptions::InvalidParameterException,
+                    lsst::pex::exceptions::TypeError,
                     (boost::format("Cannot replace field with name '%s' because sizes differ.")
                      % field.getName()).str()
                 );

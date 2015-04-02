@@ -302,7 +302,7 @@ struct FieldBase< Array<U> > {
      */
     FieldBase(int size=0) : _size(size) {
         if (size < 0) throw LSST_EXCEPT(
-            lsst::pex::exceptions::LengthError,
+            lsst::pex::exceptions::LogicError,
             "A non-negative size must be provided when constructing an array field."
         );
     }
@@ -372,7 +372,7 @@ protected:
     ) const {
         if (isVariableLength()) {
             throw LSST_EXCEPT(
-                lsst::pex::exceptions::LogicErrorException,
+                lsst::pex::exceptions::LogicError,
                 "Assignment to a variable-length array must use a non-const array of the correct type."
             );
         }
