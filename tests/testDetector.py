@@ -74,8 +74,15 @@ class DetectorTestCase(unittest.TestCase):
     def testConstructorErrors(self):
         """Test constructor errors
         """
-        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, tryDuplicateAmpNames=True)
-        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, tryBadCameraSys=True)
+        def duplicateAmpName(dw):
+            """Set two amplifiers to the same name"""
+            dw.ampInfo[1].setName(dw.ampInfo[0].getName())
+        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, modFunc=duplicateAmpName)
+
+        def addBadCameraSys(dw):
+            """Add an invalid camera system"""
+            dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
+        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, modFunc=addBadCameraSys)
 
     def testTransform(self):
         """Test the transform method

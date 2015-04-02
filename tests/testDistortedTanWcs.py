@@ -22,11 +22,13 @@ from __future__ import absolute_import, division
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
 import unittest
 
+from lsst.afw.cameraGeom import TAN_PIXELS
+from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+from lsst.afw.image.utils import getDistortedWcs
 import lsst.utils.tests as utilsTests
 import lsst.daf.base as dafBase
 
@@ -108,6 +110,69 @@ class DistortedTanWcsTestCase(unittest.TestCase):
                 pixPosRoundTrip = distortedWcs.skyToPixel(measSky)
                 for i in range(2):
                     self.assertAlmostEqual(pixPos[i], pixPosRoundTrip[i])
+
+    def testGetDistortedWcs(self):
+        """Test utils.getDistortedWcs
+        """
+        dw = DetectorWrapper()
+        detector = dw.detector
+
+        # the standard case: the exposure's WCS is pure TAN WCS and distortion information is available;
+        # return a DistortedTanWcs
+        exposure = afwImage.ExposureF(10, 10)
+        exposure.setDetector(detector)
+        exposure.setWcs(self.tanWcs)
+        self.assertFalse(self.tanWcs.hasDistortion())
+        outWcs = getDistortedWcs(exposure.getInfo())
+        self.assertTrue(outWcs.hasDistortion())
+        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is not None)
+        del exposure # avoid accidental reuse
+        del outWcs
+
+        # return the original WCS if the exposure's WCS has distortion
+        pixelsToTanPixels = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
+        distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelsToTanPixels)
+        self.assertTrue(distortedWcs.hasDistortion())
+        exposure = afwImage.ExposureF(10, 10)
+        exposure.setWcs(distortedWcs)
+        exposure.setDetector(detector)
+        outWcs = getDistortedWcs(exposure.getInfo())
+        self.assertTrue(outWcs.hasDistortion())
+        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is not None)
+        del exposure
+        del distortedWcs
+        del outWcs
+
+        # raise an exception if exposure has no WCS
+        exposure = afwImage.ExposureF(10, 10)
+        exposure.setDetector(detector)
+        self.assertRaises(Exception, getDistortedWcs, exposure.getInfo())
+        del exposure
+
+        # return the original pure TAN WCS if the exposure has no detector
+        exposure = afwImage.ExposureF(10, 10)
+        exposure.setWcs(self.tanWcs)
+        outWcs = getDistortedWcs(exposure.getInfo())
+        self.assertFalse(outWcs.hasDistortion())
+        self.assertTrue(afwImage.TanWcs.cast(outWcs) is not None)
+        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is None)
+        del exposure
+        del outWcs
+
+        # return the original pure TAN WCS if the exposure's detector has no TAN_PIXELS transform
+        def removeTanPixels(detectorWrapper):
+            tanPixSys = detector.makeCameraSys(TAN_PIXELS)
+            detectorWrapper.transMap.pop(tanPixSys)
+        detectorNoTanPix = DetectorWrapper(modFunc=removeTanPixels).detector
+        exposure = afwImage.ExposureF(10, 10)
+        exposure.setWcs(self.tanWcs)
+        exposure.setDetector(detectorNoTanPix)
+        outWcs = getDistortedWcs(exposure.getInfo())
+        self.assertFalse(outWcs.hasDistortion())
+        self.assertTrue(afwImage.TanWcs.cast(outWcs) is not None)
+        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is None)
+        del exposure
+        del outWcs
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
