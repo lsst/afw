@@ -27,18 +27,13 @@ import unittest
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
-# import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
 import lsst.daf.base as dafBase
-
-# import lsst
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
-
-
 
 class DistortedTanWcsTestCase(unittest.TestCase):
     """Test that makeWcs correctly returns a Wcs or TanWcs object
