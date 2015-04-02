@@ -1462,26 +1462,26 @@ namespace {
     PTR(Footprint) _mergeFootprints(Footprint const& aFoot, Footprint const& bFoot) {
         PTR(Footprint) foot(new Footprint());
 
-        const PeakCatalog & pka = foota.getPeaks();
-        const PeakCatalog& pkb = footb.getPeaks();
-        PeakCatalog& pk = foot->getPeaks();
-        if (pka.empty()) {
-            if (!pkb.empty()) {
-                pk = PeakCatalog(pkb.getTable(), pkb.begin(), pkb.end(), true);
+        const PeakCatalog& aPeak = aFoot.getPeaks();
+        const PeakCatalog& bPeak = bFoot.getPeaks();
+        PeakCatalog& peaks = foot->getPeaks();
+        if (aPeak.empty()) {
+            if (!bPeak.empty()) {
+                peaks = PeakCatalog(bPeak.getTable(), bPeak.begin(), bPeak.end(), true);
             }
         } else {
-            if (pkb.empty()) {
-                pk = PeakCatalog(pka.getTable(), pka.begin(), pka.end(), true);
+            if (bPeak.empty()) {
+                peaks = PeakCatalog(aPeak.getTable(), aPeak.begin(), aPeak.end(), true);
             } else {
-                if (pka.getSchema() == pkb.getSchema()) {
+                if (aPeak.getSchema() == bPeak.getSchema()) {
                     // use schema A, as it's the same as schema B
-                    pk = PeakCatalog(pka.getTable());
-                    pk.reserve(pka.size() + pkb.size());
-                    pk.insert(pk.end(), pka.begin(), pka.end(), true);
-                    pk.insert(pk.end(), pkb.begin(), pkb.end(), true);
+                    peaks = PeakCatalog(aPeak.getTable());
+                    peaks.reserve(aPeak.size() + bPeak.size());
+                    peaks.insert(peaks.end(), aPeak.begin(), aPeak.end(), true);
+                    peaks.insert(peaks.end(), bPeak.begin(), bPeak.end(), true);
                 } else {
                     throw LSST_EXCEPT(
-                        pex::exceptions::InvalidParameterException,
+                        pex::exceptions::InvalidParameterError,
                         "Cannot merge Footprints when Peaks have different Schemas"
                     );
                 }
