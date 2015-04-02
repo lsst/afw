@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division
 # 
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -22,9 +23,8 @@
 
 import re
 import lsst.pex.policy as pexPolicy
-import lsst.afw.detection as detection
+import lsst.afw.detection as afwDetect
 from . import imageLib as afwImage
-import numpy
 
 def clipImage(im, minClip, maxClip):
     """Clip an image to lie between minClip and maxclip (None to ignore)"""
@@ -38,9 +38,9 @@ def clipImage(im, minClip, maxClip):
         ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), minClip)
 
-    if maxclip is not None:
-        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxclip))
-        afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxclip)
+    if maxClip is not None:
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxClip))
+        afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxClip)
 
 def resetFilters():
     """Reset registry of filters and filter properties"""
