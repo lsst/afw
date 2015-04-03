@@ -26,14 +26,13 @@
 #include "lsst/afw/geom/Point.h"
 %}
 
-// This doesn't wrap "scalar OP extent" versions, but that's okay.
 %define %Point_PREINCLUDE(T,N)
 %copyctor lsst::afw::geom::Point<T,N>;
 %useValueEquality(lsst::afw::geom::Point<T,N>)
-%rename(__add__) lsst::afw::geom::Point<T,N>::operator+;
-%rename(__sub__) lsst::afw::geom::Point<T,N>::operator-;
-%rename(__iadd__) lsst::afw::geom::Point<T,N>::operator+=;
-%rename(__isub__) lsst::afw::geom::Point<T,N>::operator-=;
+%ignore lsst::afw::geom::Point<T,N>::operator+;
+%ignore lsst::afw::geom::Point<T,N>::operator-;
+%ignore lsst::afw::geom::Point<T,N>::operator+=;
+%ignore lsst::afw::geom::Point<T,N>::operator-=;
 %enddef
 
 %define %Point_POSTINCLUDE(T,N,SUFFIX)
@@ -41,4 +40,65 @@
 %template(PointBase ## N ## SUFFIX) lsst::afw::geom::PointBase<T,N>;
 %template(Point ## N ## SUFFIX) lsst::afw::geom::Point<T,N>;
 %CoordinateBase_POSTINCLUDE(T, N, lsst::afw::geom::Point<T,N>);
+%extend lsst::afw::geom::Point<T,N> {
+    lsst::afw::geom::Extent<T,N> __sub__(lsst::afw::geom::Point<T,N> const & other) const {
+        return *self - other;
+    }
+    lsst::afw::geom::Point<T,N> __add__(lsst::afw::geom::Extent<T,N> const & other) const {
+        return *self + other;
+    }
+    lsst::afw::geom::Point<T,N> __sub__(lsst::afw::geom::Extent<T,N> const & other) const {
+        return *self - other;
+    }
+    PyObject * __iadd__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<T,N> const & other) {
+        *self += other;
+        Py_INCREF(*PYTHON_SELF);
+        return *PYTHON_SELF;
+    }
+    PyObject * __isub__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<T,N> const & other) {
+        *self -= other;
+        Py_INCREF(*PYTHON_SELF);
+        return *PYTHON_SELF;
+    }
+}
+%enddef
+
+%define %PointD_POSTINCLUDE(N)
+%Point_POSTINCLUDE(double,N,D)
+%extend lsst::afw::geom::Point<double,N> {
+    lsst::afw::geom::Point<double,N> __add__(lsst::afw::geom::Extent<int,N> const & other) const {
+        return *self + other;
+    }
+    PyObject * __iadd__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<int,N> const & other) {
+        *self += other;
+        Py_INCREF(*PYTHON_SELF);
+        return *PYTHON_SELF;
+    }
+    lsst::afw::geom::Point<double,N> __sub__(lsst::afw::geom::Extent<int,N> const & other) const {
+        return *self - other;
+    }
+    PyObject * __isub__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<int,N> const & other) {
+        *self -= other;
+        Py_INCREF(*PYTHON_SELF);
+        return *PYTHON_SELF;
+    }
+    lsst::afw::geom::Extent<double,N> __sub__(lsst::afw::geom::Point<int,N> const & other) const {
+        return *self - other;
+    }
+}
+%enddef
+
+%define %PointI_POSTINCLUDE(N)
+%Point_POSTINCLUDE(int,N,I)
+%extend lsst::afw::geom::Point<int,N> {
+    lsst::afw::geom::Point<double,N> __add__(lsst::afw::geom::Extent<double,N> const & other) const {
+        return *self + other;
+    }
+    lsst::afw::geom::Point<double,N> __sub__(lsst::afw::geom::Extent<double,N> const & other) const {
+        return *self - other;
+    }
+    lsst::afw::geom::Extent<double,N> __sub__(lsst::afw::geom::Point<double,N> const & other) const {
+        return *self - other;
+    }
+}
 %enddef

@@ -733,8 +733,8 @@ class KernelTestCase(unittest.TestCase):
                 if (dx == dy == 0) or not dimMustMatch:
                     ksum = kernel.computeImage(image, True)
                     self.assertAlmostEqual(ksum, 1.0)
-                    llBorder = (image.getDimensions() - kernelDim) / 2
-                    predCtr = afwGeom.Point2I(afwGeom.Extent2I(llBorder + kernelCtr))
+                    llBorder = ((image.getDimensions() - kernelDim) / 2).truncate()
+                    predCtr = afwGeom.Point2I(llBorder + kernelCtr)
                     self.assertEqual(kernel.getCtr(), predCtr)
                 else:
                     self.assertRaises(Exception, kernel.computeImage, image, True)

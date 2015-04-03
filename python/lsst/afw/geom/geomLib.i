@@ -85,15 +85,15 @@ Python interface to lsst::afw::geom classes
 %include "lsst/afw/geom/Extent.h"
 %include "lsst/afw/geom/Point.h"
 
-%Extent_POSTINCLUDE(int,2,I);
-%Extent_POSTINCLUDE(int,3,I);
-%Extent_POSTINCLUDE(double,2,D);
-%Extent_POSTINCLUDE(double,3,D);
+%ExtentI_POSTINCLUDE(2);
+%ExtentI_POSTINCLUDE(3);
+%ExtentD_POSTINCLUDE(2);
+%ExtentD_POSTINCLUDE(3);
 
-%Point_POSTINCLUDE(int,2,I);
-%Point_POSTINCLUDE(int,3,I);
-%Point_POSTINCLUDE(double,2,D);
-%Point_POSTINCLUDE(double,3,D);
+%PointI_POSTINCLUDE(2);
+%PointI_POSTINCLUDE(3);
+%PointD_POSTINCLUDE(2);
+%PointD_POSTINCLUDE(3);
 
 %CoordinateExpr_POSTINCLUDE(2);
 %CoordinateExpr_POSTINCLUDE(3);

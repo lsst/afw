@@ -277,6 +277,51 @@ typedef Point<double,2> PointD;
 typedef Point<double,2> Point2D;
 typedef Point<double,3> Point3D;
 
+template <int N>
+Point<double,N> operator+(Point<double,N> const & lhs, Extent<int,N> const & rhs) {
+    return lhs + Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> operator+(Extent<int,N> const & rhs, Point<double,N> const & lhs) {
+    return Point<double,N>(lhs) + rhs;
+}
+
+template <int N>
+Point<double,N> & operator+=(Point<double,N> & lhs, Extent<int,N> const & rhs) {
+    return lhs += Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> operator+(Point<int,N> const & lhs, Extent<double,N> const & rhs) {
+    return Point<double,N>(lhs) + rhs;
+}
+
+template <int N>
+Point<double,N> operator-(Point<double,N> const & lhs, Extent<int,N> const & rhs) {
+    return lhs - Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> & operator-=(Point<double,N> & lhs, Extent<int,N> const & rhs) {
+    return lhs -= Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> operator-(Point<int,N> const & lhs, Extent<double,N> const & rhs) {
+    return Point<double,N>(lhs) - rhs;
+}
+
+template <int N>
+Extent<double,N> operator-(Point<double,N> const & lhs, Point<int,N> const & rhs) {
+    return lhs - Point<double,N>(rhs);
+}
+
+template <int N>
+Extent<double,N> operator-(Point<int,N> const & lhs, Point<double,N> const & rhs) {
+    return Point<double,N>(lhs) - rhs;
+}
+
 }}}
 
 #endif

@@ -353,6 +353,100 @@ typedef Extent<double,2> ExtentD;
 typedef Extent<double,2> Extent2D;
 typedef Extent<double,3> Extent3D;
 
+/**
+ *  Return the component-wise truncation (round towards zero).
+ *
+ *  In Python, this is available as both a free function and a method on ExtentD.
+ */
+template <int N>
+Extent<int,N> truncate(Extent<double,N> const & input);
+
+/**
+ *  Return the component-wise floor (round towards more negative).
+ *
+ *  In Python, this is available as both a free function and a method on ExtentD.
+ */
+template <int N>
+Extent<int,N> floor(Extent<double,N> const & input);
+
+/**
+ *  Return the component-wise ceil (round towards more positive).
+ *
+ *  In Python, this is available as both a free function and a method on ExtentD.
+ */
+template <int N>
+Extent<int,N> ceil(Extent<double,N> const & input);
+
+#ifndef SWIG
+
+// Some operators below need to take ExtentBase arguments rather than Extent to
+// avoid ambiguous overloads (since some competing operators are defined as member
+// functions on ExtentBase).
+
+template <typename T, int N>
+Extent<T,N> operator*(T scalar, ExtentBase<T,N> const & rhs) {
+    return rhs * scalar;
+}
+
+template <int N>
+Extent<double,N> operator*(ExtentBase<int,N> const & lhs, double rhs) {
+    return Extent<double,N>(static_cast<Extent<int,N> const &>(lhs)) * rhs;
+}
+
+template <int N>
+void operator*=(ExtentBase<int,N> & lhs, double rhs) {
+    // use "N < 0" so assertion is dependent on template instantiation, instead of triggering all the time
+    static_assert(N < 0, "In-place multiplication of Extent<int,N> by double would truncate.");
+}
+
+template <int N>
+Extent<double,N> operator/(ExtentBase<int,N> const & lhs, double rhs) {
+    return Extent<double,N>(static_cast<Extent<int,N> const &>(lhs)) / rhs;
+}
+
+template <int N>
+void operator/=(ExtentBase<int,N> & lhs, double rhs) {
+    // use "N < 0" so assertion is dependent on template instantiation, instead of triggering all the time
+    static_assert(N < 0, "In-place division of Extent<int,N> by double would truncate.");
+}
+
+template <int N>
+Extent<double,N> operator*(double lhs, ExtentBase<int,N> const & rhs) {
+    return lhs * Extent<double,N>(static_cast<Extent<int,N> const &>(rhs));
+}
+
+template <int N>
+Extent<double,N> operator+(Extent<double,N> const & lhs, Extent<int,N> const & rhs) {
+    return lhs + Extent<double,N>(rhs);
+}
+
+template <int N>
+Extent<double,N> & operator+=(Extent<double,N> & lhs, Extent<int,N> const & rhs) {
+    return lhs += Extent<double,N>(rhs);
+}
+
+template <int N>
+Extent<double,N> operator-(Extent<double,N> const & lhs, Extent<int,N> const & rhs) {
+    return lhs - Extent<double,N>(rhs);
+}
+
+template <int N>
+Extent<double,N> & operator-=(Extent<double,N> & lhs, Extent<int,N> const & rhs) {
+    return lhs -= Extent<double,N>(rhs);
+}
+
+template <int N>
+Extent<double,N> operator+(Extent<int,N> const & lhs, Extent<double,N> const & rhs) {
+    return Extent<double,N>(lhs) + rhs;
+}
+
+template <int N>
+Extent<double,N> operator-(Extent<int,N> const & lhs, Extent<double,N> const & rhs) {
+    return Extent<double,N>(lhs) - rhs;
+}
+
+#endif // !SWIG
+
 }}}
 
 #endif

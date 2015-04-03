@@ -199,7 +199,7 @@ class StackTestCase(unittest.TestCase):
             # Set part of the image to NaN (with the INTRP bit set)
             #
             llc = afwGeom.Point2I(width//2*(i//2), height//2*(i%2))
-            bbox = afwGeom.Box2I(llc, dim/2)
+            bbox = afwGeom.Box2I(llc, dim//2)
 
             smimg = mimg.Factory(mimg, bbox, afwImage.LOCAL)
             #smimg.set(numpy.nan, INTRP, numpy.nan)

@@ -99,6 +99,7 @@ python/lsst/afw/display/fwDisplay.py
 python/lsst/afw/display/xpa.py
 tests/core.*
 tests/.tests
+tests/coordinates
 tests/image.boost
 tests/*.fits
 tests/source_??????
