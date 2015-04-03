@@ -83,8 +83,9 @@ public:
         lsst::afw::table::AmpInfoCatalog const &ampInfoCatalog, ///< catalog of amplifier information
         Orientation const &orientation,     ///< detector position and orientation in focal plane
         geom::Extent2D const &pixelSize,    ///< pixel size (mm)
-        CameraTransformMap::Transforms const &Transforms    ///< map of CameraSys: XYTranform, where each
-            ///< XYTransform's "forward" method transforms from PIXELS to the specified camera system
+        CameraTransformMap::Transforms const &transforms    ///< map of
+            ///< CameraSys: lsst::afw::geom::XYTransform, where each transform's "forwardTransform" method
+            ///< transforms from PIXELS to the specified camera system
     );
 
     ~Detector() {}
@@ -151,6 +152,32 @@ public:
      * Get number of amplifiers. Renamed to __len__ in Python.
      */
     size_t size() const {return _ampInfoCatalog.size(); }
+
+    /** Does the specified CameraSys exist in the transform registry */
+    bool hasTransform(CameraSys const &cameraSys) const;
+
+    /** Does the specified CameraSysPrefix exist in the transform registry */
+    bool hasTransform(CameraSysPrefix const &cameraSysPrefix) const;
+
+    /**
+     * Get an XYTransform that transforms from cameraSys to the native system in the forward direction
+     *
+     * @param[in] cameraSys  camera coordinate system
+     * @return a shared_ptr to an lsst::afw::XYTransform
+     *
+     * @throw pexExcept::InvalidParameterError if coordSys is unknown
+     */
+    CONST_PTR(afw::geom::XYTransform) getTransform(CameraSys const &cameraSys) const;
+
+    /**
+     * Get an XYTransform that transforms from cameraSysPrefix to the native system in the forward direction
+     *
+     * @param[in] cameraSysPrefix  camera coordinate system prefix
+     * @return a shared_ptr to an lsst::afw::geom::XYTransform
+     *
+     * @throw pexExcept::InvalidParameterError if coordSys is unknown
+     */
+    CONST_PTR(afw::geom::XYTransform) getTransform(CameraSysPrefix const &cameraSysPrefix) const;
 
     /**
      * Make a CameraPoint from a point and a camera system

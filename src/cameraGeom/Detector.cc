@@ -81,7 +81,24 @@ const table::AmpInfoRecord & Detector::operator[](std::string const &name) const
     return *(ampIter->second);
 }
 
- void Detector::_init() {
+bool Detector::hasTransform(CameraSys const &cameraSys) const {
+        return _transformMap.contains(cameraSys);
+}
+
+bool Detector::hasTransform(CameraSysPrefix const &cameraSysPrefix) const {
+    return hasTransform(makeCameraSys(cameraSysPrefix));
+}
+
+CONST_PTR(afw::geom::XYTransform) Detector::getTransform(CameraSys const &cameraSys) const {
+    return _transformMap[cameraSys];
+}
+
+CONST_PTR(afw::geom::XYTransform) Detector::getTransform(CameraSysPrefix const &cameraSysPrefix) const {
+    return getTransform(makeCameraSys(cameraSysPrefix));
+}
+
+
+void Detector::_init() {
     // make _ampNameIterMap
     for (table::AmpInfoCatalog::const_iterator ampIter = _ampInfoCatalog.begin();
         ampIter != _ampInfoCatalog.end(); ++ampIter) {

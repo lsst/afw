@@ -1,3 +1,4 @@
+from __future__ import absolute_import, division
 # 
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -22,9 +23,9 @@
 
 import re
 import lsst.pex.policy as pexPolicy
-import lsst.afw.detection as detection
+from lsst.afw.cameraGeom import TAN_PIXELS
+import lsst.afw.detection as afwDetect
 from . import imageLib as afwImage
-import numpy
 
 def clipImage(im, minClip, maxClip):
     """Clip an image to lie between minClip and maxclip (None to ignore)"""
@@ -38,9 +39,44 @@ def clipImage(im, minClip, maxClip):
         ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(-minClip, afwDetect.Threshold.VALUE, False))
         afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), minClip)
 
-    if maxclip is not None:
-        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxclip))
-        afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxclip)
+    if maxClip is not None:
+        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(maxClip))
+        afwDetect.setImageFromFootprintList(mi.getImage(), ds.getFootprints(), maxClip)
+
+def getDistortedWcs(exposureInfo, log=None):
+        """!Get a WCS from an exposureInfo, with distortion terms if possible
+
+        If the WCS in the exposure is a pure TAN WCS and distortion information is available
+        in the exposure's Detector, then return a DistortedTanWcs that combines the
+        distortion information with the pure TAN WCS.
+        Otherwise return the WCS in the exposureInfo without modification.
+
+        This function is intended as a temporary workaround until ISR puts a WCS with distortion information
+        into its exposures.
+
+        @param[in] exposureInfo  exposure information (an lsst.afw.image.ExposureInfo),
+            e.g. from exposure.getInfo()
+        @param[in] log  an lsst.pex.logging.Log or None; if specified then a warning is logged if:
+            - the exposureInfo's WCS has no distortion and cannot be cast to a TanWcs
+            - the expousureInfo's detector has no TAN_PIXELS transform (distortion information)
+        @throw RuntimeError if exposureInfo has no WCS.
+        """
+        if not exposureInfo.hasWcs():
+            raise RuntimeError("exposure must have a WCS to use as an initial guess")
+        wcs = exposureInfo.getWcs()
+        if not wcs.hasDistortion() and exposureInfo.hasDetector():
+            # warn but continue if TAN_PIXELS not present or the initial WCS is not a TanWcs;
+            # other errors indicate a bug that should raise an exception
+            detector = exposureInfo.getDetector()
+            try:
+                pixelsToTanPixels = detector.getTransform(TAN_PIXELS)
+                tanWcs = afwImage.TanWcs.cast(wcs)
+            except Exception as e:
+                if log:
+                    log.warn("Could not create a DistortedTanWcs: %s" % (e,))
+            else:
+                wcs = afwImage.DistortedTanWcs(tanWcs, pixelsToTanPixels)
+        return wcs
 
 def resetFilters():
     """Reset registry of filters and filter properties"""

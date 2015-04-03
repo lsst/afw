@@ -30,8 +30,7 @@ class DetectorWrapper(object):
         orientation=Orientation(),
         plateScale=20.0,
         radialDistortion=0.925,
-        tryDuplicateAmpNames=False,
-        tryBadCameraSys=False,
+        modFunc=None,
     ):
         """!Construct a DetectorWrapper
 
@@ -49,8 +48,8 @@ class DetectorWrapper(object):
             (the r^3 coefficient of the radial distortion polynomial
             that converts PUPIL in radians to FOCAL_PLANE in mm);
             0.925 is the value Dave Monet measured for lsstSim data
-        @param[in] tryDuplicateAmpNames  create 2 amps with the same name (should result in an error)
-        @param[in] tryBadCameraSys  add a transform for an unsupported coord. system (should result in an error)
+        @param[in] modFunc  a function that can modify attributes just before constructing the detector;
+            modFunc receives one argument: a DetectorWrapper with all attributes except detector set.
         """
         # note that (0., 0.) for the reference position is the center of the first pixel
         self.name = name
@@ -69,8 +68,6 @@ class DetectorWrapper(object):
         for i in range(numAmps):
             record = self.ampInfo.addNew()
             ampName = "amp %d" % (i + 1,)
-            if i == 1 and tryDuplicateAmpNames:
-                ampName = self.ampInfo[0].getName()
             record.setName(ampName)
             record.setBBox(afwGeom.Box2I(afwGeom.Point2I(-1, 1), self.ampExtent))
             record.setGain(1.71234e3)
@@ -96,8 +93,8 @@ class DetectorWrapper(object):
             CameraSys(TAN_PIXELS, self.name): pixelToTanPixel,
             CameraSys(ACTUAL_PIXELS, self.name): afwGeom.RadialXYTransform([0, 0.95, 0.01]),
         }
-        if tryBadCameraSys:
-            self.transMap[CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
+        if modFunc:
+            modFunc(self)
         self.detector = Detector(
             self.name,
             self.id,
