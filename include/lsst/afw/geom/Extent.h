@@ -149,6 +149,9 @@ public:
     Extent<T,N> & operator/=(T scalar) { this->_vector /= scalar; return static_cast<Extent<T,N>&>(*this); }
     //@}
 
+    /// Cast this object to an Extent of the same numeric type and dimensionality.
+    Point<T,N> asPoint() const;
+
     std::string toString() const {
         std::stringstream out;
         out << "Extent(";

@@ -89,6 +89,11 @@ geom::CoordinateExpr<N> geom::ExtentBase<T,N>::ge(Extent<T,N> const & other) con
 }
 
 template <typename T, int N>
+geom::Point<T,N> geom::ExtentBase<T,N>::asPoint() const {
+    return Point<T,N>(static_cast<Extent<T,N> const &>(*this));
+}
+
+template <typename T, int N>
 geom::Point<T,N> geom::ExtentBase<T,N>::operator+(Point<T,N> const & other) const {
     return Point<T,N>(this->_vector + other.asEigen());
 }

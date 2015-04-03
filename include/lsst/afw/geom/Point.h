@@ -106,6 +106,9 @@ public:
     }
     //@}
 
+    /// Cast this object to an Extent of the same numeric type and dimensionality.
+    Extent<T,N> asExtent() const { return Extent<T,N>(static_cast<Point<T,N> const &>(*this)); }
+
     /// @brief Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
 

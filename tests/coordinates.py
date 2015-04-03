@@ -306,6 +306,22 @@ class OperatorTestCase(utilsTests.TestCase):
             if inPlace and result is not v1:
                 self.fail("%s(%s, %s): result is not self" % (op.__name__, lhs.__name__, rhs.__name__))
 
+    def testPointAsExtent(self):
+        for n in (2, 3):
+            for t in (int, float):
+                p = self.makeRandom(geom.Point[t, n])
+                e = p.asExtent()
+                self.assertEqual(type(e), geom.Extent[t, n])
+                self.assertClose(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+
+    def testExtentAsPoint(self):
+        for n in (2, 3):
+            for t in (int, float):
+                e = self.makeRandom(geom.Extent[t, n])
+                p = e.asPoint()
+                self.assertEqual(type(p), geom.Point[t, n])
+                self.assertClose(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+
     def testUnaryOperators(self):
         for n in (2, 3):
             for t in (int, float):
