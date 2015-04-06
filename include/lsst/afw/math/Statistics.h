@@ -100,7 +100,7 @@ public:
         double numSigmaClip = 3.0, ///< number of standard deviations to clip at
         int numIter = 3,           ///< Number of iterations
         lsst::afw::image::MaskPixel andMask = 0x0, ///< and-Mask: defines which mask bits cause a value to be ignored
-        bool isNanSafe = true,     ///< flag NaNs
+        bool isNanSafe = true,     ///< flag NaNs & Infs
         int useWeights = WEIGHTS_NONE      ///< use weighted statistics (via a vector or an inverse variance)
                      ) :
         _numSigmaClip(numSigmaClip),
@@ -145,7 +145,7 @@ private:
     int _numIter;                         // Number of iterations
     int _andMask;                         // and-Mask to specify which mask planes to ignore
     int _noGoodPixelsMask;                // mask to set if no values are acceptable
-    bool _isNanSafe;                      // Check for NaNs before running (slower)
+    bool _isNanSafe;                      // Check for NaNs & Infs before running (slower)
     WeightsBoolean _useWeights;           // Calculate weighted statistics (enum because of 3-valued logic)
     bool _calcErrorFromInputVariance;     // Calculate errors from the input variances, if available
 };
@@ -168,7 +168,7 @@ private:
         sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
         sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
         sctrl.setAndMask(0x1);                 // ignore pixels with these mask bits set
-        sctrl.setNanSafe(true);                // check for NaNs, a bit slower (default=true)
+        sctrl.setNanSafe(true);                // check for NaNs & Infs, a bit slower (default=true)
         
         lsst::afw::math::Statistics statobj =
             lsst::afw::math::makeStatistics(*img, afwMath::NPOINT | 

@@ -180,19 +180,18 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(self.image, afwMath.VARIANCECLIP)
         self.assertEqual(stats.getValue(afwMath.VARIANCECLIP), 0)
 
-    def testMaxWithNan(self):
-        """Test that we can handle NaNs correctly"""
-
+    def _testBadValue(self, badVal):
+        """Test that we can handle an instance of `badVal` in the data correctly"""
         x, y = 10, 10
         for useImage in [True, False]:
             if useImage:
                 self.image = afwImage.ImageF(100, 100)
                 self.image.set(self.val)
-                self.image.set(x, y, np.nan)
+                self.image.set(x, y, badVal)
             else:
                 self.image = afwImage.MaskedImageF(100, 100)            
                 self.image.set(self.val, 0x0, 1.0)
-                self.image.set(x, y, (np.nan, 0x0, 1.0))
+                self.image.set(x, y, (badVal, 0x0, 1.0))
 
             self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MAX).getValue(), self.val)
             self.assertEqual(afwMath.makeStatistics(self.image, afwMath.MEAN).getValue(), self.val)
@@ -202,6 +201,14 @@ class StatisticsTestCase(unittest.TestCase):
             sctrl.setNanSafe(False)
             self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MAX, sctrl).getValue()))
             self.assertFalse(np.isfinite(afwMath.makeStatistics(self.image, afwMath.MEAN, sctrl).getValue()))
+
+    def testMaxWithNan(self):
+        """Test that we can handle NaNs correctly"""
+        self._testBadValue(np.nan)
+
+    def testMaxWithInf(self):
+        """Test that we can handle infinities correctly"""
+        self._testBadValue(np.inf)
 
     def testSampleImageStats(self):
         """ Compare our results to known values in test data """
