@@ -91,13 +91,13 @@ namespace {
     };
 
     /**
-     * @brief A boolean functor to check for NaN (for templated conditionals)
+     * @brief A boolean functor to check for NaN or infinity (for templated conditionals)
      */    
     class CheckFinite {
     public:
         template<typename T>
         bool operator()(T val) const {
-            return !lsst::utils::isnan(static_cast<float>(val));
+            return lsst::utils::isfinite(static_cast<float>(val));
         }
     };
 
