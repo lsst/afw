@@ -26,7 +26,6 @@ from __future__ import absolute_import, division
 """
 Test cases to test image I/O
 """
-import os
 import os.path
 
 import unittest
@@ -92,16 +91,11 @@ class ReadFitsTestCase(unittest.TestCase):
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
 
-        imPath = "data"
-        if os.path.exists("tests"):
-            imPath = os.path.join("tests", imPath)
-        imPath = os.path.join(imPath, "smallD.fits")
-        
-        im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
-        im.set(666)
-        im.writeFits(imPath)
-        afwImage.ImageD(imPath)
-        os.remove(imPath)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
+            im.set(666)
+            im.writeFits(tmpFile)
+            afwImage.ImageD(tmpFile)
 
     def testSubimage(self):
         """Test reading a subimage image"""
@@ -122,66 +116,54 @@ class ReadFitsTestCase(unittest.TestCase):
     def testMEF(self):
         """Test writing a set of images to an MEF fits file, and then reading them back"""
         
-        imPath = "data"
-        if os.path.exists("tests"):
-            imPath = os.path.join("tests", imPath)
-        imPath = os.path.join(imPath, "MEF.fits")
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
 
-        im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
+            for hdu in range(1, 5):
+                im.set(100*hdu)
+                if hdu == 1:
+                    mode = "w"
+                else:
+                    mode = "a"
+                im.writeFits(tmpFile, None, mode)
 
-        for hdu in range(1, 5):
-            im.set(100*hdu)
-            if hdu == 1:
-                mode = "w"
-            else:
-                mode = "a"
-            im.writeFits(imPath, None, mode)
-
-        for hdu in range(1, 5):
-            im = afwImage.ImageF(imPath, hdu)
-            self.assertEqual(im.get(0, 0), 100*hdu)
-
-        os.remove(imPath)
+            for hdu in range(1, 5):
+                im = afwImage.ImageF(tmpFile, hdu)
+                self.assertEqual(im.get(0, 0), 100*hdu)
 
     def testWriteBool(self):
         """Test that we can read and write bools"""
         import lsst.afw.image as afwImage
         import lsst.daf.base as dafBase
 
-        imPath = "data"
-        if os.path.exists("tests"):
-            imPath = os.path.join("tests", imPath)
-        imPath = os.path.join(imPath, "tmp.fits")
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            im = afwImage.ImageF(afwGeom.ExtentI(10,20))
+            md = dafBase.PropertySet()
+            keys = {"BAD" : False,
+                    "GOOD" : True,
+                    }
+            for k, v in keys.items():
+                md.add(k, v)
+            
+            im.writeFits(tmpFile, md)
 
-        im = afwImage.ImageF(afwGeom.ExtentI(10,20))
-        md = dafBase.PropertySet()
-        keys = {"BAD" : False,
-                "GOOD" : True,
-                }
-        for k, v in keys.items():
-            md.add(k, v)
-        
-        im.writeFits(imPath, md)
+            jim = afwImage.DecoratedImageF(tmpFile)
 
-        jim = afwImage.DecoratedImageF(imPath)
-        os.remove(imPath)
-
-        for k, v in keys.items():
-            self.assertEqual(jim.getMetadata().get(k), v)
+            for k, v in keys.items():
+                self.assertEqual(jim.getMetadata().get(k), v)
 
     def testLongStrings(self):
         keyWord = 'ZZZ'
-        fitsName = 'zzz.fits'
-        longString = ' '.join(['This is a long string.'] * 8)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            longString = ' '.join(['This is a long string.'] * 8)
 
-        expOrig = afwImage.ExposureF(100,100)
-        mdOrig = expOrig.getMetadata()
-        mdOrig.set(keyWord, longString)
-        expOrig.writeFits(fitsName)
+            expOrig = afwImage.ExposureF(100,100)
+            mdOrig = expOrig.getMetadata()
+            mdOrig.set(keyWord, longString)
+            expOrig.writeFits(tmpFile)
 
-        expNew = afwImage.ExposureF(fitsName)
-        self.assertEqual(expNew.getMetadata().get(keyWord), longString)
-        os.remove(fitsName)
+            expNew = afwImage.ExposureF(tmpFile)
+            self.assertEqual(expNew.getMetadata().get(keyWord), longString)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

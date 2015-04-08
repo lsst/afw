@@ -10,9 +10,9 @@ or
 """
 
 import math
-import os
-import numpy as np
 import unittest
+
+import numpy as np
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.detection as afwDetect
@@ -33,19 +33,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-#
-# A context object to clean up temporary files
-#
-from contextlib import contextmanager
-
-@contextmanager
-def Tempfile(fileName, remove=True):
-    pass                                # entry to context block
-    yield
-    if remove:                          # exit from context block
-        os.remove(fileName)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -118,9 +105,8 @@ class RgbTestCase(unittest.TestCase):
     @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testMakeRGB(self):
         """Test the function that does it all"""
-        fileName = "makeRGB.png"
         satValue = 1000.0
-        with Tempfile(fileName, remove=True):
+        with utilsTests.getTempFilePath(".png") as fileName:
             red = saturate(self.images[R], satValue)
             green = saturate(self.images[G], satValue)
             blue = saturate(self.images[B], satValue)
@@ -132,12 +118,8 @@ class RgbTestCase(unittest.TestCase):
         """Test writing RGB files to disk"""
         asinhMap = rgb.AsinhMapping(self.min, self.range, self.Q)
         rgbImage = asinhMap.makeRgbImage(self.images[R], self.images[G], self.images[B])
-        fileName = "rgb.png"
-        with Tempfile(fileName, remove=True):
+        with utilsTests.getTempFilePath(".png") as fileName:
             rgb.writeRGB(fileName, rgbImage)
-
-            if False:               # you'll also want to set remove=False in Tempfile manager
-                os.system("open %s > /dev/null 2>&1" % fileName)
 
     def testSaturated(self):
         """Test interpolating saturated pixels"""
@@ -185,12 +167,8 @@ class RgbTestCase(unittest.TestCase):
 
     @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testWriteStarsLegacyAPI(self):
-        fileName = "rgb_legacyAPI.png"
-        with Tempfile(fileName, remove=True):
+        with utilsTests.getTempFilePath(".png") as fileName:
             self.writeFileLegacyAPI(fileName)
-
-            if False:
-                os.system("open %s > /dev/null 2>&1" % fileName)
 
         def tst():
             self.writeFileLegacyAPI("rgb.unknown")

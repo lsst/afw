@@ -33,7 +33,6 @@ or
    >>> import testExposureTable; testExposureTable.run()
 """
 
-import os
 import unittest
 import numpy
 
@@ -146,21 +145,20 @@ class ExposureTableTestCase(unittest.TestCase):
         self.assertTrue(record1.getCalib() is None)
 
     def testPersistence(self):
-        filename1 = "ExposureTable1.fits"
-        self.cat.writeFits(filename1)
-        cat1 = lsst.afw.table.ExposureCatalog.readFits(filename1)
-        os.remove(filename1)
-        self.assertEqual(self.cat[0].get(self.ka), cat1[0].get(self.ka))
-        self.assertEqual(self.cat[0].get(self.kb), cat1[0].get(self.kb))
-        self.comparePsfs(self.cat[0].getPsf(), cat1[0].getPsf())
-        self.assertEqual(self.cat[0].getWcs(), cat1[0].getWcs())
-        self.assertEqual(self.cat[1].get(self.ka), cat1[1].get(self.ka))
-        self.assertEqual(self.cat[1].get(self.kb), cat1[1].get(self.kb))
-        self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
-        self.assertTrue(self.cat[1].getPsf() is None)
-        self.assertTrue(self.cat[1].getCalib() is None)
-        self.assertEqual(self.cat[0].getWcs().getId(), self.cat[1].getWcs().getId()) # compare citizen IDs
-        self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            self.cat.writeFits(tmpFile)
+            cat1 = lsst.afw.table.ExposureCatalog.readFits(tmpFile)
+            self.assertEqual(self.cat[0].get(self.ka), cat1[0].get(self.ka))
+            self.assertEqual(self.cat[0].get(self.kb), cat1[0].get(self.kb))
+            self.comparePsfs(self.cat[0].getPsf(), cat1[0].getPsf())
+            self.assertEqual(self.cat[0].getWcs(), cat1[0].getWcs())
+            self.assertEqual(self.cat[1].get(self.ka), cat1[1].get(self.ka))
+            self.assertEqual(self.cat[1].get(self.kb), cat1[1].get(self.kb))
+            self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
+            self.assertTrue(self.cat[1].getPsf() is None)
+            self.assertTrue(self.cat[1].getCalib() is None)
+            self.assertEqual(self.cat[0].getWcs().getId(), self.cat[1].getWcs().getId()) # compare citizen IDs
+            self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
 
     def testGeometry(self):
         bigBox = lsst.afw.geom.Box2D(lsst.afw.geom.Box2I(self.bbox0))
@@ -205,16 +203,15 @@ class ExposureTableTestCase(unittest.TestCase):
         coaddInputs.ccds.addNew().setId(4)
         exposureIn = lsst.afw.image.ExposureF(10, 10)
         exposureIn.getInfo().setCoaddInputs(coaddInputs)
-        filename = "Exposure2.fits"
-        exposureIn.writeFits(filename)
-        exposureOut = lsst.afw.image.ExposureF(filename)
-        os.remove(filename)
-        coaddInputsOut = exposureOut.getInfo().getCoaddInputs()
-        self.assertEqual(len(coaddInputsOut.visits), 1)
-        self.assertEqual(len(coaddInputsOut.ccds), 2)
-        self.assertEqual(coaddInputsOut.visits[0].getId(), 2)
-        self.assertEqual(coaddInputsOut.ccds[0].getId(), 3)
-        self.assertEqual(coaddInputsOut.ccds[1].getId(), 4)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            exposureIn.writeFits(filename)
+            exposureOut = lsst.afw.image.ExposureF(filename)
+            coaddInputsOut = exposureOut.getInfo().getCoaddInputs()
+            self.assertEqual(len(coaddInputsOut.visits), 1)
+            self.assertEqual(len(coaddInputsOut.ccds), 2)
+            self.assertEqual(coaddInputsOut.visits[0].getId(), 2)
+            self.assertEqual(coaddInputsOut.ccds[0].getId(), 3)
+            self.assertEqual(coaddInputsOut.ccds[1].getId(), 4)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

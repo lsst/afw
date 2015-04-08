@@ -26,7 +26,6 @@ Tests for lsst.afw.geom.XYTransform and xyTransformRegistry
 """
 import itertools
 import math
-import os
 import unittest
 
 import lsst.utils.tests
@@ -67,10 +66,6 @@ class RefMultiXYTransform(object):
 
 
 class XYTransformTestCase(unittest.TestCase):
-    def tearDown(self):
-        if os.path.isfile("checkConfigTest.py"):
-            os.remove("checkConfigTest.py")
-
     def fromIter(self):
         for x in (-1.1, 0, 2.2):
             for y in (3.1, 0, 2.1):
@@ -98,14 +93,12 @@ class XYTransformTestCase(unittest.TestCase):
                     self.assertAlmostEqual(tweakedToPoint[i], linToPoint[i], places=2)
                     self.assertAlmostEqual(tweakedFromPoint[i], linRoundTripPoint[i], places=2)
 
-    def checkConfig(self, tClass, tConfig): 
+    def checkConfig(self, tClass, tConfig, filePath): 
         """Check round trip of config
         """
-        if os.path.isfile("checkConfigTest.py"):
-            os.remove("checkConfigTest.py")
-        tConfig.save("checkConfigTest.py")
+        tConfig.save(filePath)
         loadConfig = tConfig.__class__()
-        loadConfig.load("checkConfigTest.py")
+        loadConfig.load(filePath)
         transform = tClass(loadConfig)
         self.checkBasics(transform)
 
@@ -113,14 +106,15 @@ class XYTransformTestCase(unittest.TestCase):
         """Test identity = IdentityXYTransform
         """
         identClass = xyTransformRegistry["identity"]
-        self.checkConfig(identClass, identClass.ConfigClass())
-        ident = identClass(identClass.ConfigClass())
-        self.assertEquals(type(ident), IdentityXYTransform)
-        self.checkBasics(ident)
-        for fromPoint in self.fromIter():
-            toPoint = ident.forwardTransform(fromPoint)
-            for i in range(2):
-                self.assertAlmostEqual(fromPoint[i], toPoint[i])
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(identClass, identClass.ConfigClass(), filePath)
+            ident = identClass(identClass.ConfigClass())
+            self.assertEquals(type(ident), IdentityXYTransform)
+            self.checkBasics(ident)
+            for fromPoint in self.fromIter():
+                toPoint = ident.forwardTransform(fromPoint)
+                for i in range(2):
+                    self.assertAlmostEqual(fromPoint[i], toPoint[i])
 
     def testInverted(self):
         """Test inverted = InvertedXYTransform
@@ -131,28 +125,30 @@ class XYTransformTestCase(unittest.TestCase):
         invertedConfig.transform.retarget(affineClass)
         affineConfig = invertedConfig.transform
         affineConfig.translation = (1.2, -3.4)
-        self.checkConfig(invertedClass, invertedConfig)
-        inverted = invertedClass(invertedConfig)
-        self.checkBasics(inverted)
-        for fromPoint in self.fromIter():
-            toPoint = inverted.forwardTransform(fromPoint)
-            predToPoint = fromPoint - Extent2D(*invertedConfig.transform.translation)
-            for i in range(2):
-                self.assertAlmostEqual(toPoint[i], predToPoint[i])
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(invertedClass, invertedConfig, filePath)
+            inverted = invertedClass(invertedConfig)
+            self.checkBasics(inverted)
+            for fromPoint in self.fromIter():
+                toPoint = inverted.forwardTransform(fromPoint)
+                predToPoint = fromPoint - Extent2D(*invertedConfig.transform.translation)
+                for i in range(2):
+                    self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
     def testDefaultAffine(self):
         """Test affine = AffineXYTransform with default coeffs (identity transform)
         """
         affineClass = xyTransformRegistry["affine"]
         affineConfig = affineClass.ConfigClass()
-        self.checkConfig(affineClass, affineConfig)
-        affine = affineClass(affineConfig)
-        self.assertEquals(type(affine), AffineXYTransform)
-        self.checkBasics(affine)
-        for fromPoint in self.fromIter():
-            toPoint = affine.forwardTransform(fromPoint)
-            for i in range(2):
-                self.assertAlmostEqual(fromPoint[i], toPoint[i])
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(affineClass, affineConfig, filePath)
+            affine = affineClass(affineConfig)
+            self.assertEquals(type(affine), AffineXYTransform)
+            self.checkBasics(affine)
+            for fromPoint in self.fromIter():
+                toPoint = affine.forwardTransform(fromPoint)
+                for i in range(2):
+                    self.assertAlmostEqual(fromPoint[i], toPoint[i])
 
     def testTranslateAffine(self):
         """Test affine = AffineXYTransform with just translation coefficients
@@ -160,13 +156,14 @@ class XYTransformTestCase(unittest.TestCase):
         affineClass = xyTransformRegistry["affine"]
         affineConfig = affineClass.ConfigClass()
         affineConfig.translation = (1.2, -3.4)
-        self.checkConfig(affineClass, affineConfig)
-        affine = affineClass(affineConfig)
-        for fromPoint in self.fromIter():
-            toPoint = affine.forwardTransform(fromPoint)
-            predToPoint = fromPoint + Extent2D(*affineConfig.translation)
-            for i in range(2):
-                self.assertAlmostEqual(toPoint[i], predToPoint[i])
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(affineClass, affineConfig, filePath)
+            affine = affineClass(affineConfig)
+            for fromPoint in self.fromIter():
+                toPoint = affine.forwardTransform(fromPoint)
+                predToPoint = fromPoint + Extent2D(*affineConfig.translation)
+                for i in range(2):
+                    self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
     def testLinearAffine(self):
         """Test affine = AffineXYTransform with just linear coefficients
@@ -180,16 +177,17 @@ class XYTransformTestCase(unittest.TestCase):
              math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
-        self.checkConfig(affineClass, affineConfig)
-        affine = affineClass(affineConfig)
-        for fromPoint in self.fromIter():
-            toPoint = affine.forwardTransform(fromPoint)
-            predToPoint = Point2D(
-                affineConfig.linear[0] * fromPoint[0] + affineConfig.linear[1] * fromPoint[1],
-                affineConfig.linear[2] * fromPoint[0] + affineConfig.linear[3] * fromPoint[1],
-            )
-            for i in range(2):
-                self.assertAlmostEqual(toPoint[i], predToPoint[i])
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(affineClass, affineConfig, filePath)
+            affine = affineClass(affineConfig)
+            for fromPoint in self.fromIter():
+                toPoint = affine.forwardTransform(fromPoint)
+                predToPoint = Point2D(
+                    affineConfig.linear[0] * fromPoint[0] + affineConfig.linear[1] * fromPoint[1],
+                    affineConfig.linear[2] * fromPoint[0] + affineConfig.linear[3] * fromPoint[1],
+                )
+                for i in range(2):
+                    self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
     def testFullAffine(self):
         """Test affine = AffineXYTransform with just linear coefficients
@@ -204,17 +202,18 @@ class XYTransformTestCase(unittest.TestCase):
              math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
-        self.checkConfig(affineClass, affineConfig)
-        affine = affineClass(affineConfig)
-        for fromPoint in self.fromIter():
-            toPoint = affine.forwardTransform(fromPoint)
-            predToPoint = Point2D(
-                affineConfig.linear[0] * fromPoint[0] + affineConfig.linear[1] * fromPoint[1],
-                affineConfig.linear[2] * fromPoint[0] + affineConfig.linear[3] * fromPoint[1],
-            )
-            predToPoint = predToPoint + Extent2D(*affineConfig.translation)
-            for i in range(2):
-                self.assertAlmostEqual(toPoint[i], predToPoint[i])
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(affineClass, affineConfig, filePath)
+            affine = affineClass(affineConfig)
+            for fromPoint in self.fromIter():
+                toPoint = affine.forwardTransform(fromPoint)
+                predToPoint = Point2D(
+                    affineConfig.linear[0] * fromPoint[0] + affineConfig.linear[1] * fromPoint[1],
+                    affineConfig.linear[2] * fromPoint[0] + affineConfig.linear[3] * fromPoint[1],
+                )
+                predToPoint = predToPoint + Extent2D(*affineConfig.translation)
+                for i in range(2):
+                    self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
     def testRadial(self):
         """Test radial = RadialXYTransform
@@ -222,21 +221,22 @@ class XYTransformTestCase(unittest.TestCase):
         radialClass = xyTransformRegistry["radial"]
         radialConfig = radialClass.ConfigClass()
         radialConfig.coeffs = (0, 1.05, 0.1)
-        self.checkConfig(radialClass, radialConfig)
-        radial = radialClass(radialConfig)
-        self.assertEquals(type(radial), RadialXYTransform)
-        self.assertEquals(len(radial.getCoeffs()), len(radialConfig.coeffs))
-        for coeff, predCoeff in itertools.izip(radial.getCoeffs(), radialConfig.coeffs):
-            self.assertAlmostEqual(coeff, predCoeff)
-        self.checkBasics(radial)
-        for fromPoint in self.fromIter():
-            fromRadius = math.hypot(fromPoint[0], fromPoint[1])
-            fromAngle = math.atan2(fromPoint[1], fromPoint[0])
-            predToRadius = fromRadius * (radialConfig.coeffs[2] * fromRadius + radialConfig.coeffs[1])
-            predToPoint = Point2D(predToRadius * math.cos(fromAngle), predToRadius * math.sin(fromAngle))
-            toPoint = radial.forwardTransform(fromPoint)
-            for i in range(2):
-                self.assertAlmostEqual(toPoint[i], predToPoint[i])
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(radialClass, radialConfig, filePath)
+            radial = radialClass(radialConfig)
+            self.assertEquals(type(radial), RadialXYTransform)
+            self.assertEquals(len(radial.getCoeffs()), len(radialConfig.coeffs))
+            for coeff, predCoeff in itertools.izip(radial.getCoeffs(), radialConfig.coeffs):
+                self.assertAlmostEqual(coeff, predCoeff)
+            self.checkBasics(radial)
+            for fromPoint in self.fromIter():
+                fromRadius = math.hypot(fromPoint[0], fromPoint[1])
+                fromAngle = math.atan2(fromPoint[1], fromPoint[0])
+                predToRadius = fromRadius * (radialConfig.coeffs[2] * fromRadius + radialConfig.coeffs[1])
+                predToPoint = Point2D(predToRadius * math.cos(fromAngle), predToRadius * math.sin(fromAngle))
+                toPoint = radial.forwardTransform(fromPoint)
+                for i in range(2):
+                    self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
     def testBadRadial(self):
         """Test radial with invalid coefficients
@@ -288,21 +288,22 @@ class XYTransformTestCase(unittest.TestCase):
             0: wrapper0,
             1: wrapper1,
         }
-        self.checkConfig(multiClass, multiConfig)
-        multiXYTransform = multiClass(multiConfig)
+        with lsst.utils.tests.getTempFilePath(".py") as filePath:
+            self.checkConfig(multiClass, multiConfig, filePath)
+            multiXYTransform = multiClass(multiConfig)
 
-        affine0 = affineClass(affineConfig0)
-        affine1 = affineClass(affineConfig1)
-        transformList = (affine0, affine1)
-        refMultiXYTransform = RefMultiXYTransform(transformList)
+            affine0 = affineClass(affineConfig0)
+            affine1 = affineClass(affineConfig1)
+            transformList = (affine0, affine1)
+            refMultiXYTransform = RefMultiXYTransform(transformList)
 
-        self.checkBasics(refMultiXYTransform)
+            self.checkBasics(refMultiXYTransform)
 
-        for fromPoint in self.fromIter():
-            toPoint = multiXYTransform.forwardTransform(fromPoint)
-            predToPoint = refMultiXYTransform.forwardTransform(fromPoint)
-            for i in range(2):
-                self.assertAlmostEqual(toPoint[i], predToPoint[i])
+            for fromPoint in self.fromIter():
+                toPoint = multiXYTransform.forwardTransform(fromPoint)
+                predToPoint = refMultiXYTransform.forwardTransform(fromPoint)
+                for i in range(2):
+                    self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

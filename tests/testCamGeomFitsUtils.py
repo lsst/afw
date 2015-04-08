@@ -24,7 +24,7 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
-import unittest, os
+import unittest
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -59,7 +59,8 @@ class FitsUtilsTestCase(unittest.TestCase):
         self.metadata.set('TESTSEC', '1 2 3 4 5')
         exp = afwImage.ExposureF(10, 10)
         exp.setMetadata(self.metadata)
-        exp.writeFits('testfitsutils.fits')
+#        exp.writeFits('testfitsutils.fits')
+        self.exposure = exp
         self.mdMapList = [('NAME', 'name'),
                           ('TESTSEC', 'testsec', None, self.toTestStr),
                           ('TESTDEF', 'defaultval', 'Default', None)]
@@ -68,7 +69,8 @@ class FitsUtilsTestCase(unittest.TestCase):
     def tearDown(self):
         del self.metadata
         del self.mdMapList
-        os.remove('testfitsutils.fits')
+        del self.exposure
+#        os.remove('testfitsutils.fits')
 
     def testBasics(self):
         """Test getters and other basics
@@ -107,12 +109,14 @@ class FitsUtilsTestCase(unittest.TestCase):
         """Test the buildDetector method
            Just tests whether the constructors return without error.  The internals are tested above.
         """
-        #test that it raises without setting non-defaulted keywords
-        self.assertRaises(Exception, DetectorBuilder('testfitsutils.fits', ['testfitsutils.fits', 'testfitsutils.fits']))
-        #ignore non-defaulted keywords
-        detBuilder = DetectorBuilder('testfitsutils.fits', ['testfitsutils.fits', ], doRaise=False)
-        calib = detBuilder.makeCalib()
-        exp = detBuilder.makeExposure(afwImage.ImageF(10,10), afwImage.MaskU(10,10), afwImage.ImageF(10,10))
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            self.exposure.writeFits(tmpFile)
+            #test that it raises without setting non-defaulted keywords
+            self.assertRaises(Exception, DetectorBuilder(tmpFile, [tmpFile, tmpFile]))
+            #ignore non-defaulted keywords
+            detBuilder = DetectorBuilder(tmpFile, [tmpFile, ], doRaise=False)
+            detBuilder.makeCalib()
+            detBuilder.makeExposure(afwImage.ImageF(10,10), afwImage.MaskU(10,10), afwImage.ImageF(10,10))
 
 def suite():
     """Returns a suite containing all the test cases in this module."""

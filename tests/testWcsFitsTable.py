@@ -23,7 +23,6 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
 import unittest
 import pyfits
 
@@ -65,17 +64,16 @@ class WcsFitsTableTestCase(unittest.TestCase):
     def tearDown(self):
         del self.metadata
 
-    def doFitsRoundTrip(self, wcsIn):
-        fileName = "wcs-table-test.fits"
+    def doFitsRoundTrip(self, fileName, wcsIn):
         wcsIn.writeFits(fileName)
         wcsOut = lsst.afw.image.Wcs.readFits(fileName)
-        os.remove(fileName)
         return wcsOut
 
     def testSimpleWcs(self):
-        wcsIn = lsst.afw.image.makeWcs(self.metadata)
-        wcsOut = self.doFitsRoundTrip(wcsIn)
-        self.assertEqual(wcsIn, wcsOut)
+        with utilsTests.getTempFilePath(".fits") as fileName:
+            wcsIn = lsst.afw.image.makeWcs(self.metadata)
+            wcsOut = self.doFitsRoundTrip(fileName, wcsIn)
+            self.assertEqual(wcsIn, wcsOut)
 
     def addSipMetadata(self):
         self.metadata.add("A_ORDER", 3)
@@ -147,14 +145,15 @@ class WcsFitsTableTestCase(unittest.TestCase):
     def testTanWcs(self):
         self.addSipMetadata()
         wcsIn = lsst.afw.image.makeWcs(self.metadata)
-        wcsOut = self.doFitsRoundTrip(wcsIn)
-        wcsIn1 = lsst.afw.image.cast_TanWcs(wcsIn)
-        wcsOut1 = lsst.afw.image.cast_TanWcs(wcsOut)
-        self.assert_(wcsIn1 is not None)
-        self.assert_(wcsOut1 is not None)
-        self.assert_(wcsIn1.hasDistortion())
-        self.assert_(wcsOut1.hasDistortion())
-        self.assertEqual(wcsIn1, wcsOut1)
+        with utilsTests.getTempFilePath(".fits") as fileName:
+            wcsOut = self.doFitsRoundTrip(fileName, wcsIn)
+            wcsIn1 = lsst.afw.image.cast_TanWcs(wcsIn)
+            wcsOut1 = lsst.afw.image.cast_TanWcs(wcsOut)
+            self.assert_(wcsIn1 is not None)
+            self.assert_(wcsOut1 is not None)
+            self.assert_(wcsIn1.hasDistortion())
+            self.assert_(wcsOut1.hasDistortion())
+            self.assertEqual(wcsIn1, wcsOut1)
 
     def testExposure(self):
         """Test that we load the Wcs from the binary table instead of headers when possible."""
@@ -163,20 +162,20 @@ class WcsFitsTableTestCase(unittest.TestCase):
         dim = lsst.afw.geom.Extent2I(20, 30)
         expIn = lsst.afw.image.ExposureF(dim)
         expIn.setWcs(wcsIn)
-        fileName = "wcs-table-test.fits"
-        expIn.writeFits(fileName)
-        # Manually mess up the headers, so we'd know if we were loading the Wcs from that;
-        # when there is a WCS in the header and a WCS in the FITS table, we should use the
-        # latter, because the former might just be an approximation.
-        fits = pyfits.open(fileName)
-        os.remove(fileName)
-        fits[1].header.remove("CTYPE1")
-        fits[1].header.remove("CTYPE2")
-        fits.writeto(fileName)
-        # now load it using afw
-        expOut = lsst.afw.image.ExposureF(fileName)
-        wcsOut = expOut.getWcs()
-        self.assertEqual(wcsIn, wcsOut)
+        with utilsTests.getTempFilePath(".fits") as fileName:
+            expIn.writeFits(fileName)
+            # Manually mess up the headers, so we'd know if we were loading the Wcs from that;
+            # when there is a WCS in the header and a WCS in the FITS table, we should use the
+            # latter, because the former might just be an approximation.
+            fits = pyfits.open(fileName)
+            fits[1].header.remove("CTYPE1")
+            fits[1].header.remove("CTYPE2")
+            fits.writeto(fileName, clobber=True)
+            # now load it using afw
+            expOut = lsst.afw.image.ExposureF(fileName)
+            wcsOut = expOut.getWcs()
+            self.assertEqual(wcsIn, wcsOut)
+
 #####
 
 def suite():
