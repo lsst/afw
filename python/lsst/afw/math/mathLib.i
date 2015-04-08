@@ -43,19 +43,15 @@ Python interface to lsst::afw::math classes
 #   pragma clang diagnostic ignored "-Warray-bounds" // PyTupleObject has an array declared as [1]
 %}
 
+%include "lsst/p_lsstSwig.i"
+
 // Enable ndarray's NumPy typemaps; types are declared in %included files.
+%initializeNumPy(afw_math)
 %{
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_MATH_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
 #include "ndarray/swig.h"
 #include "ndarray/swig/eigen.h"
 %}
-%init %{
-    import_array();
-%}
 %include "ndarray.i"
-
-%include "lsst/p_lsstSwig.i"
 
 // vectors of plain old types; template vectors of more complex types in objectVectors.i
 %template(vectorF) std::vector<float>;

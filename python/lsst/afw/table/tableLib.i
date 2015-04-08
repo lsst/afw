@@ -37,6 +37,13 @@ Python interface to lsst::afw::table classes
 
 %include "lsst/p_lsstSwig.i"
 
+%initializeNumPy(afw_table)
+%{
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+%}
+%include "ndarray.i"
+
 %lsst_exceptions()
 
 %include "Base.i"

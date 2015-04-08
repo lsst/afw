@@ -52,11 +52,6 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/fits.h" // just for exceptions
 
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_IMAGE_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
-#include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
-
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/formatters/ExposureFormatter.h"
@@ -66,10 +61,6 @@ Basic routines to talk to lsst::afw::image classes
 %}
 
 %include "lsst/afw/fits/fits_reduce.i"
-
-%init %{
-    import_array();
-%}
 
 namespace boost {
     namespace mpl { }
@@ -82,6 +73,11 @@ namespace boost {
 }
 
 %include "lsst/p_lsstSwig.i"
+%initializeNumPy(afw_image)
+%{
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+%}
 %include "lsst/daf/base/persistenceMacros.i"
 
 %include "lsst/base.h"
