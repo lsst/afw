@@ -21,7 +21,7 @@ def copySchema(schema, target, targetPrefix=None, sourcePrefix=None):
         typeStr = field.getTypeString()
         fieldDoc = field.getDoc()
         fieldUnits = field.getUnits()
-        if typeStr in ("ArrayF", "ArrayD", "CovF", "CovD"):
+        if typeStr in ("ArrayF", "ArrayD", "ArrayI", "CovF", "CovD"):
             fieldSize = field.getSize()
         else:
             fieldSize = None
