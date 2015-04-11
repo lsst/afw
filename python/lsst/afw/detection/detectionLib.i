@@ -46,20 +46,19 @@ Python interface to lsst::afw::detection classes
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
-
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_DETECTION_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
-#include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
-%}
-
-%init %{
-    import_array();
 %}
 
 %include "std_string.i"
 
 %include "lsst/p_lsstSwig.i"
+
+%initializeNumPy(afw_detection)
+%{
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+%}
+%include "ndarray.i"
+
 %include "lsst/base.h"
 
 %import  "lsst/afw/utils.i" 

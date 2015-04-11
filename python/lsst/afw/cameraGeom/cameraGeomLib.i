@@ -52,6 +52,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %import "lsst/afw/geom/geomLib.i"
 %import "lsst/afw/table/AmpInfo.i"
 
+%initializeNumPy(afw_cameraGeom)
 %lsst_exceptions();
 
 %shared_ptr(lsst::afw::cameraGeom::Detector);

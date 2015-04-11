@@ -34,21 +34,18 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %{
 #include "lsst/afw/geom.h"
 #include "lsst/afw/geom/ellipses.h"
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_ELLIPSES_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
-#include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
-%}
-
-%init%{
-    import_array();
 %}
 
 %include "lsst/p_lsstSwig.i"
-
 %lsst_exceptions();
 
+%initializeNumPy(afw_geom_ellipses)
+%{
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+%}
 %include "ndarray.i"
+
 %import "lsst/afw/geom/geomLib.i"
 
 %pythondynamic lsst::afw::geom::ellipses::Ellipse;

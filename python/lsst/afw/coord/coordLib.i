@@ -36,6 +36,7 @@ Python interface to lsst::afw::coord
 %useValueEquality(lsst::afw::coord::Coord);
 
 %lsst_exceptions();
+%initializeNumPy(afw_coord)
 
 %include "std_pair.i"
 %template(pairSS) std::pair<std::string, std::string>;

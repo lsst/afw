@@ -42,26 +42,23 @@ Python interface to lsst::afw::geom classes
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom.h"
 #include "lsst/pex/exceptions.h"
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_GEOM_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
-#include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
-%}
-
-%init %{
-    import_array();
 %}
 
 %include "lsst/p_lsstSwig.i"
-%import "lsst/daf/base/baseLib.i"
-
 %lsst_exceptions();
+
+%initializeNumPy(afw_geom)
+%{
+#include "ndarray/swig.h"
+#include "ndarray/swig/eigen.h"
+%}
+%include "ndarray.i"
+
+%import "lsst/daf/base/baseLib.i"
 
 %include "std_vector.i"
 %template(Point2IVector) std::vector<lsst::afw::geom::Point<int, 2> >;
 %template(Point2DVector) std::vector<lsst::afw::geom::Point<double, 2> >;
-
-%include "ndarray.i"
 
 %declareNumPyConverters(Eigen::Matrix<double,2,1,Eigen::DontAlign>);
 %declareNumPyConverters(Eigen::Matrix<double,3,1,Eigen::DontAlign>);

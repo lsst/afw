@@ -29,9 +29,6 @@
  */
 
 %{
-#define PY_ARRAY_UNIQUE_SYMBOL LSST_AFW_TABLE_NUMPY_ARRAY_API
-#include "numpy/arrayobject.h"
-#include "ndarray/swig.h"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord.h"

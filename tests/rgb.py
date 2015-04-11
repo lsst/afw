@@ -115,6 +115,7 @@ class RgbTestCase(unittest.TestCase):
         if display:
             rgb.displayRGB(rgbImage)            
 
+    @unittest.skipUnless(HAVE_MATPLOTLIB, "Requires matplotlib >= 1.3.1")
     def testMakeRGB(self):
         """Test the function that does it all"""
         fileName = "makeRGB.png"
