@@ -31,7 +31,6 @@ Contact: nms@astro.washington.edu
 Created on: Mon Sep 10, 2007
 """
 
-import os
 import os.path
 import unittest
 
@@ -71,7 +70,6 @@ currDir = os.path.abspath(os.path.dirname(__file__))
 inFilePath = os.path.join(dataDir, InputMaskedImageName)
 inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
 inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
-outFile = OutputMaskedImageName
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -332,25 +330,25 @@ class ExposureTestCase(unittest.TestCase):
         fluxMag0, fluxMag0Err = 1e12, 1e10
         mainExposure.getCalib().setFluxMag0(fluxMag0, fluxMag0Err)
 
-        mainExposure.writeFits(outFile)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            mainExposure.writeFits(tmpFile)
 
-        readExposure = type(mainExposure)(outFile)
+            readExposure = type(mainExposure)(tmpFile)
 
-        os.remove(outFile)
-        #
-        # Check the round-tripping
-        #
-        self.assertEqual(mainExposure.getFilter().getName(), readExposure.getFilter().getName())
+            #
+            # Check the round-tripping
+            #
+            self.assertEqual(mainExposure.getFilter().getName(), readExposure.getFilter().getName())
 
-        self.assertEqual(mainExposure.getCalib().getExptime(), readExposure.getCalib().getExptime())
-        self.assertEqual(midMjd, readExposure.getCalib().getMidTime().get())
-        self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
+            self.assertEqual(mainExposure.getCalib().getExptime(), readExposure.getCalib().getExptime())
+            self.assertEqual(midMjd, readExposure.getCalib().getMidTime().get())
+            self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
 
-        psf = readExposure.getPsf()
-        self.assert_(psf is not None)
-        dummyPsf = DummyPsf.swigConvert(psf)
-        self.assert_(dummyPsf is not None)
-        self.assertEqual(dummyPsf.getValue(), self.psf.getValue())
+            psf = readExposure.getPsf()
+            self.assert_(psf is not None)
+            dummyPsf = DummyPsf.swigConvert(psf)
+            self.assert_(dummyPsf is not None)
+            self.assertEqual(dummyPsf.getValue(), self.psf.getValue())
 
     def checkWcs(self, parentExposure, subExposure):
         """Compare WCS at corner points of a sub-exposure and its parent exposure
@@ -515,47 +513,44 @@ class ExposureTestCase(unittest.TestCase):
         self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
 
     def testReadMetadata(self):
-        filename = "testExposureMetadata.fits"
-        self.exposureCrWcs.getMetadata().set("FRAZZLE", True)
-        # This will write the main metadata (inc. FRAZZLE) to the primary HDU, and the
-        # WCS to subsequent HDUs, along with INHERIT=T.
-        self.exposureCrWcs.writeFits(filename)
-        # This should read the first non-empty HDU (i.e. it skips the primary), but
-        # goes back and reads it if it finds INHERIT=T.  That should let us read
-        # frazzle and the Wcs from the PropertySet returned by readMetadata.
-        md = afwImage.readMetadata(filename)
-        wcs = afwImage.makeWcs(md, True)
-        self.assertEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
-        self.assertEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
-        self.assert_(numpy.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
-        frazzle = md.get("FRAZZLE")
-        self.assert_(frazzle is True)
-        os.remove(filename)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            self.exposureCrWcs.getMetadata().set("FRAZZLE", True)
+            # This will write the main metadata (inc. FRAZZLE) to the primary HDU, and the
+            # WCS to subsequent HDUs, along with INHERIT=T.
+            self.exposureCrWcs.writeFits(tmpFile)
+            # This should read the first non-empty HDU (i.e. it skips the primary), but
+            # goes back and reads it if it finds INHERIT=T.  That should let us read
+            # frazzle and the Wcs from the PropertySet returned by readMetadata.
+            md = afwImage.readMetadata(tmpFile)
+            wcs = afwImage.makeWcs(md, True)
+            self.assertEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
+            self.assertEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
+            self.assert_(numpy.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
+            frazzle = md.get("FRAZZLE")
+            self.assert_(frazzle is True)
 
     def testArchiveKeys(self):
-        filename = "testArchiveKeys.fits"
-        exposure1 = afwImage.ExposureF(100, 100, self.wcs)
-        exposure1.setPsf(self.psf)
-        exposure1.writeFits(filename)
-        exposure2 = afwImage.ExposureF(filename)
-        self.assertFalse(exposure2.getMetadata().exists("AR_ID"))
-        self.assertFalse(exposure2.getMetadata().exists("PSF_ID"))
-        self.assertFalse(exposure2.getMetadata().exists("WCS_ID"))
-        os.remove(filename)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            exposure1 = afwImage.ExposureF(100, 100, self.wcs)
+            exposure1.setPsf(self.psf)
+            exposure1.writeFits(tmpFile)
+            exposure2 = afwImage.ExposureF(tmpFile)
+            self.assertFalse(exposure2.getMetadata().exists("AR_ID"))
+            self.assertFalse(exposure2.getMetadata().exists("PSF_ID"))
+            self.assertFalse(exposure2.getMetadata().exists("WCS_ID"))
 
     def testTicket2861(self):
-        filename = "testTicket2861.fits"
-        exposure1 = afwImage.ExposureF(100, 100, self.wcs)
-        exposure1.setPsf(self.psf)
-        schema = afwTable.ExposureTable.makeMinimalSchema()
-        coaddInputs = afwImage.CoaddInputs(schema, schema)
-        exposure1.getInfo().setCoaddInputs(coaddInputs)
-        exposure2 = afwImage.ExposureF(exposure1, True)
-        self.assertIsNotNone(exposure2.getInfo().getCoaddInputs())
-        exposure2.writeFits(filename)
-        exposure3 = afwImage.ExposureF(filename)
-        self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
-        os.remove(filename)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            exposure1 = afwImage.ExposureF(100, 100, self.wcs)
+            exposure1.setPsf(self.psf)
+            schema = afwTable.ExposureTable.makeMinimalSchema()
+            coaddInputs = afwImage.CoaddInputs(schema, schema)
+            exposure1.getInfo().setCoaddInputs(coaddInputs)
+            exposure2 = afwImage.ExposureF(exposure1, True)
+            self.assertIsNotNone(exposure2.getInfo().getCoaddInputs())
+            exposure2.writeFits(tmpFile)
+            exposure3 = afwImage.ExposureF(tmpFile)
+            self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
         
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

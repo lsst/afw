@@ -145,33 +145,32 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        filename = "testPersisted.fits"
-        self.catalog.writeFits(filename)
-        catalog = lsst.afw.table.SourceCatalog.readFits(filename)
-        table = catalog.getTable()
-        record = catalog[0]
-        # I'm using the keys from the non-persisted table.  They should work at least in the
-        # current implementation
-        self.assertEqual(table.getPsfFluxDefinition(), "a")
-        self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
-        self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
-        self.assertEqual(table.getCentroidDefinition(), "b")
-        centroid = self.centroidKey.get(self.record)
-        self.assertEqual(centroid, record.getCentroid())
-        self.assertClose(math.fabs(self.record.get(self.xErrKey)),
-            math.sqrt(self.record.getCentroidErr()[0,0]), rtol=1e-6)
-        self.assertClose(math.fabs(self.record.get(self.yErrKey)),
-            math.sqrt(self.record.getCentroidErr()[1,1]), rtol=1e-6)
-        shape = self.shapeKey.get(self.record)
-        self.assertEqual(table.getShapeDefinition(), "c")
-        self.assertEqual(shape, record.getShape())
-        self.assertClose(math.fabs(self.record.get(self.xxErrKey)),
-            math.sqrt(self.record.getShapeErr()[0,0]), rtol=1e-6)
-        self.assertClose(math.fabs(self.record.get(self.yyErrKey)),
-            math.sqrt(self.record.getShapeErr()[1,1]), rtol=1e-6)
-        self.assertClose(math.fabs(self.record.get(self.xyErrKey)),
-            math.sqrt(self.record.getShapeErr()[2,2]), rtol=1e-6)
-        os.unlink(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.catalog.writeFits(filename)
+            catalog = lsst.afw.table.SourceCatalog.readFits(filename)
+            table = catalog.getTable()
+            record = catalog[0]
+            # I'm using the keys from the non-persisted table.  They should work at least in the
+            # current implementation
+            self.assertEqual(table.getPsfFluxDefinition(), "a")
+            self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
+            self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
+            self.assertEqual(table.getCentroidDefinition(), "b")
+            centroid = self.centroidKey.get(self.record)
+            self.assertEqual(centroid, record.getCentroid())
+            self.assertClose(math.fabs(self.record.get(self.xErrKey)),
+                math.sqrt(self.record.getCentroidErr()[0,0]), rtol=1e-6)
+            self.assertClose(math.fabs(self.record.get(self.yErrKey)),
+                math.sqrt(self.record.getCentroidErr()[1,1]), rtol=1e-6)
+            shape = self.shapeKey.get(self.record)
+            self.assertEqual(table.getShapeDefinition(), "c")
+            self.assertEqual(shape, record.getShape())
+            self.assertClose(math.fabs(self.record.get(self.xxErrKey)),
+                math.sqrt(self.record.getShapeErr()[0,0]), rtol=1e-6)
+            self.assertClose(math.fabs(self.record.get(self.yyErrKey)),
+                math.sqrt(self.record.getShapeErr()[1,1]), rtol=1e-6)
+            self.assertClose(math.fabs(self.record.get(self.xyErrKey)),
+                math.sqrt(self.record.getShapeErr()[2,2]), rtol=1e-6)
 
     def testCanonical2(self):
         self.table.definePsfFlux("a")
@@ -303,66 +302,65 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         mim2 = lsst.afw.image.MaskedImageF(W,H)
         heavy.insert(mim2)
 
-        f,fn = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
-        os.close(f)
-        self.catalog.writeFits(fn)
+        with lsst.utils.tests.getTempFilePath(".fits") as fn:
+            self.catalog.writeFits(fn)
 
-        cat2 = lsst.afw.table.SourceCatalog.readFits(fn)
-        r2 = cat2[-2]
-        f2 = r2.getFootprint()
-        self.assertTrue(f2.isHeavy())
-        h2 = lsst.afw.detection.cast_HeavyFootprintF(f2)
-        mim3 = lsst.afw.image.MaskedImageF(W, H)
-        h2.insert(mim3)
+            cat2 = lsst.afw.table.SourceCatalog.readFits(fn)
+            r2 = cat2[-2]
+            f2 = r2.getFootprint()
+            self.assertTrue(f2.isHeavy())
+            h2 = lsst.afw.detection.cast_HeavyFootprintF(f2)
+            mim3 = lsst.afw.image.MaskedImageF(W, H)
+            h2.insert(mim3)
 
-        self.assertFalse(cat2[-1].getFootprint().isHeavy())
-        self.assertFalse(cat2[-3].getFootprint().isHeavy())
-        self.assertFalse(cat2[0].getFootprint().isHeavy())
-        self.assertFalse(cat2[1].getFootprint().isHeavy())
-        self.assertFalse(cat2[2].getFootprint().isHeavy())
+            self.assertFalse(cat2[-1].getFootprint().isHeavy())
+            self.assertFalse(cat2[-3].getFootprint().isHeavy())
+            self.assertFalse(cat2[0].getFootprint().isHeavy())
+            self.assertFalse(cat2[1].getFootprint().isHeavy())
+            self.assertFalse(cat2[2].getFootprint().isHeavy())
 
-        if False:
-            # Write out before-n-after FITS images
-            for MI in [mim, mim2, mim3]:
-                f,fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
-                os.close(f)
-                MI.writeFits(fn2)
-                print 'wrote', fn2
+            if False:
+                # Write out before-n-after FITS images
+                for MI in [mim, mim2, mim3]:
+                    f,fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
+                    os.close(f)
+                    MI.writeFits(fn2)
+                    print 'wrote', fn2
 
-        self.assertTrue(all((mim2.getImage().getArray() == mim3.getImage().getArray()).ravel()))
-        self.assertTrue(all((mim2.getMask().getArray() == mim3.getMask().getArray()).ravel()))
-        self.assertTrue(all((mim2.getVariance().getArray() == mim3.getVariance().getArray()).ravel()))
+            self.assertTrue(all((mim2.getImage().getArray() == mim3.getImage().getArray()).ravel()))
+            self.assertTrue(all((mim2.getMask().getArray() == mim3.getMask().getArray()).ravel()))
+            self.assertTrue(all((mim2.getVariance().getArray() == mim3.getVariance().getArray()).ravel()))
 
-        im3 = mim3.getImage()
-        ma3 = mim3.getMask()
-        va3 = mim3.getVariance()
-        for y in range(H):
-            for x in range(W):
-                if circ.contains(lsst.afw.geom.Point2I(x, y)):
-                    self.assertEqual(im.get(x, y),  im3.get(x, y))
-                    self.assertEqual(msk.get(x, y), ma3.get(x, y))
-                    self.assertEqual(var.get(x, y), va3.get(x, y))
-                else:
-                    self.assertEqual(im3.get(x, y), 0.)
-                    self.assertEqual(ma3.get(x, y), 0.)
-                    self.assertEqual(va3.get(x, y), 0.)
+            im3 = mim3.getImage()
+            ma3 = mim3.getMask()
+            va3 = mim3.getVariance()
+            for y in range(H):
+                for x in range(W):
+                    if circ.contains(lsst.afw.geom.Point2I(x, y)):
+                        self.assertEqual(im.get(x, y),  im3.get(x, y))
+                        self.assertEqual(msk.get(x, y), ma3.get(x, y))
+                        self.assertEqual(var.get(x, y), va3.get(x, y))
+                    else:
+                        self.assertEqual(im3.get(x, y), 0.)
+                        self.assertEqual(ma3.get(x, y), 0.)
+                        self.assertEqual(va3.get(x, y), 0.)
 
-        cat3 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
-        for src in cat3:
-            self.assertFalse(src.getFootprint().isHeavy())
-        cat4 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
-        for src in cat4:
-            self.assertIsNone(src.getFootprint())
+            cat3 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+            for src in cat3:
+                self.assertFalse(src.getFootprint().isHeavy())
+            cat4 = lsst.afw.table.SourceCatalog.readFits(fn, 0, lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+            for src in cat4:
+                self.assertIsNone(src.getFootprint())
 
-        self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
-        cat5 = lsst.afw.table.SourceCatalog.readFits(fn)
-        for src in cat5:
-            self.assertFalse(src.getFootprint().isHeavy())
+            self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_HEAVY_FOOTPRINTS)
+            cat5 = lsst.afw.table.SourceCatalog.readFits(fn)
+            for src in cat5:
+                self.assertFalse(src.getFootprint().isHeavy())
 
-        self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
-        cat6 = lsst.afw.table.SourceCatalog.readFits(fn)
-        for src in cat6:
-            self.assertIsNone(src.getFootprint())
+            self.catalog.writeFits(fn, flags=lsst.afw.table.SOURCE_IO_NO_FOOTPRINTS)
+            cat6 = lsst.afw.table.SourceCatalog.readFits(fn)
+            for src in cat6:
+                self.assertIsNone(src.getFootprint())
 
     def testIdFactory(self):
         expId = int(1257198)

@@ -57,7 +57,7 @@ class ImageIoTestCase(unittest.TestCase):
                 for y in xrange(0, self.rows):
                     image.set(x, y, x + y)
 
-            with utilsTests.temporaryFile("imageIo2.fits") as filename:
+            with utilsTests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:
                 image.writeFits(filename)
                 readImage = Image(filename)
 

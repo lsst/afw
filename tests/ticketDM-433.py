@@ -26,7 +26,6 @@ from __future__ import absolute_import, division
 Tests for SourceTable slots with version > 0
 """
 
-import os
 import unittest
 import numpy
 
@@ -146,23 +145,22 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        filename = "testDM433.fits"
-        self.catalog.writeFits(filename)
-        catalog = lsst.afw.table.SourceCatalog.readFits(filename)
-        table = catalog.getTable()
-        record = catalog[0]
-        # I'm using the keys from the non-persisted table.  They should work at least in the
-        # current implementation
-        self.assertEqual(table.getPsfFluxDefinition(), "a")
-        self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
-        self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
-        self.assertEqual(table.getCentroidDefinition(), "b")
-        self.assertEqual(record.get(self.centroidKey), record.getCentroid())
-        self.assertClose(record.get(self.centroidErrKey), record.getCentroidErr())
-        self.assertEqual(table.getShapeDefinition(), "c")
-        self.assertEqual(record.get(self.shapeKey), record.getShape())
-        self.assertClose(record.get(self.shapeErrKey), record.getShapeErr())
-        os.unlink(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.catalog.writeFits(filename)
+            catalog = lsst.afw.table.SourceCatalog.readFits(filename)
+            table = catalog.getTable()
+            record = catalog[0]
+            # I'm using the keys from the non-persisted table.  They should work at least in the
+            # current implementation
+            self.assertEqual(table.getPsfFluxDefinition(), "a")
+            self.assertEqual(record.get(self.fluxKey), record.getPsfFlux())
+            self.assertEqual(record.get(self.fluxFlagKey), record.getPsfFluxFlag())
+            self.assertEqual(table.getCentroidDefinition(), "b")
+            self.assertEqual(record.get(self.centroidKey), record.getCentroid())
+            self.assertClose(record.get(self.centroidErrKey), record.getCentroidErr())
+            self.assertEqual(table.getShapeDefinition(), "c")
+            self.assertEqual(record.get(self.shapeKey), record.getShape())
+            self.assertClose(record.get(self.shapeErrKey), record.getShapeErr())
 
     def testDefiner1(self):
         self.table.definePsfFlux("a")

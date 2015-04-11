@@ -33,7 +33,6 @@ or
    >>> import Mask; Mask.run()
 """
 
-import os
 import os.path
 
 import sys
@@ -246,22 +245,21 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(mask.get(50, 50), 0)
         self.assertEqual(mask.get(0, 0), (1<<nMaskPlanes0)) # as header had none of the canonical planes
 
-        tmpFile = "foo.fits"
-        mask.writeFits(tmpFile)
-        #
-        # Read it back
-        #
-        md = lsst.daf.base.PropertySet()
-        rmask = self.Mask(tmpFile, 0, md)
-        os.remove(tmpFile)
-        
-        self.assertEqual(mask.get(0, 0), rmask.get(0, 0))
-        #
-        # Check that we wrote (and read) the metadata successfully
-        #
-        mp_ = "MP_" if True else self.Mask.maskPlanePrefix() # currently private
-        for (k, v) in self.Mask().getMaskPlaneDict().items():
-            self.assertEqual(md.get(mp_ + k), v)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            mask.writeFits(tmpFile)
+            #
+            # Read it back
+            #
+            md = lsst.daf.base.PropertySet()
+            rmask = self.Mask(tmpFile, 0, md)
+            
+            self.assertEqual(mask.get(0, 0), rmask.get(0, 0))
+            #
+            # Check that we wrote (and read) the metadata successfully
+            #
+            mp_ = "MP_" if True else self.Mask.maskPlanePrefix() # currently private
+            for (k, v) in self.Mask().getMaskPlaneDict().items():
+                self.assertEqual(md.get(mp_ + k), v)
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
@@ -269,14 +267,13 @@ class MaskTestCase(unittest.TestCase):
 
         x0, y0 = 1, 2
         mask.setXY0(x0, y0)
-        tmpFile = "foo.fits"
-        mask.writeFits(tmpFile)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            mask.writeFits(tmpFile)
 
-        mask2 = mask.Factory(tmpFile)
-        os.remove(tmpFile)
+            mask2 = mask.Factory(tmpFile)
 
-        self.assertEqual(mask2.getX0(), x0)
-        self.assertEqual(mask2.getY0(), y0)
+            self.assertEqual(mask2.getX0(), x0)
+            self.assertEqual(mask2.getY0(), y0)
 
     def testMaskInitialisation(self):
         dims = self.mask1.getDimensions()

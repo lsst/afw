@@ -33,7 +33,6 @@ or
    >>> import testGaussianPsf; testGaussianPsf.run()
 """
 
-import os
 import unittest
 import numpy
 
@@ -98,12 +97,11 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
         self.assertClose(self.psf.computeShape().getDeterminantRadius(), 4.0)
 
     def testPersistence(self):
-        filename = "testGaussianPsf.fits"
-        self.psf.writeFits(filename)
-        psf = lsst.afw.detection.GaussianPsf.readFits(filename)
-        os.remove(filename)
-        self.assertEqual(self.psf.getSigma(), psf.getSigma())
-        self.assertEqual(self.psf.getDimensions(), psf.getDimensions())
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            self.psf.writeFits(filename)
+            psf = lsst.afw.detection.GaussianPsf.readFits(filename)
+            self.assertEqual(self.psf.getSigma(), psf.getSigma())
+            self.assertEqual(self.psf.getDimensions(), psf.getDimensions())
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

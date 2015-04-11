@@ -34,7 +34,7 @@ or
 """
 
 
-import os
+import os.path
 import unittest
 
 import numpy
@@ -153,23 +153,21 @@ class MaskedImageTestCase(unittest.TestCase):
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
-        tmpFile = "foo.fits"
-        im.writeFits(tmpFile)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            im.writeFits(tmpFile)
 
-        im2 = im.Factory(tmpFile)
-        self.assertEqual(im2.getX0(), x0)
-        self.assertEqual(im2.getY0(), y0)
+            im2 = im.Factory(tmpFile)
+            self.assertEqual(im2.getX0(), x0)
+            self.assertEqual(im2.getY0(), y0)
 
-        self.assertEqual(im2.getImage().getX0(), x0)
-        self.assertEqual(im2.getImage().getY0(), y0)
+            self.assertEqual(im2.getImage().getX0(), x0)
+            self.assertEqual(im2.getImage().getY0(), y0)
 
-        self.assertEqual(im2.getMask().getX0(), x0)
-        self.assertEqual(im2.getMask().getY0(), y0)
-        
-        self.assertEqual(im2.getVariance().getX0(), x0)
-        self.assertEqual(im2.getVariance().getY0(), y0)
-        
-        os.remove(tmpFile)
+            self.assertEqual(im2.getMask().getX0(), x0)
+            self.assertEqual(im2.getMask().getY0(), y0)
+            
+            self.assertEqual(im2.getVariance().getX0(), x0)
+            self.assertEqual(im2.getVariance().getY0(), y0)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

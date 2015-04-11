@@ -33,11 +33,10 @@ or
    >>> import footprint1; footprint1.run()
 """
 
-import os
 import math, sys
 import unittest
 import numpy
-import lsst.utils.tests as tests
+import lsst.utils.tests as utilsTests
 import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
@@ -171,7 +170,7 @@ class ThresholdTestCase(unittest.TestCase):
         except:
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
 
-class FootprintTestCase(tests.TestCase):
+class FootprintTestCase(utilsTests.TestCase):
     """A test case for Footprint"""
     def setUp(self):
         self.foot = afwDetect.Footprint()
@@ -218,20 +217,19 @@ class FootprintTestCase(tests.TestCase):
         fp1 = afwDetect.Footprint(ellipse)
         fp1.getPeaks().push_back(afwDetect.Peak(6,7,2))
         fp1.getPeaks().push_back(afwDetect.Peak(8,9,3))
-        filename = "testFootprintTablePersistence.fits"
-        fp1.writeFits(filename)
-        fp2 = afwDetect.Footprint.readFits(filename)
-        self.assertEqual(fp1.getArea(), fp2.getArea())
-        self.assertEqual(list(fp1.getSpans()), list(fp2.getSpans()))
-        # can't use Peak operator== for comparison because it compares IDs, not positions/values
-        self.assertEqual(len(fp1.getPeaks()), len(fp2.getPeaks()))
-        for peak1, peak2 in zip(fp1.getPeaks(), fp2.getPeaks()):
-            self.assertEqual(peak1.getIx(), peak2.getIx())
-            self.assertEqual(peak1.getIy(), peak2.getIy())
-            self.assertEqual(peak1.getFx(), peak2.getFx())
-            self.assertEqual(peak1.getFy(), peak2.getFy())
-            self.assertEqual(peak1.getPeakValue(), peak2.getPeakValue())
-        os.remove(filename)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            fp1.writeFits(tmpFile)
+            fp2 = afwDetect.Footprint.readFits(tmpFile)
+            self.assertEqual(fp1.getArea(), fp2.getArea())
+            self.assertEqual(list(fp1.getSpans()), list(fp2.getSpans()))
+            # can't use Peak operator== for comparison because it compares IDs, not positions/values
+            self.assertEqual(len(fp1.getPeaks()), len(fp2.getPeaks()))
+            for peak1, peak2 in zip(fp1.getPeaks(), fp2.getPeaks()):
+                self.assertEqual(peak1.getIx(), peak2.getIx())
+                self.assertEqual(peak1.getIy(), peak2.getIy())
+                self.assertEqual(peak1.getFx(), peak2.getFx())
+                self.assertEqual(peak1.getFy(), peak2.getFy())
+                self.assertEqual(peak1.getPeakValue(), peak2.getPeakValue())
 
     def testAddSpans(self):
         """Add spans to a Footprint"""
@@ -1229,7 +1227,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
-    tests.init()
+    utilsTests.init()
 
     suites = []
     suites += unittest.makeSuite(ThresholdTestCase)
@@ -1238,13 +1236,13 @@ def suite():
     suites += unittest.makeSuite(FootprintSetTestCase)
     suites += unittest.makeSuite(NaNFootprintSetTestCase)
     suites += unittest.makeSuite(MaskFootprintSetTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
+    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
 
 def run(shouldExit=False):
     """Run the tests"""
-    tests.run(suite(), shouldExit)
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

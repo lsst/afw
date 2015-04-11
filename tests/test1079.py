@@ -29,7 +29,7 @@ from __future__ import absolute_import, division
 ##$Id$
 ##\author Fergal Mullally
 
-import os
+import os.path
 import unittest
 
 import eups
@@ -206,26 +206,25 @@ class SavingSubImagesTest(unittest.TestCase):
         for deep in (False, True):
             subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
-            outFile = "tmp2.fits"
-            subImg.writeFits(outFile)
-            newImg = afwImage.ExposureF(outFile)
-            os.remove(outFile)
+            with utilsTests.getTempFilePath("_%s.fits" % (deep,)) as outFile:
+                subImg.writeFits(outFile)
+                newImg = afwImage.ExposureF(outFile)
 
-            subXY0 = subImg.getMaskedImage().getXY0()
-            newXY0 = newImg.getMaskedImage().getXY0()
+                subXY0 = subImg.getMaskedImage().getXY0()
+                newXY0 = newImg.getMaskedImage().getXY0()
 
-            parentCrpix = self.parent.getWcs().getPixelOrigin()
-            subCrpix = subImg.getWcs().getPixelOrigin()
-            newCrpix = newImg.getWcs().getPixelOrigin()
+                parentCrpix = self.parent.getWcs().getPixelOrigin()
+                subCrpix = subImg.getWcs().getPixelOrigin()
+                newCrpix = newImg.getWcs().getPixelOrigin()
 
-            if False:
-                print self.parent.getWcs().getFitsMetadata().toString()
-                print subImg.getWcs().getFitsMetadata().toString()
-                print newImg.getWcs().getFitsMetadata().toString()
+                if False:
+                    print self.parent.getWcs().getFitsMetadata().toString()
+                    print subImg.getWcs().getFitsMetadata().toString()
+                    print newImg.getWcs().getFitsMetadata().toString()
 
-            for i in range(2):
-                self.assertEqual(subXY0[i], newXY0[i], "Origin has changed; deep = %s" % deep)
-                self.assertAlmostEqual(subCrpix[i], newCrpix[i], 6,"crpix has changed; deep = %s" % deep)
+                for i in range(2):
+                    self.assertEqual(subXY0[i], newXY0[i], "Origin has changed; deep = %s" % deep)
+                    self.assertAlmostEqual(subCrpix[i], newCrpix[i], 6,"crpix has changed; deep = %s" % deep)
 
     def testFitsHeader(self):
         """Test that XY0 and crpix are written to the header as expected"""
@@ -240,24 +239,23 @@ class SavingSubImagesTest(unittest.TestCase):
         bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
         deep = False
         subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
-        
-        outFile = "tmp.fits"
-        subImg.writeFits(outFile)
-        hdr = afwImage.readMetadata(outFile)
-        os.remove(outFile)
-        
-        self.assertTrue( hdr.exists("LTV1"), "LTV1 not saved to fits header")
-        self.assertTrue( hdr.exists("LTV2"), "LTV2 not saved to fits header")
-        self.assertEqual(hdr.get("LTV1"), -1*x0, "LTV1 has wrong value")
-        self.assertEqual(hdr.get("LTV2"), -1*y0, "LTV1 has wrong value")
+
+        with utilsTests.getTempFilePath(".fits") as outFile:
+            subImg.writeFits(outFile)
+            hdr = afwImage.readMetadata(outFile)
+            
+            self.assertTrue( hdr.exists("LTV1"), "LTV1 not saved to fits header")
+            self.assertTrue( hdr.exists("LTV2"), "LTV2 not saved to fits header")
+            self.assertEqual(hdr.get("LTV1"), -1*x0, "LTV1 has wrong value")
+            self.assertEqual(hdr.get("LTV2"), -1*y0, "LTV1 has wrong value")
 
 
-        self.assertTrue( hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
-        self.assertTrue( hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
-        
-        fitsCrpix = [hdr.get("CRPIX1"), hdr.get("CRPIX2")]
-        self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")
-        self.assertAlmostEqual(fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1]+1, 6, "CRPIX2 saved wrong")
+            self.assertTrue( hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
+            self.assertTrue( hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
+            
+            fitsCrpix = [hdr.get("CRPIX1"), hdr.get("CRPIX2")]
+            self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")
+            self.assertAlmostEqual(fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1]+1, 6, "CRPIX2 saved wrong")
         
 #####
 

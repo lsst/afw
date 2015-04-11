@@ -33,7 +33,6 @@ or
    >>> import Image; Image.run()
 """
 
-import os
 import os.path
 
 import shutil
@@ -541,43 +540,34 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read a U16 image
         #
-        tmpFile = "foo.fits"
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            imgU.writeFits(tmpFile)
 
-        imgU.writeFits(tmpFile)
-
-        try:
             imgU16 = afwImage.DecoratedImageF(tmpFile) # read as unsigned short
-        except:
-            os.remove(tmpFile)
-            raise
-
-        os.remove(tmpFile)
 
     def testWriteFits(self):
         """Test writing FITS files"""
 
-        tmpFile = "foo.fits"
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            if self.fileForMetadata:
+                imgU = afwImage.DecoratedImageF(self.fileForMetadata)
+            else:
+                print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS metadata I/O tests"
+                imgU = afwImage.DecoratedImageF()
 
-        if self.fileForMetadata:
-            imgU = afwImage.DecoratedImageF(self.fileForMetadata)
-        else:
-            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS metadata I/O tests"
-            imgU = afwImage.DecoratedImageF()
+            self.dimage1.writeFits(tmpFile, imgU.getMetadata())
+            #
+            # Read it back
+            #
+            rimage = afwImage.DecoratedImageF(tmpFile)
 
-        self.dimage1.writeFits(tmpFile, imgU.getMetadata())
-        #
-        # Read it back
-        #
-        rimage = afwImage.DecoratedImageF(tmpFile)
-        os.remove(tmpFile)
-
-        self.assertEqual(self.dimage1.getImage().get(0, 0), rimage.getImage().get(0, 0))
-        #
-        # Check that we wrote (and read) the metadata successfully
-        if self.fileForMetadata:
-            meta = self.trueMetadata
-            for k in meta.keys():
-                self.assertEqual(rimage.getMetadata().getAsDouble(k), meta[k])
+            self.assertEqual(self.dimage1.getImage().get(0, 0), rimage.getImage().get(0, 0))
+            #
+            # Check that we wrote (and read) the metadata successfully
+            if self.fileForMetadata:
+                meta = self.trueMetadata
+                for k in meta.keys():
+                    self.assertEqual(rimage.getMetadata().getAsDouble(k), meta[k])
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""
@@ -585,14 +575,13 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
-        tmpFile = "foo.fits"
-        im.writeFits(tmpFile)
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
+            im.writeFits(tmpFile)
 
-        im2 = im.Factory(tmpFile)
-        os.remove(tmpFile)
+            im2 = im.Factory(tmpFile)
 
-        self.assertEqual(im2.getX0(), x0)
-        self.assertEqual(im2.getY0(), y0)
+            self.assertEqual(im2.getX0(), x0)
+            self.assertEqual(im2.getY0(), y0)
 
     def testReadMetadata(self):
         if self.fileForMetadata:

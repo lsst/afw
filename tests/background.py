@@ -34,7 +34,7 @@ or
 """
 
 import math
-import os
+import os.path
 import unittest
 import numpy as np
 import pickle
@@ -779,24 +779,20 @@ class BackgroundTestCase(unittest.TestCase):
 
             backImage += bkgd.getImageF(interpStyle, undersampleStyle)
 
-        fileName = "backgroundList.fits"
-        try:
+        with utilsTests.getTempFilePath(".fits") as fileName:
             backgroundList.writeFits(fileName)
 
             backgrounds = afwMath.BackgroundList.readFits(fileName)
-        finally:
-            if os.path.exists(fileName):
-                os.unlink(fileName)
 
-        img = backgrounds.getImage()
-        #
-        # Check that the read-back image is identical to that generated from the backgroundList
-        # round-tripped to disk
-        #
-        backImage -= img
-        
-        self.assertEqual(np.min(backImage.getArray()), 0.0)
-        self.assertEqual(np.max(backImage.getArray()), 0.0)
+            img = backgrounds.getImage()
+            #
+            # Check that the read-back image is identical to that generated from the backgroundList
+            # round-tripped to disk
+            #
+            backImage -= img
+            
+            self.assertEqual(np.min(backImage.getArray()), 0.0)
+            self.assertEqual(np.max(backImage.getArray()), 0.0)
 
 def suite():
     """Returns a suite containing all the test cases in this module."""

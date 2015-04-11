@@ -23,7 +23,7 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os
+import os.path
 import math
 import unittest
 
@@ -316,15 +316,14 @@ class WCSTestCaseSDSS(unittest.TestCase):
             print "pixPos=", pixPos
         skyPos = wcs.pixelToSky(pixPos)
 
-        tmpFile = "temp.fits"
-        try:
+        with utilsTests.getTempFilePath(".fits") as tmpFile:
             exposure.writeFits(tmpFile)
             for useExposure in (False, True):
                 if useExposure:
                     unpExp = afwImage.ExposureF(tmpFile)
                     unpWcs = unpExp.getWcs()
                 else:
-                    md = afwImage.readMetadata("temp.fits")
+                    md = afwImage.readMetadata(tmpFile)
                     unpWcs = afwImage.makeWcs(md, False)
                 unpPixPos = unpWcs.skyToPixel(skyPos)
 
@@ -333,8 +332,6 @@ class WCSTestCaseSDSS(unittest.TestCase):
                     
                 for i in range(2):
                     self.assertAlmostEqual(unpPixPos[i], 1009.5)
-        finally:
-            os.remove(tmpFile)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -345,8 +342,6 @@ class WCSTestCaseCFHT(unittest.TestCase):
         path = InputImagePath + "_img.fits"
         self.metadata = afwImage.readMetadata(path)
         self.wcs = afwImage.makeWcs(self.metadata)
-        if False:
-            ds9.mtv(e)
 
     def tearDown(self):
         del self.wcs

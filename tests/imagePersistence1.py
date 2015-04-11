@@ -99,35 +99,31 @@ class ImagePersistenceTestCase(unittest.TestCase):
 
     def testBoostPersistence(self):
         """Persist the image using boost"""
-        boostFilePath = "image.boost"
-        logicalLocation = dafPers.LogicalLocation(boostFilePath)
-        storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
-        storageList = dafPers.StorageList([storage])
-        self.persistence.persist(self.image, storageList, self.additionalData)
+        with utilsTests.getTempFilePath(".boost") as boostFilePath:
+            logicalLocation = dafPers.LogicalLocation(boostFilePath)
+            storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
+            storageList = dafPers.StorageList([storage])
+            self.persistence.persist(self.image, storageList, self.additionalData)
 
-        # Retrieve it again
-        storage = self.persistence.getRetrieveStorage("BoostStorage", logicalLocation)
-        storageList = dafPers.StorageList([storage])
-        pers2Ptr = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
-        image2 = afwImage.ImageF.swigConvert(pers2Ptr)
-        
-        # Check the resulting Image
-        self.checkImages(self.image, image2)
+            # Retrieve it again
+            storage = self.persistence.getRetrieveStorage("BoostStorage", logicalLocation)
+            storageList = dafPers.StorageList([storage])
+            pers2Ptr = self.persistence.unsafeRetrieve("ImageF", storageList, self.additionalData)
+            image2 = afwImage.ImageF.swigConvert(pers2Ptr)
+            
+            # Check the resulting Image
+            self.checkImages(self.image, image2)
 
-        # Delete the boost-persisted image
-        os.remove(boostFilePath)
-
-    if False:                           #  Crashes on RHL's os/x box -- #336
-        def testBoostPersistenceU16(self):
-            """Persist a U16 image using boost"""
-            boostFilePath = "image.boost"
+    def testBoostPersistenceU16(self):
+        """Persist a U16 image using boost"""
+        with utilsTests.getTempFilePath(".boost") as boostFilePath:
             logicalLocation = dafPers.LogicalLocation(boostFilePath)
             storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
             #
             # Read a U16 image
             #
-            self.image = self.im.Factory(os.path.join(dataDir, "small_MI_img.fits"))
+            self.image = self.image.Factory(os.path.join(dataDir, "data", "small_MI.fits"))
             self.persistence.persist(self.image, storageList, self.additionalData)
 
             # Retrieve it again
@@ -138,9 +134,6 @@ class ImagePersistenceTestCase(unittest.TestCase):
 
             # Check the resulting Image
             self.checkImages(self.image, image2)
-            
-            # Delete the boost-persisted image
-            os.remove(boostFilePath)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -33,7 +33,7 @@ or
    >>> import testSimpleTable; testSimpleTable.run()
 """
 
-import os
+import os.path
 import unittest
 import numpy
 
@@ -213,8 +213,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(r1.get(k), r2.get(k))
 
     def testBaseFits(self):
-        self._testBaseFits("testBaseTable.fits")
-        os.remove("testBaseTable.fits")
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            self._testBaseFits(tmpFile)
         self.assertRaises(Exception, lsst.afw.table.BaseCatalog.readFits, "nonexistentfile.fits")
 
     def testMemoryFits(self):
@@ -460,14 +460,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(cat[-1].getTable(), t1)
         self.assertRaises(lsst.pex.exceptions.RuntimeError,
                                              cat.getColumnView)
-        filename = "testTicket2938.fits"
-        cat.writeFits(filename)  # shouldn't throw
-        schema.addField("d", type=float, doc="doc for d")
-        t2 = lsst.afw.table.BaseTable.make(schema)
-        cat.append(t2.makeRecord())
-        self.assertRaises(lsst.pex.exceptions.LogicError,
-                                             cat.writeFits, filename)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath(".fits") as filename:
+            cat.writeFits(filename)  # shouldn't throw
+            schema.addField("d", type=float, doc="doc for d")
+            t2 = lsst.afw.table.BaseTable.make(schema)
+            cat.append(t2.makeRecord())
+            self.assertRaises(lsst.pex.exceptions.LogicError, cat.writeFits, filename)
 
     def testTicket3056(self):
         """Test sorting and sort-based searches of Catalogs"""
@@ -598,51 +596,48 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         catalog = lsst.afw.table.BaseCatalog(schema)
         self.assertEqual(catalog.getTable().getVersion(), 5)
-        filename = "testDM384a.fits"
-        catalog.writeFits(filename)
-        # now read the table just written to disk, and see if it reads back correctly
-        catalog = catalog.readFits(filename)
-        os.unlink(filename)
-        metadata = catalog.getTable().getMetadata()
-        self.assertEqual(catalog.schema.getVersion(), 5)
-        self.assertFalse(metadata == None)
-        self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
+        with lsst.utils.tests.getTempFilePath("_BaseTable.fits") as filename:
+            catalog.writeFits(filename)
+            # now read the table just written to disk, and see if it reads back correctly
+            catalog = catalog.readFits(filename)
+            metadata = catalog.getTable().getMetadata()
+            self.assertEqual(catalog.schema.getVersion(), 5)
+            self.assertFalse(metadata == None)
+            self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
 
         # Now test with a SimpleTable
-        filename = "testDM384b.fits"
-        schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
-        schema.setVersion(5)
-        schema.addField("f1", doc="f1a", type="I")
-        schema.addField("f2", doc="f2a", type="Flag")
-        schema.addField("f3", doc="f3a", type="ArrayF", size=4)
-        catalog = lsst.afw.table.SimpleCatalog(schema)
-        self.assertEqual(catalog.getTable().getVersion(), 5)
-        catalog.writeFits(filename)
-        # now read the table just written to disk, and see if it reads back correctly
-        catalog = catalog.readFits(filename)
-        os.unlink(filename)
-        metadata = catalog.getTable().getMetadata()
-        self.assertEqual(catalog.getTable().getVersion(),5)
-        self.assertFalse(metadata == None)
-        self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
+        with lsst.utils.tests.getTempFilePath("_SimpleTable.fits") as filename:
+            schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
+            schema.setVersion(5)
+            schema.addField("f1", doc="f1a", type="I")
+            schema.addField("f2", doc="f2a", type="Flag")
+            schema.addField("f3", doc="f3a", type="ArrayF", size=4)
+            catalog = lsst.afw.table.SimpleCatalog(schema)
+            self.assertEqual(catalog.getTable().getVersion(), 5)
+            catalog.writeFits(filename)
+            # now read the table just written to disk, and see if it reads back correctly
+            catalog = catalog.readFits(filename)
+            metadata = catalog.getTable().getMetadata()
+            self.assertEqual(catalog.getTable().getVersion(),5)
+            self.assertFalse(metadata == None)
+            self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
 
         #  Now a SourceTable
-        filename = "testDM384c.fits"
-        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        schema.setVersion(5)
-        schema.addField("f1", doc="f1a", type="I")
-        schema.addField("f2", doc="f2a", type="Flag")
-        schema.addField("f3", doc="f3a", type="ArrayF", size=4)
-        catalog = lsst.afw.table.SourceCatalog(schema)
-        self.assertEqual(catalog.getTable().getVersion(), 5)
-        catalog.writeFits(filename)
-        # now read the table just written to disk, and see if it reads back correctly
-        catalog = catalog.readFits(filename)
-        os.unlink(filename)
-        metadata = catalog.getTable().getMetadata()
-        self.assertEqual(catalog.getTable().getVersion(),5)
-        self.assertFalse(metadata == None)
-        self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
+        with lsst.utils.tests.getTempFilePath("_SourceTable.fits") as filename:
+            schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+            schema.setVersion(5)
+            schema.addField("f1", doc="f1a", type="I")
+            schema.addField("f2", doc="f2a", type="Flag")
+            schema.addField("f3", doc="f3a", type="ArrayF", size=4)
+            catalog = lsst.afw.table.SourceCatalog(schema)
+            self.assertEqual(catalog.getTable().getVersion(), 5)
+            catalog.writeFits(filename)
+            # now read the table just written to disk, and see if it reads back correctly
+            catalog = catalog.readFits(filename)
+            metadata = catalog.getTable().getMetadata()
+            self.assertEqual(catalog.getTable().getVersion(),5)
+            self.assertFalse(metadata == None)
+            self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
 
     def testReplacePeriods(self):
         """Test version-dependent replacement of periods with underscores.
@@ -661,47 +656,47 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         # and do the reverse when we read
         schema1.setVersion(0)
         cat = lsst.afw.table.BaseCatalog(schema1)
-        cat.writeFits(filename)
-        if pyfits is not None:
-            fits = pyfits.open(filename)
-            self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
-            self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
-            self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
-        cat = lsst.afw.table.BaseCatalog.readFits(filename)
-        self.assertTrue("a.b.c" in cat.schema)
-        self.assertTrue("a.b.d" in cat.schema)
-        self.assertTrue("a.b.e" in cat.schema)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath("_schema1_v0.fits") as filename:
+            cat.writeFits(filename)
+            if pyfits is not None:
+                fits = pyfits.open(filename)
+                self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
+                self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
+                self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
+            cat = lsst.afw.table.BaseCatalog.readFits(filename)
+            self.assertTrue("a.b.c" in cat.schema)
+            self.assertTrue("a.b.d" in cat.schema)
+            self.assertTrue("a.b.e" in cat.schema)
 
         # For version 1, we shouldn't do any such replacement
         schema1.setVersion(1)
         cat = lsst.afw.table.BaseCatalog(schema1)
-        cat.writeFits(filename)
-        if pyfits is not None:
-            fits = pyfits.open(filename)
-            self.assertEqual(fits[1].header["TTYPE2"], "a.b.c")
-            self.assertEqual(fits[1].header["TTYPE3"], "a.b.e")
-            self.assertEqual(fits[1].header["TFLAG1"], "a.b.d")
-        cat = lsst.afw.table.BaseCatalog.readFits(filename)
-        self.assertTrue("a.b.c" in cat.schema)
-        self.assertTrue("a.b.d" in cat.schema)
-        self.assertTrue("a.b.e" in cat.schema)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath("_schema1_v1.fits") as filename:
+            cat.writeFits(filename)
+            if pyfits is not None:
+                fits = pyfits.open(filename)
+                self.assertEqual(fits[1].header["TTYPE2"], "a.b.c")
+                self.assertEqual(fits[1].header["TTYPE3"], "a.b.e")
+                self.assertEqual(fits[1].header["TFLAG1"], "a.b.d")
+            cat = lsst.afw.table.BaseCatalog.readFits(filename)
+            self.assertTrue("a.b.c" in cat.schema)
+            self.assertTrue("a.b.d" in cat.schema)
+            self.assertTrue("a.b.e" in cat.schema)
 
         # Also make sure that version 1 underscores are preserved
         schema2.setVersion(1)
         cat = lsst.afw.table.BaseCatalog(schema2)
-        cat.writeFits(filename)
-        if pyfits is not None:
-            fits = pyfits.open(filename)
-            self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
-            self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
-            self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
-        cat = lsst.afw.table.BaseCatalog.readFits(filename)
-        self.assertTrue("a_b_c" in cat.schema)
-        self.assertTrue("a_b_d" in cat.schema)
-        self.assertTrue("a_b_e" in cat.schema)
-        os.remove(filename)
+        with lsst.utils.tests.getTempFilePath("_schema2.fits") as filename:
+            cat.writeFits(filename)
+            if pyfits is not None:
+                fits = pyfits.open(filename)
+                self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
+                self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
+                self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
+            cat = lsst.afw.table.BaseCatalog.readFits(filename)
+            self.assertTrue("a_b_c" in cat.schema)
+            self.assertTrue("a_b_d" in cat.schema)
+            self.assertTrue("a_b_e" in cat.schema)
 
     def testDM352(self):
         filename = os.path.join(os.path.split(__file__)[0], "data", "great3.fits")
@@ -717,10 +712,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             c3 = pyfits.Column(name='star', format='20A', array=('Vega', 'Denebola', 'Arcturus'))
             columns = pyfits.ColDefs([c1, c2, c3])
             tbhdu = pyfits.new_table(columns)
-            tbhdu.writeto("testNonLsst.fits", clobber=True)
-            cat = lsst.afw.table.BaseCatalog.readFits("testNonLsst.fits")
-            self.assertEqual(cat.getVersion(), lsst.afw.table.Schema.DEFAULT_VERSION)
-            os.remove("testNonLsst.fits")
+            with lsst.utils.tests.getTempFilePath(".fits") as filename:
+                tbhdu.writeto(filename, clobber=True)
+                cat = lsst.afw.table.BaseCatalog.readFits(filename)
+                self.assertEqual(cat.getVersion(), lsst.afw.table.Schema.DEFAULT_VERSION)
 
     def testDM1710(self):
         # Extending without specifying a mapper or a deep argument should not
