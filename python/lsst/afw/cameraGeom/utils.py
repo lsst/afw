@@ -39,7 +39,7 @@ from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
 from .cameraGeomLib import PUPIL, FOCAL_PLANE
 
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.afw.display.utils as displayUtils
 
 try:
@@ -277,17 +277,17 @@ class FakeImageDataSource(object):
         return ampImage
 
 def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame, binSize):
-    """!Overlay bounding boxes on a frame in ds9
+    """!Overlay bounding boxes on a frame in display
 
     @param[in] ccd  Detector to iterate for the amp bounding boxes
     @param[in] untrimmedCcdBbox  Bounding box of the un-trimmed Detector
     @param[in] nQuarter  number of 90 degree rotations to apply to the bounding boxes
     @param[in] isTrimmed  Is the Detector image over which the boxes are layed trimmed?
     @param[in] ccdOrigin  Detector origin relative to the  parent origin if in a larger pixel grid
-    @param[in] frame  ds9 frame to display on
+    @param[in] frame  display frame to display on
     @param[in] binSize  binning factor
     """
-    with ds9.Buffering():
+    with afwDisplay.Buffering():
         ccdDim = untrimmedCcdBbox.getDimensions()
         ccdBbox = rotateBBoxBy90(untrimmedCcdBbox, nQuarter, ccdDim)
         for amp in ccd:
@@ -303,8 +303,8 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
                                   frame=frame, bin=binSize)
 
             if not isTrimmed and amp.getHasRawInfo():
-                for bbox, ctype in ((amp.getRawHorizontalOverscanBBox(), ds9.RED), (amp.getRawDataBBox(), ds9.BLUE),
-                                    (amp.getRawVerticalOverscanBBox(), ds9.MAGENTA), (amp.getRawPrescanBBox(), ds9.YELLOW)):
+                for bbox, ctype in ((amp.getRawHorizontalOverscanBBox(), afwDisplay.RED), (amp.getRawDataBBox(), afwDisplay.BLUE),
+                                    (amp.getRawVerticalOverscanBBox(), afwDisplay.MAGENTA), (amp.getRawPrescanBBox(), afwDisplay.YELLOW)):
                     if amp.getRawFlipX():
                         bbox.flipLR(amp.getRawBBox().getDimensions().getX())
                     if amp.getRawFlipY():
@@ -338,17 +338,17 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, frame
             if ccdOrigin:
                 xc += ccdOrigin[0]
                 yc += ccdOrigin[1]
-            ds9.dot(str(amp.getName()), xc/binSize, yc/binSize, frame=frame, textAngle=nQuarter*90)
+            afwDisplay.dot(str(amp.getName()), xc/binSize, yc/binSize, frame=frame, textAngle=nQuarter*90)
 
         displayUtils.drawBBox(ccdBbox, origin=ccdOrigin,
-                              borderWidth=0.49, ctype=ds9.MAGENTA, frame=frame, bin=binSize)
+                              borderWidth=0.49, ctype=afwDisplay.MAGENTA, frame=frame, bin=binSize)
 
 def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), frame=None, overlay=True, imageFactory=afwImage.ImageU):
-    """!Show an amp in a ds9 frame
+    """!Show an amp in a display frame
 
     @param[in] amp  amp record to use in display
     @param[in] imageSource  Source for getting the amp image.  Must have a getAmpImage method.
-    @param[in] frame  ds9 frame to display on; defaults to frame zero
+    @param[in] frame  display frame to display on; defaults to frame zero
     @param[in] overlay  Overlay bounding boxes?
     @param[in] imageFactory  Type of image to display (only used if ampImage is None)
     """
@@ -356,16 +356,16 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), frame=None, o
     ampImage = imageSource.getAmpImage(amp, imageFactory=imageFactory)
     ampImSize = ampImage.getDimensions()
     title = amp.getName()
-    ds9.mtv(ampImage, frame=frame, title=title)
+    afwDisplay.mtv(ampImage, frame=frame, title=title)
     if overlay:
-        with ds9.Buffering():
+        with afwDisplay.Buffering():
             if amp.getHasRawInfo() and ampImSize == amp.getRawBBox().getDimensions():
-                bboxes = [(amp.getRawBBox(), 0.49, ds9.GREEN),]
+                bboxes = [(amp.getRawBBox(), 0.49, afwDisplay.GREEN),]
                 xy0 = bboxes[0][0].getMin()
-                bboxes.append((amp.getRawHorizontalOverscanBBox(), 0.49, ds9.RED)) 
-                bboxes.append((amp.getRawDataBBox(), 0.49, ds9.BLUE))
-                bboxes.append((amp.getRawPrescanBBox(), 0.49, ds9.YELLOW))
-                bboxes.append((amp.getRawVerticalOverscanBBox(), 0.49, ds9.MAGENTA))
+                bboxes.append((amp.getRawHorizontalOverscanBBox(), 0.49, afwDisplay.RED)) 
+                bboxes.append((amp.getRawDataBBox(), 0.49, afwDisplay.BLUE))
+                bboxes.append((amp.getRawPrescanBBox(), 0.49, afwDisplay.YELLOW))
+                bboxes.append((amp.getRawVerticalOverscanBBox(), 0.49, afwDisplay.MAGENTA))
             else:
                 bboxes = [(amp.getBBox(), 0.49, None),]
                 xy0 = bboxes[0][0].getMin()
@@ -378,11 +378,11 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), frame=None, o
                 displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, frame=frame)
 
 def showCcd(ccd, imageSource=FakeImageDataSource(), frame=None, overlay=True, imageFactory=afwImage.ImageU, binSize=1, inCameraCoords=False):
-    """!Show a CCD on ds9
+    """!Show a CCD on display
 
     @param[in] ccd  Detector to use in display
     @param[in] imageSource  Source for producing images to display.  Must have a getCcdImage method.
-    @param[in] frame  ds9 frame to use, defaults to frame zero
+    @param[in] frame  display frame to use, defaults to frame zero
     @param[in] overlay  Show amp bounding boxes on the displayed image?
     @param[in] imageFactory  The image factory to use in generating the images.
     @param[in] binSize  Binning factor
@@ -404,7 +404,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), frame=None, overlay=True, im
     title = ccd.getName()
     if isTrimmed:
         title += "(trimmed)"
-    ds9.mtv(ccdImage, frame=frame, title=title)
+    afwDisplay.mtv(ccdImage, frame=frame, title=title)
 
     if overlay:
         overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, frame, binSize)
@@ -497,9 +497,9 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     return camIm
 
 def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, detectorNameList=None,
-                binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=ds9.GREEN, 
+                binSize=10, bufferSize=10, frame=None, overlay=True, title="", ctype=afwDisplay.GREEN, 
                 textSize=1.25, originAtCenter=True, **kwargs):
-    """!Show a Camera on ds9, with the specified frame
+    """!Show a Camera on display, with the specified frame
 
     The rotation of the sensors is snapped to the nearest multiple of 90 deg. 
     Also note that the pixel size is constant over the image array. The lower left corner (LLC) of each
@@ -512,9 +512,9 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     @param[in] detectorNameList  List of names of Detectors to use. If None use all
     @param[in] binSize  bin factor
     @param[in] bufferSize  size of border in binned pixels to make around camera image.
-    @param[in] frame  ds9 frame in which to display
+    @param[in] frame  display frame in which to display
     @param[in] overlay  Overlay Detector IDs and boundaries?
-    @param[in] title  Title in ds9 frame
+    @param[in] title  Title in display frame
     @param[in] ctype  Color to use when drawing Detector boundaries
     @param[in] textSize  Size of detector labels
     @param[in] originAtCenter  Put the origin of the camera WCS at the center of the image? Else it will be LL
@@ -550,10 +550,10 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
     if title == "":
         title = camera.getName()
-    ds9.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
+    afwDisplay.mtv(cameraImage, title=title, frame=frame, wcs=wcs)
 
     if overlay:
-        with ds9.Buffering():
+        with afwDisplay.Buffering():
             camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize*binSize)
             bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
             for bbox, ccd in itertools.izip(bboxList, ccdList):
@@ -561,7 +561,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                 # borderWidth to 0.5 to align with the outside edge of the pixel
                 displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, frame=frame)
                 dims = bbox.getDimensions()
-                ds9.dot(ccd.getName(), bbox.getMinX()+dims.getX()/2, bbox.getMinY()+dims.getY()/2, ctype=ctype,
+                afwDisplay.dot(ccd.getName(), bbox.getMinX()+dims.getX()/2, bbox.getMinY()+dims.getY()/2, ctype=ctype,
                         frame=frame, size=textSize, textAngle=nQuarter*90)
 
     return cameraImage

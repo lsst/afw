@@ -1,4 +1,5 @@
 EXAMPLE_PATH = examples
+INPUT += examples/imageDisplay.ipynb
 EXCLUDE += include/lsst/afw/detection/FootprintArray.cc
 EXCLUDE += include/lsst/afw/detection/detail/dgPsf.cc
 EXCLUDE += src/math/Stack.cc

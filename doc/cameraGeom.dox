@@ -17,7 +17,7 @@ of known bad pixels in each detector. The cameraGeom package supports operations
   using \ref camera.Camera.transform "Camera.transform". This can be used as part of generating a
   \ref image::Wcs "WCS" or to examine the effects of optical distortion.
 - Create a graphic showing the layout of detectors on the focal plane, using utils.plotFocalPlane.
-- Display a mosaic image in ds9 that combines all detector images, using utils.showMosaic.
+- Display a mosaic image that combines all detector images, using utils.showMosaic.
 
 Data for constructing a \ref camera.Camera "Camera" comes from the appropriate observatory-specific
 obs_ package. For example obs_lsstSim contains data for the LSST camera simulator, obs_sdss contains
@@ -42,16 +42,16 @@ Display the lsstSim camera
 optional arguments:
   -h, --help            show this help message and exit
   --showAmp SHOWAMP [SHOWAMP ...]
-                        Show an amplifier segment in ds9 May occur multiple
+                        Show an amplifier segment on an image display. May occur multiple
                         times. Format like R:Rx,Ry S:Sx,Sy A:Ax,Ay e.g. "R:2,2
                         S:1,1 A:0,0"
   --showCcd SHOWCCD [SHOWCCD ...]
-                        Show a CCD from the mosaic in ds9. May occur multiple
+                        Show a CCD from the mosaic on an image display. May occur multiple
                         times. Format like R:Rx,Ry S:Sx,Sy e.g. "R:2,2 S:1,1"
   --showRaft SHOWRAFT [SHOWRAFT ...]
-                        Show a Raft from the mosaic in ds9. May occur multiple
+                        Show a Raft from the mosaic on an image display. May occur multiple
                         times. Format like R:Rx,Ry e.g. "R:2,2"
-  --showCamera          Show the camera mosaic in ds9.
+  --showCamera          Show the camera mosaic an image display.
   --cameraBinSize CAMERABINSIZE
                         Size of binning when displaying the full camera mosaic
   --plotFocalPlane      Plot the focalplane in an interactive matplotlib

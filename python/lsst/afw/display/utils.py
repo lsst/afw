@@ -27,7 +27,21 @@ from __future__ import with_statement
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
+
+def getDisplay(display, frame=None):
+    """!Return an afwDisplay.Display given either a display or a frame ID.
+
+    If display is None, return None not the default display"""
+    if display is None and frame is None:
+        return None
+
+    if frame:
+        if display and display.frame != frame:
+            raise RuntimeError("Please specify display *or* frame")
+        display = afwDisplay.getDisplay(frame)
+
+    return display
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -40,25 +54,29 @@ class Mosaic(object):
     m.setMode("square")                     # the default; other options are "x" or "y"
 
     mosaic = m.makeMosaic(im1, im2, im3)    # build the mosaic
-    ds9.mtv(mosaic)                         # display it
-    m.drawLabels(["Label 1", "Label 2", "Label 3"]) # label the panels
+    display = afwDisplay.getDisplay()
+    display.mtv(mosaic)                         # display it
+    m.drawLabels(["Label 1", "Label 2", "Label 3"], display) # label the panels
 
     # alternative way to build a mosaic
     images = [im1, im2, im3]               
     labels = ["Label 1", "Label 2", "Label 3"]
 
     mosaic = m.makeMosaic(images)
-    ds9.mtv(mosaic)
-    m.drawLabels(labels)
+    display.mtv(mosaic)
+    m.drawLabels(labels, display)
 
     # Yet another way to build a mosaic (no need to build the images/labels lists)
     for i in range(len(images)):
         m.append(images[i], labels[i])
-    # You may optionally include a colour, e.g. ds9.YELLOW, as a third argument
+    # You may optionally include a colour, e.g. afwDisplay.YELLOW, as a third argument
 
     mosaic = m.makeMosaic()
-    ds9.mtv(mosaic)
-    m.drawLabels()
+    display.mtv(mosaic)
+    m.drawLabels(display=display)
+
+    Or simply:
+    mosaic = m.makeMosaic(display=display)
 
     You can return the (ix, iy)th (or nth) bounding box (in pixels) with getBBox()
     """
@@ -91,14 +109,14 @@ class Mosaic(object):
 
         return len(self.images)
 
-    def makeMosaic(self, images=None, frame=None, mode=None, background=None, title=""):
+    def makeMosaic(self, images=None, display=None, mode=None, background=None, title="", frame=None):
         """Return a mosaic of all the images provided; if none are specified,
         use the list accumulated with Mosaic.append().
 
         Note that this mosaic is a patchwork of the input images;  if you want to
         make a mosaic of a set images of the sky, you probably want to use the coadd code
         
-        If frame is specified, display it
+        If display or frame (deprecated) is specified, display the mosaic
         """
 
         if not images:
@@ -170,11 +188,12 @@ class Mosaic(object):
 
             smosaic <<= im
 
-        if frame is not None:
-            ds9.mtv(mosaic, frame=frame, title=title)
+        display = getDisplay(display, frame)
+        if display:
+            display.mtv(mosaic, title=title)
 
             if images == self.images:
-                self.drawLabels(frame=frame)
+                self.drawLabels(display=display)
             
         return mosaic
 
@@ -207,12 +226,9 @@ class Mosaic(object):
         return afwGeom.Box2I(afwGeom.Point2I(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
                             afwGeom.Extent2I(self.xsize, self.ysize))
 
-    def drawLabels(self, labels=None, frame=None):
+    def drawLabels(self, labels=None, display=None, frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
         specified by Mosaic.append()"""
-
-        if frame is None:
-            return
 
         if not labels:
             labels = self.labels
@@ -223,7 +239,11 @@ class Mosaic(object):
         if len(labels) != self.nImage:
             raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
 
-        with ds9.Buffering():
+        display = getDisplay(display, frame)
+        if not display:
+            return
+            
+        with display.Buffering():
             for i in range(len(labels)):
                 if labels[i]:
                     label, ctype = labels[i], None
@@ -235,11 +255,10 @@ class Mosaic(object):
                     if not label:
                         continue
 
-                    ds9.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(),
-                            frame=frame, ctype=ctype)
+                    display.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(), ctype=ctype)
 
-def drawBBox(bbox, borderWidth=0.0, origin=None, frame=None, ctype=None, bin=1):
-    """Draw an afwImage::BBox on a ds9 frame with the specified ctype.  Include an extra borderWidth pixels
+def drawBBox(bbox, borderWidth=0.0, origin=None, display=None, ctype=None, bin=1, frame=None):
+    """Draw an afwImage::BBox on a display frame with the specified ctype.  Include an extra borderWidth pixels
 If origin is present, it's Added to the BBox
 
 All BBox coordinates are divided by bin, as is right and proper for overlaying on a binned image
@@ -255,7 +274,7 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
     x1 /= bin; y1 /= bin
     borderWidth /= bin
     
-    ds9.line([(x0 - borderWidth, y0 - borderWidth),
+    display.line([(x0 - borderWidth, y0 - borderWidth),
               (x0 - borderWidth, y1 + borderWidth),
               (x1 + borderWidth, y1 + borderWidth),
               (x1 + borderWidth, y0 - borderWidth),
@@ -264,7 +283,7 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
 
 def drawFootprint(foot, borderWidth=0.5, origin=None, XY0=None, frame=None, ctype=None, bin=1,
                   peaks=False, symb="+", size=0.4, ctypePeak=None):
-    """Draw an afwDetection::Footprint on a ds9 frame with the specified ctype.  Include an extra borderWidth
+    """Draw an afwDetection::Footprint on a display frame with the specified ctype.  Include an extra borderWidth
 pixels If origin is present, it's Added to the Footprint; if XY0 is present is Subtracted from the Footprint
 
 If peaks is True, also show the object's Peaks using the specified symbol and size and ctypePeak
@@ -277,7 +296,7 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
             raise RuntimeError("You may not specify both origin and XY0")
         origin = (-XY0[0], -XY0[1])
 
-    with ds9.Buffering():
+    with display.Buffering():
         borderWidth /= bin
         for s in foot.getSpans():
             y, x0, x1 = s.getY(), s.getX0(), s.getX1()
@@ -288,7 +307,7 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
 
             x0 /= bin; x1 /= bin; y /= bin
 
-            ds9.line([(x0 - borderWidth, y - borderWidth),
+            display.line([(x0 - borderWidth, y - borderWidth),
                       (x0 - borderWidth, y + borderWidth),
                       (x1 + borderWidth, y + borderWidth),
                       (x1 + borderWidth, y - borderWidth),
@@ -304,11 +323,11 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
 
                 x /= bin; y /= bin
 
-                ds9.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)
+                display.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)
 
 def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1):
-    """Draw the bounding boxes of input exposures to a coadd on a ds9 frame with the specified ctype,
-    assuming ds9.mtv() has already been called on the given exposure on this frame.
+    """Draw the bounding boxes of input exposures to a coadd on a display frame with the specified ctype,
+    assuming display.mtv() has already been called on the given exposure on this frame.
 
 
     All coordinates are divided by bin, as is right and proper for overlaying on a binned image
@@ -317,11 +336,11 @@ def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1):
     catalog = exposure.getInfo().getCoaddInputs().ccds
 
     offset = afwGeom.Point2D() - afwGeom.Point2D(exposure.getXY0())
-    with ds9.Buffering():
+    with display.Buffering():
         for record in catalog:
             ccdBox = afwGeom.Box2D(record.getBBox())
             ccdCorners = ccdBox.getCorners()
             coaddCorners = [coaddWcs.skyToPixel(record.getWcs().pixelToSky(point)) + offset
                             for point in ccdCorners]
-            ds9.line([(coaddCorners[i].getX() / bin, coaddCorners[i].getY() / bin)
+            display.line([(coaddCorners[i].getX() / bin, coaddCorners[i].getY() / bin)
                       for i in range(-1, 4)], frame=frame, ctype=ctype)
