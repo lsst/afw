@@ -22,4 +22,5 @@
 
 """Application Framework code to display images on ds9
 """
-from ds9 import *
+from interface import *
+from .utils import Mosaic

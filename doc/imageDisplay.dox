@@ -1,38 +1,76 @@
 namespace lsst { namespace afw { namespace image {
 /**
-\page afwSecDisplay  How to %display images
+\page afwSecDisplay  How to display images
 \section afwSecDisplay  How to display images
 
- - \ref afwSecDs9Mosaics
- - \ref afwSecDs9Commands
+ - \ref afwSecImageDisplay
+ - \ref afwSecImageTypes
+ - \ref afwSecImageDisplayConfiguration
+ - \ref afwSecImageDisplayMosaics
  - \ref afwSecDs9Firewall
  
-\section afwSecDs9  Using DS9 in the LSST framework
+\section afwSecImageDisplay  Displaying images in the LSST framework
 
-At present (July 2009) we are using ds9 (http://hea-www.harvard.edu/RD/ds9) to %display
-Image%s, Mask%s, and MaskedImage%s.  This has a number of drawbacks (slow; slightly
-unstable API;  awkward to use with firewalls) as well as a number of advantages:  Supported
-by the CfA; ubiquitous in astronomy;  support for WCS;  support for multiple frames).
+In April 2015 we restructured the image display code to be backend agnostic, while still only supporting a
+virtualDevice (which does nothing), and ds9 (http://hea-www.harvard.edu/RD/ds9) for the present.  At
+the same time we made the interface object oriented --- opening a display returns an object (the old
+functional interface with a frame argument is supported for backward compatibility).
 
-The basic functionality is in \c lsst.afw.display.ds9, and the workhorse routine
-is \c mtv. The simplest use is simply to setup afw and ds9, start ds9 and python, and type:
+Although ds9 has a number of drawbacks (slow; slightly unstable API; awkward to use with firewalls) it
+also as a number of advantages: Supported by the CfA; ubiquitous in astronomy; support for WCS; support
+for multiple frames.
+
+The basic functionality is in \c lsst.afw.display, and the workhorse routine
+is \c mtv. The simplest use is simply to setup afw and display_ds9, start ds9 (you may have to
+install it yourself) and python, and type:
 \code
-import lsst.afw.display.ds9 as ds9
+import lsst.afw.display as afwDisplay
 import lsst.afw.image as afwImage
 
 im = afwImage.ImageF("myFile.fits")
-ds9.mtv(im)
+
+disp = afwDisplay.getDisplay()
+disp.mtv(im)
 \endcode
+Rather than saving \c disp in a variable, you can say
+\code
+afwDisplay.getDisplay().mtv(im)
+\endcode
+and if the display doesn't exist it'll be created for you.  You can say e.g.
+\code
+disp = afwDisplay.getDisplay(2, "virtualDisplay")
+\endcode
+to create a rather useless display named "2" using the do-nothing \c virtualDisplay device;
+you're more likely to specify \c "ds9" or (soon) \c "firefly".
 
 You can %display images in multiple frames, either by explicitly specifying the
-frame, or by setting the default with \c ds9.setDefaultFrame().  If there's a
+frame, or by setting the default with \c afwDisplay.setDefaultFrame().  If you
+are using the ds9 backend and there's a
 strong desire for multiple instances of ds9 this could be supported (by choosing
-different tcp ports); file a ticket if this is really important for you.
+different tcp ports); file a ticket if this is really important for you.  ds9 uses integers as its `frame'
+identifiers, but other display devices may use other types (e.g. strings).
+
+See the manual at \ref lsst.afw.display.interface.Display for all the supported commands, and the iPython
+notebook at \ref examples/imageDisplay.ipynb for examples (we'll provide an nbviewer link once this is
+pushed to github).
+
+Whenever you're writing more than a few glyphs
+we \em strongly recommend that you turn on buffering (it's certainly necessary when you're using the
+ds9 backend). The simplest way to do this is by using python's
+\c with statement:
+\code
+with disp.Buffering():
+    for source in sourceList:
+        disp.dot("o", source.getXAstrom(), source.getYAstrom())
+\endcode
+You can explicitly flush the buffer at anytime with \c disp.flush()
+
+\subsection afwSecImageTypes How afwDisplay handles different Image types
 
 The \c mtv command handles all of the LSST %image types:
 <DL>
 <DT>Image
-<DD> The pixels are displayed on ds9.  Image%s don't have a Wcs, so no
+<DD> The pixels are displayed on your image display.  Image%s don't have a Wcs, so no
 astronomical WCS information is available, but we do support \c WCSA and \c WCSB;
 the former is 0-indexed %pixel coordinates allowing for the Image's \c XY0; the latter
 is 0-indexed %pixel coordinates relative to the bottom left %pixel being \c (0, \c 0).
@@ -44,17 +82,19 @@ if you have an DecoratedImage or Exposure this is done for you)
 <DD> Displayed like Image, but with the default WCS set from the DecoratedImage's \c Wcs
 
 <DT> Mask
-<DD> Overlay the current %display with the Mask. A bug in ds9 prevents you from displaying a pure Mask,
-but you can use the \c isMask argument to force the Mask to be treated as a 16-bit %image.
+<DD> Overlay the current %display with the Mask.
 
-The Mask %display isn't as fast as you might like,
+If you're using the ds9 backend there's a bug that
+prevents you from displaying a pure Mask,
+but you can use the \c isMask argument to force the Mask to be treated as a 16-bit %image.
+Also, the Mask %display isn't as fast as you might like,
 as ds9's current API requires us to send each mask plane as a separate 16-bit %image (I
 have asked Bill Joy at CfA to change this).  Each bitplane may be given a separate
 colour;  you can inspect the current mapping with \c getMaskPlaneColor or set it with
 \c setMaskPlaneColor.  If a mask plane has no defined colour, one will be chosen for
 you.
 
-Recent versions of ds9 allow you to vary the mask's transparency, either via the GUI or
+You may vary the mask's transparency, either via the GUI or
 with e.g. \c setMaskTransparency(50).
 
 <DT> MaskedImage
@@ -62,18 +102,45 @@ with e.g. \c setMaskTransparency(50).
 at the variance too, you'll need to say something like:
 \code
 mi = afwImage.MaskedImageF("mi.fits")
-ds9.mtv(mi, frame=0)
-ds9.mtv(mi.getVariance(), frame=1)
-ds9.mtv(mi.getMask(), frame=1)
+disp.mtv(mi)
+
+afwDisplay.getDisplay(1).mtv(mi.getVariance())
+afwDisplay.getDisplay(1).mtv(mi.getMask())
 \endcode
 
 <DT> Exposure
 <DD> Displayed like MaskedImage, but with the default WCS set from the MaskedImage's \c Wcs
 </DL>
 
-\subsection afwSecDs9Mosaics   How to build a mosaic image
+\subsubsection afwSecImageDisplayConfiguration How to Configure the Display Device
 
-There are facilities to build mosaics of %images in \c lsst.afw.display.utils
+You won't need to configure the display code at all if you're happy with ds9, as it is 
+the default-default backend when available (\em i.e. if you have display_ds9 setup).
+
+At some point we may add a configuration mechanism using environment variables and/or dot files,
+but for the present the recommended way to set your preferred display environment is by using
+python's startup file.  \em E.g. if you have the environment variable $PYTHONSTARTUP set to \c ~/.pythonrc,
+you'd edit \c ~.pythonrc to say something like:
+\code
+try:
+    import lsst.afw.display as afwDisplay
+except ImportError:
+    afwDisplay = None
+
+if afwDisplay:
+    try:
+        afwDisplay.setDefaultBackend("myDevice")  # or "ds9"
+    except RuntimeError as e:
+        print e
+
+    afwDisplay.setDefaultMaskTransparency(75)
+\endcode
+
+\subsection afwSecImageDisplayMosaics   How to build a mosaic image
+
+There are facilities to build mosaics of %images in \c lsst.afw.display.utils (n.b. these
+are mosaics in the sense of a tiled floor;  we're not building astrophysical mosaics
+projected on the sky.)
 
 The basic class is \c Mosaic:
 \code
@@ -83,211 +150,34 @@ m.setBackground(10)
 m.setMode("square")                   # the default
 
 mosaic = m.makeMosaic(im1, im2, im3)   # build the mosaic
-ds9.mtv(mosaic)                        # display it
-m.drawLabels(["Label 1", "Label 2", "Label 3"]) # label the panels
+display = afwDisplay.getDisplay()
+display.mtv(mosaic)                        # display it
+m.drawLabels(["Label 1", "Label 2", "Label 3"], display) # label the panels
 
 # alternative way to build a mosaic
 images = [im1, im2, im3]               
 labels = ["Label 1", "Label 2", "Label 3"]
 
 mosaic = m.makeMosaic(images)
-ds9.mtv(mosaic)
-m.drawLabels(labels)
+display.mtv(mosaic)
+m.drawLabels(labels, display)
 
 # Yet another way to build a mosaic (no need to build the images/labels lists)
 for i in range(len(images)):
     m.append(images[i], labels[i])
 
 mosaic = m.makeMosaic()
-ds9.mtv(mosaic)
-m.drawLabels()
+display.mtv(mosaic)
+m.drawLabels(display=display)
 \endcode
 You can return the (ix, iy)th (or nth) bounding box with getBBox()
 
-<UL><LI> The Mosaic class API
-
-<dl>
-<dt>__init__() [self, gutter=3, background=0, mode='square']
-<dd>
-
-<dt> append() [self, %image, label=None]
-<dd>
-      Add an %image to the list of images to be mosaiced
-      Set may be cleared with Mosaic.reset()
-
-<dt> drawLabels() [self, labels=None, frame=0]
-<dd>
-      Draw the list labels at the corners of each panel.  If labels is None, use the ones
-      specified by Mosaic.append()
-
-<dt>drawLabels() [self, labels, frame=0]
-<dd>
-      Draw the list labels at the corners of each panel
-
-<dt> getBBox() [self, ix, iy=None]
-<dd>
-      Get the bounding box for the nth or (ix, iy)the panel
-
-<dt> makeMosaic() [self, images, frame=None, mode=None]
-<dd>
-      Return a mosaic of all the images provided; if none are specified,
-      use the list accumulated with Mosaic.append()
-
-      If frame is specified, %display it
-
-<dt> setBackground() [self, background]
-<dd>
-      Set the value in the gutters
-
-<dt> setGutter() [self, gutter]
-<dd>
-      Set the number of pixels between panels in a mosaic
-
-<dt> setMode() [self, mode]
-<dd>
-      Set mosaicing mode.  Valid options:
-      <table>
-        <tr><td>square</td><td>Make mosaic as square as possible</td></tr>
-        <tr><td>x</td>     <td>Make mosaic one %image high</td></tr>
-        <tr><td>y</td>     <td>Make mosaic one %image wide</td></tr>
-      </table>
-</LI>
-
-\subsection afwSecDs9Commands  All supported ds9 commands
-
-<UL>
-<LI> %Image commands
-
-It turns out that writing symbols to ds9 is very slow.  Whenever you're writing more than a few glyphs
-we \em strongly recommend that you turn on buffering.  The simplest way to do this is by using python's
-\c with statement:
-\code
-with ds9.Buffering():
-    for source in sourceList:
-        if display:
-            ds9.dot("o", source.getXAstrom(), source.getYAstrom())
-\endcode
-(note that \c ds9.Buffering() is safe even if no \c ds9 display is available).  You can explicitly
-flush the buffer at anytime with \c ds9.flush()
-
-<dl>    
-<dt> erase() [frame=-1]
-<dd>
-        Erase the specified DS9 frame
-    
-<dt> flush() []
-<dd>
-        Draw all pending glyphs; you shouldn't usually need to use this.
-    
-<dt> mtv() [data, frame=-1, init=True, wcs=None, isMask=False, lowOrderBits=False, title=None]
-<dd>
-        Display an Image or Mask on a DS9 %display
-        
-           If lowOrderBits is True, give low-order-bits priority in %display (i.e.
-        overlay them last)
-        
-        Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
-        system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
-    
-<dt> pan() [colc=None, rowc=None, frame=-1]
-<dd>
-        Pan to (rowc, colc); see also zoom
-    
-<dt> setDefaultFrame() [frame]
-<dd>
-        Set the default frame for ds9
-    
-<dt> setMaskColor() [color=GREEN]
-<dd>
-        Set the ds9 mask colour to; eg. ds9.setMaskColor(ds9.RED)
-    
-<dt> setMaskPlaneColor() [name, color=None]
-<dd>
-        Request that mask plane name be displayed as color; name may be a dictionary
-        (in which case color should be omitted
-    
-<dt> setMaskPlaneVisibility() [name, show=True]
-<dd>
-        Specify the visibility of a given mask plane; name may be a dictionary (in which case show w
-ill be ignored)
-    
-<dt> setMaskTransparency() [transparency=None]
-<dd>
-        Specify ds9's mask transparency (percent); or None to not set it when loading masks
-    
-<dt> show() [frame=-1]
-<dd>
-        Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit
-    
-<dt> zoom() [zoomfac=None, colc=None, rowc=None, frame=-1]
-<dd>
-        Zoom frame by specified amount, optionally panning also
-</dl>
-
-<LI> Graphics commands
-
-<dl>
-<dt> dot() [symb, c, r, frame=-1, size=2, ctype=GREEN]
-<dd>
-        Draw a symbol onto the specified DS9 frame at (col,row) = (c,r) [0-based coordinates]
-        Possible values are:
-<table>
-  <tr><td>+</td><td>Draw a +</td></tr>
-  <tr><td>x</td><td>Draw an x</td></tr>
-  <tr><td>o</td><td>Draw a circle</td></tr>
-  <tr><td>@:Mxx,Mxy,Myy</td><td>Draw an ellipse with moments (Mxx, Mxy, Myy) (size is ignored)</td></tr>
-</table>
-Any other value is interpreted as a string to be drawn
-    
-<dt> line() [points, frame=-1, symbs=False, ctype=GREEN]
-<dd>
-        Draw a set of symbols or connect the points, a list of (col,row)
-        If symbs is True, draw points at the specified points using the desired symbol,
-        otherwise connect the dots.  Ctype is the name of a colour (e.g. ds9.RED)
-</dl>
-
-<LI> Internal commands that you shouldn't need to know
-
-<dl>
-<dt> Ds9Error
-<dd> Exception thrown if there's some problem talking to ds9
-    
-<dt> ds9Cmd() [cmd, trap=True]
-<dd>
-        Issue a ds9 command, raising errors as appropriate
-    
-<dt> getDefaultFrame()
-<dd>
-        Get the default frame for ds9
-    
-<dt> getMaskPlaneColor() [name]
-<dd>
-        Return the colour associated with the specified mask plane name
-    
-<dt> getMaskPlaneVisibility() [name]
-<dd>
-        Should we %display the specified mask plane name?
-    
-<dt> getMaskTransparency()
-<dd>
-        Return ds9's mask transparency
-    
-<dt> getXpaAccessPoint()
-<dd>
-        Parse XPA_PORT and send return an identifier to send ds9 commands there, instead of "ds9"
-        If you don't have XPA_PORT set, the usual xpans tricks will be played when we return "ds9".
-    
-<dt> initDS9() [execDs9=True]
-<dd>
-</dl>
-</UL>
-	
-Colours may be specified as any X11-compliant string (e.g. <tt>"orchid"</tt>), or by one
-of the following constants defined in \c ds9;  the advantage of the latter
-approach is that the python interpreter can detect typos: \c BLACK, \c WHITE, \c RED, \c BLUE,
-\c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
+See \ref lsst.afw.display.utils.Mosaic for more details; there are examples near the end of the iPython
+notebook at \ref examples/imageDisplay.ipynb (we'll provide an nbviewer link once this is pushed to github).
 
 \subsection afwSecDs9Firewall  How to use ds9 through a firewall
+
+If you're using ds9 you may want to use it through a firewall;  here's how.
 
 On your home machine, type
 \code
@@ -299,20 +189,21 @@ ds9 &
 \endcode
 (<tt>setenv XPA_PORT "DS9:ds9 22345 22346"</tt> for csh users, of course)
 
-On \c lsstXXX.ncsa.uiuc.edu, set \c XPA_PORT to the same value, start \c python,
-<tt>import lsst.afw.display.ds9</tt> and proceed:
+On \c lsstXXX.ncsa.uiuc.edu, set \c XPA_PORT to the same value, setup \c display_ds9 and \c afw,
+start \c python, <tt>import lsst.afw.display as afwDisplay</tt> and proceed:
 \code
 export XPA_PORT="DS9:ds9 22345 22346"
 python
->>> import lsst.afw.display.ds9 as ds9
->>> ds9.erase()
+>>> import lsst.afw.display as afwDisplay
+>>> afwDisplay.setBackend("ds9")          # the default, so probably not needed
+>>> afwDisplay.getDisplay().erase()
 \endcode
 
 xpa afficianados will note that I'm bypassing the xpa name server; it needs
 another set of 2 or 3 ports tunnelled, and setting up ACLs.
 
-Here's \link tunnelDs9 a script\endlink (in \c afw/examples) to run on your home machine that should simplify setting
-up/tearing down the ssh tunnels.  It's not great, so improvements would/will be welcomed.
+Here's \link tunnelDs9 a script\endlink (in \c afw/examples) to run on your home machine that should
+simplify setting up/tearing down the ssh tunnels.  It's not great, so improvements would/will be welcomed.
 
 \example tunnelDs9
 
