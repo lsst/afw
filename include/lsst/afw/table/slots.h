@@ -22,12 +22,11 @@ namespace table {
 /**
  *  Base class for helper classes that define slots on SourceTable/SourceRecord.
  *
- *  Each type of slot corresponds to a subclass of SlotDefinition, and each actual
- *  slot corresponds to a particular field name prefix.  For instance, to look up
- *  the centroid slot, we look for fields named "slot_Centroid_x" and "slot_Centroid_y"
- *  (or a single compound "slot.Centroid" field in version 0).  Instead of actually
- *  naming a particular field that, however, we use Schema's alias mechanism (see AliasMap)
- *  to make these field name lookups resolve to the name of other fields.  The actual
+ *  Each type of slot corresponds to a subclass of SlotDefinition, and each actual slot
+ *  corresponds to a particular field name prefix.  For instance, to look up the centroid
+ *  slot, we look for fields named "slot_Centroid_x" and "slot_Centroid_y".  Instead of actually
+ *  naming a particular field that, however, we use Schema's alias mechanism (see AliasMap) to
+ *  make these field name lookups resolve to the name of other fields.  The actual
  *  definition of the slots is thus managed by the Schema's AliasMap, though a SourceTable
  *  object will cache Keys for the various slots to make sure accessing slot values is
  *  efficient (more precisely, when you set an alias related to a slot on an AliasMap, any
@@ -56,10 +55,10 @@ public:
     /**
      *  Return the alias field prefix used to lookup Keys for the slot.
      *
-     *  This simply prepends "slot_" to the slot name (or "slot." for version 0 tables).
+     *  This simply prepends "slot_" to the slot name.
      */
-    std::string getAlias(int version) const {
-        return (version > 0 ? "slot_" : "slot.") + _name;
+    std::string getAlias() const {
+        return "slot_" + _name;
     }
 
 protected:

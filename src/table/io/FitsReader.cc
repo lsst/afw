@@ -253,10 +253,9 @@ void FitsReader::_readSchema(
     // If not, set to 0 if it has an AFW_TYPE, Schema default otherwise (DM-590)
     int version = 0;
     if (!metadata.exists("AFW_TYPE")) {
-        version = lsst::afw::table::Schema::DEFAULT_VERSION;
+        version = lsst::afw::table::Schema::VERSION;
     }
     version = metadata.get("AFW_TABLE_VERSION", version);
-    schema.setVersion(version);
     if (stripMetadata && metadata.exists("AFW_TABLE_VERSION")) metadata.remove("AFW_TABLE_VERSION");
     int flagCol = metadata.get("FLAGCOL", 0);
     if (flagCol > 0) {
@@ -284,17 +283,17 @@ void FitsReader::_readSchema(
     }
     metadata.remove("ALIAS");
 
-    if (schema.getVersion() == 0) {
+    if (version == 0) {
         // Read slots saved using an old mechanism in as aliases, since the new slot mechanism delegates
         // slot definition to the AliasMap.
         static boost::array<std::pair<std::string,std::string>,6> oldSlotKeys = {
             {
-                std::make_pair("PSF_FLUX", "slot.PsfFlux"),
-                std::make_pair("AP_FLUX", "slot.ApFlux"),
-                std::make_pair("INST_FLUX", "slot.InstFlux"),
-                std::make_pair("MODEL_FLUX", "slot.ModelFlux"),
-                std::make_pair("CENTROID", "slot.Centroid"),
-                std::make_pair("SHAPE", "slot.Shape")
+                std::make_pair("PSF_FLUX", "slot_PsfFlux"),
+                std::make_pair("AP_FLUX", "slot_ApFlux"),
+                std::make_pair("INST_FLUX", "slot_InstFlux"),
+                std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
+                std::make_pair("CENTROID", "slot_Centroid"),
+                std::make_pair("SHAPE", "slot_Shape")
             }
         };
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
@@ -320,9 +319,6 @@ void FitsReader::_readSchema(
                 i = intermediate.asColSet().insert(i, FitsSchemaItem(col, -1));
             }
             std::string v = metadata.get<std::string>(*key);
-            if (version < 1) {
-                std::replace(v.begin(), v.end(), '_', '.');
-            }
             intermediate.asColSet().modify(i, FitsSchema::SetName(v));
             if (i->doc.empty()) // don't overwrite if already set with TDOCn
                 intermediate.asColSet().modify(i, FitsSchema::SetDoc(metadata.getComment(*key)));
@@ -334,9 +330,6 @@ void FitsReader::_readSchema(
                 i = intermediate.asBitSet().insert(i, FitsSchemaItem(-1, bit));
             }
             std::string v = metadata.get<std::string>(*key);
-            if (version < 1) {
-                std::replace(v.begin(), v.end(), '_', '.');
-            }
             intermediate.asBitSet().modify(i, FitsSchema::SetName(v));
             if (i->doc.empty()) // don't overwrite if already set with TFDOCn
                 intermediate.asBitSet().modify(i, FitsSchema::SetDoc(metadata.getComment(*key)));
@@ -406,14 +399,10 @@ void FitsReader::_readSchema(
 }
 
 void FitsReader::_startRecords(BaseTable & table) {
-
     PTR(daf::base::PropertyList) metadata = table.getMetadata();
-    // get the version number from the metadata.  If the entry is not there, set to 0
-    // remove it from the metadata while the table is in memory
     if (metadata) {
         if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     }
-
     _row = -1;
     _nRows = _fits->countRows();
     _processor = boost::make_shared<ProcessRecords>(_fits, _row);

@@ -36,29 +36,17 @@ void FluxSlotDefinition::setKeys(std::string const & alias, Schema const & schem
     _measKey = MeasKey();
     _errKey = ErrKey();
     _flagKey = Key<Flag>();
-    if (schema.getVersion() == 0) {
-        MeasFieldNameGetter helper(s, schema);
-        if (!helper.defined) return;
-        _measKey = helper.replaced;
-        try {
-            _errKey = s["err"];
-        } catch (pex::exceptions::NotFoundError &) {}
-        try {
-            _flagKey = s["flags"];
-        } catch (pex::exceptions::NotFoundError &) {}
-    } else {
-        MeasFieldNameGetter helper(s["flux"], schema);
-        if (!helper.defined) {
-            return;
-        }
-        _measKey = helper.replaced;
-        try {
-            _errKey = s["fluxSigma"];
-        } catch (pex::exceptions::NotFoundError &) {}
-        try {
-            _flagKey = s["flag"];
-        } catch (pex::exceptions::NotFoundError &) {}
+    MeasFieldNameGetter helper(s["flux"], schema);
+    if (!helper.defined) {
+        return;
     }
+    _measKey = helper.replaced;
+    try {
+        _errKey = s["fluxSigma"];
+    } catch (pex::exceptions::NotFoundError &) {}
+    try {
+        _flagKey = s["flag"];
+    } catch (pex::exceptions::NotFoundError &) {}
 }
 
 namespace {
@@ -81,23 +69,13 @@ void CentroidSlotDefinition::setKeys(std::string const & alias, Schema const & s
     _flagKey = Key<Flag>();
     MeasFieldNameGetter helper(s, schema);
     if (!helper.defined) return;
-    if (schema.getVersion() == 0) {
-        _measKey = MeasKey(Key< Point<double> >(helper.replaced));
-        try {
-            _errKey = ErrKey(Key< Covariance< Point<float> > >(s["err"]));
-        } catch (pex::exceptions::NotFoundError &) {}
-        try {
-            _flagKey = s["flags"];
-        } catch (pex::exceptions::NotFoundError &) {}
-    } else {
-        _measKey = helper.replaced;
-        try {
-            _errKey = ErrKey(s, names);
-        } catch (pex::exceptions::NotFoundError &) {}
-        try {
-            _flagKey = s["flag"];
-        } catch (pex::exceptions::NotFoundError &) {}
-    }
+    _measKey = helper.replaced;
+    try {
+        _errKey = ErrKey(s, names);
+    } catch (pex::exceptions::NotFoundError &) {}
+    try {
+        _flagKey = s["flag"];
+    } catch (pex::exceptions::NotFoundError &) {}
 }
 
 namespace {
@@ -121,23 +99,13 @@ void ShapeSlotDefinition::setKeys(std::string const & alias, Schema const & sche
     _flagKey = Key<Flag>();
     MeasFieldNameGetter helper(s, schema);
     if (!helper.defined) return;
-    if (schema.getVersion() == 0) {
-        _measKey = MeasKey(Key< Moments<double> >(helper.replaced));
-        try {
-            _errKey = ErrKey(Key< Covariance< Moments<float> > >(s["err"]));
-        } catch (pex::exceptions::NotFoundError &) {}
-        try {
-            _flagKey = s["flags"];
-        } catch (pex::exceptions::NotFoundError &) {}
-    } else {
-        _measKey = helper.replaced;
-        try {
-            _errKey = ErrKey(s, names);
-        } catch (pex::exceptions::NotFoundError &) {}
-        try {
-            _flagKey = s["flag"];
-        } catch (pex::exceptions::NotFoundError &) {}
-    }
+    _measKey = helper.replaced;
+    try {
+        _errKey = ErrKey(s, names);
+    } catch (pex::exceptions::NotFoundError &) {}
+    try {
+        _flagKey = s["flag"];
+    } catch (pex::exceptions::NotFoundError &) {}
 }
 
 void SlotSuite::handleAliasChange(std::string const & alias, Schema const & schema) {
