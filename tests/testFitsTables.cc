@@ -71,11 +71,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key< Point<double> > a_b_p = schema.addField< Point<double> >("a.b.p", "point", "pixels");
     Key< std::string > a_s = schema.addField< std::string >("a.s", "string", 5);
 
-    KeyTuple<Flux> flux = addFluxFields(schema, "flux", "flux doc");
-    KeyTuple<Centroid> centroid = addCentroidFields(schema, "centroid", "centroid doc");
     SourceCatalog vector(SourceTable::make(schema));
-    vector.getTable()->defineModelFlux("flux");
-    vector.getTable()->defineCentroid("centroid");
 
     vector.getTable()->setMetadata(boost::make_shared<lsst::daf::base::PropertyList>());
     vector.getTable()->getMetadata()->add("SHEEP", 7.3, "total number of sheep on the farm");
@@ -140,12 +136,6 @@ BOOST_AUTO_TEST_CASE(testFits) {
     BOOST_CHECK( func1.docs == func2.docs );
     BOOST_CHECK( func1.units == func2.units );
     
-    BOOST_CHECK( vector.getTable()->getModelFluxKey() == readVector.getTable()->getModelFluxKey() );
-    BOOST_CHECK( vector.getTable()->getModelFluxErrKey() == readVector.getTable()->getModelFluxErrKey() );
-
-    BOOST_CHECK( vector.getTable()->getCentroidKey() == readVector.getTable()->getCentroidKey() );
-    BOOST_CHECK( vector.getTable()->getCentroidErrKey() == readVector.getTable()->getCentroidErrKey() );
-
     {
         SourceRecord const & a1 = vector[0];
         SourceRecord const & b1 = readVector[0];
