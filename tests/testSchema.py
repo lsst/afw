@@ -50,7 +50,7 @@ except NameError:
 
 class SchemaTestCase(unittest.TestCase):
 
-    def xtestSchema(self):
+    def testSchema(self):
         schema = lsst.afw.table.Schema();
         ab_k = schema.addField("a_b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
