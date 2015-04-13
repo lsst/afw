@@ -49,31 +49,7 @@ class Footprint;
 %shared_ptr(lsst::afw::table::SourceTable)
 %shared_ptr(lsst::afw::table::SourceRecord)
 
-// Workarounds for SWIG's failure to parse the Measurement template correctly.
-// Otherwise we'd have one place in the code that controls all the canonical measurement types.
-namespace lsst { namespace afw { namespace table {
-     struct Flux {
-         typedef Key< double > MeasKey;
-         typedef Key< double > ErrKey;
-         typedef double MeasValue;
-         typedef double ErrValue;
-     };
-     struct Centroid {
-         typedef Key< Point<double> > MeasKey;
-         typedef Key< Covariance< Point<float> > > ErrKey;
-         typedef lsst::afw::geom::Point<double,2> MeasValue;
-         typedef Eigen::Matrix<float,2,2> ErrValue;
-     };
-     struct Shape {
-         typedef Key< Moments<double> > MeasKey;
-         typedef Key< Covariance< Moments<float> > > ErrKey;
-         typedef lsst::afw::geom::ellipses::Quadrupole MeasValue;
-         typedef Eigen::Matrix<float,3,3> ErrValue;
-     };
-}}}
-
 %include "lsst/afw/table/slots.h"
-
 %include "lsst/afw/table/Source.h"
 
 %addCastMethod(lsst::afw::table::SourceTable, lsst::afw::table::BaseTable)
