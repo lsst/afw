@@ -126,7 +126,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         );
     }
     if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
-        _mapper = SchemaMapper(t->getSchema()) ;
+        _mapper = SchemaMapper(t->getSchema(), true) ;
         _mapper.addMinimalSchema(t->getSchema(), true);
         _footprintKey = _mapper.editOutputSchema().addField<int>("footprint", "archive ID for Footprint");
         _outTable = BaseTable::make(_mapper.getOutputSchema());
@@ -315,7 +315,7 @@ PTR(BaseTable) SourceFitsReader::_readTable() {
         // aren't reading the Footprints), and an intermediate BaseTable with that Schema.
         // This table being non-null is what we'll use later to indicate whether we need to use the
         // SchemaMapper.
-        _mapper = SchemaMapper(schema);
+        _mapper = SchemaMapper(schema, true);
         _mapper.addMappingsWhere(FieldIsNotFootprint());
         _inTable = BaseTable::make(schema);
         _footprintKey = schema["footprint"];

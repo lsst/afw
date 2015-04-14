@@ -125,10 +125,12 @@ SchemaMapper::SchemaMapper(Schema const & input, Schema const & output) :
     _impl(new Impl(input, output))
 {}
 
-SchemaMapper::SchemaMapper(Schema const & input) :
+SchemaMapper::SchemaMapper(Schema const & input, bool shareAliasMap) :
     _impl(new Impl(input, Schema(input.getVersion())))
 {
-    editOutputSchema().setAliasMap(input.getAliasMap());
+    if (shareAliasMap) {
+        editOutputSchema().setAliasMap(input.getAliasMap());
+    }
 }
 
 SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {

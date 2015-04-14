@@ -167,6 +167,8 @@ public:
      *  @brief Construct a mapper from the given input Schema
      *
      *  @param[in] input         The Schema that fields will be mapped from.
+     *  @param[in] shareAliasMap If true, install the input Schema's AliasMap in the
+     *                           output Schema.
      *
      *  Note that the addMapping() methods will not connect input schema fields to existing
      *  output schema fields unless doReplace=true; instead, these will by default append
@@ -178,7 +180,7 @@ public:
      *  they will share the same AliasMap (use editOutputSchema().disconnectAliases() to
      *  use a copy of the AliasMap).
      */
-    explicit SchemaMapper(Schema const & input);
+    explicit SchemaMapper(Schema const & input, bool shareAliasMap=false);
 
     /// @brief Copy construct (copy-on-write).
     SchemaMapper(SchemaMapper const & other);
