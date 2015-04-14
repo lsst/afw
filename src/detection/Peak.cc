@@ -131,7 +131,7 @@ PTR(afw::table::BaseTable) PeakFitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
     afw::table::Schema schema(*metadata, true);
-    PTR(PeakTable) table = PeakTable::make(schema, PTR(afw::table::IdFactory)());
+    PTR(PeakTable) table = PeakTable::make(schema, false);
     _startRecords(*table);
     if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     table->setMetadata(metadata);
