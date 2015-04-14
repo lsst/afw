@@ -95,27 +95,22 @@ namespace {
 class AmpInfoFitsReader : public io::FitsReader {
 public:
 
-    explicit AmpInfoFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
-        io::FitsReader(fits, archive, flags) {}
+    AmpInfoFitsReader() : io::FitsReader("AMPINFO") {}
 
-protected:
-
-    virtual PTR(BaseTable) _readTable();
+    virtual PTR(BaseTable) makeTable(
+        io::FitsSchemaInputMapper & mapper,
+        PTR(daf::base::PropertyList) metadata,
+        int ioFlags,
+        bool stripMetadata
+    ) const {
+        PTR(AmpInfoTable) table = AmpInfoTable::make(mapper.finalize());
+        table->setMetadata(metadata);
+        return table;
+    }
 
 };
 
-PTR(BaseTable) AmpInfoFitsReader::_readTable() {
-    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
-    _fits->readMetadata(*metadata, true);
-    Schema schema(*metadata, true);
-    PTR(AmpInfoTable) table = AmpInfoTable::make(schema);
-    table->setMetadata(metadata);
-    _startRecords(*table);
-    return table;
-}
-
-// registers the reader so FitsReader::make can use it.
-static io::FitsReader::FactoryT<AmpInfoFitsReader> referenceFitsReaderFactory("AMPINFO");
+static AmpInfoFitsReader const ampInfoFitsReader;
 
 } // anonymous
 

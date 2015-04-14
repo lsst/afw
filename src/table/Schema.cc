@@ -645,19 +645,6 @@ Schema::Schema(Schema const & other) :
     _aliases(other._aliases)
 {}
 
-Schema::Schema(daf::base::PropertyList & metadata, bool stripMetadata) :
-    _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>())
-{
-    io::FitsReader::_readSchema(*this, metadata, stripMetadata);
-}
-
-Schema::Schema(daf::base::PropertyList const & metadata) :
-    _impl(boost::make_shared<Impl>()),
-    _aliases(boost::make_shared<AliasMap>())
-{
-    io::FitsReader::_readSchema(*this, const_cast<daf::base::PropertyList &>(metadata), false);
-}
-
 std::string Schema::join(std::string const & a, std::string const & b) const {
     // delegate to utility funcs at top of this file
     return afw::table::join(a, b, getDelimiter());

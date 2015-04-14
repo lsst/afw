@@ -27,7 +27,7 @@ class BaseRecord;
  *  with the Key object used to access record and ColumnView values.  A Schema is the most
  *  important ingredient in creating a table.
  *
- *  Because offsets for fields are assigned when the field is added to the Schema, 
+ *  Because offsets for fields are assigned when the field is added to the Schema,
  *  Schemas do not support removing fields, though they do allow renaming.
  *
  *  Field names in Schemas are expected to be dot-separated names (e.g. 'a.b.c').  The SubSchema
@@ -276,39 +276,6 @@ public:
     /// @brief Copy constructor.
     Schema(Schema const & other);
 
-    /**
-     *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
-     *
-     *  @param[in,out] metadata       PropertyList that contains the FITS header keys
-     *                                corresponding to a binary table extension.  We can't
-     *                                use a PropertySet here, because the order does matter.
-     *  @param[in]     stripMetadata  If true, the keys used to define the schema will be removed
-     *                                from the PropertySet.
-     *
-     *  If the column types in the FITS header are not compatible with Schema field types,
-     *  of if some required keys (TTYPEn, TFORMn) are not present for some columns,
-     *  afw::fits::FitsError will be thrown.
-     *
-     *  This constructor does not support strong exception safety guarantee when stripMetadata is True;
-     *  the PropertyList may be modified when an exception is thrown.
-     */
-    explicit Schema(daf::base::PropertyList & metadata, bool stripMetadata);
-
-    /**
-     *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
-     *
-     *  @param[in,out] metadata       PropertyList that contains the FITS header keys
-     *                                corresponding to a binary table extension.  We can't
-     *                                use a PropertySet here, because the order does matter.
-     *
-     *  If the column types in the FITS header are not compatible with Schema field types,
-     *  of if some required keys (TTYPEn, TFORMn) are not present for some columns,
-     *  afw::fits::FitsError will be thrown.
-     *
-     *  This overload never strips metadata, allowing it to accept a const PropertyList.
-     */
-    explicit Schema(daf::base::PropertyList const & metadata);
-
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
@@ -350,7 +317,7 @@ private:
  *  Schema schema(false);
  *  Key<int> a_i = schema.addField<int>("a.i", "integer field");
  *  Key< Point<double> > a_p = schema.addField< Point<double> >("a.p", "point field");
- *  
+ *
  *  assert(schema["a.i"] == a_i);
  *  SubSchema a = schema["a"];
  *  assert(a["i"] == a_i);
@@ -363,7 +330,7 @@ private:
 class SubSchema {
     typedef detail::SchemaImpl Impl;
 public:
-    
+
     /// @brief Find a nested SchemaItem by name.
     template <typename T>
     SchemaItem<T> find(std::string const & name) const;
