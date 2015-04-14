@@ -143,6 +143,8 @@ protected:
 
 /**
  *  @brief A coordinate class intended to represent absolute positions.
+ *
+ *  See @ref afwGeomOps for mathematical operators on Point.
  */
 template<typename T, int N>
 class Point : public PointBase<T,N> {
@@ -174,6 +176,8 @@ public:
 
 /**
  *  @brief A coordinate class intended to represent absolute positions (2-d specialization).
+ *
+ *  See @ref afwGeomOps for mathematical operators on Point.
  */
 template<typename T>
 class Point<T,2> : public PointBase<T,2> {
@@ -225,6 +229,8 @@ public:
 
 /**
  *  @brief A coordinate class intended to represent absolute positions (3-d specialization).
+ *
+ *  See @ref afwGeomOps for mathematical operators on Point.
  */
 template<typename T>
 class Point<T,3> : public PointBase<T,3> {

@@ -179,11 +179,9 @@ protected:
 /**
  *  \brief A coordinate class intended to represent offsets and dimensions.
  *
- *  Much of the functionality of Extent is provided by its CRTP base class, CoordinateBase.
+ *  Much of the functionality of Extent is provided by its CRTP base class, ExtentBase.
  *
- *  Unlike Point, Extent does not have a type-converting constructor, because the rounding semantics
- *  are not as clear.  In most cases, conversions between integer and floating point dimensions are
- *  best handled by Box objects, where the rounding semantics make more sense.
+ *  See @ref afwGeomOps for mathematical operators on Extent.
  */
 template<typename T, int N>
 class Extent : public ExtentBase<T,N> {
@@ -217,6 +215,8 @@ public:
 
 /**
  *  \brief A coordinate class intended to represent offsets and dimensions (2-d specialization).
+ *
+ *  See @ref afwGeomOps for mathematical operators on Extent.
  */
 template<typename T>
 class Extent<T,2> : public ExtentBase<T,2> {
@@ -264,6 +264,8 @@ public:
 
 /**
  *  \brief A coordinate class intended to represent offsets and dimensions (3-d specialization).
+ *
+ *  See @ref afwGeomOps for mathematical operators on Extent.
  */
 template<typename T>
 class Extent<T,3> : public ExtentBase<T,3> {

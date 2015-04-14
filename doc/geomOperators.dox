@@ -1,0 +1,426 @@
+// -*- lsst-c++ -*-
+
+namespace lsst { namespace afw { namespace geom {
+
+/**
+ *  @page afwGeomOps Operators on Point and Extent
+ *
+ *  The Point and Extent classes support many mathematical operators, but the set of available operators
+ *  (and their expected behavior) isn't quite as obvious as one might think.  The table below
+ *  lists all supported operators, with notes below on special cases.  For the rationale behind
+ *  these operations, see <a href=https://jira.lsstcorp.org/browse/RFC-41>RFC-41</a>.
+ *
+ *  <table>
+ *  <tr>
+ *  <th>LHS</th>
+ *  <th>RHS</th>
+ *  <th>Operator</th>
+ *  <th>Result    </th>
+ *  <th>Notes</th>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> +, +=       </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> +, +=       </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> -       </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> -=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> -       </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> -=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> +, +=, -, -= </td>
+ *  <td> <tt>PointD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> +, +=, -, -= </td>
+ *  <td> <tt>PointD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> +, +=    </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> +, +=    </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> +       </td>
+ *  <td> <tt>PointD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> +=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> +, +=       </td>
+ *  <td> <tt>PointI</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> -      </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> -=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> -      </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> -=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> -      </td>
+ *  <td> <tt>PointD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> -=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> -, -=   </td>
+ *  <td> <tt>PointI</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> +       </td>
+ *  <td> <tt>PointD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> +=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> -, -=   </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> +       </td>
+ *  <td> <tt>PointD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> +=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> -, -=   </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> +, +=, -, -= </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> +, +=, -, -= </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> +       </td>
+ *  <td> <tt>PointD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> +=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>PointD</tt> </td>
+ *  <td> -, -=   </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> +       </td>
+ *  <td> <tt>PointI</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> +=      </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>PointI</tt> </td>
+ *  <td> -, -=   </td>
+ *  <td> Not supported </td>
+ *  <td> (1) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> +, -     </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> +=, -=   </td>
+ *  <td> Not supported </td>
+ *  <td> (2) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> +, -, +=, -= </td>
+ *  <td> <tt>ExtentI</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>double</tt> </td>
+ *  <td> *, *=, /, /=  </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>double</tt> </td>
+ *  <td> //, //=  </td>
+ *  <td> Not supported </td>
+ *  <td> (5) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> *, *=, /, /=   </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td> (3) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> //, //=  </td>
+ *  <td> Not supported </td>
+ *  <td> (5) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>double</tt> </td>
+ *  <td> *   </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>double</tt> </td>
+ *  <td> *=  </td>
+ *  <td> Not supported </td>
+ *  <td> (2)  </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>double</tt> </td>
+ *  <td> /   </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> (4) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>double</tt> </td>
+ *  <td> /=  </td>
+ *  <td> Not supported </td>
+ *  <td> (2), (4) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>double</tt> </td>
+ *  <td> //, //=  </td>
+ *  <td> Not supported </td>
+ *  <td> (5) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> *, *=   </td>
+ *  <td> <tt>ExtentI</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> /   </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td> (4) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> /=  </td>
+ *  <td> Not supported (Python), <tt>ExtentI</tt> (C++) </td>
+ *  <td> (2), (4) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> //, //=  </td>
+ *  <td> <tt>ExtentI</tt>        </td>
+ *  <td> (6) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>double</tt> </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> *   </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>double</tt> </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> *   </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> <tt>ExtentD</tt> </td>
+ *  <td> *   </td>
+ *  <td> <tt>ExtentD</tt>        </td>
+ *  <td> (3) </td>
+ *  </tr>
+ *  <tr>
+ *  <td> <tt>int</tt>    </td>
+ *  <td> <tt>ExtentI</tt> </td>
+ *  <td> *   </td>
+ *  <td> <tt>ExtentI</tt>        </td>
+ *  <td>&nbsp;</td>
+ *  </tr>
+ *  </table>
+ *
+ *
+ *  1. Operation is not geometrically meaningful.
+ *
+ *  2. This is an in-place operator that would require the LHS type to change.  That
+ *     would actually be possible to implement in Python, but it's behavior would be confusing.
+ *
+ *  3. This operator is not implemented directly in either C++ or Python, but
+ *     is largely supported by the fact that an overload that takes <tt>double</tt>
+ *     will also accept <tt>int</tt> (but may yield different answers for extremely
+ *     large integers that cannot be represented exactly as <tt>double</tt>s).
+ *
+ *  4. All "/" and "/=" operations here assume <tt>from \_\_future\_\_
+ *     import division</tt>.  If this is not enabled, the behavior of the "/"
+ *     operator will be that of "//", and likewise for "/=" and "//=", for all
+ *     operations with <tt>ExtentI</tt> on the LHS.
+ *
+ *  5. The <tt>//</tt> operator applies only to integer types.
+ *
+ *  6. This Python-only operation does not always produce the same result as
+ *     regular division of integers in C++, because Python specifies that
+ *     <tt>a//b</tt> is equivalent to <tt>floor(a/b)</tt>, while C++ specifies that it
+ *     should be equivalent to <tt>int(a/b)</tt>.  Note that <tt>floor</tt>
+ *     rounds negative numbers down and <tt>int</tt> rounds them up.
+ */
+
+}}} // namespace lsst::afw::geom
