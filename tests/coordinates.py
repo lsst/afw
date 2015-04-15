@@ -36,6 +36,7 @@ or
 import unittest
 import numpy
 import math
+import operator
 
 import lsst.utils.tests as utilsTests
 import lsst.afw.geom as geom
@@ -45,12 +46,12 @@ numpy.random.seed(1)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class CoordinateTestCase(unittest.TestCase):
-    
-    def assertClose(self, a, b):
+
+    def assertClose(self, a, b, msg=None):
         if not numpy.allclose(a, b):
-            return self.assertEqual(a, b)
+            return self.assertEqual(a, b, msg=msg)
         else:
-            return self.assert_(True)
+            return self.assert_(True, msg=msg)
 
     def testAccessors(self):
         for dtype, cls, rnd in self.classes:
@@ -104,6 +105,7 @@ class CoordinateTestCase(unittest.TestCase):
             self.assertEqual(type(p1.gt(scalar)), CoordinateExpr)
             self.assertEqual(type(p1.ge(scalar)), CoordinateExpr)
 
+
 class PointTestCase(CoordinateTestCase):
     """A test case for Point"""
 
@@ -114,29 +116,6 @@ class PointTestCase(CoordinateTestCase):
             (float, geom.Point3D, lambda: [float(x) for x in numpy.random.randn(3)]),
             (int, geom.Point3I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 3)]),
             ]
-
-    def testArithmetic(self):
-        for dtype, cls, rnd in self.classes:
-            Extent = geom.Extent[dtype, cls.dimensions]
-            vector1 = rnd()
-            vector2 = rnd()
-            p1 = cls(*vector1)
-            p2 = cls(*vector2)
-            self.assertClose(tuple(p1-p2), tuple([v1 - v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(type(p1-p2), Extent)
-            self.assertClose(tuple(p1+Extent(p2)), tuple([v1 + v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(type(p1+Extent(p2)), cls)
-            self.assertClose(tuple(p1-Extent(p2)), tuple([v1 - v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(type(p1-Extent(p2)), cls)
-            p1 += Extent(p2)
-            vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
-            self.assertEqual(tuple(p1), tuple(vector1))
-            p1 -= Extent(p2)
-            vector1 = [v1 - v2 for v1, v2 in zip(vector1, vector2)]
-            self.assertClose(tuple(p1), tuple(vector1))
-            p1.shift(Extent(p2))
-            vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
-            self.assertClose(tuple(p1), tuple(vector1))
 
     def testSpanIteration(self):
         span = geom.Span(4, 3, 8)
@@ -194,47 +173,11 @@ class ExtentTestCase(CoordinateTestCase):
             (int, geom.Extent3I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 3)]),
             ]
 
-    def testArithmetic(self):
-        for dtype, cls, rnd in self.classes:
-            Point = geom.Point[dtype, cls.dimensions]
-            vector1 = rnd()
-            vector2 = rnd()
-            p1 = cls(*vector1)
-            p2 = cls(*vector2)
-            self.assertClose(tuple(p1+Point(p2)), tuple([v1 + v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(type(p1+Point(p2)), Point)
-            self.assertClose(tuple(p1+p2), tuple([v1 + v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(type(p1+p2), cls)
-            self.assertClose(tuple(p1-p2), tuple([v1 - v2 for v1, v2 in zip(vector1, vector2)]))
-            self.assertEqual(type(p1-p2), cls)
-            self.assertClose(tuple(+p1), tuple(vector1))
-            self.assertEqual(type(+p1), cls)
-            self.assertClose(tuple(-p1), tuple([-v1 for v1 in vector1]))
-            self.assertEqual(type(-p1), cls)
-            p1 += p2
-            vector1 = [v1 + v2 for v1, v2 in zip(vector1, vector2)]
-            self.assertClose(tuple(p1), tuple(vector1))
-            p1 -= p2
-            vector1 = [v1 - v2 for v1, v2 in zip(vector1, vector2)]
-            self.assertClose(tuple(p1), tuple(vector1))
-            scalar = 2
-            # Python handles integer division differently from C++ for negative numbers
-            vector1 = [abs(x) for x in vector1]
-            p1 = cls(*vector1)
-            self.assertClose(tuple(p1*scalar), tuple([v1*scalar for v1 in vector1]))
-            self.assertEqual(type(p1*scalar), cls)
-            if type(p1[0]) == int:
-                desDivTuple = tuple(v1//scalar for v1 in vector1)
-            else:
-                desDivTuple = tuple(v1/scalar for v1 in vector1)
-            self.assertClose(tuple(p1/scalar), desDivTuple)
-            self.assertEqual(type(p1/scalar), cls)
-            p1 *= scalar
-            vector1 = [v1*scalar for v1 in vector1]
-            self.assertClose(tuple(p1), tuple(vector1))
-            p1 /= scalar
-            vector1 = [v1/scalar for v1 in vector1]
-            self.assertClose(tuple(p1), tuple(vector1))
+    def testRounding(self):
+        e1 = geom.Extent2D(1.2, -3.4)
+        self.assertEqual(e1.floor(), geom.Extent2I(1, -4))
+        self.assertEqual(e1.ceil(), geom.Extent2I(2, -3))
+        self.assertEqual(e1.truncate(), geom.Extent2I(1, -3))
 
     def testConstructors(self):
         #test extent from extent 2-d
@@ -321,6 +264,209 @@ class ExtentTestCase(CoordinateTestCase):
             self.fail("Should not allow conversion Point3D to Extent3I")
 
 
+class OperatorTestCase(utilsTests.TestCase):
+
+    @staticmethod
+    def makeRandom(cls):
+        """Make a random Point, Extent, int, or float of the given type."""
+        if cls is int:
+            v = 0
+            while v == 0:
+                v = int(numpy.random.randn()*10)
+        elif cls is float:
+            v = float(numpy.random.randn()*10)
+        else:
+            v = cls()
+            t = type(v[0])
+            for i in range(len(v)):
+                while v[i] == 0:
+                    v[i] = t(numpy.random.randn()*10)
+        return v
+
+    def checkOperator(self, op, lhs, rhs, expected, inPlace=False):
+        """Check that the type and result of applying operator 'op' to types 'lhs' and 'rhs'
+        yield a result of type 'expected', and that the computed value is correct.  If
+        'expected' is an Exception subclass, instead check that attempting to apply the
+        operator raises that exception.
+        """
+        v1 = self.makeRandom(lhs)
+        v2 = self.makeRandom(rhs)
+        if issubclass(expected, Exception):
+            self.assertRaises(expected, op, v1, v2)
+        else:
+            check = op(numpy.array(v1), numpy.array(v2))
+            result = op(v1, v2)
+            if type(result) != expected:
+                self.fail("%s(%s, %s): expected %s, got %s" %
+                          (op.__name__, lhs.__name__, rhs.__name__,
+                           expected.__name__, type(result).__name__))
+            if not numpy.allclose(result, check):
+                self.fail("%s(%s, %s): expected %s, got %s" %
+                          (op.__name__, lhs.__name__, rhs.__name__, tuple(check), tuple(result)))
+            if inPlace and result is not v1:
+                self.fail("%s(%s, %s): result is not self" % (op.__name__, lhs.__name__, rhs.__name__))
+
+    def testPointAsExtent(self):
+        for n in (2, 3):
+            for t in (int, float):
+                p = self.makeRandom(geom.Point[t, n])
+                e = p.asExtent()
+                self.assertEqual(type(e), geom.Extent[t, n])
+                self.assertClose(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+
+    def testExtentAsPoint(self):
+        for n in (2, 3):
+            for t in (int, float):
+                e = self.makeRandom(geom.Extent[t, n])
+                p = e.asPoint()
+                self.assertEqual(type(p), geom.Point[t, n])
+                self.assertClose(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+
+    def testUnaryOperators(self):
+        for n in (2, 3):
+            for t in (int, float):
+                e1 = self.makeRandom(geom.Extent[t, n])
+                e2 = +e1
+                self.assertEqual(type(e1), type(e2))
+                self.assertClose(numpy.array(e1), numpy.array(e2), rtol=0.0, atol=0.0)
+                e3 = -e1
+                self.assertEqual(type(e1), type(e3))
+                self.assertClose(numpy.array(e3), -numpy.array(e1), rtol=0.0, atol=0.0)
+
+    def testBinaryOperators(self):
+        for n in (2, 3):
+            pD = geom.Point[float, n]
+            pI = geom.Point[int, n]
+            eD = geom.Extent[float, n]
+            eI = geom.Extent[int, n]
+            # Addition
+            self.checkOperator(operator.add, pD, pD, TypeError)
+            self.checkOperator(operator.add, pD, pI, TypeError)
+            self.checkOperator(operator.add, pD, eD, pD)
+            self.checkOperator(operator.add, pD, eI, pD)
+            self.checkOperator(operator.add, pI, pD, TypeError)
+            self.checkOperator(operator.add, pI, pI, TypeError)
+            self.checkOperator(operator.add, pI, eD, pD)
+            self.checkOperator(operator.add, pI, eI, pI)
+            self.checkOperator(operator.add, eD, pD, pD)
+            self.checkOperator(operator.add, eD, pI, pD)
+            self.checkOperator(operator.add, eD, eI, eD)
+            self.checkOperator(operator.add, eD, eD, eD)
+            self.checkOperator(operator.add, eI, pD, pD)
+            self.checkOperator(operator.add, eI, pI, pI)
+            self.checkOperator(operator.add, eI, eD, eD)
+            self.checkOperator(operator.add, eI, eI, eI)
+            # Subtraction
+            self.checkOperator(operator.sub, pD, pD, eD)
+            self.checkOperator(operator.sub, pD, pI, eD)
+            self.checkOperator(operator.sub, pD, eD, pD)
+            self.checkOperator(operator.sub, pD, eI, pD)
+            self.checkOperator(operator.sub, pI, pD, eD)
+            self.checkOperator(operator.sub, pI, pI, eI)
+            self.checkOperator(operator.sub, pI, eD, pD)
+            self.checkOperator(operator.sub, pI, eI, pI)
+            self.checkOperator(operator.sub, eD, pD, TypeError)
+            self.checkOperator(operator.sub, eD, pI, TypeError)
+            self.checkOperator(operator.sub, eD, eD, eD)
+            self.checkOperator(operator.sub, eD, eI, eD)
+            self.checkOperator(operator.sub, eI, pD, TypeError)
+            self.checkOperator(operator.sub, eI, pI, TypeError)
+            self.checkOperator(operator.sub, eI, eD, eD)
+            self.checkOperator(operator.sub, eI, eI, eI)
+            # Multiplication
+            self.checkOperator(operator.mul, eD, int, eD)
+            self.checkOperator(operator.mul, eD, float, eD)
+            self.checkOperator(operator.mul, eI, int, eI)
+            self.checkOperator(operator.mul, eI, float, eD)
+            self.checkOperator(operator.mul, int, eD, eD)
+            self.checkOperator(operator.mul, float, eD, eD)
+            self.checkOperator(operator.mul, int, eI, eI)
+            self.checkOperator(operator.mul, float, eI, eD)
+            # Old-Style Division (note that operator.div doesn't obey the future statement; it just calls
+            # __div__ directly.
+            self.checkOperator(operator.div, eD, int, eD)
+            self.checkOperator(operator.div, eD, float, eD)
+            self.checkOperator(operator.div, eI, int, eI)
+            self.checkOperator(operator.div, eI, float, eD)
+            # New-Style Division
+            self.checkOperator(operator.truediv, eD, int, eD)
+            self.checkOperator(operator.truediv, eD, float, eD)
+            self.checkOperator(operator.truediv, eI, int, eD)
+            self.checkOperator(operator.truediv, eI, float, eD)
+            # Floor Division
+            self.checkOperator(operator.floordiv, eD, int, TypeError)
+            self.checkOperator(operator.floordiv, eD, float, TypeError)
+            self.checkOperator(operator.floordiv, eI, int, eI)
+            self.checkOperator(operator.floordiv, eI, float, TypeError)
+
+    def testInPlaceOperators(self):
+        # Note: I have no idea why Swig throws NotImplementedError sometimes for in-place operators
+        # that don't match rather than TypeError (which is what it throws for regular binary operators,
+        # and what it should be throwing consistently here, if the Python built-ins are any indication).
+        # However, I've determined that it's not worth my time to fix it, as the only approach
+        # I could think of was to use %feature("shadow"), which I tried, and Swig simply ignored it
+        # (the code I put in those blocks never appeared in the .py file).
+        for n in (2, 3):
+            pD = geom.Point[float, n]
+            pI = geom.Point[int, n]
+            eD = geom.Extent[float, n]
+            eI = geom.Extent[int, n]
+            # Addition
+            self.checkOperator(operator.iadd, pD, pD, NotImplementedError)
+            self.checkOperator(operator.iadd, pD, pI, NotImplementedError)
+            self.checkOperator(operator.iadd, pD, eD, pD, inPlace=True)
+            self.checkOperator(operator.iadd, pD, eI, pD, inPlace=True)
+            self.checkOperator(operator.iadd, pI, pD, TypeError)
+            self.checkOperator(operator.iadd, pI, pI, TypeError)
+            self.checkOperator(operator.iadd, pI, eD, TypeError)
+            self.checkOperator(operator.iadd, pI, eI, pI, inPlace=True)
+            self.checkOperator(operator.iadd, eD, pD, NotImplementedError)
+            self.checkOperator(operator.iadd, eD, pI, NotImplementedError)
+            self.checkOperator(operator.iadd, eD, eI, eD, inPlace=True)
+            self.checkOperator(operator.iadd, eD, eD, eD, inPlace=True)
+            self.checkOperator(operator.iadd, eI, pD, TypeError)
+            self.checkOperator(operator.iadd, eI, pI, TypeError)
+            self.checkOperator(operator.iadd, eI, eD, TypeError)
+            self.checkOperator(operator.iadd, eI, eI, eI, inPlace=True)
+            # Subtraction
+            self.checkOperator(operator.isub, pD, pD, NotImplementedError)
+            self.checkOperator(operator.isub, pD, pI, NotImplementedError)
+            self.checkOperator(operator.isub, pD, eD, pD, inPlace=True)
+            self.checkOperator(operator.isub, pD, eI, pD, inPlace=True)
+            self.checkOperator(operator.isub, pI, pD, TypeError)
+            self.checkOperator(operator.isub, pI, pI, TypeError)
+            self.checkOperator(operator.isub, pI, eD, TypeError)
+            self.checkOperator(operator.isub, pI, eI, pI, inPlace=True)
+            self.checkOperator(operator.isub, eD, pD, NotImplementedError)
+            self.checkOperator(operator.isub, eD, pI, NotImplementedError)
+            self.checkOperator(operator.isub, eD, eD, eD, inPlace=True)
+            self.checkOperator(operator.isub, eD, eI, eD, inPlace=True)
+            self.checkOperator(operator.isub, eI, pD, TypeError)
+            self.checkOperator(operator.isub, eI, pI, TypeError)
+            self.checkOperator(operator.isub, eI, eD, TypeError)
+            self.checkOperator(operator.isub, eI, eI, eI, inPlace=True)
+            # Multiplication
+            self.checkOperator(operator.imul, eD, int, eD, inPlace=True)
+            self.checkOperator(operator.imul, eD, float, eD, inPlace=True)
+            self.checkOperator(operator.imul, eI, int, eI, inPlace=True)
+            self.checkOperator(operator.imul, eI, float, TypeError)
+            # Old-Style Division (note that operator.div doesn't obey the future statement; it just calls
+            # __div__ directly).
+            self.checkOperator(operator.idiv, eD, int, eD, inPlace=True)
+            self.checkOperator(operator.idiv, eD, float, eD, inPlace=True)
+            self.checkOperator(operator.idiv, eI, int, eI, inPlace=True)
+            self.checkOperator(operator.idiv, eI, float, TypeError)
+            # New-Style Division
+            self.checkOperator(operator.itruediv, eD, int, eD, inPlace=True)
+            self.checkOperator(operator.itruediv, eD, float, eD, inPlace=True)
+            self.checkOperator(operator.itruediv, eI, int, TypeError)
+            self.checkOperator(operator.itruediv, eI, float, TypeError)
+            # Floor Division
+            self.checkOperator(operator.floordiv, eD, int, TypeError)
+            self.checkOperator(operator.floordiv, eD, float, TypeError)
+            self.checkOperator(operator.floordiv, eI, int, eI)
+            self.checkOperator(operator.floordiv, eI, float, TypeError)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -331,6 +477,7 @@ def suite():
     suites = []
     suites += unittest.makeSuite(PointTestCase)
     suites += unittest.makeSuite(ExtentTestCase)
+    suites += unittest.makeSuite(OperatorTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 

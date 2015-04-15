@@ -106,6 +106,9 @@ public:
     }
     //@}
 
+    /// Cast this object to an Extent of the same numeric type and dimensionality.
+    Extent<T,N> asExtent() const { return Extent<T,N>(static_cast<Point<T,N> const &>(*this)); }
+
     /// @brief Shift the point by the given offset.
     void shift(Extent<T,N> const & offset) { this->_vector += offset.asEigen(); }
 
@@ -140,6 +143,8 @@ protected:
 
 /**
  *  @brief A coordinate class intended to represent absolute positions.
+ *
+ *  See @ref afwGeomOps for mathematical operators on Point.
  */
 template<typename T, int N>
 class Point : public PointBase<T,N> {
@@ -171,6 +176,8 @@ public:
 
 /**
  *  @brief A coordinate class intended to represent absolute positions (2-d specialization).
+ *
+ *  See @ref afwGeomOps for mathematical operators on Point.
  */
 template<typename T>
 class Point<T,2> : public PointBase<T,2> {
@@ -222,6 +229,8 @@ public:
 
 /**
  *  @brief A coordinate class intended to represent absolute positions (3-d specialization).
+ *
+ *  See @ref afwGeomOps for mathematical operators on Point.
  */
 template<typename T>
 class Point<T,3> : public PointBase<T,3> {
@@ -276,6 +285,51 @@ typedef Point<int,3> Point3I;
 typedef Point<double,2> PointD;
 typedef Point<double,2> Point2D;
 typedef Point<double,3> Point3D;
+
+template <int N>
+Point<double,N> operator+(Point<double,N> const & lhs, Extent<int,N> const & rhs) {
+    return lhs + Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> operator+(Extent<int,N> const & rhs, Point<double,N> const & lhs) {
+    return Point<double,N>(lhs) + rhs;
+}
+
+template <int N>
+Point<double,N> & operator+=(Point<double,N> & lhs, Extent<int,N> const & rhs) {
+    return lhs += Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> operator+(Point<int,N> const & lhs, Extent<double,N> const & rhs) {
+    return Point<double,N>(lhs) + rhs;
+}
+
+template <int N>
+Point<double,N> operator-(Point<double,N> const & lhs, Extent<int,N> const & rhs) {
+    return lhs - Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> & operator-=(Point<double,N> & lhs, Extent<int,N> const & rhs) {
+    return lhs -= Extent<double,N>(rhs);
+}
+
+template <int N>
+Point<double,N> operator-(Point<int,N> const & lhs, Extent<double,N> const & rhs) {
+    return Point<double,N>(lhs) - rhs;
+}
+
+template <int N>
+Extent<double,N> operator-(Point<double,N> const & lhs, Point<int,N> const & rhs) {
+    return lhs - Point<double,N>(rhs);
+}
+
+template <int N>
+Extent<double,N> operator-(Point<int,N> const & lhs, Point<double,N> const & rhs) {
+    return Point<double,N>(lhs) - rhs;
+}
 
 }}}
 

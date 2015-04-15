@@ -89,8 +89,40 @@ geom::CoordinateExpr<N> geom::ExtentBase<T,N>::ge(Extent<T,N> const & other) con
 }
 
 template <typename T, int N>
+geom::Point<T,N> geom::ExtentBase<T,N>::asPoint() const {
+    return Point<T,N>(static_cast<Extent<T,N> const &>(*this));
+}
+
+template <typename T, int N>
 geom::Point<T,N> geom::ExtentBase<T,N>::operator+(Point<T,N> const & other) const {
     return Point<T,N>(this->_vector + other.asEigen());
+}
+
+template <int N>
+geom::Extent<int,N> geom::truncate(Extent<double,N> const & input) {
+    Extent<int,N> result;
+    for (int i = 0; i < N; ++i) {
+        result[i] = static_cast<int>(input[i]);
+    }
+    return result;
+}
+
+template <int N>
+geom::Extent<int,N> geom::floor(Extent<double,N> const & input) {
+    Extent<int,N> result;
+    for (int i = 0; i < N; ++i) {
+        result[i] = std::floor(input[i]);
+    }
+    return result;
+}
+
+template <int N>
+geom::Extent<int,N> geom::ceil(Extent<double,N> const & input) {
+    Extent<int,N> result;
+    for (int i = 0; i < N; ++i) {
+        result[i] = std::ceil(input[i]);
+    }
+    return result;
 }
 
 #ifndef DOXYGEN
@@ -107,5 +139,12 @@ template geom::Extent<double,2>::Extent(geom::Extent<int,2> const &);
 template geom::Extent<double,3>::Extent(geom::Extent<int,3> const &);
 template geom::Extent<double,2>::Extent(geom::Point<int,2> const &);
 template geom::Extent<double,3>::Extent(geom::Point<int,3> const &);
+
+template geom::Extent<int,2> geom::truncate(geom::Extent<double,2> const &);
+template geom::Extent<int,3> geom::truncate(geom::Extent<double,3> const &);
+template geom::Extent<int,2> geom::floor(geom::Extent<double,2> const &);
+template geom::Extent<int,3> geom::floor(geom::Extent<double,3> const &);
+template geom::Extent<int,2> geom::ceil(geom::Extent<double,2> const &);
+template geom::Extent<int,3> geom::ceil(geom::Extent<double,3> const &);
 
 #endif // !DOXYGEN
