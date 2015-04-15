@@ -249,7 +249,6 @@ struct FieldIsNotFootprint {
 PTR(BaseTable) SourceFitsReader::_readTable() {
     PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
     _fits->readMetadata(*metadata, true);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
     // if there's an archive attached, it's the new way of persisting Footprints
     int archiveHdu = metadata->get("AR_HDU", -1);
     if (archiveHdu > 0) {
