@@ -103,6 +103,13 @@ public:
     /// Convenience function to add a peak (since that'd now be multiple lines without this function)
     PTR(PeakRecord) addPeak(float fx, float fy, float value);
 
+    /**
+     *  Sort Peaks from most positive value to most negative.
+     *
+     *  If the key passed is invalid (the default) PeakTable::getPeakValueKey() will be used.
+     */
+    void sortPeaks(afw::table::Key<float> const & key=afw::table::Key<float>());
+
     /// Set the Schema used by the PeakCatalog (will throw if PeakCatalog is not empty).
     void setPeakSchema(afw::table::Schema const & peakSchema) {
         if (!getPeaks().empty()) {
