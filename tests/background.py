@@ -56,6 +56,8 @@ except NameError:
 
 AfwdataDir = lsst.utils.getPackageDir("afwdata")
 
+numpy.random.seed(1)
+
 # ==== summary to currently implemented tests ====
 # getPixel: tests basic functionality of getPixel() method (floats)
 # BackgroundTestImages: tests Laher's afwdata/Statistics/*.fits images (doubles)
@@ -829,37 +831,45 @@ class BackgroundTestCase(unittest.TestCase):
         bgCtrl = afwMath.BackgroundControl(10, 10)
         interpStyle = afwMath.Interpolate.AKIMA_SPLINE
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
-        approxStyle = afwMath.ApproximateControl.UNKNOWN
-        approxOrderX = 0
-        approxOrderY = -1
+        approxOrderX = 6
+        approxOrderY = 6
 
-        backgroundList = afwMath.BackgroundList()
-        backImage = afwImage.ImageF(self.image.getDimensions())
-        for i in range(2):
-            bkgd = afwMath.makeBackground(self.image, bgCtrl)
-            if i == 0:
-                # no need to call getImage
-                backgroundList.append((bkgd, interpStyle, undersampleStyle,
-                                       approxStyle, approxOrderX, approxOrderY))
-            else:
-                backgroundList.append(bkgd) # Relies on having called getImage; deprecated
+        im = self.image.Factory(self.image, self.image.getBBox(afwImage.PARENT))
+        arr = im.getArray()
+        arr += numpy.random.normal(size=(im.getHeight(),im.getWidth()))
 
-            backImage += bkgd.getImageF(interpStyle, undersampleStyle)
+        for astyle in afwMath.ApproximateControl.UNKNOWN, afwMath.ApproximateControl.CHEBYSHEV:
 
-        with utilsTests.getTempFilePath(".fits") as fileName:
-            backgroundList.writeFits(fileName)
+            actrl = afwMath.ApproximateControl(astyle, approxOrderX)
+            bgCtrl.setApproximateControl(actrl)
 
-            backgrounds = afwMath.BackgroundList.readFits(fileName)
+            backgroundList = afwMath.BackgroundList()
+            backImage = afwImage.ImageF(im.getDimensions())
+            for i in range(2):
+                bkgd = afwMath.makeBackground(im, bgCtrl)
+                if i == 0:
+                    # no need to call getImage
+                    backgroundList.append((bkgd, interpStyle, undersampleStyle,
+                                           astyle, approxOrderX, approxOrderY))
+                else:
+                    backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
-            img = backgrounds.getImage()
-            #
-            # Check that the read-back image is identical to that generated from the backgroundList
-            # round-tripped to disk
-            #
-            backImage -= img
-            
-            self.assertEqual(np.min(backImage.getArray()), 0.0)
-            self.assertEqual(np.max(backImage.getArray()), 0.0)
+                backImage += bkgd.getImageF(interpStyle, undersampleStyle)
+
+            with utilsTests.getTempFilePath(".fits") as fileName:
+                backgroundList.writeFits(fileName)
+
+                backgrounds = afwMath.BackgroundList.readFits(fileName)
+
+                img = backgrounds.getImage()
+                #
+                # Check that the read-back image is identical to that generated from the backgroundList
+                # round-tripped to disk
+                #
+                backImage -= img
+
+                self.assertEqual(np.min(backImage.getArray()), 0.0)
+                self.assertEqual(np.max(backImage.getArray()), 0.0)
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
