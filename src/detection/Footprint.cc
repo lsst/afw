@@ -239,6 +239,27 @@ PTR(PeakRecord) Footprint::addPeak(float fx, float fy, float value) {
     return p;
 }
 
+namespace {
+
+// comparison function to sort peaks from most positive to most negative.
+struct SortPeaks {
+
+    SortPeaks(afw::table::Key<float> const & key) : _key(key) {}
+
+	bool operator()(detection::PeakRecord const & a, detection::PeakRecord const & b) const {
+        return a.get(_key) > b.get(_key);
+    }
+
+private:
+    afw::table::Key<float> _key;
+};
+
+} // anonymous
+
+void Footprint::sortPeaks(afw::table::Key<float> const & key) {
+    getPeaks().sort(SortPeaks(key.isValid() ? key : PeakTable::getPeakValueKey()));
+}
+
 /**
  * Does this Footprint contain this pixel?
  */

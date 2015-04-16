@@ -921,6 +921,15 @@ class FootprintTestCase(utilsTests.TestCase):
                 plt.axis([0, 100, 0, 20])
             plt.savefig('merge2.png')
 
+    def testPeakSort(self):
+        footprint = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Point2I(10, 10)))
+        footprint.addPeak(4, 5, 1)
+        footprint.addPeak(3, 2, 5)
+        footprint.addPeak(7, 8, -2)
+        footprint.addPeak(5, 7, 4)
+        footprint.sortPeaks()
+        self.assertEqual([peak.getIx() for peak in footprint.getPeaks()],
+                         [3, 5, 4, 7])
 
     def testClipToNonzero(self):
         # create a circular footprint
