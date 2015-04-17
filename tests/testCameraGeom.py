@@ -218,6 +218,8 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testFindDetectors(self):
         for cw in self.cameraList:
+            detXPoints = []
+            detYPoints = []
             for det in cw.camera:
                 #This currently assumes there is only one detector at the center
                 #position of any detector.  That is not enforced and multiple detectors
@@ -225,9 +227,15 @@ class CameraGeomTestCase(unittest.TestCase):
                 #camera changes.
                 #cp = cw.camera.makeCameraPoint(det.getCenter(), PUPIL)
                 cp = det.getCenter(FOCAL_PLANE)
+                detXPoints.append(cp.getPoint().getX())
+                detYPoints.append(cp.getPoint().getY())
                 detList = cw.camera.findDetectors(cp)
                 self.assertEquals(len(detList), 1)
                 self.assertEquals(det.getName(), detList[0].getName())
+            detList = cw.camera.findDetectorsArray(detXPoints, detYPoints, FOCAL_PLANE)
+            self.assertEquals(len(cw.camera), len(detList))
+            for dets in detList:
+                self.assertEquals(len(dets), 1)
 
     def testFpBbox(self):
         for cw in self.cameraList:
