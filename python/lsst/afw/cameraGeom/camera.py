@@ -65,6 +65,29 @@ class Camera(DetectorCollection):
         else:
             return self._transformSingleSys(nativePoint, toSys)
 
+    def _transformSingleSysArray(self, positionArray, fromSys, toSys):
+        """!Transform an array of points from once CameraSys to another CameraSys
+        @warning This method only handles a single jump, not a transform linked by a common native sys.
+        
+        @param[in] positionArray Array of Point2D objects, one per position
+        @param[in] fromSys  Initial coordinate system
+        @param[in] toSys  Destination coordinate system
+        
+        @returns an array of Point2D objects containing the transformed coordinates in the destination system.
+        """
+        if fromSys.hasDetectorName():
+            det = self[fromSys.getDetectorname()]
+            detTrans = det.getTransfromMap()
+            return detTrans.transform(positionArray, fromSys, toSys)
+        elif toSys.hasDetectorName():
+            det = self[toSys.getDetectorName()]
+            detTrans = det.getTransformMap()
+            return detTrans.transform(positionArray, fromSys, toSys)
+        elif toSys in self._transformMap:
+            # use camera transform map
+            return self._tranformMap.transform(positionArray, fromSys, toSys)
+        raise RuntimeError("Could not find mapping from %s to %s"%(fromSys, toSys))
+
     def _transformSingleSys(self, cameraPoint, toSys):
         """!Transform a CameraPoint with a CameraSys to another CameraSys. 
 
