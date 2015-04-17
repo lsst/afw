@@ -142,7 +142,7 @@ class Camera(DetectorCollection):
         cameraPoints = [afwGeom.Point2d(x,y) for x,y in zip(xCoord, yCoord)]
 
         #transform the points to the native coordinate system
-        nativePoints = _transformSingleSysArray(cameraPoints, coordSys, self._nativeCameraSys)
+        nativePoints = self._transformSingleSysArray(cameraPoints, coordSys, self._nativeCameraSys)
 
         detectorList = []
         for i in range(len(xCoord)):
