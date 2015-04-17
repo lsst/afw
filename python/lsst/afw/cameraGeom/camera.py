@@ -129,6 +129,35 @@ class Camera(DetectorCollection):
                 detectorList.append(detector)
         return detectorList
 
+    def findDetectorsArray(self, xCoord, yCoord, coordSys):
+        """!Find the detectors that cover a list of points specified by x and y coordinates in any system
+
+        @param[in] xCoord is an array of x coordinates
+        @param[in] yCoord is an array of y coordinates
+        @param[in] coordSys is the coordinate system in which xCoord and yCoord are defined
+        @return a list of lists; each list contains the names of all detectors which contain the
+        corresponding point
+        """
+
+        cameraPoints = [self.makeCameraPoint(afwGeom.Point2d(x,y),coordSys) for x,y in zip(xCoord, yCoord)]
+
+        #transform the points to the native coordinate system
+        nativePoints = _transformSingleSysArray(cameraPoints, coordSys, self._nativeCameraSys)
+
+        detectorList = []
+        for i in range(len(xCoord)):
+            detectorList.append([])
+
+        for detector in self:
+            coordMap = detector.getTransformMap()
+            cameraSys = detector.makeCameraSys(PIXELS)
+            detectorPoints = coordMap.transform(nativePoints, self._nativeCameraSys, cameraSys)
+            for i, pt in enumerate(detectorPoints):
+                if afwGeom.Box2D(detectro.getBBox()).contains(pt.getPoint()):
+                    detectorList[i].append(detector)
+
+        return detectorList
+
     def getTransformMap(self):
         """!Obtain a pointer to the transform registry.  
 
