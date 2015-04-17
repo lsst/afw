@@ -45,7 +45,7 @@ class Camera(DetectorCollection):
         """
         return self._name
 
-    def _tranformFromNativeSys(self, nativePoint, toSys):
+    def _transformFromNativeSys(self, nativePoint, toSys):
         """!Transform a point in the native coordinate system to another coordinate system.
 
         @param[in] nativePoint  CameraPoint in the native system for the camera
@@ -85,7 +85,7 @@ class Camera(DetectorCollection):
             return detTrans.transform(positionArray, fromSys, toSys)
         elif toSys in self._transformMap:
             # use camera transform map
-            return self._tranformMap.transform(positionArray, fromSys, toSys)
+            return self._transformMap.transform(positionArray, fromSys, toSys)
         raise RuntimeError("Could not find mapping from %s to %s"%(fromSys, toSys))
 
     def _transformSingleSys(self, cameraPoint, toSys):
@@ -176,7 +176,7 @@ class Camera(DetectorCollection):
         """
         # All transform maps should know about the native coordinate system
         nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
-        return self._tranformFromNativeSys(nativePoint, toSys)
+        return self._transformFromNativeSys(nativePoint, toSys)
 
     def makeCameraPoint(self, point, cameraSys):
         """!Make a CameraPoint from a Point2D and a CameraSys
