@@ -139,7 +139,7 @@ class Camera(DetectorCollection):
         corresponding point
         """
 
-        cameraPoints = [afwGeom.Point2d(x,y) for x,y in zip(xCoord, yCoord)]
+        cameraPoints = [afwGeom.Point2D(x,y) for x,y in zip(xCoord, yCoord)]
 
         #transform the points to the native coordinate system
         nativePoints = self._transformSingleSysArray(cameraPoints, coordSys, self._nativeCameraSys)
