@@ -22,58 +22,54 @@
  
 #if !defined(LSST_DETECTION_HEAVY_FOOTPRINT_H)
 #define LSST_DETECTION_HEAVY_FOOTPRINT_H
-/**
- * \file
- * \brief Represent a set of pixels of an arbitrary shape and size,
- *        including values for those pixels; a HeavyFootprint is a
- *        Footprint that also not only a description of a region, but
- *        values within that region.
- */
-#include <algorithm>
-#include <list>
-#include <cmath>
-#include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
+
 #include "lsst/afw/detection/Footprint.h"
 
-namespace lsst {
-namespace afw { 
-namespace detection {
+namespace lsst { namespace afw { namespace detection {
 
-class HeavyFootprintCtrl;
-
-/*!
- * \brief A set of pixels in an Image, including those pixels' actual values
+/**
+ *  Post-deblend representation of a source.
+ *
+ *  A HeavyFootprint contains a regular Footprint with a flattened 1-d representation of its pixel values.
+ *
+ *  Like Footprint, the new HeavyFootprint is immutable and always held by shared_ptr.
+ *
+ *  There are two additional major changes from the old HeavyFootprint:
+ *   - Instead of holding (image, mask, variance) pixels, we now just hold image pixels.  As far as I can
+ *     tell, we never used the mask or variance pixels in the old HeavyFootprints, so they were just taking
+ *     up space unnecessarily (and quite a bit of it, actually - this could shrink our src catalogs by
+ *     as much as 30%%).
+ *   - Instead of templates, we just typedef the Pixel type to single-precision float.  We never used
+ *     any other pixel type, and in fact never wrote working persistence code for any other pixel type.
  */
-template <typename ImagePixelT, typename MaskPixelT=lsst::afw::image::MaskPixel,
-          typename VariancePixelT=lsst::afw::image::VariancePixel>
 class HeavyFootprint : public Footprint {
 public:
 
-    /**
-     * Create a HeavyFootprint from a regular Footprint and the image that
-     * provides the pixel values
-     *
-     * \note: the HeavyFootprintCtrl is passed by const* not const& so
-     * that we needn't provide a definition in the header.
-     *
-     * foot: The Footprint defining the pixels to set
-     * mimage: The pixel values
-     * ctrl: Control how we manipulate HeavyFootprints
-     */
-    explicit HeavyFootprint(
-        Footprint const& foot,
-        lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& mimage,
-        HeavyFootprintCtrl const* ctrl=NULL
-                           );
+    typedef float Pixel;
 
-    /**
-     * Create a HeavyFootprint from a regular Footprint, allocating space
-     * to hold foot.getArea() pixels, but not initializing them.  This is
-     * used when unpersisting a HeavyFootprint.
-     */
-    explicit HeavyFootprint(Footprint const& foot,
-                            HeavyFootprintCtrl const* ctrl=NULL);
+#if SWIG
+    /// Create a new HeavyFootprint from an existing data array.
+    static PTR(HeavyFootprint) make(
+        Footprint const & footprint,
+        ndarray::Array<Pixel const,1,1> && pixels
+    );
+#endif
+
+    /// Create a new HeavyFootprint from a copy of an existing data array.
+    static PTR(HeavyFootprint) make(
+        Footprint const & footprint,
+        ndarray::Array<Pixel const,1,1> const & pixels
+    );
+
+    /// Create a new HeavyFootprint by extracting pixels from an image.
+    static HeavyFootprint fromImage(Footprint const & footprint, afw::image::Image<Pixel> const & image);
+
+    // HeavyFootprint is not copyable or moveable: it's immutable, and always held by shared_ptr,
+    // so there's never any need to copy or move it.
+    HeavyFootprint(HeavyFootprint const &) = delete;
+    HeavyFootprint(HeavyFootprint &&) = delete;
+    HeavyFootprint & operator=(HeavyFootprint const &) = delete;
+    HeavyFootprint & operator=(HeavyFootprint &&) = delete;
 
     /**
      * Is this a HeavyFootprint (yes!)
@@ -81,63 +77,61 @@ public:
     virtual bool isHeavy() const { return true; }
 
     /**
-     * Replace all the pixels in the image with the values in the HeavyFootprint.
+     *  Return an equivalent Footprint that is not Heavy.
      */
-    void insert(lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> & mimage) const;
+    virtual PTR(Footprint) withoutPixels() const;
+
+    /**
+     *  More readable shortcut for for HeavyFootprint::make(*this, pixels).
+     */
+    PTR(HeavyFootprint) withNewPixels(ndarray::Array<Pixel const,1,1> const & pixels) const;
+#ifndef SWIG
+    PTR(HeavyFootprint) withNewPixels(ndarray::Array<Pixel const,1,1> && pixels) const;
+#endif
 
     /**
      * Replace all the pixels in the image with the values in the HeavyFootprint.
      */
-    void insert(lsst::afw::image::Image<ImagePixelT> & image) const;
+    void insert(afw::image::Image<Pixel> & image) const;
 
-    ndarray::Array<ImagePixelT,1,1>     getImageArray() { return _image; }
-    ndarray::Array<MaskPixelT,1,1>      getMaskArray() { return _mask; }
-    ndarray::Array<VariancePixelT,1,1>  getVarianceArray() { return _variance; }
+    /// Return the data array that holds the HeavyFootprints pixels, flattened.
+    ndarray::Array<Pixel const,1,1> getPixels() const;
 
-    ndarray::Array<ImagePixelT const,1,1>     getImageArray() const { return _image; }
-    ndarray::Array<MaskPixelT const,1,1>      getMaskArray() const { return _mask; }
-    ndarray::Array<VariancePixelT const,1,1>  getVarianceArray() const { return _variance; }
-
-    /* Returns the OR of all the mask pixels held in this HeavyFootprint. */
-    MaskPixelT getMaskBitsSet() const {
-        MaskPixelT maskbits = 0;
-        for (typename ndarray::Array<MaskPixelT,1,1>::Iterator i = _mask.begin(); i != _mask.end(); ++i) {
-            maskbits |= *i;
-        }
-        return maskbits;
+    /**
+     *  Create a new Footprint by shifting this one's peaks and spans by the given amount.
+     *
+     *  If offset is zero, may return this.
+     */
+    PTR(HeavyFootprint) shiftedBy(geom::Extent2I const & offset) const {
+        return static_pointer_cast<HeavyFootprint>(_shiftedBy(offset));
     }
 
-private:
-    ndarray::Array<ImagePixelT, 1, 1> _image;
-    ndarray::Array<MaskPixelT, 1, 1> _mask;
-    ndarray::Array<VariancePixelT, 1, 1> _variance;
+    /**
+     *  Create a new Footprint by shifting this one's peaks and spans by the given amount.
+     *
+     *  If box already contains the HeavyFootprint, may return this.
+     */
+    PTR(HeavyFootprint) clippedTo(geom::Box2I const & box) const {
+        return static_pointer_cast<HeavyFootprint>(_clippedTo(box));
+    }
+
+    /**
+     *  Sum two HeavyFootprints.
+     *
+     *  The returned HeavyFootprint will have a SpanRegion equal to the union
+     *  of the SpanRegions of the inputs, with pixel values summed where they
+     *  overlap.  Peak lists are concatenated.
+     *
+     *  @throw InvalidParameterError if the SpanRegion union is noncontiguous.
+     */
+    PTR(HeavyFootprint) operator+(HeavyFootprint const & rhs);
+
+protected:
+
+    virtual PTR(Footprint) _shiftedBy(geom::Extent2I const & offset) const;
+    virtual PTR(Footprint) _clippedTo(geom::Box2I const & box) const;
+
 };
-
-/**
- * Create a HeavyFootprint with footprint defined by the given
- * Footprint and pixel values from the given MaskedImage.
- */
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
-    Footprint const& foot,
-    lsst::afw::image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT> const& img,
-    HeavyFootprintCtrl const* ctrl=NULL
-                                                                          )
-{
-    return HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>(foot, img, ctrl);
-}
-
-/**
- * Sum the two given HeavyFootprints *h1* and *h2*, returning a
- * HeavyFootprint with the union footprint, and summed pixels where
- * they overlap.  The peak list is the union of the two inputs.
- */
-template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-boost::shared_ptr<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> >
-mergeHeavyFootprints(
-    HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h1,
-    HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h2
-);
 
 }}}
 

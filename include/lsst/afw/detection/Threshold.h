@@ -63,6 +63,50 @@ public:
              ) : _value(value), _type(type), _polarity(polarity),
                  _includeMultiplier(includeMultiplier) {}
 
+
+    //@{
+    /**
+     *  Detection methods to generate FootprintSets.
+     *
+     *  These used to be FootprintSet constructors, which I found very non-intuitive.  While I think
+     *  making them free functions or FootprintSet static methods would also be viable, I like thinking
+     *  of Threshold as a factory for FootprintSets (and, now, SpanRegions, below).
+     */
+    template <typename ImagePixelT>
+    FootprintSet detectFootprints(image::Image<ImagePixelT> const& img,
+                                  int const npixMin=1, bool const setPeaks=true) const;
+
+    template <typename MaskPixelT>
+    FootprintSet detectFootprints(image::Mask<MaskPixelT> const& img,
+                                  int const npixMin=1) const;
+
+    template <typename ImagePixelT, typename MaskPixelT>
+    FootprintSet detectFootprints(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+                                  std::string const& planeName = "",
+                                  int const npixMin=1, bool const setPeaks=true) const;
+    //@}
+
+    //@{
+    /**
+     *  Detection methods to generate SpanRegions
+     *
+     *  These new methods are similar to the above, except that they don't split the above-threshld
+     *  region up into contiguous subregions, never require a minimum number of pixels, and never
+     *  look for peaks.  As it turns out, the FootprintSet methods above are implemented by finding
+     *  a noncontiguous region, then splitting it up, and then looking for peaks, so we can implement
+     *  those by delegating to these and the new FootprintSet static method makeFootprints().
+     */
+    template <typename ImagePixelT>
+    geom::SpanRegion detectRegion(image::Image<ImagePixelT> const& img) const;
+
+    template <typename MaskPixelT>
+    geom::SpanRegion detectRegion(image::Mask<MaskPixelT> const& img) const;
+
+    template <typename ImagePixelT, typename MaskPixelT>
+    geom::SpanRegion detectRegion(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
+                                  std::string const& planeName = "") const;
+    //@}
+
     //! return type of threshold
     ThresholdType getType() const { return _type; }
 
