@@ -39,7 +39,7 @@ class Camera(DetectorCollection):
         self._transformMap = transformMap
         self._nativeCameraSys = self._transformMap.getNativeCoordSys()
         super(Camera, self).__init__(detectorList)
-  
+
     def getName(self):
         """!Return the camera name
         """
@@ -89,7 +89,7 @@ class Camera(DetectorCollection):
         raise RuntimeError("Could not find mapping from %s to %s"%(fromSys, toSys))
 
     def _transformSingleSys(self, cameraPoint, toSys):
-        """!Transform a CameraPoint with a CameraSys to another CameraSys. 
+        """!Transform a CameraPoint with a CameraSys to another CameraSys.
 
         @warning This method only handles a single jump, not a transform linked by a common native sys.
 
@@ -98,7 +98,7 @@ class Camera(DetectorCollection):
         """
         fromSys = cameraPoint.getCameraSys()
         if fromSys.hasDetectorName():
-            # use from detector to transform 
+            # use from detector to transform
             det = self[fromSys.getDetectorName()]
             return det.transform(cameraPoint, toSys)
         elif toSys.hasDetectorName():
@@ -110,16 +110,16 @@ class Camera(DetectorCollection):
             outPoint = self._transformMap.transform(cameraPoint.getPoint(), cameraPoint.getCameraSys(), toSys)
             return CameraPoint(outPoint, toSys)
         raise RuntimeError("Could not find mapping from %s to %s"%(cameraPoint.getCameraSys(), toSys))
-        
+
     def findDetectors(self, cameraPoint):
         """!Find the detectors that cover a given cameraPoint, or empty list
-        
+
         @param[in] cameraPoint  position to use in lookup
         @return a list of zero or more Detectors that overlap the specified point
         """
         # first convert to focalPlane since the point may be in another overlapping detector
         nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
-        
+
         detectorList = []
         for detector in self:
             cameraSys = detector.makeCameraSys(PIXELS)
@@ -159,7 +159,7 @@ class Camera(DetectorCollection):
         return detectorList
 
     def getTransformMap(self):
-        """!Obtain a pointer to the transform registry.  
+        """!Obtain a pointer to the transform registry.
 
         @return a TransformMap
 
