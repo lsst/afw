@@ -152,8 +152,9 @@ class Camera(DetectorCollection):
             coordMap = detector.getTransformMap()
             cameraSys = detector.makeCameraSys(PIXELS)
             detectorPoints = coordMap.transform(nativePoints, self._nativeCameraSys, cameraSys)
+            box = afwGeom.Box2D(detector.getBBox())
             for i, pt in enumerate(detectorPoints):
-                if afwGeom.Box2D(detector.getBBox()).contains(pt):
+                if box.contains(pt):
                     detectorList[i].append(detector)
 
         return detectorList
