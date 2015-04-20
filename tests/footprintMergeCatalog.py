@@ -197,7 +197,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
                     self.assertFalse(peak.get("merge.peak.1"))
                     self.assertTrue(peak.get("merge.peak.2"))
 
-        # Add all the catalogs with minPeak = 0 so all peaks will not be added
+        # Add all the catalogs with minPeak = 0 so all peaks will be added
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
                                           ["1", "2", "3"], [0, 0, 0],
                                           self.idFactory)

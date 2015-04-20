@@ -188,7 +188,7 @@ private:
 
             if (minDist2 < maxSamePeakDist2 && nearestPeak && keys && maxSamePeakDist > 0) {
                 nearestPeak->set(keys->peak, true);
-            } else if (minDist2 > minNewPeakDist2 && minNewPeakDist > 0) {
+            } else if (minDist2 > minNewPeakDist2 && !(minNewPeakDist < 0)) {
                 if (peakSchemaMapper) {
                     PTR(PeakRecord) newPeak = newPeaks.addNew();
                     newPeak->assign(*otherIter, *peakSchemaMapper);
