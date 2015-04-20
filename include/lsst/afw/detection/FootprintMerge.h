@@ -103,8 +103,14 @@ public:
      *
      *  The SourceTable is used to create new SourceRecords that store the filter information.
      */
-    void addCatalog(PTR(afw::table::SourceTable) sourceTable, afw::table::SourceCatalog const &inputCat,
-                    std::string const & filter, float minNewPeakDist=-1., bool doMerge=true);
+    void addCatalog(
+        PTR(afw::table::SourceTable) sourceTable,
+        afw::table::SourceCatalog const &inputCat,
+        std::string const & filter,
+        float minNewPeakDist=-1.,
+        bool doMerge=true,
+        float maxSamePeakDist=-1.
+    );
 
     /**
      *  @brief Clear entries in the current vector
