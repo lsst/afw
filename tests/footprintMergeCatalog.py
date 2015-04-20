@@ -19,15 +19,16 @@ def insertPsf(pos, im, psf, kernelSize, flux):
         tmp *= flux
         im.getImage()[tmpbox] += tmp
 
-def mergeCatalogs(catList, names, peakDist, idFactory, indivNames=[]):
+def mergeCatalogs(catList, names, peakDist, idFactory, indivNames=[], samePeakDist=-1.):
     schema = afwTable.SourceTable.makeMinimalSchema()
     merged = afwDetect.FootprintMergeList(schema, names)
 
-    if not indivNames: indivNames = names
+    if not indivNames:
+        indivNames = names
+
     # Count the number of objects and peaks in this list
     mergedList = merged.getMergedSourceCatalog(catList, indivNames, peakDist,
-                                               schema, idFactory)
-
+                                               schema, idFactory, samePeakDist)
     nob = len(mergedList)
     npeaks = sum([ len(ob.getFootprint().getPeaks()) for ob in mergedList])
 
@@ -49,7 +50,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         """Build up three different sets of objects that are to be merged"""
         pos1 = [(40, 40), (220, 35), (40, 48), (220, 50),
                 (67, 67),(150, 50), (40, 90), (70, 160),
-                (35, 255), (70, 180), (250, 200), (120, 120), 
+                (35, 255), (70, 180), (250, 200), (120, 120),
                 (170, 180),(100, 210), (20, 210),
                 ]
         pos2 = [(43, 45), (215, 31), (171, 258), (211, 117),
@@ -195,7 +196,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
                     self.assertFalse(peak.get("merge.peak.1"))
                     self.assertTrue(peak.get("merge.peak.2"))
 
-        # Add all the catalogs with minPeak = 0 so all peaks will not be added
+        # Add all the catalogs with minPeak = 0 so all peaks will be added
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
                                           ["1", "2", "3"], [0, 0, 0],
                                           self.idFactory)
@@ -247,6 +248,24 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
                     self.assertTrue(isPeakInCatalog(peak, self.catalog3))
                 else:
                     self.fail("At least one merge.peak flag must be set")
+
+        # Add footprints with large samePeakDist so that any footprint that merges will also
+        # have the peak flagged
+        merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
+                                          ["1", "2", "3"], 100, self.idFactory, samePeakDist=40)
+
+        # peaks detected in more than one catalog
+        multiPeakIndex = [0, 2, 5, 7, 9]
+        peakIndex = 0
+        for record in merge:
+            for peak in record.getFootprint().getPeaks():
+                numPeak = np.sum([peak.get("merge.peak.1"),peak.get("merge.peak.2"),
+                                  peak.get("merge.peak.3")])
+                if peakIndex in multiPeakIndex:
+                    self.assertTrue(numPeak > 1)
+                else:
+                    self.assertTrue(numPeak == 1)
+                peakIndex += 1
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

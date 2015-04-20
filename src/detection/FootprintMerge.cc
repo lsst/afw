@@ -101,12 +101,13 @@ public:
         PTR(Footprint) footprint,
         afw::table::SchemaMapper const & peakSchemaMapper,
         KeyTuple const & keys,
-        float minNewPeakDist=-1.
+        float minNewPeakDist=-1.,
+        float maxSamePeakDist=-1.
     ) {
         if (_addSpans(footprint)) {
             _footprints.push_back(footprint);
             _source->set(keys.footprint, true);
-            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist);
+            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist, maxSamePeakDist);
         }
     }
 
@@ -119,7 +120,12 @@ public:
      *
      *  If foot does not overlap it will do nothing.
      */
-    void add(FootprintMerge const & other, FilterMap const & keys, float minNewPeakDist=-1.) {
+    void add(
+        FootprintMerge const & other,
+        FilterMap const & keys,
+        float minNewPeakDist=-1.,
+        float maxSamePeakDist=-1.
+        ) {
         if (_addSpans(other.getMergedFootprint())) {
             _footprints.insert(_footprints.end(), other._footprints.begin(), other._footprints.end());
             // Set source flags to the OR of the flags of the two inputs
@@ -127,7 +133,7 @@ public:
                 afw::table::Key<afw::table::Flag> const & flagKey = i->second.footprint;
                 _source->set(flagKey, _source->get(flagKey) || other._source->get(flagKey));
             }
-            _addPeaks(other.getMergedFootprint()->getPeaks(), NULL, NULL, minNewPeakDist);
+            _addPeaks(other.getMergedFootprint()->getPeaks(), NULL, NULL, minNewPeakDist, maxSamePeakDist);
         }
     }
 
@@ -154,28 +160,35 @@ private:
         PeakCatalog const & otherPeaks,
         afw::table::SchemaMapper const * peakSchemaMapper,
         KeyTuple const * keys,
-        float minNewPeakDist
+        float minNewPeakDist,
+        float maxSamePeakDist
     ) {
-        if (minNewPeakDist < 0) return;
+        if (minNewPeakDist < 0 && maxSamePeakDist < 0) return;
 
         PeakCatalog & currentPeaks = getMergedFootprint()->getPeaks();
-
+        PTR(PeakRecord) nearestPeak;
         // Create new list of peaks
         PeakCatalog newPeaks(currentPeaks.getTable());
         float minNewPeakDist2 = minNewPeakDist*minNewPeakDist;
+        float maxSamePeakDist2 = maxSamePeakDist*maxSamePeakDist;
         for (PeakCatalog::const_iterator otherIter = otherPeaks.begin();
              otherIter != otherPeaks.end(); ++otherIter) {
 
             float minDist2 = std::numeric_limits<float>::infinity();
+
             for (PeakCatalog::const_iterator currentIter = currentPeaks.begin();
                  currentIter != currentPeaks.end(); ++currentIter) {
                 float dist2 = otherIter->getI().distanceSquared(currentIter->getI());
+
                 if (dist2 < minDist2) {
                     minDist2 = dist2;
+                    nearestPeak = currentIter;
                 }
             }
 
-            if (minDist2 > minNewPeakDist2) {
+            if (minDist2 < maxSamePeakDist2 && nearestPeak && keys && maxSamePeakDist > 0) {
+                nearestPeak->set(keys->peak, true);
+            } else if (minDist2 > minNewPeakDist2 && !(minNewPeakDist < 0)) {
                 if (peakSchemaMapper) {
                     PTR(PeakRecord) newPeak = newPeaks.addNew();
                     newPeak->assign(*otherIter, *peakSchemaMapper);
@@ -184,6 +197,7 @@ private:
                     newPeaks.push_back(otherIter);
                 }
             }
+
         }
 
         getMergedFootprint()->getPeaks().insert(
@@ -241,7 +255,7 @@ void FootprintMergeList::addCatalog(
     PTR(afw::table::SourceTable) sourceTable,
     afw::table::SourceCatalog const &inputCat,
     std::string const & filter,
-    float minNewPeakDist, bool doMerge
+    float minNewPeakDist, bool doMerge, float maxSamePeakDist
 ) {
     FilterMap::const_iterator keyIter = _filterMap.find(filter);
     if (keyIter == _filterMap.end()) {
@@ -277,12 +291,13 @@ void FootprintMergeList::addCatalog(
                         first = *iter;
                         // Add Footprint to existing merge and set flag for this band
                         if (doMerge) {
-                            first->add(foot, _peakSchemaMapper, keyIter->second, minNewPeakDist);
+                            first->add(foot, _peakSchemaMapper, keyIter->second, minNewPeakDist,
+                                       maxSamePeakDist);
                         }
                     } else {
                         // Add merged Footprint to first
                         if (doMerge) {
-                            first->add(**iter, _filterMap, minNewPeakDist);
+                            first->add(**iter, _filterMap, minNewPeakDist, maxSamePeakDist);
                             iter = _mergeList.erase(iter);
                             continue;
                         }
