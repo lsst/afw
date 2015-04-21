@@ -44,7 +44,9 @@ class Mapping(object):
     def __init__(self, minimum=None, image=None):
         """!Create a mapping
         \param minimum  Intensity that should be mapped to black (a scalar or array for R, G, B)
-        \param image The image to be used to calculate the mapping.  If provided, also the default for makeRgbImage()
+        \param image The image to be used to calculate the mapping.
+
+        If provided, also the default for makeRgbImage()
         """
         self._uint8Max = float(np.iinfo(np.uint8).max)
 
@@ -57,11 +59,15 @@ class Mapping(object):
         self.minimum = minimum
         self._image = image
 
-    def makeRgbImage(self, imageR=None, imageG=None, imageB=None):
+    def makeRgbImage(self, imageR=None, imageG=None, imageB=None,
+                     xSize=None, ySize=None, rescaleFactor=None):
         """!Convert 3 arrays, imageR, imageG, and imageB into a numpy RGB image
         \param imageR Image to map to red (if None, use the image passed to the ctor)
         \param imageG Image to map to green (if None, use imageR)
         \param imageB Image to map to blue (if None, use imageR)
+        \param xSize  Desired width of RGB image (or None).  If ySize is None, preserve aspect ratio
+        \param ySize  Desired height of RGB image (or None)
+        \param rescaleFactor Make size of output image rescaleFactor*size of the input image (or None)
 
         N.b. images may be afwImage.Images or numpy arrays
         """
@@ -82,6 +88,29 @@ class Mapping(object):
             if hasattr(c, "getArray"):
                 imageRGB[i] = c.getArray()
 
+        if xSize is not None or ySize is not None:
+            assert rescaleFactor is None, "You may not specify a size and rescaleFactor"
+            h, w = imageRGB[0].shape
+            if ySize is None:
+                ySize = int(xSize*h/float(w) + 0.5)
+            elif xSize is None:
+                xSize = int(ySize*w/float(h) + 0.5)
+
+            size = (ySize, xSize) # n.b. y, x order for scipy
+        elif rescaleFactor is not None:
+            size = float(rescaleFactor) # an int is intepreted as a percentage
+        else:
+            size = None
+
+        if size is not None:
+            try:
+                import scipy.misc
+            except ImportError as e:
+                raise RuntimeError("Unable to rescale as scipy.misc is unavailable: %s" % e)
+
+            for i, im in enumerate(imageRGB):
+                imageRGB[i] = scipy.misc.imresize(im, size, interp='bilinear', mode='F')
+            
         return np.dstack(self._convertImagesToUint8(*imageRGB)).astype(np.uint8)
 
     def intensity(self, imageR, imageG, imageB):
@@ -272,7 +301,8 @@ class AsinhZScaleMapping(AsinhMapping):
         self._image = image             # support self.makeRgbImage()
 
 def makeRGB(imageR, imageG=None, imageB=None, minimum=0, range=5, Q=20, fileName=None,
-            saturatedBorderWidth=0, saturatedPixelValue=None):
+            saturatedBorderWidth=0, saturatedPixelValue=None,
+            xSize=None, ySize=None, rescaleFactor=None):            
     """Make a set of three images into an RGB image using an asinh stretch and optionally write it to disk
 
     If saturatedBorderWidth is non-zero, replace saturated pixels with saturatedPixelValue.  Note
@@ -289,7 +319,9 @@ def makeRGB(imageR, imageG=None, imageB=None, minimum=0, range=5, Q=20, fileName
         replaceSaturatedPixels(imageR, imageG, imageB, saturatedBorderWidth, saturatedPixelValue)
 
     asinhMap = AsinhMapping(minimum, range, Q)
-    rgb = asinhMap.makeRgbImage(imageR, imageG, imageB)
+    rgb = asinhMap.makeRgbImage(imageR, imageG, imageB,
+                                xSize=xSize, ySize=ySize, rescaleFactor=rescaleFactor)
+
     if fileName:
         writeRGB(fileName, rgb)
 
