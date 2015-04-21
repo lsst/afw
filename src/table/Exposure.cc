@@ -72,12 +72,17 @@ struct PersistenceSchema : private boost::noncopyable {
         std::vector<Schema> inSchemas;
         inSchemas.push_back(PersistenceSchema::get().schema);
         inSchemas.push_back(inputSchema);
-        return SchemaMapper::join(inSchemas).back(); // don't need front; it's an identity mapper
+        // don't need front; it's an identity mapper
+        SchemaMapper result = SchemaMapper::join(inSchemas).back();
+        result.editOutputSchema().setAliasMap(inputSchema.getAliasMap());
+        return result;
     }
 
     // Create a SchemaMapper that maps a BaseRecord with IDs for Psf and Wcs to an ExposureRecord
     SchemaMapper makeReadMapper(Schema const & inputSchema) const {
-        return SchemaMapper::removeMinimalSchema(inputSchema, schema);
+        SchemaMapper result = SchemaMapper::removeMinimalSchema(inputSchema, schema);
+        result.editOutputSchema().setAliasMap(inputSchema.getAliasMap());
+        return result;
     }
 
     // Convert an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.

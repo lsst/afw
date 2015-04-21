@@ -25,7 +25,6 @@
 %{
 #include "boost/shared_ptr.hpp"
 #include "lsst/afw/detection/Threshold.h"
-#include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintCtrl.h"
 #include "lsst/afw/detection/HeavyFootprint.h"
@@ -52,29 +51,26 @@ typedef lsst::afw::geom::Span Span;
 // already in image.i.
 // %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
-%shared_ptr(lsst::afw::detection::Peak);
 %declareTablePersistable(Footprint, lsst::afw::detection::Footprint);
 %shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
 
 %declareNumPyConverters(ndarray::Array<unsigned short,1,1>);
 %declareNumPyConverters(ndarray::Array<float,1,1>);
 
-%define %HeavyFootprintPtr(PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
-%shared_ptr(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>);
+%define %HeavyFootprintPtr(NAME, PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
+%declareTablePersistable(HeavyFootprint ## NAME, lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>);
 %declareNumPyConverters(ndarray::Array<PIXEL_TYPE,1,1>);
 %enddef
 
-%HeavyFootprintPtr(int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
-%HeavyFootprintPtr(float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+%HeavyFootprintPtr(I, int,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
+%HeavyFootprintPtr(F, float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel)
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
-%template(PeakContainerT)      std::vector<boost::shared_ptr<lsst::afw::detection::Peak> >;
 %template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::geom::Span> >;
 %template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
 
 %include "lsst/afw/detection/Threshold.h"
-%include "lsst/afw/detection/Peak.h"
 %include "lsst/afw/detection/Footprint.h"
 %include "lsst/afw/detection/FootprintCtrl.h"
 %include "lsst/afw/detection/HeavyFootprint.h"

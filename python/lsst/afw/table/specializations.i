@@ -118,6 +118,7 @@
 }
 %extend lsst::afw::table::FieldBase< lsst::afw::table::Array< U > > {
     int getSize() const { return self->getSize(); }
+    bool isVariableLength() const { return self->isVariableLength(); }
 }
 %extend lsst::afw::table::BaseRecord {
 
@@ -126,7 +127,20 @@
 
     ndarray::Array<U const,1,1> getArray##PYNAME(lsst::afw::table::Key< Array< U > > const & key) const
     { return self->get(key); }
-    
+
+    void set(
+        lsst::afw::table::Key< Array< U > > const & key,
+        ndarray::Array<U,1,1> const & v
+    ) {
+        self->set(key, v);
+    }
+    void setArray##PYNAME(
+        lsst::afw::table::Key< Array< U > > const & key,
+        ndarray::Array<U,1,1> const & v
+    ) {
+        self->set(key, v);
+    }
+
     void set(
         lsst::afw::table::Key< Array< U > > const & key,
         ndarray::Array<U const,1> const & v
@@ -429,6 +443,7 @@
     %}
 }
 
+%specializeScalar(boost::uint16_t, U)
 %specializeScalar(boost::int32_t, I)
 %specializeScalar(boost::int64_t, L)
 %specializeScalar(float, F)
@@ -436,11 +451,11 @@
 %specializeScalar(lsst::afw::geom::Angle, Angle)
 
 %specializePoint(boost::int32_t, I, lsst::afw::geom::Point<int,2>)
-%specializePoint(float, F, lsst::afw::geom::Point<double,2>)
 %specializePoint(double, D, lsst::afw::geom::Point<double,2>)
-%specializeMoments(float, F, lsst::afw::geom::ellipses::Quadrupole)
 %specializeMoments(double, D, lsst::afw::geom::ellipses::Quadrupole)
 
+%specializeArray(boost::uint16_t, U)
+%specializeArray(int, I)
 %specializeArray(float, F)
 %specializeArray(double, D)
 %specializeCovariance(float, F)

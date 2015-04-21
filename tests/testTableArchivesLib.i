@@ -39,6 +39,7 @@
 #include "lsst/pex/logging.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/cameraGeom.h"
+#include "lsst/afw/table.h"
 %}
 
 %import "lsst/afw/detection/detectionLib.i"

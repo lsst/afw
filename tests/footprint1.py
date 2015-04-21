@@ -215,8 +215,8 @@ class FootprintTestCase(utilsTests.TestCase):
     def testTablePersistence(self):
         ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25), afwGeom.Point2D(9,15))
         fp1 = afwDetect.Footprint(ellipse)
-        fp1.getPeaks().push_back(afwDetect.Peak(6,7,2))
-        fp1.getPeaks().push_back(afwDetect.Peak(8,9,3))
+        fp1.addPeak(6, 7, 2)
+        fp1.addPeak(8, 9, 3)
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             fp1.writeFits(tmpFile)
             fp2 = afwDetect.Footprint.readFits(tmpFile)
@@ -960,9 +960,9 @@ class FootprintTestCase(utilsTests.TestCase):
         """
         region = afwGeom.Box2I(afwGeom.Point2I(-6, -6), afwGeom.Point2I(6, 6))
         parent = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-2, -2), afwGeom.Point2I(2, 2)), region)
-        parent.getPeaks().push_back(afwDetect.Peak(0, 0))
+        parent.addPeak(0, 0, float("NaN"))
         child1 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-3, 0), afwGeom.Point2I(0, 3)), region)
-        child1.getPeaks().push_back(afwDetect.Peak(-1, 1))
+        child1.addPeak(-1, 1, float("NaN"))
         child2 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(-4, -3), afwGeom.Point2I(-1, 0)), region)
         child3 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(4, -1), afwGeom.Point2I(6, 1)))
         merge12 = afwDetect.Footprint(parent)

@@ -90,6 +90,12 @@ typename ndarray::ArrayRef<T,1> const BaseColumnView::operator[](Key<T> const & 
 
 template <typename T>
 typename ndarray::ArrayRef<T,2,1> const BaseColumnView::operator[](Key< Array<T> > const & key) const {
+    if (key.isVariableLength()) {
+        throw LSST_EXCEPT(
+            pex::exceptions::LogicError,
+            "Cannot get columns for variable-length array fields"
+        );
+    }
     return ndarray::external(
         reinterpret_cast<T *>(
             reinterpret_cast<char *>(_impl->buf) + key.getOffset()

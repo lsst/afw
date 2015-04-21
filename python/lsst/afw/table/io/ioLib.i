@@ -51,7 +51,7 @@ Python interface to lsst::afw::table::io classes
 
 %shared_ptr(lsst::afw::table::io::Persistable);
 
-%define %declareTablePersistable(NAME, T)
+%define %declareTablePersistable(NAME, T...)
 %shared_ptr(lsst::afw::table::io::Persistable);
 %shared_ptr(lsst::afw::table::io::PersistableFacade< T >);
 %shared_ptr(T);

@@ -73,13 +73,6 @@ public:
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
 
-    template <typename ImagePixelT, typename MaskPixelT>
-    FootprintSet(image::MaskedImage<ImagePixelT, MaskPixelT> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
-
 #else // workaround for https://github.com/swig/swig/issues/245
     // if that bug is fixed then you may update footprintset.i by uncommenting two lines
     // and removing this section. However, you must continue to provide SWIG
@@ -97,11 +90,6 @@ public:
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
 
     FootprintSet(image::Image<int> const& img,
                  Threshold const& threshold,
@@ -110,11 +98,6 @@ public:
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<int, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
 
     FootprintSet(image::Image<float> const& img,
                  Threshold const& threshold,
@@ -123,11 +106,6 @@ public:
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<float, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
 
     FootprintSet(image::Image<double> const& img,
                  Threshold const& threshold,
@@ -136,11 +114,6 @@ public:
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<double, image::MaskPixel> const& img,
-                 Threshold const& threshold,
-                 int x,
-                 int y,
-                 std::vector<PTR(Peak)> const* peaks = NULL);
 
 #endif
 

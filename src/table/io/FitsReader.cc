@@ -50,7 +50,7 @@ struct FitsSchemaItem {
 
     // Add the field defined by the strings to a schema.
     void addField(Schema & schema) const {
-        static boost::regex const regex("(\\d+)?(\\u)(\\d)*", boost::regex::perl);
+        static boost::regex const regex("(\\d+)?([PQ])?(\\u)\\(?(\\d)*\\)?", boost::regex::perl);
         // start by parsing the format; this tells the element type of the field and the number of elements
         boost::smatch m;
         if (!boost::regex_match(format, m, regex)) {
@@ -60,16 +60,34 @@ struct FitsSchemaItem {
             );
         }
         int size = 1;
-        if (m[1].matched)
-            size = boost::lexical_cast<int>(m[1].str());        
-        char code = m[2].str()[0];
+        if (m[1].matched) {
+            size = boost::lexical_cast<int>(m[1].str());
+        }
+        char code = m[3].str()[0];
+        if (m[2].matched) {
+            // P or Q presence indicates a variable-length array, which we can get by just setting the
+            // size to zero and letting the rest of the logic run its course.
+            size = 0;
+        }
         // switch code over FITS codes that correspond to different element types
         switch (code) {
+        case 'I': // 16-bit integers - can only be scalars or Arrays (we assume they're unsigned, since
+                  // that's all we ever write, and CFITSIO will complain later if they aren't)
+            if (size == 1) {
+                if (cls == "Array") {
+                    schema.addField< Array<boost::uint16_t> >(name, doc, units, size);
+                } else {
+                    schema.addField<boost::uint16_t>(name, doc, units);
+                }
+            } else {
+                schema.addField< Array<boost::uint16_t> >(name, doc, units, size);
+            }
+            break;
         case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
             if (size == 1) {
                 if (cls == "Array") {
                     schema.addField< Array<boost::int32_t> >(name, doc, units, size);
-                } else { 
+                } else {
                     schema.addField<boost::int32_t>(name, doc, units);
                 }
             } else if (size == 2) {
@@ -128,7 +146,7 @@ struct FitsSchemaItem {
             return;
         } else if (size == 2) {
             if (cls == "Point") {
-                schema.addField< Point<U> >(name, doc, units);
+                schema.addField< Point<double> >(name, doc, units);
                 return;
             }
             if (cls == "Coord") {
@@ -137,7 +155,7 @@ struct FitsSchemaItem {
             }
         } else if (size == 3) {
             if (cls == "Moments") {
-                schema.addField< Moments<U> >(name, doc, units);
+                schema.addField< Moments<double> >(name, doc, units);
                 return;
             }
             if (cls == "Covariance(Point)") {
@@ -363,6 +381,14 @@ void FitsReader::_readSchema(
             }
             intermediate.asColSet().modify(i, FitsSchema::SetFormat(metadata.get<std::string>(*key)));
             if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TZERO") == 0) {
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TSCAL") == 0) {
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TNULL") == 0) {
+            if (stripMetadata) metadata.remove(*key);
+        } else if (key->compare(0, 5, "TDISP") == 0) {
+            if (stripMetadata) metadata.remove(*key);
         }
     }
     
@@ -422,6 +448,20 @@ struct FitsReader::ProcessRecords {
     void operator()(SchemaItem<T> const & item) const {
         if (col == flagCol) ++col;
         fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        ++col;
+    }
+
+    template <typename T>
+    void operator()(SchemaItem< Array<T> > const & item) const {
+        if (col == flagCol) ++col;
+        if (item.key.isVariableLength()) {
+            int size = fits->getTableArraySize(row, col);
+            ndarray::Array<T,1,1> array = ndarray::allocate(size);
+            fits->readTableArray(row, col, size, array.getData());
+            record->set(item.key, array);
+        } else {
+            fits->readTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
+        }
         ++col;
     }
 

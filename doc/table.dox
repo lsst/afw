@@ -170,6 +170,27 @@ namespace lsst { namespace afw { namespace table {
  *  Other field strings (documentation and units) are essentially arbitrary, but should not contain
  *  single quotes, as these may also confuse FITS parsers (even when escaped).
  *
+ *  @section afwTableVariableLengthArrays Variable-Length Arrays
+ *
+ *  Variable-length array fields (@c Array<T> fields with a size of @c 0) work in a fundamentally different
+ *  way from all other types - instead of using some of the contiguous memory block that other fields
+ *  occupy, these fields are simply a reference-counted pointer and size to separately-allocated
+ *  memory.  That means it's impossible to get column views for them, and there's a bit more overhead
+ *  for each one.  Whenever an array size can be known in advance, it's better to use a fixed-length
+ *  array field instead.
+ *
+ *  Variable-length array fields also behave slightly differently when assigned to, as compared to
+ *  fixed-length array fields: using @c BaseRecord.set() to assign assign a new array to a variable-length
+ *  field will replace the old value entirely with a reference to the new array, without copying any
+ *  values ("shallow assignment"), while assigning to a fixed-length array field will copy the values
+ *  into the record's memory block ("deep assignment").  In order to copy values into a variable-length
+ *  array, retrieve a reference to the array using square bracket [] operators, then assign to that.
+ *  In code, if @c key is a @c Key to a variable-length array field,
+ *  @code
+ *  record.set(key, array);   // shallow: doesn't copy values, just reset pointers, size can change
+ *  record[key] = array;      // deep: copies values, doesn't modify pointers, sizes must match
+ *  @endcode
+ *
  *  @section afwTableFieldTypes Field Types
  *  In C++, field types are defined by the template arguments to Key and Field (among others).  Empty
  *  tag templates (Array, Point, Moments, Covariance) are used for compound fields.  In Python, strings
@@ -244,21 +265,17 @@ namespace lsst { namespace afw { namespace table {
  *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
  *  </tr>
  *  <tr>
- *  <td>Point<float></td> <td>"PointF"</td> <td></td> <td>afw::geom::Point2D</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
- *  </tr>
- *  <tr>
  *  <td>Point<double></td> <td>"PointD"</td> <td>afw.geom.Point2D</td> <td>afw::geom::Point2D</td>
  *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
- *  </tr>
- *  <tr>
- *  <td>Moments<float></td> <td>"MomentsF"</td> <td></td> <td>afw::geom::ellipses::Quadrupole</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>xx, yy, xy</td> <td></td>
  *  </tr>
  *  <tr>
  *  <td>Moments<double></td> <td>"MomentsD"</td> <td>afw.geom.ellipses.Quadrupole</td>
  *  <td>afw::geom::ellipses::Quadrupole</td>
  *  <td>No</td> <td>No</td> <td>No</td> <td>xx, yy, xy</td> <td></td>
+ *  </tr>
+ *  <tr>
+ *  <td>Array<int></td> <td>"ArrayI"</td> <td></td> <td>ndarray::Array<int,1></td>
+ *  <td>Yes</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an ndarray::ArrayRef</td>
  *  </tr>
  *  <tr>
  *  <td>Array<float></td> <td>"ArrayF"</td> <td></td> <td>ndarray::Array<float,1></td>

@@ -46,14 +46,6 @@
 #include "lsst/afw/table/fwd.h"
 #include "lsst/afw/table/io/Persistable.h"
 
-namespace boost { namespace serialization {
-    class access;
-}}
-
-#ifndef SWIG
-using boost::serialization::make_nvp;
-#endif
-
 namespace lsst { namespace afw { namespace detection {
 
 using geom::Span;
@@ -77,7 +69,6 @@ public:
 
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;
-    typedef std::vector<Peak::Ptr> PeakList;
 
     /**
      * Create a Footprint
@@ -121,17 +112,20 @@ public:
     const SpanList& getSpans() const { return _spans; }
 
     /**
-     * Return the Peak%s contained in this Footprint
+     * Return the Peaks contained in this Footprint
      *
-     * The peaks are ordered by decreasing pixel intensity at the peak
-     * position (so the most negative peak appears last).
+     * The peaks should be ordered by decreasing pixel intensity at the peak position (so the most negative
+     * peak appears last).  Users that add new Peaks manually are responsible for maintaining this sorting.
      */
-    PeakList & getPeaks() { return _peaks; }
-    const PeakList & getPeaks() const { return _peaks; }
+    PeakCatalog & getPeaks() { return _peaks; }
+    const PeakCatalog & getPeaks() const { return _peaks; }
+
+    /// Convenience function to add a peak (since that'd now be multiple lines without this function)
+    PTR(PeakRecord) addPeak(float fx, float fy, float value);
 
     /**
      * Return the number of pixels in this Footprint (the real number
-     * of pixels, not the area of the bbox.
+     * of pixels, not the area of the bbox).
      */
     int getNpix() const { return _area; }
 
@@ -318,9 +312,6 @@ protected:
     friend class FootprintFactory;
 
 private:
-    friend class boost::serialization::access;
-    template <typename Archive>
-    void serialize(Archive & ar, const unsigned int version);
 
     static int id;
     mutable int _fid;                    //!< unique ID
@@ -328,7 +319,7 @@ private:
 
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
-    PeakList _peaks;                     //!< the Peaks lying in this footprint
+    PeakCatalog _peaks;                     //!< the Peaks lying in this footprint
     mutable geom::Box2I _region;         //!< The corners of the MaskedImage the footprints live in
     bool _normalized;                    //!< Are the spans sorted?
 };

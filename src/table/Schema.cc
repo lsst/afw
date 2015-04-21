@@ -525,46 +525,16 @@ std::set<std::string> SchemaImpl::getNames(bool topOnly, std::string const & pre
 }
 
 template <typename T>
-Key<T> SchemaImpl::addField(Field<T> const & field, bool doReplace) {
-    static int const ELEMENT_SIZE = sizeof(typename Field<T>::Element);
-    std::pair<NameMap::iterator,bool> result
-        = _names.insert(std::pair<std::string,int>(field.getName(), _items.size()));
-    if (!result.second) {
-        if (doReplace) {
-            SchemaItem<T> * item = boost::get< SchemaItem<T> >(&_items[result.first->second]);
-            if (!item) {
-                throw LSST_EXCEPT(
-                    lsst::pex::exceptions::TypeError,
-                    (boost::format("Cannot replace field with name '%s' because types differ.")
-                     % field.getName()).str()
-                );
-            }
-            if (item->field.getElementCount() != field.getElementCount()) {
-                throw LSST_EXCEPT(
-                    lsst::pex::exceptions::TypeError,
-                    (boost::format("Cannot replace field with name '%s' because sizes differ.")
-                     % field.getName()).str()
-                );
-            }
-            item->field = field;
-            return item->key;
-        } else {
-            throw LSST_EXCEPT(
-                lsst::pex::exceptions::InvalidParameterError,
-                (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
-            );
-        }
-    } else {
-        int padding = ELEMENT_SIZE - _recordSize % ELEMENT_SIZE;
-        if (padding != ELEMENT_SIZE) {
-            _recordSize += padding;
-        }
-        SchemaItem<T> item(detail::Access::makeKey(field, _recordSize), field);
-        _recordSize += field.getElementCount() * ELEMENT_SIZE;
-        _offsets.insert(std::pair<int,int>(item.key.getOffset(), _items.size()));
-        _items.push_back(item);
-        return item.key;
+Key< Array<T> > SchemaImpl::addField(Field< Array<T> > const & field, bool doReplace) {
+    if (field.isVariableLength()) {
+        return addFieldImpl(sizeof(ndarray::Array<T,1,1>), 1, field, doReplace);
     }
+    return addFieldImpl(sizeof(typename Field<T>::Element), field.getElementCount(), field, doReplace);
+}
+
+template <typename T>
+Key<T> SchemaImpl::addField(Field<T> const & field, bool doReplace) {
+    return addFieldImpl(sizeof(typename Field<T>::Element), field.getElementCount(), field, doReplace);
 }
 
 Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
@@ -578,6 +548,13 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
                 throw LSST_EXCEPT(
                     lsst::pex::exceptions::TypeError,
                     (boost::format("Cannot replace field with name '%s' because types differ.")
+                     % field.getName()).str()
+                );
+            }
+            if (item->field.getElementCount() != field.getElementCount()) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::TypeError,
+                    (boost::format("Cannot replace field with name '%s' because sizes differ.")
                      % field.getName()).str()
                 );
             }
@@ -607,6 +584,51 @@ Key<Flag> SchemaImpl::addField(Field<Flag> const & field, bool doReplace) {
                 _items.size()
             )
         );
+        _items.push_back(item);
+        return item.key;
+    }
+}
+
+template <typename T>
+Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> const & field, bool doReplace) {
+    std::pair<NameMap::iterator,bool> result
+        = _names.insert(std::pair<std::string,int>(field.getName(), _items.size()));
+    if (!result.second) {
+        if (doReplace) {
+            SchemaItem<T> * item = boost::get< SchemaItem<T> >(&_items[result.first->second]);
+            if (!item) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::TypeError,
+                    (boost::format("Cannot replace field with name '%s' because types differ.")
+                     % field.getName()).str()
+                );
+            }
+            // n.b. we don't use elementCount here because we *do* want variable length arrays (for
+            // which we set elementCount == 1, but field->getElementCount() == -1) to compare as different
+            // from fixed-length arrays with a single element.
+            if (item->field.getElementCount() != field.getElementCount()) {
+                throw LSST_EXCEPT(
+                    lsst::pex::exceptions::TypeError,
+                    (boost::format("Cannot replace field with name '%s' because sizes differ.")
+                     % field.getName()).str()
+                );
+            }
+            item->field = field;
+            return item->key;
+        } else {
+            throw LSST_EXCEPT(
+                lsst::pex::exceptions::InvalidParameterError,
+                (boost::format("Field with name '%s' already present in schema.") % field.getName()).str()
+            );
+        }
+    } else {
+        int padding = elementSize - _recordSize % elementSize;
+        if (padding != elementSize) {
+            _recordSize += padding;
+        }
+        SchemaItem<T> item(detail::Access::makeKey(field, _recordSize), field);
+        _recordSize += elementCount * elementSize;
+        _offsets.insert(std::pair<int,int>(item.key.getOffset(), _items.size()));
         _items.push_back(item);
         return item.key;
     }

@@ -153,7 +153,7 @@ namespace {
      * Sort peaks by decreasing pixel value.  N.b. -ve peaks are sorted the same way as +ve ones
      */
     struct SortPeaks {
-	bool operator()(CONST_PTR(detection::Peak) a, CONST_PTR(detection::Peak) b) {
+	bool operator()(CONST_PTR(detection::PeakRecord) a, CONST_PTR(detection::PeakRecord) b) {
             if (a->getPeakValue() != b->getPeakValue()) {
                 return (a->getPeakValue() > b->getPeakValue());
             }
@@ -165,19 +165,7 @@ namespace {
             return (a->getIy() < b->getIy());
         }
     };
-    struct ComparPeaks {
-        bool operator()(CONST_PTR(detection::Peak) a, CONST_PTR(detection::Peak) b)
-        {
-            return a->getId() < b->getId();
-        }
-    };
-    struct EqualPeaks {
-        int operator()(CONST_PTR(detection::Peak) a, CONST_PTR(detection::Peak) b)
-        {
-            return *a == *b;
-        }
-    };
-    /*********************************************************************************************************/
+    /********************************************************************************************************/
     /*
      * Worker routine for merging two FootprintSets, possibly growing them as we proceed
      */
@@ -336,28 +324,34 @@ namespace {
              * We now have a complete set of Footprints that contributed to this one, so merge
              * all their Peaks into the new one
              */
-            Footprint::PeakList &peaks = foot->getPeaks();
+            detection::PeakCatalog &peaks = foot->getPeaks();
 
             for (std::set<boost::uint64_t>::iterator ptr = lhsFootprintIndxs.begin(),
                      end = lhsFootprintIndxs.end(); ptr != end; ++ptr) {
                 boost::uint64_t i = *ptr;
                 assert (i < lhsFootprints.size());
-                Footprint::PeakList const& oldPeaks = lhsFootprints[i]->getPeaks();
+                detection::PeakCatalog const& oldPeaks = lhsFootprints[i]->getPeaks();
 
                 int const nold = peaks.size();
                 peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
-                std::inplace_merge(peaks.begin(), peaks.begin() + nold, peaks.end(), SortPeaks());
+                // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
+                // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
+                // it'd try to do if we passed Catalog's own iterators).
+                std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
+                                   peaks.getInternal().end(), SortPeaks());
             }
 
             for (std::set<boost::uint64_t>::iterator ptr = rhsFootprintIndxs.begin(),
                      end = rhsFootprintIndxs.end(); ptr != end; ++ptr) {
                 boost::uint64_t i = *ptr;
                 assert (i < rhsFootprints.size());
-                Footprint::PeakList const& oldPeaks = rhsFootprints[i]->getPeaks();
+                detection::PeakCatalog const& oldPeaks = rhsFootprints[i]->getPeaks();
 
                 int const nold = peaks.size();
                 peaks.insert(peaks.end(), oldPeaks.begin(), oldPeaks.end());
-                std::inplace_merge(peaks.begin(), peaks.begin() + nold, peaks.end(), SortPeaks());
+                // See note above on why we're using getInternal() here.
+                std::inplace_merge(peaks.getInternal().begin(), peaks.getInternal().begin() + nold,
+                                   peaks.getInternal().end(), SortPeaks());
             }
         }
 
@@ -418,7 +412,7 @@ namespace {
     public:
         explicit FindPeaksInFootprint(ImageT const& image, ///< The image the source lives in
                                       bool polarity,       ///< true if we're looking for -ve "peaks"
-                                      detection::Footprint::PeakList &peaks
+                                      detection::PeakCatalog &peaks
                                      ) : detection::FootprintFunctor<ImageT>(image),
                                          _polarity(polarity), _peaks(peaks) {}
         
@@ -443,11 +437,16 @@ namespace {
                 }
             }
 
-            _peaks.push_back(PTR(detection::Peak)(new detection::Peak(x, y, val)));
+            PTR(detection::PeakRecord) newPeak = _peaks.addNew();
+            newPeak->setIx(x);
+            newPeak->setIy(y);
+            newPeak->setFx(x);
+            newPeak->setFy(y);
+            newPeak->setPeakValue(val);
         }
     private:
         bool _polarity;
-        detection::Footprint::PeakList &_peaks;
+        detection::PeakCatalog &_peaks;
     };
 
     /*
@@ -493,9 +492,14 @@ namespace {
             }
         }
 
-        /// Return the Footprint's Peak
-        PTR(detection::Peak) makePeak() const {
-            return boost::make_shared<detection::Peak>(detection::Peak(_x, _y, _polarity ? _max : _min));
+        // Add the Footprint's peak to the given PeakCatalog
+        void addPeak(detection::PeakCatalog & peakCat) const {
+            PTR(detection::PeakRecord) newPeak = peakCat.addNew();
+            newPeak->setIx(_x);
+            newPeak->setIy(_y);
+            newPeak->setFx(_x);
+            newPeak->setFy(_y);
+            newPeak->setPeakValue(_polarity ? _max : _min);
         }
     private:
         bool _polarity;
@@ -509,12 +513,16 @@ namespace {
         FindPeaksInFootprint<ImageT> peakFinder(img, polarity, foot->getPeaks());
         peakFinder.apply(*foot, 1);
 
-        std::stable_sort(foot->getPeaks().begin(), foot->getPeaks().end(), SortPeaks());
+        // We use getInternal() here to get the vector of shared_ptr that Catalog uses internally,
+        // which causes the STL algorithm to copy pointers instead of PeakRecords (which is what
+        // it'd try to do if we passed Catalog's own iterators).
+        std::stable_sort(foot->getPeaks().getInternal().begin(), foot->getPeaks().getInternal().end(),
+                         SortPeaks());
 
         if (foot->getPeaks().empty()) {
             FindMaxInFootprint<ImageT> maxFinder(img, polarity);
             maxFinder.apply(*foot);
-            foot->getPeaks().push_back(maxFinder.makePeak());
+            maxFinder.addPeak(foot->getPeaks());
         }
     }
 
@@ -886,27 +894,6 @@ detection::FootprintSet::FootprintSet(
 
         maskit.apply(*foot);
     }
-}
-    
-/************************************************************************************************************/
-/**
- * Return a FootprintSet consisting a Footprint containing the point (x, y) (if above threshold)
- *
- * \todo Implement this.  There's RHL Pan-STARRS code to do it, but it isn't yet converted to LSST C++
- */
-template <typename ImagePixelT, typename MaskPixelT>
-detection::FootprintSet::FootprintSet(
-    const image::MaskedImage<ImagePixelT, MaskPixelT> & img, //!< Image to search for objects
-    Threshold const &,                                   //!< threshold to find objects
-    int,                                                 //!< Footprint should include this pixel (column)
-    int,                                                 //!< Footprint should include this pixel (row) 
-    std::vector<PTR(Peak)> const *      //!< Footprint should include at most one of these peaks
-) : lsst::daf::base::Citizen(typeid(this)),
-    _footprints(new FootprintList()),
-    _region(geom::Point2I(img.getX0(), img.getY0()),
-            geom::Extent2I(img.getWidth(), img.getHeight())) 
-{
-    throw LSST_EXCEPT(lsst::pex::exceptions::LogicError, "NOT IMPLEMENTED");
 }
 
 
@@ -1520,9 +1507,6 @@ void detection::FootprintSet::makeSources(
     template detection::FootprintSet::FootprintSet(                     \
         image::MaskedImage<PIXEL,image::MaskPixel> const &, Threshold const &, \
         std::string const &, int const, bool const);\
-    template detection::FootprintSet::FootprintSet( \
-        image::MaskedImage<PIXEL,image::MaskPixel> const &, Threshold const &, \
-        int, int, std::vector<PTR(Peak)> const *);                      \
     template void detection::FootprintSet::makeHeavy(image::MaskedImage<PIXEL,image::MaskPixel> const &, \
                                                      HeavyFootprintCtrl const *)
 
