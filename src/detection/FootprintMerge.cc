@@ -198,7 +198,7 @@ void FootprintMergeList::addCatalog(
     FilterMap::const_iterator keyIter = _filterMap.find(filter);
     if (keyIter == _filterMap.end()) {
         throw LSST_EXCEPT(
-            pex::exceptions::LogicErrorException,
+            pex::exceptions::LogicError,
             (boost::format("Filter %s not in original list") % filter).str()
         );
     }

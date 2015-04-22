@@ -112,7 +112,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
 
         # Add the first catalog and second catalog with the wrong name, which should result
         # an exception being raised
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicErrorException,
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError,
                                  mergeCatalogs, [self.catalog1,self.catalog2], ["1","2"], [0, 0],
                                  self.idFactory, ["1","3"])
 
