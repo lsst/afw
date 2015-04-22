@@ -34,6 +34,7 @@
 #include <cmath>
 #include <limits>
 #include <cstdio>
+#include <iomanip>
 
 #include "Eigen/Core"
 #include "Eigen/Geometry"
@@ -1415,5 +1416,18 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
 }
 
 std::ostream & afwCoord::operator<<(std::ostream & os, afwCoord::Coord const & coord) {
-    return os << coord.getPosition() << "@" << coord.getEpoch();
+    auto const className = coord.getClassName();
+    os << (boost::format("%s(%.7f, %.7f")
+            % className
+            % coord[0].asDegrees()
+            % coord[1].asDegrees()).str();
+    if (className == "TopocentricCoord") {
+        os << (boost::format(", %.12f, (%s)")
+                % coord.getEpoch()
+                % dynamic_cast<afwCoord::TopocentricCoord const &>(coord).getObservatory()).str();
+    } else if (className != "IcrsCoord" && className != "GalacticCoord") {
+        os << (boost::format(", %.2f") % coord.getEpoch()).str();
+    }
+    os << ")";
+    return os;
 }

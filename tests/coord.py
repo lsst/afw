@@ -68,6 +68,29 @@ class CoordTestCase(unittest.TestCase):
             # [afwCoord.TopocentricCoord, afwCoord.TOPOCENTRIC]  
             ]
 
+
+    def coordIter(self, includeCoord=True):
+        """Return a collection of coords, one per class
+
+        @param[in] includeCoord  if True then include lsst.afw.coord.Coord (the base class)
+            in the list of classes instantiated
+        """
+        if includeCoord:
+            yield afwCoord.Coord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
+
+        for coordClass, enum, cast, stringName in self.coordList:
+            yield coordClass(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
+
+        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0) # peyton
+        obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
+        epoch = obsDate.get(dafBase.DateTime.EPOCH)
+        yield afwCoord.TopocentricCoord(
+            23.4 * afwGeom.degrees,
+            45.6 * afwGeom.degrees,
+            epoch,
+            obs,
+        )
+
         
     def testFormat(self):
         """Test formatting"""
@@ -121,6 +144,38 @@ class CoordTestCase(unittest.TestCase):
     def testCoordEnum(self):
         """Verify that makeCoordEnum throws an exception for non-existant systems."""
         self.assertRaises(pexEx.Exception, lambda: afwCoord.makeCoordEnum("FOO"))
+
+
+    def testGetClassName(self):
+        """Test getClassName, including after cloning
+        """
+        for coord in self.coordIter():
+            print "coord = %s = %r" % (coord, coord)
+            className = type(coord).__name__
+            self.assertEqual(coord.getClassName(), className)
+            self.assertEqual(coord.clone().getClassName(), className)
+
+
+    def testStrRepr(self):
+        """Test __str__ and __repr__
+        """
+        for coord in self.coordIter():
+            className = type(coord).__name__
+            coordStr = str(coord)
+            coordRepr = repr(coord)
+            self.assertEqual(coordStr, str(coord.clone()))
+            self.assertEqual(coordRepr, repr(coord.clone()))
+            self.assertTrue(coordStr.startswith("%s(" % (className,)))
+            self.assertFalse("degrees" in coordStr)
+            self.assertTrue(coordRepr.startswith("%s(" % (className,)))
+            self.assertTrue("degrees" in coordRepr)
+            numArgs = {
+                "IcrsCoord": 2,
+                "GalacticCoord": 2,
+                "TopocentricCoord": 5,
+            }.get(className, 3)
+            self.assertEqual(len(coordStr.split(",")), numArgs)
+            self.assertEqual(len(coordRepr.split(",")), numArgs)
         
         
     def testPosition(self):

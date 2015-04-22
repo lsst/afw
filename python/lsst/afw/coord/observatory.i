@@ -27,5 +27,8 @@
 #include "lsst/afw/coord/Observatory.h"
 %}
 
+%useValueEquality(lsst::afw::coord::Observatory);
+
 %include "lsst/afw/coord/Observatory.h"
 
+%addStreamRepr(lsst::afw::coord::Observatory);

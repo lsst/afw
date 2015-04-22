@@ -33,8 +33,6 @@ Python interface to lsst::afw::coord
 
 %include "lsst/p_lsstSwig.i"
 
-%useValueEquality(lsst::afw::coord::Coord);
-
 %lsst_exceptions();
 %initializeNumPy(afw_coord)
 
