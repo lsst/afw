@@ -105,8 +105,10 @@ strCoord(TopocentricCoord);
 %extend lsst::afw::coord::TYPE {
     %pythoncode %{
 def __iter__(self):
-    for i in 0,1:
+    for i in (0, 1):
         yield self[i]
+def __len__(self):
+    return 2
     %}
 }
 %enddef
@@ -116,6 +118,7 @@ genCoord(Fk5Coord);
 genCoord(IcrsCoord);
 genCoord(GalacticCoord);
 genCoord(EclipticCoord);
+genCoord(TopocentricCoord);
 
 
 // Add __reduce__ for Coord subclasses that take 3 arguments

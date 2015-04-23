@@ -150,16 +150,26 @@ class CoordTestCase(unittest.TestCase):
         """Test getClassName, including after cloning
         """
         for coord in self.coordIter():
-            print "coord = %s = %r" % (coord, coord)
             className = type(coord).__name__
             self.assertEqual(coord.getClassName(), className)
             self.assertEqual(coord.clone().getClassName(), className)
+
+
+    def testIter(self):
+        """Test iteration
+        """
+        for coord in self.coordIter():
+            for c in (coord, coord.clone()):
+                self.assertEqual(len(c), 2)
+                self.assertEqual(c[0], c.getLongitude())
+                self.assertEqual(c[1], c.getLatitude())
 
 
     def testStrRepr(self):
         """Test __str__ and __repr__
         """
         for coord in self.coordIter():
+            print "coord = %s = %r" % (coord, coord)
             className = type(coord).__name__
             coordStr = str(coord)
             coordRepr = repr(coord)
