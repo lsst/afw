@@ -1330,6 +1330,10 @@ PTR(Footprint) growFootprintImpl(
 
     grown->normalize();
 
+    // Copy over peaks from the original footprint
+    grown->getPeaks() = PeakCatalog(foot.getPeaks().getTable(), foot.getPeaks().begin(),
+                                    foot.getPeaks().end(), true);
+
     return grown;
 }
 
@@ -1478,6 +1482,15 @@ PTR(Footprint) shrinkFootprintImpl(
     }
 
     shrunk->normalize();
+
+    // Peaks from the original footprint have not yet been added to the shrunken footprint.
+    // Iterate over peaks from the original footprint and add them IF they are contained
+    // within the shrunken footprint.
+    for (auto peakIter = foot.getPeaks().begin(); peakIter != foot.getPeaks().end(); peakIter++) {
+        if (shrunk->contains(peakIter->getI())) {
+            shrunk->getPeaks().addNew()->assign(*peakIter);
+        }
+    }
     return shrunk;
 }
 }
