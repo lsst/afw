@@ -403,12 +403,24 @@ class FootprintTestCase(utilsTests.TestCase):
         imwidth, imheight = 100, 100 # Size of image
 
         foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(width, height)),
-                                    afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(imwidth, imheight)))
+                                   afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(imwidth, imheight)))
         self.assertEqual(foot.getNpix(), width*height)
+
+        # Add some peaks to the original footprint and check that those lying outside
+        # the shrunken footprint are omitted from the returned shrunken footprint.
+        foot.addPeak(50, 50, 1) # should be omitted in shrunken footprint
+        foot.addPeak(52, 52, 2) # should be kept in shrunken footprint
+        foot.addPeak(50, 59, 3) # should be omitted in shrunken footprint
+        self.assertEqual(len(foot.getPeaks()), 3) # check that all three peaks were added
 
         # Shrinking by one pixel makes each dimension *two* pixels shorter.
         shrunk = afwDetect.shrinkFootprint(foot, 1, True)
         self.assertEqual(3*8, shrunk.getNpix())
+
+        # Shrunken footprint should now only contain one peak at (52, 52)
+        self.assertEqual(len(shrunk.getPeaks()), 1)
+        peak = shrunk.getPeaks()[0]
+        self.assertEqual((peak.getIx(), peak.getIy()), (52, 52))
 
         # Without shifting the centroid
         self.assertEqual(shrunk.getCentroid(), foot.getCentroid())
@@ -493,6 +505,13 @@ class FootprintTestCase(utilsTests.TestCase):
         width, height = 20, 30
         foot1 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(width, height)),
                                     afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(100, 100)))
+
+        # Add some peaks and check that they get copied into the new grown footprint
+        foot1.addPeak(20, 20, 1)
+        foot1.addPeak(30, 35, 2)
+        foot1.addPeak(25, 45, 3)
+        self.assertEqual(len(foot1.getPeaks()), 3)
+
         bbox1 = foot1.getBBox()
 
         self.assertEqual(bbox1.getMinX(), x0)
@@ -506,6 +525,12 @@ class FootprintTestCase(utilsTests.TestCase):
         ngrow = 5
         for isotropic in (True, False):
             foot2 = afwDetect.growFootprint(foot1, ngrow, isotropic)
+
+            # Check that peaks got copied into grown footprint
+            self.assertEqual(len(foot2.getPeaks()), 3)
+            for peak in foot2.getPeaks():
+                self.assertTrue((peak.getIx(), peak.getIy()) in [(20, 20), (30, 35), (25, 45)])
+
             bbox2 = foot2.getBBox()
 
             if False and display:

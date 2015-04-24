@@ -96,6 +96,32 @@ Footprint::Footprint(
     }
 }
 
+/**
+ * Create a Footprint, using a custom Schema for Peaks
+ *
+ * \throws lsst::pex::exceptions::InvalidParameterError Exception in nspan is < 0
+ */
+Footprint::Footprint(
+    afw::table::Schema const & peakSchema, //!< Schema to use for PeakRecords
+    int nspan,         //!< initial number of Span%s in this Footprint
+    geom::Box2I const & region //!< Bounding box of MaskedImage footprint
+) : lsst::daf::base::Citizen(typeid(this)),
+    _fid(++id),
+    _area(0),
+    _bbox(geom::Box2I()),
+    _peaks(peakSchema),
+    _region(region),
+    _normalized(true)
+{
+    if (nspan < 0) {
+        throw LSST_EXCEPT(
+            lsst::pex::exceptions::InvalidParameterError,
+            str(boost::format("Number of spans requested is -ve: %d") % nspan));
+    }
+}
+/**
+ * Create a rectangular Footprint
+ */
 Footprint::Footprint(
     geom::Box2I const& bbox, //!< The bounding box defining the rectangle
     geom::Box2I const& region //!< Bounding box of MaskedImage footprint
@@ -889,7 +915,7 @@ PTR(Footprint) Footprint::transform(
     geom::Box2I tBoxI(tBoxD);
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
-    PTR(Footprint) fpNew = boost::make_shared<Footprint>(0, region);
+    PTR(Footprint) fpNew = boost::make_shared<Footprint>(getPeaks().getSchema(), 0, region);
 
     for (int y = tBoxI.getBeginY(); y < tBoxI.getEndY(); ++y) {
         bool inSpan = false;            // Are we in a span?
@@ -960,7 +986,7 @@ PTR(Footprint) footprintAndMask(
         typename lsst::afw::image::Mask<MaskT>::Ptr const& mask,
         MaskT const bitmask
 ) {
-    PTR(Footprint) newFp(new Footprint());
+    PTR(Footprint) newFp(new Footprint(fp->getPeaks().getSchema()));
     return newFp;
 }
 
@@ -1304,6 +1330,10 @@ PTR(Footprint) growFootprintImpl(
 
     grown->normalize();
 
+    // Copy over peaks from the original footprint
+    grown->getPeaks() = PeakCatalog(foot.getPeaks().getTable(), foot.getPeaks().begin(),
+                                    foot.getPeaks().end(), true);
+
     return grown;
 }
 
@@ -1452,6 +1482,15 @@ PTR(Footprint) shrinkFootprintImpl(
     }
 
     shrunk->normalize();
+
+    // Peaks from the original footprint have not yet been added to the shrunken footprint.
+    // Iterate over peaks from the original footprint and add them IF they are contained
+    // within the shrunken footprint.
+    for (auto peakIter = foot.getPeaks().begin(); peakIter != foot.getPeaks().end(); peakIter++) {
+        if (shrunk->contains(peakIter->getI())) {
+            shrunk->getPeaks().addNew()->assign(*peakIter);
+        }
+    }
     return shrunk;
 }
 }
@@ -1702,6 +1741,7 @@ PTR(Footprint) growFootprint(Footprint const& foot, ///< Footprint to grow
     return growFootprintImpl(foot, StructuringElement(left ? nGrow: 0, right ? nGrow : 0,
                                                       up ? nGrow : 0, down ? nGrow : 0));
 }
+
 
 PTR(Footprint) shrinkFootprint(
         Footprint const& foot,          //!< The Footprint to shrink
