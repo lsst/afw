@@ -32,6 +32,12 @@ except ImportError:
     HAVE_MATPLOTLIB = False
 
 try:
+    import scipy.misc
+    HAVE_SCIPY_MISC = True
+except ImportError:
+    HAVE_SCIPY_MISC = False
+    
+try:
     type(display)
 except NameError:
     display = False
@@ -277,6 +283,58 @@ class RgbTestCase(unittest.TestCase):
 
         if display:
             rgb.displayRGB(rgbImage)
+
+    @unittest.skipUnless(HAVE_SCIPY_MISC, "Resizing images requires scipy.misc")
+    def testStarsResizeToSize(self):
+        """Test creating an RGB image of a specified size"""
+
+        xSize = self.images[R].getWidth()/2
+        ySize = self.images[R].getHeight()/2
+        for rgbImages in ([self.images[R], self.images[G], self.images[B]],
+                          [afwImage.ImageU(_.getArray().astype('uint16')) for _ in [
+                              self.images[R], self.images[G], self.images[B]]]):
+            rgbImage = rgb.AsinhZScaleMapping(rgbImages[0]).makeRgbImage(*rgbImages,
+                                                                         xSize=xSize, ySize=ySize)
+
+            if display:
+                rgb.displayRGB(rgbImage)
+
+    @unittest.skipUnless(HAVE_SCIPY_MISC, "Resizing images requires scipy.misc")
+    def testStarsResizeSpecifications(self):
+        """Test creating an RGB image changing the output """
+
+        rgbImages = [self.images[R], self.images[G], self.images[B]]
+        map = rgb.AsinhZScaleMapping(rgbImages[0])
+
+        for xSize, ySize, frac in [(self.images[R].getWidth()/2, self.images[R].getHeight()/2, None),
+                                   (2*self.images[R].getWidth(), None,                         None),
+                                   (self.images[R].getWidth()/2, None,                         None),
+                                   (None,                        self.images[R].getHeight()/2, None),
+                                   (None,                        None,                         0.5),
+                                   (None,                        None,                         2),
+                               ]:
+            rgbImage = map.makeRgbImage(*rgbImages, xSize=xSize, ySize=ySize, rescaleFactor=frac)
+
+            h, w = rgbImage.shape[0:2]
+            self.assertTrue(xSize is None or xSize == w)
+            self.assertTrue(ySize is None or ySize == h)
+            self.assertTrue(frac is None or w == int(frac*self.images[R].getWidth()),
+                            "%g == %g" % (w, int((frac if frac else 1)*self.images[R].getWidth())))
+
+            if display:
+                rgb.displayRGB(rgbImage)
+
+    @unittest.skipUnless(HAVE_SCIPY_MISC, "Resizing images requires scipy.misc")
+    @unittest.skipUnless(HAVE_MATPLOTLIB, NO_MATPLOTLIB_STRING)
+    def testMakeRGBResize(self):
+        """Test the function that does it all, including rescaling"""
+        fileName = "makeRGB.png"
+
+        rgb.makeRGB(self.images[R], self.images[G], self.images[B], xSize=40, ySize=60)
+
+        with Tempfile(fileName, remove=True):
+            rgb.makeRGB(self.images[R], self.images[G], self.images[B], fileName=fileName, rescaleFactor=0.5)
+            self.assertTrue(os.path.exists(fileName))
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     #
