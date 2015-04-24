@@ -6,7 +6,6 @@ import lsst.pex.exceptions
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
-import lsst.meas.algorithms as measAlg
 import lsst.afw.table as afwTable
 import numpy as np
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -61,19 +60,18 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
 
         box = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Point2I(300,300))
         psfsig = 1.
-        kernelSize = 40
+        kernelSize = 41
         flux = 1000
 
         # Create a different sized psf for each image and insert them at the desired positions
         im1 = afwImage.MaskedImageD(box)
-        psf1 = measAlg.DoubleGaussianPsf(kernelSize, kernelSize, psfsig)
+        psf1 = afwDetect.GaussianPsf(kernelSize, kernelSize, psfsig)
 
         im2 = afwImage.MaskedImageD(box)
-        psf2 = measAlg.DoubleGaussianPsf(kernelSize, kernelSize, 2*psfsig)
+        psf2 = afwDetect.GaussianPsf(kernelSize, kernelSize, 2*psfsig)
 
         im3 = afwImage.MaskedImageD(box)
-        psf3 = measAlg.DoubleGaussianPsf(kernelSize, kernelSize, 1.3*psfsig)
-
+        psf3 = afwDetect.GaussianPsf(kernelSize, kernelSize, 1.3*psfsig)
 
         insertPsf(pos1, im1, psf1, kernelSize, flux)
         insertPsf(pos2, im2, psf2, kernelSize, flux)
