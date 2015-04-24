@@ -131,6 +131,8 @@ setMaskPlaneColor({
     "DETECTED_NEGATIVE" : CYAN,
     "SUSPECT" : YELLOW,
     "NO_DATA": ORANGE,
+    "CROSSTALK": RED,
+    "CLIPPED": RED,
     # deprecated names
     "INTRP" : GREEN,
     "SAT" : GREEN,
@@ -515,6 +517,9 @@ def mtv(data, frame=None, init=True, wcs=None, isMask=False, lowOrderBits=False,
                     colorIndex += 1
                     if color != WHITE and color != BLACK:
                         break
+
+                print "Assigning %s to mask plane %s" % (color, pname)
+                setMaskPlaneColor(pname, color) # remember our choice
 
             setMaskColor(color)
             _mtv(mask, wcs, title, True)
