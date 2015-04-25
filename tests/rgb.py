@@ -33,8 +33,9 @@ except ImportError:
 
 try:
     import scipy.misc
+    scipy.misc.imresize
     HAVE_SCIPY_MISC = True
-except ImportError:
+except (ImportError, AttributeError):
     HAVE_SCIPY_MISC = False
     
 try:

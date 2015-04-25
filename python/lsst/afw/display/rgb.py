@@ -105,8 +105,9 @@ class Mapping(object):
         if size is not None:
             try:
                 import scipy.misc
-            except ImportError as e:
-                raise RuntimeError("Unable to rescale as scipy.misc is unavailable: %s" % e)
+                scipy.misc.imresize
+            except (ImportError, AttributeError) as e:
+                raise RuntimeError("Unable to rescale as scipy.misc.imresize is unavailable: %s" % e)
 
             for i, im in enumerate(imageRGB):
                 imageRGB[i] = scipy.misc.imresize(im, size, interp='bilinear', mode='F')
