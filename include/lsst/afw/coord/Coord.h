@@ -98,6 +98,8 @@ public:
         return std::pair<std::string, std::string>("RA", "Dec");
     }
 
+    virtual std::string getClassName() const { return "Coord"; }
+
     // These are inline functions and are defined at the end of this header file
     lsst::afw::geom::Angle operator[](int const index) const;
     bool operator==(Coord const &rhs) const;
@@ -164,6 +166,8 @@ public:
     IcrsCoord() : Coord() {}
 
     virtual Coord::Ptr clone() const { return IcrsCoord::Ptr(new IcrsCoord(*this)); }
+
+    virtual std::string getClassName() const { return "IcrsCoord"; }
     
     virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude);
     
@@ -202,6 +206,8 @@ public:
     Fk5Coord() : Coord() {}
     
     virtual Coord::Ptr clone() const { return Fk5Coord::Ptr(new Fk5Coord(*this)); }
+
+    virtual std::string getClassName() const { return "Fk5Coord"; }
 
     Fk5Coord precess(double const epochTo) const;
     
@@ -242,6 +248,8 @@ public:
     GalacticCoord() : Coord() {}
 
     virtual Coord::Ptr clone() const { return GalacticCoord::Ptr(new GalacticCoord(*this)); }
+
+    virtual std::string getClassName() const { return "GalacticCoord"; }
 
     virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude);
     
@@ -292,6 +300,8 @@ public:
     
     virtual Coord::Ptr clone() const { return EclipticCoord::Ptr(new EclipticCoord(*this)); }
 
+    virtual std::string getClassName() const { return "EclipticCoord"; }
+
     virtual std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Lambda", "Beta");
     }
@@ -333,6 +343,10 @@ public:
                      Observatory const &obs) : Coord(az, alt, epoch), _obs(obs) {}
 
     virtual Coord::Ptr clone() const { return TopocentricCoord::Ptr(new TopocentricCoord(*this)); }
+
+    virtual std::string getClassName() const { return "TopocentricCoord"; }
+
+    Observatory getObservatory() const { return _obs; }
 
     virtual std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Az", "Alt");

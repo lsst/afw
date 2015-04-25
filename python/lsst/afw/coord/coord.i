@@ -30,6 +30,7 @@
 #include "lsst/afw/coord/Coord.h"
 %}
 
+%useValueEquality(lsst::afw::coord::Coord);
 
 // The shared pointer declarations must precede the #inlude statement for Coord.h
 %shared_ptr(lsst::afw::coord::Coord);
@@ -70,13 +71,24 @@
 
 %define strCoord(TYPE)
 %extend lsst::afw::coord::TYPE {
+    std::string __str__() const {
+        std::ostringstream os;
+        os << (*self);
+        return os.str();
+    }
     %pythoncode %{
-    def __repr__(self):
-        return "afwCoord.TYPE(%g*afwGeom.radians, %g*afwGeom.radians)" % \
-                (self[0].asRadians(), self[1].asRadians())
-    def __str__(self):
-        return "(%s, %s)" % (self[0], self[1])
-
+def __repr__(self):
+    className = self.getClassName()
+    argList = ["%r * afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
+    if className == "TopocentricCoord":
+        topoCoord = TopocentricCoord.cast(self)
+        argList += [
+            repr(self.getEpoch()),
+            "(%r)" % (topoCoord.getObservatory(),),
+        ]
+    elif className not in ("IcrsCoord", "GalacticCoord"):
+        argList.append(repr(self.getEpoch()))
+    return "%s(%s)" % (self.getClassName(), ", ".join(argList))
     %}
 }
 %enddef
@@ -86,14 +98,17 @@ strCoord(Fk5Coord);
 strCoord(IcrsCoord);
 strCoord(GalacticCoord);
 strCoord(EclipticCoord);
+strCoord(TopocentricCoord);
 
 // Add __iter__ to allow  'ra,dec = coord' statement in python
 %define genCoord(TYPE)
 %extend lsst::afw::coord::TYPE {
     %pythoncode %{
-    def __iter__(self):
-        for i in 0,1:
-            yield self[i]
+def __iter__(self):
+    for i in (0, 1):
+        yield self[i]
+def __len__(self):
+    return 2
     %}
 }
 %enddef
@@ -103,14 +118,15 @@ genCoord(Fk5Coord);
 genCoord(IcrsCoord);
 genCoord(GalacticCoord);
 genCoord(EclipticCoord);
+genCoord(TopocentricCoord);
 
 
 // Add __reduce__ for Coord subclasses that take 3 arguments
 %define reduceCoord3(TYPE)
 %extend lsst::afw::coord::TYPE {
     %pythoncode %{
-    def __reduce__(self):
-        return (TYPE, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
+def __reduce__(self):
+    return (TYPE, (self.getLongitude(), self.getLatitude(), self.getEpoch()))
     %}
 }
 %enddef
@@ -119,8 +135,8 @@ genCoord(EclipticCoord);
 %define reduceCoord2(TYPE)
 %extend lsst::afw::coord::TYPE {
     %pythoncode %{
-    def __reduce__(self):
-        return (TYPE, (self.getLongitude(), self.getLatitude()))
+def __reduce__(self):
+    return (TYPE, (self.getLongitude(), self.getLatitude()))
     %}
 }
 %enddef
