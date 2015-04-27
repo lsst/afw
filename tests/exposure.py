@@ -327,6 +327,14 @@ class ExposureTestCase(unittest.TestCase):
         fluxMag0, fluxMag0Err = 1e12, 1e10
         mainExposure.getCalib().setFluxMag0(fluxMag0, fluxMag0Err)
 
+        # Check scaling of Calib
+        scale = 2.0
+        calib = mainExposure.getCalib()
+        calib *= scale
+        self.assertEqual((fluxMag0*scale, fluxMag0Err*scale), calib.getFluxMag0())
+        calib /= scale
+        self.assertEqual((fluxMag0, fluxMag0Err), calib.getFluxMag0())
+
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             mainExposure.writeFits(tmpFile)
 

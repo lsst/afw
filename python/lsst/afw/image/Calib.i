@@ -43,3 +43,25 @@
 
 %include "lsst/afw/image/Calib.h"
 %template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
+
+%extend lsst::afw::image::Calib {
+    %pythoncode %{
+#
+# Provide return value for C++ "void operator op=()" or it will magically end up as None
+#
+def __imul__(self, *args):
+    """__imul__(self, double scale) -> self"""
+    _imageLib.Calib___imul__(self, *args)
+    return self
+
+def __truediv__(self, *args):
+    """__truediv__(self, double scale) -> self"""
+    _imageLib.Calib___idiv__(self, *args)
+    return self
+
+def __idiv__(self, *args):
+    """__idiv__(self, double scale) -> self"""
+    _imageLib.Calib___idiv__(self, *args)
+    return self
+%}
+}
