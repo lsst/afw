@@ -133,6 +133,22 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         record = cat[0]
         self.assertIsNone(record.getApCorrMap())
 
+    def testScale(self):
+        """Test that we can scale an ApCorrMap"""
+        scale = 12.345
+        new = lsst.afw.image.ApCorrMap()
+        for name, value in self.map.items():
+            new.set(name, value*scale)
+        new /= scale
+        self.compare(self.map, new)
+        # And back the other way
+        new = lsst.afw.image.ApCorrMap()
+        for name, value in self.map.items():
+            new.set(name, value/scale)
+        new *= scale
+        self.compare(self.map, new)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
