@@ -89,6 +89,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         """Test the single-point evaluate method against explicitly-defined 1-d Chebyshevs
         (at the top of this file).
         """
+        factor = 12.345
         boxD = lsst.afw.geom.Box2D(self.bbox)
         # sx, sy: transform from self.bbox range to [-1, -1]
         sx = 2.0 / boxD.getWidth()
@@ -106,6 +107,10 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             z2 = numpy.array([numpy.dot(ty[:,i], numpy.dot(coefficients, tx[:,i]))
                               for i in range(nPoints)])
             self.assertClose(z1, z2, rtol=1E-13)
+
+            scaled = lsst.afw.math.ChebyshevBoundedField.cast(field*factor)
+            self.assertClose(scaled.evaluate(x, y), factor*z2, rtol=factor*1E-13)
+            self.assertTrue(numpy.all(scaled.getCoefficients() == factor*field.getCoefficients()))
 
     def testImageFit(self):
         """Test that we can fit an image produced by a ChebyshevBoundedField and
