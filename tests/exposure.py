@@ -334,6 +334,14 @@ class ExposureTestCase(unittest.TestCase):
 
         mainExposure.writeFits(outFile)
 
+        # Check scaling of Calib
+        scale = 2.0
+        calib = mainExposure.getCalib()
+        calib *= scale
+        self.assertEqual((fluxMag0*scale, fluxMag0Err*scale), calib.getFluxMag0())
+        calib /= scale
+        self.assertEqual((fluxMag0, fluxMag0Err), calib.getFluxMag0())
+
         readExposure = type(mainExposure)(outFile)
 
         os.remove(outFile)
