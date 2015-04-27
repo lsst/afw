@@ -100,6 +100,10 @@ void applyToImage(BoundedField const & field, image::Image<T> & img, F functor, 
 
 } // anonymous
 
+PTR(BoundedField) operator*(double const scale, CONST_PTR(BoundedField) bf) {
+    return *bf*scale;
+}
+
 template <typename T>
 void BoundedField::fillImage(image::Image<T> & img, bool overlapOnly) const {
     applyToImage(*this, img, Assign(), overlapOnly);
