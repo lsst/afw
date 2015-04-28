@@ -157,7 +157,7 @@ class Camera(DetectorCollection):
         return detectorList
 
     def getTransformMap(self):
-        """!Obtain a pointer to the transform registry.
+        """!Obtain the transform registry.
 
         @return a TransformMap
 
