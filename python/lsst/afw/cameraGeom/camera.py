@@ -129,31 +129,31 @@ class Camera(DetectorCollection):
                 detectorList.append(detector)
         return detectorList
 
-    def findDetectorsArray(self, xCoord, yCoord, coordSys):
+    def findDetectorsList(self, xCoordList, yCoordList, coordSys):
         """!Find the detectors that cover a list of points specified by x and y coordinates in any system
 
-        @param[in] xCoord is an array of x coordinates
-        @param[in] yCoord is an array of y coordinates
-        @param[in] coordSys is the coordinate system in which xCoord and yCoord are defined
+        @param[in] xCoordList  an array of x coordinates
+        @param[in] yCoordList  an array of y coordinates
+        @param[in] coordSys  the coordinate system in which xCoord and yCoord are defined
         @return a list of lists; each list contains the names of all detectors which contain the
         corresponding point
         """
 
-        cameraPoints = [afwGeom.Point2D(x,y) for x,y in zip(xCoord, yCoord)]
+        cameraPointList = [afwGeom.Point2D(x,y) for x,y in zip(xCoordList, yCoordList)]
 
         #transform the points to the native coordinate system
-        nativePoints = self._transformSingleSysArray(cameraPoints, coordSys, self._nativeCameraSys)
+        nativePointList = self._transformSingleSysArray(cameraPointList, coordSys, self._nativeCameraSys)
 
         detectorList = []
-        for i in range(len(xCoord)):
+        for i in range(len(xCoordList)):
             detectorList.append([])
 
         for detector in self:
             coordMap = detector.getTransformMap()
             cameraSys = detector.makeCameraSys(PIXELS)
-            detectorPoints = coordMap.transform(nativePoints, self._nativeCameraSys, cameraSys)
+            detectorPointList = coordMap.transform(nativePointList, self._nativeCameraSys, cameraSys)
             box = afwGeom.Box2D(detector.getBBox())
-            for i, pt in enumerate(detectorPoints):
+            for i, pt in enumerate(detectorPointList):
                 if box.contains(pt):
                     detectorList[i].append(detector)
 
