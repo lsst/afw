@@ -34,15 +34,20 @@ or
 """
 
 
+import contextlib
 import os.path
 import unittest
+import shutil
+import tempfile
 
 import numpy
+import pyfits
 
 import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
+import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexEx
 
@@ -167,6 +172,159 @@ class MaskedImageTestCase(unittest.TestCase):
             self.assertEqual(im2.getVariance().getX0(), x0)
             self.assertEqual(im2.getVariance().getY0(), y0)
 
+
+@contextlib.contextmanager
+def tmpFits(*hdus):
+    # Given a list of numpy arrays, create a temporary FITS file that
+    # contains them as consecutive HDUs. Yield it, then remove it.
+    hdus = [pyfits.PrimaryHDU(hdus[0])] + [pyfits.hdu.ImageHDU(hdu) for hdu in hdus[1:]]
+    hdulist = pyfits.HDUList(hdus)
+    tempdir = tempfile.mkdtemp()
+    try:
+        filename = os.path.join(tempdir, 'test.fits')
+        hdulist.writeto(filename)
+        yield filename
+    finally:
+        shutil.rmtree(tempdir)
+
+
+class MultiExtensionTestCase(object):
+    """Base class for testing that we correctly read multi-extension FITS files.
+
+    MEF files may be read to either MaskedImage or Exposure objects. We apply
+    the same set of tests to each by subclassing and defining _constructImage
+    and _checkImage.
+    """
+    # When persisting a MaskedImage (or derivative, e.g. Exposure) to FITS, we impose a data
+    # model which the combination of the limits of the FITS structure and the desire to maintain
+    # backwards compatibility make it hard to express. We attempt to make this as safe as
+    # possible by handling the following situations and logging appropriate warnings:
+    #
+    # Note that Exposures always set needAllHdus to False.
+    #
+    # 1. If needAllHdus is true:
+    #    1.1 If the user has specified a non-default HDU, we throw.
+    #    1.2 If the user has not specified an HDU (or has specified one equal to the default):
+    #        1.2.1 If any of the image, mask or variance is unreadable (eg because they don't
+    #              exist, or they have the wrong data type), we throw.
+    #        1.2.2 Otherwise, we return the MaskedImage with image/mask/variance set as
+    #              expected.
+    # 2. If needAllHdus is false:
+    #    2.1 If the user has specified a non-default HDU:
+    #        2.1.1 If the user specified HDU is unreadable, we throw.
+    #        2.1.2 Otherwise, we return the contents of that HDU as the image and default
+    #              (=empty) mask & variance.
+    #    2.2 If the user has not specified an HDU, or has specified one equal to the default:
+    #        2.2.1 If the default HDU is unreadable, we throw.
+    #        2.2.2 Otherwise, we attempt to read both mask and variance from the FITS file,
+    #              and return them together with the image. If one or both are unreadable,
+    #              we fall back to an empty default for the missing data and return the
+    #              remainder..
+    #
+    # See also the discussion at DM-2599.
+    def _checkMaskedImage(self, mim, width, height, val1, val2, val3):
+        # Check that the input image has dimensions width & height and that the image, mask and
+        # variance have mean val1, val2 & val3 respectively.
+        self.assertEqual(mim.getWidth(), width)
+        self.assertEqual(mim.getHeight(), width)
+        self.assertEqual(afwMath.makeStatistics(mim.getImage(), afwMath.MEAN).getValue(), val1)
+        s = afwMath.makeStatistics(mim.getMask(), afwMath.SUM | afwMath.NPOINT)
+        self.assertEqual(float(s.getValue(afwMath.SUM)) / s.getValue(afwMath.NPOINT), val2)
+        self.assertEqual(afwMath.makeStatistics(mim.getVariance(), afwMath.MEAN).getValue(), val3)
+
+    def testUnreadableExtensionAsImage(self):
+        # Test for case 2.1.1 above.
+        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16), None) as fitsfile:
+            self.assertRaises(Exception, self._constructImage, fitsfile, 3)
+
+    def testReadableExtensionAsImage(self):
+        # Test for case 2.1.2 above.
+        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16),
+                     numpy.array([[3]])) as fitsfile:
+            self._checkImage(self._constructImage(fitsfile, 3), 1, 1, 3, 0, 0)
+
+    def testUnreadbleDefaultAsImage(self):
+        # Test for case 2.2.1 above.
+        with tmpFits(None, None, numpy.array([[2]], dtype=numpy.int16), numpy.array([[3]])) as fitsfile:
+            self.assertRaises(Exception, self._constructImage, fitsfile)
+
+    def testUnreadbleOptionalExtensions(self):
+        # Test for case 2.2.2 above.
+        # Unreadable mask.
+        with tmpFits(None, numpy.array([[1]]), None, numpy.array([[3]])) as fitsfile:
+            self._checkImage(self._constructImage(fitsfile), 1, 1, 1, 0, 3)
+        # Unreadable variance.
+        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16), None) as fitsfile:
+            self._checkImage(self._constructImage(fitsfile, needAllHdus=False), 1, 1, 1, 2, 0)
+
+
+class MaskedMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
+    """Derived version of MultiExtensionTestCase for MaskedImages."""
+    def _constructImage(self, filename, hdu=None, needAllHdus=False):
+        # Construct an instance of MaskedImageF by loading from filename. If hdu
+        # is specified, load that HDU specifically. Pass through needAllHdus
+        # to the MaskedImageF constructor.  This function exists only to stub
+        # default arguments into the constructor for parameters which we are
+        # not exercising in this test.
+        if hdu:
+            filename = "%s[%d]" % (filename, hdu)
+        return afwImage.MaskedImageF(filename, None, afwGeom.Box2I(), afwImage.PARENT, False, needAllHdus)
+
+    def _checkImage(self, *args, **kwargs):
+        self._checkMaskedImage(*args, **kwargs)
+
+    def testNeedAllHdus(self):
+        # Tests for cases 1.1 & 1.2.2 above.
+        # We'll regard it as ok for the user to specify any of:
+        # * No HDU;
+        # * The "zeroeth" (primary) HDU;
+        # * The first (first extension) HDU.
+        # Any others should raise when needAllHdus is true
+        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16),
+                     numpy.array([[3]])) as fitsfile:
+            # No HDU specified -> ok.
+            self._checkImage(self._constructImage(fitsfile, needAllHdus=True), 1, 1, 1, 2, 3)
+            # First HDU -> ok.
+            self._checkImage(self._constructImage(fitsfile, 0, needAllHdus=True), 1, 1, 1, 2, 3)
+            # First HDU -> ok.
+            self._checkImage(self._constructImage(fitsfile, 1, needAllHdus=True), 1, 1, 1, 2, 3)
+            # Second HDU -> raises.
+            self.assertRaises(Exception, self._constructImage, fitsfile, 2, needAllHdus=True)
+
+    def testUnreadableImage(self):
+        # Test for case 1.2.1 above.
+        with tmpFits(None, None, numpy.array([[2]], dtype=numpy.int16), numpy.array([[3]])) as fitsfile:
+            self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
+
+    def testUnreadableMask(self):
+        # Test for case 1.2.1 above.
+        with tmpFits(None, numpy.array([[1]]), None, numpy.array([[3]])) as fitsfile:
+            self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
+
+    def testUnreadableVariance(self):
+        # Test for case 1.2.1 above.
+        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16), None) as fitsfile:
+            self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
+
+
+class ExposureMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
+    """Derived version of MultiExtensionTestCase for Exposures."""
+    def _constructImage(self, filename, hdu=None, needAllHdus=False):
+        # Construct an instance of ExposureF by loading from filename. If hdu
+        # is specified, load that HDU specifically. needAllHdus exists for API
+        # compatibility, but should always be False. This function exists only
+        # to stub default arguments into the constructor for parameters which
+        # we are not exercising in this test.
+        if hdu:
+            filename = "%s[%d]" % (filename, hdu)
+        if needAllHdus:
+            raise Exception("Cannot needAllHdus with Exposure")
+        return afwImage.ExposureF(filename)
+
+    def _checkImage(self, im, width, height, val1, val2, val3):
+        self._checkMaskedImage(im.getMaskedImage(), width, height, val1, val2, val3)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -176,6 +334,8 @@ def suite():
 
     suites = []
     suites += unittest.makeSuite(MaskedImageTestCase)
+    suites += unittest.makeSuite(MaskedMultiExtensionTestCase)
+    suites += unittest.makeSuite(ExposureMultiExtensionTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
