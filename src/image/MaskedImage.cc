@@ -151,7 +151,10 @@ void checkExtType(
                                expected % fitsfile.getFileName() % fitsfile.getHdu() % exttype).str());
         }
         metadata->remove("EXTTYPE");
-    } catch(lsst::pex::exceptions::NotFoundError) {}
+    } catch(lsst::pex::exceptions::NotFoundError) {
+        lsst::pex::logging::Log log(lsst::pex::logging::Log::getDefaultLog(), "afw.image.MaskedImage");
+        log.warn(boost::format("Expected extension type not found: %s") % expected);
+    }
 }
 
 void ensureMetadata(PTR(lsst::daf::base::PropertySet) & metadata) {
@@ -173,44 +176,90 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 ) : lsst::daf::base::Citizen(typeid(this)),
     _image(), _mask(), _variance() 
 {
+    // When reading a standard Masked Image, we expect four HDUs:
+    // * The primary (HDU 1) is empty;
+    // * The first extension (HDU 2) contains the image data;
+    // * The second extension (HDU 3) contains mask data;
+    // * The third extension (HDU 4) contains the variance.
+    //
+    // If the image HDU is unreadable, we will throw.
+    //
+    // If the user has specified a non-default HDU, we load image data from
+    // that HDU, but do not attempt to load mask/variance data; rather, log a
+    // warning and return (blank) defaults.
+    //
+    // If the mask and/or variance is unreadable, we log a warning and return
+    // (blank) defaults.
+
+    // We log warnings about image loading through a child logger, so the user
+    // can disable them if required.
+    pex::logging::Log log(pex::logging::Log::getDefaultLog(), "afw.image.MaskedImage");
+
+    enum class Hdu {
+        Primary = 1,
+        Image,
+        Mask,
+        Variance
+    };
+
+    // If the user has requested a non-default HDU and we require all HDUs, we fail.
+    if (needAllHdus && fitsfile.getHdu() > static_cast<int>(Hdu::Image)) {
+        throw LSST_EXCEPT(fits::FitsError,
+                          "Cannot read all HDUs starting from non-default");
+    }
 
     if (metadata) {
         // Read primary metadata - only if user asks for it.
         // If the primary HDU is not empty, this may be the same as imageMetadata.
-        fitsfile.setHdu(1);
+        auto prevHdu = fitsfile.getHdu();
+        fitsfile.setHdu(static_cast<int>(Hdu::Primary));
         fitsfile.readMetadata(*metadata);
+        fitsfile.setHdu(prevHdu);
     }
 
-    fitsfile.setHdu(0); // this moves to the first non-empty HDU, which should always be the Image HDU.
-    int hdu = fitsfile.getHdu();
+    // setHdu(0) jumps to the first extension iff the primary HDU is both
+    // empty and currently selected.
+    fitsfile.setHdu(0);
     ensureMetadata(imageMetadata);
     _image.reset(new Image(fitsfile, imageMetadata, bbox, origin));
     checkExtType(fitsfile, imageMetadata, "IMAGE");
 
-    try {
-        fitsfile.setHdu(++hdu);
-        ensureMetadata(maskMetadata);
-        _mask.reset(new Mask(fitsfile, maskMetadata, bbox, origin, conformMasks));
-        checkExtType(fitsfile, maskMetadata, "MASK");
-    } catch(fits::FitsError &e) {
-        if (needAllHdus) {
-            LSST_EXCEPT_ADD(e, "Reading Mask");
-            throw e;
-        }
+    if (fitsfile.getHdu() != static_cast<int>(Hdu::Image)) {
+        // Reading the image from a non-default HDU means we do not attempt to
+        // read mask and variance.
         _mask.reset(new Mask(_image->getBBox()));
-    }
-
-    try {
-        fitsfile.setHdu(++hdu);
-        ensureMetadata(varianceMetadata);
-        _variance.reset(new Variance(fitsfile, varianceMetadata, bbox, origin));
-        checkExtType(fitsfile, varianceMetadata, "VARIANCE");
-    } catch(fits::FitsError &e) {
-        if (needAllHdus) {
-            LSST_EXCEPT_ADD(e, "Reading Variance");
-            throw e;
-        }
         _variance.reset(new Variance(_image->getBBox()));
+    } else {
+        try {
+            fitsfile.setHdu(static_cast<int>(Hdu::Mask));
+            ensureMetadata(maskMetadata);
+            _mask.reset(new Mask(fitsfile, maskMetadata, bbox, origin, conformMasks));
+            checkExtType(fitsfile, maskMetadata, "MASK");
+        } catch(fits::FitsError &e) {
+            if (needAllHdus) {
+                LSST_EXCEPT_ADD(e, "Reading Mask");
+                throw e;
+            }
+            log.warn("Mask unreadable; using default");
+            // By resetting the status we are able to read the next HDU (the variance).
+            fitsfile.status = 0;
+            _mask.reset(new Mask(_image->getBBox()));
+        }
+
+        try {
+            fitsfile.setHdu(static_cast<int>(Hdu::Variance));
+            ensureMetadata(varianceMetadata);
+            _variance.reset(new Variance(fitsfile, varianceMetadata, bbox, origin));
+            checkExtType(fitsfile, varianceMetadata, "VARIANCE");
+        } catch(fits::FitsError &e) {
+            if (needAllHdus) {
+                LSST_EXCEPT_ADD(e, "Reading Variance");
+                throw e;
+            }
+            log.warn("Variance unreadable; using default");
+            fitsfile.status = 0;
+            _variance.reset(new Variance(_image->getBBox()));
+        }
     }
 }
 

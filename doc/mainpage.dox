@@ -261,6 +261,14 @@ The corresponding constructors obeyed and obey the same conventions, so
 @note If \b foo.fits doesn't exist, the code tries to read \b foo.fits_img.fits for backward compatibility,
 but there's no way to force the code to write this file.
 
+@note An attempt to read a \c MaskedImage from a FITS file which does not have
+\c MASK and/or \c VARIANCE HDUs will succeed unless the \c requireAllHdus
+argument is \c true; the missing data will be replaced with 0s.
+
+@note Reading a \c MaskedImage from a non-default HDU in a MEF will not read
+\c MASK or \c VARIANCE data; again, they will be replaced with 0s.
+
+
 \subsection afwSecAppendingToFits Appending to FITS files
 
 If you specify the mode in e.g. Image::writeFits to \b a (or \b ab), the desired data
@@ -269,8 +277,8 @@ for a MaskedImage it adds 3.
 
 You can read the HDU of your desires by passing an \c hdu to the constructor.
 
-\note For MaskedImage if you specify \b hdu, we'll read \b hdu, \b hdu+1, and \b hdu+2
-so to get the nth MaskedImage, you should set <tt>hdu == 1 + 3*n</tt>
+\note Per the above, it is possible to append a \c MaskedImage to a FITS file,
+but \b not possible to read it back from a non-default HDU.
 */
 }}}
 
