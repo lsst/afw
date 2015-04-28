@@ -13,7 +13,7 @@ of known bad pixels in each detector. The cameraGeom package supports operations
 - Assemble images from raw data (combining amplifier subregions and trimming overscan). CameraGeom does not
  assemble an entire image (see ip_isr AssembleCcdTask for that) but includes functions in
  \ref assembleImage "assembleImage" that do much of the work.
-- Transform 2-d coordinates between various \ref afwCameraGeomCoordSys "camera coordinate systems",
+- Transform 2-d points between various \ref afwCameraGeomCoordSys "camera coordinate systems",
   using \ref camera.Camera.transform "Camera.transform". This can be used as part of generating a
   \ref image::Wcs "WCS" or to examine the effects of optical distortion.
 - Create a graphic showing the layout of detectors on the focal plane, using utils.plotFocalPlane.
@@ -103,7 +103,7 @@ orientation in the focal plane and information about amplifiers (such as the ima
 readout corner). Amplifier data is stored as records in an \ref table::AmpInfoTable "amp info table",
 and Detector acts as a collection of \ref table::AmpInfoRecord "amp info records".
 
-Detector also supports coordinate transforms between \ref afwCameraGeomFOCAL_PLANE "focal plane",
+Detector also supports transforms between \ref afwCameraGeomFOCAL_PLANE "focal plane",
 \ref afwCameraGeomPIXELS "pixels", and \ref afwCameraGeomACTUAL_PIXELS "actual pixels" coordinates.
 
 ### CameraSys and CameraSysPrefix
