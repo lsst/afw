@@ -129,23 +129,20 @@ class Camera(DetectorCollection):
                 detectorList.append(detector)
         return detectorList
 
-    def findDetectorsList(self, xCoordList, yCoordList, coordSys):
+    def findDetectorsList(self, cameraPointList, coordSys):
         """!Find the detectors that cover a list of points specified by x and y coordinates in any system
 
-        @param[in] xCoordList  an array of x coordinates
-        @param[in] yCoordList  an array of y coordinates
-        @param[in] coordSys  the coordinate system in which xCoord and yCoord are defined
+        @param[in] cameraPointList  a list of cameraPoints
+        @param[in] coordSys  the camera coordinate system in which cameraPointList is defined
         @return a list of lists; each list contains the names of all detectors which contain the
         corresponding point
         """
-
-        cameraPointList = [afwGeom.Point2D(x,y) for x,y in zip(xCoordList, yCoordList)]
 
         #transform the points to the native coordinate system
         nativePointList = self._transformSingleSysArray(cameraPointList, coordSys, self._nativeCameraSys)
 
         detectorList = []
-        for i in range(len(xCoordList)):
+        for i in range(len(cameraPointList)):
             detectorList.append([])
 
         for detector in self:
