@@ -27,24 +27,20 @@ import sys
 import os
 import time
 
-import eups
-
+import lsst.utils
 import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-import lsst.afw.math.detail as mathDetail
 
 pexLog.Debug("lsst.afw", 0)
 
 MaxIter = 20
 MaxTime = 1.0 # seconds
 
-dataDir = eups.productDir("afwdata")
-if not dataDir:
-    raise RuntimeError("Must set up afwdata")
+afwdataDir = lsst.utils.getPackageDir("afwdata")
 
-InputMaskedImagePath = os.path.join(dataDir, "data", "med.fits")
+InputMaskedImagePath = os.path.join(afwdataDir, "data", "med.fits")
 
 def getSpatialParameters(nKernelParams, func):
     """Get basic spatial parameters list

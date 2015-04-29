@@ -32,13 +32,14 @@ or
    python
    >>> import SourceMatch; SourceMatch.run()
 """
-import os, re, sys
+import os
+import re
 
 import numpy
 import unittest
-import eups
 import pickle
 
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.afw.table as afwTable
 import lsst.afw.geom as afwGeom
@@ -123,16 +124,12 @@ class SourceMatchTestCase(unittest.TestCase):
     def testPhotometricCalib(self):
         """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue"""
 
-        if not eups.productDir("afwdata"):
-            print >> sys.stderr, "Failed to open sdss catalogue"
-            return
-
         band = 2                        # SDSS r
         
         #
         # Read SDSS catalogue
         #
-        ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
+        ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
 
         sdss = afwTable.SourceCatalog(self.table)
         sdssSecondary = afwTable.SourceCatalog(self.table)
@@ -168,7 +165,7 @@ class SourceMatchTestCase(unittest.TestCase):
         #
         # Read SDSS catalogue
         #
-        ifd = open(os.path.join(eups.productDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
+        ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
 
         template = afwTable.SourceCatalog(self.table)
 

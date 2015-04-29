@@ -1,6 +1,8 @@
 import os
+
 import numpy
-import eups
+
+import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 from .cameraGeomLib import PIXELS, TAN_PIXELS, PUPIL, FOCAL_PLANE, SCIENCE, ACTUAL_PIXELS, \
@@ -123,9 +125,7 @@ class CameraWrapper(object):
         @param[in] isLsstLike  make repository products with one raw image per amplifier (True)
             or with one raw image per detector (False)
         """
-        afwDir = eups.productDir("afw")
-        if afwDir is None:
-            raise RuntimeError("afw is not setup")
+        afwDir = lsst.utils.getPackageDir("afw")
         self._afwTestDir = os.path.join(afwDir, "tests")
         
         # Info to store for unit tests

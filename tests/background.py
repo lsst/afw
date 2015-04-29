@@ -39,6 +39,7 @@ import unittest
 import numpy as np
 import pickle
 
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 from lsst.daf.base import PropertySet
@@ -46,14 +47,13 @@ import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
-import eups
 
 try:
     type(display)
 except NameError:
     display = False
 
-AfwdataDir = eups.productDir("afwdata")
+AfwdataDir = lsst.utils.getPackageDir("afwdata")
 
 # ==== summary to currently implemented tests ====
 # getPixel: tests basic functionality of getPixel() method (floats)

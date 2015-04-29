@@ -27,7 +27,7 @@ import os.path
 import math
 import unittest
 
-import eups
+import lsst.utils
 import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -42,7 +42,7 @@ try:
 except NameError:
     verbose = 0
 
-dataDir = eups.productDir("afwdata")
+dataDir = lsst.utils.getPackageDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
 InputImagePath = os.path.join(dataDir, "871034p_1_MI")

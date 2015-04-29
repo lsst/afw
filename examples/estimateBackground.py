@@ -23,7 +23,7 @@
 #
 
 import os
-import eups
+import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
@@ -36,7 +36,7 @@ except NameError:
 ################################################
 
 def getImage():
-    imagePath = os.path.join(eups.productDir("afwdata"),
+    imagePath = os.path.join(lsst.utils.getPackageDir("afwdata"),
                              "DC3a-Sim", "sci", "v5-e0", "v5-e0-c011-a00.sci_img.fits")
     return afwImage.MaskedImageF(imagePath)
 

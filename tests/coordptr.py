@@ -34,7 +34,7 @@ Run with:
 import os
 import unittest
 
-import eups
+import lsst.utils
 import lsst.afw.image            as image
 import lsst.afw.geom             as afwGeom
 import lsst.afw.coord.coordLib   as coord
@@ -56,8 +56,8 @@ class CoordPtrTestCase(unittest.TestCase):
         print type(c)
 
     def testMakeWcs(self):
-        path= eups.productDir("afw")
-        path = os.path.join(path, "tests", "data", "parent.fits")
+        afwdataDir = lsst.utils.getPackageDir("afw")
+        path = os.path.join(afwdataDir, "tests", "data", "parent.fits")
         fitsHdr = image.readMetadata(path)
 
         wcs = image.makeWcs(fitsHdr)

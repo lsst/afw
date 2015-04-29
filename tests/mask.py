@@ -39,12 +39,12 @@ import sys
 import unittest
 import numpy
 
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
-import eups
 import lsst.afw.display.ds9 as ds9
 
 numpy.random.seed(1)
@@ -94,14 +94,15 @@ class MaskTestCase(unittest.TestCase):
         self.mask2 = afwImage.MaskU(self.mask1.getDimensions())
         self.mask2.set(self.val2)
 
-        dataDir = os.path.join(eups.productDir("afwdata"), "data")
-        if dataDir:
+        try:
+            dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+        except Exception:
+            self.maskFile = None
+        else:
             if True:
                 self.maskFile = os.path.join(dataDir, "small_MI.fits")
             else:
                 self.maskFile = os.path.join(dataDir, "871034p_1_MI.fits")
-        else:
-            self.maskFile = None
 
     def tearDown(self):
         del self.mask1

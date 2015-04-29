@@ -34,16 +34,15 @@ or
 """
 
 import os
-
 import unittest
 
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
-import eups
 import lsst.afw.display.ds9 as ds9
 
 try:
@@ -546,7 +545,7 @@ class MaskedImageTestCase(unittest.TestCase):
         # As I don't see how reading an exposure from disk could make a difference
         # it's easier to just build an Image
         if False:
-            im = afwImage.ImageF(os.path.join(eups.productDir("afwdata"), "med_img.fits"))
+            im = afwImage.ImageF(os.path.join(lsst.utils.getPackageDir("afwdata"), "med_img.fits"))
         else:
             im = afwImage.ImageF(afwGeom.Extent2I(10, 10))
         mi = afwImage.MaskedImageF(im)

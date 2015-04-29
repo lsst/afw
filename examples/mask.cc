@@ -82,7 +82,7 @@ int main() {
 
     std::string inImagePath;
     try {
-        std::string dataDir = lsst::utils::eups::productDir("afwdata");
+        std::string dataDir = lsst::utils::getPackageDir("afwdata");
         inImagePath = dataDir + "/data/small.fits";
     } catch (lsst::pex::exceptions::NotFoundError) {
         std::cerr << "Usage: mask [fitsFile]" << std::endl;

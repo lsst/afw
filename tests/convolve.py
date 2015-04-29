@@ -35,7 +35,7 @@ import string
 
 import numpy
 
-import eups
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
@@ -57,9 +57,7 @@ except NameError:
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
-dataDir = os.path.join(eups.productDir("afwdata"), "data")
-if not dataDir:
-    raise RuntimeError("Must set up afwdata to run these tests")
+dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
 
 # input image contains a saturated star, a bad column, and a faint star
 InputMaskedImagePath = os.path.join(dataDir, "medexp.fits")

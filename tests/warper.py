@@ -27,7 +27,7 @@ import os
 import unittest
 import warnings
 
-import eups
+import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
@@ -41,8 +41,9 @@ VERBOSITY = 0                       # increase to see trace
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-afwDataDir = eups.productDir("afwdata")
-if afwDataDir == None:
+try:
+    afwDataDir = lsst.utils.getPackageDir("afwdata")
+except Exception:
     warnings.warn("skipping all tests because afwdata is not setup")
     dataDir = None
 else:

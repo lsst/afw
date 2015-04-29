@@ -36,7 +36,7 @@ import unittest
 
 import numpy
 
-import eups
+import lsst.utils
 import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -56,10 +56,7 @@ except:
 
 pexLog.Debug("lsst.afw.image", VERBOSITY)
 
-try:
-    dataDir = os.path.join(eups.productDir("afwdata"), "data")
-except Exception:
-    raise RuntimeError("Must set up afwdata to run these tests")
+dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
 
 InputMaskedImageName = "871034p_1_MI.fits"
 InputMaskedImageNameSmall = "small_MI.fits"

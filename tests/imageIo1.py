@@ -30,7 +30,7 @@ import os.path
 
 import unittest
 
-import eups
+import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
@@ -41,9 +41,7 @@ try:
 except NameError:
     verbose = 0
 
-dataDir = os.path.join(eups.productDir("afwdata"), "data")
-if not dataDir:
-    raise RuntimeError("Must set up afwdata to run these tests")
+dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
