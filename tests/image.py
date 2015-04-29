@@ -40,13 +40,13 @@ import sys
 import tempfile
 import unittest
 
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-import eups
 import lsst.afw.display.ds9 as ds9
 
 import numpy
@@ -458,12 +458,13 @@ class DecoratedImageTestCase(unittest.TestCase):
             )
         self.dimage1.getImage().set(self.val1)
 
-        dataDir = eups.productDir("afwdata")
-        if dataDir:
+        try:
+            dataDir = lsst.utils.getPackageDir("afwdata")
+        except Exception:
+            self.fileForMetadata = None
+        else:
             self.fileForMetadata = os.path.join(dataDir, "data", "small_MI.fits")
             self.trueMetadata = {"RELHUMID" : 10.69}
-        else:
-            self.fileForMetadata = None
 
     def tearDown(self):
         del self.dimage1
@@ -493,13 +494,14 @@ class DecoratedImageTestCase(unittest.TestCase):
 
     def testReadFits(self):
         """Test reading FITS files"""
-        
-        dataDir = eups.productDir("afwdata")
-        if dataDir:
-            dataDir = os.path.join(dataDir, "data")
-        else:
+
+        try:        
+            dataDir = lsst.utils.getPackageDir("afwdata")
+        except Exception:
             print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
             return
+
+        dataDir = os.path.join(dataDir, "data")
         
         hdus = {}
         fileName = os.path.join(dataDir, "small_MI.fits")

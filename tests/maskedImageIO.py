@@ -38,17 +38,15 @@ import os.path
 import unittest
 
 import numpy
-import eups
 
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexEx
 
-dataDir = eups.productDir("afwdata")
-if not dataDir:
-    raise RuntimeError("You must set up afwdata to run these tests")
+dataDir = lsst.utils.getPackageDir("afwdata")
 
 try:
     type(display)

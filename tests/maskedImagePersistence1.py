@@ -25,17 +25,16 @@ from __future__ import absolute_import, division
 
 import os
 import os.path
-
 import unittest
-import lsst.utils.tests as utilsTests
 
+import lsst.utils
+import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
-import eups
 
-dataDir = os.path.join(eups.productDir("afwdata"), "data")
+dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
 if not dataDir:
     raise RuntimeError("You must set up afwdata to run these tests")
 

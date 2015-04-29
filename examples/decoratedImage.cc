@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         file_u16 = std::string(argv[1]);
     } else {
         try {
-            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            std::string dataDir = lsst::utils::getPackageDir("afwdata");
             file_u16 = dataDir + "/data/small.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
             std::cerr << "Error: provide fits file path as argument or setup afwdata.\n" << std::endl;

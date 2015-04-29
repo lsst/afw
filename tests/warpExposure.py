@@ -31,7 +31,7 @@ import unittest
 
 import numpy
 
-import eups
+import lsst.utils
 import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
@@ -58,9 +58,7 @@ except:
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-afwDataDir = eups.productDir("afwdata")
-if not afwDataDir:
-    raise RuntimeError("Must set up afwdata to run these tests")
+afwDataDir = lsst.utils.getPackageDir("afwdata")
 dataDir = os.path.join(afwDataDir, "data")
 
 originalExposureName = "medexp.fits"

@@ -122,7 +122,7 @@ readImage() {
     afwImage::MaskedImage<PixelT>::Ptr mi;
 
     try {
-        std::string dataDir = lsst::utils::eups::productDir("afwdata");
+        std::string dataDir = lsst::utils::getPackageDir("afwdata");
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1.fits";
         

@@ -143,7 +143,7 @@ string GetInputImagePath(int argc, char **argv)
     string inImagePath;
     if (argc < 2) {
         try {
-            string dataDir = lsst::utils::eups::productDir("afwdata");
+            string dataDir = lsst::utils::getPackageDir("afwdata");
             inImagePath = dataDir + "/data/med.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
             cerr << "Usage: convolveGPU [fitsFile]" << endl;

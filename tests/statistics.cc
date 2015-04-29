@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) { /* parasoft-suppress  LsstDm-3-2a L
 
         std::string afwdata_dir;
         try {
-            afwdata_dir = lsst::utils::eups::productDir("afwdata");
+            afwdata_dir = lsst::utils::getPackageDir("afwdata");
         } catch (lsst::pex::exceptions::NotFoundError) {
             std::cout << "Warning: test skipped because afwdata is not setup" << std::endl;
             return;

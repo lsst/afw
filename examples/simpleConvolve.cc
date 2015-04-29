@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     std::string inImagePath;
     if (argc < 2) {
         try {
-            std::string dataDir = lsst::utils::eups::productDir("afwdata");
+            std::string dataDir = lsst::utils::getPackageDir("afwdata");
             inImagePath = dataDir + "/data/small.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
             std::cerr << "Usage: simpleConvolve [fitsFile [sigma]]" << std::endl;

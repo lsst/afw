@@ -25,7 +25,7 @@ from __future__ import absolute_import, division
 
 import os
 import unittest
-import eups
+import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
@@ -34,7 +34,7 @@ from math import sqrt
 class WCSTestRaWrap(unittest.TestCase):
     '''A test set for the RA=0 wrap-around'''
     def setUp(self):
-        mydir = eups.productDir('afw')
+        mydir = lsst.utils.getPackageDir('afw')
         self.assertTrue(mydir is not None)
         self.datadir = os.path.join(mydir, 'tests')
         

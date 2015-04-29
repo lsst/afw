@@ -32,7 +32,7 @@ from __future__ import absolute_import, division
 import os.path
 import unittest
 
-import eups
+import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests as utilsTests
@@ -55,7 +55,7 @@ class SavingSubImagesTest(unittest.TestCase):
     """
     
     def setUp(self):
-        path = eups.productDir("afw")
+        path = lsst.utils.getPackageDir("afw")
         self.parentFile = os.path.join(path, "tests", "data", "parent.fits")
         
         self.parent = afwImage.ExposureF(self.parentFile)

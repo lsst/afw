@@ -27,8 +27,7 @@ import sys
 import os
 import time
 
-import eups
-
+import lsst.utils
 import lsst.daf.base as dafBase
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -48,11 +47,9 @@ def setDegreesFlag(newValue):
     global DegreesFlag
     DegreesFlag = newValue
 
-dataDir = eups.productDir("afwdata")
-if not dataDir:
-    raise RuntimeError("Must set up afwdata")
+afwdataDir = lsst.utils.getPackageDir("afwdata")
 
-InputExposurePath = os.path.join(dataDir, "ImSim/calexp/v85408556-fr/R23/S11.fits")
+InputExposurePath = os.path.join(afwdataDir, "ImSim/calexp/v85408556-fr/R23/S11.fits")
 
 def timeWarp(destExposure, srcExposure, warpingControl):
     """Time warpExposure

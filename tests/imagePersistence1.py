@@ -24,18 +24,16 @@ from __future__ import absolute_import, division
 #
 
 import os
-
 import unittest
+
+import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
-import eups
 
-dataDir = eups.productDir("afwdata")
-if not dataDir:
-    raise RuntimeError("You must set up afwdata to run these tests")
+dataDir = lsst.utils.getPackageDir("afwdata")
 
 class ImagePersistenceTestCase(unittest.TestCase):
     """A test case for Image Persistence"""
