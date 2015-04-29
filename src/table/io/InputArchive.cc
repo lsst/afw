@@ -105,8 +105,23 @@ public:
                 );
                 throw;
             }
+            // If we're loading the object for the first time, and we've failed, we should have already
+            // thrown an exception, and we assert that here.
+            assert(r.first->second);
+        } else if (!r.first->second) {
+            // If we'd already tried and failed to load this object before - but we'd caught the exception
+            // previously (because the calling code didn't consider that to be a fatal error) - we'll
+            // just throw an exception again.  While we can't know exactly what was thrown before,
+            // it's most likely it was a NotFoundError because a needed extension package was not setup.
+            // And conveniently it's appropriate to throw that here too, since now the problem is that
+            // the object should have been loaded into the cache and it wasn't found there.
+            throw LSST_EXCEPT(
+                pex::exceptions::NotFoundError,
+                (boost::format(
+                    "Not trying to reload object with id=%d; a previous attempt to load it already failed."
+                ) % id).str()
+            );
         }
-        assert(r.first->second);
         return r.first->second;
     }
 
