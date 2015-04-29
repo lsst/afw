@@ -39,13 +39,13 @@ class Camera(DetectorCollection):
         self._transformMap = transformMap
         self._nativeCameraSys = self._transformMap.getNativeCoordSys()
         super(Camera, self).__init__(detectorList)
-  
+
     def getName(self):
         """!Return the camera name
         """
         return self._name
 
-    def _tranformFromNativeSys(self, nativePoint, toSys):
+    def _transformFromNativeSys(self, nativePoint, toSys):
         """!Transform a point in the native coordinate system to another coordinate system.
 
         @param[in] nativePoint  CameraPoint in the native system for the camera
@@ -65,8 +65,31 @@ class Camera(DetectorCollection):
         else:
             return self._transformSingleSys(nativePoint, toSys)
 
+    def _transformSingleSysArray(self, positionList, fromSys, toSys):
+        """!Transform an array of points from once CameraSys to another CameraSys
+        @warning This method only handles a single jump, not a transform linked by a common native sys.
+        
+        @param[in] positionList List of Point2D objects, one per position
+        @param[in] fromSys  Initial camera coordinate system
+        @param[in] toSys  Destination camera coordinate system
+        
+        @returns an array of Point2D objects containing the transformed coordinates in the destination system.
+        """
+        if fromSys.hasDetectorName():
+            det = self[fromSys.getDetectorname()]
+            detTrans = det.getTransfromMap()
+            return detTrans.transform(positionList, fromSys, toSys)
+        elif toSys.hasDetectorName():
+            det = self[toSys.getDetectorName()]
+            detTrans = det.getTransformMap()
+            return detTrans.transform(positionList, fromSys, toSys)
+        elif toSys in self._transformMap:
+            # use camera transform map
+            return self._transformMap.transform(positionList, fromSys, toSys)
+        raise RuntimeError("Could not find mapping from %s to %s"%(fromSys, toSys))
+
     def _transformSingleSys(self, cameraPoint, toSys):
-        """!Transform a CameraPoint with a CameraSys to another CameraSys. 
+        """!Transform a CameraPoint with a CameraSys to another CameraSys.
 
         @warning This method only handles a single jump, not a transform linked by a common native sys.
 
@@ -75,7 +98,7 @@ class Camera(DetectorCollection):
         """
         fromSys = cameraPoint.getCameraSys()
         if fromSys.hasDetectorName():
-            # use from detector to transform 
+            # use from detector to transform
             det = self[fromSys.getDetectorName()]
             return det.transform(cameraPoint, toSys)
         elif toSys.hasDetectorName():
@@ -87,16 +110,16 @@ class Camera(DetectorCollection):
             outPoint = self._transformMap.transform(cameraPoint.getPoint(), cameraPoint.getCameraSys(), toSys)
             return CameraPoint(outPoint, toSys)
         raise RuntimeError("Could not find mapping from %s to %s"%(cameraPoint.getCameraSys(), toSys))
-        
+
     def findDetectors(self, cameraPoint):
         """!Find the detectors that cover a given cameraPoint, or empty list
-        
+
         @param[in] cameraPoint  position to use in lookup
         @return a list of zero or more Detectors that overlap the specified point
         """
         # first convert to focalPlane since the point may be in another overlapping detector
         nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
-        
+
         detectorList = []
         for detector in self:
             cameraSys = detector.makeCameraSys(PIXELS)
@@ -106,8 +129,35 @@ class Camera(DetectorCollection):
                 detectorList.append(detector)
         return detectorList
 
+    def findDetectorsList(self, cameraPointList, coordSys):
+        """!Find the detectors that cover a list of points specified by x and y coordinates in any system
+
+        @param[in] cameraPointList  a list of cameraPoints
+        @param[in] coordSys  the camera coordinate system in which cameraPointList is defined
+        @return a list of lists; each list contains the names of all detectors which contain the
+        corresponding point
+        """
+
+        #transform the points to the native coordinate system
+        nativePointList = self._transformSingleSysArray(cameraPointList, coordSys, self._nativeCameraSys)
+
+        detectorList = []
+        for i in range(len(cameraPointList)):
+            detectorList.append([])
+
+        for detector in self:
+            coordMap = detector.getTransformMap()
+            cameraSys = detector.makeCameraSys(PIXELS)
+            detectorPointList = coordMap.transform(nativePointList, self._nativeCameraSys, cameraSys)
+            box = afwGeom.Box2D(detector.getBBox())
+            for i, pt in enumerate(detectorPointList):
+                if box.contains(pt):
+                    detectorList[i].append(detector)
+
+        return detectorList
+
     def getTransformMap(self):
-        """!Obtain a pointer to the transform registry.  
+        """!Obtain the transform registry.
 
         @return a TransformMap
 
@@ -124,7 +174,7 @@ class Camera(DetectorCollection):
         """
         # All transform maps should know about the native coordinate system
         nativePoint = self._transformSingleSys(cameraPoint, self._nativeCameraSys)
-        return self._tranformFromNativeSys(nativePoint, toSys)
+        return self._transformFromNativeSys(nativePoint, toSys)
 
     def makeCameraPoint(self, point, cameraSys):
         """!Make a CameraPoint from a Point2D and a CameraSys
