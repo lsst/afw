@@ -793,6 +793,18 @@ class FootprintTestCase(tests.TestCase):
         self.assertEqual(mask123a.getArray().sum(), merge123.getArea())
         self.assertClose(mask123a.getArray(), mask123b.getArray(), rtol=0, atol=0)
 
+        # Test that ignoreSelf=True works for include
+        ignoreParent = True
+        childOnly = afwDetect.Footprint()
+        childOnly.include([child1, child2, child3])
+        merge123 = afwDetect.Footprint(parent)
+        merge123.include([child1, child2, child3], ignoreParent)
+        maskChildren = afwImage.MaskU(region)
+        mask123 = afwImage.MaskU(region)
+        afwDetect.setMaskFromFootprint(maskChildren, childOnly, 1)
+        afwDetect.setMaskFromFootprint(mask123, merge123, 1)
+        self.assertTrue(numpy.all(maskChildren.getArray() == mask123.getArray()))
+
     def testMergeFootprints(self):
         f1 = self.foot
         f2 = afwDetect.Footprint()
