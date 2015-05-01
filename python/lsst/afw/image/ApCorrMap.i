@@ -73,5 +73,17 @@
         def __len__(self):
             return self.size()
 
+        #
+        # Provide return value for C++ "void operator op=()" or it will magically end up as None
+        #
+        def __imul__(*args):
+            """__imul__(self, double scale) -> self"""
+            _imageLib.ApCorrMap___imul__(*args)
+            return args[0]
+    
+        def __idiv__(*args):
+            """__idiv__(self, double scale) -> self"""
+            _imageLib.ApCorrMap___idiv__(*args)
+            return args[0]
 %}
 }

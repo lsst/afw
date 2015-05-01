@@ -106,6 +106,9 @@ public :
     bool operator==(Calib const& rhs) const;
     bool operator!=(Calib const& rhs) const { return !(*this == rhs); }
 
+    void operator*=(double const scale);
+    void operator/=(double const scale) { (*this) *= 1.0/scale; }
+
     bool isPersistable() const { return true; }
 
 protected:

@@ -180,6 +180,9 @@ public:
     /// ChebyshevBoundedField is always persistable.
     virtual bool isPersistable() const { return true; }
 
+    /// @copydoc BoundedField::operator*
+    virtual PTR(BoundedField) operator*(double const scale) const;
+
 protected:
 
     virtual std::string getPersistenceName() const;

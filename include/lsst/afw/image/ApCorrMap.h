@@ -66,6 +66,10 @@ public:
     /// Whether the map is persistable (true IFF all contained BoundedFields are persistable).
     virtual bool isPersistable() const;
 
+    /// Scale all fields by a constant
+    void operator*=(double const scale);
+    void operator/=(double const scale) { *this *= 1.0/scale; }
+
 private:
 
     virtual std::string getPersistenceName() const;

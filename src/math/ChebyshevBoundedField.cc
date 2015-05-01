@@ -392,6 +392,10 @@ void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(catalog);
 }
 
+PTR(BoundedField) ChebyshevBoundedField::operator*(double const scale) const {
+    return boost::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients()*scale));
+}
+
 // ------------------ explicit instantiation ----------------------------------------------------------------
 
 #ifndef DOXYGEN

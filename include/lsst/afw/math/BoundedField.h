@@ -147,6 +147,16 @@ public:
     template <typename T>
     void divideImage(image::Image<T> & image, bool overlapOnly=false) const;
 
+    /**
+     *  Return a scaled BoundedField
+     *
+     *  @param[in]  scale    Scaling factor
+     */
+    virtual PTR(BoundedField) operator*(double const scale) const = 0;
+    PTR(BoundedField) operator/(double scale) const {
+        return (*this)*(1.0/scale);
+    }
+
     virtual ~BoundedField() {}
 
 protected:
@@ -156,6 +166,8 @@ protected:
 private:
     geom::Box2I const _bbox;
 };
+
+PTR(BoundedField) operator*(double const scale, CONST_PTR(BoundedField) bf);
 
 }}} // namespace lsst::afw::math
 
