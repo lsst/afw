@@ -689,15 +689,22 @@ Footprint::insertIntoImage(
     }
 }
 
-void Footprint::include(std::vector<PTR(Footprint)> const & others) {
+void Footprint::include(std::vector<PTR(Footprint)> const & others, bool ignoreSelf) {
     if (others.empty()) return;
-    geom::Box2I bbox(getBBox());
+    geom::Box2I bbox;
+    if (!ignoreSelf) {
+        bbox.include(getBBox());
+    } else {
+        _spans.clear();
+    }
     for (std::vector<PTR(Footprint)>::const_iterator i = others.begin(); i != others.end(); ++i) {
         bbox.include((**i).getBBox());
     }
     boost::uint16_t bits = 0x1;
     image::Mask<boost::uint16_t> mask(bbox);
-    setMaskFromFootprint(&mask, *this, bits);
+    if (!ignoreSelf) {
+        setMaskFromFootprint(&mask, *this, bits);
+    }
     for (std::vector<PTR(Footprint)>::const_iterator i = others.begin(); i != others.end(); ++i) {
         setMaskFromFootprint(&mask, **i, bits);
     }
