@@ -6,6 +6,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace lsst { namespace afw { namespace math {
 
@@ -80,13 +81,13 @@ struct PolynomialFunction2PersistenceHelper {
 
 // Persistance schema for 2-d Chebyshevs; not a singleton because it depends on the order.
 struct Chebyshev1Function2PersistenceHelper : public PolynomialFunction2PersistenceHelper {
-    table::Key< table::Point<double> > min;
-    table::Key< table::Point<double> > max;
+    table::PointKey<double> min;
+    table::PointKey<double> max;
 
     explicit Chebyshev1Function2PersistenceHelper(int nCoefficients) :
         PolynomialFunction2PersistenceHelper(nCoefficients),
-        min(schema.addField< table::Point<double> >("min", "minimum point for function's bbox")),
-        max(schema.addField< table::Point<double> >("max", "maximum point for function's bbox"))
+        min(table::PointKey<double>::addFields(schema, "min", "minimum point for function's bbox", "pixels")),
+        max(table::PointKey<double>::addFields(schema, "max", "maximum point for function's bbox", "pixels"))
     {}
 
     explicit Chebyshev1Function2PersistenceHelper(table::Schema const & schema_) :

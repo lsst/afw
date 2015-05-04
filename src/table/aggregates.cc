@@ -235,22 +235,6 @@ CovarianceMatrixKey<T,N>::CovarianceMatrixKey(
 }
 
 template <typename T, int N>
-template <typename U>
-CovarianceMatrixKey<T,N>::CovarianceMatrixKey(
-    Key< Covariance<U> > const & other
-) : _isDiagonalVariance(true), _sigma(other.getSize()), _cov(other.getSize() * (other.getSize() - 1)/2)
-{
-    int const n = _sigma.size();
-    int k = 0;
-    for (int i = 0; i < n; ++i) {
-        _sigma[i] = other(i, i);
-        for (int j = 0; j < i; ++j, ++k) {
-            _cov[k] = other(i, j);
-        }
-    }
-}
-
-template <typename T, int N>
 CovarianceMatrixKey<T,N>::CovarianceMatrixKey(SubSchema const & s, NameArray const & names) :
     _isDiagonalVariance(false), _sigma(names.size()), _cov(names.size()*(names.size() - 1)/2)
 {
@@ -421,9 +405,5 @@ template class CovarianceMatrixKey<double,2>;
 template class CovarianceMatrixKey<double,3>;
 template class CovarianceMatrixKey<double,4>;
 template class CovarianceMatrixKey<double,Eigen::Dynamic>;
-
-template CovarianceMatrixKey<float,Eigen::Dynamic>::CovarianceMatrixKey(Key< Covariance<float> > const &);
-template CovarianceMatrixKey<float,2>::CovarianceMatrixKey(Key< Covariance<Point<float> > > const &);
-template CovarianceMatrixKey<float,3>::CovarianceMatrixKey(Key< Covariance<Moments<float> > > const &);
 
 }}} // namespace lsst::afw::table

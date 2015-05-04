@@ -447,11 +447,11 @@ static SourceFitsReader const sourceFitsReader;
 SourceRecord::SourceRecord(PTR(SourceTable) const & table) : SimpleRecord(table) {}
 
 void SourceRecord::updateCoord(image::Wcs const & wcs) {
-    set(SourceTable::getCoordKey(), *wcs.pixelToSky(getCentroid()));
+    setCoord(*wcs.pixelToSky(getCentroid()));
 }
 
-void SourceRecord::updateCoord(image::Wcs const & wcs, Key< Point<double> > const & key) {
-    set(SourceTable::getCoordKey(), *wcs.pixelToSky(get(key)));
+void SourceRecord::updateCoord(image::Wcs const & wcs, PointKey<double> const & key) {
+    setCoord(*wcs.pixelToSky(get(key)));
 }
 
 void SourceRecord::_assign(BaseRecord const & other) {
