@@ -195,11 +195,10 @@ public:
     /**
      *  @brief Update the Footprint in-place to be the union of itself and all its children
      *
-     *  Only spans will be modified; peaks will be left unchanged.
-     *
-     *  If the union of all children with this is disjoint, throw RuntimeErrorException.
+     *  Only spans will be modified; peaks will be left unchanged.  If ignoreSelf is true it
+     *  will only be the union of all its children.
      */
-    void include(std::vector<PTR(Footprint)> const & children);
+    void include(std::vector<PTR(Footprint)> const & children, bool ignoreSelf=false);
 
     bool isPersistable() const { return true; }
 
