@@ -29,6 +29,7 @@
 #include "lsst/afw/table/SortedCatalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/io/FitsWriter.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace lsst { namespace afw {
 
@@ -173,9 +174,9 @@ public:
     /// @brief Key for the unique ID.
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
     /// @brief Key for the minimum point of the bbox.
-    static Key< Point<int> > getBBoxMinKey() { return getMinimalSchema().bboxMin; }
+    static PointKey<int> getBBoxMinKey() { return getMinimalSchema().bboxMin; }
     /// @brief Key for the maximum point of the bbox.
-    static Key< Point<int> > getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
+    static PointKey<int> getBBoxMaxKey() { return getMinimalSchema().bboxMax; }
     //@}
 
     /// @copydoc BaseTable::clone
@@ -206,8 +207,8 @@ private:
     struct MinimalSchema {
         Schema schema;
         Key<RecordId> id;
-        Key< Point<int> > bboxMin;
-        Key< Point<int> > bboxMax;
+        PointKey<int> bboxMin;
+        PointKey<int> bboxMax;
 
         MinimalSchema();
     };

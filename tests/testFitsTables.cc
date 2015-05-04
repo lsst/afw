@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     Key<double> e_g_d = schema.addField<double>("e_g_d", "double", "bargles^2");
     Key<Flag> e_g_d_flag1 = schema.addField<Flag>("e_g_d_flag1", "flag1 for e.g.d");
     Key<Flag> e_g_d_flag2 = schema.addField<Flag>("e_g_d_flag2", "flag2 for e.g.d");
-    Key< Point<double> > a_b_p = schema.addField< Point<double> >("a_b_p", "point", "pixels");
+    PointKey<double> a_b_p = PointKey<double>::addFields(schema, "a_b_p", "point", "pixels");
     Key< std::string > a_s = schema.addField< std::string >("a_s", "string", 5);
 
     SourceCatalog vector(SourceTable::make(schema));

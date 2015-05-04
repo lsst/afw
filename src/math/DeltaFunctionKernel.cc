@@ -87,7 +87,7 @@ namespace lsst { namespace afw { namespace math {
 namespace {
 
 struct DeltaFunctionKernelPersistenceHelper : public Kernel::PersistenceHelper, private boost::noncopyable {
-    table::Key< table::Point<int> > pixel;
+    table::PointKey<int> pixel;
 
     static DeltaFunctionKernelPersistenceHelper const & get() {
         static DeltaFunctionKernelPersistenceHelper const instance;
@@ -98,7 +98,7 @@ private:
 
     explicit DeltaFunctionKernelPersistenceHelper() :
         Kernel::PersistenceHelper(0),
-        pixel(schema.addField< table::Point<int> >("pixel", "position of nonzero pixel"))
+        pixel(table::PointKey<int>::addFields(schema, "pixel", "position of nonzero pixel", "pixels"))
     {
        schema.getCitizen().markPersistent();
     }

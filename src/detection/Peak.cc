@@ -201,10 +201,10 @@ PeakTable::PeakTable(PeakTable const & other) :
 
 PeakTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<afw::table::RecordId>("id", "unique ID");
-    fx = schema.addField<float>("f.x", "subpixel column position", "pixels");
-    fy = schema.addField<float>("f.y", "subpixel row position", "pixels");
-    ix = schema.addField<int>("i.x", "column position of highest pixel", "pixels");
-    iy = schema.addField<int>("i.y", "row position of highest pixel", "pixels");
+    fx = schema.addField<float>("f_x", "subpixel column position", "pixels");
+    fy = schema.addField<float>("f_y", "subpixel row position", "pixels");
+    ix = schema.addField<int>("i_x", "column position of highest pixel", "pixels");
+    iy = schema.addField<int>("i_y", "row position of highest pixel", "pixels");
     peakValue = schema.addField<float>("peakValue", "value of [smoothed] image at peak position", "dn");
     schema.getCitizen().markPersistent();
 }

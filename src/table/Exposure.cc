@@ -328,8 +328,8 @@ ExposureTable::ExposureTable(ExposureTable const & other) :
 
 ExposureTable::MinimalSchema::MinimalSchema() {
     id = schema.addField<RecordId>("id", "unique ID");
-    bboxMin = schema.addField< Point<int> >("bbox.min", "bbox minimum point", "pixels");
-    bboxMax = schema.addField< Point<int> >("bbox.max", "bbox maximum point", "pixels");
+    bboxMin = PointKey<int>::addFields(schema, "bbox_min", "bbox minimum point", "pixels");
+    bboxMax = PointKey<int>::addFields(schema, "bbox_max", "bbox maximum point", "pixels");
     schema.getCitizen().markPersistent();
 }
 

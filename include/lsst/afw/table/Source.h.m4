@@ -227,7 +227,7 @@ public:
     void updateCoord(image::Wcs const & wcs);
 
     /// @brief Update the coord field using the given Wcs and the image center from the given key.
-    void updateCoord(image::Wcs const & wcs, Key< Point<double> > const & key);
+    void updateCoord(image::Wcs const & wcs, PointKey<double> const & key);
 
 protected:
 

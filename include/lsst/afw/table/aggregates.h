@@ -71,14 +71,6 @@ public:
     PointKey(Key<T> const & x, Key<T> const & y) : _x(x), _y(y) {}
 
     /**
-     *  Construct from a compound Key<Point>
-     *
-     *  Key<Point> is now deprecated in favor of PointKey; this constructor is intended to
-     *  aid in the transition.
-     */
-    explicit PointKey(Key< Point<T> > const & other) : _x(other.getX()), _y(other.getY()) {}
-
-    /**
      *  @brief Construct from a subschema, assuming x and y subfields
      *
      *  If a schema has "a_x" and "a_y" fields, this constructor allows you to construct
@@ -220,16 +212,6 @@ public:
     /// Construct from individual Keys
     QuadrupoleKey(Key<double> const & ixx, Key<double> const & iyy, Key<double> const & ixy) :
         _ixx(ixx), _iyy(iyy), _ixy(ixy)
-    {}
-
-    /**
-     *  Construct from a compound Key<Moments<double>>
-     *
-     *  Key<Moments> is now deprecated in favor of QuadrupoleKey; this constructor is intended to
-     *  aid in the transition.
-     */
-    explicit QuadrupoleKey(Key< Moments<double> > const & other) :
-        _ixx(other.getIxx()), _iyy(other.getIyy()), _ixy(other.getIxy())
     {}
 
     /**
@@ -425,21 +407,6 @@ public:
     );
 
     /**
-     *  @brief Construct from a (now-deprecated Key<Covariance<U>>)
-     *
-     *  This template is only instantiated for the following combinations of template parameters:
-     *   - CovarianceMatrixKey<float,Eigen::Dynamic> and Key< Covariance<float> >
-     *   - CovarianceMatrixKey<float,2> and Key< Covariance< Point<float> >
-     *   - CovarianceMatrixKey<float,3> and Key< Covariance< Moments<float> >
-     *  Calling templates other than these will result in linker errors.
-     *
-     *  To access this functionality in Python, please use the makeCovarianceMatrixKey free functions;
-     *  Swig wasn't able to instantiate the templated constructors.
-     */
-    template <typename U>
-    explicit CovarianceMatrixKey(Key< Covariance<U> > const & other);
-
-    /**
      *  @brief Construct from a subschema and an array of names for each parameter of the matrix.
      *
      *  The field names should match the following convention:
@@ -479,25 +446,9 @@ public:
     //@}
 
 private:
-    bool _isDiagonalVariance;
     SigmaKeyArray _sigma;
     CovarianceKeyArray _cov;
 };
-
-inline CovarianceMatrixKey<float,Eigen::Dynamic>
-makeCovarianceMatrixKey(Key< Covariance<float> > const & other) {
-    return CovarianceMatrixKey<float,Eigen::Dynamic>(other);
-}
-
-inline CovarianceMatrixKey<float,2>
-makeCovarianceMatrixKey(Key< Covariance< Point<float> > > const & other) {
-    return CovarianceMatrixKey<float,2>(other);
-}
-
-inline CovarianceMatrixKey<float,3>
-makeCovarianceMatrixKey(Key< Covariance< Moments<float> > > const & other) {
-    return CovarianceMatrixKey<float,3>(other);
-}
 
 }}} // namespace lsst::afw::table
 

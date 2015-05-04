@@ -205,13 +205,13 @@ CovarianceMatrixKey<T,N> CovarianceMatrixKey<T,N>::addFields(
 }
 
 template <typename T, int N>
-CovarianceMatrixKey<T,N>::CovarianceMatrixKey() : _isDiagonalVariance(false) {}
+CovarianceMatrixKey<T,N>::CovarianceMatrixKey() {}
 
 template <typename T, int N>
 CovarianceMatrixKey<T,N>::CovarianceMatrixKey(
     SigmaKeyArray const & sigma,
     CovarianceKeyArray const & cov
-) : _isDiagonalVariance(false), _sigma(sigma), _cov(cov)
+) : _sigma(sigma), _cov(cov)
 {
     if (N != Eigen::Dynamic) {
         LSST_THROW_IF_NE(
@@ -235,24 +235,8 @@ CovarianceMatrixKey<T,N>::CovarianceMatrixKey(
 }
 
 template <typename T, int N>
-template <typename U>
-CovarianceMatrixKey<T,N>::CovarianceMatrixKey(
-    Key< Covariance<U> > const & other
-) : _isDiagonalVariance(true), _sigma(other.getSize()), _cov(other.getSize() * (other.getSize() - 1)/2)
-{
-    int const n = _sigma.size();
-    int k = 0;
-    for (int i = 0; i < n; ++i) {
-        _sigma[i] = other(i, i);
-        for (int j = 0; j < i; ++j, ++k) {
-            _cov[k] = other(i, j);
-        }
-    }
-}
-
-template <typename T, int N>
 CovarianceMatrixKey<T,N>::CovarianceMatrixKey(SubSchema const & s, NameArray const & names) :
-    _isDiagonalVariance(false), _sigma(names.size()), _cov(names.size()*(names.size() - 1)/2)
+    _sigma(names.size()), _cov(names.size()*(names.size() - 1)/2)
 {
     int const n = names.size();
     int k = 0;
@@ -302,7 +286,7 @@ Eigen::Matrix<T,N,N> CovarianceMatrixKey<T,N>::get(BaseRecord const & record) co
     int k = 0;
     for (int i = 0; i < n; ++i) {
         T sigma = record.get(_sigma[i]);
-        value(i, i) = (_isDiagonalVariance) ? sigma : sigma*sigma;
+        value(i, i) = sigma*sigma;
         if (!_cov.empty()) {
             for (int j = 0; j < i; ++j, ++k) {
                 if (_cov[k].isValid()) {
@@ -319,7 +303,7 @@ void CovarianceMatrixKey<T,N>::set(BaseRecord & record, Eigen::Matrix<T,N,N> con
     int const n = _sigma.size();
     int k = 0;
     for (int i = 0; i < n; ++i) {
-        record.set(_sigma[i], (_isDiagonalVariance) ? value(i, i) : std::sqrt(value(i, i)));
+        record.set(_sigma[i], std::sqrt(value(i, i)));
         if (!_cov.empty()) {
             for (int j = 0; j < i; ++j, ++k) {
                 if (_cov[k].isValid()) {
@@ -348,9 +332,6 @@ bool CovarianceMatrixKey<T,N>::operator==(CovarianceMatrixKey const & other) con
     if (_cov.size() != other._cov.size()) {
         return false;
     }
-    if (_isDiagonalVariance != other._isDiagonalVariance) {
-        return false;
-    }
     int const n = _sigma.size();
     int k = 0;
     for (int i = 0; i < n; ++i) {
@@ -371,12 +352,8 @@ bool CovarianceMatrixKey<T,N>::operator==(CovarianceMatrixKey const & other) con
 template <typename T, int N>
 T CovarianceMatrixKey<T,N>::getElement(BaseRecord const & record, int i, int j) const {
     if (i == j) {
-        if (_isDiagonalVariance) {
-            return record.get(_sigma[i]);
-        } else {
-            T sigma = record.get(_sigma[i]);
-            return sigma*sigma;
-        }
+        T sigma = record.get(_sigma[i]);
+        return sigma*sigma;
     }
     if (_cov.empty()) {
         return 0.0;
@@ -388,11 +365,7 @@ T CovarianceMatrixKey<T,N>::getElement(BaseRecord const & record, int i, int j) 
 template <typename T, int N>
 void CovarianceMatrixKey<T,N>::setElement(BaseRecord & record, int i, int j, T value) const {
     if (i == j) {
-        if (_isDiagonalVariance) {
-            record.set(_sigma[i], value);
-        } else {
-            record.set(_sigma[i], std::sqrt(value));
-        }
+        record.set(_sigma[i], std::sqrt(value));
     } else {
         if (_cov.empty()) {
             throw LSST_EXCEPT(
@@ -421,9 +394,5 @@ template class CovarianceMatrixKey<double,2>;
 template class CovarianceMatrixKey<double,3>;
 template class CovarianceMatrixKey<double,4>;
 template class CovarianceMatrixKey<double,Eigen::Dynamic>;
-
-template CovarianceMatrixKey<float,Eigen::Dynamic>::CovarianceMatrixKey(Key< Covariance<float> > const &);
-template CovarianceMatrixKey<float,2>::CovarianceMatrixKey(Key< Covariance<Point<float> > > const &);
-template CovarianceMatrixKey<float,3>::CovarianceMatrixKey(Key< Covariance<Moments<float> > > const &);
 
 }}} // namespace lsst::afw::table

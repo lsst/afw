@@ -45,6 +45,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace except = lsst::pex::exceptions; 
 namespace afwImg = lsst::afw::image;
@@ -1041,8 +1042,8 @@ namespace {
 // to in record persistence.
 struct WcsPersistenceHelper : private boost::noncopyable {
     table::Schema schema;
-    table::Key< table::Point<double> > crval;
-    table::Key< table::Point<double> > crpix;
+    table::PointKey<double> crval;
+    table::PointKey<double> crpix;
     table::Key< table::Array<double> > cd;
     table::Key<std::string> ctype1;
     table::Key<std::string> ctype2;
@@ -1059,8 +1060,8 @@ struct WcsPersistenceHelper : private boost::noncopyable {
 private:
     WcsPersistenceHelper() :
         schema(),
-        crval(schema.addField< table::Point<double> >("crval", "celestial reference point")),
-        crpix(schema.addField< table::Point<double> >("crpix", "pixel reference point")),
+        crval(table::PointKey<double>::addFields(schema, "crval", "celestial reference point", "degrees")),
+        crpix(table::PointKey<double>::addFields(schema, "crpix", "pixel reference point", "pixels")),
         cd(schema.addField< table::Array<double> >(
                "cd", "linear transform matrix, ordered (1_1, 2_1, 1_2, 2_2)", 4)),
         ctype1(schema.addField< std::string >("ctype1", "coordinate type", 72)),
