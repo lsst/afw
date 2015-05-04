@@ -354,6 +354,49 @@ public:
     typedef std::vector< Key<T> > CovarianceKeyArray;
     typedef std::vector<std::string> NameArray;
 
+    /**
+     *  Add covariance matrix fields to a Schema, and return a CovarianceMatrixKey to manage them.
+     *
+     *  @param[out] schema    Schema to add fields to.
+     *  @param[in]  prefix    String used to form the first part of all field names.  Suffixes of
+     *                        the form '_xSigma' and '_x_y_Cov' will be added to form the full
+     *                        field names (using names={'x', 'y'} as an example).
+     *  @param[in]  unit      Unit for for sigma values (covariance matrix elements will be
+     *                        unit^2).
+     *  @param[in]  names     Vector of strings containing the names of the quantities the
+     *                        covariance matrix represents the uncertainty of.
+     *  @param[in]  diagonalOnly   If true, only create fields for the Sigma values.
+     */
+    static CovarianceMatrixKey addFields(
+        Schema & schema,
+        std::string const & prefix,
+        NameArray const & names,
+        std::string const & unit,
+        bool diagonalOnly=false
+    );
+
+    /**
+     *  Add covariance matrix fields to a Schema, and return a CovarianceMatrixKey to manage them.
+     *
+     *  @param[out] schema    Schema to add fields to.
+     *  @param[in]  prefix    String used to form the first part of all field names.  Suffixes of
+     *                        the form '_xSigma' and '_x_y_Cov' will be added to form the full
+     *                        field names (using names={'x', 'y'} as an example).
+     *  @param[in]  units     Vector of units for for sigma values (covariance matrix elements will
+     *                        have "{units[i]} {units[j]}" or "{units[i]}^2", depending on whether
+     *                        units[i] == units[j].
+     *  @param[in]  names     Vector of strings containing the names of the quantities the
+     *                        covariance matrix represents the uncertainty of.
+     *  @param[in]  diagonalOnly   If true, only create fields for the Sigma values.
+     */
+    static CovarianceMatrixKey addFields(
+        Schema & schema,
+        std::string const & prefix,
+        NameArray const & names,
+        NameArray const & units,
+        bool diagonalOnly=false
+    );
+
     /// Construct an invalid instance; must assign before subsequent use.
     CovarianceMatrixKey();
 
@@ -385,7 +428,7 @@ public:
      *  @brief Construct from a (now-deprecated Key<Covariance<U>>)
      *
      *  This template is only instantiated for the following combinations of template parameters:
-     *   - CovarianceMatrixKey<float,Eigen::Dynamic> and Key< ovariance<float> >
+     *   - CovarianceMatrixKey<float,Eigen::Dynamic> and Key< Covariance<float> >
      *   - CovarianceMatrixKey<float,2> and Key< Covariance< Point<float> >
      *   - CovarianceMatrixKey<float,3> and Key< Covariance< Moments<float> >
      *  Calling templates other than these will result in linker errors.

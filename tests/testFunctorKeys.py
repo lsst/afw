@@ -244,6 +244,35 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
         self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
 
+    def doTestCovarianceMatrixKeyAddFields(self, fieldType, varianceOnly, dynamicSize):
+        names = ["x", "y"]
+        schema = lsst.afw.table.Schema()
+        if dynamicSize:
+            FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrix2%sKey" % fieldType.lower())
+        else:
+            FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrixX%sKey" % fieldType.lower())
+        fKey1 = FunctorKeyType.addFields(schema, "a", names, ["ux", "uy"], varianceOnly)
+        fKey2 = FunctorKeyType.addFields(schema, "b", names, "u", varianceOnly)
+        self.assertEqual(schema.find("a_xSigma").field.getUnits(), "ux")
+        self.assertEqual(schema.find("a_ySigma").field.getUnits(), "uy")
+        self.assertEqual(schema.find("b_xSigma").field.getUnits(), "u")
+        self.assertEqual(schema.find("b_ySigma").field.getUnits(), "u")
+        dtype = numpy.float64 if fieldType == "D" else numpy.float32
+        if varianceOnly:
+            m = numpy.diagflat(numpy.random.randn(2)**2).astype(dtype)
+        else:
+            self.assertEqual(schema.find("a_x_y_Cov").field.getUnits(), "ux uy")
+            self.assertEqual(schema.find("b_x_y_Cov").field.getUnits(), "u^2")
+            v = numpy.random.randn(2, 2).astype(dtype)
+            m = numpy.dot(v.transpose(), v)
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        record.set(fKey1, m)
+        self.assertClose(record.get(fKey1), m, rtol=1E-6)
+        record.set(fKey2, m*2)
+        self.assertClose(record.get(fKey2), m*2, rtol=1E-6)
+
+
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
         sigmaKeys = []
@@ -327,10 +356,11 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testCovarianceMatrixKey(self):
         for fieldType in ("F", "D"):
-            for parameterNames in (["x", "y"], ["xx", "yy", "xy"]):
-                for varianceOnly in (True, False):
-                    for dynamicSize in (True, False):
+            for varianceOnly in (True, False):
+                for dynamicSize in (True, False):
+                    for parameterNames in (["x", "y"], ["xx", "yy", "xy"]):
                         self.doTestCovarianceMatrixKey(fieldType, parameterNames, varianceOnly, dynamicSize)
+                    self.doTestCovarianceMatrixKeyAddFields(fieldType, varianceOnly, dynamicSize)
 
     def doTestArrayKey(self, fieldType, numpyType):
         FunctorKeyType = getattr(lsst.afw.table, "Array%sKey" % fieldType)
