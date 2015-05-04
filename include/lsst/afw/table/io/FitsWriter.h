@@ -2,22 +2,24 @@
 #ifndef AFW_TABLE_IO_FitsWriter_h_INCLUDED
 #define AFW_TABLE_IO_FitsWriter_h_INCLUDED
 
-#include "boost/shared_ptr.hpp"
+#include <set>
 
+#include "lsst/base.h"
+#include "lsst/pex/exceptions.h"
+#include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/fits.h"
-#include "lsst/afw/table/io/Writer.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
 /**
- *  @brief Writer subclass for FITS binary tables.
+ *  @brief Writer object for FITS binary tables.
  *
  *  FitsWriter itself provides support for writing FITS binary tables from base containers.
  *  Derived record/base pairs should derive their own writer from FitsWriter and reimplement
  *  BaseTable::makeFitsWriter to return it.  Subclasses will usually delegate most of the
  *  work back to FitsWriter.
  */
-class FitsWriter : public Writer {
+class FitsWriter {
 public:
 
     typedef afw::fits::Fits Fits;
@@ -43,26 +45,61 @@ public:
         writer->write(container);
     }
 
+    /**
+     *  @brief Write records in a container to disk.
+     *
+     *  The given container must have a getTable() member function that returns a shared_ptr
+     *  to a table, and the iterators returned by begin() and end() must dereference to a type
+     *  convertible to BaseRecord const &.
+     */
+    template <typename ContainerT>
+    void write(ContainerT const & container) {
+        std::set<PTR(BaseTable const)> tables;
+        for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
+            if (i->getTable() != container.getTable()) tables.insert(i->getTable());
+        }
+        for (std::set<PTR(BaseTable const)>::iterator j = tables.begin(); j != tables.end(); ++j) {
+            if (
+                (**j).getSchema().compare(container.getTable()->getSchema(), Schema::IDENTICAL)
+                != Schema::IDENTICAL
+            ) {
+                throw LSST_EXCEPT(
+                    pex::exceptions::LogicError,
+                    "Cannot save Catalog with heterogenous schemas"
+                );
+            }
+        }
+        _writeTable(container.getTable(), container.size());
+        for (typename ContainerT::const_iterator i = container.begin(); i != container.end(); ++i) {
+            _writeRecord(*i);
+        }
+        _finish();
+    }
+
     /// @brief Construct from a wrapped cfitsio pointer.
     explicit FitsWriter(Fits * fits, int flags) : _fits(fits), _flags(flags) {}
 
 protected:
 
-    /// @copydoc Writer::_writeTable
+    /// @brief Write a table and its schema.
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
-    /// @copydoc Writer::_writeRecord
+    /// @brief Write an individual record.
     virtual void _writeRecord(BaseRecord const & source);
+
+    /// @brief Finish writing a catalog.
+    virtual void _finish() {}
 
     Fits * _fits;      // wrapped cfitsio pointer
     int _flags;        // subclass-defined flags to control writing
     std::size_t _row;  // which row we're currently processing
 
 private:
-    
+
     struct ProcessRecords;
 
-    boost::shared_ptr<ProcessRecords> _processor; // a private Schema::forEach functor that write records
+
+    PTR(ProcessRecords) _processor; // a private Schema::forEach functor that write records
 
 };
 
