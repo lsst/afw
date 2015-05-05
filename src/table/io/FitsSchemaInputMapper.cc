@@ -1,6 +1,7 @@
 // -*- lsst-c++ -*-
 
 #include <cstdio>
+#include <array>
 
 #include "boost/regex.hpp"
 #include "boost/lexical_cast.hpp"
@@ -14,6 +15,7 @@
 
 #include "lsst/pex/logging.h"
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace lsst { namespace afw { namespace table { namespace io {
 
@@ -454,6 +456,161 @@ private:
     Key<Array<T>> _key;
 };
 
+// Read a 2-element FITS array column as separate x and y Schema fields (hence converting
+// from the old Point compound field to the new PointKey FunctorKey).
+template <typename T>
+class PointConversionReader : public FitsColumnReader {
+public:
+
+    static std::unique_ptr<FitsColumnReader> make(
+        Schema & schema,
+        FitsSchemaItem const & item
+    ) {
+        return std::unique_ptr<FitsColumnReader>(new PointConversionReader(schema, item));
+    }
+
+    PointConversionReader(Schema & schema, FitsSchemaItem const & item) :
+        _column(item.column), _key(PointKey<T>::addFields(schema, item.ttype, item.doc, item.tunit))
+    {}
+
+    virtual void readCell(
+        BaseRecord & record,
+        std::size_t row,
+        afw::fits::Fits & fits,
+        PTR(InputArchive) const & archive
+    ) const {
+        std::array<T,2> buffer;
+        fits.readTableArray(row, _column, 2, buffer.data());
+        record.set(_key, geom::Point<T,2>(buffer[0], buffer[1]));
+    }
+
+private:
+    int _column;
+    PointKey<T> _key;
+};
+
+// Read a 2-element FITS array column as separate ra and dec Schema fields (hence converting
+// from the old Coord compound field to the new CoordKey FunctorKey).
+class CoordConversionReader : public FitsColumnReader {
+public:
+
+    static std::unique_ptr<FitsColumnReader> make(
+        Schema & schema,
+        FitsSchemaItem const & item
+    ) {
+        return std::unique_ptr<FitsColumnReader>(new CoordConversionReader(schema, item));
+    }
+
+    CoordConversionReader(Schema & schema, FitsSchemaItem const & item) :
+        _column(item.column), _key(CoordKey::addFields(schema, item.ttype, item.doc))
+    {}
+
+    virtual void readCell(
+        BaseRecord & record,
+        std::size_t row,
+        afw::fits::Fits & fits,
+        PTR(InputArchive) const & archive
+    ) const {
+        std::array<geom::Angle,2> buffer;
+        fits.readTableArray(row, _column, 2, buffer.data());
+        record.set(_key, coord::IcrsCoord(buffer[0], buffer[1]));
+    }
+
+private:
+    int _column;
+    CoordKey _key;
+};
+
+// Read a 3-element FITS array column as separate xx, yy, and xy Schema fields (hence converting
+// from the old Moments compound field to the new QuadrupoleKey FunctorKey).
+class MomentsConversionReader : public FitsColumnReader {
+public:
+
+    static std::unique_ptr<FitsColumnReader> make(
+        Schema & schema,
+        FitsSchemaItem const & item
+    ) {
+        return std::unique_ptr<FitsColumnReader>(new MomentsConversionReader(schema, item));
+    }
+
+    MomentsConversionReader(Schema & schema, FitsSchemaItem const & item) :
+        _column(item.column),
+        _key(QuadrupoleKey::addFields(schema, item.ttype, item.doc, CoordinateType::PIXEL))
+    {}
+
+    virtual void readCell(
+        BaseRecord & record,
+        std::size_t row,
+        afw::fits::Fits & fits,
+        PTR(InputArchive) const & archive
+    ) const {
+        std::array<double,3> buffer;
+        fits.readTableArray(row, _column, 3, buffer.data());
+        record.set(_key, geom::ellipses::Quadrupole(buffer[0], buffer[1], buffer[2], false));
+    }
+
+private:
+    int _column;
+    QuadrupoleKey _key;
+};
+
+// Read a FITS array column representing a packed symmetric matrix into
+// Schema fields for each element (hence converting from the old Covariance
+// compound field to the new CovarianceMatrixKey FunctorKey).
+template <typename T, int N>
+class CovarianceConversionReader : public FitsColumnReader {
+public:
+
+    static std::string guessUnits(std::string const & oldUnits) {
+        static boost::regex const regex("(.*)(\\^(\\d+))?", boost::regex::perl);
+        boost::smatch m;
+        if (!boost::regex_match(oldUnits, m, regex)) {
+            int oldPower = boost::lexical_cast<int>(m[2]);
+            int newPower = std::sqrt(oldPower);
+            return boost::lexical_cast<std::string>(newPower);
+        }
+        return oldUnits;
+    }
+
+    static std::unique_ptr<FitsColumnReader> make(
+        Schema & schema,
+        FitsSchemaItem const & item,
+        std::vector<std::string> const & names
+    ) {
+        return std::unique_ptr<FitsColumnReader>(new CovarianceConversionReader(schema, item, names));
+    }
+
+    CovarianceConversionReader(
+        Schema & schema, FitsSchemaItem const & item, std::vector<std::string> const & names
+    ) :
+        _column(item.column),
+        _size(names.size()),
+        _key(CovarianceMatrixKey<T,N>::addFields(schema, item.ttype, names, guessUnits(item.tunit))),
+        _buffer(new T[detail::computeCovariancePackedSize(names.size())])
+    {}
+
+    virtual void readCell(
+        BaseRecord & record,
+        std::size_t row,
+        afw::fits::Fits & fits,
+        PTR(InputArchive) const & archive
+    ) const {
+        fits.readTableArray(row, _column, detail::computeCovariancePackedSize(_size), _buffer.get());
+        for (int i = 0; i < _size; ++i) {
+            for (int j = i; j < _size; ++j) {
+                _key.setElement(record, i, j, _buffer[detail::indexCovariance(i, j)]);
+            }
+        }
+    }
+
+private:
+    int _column;
+    int _size;
+    CovarianceMatrixKey<T,N> _key;
+    std::unique_ptr<T[]> _buffer;
+};
+
+
 std::unique_ptr<FitsColumnReader> makeColumnReader(
     Schema & schema,
     FitsSchemaItem const & item
@@ -496,7 +653,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
             return VariableLengthArrayReader<boost::int32_t>::make(schema, item);
         }
         if (item.tccls == "Point") {
-            return StandardReader<Point<boost::int32_t>>::make(schema, item);
+            return PointConversionReader<boost::int32_t>::make(schema, item);
         }
         if (size > 1 || item.tccls == "Array") {
             return StandardReader<Array<boost::int32_t>>::make(schema, item, size);
@@ -511,19 +668,18 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
             return VariableLengthArrayReader<float>::make(schema, item);
         }
         if (size == 1) {
-            if (item.tccls == "Covariance") {
-                return StandardReader<Covariance<float>>::make(schema, item, 1);
-            }
             if (item.tccls == "Array") {
                 return StandardReader<Array<float>>::make(schema, item, 1);
             }
+            // Just use scalars for Covariances of size 1, since that results in more
+            // natural field names (essentially never happens anyway).
             return StandardReader<float>::make(schema, item);
         }
         if (size == 3 && item.tccls == "Covariance(Point)") {
-            return StandardReader<Covariance<Point<float>>>::make(schema, item);
+            return CovarianceConversionReader<float,2>::make(schema, item, {"x", "y"});
         }
         if (size == 6 && item.tccls == "Covariance(Moments)") {
-            return StandardReader<Covariance<Moments<float>>>::make(schema, item);
+            return CovarianceConversionReader<float,3>::make(schema, item, {"xx", "yy", "xy"});
         }
         if (item.tccls == "Covariance") {
             double v = 0.5 * (std::sqrt(1 + 8 * size) - 1);
@@ -534,7 +690,11 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
                     "Covariance field has invalid size."
                 );
             }
-            return StandardReader<Covariance<float>>::make(schema, item, size);
+            std::vector<std::string> names(n);
+            for (int i = 0; i < n; ++i) {
+                names[i] = boost::lexical_cast<std::string>(i);
+            }
+            return CovarianceConversionReader<float,Eigen::Dynamic>::make(schema, item, names);
         }
         return StandardReader<Array<float>>::make(schema, item, size);
     case 'D': // doubles
@@ -552,14 +712,14 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
         }
         if (size == 2) {
             if (item.tccls == "Point") {
-                return StandardReader<Point<double>>::make(schema, item);
+                return PointConversionReader<double>::make(schema, item);
             }
             if (item.tccls == "Coord") {
-                return StandardReader<Coord>::make(schema, item);
+                return CoordConversionReader::make(schema, item);
             }
         }
         if (size ==3 && item.tccls == "Moments") {
-            return StandardReader<Moments<double>>::make(schema, item);
+            return MomentsConversionReader::make(schema, item);
         }
         return StandardReader<Array<double>>::make(schema, item, size);
     case 'A': // strings

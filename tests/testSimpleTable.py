@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008-2014 AURA/LSST
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -189,7 +189,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.checkGeomAccessors(record, k18, "f18", lsst.afw.geom.Angle(1.2))
         self.assert_(k18.subfields is None)
         self.checkGeomAccessors(
-            record, k19, "f19", 
+            record, k19, "f19",
             lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
             )
         self.assertEqual(k19.subfields, ("ra", "dec"))
@@ -677,6 +677,39 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(numpy.all(record4.get(kb) == b1))
         self.assertTrue(numpy.all(record4.get(kc) == c1))
         os.remove(filename)
+
+    def testCompoundFieldFitsConversion(self):
+        """Test that we convert compound fields saved with an older version of the pipeline
+        into the set of multiple fields used by their replacement FunctorKeys.
+        """
+        geomValues = {
+            "point_i_x": 4, "point_i_y": 5,
+            "point_d_x": 3.5, "point_d_y": 2.0,
+            "moments_xx": 5.0, "moments_yy": 6.5, "moments_xy": 2.25,
+            "coord_ra": 1.0*lsst.afw.geom.radians, "coord_dec": 0.5*lsst.afw.geom.radians,
+        }
+        covValues = {
+            "cov_z": numpy.array([[4.00, 1.25, 1.50, 0.75],
+                                  [1.25, 2.25, 0.50, 0.25],
+                                  [1.50, 0.50, 6.25, 1.75],
+                                  [0.75, 0.25, 1.75, 9.00]], dtype=numpy.float32),
+            "cov_p": numpy.array([[5.50, -2.0],
+                                  [-2.0, 3.25]], dtype=numpy.float32),
+            "cov_m": numpy.array([[3.75, -0.5, 1.25],
+                                  [-0.5, 4.50, 0.75],
+                                  [1.25, 0.75, 6.25]], dtype=numpy.float32),
+        }
+        filename = os.path.join(os.path.split(__file__)[0], "data", "CompoundFieldConversion.fits")
+        cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
+        record2 = cat2[0]
+        for k, v in geomValues.iteritems():
+            self.assertEqual(record2.get(k), v, msg=k)
+        covZKey = lsst.afw.table.CovarianceMatrixXfKey(cat2.schema["cov_z"], ["0", "1", "2", "3"])
+        covPKey = lsst.afw.table.CovarianceMatrix2fKey(cat2.schema["cov_p"], ["x", "y"])
+        covMKey = lsst.afw.table.CovarianceMatrix3fKey(cat2.schema["cov_m"], ["xx", "yy", "xy"])
+        self.assertClose(record2.get(covZKey), covValues["cov_z"], rtol=1E-6)
+        self.assertClose(record2.get(covPKey), covValues["cov_p"], rtol=1E-6)
+        self.assertClose(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
