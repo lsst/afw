@@ -67,7 +67,7 @@ def imagesDiffer(imageArr1, imageArr2, skipMaskArr=None, rtol=1.0e-05, atol=1e-0
     Return a string describing the error if the images differ significantly, an empty string otherwise
     """
     retStrs = []
-    if skipMaskArr != None:
+    if skipMaskArr is not None:
         maskedArr1 = numpy.ma.array(imageArr1, copy=False, mask = skipMaskArr)
         maskedArr2 = numpy.ma.array(imageArr2, copy=False, mask = skipMaskArr)
         filledArr1 = maskedArr1.filled(0.0)
@@ -93,7 +93,7 @@ def imagesDiffer(imageArr1, imageArr2, skipMaskArr=None, rtol=1.0e-05, atol=1e-0
 
     # compare values that should be comparable (are neither infinite, nan nor masked)
     valSkipMaskArr = nan1 | nan2 | posinf1 | posinf2 | neginf1 | neginf2
-    if skipMaskArr != None:
+    if skipMaskArr is not None:
         valSkipMaskArr |= skipMaskArr
     valMaskedArr1 = numpy.ma.array(imageArr1, copy=False, mask = valSkipMaskArr)
     valMaskedArr2 = numpy.ma.array(imageArr2, copy=False, mask = valSkipMaskArr)
@@ -121,7 +121,7 @@ def masksDiffer(maskArr1, maskArr2, skipMaskArr=None):
     Return a string describing the error if the images differ significantly, an empty string otherwise
     """
     retStr = ""
-    if skipMaskArr != None:
+    if skipMaskArr is not None:
         maskedArr1 = numpy.ma.array(maskArr1, copy=False, mask = skipMaskArr)
         maskedArr2 = numpy.ma.array(maskArr2, copy=False, mask = skipMaskArr)
         filledArr1 = maskedArr1.filled(0.0)
