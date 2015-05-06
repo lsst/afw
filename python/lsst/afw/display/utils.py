@@ -39,7 +39,7 @@ def getDisplay(display, frame=None):
     if frame:
         if display and display.frame != frame:
             raise RuntimeError("Please specify display *or* frame")
-        display = afwDisplay.getDisplay(frame)
+        display = afwDisplay.getDisplay(frame, create=True)
 
     return display
 

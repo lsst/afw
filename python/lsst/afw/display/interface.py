@@ -46,7 +46,7 @@ YELLOW = "yellow"
 def _makeDisplayImpl(display, backend, *args, **kwargs):
     """!Return the DisplayImpl for the named backend
 
-    \param backend Name of desired display.  Should be importable, either absolutely or relative to .
+    \param backend Name of device.  Should be importable, either absolutely or relative to lsst.display
     \param frame  Identifier for this instance of the backend
     \param args   Arguments passed to DisplayImpl.__init__
     \param kwrgs  Keywords arguments passed to DisplayImpl.__init__
@@ -56,12 +56,12 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
          display = afwDisplay.Display("ds9", frame=1)
      would call
          _makeDisplayImpl(..., "ds9", 1)
-    and import the ds9 implementation of DisplayImpl from lsst.afw.display.ds9
+    and import the ds9 implementation of DisplayImpl from lsst.display.ds9
     """
     _disp = None
-    for dt in (backend, ".%s" % backend):
+    for dt in (backend, ".%s" % backend, "lsst.afw.display.%s" % backend):
         try:
-            _disp = importlib.import_module(dt, package="lsst.afw.display")
+            _disp = importlib.import_module(dt, package="lsst.display")
             break
         except ImportError as e:
             pass
@@ -86,7 +86,7 @@ class Display(object):
             backend = _defaultBackend
 
         self.frame = frame
-        self.impl = _makeDisplayImpl(self, backend, *args, **kwargs)
+        self._impl = _makeDisplayImpl(self, backend, *args, **kwargs)
 
         self._data = None               # the data displayed on the frame
         self.setMaskTransparency(_defaultMaskTransparency)
@@ -183,29 +183,48 @@ class Display(object):
                 transparency = 100
 
         if transparency is not None:
-            self.impl._setMaskTransparency(transparency, name)
+            self._impl._setMaskTransparency(transparency, name)
 
     def getMaskTransparency(self, name=None):
         """!Return the current display's mask transparency"""
 
-        self.impl._getMaskTransparency(name)
+        self._impl._getMaskTransparency(name)
 
     def show(self):
         """!Uniconify and Raise display.  N.b. throws an exception if frame doesn't exit"""
-        self.impl._show()
+        self._impl._show()
 
-    def mtv(self, data, title="", wcs=None, *args, **kwargs):
+    def mtv(self, data, title="", wcs=None):
         """!Display an Image or Mask on a DISPLAY display
-
-        If lowOrderBits is True, give low-order-bits priority in display (i.e.
-        overlay them last)
 
         Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
         system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
         """
         self._data = data
 
-        self.impl._mtv(data, title, wcs, *args, **kwargs)
+        if re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
+            if wcs:
+                raise RuntimeError, "You may not specify a wcs with an Exposure"
+            data, wcs = data.getMaskedImage(), data.getWcs()
+
+        if re.search("::DecoratedImage<", repr(data)): # it's a DecorateImage; display it
+            self._impl._mtv(data.getImage(), title, wcs, False)
+        elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
+            self._impl._mtv(data.getImage(), title, wcs, False)
+            mask = data.getMask(True)
+            if mask:
+                self._impl._mtv(mask, "", wcs, True, initialize=False)
+        elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
+            #
+            # Some displays can't display a Mask without an image; so display an Image first
+            #
+            self._impl._mtv(afwImage.ImageU(data.getDimensions()), title, wcs)
+
+            self._impl._mtv(mask, "", None, True, initialize=False)
+        elif re.search("::Image<", repr(data)): # it's an Image; display it
+            self._impl._mtv(data, title, wcs, False)
+        else:
+            raise RuntimeError, "Unsupported type %s" % repr(data)
     #
     # Graphics commands
     #
@@ -218,18 +237,18 @@ class Display(object):
         def __init__(self, display=None):
             self.display = display
         def __enter__(self):
-            getDisplay(self.display).impl._buffer(True)
+            getDisplay(self.display)._impl._buffer(True)
         def __exit__(self, *args):
-            getDisplay(self.display).impl._buffer(False)
+            getDisplay(self.display)._impl._buffer(False)
 
     def flush():
         """!Flush the buffers"""
-        self.impl._flush()
+        self._impl._flush()
 
     def erase(self):
         """!Erase the specified DISPLAY frame
         """
-        self.impl._erase()
+        self._impl._erase()
 
     def dot(self, symb, c, r, size=2, ctype=None, origin=afwImage.PARENT, *args, **kwargs):
         """!Draw a symbol onto the specified DISPLAY frame at (col,row) = (c,r) [0-based coordinates]
@@ -267,7 +286,7 @@ class Display(object):
 
             symb = afwGeom.ellipses.Axes(symb)
 
-        self.impl._dot(symb, c, r, size, ctype, **kwargs)
+        self._impl._dot(symb, c, r, size, ctype, **kwargs)
 
     def line(self, points, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
         """!Draw a set of symbols or connect the points, a list of (col,row)
@@ -293,7 +312,7 @@ class Display(object):
                         _points[i] = (p[0] - x0, p[1] - y0)
                     points = _points
 
-                self.impl._drawLines(points, ctype)
+                self._impl._drawLines(points, ctype)
     #
     # Set gray scale
     #
@@ -310,12 +329,12 @@ class Display(object):
         """    
         if min == "zscale":
             assert max == None, "You may not specify \"zscale\" and max"
-            self.impl._setScaleType("zscale")
+            self._impl._setScaleType("zscale")
         else:
             if max is None:
                 raise DisplayError("Please specify max")
 
-            self.impl._setScaleLimits(min, max)
+            self._impl._setScaleLimits(min, max)
 
     def scaleType(self, name, params=None):
         """!Set the type of scaling from DN in the image to the image display
@@ -323,7 +342,7 @@ class Display(object):
         \param frame The frame to apply the scaling too
         \param params Extra parameters for scaling (e.g. Q for asinh scalings)
         """    
-        self.impl._setScaleType(name)
+        self._impl._setScaleType(name)
 
     #
     # Zoom and Pan
@@ -339,13 +358,13 @@ class Display(object):
             rowc -= x0
             colc -= y0
 
-            self.impl._pan(colc, rowc)
+            self._impl._pan(colc, rowc)
 
         if zoomfac == None and rowc == None:
             zoomfac = 2
 
         if zoomfac is not None:
-            self.impl._zoom(zoomfac)
+            self._impl._zoom(zoomfac)
 
     def pan(self, colc=None, rowc=None, origin=afwImage.PARENT):
         """!Pan to (rowc, colc); see also zoom"""
@@ -359,7 +378,7 @@ class Display(object):
     """
 
         while True:
-            ev = self.impl._getEvent()
+            ev = self._impl._getEvent()
             if not ev:
                 continue
             k, x, y = ev.k, ev.x, ev.y      # for now
@@ -507,12 +526,12 @@ def getDisplay(frame=None, backend=None, create=True, *args, **kwargs):
 
     return _displays[frame]
 
-def delDisplay(frame=None):
+def delDisplay(frame=None, force=False):
     """!Delete the Display indexed by frame
     \param frame The desired frame (None => defaultFrame (see setDefaultFrame); "all" => all)
     """
     global _displays
-    if frame.lower() == "all":
+    if hasattr(frame, "lower") and frame.lower() == "all":
         _displays = {}
         return
 
@@ -522,7 +541,8 @@ def delDisplay(frame=None):
     if frame in _displays:
         del _displays[frame]
     else:
-        raise RuntimeError("Frame %s does not exist" % frame)
+        if not force:
+            raise RuntimeError("Frame %s does not exist" % frame)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -547,8 +567,8 @@ def setMaskPlaneColor(name, color=None, frame=None):
 def getMaskPlaneColor(name, frame=None):
     return getDisplay(frame).getMaskPlaneColor(name)
 
-def setMaskTransparency(name, show=True, frame=None):
-    return setMaskTransparency(frame).setMaskTransparency(name, show)
+def setMaskTransparency(name, frame=None):
+    return getDisplay(frame).setMaskTransparency(name)
 
 def getMaskTransparency(name, frame=None):
     return getDisplay(frame).getMaskTransparency(name)

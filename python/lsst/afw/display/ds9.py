@@ -260,17 +260,11 @@ class DisplayImpl(virtualDevice.DisplayImpl):
         """Uniconify and Raise ds9.  N.b. throws an exception if frame doesn't exit"""
         ds9Cmd("raise", trap=False, frame=self.display.frame)
 
-    def _mtv(self, data, title="", wcs=None, init=True, isMask=False, lowOrderBits=False, settings=None):
+    def _mtv(self, data, title="", wcs=None, isMask=False, initialize=True):
         """Display an Image or Mask on a DS9 display
-
-        If lowOrderBits is True, give low-order-bits priority in display (i.e.
-        overlay them last)
-
-        Historical note: the name "mtv" comes from Jim Gunn's forth imageprocessing
-        system, Mirella (named after Mirella Freni); The "m" stands for Mirella.
         """
 
-        if init:
+        if initialize:
             for i in range(3):
                 try:
                     initDS9(i == 0)
@@ -284,32 +278,13 @@ class DisplayImpl(virtualDevice.DisplayImpl):
                         sys.stdout.flush()
                     break
 
-        ds9Cmd(selectFrame(self.display.frame))
-        ds9Cmd("smooth no")
-        self._erase()
+            ds9Cmd(selectFrame(self.display.frame))
+            ds9Cmd("smooth no")
+            self._erase()
 
-        if settings:
-            for setting in settings:
-                ds9Cmd("%s %s" % (setting, settings[setting]))
-
-        if re.search("::DecoratedImage<", repr(data)): # it's a DecorateImage; display it
-            _i_mtv(data.getImage(), wcs, title, False)
-        elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
-            _i_mtv(data.getImage(), wcs, title, False)
-            mask = data.getMask(True)
-            if mask:
-                self._mtv(mask, title, wcs, False, True, lowOrderBits=lowOrderBits, settings=settings)
-                if self.display.getMaskTransparency() is not None:
-                    ds9Cmd("mask transparency %d" % self.display.getMaskTransparency())
-
-        elif re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
-            if wcs:
-                raise RuntimeError, "You may not specify a wcs with an Exposure"
-
-            self._mtv(data.getMaskedImage(), title, data.getWcs(),
-                      False, False, lowOrderBits=lowOrderBits, settings=settings)
-
-        elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
+        if not isMask:
+            _i_mtv(data, title, wcs, False)
+        else:
             maskPlanes = data.getMaskPlaneDict()
             nMaskPlanes = max(maskPlanes.values()) + 1
 
@@ -319,20 +294,10 @@ class DisplayImpl(virtualDevice.DisplayImpl):
 
             colorIndex = 0                   # index into maskColors
 
-            if lowOrderBits:
-                planeList = range(nMaskPlanes - 1, -1, -1)
-            else:
-                planeList = range(nMaskPlanes)
-
+            planeList = range(nMaskPlanes)
             usedPlanes = long(afwMath.makeStatistics(data, afwMath.SUM).getValue())
             mask = data.Factory(data.getDimensions())
-            #
-            # ds9 can't display a Mask without an image; so display an Image first
-            #
-            if not isMask:
-                im = afwImage.ImageU(data.getDimensions())
-                self._mtv(im)
-
+                
             colorGenerator = self.display.maskColorGenerator(omitBW=True)
             for p in planeList:
                 if planes.get(p):
@@ -352,13 +317,7 @@ class DisplayImpl(virtualDevice.DisplayImpl):
                     continue
 
                 ds9Cmd("mask color %s" % color)
-                _i_mtv(mask, wcs, title, True)
-            return
-        elif re.search("::Image<", repr(data)): # it's an Image; display it
-            _i_mtv(data, wcs, title, False)
-        else:
-            raise RuntimeError, "Unsupported type %s" % repr(data)
-
+                _i_mtv(mask, title, wcs, True)
     #
     # Graphics commands
     #
@@ -525,7 +484,7 @@ try:
 except NameError:
     haveGzip = not os.system("gzip < /dev/null > /dev/null 2>&1") # does gzip work?
 
-def _i_mtv(data, wcs, title, isMask):
+def _i_mtv(data, title, wcs, isMask):
     """Internal routine to display an Image or Mask on a DS9 display"""
 
     title = str(title) if title else ""
