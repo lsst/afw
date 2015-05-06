@@ -206,23 +206,19 @@ class Display(object):
             if wcs:
                 raise RuntimeError, "You may not specify a wcs with an Exposure"
             data, wcs = data.getMaskedImage(), data.getWcs()
+        elif re.search("::DecoratedImage<", repr(data)): # it's a DecoratedImage; display it
+            data, wcs = data.getImage(), afwImage.makeWcs(data.getMetadata())
+            self._data = data           # a DecoratedImage doesn't have getXY0()
 
-        if re.search("::DecoratedImage<", repr(data)): # it's a DecorateImage; display it
-            self._impl._mtv(data.getImage(), title, wcs, False)
-        elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
-            self._impl._mtv(data.getImage(), title, wcs, False)
-            mask = data.getMask(True)
-            if mask:
-                self._impl._mtv(mask, "", wcs, True, initialize=False)
+        if re.search("::Image<", repr(data)): # it's an Image; display it
+            self._impl._mtv(data, None, wcs, title)
         elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
             #
-            # Some displays can't display a Mask without an image; so display an Image first
+            # Some displays can't display a Mask without an image; so display an Image too
             #
-            self._impl._mtv(afwImage.ImageU(data.getDimensions()), title, wcs)
-
-            self._impl._mtv(mask, "", None, True, initialize=False)
-        elif re.search("::Image<", repr(data)): # it's an Image; display it
-            self._impl._mtv(data, title, wcs, False)
+            self._impl._mtv(afwImage.ImageU(data.getDimensions()), data, wcs, title)
+        elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
+            self._impl._mtv(data.getImage(), data.getMask(True), wcs, title)
         else:
             raise RuntimeError, "Unsupported type %s" % repr(data)
     #
@@ -556,55 +552,3 @@ except NameError:
     setDefaultMaskPlaneColor()
 
     setDefaultBackend("virtualDevice")
-    
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-#
-# Functions provided for backwards compatibility
-#
-def setMaskPlaneColor(name, color=None, frame=None):
-    return getDisplay(frame).setMaskPlaneColor(name, color)
-
-def getMaskPlaneColor(name, frame=None):
-    return getDisplay(frame).getMaskPlaneColor(name)
-
-def setMaskTransparency(name, frame=None):
-    return getDisplay(frame).setMaskTransparency(name)
-
-def getMaskTransparency(name, frame=None):
-    return getDisplay(frame).getMaskTransparency(name)
-
-def show(frame=None):
-    return getDisplay(frame).show()
-
-def mtv(data, frame=None, title="", wcs=None, *args, **kwargs):
-    return getDisplay(frame).mtv(data, title, wcs, *args, **kwargs)
-
-def erase(frame=None):
-    return getDisplay(frame).erase()
-
-def dot(symb, c, r, frame=None, size=2, ctype=None, origin=afwImage.PARENT, *args, **kwargs):
-    return getDisplay(frame).dot(symb, c, r, size, ctype, origin, *args, **kwargs)
-
-def line(points, frame=None, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
-    return getDisplay(frame).line(points, origin, symbs, ctype, size)
-
-def scaleLimits(min, max=None, frame=None):
-    return getDisplay(frame).scaleLimits(min, max)
-
-def scaleType(name, frame=None, params=None):
-    return getDisplay(frame).scaleType(name, params)
-
-def zoom(zoomfac=None, colc=None, rowc=None, frame=None, origin=afwImage.PARENT):
-    disp = getDisplay(frame)
-
-    disp.zoom(zoomfac)
-    disp.pan(colc, rowc, origin)
-
-def interact(frame=None):
-    return getDisplay(frame).interact()
-
-def setCallback(k, func=noop_callback, noRaise=False, frame=None):
-    return getDisplay(frame).setCallback(k, noRaise=False)
-
-def getActiveCallbackKeys(onlyActive=True, frame=None):
-    return getDisplay(frame).getActiveCallbackKeys(onlyActive)

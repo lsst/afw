@@ -90,17 +90,18 @@ class DisplayImpl(object):
         if self.verbose:
             print "dummy[%s]._getMaskTransparency()" % self.display.frame
 
-    def _mtv(self, data, title="", wcs=None, isMask=False, initialize=True):
-        """Display some data on a display
-        \param data data to display (an Exposure, MaskedImage, Image, or Mask)
-        \param wcs   A Wcs to associate with data (if not provided by data itself)
+    def _mtv(self, image, wcs=None, mask=None, title=""):
+        """Display an image and maybe a mask overlay on a display
+        \param image afwImage.Image to display
+        \param mask afwImage.Mask to display
+        \param wcs A Wcs to associate with data
+        \param title Name to display with the data
         """
         if self.verbose:
             import re
-            mat = re.search(r"imageLib\.([^;]+);", str(data))
-            dataName = mat.group(1) if mat else str(data)
-            print "dummy[%s]._mtv(%s, title=\"%s\", wcs=%s, isMask=%s)" % \
-                (self.display.frame, dataName, title, "Wcs" if wcs else None, isMask)
+            print "dummy[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\")" % \
+                (self.display.frame, "Image" if image else None,
+                 "Mask" if mask else None, "Wcs" if wcs else None, title)
 
     def _setMaskTransparency(self, transparency, maskplane):
         """Set the transparency of a maskplane
