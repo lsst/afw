@@ -409,6 +409,95 @@ class FootprintTestCase(tests.TestCase):
             self.assertEqual(s.getX1(), bbox.getMaxX())
             y+=1
 
+    def testShrink(self):
+        width, height = 5, 10 # Size of footprint
+        x0, y0 = 50, 50 # Position of footprint
+        imwidth, imheight = 100, 100 # Size of image
+
+        foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(width, height)),
+                                    afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(imwidth, imheight)))
+        self.assertEqual(foot.getNpix(), width*height)
+
+        # Shrinking by one pixel makes each dimension *two* pixels shorter.
+        shrunk = afwDetect.shrinkFootprint(foot, 1, True)
+        self.assertEqual(3*8, shrunk.getNpix())
+
+        # Without shifting the centroid
+        self.assertEqual(shrunk.getCentroid(), foot.getCentroid())
+
+        # Get the same result from a Manhattan shrink
+        shrunk = afwDetect.shrinkFootprint(foot, 1, False)
+        self.assertEqual(3*8, shrunk.getNpix())
+        self.assertEqual(shrunk.getCentroid(), foot.getCentroid())
+
+        # Shrinking by a large amount leaves nothing.
+        self.assertEqual(afwDetect.shrinkFootprint(foot, 100, True).getNpix(), 0)
+
+    def testShrinkIsoVsManhattan(self):
+        # Demonstrate that isotropic and Manhattan shrinks are different.
+        radius = 8
+        imwidth, imheight = 100, 100
+        x0, y0 = imwidth//2, imheight//2
+        nshrink = 4
+
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(1.5*radius, 2*radius, 0),
+                                          afwGeom.Point2D(x0,y0))
+        foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0),
+                                   afwGeom.Extent2I(imwidth, imheight)))
+        self.assertNotEqual(afwDetect.shrinkFootprint(foot, nshrink, False),
+                            afwDetect.shrinkFootprint(foot, nshrink, True))
+
+    def _fig8Test(self, x1, y1, x2, y2):
+        # Construct a "figure of 8" consisting of two circles touching at the
+        # centre of an image, then demonstrate that it shrinks correctly.
+        # (Helper method for tests below.)
+        radius = 3
+        imwidth, imheight = 100, 100
+        nshrink = 1
+
+        # These are the correct values for footprint sizes given the paramters
+        # above.
+        circle_npix = 29
+        initial_npix = circle_npix * 2 - 1 # touch at one pixel
+        shrunk_npix = 26
+
+        box = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(imwidth, imheight))
+
+        e1 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
+                                          afwGeom.Point2D(x1, y1))
+        f1 = afwDetect.Footprint(e1,box)
+        self.assertEqual(f1.getNpix(), circle_npix)
+
+        e2 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
+                                          afwGeom.Point2D(x2, y2))
+        f2 = afwDetect.Footprint(e2,box)
+        self.assertEqual(f2.getNpix(), circle_npix)
+
+        initial = afwDetect.mergeFootprints(f1, f2)
+        initial.setRegion(f2.getRegion()) # merge does not propagate the region
+        self.assertEqual(initial_npix, initial.getNpix())
+
+        shrunk = afwDetect.shrinkFootprint(initial, nshrink, True)
+        self.assertEqual(shrunk_npix, shrunk.getNpix())
+
+        if display:
+            idImage = afwImage.ImageU(imwidth, imheight)
+            for i, foot in enumerate([initial, shrunk]):
+                print foot.getNpix()
+                foot.insertIntoImage(idImage, i+1);
+            ds9.mtv(idImage)
+
+    def testShrinkEightVertical(self):
+        # Test a "vertical" figure of 8.
+        radius = 3
+        imwidth, imheight = 100, 100
+        self._fig8Test(imwidth//2, imheight//2-radius, imwidth//2, imheight//2+radius)
+
+    def testShrinkEightHorizontal(self):
+        # Test a "horizontal" figure of 8.
+        radius = 3
+        imwidth, imheight = 100, 100
+        self._fig8Test(imwidth//2-radius, imheight//2, imwidth//2+radius, imheight//2)
 
     def testGrow(self):
         """Test growing a footprint"""
