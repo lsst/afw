@@ -33,9 +33,6 @@ template <> struct TypeTraits<double> {
 template <> struct TypeTraits<lsst::afw::geom::Angle> {
     static char const * getName() { return "Angle"; }
 };
-template <> struct TypeTraits<lsst::afw::coord::Coord> {
-    static char const * getName() { return "Coord"; }
-};
 
 } // anonyomous
 
@@ -46,50 +43,11 @@ std::string FieldBase<T>::getTypeString() {
     return TypeTraits<T>::getName();
 }
 
-//----- Point scalar ----------------------------------------------------------------------------------------
-
-template <typename U>
-std::string FieldBase< Point<U> >::getTypeString() {
-    return (boost::format("Point%s") % TypeTraits<U>::getName()).str();
-}
-
-//----- Point scalar ----------------------------------------------------------------------------------------
-
-std::string FieldBase< Coord >::getTypeString() { return "Coord"; }
-
-//----- Moments scalar --------------------------------------------------------------------------------------
-
-template <typename U>
-std::string FieldBase< Moments<U> >::getTypeString() {
-    return (boost::format("Moments%s") % TypeTraits<U>::getName()).str();
-}
-
 //----- POD array -------------------------------------------------------------------------------------------
 
 template <typename U>
 std::string FieldBase< Array<U> >::getTypeString() {
     return (boost::format("Array%s") % TypeTraits<U>::getName()).str();
-}
-
-//----- POD covariance --------------------------------------------------------------------------------------
-
-template <typename U>
-std::string FieldBase< Covariance<U> >::getTypeString() {
-    return (boost::format("Cov%s") % TypeTraits<U>::getName()).str();
-}
-
-//----- Point covariance ------------------------------------------------------------------------------------
-
-template <typename U>
-std::string FieldBase< Covariance< Point<U> > >::getTypeString() {
-    return (boost::format("CovPoint%s") % TypeTraits<U>::getName()).str();
-}
-
-//----- Moments covariance ----------------------------------------------------------------------------------
-
-template <typename U>
-std::string FieldBase< Covariance< Moments<U> > >::getTypeString() {
-    return (boost::format("CovMoments%s") % TypeTraits<U>::getName()).str();
 }
 
 //----- String ----------------------------------------------------------------------------------------------
