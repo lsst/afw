@@ -92,7 +92,7 @@ void applyToImage(BoundedField const & field, image::Image<T> & img, F functor, 
         typename image::Image<T>::x_iterator rowIter = img.x_at(
             region.getBeginX() - img.getX0(), y - img.getY0()
         );
-        for (int x = region.getBeginX(), xEnd = region.getEndY(); x < xEnd; ++x, ++rowIter) {
+        for (int x = region.getBeginX(), xEnd = region.getEndX(); x < xEnd; ++x, ++rowIter) {
             functor(*rowIter, field.evaluate(x, y));
         }
     }
