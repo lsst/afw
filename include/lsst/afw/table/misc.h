@@ -32,10 +32,7 @@ enum class CoordinateType {
  *  See the documentation for specializations of FieldBase and KeyBase
  *  for more information.
  */
-template <typename T> class Point;
-template <typename T> class Moments;
 template <typename T> class Array;
-template <typename T> class Covariance;
 class Flag;
 typedef lsst::afw::coord::Coord Coord;
 typedef lsst::afw::coord::IcrsCoord IcrsCoord;

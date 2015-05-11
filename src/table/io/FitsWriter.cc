@@ -86,50 +86,6 @@ struct ProcessSchema {
         fits->writeColumnKey("TCCLS", n, "Array", "Field template used by lsst.afw.table");
     }
 
-    void specialize(SchemaItem<Coord> const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
-        fits->writeColumnKey("TCCLS", n, "Coord", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Point<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(), "{x, y}");
-        fits->writeColumnKey("TCCLS", n, "Point", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Moments<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(), "{xx, yy, xy}");
-        fits->writeColumnKey("TCCLS", n, "Moments", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
-                                 "{(0,0), (0,1), (1,1), (0,2), (1,2), (2,2), ...}");
-        fits->writeColumnKey("TCCLS", n, "Covariance", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance< Point<T> > > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
-                                 "{(x,x), (x,y), (y,y)}");
-        fits->writeColumnKey("TCCLS", n, "Covariance(Point)", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance< Moments<T> > > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
-                                 "{(xx,xx), (xx,yy), (yy,yy), (xx,xy), (yy,xy), (xy,xy)}");
-        fits->writeColumnKey("TCCLS", n, "Covariance(Moments)", "Field template used by lsst.afw.table");
-    }
-
     void specialize(SchemaItem< std::string > const & item, int n) const {
         if (!item.field.getUnits().empty())
             fits->writeColumnKey("TUNIT", n, item.field.getUnits());
