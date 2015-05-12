@@ -429,6 +429,13 @@ class FootprintTestCase(tests.TestCase):
         ngrow = 5
         for isotropic in (True, False):
             foot2 = afwDetect.growFootprint(foot1, ngrow, isotropic)
+
+            # Check that the grown footprint is normalized
+            self.assertTrue(foot2.isNormalized())
+
+            # Check that the grown footprint is bigger than the original
+            self.assertGreater(foot2.getArea(), foot1.getArea())
+
             bbox2 = foot2.getBBox()
 
             if False and display:

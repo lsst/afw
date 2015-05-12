@@ -1548,16 +1548,50 @@ PTR(Footprint) growFootprintImpl(
     // Create an empty footprint covering foot's region.
     PTR(Footprint) grown(new Footprint(0, foot.getRegion()));
 
-    // Iterate over foot & structuring element adding spans to the empty
-    // footprint.
+    // We use a map of (y coordinate) to set of (xmin, xmax) pairs to describe
+    // the spans being constructed. In this way, we ensure that the spans are
+    // always sorted by increasing y, xmin.
+    typedef std::set<std::pair<int, int> > SpanSet;
+    typedef std::map<int, SpanSet> SpanMap;
+    SpanMap spans;
+
+    // Iterate over foot & structuring element building up a collection of
+    // spans which should be added to the footprint.
     for (Footprint::SpanList::const_iterator spanIter = foot.getSpans().begin();
          spanIter != foot.getSpans().end();
-         spanIter++
-    ) {
-        for (StructuringElement::const_iterator it = element.begin(); it != element.end(); it++) {
-            int xmin = (*spanIter)->getX0() + it->getX0();
-            int xmax = (*spanIter)->getX1() + it->getX1();
-            grown->addSpan((*spanIter)->getY() + it->getY(), xmin, xmax);
+         ++spanIter) {
+        for (StructuringElement::const_iterator elementIter = element.begin();
+             elementIter != element.end();
+             ++elementIter) {
+            int const xmin = (*spanIter)->getX0() + elementIter->getX0();
+            int const xmax = (*spanIter)->getX1() + elementIter->getX1();
+            int const yval = (*spanIter)->getY() + elementIter->getY();
+            spans[yval].insert(std::make_pair(xmin, xmax));
+
+            // Merge overlapping spans at this y coordinate, thereby ensuring
+            // that the proto-footprint remains normalized.
+            std::set<std::pair<int, int> > newSpans;
+            for (SpanSet::const_iterator span = spans[yval].begin(); span != spans[yval].end(); ++span) {
+                int const start = span->first;
+                int end = span->second;
+                // Check for end+1 because end value is inclusive. That is, if
+                // one span terminates at x=N and another begins at x=N+1,
+                // those spans are contiguous.
+                while (span != spans[yval].end() && span->first <= (end+1)) {
+                    end = std::max(end, span++->second);
+                }
+                newSpans.insert(std::make_pair(start, end));
+                --span; // "rewind" to the last span included
+            }
+            std::swap(spans[yval], newSpans);
+        }
+    }
+
+    // Now append the spans to the output footprint, making use of the fact
+    // that they are already normalized.
+    for (SpanMap::const_iterator y = spans.begin(); y != spans.end(); ++y) {
+        for (SpanSet::const_iterator x = y->second.begin(); x != y->second.end(); ++x) {
+            grown->addSpanInSeries(y->first, x->first, x->second);
         }
     }
 
