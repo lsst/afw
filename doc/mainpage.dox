@@ -30,7 +30,7 @@ which are ultimately derived from ImageBase:
       - MaskedImage : A combination of an Image, a Mask, and an Image giving the per-pixel variance
       - Exposure : A MaskedImage with additional \link Wcs WCS\endlink information
 
-You can use \ref afwSecDisplay "ds9" to display Image%s and their Mask%s.
+You can use \ref afwSecDisplay "displaying images" to display Image%s and their Mask%s.
 
 \subsection afwSecPixelAccess How to Access Pixels
 
