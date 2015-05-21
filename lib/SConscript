@@ -3,8 +3,12 @@ from lsst.sconsUtils import scripts, targets, env
 
 objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glob("#src/*/*/*.cc") + Glob("#src/*/*/*/*.cc"))
 
-import eups
-if eups.productDir("cuda_toolkit"):
+import lsst.utils
+try:
+    lsst.utils.getPackageDir('cuda_toolkit')
+except Exception:
+    pass
+else:
     objs.append("#src/math/detail/convGPU.os")
     objs.append("#src/math/detail/cudaLanczos.os")
 
