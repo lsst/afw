@@ -764,45 +764,46 @@ class BackgroundTestCase(unittest.TestCase):
         bgCtrl.setUndersampleStyle(afwMath.REDUCE_INTERP_ORDER)
         bkgd = afwMath.makeBackground(img, bgCtrl)
         interpImage = bkgd.getImageF()
-        bglInterp = afwMath.BackgroundList()
-        bglInterp.append(bkgd)
-        bgiFile = "tests/bgInterp.fits"
-        bglInterp.writeFits(bgiFile)
 
-        # try an approx background
-        approxStyle = afwMath.ApproximateControl.CHEBYSHEV
-        approxOrder = 2
-        actrl = afwMath.ApproximateControl(approxStyle, approxOrder)
-        bkgd.getBackgroundControl().setApproximateControl(actrl)
-        approxImage = bkgd.getImageF()
-        bglApprox = afwMath.BackgroundList()
-        bglApprox.append(bkgd)
-        bgaFile = "tests/bgApprox.fits"
-        bglApprox.writeFits(bgaFile)
+        with utilsTests.getTempFilePath("_bgi.fits") as bgiFile, \
+                utilsTests.getTempFilePath("_bga.fits") as bgaFile:
+            bglInterp = afwMath.BackgroundList()
+            bglInterp.append(bkgd)
+            bglInterp.writeFits(bgiFile)
 
-        # take a difference and make sure the two are very similar
-        interpNp = interpImage.getArray()
-        diff = np.abs(interpNp - approxImage.getArray())/interpNp
+            # try an approx background
+            approxStyle = afwMath.ApproximateControl.CHEBYSHEV
+            approxOrder = 2
+            actrl = afwMath.ApproximateControl(approxStyle, approxOrder)
+            bkgd.getBackgroundControl().setApproximateControl(actrl)
+            approxImage = bkgd.getImageF()
+            bglApprox = afwMath.BackgroundList()
+            bglApprox.append(bkgd)
+            bglApprox.writeFits(bgaFile)
 
-        # the image and interp/approx parameters are chosen so these limits
-        # will be greater than machine precision for float.  The two methods
-        # should be measurably different (so we know we're not just getting the
-        # same thing from the getImage() method.  But they should be very close
-        # since they're both doing the same sort of thing.
-        tolSame = 1.0e-3  # should be the same to this order
-        tolDiff = 1.0e-4  # should be different here
-        self.assertLess(diff.max(), tolSame)
-        self.assertGreater(diff.max(), tolDiff)
+            # take a difference and make sure the two are very similar
+            interpNp = interpImage.getArray()
+            diff = np.abs(interpNp - approxImage.getArray())/interpNp
 
-        # now see if we can reload them from files and get the same images we wrote
-        interpImage2 = afwMath.BackgroundList().readFits(bgiFile).getImage()
-        approxImage2 = afwMath.BackgroundList().readFits(bgaFile).getImage()
+            # the image and interp/approx parameters are chosen so these limits
+            # will be greater than machine precision for float.  The two methods
+            # should be measurably different (so we know we're not just getting the
+            # same thing from the getImage() method.  But they should be very close
+            # since they're both doing the same sort of thing.
+            tolSame = 1.0e-3  # should be the same to this order
+            tolDiff = 1.0e-4  # should be different here
+            self.assertLess(diff.max(), tolSame)
+            self.assertGreater(diff.max(), tolDiff)
 
-        idiff = interpImage.getArray() - interpImage2.getArray()
-        adiff = approxImage.getArray() - approxImage2.getArray()
+            # now see if we can reload them from files and get the same images we wrote
+            interpImage2 = afwMath.BackgroundList().readFits(bgiFile).getImage()
+            approxImage2 = afwMath.BackgroundList().readFits(bgaFile).getImage()
 
-        self.assertEqual(idiff.max(), 0.0)
-        self.assertEqual(adiff.max(), 0.0)
+            idiff = interpImage.getArray() - interpImage2.getArray()
+            adiff = approxImage.getArray() - approxImage2.getArray()
+
+            self.assertEqual(idiff.max(), 0.0)
+            self.assertEqual(adiff.max(), 0.0)
 
     def testBackgroundListIO(self):
         """Test I/O for BackgroundLists
