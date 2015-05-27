@@ -171,7 +171,6 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
             for (int i = 0; i != nTerm; ++i) {
                 double const c_i = termCoeffs[i][alpha];
                 double const tmp = c_i*ivar;
-
                 b(i) += val*tmp;
                 A(i, i) += c_i*tmp;
                 for (int j = 0; j < i; ++j) {
@@ -182,8 +181,15 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
         }
     }
     if (A.isZero()) {
-        throw LSST_EXCEPT(pex::exceptions::RuntimeError,
-                          "No valid points to fit. Variance is likely zero. Try weighting=False");
+        if (ctrl.getWeighting()) {
+            throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                              "No valid points to fit. Variance is likely zero. Try weighting=False");
+        }
+        else {
+            throw LSST_EXCEPT(pex::exceptions::RuntimeError,
+                              "No valid points to fit (even though weighting is False). "
+                              "Check that binSize & approxOrderX settings are appropriate for image size.");
+        }
     }
     // We only filled out the lower triangular part of A
     for (int j = 0; j != nTerm; ++j) {
