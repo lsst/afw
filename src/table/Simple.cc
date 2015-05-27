@@ -2,6 +2,7 @@
 #include <typeinfo>
 
 #include "lsst/afw/table/io/FitsWriter.h"
+#include "lsst/afw/table/io/FitsReader.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/detail/Access.h"
 
@@ -29,7 +30,7 @@ public:
 class SimpleTableImpl : public SimpleTable {
 public:
 
-    explicit SimpleTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) : 
+    explicit SimpleTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) :
         SimpleTable(schema, idFactory)
     {}
 
@@ -66,7 +67,7 @@ public:
     explicit SimpleFitsWriter(Fits * fits, int flags) : io::FitsWriter(fits, flags) {}
 
 protected:
-    
+
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
 };
@@ -97,27 +98,23 @@ namespace {
 class SimpleFitsReader : public io::FitsReader {
 public:
 
-    explicit SimpleFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
-        io::FitsReader(fits, archive, flags) {}
+    SimpleFitsReader() : io::FitsReader("SIMPLE") {}
 
-protected:
-
-    virtual PTR(BaseTable) _readTable();
+    virtual PTR(BaseTable) makeTable(
+        io::FitsSchemaInputMapper & mapper,
+        PTR(daf::base::PropertyList) metadata,
+        int ioFlags,
+        bool stripMetadata
+    ) const {
+        PTR(SimpleTable) table = SimpleTable::make(mapper.finalize());
+        table->setMetadata(metadata);
+        return table;
+    }
 
 };
 
-PTR(BaseTable) SimpleFitsReader::_readTable() {
-    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
-    _fits->readMetadata(*metadata, true);
-    Schema schema(*metadata, true);
-    PTR(SimpleTable) table =  SimpleTable::make(schema, PTR(IdFactory)());
-    table->setMetadata(metadata);
-    _startRecords(*table);
-    return table;
-}
-
 // registers the reader so FitsReader::make can use it.
-static io::FitsReader::FactoryT<SimpleFitsReader> referenceFitsReaderFactory("SIMPLE");
+static SimpleFitsReader const simpleFitsReader;
 
 } // anonymous
 
