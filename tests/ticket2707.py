@@ -38,7 +38,7 @@ class MatchXyTest(unittest.TestCase):
     def setUp(self):
         nan = float('nan')
         self.schema = afwTable.SourceTable.makeMinimalSchema()
-        centroidKey = self.schema.addField("cen", type="PointD")
+        centroidKey = afwTable.Point2DKey.addFields(self.schema, "cen", "center", "pixels")
         self.table = afwTable.SourceTable.make(self.schema)
         self.table.defineCentroid("cen")
         idKey = self.table.getIdKey()

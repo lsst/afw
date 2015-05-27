@@ -592,11 +592,6 @@ aliases = {
     numpy.float32: "F",
     numpy.float64: "D",
     Angle: "Angle",
-    Coord: "Coord",
-    IcrsCoord: "Coord",
-    Point2I: "PointI",
-    Point2D: "PointD",
-    Quadrupole: "MomentsD",
 }
 %}
 
@@ -649,23 +644,11 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %declareFieldType(std::string, String)
 %declareFieldType(lsst::afw::table::Flag, Flag)
 %declareFieldType(lsst::afw::geom::Angle, Angle)
-%declareFieldType(lsst::afw::coord::Coord, Coord)
-
-%declareFieldType(lsst::afw::table::Point<boost::int32_t>, PointI)
-%declareFieldType(lsst::afw::table::Point<double>, PointD)
-
-%declareFieldType(lsst::afw::table::Moments<double>, MomentsD)
 
 %declareFieldType(lsst::afw::table::Array<boost::uint16_t>, ArrayU)
 %declareFieldType(lsst::afw::table::Array<int>, ArrayI)
 %declareFieldType(lsst::afw::table::Array<float>, ArrayF)
 %declareFieldType(lsst::afw::table::Array<double>, ArrayD)
-
-%declareFieldType(lsst::afw::table::Covariance<float>, CovF)
-
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Point<float> >, CovPointF)
-
-%declareFieldType(lsst::afw::table::Covariance< lsst::afw::table::Moments<float> >, CovMomentsF)
 
 %include "lsst/afw/table/specializations.i"
 

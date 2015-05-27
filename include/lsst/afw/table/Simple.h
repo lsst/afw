@@ -29,6 +29,7 @@
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/SortedCatalog.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -151,7 +152,7 @@ public:
     /// @brief Key for the unique ID.
     static Key<RecordId> getIdKey() { return getMinimalSchema().id; }
     /// @brief Key for the celestial coordinates.
-    static Key<Coord> getCoordKey() { return getMinimalSchema().coord; }
+    static CoordKey getCoordKey() { return getMinimalSchema().coord; }
     //@}
 
     /// @copydoc BaseTable::clone
@@ -182,7 +183,7 @@ private:
     struct MinimalSchema {
         Schema schema;
         Key<RecordId> id;
-        Key<Coord> coord;
+        CoordKey coord;
 
         MinimalSchema();
     };
@@ -205,7 +206,7 @@ inline void SimpleRecord::setId(RecordId id) { set(SimpleTable::getIdKey(), id);
 
 inline IcrsCoord SimpleRecord::getCoord() const { return get(SimpleTable::getCoordKey()); }
 inline void SimpleRecord::setCoord(IcrsCoord const & coord) { set(SimpleTable::getCoordKey(), coord); }
-inline void SimpleRecord::setCoord(Coord const & coord) { set(SimpleTable::getCoordKey(), coord); }
+inline void SimpleRecord::setCoord(Coord const & coord) { SimpleTable::getCoordKey().set(*this, coord); }
 
 inline Angle SimpleRecord::getRa() const { return get(SimpleTable::getCoordKey().getRa()); }
 inline void SimpleRecord::setRa(Angle ra) { set(SimpleTable::getCoordKey().getRa(), ra); }

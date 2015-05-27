@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008-2014 AURA/LSST
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -108,16 +108,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fastGetter(key), value1)
         self.assert_(key.subfields is None)
 
-    def checkGeomAccessors(self, record, key, name, value):
-        fastSetter = getattr(record, "set" + key.getTypeString())
-        fastGetter = getattr(record, "get" + key.getTypeString())
-        record.set(key, value)
-        self.assertEqual(record.get(key), value)
-        record.set(name, value)
-        self.assertEqual(record.get(name), value)
-        fastSetter(key, value)
-        self.assertEqual(fastGetter(key), value)
-
     def checkArrayAccessors(self, record, key, name, value):
         fastSetter = getattr(record, "set" + key.getTypeString())
         fastGetter = getattr(record, "get" + key.getTypeString())
@@ -135,18 +125,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         k2 = schema.addField("f2", type="L")
         k3 = schema.addField("f3", type="F")
         k4 = schema.addField("f4", type="D")
-        k5 = schema.addField("f5", type="PointI")
-        k7 = schema.addField("f7", type="PointD")
-        k9 = schema.addField("f9", type="MomentsD")
         k10b = schema.addField("f10b", type="ArrayU", size=2)
         k10a = schema.addField("f10a", type="ArrayI", size=3)
         k10 = schema.addField("f10", type="ArrayF", size=4)
         k11 = schema.addField("f11", type="ArrayD", size=5)
-        k12 = schema.addField("f12", type="CovF", size=3)
-        k14 = schema.addField("f14", type="CovPointF")
-        k16 = schema.addField("f16", type="CovMomentsF")
         k18 = schema.addField("f18", type="Angle")
-        k19 = schema.addField("f19", type="Coord")
         k20 = schema.addField("f20", type="String", size=4)
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
@@ -154,46 +137,22 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record[k2], 0)
         self.assert_(numpy.isnan(record[k3]))
         self.assert_(numpy.isnan(record[k4]))
-        self.assertEqual(record.get(k5), lsst.afw.geom.Point2I())
-        self.assert_(numpy.isnan(record[k7.getX()]))
-        self.assert_(numpy.isnan(record[k7.getY()]))
         self.checkScalarAccessors(record, k0, "f0", 5, 6)
         self.checkScalarAccessors(record, k1, "f1", 2, 3)
         self.checkScalarAccessors(record, k2, "f2", 2, 3)
         self.checkScalarAccessors(record, k3, "f3", 2.5, 3.5)
         self.checkScalarAccessors(record, k4, "f4", 2.5, 3.5)
-        self.checkGeomAccessors(record, k5, "f5", lsst.afw.geom.Point2I(5, 3))
-        self.checkGeomAccessors(record, k7, "f7", lsst.afw.geom.Point2D(5.5, 3.5))
-        for k in (k5, k7): self.assertEqual(k.subfields, ("x", "y"))
-        self.checkGeomAccessors(record, k9, "f9", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
-        self.assertEqual(k9.subfields, ("xx", "yy", "xy"))
         self.checkArrayAccessors(record, k10b, "f10b", makeArray(k10b.getSize(), dtype=numpy.uint16))
         self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=numpy.int32))
         self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
         for k in (k10, k11): self.assertEqual(k.subfields, tuple(range(k.getSize())))
-        self.checkArrayAccessors(record, k12, "f12", makeCov(k12.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k14, "f14", makeCov(k14.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k16, "f16", makeCov(k16.getSize(), dtype=numpy.float32))
         sub1 = k11.slice(1, 3)
         sub2 = k11[0:2]
-        self.assert_((record.get(sub1) == record.get(k11)[1:3]).all())
-        self.assert_((record.get(sub2) == record.get(k11)[0:2]).all())
+        self.assertClose(record.get(sub1), record.get(k11)[1:3], rtol=0, atol=0)
+        self.assertClose(record.get(sub2), record.get(k11)[0:2], rtol=0, atol=0)
         self.assertEqual(sub1[0], sub2[1])
-        for k in (k12, k14, k16):
-            n = 0
-            for idx, subkey in zip(k.subfields, k.subkeys):
-                self.assertEqual(k[idx], subkey)
-                n += 1
-            self.assertEqual(n, k.getElementCount())
-        self.checkGeomAccessors(record, k18, "f18", lsst.afw.geom.Angle(1.2))
         self.assert_(k18.subfields is None)
-        self.checkGeomAccessors(
-            record, k19, "f19", 
-            lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
-            )
-        self.assertEqual(k19.subfields, ("ra", "dec"))
-        self.checkScalarAccessors(record, k20, "f20", "foo", "bar")
         k0a = lsst.afw.table.Key["D"]()
         k0b = lsst.afw.table.Key["Flag"]()
         self.assertRaises(lsst.pex.exceptions.LogicError, record.get, k0a)
@@ -677,6 +636,39 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(numpy.all(record4.get(kb) == b1))
         self.assertTrue(numpy.all(record4.get(kc) == c1))
         os.remove(filename)
+
+    def testCompoundFieldFitsConversion(self):
+        """Test that we convert compound fields saved with an older version of the pipeline
+        into the set of multiple fields used by their replacement FunctorKeys.
+        """
+        geomValues = {
+            "point_i_x": 4, "point_i_y": 5,
+            "point_d_x": 3.5, "point_d_y": 2.0,
+            "moments_xx": 5.0, "moments_yy": 6.5, "moments_xy": 2.25,
+            "coord_ra": 1.0*lsst.afw.geom.radians, "coord_dec": 0.5*lsst.afw.geom.radians,
+        }
+        covValues = {
+            "cov_z": numpy.array([[4.00, 1.25, 1.50, 0.75],
+                                  [1.25, 2.25, 0.50, 0.25],
+                                  [1.50, 0.50, 6.25, 1.75],
+                                  [0.75, 0.25, 1.75, 9.00]], dtype=numpy.float32),
+            "cov_p": numpy.array([[5.50, -2.0],
+                                  [-2.0, 3.25]], dtype=numpy.float32),
+            "cov_m": numpy.array([[3.75, -0.5, 1.25],
+                                  [-0.5, 4.50, 0.75],
+                                  [1.25, 0.75, 6.25]], dtype=numpy.float32),
+        }
+        filename = os.path.join(os.path.split(__file__)[0], "data", "CompoundFieldConversion.fits")
+        cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
+        record2 = cat2[0]
+        for k, v in geomValues.iteritems():
+            self.assertEqual(record2.get(k), v, msg=k)
+        covZKey = lsst.afw.table.CovarianceMatrixXfKey(cat2.schema["cov_z"], ["0", "1", "2", "3"])
+        covPKey = lsst.afw.table.CovarianceMatrix2fKey(cat2.schema["cov_p"], ["x", "y"])
+        covMKey = lsst.afw.table.CovarianceMatrix3fKey(cat2.schema["cov_m"], ["xx", "yy", "xy"])
+        self.assertClose(record2.get(covZKey), covValues["cov_z"], rtol=1E-6)
+        self.assertClose(record2.get(covPKey), covValues["cov_p"], rtol=1E-6)
+        self.assertClose(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
