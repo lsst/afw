@@ -56,20 +56,25 @@ public:
     ApproximateControl(Style style, int orderX, int orderY=-1, bool weighting=true);
     /// Return the Style
     Style getStyle() const { return _style; }
+    /// Set the Style
     void setStyle(Style const style) { _style = style; }
     /// Return the order of approximation to use in the x-direction
     int getOrderX() const { return _orderX; }
+    /// Set the order of approximation to use in the x-direction
     void setOrderX(int const orderX) { _orderX = orderX; }
     /// Return the order of approximation to use in the y-direction
     int getOrderY() const { return _orderY; }
+    /// Set the order of approximation to use in the y-direction
     void setOrderY(int const orderY) { _orderY = orderY; }
     /// Return whether inverse variance weighting will be used in calculation
     bool getWeighting() const { return _weighting; }
+    /// Set whether inverse variance weighting will be used in calculation
+    void setWeighting(bool const weighting) { _weighting = weighting; }
 private:
     Style _style;
     int _orderX;
     int _orderY;
-    bool const _weighting;
+    bool _weighting;
 };
 
 /**
