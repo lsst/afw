@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,7 +19,7 @@
  * 
  * You should have received a copy of the LSST License Statement and 
  * the GNU General Public License along with this program.  If not, 
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
  
 #include <iostream>
@@ -51,7 +51,6 @@ typedef image::DecoratedImage<float> DecoratedImage;
 
 BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
-
     int nX = 40;
     int nY = 40;
     Image img(geom::Extent2I(nX, nY));
@@ -70,10 +69,10 @@ BOOST_AUTO_TEST_CASE(BackgroundBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         bgCtrl.getStatisticsControl()->setNumIter(3);
         PTR(math::Background) back = math::makeBackground(img, bgCtrl);
         double const TESTVAL = boost::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
-        
+
         image::Image<float>::Ptr bImage = back->getImage<float>();
         Image::Pixel const testFromImage = *(bImage->xy_at(xcen, ycen));
-        
+
         BOOST_CHECK_EQUAL(TESTVAL, pixVal);
         BOOST_CHECK_EQUAL(TESTVAL, testFromImage);
 
@@ -93,7 +92,7 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
         //imgfiles.push_back("v2_i1_p_m9_u16.fits");
         //imgfiles.push_back("v2_i2_p_m9_f.fits");
         //imgfiles.push_back("v2_i2_p_m9_u16.fits");
-        
+
         std::string afwdata_dir;
         try {
             afwdata_dir = lsst::utils::getPackageDir("afwdata");
@@ -102,7 +101,7 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
             return;
         }
         for (vector<string>::iterator imgfile = imgfiles.begin(); imgfile != imgfiles.end(); ++imgfile) {
-            
+
             string img_path = afwdata_dir + "/Statistics/" + *imgfile;
 
             // get the image and header
@@ -116,7 +115,7 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
 
             int const width = img->getWidth();
             int const height = img->getHeight();
-            
+
             // create a background control object
             math::BackgroundControl bctrl(math::Interpolate::AKIMA_SPLINE);
             bctrl.setNxSample(5);
@@ -134,18 +133,14 @@ BOOST_AUTO_TEST_CASE(BackgroundTestImages) { /* parasoft-suppress  LsstDm-3-2a L
             image::Image<float>::Ptr bimg = backobj->getImage<float>();
             float testImgval = static_cast<float>(*(bimg->xy_at(width/2, height/2)));
             BOOST_REQUIRE( fabs(testImgval - reqMean) < 2.0*stdevSubimg );
-            
         }
     }
-        
 }
-
 
 
 BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     {
-        
         // make a ramping image (spline should be exact for linear increasing image
         int const nX = 512;
         int const nY = 512;
@@ -161,7 +156,7 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
                 *rampimg.xy_at(i, j) = dzdx*x + dzdy*y + z0;
             }
         }
-        
+
         // check corner, edge, and center pixels
         math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::AKIMA_SPLINE);
         bctrl.setNxSample(6);
@@ -181,14 +176,13 @@ BOOST_AUTO_TEST_CASE(BackgroundRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
                 double realval = *rampimg.xy_at(xpix, ypix);
                 BOOST_CHECK_CLOSE(testval/realval, 1.0, 2.5e-5);
             }
-        }                    
+        }
     }
 }
 
 BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
     {
-        
         // make an image which varies parabolicly (spline should be exact for 2rd order polynomial)
         int const nX = 512;
         int const nY = 512;
@@ -204,7 +198,7 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
                 *parabimg.xy_at(i, j) = d2zdx2*i*i + d2zdy2*j*j + dzdx*i + dzdy*j + z0;
             }
         }
-        
+
         // check corner, edge, and center pixels
         math::BackgroundControl bctrl = math::BackgroundControl(math::Interpolate::CUBIC_SPLINE);
         bctrl.setNxSample(24);
@@ -231,4 +225,3 @@ BOOST_AUTO_TEST_CASE(BackgroundParabola) { /* parasoft-suppress  LsstDm-3-2a Lss
         }
     }
 }
-

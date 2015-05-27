@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,7 +19,7 @@
  * 
  * You should have received a copy of the LSST License Statement and 
  * the GNU General Public License along with this program.  If not, 
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
  
 #if !defined(LSST_AFW_MATH_BACKGROUND_H)
@@ -53,7 +53,7 @@ enum UndersampleStyle {
     INCREASE_NXNYSAMPLE
 };
 UndersampleStyle stringToUndersampleStyle(std::string const &style);
-    
+
 /**
  * @class BackgroundControl
  * @brief Pass parameters to a Background object
@@ -81,7 +81,7 @@ public:
                              );
         }
     }
-    
+
     /**
      * Overload constructor to handle string for statistical operator
      */
@@ -134,7 +134,7 @@ public:
                              );
         }
     }
-    
+
     /**
      * Overload constructor to handle strings for both interp and undersample styles.
      *
@@ -183,7 +183,7 @@ public:
     void setInterpStyle (Interpolate::Style const style) { _style = style; }
     // overload to take a string
     void setInterpStyle (std::string const &style) { _style = math::stringToInterpStyle(style); }
-    
+
     void setUndersampleStyle (UndersampleStyle const undersampleStyle) {
         _undersampleStyle = undersampleStyle;
     }
@@ -191,7 +191,7 @@ public:
     void setUndersampleStyle (std::string const &undersampleStyle) {
         _undersampleStyle = math::stringToUndersampleStyle(undersampleStyle);
     }
-    
+
     int getNxSample() const { return _nxSample; }
     int getNySample() const { return _nySample; }
     Interpolate::Style getInterpStyle() const {
@@ -213,7 +213,7 @@ public:
     void setApproximateControl(PTR(ApproximateControl) actrl) { _actrl = actrl; }
     PTR(ApproximateControl) getApproximateControl() { return _actrl; }
     CONST_PTR(ApproximateControl) getApproximateControl() const { return _actrl; }
-    
+
 private:
     Interpolate::Style _style;          // style of interpolation to use
     int _nxSample;                      // number of grid squares to divide image into to sample in x
@@ -223,7 +223,7 @@ private:
     Property _prop;                          // statistics Property
     PTR(ApproximateControl) _actrl;          // approximate control object
 };
-    
+
 /**
  * @class Background
  * @brief A virtual base class to evaluate %image background levels
@@ -371,10 +371,10 @@ protected:
 #endif
 private:
     Background(Background const&);
-    Background& operator=(Background const&);    
+    Background& operator=(Background const&);
     void _setCenOrigSize(int const width, int const height, int const nxSample, int const nySample);
 };
-    
+
 /**
  * @class BackgroundMI
  * @brief A class to evaluate %image background levels
@@ -383,7 +383,8 @@ private:
  * square.  Then use a user-specified or algorithm to estimate background at a given pixel coordinate.
  *
  * Methods are available to return the background at a point (inefficiently), or an entire background image.
- * BackgroundControl contains a public StatisticsControl member to allow user control of how the backgrounds are computed.
+ * BackgroundControl contains a public StatisticsControl member to allow user control of how the backgrounds
+ * are computed.
  * @code
        math::BackgroundControl bctrl(7, 7);  // number of sub-image squares in {x,y}-dimensions
        bctrl.sctrl.setNumSigmaClip(5.0);     // use 5-sigma clipping for the sub-image means
@@ -406,7 +407,7 @@ public:
                         BackgroundControl const& bgCtrl);
     explicit BackgroundMI(geom::Box2I const imageDimensions,
                           image::MaskedImage<InternalPixelT> const& statsImage);
-    
+
     virtual void operator+=(float const delta);
     virtual void operator-=(float const delta);
 
@@ -466,7 +467,7 @@ template<typename ImageT>
 PTR(Background) makeBackground(ImageT const& img, BackgroundControl const& bgCtrl) {
     return PTR(Background)(new BackgroundMI(img, bgCtrl));
 }
-    
-}}}
+
+}}} // lsst::afw::math
 
 #endif  //   LSST_AFW_MATH_BACKGROUND_H
