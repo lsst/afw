@@ -446,7 +446,6 @@ public:
     //@}
 
 private:
-    bool _isDiagonalVariance;
     SigmaKeyArray _sigma;
     CovarianceKeyArray _cov;
 };
