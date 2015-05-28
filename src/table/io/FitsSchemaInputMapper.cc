@@ -349,7 +349,7 @@ bool FitsSchemaInputMapper::hasArchive() const { return static_cast<bool>(_impl-
 FitsSchemaItem const * FitsSchemaInputMapper::find(std::string const & ttype) const {
     auto iter = _impl->byName().find(ttype);
     if (iter == _impl->byName().end()) {
-        return nullptr;
+        return 0;
     }
     return &(*iter);
 }
@@ -357,7 +357,7 @@ FitsSchemaItem const * FitsSchemaInputMapper::find(std::string const & ttype) co
 FitsSchemaItem const * FitsSchemaInputMapper::find(int column) const {
     auto iter = _impl->byColumn().lower_bound(column);
     if (iter == _impl->byColumn().end() || iter->column != column) {
-        return nullptr;
+        return 0;
     }
     return &(*iter);
 }
@@ -648,7 +648,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
     // start by parsing the format; this tells the element type of the field and the number of elements
     boost::smatch m;
     if (!boost::regex_match(item.tform, m, regex)) {
-        return nullptr;
+        return std::unique_ptr<FitsColumnReader>();
     }
     int size = 1;
     if (m[1].matched) {
@@ -751,7 +751,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
     case 'A': // strings
         return StringReader::make(schema, item, size);
     default:
-        return nullptr;
+        return std::unique_ptr<FitsColumnReader>();
     }
 }
 

@@ -59,7 +59,7 @@ public:
      *                       persistence).
      */
     template <typename ContainerT>
-    static ContainerT apply(afw::fits::Fits & fits, int ioFlags, PTR(InputArchive) archive=nullptr) {
+    static ContainerT apply(afw::fits::Fits & fits, int ioFlags, PTR(InputArchive) archive=PTR(InputArchive)()) {
         PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
         fits.readMetadata(*metadata, true);
         FitsReader const * reader = _lookupFitsReader(*metadata);
@@ -95,7 +95,7 @@ public:
      *  a string filename or a afw::fits::MemFileManager, then calls the other apply() overload.
      */
     template <typename ContainerT, typename SourceT>
-    static ContainerT apply(SourceT & source, int hdu, int ioFlags, PTR(InputArchive) archive=nullptr) {
+    static ContainerT apply(SourceT & source, int hdu, int ioFlags, PTR(InputArchive) archive=PTR(InputArchive)()) {
         afw::fits::Fits fits(source, "r", afw::fits::Fits::AUTO_CLOSE | afw::fits::Fits::AUTO_CHECK);
         fits.setHdu(hdu);
         return apply<ContainerT>(fits, ioFlags, archive);
