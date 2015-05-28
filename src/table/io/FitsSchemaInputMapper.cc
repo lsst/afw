@@ -702,10 +702,12 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
             return StandardReader<float>::make(schema, item);
         }
         if (size == 3 && item.tccls == "Covariance(Point)") {
-            return CovarianceConversionReader<float,2>::make(schema, item, {"x", "y"});
+            std::vector<std::string> names = {"x", "y"};
+            return CovarianceConversionReader<float,2>::make(schema, item, names);
         }
         if (size == 6 && item.tccls == "Covariance(Moments)") {
-            return CovarianceConversionReader<float,3>::make(schema, item, {"xx", "yy", "xy"});
+            std::vector<std::string> names = {"xx", "yy", "xy"};
+            return CovarianceConversionReader<float,3>::make(schema, item, names);
         }
         if (item.tccls == "Covariance") {
             double v = 0.5 * (std::sqrt(1 + 8 * size) - 1);
