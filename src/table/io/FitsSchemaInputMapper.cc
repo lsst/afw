@@ -36,6 +36,29 @@ private:
     std::string const & _v;
 };
 
+void addOldFluxSlotAliases(AliasMap & aliases, std::string const & prefix) {
+    aliases.set(prefix + "_flux", prefix);
+    aliases.set(prefix + "_fluxSigma", prefix + "_err");
+    aliases.set(prefix + "_flag", prefix + "_flags");
+}
+
+void addOldCentroidSlotAliases(AliasMap & aliases, std::string const & prefix) {
+    aliases.set(prefix + "_xSigma", prefix + "_err_xSigma");
+    aliases.set(prefix + "_ySigma", prefix + "_err_ySigma");
+    aliases.set(prefix + "_x_y_Cov", prefix + "_err_x_y_Cov");
+    aliases.set(prefix + "_flag", prefix + "_flags");
+}
+
+void addOldShapeSlotAliases(AliasMap & aliases, std::string const & prefix) {
+    aliases.set(prefix + "_xxSigma", prefix + "_err_xxSigma");
+    aliases.set(prefix + "_yySigma", prefix + "_err_yySigma");
+    aliases.set(prefix + "_xySigma", prefix + "_err_xySigma");
+    aliases.set(prefix + "_xx_yy_Cov", prefix + "_err_xx_yy_Cov");
+    aliases.set(prefix + "_xx_xy_Cov", prefix + "_err_xx_xy_Cov");
+    aliases.set(prefix + "_yy_xy_Cov", prefix + "_err_yy_xy_Cov");
+    aliases.set(prefix + "_flag", prefix + "_flags");
+}
+
 } // anonymous
 
 class FitsSchemaInputMapper::Impl {
@@ -138,17 +161,20 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
     if (_impl->version == 0) {
         // Read slots saved using an old mechanism in as aliases, since the new slot mechanism delegates
         // slot definition to the AliasMap.
-        static std::array<std::pair<std::string,std::string>,6> oldSlotKeys = {
+        // Note that the CalibFlux slot is only present on the HSC fork now, but we still want to let
+        // future versions of the LSST stack read files saved by older versions of the HSC stack, if
+        // it's not too hard.
+        static std::array<std::pair<std::string,std::string>,7> oldSlotKeys = {
             std::make_pair("PSF_FLUX", "slot_PsfFlux"),
             std::make_pair("AP_FLUX", "slot_ApFlux"),
             std::make_pair("INST_FLUX", "slot_InstFlux"),
             std::make_pair("MODEL_FLUX", "slot_ModelFlux"),
+            std::make_pair("CALIB_FLUX", "slot_CalibFlux"),
             std::make_pair("CENTROID", "slot_Centroid"),
             std::make_pair("SHAPE", "slot_Shape")
         };
         for (std::size_t i = 0; i < oldSlotKeys.size(); ++i) {
             std::string target = metadata.get(oldSlotKeys[i].first + "_SLOT", std::string(""));
-            std::replace(target.begin(), target.end(), '_', '.');
             if (!target.empty()) {
                 _impl->schema.getAliasMap()->set(oldSlotKeys[i].second, target);
                 if (stripMetadata) {
@@ -729,9 +755,67 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
     }
 }
 
+bool endswith(std::string const & s, std::string const & suffix) {
+    return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+// Replace the last n characters of a string with a new suffix string, returning the result as a new string
+std::string replaceSuffix(std::string const & s, std::size_t n, std::string const & suffix) {
+    return s.substr(0, s.size() - n) + suffix;
+}
+
 } // anonymous
 
 Schema FitsSchemaInputMapper::finalize() {
+    if (_impl->version == 0) {
+        AliasMap & aliases = *_impl->schema.getAliasMap();
+        for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
+            std::size_t flagPos = iter->ttype.find("flags");
+            if (flagPos != std::string::npos) {
+                // We want to create aliases that resolve "(.*)_flag" to "$1_flags"; old schemas will have
+                // the latter, but new conventions (including slots) expect the former.
+                // But we can't do that, because adding that alias directly results in a cycle in the
+                // aliases (since aliases do partial matches, and keep trying until there are no matches,
+                // we'd have "(.*)_flag" resolve to "$1_flagssssssssssssss...").
+                // Instead, we *rename* from "flags" to "flag", then create the reverse alias.
+                std::string ttype = iter->ttype;
+                std::string prefix = iter->ttype.substr(0, flagPos);
+                ttype.replace(flagPos, 5, "flag");
+                _impl->asList().modify(iter, Impl::SetTTYPE(ttype));
+                // Note that we're not aliasing the full field, just the first part - if we have multiple
+                // flag fields, one alias should be sufficient for all of them (because of partial matching).
+                // Of course, we'll try to recreate that alias every time we handle another flag field with
+                // the same prefix, but AliasMap know hows to handle that no-op set.
+                aliases.set(prefix + "flags", prefix + "flag");
+            } else if (iter->ttype.find("flux") != std::string::npos) {
+                // Create aliases that resolve "(.*)_flux" and "(.*)_fluxSigma" to "$1" and "$1_err",
+                // if $1 contains the string "flux".
+                if (endswith(iter->ttype, "_err")) {
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_fluxSigma"), iter->ttype);
+                } else {
+                    aliases.set(iter->ttype + "_flux", iter->ttype);
+                }
+            } else if (endswith(iter->ttype, "_err")) {
+                // Create aliases that resolve "(.*)_(.*)Sigma" and "(.*)_(.*)_(.*)_Cov" to
+                // "$1_err_$2Sigma" and "$1_err_$2_$3_Cov", to make centroid and shape uncertainties
+                // available under the new conventions.  We don't have to create aliases for the
+                // centroid and shape values themselves, as those will automatically be correct
+                // after the PointConversionReader and MomentsConversionReader do their work.
+                if (iter->tccls == "Covariance(Point)") {
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xSigma"), iter->ttype + "_xSigma");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_ySigma"), iter->ttype + "_ySigma");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_x_y_Cov"), iter->ttype + "_x_y_Cov");
+                } else if (iter->tccls == "Covariance(Moments)") {
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xxSigma"), iter->ttype + "_xxSigma");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_yySigma"), iter->ttype + "_yySigma");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xySigma"), iter->ttype + "_xySigma");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xx_yy_Cov"), iter->ttype + "_xx_yy_Cov");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_xx_xy_Cov"), iter->ttype + "_xx_xy_Cov");
+                    aliases.set(replaceSuffix(iter->ttype, 4, "_yy_xy_Cov"), iter->ttype + "_yy_xy_Cov");
+                }
+            }
+        }
+    }
     for (auto iter = _impl->asList().begin(); iter != _impl->asList().end(); ++iter) {
         if (iter->bit < 0) { // not a Flag column
             std::unique_ptr<FitsColumnReader> reader = makeColumnReader(_impl->schema, *iter);
