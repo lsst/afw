@@ -46,7 +46,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         # Set any previously-unknown Styles (they are set by bkgd.getImage())
         #
         for i, val in enumerate(self._backgrounds):
-            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY = val
+            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY, approxWeighting = val
             if interpStyle is None or undersampleStyle is None:
                 interpStyle = bkgd.getAsUsedInterpStyle()
                 undersampleStyle = bkgd.getAsUsedUndersampleStyle()
@@ -54,8 +54,9 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
                 approxStyle = actrl.getStyle()
                 approxOrderX = actrl.getOrderX()
                 approxOrderY = actrl.getOrderY()
+                approxWeighting = actrl.getWeighting()
                 self._backgrounds[i] = (bkgd, interpStyle, undersampleStyle,
-                                        approxStyle, approxOrderX, approxOrderY)
+                                        approxStyle, approxOrderX, approxOrderY, approxWeighting)
         #
         # And return what they wanted
         #
@@ -66,7 +67,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
 
     def append(self, val):
         try:
-            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY = val
+            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY, approxWeighting = val
         except TypeError:
             bkgd = val
             interpStyle = None
@@ -74,6 +75,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             approxStyle = None
             approxOrderX = None
             approxOrderY = None
+            approxWeighting = None
 
         # Check to see if the Background is actually a BackgroundMI.
         # Such special treatment is not generally a good idea as it is against the whole idea of subclassing.
@@ -89,7 +91,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             from lsst.pex.logging import getDefaultLog
             getDefaultLog().warn("Unrecognised Background object %s may be unpersistable." % (bkgd,))
 
-        bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY)
+        bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
+                  approxOrderX, approxOrderY, approxWeighting)
         self._backgrounds.append(bgInfo)
 
     def writeFits(self, fileName, flags=0):
@@ -101,7 +104,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         """
 
         for i, bkgd in enumerate(self):
-            bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY = bkgd
+            (bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY,
+             approxWeighting) = bkgd
 
             statsImage = bkgd.getStatsImage()
 
@@ -111,6 +115,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             md.set("APPROXSTYLE", approxStyle)
             md.set("APPROXORDERX", approxOrderX)
             md.set("APPROXORDERY", approxOrderY)
+            md.set("APPROXWEIGHTING", approxWeighting)
             bbox = bkgd.getImageBBox()
             md.set("BKGD_X0", bbox.getMinX())
             md.set("BKGD_Y0", bbox.getMinY())
@@ -160,19 +165,24 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             interpStyle =      md.get("INTERPSTYLE")
             undersampleStyle = md.get("UNDERSAMPLESTYLE")
 
-            # older outputs won't have APPROX* settings.  Provide alternative defaults.
+            # Older outputs won't have APPROX* settings.  Provide alternative defaults.
+            # Note: Currently X- and Y-orders must be equal due to a limitation in
+            #       math::Chebyshev1Function2.  Setting approxOrderY = -1 is equivalent
+            #       to saying approxOrderY = approxOrderX.
             approxStyle = md.get("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
                           else afwMath.ApproximateControl.UNKNOWN
             approxOrderX = md.get("APPROXORDERX") if "APPROXORDERX" in md.names() else 1
             approxOrderY = md.get("APPROXORDERY") if "APPROXORDERY" in md.names() else -1
+            approxWeighting = md.get("APPROXWEIGHTING") if "APPROXWEIGHTING" in md.names() else True
 
             bkgd = afwMath.BackgroundMI(imageBBox, statsImage)
             bctrl = bkgd.getBackgroundControl()
             bctrl.setInterpStyle(interpStyle)
             bctrl.setUndersampleStyle(undersampleStyle)
-            actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY)
+            actrl = afwMath.ApproximateControl(approxStyle, approxOrderX, approxOrderY, approxWeighting)
             bctrl.setApproximateControl(actrl)
-            bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY)
+            bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
+                      approxOrderX, approxOrderY, approxWeighting)
             self.append(bgInfo)
 
         return self
@@ -183,7 +193,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         """
 
         bkgdImage = None
-        for bkgd, interpStyle, undersampleStyle, approxStyle, approxOrderX, approxOrderY in self:
+        for (bkgd, interpStyle, undersampleStyle, approxStyle,
+             approxOrderX, approxOrderY, approxWeighting) in self:
             if not bkgdImage:
                 if approxStyle != afwMath.ApproximateControl.UNKNOWN:
                     bkgdImage = bkgd.getImageF()

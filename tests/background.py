@@ -715,14 +715,16 @@ class BackgroundTestCase(unittest.TestCase):
         approxStyle = afwMath.ApproximateControl.UNKNOWN
         approxOrderX = 0
         approxOrderY = 0
+        approxWeighting = False
 
         backgroundList = afwMath.BackgroundList()
+
         for i in range(2):
             bkgd = afwMath.makeBackground(self.image, bgCtrl)
             if i == 0:
                 # no need to call getImage
                 backgroundList.append((bkgd, interpStyle, undersampleStyle,
-                                       approxStyle, approxOrderX, approxOrderY))
+                                       approxStyle, approxOrderX, approxOrderY, approxWeighting))
             else:
                 backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
@@ -730,9 +732,9 @@ class BackgroundTestCase(unittest.TestCase):
             self.assertEqual(len(bgl), 2) # check that len() works
             for a in bgl:                 # check that we can iterate
                 pass
-            self.assertEqual(len(bgl[0]), 6) # check that we can index
-            # check that we always have a tuple (bkgd, interp, under, approxStyle, orderX, orderY)
-            self.assertEqual(len(bgl[1]), 6)
+            self.assertEqual(len(bgl[0]), 7) # check that we can index
+            # check that we always have a tuple (bkgd, interp, under, approxStyle, orderX, orderY, weighting)
+            self.assertEqual(len(bgl[1]), 7)
 
         assertBackgroundList(backgroundList)
 
@@ -813,6 +815,7 @@ class BackgroundTestCase(unittest.TestCase):
         undersampleStyle = afwMath.REDUCE_INTERP_ORDER
         approxOrderX = 6
         approxOrderY = 6
+        approxWeighting = True
 
         im = self.image.Factory(self.image, self.image.getBBox(afwImage.PARENT))
         arr = im.getArray()
@@ -829,7 +832,7 @@ class BackgroundTestCase(unittest.TestCase):
                 if i == 0:
                     # no need to call getImage
                     backgroundList.append((bkgd, interpStyle, undersampleStyle,
-                                           astyle, approxOrderX, approxOrderY))
+                                           astyle, approxOrderX, approxOrderY, approxWeighting))
                 else:
                     backgroundList.append(bkgd) # Relies on having called getImage; deprecated
 
