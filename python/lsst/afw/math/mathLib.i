@@ -77,6 +77,8 @@ Python interface to lsst::afw::math classes
 %include "random.i"
 %include "stack.i"
 %include "GaussianProcess.i"
+%include "BoundedField.i"
+%include "ChebyshevBoundedField.i"
 %include "objectVectors.i" // must come last
 
 %include "LeastSquares.i"
