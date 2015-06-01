@@ -297,7 +297,7 @@ namespace {
 /// Generate a vector of polynomial elements, x^i
 ///
 /// This is useful for optimising polynomial evaluations
-std::vector<double> polynomialElements(size_t const order, double const value)
+std::vector<double> polynomialElements(std::size_t const order, double const value)
 {
     std::vector<double> poly(order + 1);
     poly[0] = 1.0;
@@ -305,7 +305,7 @@ std::vector<double> polynomialElements(size_t const order, double const value)
         return poly;
     }
     poly[1] = value;
-    for (int i = 2; i <= order; ++i) {
+    for (std::size_t i = 2; i <= order; ++i) {
         poly[i] = poly[i-1]*value;
     }
     return poly;
@@ -323,9 +323,11 @@ geom::Point2D TanWcs::undistortPixel(geom::Point2D const & pix) const {
     assert(_sipB.rows() == _sipB.cols());
 
     // Polynomial orders for U = f(u,v) and V = g(u,v)
-    // Note these may be different in general, but not usually in practise.
-    size_t const fOrder = _sipA.rows();
-    size_t const gOrder = _sipB.rows();
+    // Note these may be different in general, but not usually in practice.
+    // We use int here rather than size_t because they need to be compared against
+    // negative values in the loops below.
+    int const fOrder = _sipA.rows();
+    int const gOrder = _sipB.rows();
 
     double u = pix[0] - _wcsInfo->crpix[0];  //Relative pixel coords
     double v = pix[1] - _wcsInfo->crpix[1];
@@ -361,8 +363,8 @@ geom::Point2D TanWcs::distortPixel(geom::Point2D const & pix) const {
 
     // Polynomial orders for u = F(U,V) and v = G(U,V)
     // Note these may be different in general, but not usually in practise.
-    size_t const fOrder = _sipAp.rows();
-    size_t const gOrder = _sipBp.rows();
+    std::size_t const fOrder = _sipAp.rows();
+    std::size_t const gOrder = _sipBp.rows();
 
     double U = pix[0] - _wcsInfo->crpix[0];  //Relative, undistorted pixel coords
     double V = pix[1] - _wcsInfo->crpix[1];
@@ -371,15 +373,15 @@ geom::Point2D TanWcs::distortPixel(geom::Point2D const & pix) const {
     std::vector<double> vPoly = polynomialElements(std::max(fOrder, gOrder), V);
 
     double F = 0;
-    for (int i = 0; i< fOrder; ++i) {
-        for (int j = 0; j < fOrder; ++j) {
+    for (std::size_t i = 0; i< fOrder; ++i) {
+        for (std::size_t j = 0; j < fOrder; ++j) {
             F += _sipAp(i,j)*uPoly[i]*vPoly[j];
         }
     }
 
     double G = 0;
-    for (int i = 0; i < gOrder; ++i) {
-        for (int j = 0; j< gOrder; ++j) {
+    for (std::size_t i = 0; i < gOrder; ++i) {
+        for (std::size_t j = 0; j< gOrder; ++j) {
             G += _sipBp(i,j)*uPoly[i]*vPoly[j];
         }
     }
