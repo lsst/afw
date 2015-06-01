@@ -162,7 +162,7 @@ class Display(object):
 
     def close(self):
         if self._impl:
-            self._impl._close()
+            del self._impl
             self._impl = None
 
         if self.frame in Display._displays:
@@ -179,7 +179,7 @@ class Display(object):
             self._impl.verbose = value
 
     def __str__(self):
-        return str(self.frame)
+        return "Display[%s]" % (self.frame)
 
     #
     # Handle Displays, including the default one (the frame to use when a user specifies None)
@@ -188,8 +188,8 @@ class Display(object):
     def setDefaultBackend(backend):
         try:
             _makeDisplayImpl(None, backend)
-        except:
-            raise RuntimeError("Unable to set backend to %s" % backend)
+        except Exception as e:
+            raise RuntimeError("Unable to set backend to %s: %s" % (backend, e))
 
         Display._defaultBackend = backend
 
@@ -374,9 +374,10 @@ class Display(object):
             self._impl._mtv(data, None, wcs, title)
         elif re.search("::Mask<", repr(data)): # it's a Mask; display it, bitplane by bitplane
             #
-            # Some displays can't display a Mask without an image; so display an Image too
+            # Some displays can't display a Mask without an image; so display an Image too,
+            # with pixel values set to the mask
             #
-            self._impl._mtv(afwImage.ImageU(data.getDimensions()), data, wcs, title)
+            self._impl._mtv(afwImage.ImageU(data.getArray()), data, wcs, title)
         elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
             self._impl._mtv(data.getImage(), data.getMask(True), wcs, title)
         else:
@@ -384,18 +385,23 @@ class Display(object):
     #
     # Graphics commands
     #
-    class Buffering(object):
-        """!A class intended to be used with python's with statement:
+    class _Buffering(object):
+        """A class intended to be used with python's with statement"""
+        def __init__(self, _impl):
+            self._impl = _impl
+        def __enter__(self):
+            self._impl._buffer(True)
+        def __exit__(self, *args):
+            self._impl._buffer(False)
+            self._impl._flush()
+
+    def Buffering(self):
+        """Return a class intended to be used with python's with statement
     E.g.
         with display.Buffering():
             display.dot("+", xc, yc)
         """
-        def __init__(self, display=None):
-            self.display = display
-        def __enter__(self):
-            getDisplay(self.display)._impl._buffer(True)
-        def __exit__(self, *args):
-            getDisplay(self.display)._impl._buffer(False)
+        return self._Buffering(self._impl)
 
     def flush(self):
         """!Flush the buffers"""
@@ -472,32 +478,22 @@ class Display(object):
     #
     # Set gray scale
     #
-    def scale(self, min=None, max=None, type=None):
-        """!Set the scale limits and type in one function call"""
-        self.scaleLimits(min, max)
-        self.scaleType(type)
-
-    def scaleLimits(self, min, max=None):
+    def scale(self, algorithm, min, max=None, unit=None, *args, **kwargs):
         """!Set the range of the scaling from DN in the image to the image display
-        \param min Minimum value, or "zscale"
-        \param max Maximum value (must be None for zscale)
+        \param algorithm Desired scaling (e.g. "linear" or "asinh")
+        \param min Minimum value, or "minmax" or "zscale"
+        \param max Maximum value (must be None for minmax|zscale)
+        \param unit Units for min and max (e.g. Percent, Absolute, Sigma; None if min==minmax|zscale)
+        \param *args Optional arguments
+        \param **kwargs Optional keyword arguments
         """    
-        if min == "zscale":
-            assert max == None, "You may not specify \"zscale\" and max"
-            self._impl._setScaleType("zscale")
-        else:
-            if max is None:
-                raise RuntimeError("Please specify max")
+        if min in ("minmax", "zscale"):
+            assert max == None, "You may not specify \"%s\" and max" % min
+            assert unit == None, "You may not specify \"%s\" and unit" % min
+        elif max is None:
+            raise RuntimeError("Please specify max")
 
-            self._impl._setScaleLimits(min, max)
-
-    def scaleType(self, name, params=None):
-        """!Set the type of scaling from DN in the image to the image display
-        \param name Desired scaling (e.g. "linear" or "asinh")
-        \param params Extra parameters for scaling (e.g. Q for asinh scalings)
-        """    
-        self._impl._setScaleType(name)
-
+        self._impl._scale(algorithm, min, max, unit, *args, **kwargs)
     #
     # Zoom and Pan
     #
@@ -507,10 +503,11 @@ class Display(object):
         if (rowc and colc is None) or (colc and rowc is None):
             raise RuntimeError, "Please specify row and column center to pan about"
 
-        if rowc is not None and origin == afwImage.PARENT and self._xy0 is not None:
-            x0, y0 = self._xy0
-            rowc -= x0
-            colc -= y0
+        if rowc is not None:
+            if origin == afwImage.PARENT and self._xy0 is not None:
+                x0, y0 = self._xy0
+                rowc -= x0
+                colc -= y0
 
             self._impl._pan(colc, rowc)
 
@@ -553,10 +550,13 @@ class Display(object):
         if k in "f":
             if noRaise:
                 return
-            raise RuntimeError("Key '%s' is already in use by display, so I can't add a callback for it" % k)
+            raise RuntimeError(
+                "Key '%s' is already in use by display, so I can't add a callback for it" % k)
 
         ofunc = self._callbacks.get(k)
         self._callbacks[k] = func if func else noop_callback
+
+        self._impl._setCallback(k, self._callbacks[k])
 
         return ofunc
 

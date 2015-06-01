@@ -55,7 +55,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
     r += 1
     c += 1                      # ds9 uses 1-based coordinates
     if isinstance(symb, afwGeom.ellipses.Axes):
-        regions.append('ellipse %g %g %g %g %g%s' % (c, r, symb.getA(), symb.getB(),
+        regions.append('ellipse %g %g %gi %gi %g%s' % (c, r, symb.getA(), symb.getB(),
                                                      math.degrees(symb.getTheta()), color))
     elif symb == '+':
         regions.append('line %g %g %g %g%s' % (c, r+size, c, r-size, color))
@@ -71,7 +71,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         regions.append('line %g %g %g %g%s' % (c-size30, r+size60, c+size30, r-size60, color))
         regions.append('line %g %g %g %g%s' % (c+size30, r+size60, c-size30, r-size60, color))
     elif symb == 'o':
-        regions.append('circle %g %g %g%s' % (c, r, size, color))
+        regions.append('circle %g %g %gi%s' % (c, r, size, color))
     else:
         color = re.sub("^ # ", "", color) # skip the leading " # "
         
@@ -93,7 +93,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
             extra += angle
             extra += font
 
-        regions.append('text %g %g \"%s\"%s };' % (c, r, symb, extra))
+        regions.append('text %g %g \"%s\"%s' % (c, r, symb, extra))
 
     return regions
 

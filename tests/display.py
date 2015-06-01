@@ -65,8 +65,11 @@ class DisplayTestCase(unittest.TestCase):
         self.display0 = afwDisplay.getDisplay(frame=0, verbose=True)
 
     def tearDown(self):
-        self.display0.verbose = False   # ensure that display9.close() call is quiet
+        for d in self.display0._displays.values():
+            d.verbose = False           # ensure that display9.close() call is quiet
+
         del self.display0
+        afwDisplay.delAllDisplays()
 
     def testClose(self):
         """Test that we can close devices."""
@@ -93,7 +96,7 @@ class DisplayTestCase(unittest.TestCase):
         exp = afwImage.ExposureF(self.fileName)
         
         for frame in (0, 1):
-            with afwDisplay.getDisplay(frame, verbose=not True) as disp:
+            with afwDisplay.Display(frame, verbose=False) as disp:
                 disp.setMaskTransparency(50)
 
                 if frame == 1:
@@ -130,8 +133,7 @@ class DisplayTestCase(unittest.TestCase):
         """Test playing with the lookup table"""
         self.display0.show()
 
-        self.display0.scaleLimits("zscale")
-        self.display0.scaleType("linear")
+        self.display0.scale("linear", "zscale")
 
     def testMaskColorGeneration(self):
         """Demonstrate the utility routine to generate mask plane colours

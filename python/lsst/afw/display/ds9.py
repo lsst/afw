@@ -29,8 +29,8 @@ from __future__ import absolute_import, division, print_function
 
 import lsst.afw.display
 import lsst.afw.image as afwImage
-from .interface import getDisplay, getDefaultBackend, setDefaultBackend
-
+from .interface import getDisplay, getDefaultBackend, setDefaultBackend, \
+                       setDefaultFrame, getDefaultFrame, incrDefaultFrame
 try:
     loaded
 except NameError:
@@ -47,7 +47,8 @@ except NameError:
 #
 from lsst.afw.display import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE
 
-Buffering = lsst.afw.display.Display.Buffering
+def Buffering():
+    return getDisplay(None, create=True).Buffering()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
@@ -79,12 +80,9 @@ def dot(symb, c, r, frame=None, size=2, ctype=None, origin=afwImage.PARENT, *arg
 
 def line(points, frame=None, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
     return getDisplay(frame, create=True).line(points, origin, symbs, ctype, size)
-
-def scaleLimits(min, max=None, frame=None):
-    return getDisplay(frame, create=True).scaleLimits(min, max)
-
-def scaleType(name, frame=None, params=None):
-    return getDisplay(frame, create=True).scaleType(name, params)
+    
+def scale(algorithm, min, max=None, frame=None):
+    return getDisplay(frame, create=True).scale(algorithm, min, max)
 
 def pan(colc=None, rowc=None, frame=None, origin=afwImage.PARENT):
     disp = getDisplay(frame, create=True)
