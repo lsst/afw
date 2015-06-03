@@ -338,7 +338,7 @@ public:
      *  a new archive from the HDUs following the catalog.
      */
     static ExposureCatalogT readFits(fits::Fits & fitsfile, PTR(io::InputArchive) archive, int flags=0) {
-        return io::FitsReader::apply<ExposureCatalogT>(fitsfile, archive, flags);
+        return io::FitsReader::apply<ExposureCatalogT>(fitsfile, flags, archive);
     }
 
     /**

@@ -118,28 +118,23 @@ namespace {
 class PeakFitsReader : public afw::table::io::FitsReader {
 public:
 
-    explicit PeakFitsReader(Fits * fits, PTR(afw::table::io::InputArchive) archive, int flags) :
-        afw::table::io::FitsReader(fits, archive, flags) {}
+    PeakFitsReader() : afw::table::io::FitsReader("PEAK") {}
 
-protected:
-
-    virtual PTR(afw::table::BaseTable) _readTable();
+    virtual PTR(afw::table::BaseTable) makeTable(
+        afw::table::io::FitsSchemaInputMapper & mapper,
+        PTR(daf::base::PropertyList) metadata,
+        int ioFlags,
+        bool stripMetadata
+    ) const {
+        PTR(PeakTable) table = PeakTable::make(mapper.finalize());
+        table->setMetadata(metadata);
+        return table;
+    }
 
 };
 
-PTR(afw::table::BaseTable) PeakFitsReader::_readTable() {
-    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
-    _fits->readMetadata(*metadata, true);
-    afw::table::Schema schema(*metadata, true);
-    PTR(PeakTable) table = PeakTable::make(schema, false);
-    _startRecords(*table);
-    if (metadata->exists("AFW_TYPE")) metadata->remove("AFW_TYPE");
-    table->setMetadata(metadata);
-    return table;
-}
-
 // registers the reader so FitsReader::make can use it.
-static afw::table::io::FitsReader::FactoryT<PeakFitsReader> referenceFitsReaderFactory("PEAK");
+static PeakFitsReader const peakFitsReader;
 
 } // anonymous
 

@@ -175,12 +175,14 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
 //----- SourceFitsReader ------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-// A custom FitsReader for Sources - this reads footprints as variable-length arrays, and adds header
-// keys that define the slots.  It gets registered with name SOURCE, so it should get used whenever
-// we read a table with AFW_TYPE set to that value.
+// A custom FitsReader for Sources - this reads footprints in addition to the regular fields.  It
+// gets registered with name SOURCE, so it should get used whenever we read a table with AFW_TYPE
+// set to that value.  (The actual SourceFitsReader class is a bit further down, after some helper
+// classes.)
 
-// As noted in the comments for SourceFitsWriter, we have to modify the Schema by adding a column for the
-// Footprint archive ID when we save a SourceCatalog.
+// As noted in the comments for SourceFitsWriter, we add a column for the Footprint archive ID when
+// we save a SourceCatalog.
+
 // Things are a bit more complicated than that when reading, because we also need to be able to read files
 // saved with an older version of the pipeline, in which there were 2-5 additional columns, all variable-
 // length arrays, holding the Spans, Peaks, and HeavyFootprint arrays.  Those are handled by explicit
@@ -191,193 +193,101 @@ void SourceFitsWriter::_writeRecord(BaseRecord const & r) {
 
 namespace {
 
-class SourceFitsReader : public io::FitsReader {
+// FitsColumnReader subclass for backwards-compatible Footprint reading from variable-length arrays
+class OldSourceFootprintReader : public io::FitsColumnReader {
 public:
 
-    // The archive argument here was added to all the derived-class FitsReader classes, just to support
-    // one use case with ExposureCatalog (which is unusual in that it's used to implement afw::table::io
-    // persistence for other objects e.g. CoaddPsf, but also uses afw::table::io persistence to save
-    // itself).  SourceCatalog now does the latter, but not the former, so we'll continue ignoring this
-    // archive argument and creating our own.  And hope someday we have time to clean up this hack.
-    explicit SourceFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
-        io::FitsReader(fits, archive, flags),
-        _spanCol(-1), _peakCol(-1), _heavyPixCol(-1), _heavyMaskCol(-1), _heavyVarCol(-1)
-    {
-        if (archive) {
+    static int readSpecialColumn(
+        io::FitsSchemaInputMapper & mapper,
+        daf::base::PropertyList & metadata,
+        bool stripMetadata,
+        std::string const & name
+    ) {
+        int column = metadata.get(name, 0);
+        --column;  // switch from 1-indexed to 0-indexed convention
+        if (column >= 0) {
+            if (stripMetadata) {
+                metadata.remove(name);
+            }
+            mapper.erase(name);
+        }
+        return column;
+    }
+
+    static void setup(
+        io::FitsSchemaInputMapper & mapper,
+        daf::base::PropertyList & metadata,
+        int ioFlags,
+        bool stripMetadata
+    ) {
+        std::unique_ptr<OldSourceFootprintReader> reader(new OldSourceFootprintReader());
+        reader->_spanCol = readSpecialColumn(mapper, metadata, stripMetadata, "SPANCOL");
+        reader->_peakCol = readSpecialColumn(mapper, metadata, stripMetadata, "PEAKCOL");
+        reader->_heavyPixCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYPIXCO");
+        reader->_heavyMaskCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYMSKCO");
+        reader->_heavyVarCol = readSpecialColumn(mapper, metadata, stripMetadata, "HVYVARCO");
+        if ((ioFlags & SOURCE_IO_NO_FOOTPRINTS) || mapper.hasArchive()) {
+            return; // don't want to load anything, so we're done after just removing the special columns
+        }
+        if (ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS) {
+            reader->_heavyPixCol = -1;
+            reader->_heavyMaskCol = -1;
+            reader->_heavyVarCol = -1;
+        }
+        // These checks are really basically assertions - they should only happen if we get
+        // a corrupted catalog - but we still don't want to crash if that happens.
+        if ((reader->_spanCol >= 0) != (reader->_peakCol >= 0)) {
             throw LSST_EXCEPT(
-                pex::exceptions::LogicError,
-                "SourceCatalog does not support reading from an external archive"
+                afw::fits::FitsError,
+                "Corrupted catalog: either both or none of the Footprint Span/Peak columns must be present."
             );
         }
+        if (reader->_spanCol < 0) {
+            return;
+        }
+        if ((reader->_heavyPixCol >= 0) != (reader->_heavyMaskCol >= 0)
+            || (reader->_heavyPixCol >= 0) != (reader->_heavyVarCol >= 0)
+        ) {
+            throw LSST_EXCEPT(
+                afw::fits::FitsError,
+                "Corrupted catalog: either all or none of the HeavyFootprint columns must be present."
+            );
+        }
+        if (reader->_heavyPixCol >= 0 && reader->_spanCol < 0) {
+            throw LSST_EXCEPT(
+                afw::fits::FitsError,
+                "Corrupted catalog: HeavyFootprint columns with no Span/Peak columns."
+            );
+        }
+        // If we do want to load old-style Footprints, add the column reader to the mapper.
+        mapper.customize(std::move(reader));
     }
 
-protected:
-
-    virtual PTR(BaseTable) _readTable();
-
-    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
-
-private:
-    PTR(BaseTable) _inTable;
-    PTR(io::InputArchive) _archive;
-    SchemaMapper _mapper;
-    Key<int> _footprintKey;
-    int _spanCol;      // all *Col data members are for backwards-compatibility reading of old
-    int _peakCol;      // Footprint persistence
-    int _heavyPixCol;
-    int _heavyMaskCol;
-    int _heavyVarCol;
-};
-
-namespace {
-
-// Predicate for SchemaMapper::addMappingsWhere to map all fields in a schema except the one holding
-// the Footprint's archive ID.
-struct FieldIsNotFootprint {
-
-    template <typename T>
-    bool operator()(SchemaItem<T> const & item) const { return true; }
-
-    bool operator()(SchemaItem<int> const & item) const {
-        return item.field.getName() != "footprint";
-    }
-
-};
-
-} // anonymous
-
-PTR(BaseTable) SourceFitsReader::_readTable() {
-    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
-    _fits->readMetadata(*metadata, true);
-    // if there's an archive attached, it's the new way of persisting Footprints
-    int archiveHdu = metadata->get("AR_HDU", -1);
-    if (archiveHdu > 0) {
-        // If we have an AR_HDU key, we have new-style persistence of Footprints,
-        // using afw::table::io archives.  We strip the key from the metadata, but we
-        // don't read the archive if the flags tell us not to.
-        metadata->remove("AR_HDU");
-        if (!(_flags & SOURCE_IO_NO_FOOTPRINTS)) {
-            int oldHdu = _fits->getHdu();
-            _fits->setHdu(archiveHdu);
-            _archive.reset(new io::InputArchive(io::InputArchive::readFits(*_fits)));
-            _fits->setHdu(oldHdu);
-        }
-    } else {
-        // Old-style persistence of Footprints, for backwards compatibility, OR we didn't persist the
-        // Footprints at all.  If it's old-style persistence, we remove the appropriate Keys from the
-        // metadata before we construct a Schema, to keep those fields from getting added to the Schema.
-        // If we just didn't persist any Footprints, then none of these keys should be present, and
-        // we don't have to do anything to get the Schema we want.
-        _spanCol = metadata->get("SPANCOL", 0);
-        if (_spanCol > 0) {
-            metadata->remove("SPANCOL");
-            metadata->remove((boost::format("TTYPE%d") % _spanCol).str());
-            metadata->remove((boost::format("TFORM%d") % _spanCol).str());
-        }
-        _peakCol = metadata->get("PEAKCOL", 0);
-        if (_peakCol > 0) {
-            metadata->remove("PEAKCOL");
-            metadata->remove((boost::format("TTYPE%d") % _peakCol).str());
-            metadata->remove((boost::format("TFORM%d") % _peakCol).str());
-        }
-        _heavyPixCol  = metadata->get("HVYPIXCO", 0);
-        if (_heavyPixCol > 0) {
-            metadata->remove("HVYPIXCO");
-            metadata->remove((boost::format("TTYPE%d") % _heavyPixCol).str());
-            metadata->remove((boost::format("TFORM%d") % _heavyPixCol).str());
-        }
-        _heavyMaskCol  = metadata->get("HVYMSKCO", 0);
-        if (_heavyMaskCol > 0) {
-            metadata->remove("HVYMSKCO");
-            metadata->remove((boost::format("TTYPE%d") % _heavyMaskCol).str());
-            metadata->remove((boost::format("TFORM%d") % _heavyMaskCol).str());
-            metadata->remove((boost::format("TZERO%d") % _heavyMaskCol).str());
-            metadata->remove((boost::format("TSCAL%d") % _heavyMaskCol).str());
-        }
-        _heavyVarCol  = metadata->get("HVYVARCO", 0);
-        if (_heavyVarCol > 0) {
-            metadata->remove("HVYVARCO");
-            metadata->remove((boost::format("TTYPE%d") % _heavyVarCol).str());
-            metadata->remove((boost::format("TFORM%d") % _heavyVarCol).str());
-        }
-        --_spanCol; // switch to 0-indexed rather than 1-indexed convention.
-        --_peakCol;
-        --_heavyPixCol;
-        --_heavyMaskCol;
-        --_heavyVarCol;
-    }
-    Schema schema(*metadata, true);
-    if (archiveHdu > 0) {
-        // If an archive was present, regardless of whether or not we actually read it, the Schema we just
-        // constructed has an extra int field holding the Footprint archive IDs.
-        // We need to create a SchemaMapper to go from that Schema to one without those ints (even if we
-        // aren't reading the Footprints), and an intermediate BaseTable with that Schema.
-        // This table being non-null is what we'll use later to indicate whether we need to use the
-        // SchemaMapper.
-        _mapper = SchemaMapper(schema, true);
-        _mapper.addMappingsWhere(FieldIsNotFootprint());
-        _inTable = BaseTable::make(schema);
-        _footprintKey = schema["footprint"];
-        schema = _mapper.getOutputSchema();
-    }
-    PTR(SourceTable) table =  SourceTable::make(schema, PTR(IdFactory)());
-    table->setMetadata(metadata);
-    _startRecords(*table);
-    return table;
-}
-
-PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
-    PTR(SourceRecord) record;
-    if (_inTable) { // New-style persisted Footprints
-        PTR(BaseRecord) inRecord = io::FitsReader::_readRecord(_inTable);
-        if (inRecord) {
-            record = boost::static_pointer_cast<SourceRecord>(table->makeRecord());
-            record->assign(*inRecord, _mapper);
-            if (_archive) { // archive is only initialized if we should read Footprints
-                PTR(afw::detection::Footprint) footprint =
-                    _archive->get<afw::detection::Footprint>(inRecord->get(_footprintKey));
-                if (footprint && footprint->isHeavy() && (_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS)) {
-                    // It sort of defeats the purpose of the flag if we have to do the I/O to read
-                    // a HeavyFootprint before we can downgrade it to a regular Footprint, but that's
-                    // what we're going to do - at least this will save on on some memory usage, which
-                    // might still be useful.  That's far from ideal, but it'd be really hard to fix
-                    // (because we have no way to pass something like the flags to the InputArchive).
-                    // The good news is that if someone's concerned about performance of reading
-                    // SourceCatalogs, they'll almost certainly use SOURCE_IO_NO_FOOTPRINTS, which
-                    // will do what we want.  SOURCE_IO_NO_HEAVY_FOOTPRINTS is more useful for writing
-                    // sources, and that works just fine.
-                    footprint.reset(new afw::detection::Footprint(*footprint));
-                }
-                record->setFootprint(footprint);
-            }
-            return record;
-        } else {
-            return record;
-        }
-    }
-    // Old-style persisted Footprints, or no persisted Footprints.
-    record = boost::static_pointer_cast<SourceRecord>(io::FitsReader::_readRecord(table));
-    if (_flags & SOURCE_IO_NO_FOOTPRINTS || !record) return record;
-    int spanElementCount = (_spanCol >= 0) ? _fits->getTableArraySize(_row, _spanCol) : 0;
-    int peakElementCount = (_peakCol >= 0) ? _fits->getTableArraySize(_row, _peakCol) : 0;
-    int heavyPixElementCount  = (_heavyPixCol  >= 0) ? _fits->getTableArraySize(_row, _heavyPixCol)  : 0;
-    int heavyMaskElementCount = (_heavyMaskCol >= 0) ? _fits->getTableArraySize(_row, _heavyMaskCol) : 0;
-    int heavyVarElementCount  = (_heavyVarCol  >= 0) ? _fits->getTableArraySize(_row, _heavyVarCol)  : 0;
-    if (spanElementCount || peakElementCount) {
+    virtual void readCell(
+        BaseRecord & baseRecord,
+        std::size_t row,
+        fits::Fits & fits,
+        PTR(io::InputArchive) const & archive
+    ) const {
+        SourceRecord & record = static_cast<SourceRecord&>(baseRecord);
         PTR(Footprint) fp = boost::make_shared<Footprint>();
+
+        // Load a regular Footprint from the span and peak columns.
+        int spanElementCount = fits.getTableArraySize(row, _spanCol);
+        int peakElementCount = fits.getTableArraySize(row, _peakCol);
         if (spanElementCount) {
             if (spanElementCount % 3) {
                 throw LSST_EXCEPT(
                     afw::fits::FitsError,
                     afw::fits::makeErrorMessage(
-                        _fits->fptr, _fits->status,
+                        fits.fptr, fits.status,
                         boost::format("Number of span elements (%d) must divisible by 3 (row %d)")
-                        % spanElementCount % _row
+                        % spanElementCount % row
                     )
                 );
             }
             std::vector<int> spanElements(spanElementCount);
-            _fits->readTableArray(_row, _spanCol, spanElementCount, &spanElements.front());
+            fits.readTableArray(row, _spanCol, spanElementCount, &spanElements.front());
             std::vector<int>::iterator j = spanElements.begin();
             while (j != spanElements.end()) {
                 int y = *j++;
@@ -391,14 +301,14 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
                 throw LSST_EXCEPT(
                     afw::fits::FitsError,
                     afw::fits::makeErrorMessage(
-                        _fits->fptr, _fits->status,
+                        fits.fptr, fits.status,
                         boost::format("Number of peak elements (%d) must divisible by 3 (row %d)")
-                        % peakElementCount % _row
+                        % peakElementCount % row
                     )
                 );
             }
             std::vector<float> peakElements(peakElementCount);
-            _fits->readTableArray(_row, _peakCol, peakElementCount, &peakElements.front());
+            fits.readTableArray(row, _peakCol, peakElementCount, &peakElements.front());
             std::vector<float>::iterator j = peakElements.begin();
             while (j != peakElements.end()) {
                 float x = *j++;
@@ -407,38 +317,127 @@ PTR(BaseRecord) SourceFitsReader::_readRecord(PTR(BaseTable) const & table) {
                 fp->addPeak(x, y, value);
             }
         }
-        record->setFootprint(fp);
+        record.setFootprint(fp);
 
-        if (
-            !(_flags & SOURCE_IO_NO_HEAVY_FOOTPRINTS)
-            && heavyPixElementCount && heavyMaskElementCount && heavyVarElementCount
-        ) {
+        // If we're setup to read HeavyFootprints
+        if (_heavyPixCol < 0) {
+            return;
+        }
+        int heavyPixElementCount  = fits.getTableArraySize(row, _heavyPixCol);
+        int heavyMaskElementCount = fits.getTableArraySize(row, _heavyMaskCol);
+        int heavyVarElementCount  = fits.getTableArraySize(row, _heavyVarCol);
+        if (heavyPixElementCount > 0) {
             int N = fp->getArea();
-            if ((heavyPixElementCount  != N) ||
-                (heavyMaskElementCount != N) ||
-                (heavyVarElementCount  != N)) {
+            if ((heavyPixElementCount != N) || (heavyMaskElementCount != N) || (heavyVarElementCount != N)) {
                 throw LSST_EXCEPT(
                     afw::fits::FitsError,
                     afw::fits::makeErrorMessage(
-                        _fits->fptr, _fits->status,
-                        boost::format("Number of HeavyFootprint elements (pix %d, mask %d, var %d) must all be equal to footprint area (%d)")
+                        fits.fptr, fits.status,
+                        boost::format("Number of HeavyFootprint elements (pix %d, mask %d, var %d) "
+                                      "must all be equal to footprint area (%d)")
                         % heavyPixElementCount % heavyMaskElementCount % heavyVarElementCount % N
-                        ));
+                    )
+                );
             }
             // float HeavyFootprints were the only kind we ever saved using the old format
             typedef detection::HeavyFootprint<float,image::MaskPixel,image::VariancePixel> HeavyFootprint;
             PTR(HeavyFootprint) heavy = boost::make_shared<HeavyFootprint>(*fp);
-            _fits->readTableArray(_row, _heavyPixCol,  N, heavy->getImageArray().getData());
-            _fits->readTableArray(_row, _heavyMaskCol, N, heavy->getMaskArray().getData());
-            _fits->readTableArray(_row, _heavyVarCol,  N, heavy->getVarianceArray().getData());
-            record->setFootprint(heavy);
+            fits.readTableArray(row, _heavyPixCol,  N, heavy->getImageArray().getData());
+            fits.readTableArray(row, _heavyMaskCol, N, heavy->getMaskArray().getData());
+            fits.readTableArray(row, _heavyVarCol,  N, heavy->getVarianceArray().getData());
+            record.setFootprint(heavy);
         }
     }
-    return record;
-}
+
+private:
+    int _spanCol;
+    int _peakCol;
+    int _heavyPixCol;
+    int _heavyMaskCol;
+    int _heavyVarCol;
+};
+
+// FitsColumnReader for new-style Footprint persistence using archives.
+class SourceFootprintReader : public io::FitsColumnReader {
+public:
+
+    static void setup(
+        io::FitsSchemaInputMapper & mapper,
+        int ioFlags
+    ) {
+        auto item = mapper.find("footprint");
+        if (item) {
+            if (mapper.hasArchive()) {
+                std::unique_ptr<io::FitsColumnReader> reader(
+                    new SourceFootprintReader(ioFlags & SOURCE_IO_NO_HEAVY_FOOTPRINTS, item->column)
+                );
+                mapper.customize(std::move(reader));
+            }
+            mapper.erase(item);
+        }
+    }
+
+    SourceFootprintReader(bool noHeavy, int column) : _noHeavy(noHeavy), _column(column) {}
+
+    virtual void readCell(
+        BaseRecord & record,
+        std::size_t row,
+        fits::Fits & fits,
+        PTR(io::InputArchive) const & archive
+    ) const {
+        int id = 0;
+        fits.readTableScalar<int>(row, _column, id);
+        PTR(Footprint) footprint = archive->get<Footprint>(id);
+        if (_noHeavy && footprint->isHeavy()) {
+            // It sort of defeats the purpose of the flag if we have to do the I/O to read
+            // a HeavyFootprint before we can downgrade it to a regular Footprint, but that's
+            // what we're going to do - at least this will save on on some memory usage, which
+            // might still be useful.  It'd be really hard to fix this
+            // (because we have no way to pass something like the ioFlags to the InputArchive).
+            // The good news is that if someone's concerned about performance of reading
+            // SourceCatalogs, they'll almost certainly use SOURCE_IO_NO_FOOTPRINTS, which
+            // will do what we want.  SOURCE_IO_NO_HEAVY_FOOTPRINTS is more useful for writing
+            // sources, and that still works just fine.
+            footprint.reset(new Footprint(*footprint));
+        }
+        static_cast<SourceRecord&>(record).setFootprint(footprint);
+    }
+
+private:
+    bool _noHeavy;
+    int _column;
+};
+
+class SourceFitsReader : public io::FitsReader {
+public:
+
+        SourceFitsReader() : afw::table::io::FitsReader("SOURCE") {}
+
+        virtual PTR(BaseTable) makeTable(
+            io::FitsSchemaInputMapper & mapper,
+            PTR(daf::base::PropertyList) metadata,
+            int ioFlags,
+            bool stripMetadata
+        ) const {
+            // Look for old-style persistence of Footprints.  If we have both that and an archive, we
+            // load the footprints from the archive, but still need to remove the old-style header keys
+            // from the metadata and the corresponding fields from the FitsSchemaInputMapper.
+            OldSourceFootprintReader::setup(mapper, *metadata, ioFlags, stripMetadata);
+            // Look for new-style persistence of Footprints.  We'll only read them if we have an archive,
+            // but we'll strip fields out regardless.
+            SourceFootprintReader::setup(mapper, ioFlags);
+            PTR(SourceTable) table = SourceTable::make(mapper.finalize());
+            table->setMetadata(metadata);
+            return table;
+        }
+
+        virtual bool usesArchive(int ioFlags) const { return !(ioFlags & SOURCE_IO_NO_FOOTPRINTS); }
+
+};
+
 
 // registers the reader so FitsReader::make can use it.
-static io::FitsReader::FactoryT<SourceFitsReader> sourceFitsReaderFactory("SOURCE");
+static SourceFitsReader const sourceFitsReader;
 
 } // anonymous
 

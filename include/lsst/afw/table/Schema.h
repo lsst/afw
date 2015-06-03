@@ -276,39 +276,6 @@ public:
     /// @brief Copy constructor.
     Schema(Schema const & other);
 
-    /**
-     *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
-     *
-     *  @param[in,out] metadata       PropertyList that contains the FITS header keys
-     *                                corresponding to a binary table extension.  We can't
-     *                                use a PropertySet here, because the order does matter.
-     *  @param[in]     stripMetadata  If true, the keys used to define the schema will be removed
-     *                                from the PropertySet.
-     *
-     *  If the column types in the FITS header are not compatible with Schema field types,
-     *  of if some required keys (TTYPEn, TFORMn) are not present for some columns,
-     *  afw::fits::FitsError will be thrown.
-     *
-     *  This constructor does not support strong exception safety guarantee when stripMetadata is True;
-     *  the PropertyList may be modified when an exception is thrown.
-     */
-    explicit Schema(daf::base::PropertyList & metadata, bool stripMetadata);
-
-    /**
-     *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
-     *
-     *  @param[in,out] metadata       PropertyList that contains the FITS header keys
-     *                                corresponding to a binary table extension.  We can't
-     *                                use a PropertySet here, because the order does matter.
-     *
-     *  If the column types in the FITS header are not compatible with Schema field types,
-     *  of if some required keys (TTYPEn, TFORMn) are not present for some columns,
-     *  afw::fits::FitsError will be thrown.
-     *
-     *  This overload never strips metadata, allowing it to accept a const PropertyList.
-     */
-    explicit Schema(daf::base::PropertyList const & metadata);
-
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 

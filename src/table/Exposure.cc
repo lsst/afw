@@ -192,61 +192,75 @@ void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
 //----- ExposureFitsReader ---------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-// A custom FitsReader for ExposureTable/Record - this gets registered with name EXPOSURE, so it should get
-// used whenever we read a table with AFW_TYPE set to that value.
+// FitsColumnReader that reads a Persistable subclass T (Wcs, Psf, or Calib here) by using an int
+// column to retrieve the object from an InputArchive and attach it to an ExposureRecord via
+// the Setter member function pointer.
+template <typename T, void (ExposureRecord::*Setter)(PTR(T const))>
+class PersistableObjectColumnReader : public io::FitsColumnReader {
+public:
+
+    static void setup(
+        std::string const & name,
+        io::FitsSchemaInputMapper & mapper
+    ) {
+        auto item = mapper.find(name);
+        if (item) {
+            if (mapper.hasArchive()) {
+                std::unique_ptr<io::FitsColumnReader> reader(
+                    new PersistableObjectColumnReader(item->column)
+                );
+                mapper.customize(std::move(reader));
+            }
+            mapper.erase(item);
+        }
+    }
+
+    PersistableObjectColumnReader(int column) : _column(column) {}
+
+    virtual void readCell(
+        BaseRecord & record,
+        std::size_t row,
+        fits::Fits & fits,
+        PTR(io::InputArchive) const & archive
+    ) const {
+        int id = 0;
+        fits.readTableScalar<int>(row, _column, id);
+        PTR(T) value = archive->get<T>(id);
+        (static_cast<ExposureRecord&>(record).*(Setter))(value);
+    }
+
+private:
+    bool _noHeavy;
+    int _column;
+};
 
 namespace {
 
 class ExposureFitsReader : public io::FitsReader {
 public:
 
-    explicit ExposureFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
-        io::FitsReader(fits, archive, flags), _archive(archive)
-    {
-        if (!_archive) {
-            int oldHdu = _fits->getHdu();
-            _fits->setHdu(oldHdu + 1);
-            _archive.reset(new io::InputArchive(io::InputArchive::readFits(*_fits)));
-            _fits->setHdu(oldHdu);
-        }
+    ExposureFitsReader() : afw::table::io::FitsReader("EXPOSURE") {}
+
+    virtual PTR(BaseTable) makeTable(
+        io::FitsSchemaInputMapper & mapper,
+        PTR(daf::base::PropertyList) metadata,
+        int ioFlags,
+        bool stripMetadata
+    ) const {
+        PersistableObjectColumnReader<detection::Psf,&ExposureRecord::setPsf>::setup("psf", mapper);
+        PersistableObjectColumnReader<image::Wcs,&ExposureRecord::setWcs>::setup("wcs", mapper);
+        PersistableObjectColumnReader<image::Calib,&ExposureRecord::setCalib>::setup("calib", mapper);
+        PersistableObjectColumnReader<image::ApCorrMap,&ExposureRecord::setApCorrMap>::setup("apCorrMap", mapper);
+        PTR(ExposureTable) table = ExposureTable::make(mapper.finalize());
+        table->setMetadata(metadata);
+        return table;
     }
 
-protected:
+    virtual bool usesArchive(int ioFlags) const { return true; }
 
-    virtual PTR(BaseTable) _readTable();
-
-    virtual PTR(BaseRecord) _readRecord(PTR(BaseTable) const & table);
-
-    PTR(BaseTable) _inTable;
-    PTR(io::InputArchive) _archive;
-    SchemaMapper _mapper;
 };
 
-PTR(BaseTable) ExposureFitsReader::_readTable() {
-    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
-    _fits->readMetadata(*metadata, true);
-    Schema schema(*metadata, true);
-    _inTable = BaseTable::make(schema);
-    _mapper = PersistenceSchema::get().makeReadMapper(schema);
-    PTR(ExposureTable) table = ExposureTable::make(_mapper.getOutputSchema());
-    table->setMetadata(metadata);
-    _startRecords(*table);
-    return table;
-}
-
-PTR(BaseRecord) ExposureFitsReader::_readRecord(PTR(BaseTable) const & t) {
-    PTR(ExposureRecord) record;
-    PTR(ExposureTable) table = boost::static_pointer_cast<ExposureTable>(t);
-    PTR(BaseRecord) inRecord = io::FitsReader::_readRecord(_inTable);
-    if (inRecord) {
-        record = table->makeRecord();
-        PersistenceSchema::get().readRecord(*inRecord, *record, _mapper, *_archive);
-    }
-    return record;
-}
-
-// registers the reader so FitsReader::make can use it.
-static io::FitsReader::FactoryT<ExposureFitsReader> referenceFitsReaderFactory("EXPOSURE");
+static ExposureFitsReader const exposureFitsReader;
 
 } // anonymous
 
