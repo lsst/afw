@@ -1,8 +1,12 @@
 # -*- python -*-
 from lsst.sconsUtils import scripts, targets, env
 
-import eups
-if eups.productDir("cuda_toolkit"):
+import lsst.utils
+try:
+    lsst.utils.getPackageDir('cuda_toolkit')
+except Exception:
+    pass
+else:
     envCudaCommon = env.Clone()
     envCudaCommon.Append(NVCCFLAGS = ' -gencode=arch=compute_13,code=\\"sm_13,compute_13\\" ')
     envCudaCommon.Append(NVCCFLAGS = ' -gencode=arch=compute_20,code=\\"sm_20,compute_20\\" ')
@@ -14,6 +18,3 @@ if eups.productDir("cuda_toolkit"):
     envWarp.Append(NVCCFLAGS = ' -maxrregcount=60 ')
     envWarp.Append(NVCCFLAGS = ' --ptxas-options=-v ')
     gpuObjConvolution = envWarp.SharedObject('#src/math/detail/cudaLanczos', ['#src/math/detail/cudaLanczos.cu'])
-
-
-
