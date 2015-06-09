@@ -24,6 +24,7 @@
  
 #include "boost/make_shared.hpp"
 #include "Eigen/Core"
+#include "lsst/pex/logging.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 
@@ -37,27 +38,75 @@ namespace afwImg = lsst::afw::image;
  * given coordinate system (e.g TanWcs)
  */
 afwImg::Wcs::Ptr afwImg::makeWcs(
-        PTR(lsst::daf::base::PropertySet) const& metadata, ///< input metadata
+        PTR(lsst::daf::base::PropertySet) const& _metadata, ///< input metadata
         bool stripMetadata                              ///< Remove FITS keywords from metadata?
                                 )
 {
-    std::string ctype1;
-    if (metadata->exists("CTYPE1")) {
+    //
+    // _metadata is not const (it is probably meant to be), but we don't want to modify it.
+    //
+    auto metadata = _metadata;          // we'll make a copy and modify metadata if needs be
+    auto modifyable = false;            // ... and set this variable to say that we did
+
+    std::string ctype1, ctype2;
+    if (metadata->exists("CTYPE1") && metadata->exists("CTYPE2")) {
         ctype1 = metadata->getAsString("CTYPE1");
+        ctype2 = metadata->getAsString("CTYPE2");
     } else {
         return PTR(Wcs)();
+    }
+    //
+    // SCAMP used to use PVi_j keys with a CTYPE of TAN to specify a "TPV" projection
+    // (cf. https://github.com/astropy/astropy/issues/299
+    // and the discussion from Dave Berry in https://jira.lsstcorp.org/browse/DM-2883)
+    //
+    // Follow Dave's AST and switch TAN to TPV
+    //
+    using pex::logging::Log;
+    auto log = Log(Log::getDefaultLog(), "makeWcs");
+    
+    if (ctype1.substr(5, 3) == "TAN" &&
+        (metadata->exists("PV1_5") || metadata->exists("PV2_1"))) {
+        log.log(Log::INFO, str(boost::format("Interpreting %s/%s + PVi_j as TPV") % ctype1 % ctype2));
+
+        if (!modifyable) {
+            metadata = _metadata->deepCopy();
+            modifyable = true;
+        }
+
+        ctype1.replace(5, 3, "TPV");
+        metadata->set<std::string>("CTYPE1", ctype1);
+
+        ctype2.replace(5, 3, "TPV");
+        metadata->set<std::string>("CTYPE2", ctype2);
     }
 
     afwImg::Wcs::Ptr wcs;               // we can't use make_shared as ctor is private
     if (ctype1.substr(5, 3) == "TAN") {
         wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata));
-    } else if (ctype1.substr(5, 3) == "TPV") {
-        PTR(daf::base::PropertySet) _metadata = metadata->deepCopy();
-        _metadata->set<std::string>("CTYPE1", "RA---TAN");
-        _metadata->set<std::string>("CTYPE2", "DEC--TAN");
-        _metadata->set<bool>("TPV_WCS", true);
+    } else if (ctype1.substr(5, 3) == "TPV") { // unfortunately we don't support TPV
+        if (!modifyable) {
+            metadata = _metadata->deepCopy();
+            modifyable = true;
+        }
+        
+        log.log(Log::WARN, str(boost::format("Stripping PVi_j keys from projection %s/%s") % ctype1 % ctype2));
 
-        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(_metadata));
+        metadata->set<std::string>("CTYPE1", "RA---TAN");
+        metadata->set<std::string>("CTYPE2", "DEC--TAN");
+        metadata->set<bool>("TPV_WCS", true);
+
+        for (int i = 1; i <= 3; ++i) {
+            for (int j = (i == 1 ? 5 : 1); j <= 16; ++j) { // note that PV1_{1..4} are legal
+                char pvName[8];
+                sprintf(pvName, "PV%d_%d", i, j);
+                if (metadata->exists(pvName)) {
+                    metadata->remove(pvName);
+                }
+            }
+        }
+
+        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata));
     } else {
         wcs = afwImg::Wcs::Ptr(new afwImg::Wcs(metadata));
     }
