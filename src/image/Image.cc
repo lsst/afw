@@ -112,7 +112,9 @@ image::ImageBase<PixelT>::ImageBase(
 ) : lsst::daf::base::Citizen(typeid(this)),
     _origin(0,0), _manager(),
     _gilView(_allocateView(dimensions, _manager))
-{}
+{
+    addMemoryUse(static_cast<std::size_t>(dimensions.getX())*dimensions.getY()*sizeof(PixelT));
+}
 
 /**
  * Allocator Constructor
@@ -125,7 +127,9 @@ image::ImageBase<PixelT>::ImageBase(
 ) : lsst::daf::base::Citizen(typeid(this)),
     _origin(bbox.getMin()), _manager(),
     _gilView(_allocateView(bbox.getDimensions(), _manager))
-{}
+{
+    addMemoryUse(bbox.getArea()*sizeof(PixelT));
+}
 
 /**
  * Copy constructor.
@@ -288,6 +292,7 @@ void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     swap(_manager, rhs._manager);   // just swapping the pointers
     swap(_gilView, rhs._gilView);
     swap(_origin, rhs._origin);
+    swapMemoryUse(rhs);
 }
 
 template<typename PixelT>

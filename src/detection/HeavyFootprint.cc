@@ -89,6 +89,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
             _mask(ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
             _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
 {
+    addMemoryUse(foot.getNpix()*(sizeof(ImagePixelT) + sizeof(MaskPixelT) + sizeof(VariancePixelT)));
     HeavyFootprintCtrl ctrl_s = HeavyFootprintCtrl();
 
     if (!ctrl) {
@@ -132,6 +133,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::HeavyFootprint(
       _mask    (ndarray::allocate(ndarray::makeVector(foot.getNpix()))),
       _variance(ndarray::allocate(ndarray::makeVector(foot.getNpix())))
 {
+    addMemoryUse(foot.getNpix()*(sizeof(ImagePixelT) + sizeof(MaskPixelT) + sizeof(VariancePixelT)));
 }
 
 /**

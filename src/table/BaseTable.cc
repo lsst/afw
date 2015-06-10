@@ -66,7 +66,7 @@ PTR(BaseRecord) BaseTableImpl::_makeRecord() {
 
 namespace {
 
-class Block : public ndarray::Manager {
+class Block : public ndarray::Manager, daf::base::Citizen {
 public:
     typedef boost::intrusive_ptr<Block> Ptr;
 
@@ -133,12 +133,14 @@ private:
     };
 
     explicit Block(std::size_t recordSize, std::size_t recordCount) :
+        Citizen(typeid(this)),
         _mem(new AllocType[(recordSize * recordCount) / sizeof(AllocType)]),
         _next(reinterpret_cast<char*>(_mem.get())),
         _end(_next + recordSize * recordCount)
     {
         assert((recordSize * recordCount) % sizeof(AllocType) == 0);
         std::fill(_next, _end, 0); // initialize to zero; we'll later initialize floats to NaN.
+        addMemoryUse(recordSize*recordCount*sizeof(AllocType));
     }
 
     boost::scoped_array<AllocType> _mem;
