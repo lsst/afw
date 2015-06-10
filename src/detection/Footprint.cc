@@ -429,7 +429,6 @@ Span const& Footprint::addSpan(
 
     Span::Ptr sp(new Span(y, x0, x1));
     _spans.push_back(sp);
-    addMemoryUse(sizeof(Span));
 
     _area += sp->getWidth();
     _normalized = false;
