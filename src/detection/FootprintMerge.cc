@@ -91,11 +91,15 @@ public:
     /*
      *  Add this Footprint to the merge.
      *
-     *  If minNewPeakDist >= 0, it will add all peaks from foot to the merged Footprint
-     *  that are greater than minNewPeakDist away from the closest existing peak.
-     *  If minNewPeakDist < 0, no peaks will be added from foot.
+     *  If minNewPeakDist >= 0, it will add all peaks from the footprint to the merged Footprint
+     *  that are greater than minNewPeakDist away from the closest peak in the existing list.
+     *  If minNewPeakDist < 0, no peaks will be added from the footprint.
      *
-     *  If foot does not overlap it will do nothing.
+     *  If maxSamePeakDist >= 0, it will find the closest peak in the existing list for every peak
+     *  in the footprint.  If the closest peak is less than maxSamePeakDist, the peak will not
+     *  be added and the closest peak will be flagged as detected by the filter defined in keys.
+     *
+     *  If the footprint does not overlap it will do nothing.
      */
     void add(
         PTR(Footprint) footprint,
@@ -107,18 +111,23 @@ public:
         if (_addSpans(footprint)) {
             _footprints.push_back(footprint);
             _source->set(keys.footprint, true);
-            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist, maxSamePeakDist);
+            _addPeaks(footprint->getPeaks(), &peakSchemaMapper, &keys, minNewPeakDist,
+                      maxSamePeakDist, NULL);
         }
     }
 
     /*
      *  Merge an already-merged clump of Footprints into this
      *
-     *  If minNewPeakDist >= 0, it will add all peaks from foot to the merged Footprint
-     *  that are greater than minNewPeakDist away from the closest existing peak.
-     *  If minNewPeakDist < 0, no peaks will be added from foot.
+     *  If minNewPeakDist >= 0, it will add all peaks from the footprint to the merged Footprint
+     *  that are greater than minNewPeakDist away from the closest peak in the existing list.
+     *  If minNewPeakDist < 0, no peaks will be added from the footprint.
      *
-     *  If foot does not overlap it will do nothing.
+     *  If maxSamePeakDist >= 0, it will find the closest peak in the existing list for every peak
+     *  in the footprint.  If the closest peak is less than maxSamePeakDist, the peak will not
+     *  be added to the list and the flags from the closest peak will be set to the OR of the two.
+     *
+     *  If the FootprintMerge does not overlap it will do nothing.
      */
     void add(
         FootprintMerge const & other,
@@ -133,7 +142,8 @@ public:
                 afw::table::Key<afw::table::Flag> const & flagKey = i->second.footprint;
                 _source->set(flagKey, _source->get(flagKey) || other._source->get(flagKey));
             }
-            _addPeaks(other.getMergedFootprint()->getPeaks(), NULL, NULL, minNewPeakDist, maxSamePeakDist);
+            _addPeaks(other.getMergedFootprint()->getPeaks(), NULL, NULL, minNewPeakDist,
+                      maxSamePeakDist, &keys);
         }
     }
 
@@ -156,14 +166,26 @@ private:
         return true;
     }
 
+    /*
+     *  Add new peaks to the list of peaks of the merged footprint.
+     *  This function handles two different cases:
+     *    - The peaks come from a single footprint.  In this case, the peakSchemaMapper
+     *      and keys should be defined so that it can create a new peak, copy the appropriate
+     *      data, and set the peak flag defined in keys.
+     *    - The peaks come from another FootprintMerge.  In this case, filterMap should
+     *      be defined so that the information from the other peaks can be propagated.
+     */
     void _addPeaks(
         PeakCatalog const & otherPeaks,
         afw::table::SchemaMapper const * peakSchemaMapper,
         KeyTuple const * keys,
         float minNewPeakDist,
-        float maxSamePeakDist
+        float maxSamePeakDist,
+        FilterMap const * filterMap
     ) {
         if (minNewPeakDist < 0 && maxSamePeakDist < 0) return;
+
+        assert(peakSchemaMapper || filterMap);
 
         PeakCatalog & currentPeaks = getMergedFootprint()->getPeaks();
         PTR(PeakRecord) nearestPeak;
@@ -186,8 +208,15 @@ private:
                 }
             }
 
-            if (minDist2 < maxSamePeakDist2 && nearestPeak && keys && maxSamePeakDist > 0) {
-                nearestPeak->set(keys->peak, true);
+            if (minDist2 < maxSamePeakDist2 && nearestPeak && maxSamePeakDist > 0) {
+                if (peakSchemaMapper) {
+                    nearestPeak->set(keys->peak, true);
+                } else {
+                    for (FilterMap::const_iterator i = filterMap->begin(); i != filterMap->end(); ++i) {
+                        afw::table::Key<afw::table::Flag> const & flagKey = i->second.peak;
+                        nearestPeak->set(flagKey, nearestPeak->get(flagKey) || otherIter->get(flagKey));
+                    }
+                }
             } else if (minDist2 > minNewPeakDist2 && !(minNewPeakDist < 0)) {
                 if (peakSchemaMapper) {
                     PTR(PeakRecord) newPeak = newPeaks.addNew();
@@ -197,7 +226,6 @@ private:
                     newPeaks.push_back(otherIter);
                 }
             }
-
         }
 
         getMergedFootprint()->getPeaks().insert(
