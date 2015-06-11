@@ -23,12 +23,9 @@ from __future__ import absolute_import, division
 
 ##\file
 ## \brief Utilities to help write tests, mostly using numpy 
-import math
-
 import numpy
 
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 
 def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     """Make a gaussian noise MaskedImageF
@@ -172,39 +169,3 @@ def maskedImagesDiffer(maskedImageArrSet1, maskedImageArrSet2,
             if errStr:
                 retStrs.append("%s planes differ: %s" % (planeName, errStr))
     return " | ".join(retStrs)
-
-def assertWcssAlmostEqual(wcs0, wcs1, bbox, maxSkyErr=0.001*afwGeom.arcseconds, maxPixErr=0.001,
-    nx=5, ny=5, msg="WCSs differ"):
-    """Assert that two WCSs give nearly equal results for pixelToSky and skyToPixel
-
-    @param[in] wcs0  WCS 0 (an lsst.afw.image.Wcs)
-    @param[in] wcs1  WCS 1 (an lsst.afw.image.Wcs)
-    @param[in] bbox  boundaries of pixel grid over which to compare the WCSs (an lsst.afw.geom.Box2I or Box2D)
-    @param[in] maxSkyErr  maximum separation between sky positions computed using Wcs.pixelToSky
-        (an lsst.afw.geom.Angle)
-    @param[in] maxPixErr  maximum separation between pixel positions computed using Wcs.skyToPixel
-    @param[in] nx  number of points in x for the grid of pixel positions
-    @param[in] ny  number of points in y for the grid of pixel positions
-    @param[in] msg  prefix for error messages; details of the error are appended after ": "
-
-    @throw AssertionError if the two WCSs do not match sufficiently closely
-    """
-    bboxd = afwGeom.Box2D(bbox)
-    xList = numpy.linspace(bboxd.getMinX(), bboxd.getMaxX(), nx)
-    yList = numpy.linspace(bboxd.getMinY(), bboxd.getMaxY(), ny)
-    for x in xList:
-        for y in yList:
-            fromPixPos = afwGeom.Point2D(x, y)
-            sky0 = wcs0.pixelToSky(fromPixPos)
-            sky1 = wcs1.pixelToSky(fromPixPos)
-            skyErr = sky0.angularSeparation(sky1)
-            if skyErr > maxSkyErr:
-                raise AssertionError("%s: %s arcsec sky error > %f arcsec max sky error at pixPos=%s" %
-                    (msg, skyErr.asArcseconds(), maxSkyErr.asArcseconds(), fromPixPos,))
-
-            toPixPos0 = wcs0.skyToPixel(sky0)
-            toPixPos1 = wcs1.skyToPixel(sky0)
-            pixErr = math.hypot(*(toPixPos0 - toPixPos1))
-            if pixErr > maxPixErr:
-                raise AssertionError("%s: %f pix error > %f max pix error at skyPos=%s" %
-                        (msg, pixErr, maxPixErr, sky0))
