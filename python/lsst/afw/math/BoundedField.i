@@ -7,6 +7,7 @@
 
 %declareNumPyConverters(ndarray::Array<double,1,1>);
 %declareNumPyConverters(ndarray::Array<double const,1>);
+%declareNumPyConverters(ndarray::Array<double const,2,2>);
 
 %declareTablePersistable(BoundedField, lsst::afw::math::BoundedField)
 

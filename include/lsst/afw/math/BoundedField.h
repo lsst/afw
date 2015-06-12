@@ -101,7 +101,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeErrorException if the bounding boxes do not overlap
+     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
@@ -115,7 +115,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeErrorException if the bounding boxes do not overlap
+     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
@@ -128,7 +128,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeErrorException if the bounding boxes do not overlap
+     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>
@@ -141,7 +141,7 @@ public:
      *  @param[in]    overlapOnly   If true, only modify the region in the intersection of
      *                              image.getBBox(image::PARENT) and this->getBBox().
      *
-     *  @throw pex::exceptions::RuntimeErrorException if the bounding boxes do not overlap
+     *  @throw pex::exceptions::RuntimeError if the bounding boxes do not overlap
      *         and overlapOnly=false.
      */
     template <typename T>

@@ -84,7 +84,7 @@ void applyToImage(BoundedField const & field, image::Image<T> & img, F functor, 
         region.clip(img.getBBox(image::PARENT));
     } else if (region != img.getBBox(image::PARENT)) {
         throw LSST_EXCEPT(
-            pex::exceptions::RuntimeErrorException,
+            pex::exceptions::RuntimeError,
             "Image bounding box does not match field bounding box"
         );
     }
