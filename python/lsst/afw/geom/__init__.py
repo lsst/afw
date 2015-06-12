@@ -25,6 +25,7 @@
 from .geomLib import *
 from .xyTransformFactory import *
 from .transformConfig import *
+from .utils import *
 
 BoxI = Box2I
 BoxD = Box2D

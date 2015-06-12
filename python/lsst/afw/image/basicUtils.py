@@ -32,7 +32,7 @@ import lsst.afw.geom as afwGeom
 from . import imageLib
 
 __all__ = ["makeImageFromArray", "makeMaskFromArray", "makeMaskedImageFromArrays",
-    "assertWcssNearlyEqualOverBBox"]
+    "assertWcsNearlyEqualOverBBox"]
 
 suffixes = {str(numpy.uint16): "U", str(numpy.int32): "I", str(numpy.float32): "F", str(numpy.float64): "D"}
 
@@ -41,24 +41,25 @@ def makeImageFromArray(array):
     Return None if input is None.
     """
     if array is None: return None
-    cls = globals()["imageLib.Image%s" % suffixes[str(array.dtype.type)]]
+    cls = getattr(imageLib, "Image%s" % (suffixes[str(array.dtype.type)],))
     return cls(array)
 
 def makeMaskFromArray(array):
     """Construct an Mask from a NumPy array, inferring the Mask type from the NumPy type.
+    Return None if input is None.
     """
     if array is None: return None
-    cls = globals()["imageLib.Mask%s" % suffixes[str(array.dtype.type)]]
+    cls = getattr(imageLib, "Mask%s" % (suffixes[str(array.dtype.type)],))
     return cls(array)
 
 def makeMaskedImageFromArrays(image, mask=None, variance=None):
     """Construct a MaskedImage from three NumPy arrays, inferring the MaskedImage types from the NumPy types.
     """
-    cls = globals()["imageLib.MaskedImage%s" % suffixes[str(image.dtype.type)]]
+    cls = getattr(imageLib, "MaskedImage%s" % (suffixes[str(image.dtype.type)],))
     return cls(makeImageFromArray(image), makeMaskFromArray(mask), makeImageFromArray(variance))
 
 @lsst.utils.tests.inTestCase
-def assertWcssNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds, maxDiffPix=0.01,
+def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds, maxDiffPix=0.01,
     nx=5, ny=5, msg="WCSs differ"):
     """Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions
 
@@ -75,11 +76,14 @@ def assertWcssNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*af
 
     @throw AssertionError if the two WCSs do not match sufficiently closely
     """
+    if nx < 1 or ny < 1:
+        raise RuntimeError("nx = %s and ny = %s must both be positive" % (nx, ny))
+
     bboxd = afwGeom.Box2D(bbox)
     xList = numpy.linspace(bboxd.getMinX(), bboxd.getMaxX(), nx)
     yList = numpy.linspace(bboxd.getMinY(), bboxd.getMaxY(), ny)
-    measDiffSky = (afwGeom.Angle(0), -1, -1) # (sky diff, pix pos)
-    measDiffPix = (0, -1, -1) # (pix diff, sky pos)
+    measDiffSky = (afwGeom.Angle(0), "?") # (sky diff, pix pos)
+    measDiffPix = (0, "?") # (pix diff, sky pos)
     for x in xList:
         for y in yList:
             fromPixPos = afwGeom.Point2D(x, y)
