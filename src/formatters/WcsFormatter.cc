@@ -156,6 +156,16 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
     wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1], "WCS Ref value (DEC in decimal degrees)");
     wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
+    //
+    // Some projections need PVi_j keywords.  Add them.
+    //
+    for (int i = 0; i != wcs._wcsInfo[0].npv; ++i) {
+        auto const pv = wcs._wcsInfo[0].pv[i];
+        int const ii = pv.i > 0 ? pv.i : (wcs._wcsInfo[0].lat + 1); // 0 => latitude axis (see wcslib/wsc.h)
+        char key[20];
+        sprintf(key, "PV%d_%d", ii, pv.m);
+        wcsProps->add(key, pv.value);
+    }
 
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
