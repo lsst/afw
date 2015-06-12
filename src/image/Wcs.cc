@@ -199,11 +199,14 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     HeaderAccess access(header);
 
     // Some headers (e.g. SDSS ones from FNAL) have EQUINOX as a string.  Fix this,
-    // as wcslib 4.4.4 refuses to handle it
+    // as wcslib 4.4.4 refuses to handle it.  Furthermore, some headers (e.g. Skymapper)
+    // use a string but prepend 'J':  "J2000.0" -- if we don't handle this, we deduce
+    // an equinox of 0.0
     {
         std::string const& key = "EQUINOX";
         if (access.toRead()->exists(key) && access.toRead()->typeOf(key) == typeid(std::string)) {
-            double equinox = ::atof(access.toRead()->getAsString(key).c_str());
+            auto equinoxStr = access.toRead()->getAsString(key).c_str();
+            double equinox = ::atof(equinoxStr[0] == 'J' ? equinoxStr + 1 : equinoxStr);
             access.toWrite()->set(key, equinox);
         }
     }
