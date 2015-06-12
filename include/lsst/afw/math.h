@@ -46,5 +46,7 @@
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Random.h"
 #include "lsst/afw/math/LeastSquares.h"
+#include "lsst/afw/math/BoundedField.h"
+#include "lsst/afw/math/ChebyshevBoundedField.h"
 
 #endif // LSST_AFW_MATH_H

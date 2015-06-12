@@ -80,6 +80,8 @@ Python interface to lsst::afw::math classes
 %include "objectVectors.i" // must come last
 
 %include "LeastSquares.i"
+%include "BoundedField.i"
+%include "ChebyshevBoundedField.i"
 
 
 
