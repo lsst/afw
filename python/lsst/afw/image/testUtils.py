@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+from __future__ import absolute_import, division
 # 
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -24,16 +23,9 @@
 
 ##\file
 ## \brief Utilities to help write tests, mostly using numpy 
-##
-## Subroutines to move data between numpy arrays and lsst::afw::image classes
-## Mask, Image and MaskedImage.
-## 
-## Please only use these for testing; they are too slow for production work!
-## Eventually Image, Mask and MaskedImage will offer much better ways to do this.
-
 import numpy
+
 import lsst.afw.image as afwImage
-import lsst.afw.geom as afwGeom
 
 def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     """Make a gaussian noise MaskedImageF
