@@ -45,7 +45,7 @@ except NameError:
 dataDir = lsst.utils.getPackageDir("afwdata")
 if not dataDir:
     raise RuntimeError("Must set up afwdata to run these tests")
-InputImagePath = os.path.join(dataDir, "871034p_1_MI")
+InputImagePath = os.path.join(dataDir, "data", "871034p_1_MI")
 InputSmallImagePath = os.path.join(dataDir, "data", "small_img.fits")
 InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
@@ -339,7 +339,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        path = InputImagePath + "_img.fits"
+        path = InputImagePath + ".fits"
         self.metadata = afwImage.readMetadata(path)
         self.wcs = afwImage.makeWcs(self.metadata)
 
@@ -365,9 +365,12 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
         side = 1e-3
         icrs = afwCoord.ICRS
-        degrees = afwCoord.DEGREES
-        sky10 = afwCoord.makeCoord(icrs, sky00 + afwGeom.Extent2D(side/cosdec, 0), degrees)
-        sky01 = afwCoord.makeCoord(icrs, sky00 + afwGeom.Extent2D(0,side),         degrees)
+        sky10 = afwCoord.makeCoord(
+            icrs, sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(side/cosdec, 0), afwGeom.degrees
+        )
+        sky01 = afwCoord.makeCoord(
+            icrs, sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(0,side), afwGeom.degrees
+        )
         p10 = self.wcs.skyToPixel(sky10) - p00
         p01 = self.wcs.skyToPixel(sky01) - p00
 
@@ -386,7 +389,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
     def testReadWcs(self):
         """Test reading a Wcs directly from a fits file"""
 
-        meta = afwImage.readMetadata(InputImagePath + "_img.fits")
+        meta = afwImage.readMetadata(InputImagePath + ".fits")
         wcs = afwImage.makeWcs(meta)
 
         sky0 = wcs.pixelToSky(0.0, 0.0).getPosition()
@@ -419,7 +422,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
         self.assertAlmostEqual(cd[1,1], self.metadata.getAsDouble("CD2_2"))
 
     def testConstructor(self):
-        copy = afwImage.Wcs(self.wcs.getSkyOrigin(), self.wcs.getPixelOrigin(), 
+        copy = afwImage.Wcs(self.wcs.getSkyOrigin().getPosition(afwGeom.degrees), self.wcs.getPixelOrigin(),
                             self.wcs.getCDMatrix())
 
     def testAffineTransform(self):
@@ -428,16 +431,14 @@ class WCSTestCaseCFHT(unittest.TestCase):
         #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
 
         sky00g = afwGeom.Point2D(10, 10)
-        sky00i = afwGeom.Point2D(sky00g.getX(), sky00g.getY())
-        sky00c = afwCoord.makeCoord(afwCoord.ICRS, sky00i, afwCoord.DEGREES)
+        sky00c = afwCoord.makeCoord(afwCoord.ICRS, sky00g, afwGeom.degrees)
         a = self.wcs.linearizeSkyToPixel(sky00c)
-        pix00i = self.wcs.skyToPixel(sky00c)
-        pix00g = afwGeom.Point2D(pix00i.getX(), pix00i.getY())
-        sky00gApprox = a(pix00g);
-        self.assertAlmostEqual(sky00g.getX(), sky00gApprox.getX())
-        self.assertAlmostEqual(sky00g.getY(), sky00gApprox.getY())
-        self.assertAlmostEqual(self.wcs.pixArea(sky00i), abs(a[a.XX]* a[a.YY] - a[a.XY]*a[a.YX]))
-        a.invert()
+        pix00g = self.wcs.skyToPixel(sky00c)
+        pix00gApprox = a(sky00g);
+        self.assertAlmostEqual(pix00g.getX(), pix00gApprox.getX())
+        self.assertAlmostEqual(pix00g.getY(), pix00gApprox.getY())
+        b = a.invert()
+        self.assertAlmostEqual(self.wcs.pixArea(sky00g), abs(b[b.XX]* b[b.YY] - b[b.XY]*b[b.YX]))
 
 class TestWcsCompare(unittest.TestCase):
 
@@ -483,7 +484,7 @@ def suite():
     suites += unittest.makeSuite(WcsTestCase)
     suites += unittest.makeSuite(WCSTestCaseSDSS)
     suites += unittest.makeSuite(TestWcsCompare)
-#    suites += unittest.makeSuite(WCSTestCaseCFHT)
+    suites += unittest.makeSuite(WCSTestCaseCFHT)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
