@@ -50,7 +50,7 @@ except NameError:
 
 class SchemaTestCase(unittest.TestCase):
 
-    def xtestSchema(self):
+    def testSchema(self):
         schema = lsst.afw.table.Schema();
         ab_k = schema.addField("a_b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
@@ -291,7 +291,7 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertEqual(sm0.getOutputSchema().getVersion(), 1)
         self.assertEqual(sm1.getOutputSchema().getVersion(), 0)
 
-    def testJoin(self):
+    def testJoin2(self):
         s0 = lsst.afw.table.Schema(0)
         s1 = lsst.afw.table.Schema(1)
         self.assertEqual(s0.join("a", "b"), "a.b")
