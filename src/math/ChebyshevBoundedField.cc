@@ -30,6 +30,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace lsst { namespace afw { namespace math {
 
@@ -319,15 +320,17 @@ namespace {
 struct PersistenceHelper {
     table::Schema schema;
     table::Key<int> orderX;
-    table::Key< table::Point<int> > bboxMin;
-    table::Key< table::Point<int> > bboxMax;
+    table::PointKey<int> bboxMin;
+    table::PointKey<int> bboxMax;
     table::Key< table::Array<double> > coefficients;
 
     PersistenceHelper(int nx, int ny) :
         schema(),
         orderX(schema.addField<int>("order.x", "maximum Chebyshev function order in x")),
-        bboxMin(schema.addField< table::Point<int> >("bbox.min", "lower-left corner of bounding box")),
-        bboxMax(schema.addField< table::Point<int> >("bbox.max", "upper-right corner of bounding box")),
+        bboxMin(table::PointKey<int>::addFields(
+            schema, "bbox.min", "lower-left corner of bounding box", "pixels")),
+        bboxMax(table::PointKey<int>::addFields(
+            schema, "bbox.max", "upper-right corner of bounding box", "pixels")),
         coefficients(
             schema.addField< table::Array<double> >(
                 "coefficients", "Chebyshev function coefficients, ordered by y then x", nx*ny
