@@ -129,6 +129,8 @@ def getChildren(self, parent, *args):
     of self (i.e. zip(self, *args) is valid) will be subset using the same slice object
     used on self, and these subsets will be returned along with the subset of self.
     """
+    if not self.isSorted(SourceTable.getParentKey()):
+        raise AssertionError("The table is not sorted by parent, so cannot getChildren")
     s = self.equal_range(parent, SourceTable.getParentKey())
     if args:
         return (self[s],) + tuple(arg[s] for arg in args)

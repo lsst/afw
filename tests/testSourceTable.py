@@ -369,6 +369,12 @@ class SourceTableTestCase(unittest.TestCase):
                 self.assertEqual(child.getParent(), parent.getId())
                 self.assertEqual(child.getId(), id)
 
+        # Check detection of unsorted catalog
+        self.catalog.sort(self.fluxKey)
+        self.assertRaises(AssertionError, self.catalog.getChildren, 0)
+        self.catalog.sort(parentKey)
+        self.catalog.getChildren(0) # Just care this succeeds
+
     def testOldFootprintPersistence(self):
         """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
         version of the pipeline with a different format.
