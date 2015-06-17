@@ -950,6 +950,56 @@ class FootprintTestCase(tests.TestCase):
             plt.imshow(img.getArray(), **ima)
             plt.savefig('clipnz3.png')
 
+    def checkEdge(self, footprint):
+        """Check that Footprint::findEdgePixels() works"""
+        bbox = footprint.getBBox()
+        bbox.grow(3)
+
+        def makeImage(footprint):
+            """Make an ImageF with 1 in the footprint, and 0 elsewhere"""
+            ones = afwImage.ImageI(bbox)
+            ones.set(1)
+            image = afwImage.ImageI(bbox)
+            image.set(0)
+            afwDetect.copyWithinFootprintImage(footprint, ones, image)
+            return image
+
+        edges = self.foot.findEdgePixels()
+        edgeImage = makeImage(edges)
+
+        # Find edges with an edge-detection kernel
+        image = makeImage(self.foot)
+        kernel = afwImage.ImageD(3, 3)
+        kernel.set(1, 1, 4)
+        for x, y in [(1, 2), (0, 1), (1, 0), (2, 1)]:
+            kernel.set(x, y, -1)
+        kernel.setXY0(1, 1)
+        result = afwImage.ImageI(bbox)
+        result.set(0)
+        afwMath.convolve(result, image, afwMath.FixedKernel(kernel), afwMath.ConvolutionControl(False))
+        result.getArray().__imul__(image.getArray())
+        trueEdges = numpy.where(result.getArray() > 0, 1, 0)
+
+        self.assertTrue(numpy.all(trueEdges == edgeImage.getArray()))
+
+
+    def testEdge(self):
+        """Test for Footprint::findEdgePixels()"""
+        foot = afwDetect.Footprint()
+        for span in ((3, 3, 9),
+                     (4, 2, 4),
+                     (4, 6, 7),
+                     (4, 9, 11),
+                     (5, 3, 9),
+                     (6, 6, 7),
+                     ):
+            foot.addSpanInSeries(*span)
+        foot.normalize()
+        self.checkEdge(foot)
+
+        # This footprint came from a very large Footprint in a deep HSC coadd patch
+        self.checkEdge(afwDetect.Footprint.readFits("tests/testFootprintEdge.fits"))
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

@@ -193,6 +193,13 @@ public:
     ) const;
 
     /**
+     * @brief Find edge pixels on the footprint
+     *
+     * Note that the resultant Footprint of edge pixels may not be contiguous.
+     */
+    PTR(Footprint) findEdgePixels() const;
+
+    /**
      *  @brief Update the Footprint in-place to be the union of itself and all its children
      *
      *  Only spans will be modified; peaks will be left unchanged.  If ignoreSelf is true it
