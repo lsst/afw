@@ -8,6 +8,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/Calib.h"
+#include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -61,13 +62,15 @@ struct PersistenceSchema : private boost::noncopyable {
     Key<int> wcs;
     Key<int> psf;
     Key<int> calib;
+    Key<int> apCorrMap;
 
     static PersistenceSchema const & get() {
         static PersistenceSchema const instance;
         return instance;
     }
 
-    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
+    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord 
+    // with IDs for Wcs, Psf, Calib and ApCorrMap.
     SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
         std::vector<Schema> inSchemas;
         inSchemas.push_back(PersistenceSchema::get().schema);
@@ -96,6 +99,7 @@ struct PersistenceSchema : private boost::noncopyable {
         output.set(psf, archive.put(input.getPsf(), permissive));
         output.set(wcs, archive.put(input.getWcs(), permissive));
         output.set(calib, archive.put(input.getCalib(), permissive));
+        output.set(apCorrMap, archive.put(input.getApCorrMap(), permissive));
     }
 
     void readRecord(
@@ -106,6 +110,7 @@ struct PersistenceSchema : private boost::noncopyable {
         output.setPsf(archive.get<detection::Psf>(input.get(psf)));
         output.setWcs(archive.get<image::Wcs>(input.get(wcs)));
         output.setCalib(archive.get<image::Calib>(input.get(calib)));
+        output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
     }
 
 private:
@@ -113,7 +118,8 @@ private:
         schema(),
         wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
         psf(schema.addField<int>("psf", "archive ID for Psf object")),
-        calib(schema.addField<int>("calib", "archive ID for Calib object"))
+        calib(schema.addField<int>("calib", "archive ID for Calib object")),
+        apCorrMap(schema.addField<int>("apCorrMap", "archive ID for ApCorrMap object"))
     {
         schema.getCitizen().markPersistent();
     }
@@ -286,6 +292,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
         _psf = s._psf;
         _wcs = s._wcs;
         _calib = s._calib;
+        _apCorrMap = s._apCorrMap;
     } catch (std::bad_cast&) {}
 }
 

@@ -35,6 +35,7 @@ namespace lsst { namespace afw {
 namespace image {
 class Wcs;
 class Calib;
+class ApCorrMap;
 } // namespace image
 
 namespace detection {
@@ -93,7 +94,7 @@ public:
     bool contains(geom::Point2D const & point, image::Wcs const & wcs) const;
 
     //@{
-    /// Get/Set the the attached Wcs, Psf, or Calib.  No copies are made.
+    /// Get/Set the the attached Wcs, Psf, Calib, or ApCorrMap.  No copies are made.
     CONST_PTR(image::Wcs) getWcs() const { return _wcs; }
     void setWcs(CONST_PTR(image::Wcs) wcs) { _wcs = wcs; }
 
@@ -102,6 +103,9 @@ public:
 
     CONST_PTR(image::Calib) getCalib() const { return _calib; }
     void setCalib(CONST_PTR(image::Calib) calib) { _calib = calib; }
+
+    CONST_PTR(image::ApCorrMap) getApCorrMap() const { return _apCorrMap; }
+    void setApCorrMap(CONST_PTR(image::ApCorrMap) apCorrMap) { _apCorrMap = apCorrMap; }
     //@}
 
 protected:
@@ -114,6 +118,7 @@ private:
     CONST_PTR(image::Wcs) _wcs;
     CONST_PTR(detection::Psf) _psf;
     CONST_PTR(image::Calib) _calib;
+    CONST_PTR(image::ApCorrMap) _apCorrMap;
 };
 
 /**

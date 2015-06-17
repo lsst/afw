@@ -156,7 +156,8 @@ tests/testSchema
 tests/testFitsTables
 tests/testTableAliases
 testTable.fits
-tests/data/*
+tests/data/Dest
+tests/data/kernel*.boost
 ups/*.cfgc
 extensions/
 
