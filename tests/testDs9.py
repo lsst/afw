@@ -116,8 +116,7 @@ class DisplayTestCase(unittest.TestCase):
         """Test playing with the lookup table"""
         ds9.show()
 
-        ds9.scaleLimits("zscale")
-        ds9.scaleType("linear")
+        ds9.scale("linear", "zscale")
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

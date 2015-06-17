@@ -39,17 +39,28 @@ def _getDisplayFromDisplayOrFrame(display, frame=None):
     If the two arguments are consistent, return the desired display; if they are not,
     raise a RuntimeError exception.
 
-    If the desired display is None, return None rather than the default display"""
+    If the desired display is None, return None;
+    if (display, frame) == ("deferToFrame", None), return the default display"""
 
     import lsst.afw.display as afwDisplay # import locally to allow this file to be imported by __init__
 
-    if display is None and frame is None:
-        return None
+    if display in ("deferToFrame", None):
+        if display is None and frame is None:
+            return None
 
-    if frame:
-        if display and display.frame != frame:
-            raise RuntimeError("Please specify display *or* frame")
-        display = afwDisplay.getDisplay(frame, create=True)
+        # "deferToFrame" is the default value, and  means "obey frame"
+        display = None
+
+    if display and not hasattr(display, "frame"):
+        raise RuntimeError("display == %s doesn't support .frame" % display)
+
+    if frame and display and display.frame != frame:
+        raise RuntimeError("Please specify display *or* frame")
+
+    if display:
+        frame = display.frame
+
+    display = afwDisplay.getDisplay(frame, create=True)
 
     return display
 
@@ -119,7 +130,7 @@ class Mosaic(object):
 
         return len(self.images)
 
-    def makeMosaic(self, images=None, display=None, mode=None, background=None, title="", frame=None):
+    def makeMosaic(self, images=None, display="deferToFrame", mode=None, background=None, title="", frame=None):
         """Return a mosaic of all the images provided; if none are specified,
         use the list accumulated with Mosaic.append().
 
@@ -236,7 +247,7 @@ class Mosaic(object):
         return afwGeom.Box2I(afwGeom.PointI(ix*(self.xsize + self.gutter), iy*(self.ysize + self.gutter)),
                              afwGeom.ExtentI(self.xsize, self.ysize))
 
-    def drawLabels(self, labels=None, display=None, frame=None):
+    def drawLabels(self, labels=None, display="deferToFrame", frame=None):
         """Draw the list labels at the corners of each panel.  If labels is None, use the ones
         specified by Mosaic.append()"""
 
@@ -267,7 +278,7 @@ class Mosaic(object):
 
                     display.dot(str(label), self.getBBox(i).getMinX(), self.getBBox(i).getMinY(), ctype=ctype)
 
-def drawBBox(bbox, borderWidth=0.0, origin=None, display=None, ctype=None, bin=1, frame=None):
+def drawBBox(bbox, borderWidth=0.0, origin=None, display="deferToFrame", ctype=None, bin=1, frame=None):
     """Draw an afwImage::BBox on a display frame with the specified ctype.  Include an extra borderWidth pixels
 If origin is present, it's Added to the BBox
 
@@ -290,10 +301,10 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
               (x1 + borderWidth, y1 + borderWidth),
               (x1 + borderWidth, y0 - borderWidth),
               (x0 - borderWidth, y0 - borderWidth),
-              ], frame=frame, ctype=ctype)
+              ], ctype=ctype)
 
 def drawFootprint(foot, borderWidth=0.5, origin=None, XY0=None, frame=None, ctype=None, bin=1,
-                  peaks=False, symb="+", size=0.4, ctypePeak=None, display=None):
+                  peaks=False, symb="+", size=0.4, ctypePeak=None, display="deferToFrame"):
     """Draw an afwDetection::Footprint on a display frame with the specified ctype.  Include an extra borderWidth
 pixels If origin is present, it's Added to the Footprint; if XY0 is present is Subtracted from the Footprint
 
@@ -324,7 +335,7 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
                       (x1 + borderWidth, y + borderWidth),
                       (x1 + borderWidth, y - borderWidth),
                       (x0 - borderWidth, y - borderWidth),
-                      ], frame=frame, ctype=ctype)
+                      ], ctype=ctype)
 
         if peaks:
             for p in foot.getPeaks():
@@ -335,9 +346,9 @@ All Footprint coordinates are divided by bin, as is right and proper for overlay
 
                 x /= bin; y /= bin
 
-                display.dot(symb, x, y, size=size, ctype=ctypePeak, frame=frame)
+                display.dot(symb, x, y, size=size, ctype=ctypePeak)
 
-def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display=None):
+def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display="deferToFrame"):
     """Draw the bounding boxes of input exposures to a coadd on a display frame with the specified ctype,
     assuming display.mtv() has already been called on the given exposure on this frame.
 
@@ -358,4 +369,4 @@ def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display=None):
             coaddCorners = [coaddWcs.skyToPixel(record.getWcs().pixelToSky(point)) + offset
                             for point in ccdCorners]
             display.line([(coaddCorners[i].getX()/bin, coaddCorners[i].getY()/bin)
-                      for i in range(-1, 4)], frame=frame, ctype=ctype)
+                      for i in range(-1, 4)], ctype=ctype)
