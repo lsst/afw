@@ -84,6 +84,11 @@ public:
         return maskbits;
     }
 
+    /// Dot product between HeavyFootprints
+    ///
+    /// The mask and variance planes are ignored.
+    double dot(HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& other) const;
+
 protected:
 
     class Factory;  // factory class used for persistence, public only so we can instantiate it in .cc file

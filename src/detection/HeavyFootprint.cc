@@ -191,6 +191,66 @@ mergeHeavyFootprints(HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT> const
     //return x;
 }
 
+
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+double
+HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT>::dot(
+    HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& rhs
+    ) const
+{
+    // Require that footprints are sorted in ascending y
+    assert(isNormalized());
+    assert(rhs.isNormalized());
+
+    // Coordinated cycling through the iterators while juggling the offsets into the arrays
+    typedef typename ndarray::Array<ImagePixelT const, 1, 1>::Iterator ArrayIter;
+    ArrayIter lhsArray = getImageArray().begin(), rhsArray = rhs.getImageArray().begin();
+    SpanList::const_iterator lhsIter = getSpans().begin(), rhsIter = rhs.getSpans().begin();
+    SpanList::const_iterator const lhsEnd = getSpans().end(), rhsEnd = rhs.getSpans().end();
+    double sum = 0.0;
+    while (lhsIter != lhsEnd && rhsIter != rhsEnd) {
+        Span const& lhsSpan = **lhsIter, rhsSpan = **rhsIter;
+        int const yLhs = lhsSpan.getY(), yRhs = rhsSpan.getY();
+        if (yLhs == yRhs) {
+            int const x0Lhs = lhsSpan.getX0(), x1Lhs = lhsSpan.getX1();
+            int const x0Rhs = rhsSpan.getX0(), x1Rhs = rhsSpan.getX1();
+            int const xMin = std::max(x0Lhs, x0Rhs), xMax = std::min(x1Lhs, x1Rhs);
+            if (xMin <= xMax) {
+                lhsArray += xMin - x0Lhs;
+                rhsArray += xMin - x0Rhs;
+                for (int x = xMin; x <= xMax; ++x, ++lhsArray, ++rhsArray) {
+                    sum += (*lhsArray)*(*rhsArray);
+                }
+                // Rewind to the start of the span, for easier sync between spans and arrays
+                lhsArray -= xMax + 1 - x0Lhs;
+                rhsArray -= xMax + 1 - x0Rhs;
+            }
+            if (x1Lhs <= x1Rhs) {
+                lhsArray += lhsSpan.getWidth();
+                ++lhsIter;
+            } else {
+                rhsArray += rhsSpan.getWidth();
+                ++rhsIter;
+            }
+            continue;
+        } else if (yLhs < yRhs) {
+            while (lhsIter != lhsEnd && (*lhsIter)->getY() < yRhs) {
+                lhsArray += (*lhsIter)->getWidth();
+                ++lhsIter;
+            }
+            continue;
+        } else { // yLhs > yRhs
+            while (rhsIter != rhsEnd && (*rhsIter)->getY() < yLhs) {
+                rhsArray += (*rhsIter)->getWidth();
+                ++rhsIter;
+            }
+            continue;
+        }
+    }
+    return sum;
+}
+
+
 /************************************************************************************************************/
 // Persistence (using afw::table::io)
 //
