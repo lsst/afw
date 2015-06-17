@@ -4,7 +4,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -21,7 +21,7 @@
  * 
  * You should have received a copy of the LSST License Statement and 
  * the GNU General Public License along with this program.  If not, 
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 #include "lsst/base.h"
 
@@ -56,17 +56,25 @@ public:
     ApproximateControl(Style style, int orderX, int orderY=-1, bool weighting=true);
     /// Return the Style
     Style getStyle() const { return _style; }
+    /// Set the Style
+    void setStyle(Style const style) { _style = style; }
     /// Return the order of approximation to use in the x-direction
     int getOrderX() const { return _orderX; }
+    /// Set the order of approximation to use in the x-direction
+    void setOrderX(int const orderX) { _orderX = orderX; }
     /// Return the order of approximation to use in the y-direction
     int getOrderY() const { return _orderY; }
+    /// Set the order of approximation to use in the y-direction
+    void setOrderY(int const orderY) { _orderY = orderY; }
     /// Return whether inverse variance weighting will be used in calculation
     bool getWeighting() const { return _weighting; }
+    /// Set whether inverse variance weighting will be used in calculation
+    void setWeighting(bool const weighting) { _weighting = weighting; }
 private:
-    Style const _style;
-    int const _orderX;
-    int const _orderY;
-    bool const _weighting;
+    Style _style;
+    int _orderX;
+    int _orderY;
+    bool _weighting;
 };
 
 /**
@@ -122,6 +130,6 @@ private:
     virtual PTR(image::MaskedImage<OutPixelT>) doGetMaskedImage(int orderX, int orderY) const = 0;
 };
 
-}}}
-                     
+}}} // lsst::afw::math
+
 #endif // LSST_AFW_MATH_APPROXIMATE_H

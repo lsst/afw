@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,7 +19,7 @@
  * 
  * You should have received a copy of the LSST License Statement and 
  * the GNU General Public License along with this program.  If not, 
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
  
 %define mathLib_DOCSTRING
@@ -66,6 +66,7 @@ Python interface to lsst::afw::math classes
 %lsst_exceptions();
 
 
+%include "approximate.i"
 %include "function.i"
 %include "kernel.i"
 %include "minimize.i"
@@ -82,9 +83,6 @@ Python interface to lsst::afw::math classes
 %include "LeastSquares.i"
 %include "BoundedField.i"
 %include "ChebyshevBoundedField.i"
-
-
-
 
 %inline %{
     struct InitGsl {

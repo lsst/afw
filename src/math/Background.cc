@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,7 +19,7 @@
  * 
  * You should have received a copy of the LSST License Statement and 
  * the GNU General Public License along with this program.  If not, 
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
 /**
@@ -61,7 +61,7 @@ Background::Background(ImageT const& img,              ///< ImageT (or MaskedIma
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(img.getBBox()),
-    _bctrl(bgCtrl),
+    _bctrl(new BackgroundControl(bgCtrl)),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
     _asUsedUndersampleStyle(THROW_EXCEPTION),
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
@@ -93,7 +93,7 @@ Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image 
                       ) :
     lsst::daf::base::Citizen(typeid(this)),
     _imgBBox(imageBBox),
-    _bctrl(nx, ny),
+    _bctrl(new BackgroundControl(nx, ny)),
     _asUsedInterpStyle(Interpolate::UNKNOWN),
     _asUsedUndersampleStyle(THROW_EXCEPTION),
     _xcen(0),  _ycen(0), _xorig(0), _yorig(0), _xsize(0), _ysize(0)
@@ -111,7 +111,7 @@ Background::Background(geom::Box2I const imageBBox, ///< Bounding box for image 
 
     _setCenOrigSize(_imgBBox.getWidth(), _imgBBox.getHeight(), nx, ny);
 }
-    
+
 /************************************************************************************************************/
 /**
  * Compute the centers, origins, and sizes of the patches used to compute image statistics
@@ -140,7 +140,7 @@ Background::_setCenOrigSize(int const width, int const height,
         _ycen [iY] = _yorig[iY] + (0.5 * _ysize[iY]) - 0.5;
     }
 }
-    
+
 /************************************************************************************************************/
 /**
  * @brief Conversion function to switch a string to an UndersampleStyle
@@ -172,9 +172,7 @@ UndersampleStyle stringToUndersampleStyle(std::string const &style) {
                                                                     UndersampleStyle const) const;
 
 
-INSTANTIATE_BACKGROUND(double)
 INSTANTIATE_BACKGROUND(float)
-INSTANTIATE_BACKGROUND(int)
 
 /// \endcond
-}}}
+}}} // lsst::afw::math

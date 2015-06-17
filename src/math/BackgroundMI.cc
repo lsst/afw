@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,7 +19,7 @@
  * 
  * You should have received a copy of the LSST License Statement and 
  * the GNU General Public License along with this program.  If not, 
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
 /**
@@ -233,7 +233,7 @@ double BackgroundMI::getPixel(Interpolate::Style const interpStyle, ///< How to 
                             int const y ///< y-pixel coordinate (row)
                            ) const
 {
-    (void)getImage<double>(interpStyle);        // setup the interpolation
+    (void)getImage<InternalPixelT>(interpStyle);        // setup the interpolation
 
     // build an interpobj along the row y and get the x'th value
     int const nxSample = _statsImage.getWidth();
@@ -321,7 +321,12 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
                           str(boost::format("The selected BackgroundControl "
                                             "UndersampleStyle %d is not defined.") % undersampleStyle));
     }
-       
+
+    // if we're approximating, don't bother with the rest of the interp-related work.  Return from here.
+    if (_bctrl->getApproximateControl()->getStyle() != ApproximateControl::UNKNOWN) {
+        return doGetApproximate<PixelT>(*_bctrl->getApproximateControl(), _asUsedUndersampleStyle)->getImage();
+    }
+    
     // =============================================================
     // --> We'll store nxSample fully-interpolated columns to interpolate the rows over
     // make a vector containing the y pixel coords for the column
@@ -453,5 +458,5 @@ PTR(Approximate<TYPE>) BackgroundMI::_getApproximate(                   \
 BOOST_PP_SEQ_FOR_EACH(CREATE_BACKGROUND, , LSST_makeBackground_getImage_types)
 BOOST_PP_SEQ_FOR_EACH(CREATE_getApproximate, , LSST_makeBackground_getApproximate_types)
 
-// \endcond
-}}}
+/// \endcond
+}}} // lsst::afw::math
