@@ -653,14 +653,20 @@ template<typename PixelT>
 void
 Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
     typedef typename lsst::afw::image::Image<PixelT> ImageT;
-    int ix0 = img.getX0();
-    int iy0 = img.getY0();
-    PixelT zero = 0;
+    int const ix0 = img.getX0();
+    int const iy0 = img.getY0();
+    PixelT const zero = 0;
 
-    for (SpanList::iterator s = _spans.begin(); s < _spans.end(); s++) {
-        int y = (*s)->getY();
-        int x0 = (*s)->getX0();
-        int x1 = (*s)->getX1();
+    normalize(); // allows us to produce a normalized output
+    SpanList old;
+    std::swap(_spans, old);
+    _spans.reserve(old.size());
+    _area = 0;
+    _bbox = geom::Box2I();
+    for (SpanList::iterator s = old.begin(); s != old.end(); ++s) {
+        int const y = (*s)->getY();
+        int const x0 = (*s)->getX0();
+        int const x1 = (*s)->getX1();
         typename ImageT::x_iterator img_it = img.row_begin(y - iy0) + (x0 - ix0);
         int leftx, rightx;
         // find zero pixels on the left...
@@ -671,9 +677,6 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
         }
         if (leftx > x1) {
             // whole span is zero; drop it.
-            _normalized = false;
-            _spans.erase(s);
-            s--;
             continue;
         }
         // find zero pixels on the right...
@@ -683,21 +686,9 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
                 break;
             }
         }
-        if (leftx != x0) {
-            (*s)->_x0 = leftx;
-            _normalized = false;
-        }
-        if (rightx != x1) {
-            (*s)->_x1 = rightx;
-            _normalized = false;
-        }
+        addSpanInSeries(y, leftx, rightx);
     }
-
-    if (_spans.empty()) {
-        _bbox = geom::Box2I();
-        _area = 0;
-        _normalized = true;
-    }
+    normalize();
 }
 
 /**
