@@ -279,47 +279,44 @@ bool Footprint::contains(
 }
 
 namespace {
-/// Predicate for removing peaks outside a bbox
-struct ClipPredicate : public std::unary_function<PeakRecord const&, bool> {
+
+/// Predicate for removing spans outside a bbox
+struct ClipSpansPredicate : public std::unary_function<PTR(Span) const&, bool> {
     geom::Box2I const& bbox;
-    ClipPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
+    ClipSpansPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
+    bool operator()(PTR(Span) const& spanPtr) const {
+        Span const& span = *spanPtr;
+        int const y = span.getY();
+        return (y < bbox.getMinY() || y > bbox.getMaxY() ||
+                span.getX0() > bbox.getMaxX() || span.getX1() < bbox.getMinX());
+    }
+};
+
+/// Predicate for removing peaks outside a bbox
+struct ClipPeaksPredicate : public std::unary_function<PeakRecord const&, bool> {
+    geom::Box2I const& bbox;
+
+    ClipPeaksPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
     bool operator()(PTR(PeakRecord) const& peak) const {
         return !bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
     }
 };
-}
+} // anonymous namespace
 
 void Footprint::clipTo(geom::Box2I const& bbox) {
-    Footprint::SpanList::iterator it = _spans.begin();
-    for (; it != _spans.end();) {
-        Span *sp = it->get();
-        if ((sp->getY() < bbox.getMinY()) ||
-            (sp->getY() > bbox.getMaxY())) {
-            // out of bounds in y -- erase
-            it = _spans.erase(it);
-            continue;
-        }
-        if ((sp->getX0() > bbox.getMaxX()) ||
-            (sp->getX1() < bbox.getMinX())) {
-            // out of bounds in x; erase
-            it = _spans.erase(it);
-            continue;
-        }
-        // clip
-        if (sp->getX0() < bbox.getMinX()) {
-            // clip span x0 to bbox
-            sp->_x0 = bbox.getMinX();
-        }
-        if (sp->getX1() > bbox.getMaxX()) {
-            // clip span x1 to bbox
-            sp->_x1 = bbox.getMaxX();
-        }
-        ++it;
+    _spans.erase(std::remove_if(_spans.begin(), _spans.end(), ClipSpansPredicate(bbox)), _spans.end());
+    for (SpanList::const_iterator ss = _spans.begin(); ss != _spans.end(); ++ss) {
+        Span& span = **ss;
+        span.getX0() = std::max(span.getX0(), bbox.getMinX());
+        span.getX1() = std::min(span.getX1(), bbox.getMaxX());
     }
 
     // Remove peaks not in the new bbox
     _peaks.getInternal().erase(std::remove_if(_peaks.getInternal().begin(), _peaks.getInternal().end(),
-                                              ClipPredicate(bbox)), _peaks.getInternal().end());
+                                              ClipPeaksPredicate(bbox)), _peaks.getInternal().end());
 
     if (_spans.empty()) {
         _bbox = geom::Box2I();
