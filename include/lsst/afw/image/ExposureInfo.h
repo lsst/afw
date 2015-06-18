@@ -49,6 +49,7 @@ namespace image {
 
 class Calib;
 class Wcs;
+class ApCorrMap;
 
 /**
  *  @brief A collection of all the things that make an Exposure different from a MaskedImage
@@ -133,6 +134,26 @@ public:
         _psf = boost::const_pointer_cast<detection::Psf>(psf);
     }
 
+    /// Return true if the exposure has an aperture correction map
+    bool hasApCorrMap() const { return static_cast<bool>(_apCorrMap); }
+
+    /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
+    PTR(ApCorrMap) getApCorrMap() { return _apCorrMap; }
+
+    /// Return the exposure's aperture correction map (null pointer if !hasApCorrMap())
+    PTR(ApCorrMap const) getApCorrMap() const { return _apCorrMap; }
+
+    /// Set the exposure's aperture correction map (null pointer if !hasApCorrMap())
+    void setApCorrMap(PTR(ApCorrMap) apCorrMap) { _apCorrMap = apCorrMap; }
+
+    /**
+     *  Set the exposure's aperture correction map to a new, empty map
+     *
+     *  Note that the ExposureInfo constructors do not create an empty aperture correction map,
+     *  so this method provide a convenient way to initialize one before filling it.
+     */
+    void initApCorrMap();
+
     /// Does this exposure have coadd provenance catalogs?
     bool hasCoaddInputs() const { return static_cast<bool>(_coaddInputs); }
 
@@ -156,7 +177,8 @@ public:
         CONST_PTR(cameraGeom::Detector) const & detector = CONST_PTR(cameraGeom::Detector)(),
         Filter const & filter = Filter(),
         PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)(),
-        PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)()
+        PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)(),
+        PTR(ApCorrMap) const & apCorrMap = PTR(ApCorrMap)()
     );
 
     /// Copy constructor; deep-copies all components except the metadata.
@@ -235,6 +257,7 @@ private:
 
     static PTR(Calib) _cloneCalib(CONST_PTR(Calib) calib);
     static PTR(Wcs) _cloneWcs(CONST_PTR(Wcs) wcs);
+    static PTR(ApCorrMap) _cloneApCorrMap(PTR(ApCorrMap const) apCorrMap);
 
     PTR(Wcs) _wcs;
     PTR(detection::Psf) _psf;
@@ -243,6 +266,7 @@ private:
     Filter _filter;
     PTR(daf::base::PropertySet) _metadata;
     PTR(CoaddInputs) _coaddInputs;
+    PTR(ApCorrMap) _apCorrMap;
 };
 
 }}} // lsst::afw::image

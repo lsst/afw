@@ -42,6 +42,7 @@ class Psf;
 }}
 %shared_ptr(lsst::afw::image::Wcs);
 %shared_ptr(lsst::afw::image::Calib);
+%shared_ptr(lsst::afw::image::ApCorrMap);
 %shared_ptr(lsst::afw::detection::Psf);
 
 // =============== ExposureTable and ExposureRecord =========================================================

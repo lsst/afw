@@ -280,6 +280,7 @@ def __int__(self):
 /************************************************************************************************************/
 
 %include "lsst/afw/image/Calib.i"
+%include "lsst/afw/image/ApCorrMap.i"
 
 %{
 #include "lsst/afw/detection.h"
