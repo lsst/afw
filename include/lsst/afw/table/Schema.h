@@ -49,7 +49,7 @@ public:
 
     // This variable is defined in SchemaImpl, but is replicated here as
     // a static so that it is available to SWIG.
-    static int const DEFAULT_VERSION = detail::SchemaImpl::DEFAULT_VERSION;
+    static int const VERSION = detail::SchemaImpl::VERSION;
 
     /**
      *  @brief Bit flags used when comparing schemas.
@@ -68,7 +68,7 @@ public:
     };
 
     //@{
-    /// Join strings using the field delimiter appropriate for this Schema's version
+    /// Join strings using the field delimiter appropriate for this Schema
     std::string join(std::string const & a, std::string const & b) const;
     std::string join(std::string const & a, std::string const & b, std::string const & c) const {
         return join(join(a, b), c);
@@ -273,9 +273,6 @@ public:
     /// @brief Construct an empty Schema.
     Schema();
 
-    /// @brief Construct an empty Schema with the given version.
-    explicit Schema(int version);
-
     /// @brief Copy constructor.
     Schema(Schema const & other);
 
@@ -317,12 +314,6 @@ public:
 
     /// @brief Get the Citizen corresponding to this Schema (SchemaImpl is what inherits from Citizen).
     daf::base::Citizen & getCitizen() { return *_impl; }
-
-    /// @brief Return the table's version.
-    int getVersion() const { return _impl->getVersion(); }
-
-    /// @brief Set the table's version.
-    void setVersion(int version) { _edit();_impl->setVersion(version); }
 
 private:
 

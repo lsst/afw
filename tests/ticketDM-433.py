@@ -120,7 +120,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-        self.schema.setVersion(1)
         self.makeFlux(self.schema, "a", 1)
         self.makeCentroid(self.schema, "b", 2)
         self.makeShape(self.schema, "c", 2)

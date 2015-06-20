@@ -22,12 +22,11 @@ namespace table {
 /**
  *  Base class for helper classes that define slots on SourceTable/SourceRecord.
  *
- *  Each type of slot corresponds to a subclass of SlotDefinition, and each actual
- *  slot corresponds to a particular field name prefix.  For instance, to look up
- *  the centroid slot, we look for fields named "slot_Centroid_x" and "slot_Centroid_y"
- *  (or a single compound "slot.Centroid" field in version 0).  Instead of actually
- *  naming a particular field that, however, we use Schema's alias mechanism (see AliasMap)
- *  to make these field name lookups resolve to the name of other fields.  The actual
+ *  Each type of slot corresponds to a subclass of SlotDefinition, and each actual slot
+ *  corresponds to a particular field name prefix.  For instance, to look up the centroid
+ *  slot, we look for fields named "slot_Centroid_x" and "slot_Centroid_y".  Instead of actually
+ *  naming a particular field that, however, we use Schema's alias mechanism (see AliasMap) to
+ *  make these field name lookups resolve to the name of other fields.  The actual
  *  definition of the slots is thus managed by the Schema's AliasMap, though a SourceTable
  *  object will cache Keys for the various slots to make sure accessing slot values is
  *  efficient (more precisely, when you set an alias related to a slot on an AliasMap, any
@@ -56,10 +55,10 @@ public:
     /**
      *  Return the alias field prefix used to lookup Keys for the slot.
      *
-     *  This simply prepends "slot_" to the slot name (or "slot." for version 0 tables).
+     *  This simply prepends "slot_" to the slot name.
      */
-    std::string getAlias(int version) const {
-        return (version > 0 ? "slot_" : "slot.") + _name;
+    std::string getAlias() const {
+        return "slot_" + _name;
     }
 
 protected:
@@ -212,75 +211,6 @@ struct SlotSuite {
     /// Initialize the slots.
     explicit SlotSuite(Schema const & schema);
 };
-
-
-//@{
-/**
- *  Utilities for version 0 tables and measurement algorithms that fill them.
- *
- *  These are deprecated and should not be used by new code; they will be removed when
- *  the new measurement framework in meas_base is complete and the old one in meas_algorithms
- *  is retired.
- */
-
-#ifndef SWIG
-
-template <typename MeasTagT, typename ErrTagT>
-struct Measurement {
-    typedef MeasTagT MeasTag;  ///< the tag (template parameter) type used for the measurement
-    typedef ErrTagT ErrTag;    ///< the tag (template parameter) type used for the uncertainty
-    typedef typename Field<MeasTag>::Value MeasValue; ///< the value type used for the measurement
-    typedef typename Field<ErrTag>::Value ErrValue;   ///< the value type used for the uncertainty
-    typedef Key<MeasTag> MeasKey;  ///< the Key type for the actual measurement
-    typedef Key<ErrTag> ErrKey;    ///< the Key type for the error on the measurement
-};
-
-/// A collection of types useful for flux measurement algorithms.
-struct Flux : public Measurement<double, double> {};
-
-/// A collection of types useful for centroid measurement algorithms.
-struct Centroid : public Measurement< Point<double>, Covariance< Point<float> > > {};
-
-/// A collection of types useful for shape measurement algorithms.
-struct Shape : public Measurement< Moments<double>, Covariance< Moments<float> > > {};
-
-/**
- *  @brief A three-element tuple of measurement, uncertainty, and flag keys.
- *
- *  Most measurement should have more than one flag key to indicate different kinds of failures.
- *  This flag key should usually be set to be a logical OR of all of them, so it is set whenever
- *  a measurement cannot be fully trusted.
- */
-template <typename MeasurementT>
-struct KeyTuple {
-    typename MeasurementT::MeasKey meas; ///< Key used for the measured value.
-    typename MeasurementT::ErrKey err;   ///< Key used for the uncertainty.
-    Key<Flag> flag;                      ///< Failure bit; set if the measurement did not fully succeed.
-
-    /// Default-constructor; all keys will be invalid.
-    KeyTuple() {}
-
-    /// Main constructor.
-    KeyTuple(
-        typename MeasurementT::MeasKey const & meas_,
-        typename MeasurementT::ErrKey const & err_,
-        Key<Flag> const & flag_
-    ) : meas(meas_), err(err_), flag(flag_) {}
-
-};
-
-/// Convenience function to setup fields for centroid measurement algorithms.
-KeyTuple<Centroid> addCentroidFields(Schema & schema, std::string const & name, std::string const & doc);
-
-/// Convenience function to setup fields for shape measurement algorithms.
-KeyTuple<Shape> addShapeFields(Schema & schema, std::string const & name, std::string const & doc);
-
-/// Convenience function to setup fields for flux measurement algorithms.
-KeyTuple<Flux> addFluxFields(Schema & schema, std::string const & name, std::string const & doc);
-
-#endif // !SWIG
-
-//@
 
 }}} // lsst::afw::table
 
