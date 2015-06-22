@@ -254,7 +254,10 @@ void ExposureInfo::_readFits(
         }
         int wcsId = popInt(*metadata, "WCS_ID");
         try {
-            _wcs = archive.get<Wcs>(wcsId);
+            auto archiveWcs = archive.get<Wcs>(wcsId);
+            if (archiveWcs) {
+                _wcs = archiveWcs;
+            }
         } catch (pex::exceptions::NotFoundError & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read WCS; setting to null: %s") % err.what()
