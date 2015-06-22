@@ -55,6 +55,14 @@ TanWcs::TanWcs() :
     _sipA(), _sipB(), _sipAp(), _sipBp()
 {}
 
+bool TanWcs::isPersistable() const {
+    if (!_mayBePersistable()) {
+        return false;
+    }
+
+    return true;
+}
+
 geom::Angle TanWcs::pixelScale() const {
     // HACK -- assume "CD" elements are set (and are in degrees)
     double* cd = _wcsInfo->m_cd;

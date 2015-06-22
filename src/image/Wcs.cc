@@ -1102,11 +1102,20 @@ void Wcs::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(catalog);
 }
 
-bool Wcs::isPersistable() const {
+bool Wcs::_mayBePersistable() const {
     if (_wcsInfo[0].naxis != 2) return false;
     if (std::strcmp(_wcsInfo[0].cunit[0], "deg") != 0) return false;
     if (std::strcmp(_wcsInfo[0].cunit[1], "deg") != 0) return false;
+
     return true;
+}
+
+bool Wcs::isPersistable() const {
+    if (!_mayBePersistable()) {
+        return false;
+    }
+    // The current table persistence only works for TAN and TAN-SIP projections
+    return false;
 }
 
 Wcs::Wcs(afw::table::BaseRecord const & record) :

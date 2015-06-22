@@ -161,6 +161,9 @@ public:
         Eigen::MatrixXd const & sipBp
     );
 
+    /// @brief Whether the object is persistable using afw::table::io archives.
+    virtual bool isPersistable() const;
+
 protected:
 
     TanWcs(TanWcs const & rhs);

@@ -337,7 +337,8 @@ private:
 protected:
 
     friend class WcsFactory;
-
+    /// Perform basic checks on whether *this might be persistable
+    bool _mayBePersistable() const;
     // See afw::table::io::Persistable
     virtual std::string getPersistenceName() const;
     virtual std::string getPythonModule() const;
