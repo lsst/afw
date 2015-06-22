@@ -58,12 +58,12 @@ public:
      *  Initialize the merge with a custom initial peak schema
      *
      *  @param[in,out]  sourceSchema    Input schema for SourceRecords to be merged, modified on return
-     *                                  to include 'merge.footprint.<filter>' Flag fields that will
+     *                                  to include 'merge_footprint_<filter>' Flag fields that will
      *                                  indicate the origin of the source.
      *  @param[in]      filterList      Sequence of filter names to be used in Flag fields.
      *  @param[in]      initialPeakSchema    Input schema of PeakRecords in Footprints to be merged.
      *
-     *  The output schema for PeakRecords will include additional 'merge.peak.<filter>' Flag fields that
+     *  The output schema for PeakRecords will include additional 'merge_peak_<filter>' Flag fields that
      *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
      */
     FootprintMergeList(
@@ -76,12 +76,12 @@ public:
      *  Initialize the merge with the default peak schema
      *
      *  @param[in,out]  sourceSchema    Input schema for SourceRecords to be merged, modified on return
-     *                                  to include 'merge.footprint.<filter>' Flag fields that will
+     *                                  to include 'merge_footprint_<filter>' Flag fields that will
      *                                  indicate the origin of the source.
      *  @param[in]      filterList      Sequence of filter names to be used in Flag fields.
      *  @param[in]      initialPeakSchema    Input schema of PeakRecords in Footprints to be merged.
      *
-     *  The output schema for PeakRecords will include additional 'merge.peak.<filter>' Flag fields that
+     *  The output schema for PeakRecords will include additional 'merge_peak_<filter>' Flag fields that
      *  indicate the origin of peaks.  This can be accessed by getPeakSchema().
      */
     FootprintMergeList(

@@ -239,6 +239,27 @@ PTR(PeakRecord) Footprint::addPeak(float fx, float fy, float value) {
     return p;
 }
 
+namespace {
+
+// comparison function to sort peaks from most positive to most negative.
+struct SortPeaks {
+
+    SortPeaks(afw::table::Key<float> const & key) : _key(key) {}
+
+	bool operator()(detection::PeakRecord const & a, detection::PeakRecord const & b) const {
+        return a.get(_key) > b.get(_key);
+    }
+
+private:
+    afw::table::Key<float> _key;
+};
+
+} // anonymous
+
+void Footprint::sortPeaks(afw::table::Key<float> const & key) {
+    getPeaks().sort(SortPeaks(key.isValid() ? key : PeakTable::getPeakValueKey()));
+}
+
 /**
  * Does this Footprint contain this pixel?
  */
@@ -263,7 +284,7 @@ struct ClipPredicate : public std::unary_function<PeakRecord const&, bool> {
     geom::Box2I const& bbox;
     ClipPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
     bool operator()(PTR(PeakRecord) const& peak) const {
-        return bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
+        return !bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
     }
 };
 }
@@ -681,14 +702,17 @@ void Footprint::include(std::vector<PTR(Footprint)> const & others) {
         setMaskFromFootprint(&mask, **i, bits);
     }
     FootprintSet fpSet(mask, Threshold(bits, Threshold::BITMASK));
-    if (fpSet.getFootprints()->size() != 1u) {
-        throw LSST_EXCEPT(
-            pex::exceptions::RuntimeError,
-            (boost::format("Footprint::include() result is disjoint; got %d distinct Footprints")
-             % fpSet.getFootprints()->size()).str()
-        );
+    if (fpSet.getFootprints()->empty()) {
+        _spans.clear();
+    } else if (fpSet.getFootprints()->size() == 1u) {
+        _spans.swap(fpSet.getFootprints()->front()->getSpans());
+    } else {
+        _spans.clear();
+        for (std::vector<PTR(Footprint)>::const_iterator i = fpSet.getFootprints()->begin();
+             i != fpSet.getFootprints()->end(); ++i) {
+            _spans.insert(_spans.end(), (**i).getSpans().begin(), (**i).getSpans().end());
+        }
     }
-    _spans.swap(fpSet.getFootprints()->front()->getSpans());
     _normalized = false;
     normalize();
 }
@@ -922,11 +946,11 @@ PTR(Footprint) Footprint::transform(
         int start = -1;                  // Start of span
 
         for (int x = tBoxI.getBeginX(); x < tBoxI.getEndX(); ++x) {
-            lsst::afw::geom::Point2D const& p = transformPoint(x, y, target, source);
+            geom::Point2D p = transformPoint(x, y, target, source);
             int const xSource = std::floor(0.5 + p.getX());
             int const ySource = std::floor(0.5 + p.getY());
 
-            if (contains(lsst::afw::geom::Point2I(xSource, ySource))) {
+            if (contains(geom::Point2I(xSource, ySource))) {
                 if (!inSpan) {
                     inSpan = true;
                     start = x;
@@ -940,6 +964,17 @@ PTR(Footprint) Footprint::transform(
             fpNew->addSpan(y, start, tBoxI.getMaxX());
         }
     }
+
+    // Copy over peaks to new Footprint
+    for (
+        PeakCatalog::const_iterator iter = this->getPeaks().begin();
+        iter != this->getPeaks().end();
+        ++iter
+        ) {
+            geom::Point2D tp = transformPoint(iter->getFx(), iter->getFy(), source, target);
+            fpNew->addPeak(tp.getX(), tp.getY(), iter->getPeakValue());
+        }
+
     if (doClip) {
         fpNew->clipTo(region);
     }
