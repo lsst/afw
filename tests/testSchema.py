@@ -48,14 +48,36 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class SchemaTestCase(unittest.TestCase):
 
     def testSchema(self):
+        def testKey(name, key):
+            col = schema.find(name)
+            self.assertEqual(col.key, key)
+            self.assertEqual(col.field.getName(), name)
+
         schema = lsst.afw.table.Schema();
+        ab_k = schema.addField("a_b", type="Coord", doc="parent coord")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
         acf_k = schema.addField("a_c_f", type=numpy.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
-        self.assertEqual(schema.getNames(), ("a_b_i", "a_c_f", "e_g_d"))
+        abp_k = schema.addField("a_b_p", type="PointD", doc="point")
+
+        #Basic test for all key types
+        for name, key in (("a_b", ab_k), ("a_b_i", abi_k), ("a_c_f", acf_k),
+                          ("e_g_d", egd_k), ("a_b_p", abp_k)):
+            testKey(name, key)
+
+        #Extra tests for special types
+        self.assertEqual(ab_k.getRa(), schema["a_b_ra"].asKey());
+        abpx_si = schema.find("a_b_p_x")
+        self.assertEqual(abp_k.getX(), abpx_si.key);
+        self.assertEqual(abpx_si.field.getName(), "a_b_p_x")
+        self.assertEqual(abpx_si.field.getDoc(), "point")
+        self.assertEqual(abp_k, schema["a_b_p"].asKey())
+        self.assertEqual(abp_k.getX(), schema["a_b_p_x"].asKey());
+        self.assertEqual(schema.getNames(), ("a_b", "a_b_i", "a_b_p", "a_c_f", "e_g_d"))
         self.assertEqual(schema.getNames(True), ("a", "e"))
         self.assertEqual(schema["a"].getNames(), ("b_i", "c_f"))
         self.assertEqual(schema["a"].getNames(True), ("b", "c"))
