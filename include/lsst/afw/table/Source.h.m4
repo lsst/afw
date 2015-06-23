@@ -56,11 +56,11 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *  @brief Set the measurement used for the $1$2 slot.
      *
      *  The definitions for slots are actually managed by the Schema object, and its associated
-     *  AliasMap, so this simply sets the "slot_$1$2" alias (or "slot.$1$2" for version 0 tables)
+     *  AliasMap, so this simply sets the "slot_$1$2" alias
      *  to point to the given field name prefix.  See $2SlotDefinition for more information.
      */
     void define$1$2(std::string const & name) {
-        getSchema().getAliasMap()->set(get$1$2Slot().getAlias(getSchema().getVersion()), name);
+        getSchema().getAliasMap()->set(get$1$2Slot().getAlias(), name);
     }
 
     /**
@@ -70,11 +70,11 @@ m4def(`DECLARE_SLOT_DEFINERS',
      *
      *  @deprecated in favor of
      *  @code
-     *  getSchema().getAliasMap()->get("slot_$1$2")  # or "slot.$1$2" for version 0 tables
+     *  getSchema().getAliasMap()->get("slot_$1$2")
      *  @endcode
      */
     std::string get$1$2Definition() const {
-        return getSchema().getAliasMap()->get(get$1$2Slot().getAlias(getSchema().getVersion()));
+        return getSchema().getAliasMap()->get(get$1$2Slot().getAlias());
     }
 
     /**
@@ -227,7 +227,7 @@ public:
     void updateCoord(image::Wcs const & wcs);
 
     /// @brief Update the coord field using the given Wcs and the image center from the given key.
-    void updateCoord(image::Wcs const & wcs, Key< Point<double> > const & key);
+    void updateCoord(image::Wcs const & wcs, PointKey<double> const & key);
 
 protected:
 

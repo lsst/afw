@@ -244,6 +244,35 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
         self.assertEqual(record.get(fKey1).getCenter().getX(), e.getCenter().getX())
 
+    def doTestCovarianceMatrixKeyAddFields(self, fieldType, varianceOnly, dynamicSize):
+        names = ["x", "y"]
+        schema = lsst.afw.table.Schema()
+        if dynamicSize:
+            FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrix2%sKey" % fieldType.lower())
+        else:
+            FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrixX%sKey" % fieldType.lower())
+        fKey1 = FunctorKeyType.addFields(schema, "a", names, ["ux", "uy"], varianceOnly)
+        fKey2 = FunctorKeyType.addFields(schema, "b", names, "u", varianceOnly)
+        self.assertEqual(schema.find("a_xSigma").field.getUnits(), "ux")
+        self.assertEqual(schema.find("a_ySigma").field.getUnits(), "uy")
+        self.assertEqual(schema.find("b_xSigma").field.getUnits(), "u")
+        self.assertEqual(schema.find("b_ySigma").field.getUnits(), "u")
+        dtype = numpy.float64 if fieldType == "D" else numpy.float32
+        if varianceOnly:
+            m = numpy.diagflat(numpy.random.randn(2)**2).astype(dtype)
+        else:
+            self.assertEqual(schema.find("a_x_y_Cov").field.getUnits(), "ux uy")
+            self.assertEqual(schema.find("b_x_y_Cov").field.getUnits(), "u^2")
+            v = numpy.random.randn(2, 2).astype(dtype)
+            m = numpy.dot(v.transpose(), v)
+        table = lsst.afw.table.BaseTable.make(schema)
+        record = table.makeRecord()
+        record.set(fKey1, m)
+        self.assertClose(record.get(fKey1), m, rtol=1E-6)
+        record.set(fKey2, m*2)
+        self.assertClose(record.get(fKey2), m*2, rtol=1E-6)
+
+
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
         sigmaKeys = []
@@ -327,10 +356,11 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testCovarianceMatrixKey(self):
         for fieldType in ("F", "D"):
-            for parameterNames in (["x", "y"], ["xx", "yy", "xy"]):
-                for varianceOnly in (True, False):
-                    for dynamicSize in (True, False):
+            for varianceOnly in (True, False):
+                for dynamicSize in (True, False):
+                    for parameterNames in (["x", "y"], ["xx", "yy", "xy"]):
                         self.doTestCovarianceMatrixKey(fieldType, parameterNames, varianceOnly, dynamicSize)
+                    self.doTestCovarianceMatrixKeyAddFields(fieldType, varianceOnly, dynamicSize)
 
     def doTestArrayKey(self, fieldType, numpyType):
         FunctorKeyType = getattr(lsst.afw.table, "Array%sKey" % fieldType)
@@ -387,58 +417,6 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.doTestArrayKey("F", numpy.float32)
         self.doTestArrayKey("D", numpy.float64)
 
-    def testCompoundKeyConverters(self):
-        """Test that FunctorKeys that convert from old-style compound Keys work
-        """
-        schema = lsst.afw.table.Schema()
-
-        # Create a schema full of old-style Keys
-        pi1 = schema.addField("pi", type="PointI", doc="old-style Point field")
-        pd1 = schema.addField("pd", type="PointD", doc="old-style Point field")
-        q1 = schema.addField("q", type="MomentsD", doc="old-style Moments field")
-        c1 = schema.addField("cov", type="CovF", doc="old-style Covariance field", size=4)
-        cp1 = schema.addField("cov_p", type="CovPointF", doc="old-style Covariance<Point> field")
-        cq1 = schema.addField("cov_q", type="CovMomentsF", doc="old-style Covariance<Moments> field")
-
-        # Create FunctorKeys from the old-style Keys
-        pi2 = lsst.afw.table.Point2IKey(pi1)
-        pd2 = lsst.afw.table.Point2DKey(pd1)
-        q2 = lsst.afw.table.QuadrupoleKey(q1)
-        c2 = lsst.afw.table.makeCovarianceMatrixKey(c1)
-        cp2 = lsst.afw.table.makeCovarianceMatrixKey(cp1)
-        cq2 = lsst.afw.table.makeCovarianceMatrixKey(cq1)
-
-        # Check that they're the same
-        self.assertEqual(pi1.getX(), pi2.getX())
-        self.assertEqual(pi1.getY(), pi2.getY())
-        self.assertEqual(pd1.getX(), pd2.getX())
-        self.assertEqual(pd1.getY(), pd2.getY())
-        self.assertEqual(q1.getIxx(), q2.getIxx())
-        self.assertEqual(q1.getIyy(), q2.getIyy())
-        self.assertEqual(q1.getIxy(), q2.getIxy())
-
-        # Covariance matrices are a little trickier; actually try getting/setting records to compare
-        table = lsst.afw.table.BaseTable.make(schema)
-        record1 = table.makeRecord()
-        record2 = table.makeRecord()
-
-        matrix = makePositiveSymmetricMatrix(4)
-        record1.set(c1, matrix)
-        self.assertClose(record1.get(c2), matrix)
-        record2.set(c2, matrix)
-        self.assertClose(record2.get(c1), matrix)
-
-        matrix = makePositiveSymmetricMatrix(2)
-        record1.set(cp1, matrix)
-        self.assertClose(record1.get(cp2), matrix)
-        record2.set(cp2, matrix)
-        self.assertClose(record2.get(cp1), matrix)
-
-        matrix = makePositiveSymmetricMatrix(3)
-        record1.set(cq1, matrix)
-        self.assertClose(record1.get(cq2), matrix)
-        record2.set(cq2, matrix)
-        self.assertClose(record2.get(cq1), matrix)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

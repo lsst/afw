@@ -49,7 +49,7 @@ public:
 
     // This variable is defined in SchemaImpl, but is replicated here as
     // a static so that it is available to SWIG.
-    static int const DEFAULT_VERSION = detail::SchemaImpl::DEFAULT_VERSION;
+    static int const VERSION = detail::SchemaImpl::VERSION;
 
     /**
      *  @brief Bit flags used when comparing schemas.
@@ -68,7 +68,7 @@ public:
     };
 
     //@{
-    /// Join strings using the field delimiter appropriate for this Schema's version
+    /// Join strings using the field delimiter appropriate for this Schema
     std::string join(std::string const & a, std::string const & b) const;
     std::string join(std::string const & a, std::string const & b, std::string const & c) const {
         return join(join(a, b), c);
@@ -273,56 +273,14 @@ public:
     /// @brief Construct an empty Schema.
     Schema();
 
-    /// @brief Construct an empty Schema with the given version.
-    explicit Schema(int version);
-
     /// @brief Copy constructor.
     Schema(Schema const & other);
-
-    /**
-     *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
-     *
-     *  @param[in,out] metadata       PropertyList that contains the FITS header keys
-     *                                corresponding to a binary table extension.  We can't
-     *                                use a PropertySet here, because the order does matter.
-     *  @param[in]     stripMetadata  If true, the keys used to define the schema will be removed
-     *                                from the PropertySet.
-     *
-     *  If the column types in the FITS header are not compatible with Schema field types,
-     *  of if some required keys (TTYPEn, TFORMn) are not present for some columns,
-     *  afw::fits::FitsError will be thrown.
-     *
-     *  This constructor does not support strong exception safety guarantee when stripMetadata is True;
-     *  the PropertyList may be modified when an exception is thrown.
-     */
-    explicit Schema(daf::base::PropertyList & metadata, bool stripMetadata);
-
-    /**
-     *  @brief Construct from a PropertyList, interpreting it as a FITS binary table header.
-     *
-     *  @param[in,out] metadata       PropertyList that contains the FITS header keys
-     *                                corresponding to a binary table extension.  We can't
-     *                                use a PropertySet here, because the order does matter.
-     *
-     *  If the column types in the FITS header are not compatible with Schema field types,
-     *  of if some required keys (TTYPEn, TFORMn) are not present for some columns,
-     *  afw::fits::FitsError will be thrown.
-     *
-     *  This overload never strips metadata, allowing it to accept a const PropertyList.
-     */
-    explicit Schema(daf::base::PropertyList const & metadata);
 
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
     /// @brief Get the Citizen corresponding to this Schema (SchemaImpl is what inherits from Citizen).
     daf::base::Citizen & getCitizen() { return *_impl; }
-
-    /// @brief Return the table's version.
-    int getVersion() const { return _impl->getVersion(); }
-
-    /// @brief Set the table's version.
-    void setVersion(int version) { _edit();_impl->setVersion(version); }
 
 private:
 

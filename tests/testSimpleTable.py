@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008-2014 AURA/LSST
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -108,16 +108,6 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fastGetter(key), value1)
         self.assert_(key.subfields is None)
 
-    def checkGeomAccessors(self, record, key, name, value):
-        fastSetter = getattr(record, "set" + key.getTypeString())
-        fastGetter = getattr(record, "get" + key.getTypeString())
-        record.set(key, value)
-        self.assertEqual(record.get(key), value)
-        record.set(name, value)
-        self.assertEqual(record.get(name), value)
-        fastSetter(key, value)
-        self.assertEqual(fastGetter(key), value)
-
     def checkArrayAccessors(self, record, key, name, value):
         fastSetter = getattr(record, "set" + key.getTypeString())
         fastGetter = getattr(record, "get" + key.getTypeString())
@@ -135,18 +125,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         k2 = schema.addField("f2", type="L")
         k3 = schema.addField("f3", type="F")
         k4 = schema.addField("f4", type="D")
-        k5 = schema.addField("f5", type="PointI")
-        k7 = schema.addField("f7", type="PointD")
-        k9 = schema.addField("f9", type="MomentsD")
         k10b = schema.addField("f10b", type="ArrayU", size=2)
         k10a = schema.addField("f10a", type="ArrayI", size=3)
         k10 = schema.addField("f10", type="ArrayF", size=4)
         k11 = schema.addField("f11", type="ArrayD", size=5)
-        k12 = schema.addField("f12", type="CovF", size=3)
-        k14 = schema.addField("f14", type="CovPointF")
-        k16 = schema.addField("f16", type="CovMomentsF")
         k18 = schema.addField("f18", type="Angle")
-        k19 = schema.addField("f19", type="Coord")
         k20 = schema.addField("f20", type="String", size=4)
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
@@ -154,46 +137,22 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record[k2], 0)
         self.assert_(numpy.isnan(record[k3]))
         self.assert_(numpy.isnan(record[k4]))
-        self.assertEqual(record.get(k5), lsst.afw.geom.Point2I())
-        self.assert_(numpy.isnan(record[k7.getX()]))
-        self.assert_(numpy.isnan(record[k7.getY()]))
         self.checkScalarAccessors(record, k0, "f0", 5, 6)
         self.checkScalarAccessors(record, k1, "f1", 2, 3)
         self.checkScalarAccessors(record, k2, "f2", 2, 3)
         self.checkScalarAccessors(record, k3, "f3", 2.5, 3.5)
         self.checkScalarAccessors(record, k4, "f4", 2.5, 3.5)
-        self.checkGeomAccessors(record, k5, "f5", lsst.afw.geom.Point2I(5, 3))
-        self.checkGeomAccessors(record, k7, "f7", lsst.afw.geom.Point2D(5.5, 3.5))
-        for k in (k5, k7): self.assertEqual(k.subfields, ("x", "y"))
-        self.checkGeomAccessors(record, k9, "f9", lsst.afw.geom.ellipses.Quadrupole(5.5, 3.5, -1.0))
-        self.assertEqual(k9.subfields, ("xx", "yy", "xy"))
         self.checkArrayAccessors(record, k10b, "f10b", makeArray(k10b.getSize(), dtype=numpy.uint16))
         self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=numpy.int32))
         self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
         for k in (k10, k11): self.assertEqual(k.subfields, tuple(range(k.getSize())))
-        self.checkArrayAccessors(record, k12, "f12", makeCov(k12.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k14, "f14", makeCov(k14.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k16, "f16", makeCov(k16.getSize(), dtype=numpy.float32))
         sub1 = k11.slice(1, 3)
         sub2 = k11[0:2]
-        self.assert_((record.get(sub1) == record.get(k11)[1:3]).all())
-        self.assert_((record.get(sub2) == record.get(k11)[0:2]).all())
+        self.assertClose(record.get(sub1), record.get(k11)[1:3], rtol=0, atol=0)
+        self.assertClose(record.get(sub2), record.get(k11)[0:2], rtol=0, atol=0)
         self.assertEqual(sub1[0], sub2[1])
-        for k in (k12, k14, k16):
-            n = 0
-            for idx, subkey in zip(k.subfields, k.subkeys):
-                self.assertEqual(k[idx], subkey)
-                n += 1
-            self.assertEqual(n, k.getElementCount())
-        self.checkGeomAccessors(record, k18, "f18", lsst.afw.geom.Angle(1.2))
         self.assert_(k18.subfields is None)
-        self.checkGeomAccessors(
-            record, k19, "f19", 
-            lsst.afw.coord.IcrsCoord(lsst.afw.geom.Angle(1.3), lsst.afw.geom.Angle(0.5))
-            )
-        self.assertEqual(k19.subfields, ("ra", "dec"))
-        self.checkScalarAccessors(record, k20, "f20", "foo", "bar")
         k0a = lsst.afw.table.Key["D"]()
         k0b = lsst.afw.table.Key["Flag"]()
         self.assertRaises(lsst.pex.exceptions.LogicError, record.get, k0a)
@@ -611,137 +570,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(k3a, k3b)
         self.assertEqual(schema.find(k3a).field.getDoc(), "f3b")
 
-    def testDM384(self):
-        """Test the versioning persistence in FitsReader and FitsWriter
-        """
-        # Now test with a BaseTable
-        schema = lsst.afw.table.Schema()
-        schema.setVersion(5)
-        schema.addField("f1", doc="f1a", type="I")
-        schema.addField("f2", doc="f2a", type="Flag")
-        schema.addField("f3", doc="f3a", type="ArrayF", size=4)
-        catalog = lsst.afw.table.BaseCatalog(schema)
-        self.assertEqual(catalog.getTable().getVersion(), 5)
-        with lsst.utils.tests.getTempFilePath("_BaseTable.fits") as filename:
-            catalog.writeFits(filename)
-            # now read the table just written to disk, and see if it reads back correctly
-            catalog = catalog.readFits(filename)
-            metadata = catalog.getTable().getMetadata()
-            self.assertEqual(catalog.schema.getVersion(), 5)
-            self.assertFalse(metadata == None)
-            self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
-
-        # Now test with a SimpleTable
-        with lsst.utils.tests.getTempFilePath("_SimpleTable.fits") as filename:
-            schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
-            schema.setVersion(5)
-            schema.addField("f1", doc="f1a", type="I")
-            schema.addField("f2", doc="f2a", type="Flag")
-            schema.addField("f3", doc="f3a", type="ArrayF", size=4)
-            catalog = lsst.afw.table.SimpleCatalog(schema)
-            self.assertEqual(catalog.getTable().getVersion(), 5)
-            catalog.writeFits(filename)
-            # now read the table just written to disk, and see if it reads back correctly
-            catalog = catalog.readFits(filename)
-            metadata = catalog.getTable().getMetadata()
-            self.assertEqual(catalog.getTable().getVersion(),5)
-            self.assertFalse(metadata == None)
-            self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
-
-        #  Now a SourceTable
-        with lsst.utils.tests.getTempFilePath("_SourceTable.fits") as filename:
-            schema = lsst.afw.table.SourceTable.makeMinimalSchema()
-            schema.setVersion(5)
-            schema.addField("f1", doc="f1a", type="I")
-            schema.addField("f2", doc="f2a", type="Flag")
-            schema.addField("f3", doc="f3a", type="ArrayF", size=4)
-            catalog = lsst.afw.table.SourceCatalog(schema)
-            self.assertEqual(catalog.getTable().getVersion(), 5)
-            catalog.writeFits(filename)
-            # now read the table just written to disk, and see if it reads back correctly
-            catalog = catalog.readFits(filename)
-            metadata = catalog.getTable().getMetadata()
-            self.assertEqual(catalog.getTable().getVersion(),5)
-            self.assertFalse(metadata == None)
-            self.assertFalse(metadata.exists("AFW_TABLE_VERSION"))
-
-    def testReplacePeriods(self):
-        """Test version-dependent replacement of periods with underscores.
-        """
-        schema1 = lsst.afw.table.Schema()
-        schema1.addField("a.b.c", type=float, doc="test field 1")
-        schema1.addField("a.b.d", type="Flag", doc="test field 2")
-        schema1.addField("a.b.e", type=str, doc="test field 3", size=16)
-        schema2 = lsst.afw.table.Schema()
-        schema2.addField("a_b_c", type=float, doc="test field 1")
-        schema2.addField("a_b_d", type="Flag", doc="test field 2")
-        schema2.addField("a_b_e", type=str, doc="test field 3", size=16)
-        filename = "ReplacePeriods.fits"
-
-        # For version 0, we should replace periods with underscores when we write
-        # and do the reverse when we read
-        schema1.setVersion(0)
-        cat = lsst.afw.table.BaseCatalog(schema1)
-        with lsst.utils.tests.getTempFilePath("_schema1_v0.fits") as filename:
-            cat.writeFits(filename)
-            if pyfits is not None:
-                fits = pyfits.open(filename)
-                self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
-                self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
-                self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
-            cat = lsst.afw.table.BaseCatalog.readFits(filename)
-            self.assertTrue("a.b.c" in cat.schema)
-            self.assertTrue("a.b.d" in cat.schema)
-            self.assertTrue("a.b.e" in cat.schema)
-
-        # For version 1, we shouldn't do any such replacement
-        schema1.setVersion(1)
-        cat = lsst.afw.table.BaseCatalog(schema1)
-        with lsst.utils.tests.getTempFilePath("_schema1_v1.fits") as filename:
-            cat.writeFits(filename)
-            if pyfits is not None:
-                fits = pyfits.open(filename)
-                self.assertEqual(fits[1].header["TTYPE2"], "a.b.c")
-                self.assertEqual(fits[1].header["TTYPE3"], "a.b.e")
-                self.assertEqual(fits[1].header["TFLAG1"], "a.b.d")
-            cat = lsst.afw.table.BaseCatalog.readFits(filename)
-            self.assertTrue("a.b.c" in cat.schema)
-            self.assertTrue("a.b.d" in cat.schema)
-            self.assertTrue("a.b.e" in cat.schema)
-
-        # Also make sure that version 1 underscores are preserved
-        schema2.setVersion(1)
-        cat = lsst.afw.table.BaseCatalog(schema2)
-        with lsst.utils.tests.getTempFilePath("_schema2.fits") as filename:
-            cat.writeFits(filename)
-            if pyfits is not None:
-                fits = pyfits.open(filename)
-                self.assertEqual(fits[1].header["TTYPE2"], "a_b_c")
-                self.assertEqual(fits[1].header["TTYPE3"], "a_b_e")
-                self.assertEqual(fits[1].header["TFLAG1"], "a_b_d")
-            cat = lsst.afw.table.BaseCatalog.readFits(filename)
-            self.assertTrue("a_b_c" in cat.schema)
-            self.assertTrue("a_b_d" in cat.schema)
-            self.assertTrue("a_b_e" in cat.schema)
-
     def testDM352(self):
         filename = os.path.join(os.path.split(__file__)[0], "data", "great3.fits")
         cat = lsst.afw.table.BaseCatalog.readFits(filename)
         self.assertEqual(len(cat), 1)
-
-    def testDM590(self):
-        # create a simple fits table using pyfits, and tests is version number
-        # when it is read into a catalog
-        if pyfits is not None:
-            c1 = pyfits.Column(name='id', format='J', array=(1,2,3))
-            c2 = pyfits.Column(name='flux', format='K', array=(1000,2000,3000))
-            c3 = pyfits.Column(name='star', format='20A', array=('Vega', 'Denebola', 'Arcturus'))
-            columns = pyfits.ColDefs([c1, c2, c3])
-            tbhdu = pyfits.new_table(columns)
-            with lsst.utils.tests.getTempFilePath(".fits") as filename:
-                tbhdu.writeto(filename, clobber=True)
-                cat = lsst.afw.table.BaseCatalog.readFits(filename)
-                self.assertEqual(cat.getVersion(), lsst.afw.table.Schema.DEFAULT_VERSION)
 
     def testDM1710(self):
         # Extending without specifying a mapper or a deep argument should not
@@ -804,6 +636,39 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(numpy.all(record4.get(kb) == b1))
         self.assertTrue(numpy.all(record4.get(kc) == c1))
         os.remove(filename)
+
+    def testCompoundFieldFitsConversion(self):
+        """Test that we convert compound fields saved with an older version of the pipeline
+        into the set of multiple fields used by their replacement FunctorKeys.
+        """
+        geomValues = {
+            "point_i_x": 4, "point_i_y": 5,
+            "point_d_x": 3.5, "point_d_y": 2.0,
+            "moments_xx": 5.0, "moments_yy": 6.5, "moments_xy": 2.25,
+            "coord_ra": 1.0*lsst.afw.geom.radians, "coord_dec": 0.5*lsst.afw.geom.radians,
+        }
+        covValues = {
+            "cov_z": numpy.array([[4.00, 1.25, 1.50, 0.75],
+                                  [1.25, 2.25, 0.50, 0.25],
+                                  [1.50, 0.50, 6.25, 1.75],
+                                  [0.75, 0.25, 1.75, 9.00]], dtype=numpy.float32),
+            "cov_p": numpy.array([[5.50, -2.0],
+                                  [-2.0, 3.25]], dtype=numpy.float32),
+            "cov_m": numpy.array([[3.75, -0.5, 1.25],
+                                  [-0.5, 4.50, 0.75],
+                                  [1.25, 0.75, 6.25]], dtype=numpy.float32),
+        }
+        filename = os.path.join(os.path.split(__file__)[0], "data", "CompoundFieldConversion.fits")
+        cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
+        record2 = cat2[0]
+        for k, v in geomValues.iteritems():
+            self.assertEqual(record2.get(k), v, msg=k)
+        covZKey = lsst.afw.table.CovarianceMatrixXfKey(cat2.schema["cov_z"], ["0", "1", "2", "3"])
+        covPKey = lsst.afw.table.CovarianceMatrix2fKey(cat2.schema["cov_p"], ["x", "y"])
+        covMKey = lsst.afw.table.CovarianceMatrix3fKey(cat2.schema["cov_m"], ["xx", "yy", "xy"])
+        self.assertClose(record2.get(covZKey), covValues["cov_z"], rtol=1E-6)
+        self.assertClose(record2.get(covPKey), covValues["cov_p"], rtol=1E-6)
+        self.assertClose(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

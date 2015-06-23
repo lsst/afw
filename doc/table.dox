@@ -250,28 +250,9 @@ namespace lsst { namespace afw { namespace table {
  *  <td>ColumnView access in Python returns an array of numpy.float64 (in radians).</td>
  *  </tr>
  *  <tr>
- *  <td>Coord</td> <td>"Coord"</td> <td>afw.coord.Coord, afw.coord.IcrsCoord</td> 
- *  <td>afw::coord::IcrsCoord</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>ra, dec</td>
- *  <td> Can assign any Coord, but always stored as ICRS </td>
- *  </tr>
- *  <tr>
  *  <td>std::string</td> <td>"String"</td> <td>str</td> <td>std::string</td>
  *  <td>No</td> <td>No</td> <td>Yes</td> <td></td>
  *  <td>Strings are fixed-size; sizes must be declared at schema-creation time as with arrays.</td>
- *  </tr>
- *  <tr>
- *  <td>Point<int></td> <td>"PointI"</td> <td>afw.geom.Point2I</td> <td>afw::geom::Point2I</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
- *  </tr>
- *  <tr>
- *  <td>Point<double></td> <td>"PointD"</td> <td>afw.geom.Point2D</td> <td>afw::geom::Point2D</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>x, y</td> <td></td>
- *  </tr>
- *  <tr>
- *  <td>Moments<double></td> <td>"MomentsD"</td> <td>afw.geom.ellipses.Quadrupole</td>
- *  <td>afw::geom::ellipses::Quadrupole</td>
- *  <td>No</td> <td>No</td> <td>No</td> <td>xx, yy, xy</td> <td></td>
  *  </tr>
  *  <tr>
  *  <td>Array<int></td> <td>"ArrayI"</td> <td></td> <td>ndarray::Array<int,1></td>
@@ -284,21 +265,6 @@ namespace lsst { namespace afw { namespace table {
  *  <tr>
  *  <td>Array<double></td> <td>"ArrayD"</td> <td></td> <td>ndarray::Array<double,1></td>
  *  <td>Yes</td> <td>Yes</td> <td>Yes</td> <td></td> <td>operator[] returns an ndarray::ArrayRef</td>
- *  </tr>
- *  <tr>
- *  <td>Covariance<float></td> <td>"CovF"</td> <td></td> <td>Eigen::MatrixXf</td>
- *  <td>No</td> <td>No</td> <td>Yes</td> <td></td>
- *  <td>symmetric matrix is stored packed (size*(size+1)/2 elements)</td>
- *  </tr>
- *  <tr>
- *   <td>Covariance<&nbsp;Point<float>&nbsp;></td> <td>"CovPointF"</td> <td></td>
- *   <td>Eigen::Matrix2f</td>
- *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (3 elements)</td>
- *  </tr>
- *  <tr>
- *   <td>Covariance<&nbsp;Moments<float>&nbsp;></td> <td>"CovMomentsF"</td> <td></td>
- *   <td>Eigen::Matrix3f</td>
- *   <td>No</td> <td>No</td> <td>No</td> <td></td> <td>symmetric matrix is stored packed (6 elements)</td>
  *  </tr>
  *  </table>
  */

@@ -30,8 +30,14 @@ namespace lsst { namespace afw { namespace math {
 
 Kernel::PersistenceHelper::PersistenceHelper(int nSpatialFunctions) :
     schema(),
-    dimensions(schema.addField< afw::table::Point<int> >("dimensions", "dimensions of a Kernel's images")),
-    center(schema.addField< afw::table::Point<int> >("center", "center point in a Kernel image"))
+    dimensions(
+        afw::table::PointKey<int>::addFields(
+            schema, "dimensions", "dimensions of a Kernel's images", "pixels"
+        )
+    ),
+    center(
+        afw::table::PointKey<int>::addFields(schema, "center", "center point in a Kernel image", "pixels")
+    )
 {
     if (nSpatialFunctions > 0) {
         spatialFunctions = schema.addField< afw::table::Array<int> >(

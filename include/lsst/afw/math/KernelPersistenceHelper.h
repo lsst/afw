@@ -29,14 +29,15 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace lsst { namespace afw { namespace math {
 
 // Schema for use by Kernel subclasses in persistence.
 struct Kernel::PersistenceHelper {
     afw::table::Schema schema;
-    afw::table::Key< afw::table::Point<int> > dimensions;
-    afw::table::Key< afw::table::Point<int> > center;
+    afw::table::PointKey<int> dimensions;
+    afw::table::PointKey<int> center;
     afw::table::Key< afw::table::Array<int> > spatialFunctions;
 
     explicit PersistenceHelper(int nSpatialFunctions);

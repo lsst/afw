@@ -71,14 +71,6 @@ public:
     PointKey(Key<T> const & x, Key<T> const & y) : _x(x), _y(y) {}
 
     /**
-     *  Construct from a compound Key<Point>
-     *
-     *  Key<Point> is now deprecated in favor of PointKey; this constructor is intended to
-     *  aid in the transition.
-     */
-    explicit PointKey(Key< Point<T> > const & other) : _x(other.getX()), _y(other.getY()) {}
-
-    /**
      *  @brief Construct from a subschema, assuming x and y subfields
      *
      *  If a schema has "a_x" and "a_y" fields, this constructor allows you to construct
@@ -223,16 +215,6 @@ public:
     {}
 
     /**
-     *  Construct from a compound Key<Moments<double>>
-     *
-     *  Key<Moments> is now deprecated in favor of QuadrupoleKey; this constructor is intended to
-     *  aid in the transition.
-     */
-    explicit QuadrupoleKey(Key< Moments<double> > const & other) :
-        _ixx(other.getIxx()), _iyy(other.getIyy()), _ixy(other.getIxy())
-    {}
-
-    /**
      *  @brief Construct from a subschema with appropriate subfields
      *
      *  If the schema has "a_xx", "a_yy" and "a_xy" fields this constructor enables you to
@@ -354,6 +336,49 @@ public:
     typedef std::vector< Key<T> > CovarianceKeyArray;
     typedef std::vector<std::string> NameArray;
 
+    /**
+     *  Add covariance matrix fields to a Schema, and return a CovarianceMatrixKey to manage them.
+     *
+     *  @param[out] schema    Schema to add fields to.
+     *  @param[in]  prefix    String used to form the first part of all field names.  Suffixes of
+     *                        the form '_xSigma' and '_x_y_Cov' will be added to form the full
+     *                        field names (using names={'x', 'y'} as an example).
+     *  @param[in]  unit      Unit for for sigma values (covariance matrix elements will be
+     *                        unit^2).
+     *  @param[in]  names     Vector of strings containing the names of the quantities the
+     *                        covariance matrix represents the uncertainty of.
+     *  @param[in]  diagonalOnly   If true, only create fields for the Sigma values.
+     */
+    static CovarianceMatrixKey addFields(
+        Schema & schema,
+        std::string const & prefix,
+        NameArray const & names,
+        std::string const & unit,
+        bool diagonalOnly=false
+    );
+
+    /**
+     *  Add covariance matrix fields to a Schema, and return a CovarianceMatrixKey to manage them.
+     *
+     *  @param[out] schema    Schema to add fields to.
+     *  @param[in]  prefix    String used to form the first part of all field names.  Suffixes of
+     *                        the form '_xSigma' and '_x_y_Cov' will be added to form the full
+     *                        field names (using names={'x', 'y'} as an example).
+     *  @param[in]  units     Vector of units for for sigma values (covariance matrix elements will
+     *                        have "{units[i]} {units[j]}" or "{units[i]}^2", depending on whether
+     *                        units[i] == units[j].
+     *  @param[in]  names     Vector of strings containing the names of the quantities the
+     *                        covariance matrix represents the uncertainty of.
+     *  @param[in]  diagonalOnly   If true, only create fields for the Sigma values.
+     */
+    static CovarianceMatrixKey addFields(
+        Schema & schema,
+        std::string const & prefix,
+        NameArray const & names,
+        NameArray const & units,
+        bool diagonalOnly=false
+    );
+
     /// Construct an invalid instance; must assign before subsequent use.
     CovarianceMatrixKey();
 
@@ -380,21 +405,6 @@ public:
         SigmaKeyArray const & sigma,
         CovarianceKeyArray const & cov=CovarianceKeyArray()
     );
-
-    /**
-     *  @brief Construct from a (now-deprecated Key<Covariance<U>>)
-     *
-     *  This template is only instantiated for the following combinations of template parameters:
-     *   - CovarianceMatrixKey<float,Eigen::Dynamic> and Key< ovariance<float> >
-     *   - CovarianceMatrixKey<float,2> and Key< Covariance< Point<float> >
-     *   - CovarianceMatrixKey<float,3> and Key< Covariance< Moments<float> >
-     *  Calling templates other than these will result in linker errors.
-     *
-     *  To access this functionality in Python, please use the makeCovarianceMatrixKey free functions;
-     *  Swig wasn't able to instantiate the templated constructors.
-     */
-    template <typename U>
-    explicit CovarianceMatrixKey(Key< Covariance<U> > const & other);
 
     /**
      *  @brief Construct from a subschema and an array of names for each parameter of the matrix.
@@ -436,25 +446,9 @@ public:
     //@}
 
 private:
-    bool _isDiagonalVariance;
     SigmaKeyArray _sigma;
     CovarianceKeyArray _cov;
 };
-
-inline CovarianceMatrixKey<float,Eigen::Dynamic>
-makeCovarianceMatrixKey(Key< Covariance<float> > const & other) {
-    return CovarianceMatrixKey<float,Eigen::Dynamic>(other);
-}
-
-inline CovarianceMatrixKey<float,2>
-makeCovarianceMatrixKey(Key< Covariance< Point<float> > > const & other) {
-    return CovarianceMatrixKey<float,2>(other);
-}
-
-inline CovarianceMatrixKey<float,3>
-makeCovarianceMatrixKey(Key< Covariance< Moments<float> > > const & other) {
-    return CovarianceMatrixKey<float,3>(other);
-}
 
 }}} // namespace lsst::afw::table
 

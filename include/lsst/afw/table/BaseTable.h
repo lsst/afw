@@ -122,9 +122,6 @@ public:
      */
     PTR(BaseRecord) copyRecord(BaseRecord const & input, SchemaMapper const & mapper);
 
-    /// @brief Return the table's version.
-    int getVersion() const { return _schema.getVersion(); }
-
     /// @brief Return the table's schema.
     Schema getSchema() const { return _schema; }
 

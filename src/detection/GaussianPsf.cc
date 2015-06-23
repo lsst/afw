@@ -29,6 +29,7 @@
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/aggregates.h"
 
 namespace lsst { namespace afw { namespace detection {
 
@@ -38,7 +39,7 @@ namespace {
 // to in record persistence.
 struct GaussianPsfPersistenceHelper : private boost::noncopyable {
     afw::table::Schema schema;
-    afw::table::Key< afw::table::Point<int> > dimensions;
+    afw::table::PointKey<int> dimensions;
     afw::table::Key<double> sigma;
 
     static GaussianPsfPersistenceHelper const & get() {
@@ -50,8 +51,10 @@ private:
     GaussianPsfPersistenceHelper() :
         schema(),
         dimensions(
-            schema.addField< afw::table::Point<int> >(
-                "dimensions", "width/height of realization of Psf", "pixels"
+            afw::table::PointKey<int>::addFields(
+                schema,
+                "dimensions",
+                "width/height of realization of Psf", "pixels"
             )
         ),
         sigma(schema.addField<double>("sigma", "radius of Gaussian", "pixels"))

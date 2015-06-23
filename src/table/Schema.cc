@@ -23,7 +23,7 @@ namespace lsst { namespace afw { namespace table {
 
 namespace {
 
-inline char getDelimiter(int version) { return (version > 0) ? '_' : '.'; }
+inline char getDelimiter() { return '_'; }
 
 // Concatenate two strings with a single-character delimiter between them
 std::string join(std::string const & a, std::string const & b, char delimiter) {
@@ -226,7 +226,7 @@ SchemaItem<T> SchemaImpl::find(std::string const & name) const {
     }
     // We didn't get an exact match, but we might be searching for "a.x/a_x" and "a" might be a point field.
     // Because the names are sorted, we know we overshot it, so we work backwards.
-    ExtractItemByName<T> extractor(name, getDelimiter(_version));
+    ExtractItemByName<T> extractor(name, getDelimiter());
     while (i != _names.begin()) {
         --i;
         boost::apply_visitor(extractor, _items[i->second]); // see if the current item is a match
@@ -315,7 +315,7 @@ SchemaItem<T> SchemaImpl::find(Key<T> const & key) const {
         }
         // We didn't get an exact match, but we might be searching for a subfield.
         // Because the offsets are sorted, we know we overshot it, so we work backwards.
-        ExtractItemByKey<T> extractor(key, getDelimiter(_version));
+        ExtractItemByKey<T> extractor(key, getDelimiter());
         while (i != _offsets.begin()) {
             --i;
             boost::apply_visitor(extractor, _items[i->second]);
@@ -473,11 +473,9 @@ int SchemaImpl::contains(SchemaItem<T> const & item, int flags) const {
 
 std::set<std::string> SchemaImpl::getNames(bool topOnly) const {
     std::set<std::string> result;
-    // set the separator for table ('.' if getVersion() is 0 or nan, else '_')
-    char separator = (getVersion() > 0) ? '_' : '.';
     if (topOnly) {
         for (NameMap::const_iterator i = _names.begin(); i != _names.end(); ++i) {
-            std::size_t sep = i->first.find(separator);
+            std::size_t sep = i->first.find(getDelimiter());
             if (sep == std::string::npos) {
                 result.insert(result.end(), i->first);
             } else {
@@ -494,12 +492,10 @@ std::set<std::string> SchemaImpl::getNames(bool topOnly) const {
 
 std::set<std::string> SchemaImpl::getNames(bool topOnly, std::string const & prefix) const {
     std::set<std::string> result;
-    // set the separator for table ('.' if getVersion() is 0 or nan, else '_')
-    char separator = (getVersion() > 0) ? '_' : '.';
     if (topOnly) {
         for (NameMap::const_iterator i = _names.lower_bound(prefix); i != _names.end(); ++i) {
             if (i->first.compare(0, prefix.size(), prefix) != 0) break;
-            std::size_t sep = i->first.find(separator, prefix.size() + 1);
+            std::size_t sep = i->first.find(getDelimiter(), prefix.size() + 1);
             if (sep == std::string::npos) {
                 result.insert(
                     result.end(),
@@ -640,37 +636,18 @@ Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> cons
 //----- Schema implementation -------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-int const Schema::DEFAULT_VERSION;
+int const Schema::VERSION;
 
-Schema::Schema() : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {
-    _impl->setVersion(DEFAULT_VERSION);
-}
-
-Schema::Schema(int version) : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {
-    _impl->setVersion(version);
-}
+Schema::Schema() : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {}
 
 Schema::Schema(Schema const & other) :
     _impl(other._impl),
     _aliases(other._aliases)
 {}
 
-Schema::Schema(daf::base::PropertyList & metadata, bool stripMetadata) :
-    _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>())
-{
-    io::FitsReader::_readSchema(*this, metadata, stripMetadata);
-}
-
-Schema::Schema(daf::base::PropertyList const & metadata) :
-    _impl(boost::make_shared<Impl>()),
-    _aliases(boost::make_shared<AliasMap>())
-{
-    io::FitsReader::_readSchema(*this, const_cast<daf::base::PropertyList &>(metadata), false);
-}
-
 std::string Schema::join(std::string const & a, std::string const & b) const {
     // delegate to utility funcs at top of this file
-    return afw::table::join(a, b, getDelimiter(getVersion()));
+    return afw::table::join(a, b, getDelimiter());
 }
 
 void Schema::_edit() {
@@ -797,11 +774,11 @@ SubSchema::SubSchema(PTR(Impl) impl, PTR(AliasMap) aliases, std::string const & 
 
 template <typename T>
 SchemaItem<T> SubSchema::find(std::string const & name) const {
-    return _impl->find<T>(_aliases->apply(join(_name, name, getDelimiter(_impl->getVersion()))));
+    return _impl->find<T>(_aliases->apply(join(_name, name, getDelimiter())));
 }
 
 SubSchema SubSchema::operator[](std::string const & name) const {
-    return SubSchema(_impl, _aliases, join(_name, name, getDelimiter(_impl->getVersion())));
+    return SubSchema(_impl, _aliases, join(_name, name, getDelimiter()));
 }
 
 std::set<std::string> SubSchema::getNames(bool topOnly) const {

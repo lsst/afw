@@ -66,7 +66,7 @@ private:
 
 public:
 
-    static int const DEFAULT_VERSION = 1;
+    static int const VERSION = 1;
 
     /// An MPL sequence of all the allowed SchemaItem templates.
     typedef boost::mpl::transform<FieldTypes,MakeItem>::type ItemTypes;
@@ -140,7 +140,7 @@ public:
     /// Default constructor.
     explicit SchemaImpl() : 
         daf::base::Citizen(typeid(this)), 
-        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items(), _version(DEFAULT_VERSION)
+        _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items()
     {}
 
     /**
@@ -179,13 +179,6 @@ public:
         F _func;
     };
 
-    /// @brief Return the table's version.
-    int getVersion() const { return _version; }
-
-    /// @brief Set the table's version.
-    void setVersion(int version) { _version = version; }
-
-
 private:
 
     friend class detail::Access;
@@ -200,7 +193,6 @@ private:
     NameMap _names;       // Field name to vector-index map.
     OffsetMap _offsets;   // Offset to vector-index map for regular fields.
     FlagMap _flags;       // Offset to vector-index map for flags.
-    int _version;         // temporary flag for version 0/1 tables
 };
 
 #endif

@@ -95,27 +95,22 @@ namespace {
 class AmpInfoFitsReader : public io::FitsReader {
 public:
 
-    explicit AmpInfoFitsReader(Fits * fits, PTR(io::InputArchive) archive, int flags) :
-        io::FitsReader(fits, archive, flags) {}
+    AmpInfoFitsReader() : io::FitsReader("AMPINFO") {}
 
-protected:
-
-    virtual PTR(BaseTable) _readTable();
+    virtual PTR(BaseTable) makeTable(
+        io::FitsSchemaInputMapper & mapper,
+        PTR(daf::base::PropertyList) metadata,
+        int ioFlags,
+        bool stripMetadata
+    ) const {
+        PTR(AmpInfoTable) table = AmpInfoTable::make(mapper.finalize());
+        table->setMetadata(metadata);
+        return table;
+    }
 
 };
 
-PTR(BaseTable) AmpInfoFitsReader::_readTable() {
-    PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
-    _fits->readMetadata(*metadata, true);
-    Schema schema(*metadata, true);
-    PTR(AmpInfoTable) table = AmpInfoTable::make(schema);
-    table->setMetadata(metadata);
-    _startRecords(*table);
-    return table;
-}
-
-// registers the reader so FitsReader::make can use it.
-static io::FitsReader::FactoryT<AmpInfoFitsReader> referenceFitsReaderFactory("AMPINFO");
+static AmpInfoFitsReader const ampInfoFitsReader;
 
 } // anonymous
 
@@ -146,12 +141,12 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
         "name",
         "name of amplifier location in camera",
         AmpInfoTable::MAX_NAME_LENGTH);
-    bboxMin = schema.addField< Point<int> >(
-        "bbox.min",
+    bboxMin = PointKey<int>::addFields(schema,
+        "bbox_min",
         "bbox of amplifier image data on assembled image, min point",
         "pixels");
-    bboxExtent = schema.addField< Point<int> >(
-        "bbox.extent",
+    bboxExtent = PointKey<int>::addFields(schema,
+        "bbox_extent",
         "bbox of amplifier image data on assembled image, extent",
         "pixels");
     gain = schema.addField<double>(
@@ -170,11 +165,11 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
         "readoutcorner",
         "readout corner, in the frame of the assembled image");
     linearityCoeffs = schema.addField< Array<double> >(
-        "linearity.coeffs",
+        "linearity_coeffs",
         "coefficients for linearity fit up to cubic",
         AmpInfoTable::MAX_LINEARITY_COEFFS);
     linearityType = schema.addField<std::string>(
-        "linearity.type",
+        "linearity_type",
         "type of linearity model",
         AmpInfoTable::MAX_LINEARITY_TYPE_LENGTH);
 
@@ -182,54 +177,54 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
     hasRawInfo = schema.addField<Flag>(
         "hasrawinfo",
         "is raw amplifier information available (e.g. untrimmed bounding boxes)?");
-    rawBBoxMin = schema.addField< Point<int> >(
-        "raw.bbox.min",
+    rawBBoxMin = PointKey<int>::addFields(schema,
+        "raw_bbox_min",
         "entire amplifier bbox on raw image, min point",
         "pixels");
-    rawBBoxExtent = schema.addField< Point<int> >(
-        "raw.bbox.extent",
+    rawBBoxExtent = PointKey<int>::addFields(schema,
+        "raw_bbox_extent",
         "entire amplifier bbox on raw image, extent",
         "pixels");
-    rawDataBBoxMin = schema.addField< Point<int> >(
-        "raw.databbox.min",
+    rawDataBBoxMin = PointKey<int>::addFields(schema,
+        "raw_databbox_min",
         "image data bbox on raw image, min point",
         "pixels");
-    rawDataBBoxExtent = schema.addField< Point<int> >(
-        "raw.databbox.extent",
+    rawDataBBoxExtent = PointKey<int>::addFields(schema,
+        "raw_databbox_extent",
         "image data bbox on raw image, extent",
         "pixels");
     rawFlipX = schema.addField<Flag>(
-        "raw.flip.x",
+        "raw_flip_x",
         "flip row order to make assembled image?");
     rawFlipY = schema.addField<Flag>(
-        "raw.flip.y",
+        "raw_flip_y",
         "flip column order to make an assembled image?");
-    rawXYOffset = schema.addField< Point<int> >(
-        "raw.xyoffset",
+    rawXYOffset = PointKey<int>::addFields(schema,
+        "raw_xyoffset",
         "offset for assembling a raw CCD image: desired xy0 - raw xy0; 0,0 if raw data comes assembled",
         "pixels");
-    rawHorizontalOverscanBBoxMin = schema.addField< Point<int> >(
-        "raw.horizontaloverscanbbox.min",
+    rawHorizontalOverscanBBoxMin = PointKey<int>::addFields(schema,
+        "raw_horizontaloverscanbbox_min",
         "usable horizontal overscan bbox on raw image, min point",
         "pixels");
-    rawHorizontalOverscanBBoxExtent = schema.addField< Point<int> >(
-        "raw.horizontaloverscanbbox.extent",
+    rawHorizontalOverscanBBoxExtent = PointKey<int>::addFields(schema,
+        "raw_horizontaloverscanbbox_extent",
         "usable horizontal overscan bbox on raw image, extent",
         "pixels");
-    rawVerticalOverscanBBoxMin = schema.addField< Point<int> >(
-        "raw.verticaloverscanbbox.min",
+    rawVerticalOverscanBBoxMin = PointKey<int>::addFields(schema,
+        "raw_verticaloverscanbbox_min",
         "usable vertical overscan region raw image, min point",
         "pixels");
-    rawVerticalOverscanBBoxExtent = schema.addField< Point<int> >(
-        "raw.verticaloverscanbbox.extent",
+    rawVerticalOverscanBBoxExtent = PointKey<int>::addFields(schema,
+        "raw_verticaloverscanbbox_extent",
         "usable vertical overscan region raw image, extent",
         "pixels");
-    rawPrescanBBoxMin = schema.addField< Point<int> >(
-        "raw.prescanbbox.min",
+    rawPrescanBBoxMin = PointKey<int>::addFields(schema,
+        "raw_prescanbbox_min",
         "usable (horizontal) prescan bbox on raw image, min point",
         "pixels");
-    rawPrescanBBoxExtent = schema.addField< Point<int> >(
-        "raw.prescanbbox.extent",
+    rawPrescanBBoxExtent = PointKey<int>::addFields(schema,
+        "raw_prescanbbox_extent",
         "usable (horizontal) prescan bbox on raw image, extent",
         "pixels");
     schema.getCitizen().markPersistent();

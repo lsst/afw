@@ -23,9 +23,6 @@ struct ProcessSchema {
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         std::string name = item.field.getName();
-        if (version < 1) {
-            std::replace(name.begin(), name.end(), '.', '_');
-        }
         int n = fits->addColumn<typename Field<T>::Element>(
             name, item.field.getElementCount(),
             item.field.getDoc()
@@ -41,9 +38,6 @@ struct ProcessSchema {
 
     void operator()(SchemaItem<std::string> const & item) const {
         std::string name = item.field.getName();
-        if (version < 1) {
-            std::replace(name.begin(), name.end(), '.', '_');
-        }
         int n = fits->addColumn<std::string>(
             name, item.field.getElementCount(),
             item.field.getDoc()
@@ -56,9 +50,6 @@ struct ProcessSchema {
 
     void operator()(SchemaItem<Flag> const & item) const {
         std::string name = item.field.getName();
-        if (version < 1) {
-            std::replace(name.begin(), name.end(), '.', '_');
-        }
         fits->writeColumnKey("TFLAG", nFlags, name);
         if (!item.field.getDoc().empty()) {
             // We use a separate key TFDOCn for documentation instead of the comment on TFLAGn so
@@ -70,8 +61,8 @@ struct ProcessSchema {
     }
 
     // Create and apply the functor to a schema.
-    static void apply(Fits & fits, Schema const & schema, int version) {
-        ProcessSchema f = { &fits, 0, version };
+    static void apply(Fits & fits, Schema const & schema) {
+        ProcessSchema f = { &fits, 0 };
         schema.forEach(boost::ref(f));
     }
 
@@ -95,50 +86,6 @@ struct ProcessSchema {
         fits->writeColumnKey("TCCLS", n, "Array", "Field template used by lsst.afw.table");
     }
 
-    void specialize(SchemaItem<Coord> const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
-        fits->writeColumnKey("TCCLS", n, "Coord", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Point<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(), "{x, y}");
-        fits->writeColumnKey("TCCLS", n, "Point", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Moments<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(), "{xx, yy, xy}");
-        fits->writeColumnKey("TCCLS", n, "Moments", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance<T> > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
-                                 "{(0,0), (0,1), (1,1), (0,2), (1,2), (2,2), ...}");
-        fits->writeColumnKey("TCCLS", n, "Covariance", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance< Point<T> > > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
-                                 "{(x,x), (x,y), (y,y)}");
-        fits->writeColumnKey("TCCLS", n, "Covariance(Point)", "Field template used by lsst.afw.table");
-    }
-
-    template <typename T>
-    void specialize(SchemaItem< Covariance< Moments<T> > > const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits(),
-                                 "{(xx,xx), (xx,yy), (yy,yy), (xx,xy), (yy,xy), (xy,xy)}");
-        fits->writeColumnKey("TCCLS", n, "Covariance(Moments)", "Field template used by lsst.afw.table");
-    }
-
     void specialize(SchemaItem< std::string > const & item, int n) const {
         if (!item.field.getUnits().empty())
             fits->writeColumnKey("TUNIT", n, item.field.getUnits());
@@ -147,7 +94,6 @@ struct ProcessSchema {
 
     Fits * fits;
     mutable int nFlags;
-    int version;
 };
 
 void writeAliasMap(Fits & fits, AliasMap const & aliases) {
@@ -168,15 +114,14 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
         int n = _fits->addColumn<bool>("flags", nFlags, "bits for all Flag fields; see also TFLAGn");
         _fits->writeKey("FLAGCOL", n + 1, "Column number for the bitflags.");
     }
-    ProcessSchema::apply(*_fits, schema, schema.getVersion());
+    ProcessSchema::apply(*_fits, schema);
     writeAliasMap(*_fits, *schema.getAliasMap());
     // write the version number to the fits header, plus any other metadata
     PTR(daf::base::PropertyList) metadata = table->getMetadata();
     if (!metadata) {
         metadata = boost::make_shared<daf::base::PropertyList>();
     }
-    int version = table->getVersion();
-    metadata->set<int>("AFW_TABLE_VERSION", version);
+    metadata->set<int>("AFW_TABLE_VERSION", Schema::VERSION);
     _fits->writeMetadata(*metadata);
     // In case the metadata was attached to the table, clean it up.
     metadata->remove("AFW_TABLE_VERSION");

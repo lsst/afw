@@ -47,8 +47,8 @@ Python interface to lsst::afw::table classes
 %lsst_exceptions()
 
 %include "Base.i"
-%include "Simple.i"
 %include "aggregates.i"
+%include "Simple.i"
 %include "Source.i"
 %include "Match.i"
 %include "Exposure.i"

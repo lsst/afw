@@ -32,22 +32,6 @@ import re
 import numpy
 import collections
 
-def KeyBaseCov_subfields(self):
-    """a tuple of Key subfield extraction indices (the lower-triangular elements)."""
-    r = []
-    for i in range(self.getSize()):
-        for j in range(i+1):
-            r.append((i,j))
-    return tuple(r)
-
-def KeyBaseCov_subkeys(self):
-    """a tuple of subelement Keys (the lower-triangular elements)."""
-    r = []
-    for i in range(self.getSize()):
-        for j in range(i+1):
-            r.append(self[i,j])
-    return tuple(r)
-
 def Schema_extract(self, *patterns, **kwds):
     """
     Extract a dictionary of {<name>: <schema-item>} in which the field names
@@ -213,22 +197,7 @@ def BaseColumnView_extract(self, *patterns, **kwds):
         return a
     for name, schemaItem in d.items(): # can't use iteritems because we might be adding/deleting elements
         key = schemaItem.key
-        if key.HAS_NAMED_SUBFIELDS:
-            for subname, subkey in zip(key.subfields, key.subkeys):
-                d["%s.%s" % (name, subname)] = processArray(self.get(subkey))
-            del d[name]
-        elif key.getTypeString().startswith("Cov"):
-            unpacked = None
-            for idx, subkey in zip(key.subfields, key.subkeys):
-                i, j = idx
-                array = processArray(self.get(subkey))
-                if unpacked is None:
-                    unpacked = numpy.zeros((array.size, key.getSize(), key.getSize()), dtype=array.dtype)
-                unpacked[:,i,j] = array
-                if i != j:
-                    unpacked[:,j,i] = array
-            d[name] = unpacked
-        elif key.getTypeString() == "String":
+        if key.getTypeString() == "String":
             del d[name]
         else:
             d[name] = processArray(self.get(schemaItem.key))
