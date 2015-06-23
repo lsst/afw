@@ -132,7 +132,7 @@ class SchemaTestCase(unittest.TestCase):
 
 
 class SchemaMapperTestCase(unittest.TestCase):
-    
+
     def testJoin(self):
         inputs = [lsst.afw.table.Schema(), lsst.afw.table.Schema(), lsst.afw.table.Schema()]
         inputs = lsst.afw.table.SchemaVector(inputs)

@@ -55,7 +55,7 @@ InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName
 class WcsTestCase(unittest.TestCase):
     def testCD_PC(self):
         """Test that we can read a FITS file with both CD and PC keys (like early Suprimecam files)"""
-        
+
         md = dafBase.PropertyList()
         for k, v in (
             ("EQUINOX", 2000.0),
@@ -179,12 +179,12 @@ class WCSTestCaseSDSS(unittest.TestCase):
         metadata = self.im.getMetadata()
         crpix0 = metadata.getAsDouble("CRPIX1")
         crpix1 = metadata.getAsDouble("CRPIX2")
-        
+
         lsstCrpix = self.wcs.getPixelOrigin()
-        
+
         self.assertEqual(lsstCrpix[0], crpix0-1)
         self.assertEqual(lsstCrpix[1], crpix1-1)
-        
+
     def testXyToRaDecArguments(self):
         """Check that conversion of xy to ra dec (and back again) works"""
         xy = afwGeom.Point2D(110, 123)
@@ -195,10 +195,10 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(xy.getY(), xy2.getY())
 
         raDec = afwCoord.makeCoord(afwCoord.ICRS, 245.167400 * afwGeom.degrees, +19.1976583 * afwGeom.degrees)
-        
+
         xy = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(xy)
-        
+
         self.assertAlmostEqual(raDec[0].asDegrees(), raDec2[0].asDegrees())
         self.assertAlmostEqual(raDec[1].asDegrees(), raDec2[1].asDegrees())
 
@@ -279,8 +279,6 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def testAffineTransform(self):
         a = self.wcs.getLinearTransform()
         l = self.wcs.getCDMatrix()
-        #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
-        #print a, l
 
     def testXY0(self):
         """Test that XY0 values are handled correctly when building an exposure and also when
@@ -329,7 +327,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
                 if verbose:
                     print "useExposure=%s; unp pixPos=%s" % (useExposure, unpPixPos)
-                    
+
                 for i in range(2):
                     self.assertAlmostEqual(unpPixPos[i], 1009.5)
 
@@ -426,10 +424,6 @@ class WCSTestCaseCFHT(unittest.TestCase):
                             self.wcs.getCDMatrix())
 
     def testAffineTransform(self):
-        a = self.wcs.getLinearTransform()
-        l = self.wcs.getCDMatrix()
-        #print print a[a.XX], a[a.XY], a[a.YX], a[a.YY]
-
         sky00g = afwGeom.Point2D(10, 10)
         sky00c = afwCoord.makeCoord(afwCoord.ICRS, sky00g, afwGeom.degrees)
         a = self.wcs.linearizeSkyToPixel(sky00c)
