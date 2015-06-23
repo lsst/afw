@@ -133,7 +133,7 @@ class WCSRotateFlip(unittest.TestCase):
     def makeWcs(self):
         crval = afwCoord.Coord(afwGeom.Point2D(1.606631, 5.090329))
         crpix = afwGeom.Point2D(2036., 2000.)
-        wcs = afwImage.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
+        return afwImage.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
 
     def testRotation(self):
         q1 = {0:afwGeom.Point2D(100., 1600.), 
@@ -141,24 +141,24 @@ class WCSRotateFlip(unittest.TestCase):
               2:afwGeom.Point2D(self.size.getX() - 100., self.size.getY() - 1600.), 
               3:afwGeom.Point2D(1600., self.size.getX() - 100.)} 
         wcs = self.makeWcs()
-        pos0 = self.wcs.pixelToSky(q1[0])
+        pos0 = wcs.pixelToSky(q1[0])
         for rot in (1,2,3):
             wcs = self.makeWcs()
             wcs.rotateImageBy90(rot, self.size)
-            self.assertEqual(pos0, self.wcs.pixelToSky(q1[rot]))
+            self.assertEqual(pos0, wcs.pixelToSky(q1[rot]))
 
     def testFlip(self):
         q1 = {'noFlip': afwGeom.Point2D(300., 900.),
               'flipLR': afwGeom.Point2D(self.size.getX()-300., 900.),
               'flipTB': afwGeom.Point2D(300., self.size.getY()-900.)}
         wcs = self.makeWcs()
-        pos0 = self.wcs.pixelToSky(q1['noFlip'])
+        pos0 = wcs.pixelToSky(q1['noFlip'])
         wcs = self.makeWcs()
         wcs.flipImage(True, False, self.size)
-        self.assertEqual(pos0, self.wcs.pixelToSky(q1['flipLR']))
+        self.assertEqual(pos0, wcs.pixelToSky(q1['flipLR']))
         wcs = self.makeWcs()
         wcs.flipImage(False, True, self.size)
-        self.assertEqual(pos0, self.wcs.pixelToSky(q1['flipTB']))
+        self.assertEqual(pos0, wcs.pixelToSky(q1['flipTB']))
 
 class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
@@ -169,7 +169,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.wcs = afwImage.makeWcs(self.im.getMetadata())
 
         if False:
-            ds9.mtv(im, wcs=self.wcs)
+            ds9.mtv(self.im, wcs=self.wcs)
 
     def tearDown(self):
         del self.wcs
@@ -479,6 +479,7 @@ def suite():
     suites += unittest.makeSuite(WCSTestCaseSDSS)
     suites += unittest.makeSuite(TestWcsCompare)
     suites += unittest.makeSuite(WCSTestCaseCFHT)
+    suites += unittest.makeSuite(WCSRotateFlip)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
