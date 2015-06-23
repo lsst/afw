@@ -146,5 +146,5 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     lsst::afw::geom::Point2D crvalTmp;
     crvalTmp[0] = crval.toIcrs().getLongitude().asDegrees();
     crvalTmp[1] = crval.toIcrs().getLatitude().asDegrees();
-    return afwImg::Wcs::Ptr(new lsst::afw::image::Wcs(crvalTmp, crpix, CD));
+    return afwImg::Wcs::Ptr(new lsst::afw::image::TanWcs(crvalTmp, crpix, CD));
 }

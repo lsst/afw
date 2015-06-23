@@ -254,11 +254,19 @@ void ExposureInfo::_readFits(
         }
         int wcsId = popInt(*metadata, "WCS_ID");
         try {
-            _wcs = archive.get<Wcs>(wcsId);
+            auto archiveWcs = archive.get<Wcs>(wcsId);
+            if (archiveWcs) {
+                _wcs = archiveWcs;
+            } else {
+                pex::logging::Log::getDefaultLog().info("Empty WCS extension, using FITS header");
+            }
         } catch (pex::exceptions::NotFoundError & err) {
-            pex::logging::Log::getDefaultLog().warn(
-                boost::format("Could not read WCS; setting to null: %s") % err.what()
-            );
+            auto msg = str(boost::format("Could not read WCS extension; setting to null: %s") % err.what());
+            if (_wcs) {
+                msg += " ; using WCS from FITS header";
+            }
+
+            pex::logging::Log::getDefaultLog().warn(msg);
         }
         int coaddInputsId = popInt(*metadata, "COADD_INPUTS_ID");
         try {

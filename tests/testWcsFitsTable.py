@@ -176,6 +176,20 @@ class WcsFitsTableTestCase(unittest.TestCase):
             wcsOut = expOut.getWcs()
             self.assertEqual(wcsIn, wcsOut)
 
+    def testWcsWhenNonPersistable(self):
+        """Test that we can round-trip a WCS even when it is not persistable"""
+        import os
+        
+        fileName = os.path.join(os.path.split(__file__)[0], "data", "ZPN.fits")
+        exp = lsst.afw.image.ExposureF(fileName)
+        del fileName
+
+        self.assertFalse(exp.getWcs().isPersistable(), "Test assumes that ZPN projections are not persistable")
+        
+        with utilsTests.getTempFilePath(".fits") as fileName:
+            exp.writeFits(fileName)
+            exp2 = lsst.afw.image.ExposureF(fileName)
+            self.assertEqual(exp.getWcs(), exp2.getWcs())
 #####
 
 def suite():
