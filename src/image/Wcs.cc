@@ -219,20 +219,6 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
 
-    // Scamp produces PVi_xx header cards that are inconsistent with WCS Paper 2
-    // and cause WCSLib to choke.  Aggressively, rename all PV keywords to X_PV
-    for (int j=1; j<3; j++) {
-        for (int i=0; i<=99; i++) {
-            std::string key = (boost::format("PV%i_%i") % j % i).str();
-            if (!access.toRead()->exists(key)) {
-                break;
-            }
-            double val = access.toRead()->getAsDouble(key);
-            access.toWrite()->remove(key);
-            access.toWrite()->add("X_"+key, val);
-        }
-    }
-
     //While the standard does not insist on CRVAL and CRPIX being present, it 
     //is almost certain their absence indicates a problem.   
     //Check for CRPIX
