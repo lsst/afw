@@ -281,6 +281,38 @@ class HeavyFootprintTestCase(tests.TestCase):
         self.assertClose(heavy1.getVarianceArray(), heavy2.getVarianceArray(), rtol=0.0, atol=0.0)
         os.remove(filename)
 
+    def testDot(self):
+        """Test HeavyFootprint::dot"""
+        size = 20, 20
+        for xOffset, yOffset in [(0, 0), (0, 3), (3, 0), (2, 2)]:
+            mi1 = afwImage.MaskedImageF(*size)
+            mi2 = afwImage.MaskedImageF(*size)
+            mi1.set(0)
+            mi2.set(0)
+
+            fp1 = afwDetect.Footprint()
+            fp2 = afwDetect.Footprint()
+            for y, x0, x1 in [(5, 3, 7),
+                              (6, 3, 4),
+                              (6, 6, 7),
+                              (7, 3, 7),]:
+                fp1.addSpan(y, x0, x1)
+                fp2.addSpan(y + yOffset, x0 + xOffset, x1 + xOffset)
+                for x in range(x0, x1 + 1):
+                    value = (x + y, 0, 1.0)
+                    mi1.set(x, y, value)
+                    mi2.set(x + xOffset, y + yOffset, value)
+
+            hfp1 = afwDetect.makeHeavyFootprint(fp1, mi1)
+            hfp2 = afwDetect.makeHeavyFootprint(fp2, mi2)
+            hfp1.normalize()
+            hfp2.normalize()
+
+            dot = np.vdot(mi1.getImage().getArray(), mi2.getImage().getArray())
+            self.assertEqual(hfp1.dot(hfp2), dot)
+            self.assertEqual(hfp2.dot(hfp1), dot)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

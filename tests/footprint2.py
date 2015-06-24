@@ -34,7 +34,6 @@ or
 
 import sys
 import unittest
-import numpy as np
 import lsst.utils.tests as tests
 import lsst.pex.logging as logging
 import lsst.afw.image as afwImage
@@ -43,7 +42,6 @@ import lsst.afw.math as afwMath
 import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
-import lsst.afw.display.utils as dispUtils
 
 try:
     type(verbose)
@@ -220,18 +218,6 @@ class FootprintSetTestCase(unittest.TestCase):
             self.assertGreater(len(grown.getFootprints()), 0)
             self.assertLessEqual(len(grown.getFootprints()), len(fs.getFootprints()))
 
-    def testGrow0(self):
-        """Test that we can grow a Footprint by 0 pixels"""
-        # N.b. we make use of this in testNonContiguous()
-        
-        fs = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
-        foot = fs.getFootprints()[0]
-        gfoot = afwDetect.growFootprint(foot, 0)
-
-        self.assertNotEqual(foot.getId(), gfoot.getId()) # i.e. grow(foot, 0) doesn't return foot
-        for s, gs in zip(foot.getSpans(), gfoot.getSpans()):
-            self.assertEqual(gs, s)
-
     def testFootprintControl(self):
         """Test the FootprintControl constructor"""
         fctrl = afwDetect.FootprintControl()
@@ -405,68 +391,7 @@ class FootprintSetTestCase(unittest.TestCase):
             ds9.mtv(im)
 
         self.assertEqual(len(objects), 1)
-
-    def testNonContiguous(self):
-        """Test non-contiguous Footprints"""
-
-        for isotropic in (False, True):
-            foot = afwDetect.Footprint(afwGeom.BoxI(), self.im.getBBox())
-            for y, x0, x1 in [(3, 2, 3), (3, 7, 8),
-                              (4, 2, 3), (4, 7, 9),
-                              ]:
-                foot.addSpan(afwGeom.Span(y, x0, x1))
-
-            foot.addPeak(2.5, 3.5, 100)
-            foot.addPeak(8.0, 4.0, 200)
-
-            foot.normalize()
-
-            gfoot = afwDetect.growFootprint(foot, 0, isotropic)
-
-            im = self.im.clone(); im[:] = 0
-            foot.insertIntoImage(im, 10)
-            gim = self.im.clone(); gim[:] = 0
-            gfoot.insertIntoImage(gim, 10)
-
-            if display:
-                dim = gim.clone()           # image is only for display
-                foot.insertIntoImage(dim, 20)
-                ds9.mtv(dim, title="Grown footprint")
-                del dim
-
-            self.assertTrue(np.all(im.getArray() == gim.getArray()),
-                            "Footprint grown %sby 0 == original" % ("isotropically " if isotropic else ""))
-            if False:
-                print "\n", isotropic, "foot ", [p for p in foot.getPeaks()]
-                print       isotropic, "gfoot", [p for p in gfoot.getPeaks()]
-
-            for op, gp in zip(foot.getPeaks(), gfoot.getPeaks()):
-                self.assertEqual(op.getId(), gp.getId())
-                self.assertEqual((op.getFx(), op.getFy()), (gp.getFx(), gp.getFy()))
-                self.assertEqual((op.getIx(), op.getIy()), (gp.getIx(), gp.getIy()))
-            #
-            # Now try a non-trivial grow
-            #
-            gfoot = afwDetect.growFootprint(foot, 1, isotropic)
-
-            gim = self.im.clone(); gim[:] = 0
-            gfoot.insertIntoImage(gim, 20)
-
-            if display:
-                dim = gim.clone()           # image is only for display
-                foot.insertIntoImage(dim, 10)
-                ds9.mtv(dim, title="Grown footprint")
-                dispUtils.drawFootprint(gfoot, peaks=True)
-
-                del dim
-            #
-            # Check that we recovered both parts of original Footprint
-            #
-            fs = afwDetect.FootprintSet(gim, afwDetect.Threshold(1))
-            self.assertEqual(len(fs.getFootprints()), 2,
-                             "Found both parts of the %sgrown Footprint" %
-                             ("isotropically " if isotropic else ""))
-
+            
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class PeaksInFootprintsTestCase(unittest.TestCase):

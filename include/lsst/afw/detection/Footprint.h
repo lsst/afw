@@ -193,6 +193,13 @@ public:
     ) const;
 
     /**
+     * @brief Find edge pixels on the footprint
+     *
+     * Note that the resultant Footprint of edge pixels may not be contiguous.
+     */
+    PTR(Footprint) findEdgePixels() const;
+
+    /**
      *  @brief Update the Footprint in-place to be the union of itself and all its children
      *
      *  Only spans will be modified; peaks will be left unchanged.  If ignoreSelf is true it
@@ -237,12 +244,46 @@ void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
                       lsst::afw::image::Image<boost::uint16_t>::Ptr argmin,
                       lsst::afw::image::Image<boost::uint16_t>::Ptr dist);
 
-Footprint::Ptr mergeFootprints(Footprint const& foot1, Footprint const& foot2);
-Footprint::Ptr mergeFootprints(Footprint& foot1, Footprint& foot2);
+/**
+   Merges two Footprints -- appends their peaks, and unions their
+   spans, returning a new Footprint.
 
-Footprint::Ptr growFootprint(Footprint const& foot, int ngrow, bool isotropic=true);
-Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic=true);
-Footprint::Ptr growFootprint(Footprint const& foot, int ngrow,
+   This const version requires that both input footprints are
+   normalized (and will raise an exception if not).
+ */
+PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2);
+
+/**
+   Merges two Footprints -- appends their peaks, and unions their
+   spans, returning a new Footprint.
+ */
+PTR(Footprint) mergeFootprints(Footprint& foot1, Footprint& foot2);
+
+/**
+ * Shrink a footprint isotropically by nGrow pixels, returning a new Footprint.
+ */
+PTR(Footprint) shrinkFootprint(Footprint const& foot, int nGrow, bool isotropic);
+
+/**
+ * Grow a Footprint by nGrow pixels, returning a new Footprint.
+ */
+PTR(Footprint) growFootprint(Footprint const& foot, int nGrow, bool isotropic=true);
+
+/**
+ * \note Deprecated interface; use the Footprint const& version.
+ */
+PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int nGrow, bool isotropic=true);
+
+/**
+ * \brief Grow a Footprint in at least one of the cardinal directions,
+ * returning a new Footprint
+ *
+ * Note that any left/right grow is done prior to the up/down grow, so
+ * any left/right grown pixels \em are subject to a further up/down
+ * grow (i.e. an initial single pixel Footprint will end up as a
+ * square, not a cross.
+ */
+PTR(Footprint) growFootprint(Footprint const& foot, int nGrow,
                              bool left, bool right, bool up, bool down);
 
 std::vector<lsst::afw::geom::Box2I> footprintToBBoxList(Footprint const& foot);

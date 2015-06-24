@@ -290,50 +290,44 @@ bool Footprint::contains(
 }
 
 namespace {
-/// Predicate for removing peaks outside a bbox
-struct ClipPredicate : public std::unary_function<PeakRecord const&, bool> {
+
+/// Predicate for removing spans outside a bbox
+struct ClipSpansPredicate : public std::unary_function<PTR(Span) const&, bool> {
     geom::Box2I const& bbox;
-    ClipPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
+    ClipSpansPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
+    bool operator()(PTR(Span) const& spanPtr) const {
+        Span const& span = *spanPtr;
+        int const y = span.getY();
+        return (y < bbox.getMinY() || y > bbox.getMaxY() ||
+                span.getX0() > bbox.getMaxX() || span.getX1() < bbox.getMinX());
+    }
+};
+
+/// Predicate for removing peaks outside a bbox
+struct ClipPeaksPredicate : public std::unary_function<PeakRecord const&, bool> {
+    geom::Box2I const& bbox;
+
+    ClipPeaksPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
     bool operator()(PTR(PeakRecord) const& peak) const {
         return !bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
     }
 };
-}
+} // anonymous namespace
 
 void Footprint::clipTo(geom::Box2I const& bbox) {
-    Footprint::SpanList::iterator it = _spans.begin();
-    for (; it != _spans.end();) {
-        Span *sp = it->get();
-        //printf("span: y=%i (x=[%i,%i]), vs bbox [%i,%i]\n", sp->getY(), sp->getX0(), sp->getX1(), bbox.getMinY(), bbox.getMaxY());
-        if ((sp->getY() < bbox.getMinY()) ||
-            (sp->getY() > bbox.getMaxY())) {
-            //printf("  --> out of bounds in y; erasing.\n");
-            it = _spans.erase(it);
-            continue;
-        }
-        //printf("span: x=[%i,%i], vs bbox [%i,%i]\n", sp->getX0(), sp->getX1(), bbox.getMinX(), bbox.getMaxX());
-        if ((sp->getX0() > bbox.getMaxX()) ||
-            (sp->getX1() < bbox.getMinX())) {
-            //printf("  --> out of bounds in x; erasing.\n");
-            it = _spans.erase(it);
-            continue;
-        }
-
-        // clip
-        if (sp->getX0() < bbox.getMinX()) {
-            //printf("  -> clipped span x0 to bbox\n");
-            sp->_x0 = bbox.getMinX();
-        }
-        if (sp->getX1() > bbox.getMaxX()) {
-            //printf("  -> clipped span x1 to bbox\n");
-            sp->_x1 = bbox.getMaxX();
-        }
-        it++;
+    _spans.erase(std::remove_if(_spans.begin(), _spans.end(), ClipSpansPredicate(bbox)), _spans.end());
+    for (SpanList::const_iterator ss = _spans.begin(); ss != _spans.end(); ++ss) {
+        Span& span = **ss;
+        span.getX0() = std::max(span.getX0(), bbox.getMinX());
+        span.getX1() = std::min(span.getX1(), bbox.getMaxX());
     }
 
     // Remove peaks not in the new bbox
     _peaks.getInternal().erase(std::remove_if(_peaks.getInternal().begin(), _peaks.getInternal().end(),
-                                              ClipPredicate(bbox)), _peaks.getInternal().end());
+                                              ClipPeaksPredicate(bbox)), _peaks.getInternal().end());
 
     if (_spans.empty()) {
         _bbox = geom::Box2I();
@@ -659,14 +653,20 @@ template<typename PixelT>
 void
 Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
     typedef typename lsst::afw::image::Image<PixelT> ImageT;
-    int ix0 = img.getX0();
-    int iy0 = img.getY0();
-    PixelT zero = 0;
+    int const ix0 = img.getX0();
+    int const iy0 = img.getY0();
+    PixelT const zero = 0;
 
-    for (SpanList::iterator s = _spans.begin(); s < _spans.end(); s++) {
-        int y = (*s)->getY();
-        int x0 = (*s)->getX0();
-        int x1 = (*s)->getX1();
+    normalize(); // allows us to produce a normalized output
+    SpanList old;
+    std::swap(_spans, old);
+    _spans.reserve(old.size());
+    _area = 0;
+    _bbox = geom::Box2I();
+    for (SpanList::iterator s = old.begin(); s != old.end(); ++s) {
+        int const y = (*s)->getY();
+        int const x0 = (*s)->getX0();
+        int const x1 = (*s)->getX1();
         typename ImageT::x_iterator img_it = img.row_begin(y - iy0) + (x0 - ix0);
         int leftx, rightx;
         // find zero pixels on the left...
@@ -677,9 +677,6 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
         }
         if (leftx > x1) {
             // whole span is zero; drop it.
-            _normalized = false;
-            _spans.erase(s);
-            s--;
             continue;
         }
         // find zero pixels on the right...
@@ -689,21 +686,9 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
                 break;
             }
         }
-        if (leftx != x0) {
-            (*s)->_x0 = leftx;
-            _normalized = false;
-        }
-        if (rightx != x1) {
-            (*s)->_x1 = rightx;
-            _normalized = false;
-        }
+        addSpanInSeries(y, leftx, rightx);
     }
-
-    if (_spans.empty()) {
-        _bbox = geom::Box2I();
-        _area = 0;
-        _normalized = true;
-    }
+    normalize();
 }
 
 /**
@@ -1056,6 +1041,93 @@ PTR(Footprint) Footprint::transform(
     return fpNew;
 }
 
+PTR(Footprint) Footprint::findEdgePixels() const
+{
+    if (!_normalized) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterException, "Footprint isn't normalized");
+    }
+    int const width = getBBox().getWidth(), height = getBBox().getHeight();
+    if (height <= 2 || _spans.size() <= 2) {
+        // Everything is on the edge
+        return boost::make_shared<Footprint>(*this);
+    }
+
+    // Get a list of pixels (in the form of a Footprint) that are on the edge horizontally
+    // or have nothing above or below them.
+    PTR(Footprint) edges = boost::make_shared<Footprint>(getPeaks().getSchema());
+    int const xStart = getBBox().getMinX(), yStart = getBBox().getMinY();
+    std::vector<bool> rowBefore(width, false); // Representation of the previous row
+    std::vector<bool> rowNow(width, false);    // Representation of this row
+    std::vector<bool> rowAfter(width, false); // Representation of the next row
+
+    int yLast = yStart; // y value of last span we looked at
+    int const yEnd = _spans.back()->getY(); // y value of end span
+
+    // Set rowNow, rowAfter
+    SpanList::const_iterator readAhead = _spans.begin(); // Iterator for loading next row
+    for (; readAhead != _spans.end() && (*readAhead)->getY() == yStart; ++readAhead) {
+        std::fill(rowNow.begin() + (*readAhead)->getX0() - xStart,
+                  rowNow.begin() + (*readAhead)->getX1() + 1 - xStart,
+                  true);
+    }
+    for (; readAhead != _spans.end() && (*readAhead)->getY() == yStart + 1; ++readAhead) {
+        std::fill(rowAfter.begin() + (*readAhead)->getX0() - xStart,
+                  rowAfter.begin() + (*readAhead)->getX1() + 1 - xStart,
+                  true);
+    }
+
+    for (SpanList::const_iterator ss = _spans.begin(); ss != _spans.end(); ++ss) {
+        int const y = (*ss)->getY();
+        if (y == yStart || y == yEnd) {
+            // The whole span is on an edge
+            edges->addSpanInSeries(y, (*ss)->getX0(), (*ss)->getX1());
+            continue;
+        }
+        if (y != yLast) {
+            // Move rows down
+            rowBefore.assign(rowNow.begin(), rowNow.end());
+            rowNow.assign(rowAfter.begin(), rowAfter.end());
+            // Prepare the next row
+            std::fill(rowAfter.begin(), rowAfter.end(), false);
+            for (; readAhead != _spans.end() && (*readAhead)->getY() <= y; ++readAhead) {} // Moving only
+            for (; readAhead != _spans.end() && (*readAhead)->getY() == y + 1; ++readAhead) {
+                std::fill(rowAfter.begin() + (*readAhead)->getX0() - xStart,
+                          rowAfter.begin() + (*readAhead)->getX1() + 1 - xStart,
+                          true);
+            }
+            yLast = y;
+        }
+
+        // Look for edge in the current row
+        int x0 = (*ss)->getX0();
+        bool onEdge = true;             // Are we on an edge? The first pixel is an edge
+        for (int x = x0 + 1, i = x0 + 1 - xStart; x < (*ss)->getX1(); ++x, ++i) {
+            if (onEdge) {
+                if (rowBefore[i] && rowAfter[i]) {
+                    // We've come to the end of the edge
+                    onEdge = false;
+                    edges->addSpanInSeries(y, x0, x - 1);
+                }
+            } else if (!rowBefore[i] || !rowAfter[i]) {
+                // We're on an edge now
+                onEdge = true;
+                x0 = x;
+            }
+        }
+        // Last pixel is an edge
+        int const x1 = (*ss)->getX1();
+        if (onEdge) {
+            edges->addSpanInSeries(y, x0, x1);
+        } else {
+            edges->addSpanInSeries(y, x1, x1);
+        }
+    }
+    edges->normalize(); // Should be a no-op, but just in case...
+
+    return edges;
+}
+
+
 /**
    Returns *true* iff this Footprint satisfies the "normalized" conditions.
 
@@ -1402,19 +1474,126 @@ typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(
 
 template image::Image<int>::Ptr setFootprintID(Footprint::Ptr const& foot, int const id);
 
-/***********************************************************************************************************/
 namespace {
-//
-// Utility routine to repack a list of Footprints into a single grown Footprint
-//
-PTR(Footprint)
-convertGrownListToFootprint(FootprintSet::FootprintList const& grownList,
-                            geom::Box2I const& bbox,
-                            Footprint const& foot
-                           )
+/** Define a structuring element for use in RLE-based morphological operations
+ *
+ * Provides pre-canned definition of circular & diamond shapes for use in
+ * isotropic and non-isotropic dilation respectively, as well as elements which
+ * can be used to grow in one or more of up/down/left/right.
+ */
+class StructuringElement
 {
-    PTR(Footprint) grown = boost::make_shared<Footprint>();
-    grown->include(grownList, true);
+public:
+    enum Shape { CIRCLE, DIAMOND };
+    typedef std::vector<Span>::const_iterator const_iterator;
+    StructuringElement(Shape shape, int radius);
+    StructuringElement(int left, int right, int up, int down);
+    const_iterator begin() const { return _widths.begin(); }
+    const_iterator end() const { return _widths.end(); }
+    int getYRange() const { return _yRange; }
+
+private:
+    std::vector<Span> _widths;
+    int _yRange;
+};
+
+/** Create a shape-based StructuringElement
+ *
+ * Circles and diamonds are used in isotropic and non-isotropic grows,
+ * respetively.
+ */
+StructuringElement::StructuringElement(Shape shape, int radius) {
+    _yRange = 2*radius + 1;
+    _widths.reserve(_yRange);
+    switch (shape) {
+    case CIRCLE:
+        for (int dy = -radius; dy <= radius; dy++) {
+            int dx = static_cast<int>(sqrt(radius*radius - dy*dy));
+            _widths.push_back(Span(dy, -dx, dx));
+        }
+        break;
+    case DIAMOND:
+        for (int dy = -radius; dy <= radius; dy++) {
+            int dx = radius - abs(dy);
+            _widths.push_back(Span(dy, -dx, dx));
+        }
+        break;
+    }
+}
+
+/** Create a direction-based StructuringElement
+ *
+ * Used to grow in one or more of the left/right/up/down directions.
+ */
+StructuringElement::StructuringElement(int left, int right, int up, int down) {
+    _yRange = up + down + 1;
+    _widths.reserve(_yRange);
+    for (int dy = 1; dy <= up; dy++) {
+        _widths.push_back(Span(dy, 0, 0));
+    }
+    for (int dy = -1; dy >= -down; dy--) {
+        _widths.push_back(Span(dy, 0, 0));
+    }
+    _widths.push_back(Span(0, -left, right));
+}
+
+/** RLE based implementation of Footprint dilation.
+  *
+  * See Kim et al., ETRI Journal 27, Dec 2005.
+  */
+PTR(Footprint) growFootprintImpl(
+        Footprint const& foot,            //!< The Footprint to grow
+        StructuringElement const& element //!< The structuring element
+) {
+    // Create an empty footprint covering foot's region.
+    PTR(Footprint) grown(new Footprint(0, foot.getRegion()));
+
+    // We use a map of (y coordinate) to set of (xmin, xmax) pairs to describe
+    // the spans being constructed. In this way, we ensure that the spans are
+    // always sorted by increasing y, xmin.
+    typedef std::set<std::pair<int, int> > SpanSet;
+    typedef std::map<int, SpanSet> SpanMap;
+    SpanMap spans;
+
+    // Iterate over foot & structuring element building up a collection of
+    // spans which should be added to the footprint.
+    for (Footprint::SpanList::const_iterator spanIter = foot.getSpans().begin();
+         spanIter != foot.getSpans().end();
+         ++spanIter) {
+        for (StructuringElement::const_iterator elementIter = element.begin();
+             elementIter != element.end();
+             ++elementIter) {
+            int const xmin = (*spanIter)->getX0() + elementIter->getX0();
+            int const xmax = (*spanIter)->getX1() + elementIter->getX1();
+            int const yval = (*spanIter)->getY() + elementIter->getY();
+            spans[yval].insert(std::make_pair(xmin, xmax));
+
+            // Merge overlapping spans at this y coordinate, thereby ensuring
+            // that the proto-footprint remains normalized.
+            std::set<std::pair<int, int> > newSpans;
+            for (SpanSet::const_iterator span = spans[yval].begin(); span != spans[yval].end(); ++span) {
+                int const start = span->first;
+                int end = span->second;
+                // Check for end+1 because end value is inclusive. That is, if
+                // one span terminates at x=N and another begins at x=N+1,
+                // those spans are contiguous.
+                while (span != spans[yval].end() && span->first <= (end+1)) {
+                    end = std::max(end, span++->second);
+                }
+                newSpans.insert(std::make_pair(start, end));
+                --span; // "rewind" to the last span included
+            }
+            std::swap(spans[yval], newSpans);
+        }
+    }
+
+    // Now append the spans to the output footprint, making use of the fact
+    // that they are already normalized.
+    for (SpanMap::const_iterator y = spans.begin(); y != spans.end(); ++y) {
+        for (SpanSet::const_iterator x = y->second.begin(); x != y->second.end(); ++x) {
+            grown->addSpanInSeries(y->first, x->first, x->second);
+        }
+    }
 
     // Copy over peaks from the original footprint
     grown->getPeaks() = PeakCatalog(
@@ -1422,67 +1601,182 @@ convertGrownListToFootprint(FootprintSet::FootprintList const& grownList,
         foot.getPeaks().begin(), foot.getPeaks().end(),
         true
     );
-    //
-    // Fix the coordinate system to be that of foot
-    //
-    grown->shift(bbox.getMinX(), bbox.getMinY());
-    grown->setRegion(foot.getRegion());
-    
+
+    grown->normalize();
+
     return grown;
 }
 
-/*
- * Grow a Footprint isotropically by r pixels, returning a new Footprint
+/**
+ * Represents a "primary run", as defined by Kim et al. A primary run is an
+ * intermediate result from the erosion operation; they represent potential
+ * spans in the output footprint, but are not normalized.
  *
- * N.b. this is slow, as it uses a convolution with a disk
+ * The 'm' value tracks the row in the structuring element which was
+ * responsible for a particular primary run; it is required to implement the
+ * algorithm.
  */
+struct PrimaryRun {
+    int m, y, xmin, xmax;
 
-Footprint::Ptr growFootprintSlow(
-        Footprint const& foot, //!< The Footprint to grow
-        int ngrow                              //!< how much to grow foot
-                                                 ) {
-    if (ngrow < 0) {
-        ngrow = 0;                      // ngrow == 0 => no grow
+    PrimaryRun(int m_, int y_, int xmin_, int xmax_) :
+        m(m_), y(y_), xmin(xmin_), xmax(xmax_)
+    {}
+};
+
+/**
+ * Compare primary runs such that they are sorted primarily by y, then by m,
+ * then by xmin.
+ */
+bool comparePrimaryRun(PrimaryRun const& first, PrimaryRun const& second) {
+    if (first.y != second.y) {
+        return first.y < second.y;
+    } else if (first.m != second.m) {
+        return first.m < second.m;
+    } else {
+        return first.xmin < second.xmin;
     }
+}
 
-    if (foot.getNpix() == 0) {          // an empty Footprint
-        return Footprint::Ptr(new Footprint(foot));
+class ComparePrimaryRunY{
+public:
+    bool operator()(PrimaryRun const& pr, int yval) {
+        return pr.y < yval;
     }
+    bool operator()(int yval, PrimaryRun const& pr) {
+        return yval < pr.y;
+    }
+};
 
-    /*
-     * We'll insert the footprints into an image, then convolve with a disk,
-     * then extract a footprint from the result --- this is magically what we want.
-     */
-    geom::Box2I bbox = foot.getBBox();
-    bbox.grow(2*ngrow);
-    image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
-    *idImage = 0;
-    idImage->setXY0(0, 0);
+class ComparePrimaryRunM{
+public:
+    bool operator()(PrimaryRun const& pr, int mval) {
+        return pr.m < mval;
+    }
+    bool operator()(int mval, PrimaryRun const& pr) {
+        return mval < pr.m;
+    }
+};
 
-    set_footprint_id<int>(idImage, foot, 1, -bbox.getMinX(), -bbox.getMinY());
+/** RLE based implementation of Footprint erosion.
+  *
+  * See Kim et al., ETRI Journal 27, Dec 2005.
+  */
+PTR(Footprint) shrinkFootprintImpl(
+    Footprint const& foot,            //!< The Footprint to shrink
+    StructuringElement const& element //!< The structuring element
+) {
+    // Create an empty FootprintSet covering the input region
+    PTR(Footprint) shrunk(new Footprint(0, foot.getRegion()));
 
-
-    image::Image<double>::Ptr circle_im(
-        new image::Image<double>(geom::Extent2I(2*ngrow + 1, 2*ngrow + 1))
-    );
-    *circle_im = 0;
-    for (int r = -ngrow; r <= ngrow; ++r) {
-        image::Image<double>::x_iterator row = circle_im->x_at(0, r + ngrow);
-        for (int c = -ngrow; c <= ngrow; ++c, ++row) {
-            if (r*r + c*c <= ngrow*ngrow) {
-                *row = 8;
+    // Calculate all possible primary runs.
+    std::vector<PrimaryRun> primaryRuns;
+    typedef std::vector<PrimaryRun>::const_iterator RunIter;
+    typedef std::pair<RunIter,RunIter> RunIterPair;
+    for (Footprint::SpanList::const_iterator spanIter = foot.getSpans().begin();
+         spanIter != foot.getSpans().end();
+         ++spanIter
+    ) {
+        int m = 0;
+        for (StructuringElement::const_iterator it = element.begin(); it != element.end(); ++it, ++m) {
+            if ((it->getX1() - it->getX0()) <= ((*spanIter)->getX1() - (*spanIter)->getX0())) {
+                int xmin = (*spanIter)->getX0() - it->getX0();
+                int xmax = (*spanIter)->getX1() - it->getX1();
+                int y = (*spanIter)->getY() - it->getY();
+                primaryRuns.push_back(PrimaryRun(m, y, xmin, xmax));
             }
         }
     }
 
-    math::FixedKernel::Ptr circle(new math::FixedKernel(*circle_im));
-    // Here's the actual grow step
-    image::MaskedImage<int>::Ptr convolvedImage(new image::MaskedImage<int>(idImage->getDimensions()));
-    math::convolve(*convolvedImage->getImage(), *idImage, *circle, false);
+    // Iterate over the primary runs in such a way that we consider all values
+    // of m for given y, then all m for y+1, etc.
+    std::sort(primaryRuns.begin(), primaryRuns.end(), comparePrimaryRun);
 
-    PTR(FootprintSet) grownList(new FootprintSet(*convolvedImage, 0.5, "", 1, false));
+    for (int y = primaryRuns.front().y; y <= primaryRuns.back().y; ++y) {
+        RunIterPair yRange = std::equal_range(primaryRuns.begin(), primaryRuns.end(),
+                                              y, ComparePrimaryRunY());
 
-    return convertGrownListToFootprint(*grownList->getFootprints(), bbox, foot);
+        // Discard runs for any value of y for which we find fewer groups than
+        // M, the total Y range of the structuring element. This is step 3.1
+        // of the Kim et al. algorithm.
+        if (std::distance(yRange.first, yRange.second) < element.getYRange()) {
+            continue;
+        }
+
+        // "good" runs are those which are covered by each value of m, ie by
+        // each row in the structuring element. Our algorithm will consider
+        // each value of m in turn, gradually whittling down the list of good
+        // runs, then finally convert the remainder into Spans and add them to
+        // the shrunken Footprint.
+        std::list<PrimaryRun> goodRuns;
+
+        for (int m = 0; m < element.getYRange(); ++m) {
+            RunIterPair mRange = std::equal_range(yRange.first, yRange.second, m, ComparePrimaryRunM());
+            if (mRange.first == mRange.second) {
+                // If a particular m is missing, we know that this y contains
+                // no good runs; this is equivalent to Kim et al. step 3.2.
+                goodRuns.clear();
+            } else {
+                // Consolidate all primary runs at this m so that they
+                // don't overlap.
+                std::list<PrimaryRun> candidateRuns;
+                int start_x = mRange.first->xmin;
+                int end_x = mRange.first->xmax;
+                for (RunIter run = mRange.first+1; run != mRange.second; ++run) {
+                    if (run->xmin > end_x) {
+                        // Start of a new run
+                        candidateRuns.push_back(PrimaryRun(m, y, start_x, end_x));
+                        start_x = run->xmin;
+                        end_x = run->xmax;
+                    } else {
+                        // Continuation of an existing run
+                        end_x = run->xmax;
+                    }
+                }
+                candidateRuns.push_back(PrimaryRun(m, y, start_x, end_x));
+
+                // Otherwise, calculate the intersection of candidate runs at
+                // this m with good runs from all previous m.
+                if (m == 0) {
+                    // For m = 0 we have nothing to compare to; all runs are
+                    // accepted.
+                    std::swap(goodRuns, candidateRuns);
+                } else {
+                    std::list<PrimaryRun> newlist;
+                    for (std::list<PrimaryRun>::const_iterator good = goodRuns.begin();
+                         good != goodRuns.end();
+                         ++good
+                    ) {
+                        for (std::list<PrimaryRun>::const_iterator cand = candidateRuns.begin();
+                             cand != candidateRuns.end();
+                             ++cand
+                        ) {
+                            int start = std::max(good->xmin, cand->xmin);
+                            int end = std::min(good->xmax, cand->xmax);
+                            if (end >= start) {
+                                newlist.push_back(PrimaryRun(m, y, start, end));
+                            }
+                        }
+                    }
+                    std::swap(newlist, goodRuns);
+                }
+            }
+        }
+        for (std::list<PrimaryRun>::const_iterator run = goodRuns.begin(); run != goodRuns.end(); ++run) {
+            shrunk->addSpan(run->y, run->xmin, run->xmax);
+        }
+    }
+
+    // Copy over peaks from the original footprint
+    shrunk->getPeaks() = PeakCatalog(
+        foot.getPeaks().getTable(),
+        foot.getPeaks().begin(), foot.getPeaks().end(),
+        true
+    );
+
+    shrunk->normalize();
+
+    return shrunk;
 }
 }
 
@@ -1704,135 +1998,50 @@ void nearestFootprint(std::vector<Footprint::Ptr> const& foots,
     }
 }
 
-
-/**
- * Grow a Footprint by ngrow pixels, returning a new Footprint
- */
-Footprint::Ptr growFootprint(
+PTR(Footprint) growFootprint(
         Footprint const& foot,          //!< The Footprint to grow
-        int ngrow,                      //!< how much to grow foot
+        int nGrow,                      //!< how much to grow foot
         bool isotropic                  //!< Grow isotropically (as opposed to a Manhattan metric)
-                                        //!< @note Isotropic grows are significantly slower
-                            )
-{
-    if (isotropic) {
-        return growFootprintSlow(foot, ngrow);
+) {
+    if (nGrow <= 0 || foot.getNpix() == 0 ) {
+        // Return a new footprint equal to the input.
+        return PTR(Footprint)(new Footprint(foot));
     }
 
-    if (ngrow < 0) {
-        ngrow = 0;                      // ngrow == 0 => no grow
-    }
-    /*
-     * We'll insert the footprints into an image, set all the pixels to the Manhatten distance from the
-     * nearest set pixel, then extract a footprint from the result
-     *
-     * Cf. http://ostermiller.org/dilate_and_erode.html
-     */
-    geom::Box2I bbox = foot.getBBox();
-    bbox.grow(ngrow);
-    image::Image<int>::Ptr idImage(new image::Image<int>(bbox));
-    *idImage = 0;
-    idImage->setXY0(0, 0);
-
-    // Set all the pixels in the footprint to 1
-    set_footprint_id<int>(idImage, foot, 1, -bbox.getMinX(), -bbox.getMinY());
-    //
-    // Set the idImage to the Manhattan distance from the nearest set pixel
-    //
-    int const height = idImage->getHeight();
-    int const width = idImage->getWidth();
-
-    // traverse from bottom left to top right
-    for (int y = 0; y != height; ++y) {
-        image::Image<int>::xy_locator im = idImage->xy_at(0, y);
-
-        for (int x = 0; x != width; ++x, ++im.x()) {
-            if (im(0, 0) == 1) {
-                // first pass and pixel was on, it gets a zero
-                im(0, 0) = 0;
-            } else {
-                // pixel was off. It is at most the sum of lengths of the array away from a pixel that is on
-                im(0, 0) = width + height;
-                // or one more than the pixel to the north
-                if (y > 0) {
-                    // im(0, 0)[0] == static_cast<int>(im(0, 0))
-                    im(0, 0) = std::min(im(0, 0)[0], im(0, -1) + 1);
-                }
-                // or one more than the pixel to the west
-                if (x > 0) {
-                    im(0, 0) = std::min(im(0, 0)[0], im(-1, 0) + 1);
-                }
-            }
-        }
-    }
-    // traverse from top right to bottom left
-    for (int y = height - 1; y >= 0; --y) {
-        image::Image<int>::xy_locator im = idImage->xy_at(width - 1, y);
-        for (int x = width - 1; x >= 0; --x, --im.x()) {
-            // either what we had on the first pass or one more than the pixel to the south
-            if (y + 1 < height) {
-                im(0, 0) = std::min(im(0, 0)[0], im(0, 1) + 1);
-            }
-            // or one more than the pixel to the east
-            if (x + 1 < width) {
-                im(0, 0) = std::min(im(0, 0)[0], im(1, 0) + 1);
-            }
-        }
-    }
-
-    image::MaskedImage<int>::Ptr midImage(new image::MaskedImage<int>(idImage));
-    // XXX Why do I need a -ve threshold when parity == false? I'm looking for pixels below ngrow
-    PTR(FootprintSet) grownList(new FootprintSet(*midImage, Threshold(-ngrow, Threshold::VALUE, false)));
-
-    return convertGrownListToFootprint(*grownList->getFootprints(), bbox, foot);
+    // An isotropic grow is equivalent to growing with a circular structuring
+    // element, while a Manhattan grow is equivalent to growing with a
+    // diamond-shaped element.
+    StructuringElement::Shape shape = isotropic ? StructuringElement::CIRCLE : StructuringElement::DIAMOND;
+    return growFootprintImpl(foot, StructuringElement(shape, nGrow));
 }
 
-/**
- * \note Deprecated interface; use the Footprint const& version
- */
-Footprint::Ptr growFootprint(Footprint::Ptr const& foot, int ngrow, bool isotropic) {
-    return growFootprint(*foot, ngrow, isotropic);
+PTR(Footprint) growFootprint(PTR(Footprint) const& foot, int nGrow, bool isotropic) {
+    return growFootprint(*foot, nGrow, isotropic);
 }
 
-/**
- * \brief Grow a Foorprint in at least one of the cardinal directions, returning a new Footprint
- *
- * Note that any left/right grow is done prior to the up/down grow, so any left/right grown pixels
- * \em are subject to a further up/down grow (i.e. an initial single pixel Footprint will end up
- * as a square, not a cross.
- */
-PTR(Footprint) growFootprint(Footprint const& old, ///< Footprint to grow
-                             int nGrow,            ///< How many pixels to grow it
-                             bool left,            ///< grow to the left
-                             bool right,           ///< grow to the right
-                             bool up,              ///< grow up
-                             bool down             ///< grow down
+PTR(Footprint) growFootprint(Footprint const& foot, ///< Footprint to grow
+                             int nGrow,             ///< How many pixels to grow it
+                             bool left,             ///< grow to the left
+                             bool right,            ///< grow to the right
+                             bool up,               ///< grow up
+                             bool down              ///< grow down
                             )
 {
-    Footprint::Ptr grown(new Footprint(old.getPeaks().getSchema(), 0, old.getRegion()));
-
-    for (Footprint::SpanList::const_iterator siter = old.getSpans().begin();
-            siter != old.getSpans().end(); ++siter) {
-        CONST_PTR(Span) span = *siter;
-        int y=span->getY();
-        int x0 = (left) ? span->getX0() - nGrow : span->getX0();
-        int x1 = (right) ? span->getX1() + nGrow : span->getX1();
-        grown->addSpan(y, x0, x1);
-        if (up) {
-            for(int i=1; i <=nGrow; i++) {
-                grown->addSpan(y+i,span->getX0(), span->getX1());
-            }
-        }
-        if (down) {
-            for(int i=1; i <=nGrow; i++) {
-                grown->addSpan(y-i, span->getX0(), span->getX1());
-            }
-        }
+    if (nGrow <= 0 || foot.getNpix() == 0 ) {
+        // Return a new footprint equal to the input.
+        return PTR(Footprint)(new Footprint(foot));
     }
+    return growFootprintImpl(foot, StructuringElement(left ? nGrow: 0, right ? nGrow : 0,
+                                                      up ? nGrow : 0, down ? nGrow : 0));
+}
 
-    //normalize to remove overlapped spans and correct bbox
-    grown->normalize();
-    return grown;
+PTR(Footprint) shrinkFootprint(
+        Footprint const& foot,          //!< The Footprint to shrink
+        int nShrink,                    //!< How much to grow foot
+        bool isotropic                  //!< Shrink isotropically (as opposed to a Manhattan metric)
+) {
+    StructuringElement::Shape shape = isotropic ? StructuringElement::CIRCLE : StructuringElement::DIAMOND;
+    return shrinkFootprintImpl(foot, StructuringElement(shape, nShrink));
 }
 
 /************************************************************************************************************/
