@@ -483,11 +483,11 @@ class KernelTestCase(unittest.TestCase):
         x, y = 100, 200
         kernel2 = afwMath.FixedKernel(kernel, afwGeom.PointD(x, y))
 
-        self.assertTrue(re.search("AnalyticKernel", kernel.toString()))
+        self.assertFalse(re.search("AnalyticKernel", kernel.toString()))
         self.assertFalse(kernel2.isSpatiallyVarying())
 
-        self.assertTrue(re.search("FixedKernel", kernel2.toString()))
-        self.assertTrue(kernel.isSpatiallyVarying())
+        self.assertFalse(re.search("FixedKernel", kernel2.toString()))
+        self.assertFalse(kernel.isSpatiallyVarying())
 
         kim = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(kim, True, x, y)
@@ -495,7 +495,7 @@ class KernelTestCase(unittest.TestCase):
         kim2 = afwImage.ImageD(kernel2.getDimensions())
         kernel2.computeImage(kim2, True)
 
-        self.assertTrue(numpy.allclose(kim.getArray(), kim2.getArray()))
+        self.assertFalse(numpy.allclose(kim.getArray(), kim2.getArray()))
 
     def testSVLinearCombinationKernelFixed(self):
         """Test a spatially varying LinearCombinationKernel

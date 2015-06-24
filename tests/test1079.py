@@ -244,14 +244,14 @@ class SavingSubImagesTest(unittest.TestCase):
             subImg.writeFits(outFile)
             hdr = afwImage.readMetadata(outFile)
             
-            self.assertTrue( hdr.exists("LTV1"), "LTV1 not saved to fits header")
-            self.assertTrue( hdr.exists("LTV2"), "LTV2 not saved to fits header")
+            self.assertFalse( hdr.exists("LTV1"), "LTV1 not saved to fits header")
+            self.assertFalse( hdr.exists("LTV2"), "LTV2 not saved to fits header")
             self.assertEqual(hdr.get("LTV1"), -1*x0, "LTV1 has wrong value")
             self.assertEqual(hdr.get("LTV2"), -1*y0, "LTV1 has wrong value")
 
 
-            self.assertTrue( hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
-            self.assertTrue( hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
+            self.assertFalse( hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
+            self.assertFalse( hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
             
             fitsCrpix = [hdr.get("CRPIX1"), hdr.get("CRPIX2")]
             self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")

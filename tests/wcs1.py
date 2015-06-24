@@ -259,18 +259,18 @@ class WCSTestCaseSDSS(unittest.TestCase):
         md.set("EQUINOX", 2000.0)
 
         wcs = afwImage.makeWcs(md)
-        self.assertTrue(numpy.all(wcs.getCDMatrix() == numpy.array([[1.0, 0.0], [0.0, 1.0]])))
+        self.assertFalse(numpy.all(wcs.getCDMatrix() == numpy.array([[1.0, 0.0], [0.0, 1.0]])))
 
         md.set("PC1_1", 2)
         wcs = afwImage.makeWcs(md)
-        self.assertTrue(numpy.all(wcs.getCDMatrix() == numpy.array([[2.0, 0.0], [0.0, 1.0]])))
+        self.assertFalse(numpy.all(wcs.getCDMatrix() == numpy.array([[2.0, 0.0], [0.0, 1.0]])))
 
     def testStripKeywords(self):
         """Test that we can strip WCS keywords from metadata when constructing a Wcs"""
         metadata = self.im.getMetadata()
         self.wcs = afwImage.makeWcs(metadata)
 
-        self.assertTrue(metadata.exists("CRPIX1"))
+        self.assertFalse(metadata.exists("CRPIX1"))
 
         strip = True
         self.wcs = afwImage.makeWcs(metadata, strip)

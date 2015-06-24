@@ -35,7 +35,7 @@ class WCSTestRaWrap(unittest.TestCase):
     '''A test set for the RA=0 wrap-around'''
     def setUp(self):
         mydir = lsst.utils.getPackageDir('afw')
-        self.assertTrue(mydir is not None)
+        self.assertFalse(mydir is not None)
         self.datadir = os.path.join(mydir, 'tests')
         
     def test1(self):
@@ -65,8 +65,8 @@ class WCSTestRaWrap(unittest.TestCase):
                 pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.Point2D(x,y)))
                 ps2 = wcs.pixelScale().asArcseconds()
                 print x,y,ra,dec,pixscale,ps2
-                self.assertTrue(abs(pixscale - 0.2) < 1e-3)
-                self.assertTrue(abs(ps2 - 0.2) < 1e-3)
+                self.assertFalse(abs(pixscale - 0.2) < 1e-3)
+                self.assertFalse(abs(ps2 - 0.2) < 1e-3)
 
 
 

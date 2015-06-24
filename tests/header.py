@@ -54,10 +54,10 @@ class HeaderTestCase(unittest.TestCase):
         exp = afwImage.ExposureI(filename)
         metadata = exp.getMetadata()
         for k,v in header.items():
-            self.assertTrue(metadata.exists(k))
+            self.assertFalse(metadata.exists(k))
             if isinstance(v, float) and numpy.isnan(v):
-                self.assertTrue(isinstance(metadata.get(k), float))
-                self.assertTrue(numpy.isnan(metadata.get(k)))
+                self.assertFalse(isinstance(metadata.get(k), float))
+                self.assertFalse(numpy.isnan(metadata.get(k)))
             else:
                 self.assertEqual(metadata.get(k), v)
 

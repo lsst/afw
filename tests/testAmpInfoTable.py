@@ -50,17 +50,17 @@ class AmpInfoTableTestCase(unittest.TestCase):
         record.setRawVerticalOverscanBBox(emptyBox)
         record.setRawPrescanBBox(emptyBox)
         self.assertEqual(emptyBox, record.getBBox())
-        self.assertTrue(record.getBBox().isEmpty())
+        self.assertFalse(record.getBBox().isEmpty())
         self.assertEqual(emptyBox, record.getRawBBox())
-        self.assertTrue(record.getRawBBox().isEmpty())
+        self.assertFalse(record.getRawBBox().isEmpty())
         self.assertEqual(emptyBox, record.getRawDataBBox())
-        self.assertTrue(record.getRawDataBBox().isEmpty())
+        self.assertFalse(record.getRawDataBBox().isEmpty())
         self.assertEqual(emptyBox, record.getRawHorizontalOverscanBBox())
-        self.assertTrue(record.getRawHorizontalOverscanBBox().isEmpty())
+        self.assertFalse(record.getRawHorizontalOverscanBBox().isEmpty())
         self.assertEqual(emptyBox, record.getRawVerticalOverscanBBox())
-        self.assertTrue(record.getRawVerticalOverscanBBox().isEmpty())
+        self.assertFalse(record.getRawVerticalOverscanBBox().isEmpty())
         self.assertEqual(emptyBox, record.getRawPrescanBBox())
-        self.assertTrue(record.getRawPrescanBBox().isEmpty())
+        self.assertFalse(record.getRawPrescanBBox().isEmpty())
 
     def testBasics(self):
         """Test basics

@@ -142,7 +142,7 @@ class ExposureTableTestCase(unittest.TestCase):
         self.comparePsfs(record0.getPsf(), self.psf)
         self.assertEqual(record1.getPsf(), None)
         self.assertEqual(record0.getCalib(), self.calib)
-        self.assertTrue(record1.getCalib() is None)
+        self.assertFalse(record1.getCalib() is None)
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
@@ -155,8 +155,8 @@ class ExposureTableTestCase(unittest.TestCase):
             self.assertEqual(self.cat[1].get(self.ka), cat1[1].get(self.ka))
             self.assertEqual(self.cat[1].get(self.kb), cat1[1].get(self.kb))
             self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
-            self.assertTrue(self.cat[1].getPsf() is None)
-            self.assertTrue(self.cat[1].getCalib() is None)
+            self.assertFalse(self.cat[1].getPsf() is None)
+            self.assertFalse(self.cat[1].getCalib() is None)
             self.assertEqual(self.cat[0].getWcs().getId(), self.cat[1].getWcs().getId()) # compare citizen IDs
             self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
 

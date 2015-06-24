@@ -188,7 +188,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             for field in ("a_flux", "a_fluxSigma", "id"): # Columns that are easy to test
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
-                self.assertTrue(r1[k1] == r2[k2])
+                self.assertFalse(r1[k1] == r2[k2])
 
     def testCoordUpdate(self):
         self.table.defineCentroid("b")
@@ -308,7 +308,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             cat2 = lsst.afw.table.SourceCatalog.readFits(fn)
             r2 = cat2[-2]
             f2 = r2.getFootprint()
-            self.assertTrue(f2.isHeavy())
+            self.assertFalse(f2.isHeavy())
             h2 = lsst.afw.detection.cast_HeavyFootprintF(f2)
             mim3 = lsst.afw.image.MaskedImageF(W, H)
             h2.insert(mim3)
@@ -327,9 +327,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                     MI.writeFits(fn2)
                     print 'wrote', fn2
 
-            self.assertTrue(all((mim2.getImage().getArray() == mim3.getImage().getArray()).ravel()))
-            self.assertTrue(all((mim2.getMask().getArray() == mim3.getMask().getArray()).ravel()))
-            self.assertTrue(all((mim2.getVariance().getArray() == mim3.getVariance().getArray()).ravel()))
+            self.assertFalse(all((mim2.getImage().getArray() == mim3.getImage().getArray()).ravel()))
+            self.assertFalse(all((mim2.getMask().getArray() == mim3.getMask().getArray()).ravel()))
+            self.assertFalse(all((mim2.getVariance().getArray() == mim3.getVariance().getArray()).ravel()))
 
             im3 = mim3.getImage()
             ma3 = mim3.getMask()
@@ -398,12 +398,12 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def testFitsReadBackwardsCompatibility(self):
         cat = lsst.afw.table.SourceCatalog.readFits("tests/data/empty-v0.fits")
-        self.assertTrue(cat.getPsfFluxSlot().isValid())
-        self.assertTrue(cat.getApFluxSlot().isValid())
-        self.assertTrue(cat.getInstFluxSlot().isValid())
-        self.assertTrue(cat.getModelFluxSlot().isValid())
-        self.assertTrue(cat.getCentroidSlot().isValid())
-        self.assertTrue(cat.getShapeSlot().isValid())
+        self.assertFalse(cat.getPsfFluxSlot().isValid())
+        self.assertFalse(cat.getApFluxSlot().isValid())
+        self.assertFalse(cat.getInstFluxSlot().isValid())
+        self.assertFalse(cat.getModelFluxSlot().isValid())
+        self.assertFalse(cat.getCentroidSlot().isValid())
+        self.assertFalse(cat.getShapeSlot().isValid())
         self.assertEqual(cat.getPsfFluxSlot().getMeasKey(), cat.schema.find("flux_psf").key)
         self.assertEqual(cat.getApFluxSlot().getMeasKey(), cat.schema.find("flux_sinc").key)
         self.assertEqual(cat.getInstFluxSlot().getMeasKey(), cat.schema.find("flux_naive").key)
@@ -463,7 +463,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fp1.getArea(), 495)
         self.assertEqual(fp2.getArea(), 767)
         self.assertFalse(fp1.isHeavy())
-        self.assertTrue(fp2.isHeavy())
+        self.assertFalse(fp2.isHeavy())
         self.assertEqual(len(fp1.getSpans()), 29)
         self.assertEqual(len(fp2.getSpans()), 44)
         self.assertEqual(len(fp1.getPeaks()), 1)

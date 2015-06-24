@@ -593,7 +593,7 @@ class DecoratedImageTestCase(unittest.TestCase):
             return
 
         meta = afwImage.readMetadata(self.fileForMetadata)
-        self.assertTrue("NAXIS1" in meta.names())
+        self.assertFalse("NAXIS1" in meta.names())
         self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
         self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
 

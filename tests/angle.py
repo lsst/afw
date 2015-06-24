@@ -64,7 +64,7 @@ class AngleTestCase(unittest.TestCase):
         self.assertEqual(self.d, dd)
 
     def testArithmetic(self):
-        self.assertTrue(afwGeom.isAngle(self.pi))
+        self.assertFalse(afwGeom.isAngle(self.pi))
         self.assertFalse(afwGeom.isAngle(self.pi.asRadians()))
         self.assertFalse(afwGeom.isAngle(math.pi))
         

@@ -144,8 +144,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
         #now try with the Neural Network covariogram
 
@@ -197,8 +197,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
     def testMinMax(self):
         """
@@ -292,8 +292,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
     def testAddition(self):
         """
@@ -387,8 +387,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "worst sig2 error ",worstSigErr
 
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
     def testKdTree(self):
         """
@@ -434,7 +434,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                     dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
                 if dd>worstErr:
                     worstErr=dd
-        self.assertTrue(worstErr<tol)
+        self.assertFalse(worstErr<tol)
 
         try:
             kd.removePoint(2)
@@ -453,7 +453,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                     dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
                 if dd>worstErr:
                     worstErr=dd
-        self.assertTrue(worstErr<tol)
+        self.assertFalse(worstErr<tol)
 
         try:
             kd.removePoint(10)
@@ -472,7 +472,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                     dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
                 if dd>worstErr:
                     worstErr=dd
-        self.assertTrue(worstErr<tol)
+        self.assertFalse(worstErr<tol)
         print "\nworst distance error in kdTest ",worstErr,"\n"
 
 
@@ -560,8 +560,8 @@ class GaussianProcessTestCase(unittest.TestCase):
             if err > worstMuErr:
                 worstMuErr = err
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstVarErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstVarErr < tol)
 
         print "\nThe errors for batch interpolation\n"
         print "worst mu error ",worstMuErr
@@ -637,8 +637,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "\nThe errors for self interpolation\n"
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
     def testVector(self):
         """
@@ -707,8 +707,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "\nThe errors for vector interpolation\n"
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
         worstMuErr=-1.0
         worstSigErr=-1.0
@@ -745,8 +745,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "\nThe errors for vector self interpolation\n"
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
         queries=np.zeros((100,10), dtype = float)
         batchMu=np.zeros((100,4), dtype = float)
@@ -808,8 +808,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "\nThe errors for vector batch interpolation with variance\n"
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
         ggbatch.batchInterpolate(batchMu,queries)
         worstMuErr=-1.0
@@ -826,7 +826,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         print "\nThe errors for vector batch interpolation without variance\n"
         print "worst mu error ",worstMuErr
-        self.assertTrue(worstMuErr < tol)
+        self.assertFalse(worstMuErr < tol)
 
 
         f=open("tests/data/gp_vector_add_data.sav","r")
@@ -875,8 +875,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
 
     def testSubtraction(self):
@@ -952,8 +952,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "\nThe errors for subtraction interpolation\n"
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
         worstMuErr=-1.0
         worstSigErr=-1.0
@@ -988,8 +988,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print "\nThe errors for subtraction self interpolation\n"
         print "worst mu error ",worstMuErr
         print "worst sig2 error ",worstSigErr
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertFalse(worstMuErr < tol)
+        self.assertFalse(worstSigErr < tol)
 
 def suite():
     utilsTests.init()

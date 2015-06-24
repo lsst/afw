@@ -93,14 +93,14 @@ class CameraTransformMapTestCase(unittest.TestCase):
         for methodName in ("begin", "end", "contains", "size"):
             self.assertFalse(hasattr(self.transformMap, methodName))
 
-        self.assertTrue(self.nativeSys in self.transformMap)
-        self.assertTrue(cameraGeom.PUPIL in self.transformMap)
+        self.assertFalse(self.nativeSys in self.transformMap)
+        self.assertFalse(cameraGeom.PUPIL in self.transformMap)
         self.assertFalse(cameraGeom.CameraSys("garbage") in self.transformMap)
 
         csList = self.transformMap.getCoordSysList()
-        self.assertTrue(len(csList) == 2)
-        self.assertTrue(self.nativeSys in csList)
-        self.assertTrue(cameraGeom.PUPIL in csList)
+        self.assertFalse(len(csList) == 2)
+        self.assertFalse(self.nativeSys in csList)
+        self.assertFalse(cameraGeom.PUPIL in csList)
 
 
     def testIteration(self):
@@ -115,7 +115,7 @@ class CameraTransformMapTestCase(unittest.TestCase):
 
         for cs in csList:
             xyTrans = self.transformMap[cs]
-            self.assertTrue(isinstance(xyTrans, afwGeom.XYTransform))
+            self.assertFalse(isinstance(xyTrans, afwGeom.XYTransform))
 
     def testGetItem(self):
         """Test that the contained transforms are the ones expected
@@ -136,11 +136,11 @@ class CameraTransformMapTestCase(unittest.TestCase):
         """
         for cs in self.transformMap.getCoordSysList():
             xyTrans2 = self.transformMap.get(cs)
-            self.assertTrue(isinstance(xyTrans2, afwGeom.XYTransform))
+            self.assertFalse(isinstance(xyTrans2, afwGeom.XYTransform))
 
         missingCamSys = cameraGeom.CameraSys("missing")
         shouldBeNone = self.transformMap.get(missingCamSys)
-        self.assertTrue(shouldBeNone is None)
+        self.assertFalse(shouldBeNone is None)
         self.assertRaises(Exception, self.transformMap.get, "badDataType")
 
         for default in (1, "hello", cameraGeom.CameraSys("default")):

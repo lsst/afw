@@ -104,7 +104,7 @@ class BackgroundTestCase(unittest.TestCase):
 
         for iy, by in zip([image.get(0, y) for y in range(H)],
                           [back.get(0, y) for y in range(H)]):
-            self.assertTrue(abs(iy - by) < 5)
+            self.assertFalse(abs(iy - by) < 5)
 
         if False:
             import matplotlib
@@ -183,12 +183,12 @@ class BackgroundTestCase(unittest.TestCase):
             # test getPixel()
             testval = afwMath.cast_BackgroundMI(backobj).getPixel(naxis1//2, naxis2//2)
             self.assertAlmostEqual(testval/centerValue, 1, places=7)
-            self.assertTrue( abs(testval - reqMean) < 2*stdevInterp )
+            self.assertFalse( abs(testval - reqMean) < 2*stdevInterp )
 
             # test getImage() by checking the center pixel
             bimg = backobj.getImageF()
             testImgval = bimg.get(naxis1//2, naxis2//2)
-            self.assertTrue( abs(testImgval - reqMean) < 2*stdevInterp )
+            self.assertFalse( abs(testImgval - reqMean) < 2*stdevInterp )
 
     def testRamp(self):
         # make a ramping image (spline should be exact for linear increasing image
@@ -229,7 +229,7 @@ class BackgroundTestCase(unittest.TestCase):
         testImage = bg.getImageF(box, "AKIMA_SPLINE")
         self.assertEqual(testImage.getXY0(), bgSubImage.getXY0())
         self.assertEqual(testImage.getDimensions(), bgSubImage.getDimensions())
-        self.assertTrue(np.all(testImage.getArray() == bgSubImage.getArray()))
+        self.assertFalse(np.all(testImage.getArray() == bgSubImage.getArray()))
 
     def getParabolaImage(self, nx, ny, pars=(1.0e-4, 1.0e-4, 0.1, 0.2, 10.0)):
         parabimg = afwImage.ImageF(afwGeom.Extent2I(nx, ny))
@@ -305,7 +305,7 @@ class BackgroundTestCase(unittest.TestCase):
                 # quadratic terms skew the averages of the subimages and the clipped mean for
                 # a subimage != value of center pixel.  1/20 counts on a 10000 count sky
                 # is a fair (if arbitrary) test.
-                self.assertTrue( abs(testval - realval) < 0.5 )
+                self.assertFalse( abs(testval - realval) < 0.5 )
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testCFHT_oldAPI(self):
@@ -362,10 +362,10 @@ class BackgroundTestCase(unittest.TestCase):
         # changing the bounding box should make no difference to the pixel values,
         # so compare pixels using exact equality
         for bgImage in bgImageList[1:]:
-            self.assertTrue(np.all(bgImage.getArray() == bgImageList[0].getArray()))
+            self.assertFalse(np.all(bgImage.getArray() == bgImageList[0].getArray()))
         for statsImage in statsImageList[1:]:
             for i in range(3):
-                self.assertTrue(np.all(statsImage.getArrays()[i] == statsImageList[0].getArrays()[i]))
+                self.assertFalse(np.all(statsImage.getArrays()[i] == statsImageList[0].getArrays()[i]))
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testSubImage(self):
@@ -388,7 +388,7 @@ class BackgroundTestCase(unittest.TestCase):
         subArr = bgSubImage.getArray()
 
         # the pixels happen to be identical but it is safer not to rely on that; close is good enough
-        self.assertTrue(np.allclose(subArr, subFullArr))
+        self.assertFalse(np.allclose(subArr, subFullArr))
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testCFHT(self):
@@ -683,7 +683,7 @@ class BackgroundTestCase(unittest.TestCase):
             if np.isfinite(pix00):
                 self.assertEqual(val, pix00)
             else:
-                self.assertTrue(np.isnan(val))
+                self.assertFalse(np.isnan(val))
 
     def testBackgroundFromStatsImage(self):
         """Check that we can rebuild a Background from a BackgroundMI.getStatsImage()
@@ -749,9 +749,9 @@ class BackgroundTestCase(unittest.TestCase):
     def assertBackgroundEqual(self, lhs, rhs):
         lhsStats, rhsStats = lhs.getStatsImage(), rhs.getStatsImage()
         self.assertEqual(lhs.getImageBBox(), rhs.getImageBBox())
-        self.assertTrue(np.all(lhsStats.getImage().getArray() == rhsStats.getImage().getArray()))
-        self.assertTrue(np.all(lhsStats.getMask().getArray() == rhsStats.getMask().getArray()))
-        self.assertTrue(np.all(lhsStats.getVariance().getArray() == rhsStats.getVariance().getArray()))
+        self.assertFalse(np.all(lhsStats.getImage().getArray() == rhsStats.getImage().getArray()))
+        self.assertFalse(np.all(lhsStats.getMask().getArray() == rhsStats.getMask().getArray()))
+        self.assertFalse(np.all(lhsStats.getVariance().getArray() == rhsStats.getVariance().getArray()))
 
 
     def testApproximate(self):

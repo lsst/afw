@@ -173,14 +173,14 @@ class ExposureTestCase(unittest.TestCase):
         Exposures should throw a lsst::pex::exceptions::NotFound.
         """
 
-        self.assertTrue(not self.exposureBlank.getWcs())
-        self.assertTrue(not self.exposureMiOnly.getWcs())
+        self.assertFalse(not self.exposureBlank.getWcs())
+        self.assertFalse(not self.exposureMiOnly.getWcs())
 
         # These two should pass
         self.exposureMiWcs.getWcs()
         self.exposureCrWcs.getWcs()
        
-        self.assertTrue(not self.exposureCrOnly.getWcs())
+        self.assertFalse(not self.exposureCrOnly.getWcs())
             
     def testSetMembers(self):
         """
@@ -225,7 +225,7 @@ class ExposureTestCase(unittest.TestCase):
         #
         self.assertFalse(exposure.hasPsf())
         exposure.setPsf(self.psf)
-        self.assertTrue(exposure.hasPsf())
+        self.assertFalse(exposure.hasPsf())
 
         exposure.setPsf(DummyPsf(1.0)) # we can reset the Psf
          
@@ -241,8 +241,8 @@ class ExposureTestCase(unittest.TestCase):
         self.assertFalse(self.exposureBlank.hasWcs())
 
         self.assertFalse(self.exposureMiOnly.hasWcs())
-        self.assertTrue(self.exposureMiWcs.hasWcs())
-        self.assertTrue(self.exposureCrWcs.hasWcs())
+        self.assertFalse(self.exposureMiWcs.hasWcs())
+        self.assertFalse(self.exposureCrWcs.hasWcs())
         self.assertFalse(self.exposureCrOnly.hasWcs())
        
     def testGetSubExposure(self):
@@ -306,7 +306,7 @@ class ExposureTestCase(unittest.TestCase):
         subExposure = mainExposure.Factory(mainExposure, subBBox, afwImage.LOCAL)
         self.checkWcs(mainExposure, subExposure)
         det = subExposure.getDetector()
-        self.assertTrue(det)
+        self.assertFalse(det)
         
         subExposure = afwImage.ExposureF(inFilePathSmall, subBBox, afwImage.LOCAL)
         
@@ -426,13 +426,13 @@ class ExposureTestCase(unittest.TestCase):
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
 
-        self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
-        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
-        self.assertTrue(numpy.allclose(miCopy.getVariance().getArray(), 175))
+        self.assertFalse(numpy.allclose(miCopy.getImage().getArray(), -50))
+        self.assertFalse(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertFalse(numpy.allclose(miCopy.getVariance().getArray(), 175))
 
-        self.assertTrue(numpy.allclose(mi.getImage().getArray(), 100))
-        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
-        self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
+        self.assertFalse(numpy.allclose(mi.getImage().getArray(), 100))
+        self.assertFalse(numpy.all(mi.getMask().getArray() == 5))
+        self.assertFalse(numpy.allclose(mi.getVariance().getArray(), 200))
 
     
     def testDeepCopySubData(self):
@@ -451,13 +451,13 @@ class ExposureTestCase(unittest.TestCase):
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
 
-        self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
-        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
-        self.assertTrue(numpy.allclose(miCopy.getVariance().getArray(), 175))
+        self.assertFalse(numpy.allclose(miCopy.getImage().getArray(), -50))
+        self.assertFalse(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertFalse(numpy.allclose(miCopy.getVariance().getArray(), 175))
 
-        self.assertTrue(numpy.allclose(mi.getImage().getArray(), 100))
-        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
-        self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
+        self.assertFalse(numpy.allclose(mi.getImage().getArray(), 100))
+        self.assertFalse(numpy.all(mi.getMask().getArray() == 5))
+        self.assertFalse(numpy.allclose(mi.getVariance().getArray(), 200))
     
     def testDeepCopyMetadata(self):
         """Make sure a deep copy of an Exposure has a deep copy of metadata (ticket #2568)

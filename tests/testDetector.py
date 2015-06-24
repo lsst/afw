@@ -58,7 +58,7 @@ class DetectorTestCase(unittest.TestCase):
         transformMap = detector.getTransformMap()
         self.assertEquals(len(transformMap), len(dw.transMap) + 1) # add 1 for null transform
         for cameraSys in dw.transMap:
-            self.assertTrue(cameraSys in transformMap)
+            self.assertFalse(cameraSys in transformMap)
 
         # make sure some complex objects stick around after detector is deleted
 
@@ -129,8 +129,8 @@ class DetectorTestCase(unittest.TestCase):
         for camSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS, cameraGeom.TAN_PIXELS):
             # camSys may be a CameraSys or a CameraSysPrefix
             fullCamSys = detector.makeCameraSys(camSys)
-            self.assertTrue(detector.hasTransform(camSys))
-            self.assertTrue(detector.hasTransform(fullCamSys))
+            self.assertFalse(detector.hasTransform(camSys))
+            self.assertFalse(detector.hasTransform(fullCamSys))
             detector.getTransform(camSys)
             detector.getTransform(fullCamSys)
 

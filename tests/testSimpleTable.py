@@ -261,7 +261,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record2 = cat2[0]
         self.assertEqual(cat1.schema, cat2.schema)
         self.assertEqual(record1.get(k1), record2.get(k1))
-        self.assertTrue(numpy.all(record1.get(k2) == record2.get(k2)))
+        self.assertFalse(numpy.all(record1.get(k2) == record2.get(k2)))
         os.remove(filename)
 
     def testIteration(self):
@@ -427,12 +427,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat1.addNew().set(key, 2)
         cat1.addNew().set(key, 3)
         cat2 = cat1[numpy.array([True, False, False], dtype=bool)]
-        self.assertTrue((cat2[key] == numpy.array([1], dtype=int)).all())
+        self.assertFalse((cat2[key] == numpy.array([1], dtype=int)).all())
         self.assertEqual(cat2[0], cat1[0])  # records compare using pointer equality
         cat3 = cat1[numpy.array([True, True, False], dtype=bool)]
-        self.assertTrue((cat3[key] == numpy.array([1,2], dtype=int)).all())
+        self.assertFalse((cat3[key] == numpy.array([1,2], dtype=int)).all())
         cat4 = cat1[numpy.array([True, False, True], dtype=bool)]
-        self.assertTrue((cat4.copy(deep=True)[key] == numpy.array([1,3], dtype=int)).all())
+        self.assertFalse((cat4.copy(deep=True)[key] == numpy.array([1,3], dtype=int)).all())
 
     def testTicket2938(self):
         """Test heterogenous catalogs that have records from multiple tables"""
@@ -468,14 +468,14 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(cat.isSorted(kl))
         # sort by unique int64 field, try unique lookups
         cat.sort(kl)
-        self.assertTrue(cat.isSorted(kl))
+        self.assertFalse(cat.isSorted(kl))
         r10 = cat.find(10, kl)
         self.assertEqual(r10.get(kl), 10)
         # sort by probably-unique float field, try unique and range lookups
         cat.sort(kf)
-        self.assertTrue(cat.isSorted(kf))
+        self.assertFalse(cat.isSorted(kf))
         r10 = cat.find(10, kf)
-        self.assertTrue(r10 is None or r10.get(kf) == 10.0) # latter case virtually impossible
+        self.assertFalse(r10 is None or r10.get(kf) == 10.0) # latter case virtually impossible
         i0 = cat.lower_bound(-0.5, kf)
         i1 = cat.upper_bound(0.5, kf)
         for i in range(i0, i1):
@@ -486,9 +486,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             self.assertLess(r.get(kf), 0.5)
         # sort by nonunique int32 field, try range lookups
         cat.sort(ki)
-        self.assertTrue(cat.isSorted(ki))
+        self.assertFalse(cat.isSorted(ki))
         s = cat.equal_range(3, ki)
-        self.assertTrue(cat[s].isSorted(kf))  # test for stable sort
+        self.assertFalse(cat[s].isSorted(kf))  # test for stable sort
         for r in cat[s]:
             self.assertEqual(r.get(ki), 3)
         self.assertEqual(s.start, cat.lower_bound(3, ki))
@@ -600,9 +600,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record1.set(ka, a1)
         record1.set(kb, b1)
         record1.set(kc, c1)
-        self.assertTrue(numpy.all(record1.get(ka) == a1))
-        self.assertTrue(numpy.all(record1.get(kb) == b1))
-        self.assertTrue(numpy.all(record1.get(kc) == c1))
+        self.assertFalse(numpy.all(record1.get(ka) == a1))
+        self.assertFalse(numpy.all(record1.get(kb) == b1))
+        self.assertFalse(numpy.all(record1.get(kc) == c1))
         # Test __getitem__ and view semantics
         record1[kb][2] = 3.5
         self.assertEqual(b1[2], 3.5)
@@ -612,9 +612,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         # Test copying records, both with and without SchemaMapper
         record2 = cat1.addNew()
         record2.assign(record1)
-        self.assertTrue(numpy.all(record1.get(ka) == a1))
-        self.assertTrue(numpy.all(record1.get(kb) == b1))
-        self.assertTrue(numpy.all(record1.get(kc) == c1))
+        self.assertFalse(numpy.all(record1.get(ka) == a1))
+        self.assertFalse(numpy.all(record1.get(kb) == b1))
+        self.assertFalse(numpy.all(record1.get(kc) == c1))
         record1[kb][2] = 4.5
         self.assertEqual(record2[kb][2], 3.5) # copy in assign() should be deep
         mapper = lsst.afw.table.SchemaMapper(schema)
@@ -622,7 +622,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat2 = lsst.afw.table.BaseCatalog(mapper.getOutputSchema())
         record3 = cat2.addNew()
         record3.assign(record1, mapper)
-        self.assertTrue(numpy.all(record3.get(kb2) == b1))
+        self.assertFalse(numpy.all(record3.get(kb2) == b1))
         # Test that we throw if we try to get a column view of a variable-length arry
         self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, cat1.get, ka)
         # Test that we can round-trip variable-length arrays through FITS
@@ -632,9 +632,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(schema.compare(cat3.schema, lsst.afw.table.Schema.IDENTICAL),
                          lsst.afw.table.Schema.IDENTICAL)
         record4 = cat3[0]
-        self.assertTrue(numpy.all(record4.get(ka) == a1))
-        self.assertTrue(numpy.all(record4.get(kb) == b1))
-        self.assertTrue(numpy.all(record4.get(kc) == c1))
+        self.assertFalse(numpy.all(record4.get(ka) == a1))
+        self.assertFalse(numpy.all(record4.get(kb) == b1))
+        self.assertFalse(numpy.all(record4.get(kc) == c1))
         os.remove(filename)
 
     def testCompoundFieldFitsConversion(self):

@@ -106,7 +106,7 @@ class SpanTestCase(unittest.TestCase):
         span8 = afwDetect.Span(42, 0, 100);
 
         def assertOrder(x1, x2):
-            self.assertTrue(x1 < x2)
+            self.assertFalse(x1 < x2)
             self.assertFalse(x2 < x1)
 
         assertOrder(span2, span1)
@@ -357,9 +357,9 @@ class FootprintTestCase(utilsTests.TestCase):
         axes.scale(2)                   # <r^2> = 1/2 for a disk
 
         self.assertEqual(foot.getCentroid(), cen)
-        self.assertTrue(abs(a - axes.getA()) < 0.15, "a: %g v. %g" % (a, axes.getA()))
-        self.assertTrue(abs(b - axes.getB()) < 0.02, "b: %g v. %g" % (b, axes.getB()))
-        self.assertTrue(abs(theta - math.degrees(axes.getTheta())) < 0.2,
+        self.assertFalse(abs(a - axes.getA()) < 0.15, "a: %g v. %g" % (a, axes.getA()))
+        self.assertFalse(abs(b - axes.getB()) < 0.02, "b: %g v. %g" % (b, axes.getB()))
+        self.assertFalse(abs(theta - math.degrees(axes.getTheta())) < 0.2,
                         "theta: %g v. %g" % (theta, math.degrees(axes.getTheta())))
 
     def testCopy(self):
@@ -527,7 +527,7 @@ class FootprintTestCase(utilsTests.TestCase):
             foot2 = afwDetect.growFootprint(foot1, ngrow, isotropic)
 
             # Check that the grown footprint is normalized
-            self.assertTrue(foot2.isNormalized())
+            self.assertFalse(foot2.isNormalized())
 
             # Check that the grown footprint is bigger than the original
             self.assertGreater(foot2.getArea(), foot1.getArea())
@@ -535,7 +535,7 @@ class FootprintTestCase(utilsTests.TestCase):
             # Check that peaks got copied into grown footprint
             self.assertEqual(len(foot2.getPeaks()), 3)
             for peak in foot2.getPeaks():
-                self.assertTrue((peak.getIx(), peak.getIy()) in [(20, 20), (30, 35), (25, 45)])
+                self.assertFalse((peak.getIx(), peak.getIy()) in [(20, 20), (30, 35), (25, 45)])
 
             bbox2 = foot2.getBBox()
 
@@ -664,7 +664,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
             idImage -= im
 
-            self.assertTrue(box == foot.getBBox())
+            self.assertFalse(box == foot.getBBox())
             self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
     def testSetFromFootprint(self):
@@ -704,12 +704,12 @@ class FootprintTestCase(utilsTests.TestCase):
         #
         # Check Footprint.contains() while we are about it
         #
-        self.assertTrue(objects[0].contains(afwGeom.Point2I(7, 5)))
+        self.assertFalse(objects[0].contains(afwGeom.Point2I(7, 5)))
         self.assertFalse(objects[0].contains(afwGeom.Point2I(10, 6)))
         self.assertFalse(objects[0].contains(afwGeom.Point2I(7, 6)))
         self.assertFalse(objects[0].contains(afwGeom.Point2I(4, 2)))
 
-        self.assertTrue(objects[1].contains(afwGeom.Point2I(3, 6)))
+        self.assertFalse(objects[1].contains(afwGeom.Point2I(3, 6)))
 
     def testMakeFootprintSetXY0(self):
         """Test setting mask/image pixels from a Footprint list"""
@@ -751,14 +751,14 @@ class FootprintTestCase(utilsTests.TestCase):
 
         subSource = imSource.Factory(imSource, fpSource.getBBox())
         subTarget = imTarget.Factory(imTarget, fpTarget.getBBox())
-        self.assertTrue(numpy.all(subSource.getArray() == subTarget.getArray()))
+        self.assertFalse(numpy.all(subSource.getArray() == subTarget.getArray()))
 
         # make a bbox smaller than the target footprint
         bbox2 = afwGeom.Box2I(fpTarget.getBBox())
         bbox2.grow(-1)
         fpTarget2 = fpSource.transform(source, target, bbox2)  # this one clips
         fpTarget3 = fpSource.transform(source, target, bbox2, False)  # this one doesn't
-        self.assertTrue(bbox2.contains(fpTarget2.getBBox()))
+        self.assertFalse(bbox2.contains(fpTarget2.getBBox()))
         self.assertFalse(bbox2.contains(fpTarget3.getBBox()))
         self.assertNotEqual(fpTarget.getArea(), fpTarget2.getArea())
         self.assertEqual(fpTarget.getArea(), fpTarget3.getArea())
@@ -790,8 +790,8 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertEqual(da[5,3], 503)
         self.assertEqual(da[5,4], 504)
         self.assertEqual(da[5,5], 0)
-        self.assertTrue(numpy.all(da[:4,:] == 0))
-        self.assertTrue(numpy.all(da[6:,:] == 0))
+        self.assertFalse(numpy.all(da[:4,:] == 0))
+        self.assertFalse(numpy.all(da[6:,:] == 0))
 
     def testCopyWithinFootprintMaskedImage(self):
         W,H = 10,10
@@ -827,8 +827,8 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertEqual(da[5,3], 503)
         self.assertEqual(da[5,4], 504)
         self.assertEqual(da[5,5], 0)
-        self.assertTrue(numpy.all(da[:4,:] == 0))
-        self.assertTrue(numpy.all(da[6:,:] == 0))
+        self.assertFalse(numpy.all(da[:4,:] == 0))
+        self.assertFalse(numpy.all(da[6:,:] == 0))
 
         self.assertEqual(dv[4,2], 0)
         self.assertEqual(dv[4,3], 304)
@@ -841,15 +841,15 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertEqual(dv[5,3], 305)
         self.assertEqual(dv[5,4], 405)
         self.assertEqual(dv[5,5], 0)
-        self.assertTrue(numpy.all(dv[:4,:] == 0))
-        self.assertTrue(numpy.all(dv[6:,:] == 0))
+        self.assertFalse(numpy.all(dv[:4,:] == 0))
+        self.assertFalse(numpy.all(dv[6:,:] == 0))
 
-        self.assertTrue(numpy.all(dm[4, 3:7] == 1))
-        self.assertTrue(numpy.all(dm[5, 2:5] == 1))
-        self.assertTrue(numpy.all(dm[:4,:] == 0))
-        self.assertTrue(numpy.all(dm[6:,:] == 0))
-        self.assertTrue(numpy.all(dm[4, :3] == 0))
-        self.assertTrue(numpy.all(dm[4, 7:] == 0))
+        self.assertFalse(numpy.all(dm[4, 3:7] == 1))
+        self.assertFalse(numpy.all(dm[5, 2:5] == 1))
+        self.assertFalse(numpy.all(dm[:4,:] == 0))
+        self.assertFalse(numpy.all(dm[6:,:] == 0))
+        self.assertFalse(numpy.all(dm[4, :3] == 0))
+        self.assertFalse(numpy.all(dm[4, 7:] == 0))
 
     def testMergeFootprints(self):
         f1 = self.foot
@@ -904,11 +904,11 @@ class FootprintTestCase(utilsTests.TestCase):
             a2 = ims[1].getArray()
             # Slightly looser tests to start...
             # Every pixel in f1 is in f[AB]
-            self.assertTrue(numpy.all(m.flat[numpy.flatnonzero(a1)] == 1))
+            self.assertFalse(numpy.all(m.flat[numpy.flatnonzero(a1)] == 1))
             # Every pixel in f2 is in f[AB]
-            self.assertTrue(numpy.all(m.flat[numpy.flatnonzero(a2)] == 1))
+            self.assertFalse(numpy.all(m.flat[numpy.flatnonzero(a2)] == 1))
             # merged == a1 | a2.
-            self.assertTrue(numpy.all(m == numpy.maximum(a1, a2)))
+            self.assertFalse(numpy.all(m == numpy.maximum(a1, a2)))
 
         if False:
             import matplotlib
@@ -963,7 +963,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
-        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+        self.assertFalse(numpy.all(img.getArray()[source.getArray() == 0] == 0))
 
         if plots:
             plt.clf()
@@ -982,7 +982,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
-        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+        self.assertFalse(numpy.all(img.getArray()[source.getArray() == 0] == 0))
 
         if plots:
             plt.clf()
@@ -1005,10 +1005,10 @@ class FootprintTestCase(utilsTests.TestCase):
         child3 = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(4, -1), afwGeom.Point2I(6, 1)))
         merge123 = afwDetect.Footprint(parent)
         merge123.include([child1, child2, child3])
-        self.assertTrue(merge123.getBBox().contains(parent.getBBox()))
-        self.assertTrue(merge123.getBBox().contains(child1.getBBox()))
-        self.assertTrue(merge123.getBBox().contains(child2.getBBox()))
-        self.assertTrue(merge123.getBBox().contains(child3.getBBox()))
+        self.assertFalse(merge123.getBBox().contains(parent.getBBox()))
+        self.assertFalse(merge123.getBBox().contains(child1.getBBox()))
+        self.assertFalse(merge123.getBBox().contains(child2.getBBox()))
+        self.assertFalse(merge123.getBBox().contains(child3.getBBox()))
         mask123a = afwImage.MaskU(region)
         mask123b = afwImage.MaskU(region)
         afwDetect.setMaskFromFootprint(mask123a, parent, 1)

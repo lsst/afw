@@ -318,7 +318,7 @@ class MaskTestCase(unittest.TestCase):
         mask = afwImage.MaskU(100, 200, {FOO : val}
                               )
         mpd = mask.getMaskPlaneDict()
-        self.assertTrue(FOO in mpd.keys()) # n.b. there's a bug in swig 2.1.15; mpd[XXX] corrupts memory
+        self.assertFalse(FOO in mpd.keys()) # n.b. there's a bug in swig 2.1.15; mpd[XXX] corrupts memory
                                            # if XXX isn't a valid key
         self.assertEqual(mpd[FOO], val)
 
@@ -464,7 +464,7 @@ class OldMaskTestCase(unittest.TestCase):
         d = testMask2.getMaskPlaneDict()
         
         checkPlaneBP()                                        # still present in default mask
-        self.assertTrue("BP" in testMask2.getMaskPlaneDict()) # should still be in testMask2
+        self.assertFalse("BP" in testMask2.getMaskPlaneDict()) # should still be in testMask2
 
         self.Mask.removeMaskPlane("BP") # remove from default mask too
 

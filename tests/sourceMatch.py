@@ -261,7 +261,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN"""
-        self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
+        self.assertFalse(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

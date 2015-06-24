@@ -50,13 +50,13 @@ class CameraSysTestCase(unittest.TestCase):
 
                 if detectorName:
                     self.assertFalse(cameraSys == noDetSys)
-                    self.assertTrue(cameraSys != noDetSys)
+                    self.assertFalse(cameraSys != noDetSys)
                 else:
-                    self.assertTrue(cameraSys == noDetSys)
+                    self.assertFalse(cameraSys == noDetSys)
                     self.assertFalse(cameraSys != noDetSys)
 
-                self.assertTrue(cameraSys != camSysPrefix)
-                self.assertTrue(noDetSys != camSysPrefix)
+                self.assertFalse(cameraSys != camSysPrefix)
+                self.assertFalse(noDetSys != camSysPrefix)
                 self.assertFalse(cameraSys == camSysPrefix)
                 self.assertFalse(noDetSys == camSysPrefix)
 
@@ -64,19 +64,19 @@ class CameraSysTestCase(unittest.TestCase):
                 for detectorName2 in ("", "det1", "det2"):
                     cameraSys2 = cameraGeom.CameraSys(sysName2, detectorName2)
                     if sysName == sysName2 and detectorName == detectorName2:
-                        self.assertTrue(cameraSys == cameraSys2)
+                        self.assertFalse(cameraSys == cameraSys2)
                         self.assertFalse(cameraSys != cameraSys2)
                     else:
                         self.assertFalse(cameraSys == cameraSys2)
-                        self.assertTrue(cameraSys != cameraSys2)
+                        self.assertFalse(cameraSys != cameraSys2)
 
                     camSysPrefix2 = cameraGeom.CameraSysPrefix(sysName2)
                     if sysName2 == sysName:
-                        self.assertTrue(camSysPrefix2 == camSysPrefix)
+                        self.assertFalse(camSysPrefix2 == camSysPrefix)
                         self.assertFalse(camSysPrefix2 != camSysPrefix)
                     else:
                         self.assertFalse(camSysPrefix2 == camSysPrefix)
-                        self.assertTrue(camSysPrefix2 != camSysPrefix)
+                        self.assertFalse(camSysPrefix2 != camSysPrefix)
 
     def testRepr(self):
         """Test __repr__

@@ -236,7 +236,7 @@ class WarpExposureTestCase(unittest.TestCase):
         
         for cacheSize in (0, 100):
             wc = afwMath.WarpingControl("lanczos3", "bilinear", cacheSize)
-            self.assertTrue(wc.hasMaskWarpingKernel())
+            self.assertFalse(wc.hasMaskWarpingKernel())
             self.assertEqual(wc.getCacheSize(), cacheSize)
             self.assertEqual(wc.getWarpingKernel().getCacheSize(), cacheSize)
             self.assertEqual(wc.getMaskWarpingKernel().getCacheSize(), cacheSize)
@@ -420,10 +420,10 @@ class WarpExposureTestCase(unittest.TestCase):
         numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
         self.assertEqual(numGoodPix, 0)
         imArr, maskArr, varArr = toExp.getMaskedImage().getArrays()
-        self.assertTrue(numpy.alltrue(numpy.isnan(imArr)))
-        self.assertTrue(numpy.alltrue(numpy.isinf(varArr)))
+        self.assertFalse(numpy.alltrue(numpy.isnan(imArr)))
+        self.assertFalse(numpy.alltrue(numpy.isinf(varArr)))
         edgeMask = afwImage.MaskU.getPlaneBitMask("EDGE")
-        self.assertTrue(numpy.alltrue(maskArr == edgeMask))
+        self.assertFalse(numpy.alltrue(maskArr == edgeMask))
     
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):

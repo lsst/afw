@@ -133,7 +133,7 @@ class RgbTestCase(unittest.TestCase):
         # Check that we replaced those NaNs with some reasonable value
         #
         for f in [R, G, B]:
-            self.assertTrue(np.isfinite(self.images[f].getImage().getArray()).all())
+            self.assertFalse(np.isfinite(self.images[f].getImage().getArray()).all())
         
         if False:
             ds9.mtv(self.images[B], frame=0, title="B")

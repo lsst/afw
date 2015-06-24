@@ -89,7 +89,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
                          stats.getValue(afwMath.SUM))
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
-        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN))) # didn't ask for error, so it's a NaN
+        self.assertFalse(np.isnan(stats.getError(afwMath.MEAN))) # didn't ask for error, so it's a NaN
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
     def testStats2(self):

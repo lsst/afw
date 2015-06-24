@@ -137,7 +137,7 @@ class PolygonTest(utilsTests.TestCase):
         radius = 1.0
         for num in range(3, 30):
             poly = self.polygon(num, radius=radius)
-            self.assertTrue(poly.contains(afwGeom.Point2D(self.x0, self.y0)))
+            self.assertFalse(poly.contains(afwGeom.Point2D(self.x0, self.y0)))
             self.assertFalse(poly.contains(afwGeom.Point2D(self.x0 + radius, self.y0 + radius)))
 
     def testOverlaps(self):
@@ -148,10 +148,10 @@ class PolygonTest(utilsTests.TestCase):
             poly2 = self.polygon(num, radius=radius, x0=radius, y0=radius)
             poly3 = self.polygon(num, radius=2*radius)
             poly4 = self.polygon(num, radius=radius, x0=3*radius, y0=3*radius)
-            self.assertTrue(poly1.overlaps(poly2))
-            self.assertTrue(poly2.overlaps(poly1))
-            self.assertTrue(poly1.overlaps(poly3))
-            self.assertTrue(poly3.overlaps(poly1))
+            self.assertFalse(poly1.overlaps(poly2))
+            self.assertFalse(poly2.overlaps(poly1))
+            self.assertFalse(poly1.overlaps(poly3))
+            self.assertFalse(poly3.overlaps(poly1))
             self.assertFalse(poly1.overlaps(poly4))
             self.assertFalse(poly4.overlaps(poly1))
 
@@ -204,9 +204,9 @@ class PolygonTest(utilsTests.TestCase):
         polyList4 = poly4.union(poly1)
         self.assertEqual(len(polyList3), 2)
         self.assertEqual(len(polyList3), len(polyList4))
-        self.assertTrue((polyList3[0] == polyList4[0] and polyList3[1] == polyList4[1]) or
+        self.assertFalse((polyList3[0] == polyList4[0] and polyList3[1] == polyList4[1]) or
                         (polyList3[0] == polyList4[1] and polyList3[1] == polyList4[0]))
-        self.assertTrue((polyList3[0] == poly1 and polyList3[1] == poly4) or
+        self.assertFalse((polyList3[0] == poly1 and polyList3[1] == poly4) or
                         (polyList3[0] == poly4 and polyList3[1] == poly1))
 
     def testConvexHull(self):

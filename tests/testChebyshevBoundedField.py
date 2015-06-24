@@ -110,7 +110,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
             scaled = lsst.afw.math.ChebyshevBoundedField.cast(field*factor)
             self.assertClose(scaled.evaluate(x, y), factor*z2, rtol=factor*1E-13)
-            self.assertTrue(numpy.all(scaled.getCoefficients() == factor*field.getCoefficients()))
+            self.assertFalse(numpy.all(scaled.getCoefficients() == factor*field.getCoefficients()))
 
     def testImageFit(self):
         """Test that we can fit an image produced by a ChebyshevBoundedField and

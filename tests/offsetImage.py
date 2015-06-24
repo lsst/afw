@@ -171,9 +171,9 @@ class offsetImageTestCase(unittest.TestCase):
 #                                                      stats.getValue(afwMath.MIN),
 #                                                      stats.getValue(afwMath.MAX))
 #             
-#         self.assertTrue(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
-#         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
-#         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
+#         self.assertFalse(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
+#         self.assertFalse(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
+#         self.assertFalse(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
 
 
 def getOrigFracShift(dx, dy):

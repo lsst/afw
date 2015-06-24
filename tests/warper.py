@@ -102,7 +102,7 @@ class WarpExposureTestCase(unittest.TestCase):
         nGood2 = (mask2Arr & edgeMask == 0).sum()
         nGood3 = (mask3Arr & edgeMask == 0).sum()
         self.assertEqual(nGood1, nGood2)
-        self.assertTrue(nGood3 < nGood1)
+        self.assertFalse(nGood3 < nGood1)
 
         self.assertEquals(warpedExposure1.getFilter().getName(), originalFilter.getName())
         self.assertEquals(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
@@ -123,7 +123,7 @@ class WarpExposureTestCase(unittest.TestCase):
             border = -2, # should be ignored
             maxBBox = afwGeom.Box2I(afwGeom.Point2I(1, 2), afwGeom.Extent2I(8, 9)), # should be ignored
         )
-        self.assertTrue(bbox == warpedExposure.getBBox(afwImage.PARENT))
+        self.assertFalse(bbox == warpedExposure.getBBox(afwImage.PARENT))
     
     def getSwarpedImage(self, kernelName, useSubregion=False, useDeepCopy=False):
         """

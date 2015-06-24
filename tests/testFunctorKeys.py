@@ -80,9 +80,9 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fKey2.getY(), yKey)
         self.assertEqual(fKey0, fKey1)
         self.assertEqual(fKey1, fKey2)
-        self.assertTrue(fKey0.isValid())
-        self.assertTrue(fKey1.isValid())
-        self.assertTrue(fKey2.isValid())
+        self.assertFalse(fKey0.isValid())
+        self.assertFalse(fKey1.isValid())
+        self.assertFalse(fKey2.isValid())
         # check that a default-constructed functor key is invalid
         fKey3 = functorKeyType()
         self.assertNotEqual(fKey3, fKey1)
@@ -173,9 +173,9 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fKey2.getIxy(), xyKey)
         self.assertEqual(fKey0, fKey1)
         self.assertEqual(fKey1, fKey2)
-        self.assertTrue(fKey0.isValid())
-        self.assertTrue(fKey1.isValid())
-        self.assertTrue(fKey2.isValid())
+        self.assertFalse(fKey0.isValid())
+        self.assertFalse(fKey1.isValid())
+        self.assertFalse(fKey2.isValid())
         # check that a default-constructed functor key is invalid
         fKey3 = lsst.afw.table.QuadrupoleKey()
         self.assertNotEqual(fKey3, fKey1)
@@ -215,9 +215,9 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(fKey2.getCenter(), pKey)
         self.assertEqual(fKey0, fKey1)
         self.assertEqual(fKey1, fKey2)
-        self.assertTrue(fKey0.isValid())
-        self.assertTrue(fKey1.isValid())
-        self.assertTrue(fKey2.isValid())
+        self.assertFalse(fKey0.isValid())
+        self.assertFalse(fKey1.isValid())
+        self.assertFalse(fKey2.isValid())
         # check that a default-constructed functor key is invalid
         fKey3 = lsst.afw.table.EllipseKey()
         self.assertNotEqual(fKey3, fKey1)
@@ -306,8 +306,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # construct two equivalent functor keys using the different constructors
         fKey1 = FunctorKeyType(sigmaKeys, covKeys)
         fKey2 = FunctorKeyType(schema["a"], parameterNames)
-        self.assertTrue(fKey1.isValid())
-        self.assertTrue(fKey2.isValid())
+        self.assertFalse(fKey1.isValid())
+        self.assertFalse(fKey2.isValid())
         self.assertEqual(fKey1, fKey2)
         # verify that a default-constructed functor key is invalid
         fKey3 = FunctorKeyType()
@@ -378,11 +378,11 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         k3 = FunctorKeyType(c)             # construct from old-style Key<Array<T>>
         k4 = FunctorKeyType.addFields(schema, "d", "doc for d", "camels", 4)
         k5 = FunctorKeyType.addFields(schema, "e", "doc for e %3.1f", "camels", [2.1, 2.2])
-        self.assertTrue(k1.isValid())
-        self.assertTrue(k2.isValid())
-        self.assertTrue(k3.isValid())
-        self.assertTrue(k4.isValid())
-        self.assertTrue(k5.isValid())
+        self.assertFalse(k1.isValid())
+        self.assertFalse(k2.isValid())
+        self.assertFalse(k3.isValid())
+        self.assertFalse(k4.isValid())
+        self.assertFalse(k5.isValid())
         self.assertEqual(k1, k2)      # k1 and k2 point to the same underlying fields
         self.assertEqual(k1[2], a2)   # test that we can extract an element
         self.assertEqual(k1[1:3], FunctorKeyType([a1, a2]))  # test that we can slice ArrayKeys

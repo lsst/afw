@@ -72,7 +72,7 @@ class DistortedTanWcsTestCase(unittest.TestCase):
 
         self.assertEqual(self.tanWcs, tanWcsCopy)
         self.assertFalse(self.tanWcs.hasDistortion())
-        self.assertTrue(distortedWcs.hasDistortion())
+        self.assertFalse(distortedWcs.hasDistortion())
         try:
             self.tanWcs == distortedWcs
             self.fail("== should not be implemented for DistortedTanWcs")
@@ -124,21 +124,21 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         exposure.setWcs(self.tanWcs)
         self.assertFalse(self.tanWcs.hasDistortion())
         outWcs = getDistortedWcs(exposure.getInfo())
-        self.assertTrue(outWcs.hasDistortion())
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is not None)
+        self.assertFalse(outWcs.hasDistortion())
+        self.assertFalse(afwImage.DistortedTanWcs.cast(outWcs) is not None)
         del exposure # avoid accidental reuse
         del outWcs
 
         # return the original WCS if the exposure's WCS has distortion
         pixelsToTanPixels = afwGeom.RadialXYTransform([0, 1.001, 0.00003])
         distortedWcs = afwImage.DistortedTanWcs(self.tanWcs, pixelsToTanPixels)
-        self.assertTrue(distortedWcs.hasDistortion())
+        self.assertFalse(distortedWcs.hasDistortion())
         exposure = afwImage.ExposureF(10, 10)
         exposure.setWcs(distortedWcs)
         exposure.setDetector(detector)
         outWcs = getDistortedWcs(exposure.getInfo())
-        self.assertTrue(outWcs.hasDistortion())
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is not None)
+        self.assertFalse(outWcs.hasDistortion())
+        self.assertFalse(afwImage.DistortedTanWcs.cast(outWcs) is not None)
         del exposure
         del distortedWcs
         del outWcs
@@ -154,8 +154,8 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         exposure.setWcs(self.tanWcs)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertFalse(outWcs.hasDistortion())
-        self.assertTrue(afwImage.TanWcs.cast(outWcs) is not None)
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is None)
+        self.assertFalse(afwImage.TanWcs.cast(outWcs) is not None)
+        self.assertFalse(afwImage.DistortedTanWcs.cast(outWcs) is None)
         del exposure
         del outWcs
 
@@ -169,8 +169,8 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         exposure.setDetector(detectorNoTanPix)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertFalse(outWcs.hasDistortion())
-        self.assertTrue(afwImage.TanWcs.cast(outWcs) is not None)
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is None)
+        self.assertFalse(afwImage.TanWcs.cast(outWcs) is not None)
+        self.assertFalse(afwImage.DistortedTanWcs.cast(outWcs) is None)
         del exposure
         del outWcs
 

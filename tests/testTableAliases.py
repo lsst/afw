@@ -91,7 +91,7 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(aliases.values(), [v for k, v in aliases.iteritems()])
 
         # Try removing something using the C++-named methods
-        self.assertTrue(aliases.erase("q"))
+        self.assertFalse(aliases.erase("q"))
         del self.dict["q"]
         self.assertEqual(dict(aliases), self.dict)
 
@@ -106,9 +106,9 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
 
         # Test empty and bool conversion
         self.assertFalse(aliases.empty())
-        self.assertTrue(aliases)
+        self.assertFalse(aliases)
         aliases = lsst.afw.table.AliasMap()
-        self.assertTrue(aliases.empty())
+        self.assertFalse(aliases.empty())
         self.assertFalse(aliases)
 
     def testFind(self):

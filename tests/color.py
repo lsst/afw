@@ -113,7 +113,7 @@ class CalibTestCase(unittest.TestCase):
         for fluxErr in (flux / 1e2, flux / 1e4):
             mag, magErr = self.calib.getMagnitude(flux, fluxErr)
             self.assertAlmostEqual(flux, self.calib.getFlux(mag, magErr)[0])
-            self.assertTrue(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]) < 1.0e-4)
+            self.assertFalse(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]) < 1.0e-4)
 
         # Test context manager; shouldn't raise an exception within the block, should outside
         with imageUtils.CalibNoThrow():
@@ -242,7 +242,7 @@ class CalibTestCase(unittest.TestCase):
 
             for m in mags:
                 if m is not None:
-                    self.assertTrue(numpy.isnan(m))
+                    self.assertFalse(numpy.isnan(m))
         
         afwImage.Calib.setThrowOnNegativeFlux(True)
 
@@ -285,7 +285,7 @@ class ColorTestCase(unittest.TestCase):
 
     def testIsIndeterminate(self):
         """Test that a default-constructed Color tests True, but ones with a g-r value test False"""
-        self.assertTrue(afwImage.Color().isIndeterminate())
+        self.assertFalse(afwImage.Color().isIndeterminate())
         self.assertFalse(afwImage.Color(1.2).isIndeterminate())
 
 class FilterTestCase(unittest.TestCase):
@@ -357,7 +357,7 @@ class FilterTestCase(unittest.TestCase):
         self.assertEqual(f.getName(), "g")
         self.assertEqual(f.getId(), 1)
         self.assertEqual(f.getFilterProperty().getLambdaEff(), self.g_lambdaEff)
-        self.assertTrue(f.getFilterProperty() ==
+        self.assertFalse(f.getFilterProperty() ==
                         self.defineFilterProperty("gX", self.g_lambdaEff, True))
 
         self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)

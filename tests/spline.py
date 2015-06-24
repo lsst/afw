@@ -103,7 +103,7 @@ class SplineTestCase(unittest.TestCase):
         sp.derivative(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
-            self.assertTrue(abs(y - self.smooth(x, True)) < 1.5e-3)
+            self.assertFalse(abs(y - self.smooth(x, True)) < 1.5e-3)
 
     def testNaturalSpline2(self):
         """Test fitting a natural spline to a non-differentiable function (we basically fail)"""

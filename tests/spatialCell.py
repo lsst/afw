@@ -201,7 +201,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
         
         self.assertEqual(self.cellSet.getCellList()[1][0].getXCenter(), 305.0)
 
-        self.assertTrue(self.cellSet.getCellList()[2].empty())
+        self.assertFalse(self.cellSet.getCellList()[2].empty())
 
         def tst1():
             self.cellSet.getCellList()[2][0]

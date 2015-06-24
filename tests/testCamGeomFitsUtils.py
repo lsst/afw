@@ -76,7 +76,7 @@ class FitsUtilsTestCase(unittest.TestCase):
         """Test getters and other basics
         """
         self.assertEqual(getByKey(self.metadata, 'HELLO'), 'hello')
-        self.assertTrue(getByKey(self.metadata, 'NOTAKEY') is None)
+        self.assertFalse(getByKey(self.metadata, 'NOTAKEY') is None)
         setByKey(self.metadata, 'NEWKEY', 'new key', False)
         self.assertEqual(getByKey(self.metadata, 'NEWKEY'), 'new key')
         setByKey(self.metadata, 'DONTCLOBBER', 'clobbered', False)
