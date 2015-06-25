@@ -58,15 +58,14 @@ class SchemaTestCase(unittest.TestCase):
             self.assertEqual(col.field.getName(), name)
 
         schema = lsst.afw.table.Schema();
-        ab_k = schema.addField("a_b", type="Coord", doc="parent coord")
+        ab_k = lsst.afw.table.CoordKey.addFields(schema, "a_b", "parent coord")
+        abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixels")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
         acf_k = schema.addField("a_c_f", type=numpy.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
-        abp_k = schema.addField("a_b_p", type="PointD", doc="point")
 
-        #Basic test for all key types
-        for name, key in (("a_b", ab_k), ("a_b_i", abi_k), ("a_c_f", acf_k),
-                          ("e_g_d", egd_k), ("a_b_p", abp_k)):
+        #Basic test for all native key types.
+        for name, key in (("a_b_i", abi_k), ("a_c_f", acf_k), ("e_g_d", egd_k)):
             testKey(name, key)
 
         #Extra tests for special types
@@ -75,17 +74,21 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(abp_k.getX(), abpx_si.key);
         self.assertEqual(abpx_si.field.getName(), "a_b_p_x")
         self.assertEqual(abpx_si.field.getDoc(), "point")
-        self.assertEqual(abp_k, schema["a_b_p"].asKey())
         self.assertEqual(abp_k.getX(), schema["a_b_p_x"].asKey());
-        self.assertEqual(schema.getNames(), ("a_b", "a_b_i", "a_b_p", "a_c_f", "e_g_d"))
+        self.assertEqual(schema.getNames(), ('a_b_dec', 'a_b_i', 'a_b_p_x', 'a_b_p_y', 'a_b_ra', 'a_c_f',
+                                             'e_g_d'))
         self.assertEqual(schema.getNames(True), ("a", "e"))
-        self.assertEqual(schema["a"].getNames(), ("b_i", "c_f"))
+        self.assertEqual(schema["a"].getNames(), ('b_dec', 'b_i', 'b_p_x', 'b_p_y', 'b_ra', 'c_f'))
         self.assertEqual(schema["a"].getNames(True), ("b", "c"))
         schema2 = lsst.afw.table.Schema(schema)
         self.assertEqual(schema, schema2)
         schema2.addField("q", type=float, doc="another double")
         self.assertNotEqual(schema, schema2)
         schema3 = lsst.afw.table.Schema()
+        schema3.addField("ra", type="Angle", doc="coord_ra")
+        schema3.addField("dec", type="Angle", doc="coord_dec")
+        schema3.addField("x", type="D", doc="position_x")
+        schema3.addField("y", type="D", doc="position_y")
         schema3.addField("i", type="I", doc="int")
         schema3.addField("f", type="F", doc="float")
         schema3.addField("d", type="Angle", doc="angle")
@@ -251,24 +254,8 @@ class SchemaMapperTestCase(unittest.TestCase):
         mapper3.addMapping(ka, "c", True)
         self.assertEqual(mapper3.getMapping(ka), kc)
 
-    def testVersions(self):
-        s0 = lsst.afw.table.Schema(0)
-        s1 = lsst.afw.table.Schema(1)
-        sm0 = lsst.afw.table.SchemaMapper(s0)
-        sm1 = lsst.afw.table.SchemaMapper(s1)
-        self.assertEqual(sm0.getOutputSchema().getVersion(), 0)
-        self.assertEqual(sm1.getOutputSchema().getVersion(), 1)
-        sm0.editOutputSchema().setVersion(1)
-        sm1.editOutputSchema().setVersion(0)
-        self.assertEqual(sm0.getOutputSchema().getVersion(), 1)
-        self.assertEqual(sm1.getOutputSchema().getVersion(), 0)
-
     def testJoin2(self):
-        s0 = lsst.afw.table.Schema(0)
-        s1 = lsst.afw.table.Schema(1)
-        self.assertEqual(s0.join("a", "b"), "a.b")
-        self.assertEqual(s0.join("a", "b", "c"), "a.b.c")
-        self.assertEqual(s0.join("a", "b", "c", "d"), "a.b.c.d")
+        s1 = lsst.afw.table.Schema()
         self.assertEqual(s1.join("a", "b"), "a_b")
         self.assertEqual(s1.join("a", "b", "c"), "a_b_c")
         self.assertEqual(s1.join("a", "b", "c", "d"), "a_b_c_d")
