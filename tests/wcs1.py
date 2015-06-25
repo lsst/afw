@@ -136,10 +136,12 @@ class WCSRotateFlip(unittest.TestCase):
         return afwImage.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
 
     def testRotation(self):
+        # Origin for LSST pixels is (0,0).  Need to subtract one when rotating to avoid off by one.
+        # E.g. UR (507, 1999) goes to (0,0) for nRot = 2
         q1 = {0:afwGeom.Point2D(100., 1600.), 
-              1:afwGeom.Point2D(self.size.getY() - 1600., 100.), 
-              2:afwGeom.Point2D(self.size.getX() - 100., self.size.getY() - 1600.), 
-              3:afwGeom.Point2D(1600., self.size.getX() - 100.)} 
+              1:afwGeom.Point2D(self.size.getY() - 1600. - 1, 100.),
+              2:afwGeom.Point2D(self.size.getX() - 100. - 1, self.size.getY() - 1600. - 1),
+              3:afwGeom.Point2D(1600., self.size.getX() - 100. - 1)}
         wcs = self.makeWcs()
         pos0 = wcs.pixelToSky(q1[0])
         for rot in (1,2,3):
@@ -149,8 +151,8 @@ class WCSRotateFlip(unittest.TestCase):
 
     def testFlip(self):
         q1 = {'noFlip': afwGeom.Point2D(300., 900.),
-              'flipLR': afwGeom.Point2D(self.size.getX()-300., 900.),
-              'flipTB': afwGeom.Point2D(300., self.size.getY()-900.)}
+              'flipLR': afwGeom.Point2D(self.size.getX()-300.-1, 900.),
+              'flipTB': afwGeom.Point2D(300., self.size.getY()-900.-1)}
         wcs = self.makeWcs()
         pos0 = wcs.pixelToSky(q1['noFlip'])
         wcs = self.makeWcs()
