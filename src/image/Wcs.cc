@@ -595,15 +595,16 @@ void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const 
 
     //If naxis != 2, I'm not sure if any of what follows is correct
     assert(naxis == 2);
+    //Origin is at (1,1).  Adjust to avoid off by one.
     if (flipLR) {
         _wcsInfo->cd[0] = -_wcsInfo->cd[0];
         _wcsInfo->cd[2] = -_wcsInfo->cd[2];
-        _wcsInfo->crpix[0] = -_wcsInfo->crpix[0] + dimensions.getX();
+        _wcsInfo->crpix[0] = -_wcsInfo->crpix[0] + dimensions.getX() + 1;
     }
     if (flipTB) {
         _wcsInfo->cd[1] = -_wcsInfo->cd[1];
         _wcsInfo->cd[3] = -_wcsInfo->cd[3];
-        _wcsInfo->crpix[1] = -_wcsInfo->crpix[1]+dimensions.getY();
+        _wcsInfo->crpix[1] = -_wcsInfo->crpix[1]+dimensions.getY() + 1;
     }
 
     // tells libwcs to invalidate cached data, since transformation has been modified
@@ -628,6 +629,9 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
     double d = _wcsInfo->cd[3];
     double crpx = _wcsInfo->crpix[0];
     double crpy = _wcsInfo->crpix[1];
+    //Origin is at (1,1).  Adjust to avoid off by one.
+    //E.g. CRPIX one pixel off the UR of the grid should go to
+    //(0,0) for nQuarter=2
     switch (nQuarter%4) {
         case 0:
             break;
@@ -636,7 +640,7 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
             _wcsInfo->cd[1] = a;
             _wcsInfo->cd[2] = -d;
             _wcsInfo->cd[3] = c;
-            _wcsInfo->crpix[0] = -crpy + dimensions.getY();
+            _wcsInfo->crpix[0] = -crpy + dimensions.getY() + 1;
             _wcsInfo->crpix[1] = crpx;
             break;
         case 2:
@@ -644,8 +648,8 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
             _wcsInfo->cd[1] = -b;
             _wcsInfo->cd[2] = -c;
             _wcsInfo->cd[3] = -d;
-            _wcsInfo->crpix[0] = -crpx + dimensions.getX();
-            _wcsInfo->crpix[1] = -crpy + dimensions.getY();
+            _wcsInfo->crpix[0] = -crpx + dimensions.getX() + 1;
+            _wcsInfo->crpix[1] = -crpy + dimensions.getY() + 1;
             break;
         case 3:
             _wcsInfo->cd[0] = b;
@@ -653,7 +657,7 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
             _wcsInfo->cd[2] = d;
             _wcsInfo->cd[3] = -c;
             _wcsInfo->crpix[0] = crpy;
-            _wcsInfo->crpix[1] = -crpx + dimensions.getX();
+            _wcsInfo->crpix[1] = -crpx + dimensions.getX() + 1;
             break;
     }
 
