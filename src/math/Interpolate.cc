@@ -54,7 +54,7 @@ namespace {
                               str(boost::format("Dimensions of x and y must match; %ul != %ul")
                                   % x.size() % y.size()));
         }
-        unsigned int const len = x.size();
+        std::size_t const len = x.size();
         if (len == 0) {
             throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
                               "You must provide at least 1 point");
@@ -65,17 +65,15 @@ namespace {
         std::vector<double> recentered_x(len + 1);
         std::vector<double> recentered_y(len + 1);
 
-        int j = 0; 
-        recentered_x[j] = 0.5*(3*x[0] - x[1]);
-        recentered_y[j] = y[0];
+        recentered_x[0] = 0.5*(3*x[0] - x[1]);
+        recentered_y[0] = y[0];
 
-        for (unsigned int i = 0; i < x.size(); ++i) {
-            ++j;
+        for (std::size_t i = 0, j = 1; i < len - 1; ++i, ++j) {
             recentered_x[j] = 0.5*(x[i] + x[i + 1]);
             recentered_y[j] = 0.5*(y[i] + y[i + 1]);
         }
-        recentered_x[j] = 0.5*(3*x[len - 1] - x[len - 2]);
-        recentered_y[j] = y[len - 1];
+        recentered_x[len] = 0.5*(3*x[len - 1] - x[len - 2]);
+        recentered_y[len] = y[len - 1];
 
         return std::make_pair(recentered_x, recentered_y);        
     }
