@@ -58,7 +58,7 @@ except:
 ######################################
 # main body of code
 ######################################
-class StackTestCase(unittest.TestCase):
+class StackTestCase(utilsTests.TestCase):
 
     def setUp(self):
         self.nImg = 10
@@ -285,6 +285,65 @@ class StackTestCase(unittest.TestCase):
             print "image=", stack.getImage().getArray()
             print "variance=", stack.getVariance().getArray()
         self.assertNotEqual(numpy.sum(stack.getVariance().getArray()), 0.0)
+
+    def testRejectedMaskPropagation(self):
+        """Test that we can propagate mask bits from rejected pixels, when the amount
+        of rejection crosses a threshold."""
+        rejectedBit = 1        # use this bit to determine whether to reject a pixel
+        propagatedBit = 2  # propagate this bit if a pixel with it set is rejected
+        statsCtrl = afwMath.StatisticsControl()
+        statsCtrl.setMaskPropagationThreshold(propagatedBit, 0.3)
+        statsCtrl.setAndMask(1 << rejectedBit)
+        statsCtrl.setWeighted(True)
+        maskedImageList = afwImage.vectorMaskedImageF()
+
+        # start with 4 images with no mask bits set
+        partialSum = numpy.zeros((1, 4), dtype=numpy.float32)
+        finalImage = numpy.array([12.0, 12.0, 12.0, 12.0], dtype=numpy.float32)
+        for i in range(4):
+            mi = afwImage.MaskedImageF(4, 1)
+            imArr, maskArr, varArr = mi.getArrays()
+            imArr[:,:] = numpy.ones((1, 4), dtype=numpy.float32)
+            maskedImageList.append(mi)
+            partialSum += imArr
+        # add one more image with all permutations of the first two bits set in different pixels
+        mi = afwImage.MaskedImageF(4, 1)
+        imArr, maskArr, varArr = mi.getArrays()
+        imArr[0,:] = finalImage
+        maskArr[0,1] |= (1 << rejectedBit)
+        maskArr[0,2] |= (1 << propagatedBit)
+        maskArr[0,3] |= (1 << rejectedBit)
+        maskArr[0,3] |= (1 << propagatedBit)
+        maskedImageList.append(mi)
+
+        # these will always be rejected
+        finalImage[1] = 0.0
+        finalImage[3] = 0.0
+
+        # Uniform weights: we should only see pixel 2 set with propagatedBit, because it's not rejected;
+        # pixel 3 is rejected, but its weight (0.2) below the propagation threshold (0.3)
+        stack1 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [1.0, 1.0, 1.0, 1.0, 1.0])
+        self.assertEqual(stack1.get(0,0)[1], 0x0)
+        self.assertEqual(stack1.get(1,0)[1], 0x0)
+        self.assertEqual(stack1.get(2,0)[1], 1 << propagatedBit)
+        self.assertEqual(stack1.get(3,0)[1], 0x0)
+        self.assertClose(stack1.getImage().getArray(),
+                         (partialSum + finalImage) / numpy.array([5.0, 4.0, 5.0, 4.0]),
+                         rtol=1E-7)
+
+        # Give the masked image more weight: we should see pixel 2 and pixel 3 set with propagatedBit,
+        # pixel 2 because it's not rejected, and pixel 3 because the weight of the rejection (0.3333)
+        # is above the threshold (0.3)
+        # Note that rejectedBit is never propagated, because we didn't include it in statsCtrl (of course,
+        # normally the bits we'd propagate and the bits we'd reject would be the same)
+        stack2 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [1.0, 1.0, 1.0, 1.0, 2.0])
+        self.assertEqual(stack2.get(0,0)[1], 0x0)
+        self.assertEqual(stack2.get(1,0)[1], 0x0)
+        self.assertEqual(stack2.get(2,0)[1], 1 << propagatedBit)
+        self.assertEqual(stack2.get(3,0)[1], 1 << propagatedBit)
+        self.assertClose(stack2.getImage().getArray(),
+                         (partialSum + 2*finalImage) / numpy.array([6.0, 4.0, 6.0, 4.0]),
+                         rtol=1E-7)
 
 #################################################################
 # Test suite boiler plate

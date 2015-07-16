@@ -191,7 +191,8 @@ namespace {
                                 double const cliplimit,
                                 bool const weightsAreMultiplicative,
                                 int const andMask,
-                                bool const calcErrorFromInputVariance
+                                bool const calcErrorFromInputVariance,
+                                std::vector<double> const & maskPropagationThresholds
                                )
     {
         int n = 0;
@@ -206,6 +207,8 @@ namespace {
         double max = (nCrude) ? meanCrude : -MAX_DOUBLE;
 
         afwImage::MaskPixel allPixelOrMask = 0x0;
+
+        std::vector<double> rejectedWeightsByBit(maskPropagationThresholds.size(), 0.0);
     
         for (int iY = 0; iY < img.getHeight(); iY += stride) {
 
@@ -256,6 +259,23 @@ namespace {
                     if (HasValueLtMin()(*ptr, min)) { min = *ptr; }
                     if (HasValueGtMax()(*ptr, max)) { max = *ptr; }
                     n++;
+                } else { // pixel has been clipped, rejected, etc.
+                    for (int bit = 0, nBits=maskPropagationThresholds.size(); bit < nBits; ++bit) {
+                        lsst::afw::image::MaskPixel mask = 1 << bit;
+                        if (*mptr & mask) {
+                            double weight = 1.0;
+                            if (useWeights) {
+                                weight = *wptr;
+                                if (!weightsAreMultiplicative) {
+                                    if (*wptr <= 0) {
+                                        continue;
+                                    }
+                                    weight = 1.0 / weight;
+                                }
+                            }
+                            rejectedWeightsByBit[bit] += weight;
+                        }
+                    }
                 }
             }
         }
@@ -269,6 +289,15 @@ namespace {
         if (!useWeights) {
             sumw = sumw2 = n;
         }
+
+        for (int bit = 0, nBits=maskPropagationThresholds.size(); bit < nBits; ++bit) {
+            double hypotheticalTotalWeight = sumw + rejectedWeightsByBit[bit];
+            rejectedWeightsByBit[bit] /= hypotheticalTotalWeight;
+            if (rejectedWeightsByBit[bit] > maskPropagationThresholds[bit]) {
+                allPixelOrMask |= (1 << bit);
+            }
+        }
+
 
         // N.b. if sumw == 0 or sumw*sumw == sumw2 (e.g. n == 1) we'll get NaNs
         // N.b. the estimator of the variance assumes that the sample points all have the same variance;
@@ -312,19 +341,20 @@ namespace {
                                 bool const weightsAreMultiplicative,
                                 int const andMask,
                                 bool const calcErrorFromInputVariance,
-                                bool doGetWeighted
+                                bool doGetWeighted,
+                                std::vector<double> const & maskPropagationThresholds
                                )
     {
         if (doGetWeighted) {
             return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, true>(
                                  img, msk, var, weights,
                                  flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative, andMask,
-                                 calcErrorFromInputVariance);
+                                 calcErrorFromInputVariance, maskPropagationThresholds);
         } else {
             return processPixels<IsFinite, HasValueLtMin, HasValueGtMax, InClipRange, false>(
                                  img, msk, var, weights,
                                  flags, nCrude, 1, meanCrude, cliplimit, weightsAreMultiplicative, andMask,
-                                 calcErrorFromInputVariance);
+                                 calcErrorFromInputVariance, maskPropagationThresholds);
         }
     }
 
@@ -347,7 +377,8 @@ namespace {
                                 int const andMask,
                                 bool const calcErrorFromInputVariance,                                
                                 bool doCheckFinite,
-                                bool doGetWeighted
+                                bool doGetWeighted,
+                                std::vector<double> const & maskPropagationThresholds
                                )
     {
         if (doCheckFinite) {
@@ -355,13 +386,13 @@ namespace {
                                  img, msk, var, weights,
                                  flags, nCrude, 1, meanCrude, cliplimit,
                                  weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                 doGetWeighted);
+                                 doGetWeighted, maskPropagationThresholds);
         } else {
             return processPixels<AlwaysTrue, HasValueLtMin, HasValueGtMax, InClipRange, useWeights>(
                                  img, msk, var, weights,
                                  flags, nCrude, 1, meanCrude, cliplimit,
                                  weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                 doGetWeighted);
+                                 doGetWeighted, maskPropagationThresholds);
         }
     }
 
@@ -383,7 +414,8 @@ namespace {
                                int const andMask,              // mask of bad pixels
                                bool const calcErrorFromInputVariance, // estimate errors from variance
                                bool doCheckFinite,             // check for NaN/Inf
-                               bool doGetWeighted              // use the weights
+                               bool doGetWeighted,             // use the weights
+                               std::vector<double> const & maskPropagationThresholds
                               )
     {
         // =====================================================
@@ -406,7 +438,8 @@ namespace {
                                               flags, nCrude, strideCrude, meanCrude,
                                               cliplimit,
                                               weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                              doCheckFinite, doGetWeighted);
+                                              doCheckFinite, doGetWeighted,
+                                              maskPropagationThresholds);
         nCrude = values.get<0>();
         double sumCrude = values.get<1>();
         
@@ -425,14 +458,14 @@ namespace {
                                  flags, nCrude, 1, meanCrude,
                                  cliplimit,
                                  weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                 true, doGetWeighted);
+                                 true, doGetWeighted, maskPropagationThresholds);
         } else {
             return processPixels<ChkFin, AlwaysF, AlwaysF, AlwaysT,true>(
                                  img, msk, var, weights,
                                  flags, nCrude, 1, meanCrude,
                                  cliplimit,
                                  weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                 doCheckFinite, doGetWeighted);
+                                 doCheckFinite, doGetWeighted, maskPropagationThresholds);
         }
     }
 
@@ -453,7 +486,8 @@ namespace {
                                int const andMask,              // mask of bad pixels
                                bool const calcErrorFromInputVariance, // estimate errors from variance
                                bool doCheckFinite,             // check for NaN/Inf
-                               bool doGetWeighted              // use the weights
+                               bool doGetWeighted,             // use the weights,
+                               std::vector<double> const & maskPropagationThresholds
                               )
     {
         double const center = clipinfo.first;
@@ -476,14 +510,14 @@ namespace {
                                  flags, nCrude, stride,
                                  center, cliplimit,
                                  weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                 true, doGetWeighted);
+                                 true, doGetWeighted, maskPropagationThresholds);
         } else {                            // fast loop ... just the mean & variance
             return processPixels<ChkFin, AlwaysF, AlwaysF, ChkClip, true>(
                                  img, msk, var, weights,
                                  flags, nCrude, stride,
                                  center, cliplimit,
                                  weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
-                                 doCheckFinite, doGetWeighted);
+                                 doCheckFinite, doGetWeighted, maskPropagationThresholds);
         }
     }
 
@@ -652,6 +686,29 @@ namespace {
     }
 }
 
+
+
+double afwMath::StatisticsControl::getMaskPropagationThreshold(int bit) const {
+    int oldSize = _maskPropagationThresholds.size();
+    if (oldSize < bit) {
+        return 1.0;
+    }
+    return _maskPropagationThresholds[bit];
+}
+
+void afwMath::StatisticsControl::setMaskPropagationThreshold(int bit, double threshold) {
+    int oldSize = _maskPropagationThresholds.size();
+    if (oldSize <= bit) {
+        int newSize = bit + 1;
+        _maskPropagationThresholds.resize(newSize);
+        for (int i = oldSize; i < bit; ++i) {
+            _maskPropagationThresholds[i] = 1.0;
+        }
+    }
+    _maskPropagationThresholds[bit] = threshold;
+}
+
+
 /**
  * @brief Conversion function to switch a string to a Property (see Statistics.h)
  */
@@ -755,7 +812,8 @@ void afwMath::Statistics::doStatistics(
                                           _weightsAreMultiplicative,
                                           _sctrl.getAndMask(),
                                           _sctrl.getCalcErrorFromInputVariance(),
-                                          _sctrl.getNanSafe(), _sctrl.getWeighted());
+                                          _sctrl.getNanSafe(), _sctrl.getWeighted(),
+                                          _sctrl._maskPropagationThresholds);
 
     _n = standard.get<0>();
     _sum = standard.get<1>();
@@ -801,7 +859,8 @@ void afwMath::Statistics::doStatistics(
                                                      _weightsAreMultiplicative,
                                                      _sctrl.getAndMask(),
                                                      _sctrl.getCalcErrorFromInputVariance(),
-                                                     _sctrl.getNanSafe(), _sctrl.getWeighted());
+                                                     _sctrl.getNanSafe(), _sctrl.getWeighted(),
+                                                     _sctrl._maskPropagationThresholds);
                 
                 int const nClip = clipped.get<0>();
                 _meanclip = clipped.get<2>();     // clipped mean

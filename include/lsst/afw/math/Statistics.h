@@ -109,7 +109,8 @@ public:
         _noGoodPixelsMask(0x0),
         _isNanSafe(isNanSafe),
         _useWeights(useWeights == 0 ? WEIGHTS_FALSE : (useWeights == 1) ? WEIGHTS_TRUE : WEIGHTS_NONE),
-        _calcErrorFromInputVariance(false)
+        _calcErrorFromInputVariance(false),
+        _maskPropagationThresholds()
     {
         try {
             _noGoodPixelsMask = lsst::afw::image::Mask<>::getPlaneBitMask("EDGE");
@@ -120,6 +121,16 @@ public:
         assert(_numSigmaClip > 0);
         assert(_numIter > 0);
     }
+
+    //@{
+    /**  When pixels with the given bit are rejected, we count what fraction the rejected
+     *   pixels would have contributed (including the weights, if any) if those pixels had
+     *   not been rejected, and set that bit in the return value of Statistics::getOrMask()
+     *   if it exceeds the given threshold.
+     */
+    double getMaskPropagationThreshold(int bit) const;
+    void setMaskPropagationThreshold(int bit, double threshold);
+    //@}
 
     double getNumSigmaClip() const { return _numSigmaClip; }
     int getNumIter() const { return _numIter; }
@@ -141,6 +152,9 @@ public:
     }
 
 private:
+
+    friend class Statistics;
+
     double _numSigmaClip;                 // Number of standard deviations to clip at
     int _numIter;                         // Number of iterations
     int _andMask;                         // and-Mask to specify which mask planes to ignore
@@ -148,6 +162,8 @@ private:
     bool _isNanSafe;                      // Check for NaNs & Infs before running (slower)
     WeightsBoolean _useWeights;           // Calculate weighted statistics (enum because of 3-valued logic)
     bool _calcErrorFromInputVariance;     // Calculate errors from the input variances, if available
+    std::vector<double> _maskPropagationThresholds; // Thresholds for when to propagate mask bits,
+                                                    // treated like a dict (unset bits are set to 1.0)
 };
             
 /**
