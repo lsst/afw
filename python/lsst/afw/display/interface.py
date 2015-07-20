@@ -31,7 +31,7 @@ import lsst.afw.geom  as afwGeom
 import lsst.afw.image as afwImage
 
 __all__ = (
-    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW",
+    "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE",
     "Display", "Event", "noop_callback", "h_callback",
     "setDefaultBackend", "getDefaultBackend",
     "setDefaultFrame", "getDefaultFrame", "incrDefaultFrame",
@@ -50,6 +50,7 @@ BLUE = "blue"
 CYAN = "cyan"
 MAGENTA = "magenta"
 YELLOW = "yellow"
+ORANGE = "orange"
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -96,6 +97,7 @@ class Display(object):
         DETECTED=BLUE,
         DETECTED_NEGATIVE=CYAN,
         SUSPECT=YELLOW,
+        NO_DATA=ORANGE,
         # deprecated names
         INTRP=GREEN,
         SAT=GREEN,
@@ -285,7 +287,7 @@ class Display(object):
         for p in planeList:
             print p, next(colorGenerator)
         """
-        _maskColors = [WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW]
+        _maskColors = [WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, ORANGE]
 
         i = -1
         while True:

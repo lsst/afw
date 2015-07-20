@@ -294,7 +294,8 @@ namespace math {
             _cacheSize(warpingKernel.getCacheSize()),
             _interpLength(interpLength),
             _devicePreference(devicePreference),
-            _growFullMask(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE"))
+            _growFullMask(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE") |
+                          lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("NO_DATA"))
         {
             _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }

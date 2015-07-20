@@ -112,7 +112,7 @@ class WarpExposureTestCase(unittest.TestCase):
         """Test that warpExposure maps an image onto itself.
         
         Note:
-        - edge pixels must be ignored
+        - edge and off-CCD pixels must be ignored
         - bad mask pixels get smeared out so we have to excluded all bad mask pixels
           from the output image when comparing masks.
         """
@@ -140,17 +140,20 @@ class WarpExposureTestCase(unittest.TestCase):
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
+        noDataBitMask = afwWarpedMask.getPlaneBitMask("NO_DATA")
         if edgeBitMask == 0:
             self.fail("warped mask has no EDGE bit")
+        if noDataBitMask == 0:
+            self.fail("warped mask has no NO_DATA bit")
         afwWarpedMaskedImageArrSet = afwWarpedMaskedImage.getArrays()
         afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
         
         # compare all non-edge pixels of image and variance, but relax specs a bit
         # because of minor noise introduced by bad pixels
-        edgeMaskArr = afwWarpedMaskArr & edgeBitMask
+        maskArr = afwWarpedMaskArr & (edgeBitMask | noDataBitMask)
         originalMaskedImageArrSet = originalExposure.getMaskedImage().getArrays()
         errStr = imageTestUtils.maskedImagesDiffer(afwWarpedMaskedImageArrSet, originalMaskedImageArrSet,
-            doMask=False, skipMaskArr=edgeMaskArr, atol=1e-5)
+            doMask=False, skipMaskArr=maskArr, atol=1e-5)
         if errStr:
             self.fail("afw null-warped MaskedImage (all pixels, relaxed tolerance): %s" % (errStr,))
         
@@ -423,7 +426,8 @@ class WarpExposureTestCase(unittest.TestCase):
         self.assertTrue(numpy.alltrue(numpy.isnan(imArr)))
         self.assertTrue(numpy.alltrue(numpy.isinf(varArr)))
         edgeMask = afwImage.MaskU.getPlaneBitMask("EDGE")
-        self.assertTrue(numpy.alltrue(maskArr == edgeMask))
+        noDataMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
+        self.assertTrue(numpy.alltrue(maskArr == (noDataMask or edgeMask)))
     
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):
