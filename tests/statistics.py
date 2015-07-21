@@ -52,7 +52,7 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class StatisticsTestCase(unittest.TestCase):
+class StatisticsTestCase(utilsTests.TestCase):
     """A test case for Statistics"""
     def setUp(self):
         self.val = 10
@@ -450,6 +450,21 @@ class StatisticsTestCase(unittest.TestCase):
         stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(), 0)
             
+    def testMismatch(self):
+        """Test that we get an exception when there's a size mismatch"""
+        scale = 5
+        dims = self.image.getDimensions()
+        mask = afwImage.MaskU(dims*scale)
+        mask.set(0xFF)
+        ctrl = afwMath.StatisticsControl()
+        ctrl.setAndMask(0xFF)
+        subMask = afwImage.MaskU(mask, afwGeom.Box2I(afwGeom.Point2I(dims*(scale - 1)), dims))
+        subMask.set(0)
+        # Whoops, we "forgot" to use "subMask" instead of "mask"...
+        # That would ordinarily result in a NAN (because the lower-left is completely masked).
+        self.assertRaisesLsstCpp(lsst.pex.exceptions.InvalidParameterException,
+                                 afwMath.makeStatistics, self.image, mask, afwMath.MEDIAN, ctrl)
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

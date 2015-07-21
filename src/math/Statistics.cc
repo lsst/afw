@@ -763,6 +763,24 @@ namespace {
 
     template<typename T>
     bool isEmpty(afwImage::Image<T> const& im) { return (im.getWidth() == 0 && im.getHeight() == 0); }
+
+    // Asserts that image dimensions are equal
+    template<typename ImageT1, typename ImageT2>
+    void checkDimensions(ImageT1 const& image1, ImageT2 const& image2)
+    {
+        if (image1.getDimensions() != image2.getDimensions()) {
+            throw LSST_EXCEPT(pexExceptions::InvalidParameterException,
+                              (boost::format("Image sizes don't match: %s vs %s") %
+                               image1.getDimensions() % image2.getDimensions()).str());
+        }
+    }
+
+    // Overloads for MaskImposter (which doesn't have a size)
+    template<typename ImageT, typename PixelT>
+    void checkDimensions(ImageT const& image1, afwMath::MaskImposter<PixelT> const& image2) {}
+    template<typename ImageT, typename PixelT>
+    void checkDimensions(afwMath::MaskImposter<PixelT> const& image1, ImageT const& image2) {}
+
 }
 
 template<typename ImageT, typename MaskT, typename VarianceT, typename WeightT>
@@ -802,6 +820,11 @@ void afwMath::Statistics::doStatistics(
     _n = img.getWidth()*img.getHeight();
     if (_n == 0) {
         throw LSST_EXCEPT(pexExceptions::InvalidParameterException, "Image contains no pixels");
+    }
+    checkDimensions(img, msk);
+    checkDimensions(img, var);
+    if (sctrl.getWeighted()) {
+        checkDimensions(img, weights);
     }
     
     // Check that an int's large enough to hold the number of pixels
