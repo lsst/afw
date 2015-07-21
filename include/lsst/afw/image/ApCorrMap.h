@@ -54,7 +54,7 @@ public:
 
     std::size_t size() const { return _internal.size(); }
 
-    /// Return the field with the given name, throwing NotFoundException when the name is not present.
+    /// Return the field with the given name, throwing NotFoundError when the name is not present.
     PTR(math::BoundedField) const operator[](std::string const & name) const;
 
     /// Return the field with the given name, returning an empty pointer when the name is not present.

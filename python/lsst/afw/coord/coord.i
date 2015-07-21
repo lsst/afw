@@ -32,7 +32,7 @@
 
 %useValueEquality(lsst::afw::coord::Coord);
 
-// The shared pointer declarations must precede the #inlude statement for Coord.h
+// The shared pointer declarations must precede the %include statement for Coord.h
 %shared_ptr(lsst::afw::coord::Coord);
 %shared_ptr(lsst::afw::coord::Fk5Coord);
 %shared_ptr(lsst::afw::coord::IcrsCoord);
