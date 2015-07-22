@@ -486,6 +486,50 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(catalog3[0].getFootprint(), None)
         self.assertEqual(catalog3[1].getFootprint(), None)
 
+    def _testFluxSlot(self, slotName):
+        """Demonstrate that we can create & use the named Flux slot."""
+        schema = lsst.afw.table.SourceTable.makeMinimalSchema()
+        baseName = "afw_Test"
+        fluxKey = schema.addField("%s_flux" % (baseName,), type=float, doc="flux")
+        errKey = schema.addField("%s_fluxSigma" % (baseName,), type=float, doc="flux uncertainty")
+        flagKey = schema.addField("%s_flag" % (baseName,), type="Flag", doc="flux flag")
+        table = lsst.afw.table.SourceTable.make(schema)
+
+        # Initially, the slot is undefined.
+        self.assertRaises(lsst.pex.exceptions.NotFoundError, getattr(table, "get%sDefinition" % (slotName,)))
+
+        # After definition, it maps to the keys defined above.
+        getattr(table, "define%s" % (slotName,))(baseName)
+        self.assertEqual(getattr(table, "get%sDefinition" % (slotName,))(), baseName)
+        self.assertEqual(getattr(table, "get%sKey" % (slotName,))(), fluxKey)
+        self.assertEqual(getattr(table, "get%sErrKey" % (slotName,))(), errKey)
+        self.assertEqual(getattr(table, "get%sFlagKey" % (slotName,))(), flagKey)
+
+        # We should be able to retrieve arbitrary values set in records.
+        record = table.makeRecord()
+        flux, err, flag = 10.0, 1.0, False
+        record.set(fluxKey, flux)
+        record.set(errKey, err)
+        record.set(flagKey, flag)
+        self.assertEqual(getattr(record, "get%s" % (slotName,))(), flux)
+        self.assertEqual(getattr(record, "get%sErr" % (slotName,))(), err)
+        self.assertEqual(getattr(record, "get%sFlag" % (slotName,))(), flag)
+
+        # And we should be able to delete the slot, breaking the mapping.
+        table.schema.getAliasMap().erase("slot_%s" % (slotName,))
+        self.assertNotEqual(getattr(table, "get%sKey" % (slotName,))(), fluxKey)
+        self.assertNotEqual(getattr(table, "get%sErrKey" % (slotName,))(), errKey)
+        self.assertNotEqual(getattr(table, "get%sFlagKey" % (slotName,))(), flagKey)
+
+
+    def testFluxSlots(self):
+        """Check that all the expected flux slots are present & correct."""
+        for slotName in ["ApFlux", "CalibFlux", "InstFlux", "ModelFlux", "PsfFlux"]:
+            self._testFluxSlot(slotName)
+
+        # But, of course, we should not accept a slot which hasn't be defined.
+        self.assertRaises(AttributeError, self._testFluxSlot, "NotExtantFlux")
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

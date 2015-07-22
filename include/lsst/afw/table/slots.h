@@ -202,6 +202,7 @@ struct SlotSuite {
     FluxSlotDefinition defApFlux;
     FluxSlotDefinition defInstFlux;
     FluxSlotDefinition defModelFlux;
+    FluxSlotDefinition defCalibFlux;
     CentroidSlotDefinition defCentroid;
     ShapeSlotDefinition defShape;
 
