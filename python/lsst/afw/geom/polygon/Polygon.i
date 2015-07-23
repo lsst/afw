@@ -43,7 +43,7 @@
 
 %useValueEquality(lsst::afw::geom::polygon::Polygon);
 %definePythonIterator(lsst::afw::geom::polygon::Polygon);
-%ignore lsst::afw::geom::Polygon::swap(lsst::afw::geom::polygon::Polygon&); // not needed in python
+%ignore lsst::afw::geom::polygon::Polygon::swap(lsst::afw::geom::polygon::Polygon&); // not needed in python
 
 
 %extend lsst::afw::geom::polygon::Polygon {
