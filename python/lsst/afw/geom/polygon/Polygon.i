@@ -104,3 +104,8 @@
         return self.__class__, ([p for p in self],)
 %}
 }
+
+%import "lsst/pex/exceptions/exceptionsLib.i"
+
+%declareException(SinglePolygonException, lsst.pex.exceptions.RuntimeError,
+                  lsst::afw::geom::polygon::SinglePolygonException)
