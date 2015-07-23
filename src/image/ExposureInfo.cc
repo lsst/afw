@@ -297,7 +297,7 @@ void ExposureInfo::_readFits(
         int validPolygonId = popInt(*metadata, "VALID_POLYGON_ID");
         try {
             _validPolygon = archive.get<geom::polygon::Polygon>(validPolygonId);
-        } catch (pex::exceptions::NotFoundException & err) {
+        } catch (pex::exceptions::NotFoundError & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read ValidPolygon; setting to null: %s") % err.what()
             );
