@@ -11,7 +11,7 @@
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
-
+#include "lsst/afw/table/aggregates.h"
 
 typedef lsst::afw::geom::polygon::Polygon::Point LsstPoint;
 typedef lsst::afw::geom::polygon::Polygon::Box LsstBox;
@@ -549,7 +549,7 @@ namespace {
 
 struct PolygonSchema : private boost::noncopyable {
     afw::table::Schema schema;
-    afw::table::Key< afw::table::Point<double> > vertices;
+    afw::table::PointKey<double> vertices;
 
     static PolygonSchema const & get() {
         static PolygonSchema instance;
@@ -557,8 +557,8 @@ struct PolygonSchema : private boost::noncopyable {
     }
 private:
     PolygonSchema() : schema(),
-                      vertices(schema.addField< afw::table::Point<double> >("vertices", 
-                                                                            "list of vertex points"))
+                      vertices(afw::table::PointKey<double>::addFields(schema, "vertices", 
+                                                                            "list of vertex points", ""))
         {
             schema.getCitizen().markPersistent();
         }
