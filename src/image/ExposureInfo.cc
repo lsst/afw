@@ -1,8 +1,8 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,14 +10,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -91,7 +91,7 @@ ExposureInfo::ExposureInfo(
     _apCorrMap(_cloneApCorrMap(apCorrMap))
 {}
 
-ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
+ExposureInfo::ExposureInfo(ExposureInfo const & other) :
     _wcs(_cloneWcs(other._wcs)),
     _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
@@ -140,7 +140,7 @@ ExposureInfo::~ExposureInfo() {}
 
 ExposureInfo::FitsWriteData
 ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
-    
+
     FitsWriteData data;
 
     data.metadata.reset(new daf::base::PropertyList());
@@ -197,7 +197,7 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     //LTV keywords use the opposite convention to the LSST, in that they represent
     //the position of the origin of the parent image relative to the origin of the sub-image.
     // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
-  
+
     data.imageMetadata->set("LTV1", -xy0.getX());
     data.imageMetadata->set("LTV2", -xy0.getY());
 
@@ -213,7 +213,7 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     data.metadata->set("EXPTIME", getCalib()->getExptime());
     data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
     data.metadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
-    
+
     return data;
 }
 

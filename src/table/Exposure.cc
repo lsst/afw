@@ -39,7 +39,7 @@ public:
 class ExposureTableImpl : public ExposureTable {
 public:
 
-    explicit ExposureTableImpl(Schema const & schema) : 
+    explicit ExposureTableImpl(Schema const & schema) :
         ExposureTable(schema)
     {}
 
@@ -71,7 +71,7 @@ struct PersistenceSchema : private boost::noncopyable {
         return instance;
     }
 
-    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord 
+    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord
     // with IDs for Wcs, Psf, Calib and ApCorrMap.
     SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
         std::vector<Schema> inSchemas;
@@ -155,7 +155,7 @@ public:
     }
 
 protected:
-    
+
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
     virtual void _writeRecord(BaseRecord const & r);

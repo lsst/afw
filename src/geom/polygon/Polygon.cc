@@ -543,7 +543,7 @@ PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox)
 // -------------- Table-based Persistence -------------------------------------------------------------------
 
 /*
- *  
+ *
  */
 namespace {
 
@@ -557,7 +557,7 @@ struct PolygonSchema : private boost::noncopyable {
     }
 private:
     PolygonSchema() : schema(),
-                      vertices(afw::table::PointKey<double>::addFields(schema, "vertices", 
+                      vertices(afw::table::PointKey<double>::addFields(schema, "vertices",
                                                                             "list of vertex points", ""))
         {
             schema.getCitizen().markPersistent();
@@ -571,8 +571,8 @@ public:
     explicit PolygonFactory(std::string const & name) :
         table::io::PersistableFactory(name) {}
 
-    virtual PTR(table::io::Persistable) read(InputArchive const & archive, 
-                                             CatalogVector const & catalogs) const 
+    virtual PTR(table::io::Persistable) read(InputArchive const & archive,
+                                             CatalogVector const & catalogs) const
         {
             static PolygonSchema const & keys = PolygonSchema::get();
 

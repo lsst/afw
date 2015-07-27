@@ -82,10 +82,10 @@ public:
 
     /// Does this exposure have a Wcs?
     bool hasWcs() const { return static_cast<bool>(_wcs); }
-    
+
     /// Return the coordinate system of the exposure
     PTR(Wcs) getWcs() { return _wcs; }
-    
+
     /// Return the coordinate system of the exposure
     CONST_PTR(Wcs) getWcs() const { return _wcs; }
 
@@ -124,7 +124,7 @@ public:
 
     /// Set the flexible metadata
     void setMetadata(PTR(daf::base::PropertySet) metadata) { _metadata = metadata; }
-    
+
     /// Does this exposure have a Psf?
     bool hasPsf() const { return static_cast<bool>(_psf); }
 
