@@ -43,6 +43,10 @@ namespace detection {
 class Psf;
 } // namespace detection
 
+namespace geom { namespace polygon {
+class Polygon;
+}} 
+
 namespace table {
 
 class ExposureRecord;
@@ -107,6 +111,9 @@ public:
 
     CONST_PTR(image::ApCorrMap) getApCorrMap() const { return _apCorrMap; }
     void setApCorrMap(CONST_PTR(image::ApCorrMap) apCorrMap) { _apCorrMap = apCorrMap; }
+
+    CONST_PTR(geom::polygon::Polygon) getValidPolygon() const { return _validPolygon; }
+    void setValidPolygon(CONST_PTR(geom::polygon::Polygon) polygon) { _validPolygon = polygon; }
     //@}
 
 protected:
@@ -120,6 +127,7 @@ private:
     CONST_PTR(detection::Psf) _psf;
     CONST_PTR(image::Calib) _calib;
     CONST_PTR(image::ApCorrMap) _apCorrMap;
+    CONST_PTR(geom::polygon::Polygon) _validPolygon;
 };
 
 /**

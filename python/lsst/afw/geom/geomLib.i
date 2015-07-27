@@ -169,12 +169,9 @@ Python interface to lsst::afw::geom classes
 %include "Angle.i"
 %include "Span.i"
 %include "XYTransform.i"
-%include "Polygon.i"
 %include "TransformMap.i"
 
 %import "lsst/pex/exceptions/exceptionsLib.i"
 
 %declareException(SingularTransformException, lsst.pex.exceptions.RuntimeError,
                   lsst::afw::geom::SingularTransformException)
-%declareException(SinglePolygonException, lsst.pex.exceptions.RuntimeError,
-                  lsst::afw::geom::SinglePolygonException)

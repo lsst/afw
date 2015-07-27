@@ -25,13 +25,14 @@ from __future__ import absolute_import, division
 import numpy
 import pickle
 import unittest
+import os
 import lsst.utils.tests as utilsTests
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.coord as afwCoord
 
-from lsst.afw.geom import Polygon, SinglePolygonException
+from lsst.afw.geom.polygon import Polygon, SinglePolygonException
 
 DEBUG = False
 
@@ -209,6 +210,26 @@ class PolygonTest(utilsTests.TestCase):
         self.assertTrue((polyList3[0] == poly1 and polyList3[1] == poly4) or
                         (polyList3[0] == poly4 and polyList3[1] == poly1))
 
+    def testSymDifference(self):
+        """Test Polygon.symDifference"""
+        poly1 = self.square(2.0, -1.0, -1.0)
+        poly2 = self.square(2.0, +1.0, +1.0)
+
+        poly3 = Polygon([afwGeom.Point2D(x,y) for x,y in
+                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
+        poly4 = Polygon([afwGeom.Point2D(x,y) for x,y in
+                         ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
+
+        diff1 = poly1.symDifference(poly2)
+        diff2 = poly2.symDifference(poly1)
+
+        self.assertEqual(len(diff1), 2)
+        self.assertEqual(len(diff2), 2)
+        self.assertTrue((diff1[0] == diff2[0] and diff1[1] == diff2[1]) or
+                        (diff1[1] == diff2[0] and diff1[0] == diff2[1]))
+        self.assertTrue((diff1[0] == poly3 and diff1[1] == poly4) or
+                        (diff1[1] == poly3 and diff1[0] == poly4))
+
     def testConvexHull(self):
         """Test Polygon.convexHull"""
         poly1 = self.square(2.0, -1.0, -1.0)
@@ -314,6 +335,15 @@ class PolygonTest(utilsTests.TestCase):
                 expected.plot(axes, c='r')
                 plt.show()
 
+    def testReadWrite(self):
+        """Test that polygons can be read and written to fits files"""
+        for num in range(3, 30):
+            poly = self.polygon(num)
+            filename='polygon.fits'
+            poly.writeFits(filename)
+            poly2=Polygon.readFits(filename)
+            self.assertEqual(poly, poly2)
+            os.remove(filename)
 
 def suite():
     """Returns a suite containing all the test cases in this module."""

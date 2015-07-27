@@ -6,12 +6,15 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Extent.h"
-#include "lsst/afw/geom/Polygon.h"
+#include "lsst/afw/geom/polygon/Polygon.h"
 
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/aggregates.h"
 
-
-typedef lsst::afw::geom::Polygon::Point LsstPoint;
-typedef lsst::afw::geom::Polygon::Box LsstBox;
+typedef lsst::afw::geom::polygon::Polygon::Point LsstPoint;
+typedef lsst::afw::geom::polygon::Polygon::Box LsstBox;
 typedef std::vector<LsstPoint> LsstRing;
 typedef boost::geometry::model::polygon<LsstPoint> BoostPolygon;
 typedef boost::geometry::model::box<LsstPoint> BoostBox;
@@ -105,15 +108,14 @@ void addSubSampledEdge(
 /// Calculate area of overlap between polygon and pixel
 double pixelOverlap(BoostPolygon const& poly, int const x, int const y)
 {
-    BoostPolygon pixel;     // Polygon for single pixel
-    boost::geometry::assign(pixel, LsstBox(lsst::afw::geom::Point2D(x - 0.5, y - 0.5),
-                                           lsst::afw::geom::Extent2D(1.0, 1.0)));
     std::vector<BoostPolygon> overlap; // Overlap between pixel and polygon
+    LsstBox const pixel(lsst::afw::geom::Point2D(x - 0.5, y - 0.5),
+                        lsst::afw::geom::Point2D(x + 0.5, y + 0.5));
     boost::geometry::intersection(poly, pixel, overlap);
     double area = 0.0;
     for (std::vector<BoostPolygon>::const_iterator i = overlap.begin(); i != overlap.end(); ++i) {
-        area += boost::geometry::area(*i);
-        assert(area <= 1.0); // by construction
+        double const polyArea = boost::geometry::area(*i);
+        area += std::min(polyArea, 1.0); // remove any rounding error
     }
     return area;
 }
@@ -132,7 +134,7 @@ void pixelRowOverlap(PTR(lsst::afw::image::Image<float>) const image,
 } // anonymous namespace
 
 
-namespace lsst { namespace afw { namespace geom {
+namespace lsst { namespace afw { namespace geom { namespace polygon {
 
 /// Stream vertices
 std::ostream& operator<<(std::ostream& os, std::vector<LsstPoint> const& vertices)
@@ -166,7 +168,7 @@ struct Polygon::Impl
         boost::geometry::assign(poly, box);
         // Assignment from a box is correctly handled by BoostPolygon, so doesn't need a "check()"
     }
-    explicit Impl(std::vector<Polygon::Point> const& vertices) : poly() {
+    explicit Impl(std::vector<LsstPoint> const& vertices) : poly() {
         boost::geometry::assign(poly, vertices);
         check(); // because the vertices might not have the correct orientation (CW vs CCW) or be open
     }
@@ -174,28 +176,45 @@ struct Polygon::Impl
 
     void check() { boost::geometry::correct(poly); }
 
+    /// Convert collection of Boost polygons to our own
+    static std::vector<PTR(Polygon)> convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons);
+
     template <class PolyT>
     bool overlaps(PolyT const& other) const {
         return !boost::geometry::disjoint(poly, other);
     }
 
     template <class PolyT>
-    Polygon intersectionSingle(PolyT const& other) const;
+    PTR(Polygon) intersectionSingle(PolyT const& other) const;
 
     template <class PolyT>
-    std::vector<Polygon> intersection(PolyT const& other) const;
+    std::vector<PTR(Polygon)> intersection(PolyT const& other) const;
 
     template <class PolyT>
-    Polygon unionSingle(PolyT const& other) const;
+    PTR(Polygon) unionSingle(PolyT const& other) const;
 
     template <class PolyT>
-    std::vector<Polygon> union_(PolyT const& other) const;
+    std::vector<PTR(Polygon)> union_(PolyT const& other) const;
+
+    template <class PolyT>
+    std::vector<PTR(Polygon)> symDifference(PolyT const& other) const;
 
     BoostPolygon poly;
 };
 
+std::vector<PTR(Polygon)> Polygon::Impl::convertBoostPolygons(std::vector<BoostPolygon> const& boostPolygons)
+{
+    std::vector<PTR(Polygon)> lsstPolygons;
+    lsstPolygons.reserve(boostPolygons.size());
+    for (std::vector<BoostPolygon>::const_iterator i = boostPolygons.begin(); i != boostPolygons.end(); ++i) {
+        PTR(Polygon) tmp(new Polygon(PTR(Polygon::Impl)(new Polygon::Impl(*i))));
+        lsstPolygons.push_back(tmp);
+    }
+    return lsstPolygons;
+}
+
 template <class PolyT>
-Polygon Polygon::Impl::intersectionSingle(PolyT const& other) const
+PTR(Polygon) Polygon::Impl::intersectionSingle(PolyT const& other) const
 {
     std::vector<BoostPolygon> result;
     boost::geometry::intersection(poly, other, result);
@@ -207,25 +226,19 @@ Polygon Polygon::Impl::intersectionSingle(PolyT const& other) const
                           (boost::format("Multiple polygons (%d) created by intersection()") %
                            result.size()).str());
     }
-    return Polygon(PTR(Impl)(new Impl(result[0])));
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(result[0]))));
 }
 
 template <class PolyT>
-std::vector<Polygon> Polygon::Impl::intersection(PolyT const& other) const
+std::vector<PTR(Polygon)> Polygon::Impl::intersection(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::intersection(poly, other, boostResult);
-    std::vector<Polygon> lsstResult;
-    lsstResult.reserve(boostResult.size());
-    for (std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
-         i != boostResult.end(); ++i) {
-        lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
-    }
-    return lsstResult;
+    return convertBoostPolygons(boostResult);
 }
 
 template <class PolyT>
-Polygon Polygon::Impl::unionSingle(PolyT const& other) const
+PTR(Polygon) Polygon::Impl::unionSingle(PolyT const& other) const
 {
     std::vector<BoostPolygon> result;
     boost::geometry::union_(poly, other, result);
@@ -234,28 +247,31 @@ Polygon Polygon::Impl::unionSingle(PolyT const& other) const
                           (boost::format("Multiple polygons (%d) created by union_()") %
                            result.size()).str());
     }
-    return Polygon(PTR(Impl)(new Impl(result[0])));
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(result[0]))));
 }
 
 template <class PolyT>
-std::vector<Polygon> Polygon::Impl::union_(PolyT const& other) const
+std::vector<PTR(Polygon)> Polygon::Impl::union_(PolyT const& other) const
 {
     std::vector<BoostPolygon> boostResult;
     boost::geometry::union_(poly, other, boostResult);
-    std::vector<Polygon> lsstResult;
-    lsstResult.reserve(boostResult.size());
-    for (std::vector<BoostPolygon>::const_iterator i = boostResult.begin();
-         i != boostResult.end(); ++i) {
-        lsstResult.push_back(Polygon(PTR(Impl)(new Impl(*i))));
-    }
-    return lsstResult;
+    return convertBoostPolygons(boostResult);
 }
+
+template <class PolyT>
+std::vector<PTR(Polygon)> Polygon::Impl::symDifference(PolyT const& other) const
+{
+    std::vector<BoostPolygon> boostResult;
+    boost::geometry::sym_difference(poly, other, boostResult);
+    return convertBoostPolygons(boostResult);
+}
+
 
 
 Polygon::Polygon(Polygon::Box const& box) :
     _impl(new Polygon::Impl(box)) {}
 
-Polygon::Polygon(std::vector<Polygon::Point> const& vertices) :
+Polygon::Polygon(std::vector<LsstPoint> const& vertices) :
     _impl(new Polygon::Impl(vertices)) {}
 
 Polygon::Polygon(
@@ -294,7 +310,7 @@ Polygon::Box Polygon::getBBox() const
     return boostBoxToLsst(boost::geometry::return_envelope<BoostBox>(_impl->poly));
 }
 
-Polygon::Point Polygon::calculateCenter() const
+LsstPoint Polygon::calculateCenter() const
 {
     return boost::geometry::return_centroid<LsstPoint>(_impl->poly);
 }
@@ -303,11 +319,11 @@ double Polygon::calculateArea() const { return boost::geometry::area(_impl->poly
 
 double Polygon::calculatePerimeter() const { return boost::geometry::perimeter(_impl->poly); }
 
-std::vector<std::pair<Polygon::Point, Polygon::Point> >
+std::vector<std::pair<LsstPoint, LsstPoint> >
 Polygon::getEdges() const
 {
     std::vector<LsstPoint> const vertices = getVertices();
-    std::vector<std::pair<Polygon::Point, Polygon::Point> > edges;
+    std::vector<std::pair<LsstPoint, LsstPoint> > edges;
     edges.reserve(getNumEdges());
     for (std::vector<LsstPoint>::const_iterator i = vertices.begin(), j = vertices.begin() + 1;
          j != vertices.end(); ++i, ++j) {
@@ -316,11 +332,11 @@ Polygon::getEdges() const
     return edges;
 }
 
-std::vector<Polygon::Point> Polygon::getVertices() const { return _impl->poly.outer(); }
+std::vector<LsstPoint> Polygon::getVertices() const { return _impl->poly.outer(); }
 
-std::vector<Polygon::Point>::const_iterator Polygon::begin() const { return _impl->poly.outer().begin(); }
+std::vector<LsstPoint>::const_iterator Polygon::begin() const { return _impl->poly.outer().begin(); }
 
-std::vector<Polygon::Point>::const_iterator Polygon::end() const {
+std::vector<LsstPoint>::const_iterator Polygon::end() const {
     return _impl->poly.outer().end() - 1; // Note removal of final "closed" point
 }
 
@@ -329,7 +345,7 @@ bool Polygon::operator==(Polygon const& other) const
     return boost::geometry::equals(_impl->poly, other._impl->poly);
 }
 
-bool Polygon::contains(Polygon::Point const& point) const
+bool Polygon::contains(LsstPoint const& point) const
 {
     return boost::geometry::within(point, _impl->poly);
 }
@@ -342,46 +358,60 @@ bool Polygon::overlaps(Box const& box) const {
     return _impl->overlaps(box);
 }
 
-Polygon Polygon::intersectionSingle(Polygon const& other) const {
+PTR(Polygon) Polygon::intersectionSingle(Polygon const& other) const {
     return _impl->intersectionSingle(other._impl->poly);
 }
 
-Polygon Polygon::intersectionSingle(Box const& box) const {
+PTR(Polygon) Polygon::intersectionSingle(Box const& box) const {
     return _impl->intersectionSingle(box);
 }
 
-std::vector<Polygon> Polygon::intersection(Polygon const& other) const {
+std::vector<PTR(Polygon)> Polygon::intersection(Polygon const& other) const {
     return _impl->intersection(other._impl->poly);
 }
 
-std::vector<Polygon> Polygon::intersection(Box const& box) const {
+std::vector<PTR(Polygon)> Polygon::intersection(Box const& box) const {
     return _impl->intersection(box);
 }
 
-Polygon Polygon::unionSingle(Polygon const& other) const {
+PTR(Polygon) Polygon::unionSingle(Polygon const& other) const {
     return _impl->unionSingle(other._impl->poly);
 }
 
-Polygon Polygon::unionSingle(Box const& box) const {
+PTR(Polygon) Polygon::unionSingle(Box const& box) const {
     return _impl->unionSingle(box);
 }
 
-std::vector<Polygon> Polygon::union_(Polygon const& other) const {
+std::vector<PTR(Polygon)> Polygon::union_(Polygon const& other) const {
     return _impl->union_(other._impl->poly);
 }
 
-std::vector<Polygon> Polygon::union_(Box const& box) const {
+std::vector<PTR(Polygon)> Polygon::union_(Box const& box) const {
     return _impl->union_(box);
 }
 
-Polygon Polygon::convexHull() const
+std::vector<PTR(Polygon)> Polygon::symDifference(Polygon const& other) const {
+    return _impl->symDifference(other._impl->poly);
+}
+
+std::vector<PTR(Polygon)> Polygon::symDifference(Box const& box) const {
+    return _impl->symDifference(box);
+}
+
+PTR(Polygon) Polygon::simplify(double const distance) const {
+    BoostPolygon result;
+    boost::geometry::simplify(_impl->poly, result, distance);
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(result))));
+}
+
+PTR(Polygon) Polygon::convexHull() const
 {
     BoostPolygon hull;
     boost::geometry::convex_hull(_impl->poly, hull);
-    return Polygon(PTR(Impl)(new Impl(hull)));
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(hull))));
 }
 
-Polygon Polygon::transform(CONST_PTR(XYTransform) const& transform) const
+PTR(Polygon) Polygon::transform(CONST_PTR(XYTransform) const& transform) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges());
@@ -389,10 +419,10 @@ Polygon Polygon::transform(CONST_PTR(XYTransform) const& transform) const
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform->forwardTransform(*i));
     }
-    return Polygon(PTR(Impl)(new Impl(vertices)));
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
 }
 
-Polygon Polygon::transform(AffineTransform const& transform) const
+PTR(Polygon) Polygon::transform(AffineTransform const& transform) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges());
@@ -400,10 +430,10 @@ Polygon Polygon::transform(AffineTransform const& transform) const
          i != _impl->poly.outer().end(); ++i) {
         vertices.push_back(transform(*i));
     }
-    return Polygon(PTR(Impl)(new Impl(vertices)));
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
 }
 
-Polygon Polygon::subSample(size_t num) const
+PTR(Polygon) Polygon::subSample(size_t num) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges()*num);
@@ -412,10 +442,10 @@ Polygon Polygon::subSample(size_t num) const
          i != edges.end(); ++i) {
         addSubSampledEdge(vertices, i->first, i->second, num);
     }
-    return Polygon(PTR(Impl)(new Impl(vertices)));
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
 }
 
-Polygon Polygon::subSample(double maxLength) const
+PTR(Polygon) Polygon::subSample(double maxLength) const
 {
     std::vector<LsstPoint> vertices;        // New vertices
     vertices.reserve(getNumEdges() + static_cast<size_t>(::ceil(calculatePerimeter()/maxLength)));
@@ -426,7 +456,7 @@ Polygon Polygon::subSample(double maxLength) const
         double const dist = ::sqrt(p1.distanceSquared(p2));
         addSubSampledEdge(vertices, p1, p2, static_cast<size_t>(::ceil(dist/maxLength)));
     }
-    return Polygon(PTR(Impl)(new Impl(vertices)));
+    return PTR(Polygon)(new Polygon(PTR(Impl)(new Impl(vertices))));
 }
 
 
@@ -475,13 +505,16 @@ PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox)
                 int const xStart = ::ceil(std::max(top[0], bottom[0])) + 1;
                 int const xStop = std::min(top[1], bottom[1]) - 1;
                 int const xMax = ::ceil(std::max(top[1], bottom[1]));
-                pixelRowOverlap(image, _impl->poly, xMin, xStart, y);
+                pixelRowOverlap(image, _impl->poly, std::max(xMin, bbox.getMinX()),
+                                std::min(xStart, bbox.getMaxX()), y);
                 int x = xStart;
-                for (Image::x_iterator i = image->x_at(xStart - image->getX0(), y - image->getY0());
-                     x <= xStop; ++i, ++x) {
+                for (Image::x_iterator i = image->x_at(std::max(xStart, bbox.getMinX()) - image->getX0(),
+                                                       y - image->getY0());
+                     x <= std::min(xStop, bbox.getMaxX()); ++i, ++x) {
                     *i = 1.0;
                 }
-                pixelRowOverlap(image, _impl->poly, xStop, xMax, y);
+                pixelRowOverlap(image, _impl->poly, std::max(xStop, bbox.getMinX()),
+                                std::min(xMax, bbox.getMaxX()), y);
                 continue;
             }
         }
@@ -498,11 +531,85 @@ PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox)
                 if (x > xMaxRow) xMaxRow = x;
             }
 
-            pixelRowOverlap(image, _impl->poly, xMinRow, ::ceil(xMaxRow), y);
+            pixelRowOverlap(image, _impl->poly, std::max(static_cast<int>(xMinRow), bbox.getMinX()),
+                            std::min(static_cast<int>(::ceil(xMaxRow)), bbox.getMaxX()), y);
         }
     }
     return image;
 }
 
 
-}}} // namespace lsst::afw::geom
+
+// -------------- Table-based Persistence -------------------------------------------------------------------
+
+/*
+ *
+ */
+namespace {
+
+struct PolygonSchema : private boost::noncopyable {
+    afw::table::Schema schema;
+    afw::table::PointKey<double> vertices;
+
+    static PolygonSchema const & get() {
+        static PolygonSchema instance;
+        return instance;
+    }
+private:
+    PolygonSchema() : schema(),
+                      vertices(afw::table::PointKey<double>::addFields(schema, "vertices",
+                                                                            "list of vertex points", ""))
+        {
+            schema.getCitizen().markPersistent();
+        }
+};
+
+
+class PolygonFactory : public table::io::PersistableFactory {
+public:
+
+    explicit PolygonFactory(std::string const & name) :
+        table::io::PersistableFactory(name) {}
+
+    virtual PTR(table::io::Persistable) read(InputArchive const & archive,
+                                             CatalogVector const & catalogs) const
+        {
+            static PolygonSchema const & keys = PolygonSchema::get();
+
+            LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+            afw::table::BaseCatalog const & cat = catalogs.front();
+
+            std::vector<LsstPoint> vertices;
+            for ( afw::table::BaseCatalog::const_iterator iter = cat.begin(); iter != cat.end(); ++iter) {
+                vertices.push_back(iter->get(keys.vertices));
+            }
+            PTR(Polygon) result(new Polygon(vertices));
+            return result;
+        }
+};
+
+
+std::string getPolygonPersistenceName() { return "Polygon"; }
+
+PolygonFactory registration(getPolygonPersistenceName());
+
+} // anonymous namespace
+
+std::string Polygon::getPersistenceName() const { return getPolygonPersistenceName(); }
+
+void Polygon::write(OutputArchiveHandle & handle) const {
+    static PolygonSchema const & keys = PolygonSchema::get();
+    afw::table::BaseCatalog catalog = handle.makeCatalog(keys.schema);
+
+    std::vector<LsstPoint> vertices = this->getVertices();
+    for (std::vector<LsstPoint>::const_iterator i = vertices.begin(); i != vertices.end(); ++i) {
+        PTR(afw::table::BaseRecord) record = catalog.addNew();
+        record->set(keys.vertices, *i);
+    }
+
+    handle.saveCatalog(catalog);
+}
+
+
+
+}}}} // namespace lsst::afw::geom::polygon

@@ -1,8 +1,8 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,14 +10,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -26,6 +26,7 @@
 #include "lsst/afw/image/ExposureInfo.h"
 #include "lsst/afw/image/Calib.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/cameraGeom/Detector.h"
@@ -74,6 +75,7 @@ ExposureInfo::ExposureInfo(
     CONST_PTR(detection::Psf) const & psf,
     CONST_PTR(Calib) const & calib,
     CONST_PTR(cameraGeom::Detector) const & detector,
+    CONST_PTR(geom::polygon::Polygon) const & polygon,
     Filter const & filter,
     PTR(daf::base::PropertySet) const & metadata,
     PTR(CoaddInputs) const & coaddInputs,
@@ -82,17 +84,19 @@ ExposureInfo::ExposureInfo(
     _psf(boost::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
+    _validPolygon(polygon),
     _filter(filter),
     _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList())),
     _coaddInputs(coaddInputs),
     _apCorrMap(_cloneApCorrMap(apCorrMap))
 {}
 
-ExposureInfo::ExposureInfo(ExposureInfo const & other) : 
+ExposureInfo::ExposureInfo(ExposureInfo const & other) :
     _wcs(_cloneWcs(other._wcs)),
     _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
+    _validPolygon(other._validPolygon),
     _filter(other._filter),
     _metadata(other._metadata),
     _coaddInputs(other._coaddInputs),
@@ -104,6 +108,7 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _psf(other._psf),
     _calib(_cloneCalib(other._calib)),
     _detector(other._detector),
+    _validPolygon(other._validPolygon),
     _filter(other._filter),
     _metadata(other._metadata),
     _coaddInputs(other._coaddInputs),
@@ -118,6 +123,7 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
         _psf = other._psf;
         _calib = _cloneCalib(other._calib);
         _detector = other._detector;
+        _validPolygon = other._validPolygon;
         _filter = other._filter;
         _metadata = other._metadata;
         _coaddInputs = other._coaddInputs;
@@ -134,7 +140,7 @@ ExposureInfo::~ExposureInfo() {}
 
 ExposureInfo::FitsWriteData
 ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
-    
+
     FitsWriteData data;
 
     data.metadata.reset(new daf::base::PropertyList());
@@ -163,6 +169,10 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
         int wcsId = data.archive.put(getWcs());
         data.metadata->set("WCS_ID", wcsId, "archive ID for the Exposure's main Wcs");
     }
+    if (hasValidPolygon() && getValidPolygon()->isPersistable()) {
+        int polygonId = data.archive.put(getValidPolygon());
+        data.metadata->set("VALID_POLYGON_ID", polygonId, "archive ID for the Exposure's valid polygon");
+    }
 
     //LSST convention is that Wcs is in pixel coordinates (i.e relative to bottom left
     //corner of parent image, if any). The Wcs/Fits convention is that the Wcs is in
@@ -187,7 +197,7 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     //LTV keywords use the opposite convention to the LSST, in that they represent
     //the position of the origin of the parent image relative to the origin of the sub-image.
     // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
-  
+
     data.imageMetadata->set("LTV1", -xy0.getX());
     data.imageMetadata->set("LTV2", -xy0.getY());
 
@@ -203,7 +213,7 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     data.metadata->set("EXPTIME", getCalib()->getExptime());
     data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
     data.metadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
-    
+
     return data;
 }
 
@@ -282,6 +292,14 @@ void ExposureInfo::_readFits(
         } catch (pex::exceptions::NotFoundError & err) {
             pex::logging::Log::getDefaultLog().warn(
                 boost::format("Could not read ApCorrMap; setting to null: %s") % err.what()
+            );
+        }
+        int validPolygonId = popInt(*metadata, "VALID_POLYGON_ID");
+        try {
+            _validPolygon = archive.get<geom::polygon::Polygon>(validPolygonId);
+        } catch (pex::exceptions::NotFoundError & err) {
+            pex::logging::Log::getDefaultLog().warn(
+                boost::format("Could not read ValidPolygon; setting to null: %s") % err.what()
             );
         }
     }
