@@ -32,7 +32,7 @@ import lsst.afw.geom as afwGeom
 from . import imageLib
 
 __all__ = ["makeImageFromArray", "makeMaskFromArray", "makeMaskedImageFromArrays",
-    "assertWcsNearlyEqualOverBBox"]
+    "wcsNearlyEqualOverBBox", "assertWcsNearlyEqualOverBBox"]
 
 suffixes = {str(numpy.uint16): "U", str(numpy.int32): "I", str(numpy.float32): "F", str(numpy.float64): "D"}
 
@@ -58,12 +58,10 @@ def makeMaskedImageFromArrays(image, mask=None, variance=None):
     cls = getattr(imageLib, "MaskedImage%s" % (suffixes[str(image.dtype.type)],))
     return cls(makeImageFromArray(image), makeMaskFromArray(mask), makeImageFromArray(variance))
 
-@lsst.utils.tests.inTestCase
-def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds, maxDiffPix=0.01,
+def wcsNearlyEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds, maxDiffPix=0.01,
     nx=5, ny=5, msg="WCSs differ"):
     """Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions
 
-    @param[in] testCase  unittest.TestCase instance the test is part of
     @param[in] wcs0  WCS 0 (an lsst.afw.image.Wcs)
     @param[in] wcs1  WCS 1 (an lsst.afw.image.Wcs)
     @param[in] bbox  boundaries of pixel grid over which to compare the WCSs (an lsst.afw.geom.Box2I or Box2D)
@@ -74,7 +72,8 @@ def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afw
     @param[in] ny  number of points in y for the grid of pixel positions
     @param[in] msg  exception message prefix; details of the error are appended after ": "
 
-    @throw AssertionError if the two WCSs do not match sufficiently closely
+    @param[out] bool True if WCSs are equal to within specified tolerances; False otherwise
+    @param[out] msgList indicating where differences were
     """
     if nx < 1 or ny < 1:
         raise RuntimeError("nx = %s and ny = %s must both be positive" % (nx, ny))
@@ -106,5 +105,34 @@ def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afw
     if measDiffPix[0] > maxDiffPix:
         msgList.append("%s max measured pix error > %s max allowed pix error at sky pos=%s" %
                 (measDiffPix[0], maxDiffPix, measDiffPix[1]))
-    if msgList:
+
+    if not msgList:
+        return True, msgList
+    else:
+        return False, msgList
+
+
+@lsst.utils.tests.inTestCase
+def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds, maxDiffPix=0.01,
+    nx=5, ny=5, msg="WCSs differ"):
+    """Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions
+
+    @param[in] testCase  unittest.TestCase instance the test is part of
+    @param[in] wcs0  WCS 0 (an lsst.afw.image.Wcs)
+    @param[in] wcs1  WCS 1 (an lsst.afw.image.Wcs)
+    @param[in] bbox  boundaries of pixel grid over which to compare the WCSs (an lsst.afw.geom.Box2I or Box2D)
+    @param[in] maxDiffSky  maximum separation between sky positions computed using Wcs.pixelToSky
+        (an lsst.afw.geom.Angle)
+    @param[in] maxDiffPix  maximum separation between pixel positions computed using Wcs.skyToPixel
+    @param[in] nx  number of points in x for the grid of pixel positions
+    @param[in] ny  number of points in y for the grid of pixel positions
+    @param[in] msg  exception message prefix; details of the error are appended after ": "
+
+    @throw AssertionError if the two WCSs do not match sufficiently closely
+    """
+
+    areEqual, msgList = wcsNearlyEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=maxDiffSky, maxDiffPix=maxDiffPix,
+                                              nx=nx, ny=ny, msg=msg)
+
+    if not areEqual:
         testCase.fail("%s: %s" % (msg, "; ".join(msgList)))
