@@ -31,12 +31,13 @@ __all__ = ["assertCoordsNearlyEqual"]
 
 @lsst.utils.tests.inTestCase
 def assertCoordsNearlyEqual(testCase, coord0, coord1, maxDiff=0.001*afwGeom.arcseconds, msg="Coords differ"):
-    """Assert that two coords represent nearly the same point on the sky
+    """!Assert that two coords represent nearly the same point on the sky
 
     @warning the coordinate systems are not compared; instead both angles are converted to ICRS
     and the angular separation measured.
 
-    @param[in] testCase  unittest.TestCase instance the test is part of
+    @param[in] testCase  unittest.TestCase instance the test is part of;
+                        an object supporting one method: fail(self, msgStr)
     @param[in] coord0  coord 0 (an lsst.afw.geom.Coord)
     @param[in] coord1  coord 1 (an lsst.afw.geom.Coord)
     @param[in] maxDiff  maximum angular separation between the two coords (an lsst.afw.geom.Angle)

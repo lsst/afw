@@ -63,7 +63,8 @@ def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afw
     nx=5, ny=5, msg="WCSs differ"):
     """Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions
 
-    @param[in] testCase  unittest.TestCase instance the test is part of
+    @param[in] testCase  unittest.TestCase instance the test is part of;
+                        an object supporting one method: fail(self, msgStr)
     @param[in] wcs0  WCS 0 (an lsst.afw.image.Wcs)
     @param[in] wcs1  WCS 1 (an lsst.afw.image.Wcs)
     @param[in] bbox  boundaries of pixel grid over which to compare the WCSs (an lsst.afw.geom.Box2I or Box2D)

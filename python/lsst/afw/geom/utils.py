@@ -34,9 +34,10 @@ __all__ = ["assertAnglesNearlyEqual", "assertPairsNearlyEqual", "assertBoxesNear
 @lsst.utils.tests.inTestCase
 def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*geomLib.arcseconds,
         ignoreWrap=True, msg="Angles differ"):
-    """Assert that two angles are nearly equal, ignoring wrap differences by default
+    """!Assert that two angles are nearly equal, ignoring wrap differences by default
 
-    @param[in] testCase  unittest.TestCase instance the test is part of
+    @param[in] testCase  unittest.TestCase instance the test is part of;
+                        an object supporting one method: fail(self, msgStr)
     @param[in] ang0  angle 0 (an lsst.afw.geom.Angle)
     @param[in] ang1  angle 1 (an lsst.afw.geom.Angle)
     @param[in] maxDiff  maximum difference between the two angles (an lsst.afw.geom.Angle)
@@ -56,11 +57,12 @@ def assertAnglesNearlyEqual(testCase, ang0, ang1, maxDiff=0.001*geomLib.arcsecon
 
 @lsst.utils.tests.inTestCase
 def assertPairsNearlyEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs differ"):
-    """Assert that two planar pairs (e.g. Point2D or Extent2D) are nearly equal
+    """!Assert that two planar pairs (e.g. Point2D or Extent2D) are nearly equal
 
     @warning Does not compare types, just compares values.
 
-    @param[in] testCase  unittest.TestCase instance the test is part of
+    @param[in] testCase  unittest.TestCase instance the test is part of;
+                        an object supporting one method: fail(self, msgStr)
     @param[in] pair0  pair 0 (a pair of floats)
     @param[in] pair1  pair 1 (a pair of floats)
     @param[in] maxDiff  maximum radial separation between the two points
@@ -80,11 +82,12 @@ def assertPairsNearlyEqual(testCase, pair0, pair1, maxDiff=1e-7, msg="Pairs diff
 
 @lsst.utils.tests.inTestCase
 def assertBoxesNearlyEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ"):
-    """Assert that two boxes (Box2D or Box2I) are nearly equal
+    """!Assert that two boxes (Box2D or Box2I) are nearly equal
 
     @warning Does not compare types, just compares values.
 
-    @param[in] testCase  unittest.TestCase instance the test is part of
+    @param[in] testCase  unittest.TestCase instance the test is part of;
+                        an object supporting one method: fail(self, msgStr)
     @param[in] box0  box 0
     @param[in] box1  box 1
     @param[in] maxDiff  maximum radial separation between the min points and max points
@@ -92,5 +95,5 @@ def assertBoxesNearlyEqual(testCase, box0, box1, maxDiff=1e-7, msg="Boxes differ
 
     @throw AssertionError if the radial difference of the min points or max points is greater than maxDiff
     """
-    testCase.assertPairsNearlyEqual(box0.getMin(), box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
-    testCase.assertPairsNearlyEqual(box0.getMax(), box1.getMax(), maxDiff=maxDiff, msg=msg + ": max")
+    assertPairsNearlyEqual(testCase, box0.getMin(), box1.getMin(), maxDiff=maxDiff, msg=msg + ": min")
+    assertPairsNearlyEqual(testCase, box0.getMax(), box1.getMax(), maxDiff=maxDiff, msg=msg + ": max")
