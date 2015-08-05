@@ -30,6 +30,7 @@ import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+from lsst.afw.image.basicUtils import _compareWcsOverBBox
 
 class TestTestUtils(utilsTests.TestCase):
     """Test test methods added to lsst.utils.tests.TestCase
@@ -161,7 +162,7 @@ class TestTestUtils(utilsTests.TestCase):
                         pair0, pair1, maxDiff=radialDiff-1e-7)
 
     def testAssertWcssNearlyEqualOverBBox(self):
-        """Test assertWcsNearlyEqualOverBBox"""
+        """Test assertWcsNearlyEqualOverBBox and wcsNearlyEqualOverBBox"""
         bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(3001, 3001))
         ctrPix = afwGeom.Point2I(1500, 1500)
         metadata = dafBase.PropertySet()
@@ -185,15 +186,30 @@ class TestTestUtils(utilsTests.TestCase):
 
         self.assertWcsNearlyEqualOverBBox(wcs0, wcs0, bbox,
             maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7)
+        self.assertTrue(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs0, bbox,
+            maxDiffSky=1e-7*afwGeom.arcseconds, maxDiffPix=1e-7))
 
         self.assertWcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
             maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02)
+        self.assertTrue(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
+            maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02))
 
-        self.assertRaises(AssertionError, self.assertWcsNearlyEqualOverBBox,
-            wcs0, wcs1, bbox, maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02)
+        self.assertRaises(AssertionError, self.assertWcsNearlyEqualOverBBox, wcs0, wcs1, bbox,
+            maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02)
+        self.assertFalse(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
+            maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02))
 
-        self.assertRaises(AssertionError, self.assertWcsNearlyEqualOverBBox,
-            wcs0, wcs1, bbox, maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
+        self.assertRaises(AssertionError, self.assertWcsNearlyEqualOverBBox, wcs0, wcs1, bbox,
+            maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
+        self.assertFalse(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
+            maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001))
+
+        # check that doShortCircuit works in the private implementation
+        errStr1 = _compareWcsOverBBox(wcs0, wcs1, bbox,
+            maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001, doShortCircuit=False)
+        errStr2 = _compareWcsOverBBox(wcs0, wcs1, bbox,
+            maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001, doShortCircuit=True)
+        self.assertNotEqual(errStr1, errStr2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
