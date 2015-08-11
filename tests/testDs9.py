@@ -47,6 +47,13 @@ try:
 except ImportError:
     ds9 = None
 
+if ds9:
+    try:
+        ds9.mtv(afwImage.ImageF(1,1))
+    except Exception as e:
+        print("Unable to use ds9: %s" % e)
+        ds9 = None
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DisplayTestCase(unittest.TestCase):
