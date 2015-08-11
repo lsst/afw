@@ -44,7 +44,7 @@ import lsst.utils.tests as tests
 import lsst.afw.image as afwImage
 try:
     import  lsst.afw.display.ds9 as ds9
-except ImportError:
+except Exception:
     ds9 = None
 
 if ds9:

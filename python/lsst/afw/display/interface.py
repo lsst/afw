@@ -191,7 +191,7 @@ class Display(object):
         try:
             _makeDisplayImpl(None, backend)
         except Exception as e:
-            raise RuntimeError("Unable to set backend to %s: %s" % (backend, e))
+            raise RuntimeError("Unable to set backend to %s: \"%s\"" % (backend, e))
 
         Display._defaultBackend = backend
 
