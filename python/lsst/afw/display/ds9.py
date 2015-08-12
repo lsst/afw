@@ -29,18 +29,25 @@ from __future__ import absolute_import, division, print_function
 
 import lsst.afw.display
 import lsst.afw.image as afwImage
-from .interface import getDisplay, getDefaultBackend, setDefaultBackend, \
+from .interface import getDisplay as _getDisplay, getDefaultBackend, setDefaultBackend, \
                        setDefaultFrame, getDefaultFrame, incrDefaultFrame
 try:
     loaded
 except NameError:
-    if getDefaultBackend() == "virtualDevice":
-        try:
-            setDefaultBackend("lsst.display.ds9")
-        except ImportError as e:
-            raise ImportError("Unable to import lsst.display.ds9: %s" % e)
+    try:
+        setDefaultBackend("lsst.display.ds9")
+        getDisplay = _getDisplay
+    except Exception as e:
+        # No usable version of display_ds9.
+        # Let's define a version of getDisplay() which will throw an exception.
+        e.args = ["%s (is display_ds9 setup?)" % e]
 
-    loaded = True
+        def getDisplay(*args, **kwargs):
+            raise e
+
+        loaded = False
+    else:
+        loaded = True
 
 #
 # Backwards compatibility.  Downstream code should be converted to use display.RED etc.
@@ -48,7 +55,7 @@ except NameError:
 from lsst.afw.display import BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WHITE
 
 def Buffering():
-    return getDisplay(None, create=True).Buffering()
+    return _getDisplay(None, create=True).Buffering() # always use the real one
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
