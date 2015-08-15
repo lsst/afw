@@ -62,7 +62,7 @@ def getDistortedWcs(exposureInfo, log=None):
         @throw RuntimeError if exposureInfo has no WCS.
         """
         if not exposureInfo.hasWcs():
-            raise RuntimeError("exposure must have a WCS to use as an initial guess")
+            raise RuntimeError("exposure must have a WCS")
         wcs = exposureInfo.getWcs()
         if not wcs.hasDistortion() and exposureInfo.hasDetector():
             # warn but continue if TAN_PIXELS not present or the initial WCS is not a TanWcs;
