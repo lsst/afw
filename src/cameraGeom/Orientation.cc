@@ -26,6 +26,17 @@ namespace lsst {
 namespace afw {
 namespace cameraGeom {
 
+namespace {
+    /// Return the number of quarter turns (rounded to the closest quarter)
+    int calcNQuarter(geom::Angle const yaw) {
+        float yawDeg = yaw.asDegrees();
+        while (yawDeg < 0.) {
+            yawDeg += 360.;
+        }
+        return std::floor((yawDeg + 45.)/90.);
+    }
+} // anonymous
+
     Orientation::Orientation(
         geom::Point2D const fpPosition,
         geom::Point2D const refPoint,
@@ -35,11 +46,13 @@ namespace cameraGeom {
     ) :
         _fpPosition(fpPosition),
         _refPoint(refPoint),
-        _yaw(yaw),
         _pitch(pitch),
         _roll(roll),
         _rotMat()
     {
+        _nQuarter = calcNQuarter(yaw);
+        _yaw = yaw - _nQuarter * 90 * geom::degrees;
+
         double cosYaw = std::cos(_yaw);
         double sinYaw = std::sin(_yaw);
         double cosPitch = std::cos(_pitch);
@@ -55,15 +68,6 @@ namespace cameraGeom {
         _rotMat << cosYaw*cosPitch, cosYaw*sinPitch*sinRoll - cosRoll*sinYaw,
                    cosPitch*sinYaw,  cosYaw*cosRoll + sinYaw*sinPitch*sinRoll;
 
-    }
-
-    /// Return the number of quarter turns (rounded to the closest quarter)
-    int Orientation::getNQuarter() const {
-        float yawDeg = _yaw.asDegrees();
-        while (yawDeg < 0.) {
-            yawDeg += 360.;
-        }
-        return std::floor((yawDeg + 45.)/90.);
     }
 
     geom::AffineXYTransform Orientation::makePixelFpTransform(

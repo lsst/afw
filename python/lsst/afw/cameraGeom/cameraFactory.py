@@ -25,8 +25,13 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil, plateScale):
     transforms = makeTransformDict(detectorConfig.transformDict.transforms)
     transforms[FOCAL_PLANE] = orientation.makePixelFpTransform(pixelSizeMm)
 
-    llPoint = afwGeom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0)
-    urPoint = afwGeom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
+    if (45 <= detectorConfig.yawDeg < 135) or (225 <= detectorConfig.yawDeg < 315):
+        # CCD is on its side; rotate the BBox to match
+        llPoint = afwGeom.Point2I(detectorConfig.bbox_y0, detectorConfig.bbox_x0)
+        urPoint = afwGeom.Point2I(detectorConfig.bbox_y1, detectorConfig.bbox_x1)
+    else:
+        llPoint = afwGeom.Point2I(detectorConfig.bbox_x0, detectorConfig.bbox_y0)
+        urPoint = afwGeom.Point2I(detectorConfig.bbox_x1, detectorConfig.bbox_y1)
     bbox = afwGeom.Box2I(llPoint, urPoint)
 
     tanPixSys = CameraSys(TAN_PIXELS, detectorConfig.name)
@@ -57,7 +62,11 @@ def makeOrientation(detectorConfig):
     @return orientation (an lsst.afw.cameraGeom.Orientation)
     """
     offset = afwGeom.Point2D(detectorConfig.offset_x, detectorConfig.offset_y)
-    refPos = afwGeom.Point2D(detectorConfig.refpos_x, detectorConfig.refpos_y)
+    if (45 <= detectorConfig.yawDeg < 135) or (225 <= detectorConfig.yawDeg < 315):
+        # CCD is on its side; shift the refPos to match
+        refPos = afwGeom.Point2D(detectorConfig.refpos_y, detectorConfig.refpos_x)
+    else:
+        refPos = afwGeom.Point2D(detectorConfig.refpos_x, detectorConfig.refpos_y)
     yaw = afwGeom.Angle(detectorConfig.yawDeg, afwGeom.degrees)
     pitch = afwGeom.Angle(detectorConfig.pitchDeg, afwGeom.degrees)
     roll = afwGeom.Angle(detectorConfig.rollDeg, afwGeom.degrees)

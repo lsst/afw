@@ -71,7 +71,7 @@ public:
     geom::Point2D getReferencePoint() const { return _refPoint; }
 
     /// Return the yaw angle
-    geom::Angle getYaw() const { return _yaw; }
+    geom::Angle getYaw() const { return _yaw + _nQuarter * 90 * geom::degrees; }
 
     /// Return the pitch angle
     lsst::afw::geom::Angle getPitch() const { return _pitch; }
@@ -80,7 +80,7 @@ public:
     geom::Angle getRoll() const { return _roll; }
 
     /// Return the number of quarter turns (rounded to the closest quarter)
-    int getNQuarter() const;
+    int getNQuarter() const { return _nQuarter; }
 
     /**
      * @brief Generate an XYTransform from pixel to focal plane coordinates
@@ -107,6 +107,8 @@ private:
     lsst::afw::geom::Angle _yaw;        ///< yaw
     lsst::afw::geom::Angle _pitch;      ///< pitch
     lsst::afw::geom::Angle _roll;       ///< roll
+
+    int _nQuarter;                      //< Number of quarter turns applied to detector
 
     // Elements of the Jacobian for three space rotation projected into XY plane.
     // Turn off alignment since this is dynamically allocated (via Detector)
