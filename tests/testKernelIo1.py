@@ -31,7 +31,6 @@ import numpy
 import os
 
 import lsst.utils.tests
-import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPersist
@@ -39,9 +38,6 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 
-Verbosity = 0  # increase to see trace
-pexLog.Debug("lsst.afw", Verbosity)
-# pexLog.Debug("afw.math.KernelFormatter", 30)
 
 testPath = os.path.abspath(os.path.dirname(__file__))
 

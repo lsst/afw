@@ -40,6 +40,8 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
+#include <string>
+
 //#include "boost/serialization/shared_ptr.hpp"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -52,17 +54,13 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/daf/persistence.h"
 #include "lsst/daf/persistence/PropertySetFormatter.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/image/TanWcs.h"
 
-#define EXEC_TRACE  20
-static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::pex::logging::Trace("afw.TanWcsFormatter", level, s);
-}
-
+static const std::string LogName{"afw.TanWcsFormatter"};
 
 namespace afwForm = lsst::afw::formatters;
 namespace afwImg = lsst::afw::image;
@@ -87,16 +85,16 @@ void afwForm::TanWcsFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr) {
-    execTrace("TamWcsFormatter write start");
+    LOGL_TRACE9(LogName, "TamWcsFormatter write start");
     afwImg::TanWcs const* ip = dynamic_cast<afwImg::TanWcs const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-TanWcs");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        execTrace("TanWcsFormatter write BoostStorage");
+        LOGL_TRACE9(LogName, "TanWcsFormatter write BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
-        execTrace("TanWcsFormatter write end");
+        LOGL_TRACE9(LogName, "TanWcsFormatter write end");
         return;
     }
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
@@ -105,23 +103,23 @@ void afwForm::TanWcsFormatter::write(
 dafBase::Persistable* afwForm::TanWcsFormatter::read(
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr additionalData) {
-    execTrace("TanWcsFormatter read start");
+    LOGL_TRACE9(LogName, "TanWcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         afwImg::TanWcs* ip = new afwImg::TanWcs;
-        execTrace("TanWcsFormatter read BoostStorage");
+        LOGL_TRACE9(LogName, "TanWcsFormatter read BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
-        execTrace("TanWcsFormatter read end");
+        LOGL_TRACE9(LogName, "TanWcsFormatter read end");
         return ip;
     }
     else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
-        execTrace("TanWcsFormatter read FitsStorage");
+        LOGL_TRACE9(LogName, "TanWcsFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", 0);
         dafBase::PropertySet::Ptr md =
             afwImg::readMetadata(fits->getPath(), hdu);
         afwImg::TanWcs* ip = new afwImg::TanWcs(md);
-        execTrace("TanWcsFormatter read end");
+        LOGL_TRACE9(LogName, "TanWcsFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for TanWcs");
@@ -232,7 +230,7 @@ afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
 template <class Archive>
 void afwForm::TanWcsFormatter::delegateSerialize(
     Archive& ar, int const, dafBase::Persistable* persistable) {
-    execTrace("TanWcsFormatter delegateSerialize start");
+    LOGL_TRACE9(LogName, "TanWcsFormatter delegateSerialize start");
     afwImg::TanWcs* ip = dynamic_cast<afwImg::TanWcs*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-TanWcs");
@@ -289,7 +287,7 @@ void afwForm::TanWcsFormatter::delegateSerialize(
             wcsset(&(ip->_wcsInfo[i]));
         }
     }
-    execTrace("TanWcsFormatter delegateSerialize end");
+    LOGL_TRACE9(LogName, "TanWcsFormatter delegateSerialize end");
 }
 
 template void afwForm::TanWcsFormatter::delegateSerialize(

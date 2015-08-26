@@ -56,7 +56,7 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/Mask.h"
 
@@ -74,7 +74,6 @@
 namespace afwGeom = lsst::afw::geom;
 namespace dafBase = lsst::daf::base;
 namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
 
 /************************************************************************************************************/
 
@@ -392,7 +391,7 @@ namespace {
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
-    pexLog::Trace("afw.Mask", 5, boost::format("Number of mask planes: %d") % getNumPlanesMax());
+    LOGLF_TRACE5("afw.Mask", 5, boost::format("Number of mask planes: %d"), getNumPlanesMax());
 
     _maskDict = detail::MaskDict::makeMaskDict(planeDefs);
 }

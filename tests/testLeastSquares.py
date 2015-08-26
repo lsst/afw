@@ -39,10 +39,8 @@ import sys
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
-import lsst.pex.logging
 from lsst.afw.math import LeastSquares
 
-lsst.pex.logging.getDefaultLog().setThresholdFor("afw.math.LeastSquares", -10)
 
 class LeastSquaresTestCase(lsst.utils.tests.TestCase):
 

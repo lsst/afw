@@ -14,6 +14,7 @@ setupRequired(fftw)
 setupRequired(utils)
 setupRequired(astropy)
 setupRequired(python_future)
+setupRequired(log)
 setupOptional(pyfits)
 setupOptional(matplotlib)
 

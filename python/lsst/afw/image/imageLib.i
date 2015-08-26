@@ -42,7 +42,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"

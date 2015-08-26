@@ -38,7 +38,7 @@ Python interface to lsst::afw::detection classes
 
 %{
 #include "lsst/daf/base.h"
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"

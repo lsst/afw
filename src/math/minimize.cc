@@ -41,7 +41,7 @@
 #include "Minuit2/MnMinos.h"
 #include "Minuit2/MnPrint.h"
 
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/math/minimize.h"
 
 namespace afwMath = lsst::afw::math;
@@ -250,7 +250,7 @@ afwMath::FitResults afwMath::minimize(
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
+        LOGL_WARN("lsst::afw::math::minimize", "Fit failed to converge");
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {
@@ -340,7 +340,7 @@ afwMath::FitResults afwMath::minimize(
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
+        LOGL_WARN("lsst::afw::math::minimize", "Fit failed to converge");
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {

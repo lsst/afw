@@ -34,7 +34,7 @@
 #pragma clang diagnostic pop
 #include "boost/regex.hpp"
 #include "boost/filesystem/path.hpp"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
 #include "boost/algorithm/string/trim.hpp"
 
@@ -151,8 +151,7 @@ void checkExtType(
         }
         metadata->remove("EXTTYPE");
     } catch(lsst::pex::exceptions::NotFoundError) {
-        lsst::pex::logging::Log log(lsst::pex::logging::Log::getDefaultLog(), "afw.image.MaskedImage");
-        log.warn(boost::format("Expected extension type not found: %s") % expected);
+        LOGLF_WARN("afw.image.MaskedImage", "Expected extension type not found: %s" % expected);
     }
 }
 
@@ -192,7 +191,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
 
     // We log warnings about image loading through a child logger, so the user
     // can disable them if required.
-    pex::logging::Log log(pex::logging::Log::getDefaultLog(), "afw.image.MaskedImage");
+    lsst::log::Log log("afw.image.MaskedImage");
 
     enum class Hdu {
         Primary = 1,
@@ -239,7 +238,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Mask");
                 throw e;
             }
-            log.warn("Mask unreadable; using default");
+            LOGLF_WARN(log "Mask unreadable; using default");
             // By resetting the status we are able to read the next HDU (the variance).
             fitsfile.status = 0;
             _mask.reset(new Mask(_image->getBBox()));
@@ -255,7 +254,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Variance");
                 throw e;
             }
-            log.warn("Variance unreadable; using default");
+            LOGLF_WARN(log, "Variance unreadable; using default");
             fitsfile.status = 0;
             _variance.reset(new Variance(_image->getBBox()));
         }

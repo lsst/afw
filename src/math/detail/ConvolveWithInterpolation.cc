@@ -39,14 +39,13 @@
 #include <iostream>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
@@ -91,11 +90,11 @@ void mathDetail::convolveWithInterpolation(
         goodBBox,
         inImage.getXY0(),
         convolutionControl.getDoNormalize()));
-    pexLog::TTrace<6>("lsst.afw.math.convolve",
+    LOGF_TRACE6("lsst.afw.math.convolve",
         "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)",
             fullBBox.getMinX(), fullBBox.getMinY(),
             fullBBox.getWidth(), fullBBox.getHeight());
-    pexLog::TTrace<6>("lsst.afw.math.convolve",
+    LOGF_TRACE6("lsst.afw.math.convolve",
         "convolveWithInterpolation: goodRegion bbox minimum=(%d, %d), extent=(%d, %d)",
             goodRegion.getBBox().getMinX(), goodRegion.getBBox().getMinY(),
             goodRegion.getBBox().getWidth(), goodRegion.getBBox().getHeight());
@@ -103,7 +102,7 @@ void mathDetail::convolveWithInterpolation(
     // divide good region into subregions small enough to interpolate over
     int nx = 1 + (goodBBox.getWidth() / convolutionControl.getMaxInterpolationDistance());
     int ny = 1 + (goodBBox.getHeight() / convolutionControl.getMaxInterpolationDistance());
-    pexLog::TTrace<4>("lsst.afw.math.convolve",
+    LOGF_TRACE4("lsst.afw.math.convolve",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
     ConvolveWithInterpolationWorkingImages workingImages(kernel.getDimensions());
@@ -111,7 +110,7 @@ void mathDetail::convolveWithInterpolation(
     while (goodRegion.computeNextRow(regionRow)) {
         for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
             rgnIter != rgnEnd; ++rgnIter) {
-            pexLog::TTrace<6>("lsst.afw.math.convolve",
+            LOGF_TRACE6("lsst.afw.math.convolve",
                 "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                     (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                     (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());
