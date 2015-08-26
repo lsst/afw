@@ -119,6 +119,20 @@ class DisplayTestCase(unittest.TestCase):
             ds9.line(vertices[:-1], symbs="+x+x", size=3)
 
     @unittest.skipUnless(ds9, "You must setup display.ds9 to run this test")
+    def testText(self):
+        """Test drawing text"""
+        ds9.erase()
+
+        exp = afwImage.ExposureF(300, 350)
+        ds9.mtv(exp, title="parent") # tells display0 about the image's xy0
+
+        with ds9.Buffering():
+            ds9.dot('hello', 200, 200)
+            ds9.dot('hello', 200, 210, size=1.25)
+            ds9.dot('hello', 200, 220, size=3, fontFamily="times")
+            ds9.dot('hello', 200, 230, fontFamily="helvetica bold italic")
+
+    @unittest.skipUnless(ds9, "You must setup display.ds9 to run this test")
     def testStretch(self):
         """Test playing with the lookup table"""
         ds9.show()

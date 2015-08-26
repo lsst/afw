@@ -83,8 +83,9 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         if size != 2 or fontFamily != "helvetica":
             fontFamily = fontFamily.split()
             font += ' font="%s %d' % (fontFamily.pop(0), int(10*size/2.0 + 0.5))
-            if fontFamily:
-                font += " %s" % " ".join(fontFamily)
+            if not fontFamily:
+                fontFamily = ["normal"] # appears to be needed at least for 7.4b1
+            font += " %s" % " ".join(fontFamily)
             font += '"'
         extra = ""
         if color or angle or font:
