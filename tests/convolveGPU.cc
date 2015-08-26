@@ -46,7 +46,7 @@
 #include "lsst/utils/ieee.h"
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
@@ -58,7 +58,6 @@
 
 
 using namespace std;
-using lsst::pex::logging::Trace;
 namespace pexEx = lsst::pex::exceptions;
 namespace afwImage = lsst::afw::image;
 namespace afwMath  = lsst::afw::math;
@@ -400,8 +399,7 @@ bool TestConvGpu(
 
 bool GpuTestAccuracy(string imgFileName)
 {
-    lsst::pex::logging::Trace::setDestination(std::cout);
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
+	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
 
     afwGeom::Box2I inputBBox(afwGeom::Point2I(52, 574), afwGeom::Extent2I(76, 80));
 
@@ -479,8 +477,7 @@ bool GpuTestAccuracy(string imgFileName)
 
 bool GpuTestExceptions(const string imgFileName)
 {
-    lsst::pex::logging::Trace::setDestination(std::cout);
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
+	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
 
     afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
@@ -625,8 +622,7 @@ bool GpuTestExceptions(const string imgFileName)
 
 bool CpuTestExceptions(const string imgFileName)
 {
-    lsst::pex::logging::Trace::setDestination(std::cout);
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
+	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
 
     afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());

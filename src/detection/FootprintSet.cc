@@ -49,7 +49,7 @@
 #include <typeinfo>
 #include "boost/format.hpp"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/detection/Peak.h"
@@ -61,7 +61,6 @@
 namespace detection = lsst::afw::detection;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace pexLogging = lsst::pex::logging;
 namespace geom = lsst::afw::geom;
 
 /************************************************************************************************************/

@@ -22,15 +22,12 @@
 #include "lsst/daf/persistence/BoostStorage.h"
 #include "lsst/daf/persistence/XmlStorage.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/policy/Policy.h"
 
 BOOST_CLASS_EXPORT(lsst::afw::detection::Psf)
 
-#define EXEC_TRACE  20
-static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::pex::logging::Trace("afw.detection.PsfFormatter", level, s);
-}
+static const std::string LogName = "afw.detection.PsfFormatter";
 
 namespace afwDetect = lsst::afw::detection;
 namespace afwMath = lsst::afw::math;
@@ -61,25 +58,25 @@ void afwDetect::PsfFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr) {
-    execTrace("PsfFormatter write start");
+    LOGL_TRACE9(LogName, "PsfFormatter write start");
     afwDetect::Psf const* ps = dynamic_cast<afwDetect::Psf const*>(persistable);
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Psf");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        execTrace("PsfFormatter write BoostStorage");
+        LOGL_TRACE9(LogName, "PsfFormatter write BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & ps;
-        execTrace("PsfFormatter write end");
+        LOGL_TRACE9(LogName, "PsfFormatter write end");
         return;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
-        execTrace("PsfFormatter write XmlStorage");
+        LOGL_TRACE9(LogName, "PsfFormatter write XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getOArchive() & make_nvp("psf", ps);
-        execTrace("PsfFormatter write end");
+        LOGL_TRACE9(LogName, "PsfFormatter write end");
         return;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
@@ -87,22 +84,22 @@ void afwDetect::PsfFormatter::write(
 
 dafBase::Persistable* afwDetect::PsfFormatter::read(
     dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
-    execTrace("PsfFormatter read start");
+    LOGL_TRACE9(LogName, "PsfFormatter read start");
     afwDetect::Psf* ps;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        execTrace("PsfFormatter read BoostStorage");
+        LOGL_TRACE9(LogName, "PsfFormatter read BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & ps;
-        execTrace("PsfFormatter read end");
+        LOGL_TRACE9(LogName, "PsfFormatter read end");
         return ps;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
-        execTrace("PsfFormatter read XmlStorage");
+        LOGL_TRACE9(LogName, "PsfFormatter read XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getIArchive() & make_nvp("psf", ps);
-        execTrace("PsfFormatter read end");
+        LOGL_TRACE9(LogName, "PsfFormatter read end");
         return ps;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
@@ -123,7 +120,7 @@ void afwDetect::PsfFormatter::delegateSerialize(
         unsigned int const,             ///< Version of the Psf class
         dafBase::Persistable* persistable ///< persistable Pointer to the Psf as a Persistable
                                                ) {
-    execTrace("PsfFormatter delegateSerialize start");
+    LOGL_TRACE9(LogName, "PsfFormatter delegateSerialize start");
     afwDetect::Psf* ps = dynamic_cast<afwDetect::Psf*>(persistable);
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Psf");
@@ -133,7 +130,7 @@ void afwDetect::PsfFormatter::delegateSerialize(
     ar & make_nvp("k", ps->_kernel);
 #endif
 
-    execTrace("PsfFormatter delegateSerialize end");
+    LOGL_TRACE9(LogName, "PsfFormatter delegateSerialize end");
 }
 
 /** Factory method for PsfFormatter.

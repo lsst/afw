@@ -27,11 +27,9 @@ import optparse
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.daf.base as dafBase
-import lsst.pex.logging
 
 def main():
     DefKernel = "lanczos4"
-    DefVerbosity = 1
     
     usage = """usage: %%prog [options] srcExposure refExposure destExposure
 
@@ -42,10 +40,6 @@ where exposure arguments are paths to Exposure fits files"""
     parser.add_option("-k", "--kernel",
                       type=str, default=DefKernel,
                       help="kernel type: bilinear or lancszosN where N = order; default=%s" % (DefKernel,))
-    parser.add_option("-v", "--verbosity",
-                      type=int, default=DefVerbosity,
-                      help="verbosity of diagnostic trace messages; 1 for just warnings, more for more" + \
-                      " information; default=%s" % (DefVerbosity,))
     
     (opt, args) = parser.parse_args()
     
@@ -66,10 +60,6 @@ where exposure arguments are paths to Exposure fits files"""
     srcExposure = afwImage.ExposureF(srcExposurePath)
     
     destExposure = afwImage.ExposureF(refExposurePath)
-    
-    if opt.verbosity > 0:
-        print "Verbosity =", opt.verbosity
-        lsst.pex.logging.Trace_setVerbosity("lsst.afw.math", opt.verbosity)
     
     numGoodPixels = afwMath.warpExposure(destExposure, srcExposure, warpingControl)
     print "Warped exposure has %s good pixels" % (numGoodPixels)

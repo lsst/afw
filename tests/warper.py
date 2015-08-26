@@ -34,12 +34,7 @@ import lsst.afw.image.utils as imageUtils
 import lsst.afw.image.testUtils as imageTestUtils
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
-
-VERBOSITY = 0                       # increase to see trace
-
-pexLog.Debug("lsst.afw.math", VERBOSITY)
 
 try:
     afwDataDir = lsst.utils.getPackageDir("afwdata")

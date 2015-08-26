@@ -13,7 +13,7 @@
 #include "boost/multi_index/member.hpp"
 #include "boost/math/special_functions/round.hpp"
 
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
 #include "lsst/afw/table/aggregates.h"
 
@@ -821,10 +821,8 @@ Schema FitsSchemaInputMapper::finalize() {
             if (reader) {
                 _impl->readers.push_back(std::move(reader));
             } else {
-                pex::logging::Log::getDefaultLog().log(
-                    pex::logging::Log::WARN,
-                    (boost::format("Format '%s' for column '%s' not supported; skipping.")
-                    % iter->tform % iter->ttype).str()
+                LOGLF_WARN("afw.FitsSchemaInputMapper",
+                    "Format '%s' for column '%s' not supported; skipping." % iter->tform % iter->ttype).str()
                 );
             }
         } else {  // is a Flag column

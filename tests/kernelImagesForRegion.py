@@ -28,16 +28,11 @@ import unittest
 import numpy
 
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
 import lsst.afw.image.testUtils as imTestUtils
-
-VERBOSITY = 0 # increase to see trace
-
-pexLog.Debug("lsst.afw", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

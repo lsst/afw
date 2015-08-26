@@ -33,7 +33,7 @@ Python interface to lsst::afw::math classes
 
 %{
 #   include "lsst/daf/base.h"
-#   include "lsst/pex/logging.h"
+#   include "lsst/log/Log.h"
 #   include "lsst/pex/policy.h"
 #   include "lsst/afw/image.h"
 #   include "lsst/afw/geom.h"

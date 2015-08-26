@@ -35,17 +35,10 @@ or
 
 import unittest
 import lsst.utils.tests as tests
-import lsst.pex.logging as logging
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
 import lsst.afw.display.ds9 as ds9
-
-try:
-    type(verbose)
-except NameError:
-    verbose = 0
-    logging.Debug("afwDetect.Footprint", verbose)
 
 try:
     type(display)

@@ -29,7 +29,7 @@
  */
 
 %{
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord.h"
 #include "lsst/afw/fits.h"

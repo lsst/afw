@@ -42,7 +42,7 @@
 #include "boost/cstdint.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/math/Kernel.h"
@@ -60,7 +60,6 @@
 #include "lsst/afw/gpu/GpuExceptions.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
@@ -185,7 +184,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::basicConvolveGPU(
     } else if (IS_INSTANCE(kernel, afwMath::SeparableKernel)) {
         return mathDetail::ConvolveGpuStatus::UNSUPPORTED_KERNEL;
     } else if (IS_INSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<4>("lsst.afw.math.convolve",
+        LOGF_TRACE4("lsst.afw.math.convolve",
                           "generic basicConvolve (GPU): dispatch to convolveLinearCombinationGPU");
         return mathDetail::convolveLinearCombinationGPU(convolvedImage, inImage,
                 *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
@@ -193,7 +192,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::basicConvolveGPU(
     }
 
     // use brute force
-    pexLog::TTrace<3>("lsst.afw.math.convolve",
+    LOGF_TRACE3("lsst.afw.math.convolve",
                       "generic basicConvolve (GPU): dispatch to convolveSpatiallyInvariantGPU");
     return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel, convolutionControl);
 }
@@ -238,7 +237,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
 
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        LOGF_TRACE3("lsst.afw.math.convolve",
                           "convolveLinearCombinationGPU: spatially invariant; will delegate");
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
                 convolutionControl.getDoNormalize());
@@ -334,7 +333,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
                 return mathDetail::ConvolveGpuStatus::INVALID_KERNEL_DATA;
             }
         }
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        LOGF_TRACE3("lsst.afw.math.convolve",
                 "MaskedImage, convolveLinearCombinationGPU: will use GPU acceleration");
 
         std::vector< KernelBuffer >  basisKernels(kernelN);
@@ -370,7 +369,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
         gpuDetail::GpuBuffer2D<VarPixel>  outBufVar(cnvWidth, cnvHeight);
         gpuDetail::GpuBuffer2D<MskPixel>  outBufMsk(cnvWidth, cnvHeight);
 
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        LOGF_TRACE3("lsst.afw.math.convolve",
                 "MaskedImage, convolveLinearCombinationGPU: will use GPU acceleration");
 
 #ifdef GPU_BUILD
@@ -430,7 +429,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
 
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        LOGF_TRACE3("lsst.afw.math.convolve",
                           "convolveLinearCombinationGPU: spatially invariant; delegate");
         return mathDetail::convolveSpatiallyInvariantGPU(convolvedImage, inImage, kernel,
                 convolutionControl.getDoNormalize());
@@ -560,7 +559,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveLinearCombinationG
             gpuDetail::GpuBuffer2D<InPixelT>  inBuf(inImage);
             gpuDetail::GpuBuffer2D<OutPixelT> outBuf(cnvWidth, cnvHeight);
 
-            pexLog::TTrace<3>("lsst.afw.math.convolve",
+            LOGF_TRACE3("lsst.afw.math.convolve",
                 "plain Image, convolveLinearCombinationGPU: will use GPU acceleration");
 
 #ifdef GPU_BUILD
@@ -651,7 +650,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
 
     KernelImage kernelImage(kernel.getDimensions());
 
-    pexLog::TTrace<3>("lsst.afw.math.convolve",
+    LOGF_TRACE3("lsst.afw.math.convolve",
                       "convolveSpatiallyInvariantGPU: using GPU acceleration, "
                       "plain Image, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);
@@ -766,7 +765,7 @@ mathDetail::ConvolveGpuStatus::ReturnCode mathDetail::convolveSpatiallyInvariant
 
     KernelImage kernelImage(kernel.getDimensions());
 
-    pexLog::TTrace<3>("lsst.afw.math.convolve",
+    LOGF_TRACE3("lsst.afw.math.convolve",
                       "convolveSpatiallyInvariantGPU: using GPU acceleration, "
                       "MaskedImage, kernel is spatially invariant");
     (void)kernel.computeImage(kernelImage, doNormalize);

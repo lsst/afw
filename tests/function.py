@@ -32,11 +32,6 @@ import numpy
 import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as pexLog
-
-VERBOSITY = 0 # increase to see trace
-
-pexLog.Debug("lsst.afwMath", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

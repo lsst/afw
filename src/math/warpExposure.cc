@@ -44,7 +44,7 @@
 #include "boost/cstdint.hpp"
 #include "boost/regex.hpp"
 
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/geom.h"
@@ -60,7 +60,6 @@
 #include "lsst/afw/math/detail/WarpAtOnePoint.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
 namespace afwCoord = lsst::afw::coord;
@@ -451,15 +450,15 @@ namespace {
         // Get the source MaskedImage and a pixel accessor to it.
         int const srcWidth = srcImage.getWidth();
         int const srcHeight = srcImage.getHeight();
-        pexLog::TTrace<3>("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
+        LOGF_TRACE3("lsst.afw.math.warp", "source image width=%d; height=%d", srcWidth, srcHeight);
 
         int const destWidth = destImage.getWidth();
         int const destHeight = destImage.getHeight();
 
-        pexLog::TTrace<3>("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
+        LOGF_TRACE3("lsst.afw.math.warp", "remap image width=%d; height=%d", destWidth, destHeight);
 
         // Set each pixel of destExposure's MaskedImage
-        pexLog::TTrace<4>("lsst.afw.math.warp", "Remapping masked image");
+        LOGF_TRACE4("lsst.afw.math.warp", "Remapping masked image");
 
         // A cache of pixel positions on the source corresponding to the previous or current row
         // of the destination image.

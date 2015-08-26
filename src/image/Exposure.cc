@@ -32,7 +32,7 @@
 #include "lsst/daf/base/PropertySet.h"
 #include "lsst/daf/base/PropertyList.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/detection/Psf.h"

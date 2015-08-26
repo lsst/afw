@@ -46,7 +46,7 @@
 #include "lsst/utils/ieee.h"
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
@@ -56,7 +56,6 @@
 
 
 using namespace std;
-using lsst::pex::logging::Trace;
 namespace pexEx = lsst::pex::exceptions;
 namespace afwImage = lsst::afw::image;
 namespace afwMath  = lsst::afw::math;

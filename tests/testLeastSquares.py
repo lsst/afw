@@ -39,12 +39,9 @@ import sys
 
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
-import lsst.pex.logging
 from lsst.afw.math import LeastSquares
 
 numpy.random.seed(500)
-
-lsst.pex.logging.getDefaultLog().setThresholdFor("afw.math.LeastSquares", -10)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

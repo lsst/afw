@@ -36,7 +36,7 @@
 // test module to build, but that's the way it is right now.
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image.h"
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/table.h"

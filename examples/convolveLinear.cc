@@ -27,7 +27,7 @@
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/math.h"
 
@@ -37,8 +37,7 @@ namespace afwMath= lsst::afw::math;
 const std::string outImagePath("clOut.fits");
 
 int main(int argc, char **argv) {
-    lsst::pex::logging::Trace::setDestination(std::cout);
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.math", 5);
+	lsst::log::Log::setLevel("lsst.afw.math", TRACE5);
 
     typedef float ImagePixel;
     unsigned int const KernelCols = 19;

@@ -23,7 +23,7 @@
 #include <string>
 #include <boost/format.hpp>
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/math/Statistics.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -31,7 +31,6 @@
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
-namespace pexLogging = lsst::pex::logging;
 
 namespace lsst {
 namespace afw {
@@ -114,7 +113,7 @@ double Threshold::getValue(ImageT const& image) const {
         math::Statistics stats = math::makeStatistics(image, math::STDEVCLIP);
         double const sd = stats.getValue(math::STDEVCLIP);
 
-        pexLogging::TTrace<3>("afw.detection", "St. Dev = %g", sd);
+        LOGF_TRACE3("afw.detection", "afw.detection", "St. Dev = %g", sd);
         
         if (_type == VARIANCE) {
             param = sd*sd;

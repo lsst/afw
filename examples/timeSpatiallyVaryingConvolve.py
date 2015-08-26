@@ -28,12 +28,9 @@ import os
 import time
 
 import lsst.utils
-import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-
-pexLog.Debug("lsst.afw", 0)
 
 MaxIter = 20
 MaxTime = 1.0 # seconds

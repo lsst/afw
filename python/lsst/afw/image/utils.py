@@ -56,7 +56,7 @@ def getDistortedWcs(exposureInfo, log=None):
 
         @param[in] exposureInfo  exposure information (an lsst.afw.image.ExposureInfo),
             e.g. from exposure.getInfo()
-        @param[in] log  an lsst.pex.logging.Log or None; if specified then a warning is logged if:
+        @param[in] log  an lsst.log.Log or None; if specified then a warning is logged if:
             - the exposureInfo's WCS has no distortion and cannot be cast to a TanWcs
             - the expousureInfo's detector has no TAN_PIXELS transform (distortion information)
         @throw RuntimeError if exposureInfo has no WCS.

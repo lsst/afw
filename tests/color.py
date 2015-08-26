@@ -41,18 +41,11 @@ import numpy
 
 import lsst.utils.tests as tests
 import lsst.daf.base as dafBase
-import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
-
-try:
-    type(verbose)
-except NameError:
-    verbose = 0
-    logging.Debug("afwDetect.Footprint", verbose)
 
 try:
     type(display)

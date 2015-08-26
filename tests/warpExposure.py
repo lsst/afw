@@ -41,7 +41,6 @@ import lsst.afw.math as afwMath
 import lsst.afw.image.utils as imageUtils
 import lsst.afw.image.testUtils as imageTestUtils
 import lsst.utils.tests as utilsTests
-import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
@@ -49,14 +48,11 @@ try:
     display
 except:
     display = False
-    VERBOSITY = 0                       # increase to see trace
     # set True to save afw-warped images as FITS files
     SAVE_FITS_FILES = False
     # set True to save failed afw-warped images as FITS files even if SAVE_FITS_FILES is False
     #SAVE_FAILED_FITS_FILES = False
     SAVE_FAILED_FITS_FILES = True
-
-pexLog.Debug("lsst.afw.math", VERBOSITY)
 
 afwDataDir = lsst.utils.getPackageDir("afwdata")
 dataDir = os.path.join(afwDataDir, "data")

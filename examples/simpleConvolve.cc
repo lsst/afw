@@ -26,7 +26,7 @@
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/image.h"
 
@@ -39,8 +39,7 @@ int main(int argc, char **argv) {
     unsigned int kernelCols = 6;
     unsigned int kernelRows = 5;
     
-    lsst::pex::logging::Trace::setDestination(std::cout);
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
+	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
 
     const double DefSigma = 2.0;
     

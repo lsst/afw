@@ -41,7 +41,7 @@
 
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/warpExposure.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/image/Wcs.h"
 
@@ -66,7 +66,6 @@ namespace afwMath = lsst::afw::math;
 namespace afwGpu = lsst::afw::gpu;
 namespace afwImage = lsst::afw::image;
 namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 
 namespace lsst {
@@ -410,7 +409,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 
     int const srcWidth = srcImage.getWidth();
     int const srcHeight = srcImage.getHeight();
-    pexLog::TTrace<3>("lsst.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
+    LOGF_TRACE3("lsst.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
 
     if (!lsst::afw::gpu::isGpuBuild()) {
         throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
@@ -448,7 +447,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 
     int const destWidth = destImage.getWidth();
     int const destHeight = destImage.getHeight();
-    pexLog::TTrace<3>("lsst.afw.math.warp", "(GPU) remap image width=%d; height=%d", destWidth, destHeight);
+    LOGF_TRACE3("lsst.afw.math.warp", "(GPU) remap image width=%d; height=%d", destWidth, destHeight);
 
     int const maxCol = destWidth - 1;
     int const maxRow = destHeight - 1;
@@ -479,7 +478,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 
     int numGoodPixels = 0;
 
-    pexLog::TTrace<3>("lsst.afw.math.warp", "using GPU acceleration, remapping masked image");
+    LOGF_TRACE3("lsst.afw.math.warp", "using GPU acceleration, remapping masked image");
 
 #ifdef GPU_BUILD
     int maskKernelSize;

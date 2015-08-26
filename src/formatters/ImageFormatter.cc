@@ -40,6 +40,8 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
+#include <string>
+
 #include "boost/scoped_ptr.hpp"
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
@@ -52,15 +54,11 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/formatters/ImageFormatter.h"
 #include "lsst/afw/image/Image.h"
 
-
-#define EXEC_TRACE  20
-static void execTrace(std::string s, int level = EXEC_TRACE) {
-    lsst::pex::logging::Trace("afw.ImageFormatter", level, s);
-}
+static const std::string LogName{"afw.ImageFormatter"};
 
 using boost::serialization::make_nvp;
 using lsst::daf::base::Persistable;
@@ -135,27 +133,27 @@ void ImageFormatter<ImagePixelT>::write(
     Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr) {
 
-    execTrace("ImageFormatter write start");
+    LOGL_TRACE9(LogName, "ImageFormatter write start");
     Image<ImagePixelT> const* ip = dynamic_cast<Image<ImagePixelT> const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Image");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
-        execTrace("ImageFormatter write BoostStorage");
+        LOGL_TRACE9(LogName, "ImageFormatter write BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
-        execTrace("ImageFormatter write end");
+        LOGL_TRACE9(LogName, "ImageFormatter write end");
         return;
     }
     else if (typeid(*storage) == typeid(XmlStorage)) {
-        execTrace("ImageFormatter write XmlStorage");
+        LOGL_TRACE9(LogName, "ImageFormatter write XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         boost->getOArchive() & make_nvp("img", *ip);
-        execTrace("ImageFormatter write end");
+        LOGL_TRACE9(LogName, "ImageFormatter write end");
         return;
     }
     else if (typeid(*storage) == typeid(FitsStorage)) {
-        execTrace("ImageFormatter write FitsStorage");
+        LOGL_TRACE9(LogName, "ImageFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef Image<ImagePixelT> Image;
 
@@ -163,7 +161,7 @@ void ImageFormatter<ImagePixelT>::write(
         // \todo Do something with these fields?
         // int _X0;
         // int _Y0;
-        execTrace("ImageFormatter write end");
+        LOGL_TRACE9(LogName, "ImageFormatter write end");
         return;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Image");
@@ -172,26 +170,26 @@ void ImageFormatter<ImagePixelT>::write(
 template <typename ImagePixelT>
 Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
                                                lsst::daf::base::PropertySet::Ptr additionalData) {
-    execTrace("ImageFormatter read start");
+    LOGL_TRACE9(LogName, "ImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
-        execTrace("ImageFormatter read BoostStorage");
+        LOGL_TRACE9(LogName, "ImageFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         Image<ImagePixelT>* ip = new Image<ImagePixelT>;
         boost->getIArchive() & *ip;
-        execTrace("ImageFormatter read end");
+        LOGL_TRACE9(LogName, "ImageFormatter read end");
         return ip;
     }
     else if (typeid(*storage) == typeid(XmlStorage)) {
-        execTrace("ImageFormatter read XmlStorage");
+        LOGL_TRACE9(LogName, "ImageFormatter read XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         Image<ImagePixelT>* ip = new Image<ImagePixelT>;
         boost->getIArchive() & make_nvp("img", *ip);
-        execTrace("ImageFormatter read end");
+        LOGL_TRACE9(LogName, "ImageFormatter read end");
         return ip;
     }
     else if(typeid(*storage) == typeid(FitsStorage)) {
 
-        execTrace("ImageFormatter read FitsStorage");
+        LOGL_TRACE9(LogName, "ImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         geom::Box2I box;
         if (additionalData->exists("llcX")) {
@@ -232,7 +230,7 @@ Persistable* ImageFormatter<ImagePixelT>::read(Storage::Ptr storage,
         // \todo Do something with these fields?
         // int _X0;
         // int _Y0;
-        execTrace("ImageFormatter read end");
+        LOGL_TRACE9(LogName, "ImageFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Image");
@@ -249,7 +247,7 @@ void ImageFormatter<ImagePixelT>::update(
 template <typename ImagePixelT> template <class Archive>
 void ImageFormatter<ImagePixelT>::delegateSerialize(
     Archive& ar, int const, Persistable* persistable) {
-    execTrace("ImageFormatter delegateSerialize start");
+    LOGL_TRACE9(LogName, "ImageFormatter delegateSerialize start");
     Image<ImagePixelT>* ip = dynamic_cast<Image<ImagePixelT>*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Image");
