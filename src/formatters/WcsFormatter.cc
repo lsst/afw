@@ -60,8 +60,6 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/Wcs.h"
 
-static const std::string LogName{"afw.WcsFormatter"};
-
 namespace afwForm = lsst::afw::formatters;
 namespace afwImg = lsst::afw::image;
 namespace dafBase = lsst::daf::base;
@@ -85,17 +83,17 @@ void afwForm::WcsFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr) {
-    LOGL_TRACE9(LogName, "WcsFormatter write start");
+    LOGL_TRACE9(_log, "WcsFormatter write start");
     afwImg::Wcs const* ip =
         dynamic_cast<afwImg::Wcs const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Persisting non-Wcs");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        LOGL_TRACE9(LogName, "WcsFormatter write BoostStorage");
+        LOGL_TRACE9(_log, "WcsFormatter write BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
-        LOGL_TRACE9(LogName, "WcsFormatter write end");
+        LOGL_TRACE9(_log, "WcsFormatter write end");
         return;
     }
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
@@ -104,23 +102,23 @@ void afwForm::WcsFormatter::write(
 dafBase::Persistable* afwForm::WcsFormatter::read(
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr additionalData) {
-    LOGL_TRACE9(LogName, "WcsFormatter read start");
+    LOGL_TRACE9(_log, "WcsFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
         afwImg::Wcs* ip = new afwImg::Wcs;
-        LOGL_TRACE9(LogName, "WcsFormatter read BoostStorage");
+        LOGL_TRACE9(_log, "WcsFormatter read BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & *ip;
-        LOGL_TRACE9(LogName, "WcsFormatter read end");
+        LOGL_TRACE9(_log, "WcsFormatter read end");
         return ip;
     }
     else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
-        LOGL_TRACE9(LogName, "WcsFormatter read FitsStorage");
+        LOGL_TRACE9(_log, "WcsFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", 0);
         dafBase::PropertySet::Ptr md =
             afwImg::readMetadata(fits->getPath(), hdu);
         afwImg::Wcs* ip = new afwImg::Wcs(md);
-        LOGL_TRACE9(LogName, "WcsFormatter read end");
+        LOGL_TRACE9(_log, "WcsFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(pexExcept::RuntimeError, "Unrecognized Storage for Wcs");
@@ -175,7 +173,7 @@ afwForm::WcsFormatter::generatePropertySet(afwImg::Wcs const& wcs) {
 template <class Archive>
 void afwForm::WcsFormatter::delegateSerialize(
     Archive& ar, int const, dafBase::Persistable* persistable) {
-    LOGL_TRACE9(LogName, "WcsFormatter delegateSerialize start");
+    LOGL_TRACE9(_log, "WcsFormatter delegateSerialize start");
     afwImg::Wcs* ip = dynamic_cast<afwImg::Wcs*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Serializing non-Wcs");
@@ -227,7 +225,7 @@ void afwForm::WcsFormatter::delegateSerialize(
             wcsset(&(ip->_wcsInfo[i]));
         }
     }
-    LOGL_TRACE9(LogName, "WcsFormatter delegateSerialize end");
+    LOGL_TRACE9(_log, "WcsFormatter delegateSerialize end");
 }
 
 template void afwForm::WcsFormatter::delegateSerialize(

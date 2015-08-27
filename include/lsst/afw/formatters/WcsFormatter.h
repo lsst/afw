@@ -44,6 +44,7 @@
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
+#include "lsst/log/Log.h"
 
 namespace lsst {
 namespace afw {
@@ -87,6 +88,8 @@ public:
 
 private:
     explicit WcsFormatter(lsst::pex::policy::Policy::Ptr policy);
+
+    lsst::log::Log _log{"afw.image.WcsFormatter"};
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };

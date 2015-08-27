@@ -45,6 +45,7 @@
 #include <lsst/daf/base/Persistable.h>
 #include <lsst/daf/persistence/Formatter.h>
 #include <lsst/daf/persistence/Storage.h>
+#include "lsst/log/Log.h"
 #include <lsst/pex/policy/Policy.h>
 
 namespace lsst {
@@ -74,6 +75,7 @@ private:
     explicit KernelFormatter(lsst::pex::policy::Policy::Ptr policy);
 
     lsst::pex::policy::Policy::Ptr _policy;
+    lsst::log::Log _log{"afw.math.KernelFormatter"};
 
     static lsst::daf::persistence::Formatter::Ptr
         createInstance(lsst::pex::policy::Policy::Ptr policy);

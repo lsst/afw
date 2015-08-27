@@ -44,6 +44,7 @@
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
@@ -83,6 +84,8 @@ public:
 
 private:
     explicit ImageFormatter(lsst::pex::policy::Policy::Ptr policy);
+
+    lsst::log::Log _log{"afw.image.ImageFormatter"};
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };

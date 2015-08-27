@@ -44,6 +44,7 @@
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
+#include "lsst/log/Log.h"
 
 #include "Eigen/Core"
 
@@ -89,6 +90,8 @@ public:
 
 private:
     explicit TanWcsFormatter(lsst::pex::policy::Policy::Ptr policy);
+
+    lsst::log::Log _log{"afw.image.TanWcsFormatter"};
 
     static lsst::daf::persistence::FormatterRegistration registration;
 };
