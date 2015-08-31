@@ -793,6 +793,27 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertTrue(numpy.all(da[:4,:] == 0))
         self.assertTrue(numpy.all(da[6:,:] == 0))
 
+    def testCopyWithinFootprintOutside(self):
+        """Copy a footprint that is larger than the image"""
+        target = afwImage.ImageF(100, 100)
+        target.set(0)
+        subTarget = afwImage.ImageF(target, afwGeom.Box2I(afwGeom.Point2I(40, 40), afwGeom.Extent2I(20, 20)))
+        source = afwImage.ImageF(10, 30)
+        source.setXY0(45, 45)
+        source.set(1.0)
+
+        foot = afwDetect.Footprint()
+        foot.addSpan(50, 50, 60) # Oversized on the source image, right; only some pixels overlap
+        foot.addSpan(60, 0, 100) # Oversized on the source, left and right; and on sub-target image, top
+        foot.addSpan(99, 0, 1000) # Oversized on the source image, top, left and right; aiming for segfault
+
+        afwDetect.copyWithinFootprintImage(foot, source, subTarget)
+
+        expected = numpy.zeros((100, 100))
+        expected[50,50:55] = 1.0
+
+        self.assertTrue(numpy.all(target.getArray() == expected))
+
     def testCopyWithinFootprintMaskedImage(self):
         W,H = 10,10
         dims = afwGeom.Extent2I(W,H)
@@ -1018,6 +1039,69 @@ class FootprintTestCase(utilsTests.TestCase):
         afwDetect.setMaskFromFootprint(mask123b, merge123, 1)
         self.assertEqual(mask123a.getArray().sum(), merge123.getArea())
         self.assertClose(mask123a.getArray(), mask123b.getArray(), rtol=0, atol=0)
+
+        # Test that ignoreSelf=True works for include
+        ignoreParent = True
+        childOnly = afwDetect.Footprint()
+        childOnly.include([child1, child2, child3])
+        merge123 = afwDetect.Footprint(parent)
+        merge123.include([child1, child2, child3], ignoreParent)
+        maskChildren = afwImage.MaskU(region)
+        mask123 = afwImage.MaskU(region)
+        afwDetect.setMaskFromFootprint(maskChildren, childOnly, 1)
+        afwDetect.setMaskFromFootprint(mask123, merge123, 1)
+        self.assertTrue(numpy.all(maskChildren.getArray() == mask123.getArray()))
+
+    def checkEdge(self, footprint):
+        """Check that Footprint::findEdgePixels() works"""
+        bbox = footprint.getBBox()
+        bbox.grow(3)
+
+        def makeImage(footprint):
+            """Make an ImageF with 1 in the footprint, and 0 elsewhere"""
+            ones = afwImage.ImageI(bbox)
+            ones.set(1)
+            image = afwImage.ImageI(bbox)
+            image.set(0)
+            afwDetect.copyWithinFootprintImage(footprint, ones, image)
+            return image
+
+        edges = self.foot.findEdgePixels()
+        edgeImage = makeImage(edges)
+
+        # Find edges with an edge-detection kernel
+        image = makeImage(self.foot)
+        kernel = afwImage.ImageD(3, 3)
+        kernel.set(1, 1, 4)
+        for x, y in [(1, 2), (0, 1), (1, 0), (2, 1)]:
+            kernel.set(x, y, -1)
+        kernel.setXY0(1, 1)
+        result = afwImage.ImageI(bbox)
+        result.set(0)
+        afwMath.convolve(result, image, afwMath.FixedKernel(kernel), afwMath.ConvolutionControl(False))
+        result.getArray().__imul__(image.getArray())
+        trueEdges = numpy.where(result.getArray() > 0, 1, 0)
+
+        self.assertTrue(numpy.all(trueEdges == edgeImage.getArray()))
+
+
+    def testEdge(self):
+        """Test for Footprint::findEdgePixels()"""
+        foot = afwDetect.Footprint()
+        for span in ((3, 3, 9),
+                     (4, 2, 4),
+                     (4, 6, 7),
+                     (4, 9, 11),
+                     (5, 3, 9),
+                     (6, 6, 7),
+                     ):
+            foot.addSpanInSeries(*span)
+        foot.normalize()
+        self.checkEdge(foot)
+
+        # This footprint came from a very large Footprint in a deep HSC coadd patch
+        self.checkEdge(afwDetect.Footprint.readFits("tests/testFootprintEdge.fits"))
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

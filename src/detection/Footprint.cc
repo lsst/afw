@@ -279,47 +279,44 @@ bool Footprint::contains(
 }
 
 namespace {
-/// Predicate for removing peaks outside a bbox
-struct ClipPredicate : public std::unary_function<PeakRecord const&, bool> {
+
+/// Predicate for removing spans outside a bbox
+struct ClipSpansPredicate : public std::unary_function<PTR(Span) const&, bool> {
     geom::Box2I const& bbox;
-    ClipPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
+    ClipSpansPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
+    bool operator()(PTR(Span) const& spanPtr) const {
+        Span const& span = *spanPtr;
+        int const y = span.getY();
+        return (y < bbox.getMinY() || y > bbox.getMaxY() ||
+                span.getX0() > bbox.getMaxX() || span.getX1() < bbox.getMinX());
+    }
+};
+
+/// Predicate for removing peaks outside a bbox
+struct ClipPeaksPredicate : public std::unary_function<PeakRecord const&, bool> {
+    geom::Box2I const& bbox;
+
+    ClipPeaksPredicate(geom::Box2I const& _bbox) : bbox(_bbox) {}
+
     bool operator()(PTR(PeakRecord) const& peak) const {
         return !bbox.contains(geom::Point2I(peak->getIx(), peak->getIy()));
     }
 };
-}
+} // anonymous namespace
 
 void Footprint::clipTo(geom::Box2I const& bbox) {
-    Footprint::SpanList::iterator it = _spans.begin();
-    for (; it != _spans.end();) {
-        Span *sp = it->get();
-        if ((sp->getY() < bbox.getMinY()) ||
-            (sp->getY() > bbox.getMaxY())) {
-            // out of bounds in y -- erase
-            it = _spans.erase(it);
-            continue;
-        }
-        if ((sp->getX0() > bbox.getMaxX()) ||
-            (sp->getX1() < bbox.getMinX())) {
-            // out of bounds in x; erase
-            it = _spans.erase(it);
-            continue;
-        }
-        // clip
-        if (sp->getX0() < bbox.getMinX()) {
-            // clip span x0 to bbox
-            sp->_x0 = bbox.getMinX();
-        }
-        if (sp->getX1() > bbox.getMaxX()) {
-            // clip span x1 to bbox
-            sp->_x1 = bbox.getMaxX();
-        }
-        ++it;
+    _spans.erase(std::remove_if(_spans.begin(), _spans.end(), ClipSpansPredicate(bbox)), _spans.end());
+    for (SpanList::const_iterator ss = _spans.begin(); ss != _spans.end(); ++ss) {
+        Span& span = **ss;
+        span.getX0() = std::max(span.getX0(), bbox.getMinX());
+        span.getX1() = std::min(span.getX1(), bbox.getMaxX());
     }
 
     // Remove peaks not in the new bbox
     _peaks.getInternal().erase(std::remove_if(_peaks.getInternal().begin(), _peaks.getInternal().end(),
-                                              ClipPredicate(bbox)), _peaks.getInternal().end());
+                                              ClipPeaksPredicate(bbox)), _peaks.getInternal().end());
 
     if (_spans.empty()) {
         _bbox = geom::Box2I();
@@ -609,9 +606,15 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
     typedef lsst::afw::image::Image<PixelT> ImageT;
     int const ix0 = img.getX0();
     int const iy0 = img.getY0();
-    const PixelT zero = 0;
+    PixelT const zero = 0;
 
-    for (SpanList::iterator s = _spans.begin(); s < _spans.end(); ++s) {
+    normalize(); // allows us to produce a normalized output
+    SpanList old;
+    std::swap(_spans, old);
+    _spans.reserve(old.size());
+    _area = 0;
+    _bbox = geom::Box2I();
+    for (SpanList::iterator s = old.begin(); s != old.end(); ++s) {
         int const y = (*s)->getY();
         int const x0 = (*s)->getX0();
         int const x1 = (*s)->getX1();
@@ -625,9 +628,6 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
         }
         if (leftx > x1) {
             // whole span is zero; drop it.
-            _normalized = false;
-            _spans.erase(s);
-            s--;
             continue;
         }
         // find zero pixels on the right...
@@ -637,21 +637,9 @@ Footprint::clipToNonzero(typename image::Image<PixelT> const& img) {
                 break;
             }
         }
-        if (leftx != x0) {
-            (*s)->_x0 = leftx;
-            _normalized = false;
-        }
-        if (rightx != x1) {
-            (*s)->_x1 = rightx;
-            _normalized = false;
-        }
+        addSpanInSeries(y, leftx, rightx);
     }
-
-    if (_spans.empty()) {
-        _bbox = geom::Box2I();
-        _area = 0;
-        _normalized = true;
-    }
+    normalize();
 }
 
 template<typename PixelT>
@@ -689,15 +677,22 @@ Footprint::insertIntoImage(
     }
 }
 
-void Footprint::include(std::vector<PTR(Footprint)> const & others) {
+void Footprint::include(std::vector<PTR(Footprint)> const & others, bool ignoreSelf) {
     if (others.empty()) return;
-    geom::Box2I bbox(getBBox());
+    geom::Box2I bbox;
+    if (!ignoreSelf) {
+        bbox.include(getBBox());
+    } else {
+        _spans.clear();
+    }
     for (std::vector<PTR(Footprint)>::const_iterator i = others.begin(); i != others.end(); ++i) {
         bbox.include((**i).getBBox());
     }
     boost::uint16_t bits = 0x1;
     image::Mask<boost::uint16_t> mask(bbox);
-    setMaskFromFootprint(&mask, *this, bits);
+    if (!ignoreSelf) {
+        setMaskFromFootprint(&mask, *this, bits);
+    }
     for (std::vector<PTR(Footprint)>::const_iterator i = others.begin(); i != others.end(); ++i) {
         setMaskFromFootprint(&mask, **i, bits);
     }
@@ -980,6 +975,93 @@ PTR(Footprint) Footprint::transform(
     }
     return fpNew;
 }
+
+PTR(Footprint) Footprint::findEdgePixels() const
+{
+    if (!_normalized) {
+        throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Footprint isn't normalized");
+    }
+    int const width = getBBox().getWidth(), height = getBBox().getHeight();
+    if (height <= 2 || _spans.size() <= 2) {
+        // Everything is on the edge
+        return boost::make_shared<Footprint>(*this);
+    }
+
+    // Get a list of pixels (in the form of a Footprint) that are on the edge horizontally
+    // or have nothing above or below them.
+    PTR(Footprint) edges = boost::make_shared<Footprint>(getPeaks().getSchema());
+    int const xStart = getBBox().getMinX(), yStart = getBBox().getMinY();
+    std::vector<bool> rowBefore(width, false); // Representation of the previous row
+    std::vector<bool> rowNow(width, false);    // Representation of this row
+    std::vector<bool> rowAfter(width, false); // Representation of the next row
+
+    int yLast = yStart; // y value of last span we looked at
+    int const yEnd = _spans.back()->getY(); // y value of end span
+
+    // Set rowNow, rowAfter
+    SpanList::const_iterator readAhead = _spans.begin(); // Iterator for loading next row
+    for (; readAhead != _spans.end() && (*readAhead)->getY() == yStart; ++readAhead) {
+        std::fill(rowNow.begin() + (*readAhead)->getX0() - xStart,
+                  rowNow.begin() + (*readAhead)->getX1() + 1 - xStart,
+                  true);
+    }
+    for (; readAhead != _spans.end() && (*readAhead)->getY() == yStart + 1; ++readAhead) {
+        std::fill(rowAfter.begin() + (*readAhead)->getX0() - xStart,
+                  rowAfter.begin() + (*readAhead)->getX1() + 1 - xStart,
+                  true);
+    }
+
+    for (SpanList::const_iterator ss = _spans.begin(); ss != _spans.end(); ++ss) {
+        int const y = (*ss)->getY();
+        if (y == yStart || y == yEnd) {
+            // The whole span is on an edge
+            edges->addSpanInSeries(y, (*ss)->getX0(), (*ss)->getX1());
+            continue;
+        }
+        if (y != yLast) {
+            // Move rows down
+            rowBefore.assign(rowNow.begin(), rowNow.end());
+            rowNow.assign(rowAfter.begin(), rowAfter.end());
+            // Prepare the next row
+            std::fill(rowAfter.begin(), rowAfter.end(), false);
+            for (; readAhead != _spans.end() && (*readAhead)->getY() <= y; ++readAhead) {} // Moving only
+            for (; readAhead != _spans.end() && (*readAhead)->getY() == y + 1; ++readAhead) {
+                std::fill(rowAfter.begin() + (*readAhead)->getX0() - xStart,
+                          rowAfter.begin() + (*readAhead)->getX1() + 1 - xStart,
+                          true);
+            }
+            yLast = y;
+        }
+
+        // Look for edge in the current row
+        int x0 = (*ss)->getX0();
+        bool onEdge = true;             // Are we on an edge? The first pixel is an edge
+        for (int x = x0 + 1, i = x0 + 1 - xStart; x < (*ss)->getX1(); ++x, ++i) {
+            if (onEdge) {
+                if (rowBefore[i] && rowAfter[i]) {
+                    // We've come to the end of the edge
+                    onEdge = false;
+                    edges->addSpanInSeries(y, x0, x - 1);
+                }
+            } else if (!rowBefore[i] || !rowAfter[i]) {
+                // We're on an edge now
+                onEdge = true;
+                x0 = x;
+            }
+        }
+        // Last pixel is an edge
+        int const x1 = (*ss)->getX1();
+        if (onEdge) {
+            edges->addSpanInSeries(y, x0, x1);
+        } else {
+            edges->addSpanInSeries(y, x1, x1);
+        }
+    }
+    edges->normalize(); // Should be a no-op, but just in case...
+
+    return edges;
+}
+
 
 /**
    Returns *true* iff this Footprint satisfies the "normalized" conditions.
@@ -1891,16 +1973,29 @@ copyWithinFootprint(Footprint const& foot,
                     PTR(ImageOrMaskedImageT) const input,
                     PTR(ImageOrMaskedImageT) output) {
     Footprint::SpanList spans = foot.getSpans();
+
+    int const inX0 = input->getX0(), inY0 = input->getY0();
+    int const outX0 = output->getX0(), outY0 = output->getY0();
+
+    int const xMin = std::max(inX0, outX0);
+    int const xMax = std::min(input->getWidth() + inX0, output->getWidth() + outX0) - 1;
     for (Footprint::SpanList::iterator sp = spans.begin();
          sp != spans.end(); ++sp) {
-        int y  = (*sp)->getY();
-        int x0 = (*sp)->getX0();
-        int x1 = (*sp)->getX1();
-        typename ImageOrMaskedImageT::const_x_iterator initer = input->x_at(
-            x0 - input->getX0(),  y - input->getY0());
-        typename ImageOrMaskedImageT::x_iterator outiter = output->x_at(
-            x0 - output->getX0(), y - output->getY0());
-        for (int x=x0; x <= x1; ++x, ++initer, ++outiter) {
+        int const y  = (*sp)->getY();
+        int const x0 = (*sp)->getX0();
+        int const x1 = (*sp)->getX1();
+
+        int const yInput = y - inY0, yOutput = y - outY0;
+        if (yInput < 0 || yInput >= input->getHeight() || yOutput < 0 || yOutput >= output->getHeight()) {
+            continue;
+        }
+
+        int const xStart = std::max(x0, xMin); // Starting position in x, parent frame
+        int const xStop = std::min(x1, xMax);  // Stopping position (inclusive) in x, parent frame
+
+        typename ImageOrMaskedImageT::const_x_iterator initer = input->x_at(xStart - inX0, yInput);
+        typename ImageOrMaskedImageT::x_iterator outiter = output->x_at(xStart - outX0, yOutput);
+        for (int x = xStart; x <= xStop; ++x, ++initer, ++outiter) {
             *outiter = *initer;
         }
     }

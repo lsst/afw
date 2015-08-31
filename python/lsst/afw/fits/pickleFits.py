@@ -20,6 +20,6 @@ def unreduceFromFits(cls, data, size):
 
     Assumes the existence of a "readFits" method on the object.
     """
-    manager = MemFileManager(size)
+    manager = MemFileManager(size + 1) # Allow an extra char for nul
     memmove(manager.getData(), data)
     return cls.readFits(manager)
