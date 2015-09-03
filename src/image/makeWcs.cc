@@ -95,20 +95,18 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
         metadata->set<std::string>("CTYPE1", "RA---TAN");
         metadata->set<std::string>("CTYPE2", "DEC--TAN");
         metadata->set<bool>("TPV_WCS", true);
-        // PV1_[1-4] are in principle legal, but Swarp reuses them as part of the TPV parameterisation
-        // As a compromise, we remove them iff there is at least one PV2_? card
-        // John Swinbank points out the maximum is 39; http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html
-        bool sawPV2 = false;               // did we see a PV2_? card?
-        for (int i = 2; i > 0; i--) {
-            for (int j = (i == 1 && sawPV2 ? 5 : 1); j <= 39; ++j) { // 39's the max in the TPV standard
+        // PV1_[1-4] are in principle legal, although Swarp reuses them as part of the TPV parameterisation.
+        // It turns out that leaving PV1_[1-4] in the header breaks wcslib 4.14's ability to read
+        // DECam headers (DM-3196) so we'll delete them all for now.
+        //
+        // John Swinbank points out the maximum value of j in TVi_j is 39;
+        // http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html
+        for (int i = 0; i != 2; ++i) {
+            for (int j = 1; j <= 39; ++j) { // 39's the max in the TPV standard
                 char pvName[8];
                 sprintf(pvName, "PV%d_%d", i, j);
                 if (metadata->exists(pvName)) {
                     metadata->remove(pvName);
-
-                    if (i == 2) {
-                        sawPV2 = true;
-                    }
                 }
             }
         }
