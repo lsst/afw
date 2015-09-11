@@ -38,14 +38,10 @@ import lsst.daf.base as dafBase
 from .rotateBBoxBy90 import rotateBBoxBy90
 from .assembleImage import assembleAmplifierImage, assembleAmplifierRawImage
 from .cameraGeomLib import PUPIL, FOCAL_PLANE
+from lsst.afw.display.utils import _getDisplayFromDisplayOrFrame
 
 import lsst.afw.display as afwDisplay
 import lsst.afw.display.utils as displayUtils
-
-try:
-    type(display)
-except NameError:
-    display = False
 
 def prepareWcsData(wcs, amp, isTrimmed=True):
     """!Put Wcs from an Amp image into CCD coordinates
@@ -67,8 +63,8 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
     offset = amp.getRawXYOffset()
     wcs.shiftReferencePixel(offset.getX(), offset.getY())
 
-def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsize=(10., 10.),
-    showFig=True, savePath=None):
+def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1, figsize=(10., 10.),
+                   useIds=False, showFig=True, savePath=None):
     """!Make a plot of the focal plane along with a set points that sample the Pupil
 
     @param[in] camera  a camera object
@@ -77,6 +73,7 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
     @param[in] dx  Spacing of sample points in x in degrees
     @param[in] dy  Spacing of sample points in y in degrees
     @param[in] figsize  matplotlib style tuple indicating the size of the figure in inches
+    @param[in] useIds Label detectors by name, not id
     @param[in] showFig  Display the figure on the screen?
     @param[in] savePath  If not None, save a copy of the figure to this name
     """
@@ -86,12 +83,21 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
         import matplotlib.pyplot as plt
     except ImportError:
         raise ImportError("Can't run plotFocalPlane: matplotlib has not been set up")
-    pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2., 
-                                              numpy.arange(0., pupilSizeDeg_y+dy, dy) -  pupilSizeDeg_y/2.)
+
+    if pupilSizeDeg_x:
+        if pupilSizeDeg_y is None:
+            pupilSizeDeg_y = pupilSizeDeg_x
+
+        pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2., 
+                                                  numpy.arange(0., pupilSizeDeg_y+dy, dy) -  pupilSizeDeg_y/2.)
+        pupil_gridx, pupil_gridy = pupil_gridx.flatten(), pupil_gridy.flatten()
+    else:
+        pupil_gridx, pupil_gridy = [], []
+
     xs = []
     ys = []
     pcolors = []
-    for pos in zip(pupil_gridx.flatten(), pupil_gridy.flatten()):
+    for pos in zip(pupil_gridx, pupil_gridy):
         posRad = afwGeom.Point2D(math.radians(pos[0]), math.radians(pos[1]))
         cp = camera.makeCameraPoint(posRad, PUPIL)
         ncp = camera.transform(cp, FOCAL_PLANE)
@@ -120,7 +126,8 @@ def plotFocalPlane(camera, pupilSizeDeg_x, pupilSizeDeg_y, dx=0.1, dy=0.1, figsi
         colors.append(colorMap[det.getType()])
         patches.append(Polygon(corners, True))
         center = det.getOrientation().getFpPosition()
-        ax.text(center.getX(), center.getY(), det.getName(), horizontalalignment='center', size=6)
+        ax.text(center.getX(), center.getY(), det.getId() if useIds else det.getName(),
+                horizontalalignment='center', size=6)
 
     patchCollection = PatchCollection(patches, alpha=0.6, facecolor=colors)
     ax.add_collection(patchCollection)
@@ -240,11 +247,14 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
 
 class FakeImageDataSource(object):
     """A class to retrieve synthetic images for display by the show* methods"""
-    def __init__(self, isTrimmed=True, showAmpGain=True, markSize=10, markValue=0,
-            ampImValue=None, scaleGain = lambda gain: (gain*1000)//10):
+    def __init__(self, isTrimmed=True, verbose=False, background=numpy.nan, 
+                 showAmpGain=True, markSize=10, markValue=0,
+                 ampImValue=None, scaleGain=lambda gain: (gain*1000)//10):
         """!Construct a FakeImageDataSource
 
         @param[in] isTrimmed  Should amps be trimmed?
+        @param[in] verbose  Be chatty
+        @param[in] background  The value of any pixels that lie outside the CCDs
         @param[in] showAmpGain  color the amp segments with the gain of the amp
         @param[in] markSize  size of the side of the box used to mark the read corner
         @param[in] markValue  value to assing the read corner mark
@@ -252,6 +262,8 @@ class FakeImageDataSource(object):
         @param[in] scaleGain  function to scale the gain by
         """
         self.isTrimmed = isTrimmed
+        self.verbose = verbose
+        self.background = background
         self.showAmpGain = showAmpGain
         self.markSize = markSize
         self.markValue = markValue
@@ -281,6 +293,100 @@ class FakeImageDataSource(object):
             ampImage = ampImage.Factory(ampImage, amp.getRawDataBBox(), False)
         return ampImage
 
+class ButlerImage(FakeImageDataSource):
+    """A class to return an Image of a given Ccd using the butler"""
+    
+    def __init__(self, butler=None, type="raw",
+                 isTrimmed=True, verbose=False, background=numpy.nan, gravity=None, *args, **kwargs):
+        """!Create an object that knows how to prepare images for showCamera using the butler
+
+        \param The butler to use.  If no butler is provided an empty image is returned
+        \param type The type of image to read (e.g. raw, bias, flat, calexp)
+        \param isTrimmed If true, the showCamera command expects to be given trimmed images
+        \param verbose  Be chatty (in particular, print any error messages from the butler)
+        \param background  The value of any pixels that lie outside the CCDs
+        \param  gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
+                 Specify how to fit the image into the available space; N => align top, W => align left
+        \param *args, *kwargs Passed to the butler
+        """
+        super(ButlerImage, self).__init__(*args)
+        self.isTrimmed = isTrimmed
+        self.type = type
+        self.butler = butler
+        self.kwargs = kwargs
+        self.isRaw = False
+        self.gravity = gravity
+        self.background = background
+        self.verbose = verbose
+    
+    def _prepareImage(self, ccd, im, binSize, allowRotate=True):
+        if binSize > 1:
+            im = afwMath.binImage(im, binSize)
+    
+        if allowRotate:
+            im = afwMath.rotateImageBy90(im, ccd.getOrientation().getNQuarter())
+                
+        return im
+
+    def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1):
+        """Return an image of the specified amp in the specified ccd"""
+
+        if self.isTrimmed:
+             bbox = ccd.getBBox()
+        else:
+             bbox = calcRawCcdBBox(ccd)
+
+        im = None
+        if self.butler is not None:
+            e = None
+            if self.type == "calexp":    # reading the exposure can die if the PSF's unknown
+                try:
+                    fileName = self.butler.get(self.type + "_filename", ccd=ccd.getId(),
+                                                    **self.kwargs)[0]
+                    im = imageFactory(fileName)
+                except Exception as e:
+                    pass
+            else:
+                try:
+                    im = self.butler.get(self.type, ccd=ccd.getId(),
+                                         **self.kwargs).getMaskedImage().getImage()
+                except Exception as e:
+                    pass
+                    
+            if e:
+                if self.verbose:
+                    print "Reading %s: %s" % (ccd.getId(), e)
+
+        if im is None:
+            return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize)
+
+        if self.type == "raw":
+            if hasattr(im, 'convertF'):
+                im = im.convertF()
+        else:
+            return self._prepareImage(ccd, im, binSize, allowRotate=False) # calexps were rotated by the ISR 
+
+        ccdImage = im.Factory(bbox)
+
+        ampImages = []
+        med0 = None
+        for a in ccd:
+            bias = im[a.getRawHorizontalOverscanBBox()]
+            data = im[a.getRawDataBBox()]
+            data -= afwMath.makeStatistics(bias, afwMath.MEANCLIP).getValue()
+            data *= a.getGain()
+
+            ampImages.append(data)
+
+        ccdImage = imageFactory(bbox)
+        for ampImage, amp in itertools.izip(ampImages, ccd):
+            if self.isTrimmed:
+                assembleAmplifierImage(ccdImage, ampImage, amp)
+            else:
+                assembleAmplifierRawImage(ccdImage, ampImage, amp)
+
+        return ccdImage
+
 def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, display, binSize):
     """!Overlay bounding boxes on an image display
 
@@ -292,7 +398,7 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, displ
     @param[in] display image display to display on
     @param[in] binSize  binning factor
     """
-    with afwDisplay.Buffering():
+    with display.Buffering():
         ccdDim = untrimmedCcdBbox.getDimensions()
         ccdBbox = rotateBBoxBy90(untrimmedCcdBbox, nQuarter, ccdDim)
         for amp in ccd:
@@ -363,14 +469,14 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
     """
 
     if not display:
-        display = afwDisplay.getDisplay()
+        display = _getDisplayFromDisplayOrFrame()
 
     ampImage = imageSource.getAmpImage(amp, imageFactory=imageFactory)
     ampImSize = ampImage.getDimensions()
     title = amp.getName()
     display.mtv(ampImage, title=title)
     if overlay:
-        with afwDisplay.Buffering():
+        with display.Buffering():
             if amp.getHasRawInfo() and ampImSize == amp.getRawBBox().getDimensions():
                 bboxes = [(amp.getRawBBox(), 0.49, afwDisplay.GREEN),]
                 xy0 = bboxes[0][0].getMin()
@@ -389,8 +495,8 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
                 bbox.shift(-afwGeom.ExtentI(xy0))
                 displayUtils.drawBBox(bbox, borderWidth=borderWidth, ctype=ctype, display=display)
 
-def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, overlay=True,
-            imageFactory=afwImage.ImageU, binSize=1, inCameraCoords=False):
+def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, overlay=True,
+            imageFactory=afwImage.ImageF, binSize=1, inCameraCoords=False):
     """!Show a CCD on display
 
     @param[in] ccd  Detector to use in display
@@ -401,6 +507,8 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, overlay=True,
     @param[in] binSize  Binning factor
     @param[in] inCameraCoords  Show the Detector in camera coordinates?
     """
+    display = _getDisplayFromDisplayOrFrame(display, frame)
+
     ccdOrigin = afwGeom.Point2I(0,0)
     nQuarter = 0
     ccdImage = imageSource.getCcdImage(ccd, imageFactory=imageFactory, binSize=binSize)
@@ -417,10 +525,14 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, overlay=True,
     title = ccd.getName()
     if isTrimmed:
         title += "(trimmed)"
-    display.mtv(ccdImage, title=title)
 
-    if overlay:
-        overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, display, binSize)
+    if display:
+        display.mtv(ccdImage, title=title)
+
+        if overlay:
+            overlayCcdBoxes(ccd, ccdBbox, nQuarter, isTrimmed, ccdOrigin, display, binSize)
+
+    return ccdImage
 
 def getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin):
     """!Get the bounding boxes of a list of Detectors within a camera sized pixel grid
@@ -470,7 +582,7 @@ def getCameraImageBBox(camBbox, pixelSize, bufferSize):
     return retBox
 
 def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, bufferSize=10,
-        imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, binSize=1):
+                        imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU, binSize=1):
     """!Make an Image of a Camera
 
     @param[in] camera  Camera object to use to make the image
@@ -502,17 +614,26 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     camIm = imageFactory(int(math.ceil(camBbox.getDimensions().getX()/binSize)),
                          int(math.ceil(camBbox.getDimensions().getY()/binSize)))
+    camIm[:] = imageSource.background
+
+    assert imageSource.isTrimmed, "isTrimmed is False isn't supported by getCcdInCamBBoxList"
+
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin) 
     for det, bbox in itertools.izip(ccdList, boxList):
         im = imageSource.getCcdImage(det, imageFactory, binSize)
+
         nQuarter = det.getOrientation().getNQuarter()
         im = afwMath.rotateImageBy90(im, nQuarter)
+        
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
-        imView <<= im
+        try:
+            imView <<= im
+        except Exception as e:
+            pass
 
     return camIm
 
-def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageU,
+def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.ImageF,
                detectorNameList=None, binSize=10, bufferSize=10, frame=None, overlay=True, title="",
                ctype=afwDisplay.GREEN, textSize=1.25, originAtCenter=True, display=None, **kwargs):
     """!Show a Camera on display, with the specified display
@@ -538,7 +659,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     @param[in] **kwargs all remaining keyword arguments are passed to makeImageFromCamera
     @return the mosaic image
     """
-    display = displayUtils.getDisplay(display, frame)
+    display = _getDisplayFromDisplayOrFrame(display, frame)
 
     if binSize < 1:
         binSize = 1
@@ -568,21 +689,23 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
     else:
         wcsReferencePixel = afwGeom.Point2I(0,0)
     wcs = makeFocalPlaneWcs(pixelSize*binSize, wcsReferencePixel)
-    if title == "":
-        title = camera.getName()
-    display.mtv(cameraImage, title=title, wcs=wcs)
 
-    if overlay:
-        with afwDisplay.Buffering():
-            camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize*binSize)
-            bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
-            for bbox, ccd in itertools.izip(bboxList, ccdList):
-                nQuarter = ccd.getOrientation().getNQuarter()
-                # borderWidth to 0.5 to align with the outside edge of the pixel
-                displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, display=display)
-                dims = bbox.getDimensions()
-                display.dot(ccd.getName(), bbox.getMinX()+dims.getX()/2, bbox.getMinY()+dims.getY()/2,
-                            ctype=ctype, size=textSize, textAngle=nQuarter*90)
+    if display:
+        if title == "":
+            title = camera.getName()
+        display.mtv(cameraImage, title=title, wcs=wcs)
+
+        if overlay:
+            with display.Buffering():
+                camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize*binSize)
+                bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
+                for bbox, ccd in itertools.izip(bboxList, ccdList):
+                    nQuarter = ccd.getOrientation().getNQuarter()
+                    # borderWidth to 0.5 to align with the outside edge of the pixel
+                    displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, display=display)
+                    dims = bbox.getDimensions()
+                    display.dot(ccd.getName(), bbox.getMinX()+dims.getX()/2, bbox.getMinY()+dims.getY()/2,
+                                ctype=ctype, size=textSize, textAngle=nQuarter*90)
 
     return cameraImage
 
