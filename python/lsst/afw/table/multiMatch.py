@@ -163,7 +163,7 @@ class GroupView(collections.Mapping):
 
     def __iter__(self):
         """Iterate over group field values"""
-        return self.ids
+        return iter(self.ids)
 
     def __getitem__(self, key):
         """Return the catalog subset that corresponds to an group field value"""
