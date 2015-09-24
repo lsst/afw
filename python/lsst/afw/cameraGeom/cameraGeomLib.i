@@ -75,7 +75,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %include "lsst/afw/cameraGeom/Orientation.h"
 %include "lsst/afw/cameraGeom/Detector.h"
 
-# macros from p_lsstSWig.i
+// macros from p_lsstSWig.i
 %addStreamRepr(lsst::afw::cameraGeom::CameraSysPrefix)
 %useValueEquality(lsst::afw::cameraGeom::CameraSysPrefix)
 %addStreamRepr(lsst::afw::cameraGeom::CameraSys)
