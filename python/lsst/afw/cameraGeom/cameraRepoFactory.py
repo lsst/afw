@@ -207,7 +207,7 @@ class CameraRepositoryFactory(object):
         return returnDict
 
 
-    def makeDetectorConfigs(self, detectorLayoutFile, phosimVersion):
+    def makeDetectorConfigs(self):
         """
         Create the detector configs to use in building the Camera
         @param detectorLayoutFile -- String describing where the focalplanelayout.txt file is located.
@@ -219,7 +219,7 @@ class CameraRepositoryFactory(object):
         detectorConfigs = []
         #We know we need to rotate 3 times and also apply the yaw perturbation
         nQuarter = 1
-        with open(detectorLayoutFile) as fh:
+        with open(self._detectorLayoutFile) as fh:
             for l in fh:
                 if l.startswith("#"):
                     continue
@@ -232,7 +232,7 @@ class CameraRepositoryFactory(object):
                 detConfig.bbox_x1 = int(els[5]) - 1
                 detConfig.bbox_y1 = int(els[4]) - 1
                 detConfig.detectorType = self.detTypeMap[els[8]]
-                detConfig.serial = els[0]+"_"+phosimVersion
+                detConfig.serial = els[0]+"_"+self._version
 
                 # Convert from microns to mm.
                 detConfig.offset_x = float(els[1])/1000. + float(els[12])
