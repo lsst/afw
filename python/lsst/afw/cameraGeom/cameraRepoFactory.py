@@ -39,7 +39,8 @@ class CameraRepositoryFactory(object):
                  gainFile=None,
                  expandDetectorName=None,
                  detectorIdFromAbbrevName=None,
-                 detTypeMap=None):
+                 detTypeMap=None,
+                 radialTransform = [0.0, 1.0, 0.0, 0.0]):
 
         self._default_saturation = 65535
         self._readCorner=readCorner
@@ -54,8 +55,7 @@ class CameraRepositoryFactory(object):
         self._voverscan = 0
 
         self._cameraName = 'LSST'
-        self._plateScale = 20.0 #arcsec per mm
-        self._pinCushion = 0.925
+        self._radialTransform = radialTransform #[1] should be 1/rad per mm
 
         if expandDetectorName is None:
             self._expandDetectorName = self._default_expandDetectorName
@@ -276,7 +276,7 @@ class CameraRepositoryFactory(object):
         camConfig = CameraConfig()
         camConfig.detectorList = dict([(i,detectorConfigList[i]) for i in xrange(len(detectorConfigList))])
         camConfig.name = self._cameraName
-        camConfig.plateScale = self._plateScale
+        camConfig.plateScale = 1.0/afwGeom.radToArcsec(self._radialTransform[1])
         pScaleRad = afwGeom.arcsecToRad(camConfig.plateScale)
         # Don't have this yet ticket/3155
         #camConfig.boresiteOffset_x = 0.
@@ -287,7 +287,7 @@ class CameraRepositoryFactory(object):
         tConfig.transform.active.transform.retarget(radialClass)
         # According to Dave M. the simulated LSST transform is well approximated (1/3 pix)
         # by a scale and a pincusion.
-        tConfig.transform.active.transform.coeffs = [0., 1./pScaleRad, 0., self._pincushion/pScaleRad]
+        tConfig.transform.active.transform.coeffs = self._radialTransform
         #tConfig.transform.active.boresiteOffset_x = camConfig.boresiteOffset_x
         #tConfig.transform.active.boresiteOffset_y = camConfig.boresiteOffset_y
         tmc = afwGeom.TransformMapConfig()
