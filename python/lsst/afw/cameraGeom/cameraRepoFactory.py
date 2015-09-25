@@ -29,6 +29,7 @@ import shutil
 import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
+from lsst.afw.cameraGeom import makeCameraFromCatalogs
 from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLANE, PIXELS,
                                  SCIENCE, FOCUS, GUIDER, WAVEFRONT)
 
@@ -140,6 +141,9 @@ class CameraRepositoryFactory(object):
             self._detectorIdFromAbbrevName = detectorIdFromAbbrevName
 
         self._detTypeMap = detTypeMap
+
+        self._camConfig = None
+        self._ampTableDict = None
 
 
     def _default_expandDetectorName(self, name):
@@ -332,7 +336,7 @@ class CameraRepositoryFactory(object):
         return detectorConfigs
 
 
-    def makeCameraRepo(self, outputDir):
+    def _makeCameraData(self):
         """
         Create the configs for building a camera.  This runs on the files distributed with PhoSim.  Currently gain and
         saturation need to be supplied as well.  The file should have three columns: on disk amp id (R22_S11_C00), gain, saturation.
@@ -367,6 +371,24 @@ class CameraRepositoryFactory(object):
         tmc.transforms = {PUPIL.getSysName():tConfig}
         camConfig.transformDict = tmc
 
+        self._camConfig = camConfig
+        self._ampTableDict = ampTableDict
+
+
+    def makeCamera(self):
+        if self._camConfig is None:
+            self._makeCameraData()
+
+        outputCamera = makeCameraFromCatalogs(self._camConfig, self._ampTableDict)
+
+        return outputCamera
+
+
+    def makeCameraRepo(self, outputDir):
+
+        if self._camConfig is NOne:
+            self._makeCameraData()
+
         def makeDir(dirPath, doClobber=False):
             """Make a directory; if it exists then clobber or fail, depending on doClobber
 
@@ -388,9 +410,9 @@ class CameraRepositoryFactory(object):
         makeDir(dirPath=outputDir)
 
         camConfigPath = os.path.join(outputDir, "camera.py")
-        camConfig.save(camConfigPath)
+        self._camConfig.save(camConfigPath)
 
-        for detectorName, ampTable in ampTableDict.iteritems():
+        for detectorName, ampTable in self._ampTableDict.iteritems():
             shortDetectorName = self._shortNameFromLongName[detectorName]
             ampInfoPath = os.path.join(outDir, shortDetectorName + ".fits")
             ampTable.writeFits(ampInfoPath)
