@@ -51,7 +51,8 @@ class CameraRepositoryFactory(object):
                  extended=0,
                  voverscan=0,
                  cameraName='LSST',
-                 saturation=65535
+                 saturation=65535,
+                 version=None
                  ):
 
         """
@@ -117,13 +118,16 @@ class CameraRepositoryFactory(object):
 
         @param [in] saturation is the default number of counts at which a pixel
         is saturated (default 65535)
+
+        @param [in] version is a string denoting the version of the camera
         """
 
         self._default_saturation = saturation
         self._readCorner=readCorner
         self._detectorLayoutFile = detectorLayoutFile
-        self._segmentationFile = degmentationFile
+        self._segmentationFile = segmentationFile
         self._gainFile = gainFile
+        self._version = version
         self._shortNameFromLongName = {}
 
         self._prescan = prescan
@@ -163,6 +167,8 @@ class CameraRepositoryFactory(object):
         if shortName not in self._shortNameFromLongName:
             self._shortNameFromLongName[shortName] = longName
 
+        return longName
+
 
     def detTypeMap(self, typeName):
         if self._detTypeMap is None:
@@ -177,7 +183,7 @@ class CameraRepositoryFactory(object):
         @param segmentsFile -- String indicating where the file is located
         """
         gainDict = {}
-        if self._gainFile not None:
+        if self._gainFile is not None:
             with open(gainFile) as fh:
                 for l in fh:
                     els = l.rstrip().split()
@@ -315,8 +321,11 @@ class CameraRepositoryFactory(object):
                 detConfig.bbox_y0 = 0
                 detConfig.bbox_x1 = int(els[5]) - 1
                 detConfig.bbox_y1 = int(els[4]) - 1
-                detConfig.detectorType = self.detTypeMap[els[8]]
-                detConfig.serial = els[0]+"_"+self._version
+                detConfig.detectorType = self._detTypeMap[els[8]]
+                if self._version is not None:
+                    detConfig.serial = els[0]+"_"+self._version
+                else:
+                    detConfig.serial = els[0]
 
                 # Convert from microns to mm.
                 detConfig.offset_x = float(els[1])/1000. + float(els[12])
