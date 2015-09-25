@@ -207,23 +207,6 @@ class CameraRepositoryFactory(object):
         return returnDict
 
 
-    def makeLongName(self, shortName):
-        """
-        Make the long name from the PhoSim short name
-        @param shortName -- string name like R??_S??[_C??] to parse
-        """
-        parts = shortName.split("_")
-        if len(parts) == 2:
-            return " ".join(["%s:%s"%(el[0], ",".join(el[1:])) for el in parts])
-        elif len(parts) == 3:
-            #This must be a wavefront sensor
-            wsPartMap = {'S':{'C0':'A', 'C1':'B'},
-                         'R':{'C0':'', 'C1':''}}
-            return " ".join(["%s:%s"%(el[0], ",".join(el[1:]+wsPartMap[el[0]][parts[-1]])) for el in parts[:-1]])
-        else:
-            raise ValueError("Could not parse %s: has %i parts"%(shortName, len(parts)))
-
-
     def makeDetectorConfigs(self, detectorLayoutFile, phosimVersion):
         """
         Create the detector configs to use in building the Camera
