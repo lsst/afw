@@ -29,19 +29,21 @@ import shutil
 import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
-from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLANE, PIXELS)
-from lsst.obs.lsstSim import LsstSimMapper
+from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLANE, PIXELS,
+                                 SCIENCE, FOCUS, GUIDER, WAVEFRONT)
 
 class CameraRepositoryFactory(object):
 
     def __init__(self, detectorLayoutFile, segmentationFile,
                  gainFile=None,
                  expandDetectorName=None,
-                 detectorIdFromAbbrevName=None):
+                 detectorIdFromAbbrevName=None,
+                 detTypeMap=None):
 
         self._detectorLayoutFile = detectorLayoutFile
         self._segmentationFile = degmentationFile
         self._gainFile = gainFile
+        self._shortNameFromLongName = {}
 
         if expandDetectorName is None:
             self._expandDetectorName = self._default_expandDetectorName
@@ -53,6 +55,8 @@ class CameraRepositoryFactory(object):
         else:
             self._detectorIdFromAbbrevName = detectorIdFromAbbrevName
 
+        self._detTypeMap = detTypeMap
+
 
     def _default_expandDetectorName(self, name):
         return name
@@ -60,6 +64,19 @@ class CameraRepositoryFactory(object):
 
     def _default_detectorIdFromAbbrevName(self, name):
         raise RuntimeError('You cannot run cameraRepofactory without specifying detectorIdFromAbbrevName')
+
+    def expandDetectorName(self, shortName):
+        longName = self._expandDetectorName(shortName)
+
+        if shortName not in self._shortNameFromLongName:
+            self._shortNameFromLongName[shortName] = longName
+
+
+    def detTypeMap(self, typeName):
+        if self._detTypeMap is None:
+            return int(typeName)
+        else:
+            return self._detTypeMap[typeName]
 
 
     def makeAmpTables(self, segmentsFile, gainFile):
@@ -90,7 +107,7 @@ class CameraRepositoryFactory(object):
                 if len(els) == 4:
                     if ampCatalog is not None:
                         returnDict[detectorName] = ampCatalog
-                    detectorName = self._expandDetectorName(els[0])
+                    detectorName = self.expandDetectorName(els[0])
                     numy = int(els[2])
                     schema = afwTable.AmpInfoTable.makeMinimalSchema()
                     ampCatalog = afwTable.AmpInfoCatalog(schema)
@@ -205,7 +222,6 @@ class CameraRepositoryFactory(object):
         * deal with the extra orientation angles (not that they really matter)
         """
         detectorConfigs = []
-        detTypeMap = {"Group2":2, "Group1":3, "Group0":0}
         #We know we need to rotate 3 times and also apply the yaw perturbation
         nQuarter = 1
         with open(detectorLayoutFile) as fh:
@@ -214,13 +230,13 @@ class CameraRepositoryFactory(object):
                     continue
                 detConfig = DetectorConfig()
                 els = l.rstrip().split()
-                detConfig.name = self._expandDetectorName(els[0])
+                detConfig.name = self.expandDetectorName(els[0])
                 detConfig.id = self._detectorIdFromAbbrevName(els[0])
                 detConfig.bbox_x0 = 0
                 detConfig.bbox_y0 = 0
                 detConfig.bbox_x1 = int(els[5]) - 1
                 detConfig.bbox_y1 = int(els[4]) - 1
-                detConfig.detectorType = detTypeMap[els[8]]
+                detConfig.detectorType = self.detTypeMap[els[8]]
                 detConfig.serial = els[0]+"_"+phosimVersion
 
                 # Convert from microns to mm.
@@ -321,6 +337,6 @@ class CameraRepositoryFactory(object):
         camConfig.save(camConfigPath)
 
         for detectorName, ampTable in ampTableDict.iteritems():
-            shortDetectorName = LsstSimMapper.getShortCcdName(detectorName)
+            shortDetectorName = self._shortNameFromLongName[detectorName]
             ampInfoPath = os.path.join(outDir, shortDetectorName + ".fits")
             ampTable.writeFits(ampInfoPath)
