@@ -40,7 +40,14 @@ class CameraRepositoryFactory(object):
                  expandDetectorName=None,
                  detectorIdFromAbbrevName=None,
                  detTypeMap=None,
-                 radialTransform = [0.0, 1.0, 0.0, 0.0]):
+                 radialTransform=[0.0, 1.0, 0.0, 0.0],
+                 prescan=0,
+                 hoverscan=0,
+                 extended=0,
+                 voverscan=0,
+                 cameraName='LSST',
+                 saturation=65535
+                 ):
 
         self._default_saturation = 65535
         self._readCorner=readCorner
@@ -49,12 +56,12 @@ class CameraRepositoryFactory(object):
         self._gainFile = gainFile
         self._shortNameFromLongName = {}
 
-        self._prescan = 1
-        self._hoverscan = 0
-        self._extended = 4
-        self._voverscan = 0
+        self._prescan = prescan
+        self._hoverscan = hoverscan
+        self._extended = extended
+        self._voverscan = voverscan
 
-        self._cameraName = 'LSST'
+        self._cameraName = cameraName
         self._radialTransform = radialTransform #[1] should be 1/rad per mm
 
         if expandDetectorName is None:
@@ -111,7 +118,7 @@ class CameraRepositoryFactory(object):
         ampCatalog = None
         detectorName = [] # set to a value that is an invalid dict key, to catch bugs
         correctY0 = False
-        with open(self._segmentsFile) as fh:
+        with open(self._segmentationFile) as fh:
             for l in fh:
                 if l.startswith("#"):
                     continue
