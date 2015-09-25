@@ -34,32 +34,33 @@ from lsst.obs.lsstSim import LsstSimMapper
 
 class CameraRepositoryFactory(object):
 
-    def expandDetectorName(self, abbrevName):
-        """Convert a detector name of the form Rxy_Sxy[_Ci] to canonical form: R:x,y S:x,y[,c]
+    def __init__(self, detectorLayoutFile, segmentationFile,
+                 gainFile=None,
+                 expandDetectorName=None,
+                 detectorIdFromAbbrevName=None):
 
-        C0 -> A, C1 -> B
-        """
-        m = re.match(r"R(\d)(\d)_S(\d)(\d)(?:_C([0,1]))?$", abbrevName)
-        if m is None:
-            raise RuntimeError("Cannot parse abbreviated name %r" % (abbrevName,))
-        fullName = "R:%s,%s S:%s,%s" % tuple(m.groups()[0:4])
-        subSensor = m.groups()[4]
-        if subSensor is not None:
-            fullName  = fullName + "," + {"0": "A", "1": "B"}[subSensor]
-        return fullName
+        self._detectorLayoutFile = detectorLayoutFile
+        self._segmentationFile = degmentationFile
+        self._gainFile = gainFile
 
-    def detectorIdFromAbbrevName(self, abbrevName):
-        """Compute detector ID from an abbreviated detector name of the form Rxy_Sxy_Ci
+        if expandDetectorName is None:
+            self._expandDetectorName = self._default_expandDetectorName
+        else:
+            self._expandDetectorName = expandDetectorName
 
-        value = digits in this order: ci+1 rx ry sx sy
-        """
-        m = re.match(r"R(\d)(\d)_S(\d)(\d)(?:_C([0,1]))?$", abbrevName)
-        if m is None:
-            raise RuntimeError("Cannot parse abbreviated name %r" % (abbrevName,))
-        detectorId = int("".join(m.groups()[0:4]))
-        if m.group(5) is not None:
-            detectorId += 10000 * (1 + int(m.group(5)))
-        return detectorId
+        if detectorIdFromAbbrevName is None:
+            self._detectorIdFromAbbrevName = self._default_detectorIdFromAbbrevName
+        else:
+            self._detectorIdFromAbbrevName = detectorIdFromAbbrevName
+
+
+    def _default_expandDetectorName(self, name):
+        return name
+
+
+    def _default_detectorIdFromAbbrevName(self, name):
+        raise RuntimeError('You cannot run cameraRepofactory without specifying detectorIdFromAbbrevName')
+
 
     def makeAmpTables(self, segmentsFile, gainFile):
         """
@@ -89,7 +90,7 @@ class CameraRepositoryFactory(object):
                 if len(els) == 4:
                     if ampCatalog is not None:
                         returnDict[detectorName] = ampCatalog
-                    detectorName = self.expandDetectorName(els[0])
+                    detectorName = self._expandDetectorName(els[0])
                     numy = int(els[2])
                     schema = afwTable.AmpInfoTable.makeMinimalSchema()
                     ampCatalog = afwTable.AmpInfoCatalog(schema)
@@ -176,6 +177,7 @@ class CameraRepositoryFactory(object):
         returnDict[detectorName] = ampCatalog
         return returnDict
 
+
     def makeLongName(self, shortName):
         """
         Make the long name from the PhoSim short name
@@ -191,6 +193,7 @@ class CameraRepositoryFactory(object):
             return " ".join(["%s:%s"%(el[0], ",".join(el[1:]+wsPartMap[el[0]][parts[-1]])) for el in parts[:-1]])
         else:
             raise ValueError("Could not parse %s: has %i parts"%(shortName, len(parts)))
+
 
     def makeDetectorConfigs(self, detectorLayoutFile, phosimVersion):
         """
@@ -211,8 +214,8 @@ class CameraRepositoryFactory(object):
                     continue
                 detConfig = DetectorConfig()
                 els = l.rstrip().split()
-                detConfig.name = self.expandDetectorName(els[0])
-                detConfig.id = self.detectorIdFromAbbrevName(els[0])
+                detConfig.name = self._expandDetectorName(els[0])
+                detConfig.id = self._detectorIdFromAbbrevName(els[0])
                 detConfig.bbox_x0 = 0
                 detConfig.bbox_y0 = 0
                 detConfig.bbox_x1 = int(els[5]) - 1
@@ -240,6 +243,7 @@ class CameraRepositoryFactory(object):
                 # Any additional transforms (such as ACTUAL_PIXELS) should be inserted here.
                 detectorConfigs.append(detConfig)
         return detectorConfigs
+
 
     def makeCameraRepo(self):
         """
