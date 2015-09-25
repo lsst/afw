@@ -35,15 +35,23 @@ from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLAN
 class CameraRepositoryFactory(object):
 
     def __init__(self, detectorLayoutFile, segmentationFile,
+                 readCorner='LL',
                  gainFile=None,
                  expandDetectorName=None,
                  detectorIdFromAbbrevName=None,
                  detTypeMap=None):
 
+        self._default_saturation = 65535
+        self._readCorner=readCorner
         self._detectorLayoutFile = detectorLayoutFile
         self._segmentationFile = degmentationFile
         self._gainFile = gainFile
         self._shortNameFromLongName = {}
+
+        self._prescan = 1
+        self._hoverscan = 0
+        self._extended = 4
+        self._voverscan = 0
 
         if expandDetectorName is None:
             self._expandDetectorName = self._default_expandDetectorName
@@ -79,16 +87,17 @@ class CameraRepositoryFactory(object):
             return self._detTypeMap[typeName]
 
 
-    def makeAmpTables(self, segmentsFile, gainFile):
+    def makeAmpTables(self):
         """
         Read the segments file from a PhoSim release and produce the appropriate AmpInfo
         @param segmentsFile -- String indicating where the file is located
         """
         gainDict = {}
-        with open(gainFile) as fh:
-            for l in fh:
-                els = l.rstrip().split()
-                gainDict[els[0]] = {'gain':float(els[1]), 'saturation':int(els[2])}
+        if self._gainFile not None:
+            with open(gainFile) as fh:
+                for l in fh:
+                    els = l.rstrip().split()
+                    gainDict[els[0]] = {'gain':float(els[1]), 'saturation':int(els[2])}
         returnDict = {}
         #TODO currently there is no linearity provided, but we should identify
         #how to get this information.
@@ -98,7 +107,7 @@ class CameraRepositoryFactory(object):
         ampCatalog = None
         detectorName = [] # set to a value that is an invalid dict key, to catch bugs
         correctY0 = False
-        with open(segmentsFile) as fh:
+        with open(self._segmentsFile) as fh:
             for l in fh:
                 if l.startswith("#"):
                     continue
@@ -138,7 +147,7 @@ class CameraRepositoryFactory(object):
                     gain = gainDict[els[0]]['gain']
                 except KeyError:
                     # Set default if no gain exists
-                    saturation = 65535
+                    saturation = self._default_saturation
                     gain = float(els[7])
                 readnoise = float(els[11])
                 bbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Point2I(x1, y1))
@@ -154,23 +163,26 @@ class CameraRepositoryFactory(object):
 
                 #Since the amps are stored in amp coordinates, the readout is the same
                 #for all amps
-                readCorner = readoutMap['LL']
+                readCorner = readoutMap[self._readCorner]
 
                 ndatax = x1 - x0 + 1
                 ndatay = y1 - y0 + 1
                 #Because in versions v3.3.2 and earlier there was no overscan, we use the extended register as the overscan region
-                prescan = 1
-                hoverscan = 0
-                extended = 4
-                voverscan = 0
-                rawBBox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(extended+ndatax+hoverscan, prescan+ndatay+voverscan))
-                rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(extended, prescan), afwGeom.Extent2I(ndatax, ndatay))
-                rawHorizontalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(0, prescan), afwGeom.Extent2I(extended, ndatay))
-                rawVerticalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(extended, prescan+ndatay), afwGeom.Extent2I(ndatax, voverscan))
-                rawPrescanBBox = afwGeom.Box2I(afwGeom.Point2I(extended, 0), afwGeom.Extent2I(ndatax, prescan))
 
-                extraRawX = extended + hoverscan
-                extraRawY = prescan + voverscan
+                rawBBox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(self._extended+ndatax+self._hoverscan, \
+                                        self._prescan+ndatay+self._voverscan))
+
+                rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(self._extended, self._prescan), afwGeom.Extent2I(ndatax, ndatay))
+
+                rawHorizontalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(0, self._prescan), afwGeom.Extent2I(self._extended, ndatay))
+
+                rawVerticalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(self._extended, self._prescan+ndatay), \
+                                                        afwGeom.Extent2I(ndatax, self._voverscan))
+
+                rawPrescanBBox = afwGeom.Box2I(afwGeom.Point2I(self._extended, 0), afwGeom.Extent2I(ndatax, self._prescan))
+
+                extraRawX = self._extended + self._hoverscan
+                extraRawY = self._prescan + self._voverscan
                 rawx0 = x0 + extraRawX*(x0//ndatax)
                 rawy0 = y0 + extraRawY*(y0//ndatay)
                 #Set the elements of the record for this amp
