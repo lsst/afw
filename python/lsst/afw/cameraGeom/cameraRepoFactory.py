@@ -49,7 +49,72 @@ class CameraRepositoryFactory(object):
                  saturation=65535
                  ):
 
-        self._default_saturation = 65535
+        """
+        @param [in] detectorLayoutFile is the absolute path to the file
+        listing the layout of all of the chips
+
+        @param [in] segmentationFile is the absolute path to the file
+        describing the details of the amplifiers
+
+        @param [in] readCorner is the corner from which each detector is
+        read.  'LL' for lower left (default).  'UL' for upper left.
+        'LR' for lower right.  'UR' for upper right.
+
+        @param [in] gainFile is an (optional) file providing gain and saturation
+        information.
+
+        @param [in] expandDetectorName is an (optional) method that takes the name
+        of detectors as recorded in the detectorLayoutFile and expands them into
+        their names as they will be stored in the returned afw.camerGeom.camera
+        object.  If 'None', the names used in detectorLayoutFile will be stored
+        in the afw.cameraGeom.camera object.
+
+        @param [in] detectorIdFromAbbrevName is a (required) method mapping the
+        names of detectors as stored in the detectorLayoutFile to unique integers
+        identifying each detector.
+
+        @param[in] detTypeMap is a dict mapping the group name of the sensors in
+        detectorLayoutFile to the integers:
+
+        0 = SCIENCE
+        1 = FOCUS
+        2 = GUIDER
+        3 = WAVEFRONT
+
+        if left as None, this will just try to cast the contents of detectoLayoutFile
+        as an int
+
+        @param [in] radialTransform is a list of coefficents that transform positions
+        from pupil coordinates (x, y, radians) to focal plane coordinates (x, y, mm)
+        according to the convention
+
+        sum_i radialTransform[i] * r^i/r
+
+        where r is the magnitude of the point in pupil coordinates.  Note that the [1]
+        element of this list should be 1/plateSclae in radians per mm.
+
+        @param [in] prescan is the number of y pixels between the lower left corner
+        of each detector and the actual data-recording region of the detector
+        (default 0)
+
+        @param [in] extened is the number of x pixels between the lower left
+        corner of each detector and the actual data-recording region of the detector
+        (default 0)
+
+        @param [in] hoverscan is the number of x pixels each detector extends beyond
+        the actual data-recording region (default 0)
+
+        @param [in] voverscan is the number of y pixels each detector extends beyond
+        the actual data-recording region (default 0)
+
+        @param [in] cameraName is a string referring to the name of the camera
+        (default 'LSST')
+
+        @param [in] saturation is the default number of counts at which a pixel
+        is saturated (default 65535)
+        """
+
+        self._default_saturation = saturation
         self._readCorner=readCorner
         self._detectorLayoutFile = detectorLayoutFile
         self._segmentationFile = degmentationFile
