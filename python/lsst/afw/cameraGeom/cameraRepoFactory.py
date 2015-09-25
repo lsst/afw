@@ -53,6 +53,10 @@ class CameraRepositoryFactory(object):
         self._extended = 4
         self._voverscan = 0
 
+        self._cameraName = 'LSST'
+        self._plateScale = 20.0 #arcsec per mm
+        self._pinCushion = 0.925
+
         if expandDetectorName is None:
             self._expandDetectorName = self._default_expandDetectorName
         else:
@@ -256,7 +260,7 @@ class CameraRepositoryFactory(object):
         return detectorConfigs
 
 
-    def makeCameraRepo(self):
+    def makeCameraRepo(self, outputDir):
         """
         Create the configs for building a camera.  This runs on the files distributed with PhoSim.  Currently gain and
         saturation need to be supplied as well.  The file should have three columns: on disk amp id (R22_S11_C00), gain, saturation.
@@ -264,32 +268,16 @@ class CameraRepositoryFactory(object):
         DetectorLayoutFile -- https://dev.lsstcorp.org/cgit/LSST/sims/phosim.git/plain/data/lsst/focalplanelayout.txt?h=dev
         SegmentsFile -- https://dev.lsstcorp.org/cgit/LSST/sims/phosim.git/plain/data/lsst/segmentation.txt?h=dev
         """
-        baseDir = lsst.utils.getPackageDir('obs_lsstsim')
-        defaultOutDir = os.path.join(os.path.normpath(baseDir), "description", "camera")
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument("DetectorLayoutFile", help="Path to detector layout file")
-        parser.add_argument("SegmentsFile", help="Path to amp segments file")
-        parser.add_argument("GainFile", help="Path to gain and saturation file")
-        parser.add_argument("phosimVersion", help="String id of the version of phosim used to construct this camera repository")
-        parser.add_argument("OutputDir",
-            help = "Path to dump configs and AmpInfo Tables; defaults to %r" % (defaultOutDir,),
-            nargs = "?",
-            default = defaultOutDir,
-        )
-        parser.add_argument("--clobber", action="store_true", dest="clobber", default=False,
-            help=("remove and re-create the output directory if it already exists?"))
-        args = parser.parse_args()
-        ampTableDict = self.makeAmpTables(args.SegmentsFile, args.GainFile)
-        detectorConfigList = self.makeDetectorConfigs(args.DetectorLayoutFile, args.phosimVersion)
+        ampTableDict = self.makeAmpTables()
+        detectorConfigList = self.makeDetectorConfigs()
 
         #Build the camera config.
         camConfig = CameraConfig()
         camConfig.detectorList = dict([(i,detectorConfigList[i]) for i in xrange(len(detectorConfigList))])
-        camConfig.name = 'LSST'
-        camConfig.plateScale = 20.0
+        camConfig.name = self._cameraName
+        camConfig.plateScale = self._plateScale
         pScaleRad = afwGeom.arcsecToRad(camConfig.plateScale)
-        pincushion = 0.925
         # Don't have this yet ticket/3155
         #camConfig.boresiteOffset_x = 0.
         #camConfig.boresiteOffset_y = 0.
@@ -299,7 +287,7 @@ class CameraRepositoryFactory(object):
         tConfig.transform.active.transform.retarget(radialClass)
         # According to Dave M. the simulated LSST transform is well approximated (1/3 pix)
         # by a scale and a pincusion.
-        tConfig.transform.active.transform.coeffs = [0., 1./pScaleRad, 0., pincushion/pScaleRad]
+        tConfig.transform.active.transform.coeffs = [0., 1./pScaleRad, 0., self._pincushion/pScaleRad]
         #tConfig.transform.active.boresiteOffset_x = camConfig.boresiteOffset_x
         #tConfig.transform.active.boresiteOffset_y = camConfig.boresiteOffset_y
         tmc = afwGeom.TransformMapConfig()
@@ -325,10 +313,9 @@ class CameraRepositoryFactory(object):
             os.makedirs(dirPath)
 
         # write data products
-        outDir = args.OutputDir
-        makeDir(dirPath=outDir, doClobber=args.clobber)
+        makeDir(dirPath=outputDir)
 
-        camConfigPath = os.path.join(outDir, "camera.py")
+        camConfigPath = os.path.join(outputDir, "camera.py")
         camConfig.save(camConfigPath)
 
         for detectorName, ampTable in ampTableDict.iteritems():
