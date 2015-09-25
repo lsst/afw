@@ -33,6 +33,10 @@ from lsst.afw.cameraGeom import makeCameraFromCatalogs
 from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLANE, PIXELS,
                                  SCIENCE, FOCUS, GUIDER, WAVEFRONT)
 
+
+__all__ = ["CameraRepositoryFactory"]
+
+
 class CameraRepositoryFactory(object):
 
     def __init__(self, detectorLayoutFile, segmentationFile,
