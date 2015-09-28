@@ -46,6 +46,11 @@ class BasicCameraFactory(object):
     amplifier information.  Cameras produced by this method should only be used for
     mapping objects' positions on the sky to positions on the focal plane.
 
+    To create a camera, one should:
+
+    cameraFactory = BasicCameraFactory('path/to/focal/plane/layout.txt')
+    camera = cameraFactory.makeCamera()
+
     The input text file should consist of one row for each detector.  Each row should contain
 
     An abbreviated name of the detector
@@ -141,6 +146,9 @@ class BasicCameraFactory(object):
 
 
     def _default_expandDetectorName(self, name):
+        """
+        Do nothing when expanding detector names
+        """
         return name
 
 
@@ -148,6 +156,11 @@ class BasicCameraFactory(object):
         raise RuntimeError('You cannot run cameraRepofactory without specifying detectorIdFromAbbrevName')
 
     def expandDetectorName(self, shortName):
+        """
+        Take the (abbreviated) detector name listed in the focal plane layout file
+        and expand it into something longer used as the key for the dict of detectors
+        in the final camera.
+        """
         longName = self._expandDetectorName(shortName)
 
         if shortName not in self._shortNameFromLongName:
@@ -157,6 +170,10 @@ class BasicCameraFactory(object):
 
 
     def detTypeMap(self, typeName):
+        """
+        Map the strings indicating detector type in the focal plane layout file
+        to the integers used by afw.cameraGeom to keep track of detector types.
+        """
         if self._detTypeMap is None:
             return int(typeName)
         else:
@@ -165,11 +182,6 @@ class BasicCameraFactory(object):
     def makeDetectorConfigs(self):
         """
         Create the detector configs to use in building the Camera
-        @param detectorLayoutFile -- String describing where the focalplanelayout.txt file is located.
-
-        @todo:
-        * set serial to something other than name (e.g. include git sha)
-        * deal with the extra orientation angles (not that they really matter)
         """
         detectorConfigs = []
         #We know we need to rotate 3 times and also apply the yaw perturbation
@@ -213,11 +225,7 @@ class BasicCameraFactory(object):
 
     def _makeCameraData(self):
         """
-        Create the configs for building a camera.  This runs on the files distributed with PhoSim.  Currently gain and
-        saturation need to be supplied as well.  The file should have three columns: on disk amp id (R22_S11_C00), gain, saturation.
-        For example:
-        DetectorLayoutFile -- https://dev.lsstcorp.org/cgit/LSST/sims/phosim.git/plain/data/lsst/focalplanelayout.txt?h=dev
-        SegmentsFile -- https://dev.lsstcorp.org/cgit/LSST/sims/phosim.git/plain/data/lsst/segmentation.txt?h=dev
+        Create the underlying data used to generate the camera
         """
 
         detectorConfigList = self.makeDetectorConfigs()
@@ -255,6 +263,10 @@ class BasicCameraFactory(object):
 
 
     def makeCamera(self):
+        """
+        Output the camera described by the focal plane layout file as an
+        afw.cameraGeom.camera instantiation
+        """
         if self._camConfig is None:
             self._makeCameraData()
 
