@@ -38,6 +38,37 @@ __all__ = ["BasicCameraFactory"]
 
 
 class BasicCameraFactory(object):
+    """
+    This class reads in a text file describing the layout of a camera's focal plane
+    and creates and afwCameraGeom.camera instantiation that contains all of the
+    coordinate transformations (i.e. between PUPIL, FOCAL_PLANE, PIXELS, and TAN_PIXELS
+    coordinates) in that focal plane.  The resulting camera will not contain any
+    amplifier information.  Cameras produced by this method should only be used for
+    mapping objects' positions on the sky to positions on the focal plane.
+
+    The input text file should consist of one row for each detector.  Each row should contain
+
+    An abbreviated name of the detector
+    The x coordinate of the detector's center in microns (relative to the center of the focal plane)
+    The y coordinate of the detector's center in microns
+    The size of each pixel in microns
+    The number of x pixels
+    The number of y pixels
+    A string indicating what type of detector it is (SCIENCE, FOCUS, GUIDER, or WAVEFRONT)
+    Three euler angles (in degrees) governing the orientation of the detector
+
+    For example:
+
+    #
+    # rows are the chips in the focal plane
+    # columns are the name, x position (microns), y position (microns),
+    # pixel size (microns), number of x pixels, number of y pixels,
+    # group of sensors, 3 euler rotations (degrees)
+    #
+    Det00 0.0 0.0 2.0 400 400 science 20.0 0.0 0.0
+    Det01 0.0 9000.0 2.0 400 400 science 10.0 0.0 0.0
+    Det02 -9000.0 0.0 2.0 400 400 wave 30.0 0.0 0.0
+    """
 
     def __init__(self, detectorLayoutFile,
                  expandDetectorName=None,
@@ -49,11 +80,9 @@ class BasicCameraFactory(object):
 
         """
         @param [in] detectorLayoutFile is the absolute path to the file
-        listing the layout of all of the chips
-
-        @param [in] readCorner is the corner from which each detector is
-        read.  'LL' for lower left (default).  'UL' for upper left.
-        'LR' for lower right.  'UR' for upper right.
+        listing the layout of all of the chips in the camera's focal plane
+        (see this class' docstring for detailed information on the contents
+        of that file).
 
         @param [in] expandDetectorName is an (optional) method that takes the name
         of detectors as recorded in the detectorLayoutFile and expands them into
@@ -73,17 +102,17 @@ class BasicCameraFactory(object):
         2 = GUIDER
         3 = WAVEFRONT
 
-        if left as None, this will just try to cast the contents of detectoLayoutFile
+        if left as None, this will just try to cast the contents of detectorLayoutFile
         as an int
 
         @param [in] radialTransform is a list of coefficents that transform positions
         from pupil coordinates (x, y, radians) to focal plane coordinates (x, y, mm)
         according to the convention
 
-        sum_i radialTransform[i] * r^i/r
+        (x, y)_focal = (x, y)_pupil * sum_i radialTransform[i] * r^i/r
 
         where r is the magnitude of the point in pupil coordinates.  Note that the [1]
-        element of this list should be 1/plateScale in radians per mm.
+        element of this list should be 1/plateScale where plateScale is in radians per mm.
 
         @param [in] cameraName is a string referring to the name of the camera
         (default 'LSST')
