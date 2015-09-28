@@ -20,18 +20,10 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-from __future__ import absolute_import, division
-import argparse
-import os
-import re
-import shutil
-
-import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 from lsst.afw.cameraGeom import makeCameraFromCatalogs
-from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLANE, PIXELS,
-                                 SCIENCE, FOCUS, GUIDER, WAVEFRONT)
+from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLANE, PIXELS)
 
 
 __all__ = ["BasicCameraFactory"]
