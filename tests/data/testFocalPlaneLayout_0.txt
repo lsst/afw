@@ -2,9 +2,8 @@
 # rows are the chips in the focal plane
 # columns are the name, x position (microns), y position (microns),
 # pixel size (microns), number of x pixels, number of y pixels,
-# readout time (CCD) or frame rate (CMOS)
 # group of sensors, 3 euler rotations (degrees)
 #
-Det00 0.0 0.0 2.0 400 400 0.1 science 20.0 0.0 0.0
-Det01 0.0 9000.0 2.0 400 400 0.1 science 10.0 0.0 0.0
-Det02 -9000.0 0.0 2.0 400 400 0.1 wave 30.0 0.0 0.0
+Det00 0.0 0.0 2.0 400 400 science 20.0 0.0 0.0
+Det01 0.0 9000.0 2.0 400 400 science 10.0 0.0 0.0
+Det02 -9000.0 0.0 2.0 400 400 wave 30.0 0.0 0.0

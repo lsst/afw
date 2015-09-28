@@ -157,7 +157,7 @@ class BasicCameraFactory(object):
                 detConfig.bbox_y0 = 0
                 detConfig.bbox_x1 = int(els[5]) - 1
                 detConfig.bbox_y1 = int(els[4]) - 1
-                detConfig.detectorType = self._detTypeMap[els[7]]
+                detConfig.detectorType = self._detTypeMap[els[6]]
                 detConfig.serial = els[0]
 
                 # Convert from microns to mm.
@@ -168,9 +168,9 @@ class BasicCameraFactory(object):
                 detConfig.refpos_y = (int(els[4]) - 1.)/2.
                 # TODO translate between John's angles and Orientation angles.
                 # It's not an issue now because there is no rotation except about z in John's model.
-                detConfig.yawDeg = 90.*nQuarter + float(els[8])
-                detConfig.pitchDeg = float(els[9])
-                detConfig.rollDeg = float(els[10])
+                detConfig.yawDeg = 90.*nQuarter + float(els[7])
+                detConfig.pitchDeg = float(els[8])
+                detConfig.rollDeg = float(els[9])
                 detConfig.pixelSize_x = float(els[3])/1000.
                 detConfig.pixelSize_y = float(els[3])/1000.
                 detConfig.transposeDetector = False
