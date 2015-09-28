@@ -53,7 +53,7 @@ class BasicCameraFactory(object):
 
     The input text file should consist of one row for each detector.  Each row should contain
 
-    An abbreviated name of the detector
+    Name of the detector
     The x coordinate of the detector's center in microns (relative to the center of the focal plane)
     The y coordinate of the detector's center in microns
     The size of each pixel in microns
