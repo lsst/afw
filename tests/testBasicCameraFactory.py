@@ -38,6 +38,20 @@ class BasicCameraFactoryTest(unittest.TestCase):
         self. cameraDataDir = os.path.join(getPackageDir('afw'),
                                            'tests', 'data')
 
+    def testException(self):
+        """
+        Test that an exception is raised if you try to create a BasicCameraFactory
+        without specifying detectorIdFromAbbrevName
+        """
+        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout.txt')
+
+        self.assertRaises(RuntimeError, BasicCameraFactory, layoutFile, \
+                          detTypeMap = {'science':SCIENCE,
+                                        'focus':FOCUS,
+                                        'guider':GUIDER,
+                                        'wave':WAVEFRONT})
+
+
     def testBBox(self):
         """
         Test that BasicCameraFactory creates detectors with the correct BBoxes
