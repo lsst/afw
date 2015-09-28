@@ -46,10 +46,6 @@ class CameraRepositoryFactory(object):
                  detectorIdFromAbbrevName=None,
                  detTypeMap=None,
                  radialTransform=[0.0, 1.0, 0.0, 0.0],
-                 prescan=0,
-                 hoverscan=0,
-                 extended=0,
-                 voverscan=0,
                  cameraName='LSST',
                  saturation=65535,
                  version=None
@@ -99,20 +95,6 @@ class CameraRepositoryFactory(object):
         where r is the magnitude of the point in pupil coordinates.  Note that the [1]
         element of this list should be 1/plateSclae in radians per mm.
 
-        @param [in] prescan is the number of y pixels between the lower left corner
-        of each detector and the actual data-recording region of the detector
-        (default 0)
-
-        @param [in] extened is the number of x pixels between the lower left
-        corner of each detector and the actual data-recording region of the detector
-        (default 0)
-
-        @param [in] hoverscan is the number of x pixels each detector extends beyond
-        the actual data-recording region (default 0)
-
-        @param [in] voverscan is the number of y pixels each detector extends beyond
-        the actual data-recording region (default 0)
-
         @param [in] cameraName is a string referring to the name of the camera
         (default 'LSST')
 
@@ -129,11 +111,6 @@ class CameraRepositoryFactory(object):
         self._gainFile = gainFile
         self._version = version
         self._shortNameFromLongName = {}
-
-        self._prescan = prescan
-        self._hoverscan = hoverscan
-        self._extended = extended
-        self._voverscan = voverscan
 
         self._cameraName = cameraName
         self._radialTransform = radialTransform #[1] should be 1/rad per mm
@@ -259,20 +236,25 @@ class CameraRepositoryFactory(object):
                 ndatay = y1 - y0 + 1
                 #Because in versions v3.3.2 and earlier there was no overscan, we use the extended register as the overscan region
 
-                rawBBox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(self._extended+ndatax+self._hoverscan, \
-                                        self._prescan+ndatay+self._voverscan))
+                parallel_prescan = int(els[15])
+                serial_overscan = int(els[16])
+                serial_prescan = int(els[17])
+                parallel_overscan = int(els[18])
 
-                rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(self._extended, self._prescan), afwGeom.Extent2I(ndatax, ndatay))
+                rawBBox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(serial_prescan+ndatax+serial_overscan, \
+                                        parallel_prescan+ndatay+parallel_overscan))
 
-                rawHorizontalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(0, self._prescan), afwGeom.Extent2I(self._extended, ndatay))
+                rawDataBBox = afwGeom.Box2I(afwGeom.Point2I(serial_prescan, parallel_prescan), afwGeom.Extent2I(ndatax, ndatay))
 
-                rawVerticalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(self._extended, self._prescan+ndatay), \
-                                                        afwGeom.Extent2I(ndatax, self._voverscan))
+                rawHorizontalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(0, parallel_prescan), afwGeom.Extent2I(serial_prescan, ndatay))
 
-                rawPrescanBBox = afwGeom.Box2I(afwGeom.Point2I(self._extended, 0), afwGeom.Extent2I(ndatax, self._prescan))
+                rawVerticalOverscanBBox = afwGeom.Box2I(afwGeom.Point2I(serial_prescan, parallel_prescan+ndatay), \
+                                                        afwGeom.Extent2I(ndatax, parallel_overscan))
 
-                extraRawX = self._extended + self._hoverscan
-                extraRawY = self._prescan + self._voverscan
+                rawPrescanBBox = afwGeom.Box2I(afwGeom.Point2I(serial_prescan, 0), afwGeom.Extent2I(ndatax, parallel_prescan))
+
+                extraRawX = serial_prescan + serial_overscan
+                extraRawY = parallel_prescan + parallel_overscan
                 rawx0 = x0 + extraRawX*(x0//ndatax)
                 rawy0 = y0 + extraRawY*(y0//ndatay)
                 #Set the elements of the record for this amp
