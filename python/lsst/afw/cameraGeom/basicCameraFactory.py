@@ -240,19 +240,12 @@ class BasicCameraFactory(object):
         camConfig.detectorList = dict([(i,detectorConfigList[i]) for i in xrange(len(detectorConfigList))])
         camConfig.name = self._cameraName
         camConfig.plateScale = 1.0/afwGeom.radToArcsec(self._radialTransform[1])
-        pScaleRad = afwGeom.arcsecToRad(camConfig.plateScale)
-        # Don't have this yet ticket/3155
-        #camConfig.boresiteOffset_x = 0.
-        #camConfig.boresiteOffset_y = 0.
+
         tConfig = afwGeom.TransformConfig()
         tConfig.transform.name = 'inverted'
         radialClass = afwGeom.xyTransformRegistry['radial']
         tConfig.transform.active.transform.retarget(radialClass)
-        # According to Dave M. the simulated LSST transform is well approximated (1/3 pix)
-        # by a scale and a pincusion.
         tConfig.transform.active.transform.coeffs = self._radialTransform
-        #tConfig.transform.active.boresiteOffset_x = camConfig.boresiteOffset_x
-        #tConfig.transform.active.boresiteOffset_y = camConfig.boresiteOffset_y
         tmc = afwGeom.TransformMapConfig()
         tmc.nativeSys = FOCAL_PLANE.getSysName()
         tmc.transforms = {PUPIL.getSysName():tConfig}
