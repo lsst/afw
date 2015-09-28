@@ -44,23 +44,16 @@ class BasicCameraFactory(object):
                  detectorIdFromAbbrevName=None,
                  detTypeMap=None,
                  radialTransform=[0.0, 1.0, 0.0, 0.0],
-                 cameraName='LSST',
-                 version=None
+                 cameraName='LSST'
                  ):
 
         """
         @param [in] detectorLayoutFile is the absolute path to the file
         listing the layout of all of the chips
 
-        @param [in] segmentationFile is the absolute path to the file
-        describing the details of the amplifiers
-
         @param [in] readCorner is the corner from which each detector is
         read.  'LL' for lower left (default).  'UL' for upper left.
         'LR' for lower right.  'UR' for upper right.
-
-        @param [in] gainFile is an (optional) file providing gain and saturation
-        information.
 
         @param [in] expandDetectorName is an (optional) method that takes the name
         of detectors as recorded in the detectorLayoutFile and expands them into
@@ -94,15 +87,9 @@ class BasicCameraFactory(object):
 
         @param [in] cameraName is a string referring to the name of the camera
         (default 'LSST')
-
-        @param [in] saturation is the default number of counts at which a pixel
-        is saturated (default 65535)
-
-        @param [in] version is a string denoting the version of the camera
         """
 
         self._detectorLayoutFile = detectorLayoutFile
-        self._version = version
         self._shortNameFromLongName = {}
 
         self._cameraName = cameraName
@@ -171,10 +158,7 @@ class BasicCameraFactory(object):
                 detConfig.bbox_x1 = int(els[5]) - 1
                 detConfig.bbox_y1 = int(els[4]) - 1
                 detConfig.detectorType = self._detTypeMap[els[7]]
-                if self._version is not None:
-                    detConfig.serial = els[0]+"_"+self._version
-                else:
-                    detConfig.serial = els[0]
+                detConfig.serial = els[0]
 
                 # Convert from microns to mm.
                 detConfig.offset_x = float(els[1])/1000.
