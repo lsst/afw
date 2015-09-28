@@ -97,8 +97,8 @@ class BasicCameraFactoryTest(unittest.TestCase):
                 focalPoint = camera.makeCameraPoint(afwGeom.Point2D(xxF, yyF), FOCAL_PLANE)
                 pixelPoint = camera.transform(focalPoint, pixelSystem).getPoint()
 
-                self.assertAlmostEqual(float(xxPcontrol), pixelPoint.getX(), 9, msg=detName)
-                self.assertAlmostEqual(float(yyPcontrol), pixelPoint.getY(), 9, msg=detName)
+                self.assertAlmostEqual(float(xxPcontrol), pixelPoint.getX(), 9)
+                self.assertAlmostEqual(float(yyPcontrol), pixelPoint.getY(), 9)
 
 
     def testPupilCoords(self):
