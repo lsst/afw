@@ -248,37 +248,3 @@ class BasicCameraFactory(object):
         outputCamera = makeCameraFromCatalogs(self._camConfig, self._ampTableDict)
 
         return outputCamera
-
-
-    def makeCameraRepo(self, outputDir):
-
-        if self._camConfig is None:
-            self._makeCameraData()
-
-        def makeDir(dirPath, doClobber=False):
-            """Make a directory; if it exists then clobber or fail, depending on doClobber
-
-            @param[in] dirPath: path of directory to create
-            @param[in] doClobber: what to do if dirPath already exists:
-                if True and dirPath is a dir, then delete it and recreate it, else raise an exception
-            @throw RuntimeError if dirPath exists and doClobber False
-            """
-            if os.path.exists(dirPath):
-                if doClobber and os.path.isdir(dirPath):
-                    print "Clobbering directory %r" % (dirPath,)
-                    shutil.rmtree(dirPath)
-                else:
-                    raise RuntimeError("Directory %r exists" % (dirPath,))
-            print "Creating directory %r" % (dirPath,)
-            os.makedirs(dirPath)
-
-        # write data products
-        makeDir(dirPath=outputDir)
-
-        camConfigPath = os.path.join(outputDir, "camera.py")
-        self._camConfig.save(camConfigPath)
-
-        for detectorName, ampTable in self._ampTableDict.iteritems():
-            shortDetectorName = self._shortNameFromLongName[detectorName]
-            ampInfoPath = os.path.join(outDir, shortDetectorName + ".fits")
-            ampTable.writeFits(ampInfoPath)
