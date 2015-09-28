@@ -136,7 +136,7 @@ class BasicCameraFactoryTest(unittest.TestCase):
                 nxList, nyList, mmPerPixelList):
 
             pixelSystem = camera[detName].makeCameraSys(PIXELS)
-            focalSystem = camera[detName].makeCameraSys(FOCAL_PLANE)
+
             xPix_control = []
             yPix_control = []
             xFocalList = []
