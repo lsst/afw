@@ -28,11 +28,11 @@ import os
 import numpy as np
 from lsst.utils import getPackageDir
 import lsst.afw.geom as afwGeom
-from lsst.afw.cameraGeom import CameraRepositoryFactory
+from lsst.afw.cameraGeom import BasicCameraFactory
 from lsst.afw.cameraGeom import SCIENCE, FOCUS, GUIDER, WAVEFRONT
 from lsst.afw.cameraGeom import PUPIL, FOCAL_PLANE, PIXELS
 
-class CameraRepoFactoryTest(unittest.TestCase):
+class BasicCameraFactoryTest(unittest.TestCase):
 
     def setUp(self):
         self. cameraDataDir = os.path.join(getPackageDir('afw'),
@@ -40,7 +40,7 @@ class CameraRepoFactoryTest(unittest.TestCase):
 
     def testFocalPlaneCoords(self):
         """
-        Test that, when we generate a camera using CameraRepositoryFactory,
+        Test that, when we generate a camera using BasicCameraFactory,
         it maps focal plane coordinates to pixel coordinates in the way we
         expect
         """
@@ -50,13 +50,13 @@ class CameraRepoFactoryTest(unittest.TestCase):
         def getIdFromName(name):
             return int(name[-2:])
 
-        factory = CameraRepositoryFactory(detectorLayoutFile=layoutFile,
-                                          segmentationFile=segmentFile,
-                                          detectorIdFromAbbrevName=getIdFromName,
-                                          detTypeMap = {'science':SCIENCE,
-                                                        'focus':FOCUS,
-                                                        'guider':GUIDER,
-                                                        'wave':WAVEFRONT})
+        factory = BasicCameraFactory(detectorLayoutFile=layoutFile,
+                                     segmentationFile=segmentFile,
+                                     detectorIdFromAbbrevName=getIdFromName,
+                                     detTypeMap = {'science':SCIENCE,
+                                                   'focus':FOCUS,
+                                                   'guider':GUIDER,
+                                                   'wave':WAVEFRONT})
 
 
         camera = factory.makeCamera()
@@ -105,7 +105,7 @@ class CameraRepoFactoryTest(unittest.TestCase):
 
     def testPupilCoords(self):
         """
-        Test that cameras generated with CameraRepositoryFactory convert from pupil
+        Test that cameras generated with BasicCameraFactory convert from pupil
         coordinates to pixel coordinates as expected
         """
         layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
@@ -128,14 +128,14 @@ class CameraRepoFactoryTest(unittest.TestCase):
             radial_coeffs = np.random.random_sample(5)
             radial_coeffs[0] = 0.0
 
-            factory = CameraRepositoryFactory(detectorLayoutFile=layoutFile,
-                                              segmentationFile=segmentFile,
-                                              detectorIdFromAbbrevName=getIdFromName,
-                                              radialTransform = radial_coeffs,
-                                              detTypeMap = {'science':SCIENCE,
-                                                            'focus':FOCUS,
-                                                            'guider':GUIDER,
-                                                            'wave':WAVEFRONT})
+            factory = BasicCameraFactory(detectorLayoutFile=layoutFile,
+                                         segmentationFile=segmentFile,
+                                         detectorIdFromAbbrevName=getIdFromName,
+                                         radialTransform = radial_coeffs,
+                                         detTypeMap = {'science':SCIENCE,
+                                                       'focus':FOCUS,
+                                                       'guider':GUIDER,
+                                                       'wave':WAVEFRONT})
 
 
             camera = factory.makeCamera()
@@ -201,7 +201,7 @@ def suite():
     lsst.utils.tests.init()
 
     suites = []
-    suites += unittest.makeSuite(CameraRepoFactoryTest)
+    suites += unittest.makeSuite(BasicCameraFactoryTest)
     return unittest.TestSuite(suites)
 
 def run(shouldExit = False):

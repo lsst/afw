@@ -34,10 +34,10 @@ from lsst.afw.cameraGeom import (DetectorConfig, CameraConfig, PUPIL, FOCAL_PLAN
                                  SCIENCE, FOCUS, GUIDER, WAVEFRONT)
 
 
-__all__ = ["CameraRepositoryFactory"]
+__all__ = ["BasicCameraFactory"]
 
 
-class CameraRepositoryFactory(object):
+class BasicCameraFactory(object):
 
     def __init__(self, detectorLayoutFile, segmentationFile,
                  readCorner='LL',
