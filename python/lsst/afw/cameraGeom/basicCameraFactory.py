@@ -76,7 +76,6 @@ class BasicCameraFactory(object):
     """
 
     def __init__(self, detectorLayoutFile,
-                 expandDetectorName=None,
                  detectorIdFromAbbrevName=None,
                  detTypeMap=None,
                  radialTransform=[0.0, 1.0, 0.0, 0.0],
@@ -88,12 +87,6 @@ class BasicCameraFactory(object):
         listing the layout of all of the chips in the camera's focal plane
         (see this class' docstring for detailed information on the contents
         of that file).
-
-        @param [in] expandDetectorName is an (optional) method that takes the name
-        of detectors as recorded in the detectorLayoutFile and expands them into
-        their names as they will be stored in the returned afw.camerGeom.camera
-        object.  If 'None', the names used in detectorLayoutFile will be stored
-        in the afw.cameraGeom.camera object.
 
         @param [in] detectorIdFromAbbrevName is a (required) method mapping the
         names of detectors as stored in the detectorLayoutFile to unique integers
@@ -129,13 +122,9 @@ class BasicCameraFactory(object):
         self._cameraName = cameraName
         self._radialTransform = radialTransform #[1] should be 1/rad per mm
 
-        if expandDetectorName is None:
-            self._expandDetectorName = self._default_expandDetectorName
-        else:
-            self._expandDetectorName = expandDetectorName
-
         if detectorIdFromAbbrevName is None:
-            self._detectorIdFromAbbrevName = self._default_detectorIdFromAbbrevName
+            raise RuntimeError("You must specify detectorIdFromAbbrevName when " \
+                               + "instantiating BasicCameraFactory")
         else:
             self._detectorIdFromAbbrevName = detectorIdFromAbbrevName
 
@@ -143,30 +132,6 @@ class BasicCameraFactory(object):
 
         self._camConfig = None
         self._ampTableDict = None
-
-
-    def _default_expandDetectorName(self, name):
-        """
-        Do nothing when expanding detector names
-        """
-        return name
-
-
-    def _default_detectorIdFromAbbrevName(self, name):
-        raise RuntimeError('You cannot run cameraRepofactory without specifying detectorIdFromAbbrevName')
-
-    def expandDetectorName(self, shortName):
-        """
-        Take the (abbreviated) detector name listed in the focal plane layout file
-        and expand it into something longer used as the key for the dict of detectors
-        in the final camera.
-        """
-        longName = self._expandDetectorName(shortName)
-
-        if shortName not in self._shortNameFromLongName:
-            self._shortNameFromLongName[shortName] = longName
-
-        return longName
 
 
     def detTypeMap(self, typeName):
@@ -192,7 +157,7 @@ class BasicCameraFactory(object):
                     continue
                 detConfig = DetectorConfig()
                 els = l.rstrip().split()
-                detConfig.name = self.expandDetectorName(els[0])
+                detConfig.name = els[0]
                 detConfig.id = self._detectorIdFromAbbrevName(els[0])
                 detConfig.bbox_x0 = 0
                 detConfig.bbox_y0 = 0
