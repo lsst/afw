@@ -132,8 +132,8 @@ class BasicCameraFactoryTest(unittest.TestCase):
         mmPerPixelList = [2.0e-3, 1.0e-3, 3.0e-3]
 
         for detName, yaw, xCenter, yCenter, nx, ny, mmPerPixel in \
-        zip(detNameList, yawList, xCenterList, yCenterList, \
-            nxList, nyList, mmPerPixelList):
+            zip(detNameList, yawList, xCenterList, yCenterList,
+                nxList, nyList, mmPerPixelList):
 
             pixelSystem = camera[detName].makeCameraSys(PIXELS)
             focalSystem = camera[detName].makeCameraSys(FOCAL_PLANE)
@@ -159,7 +159,7 @@ class BasicCameraFactoryTest(unittest.TestCase):
                     yFocalList.append(yyFocal)
 
             for xxF, yyF, xxPcontrol, yyPcontrol in \
-            zip(xFocalList, yFocalList, xPix_control, yPix_control):
+                zip(xFocalList, yFocalList, xPix_control, yPix_control):
 
                 focalPoint = camera.makeCameraPoint(afwGeom.Point2D(xxF, yyF), FOCAL_PLANE)
                 pixelPoint = camera.transform(focalPoint, pixelSystem).getPoint()
@@ -206,8 +206,8 @@ class BasicCameraFactoryTest(unittest.TestCase):
             camera = factory.makeCamera()
 
             for detName, yaw, xCenter, yCenter, nx, ny, mmPerPixel in \
-            zip(detNameList, yawList, xCenterList, yCenterList, \
-                nxList, nyList, mmPerPixelList):
+                zip(detNameList, yawList, xCenterList, yCenterList,
+                    nxList, nyList, mmPerPixelList):
 
                 pupilSystem = camera[detName].makeCameraSys(PUPIL)
                 pixelSystem = camera[detName].makeCameraSys(PIXELS)
