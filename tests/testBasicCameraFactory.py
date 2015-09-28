@@ -45,13 +45,11 @@ class BasicCameraFactoryTest(unittest.TestCase):
         expect
         """
         layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
-        segmentFile = os.path.join(self.cameraDataDir, 'testSegmentationFile_0.txt')
 
         def getIdFromName(name):
             return int(name[-2:])
 
         factory = BasicCameraFactory(detectorLayoutFile=layoutFile,
-                                     segmentationFile=segmentFile,
                                      detectorIdFromAbbrevName=getIdFromName,
                                      detTypeMap = {'science':SCIENCE,
                                                    'focus':FOCUS,
@@ -109,7 +107,6 @@ class BasicCameraFactoryTest(unittest.TestCase):
         coordinates to pixel coordinates as expected
         """
         layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
-        segmentFile = os.path.join(self.cameraDataDir, 'testSegmentationFile_0.txt')
 
         def getIdFromName(name):
             return int(name[-2:])
@@ -129,7 +126,6 @@ class BasicCameraFactoryTest(unittest.TestCase):
             radial_coeffs[0] = 0.0
 
             factory = BasicCameraFactory(detectorLayoutFile=layoutFile,
-                                         segmentationFile=segmentFile,
                                          detectorIdFromAbbrevName=getIdFromName,
                                          radialTransform = radial_coeffs,
                                          detTypeMap = {'science':SCIENCE,
