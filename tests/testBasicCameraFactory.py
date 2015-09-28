@@ -209,7 +209,6 @@ class BasicCameraFactoryTest(unittest.TestCase):
                 zip(detNameList, yawList, xCenterList, yCenterList,
                     nxList, nyList, mmPerPixelList):
 
-                pupilSystem = camera[detName].makeCameraSys(PUPIL)
                 pixelSystem = camera[detName].makeCameraSys(PIXELS)
                 focalSystem = camera[detName].makeCameraSys(FOCAL_PLANE)
 
