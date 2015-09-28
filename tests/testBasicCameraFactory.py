@@ -38,6 +38,56 @@ class BasicCameraFactoryTest(unittest.TestCase):
         self. cameraDataDir = os.path.join(getPackageDir('afw'),
                                            'tests', 'data')
 
+    def testBBox(self):
+        """
+        Test that BasicCameraFactory creates detectors with the correct BBoxes
+        """
+        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
+
+        def getIdFromName(name):
+            return int(name[-2:])
+
+        factory = BasicCameraFactory(detectorLayoutFile=layoutFile,
+                                     detectorIdFromAbbrevName=getIdFromName,
+                                     detTypeMap = {'science':SCIENCE,
+                                                   'focus':FOCUS,
+                                                   'guider':GUIDER,
+                                                   'wave':WAVEFRONT})
+
+
+        camera = factory.makeCamera()
+
+        bboxCorners = camera['Det00'].getBBox().getCorners()
+        self.assertEqual(bboxCorners[0][0], 0)
+        self.assertEqual(bboxCorners[0][1], 0)
+        self.assertEqual(bboxCorners[1][0], 399)
+        self.assertEqual(bboxCorners[1][1], 0)
+        self.assertEqual(bboxCorners[2][0], 399)
+        self.assertEqual(bboxCorners[2][1], 399)
+        self.assertEqual(bboxCorners[3][0], 0)
+        self.assertEqual(bboxCorners[3][1], 399)
+
+        bboxCorners = camera['Det01'].getBBox().getCorners()
+        self.assertEqual(bboxCorners[0][0], 0)
+        self.assertEqual(bboxCorners[0][1], 0)
+        self.assertEqual(bboxCorners[1][0], 199)
+        self.assertEqual(bboxCorners[1][1], 0)
+        self.assertEqual(bboxCorners[2][0], 199)
+        self.assertEqual(bboxCorners[2][1], 299)
+        self.assertEqual(bboxCorners[3][0], 0)
+        self.assertEqual(bboxCorners[3][1], 299)
+
+        bboxCorners = camera['Det02'].getBBox().getCorners()
+        self.assertEqual(bboxCorners[0][0], 0)
+        self.assertEqual(bboxCorners[0][1], 0)
+        self.assertEqual(bboxCorners[1][0], 299)
+        self.assertEqual(bboxCorners[1][1], 0)
+        self.assertEqual(bboxCorners[2][0], 299)
+        self.assertEqual(bboxCorners[2][1], 299)
+        self.assertEqual(bboxCorners[3][0], 0)
+        self.assertEqual(bboxCorners[3][1], 299)
+
+
     def testFocalPlaneCoords(self):
         """
         Test that, when we generate a camera using BasicCameraFactory,
