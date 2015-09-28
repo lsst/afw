@@ -205,7 +205,7 @@ class BasicCameraFactory(object):
         tConfig.transform.active.transform.coeffs = self._radialTransform
         tmc = afwGeom.TransformMapConfig()
         tmc.nativeSys = FOCAL_PLANE.getSysName()
-        tmc.transforms = {PUPIL.getSysName():tConfig}
+        tmc.transforms = {PUPIL.getSysName(): tConfig}
         camConfig.transformDict = tmc
 
         self._camConfig = camConfig
