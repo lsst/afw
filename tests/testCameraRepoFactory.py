@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+#
+# LSST Data Management System
+# Copyright 2008-2014 LSST Corporation.
+#
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
+
+import unittest
+import lsst.utils.tests
+
+import os
+import numpy as np
+from lsst.utils import getPackageDir
+import lsst.afw.geom as afwGeom
+from lsst.afw.cameraGeom import CameraRepositoryFactory
+from lsst.afw.cameraGeom import SCIENCE, FOCUS, GUIDER, WAVEFRONT
+from lsst.afw.cameraGeom import PUPIL, FOCAL_PLANE, PIXELS
+
+class CameraRepoFactoryTest(unittest.TestCase):
+
+    def setUp(self):
+        self. cameraDataDir = os.path.join(getPackageDir('afw'),
+                                           'tests', 'data')
+
+    def testFocalPlaneCoords(self):
+        """
+        Test that, when we generate a camera using CameraRepositoryFactory,
+        it maps focal plane coordinates to pixel coordinates in the way we
+        expect
+        """
+        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
+        segmentFile = os.path.join(self.cameraDataDir, 'testSegmentationFile_0.txt')
+
+
+        def getIdFromName(name):
+            return int(name[-2:])
+
+        factory = CameraRepositoryFactory(detectorLayoutFile=layoutFile,
+                                          segmentationFile=segmentFile,
+                                          detectorIdFromAbbrevName=getIdFromName,
+                                          detTypeMap = {'science':SCIENCE,
+                                                        'focus':FOCUS,
+                                                        'guider':GUIDER,
+                                                        'wave':WAVEFRONT})
+
+
+        camera = factory.makeCamera()
+
+        detNameList = ['Det00', 'Det01', 'Det02']
+        yawList = np.radians([20.0, 10.0, 30.0])
+        xCenterList = [0.0, 0.0, -9.0]
+        yCenterList = [0.0, 9.0, 0.0]
+        mmPerPixel = 2.0e-3
+
+        for detName, yaw, xCenter, yCenter in \
+        zip(detNameList, yawList, xCenterList, yCenterList):
+
+            pixelSystem = camera[detName].makeCameraSys(PIXELS)
+            focalSystem = camera[detName].makeCameraSys(FOCAL_PLANE)
+            xPix_control = []
+            yPix_control = []
+            xFocalList = []
+            yFocalList = []
+            for xx in range(0, 400, 100):
+                for yy in range(0, 400, 100):
+                    xPix_control.append(xx)
+                    yPix_control.append(yy)
+
+                    # Note: because of the demand that the x-axis in pixel coordinates
+                    # be along the direction of readout, the pixel x and y axes are rotated
+                    # 90 degrees with respect to the focal plane x and y axes
+                    xxFocalUnRotated = (199.5-yy)*mmPerPixel
+                    yyFocalUnRotated = (xx-199.5)*mmPerPixel
+
+                    xxFocal = xCenter + xxFocalUnRotated*np.cos(yaw) - yyFocalUnRotated*np.sin(yaw)
+                    yyFocal = yCenter + xxFocalUnRotated*np.sin(yaw) + yyFocalUnRotated*np.cos(yaw)
+
+                    xFocalList.append(xxFocal)
+                    yFocalList.append(yyFocal)
+
+            for xxF, yyF, xxPcontrol, yyPcontrol in \
+            zip(xFocalList, yFocalList, xPix_control, yPix_control):
+
+                focalPoint = camera.makeCameraPoint(afwGeom.Point2D(xxF, yyF), FOCAL_PLANE)
+                pixelPoint = camera.transform(focalPoint, pixelSystem).getPoint()
+
+                self.assertAlmostEqual(float(xxPcontrol), pixelPoint.getX(), 9, msg=detName)
+                self.assertAlmostEqual(float(yyPcontrol), pixelPoint.getY(), 9, msg=detName)
+
+
+def suite():
+    """Returns a suite containing all the test cases in this module."""
+
+    lsst.utils.tests.init()
+
+    suites = []
+    suites += unittest.makeSuite(CameraRepoFactoryTest)
+    return unittest.TestSuite(suites)
+
+def run(shouldExit = False):
+    """Run the tests"""
+    lsst.utils.tests.run(suite(), shouldExit)
+
+if __name__ == "__main__":
+    run(True)
