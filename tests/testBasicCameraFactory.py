@@ -42,7 +42,7 @@ class BasicCameraFactoryTest(unittest.TestCase):
         """
         Test that BasicCameraFactory creates detectors with the correct BBoxes
         """
-        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
+        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout.txt')
 
         def getIdFromName(name):
             return int(name[-2:])
@@ -94,7 +94,7 @@ class BasicCameraFactoryTest(unittest.TestCase):
         it maps focal plane coordinates to pixel coordinates in the way we
         expect
         """
-        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
+        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout.txt')
 
         def getIdFromName(name):
             return int(name[-2:])
@@ -159,7 +159,7 @@ class BasicCameraFactoryTest(unittest.TestCase):
         Test that cameras generated with BasicCameraFactory convert from pupil
         coordinates to pixel coordinates as expected
         """
-        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
+        layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout.txt')
 
         def getIdFromName(name):
             return int(name[-2:])
