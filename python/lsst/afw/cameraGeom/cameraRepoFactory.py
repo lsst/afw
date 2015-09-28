@@ -93,7 +93,7 @@ class CameraRepositoryFactory(object):
         sum_i radialTransform[i] * r^i/r
 
         where r is the magnitude of the point in pupil coordinates.  Note that the [1]
-        element of this list should be 1/plateSclae in radians per mm.
+        element of this list should be 1/plateScale in radians per mm.
 
         @param [in] cameraName is a string referring to the name of the camera
         (default 'LSST')

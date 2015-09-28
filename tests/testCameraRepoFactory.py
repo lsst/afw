@@ -47,7 +47,6 @@ class CameraRepoFactoryTest(unittest.TestCase):
         layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout_0.txt')
         segmentFile = os.path.join(self.cameraDataDir, 'testSegmentationFile_0.txt')
 
-
         def getIdFromName(name):
             return int(name[-2:])
 
