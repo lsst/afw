@@ -63,10 +63,13 @@ class BasicCameraFactoryTest(unittest.TestCase):
         yawList = np.radians([20.0, 10.0, 30.0])
         xCenterList = [0.0, 0.0, -9.0]
         yCenterList = [0.0, 9.0, 0.0]
-        mmPerPixel = 2.0e-3
+        nxList = [400, 300, 300]
+        nyList = [400, 200, 300]
+        mmPerPixelList = [2.0e-3, 1.0e-3, 3.0e-3]
 
-        for detName, yaw, xCenter, yCenter in \
-        zip(detNameList, yawList, xCenterList, yCenterList):
+        for detName, yaw, xCenter, yCenter, nx, ny, mmPerPixel in \
+        zip(detNameList, yawList, xCenterList, yCenterList, \
+            nxList, nyList, mmPerPixelList):
 
             pixelSystem = camera[detName].makeCameraSys(PIXELS)
             focalSystem = camera[detName].makeCameraSys(FOCAL_PLANE)
@@ -82,8 +85,8 @@ class BasicCameraFactoryTest(unittest.TestCase):
                     # Note: because of the demand that the x-axis in pixel coordinates
                     # be along the direction of readout, the pixel x and y axes are rotated
                     # 90 degrees with respect to the focal plane x and y axes
-                    xxFocalUnRotated = (199.5-yy)*mmPerPixel
-                    yyFocalUnRotated = (xx-199.5)*mmPerPixel
+                    xxFocalUnRotated = (0.5*(nx-1)-yy)*mmPerPixel
+                    yyFocalUnRotated = (xx-0.5*(ny-1))*mmPerPixel
 
                     xxFocal = xCenter + xxFocalUnRotated*np.cos(yaw) - yyFocalUnRotated*np.sin(yaw)
                     yyFocal = yCenter + xxFocalUnRotated*np.sin(yaw) + yyFocalUnRotated*np.cos(yaw)
@@ -117,7 +120,9 @@ class BasicCameraFactoryTest(unittest.TestCase):
         yawList = np.radians([20.0, 10.0, 30.0])
         xCenterList = [0.0, 0.0, -9.0]
         yCenterList = [0.0, 9.0, 0.0]
-        mmPerPixel = 2.0e-3
+        nxList = [400, 300, 300]
+        nyList = [400, 200, 300]
+        mmPerPixelList = [2.0e-3, 1.0e-3, 3.0e-3]
 
         for iteration in range(3):
 
@@ -136,8 +141,9 @@ class BasicCameraFactoryTest(unittest.TestCase):
 
             camera = factory.makeCamera()
 
-            for detName, yaw, xCenter, yCenter in \
-            zip(detNameList, yawList, xCenterList, yCenterList):
+            for detName, yaw, xCenter, yCenter, nx, ny, mmPerPixel in \
+            zip(detNameList, yawList, xCenterList, yCenterList, \
+                nxList, nyList, mmPerPixelList):
 
                 pupilSystem = camera[detName].makeCameraSys(PUPIL)
                 pixelSystem = camera[detName].makeCameraSys(PIXELS)
@@ -181,8 +187,8 @@ class BasicCameraFactoryTest(unittest.TestCase):
                         xfChip = xfCenter*np.cos(yaw) + yfCenter*np.sin(yaw)
                         yfChip = -xfCenter*np.sin(yaw) + yfCenter*np.cos(yaw)
 
-                        yPix = 199.5 - xfChip/mmPerPixel
-                        xPix = 199.5 + yfChip/mmPerPixel
+                        yPix = 0.5*(nx-1) - xfChip/mmPerPixel
+                        xPix = 0.5*(ny-1) + yfChip/mmPerPixel
 
                         pixelPoint = camera.transform(pupilPoint, pixelSystem).getPoint()
 

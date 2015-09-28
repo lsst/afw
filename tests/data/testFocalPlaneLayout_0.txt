@@ -5,5 +5,5 @@
 # group of sensors, 3 euler rotations (degrees)
 #
 Det00 0.0 0.0 2.0 400 400 science 20.0 0.0 0.0
-Det01 0.0 9000.0 2.0 400 400 science 10.0 0.0 0.0
-Det02 -9000.0 0.0 2.0 400 400 wave 30.0 0.0 0.0
+Det01 0.0 9000.0 1.0 300 200 science 10.0 0.0 0.0
+Det02 -9000.0 0.0 3.0 300 300 wave 30.0 0.0 0.0
