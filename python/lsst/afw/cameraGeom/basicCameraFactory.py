@@ -123,8 +123,8 @@ class BasicCameraFactory(object):
         self._radialTransform = radialTransform #[1] should be 1/rad per mm
 
         if detectorIdFromAbbrevName is None:
-            raise RuntimeError("You must specify detectorIdFromAbbrevName when " \
-                               + "instantiating BasicCameraFactory")
+            raise RuntimeError("You must specify detectorIdFromAbbrevName when "
+                               "instantiating BasicCameraFactory")
         else:
             self._detectorIdFromAbbrevName = detectorIdFromAbbrevName
 

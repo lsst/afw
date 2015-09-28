@@ -45,7 +45,7 @@ class BasicCameraFactoryTest(unittest.TestCase):
         """
         layoutFile = os.path.join(self.cameraDataDir, 'testFocalPlaneLayout.txt')
 
-        self.assertRaises(RuntimeError, BasicCameraFactory, layoutFile, \
+        self.assertRaises(RuntimeError, BasicCameraFactory, layoutFile,
                           detTypeMap = {'science':SCIENCE,
                                         'focus':FOCUS,
                                         'guider':GUIDER,
@@ -222,7 +222,7 @@ class BasicCameraFactoryTest(unittest.TestCase):
                         xp = rr*np.cos(theta)
                         yp = rr*np.sin(theta)
 
-                        rr_scale = np.array([radial_coeffs[ii]*rr**ii \
+                        rr_scale = np.array([radial_coeffs[ii]*rr**ii
                                              for ii in range(len(radial_coeffs))]).sum()/rr
 
                         xf = rr_scale*rr*np.cos(theta)
