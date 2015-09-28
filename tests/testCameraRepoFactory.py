@@ -116,7 +116,6 @@ class CameraRepoFactoryTest(unittest.TestCase):
 
         np.random.seed(435)
 
-
         detNameList = ['Det00', 'Det01', 'Det02']
         yawList = np.radians([20.0, 10.0, 30.0])
         xCenterList = [0.0, 0.0, -9.0]
