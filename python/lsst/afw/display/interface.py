@@ -435,8 +435,8 @@ class Display(object):
 
         if origin == afwImage.PARENT and self._xy0 is not None:
             x0, y0 = self._xy0
-            r -= x0
-            c -= y0
+            r -= y0
+            c -= x0
 
         if isinstance(symb, afwGeom.ellipses.BaseCore) or re.search(r"^@:", symb):
             try:
