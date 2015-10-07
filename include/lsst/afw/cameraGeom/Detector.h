@@ -25,6 +25,7 @@
 
 #include <string>
 #include <vector>
+#include "boost/unordered_map.hpp"
 #include "lsst/base.h"
 #include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/table/AmpInfo.h"

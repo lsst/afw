@@ -89,7 +89,7 @@ public:
 
     static FilterProperty const& lookup(std::string const& name);
 private:
-    typedef std::tr1::unordered_map<std::string const, FilterProperty> PropertyMap;
+    typedef std::tr1::unordered_map<std::string, FilterProperty> PropertyMap;
 
     static void _initRegistry();
     void _insert(bool force=false);
@@ -155,9 +155,9 @@ public :
 
     static std::vector<std::string> getNames();
 private :
-    typedef std::tr1::unordered_map<std::string const, std::string const> AliasMap;
-    typedef std::tr1::unordered_map<std::string const, unsigned int const> NameMap;
-    typedef std::tr1::unordered_map<unsigned int const, std::string const> IdMap;
+    typedef std::tr1::unordered_map<std::string, std::string const> AliasMap;
+    typedef std::tr1::unordered_map<std::string, unsigned int const> NameMap;
+    typedef std::tr1::unordered_map<unsigned int, std::string const> IdMap;
 
     static void _initRegistry();
     static int _lookup(std::string const& name, bool const force=false);
