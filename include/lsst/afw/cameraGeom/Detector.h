@@ -25,7 +25,7 @@
 
 #include <string>
 #include <vector>
-#include "boost/unordered_map.hpp"
+#include <unordered_map>
 #include "lsst/base.h"
 #include "lsst/afw/geom/TransformMap.h"
 #include "lsst/afw/table/AmpInfo.h"
@@ -245,7 +245,7 @@ public:
     }
 
 private:
-    typedef boost::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
+    typedef std::unordered_map<std::string, table::AmpInfoCatalog::const_iterator> _AmpInfoMap;
     /**
      * Finish constructing this object
      *

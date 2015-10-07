@@ -34,9 +34,9 @@
 #define LSST_AFW_IMAGE_FILTER_H
 
 #include <string>
+#include <unordered_map>
 #include "boost/shared_ptr.hpp"
 #include "lsst/base.h"
-#include "lsst/tr1/unordered_map.h"
 #include "lsst/pex/policy/Policy.h"
 
 namespace lsst {
@@ -89,7 +89,7 @@ public:
 
     static FilterProperty const& lookup(std::string const& name);
 private:
-    typedef std::tr1::unordered_map<std::string, FilterProperty> PropertyMap;
+    typedef std::unordered_map<std::string, FilterProperty> PropertyMap;
 
     static void _initRegistry();
     void _insert(bool force=false);
@@ -155,9 +155,9 @@ public :
 
     static std::vector<std::string> getNames();
 private :
-    typedef std::tr1::unordered_map<std::string, std::string const> AliasMap;
-    typedef std::tr1::unordered_map<std::string, unsigned int const> NameMap;
-    typedef std::tr1::unordered_map<unsigned int, std::string const> IdMap;
+    typedef std::unordered_map<std::string, std::string const> AliasMap;
+    typedef std::unordered_map<std::string, unsigned int const> NameMap;
+    typedef std::unordered_map<unsigned int, std::string const> IdMap;
 
     static void _initRegistry();
     static int _lookup(std::string const& name, bool const force=false);
