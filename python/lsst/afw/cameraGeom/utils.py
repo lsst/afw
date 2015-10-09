@@ -298,12 +298,13 @@ class FakeImageDataSource(object):
 class ButlerImage(FakeImageDataSource):
     """A class to return an Image of a given Ccd using the butler"""
     
-    def __init__(self, butler=None, type="raw",
+    def __init__(self, butler=None, type="raw", ccdKey="ccd",
                  isTrimmed=True, verbose=False, background=numpy.nan, gravity=None, *args, **kwargs):
         """!Create an object that knows how to prepare images for showCamera using the butler
 
         \param butler  The butler to use.  If no butler is provided an empty image is returned
         \param type  The type of image to read (e.g. raw, bias, flat, calexp)
+        \param ccdKey The CCD key name for Butler lookup
         \param isTrimmed  If true, the showCamera command expects to be given trimmed images
         \param verbose  Be chatty (in particular, print any error messages from the butler)
         \param background  The value of any pixels that lie outside the CCDs
@@ -315,6 +316,7 @@ class ButlerImage(FakeImageDataSource):
         self.isTrimmed = isTrimmed
         self.type = type
         self.butler = butler
+        self.ccdKey = ccdKey
         self.kwargs = kwargs
         self.isRaw = False
         self.gravity = gravity
@@ -341,16 +343,17 @@ class ButlerImage(FakeImageDataSource):
         im = None
         if self.butler is not None:
             e = None
+            self.kwargs.update({self.ccdKey: ccd.getId()})
             if self.type == "calexp":    # reading the exposure can die if the PSF's unknown
                 try:
-                    fileName = self.butler.get(self.type + "_filename", ccd=ccd.getId(),
+                    fileName = self.butler.get(self.type + "_filename",
                                                     **self.kwargs)[0]
                     im = imageFactory(fileName)
                 except Exception as e:
                     pass
             else:
                 try:
-                    im = self.butler.get(self.type, ccd=ccd.getId(),
+                    im = self.butler.get(self.type,
                                          **self.kwargs).getMaskedImage().getImage()
                 except Exception as e:
                     pass
@@ -372,9 +375,10 @@ class ButlerImage(FakeImageDataSource):
 
         ampImages = []
         for a in ccd:
-            bias = im[a.getRawHorizontalOverscanBBox()]
             data = im[a.getRawDataBBox()]
-            data -= afwMath.makeStatistics(bias, afwMath.MEANCLIP).getValue()
+            if not a.getRawHorizontalOverscanBBox().isEmpty():
+                bias = im[a.getRawHorizontalOverscanBBox()]
+                data -= afwMath.makeStatistics(bias, afwMath.MEANCLIP).getValue()
             data *= a.getGain()
 
             ampImages.append(data)
