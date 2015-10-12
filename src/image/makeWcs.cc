@@ -84,34 +84,6 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     afwImg::Wcs::Ptr wcs;               // we can't use make_shared as ctor is private
     if (ctype1.substr(5, 3) == "TAN") {
         wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata));
-    } else if (ctype1.substr(5, 3) == "TPV") { // unfortunately we don't support TPV
-        if (!modifyable) {
-            metadata = _metadata->deepCopy();
-            modifyable = true;
-        }
-        
-        log.log(Log::WARN, str(boost::format("Stripping PVi_j keys from projection %s/%s") % ctype1 % ctype2));
-
-        metadata->set<std::string>("CTYPE1", "RA---TAN");
-        metadata->set<std::string>("CTYPE2", "DEC--TAN");
-        metadata->set<bool>("TPV_WCS", true);
-        // PV1_[1-4] are in principle legal, although Swarp reuses them as part of the TPV parameterisation.
-        // It turns out that leaving PV1_[1-4] in the header breaks wcslib 4.14's ability to read
-        // DECam headers (DM-3196) so we'll delete them all for now.
-        //
-        // John Swinbank points out the maximum value of j in TVi_j is 39;
-        // http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html
-        for (int i = 0; i != 2; ++i) {
-            for (int j = 1; j <= 39; ++j) { // 39's the max in the TPV standard
-                char pvName[8];
-                sprintf(pvName, "PV%d_%d", i, j);
-                if (metadata->exists(pvName)) {
-                    metadata->remove(pvName);
-                }
-            }
-        }
-
-        wcs = afwImg::Wcs::Ptr(new afwImg::TanWcs(metadata));
     } else {
         wcs = afwImg::Wcs::Ptr(new afwImg::Wcs(metadata));
     }
