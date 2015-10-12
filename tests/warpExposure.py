@@ -396,6 +396,22 @@ class WarpExposureTestCase(unittest.TestCase):
         # if a bug described in ticket #2441 is present, this will raise an exception:
         numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
         self.assertEqual(numGoodPix, 0)
+
+    def testTicketDM4063(self):
+        """Test that a uint16 array can be cast to a bool array, to avoid DM-4063
+        """
+        a = numpy.array([0, 1, 0, 23], dtype=numpy.uint16)
+        b = numpy.array([True, True, False, False], dtype=bool)
+        acast = numpy.array(a != 0, dtype=bool)
+        orArr = acast | b
+        desOrArr = numpy.array([True, True, False, True], dtype=bool)
+        # Note: assertEqual(bool arr, bool arr) fails with:
+        # ValueError: The truth value of an array with more than one element is ambiguous
+        try:
+            self.assertTrue(numpy.all(orArr == desOrArr))
+        except Exception as e:
+            print "Failed: %r != %r: %s" % (orArr, desOrArr, e)
+            raise
     
     def testSmallSrc(self):
         """Verify that a source image that is too small will not raise an exception
@@ -658,6 +674,7 @@ class WarpExposureTestCase(unittest.TestCase):
         arr2 = image2.getArray()
 
         if skipMaskArr != None:
+            skipMaskArr = numpy.array(skipMaskArr != 0, dtype=bool)
             maskedArr1 = numpy.ma.array(arr1, copy=False, mask = skipMaskArr)
             maskedArr2 = numpy.ma.array(arr2, copy=False, mask = skipMaskArr)
             filledArr1 = maskedArr1.filled(0.0)

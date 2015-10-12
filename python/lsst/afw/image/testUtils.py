@@ -60,6 +60,7 @@ def imagesDiffer(imageArr1, imageArr2, skipMaskArr=None, rtol=1.0e-05, atol=1e-0
     """
     retStrs = []
     if skipMaskArr is not None:
+        skipMaskArr = numpy.array(skipMaskArr != 0, dtype=bool)
         maskedArr1 = numpy.ma.array(imageArr1, copy=False, mask = skipMaskArr)
         maskedArr2 = numpy.ma.array(imageArr2, copy=False, mask = skipMaskArr)
         filledArr1 = maskedArr1.filled(0.0)
@@ -114,6 +115,7 @@ def masksDiffer(maskArr1, maskArr2, skipMaskArr=None):
     """
     retStr = ""
     if skipMaskArr is not None:
+        skipMaskArr = numpy.array(skipMaskArr != 0, dtype=bool)
         maskedArr1 = numpy.ma.array(maskArr1, copy=False, mask = skipMaskArr)
         maskedArr2 = numpy.ma.array(maskArr2, copy=False, mask = skipMaskArr)
         filledArr1 = maskedArr1.filled(0.0)
