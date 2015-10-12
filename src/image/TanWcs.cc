@@ -139,6 +139,35 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
             decodeSipHeader(*hackMetadata, "AP", _sipAp);
             decodeSipHeader(*hackMetadata, "BP", _sipBp);
 
+            // Remove SIP headers, so that wcslib cannot attempt to use them
+            const char* sipPrefixes[] = {"A", "B", "AP", "BP"};
+
+            char sipName[9];
+            char orderName[9];
+            for (int i=0; i < 4; i++) {
+
+                sprintf(orderName, "%s_ORDER", sipPrefixes[i]);
+                if(!hackMetadata->exists(orderName)) continue;
+                int order = hackMetadata->getAsInt(orderName);
+
+                for (int p = 0; p <= order; p++) {
+                    for (int q = 0; p + q <= order; q++) {
+                        sprintf(sipName, "%s_%d_%d", sipPrefixes[i], p, q);
+                        if (hackMetadata->exists(sipName)) {
+                            hackMetadata->remove(sipName);
+                        }
+                    }
+                }
+                sprintf(sipName, "%s_DMAX", sipPrefixes[i]);
+                if (hackMetadata->exists(sipName)) {
+                    hackMetadata->remove(sipName);
+                }
+                sprintf(sipName, "%s_ORDER", sipPrefixes[i]);
+                if (hackMetadata->exists(sipName)) {
+                    hackMetadata->remove(sipName);
+                }
+            }
+
             // this gets called in the Wcs (base class) constructor
             // We just changed fitsMetadata, so we have to re-init wcslib
             initWcsLibFromFits(hackMetadata);
