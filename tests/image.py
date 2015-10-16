@@ -316,7 +316,7 @@ class ImageTestCase(unittest.TestCase):
 
         image2 = afwImage.ImageF(simage.getDimensions())
         image2.set(666)
-        simage <<= image2
+        simage[:] = image2
         del simage
         del image2
 
@@ -346,7 +346,7 @@ class ImageTestCase(unittest.TestCase):
 
         image2 = afwImage.ImageF(simage.getDimensions())
         image2.set(666)
-        simage <<= image2
+        simage[:] = image2
         del simage
         del image2
         
@@ -476,7 +476,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
     def testCreateDecoratedImageFromImage(self):
         image = afwImage.ImageF(afwGeom.Extent2I(self.width, self.height))
-        image <<= self.dimage1.getImage()
+        image[:] = self.dimage1.getImage()
 
         dimage = afwImage.DecoratedImageF(image)
         self.assertEqual(dimage.getWidth(), self.width)

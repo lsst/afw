@@ -86,7 +86,7 @@ class RgbTestCase(unittest.TestCase):
             afwMath.randomGaussianImage(randomImage, rand)
             randomImage *= 2
             convolvedImage += randomImage
-            self.images[i] <<= convolvedImage
+            self.images[i][:] = convolvedImage
         del convolvedImage; del randomImage
 
     def tearDown(self):

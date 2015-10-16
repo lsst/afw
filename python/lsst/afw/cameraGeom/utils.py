@@ -627,7 +627,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
-            imView <<= im
+            imView[:] = im
         except Exception as e:
             pass
 

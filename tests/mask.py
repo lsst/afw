@@ -194,7 +194,7 @@ class MaskTestCase(unittest.TestCase):
         mask2 = afwImage.MaskU(smask.getDimensions())
 
         mask2.set(666)
-        smask <<= mask2
+        smask[:] = mask2
         
         del smask
         del mask2
