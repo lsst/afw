@@ -97,7 +97,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
 /**
  * Assignment operator
  *
- * N.b. this is a shallow assignment; use operator<<=() if you want to copy the pixels
+ * N.b. this is a shallow assignment; use set(src) if you want to copy the pixels
  */
 template<typename PixelT>
 image::DecoratedImage<PixelT>& image::DecoratedImage<PixelT>::operator=(const DecoratedImage& src) {

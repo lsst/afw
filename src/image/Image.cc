@@ -129,7 +129,7 @@ image::ImageBase<PixelT>::ImageBase(
  * Copy constructor.
  *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this may not be what you want.  See also operator<<=() to copy pixels between Image%s
+ * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
  */
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
@@ -144,7 +144,7 @@ image::ImageBase<PixelT>::ImageBase(
 {
     if (deep) {
         ImageBase tmp(getBBox());
-        tmp <<= *this;                  // now copy the pixels
+        tmp.assign(*this);                  // now copy the pixels
         swap(tmp);
     }
 }
@@ -172,7 +172,7 @@ image::ImageBase<PixelT>::ImageBase(
 {
     if (deep) {
         ImageBase tmp(getBBox());        
-        tmp <<= *this;                  // now copy the pixels
+        tmp.assign(*this);                  // now copy the pixels
         swap(tmp);
     }
 }
@@ -208,7 +208,7 @@ image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2
 /// Shallow assignment operator.
 ///
 /// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use operator<<=()
+/// not be what you intended;  to copy the pixels, use assign(rhs)
 ///
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private
@@ -221,14 +221,39 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 }
 
 /// Set the lhs's %pixel values to equal the rhs's
+///
+/// \deprecated use assign(rhs) instead
 template<typename PixelT>
 void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
-    if (getDimensions() != rhs.getDimensions()) {
+    assign(rhs);
+}
+
+/**
+ * Copy pixels from another image to a specified subregion of this image.
+ *
+ * \param[in] rhs  source image whose pixels are to be copied into this image (the destination)
+ * \param[in] bbox  subregion of this image to set; if empty (the default) then all pixels are set
+ * \param[in] origin  origin of bbox: if PARENT then the lower left pixel of this image is at xy0
+ *                    if LOCAL then the lower left pixel of this image is at 0,0
+ *
+ * \throw lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
+ * this image do not match.
+ */
+template<typename PixelT>
+void image::ImageBase<PixelT>::assign(ImageBase const &rhs, geom::Box2I const &bbox, ImageOrigin origin) {
+    auto lhsDim = bbox.isEmpty() ? getDimensions() : bbox.getDimensions();
+    if (lhsDim != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Dimension mismatch: %dx%d v. %dx%d") %
-                              getWidth() % getHeight() % rhs.getWidth() % rhs.getHeight()).str());
+                              lhsDim.getX() % lhsDim.getY() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    copy_pixels(rhs._gilView, _gilView);
+    if (bbox.isEmpty()) {
+        copy_pixels(rhs._gilView, _gilView);
+    } else {
+        auto lhsOff = (origin == PARENT) ? bbox.getMin() - _origin : geom::Extent2I(bbox.getMin());
+        auto lhsGilView = _makeSubView(lhsDim, lhsOff, _gilView);
+        copy_pixels(rhs._gilView, lhsGilView);
+    }
 }
 
 /// Return a reference to the pixel <tt>(x, y)</tt>
@@ -449,7 +474,7 @@ image::Image<PixelT>::Image(geom::Box2I const & bbox, ///< dimensions and origin
  * Copy constructor.
  *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this may not be what you want.  See also operator<<=() to copy pixels between Image%s
+ * this may not be what you want.  See also assign(rhs) to copy pixels between Image%s
  */
 template<typename PixelT>
 image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
@@ -486,7 +511,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
 /// Assignment operator.
 ///
 /// \note that this has the effect of making the lhs share pixels with the rhs which may
-/// not be what you intended;  to copy the pixels, use operator<<=()
+/// not be what you intended;  to copy the pixels, use assign(rhs)
 ///
 /// \note this behaviour is required to make the swig interface work, otherwise I'd
 /// declare this function private

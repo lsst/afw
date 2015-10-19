@@ -212,6 +212,8 @@ namespace image {
         ImageBase& operator=(const ImageBase& rhs);
         ImageBase& operator=(const PixelT rhs);
         void operator<<=(const ImageBase& rhs);
+
+        void assign(ImageBase const &rsh, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
         //
         // Operators etc.
         //

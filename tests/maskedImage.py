@@ -36,6 +36,8 @@ or
 import os
 import unittest
 
+import numpy as np
+
 import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
@@ -49,6 +51,26 @@ try:
     type(display)
 except NameError:
     display = False
+
+def makeRampImage(width, height, imgClass=afwImage.MaskedImageF):
+    """Make a ramp image of the specified size and image class
+
+    Image values start from 0 at the lower left corner and increase by 1 along rows
+    Variance values equal image values + 100
+    Mask values equal image values modulo 8 bits (leaving plenty of unused values)
+    """
+    mi = imgClass(width, height)
+    image = mi.getImage()
+    mask = mi.getMask()
+    variance = mi.getVariance()
+    val = 0
+    for yInd in range(height):
+        for xInd in range(width):
+            image.set(xInd, yInd, val)
+            variance.set(xInd, yInd, val + 100)
+            mask.set(xInd, yInd, val % 0x100)
+            val += 1
+    return mi
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -227,6 +249,95 @@ class MaskedImageTestCase(unittest.TestCase):
         mimage2_copy += tmp
 
         self.assertEqual(self.mimage2.get(0, 0), mimage2_copy.get(0, 0))
+
+    def testAssignWithBBox(self):
+        """Test assign(rhs, bbox) with non-empty bbox
+        """
+        for xy0 in (afwGeom.Point2I(*val) for val in (
+            (0, 0),
+            (-100, 120), # an arbitrary value that is off the image
+        )):
+            destMIDim = afwGeom.Extent2I(5, 4)
+            srcMIDim = afwGeom.Extent2I(3, 2)
+            destMI = afwImage.MaskedImageF(destMIDim)
+            destImage = destMI.getImage()
+            destVariance = destMI.getVariance()
+            destMask = destMI.getMask()
+            destMI.setXY0(xy0)
+            srcMI = makeRampImage(*srcMIDim)
+            srcMI.setXY0(55, -33) # an arbitrary value that should be ignored
+            self.assertRaises(Exception, destMI.set, srcMI) # size mismatch
+
+            for validMin in (afwGeom.Point2I(*val) for val in (
+                (0, 0),
+                (2, 0),
+                (0, 1),
+                (1, 2),
+            )):
+                for origin in (None, afwImage.PARENT, afwImage.LOCAL): # None to omit the argument
+                    destImage[:] = -1.0
+                    destVariance[:] = -1.0
+                    destMask[:] = 0xFFFF
+                    bbox = afwGeom.Box2I(validMin, srcMI.getDimensions())
+                    if origin != afwImage.LOCAL:
+                        bbox.shift(afwGeom.Extent2I(xy0))
+                    if origin is None:
+                        destMI.assign(srcMI, bbox)
+                        destMIView = afwImage.MaskedImageF(destMI, bbox)
+                    else:
+                        destMI.assign(srcMI, bbox, origin)
+                        destMIView = afwImage.MaskedImageF(destMI, bbox, origin)
+                    for i in range(3):
+                        self.assertTrue(np.all(destMIView.getArrays()[i] == srcMI.getArrays()[i]))
+                    numPixNotAssigned = (destMIDim[0] * destMIDim[1]) - (srcMIDim[0] * srcMIDim[1])
+                    self.assertEqual(np.sum(destImage.getArray() < -0.5), numPixNotAssigned)
+                    self.assertEqual(np.sum(destVariance.getArray() < -0.5), numPixNotAssigned)
+                    self.assertEqual(np.sum(destMask.getArray() == 0xFFFF), numPixNotAssigned)
+
+            for badMin in (afwGeom.Point2I(*val) + afwGeom.Extent2I(xy0) for val in (
+                (-1, 0),
+                (3, 0),
+                (0, -1),
+                (1, 3),
+            )):
+                for origin in (None, afwImage.PARENT, afwImage.LOCAL): # None to omit the argument
+                    bbox = afwGeom.Box2I(validMin, srcMI.getDimensions())
+                    if origin != afwImage.LOCAL:
+                        bbox.shift(afwGeom.Extent2I(xy0))
+                    if origin is None:
+                        self.assertRaises(Exception, destMI.set, srcMI, bbox)
+                    else:
+                        self.assertRaises(Exception, destMI.set, srcMI, bbox, origin)
+
+    def testAssignWithoutBBox(self):
+        """Test assign(rhs, [bbox]) with an empty bbox and with no bbox specified; both set all pixels
+        """
+        for xy0 in (afwGeom.Point2I(*val) for val in (
+            (0, 0),
+            (-100, 120), # an arbitrary value that is off the image
+        )):
+            destMIDim = afwGeom.Extent2I(5, 4)
+            destMI = afwImage.MaskedImageF(destMIDim)
+            destMI.setXY0(xy0)
+            destImage = destMI.getImage()
+            destVariance = destMI.getVariance()
+            destMask = destMI.getMask()
+            srcMI = makeRampImage(*destMIDim)
+            srcMI.setXY0(55, -33) # an arbitrary value that should be ignored
+
+            destImage[:] = -1.0
+            destVariance[:] = -1.0
+            destMask[:] = 0xFFFF
+            destMI.assign(srcMI)
+            for i in range(3):
+                self.assertTrue(np.all(destMI.getArrays()[i] == srcMI.getArrays()[i]))
+
+            destImage[:] = -1.0
+            destVariance[:] = -1.0
+            destMask[:] = 0xFFFF
+            destMI.assign(srcMI, afwGeom.Box2I())
+            for i in range(3):
+                self.assertTrue(np.all(destMI.getArrays()[i] == srcMI.getArrays()[i]))
 
     def testSubtractImages(self):
         "Test subtraction"

@@ -185,7 +185,7 @@ int main() {
     {
         afwImage::Image<float> nimg(afwGeom::Extent2I(5, 2));
         nimg = 1;
-        simg <<= nimg;
+        simg.assign(nimg);
     }
 
     print(simg, "simg");

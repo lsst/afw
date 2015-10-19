@@ -60,6 +60,19 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+def makeRampImage(width, height, imgClass=afwImage.ImageF):
+    """Make a ramp image of the specified size and image class
+
+    Values start from 0 at the lower left corner and increase by 1 along rows
+    """
+    im = imgClass(width, height)
+    val = 0
+    for yInd in range(height):
+        for xInd in range(width):
+            im.set(xInd, yInd, val)
+            val += 1
+    return im
+
 class ImageTestCase(unittest.TestCase):
     """A test case for Image"""
     def setUp(self):
@@ -142,6 +155,78 @@ class ImageTestCase(unittest.TestCase):
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
                 self.assertEqual(self.image1.get(i, j), self.val1 + self.function(i, j))
+
+    def testAssignWithBBox(self):
+        """Test assign(rhs, bbox) with non-empty bbox
+        """
+        for xy0 in (afwGeom.Point2I(*val) for val in (
+            (0, 0),
+            (-100, 120), # an arbitrary value that is off the image
+        )):
+            destImDim = afwGeom.Extent2I(5, 4)
+            srcImDim = afwGeom.Extent2I(3, 2)
+            destIm = afwImage.ImageF(destImDim)
+            destIm.setXY0(xy0)
+            srcIm = makeRampImage(*srcImDim)
+            srcIm.setXY0(55, -33) # an arbitrary value that should be ignored
+            self.assertRaises(Exception, destIm.set, srcIm) # size mismatch
+
+            for validMin in (afwGeom.Point2I(*val) for val in (
+                (0, 0),
+                (2, 0),
+                (0, 1),
+                (1, 2),
+            )):
+                for origin in (None, afwImage.PARENT, afwImage.LOCAL): # None to omit the argument
+                    destIm[:] = -1.0
+                    bbox = afwGeom.Box2I(validMin, srcIm.getDimensions())
+                    if origin != afwImage.LOCAL:
+                        bbox.shift(afwGeom.Extent2I(xy0))
+                    if origin is None:
+                        destIm.assign(srcIm, bbox)
+                        destImView = afwImage.ImageF(destIm, bbox)
+                    else:
+                        destIm.assign(srcIm, bbox, origin)
+                        destImView = afwImage.ImageF(destIm, bbox, origin)
+                    self.assertTrue(numpy.all(destImView.getArray() == srcIm.getArray()))
+                    numPixNotAssigned = (destImDim[0] * destImDim[1]) - (srcImDim[0] * srcImDim[1])
+                    self.assertEqual(numpy.sum(destIm.getArray() < -0.5), numPixNotAssigned)
+
+            for badMin in (afwGeom.Point2I(*val) + afwGeom.Extent2I(xy0) for val in (
+                (-1, 0),
+                (3, 0),
+                (0, -1),
+                (1, 3),
+            )):
+                for origin in (None, afwImage.PARENT, afwImage.LOCAL): # None to omit the argument
+                    bbox = afwGeom.Box2I(badMin, srcIm.getDimensions())
+                    if origin != afwImage.LOCAL:
+                        bbox.shift(afwGeom.Extent2I(xy0))
+                    if origin is None:
+                        self.assertRaises(Exception, destIm.set, srcIm, bbox)
+                    else:
+                        self.assertRaises(Exception, destIm.set, srcIm, bbox, origin)
+
+    def testAssignWithoutBBox(self):
+        """Test assign(rhs, [bbox]) with an empty bbox and with no bbox specified; both set all pixels
+        """
+        for xy0 in (afwGeom.Point2I(*val) for val in (
+            (0, 0),
+            (-100, 120), # an arbitrary value that is off the image
+        )):
+            destImDim = afwGeom.Extent2I(5, 4)
+            destIm = afwImage.ImageF(destImDim)
+            destIm.setXY0(xy0)
+            srcIm = makeRampImage(*destImDim)
+            srcIm.setXY0(55, -33) # an arbitrary value that should be ignored
+
+            destIm[:] = -1.0
+            destIm.assign(srcIm)
+            self.assertTrue(numpy.all(destIm.getArray() == srcIm.getArray()))
+
+            destIm[:] = -1.0
+            destIm.assign(srcIm, afwGeom.Box2I())
+            self.assertTrue(numpy.all(destIm.getArray() == srcIm.getArray()))
 
     def testBoundsChecking(self):
         """Check that pixel indexes are checked in python"""
