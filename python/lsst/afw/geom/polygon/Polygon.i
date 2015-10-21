@@ -28,6 +28,7 @@
 
 %template(PairPoint) std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D>;
 %template(VectorPairPoint) std::vector<std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D> >;
+%shared_ptr(lsst::afw::geom::polygon::Polygon)
 
 %{
 #include "lsst/afw/geom/polygon/Polygon.h"
