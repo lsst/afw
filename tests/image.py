@@ -138,7 +138,7 @@ class ImageTestCase(unittest.TestCase):
         bbox = afwGeom.BoxI(afwGeom.PointI(-1<<30, -1<<30), afwGeom.PointI(1<<30, 1<<30))
 
         def tst():
-            im = afwImage.ImageF(bbox)
+            afwImage.ImageF(bbox)
 
         self.assertRaises(lsst.pex.exceptions.LengthError, tst)
 
@@ -440,7 +440,7 @@ class ImageTestCase(unittest.TestCase):
 
     def testBadSubimages(self):
         def tst():
-            simage1 = afwImage.ImageF(
+            afwImage.ImageF(
                 self.image1, 
                 afwGeom.Box2I(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
                 afwImage.LOCAL
@@ -630,7 +630,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             imgU.writeFits(tmpFile)
 
-            imgU16 = afwImage.DecoratedImageF(tmpFile) # read as unsigned short
+            afwImage.DecoratedImageF(tmpFile) # read as unsigned short
 
     def testWriteFits(self):
         """Test writing FITS files"""

@@ -660,7 +660,7 @@ class MaskedImageTestCase(unittest.TestCase):
         else:
             im = afwImage.ImageF(afwGeom.Extent2I(10, 10))
         mi = afwImage.MaskedImageF(im)
-        exp = afwImage.ExposureF(mi)
+        afwImage.ExposureF(mi)
 
     def testMaskedImageInitialisation(self):
         dims = self.mimage.getDimensions()
