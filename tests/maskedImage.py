@@ -458,7 +458,7 @@ class MaskedImageTestCase(unittest.TestCase):
         mimage2 = afwImage.MaskedImageF(simage.getDimensions())
         mimage2.getImage().set(666)
         mimage2.getMask().set(self.BAD)
-        simage <<= mimage2
+        simage[:] = mimage2
 
         del simage
         del mimage2
@@ -488,7 +488,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         mimage2 = afwImage.MaskedImageF(simage.getDimensions())
         mimage2.set(666, self.BAD, 0.0)
-        simage <<= mimage2
+        simage[:] = mimage2
         del simage
         del mimage2
         
@@ -536,7 +536,7 @@ class MaskedImageTestCase(unittest.TestCase):
         gain = 2
 
         var = self.mimage.getVariance()
-        var <<= self.mimage.getImage()
+        var[:] = self.mimage.getImage()
         var /= gain
 
     def testTicket653(self):

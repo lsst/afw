@@ -326,7 +326,7 @@ class ConvolveTestCase(unittest.TestCase):
         # reset the good region to the original convolved image;
         # this should reset the entire convolved image to its original self
         cnvMaskedImageGoodView = afwImage.MaskedImageF(cnvMaskedImage, goodBox, afwImage.LOCAL, False)
-        cnvMaskedImageGoodView <<= cnvMaskedImageCopyViewOfGoodRegion
+        cnvMaskedImageGoodView[:] = cnvMaskedImageCopyViewOfGoodRegion
 
         # assert that these two are equal
         cnvImMaskVarArr = cnvMaskedImage.getArrays()

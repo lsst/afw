@@ -68,7 +68,7 @@ class ScaledPlus(unittest.TestCase):
         im1ArrSet = self.maskedImage1.getArrays()
         
         desMaskedImage = afwImage.MaskedImageF(self.maskedImage0.getDimensions())
-        desMaskedImage <<= self.maskedImage0
+        desMaskedImage[:] = self.maskedImage0
         desMaskedImage *= coeff0
         desMaskedImage.scaledPlus(coeff1, self.maskedImage1)
         desImArrSet = desMaskedImage.getArrays()

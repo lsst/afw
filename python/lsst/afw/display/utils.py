@@ -207,7 +207,7 @@ class Mosaic(object):
                                      (smosaic.getHeight() - im.getHeight())//2)
                 smosaic = smosaic.Factory(smosaic, afwGeom.Box2I(llc, im.getDimensions()), afwImage.LOCAL)
 
-            smosaic <<= im
+            smosaic[:] = im
 
         display = _getDisplayFromDisplayOrFrame(display, frame)
         if display:
