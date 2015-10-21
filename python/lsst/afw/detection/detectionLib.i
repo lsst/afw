@@ -42,6 +42,7 @@ Python interface to lsst::afw::detection classes
 #include "lsst/daf/persistence.h"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/geom/polygon.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"

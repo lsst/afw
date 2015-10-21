@@ -36,6 +36,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %{
 #include "boost/shared_ptr.hpp"
 #include "lsst/afw/geom.h"
+#include "lsst/afw/geom/polygon.h"
 #include "lsst/afw/geom/ellipses.h"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/image.h"

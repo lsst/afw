@@ -37,6 +37,7 @@ Basic routines to talk to ds9
 #   include "lsst/pex/policy.h"
 #   include "lsst/pex/logging.h"
 #   include "lsst/afw/geom.h"
+#   include "lsst/afw/geom/polygon.h"
 #   include "lsst/afw/cameraGeom.h"
 #   include "lsst/afw/image.h"
 
