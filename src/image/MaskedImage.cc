@@ -322,7 +322,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
  *
  * If you are copying a scalar value, a simple <tt>lhs = scalar;</tt> is OK, but
  * this is probably not the function that you want to use with an %image. To copy pixel values
- * from the rhs use operator<<=()
+ * from the rhs use assign(rhs)
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>& image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(image::MaskedImage const& rhs ///< Right hand side
@@ -371,13 +371,32 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
 /**
  * Copy the pixels from the rhs to the lhs
  *
+ * \deprecated use assign(rhs) instead
+ *
  * \note operator=() is not equivalent to this command
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
-    *_image <<= *rhs.getImage();
-    *_mask <<= *rhs.getMask();
-    *_variance <<= *rhs.getVariance();
+    assign(rhs);
+}
+
+/**
+ * Copy pixels from another masked image to a specified subregion of this masked image.
+ *
+ * \param[in] rhs  source image whose pixels are to be copied into this image (the destination)
+ * \param[in] bbox  subregion of this image to set; if empty (the default) then all pixels are set
+ * \param[in] origin  origin of bbox: if PARENT then the lower left pixel of this image is at xy0
+ *                    if LOCAL then the lower left pixel of this image is at 0,0
+ *
+ * \throw lsst::pex::exceptions::LengthError if the dimensions of rhs and the specified subregion of
+ * this image do not match.
+ */
+template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
+void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedImage const &rhs,
+    geom::Box2I const &bbox, ImageOrigin origin) {
+    _image->assign(*rhs.getImage(), bbox, origin);
+    _mask->assign(*rhs.getMask(), bbox, origin);
+    _variance->assign(*rhs.getVariance(), bbox, origin);
 }
 
 /// Add a MaskedImage rhs to a MaskedImage

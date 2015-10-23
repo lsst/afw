@@ -116,7 +116,7 @@ int main() {
 
     {
         float const gain = 2;
-        *img.getVariance() <<= image::Image<image::VariancePixel>(*img.getImage(), true);
+        img.getVariance()->assign(image::Image<image::VariancePixel>(*img.getImage(), true));
         *img.getVariance() /= gain;
     }
 

@@ -73,7 +73,7 @@ int main() {
     {
         afwImage::Mask<afwImage::MaskPixel> nimg(simg.getDimensions());
         nimg = 1;
-        simg <<= nimg;
+        simg.assign(nimg);
     }
 
     for (int r = 0; r != img.getHeight(); ++r) {

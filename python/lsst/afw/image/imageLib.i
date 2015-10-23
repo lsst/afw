@@ -214,10 +214,11 @@ def __setitem__(self, imageSlice, rhs):
     """
     __setitem__(self, imageSlice, value)
     """
-    lhs = self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice), LOCAL)
+    bbox = _getBBoxFromSliceTuple(self, imageSlice)
     try:
-        lhs <<= rhs
-    except TypeError:
+        self.assign(rhs, bbox, LOCAL)
+    except NotImplementedError:
+        lhs = self.Factory(self, bbox, LOCAL)
         lhs.set(rhs)
 
 def __float__(self):

@@ -71,7 +71,7 @@ Set the %image to a ramp
 That didn't gain us much, did it?  The code's a little messier than using
 \c x_iterator.   But now we can add code to calculate the smoothed
 %image.  First make an output image, and copy the input pixels:
-\until <<=
+\until out.assign
 (we didn't need to copy all of them, just the ones around the edge
 that we won't smooth, but this is an easy way to do it).
 
@@ -147,7 +147,7 @@ Set the %image (but not the mask or variance) to a ramp
 That didn't gain us much, did it?  The code's a little messier than using
 \c x_iterator.   But now we can add code to calculate the smoothed
 %image.  First make an output image, and copy the input pixels:
-\until <<=
+\until out2.assign
 (we didn't need to copy all of them, just the ones around the edge
 that we won't smooth, but this is an easy way to do it).
 

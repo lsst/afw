@@ -142,9 +142,9 @@ void mathDetail::convolveRegionWithInterpolation(
     
     CONST_PTR(afwMath::Kernel) kernelPtr = region.getKernel();
     geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
-    workingImages.leftImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_LEFT);
-    workingImages.rightImage <<= *region.getImage(KernelImagesForRegion::BOTTOM_RIGHT);
-    workingImages.kernelImage <<= workingImages.leftImage;
+    workingImages.leftImage.assign(*region.getImage(KernelImagesForRegion::BOTTOM_LEFT));
+    workingImages.rightImage.assign(*region.getImage(KernelImagesForRegion::BOTTOM_RIGHT));
+    workingImages.kernelImage.assign(workingImages.leftImage);
 
     afwGeom::Box2I const goodBBox = region.getBBox();
     afwGeom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
@@ -189,7 +189,7 @@ void mathDetail::convolveRegionWithInterpolation(
         }
         workingImages.leftImage += workingImages.leftDeltaImage;
         workingImages.rightImage += workingImages.rightDeltaImage;
-        workingImages.kernelImage <<= workingImages.leftImage;
+        workingImages.kernelImage.assign(workingImages.leftImage);
         inLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
         outLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
     }

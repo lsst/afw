@@ -71,8 +71,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
         typename ImageT::Ptr buffered(new ImageT(dims.getX() + 2 * buffer, dims.getY() + 2 * buffer));
         buffImage = buffered;
         afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), dims);
-        typename ImageT::Ptr buffSmall(new ImageT(*buffImage, box, afwImage::LOCAL, false));
-        *buffSmall <<= inImage;
+        buffImage->assign(inImage, box);
     } else {
         buffImage = boost::make_shared<ImageT>(inImage);
     }

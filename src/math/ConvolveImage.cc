@@ -111,9 +111,9 @@ namespace {
         ) {
             OutImageT outView(outImage, *bboxIter, afwImage::LOCAL);
             if (doCopyEdge) {
-                // note: <<= only works with data of the same type
+                // note: set only works with data of the same type
                 // so convert the input image to output format
-                outView <<= OutImageT(InImageT(inImage, *bboxIter, afwImage::LOCAL), true);
+                outView.assign(OutImageT(InImageT(inImage, *bboxIter, afwImage::LOCAL), true));
             } else {
                 outView = edgePixel;
             }
@@ -185,9 +185,9 @@ namespace {
             bboxIter != bboxList.end(); ++bboxIter) {
             OutImageT outView(outImage, *bboxIter, afwImage::LOCAL);
             if (doCopyEdge) {
-                // note: <<= only works with data of the same type
+                // note: set only works with data of the same type
                 // so convert the input image to output format
-                outView <<= OutImageT(InImageT(inImage, *bboxIter, afwImage::LOCAL), true);
+                outView.assign(OutImageT(InImageT(inImage, *bboxIter, afwImage::LOCAL), true));
                 *(outView.getMask()) |= edgeMask;
             } else {
                 outView = edgePixel;

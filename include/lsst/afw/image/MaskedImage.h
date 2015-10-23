@@ -744,6 +744,8 @@ public:
 
     void operator<<=(MaskedImage const& rhs);
 
+    void assign(MaskedImage const &rsh, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
+
     void operator+=(ImagePixelT const rhs);
     void operator+=(MaskedImage const& rhs);
     void operator+=(lsst::afw::image::Image<ImagePixelT> const& rhs) {

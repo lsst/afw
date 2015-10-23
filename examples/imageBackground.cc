@@ -96,7 +96,7 @@ int main() {
     
     // create a background-subtracted image
     ImageF sub(img.getDimensions());
-    sub <<= img;
+    sub.assign(img);
     sub -= *bg;
     
     // output what we've made
