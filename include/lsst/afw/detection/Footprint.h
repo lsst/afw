@@ -152,6 +152,15 @@ public:
 
     bool contains(geom::Point2I const& pix) const;
 
+    /**
+     * Find the mask bit in the Mask that fall in the Footprint
+     *
+     * \returns Return the bitwise OR of all the mask bits of all the mask pixels that fall in the Footprint
+     */
+    template<typename MaskT>
+    MaskT footprintOverlapsWithMask(typename image::Mask<MaskT> const& mask ///< Mask to inspect
+                                   ) const;
+
     void normalize();
     bool isNormalized() const {return _normalized;}
 
