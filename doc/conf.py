@@ -20,6 +20,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
+    'breathe',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -115,6 +116,11 @@ for package_name, package in list_packages().items():
 
 # we should always set the project; this is done for config completeness
 breathe_default_project = 'afw'
+
+breathe_default_members = ['members',
+                           'protected-members',
+                           'private-members',
+                           'undoc-members']
 
 # -- Options for HTML output ------------------------------------------------
 
