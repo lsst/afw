@@ -170,13 +170,13 @@ public:
     geom::Extent2I getDimensions() const { return _maskedImage.getDimensions(); }
 
     /**
-     * Return the Exposure's row-origin
+     * Return the Exposure's column-origin
      *
      * \sa getXY0()
      */
     int getX0() const { return _maskedImage.getX0(); }
     /**
-     * Return the Exposure's column-origin
+     * Return the Exposure's row-origin
      *
      * \sa getXY0()
      */

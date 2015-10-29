@@ -906,7 +906,7 @@ public:
     geom::Extent2I getDimensions() const {return _image->getDimensions();}
     geom::Box2I getBBox(ImageOrigin const origin=PARENT) const {return _image->getBBox(origin);}
     /**
-     * Return the %image's row-origin
+     * Return the %image's column-origin
      *
      * This will usually be 0 except for images created using the
      * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
@@ -914,7 +914,7 @@ public:
      */
     int getX0() const { return _image->getX0(); }
     /**
-     * Return the %image's column-origin
+     * Return the %image's row-origin
      *
      * This will usually be 0 except for images created using the
      * <tt>MaskedImage(fileName, hdu, BBox, mode)</tt> ctor or <tt>MaskedImage(ImageBase, BBox)</tt> cctor
