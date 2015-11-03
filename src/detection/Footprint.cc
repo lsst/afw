@@ -294,8 +294,8 @@ bool Footprint::contains(
  * Return the bitwise OR of all the mask bits of all the mask pixels that fall in the Footprint
  */
 template<typename MaskT>
-MaskT Footprint::footprintOverlapsWithMask(typename image::Mask<MaskT> const& mask ///< Mask to inspect
-                                          ) const
+MaskT Footprint::overlapsWithMask(image::Mask<MaskT> const& mask ///< Mask to inspect
+                                 ) const
 {
     int const width = static_cast<int>(mask.getWidth());
     int const height = static_cast<int>(mask.getHeight());
@@ -2615,7 +2615,7 @@ void Footprint::insertIntoImage(                                        \
     geom::Box2I const& region=geom::Box2I()                             \
     ) const;                                                            \
 template                                                                \
-PIXEL Footprint::footprintOverlapsWithMask(image::Mask<PIXEL> const& mask) const
+PIXEL Footprint::overlapsWithMask(image::Mask<PIXEL> const& mask) const
 
 INSTANTIATE_MASK(boost::uint16_t);
 INSTANTIATE_MASK(int);
