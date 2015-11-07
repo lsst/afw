@@ -435,7 +435,7 @@ class KernelTestCase(unittest.TestCase):
                 try:
                     afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(pointX, pointY))
                     self.fail("Should have failed with point not on kernel")
-                except pexExcept.Exception, e:
+                except pexExcept.Exception:
                     pass
                     
 
@@ -625,7 +625,6 @@ class KernelTestCase(unittest.TestCase):
         Note: this ignores the default constructors, which produce kernels with height = width = 0.
         The default constructors are only intended to support persistence, not to produce useful kernels.
         """
-        emptyImage = afwImage.ImageF(afwGeom.Extent2I(0, 0))
         gaussFunc2D = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         gaussFunc1D = afwMath.GaussianFunction1D(1.0)
         zeroPoint = afwGeom.Point2I(0, 0)
@@ -716,7 +715,7 @@ class KernelTestCase(unittest.TestCase):
                 spatialParams = (spatialParamsForOneKernel,)*nkp
                 if ((nkp == nKernelParams) and ((nsp == nSpatialParams) or (nkp == 0))):
                     kernel.setSpatialParameters(spatialParams)
-                    self.assert_(numpy.alltrue(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
+                    self.assert_(numpy.all(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
                 else:
                     self.assertRaises(pexExcept.InvalidParameterError,
                         kernel.setSpatialParameters, spatialParams)
@@ -747,7 +746,7 @@ class KernelTestCase(unittest.TestCase):
             kernel.computeImage(kImage, True)
             if doRaise:
                 self.fail(kernelDescr + ".computeImage should have raised an exception")
-        except pexExcept.Exception, e:
+        except pexExcept.Exception:
             if not doRaise:
                 self.fail(kernelDescr + ".computeImage should not have raised an exception")
 
