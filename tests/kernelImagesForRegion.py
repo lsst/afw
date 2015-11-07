@@ -33,7 +33,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
-import lsst.afw.image.testUtils as imTestUtils
 
 VERBOSITY = 0 # increase to see trace
 
@@ -50,7 +49,7 @@ LocNameDict = {
 
 NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.iteritems())
 
-class KernelImagesForRegion(unittest.TestCase):
+class KernelImagesForRegion(utilsTests.TestCase):
     def setUp(self):
         boxCorner = afwGeom.Point2I(11, 50)
         boxExtent = afwGeom.Extent2I(100, 99)
@@ -218,13 +217,10 @@ class KernelImagesForRegion(unittest.TestCase):
                 xPos = afwImage.indexToPosition(pixelIndex[0] + self.xy0[0])
                 yPos = afwImage.indexToPosition(pixelIndex[1] + self.xy0[1])
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
-                desImArr = desImage.getArray().transpose().copy()
                 
                 actImage = region.getImage(location)
-                actImArr = actImage.getArray().transpose().copy()
-                errStr = imTestUtils.imagesDiffer(actImArr, desImArr)
-                if errStr:
-                    self.fail("exact image(%s) incorrect:\n%s" % (LocNameDict[location], errStr))
+                msg = "exact image(%s) incorrect" % (LocNameDict[location],)
+                self.assertImagesNearlyEqual(actImage, desImage, msg=msg)
     
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

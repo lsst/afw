@@ -30,7 +30,6 @@ import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
-import lsst.afw.image.testUtils as imTestUtils
 
 VERBOSITY = 0 # increase to see trace
 
@@ -38,7 +37,7 @@ pexLog.Debug("lsst.afw", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class ScaledPlus(unittest.TestCase):
+class ScaledPlus(utilsTests.TestCase):
     def setUp(self):
         self.random = afwMath.Random()
         self.imWidth = 200
@@ -64,34 +63,25 @@ class ScaledPlus(unittest.TestCase):
         - coeff0: coefficient of image 0
         - coeff1: coefficient of image 1
         """
-        im0ArrSet = self.maskedImage0.getArrays()
-        im1ArrSet = self.maskedImage1.getArrays()
-        
         desMaskedImage = afwImage.MaskedImageF(self.maskedImage0.getDimensions())
         desMaskedImage[:] = self.maskedImage0
         desMaskedImage *= coeff0
         desMaskedImage.scaledPlus(coeff1, self.maskedImage1)
-        desImArrSet = desMaskedImage.getArrays()
         
         actMaskedImage = afwImage.MaskedImageF(afwGeom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actMaskedImage.getImage(), self.random)
         afwMath.randomUniformImage(actMaskedImage.getVariance(), self.random)
 
         afwMath.scaledPlus(actMaskedImage, coeff0, self.maskedImage0, coeff1, self.maskedImage1)
-        actImArrSet = actMaskedImage.getArrays()
         
         actImage = afwImage.ImageF(afwGeom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actImage, self.random)
         afwMath.scaledPlus(actImage, coeff0, self.maskedImage0.getImage(), coeff1, self.maskedImage1.getImage())
-        actImArr = actImage.getArray()
         
-        errStr = imTestUtils.imagesDiffer(actImArr, desImArrSet[0])
-        if errStr:
-            self.fail("scaledPlus failed in images; coeff0=%s, coeff1=%s:\n%s" % (coeff0, coeff1, errStr,))
-        errStr = imTestUtils.maskedImagesDiffer(actImArrSet, desImArrSet)
-        if errStr:
-            self.fail("scaledPlus failed on masked images; coeff0=%s, coeff1=%s:\n%s" %
-                (coeff0, coeff1, errStr,))
+        msg = "scaledPlus failed for images; coeff0=%s, coeff1=%s" % (coeff0, coeff1)
+        self.assertImagesNearlyEqual(actImage, desMaskedImage.getImage(), msg=msg)
+        msg = "scaledPlus failed for masked images; coeff0=%s, coeff1=%s" % (coeff0, coeff1)
+        self.assertMaskedImagesNearlyEqual(actMaskedImage, desMaskedImage, msg=msg)
 
     def testScaledPlus(self):
         for coeff0 in (0.0, -0.1e-5, 0.1e-5, 1.0e3):

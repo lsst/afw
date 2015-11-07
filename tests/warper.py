@@ -31,7 +31,6 @@ import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
-import lsst.afw.image.testUtils as imageTestUtils
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
@@ -55,7 +54,7 @@ else:
     originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
-class WarpExposureTestCase(unittest.TestCase):
+class WarpExposureTestCase(utilsTests.TestCase):
     """Test case for Warp
     """
     def testMatchSwarpLanczos2Exposure(self):
@@ -196,16 +195,15 @@ class WarpExposureTestCase(unittest.TestCase):
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
 
         afwWarpedMask = afwWarpedMaskedImage.getMask()
+        # WARNING: probably should use NO_DATA instead of EDGE
         edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
         if edgeBitMask == 0:
             self.fail("warped mask has no EDGE bit")
-        afwWarpedImagArr = afwWarpedMaskedImage.getImage().getArray()
-        afwWarpedMaskArr = afwWarpedMaskedImage.getMask().getArray()
 
-        errStr = imageTestUtils.imagesDiffer(afwWarpedImagArr, swarpedImage.getArray(),
-            skipMaskArr=afwWarpedMaskArr, rtol=rtol, atol=atol)
-        if errStr:
-            self.fail("afw and swarp %s-warped %s (ignoring bad pixels)" % (kernelName, errStr))
+        # WARNING: should probably skip only NO_DATA pixels instead of all masked pixels
+        msg = "afw and swarp %s-warped %s (ignoring bad pixels)"
+        self.assertImagesNearlyEqual(afwWarpedMaskedImage.getImage(), swarpedImage,
+            skipMask=afwWarpedMaskedImage.getMask(), rtol=rtol, atol=atol, msg=msg)
         
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
