@@ -91,15 +91,15 @@ class WarpExposureTestCase(utilsTests.TestCase):
         warpedExposure2 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=1)
         # a bit of excess border is allowed, but surely not as much as 10 (in fact it is approx. 5)
         warpedExposure3 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
-        # assert that warpedExposure and warpedExposure2 have the same number of non-edge pixels
+        # assert that warpedExposure and warpedExposure2 have the same number of non-no_data pixels
         # and that warpedExposure3 has fewer
-        mask = (1 << afwImage.MaskU.getMaskPlane("NO_DATA")) + (1 << afwImage.MaskU.getMaskPlane("EDGE"))
+        noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
         mask1Arr = warpedExposure1.getMaskedImage().getMask().getArray()
         mask2Arr = warpedExposure2.getMaskedImage().getMask().getArray()
         mask3Arr = warpedExposure3.getMaskedImage().getMask().getArray()
-        nGood1 = (mask1Arr & mask == 0).sum()
-        nGood2 = (mask2Arr & mask == 0).sum()
-        nGood3 = (mask3Arr & mask == 0).sum()
+        nGood1 = (mask1Arr & noDataBitMask == 0).sum()
+        nGood2 = (mask2Arr & noDataBitMask == 0).sum()
+        nGood3 = (mask3Arr & noDataBitMask == 0).sum()
         self.assertEqual(nGood1, nGood2)
         self.assertTrue(nGood3 < nGood1)
 
@@ -195,15 +195,12 @@ class WarpExposureTestCase(utilsTests.TestCase):
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
 
         afwWarpedMask = afwWarpedMaskedImage.getMask()
-        # WARNING: probably should use NO_DATA instead of EDGE
-        edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
-        if edgeBitMask == 0:
-            self.fail("warped mask has no EDGE bit")
+        noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
+        noDataMask = afwWarpedMask.getArray() & noDataBitMask
 
-        # WARNING: should probably skip only NO_DATA pixels instead of all masked pixels
         msg = "afw and swarp %s-warped %s (ignoring bad pixels)"
         self.assertImagesNearlyEqual(afwWarpedMaskedImage.getImage(), swarpedImage,
-            skipMask=afwWarpedMaskedImage.getMask(), rtol=rtol, atol=atol, msg=msg)
+            skipMask=noDataMask, rtol=rtol, atol=atol, msg=msg)
         
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
