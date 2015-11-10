@@ -42,7 +42,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
-import lsst.afw.image.testUtils as imTestUtils
 from kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 
 VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
@@ -153,7 +152,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
 
             retCol += 1
         retRow += 1
-    return (retImage.transpose(), retMask.transpose(), retVariance.transpose())
+    return [numpy.copy(numpy.transpose(arr), order="C") for arr in (retImage, retMask, retVariance)]
 
 def sameMaskPlaneDicts(maskedImageA, maskedImageB):
     """Return True if the mask plane dicts are the same, False otherwise.
@@ -172,7 +171,7 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
         return False
     return True
 
-class ConvolveTestCase(unittest.TestCase):
+class ConvolveTestCase(utilsTests.TestCase):
     def setUp(self):
         self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, afwImage.LOCAL, True)
         # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
@@ -223,16 +222,14 @@ class ConvolveTestCase(unittest.TestCase):
         xy0 = self.maskedImage.getXY0()
         
         refCnvImMaskVarArr = refConvolve(imMaskVar, xy0, refKernel, doNormalize, doCopyEdge)
+        refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
 
         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, convControl)
         self.assertEqual(self.cnvImage.getXY0(), self.xy0)
-        cnvImArr = self.cnvImage.getArray()
 
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, convControl)
-        cnvImMaskVarArr = self.cnvMaskedImage.getArrays()
 
         if display and False:
-            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
             ds9.mtv(displayUtils.Mosaic().makeMosaic([
                 self.maskedImage, refMaskedImage, self.cnvMaskedImage]), frame=0)
             if False:
@@ -240,26 +237,11 @@ class ConvolveTestCase(unittest.TestCase):
                     print "Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask().get(x, y),
                     self.cnvMaskedImage.getMask().get(x, y))
 
-        errStr = imTestUtils.imagesDiffer(cnvImArr, refCnvImMaskVarArr[0], rtol=rtol, atol=atol)
-        if errStr:
-            self.cnvImage.writeFits("act%s.fits" % (shortKernelDescr,))
-            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
-            refMaskedImage.getImage().writeFits("des%s.fits" % (shortKernelDescr,))
-            self.fail("convolve(Image, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" % \
-                (kernelDescr, doNormalize, doCopyEdge, maxInterpDist, errStr))
-
-        errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, refCnvImMaskVarArr,
-            doVariance = True, rtol=rtol, atol=atol)
-        if errStr:
-            self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
-            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
-            refMaskedImage.writeFits("des%s" % (shortKernelDescr,))
-            self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" % \
-                (kernelDescr, doNormalize, doCopyEdge, maxInterpDist, errStr))
+        self.assertImagesNearlyEqual(self.cnvImage, refMaskedImage.getImage(), atol=atol, rtol=rtol)
+        self.assertMaskedImagesNearlyEqual(self.cnvMaskedImage, refMaskedImage, atol=atol, rtol=rtol)
 
         if not sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage):
             self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
-            refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
             refMaskedImage.writeFits("des%s" % (shortKernelDescr,))
             self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" % \
                 (kernelDescr, doNormalize, doCopyEdge, maxInterpDist, "convolved mask dictionary does not match input"))
@@ -329,16 +311,16 @@ class ConvolveTestCase(unittest.TestCase):
         cnvMaskedImageGoodView[:] = cnvMaskedImageCopyViewOfGoodRegion
 
         # assert that these two are equal
-        cnvImMaskVarArr = cnvMaskedImage.getArrays()
-        desCnvImMaskVarArr = cnvMaskedImageCopy.getArrays()
-        errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, desCnvImMaskVarArr,
-            doVariance = True, rtol=0, atol=0)
-        shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
-        if errStr:
+        msg = "basicConvolve(MaskedImage, kernel=%s) wrote to edge pixels" % (kernelDescr,)
+        try:
+            self.assertMaskedImagesNearlyEqual(cnvMaskedImage, cnvMaskedImageCopy,
+                doVariance = True, rtol=0, atol=0, msg=msg)
+        except Exception:
+            # write out the images, then fail
+            shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
             cnvMaskedImage.writeFits("actBasicConvolve%s" % (shortKernelDescr,))
             cnvMaskedImageCopy.writeFits("desBasicConvolve%s" % (shortKernelDescr,))
-            self.fail("basicConvolve(MaskedImage, kernel=%s) wrote to edge pixels:\n%s" % \
-                (kernelDescr, errStr))
+            raise
 
     def testConvolutionControl(self):
         """Test the ConvolutionControl object
@@ -369,28 +351,15 @@ class ConvolveTestCase(unittest.TestCase):
         doCopyEdge = False
 
         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, doNormalize, doCopyEdge)
-        cnvImArr = self.cnvImage.getArray()
         
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, doNormalize, doCopyEdge)
         cnvImMaskVarArr = self.cnvMaskedImage.getArrays()
-
-        refCnvImMaskVarArr = self.maskedImage.getArrays()
         
-        skipMaskArr = numpy.isnan(cnvImMaskVarArr[0])
+        skipMaskArr = numpy.array(numpy.isnan(cnvImMaskVarArr[0]), dtype=numpy.uint16)
 
         kernelDescr = "Centered DeltaFunctionKernel (testing unity convolution)"
-        errStr = imTestUtils.imagesDiffer(cnvImArr, refCnvImMaskVarArr[0], skipMaskArr=skipMaskArr)
-        if errStr:
-            self.fail("convolve(Image, kernel=%s, doNormalize=%s, doCopyEdge=%s) failed:\n%s" % \
-                (kernelDescr, doNormalize, doCopyEdge, errStr))
-        errStr = imTestUtils.maskedImagesDiffer(cnvImMaskVarArr, refCnvImMaskVarArr, skipMaskArr=skipMaskArr)
-        if errStr:
-            self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, doCopyEdge=%s) failed:\n%s" % \
-                (kernelDescr, doNormalize, doCopyEdge, errStr))
-        self.assert_(sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage),
-            "convolve(MaskedImage, kernel=%s, doNormalize=%s, doCopyEdge=%s) failed:\n%s" % \
-            (kernelDescr, doNormalize, doCopyEdge, "convolved mask dictionary does not match input"))
-
+        self.assertImagesNearlyEqual(self.cnvImage, self.maskedImage.getImage(), skipMask=skipMaskArr, msg=kernelDescr)
+        self.assertMaskedImagesNearlyEqual(self.cnvMaskedImage, self.maskedImage, skipMask=skipMaskArr, msg=kernelDescr)
 
     def testFixedKernelConvolve(self):
         """Test convolve with a fixed kernel

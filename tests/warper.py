@@ -31,7 +31,6 @@ import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
-import lsst.afw.image.testUtils as imageTestUtils
 import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
@@ -55,7 +54,7 @@ else:
     originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
-class WarpExposureTestCase(unittest.TestCase):
+class WarpExposureTestCase(utilsTests.TestCase):
     """Test case for Warp
     """
     def testMatchSwarpLanczos2Exposure(self):
@@ -92,15 +91,15 @@ class WarpExposureTestCase(unittest.TestCase):
         warpedExposure2 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=1)
         # a bit of excess border is allowed, but surely not as much as 10 (in fact it is approx. 5)
         warpedExposure3 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
-        # assert that warpedExposure and warpedExposure2 have the same number of non-edge pixels
+        # assert that warpedExposure and warpedExposure2 have the same number of non-no_data pixels
         # and that warpedExposure3 has fewer
-        mask = (1 << afwImage.MaskU.getMaskPlane("NO_DATA")) + (1 << afwImage.MaskU.getMaskPlane("EDGE"))
+        noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
         mask1Arr = warpedExposure1.getMaskedImage().getMask().getArray()
         mask2Arr = warpedExposure2.getMaskedImage().getMask().getArray()
         mask3Arr = warpedExposure3.getMaskedImage().getMask().getArray()
-        nGood1 = (mask1Arr & mask == 0).sum()
-        nGood2 = (mask2Arr & mask == 0).sum()
-        nGood3 = (mask3Arr & mask == 0).sum()
+        nGood1 = (mask1Arr & noDataBitMask == 0).sum()
+        nGood2 = (mask2Arr & noDataBitMask == 0).sum()
+        nGood3 = (mask3Arr & noDataBitMask == 0).sum()
         self.assertEqual(nGood1, nGood2)
         self.assertTrue(nGood3 < nGood1)
 
@@ -196,16 +195,12 @@ class WarpExposureTestCase(unittest.TestCase):
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
 
         afwWarpedMask = afwWarpedMaskedImage.getMask()
-        edgeBitMask = afwWarpedMask.getPlaneBitMask("EDGE")
-        if edgeBitMask == 0:
-            self.fail("warped mask has no EDGE bit")
-        afwWarpedImagArr = afwWarpedMaskedImage.getImage().getArray()
-        afwWarpedMaskArr = afwWarpedMaskedImage.getMask().getArray()
+        noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
+        noDataMask = afwWarpedMask.getArray() & noDataBitMask
 
-        errStr = imageTestUtils.imagesDiffer(afwWarpedImagArr, swarpedImage.getArray(),
-            skipMaskArr=afwWarpedMaskArr, rtol=rtol, atol=atol)
-        if errStr:
-            self.fail("afw and swarp %s-warped %s (ignoring bad pixels)" % (kernelName, errStr))
+        msg = "afw and swarp %s-warped %s (ignoring bad pixels)"
+        self.assertImagesNearlyEqual(afwWarpedMaskedImage.getImage(), swarpedImage,
+            skipMask=noDataMask, rtol=rtol, atol=atol, msg=msg)
         
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

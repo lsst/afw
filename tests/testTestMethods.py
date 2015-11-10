@@ -25,6 +25,8 @@ from __future__ import absolute_import, division, print_function
 import math
 import unittest
 
+import numpy as np
+
 import lsst.utils.tests as utilsTests
 import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
@@ -210,6 +212,221 @@ class TestTestUtils(utilsTests.TestCase):
         errStr2 = _compareWcsOverBBox(wcs0, wcs1, bbox,
             maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001, doShortCircuit=True)
         self.assertNotEqual(errStr1, errStr2)
+
+    def checkMaskedImage(self, mi):
+        """Run assertImage-like function tests on a masked image
+
+        Compare the masked image to itself, then alter copies and check that the altered copy
+        is or is not nearly equal the original, depending on the amount of change, rtol and atol
+        """
+        epsilon = 1e-5 # margin to avoid roundoff error
+
+        mi0 = mi.Factory(mi, True) # deep copy
+        mi1 = mi.Factory(mi, True)
+
+        # a masked image should be exactly equal to itself
+        self.assertMaskedImagesNearlyEqual(mi0, mi1, atol=0, rtol=0)
+        self.assertMaskedImagesNearlyEqual(mi1, mi0, atol=0, rtol=0)
+        self.assertMaskedImagesNearlyEqual(mi0.getArrays(), mi1, atol=0, rtol=0)
+        self.assertMaskedImagesNearlyEqual(mi0, mi1.getArrays(), atol=0, rtol=0)
+        self.assertMaskedImagesNearlyEqual(mi0.getArrays(), mi1.getArrays(), atol=0, rtol=0)
+        for getName in ("getImage", "getVariance"):
+            plane0 = getattr(mi0, getName)()
+            plane1 = getattr(mi1, getName)()
+            self.assertImagesNearlyEqual(plane0, plane1, atol=0, rtol=0)
+            self.assertImagesNearlyEqual(plane1, plane0, atol=0, rtol=0)
+            self.assertImagesNearlyEqual(plane0.getArray(), plane1, atol=0, rtol=0)
+            self.assertImagesNearlyEqual(plane0, plane1.getArray(), atol=0, rtol=0)
+            self.assertImagesNearlyEqual(plane0.getArray(), plane1.getArray(), atol=0, rtol=0)
+            self.assertMasksEqual(plane0, plane1)
+            self.assertMasksEqual(plane1, plane0)
+            self.assertMasksEqual(plane0.getArray(), plane1)
+            self.assertMasksEqual(plane0, plane1.getArray())
+            self.assertMasksEqual(plane0.getArray(), plane1.getArray())
+        self.assertMasksEqual(mi0.getMask(), mi1.getMask())
+        self.assertMasksEqual(mi1.getMask(), mi0.getMask())
+
+        # alter image and variance planes and check the results
+        for getName in ("getImage", "getVariance"):
+            isFloat = getattr(mi, getName)().getArray().dtype.kind == "f"
+            if isFloat:
+                for errVal in (np.nan, np.inf, -np.inf):
+                    mi0 = mi.Factory(mi, True)
+                    mi1 = mi.Factory(mi, True)
+                    plane0 = getattr(mi0, getName)()
+                    plane1 = getattr(mi1, getName)()
+                    plane1[2, 2] = errVal
+                    with self.assertRaises(Exception):
+                        self.assertImagesNearlyEqual(plane0, plane1)
+                    with self.assertRaises(Exception):
+                        self.assertImagesNearlyEqual(plane0.getArray(), plane1)
+                    with self.assertRaises(Exception):
+                        self.assertImagesNearlyEqual(plane1, plane0)
+                    with self.assertRaises(Exception):
+                        self.assertMaskedImagesNearlyEqual(mi0, mi1)
+                    with self.assertRaises(Exception):
+                        self.assertMaskedImagesNearlyEqual(mi0, mi1.getArrays())
+                    with self.assertRaises(Exception):
+                        self.assertMaskedImagesNearlyEqual(mi1, mi0)
+
+                    skipMask = mi.getMask().Factory(mi.getMask(), True)
+                    skipMaskArr = skipMask.getArray()
+                    skipMaskArr[:] = 0
+                    skipMaskArr[2, 2] = 1
+                    self.assertImagesNearlyEqual(plane0, plane1, skipMask=skipMaskArr, atol=0, rtol=0)
+                    self.assertImagesNearlyEqual(plane0, plane1, skipMask=skipMask, atol=0, rtol=0)
+                    self.assertMaskedImagesNearlyEqual(mi0, mi1, skipMask=skipMaskArr, atol=0, rtol=0)
+                    self.assertMaskedImagesNearlyEqual(mi0, mi1, skipMask=skipMask, atol=0, rtol=0)
+
+                for dval in (0.001, 0.03):
+                    mi0 = mi.Factory(mi, True)
+                    mi1 = mi.Factory(mi, True)
+                    plane0 = getattr(mi0, getName)()
+                    plane1 = getattr(mi1, getName)()
+                    plane1[2, 2] += dval
+                    val1 = plane1.get(2, 2)
+                    self.assertImagesNearlyEqual(plane0, plane1, rtol=0, atol=dval + epsilon)
+                    self.assertImagesNearlyEqual(plane0, plane1, rtol=dval/val1 + epsilon, atol=0)
+                    self.assertMaskedImagesNearlyEqual(mi0, mi1, rtol=0, atol=dval + epsilon)
+                    self.assertMaskedImagesNearlyEqual(mi1, mi0, rtol=0, atol=dval + epsilon)
+                    with self.assertRaises(Exception):
+                        self.assertImagesNearlyEqual(plane0, plane1, rtol=0, atol=dval - epsilon)
+                    with self.assertRaises(Exception):
+                        self.assertImagesNearlyEqual(plane0, plane1, rtol=dval/val1 - epsilon, atol=0)
+                    with self.assertRaises(Exception):
+                        self.assertMaskedImagesNearlyEqual(mi0, mi1, rtol=0, atol=dval - epsilon)
+                    with self.assertRaises(Exception):
+                        self.assertMaskedImagesNearlyEqual(mi0, mi1, rtol=dval/val1 - epsilon, atol=0)
+            else:
+                # plane is an integer of some type
+                for dval in (1, 3):
+                    mi0 = mi.Factory(mi, True)
+                    mi1 = mi.Factory(mi, True)
+                    plane0 = getattr(mi0, getName)()
+                    plane1 = getattr(mi1, getName)()
+                    plane1[2, 2] += dval
+                    val1 = plane1.get(2, 2)
+                    # int value and test is <= so epsilon not required for atol
+                    # but rtol is a fraction, so epsilon is still safest for the rtol test
+                    self.assertImagesNearlyEqual(plane0, plane1, rtol=0, atol=dval)
+                    self.assertImagesNearlyEqual(plane0, plane1, rtol=dval/val1 + epsilon, atol=0)
+                    with self.assertRaises(Exception):
+                        self.assertImagesNearlyEqual(plane0, plane1, rtol=0, atol=dval - epsilon)
+                    with self.assertRaises(Exception):
+                        self.assertImagesNearlyEqual(plane0, plane1, rtol=dval/val1 - epsilon, atol=0)
+
+        # alter mask and check the results
+        mi0 = mi.Factory(mi, True)
+        mi1 = mi.Factory(mi, True)
+        mask0 = mi0.getMask()
+        mask1 = mi1.getMask()
+        for dval in (1, 3):
+            mask1.getArray()[2, 2] += 1 # getArray avoids "unsupported operand type" failure
+            with self.assertRaises(Exception):
+                self.assertMasksEqual(mask0, mask1)
+            with self.assertRaises(Exception):
+                self.assertMasksEqual(mask1, mask0)
+            with self.assertRaises(Exception):
+                self.assertMaskedImagesEqual(mi0, mi1)
+            with self.assertRaises(Exception):
+                self.assertMaskedImagesEqual(mi1, mi0)
+
+        skipMask = mi.getMask().Factory(mi.getMask(), True)
+        skipMaskArr = skipMask.getArray()
+        skipMaskArr[:] = 0
+        skipMaskArr[2, 2] = 1
+        self.assertMasksEqual(mask0, mask1, skipMask=skipMaskArr)
+        self.assertMasksEqual(mask0, mask1, skipMask=skipMask)
+        self.assertMaskedImagesNearlyEqual(mi0, mi1, skipMask=skipMaskArr, atol=0, rtol=0)
+        self.assertMaskedImagesNearlyEqual(mi0, mi1, skipMask=skipMask, atol=0, rtol=0)
+
+    def testAssertImagesNearlyEqual(self):
+        """Test assertImagesNearlyEqual, assertMasksNearlyEqual and assertMaskedImagesNearlyEqual
+        """
+        width = 10
+        height = 9
+
+        for miType in (afwImage.MaskedImageF, afwImage.MaskedImageD, afwImage.MaskedImageI,
+            afwImage.MaskedImageU):
+            mi = makeRampMaskedImageWithNans(width, height, miType)
+            self.checkMaskedImage(mi)
+
+        for invalidType in (np.zeros([width+1, height]), str, self.assertRaises):
+            mi = makeRampMaskedImageWithNans(width, height, miType)
+            with self.assertRaises(TypeError):
+                self.assertMasksEqual(mi.getMask(), invalidType)
+            with self.assertRaises(TypeError):
+                self.assertMasksEqual(invalidType, mi.getMask())
+            with self.assertRaises(TypeError):
+                self.assertMasksEqual(mi.getMask(), mi.getMask(), skipMask=invalidType)
+
+            with self.assertRaises(TypeError):
+                self.assertImagesNearlyEqual(mi.getImage(), invalidType)
+            with self.assertRaises(TypeError):
+                self.assertImagesNearlyEqual(invalidType, mi.getImage())
+            with self.assertRaises(TypeError):
+                self.assertImagesNearlyEqual(mi.getImage(), mi.getImage(), skipMask=invalidType)
+
+            with self.assertRaises(TypeError):
+                self.assertMaskedImagesNearlyEqual(mi, invalidType)
+            with self.assertRaises(TypeError):
+                self.assertMaskedImagesNearlyEqual(invalidType, mi)
+            with self.assertRaises(TypeError):
+                self.assertMaskedImagesNearlyEqual(mi, mi, skipMask=invalidType)
+
+            with self.assertRaises(TypeError):
+                self.assertMaskedImagesNearlyEqual(mi.getImage(), mi.getImage())
+
+
+def makeRampMaskedImageWithNans(width, height, imgClass=afwImage.MaskedImageF):
+    """Make a masked image that is a ramp with additional non-finite values
+
+    Make a masked image with the following additional non-finite values
+    in the variance plane and (if image is of some floating type) image plane:
+    - nan at [0, 0]
+    - inf at [1, 0]
+    - -inf at [0, 1]
+    """
+    mi = makeRampMaskedImage(width, height, imgClass)
+
+    var = mi.getVariance()
+    var[0, 0] = np.nan
+    var[1, 0] = np.inf
+    var[0, 1] = -np.inf
+
+    im = mi.getImage()
+    try:
+        np.array([np.nan], dtype=im.getArray().dtype)
+    except Exception:
+        # image plane does not support nan, etc. (presumably an int of some variety)
+        pass
+    else:
+        # image plane does support nan, etc.
+        im[0, 0] = np.nan
+        im[1, 0] = np.inf
+        im[0, 1] = -np.inf
+    return mi
+
+def makeRampMaskedImage(width, height, imgClass=afwImage.MaskedImageF):
+    """Make a ramp image of the specified size and image class
+
+    Image values start from 0 at the lower left corner and increase by 1 along rows
+    Variance values equal image values + 100
+    Mask values equal image values modulo 8 bits (leaving plenty of unused values)
+    """
+    mi = imgClass(width, height)
+    image = mi.getImage()
+    mask = mi.getMask()
+    variance = mi.getVariance()
+    val = 0
+    for yInd in range(height):
+        for xInd in range(width):
+            image.set(xInd, yInd, val)
+            variance.set(xInd, yInd, val + 100)
+            mask.set(xInd, yInd, val % 0x100)
+            val += 1
+    return mi
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
