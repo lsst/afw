@@ -170,3 +170,4 @@ tmp-True.fits
 in.fits
 out.fits
 matches.fits
+bin/showCamera.py
