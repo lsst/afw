@@ -1,14 +1,9 @@
 # -*- python -*-
-from lsst.sconsUtils import scripts, targets, env
+from lsst.sconsUtils import scripts, targets, env, eupsForScons
 
 objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glob("#src/*/*/*.cc") + Glob("#src/*/*/*/*.cc"))
 
-import lsst.utils
-try:
-    lsst.utils.getPackageDir('cuda_toolkit')
-except Exception:
-    pass
-else:
+if eupsForScons.productDir('cuda_toolkit') is not None:
     objs.append("#src/math/detail/convGPU.os")
     objs.append("#src/math/detail/cudaLanczos.os")
 
