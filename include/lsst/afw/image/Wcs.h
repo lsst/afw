@@ -217,7 +217,7 @@ public:
      */
     geom::Point2D skyToIntermediateWorldCoord(coord::Coord const & coord) const;
 
-    virtual bool hasDistortion() const {    return false;};
+    virtual bool hasDistortion() const {    return _hasDistortion;};
 
     afw::coord::CoordSystem getCoordSystem() const { return _coordSystem; };
 
@@ -415,6 +415,8 @@ protected:
     int _nReject;
     coord::CoordSystem _coordSystem;
     bool _skyAxesSwapped; ///< if true then the sky axes are swapped
+    bool _hasDistortion;
+
 };
 
 namespace detail {

@@ -89,7 +89,8 @@ const int fitsToLsstPixels = -1;
 lsst::afw::image::Wcs::Wcs() :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN),  // set by _initWcs
+    _hasDistortion(false)
 {
     _setWcslibParams();
     _initWcs();    
@@ -106,7 +107,8 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN),  // set by _initWcs
+    _hasDistortion(false)
 {
     _setWcslibParams();
 
@@ -143,6 +145,13 @@ void Wcs::_initWcs()
                               (boost::format("Failed to setup wcs structure with wcsset. Status %d: %s") %
                                status % wcs_errmsg[status] ).str());
         }
+        // npv is the number of PV cards read in the header. In the case of
+        // TPV it is not set (even though PV cards are present in the header),
+        // instead they are put in lin->disseq.
+        _hasDistortion = _wcsInfo->npv > 0;
+        _hasDistortion |= _wcsInfo->lin.dispre != NULL;
+        _hasDistortion |= _wcsInfo->lin.disseq != NULL;
+
     }
 }
 
