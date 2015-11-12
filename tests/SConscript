@@ -1,22 +1,15 @@
 # -*- python -*-
 import os
 
-import lsst.daf.persistence
-import lsst.utils
-from lsst.sconsUtils import scripts, env, targets
+from lsst.sconsUtils import scripts, env, targets, eupsForScons
 
-try:
-    afwdataDir = lsst.utils.getPackageDir("afwdata")
-except Exception:
+afwdataDir = eupsForScons.productDir("afwdata")
+if afwdataDir is None:
     print "Warning: afwdata is not set up; not running the tests!"
 else:
     # copy AFWDATA_DIR to the test's environment
     env["ENV"]["AFWDATA_DIR"] = afwdataDir
-    
-    if not lsst.daf.persistence.DbAuth.available("lsst10.ncsa.uiuc.edu", "3306"):
-        print "WARNING: No database authenticator seen"
-        print "Database tests may be skipped or may fail"
-    
+
     # set up arguments for C++ tests
     inFile = os.path.join(afwdataDir, "data", "871034p_1_MI.fits")
     inFileRamFitsIO1 = os.path.join(afwdataDir, "data", "fpC-002570-r6-0199_sub.fits")

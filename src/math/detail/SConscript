@@ -1,12 +1,7 @@
 # -*- python -*-
-from lsst.sconsUtils import scripts, targets, env
+from lsst.sconsUtils import scripts, targets, env, eupsForScons
 
-import lsst.utils
-try:
-    lsst.utils.getPackageDir('cuda_toolkit')
-except Exception:
-    pass
-else:
+if eupsForScons.productDir('cuda_toolkit') is not None:
     envCudaCommon = env.Clone()
     envCudaCommon.Append(NVCCFLAGS = ' -gencode=arch=compute_13,code=\\"sm_13,compute_13\\" ')
     envCudaCommon.Append(NVCCFLAGS = ' -gencode=arch=compute_20,code=\\"sm_20,compute_20\\" ')
