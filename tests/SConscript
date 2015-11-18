@@ -1,9 +1,9 @@
 # -*- python -*-
 import os
 
-from lsst.sconsUtils import scripts, env, targets, eupsForScons
+from lsst.sconsUtils import scripts, env, targets
 
-afwdataDir = eupsForScons.productDir("afwdata")
+afwdataDir = env.ProductDir("afwdata")
 if afwdataDir is None:
     print "Warning: afwdata is not set up; not running the tests!"
 else:

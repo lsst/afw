@@ -1,9 +1,9 @@
 # -*- python -*-
-from lsst.sconsUtils import scripts, targets, env, eupsForScons
+from lsst.sconsUtils import scripts, targets, env
 
 objs = env.SourcesForSharedLibrary(Glob("#src/*.cc") + Glob("#src/*/*.cc") + Glob("#src/*/*/*.cc") + Glob("#src/*/*/*/*.cc"))
 
-if eupsForScons.productDir('cuda_toolkit') is not None:
+if env.ProductDir('cuda_toolkit') is not None:
     objs.append("#src/math/detail/convGPU.os")
     objs.append("#src/math/detail/cudaLanczos.os")
 
