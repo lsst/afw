@@ -1,5 +1,6 @@
 import os.path
 import lsst.afw.table as afwTable
+from lsst.utils import getPackageDir
 
 def copySchema(schema, target, targetPrefix=None, sourcePrefix=None):
     """Return a deep copy the provided schema
@@ -88,7 +89,7 @@ def matchesToCatalog(matches, matchMeta):
         r.set(distKey, m.distance)
 
     # obtaining reference catalog name
-    catalogName = os.path.basename(os.getenv("ASTROMETRY_NET_DATA_DIR").rstrip('/'))
+    catalogName = os.path.basename(getPackageDir("astrometry_net_data"))
     matchMeta.add('REFCAT', catalogName)
     mergedCatalog.getTable().setMetadata(matchMeta)
 
