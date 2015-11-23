@@ -78,13 +78,13 @@ def matchesToCatalog(matches, matchMeta):
     refSchema = matches[0].first.getSchema()
     srcSchema = matches[0].second.getSchema()
 
-    mergedSchema = copySchema(refSchema, afwTable.Schema(), targetPrefix="ref.")
-    mergedSchema = copySchema(srcSchema, mergedSchema, targetPrefix="src.")
+    mergedSchema = copySchema(refSchema, afwTable.Schema(), targetPrefix="ref_")
+    mergedSchema = copySchema(srcSchema, mergedSchema, targetPrefix="src_")
     distKey = mergedSchema.addField("distance", type=float, doc="Distance between ref and src")
 
     mergedCatalog = afwTable.BaseCatalog(mergedSchema)
-    copyCatalog([m.first for m in matches], mergedCatalog, sourceSchema=refSchema, targetPrefix="ref.")
-    copyCatalog([m.second for m in matches], mergedCatalog, sourceSchema=srcSchema, targetPrefix="src.")
+    copyCatalog([m.first for m in matches], mergedCatalog, sourceSchema=refSchema, targetPrefix="ref_")
+    copyCatalog([m.second for m in matches], mergedCatalog, sourceSchema=srcSchema, targetPrefix="src_")
     for m, r in zip(matches, mergedCatalog):
         r.set(distKey, m.distance)
 
@@ -100,13 +100,13 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None, prefix=""):
     if catalog is None:
         # There are none
         return []
-    refSchema = copySchema(catalog.schema, afwTable.SimpleTable.makeMinimalSchema(), sourcePrefix="ref.")
+    refSchema = copySchema(catalog.schema, afwTable.SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
     refCatalog = afwTable.SimpleCatalog(refSchema)
-    copyCatalog(catalog, refCatalog, sourcePrefix="ref.")
+    copyCatalog(catalog, refCatalog, sourcePrefix="ref_")
 
-    srcSchema = copySchema(catalog.schema, afwTable.SourceTable.makeMinimalSchema(), sourcePrefix="src.")
+    srcSchema = copySchema(catalog.schema, afwTable.SourceTable.makeMinimalSchema(), sourcePrefix="src_")
     srcCatalog = afwTable.SourceCatalog(srcSchema)
-    copyCatalog(catalog, srcCatalog, sourcePrefix="src.")
+    copyCatalog(catalog, srcCatalog, sourcePrefix="src_")
 
     if sourceSlotConfig is not None:
         sourceSlotConfig.setupTable(srcCatalog.table, prefix=prefix)
