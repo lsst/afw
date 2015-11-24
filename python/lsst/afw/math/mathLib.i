@@ -37,6 +37,7 @@ Python interface to lsst::afw::math classes
 #   include "lsst/pex/policy.h"
 #   include "lsst/afw/image.h"
 #   include "lsst/afw/geom.h"
+#   include "lsst/afw/geom/polygon.h"
 #   include "lsst/afw/math.h"
 #   include "lsst/afw/cameraGeom.h"
 
