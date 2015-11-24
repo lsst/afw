@@ -1,6 +1,6 @@
 /*
  * LSST Data Management System
- * Copyright 2014 LSST Corporation.
+ * Copyright 2008-2015 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the LSST License Statement and
  * the GNU General Public License along with this program.  If not,
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
 %include "std_pair.i"
@@ -28,6 +28,7 @@
 
 %template(PairPoint) std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D>;
 %template(VectorPairPoint) std::vector<std::pair<lsst::afw::geom::Point2D, lsst::afw::geom::Point2D> >;
+%shared_ptr(lsst::afw::geom::polygon::Polygon)
 
 %{
 #include "lsst/afw/geom/polygon/Polygon.h"

@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2015 AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,7 +19,7 @@
  * 
  * You should have received a copy of the LSST License Statement and 
  * the GNU General Public License along with this program.  If not, 
- * see <http://www.lsstcorp.org/LegalNotices/>.
+ * see <https://www.lsstcorp.org/LegalNotices/>.
  */
  
 %define imageLib_DOCSTRING
@@ -88,6 +88,7 @@ namespace boost {
 %import "lsst/pex/policy/policyLib.i"
 %import "lsst/daf/persistence/persistenceLib.i"
 %import "lsst/afw/geom/geomLib.i"
+%import "lsst/afw/geom/polygon/polygonLib.i"
 %import "lsst/afw/coord/coordLib.i"
 %import "lsst/afw/fits/fitsLib.i" // just for FITS exceptions
 
