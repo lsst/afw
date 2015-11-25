@@ -48,13 +48,13 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     return destBBox
 
 _DefaultInterpLength = 10
-_DefaultCacheSize = 0
+_DefaultCacheSize = 1000000
 
 class WarperConfig(pexConfig.Config):
     warpingKernelName = pexConfig.ChoiceField(
         dtype = str,
         doc = "Warping kernel",
-        default = "lanczos4",
+        default = "lanczos3",
         allowed = {
             "bilinear": "bilinear interpolation",
             "lanczos3": "Lanczos kernel of order 3",
