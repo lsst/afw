@@ -463,27 +463,6 @@ namespace math {
     );
 
     /**
-     * \brief Warp (remap) one exposure to another.
-     *
-     * This variant uses an older, deprecated interface.
-     */
-    template<typename DestExposureT, typename SrcExposureT>
-        int warpExposure(
-        DestExposureT &destExposure,        ///< Remapped exposure. Wcs and xy0 are read, MaskedImage is set,
-                                            ///< and Calib and Filter are copied from srcExposure.
-                                            ///< All other attributes are left alone (including Detector and Psf)
-        SrcExposureT const &srcExposure,    ///< Source exposure
-        SeparableKernel &warpingKernel,     ///< Warping kernel; determines warping algorithm
-        int const interpLength=0,           ///< Distance over which WCS can be linearily interpolated
-        typename DestExposureT::MaskedImageT::SinglePixel padValue =
-            lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
-            typename lsst::afw::image::detail::image_traits<typename DestExposureT::MaskedImageT>::image_category()),
-            ///< use this value for undefined (edge) pixels
-        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
-            ///< Specifies whether to use CPU or GPU device
-    );
-
-    /**
      * \brief Warp an Image or MaskedImage to a new Wcs. See also convenience function
      * warpExposure() to warp an Exposure.
      *
@@ -540,26 +519,6 @@ namespace math {
     );
 
     /**
-     * \brief A variant of warpImage that uses an older, deprecated interface
-     */
-    template<typename DestImageT, typename SrcImageT>
-    int warpImage(
-        DestImageT &destImage,                  ///< remapped %image
-        lsst::afw::image::Wcs const &destWcs,   ///< WCS of remapped %image
-        SrcImageT const &srcImage,              ///< source %image
-        lsst::afw::image::Wcs const &srcWcs,    ///< WCS of source %image
-        SeparableKernel &warpingKernel,         ///< warping kernel; determines warping algorithm
-        int const interpLength=0,               ///< Distance over which WCS can be linearily interpolated
-            ///< 0 means no interpolation and uses an optimized branch of the code
-            ///< 1 also performs no interpolation but it runs the interpolation code branch
-        typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
-            ///< use this value for undefined (edge) pixels
-        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
-            ///< Specifies whether to use CPU or GPU device
-    );
-
-    /**
      * \brief A variant of warpImage that uses an affine transformation instead of a WCS
      * to describe the transformation.
      */
@@ -572,25 +531,6 @@ namespace math {
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
             typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
             ///< use this value for undefined (edge) pixels
-     );
-
-    /**
-     * \brief A variant of the affine transformation warpImage that uses an older, deprecated interface
-     */
-    template<typename DestImageT, typename SrcImageT>
-    int warpImage(
-        DestImageT &destImage,              ///< remapped %image
-        SrcImageT const &srcImage,          ///< source %image
-        SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
-        lsst::afw::geom::AffineTransform const &affineTransform, ///< affine transformation to apply
-        int const interpLength = 0,         ///< Distance over which WCS can be linearily interpolated
-            ///< 0 means no interpolation and uses an optimized branch of the code
-            ///< 1 also performs no interpolation but it runs the interpolation code branch
-        typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
-            ///< use this value for undefined (edge) pixels
-        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
-            ///< Specifies whether to use CPU or GPU device
      );
 
 
@@ -608,26 +548,6 @@ namespace math {
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
             typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
             ///< use this value for undefined (edge) pixels
-    );
-
-    /**
-     * @brief A variant of warpCenteredImage that supports the old, deprecated interface
-     */
-    template<typename DestImageT, typename SrcImageT>
-    int warpCenteredImage(
-        DestImageT &destImage,              ///< remapped %image
-        SrcImageT const &srcImage,          ///< source %image
-        SeparableKernel &warpingKernel,     ///< warping kernel; determines warping algorithm
-        lsst::afw::geom::LinearTransform const &linearTransform, ///< linear transformation to apply
-        lsst::afw::geom::Point2D const &centerPosition,   ///< pixel corresponding to location of linearTransform
-        int const interpLength = 0,         ///< Distance over which WCS can be linearily interpolated
-            ///< 0 means no interpolation and uses an optimized branch of the code
-            ///< 1 also performs no interpolation but it runs the interpolation code branch
-        typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
-            typename lsst::afw::image::detail::image_traits<DestImageT>::image_category()),
-            ///< use this value for undefined (edge) pixels
-        lsst::afw::gpu::DevicePreference devPref = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
-            ///< Specifies whether to use CPU or GPU device
     );
 
     namespace details {
