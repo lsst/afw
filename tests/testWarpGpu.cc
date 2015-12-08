@@ -299,47 +299,50 @@ bool TestWarpGpuKernels(
 )
 {
     bool isSuccess = true;
-    afwMath::LanczosWarpingKernel lanKernel(kernelOrder);
     const lsst::afw::gpu::DevicePreference useGpu = lsst::afw::gpu::USE_GPU;
     const lsst::afw::gpu::DevicePreference useCpu = lsst::afw::gpu::USE_CPU;
 
+    std::ostringstream os;
+    os << "lanczos" << kernelOrder;
+    auto lanczosKernelName = os.str();
+    std::ostringstream os1;
+    os1 << "lanczos" << kernelOrder - 1;
+    auto lanczosKernelMaskName = os.str();
+
     {
-        afwMath::WarpingControl wctrCPU(lanKernel,interpLen, useCpu);
-        afwMath::WarpingControl wctrGPU(lanKernel,interpLen, useGpu);
-        isSuccess = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr, "not set (same as main)");
+        afwMath::WarpingControl wctrCPU(lanczosKernelName, "", 0, interpLen, useCpu);
+        afwMath::WarpingControl wctrGPU(lanczosKernelName, "", 0, interpLen, useGpu);
+        isSuccess = TestWarpGpu(inImgDbl, inImgFlt, wcs1, wcs2, wctrCPU, wctrGPU, wcsStr,
+            "not set (same as main)");
     }
 
     if ( (kernelOrder==4 || kernelOrder==5) && (interpLen==1 || interpLen==7 || interpLen==11)) {
         bool isSuccess2=true, isSuccess3=true, isSuccess4=true, isSuccess5=true, isSuccess6=true;
-        char lanczosNameBuf[30];
-        sprintf(lanczosNameBuf, "lanczos%d", kernelOrder);
-        char lanczosNameM1Buf[30];
-        sprintf(lanczosNameM1Buf, "lanczos%d", kernelOrder-1);
         {
-            afwMath::WarpingControl wctrCPU(lanczosNameBuf,"",0,interpLen, useCpu);
-            afwMath::WarpingControl wctrGPU(lanczosNameBuf,"",0,interpLen, useGpu);
+            afwMath::WarpingControl wctrCPU(lanczosKernelName,"",0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosKernelName,"",0,interpLen, useGpu);
             isSuccess2 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr,
                                      "empty string (same as main)");
         }
         {
-            afwMath::WarpingControl wctrCPU(lanczosNameBuf,"bilinear",0,interpLen, useCpu);
-            afwMath::WarpingControl wctrGPU(lanczosNameBuf,"bilinear",0,interpLen, useGpu);
+            afwMath::WarpingControl wctrCPU(lanczosKernelName,"bilinear",0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosKernelName,"bilinear",0,interpLen, useGpu);
             isSuccess3 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr, "bilinear");
         }
         {
-            afwMath::WarpingControl wctrCPU(lanczosNameBuf,"nearest",0,interpLen, useCpu);
-            afwMath::WarpingControl wctrGPU(lanczosNameBuf,"nearest",0,interpLen, useGpu);
+            afwMath::WarpingControl wctrCPU(lanczosKernelName,"nearest",0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosKernelName,"nearest",0,interpLen, useGpu);
             isSuccess4 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr, "nearest");
         }
         {
-            afwMath::WarpingControl wctrCPU(lanczosNameBuf,lanczosNameBuf,0,interpLen, useCpu);
-            afwMath::WarpingControl wctrGPU(lanczosNameBuf,lanczosNameBuf,0,interpLen, useGpu);
+            afwMath::WarpingControl wctrCPU(lanczosKernelName,lanczosKernelName,0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosKernelName,lanczosKernelName,0,interpLen, useGpu);
             isSuccess5 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr,
                             "identical string (same as main)");
         }
         {
-            afwMath::WarpingControl wctrCPU(lanczosNameBuf,lanczosNameM1Buf,0,interpLen, useCpu);
-            afwMath::WarpingControl wctrGPU(lanczosNameBuf,lanczosNameM1Buf,0,interpLen, useGpu);
+            afwMath::WarpingControl wctrCPU(lanczosKernelName,lanczosKernelMaskName,0,interpLen, useCpu);
+            afwMath::WarpingControl wctrGPU(lanczosKernelName,lanczosKernelMaskName,0,interpLen, useGpu);
             isSuccess6 = TestWarpGpu(inImgDbl,inImgFlt,wcs1,wcs2, wctrCPU, wctrGPU, wcsStr,
                             "lanczos, one order less than main");
         }
@@ -415,13 +418,13 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     lsst::afw::gpu::DevicePreference devPrefAuto = lsst::afw::gpu::AUTO;
     lsst::afw::gpu::DevicePreference devPrefSafe = lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK;
 
-    afwMath::LanczosWarpingKernel lanKernel(2);
-    afwMath::BilinearWarpingKernel bilKernel;
+    std::string const lanczosKernelName{"lanczos2"};
+    std::string const bilinearKernelName{"bilinear"};
 
-    afwMath::WarpingControl wctrLanGPU( lanKernel, defaultInterpLen, devPrefUGpu);
-    afwMath::WarpingControl wctrLanCPU( lanKernel, defaultInterpLen, devPrefUCpu);
-    afwMath::WarpingControl wctrLanAUTO(lanKernel, defaultInterpLen, devPrefAuto);
-    afwMath::WarpingControl wctrLanSAFE(lanKernel, defaultInterpLen, devPrefSafe);
+    afwMath::WarpingControl wctrLanGPU( lanczosKernelName, "", 0, defaultInterpLen, devPrefUGpu);
+    afwMath::WarpingControl wctrLanCPU( lanczosKernelName, "", 0, defaultInterpLen, devPrefUCpu);
+    afwMath::WarpingControl wctrLanAUTO(lanczosKernelName, "", 0, defaultInterpLen, devPrefAuto);
+    afwMath::WarpingControl wctrLanSAFE(lanczosKernelName, "", 0, defaultInterpLen, devPrefSafe);
 
     afwImage::Wcs::Ptr wcs1=GetLinWcs(1  ,  -1, -0.5,  1  );
     afwImage::Wcs::Ptr wcs2=GetLinWcs(2.2, 1.3,  3.4, -1.1);
@@ -443,7 +446,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrBilGPU( bilKernel, defaultInterpLen, devPrefUGpu);
+        afwMath::WarpingControl wctrBilGPU(bilinearKernelName, "", 0, defaultInterpLen, devPrefUGpu);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBilGPU);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -457,7 +460,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrBilSAFE(bilKernel, defaultInterpLen, devPrefSafe);
+        afwMath::WarpingControl wctrBilSAFE(bilinearKernelName, "", 0, defaultInterpLen, devPrefSafe);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBilSAFE);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -471,7 +474,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLan0AUTO(lanKernel, 0, devPrefAuto);
+        afwMath::WarpingControl wctrLan0AUTO(lanczosKernelName, "", 0, 0, devPrefAuto);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0AUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -485,7 +488,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLan0CPU(lanKernel, 0, devPrefUCpu);
+        afwMath::WarpingControl wctrLan0CPU(lanczosKernelName, "", 0, 0, devPrefUCpu);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0CPU);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -512,7 +515,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLan0GPU( lanKernel, 0, devPrefUGpu);
+        afwMath::WarpingControl wctrLan0GPU(lanczosKernelName, "", 0, 0, devPrefUGpu);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0GPU);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -527,7 +530,7 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrBilAUTO(bilKernel, defaultInterpLen, devPrefSafe);
+        afwMath::WarpingControl wctrBilAUTO(bilinearKernelName, "", 0, defaultInterpLen, devPrefSafe);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBilAUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -563,8 +566,8 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     lsst::afw::gpu::DevicePreference devPrefAuto = lsst::afw::gpu::AUTO;
     lsst::afw::gpu::DevicePreference devPrefSafe = lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK;
 
-    afwMath::LanczosWarpingKernel lanKernel(2);
-    afwMath::BilinearWarpingKernel bilKernel;
+    std::string const lanczosKernelName{"lanczos2"};
+    std::string const bilinearKernelName{"bilinear"};
 
     afwImage::Wcs::Ptr wcs1=GetLinWcs(1  ,  -1, -0.5,  1  );
     afwImage::Wcs::Ptr wcs2=GetLinWcs(2.2, 1.3,  3.4, -1.1);
@@ -573,7 +576,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
     bool isThrown;
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLanAUTO( lanKernel, defaultInterpLen, devPrefAuto);
+        afwMath::WarpingControl wctrLanAUTO(lanczosKernelName, "", 0, defaultInterpLen, devPrefAuto);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLanAUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -587,7 +590,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLanGPU( lanKernel, defaultInterpLen, devPrefUGpu);
+        afwMath::WarpingControl wctrLanGPU(lanczosKernelName, "", 0, defaultInterpLen, devPrefUGpu);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLanGPU);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -601,7 +604,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLan0SAFE( lanKernel, 0, devPrefSafe);
+        afwMath::WarpingControl wctrLan0SAFE(lanczosKernelName, "", 0, 0, devPrefSafe);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0SAFE);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -615,7 +618,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLan0AUTO( lanKernel, 0, devPrefAuto);
+        afwMath::WarpingControl wctrLan0AUTO(lanczosKernelName, "", 0, 0, devPrefAuto);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0AUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -629,7 +632,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLan0CPU( lanKernel, 0, devPrefUCpu);
+        afwMath::WarpingControl wctrLan0CPU(lanczosKernelName, "", 0, 0, devPrefUCpu);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0CPU);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -643,7 +646,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrLan0GPU( lanKernel, 0, devPrefUGpu);
+        afwMath::WarpingControl wctrLan0GPU(lanczosKernelName, "", 0, 0, devPrefUGpu);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrLan0GPU);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -657,7 +660,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrBil2GPU( bilKernel, 2, devPrefUGpu);
+        afwMath::WarpingControl wctrBil2GPU(bilinearKernelName, "", 0, 2, devPrefUGpu);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBil2GPU);
     } catch(pexEx::Exception) {
         isThrown = true;
@@ -671,7 +674,7 @@ bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
     isThrown = false;
     try {
-        afwMath::WarpingControl wctrBil2AUTO( bilKernel, 2, devPrefAuto);
+        afwMath::WarpingControl wctrBil2AUTO(bilinearKernelName, "", 0, 2, devPrefAuto);
         afwMath::warpImage(resImg, *wcs1, inImg, *wcs2, wctrBil2AUTO);
     } catch(pexEx::Exception) {
         isThrown = true;
