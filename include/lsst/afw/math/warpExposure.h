@@ -239,7 +239,7 @@ namespace math {
     class WarpingControl {
     public:
         /**
-         * \brief Construct a WarpingControl object
+         * @brief Construct a WarpingControl object
          *
          * @warning: the GPU code does not yet support warping the mask with
          * a separate kernel. Thus if maskWarpingKernelName is provided
@@ -274,29 +274,6 @@ namespace math {
             _growFullMask(growFullMask)
         {
             setMaskWarpingKernelName(maskWarpingKernelName);
-            _testDevicePreference(_devicePreference, _warpingKernelPtr);
-        }
-
-        /**
-         * \brief This constructor supports the deprecated legacy warping API
-         */
-        explicit WarpingControl(
-            SeparableKernel &warpingKernel,  ///< warping kernel
-            int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated;
-                ///< 0 means no interpolation and uses an optimized branch of the code
-                ///< 1 also performs no interpolation but it runs the interpolation code branch
-                ///< (and so is only intended for unit tests)
-            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE
-                ///< use GPU acceleration?
-        ) :
-            _warpingKernelPtr(boost::dynamic_pointer_cast<SeparableKernel>(warpingKernel.clone())),
-            _maskWarpingKernelPtr(),
-            _cacheSize(warpingKernel.getCacheSize()),
-            _interpLength(interpLength),
-            _devicePreference(devicePreference),
-            _growFullMask(lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("EDGE") |
-                          lsst::afw::image::Mask<lsst::afw::image::MaskPixel>::getPlaneBitMask("NO_DATA"))
-        {
             _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }
 

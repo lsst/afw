@@ -233,10 +233,12 @@ void TimeOneKernelPI(
     const lsst::afw::gpu::DevicePreference selCPU = lsst::afw::gpu::USE_CPU;
     const lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::AUTO;
 
-    afwMath::LanczosWarpingKernel lanKernel(order);
+    std::ostringstream os;
+    os << "lanczos" << order;
+    auto lanczosKernelName = os.str();
 
-    afwMath::WarpingControl lanCPU( lanKernel, interpLen, selCPU);
-    afwMath::WarpingControl lanGPU( lanKernel, interpLen, selGPU);
+    afwMath::WarpingControl lanCPU(lanczosKernelName, "", 0, interpLen, selCPU);
+    afwMath::WarpingControl lanGPU(lanczosKernelName, "", 0, interpLen, selGPU);
 
     afwImage::Image<T>       resPI   (inImg.getDimensions());
     afwImage::Image<T>       resPIGpu(inImg.getDimensions());
@@ -277,6 +279,8 @@ void TestWarpGpu(
     const lsst::afw::gpu::DevicePreference selCPU = lsst::afw::gpu::USE_CPU;
     const lsst::afw::gpu::DevicePreference selGPU = lsst::afw::gpu::AUTO;
 
+    auto const lanczosKernelName = "lanczos2";
+
     const afwImage::MaskedImage<double>  inMIDbl = inImgDbl;
     const afwImage::MaskedImage<float>   inMIFlt = inImgFlt;
     int const sizeX = inMIDbl.getWidth();
@@ -300,7 +304,7 @@ void TestWarpGpu(
         // because first warp has to initialize GPU, thus using aditional time
         afwMath::LanczosWarpingKernel lanKernel(2);
         afwImage::MaskedImage<float>       resGpu(15, 15);
-        afwMath::WarpingControl lanGPU( lanKernel, 40, lsst::afw::gpu::USE_GPU);
+        afwMath::WarpingControl lanGPU(lanczosKernelName, "", 0, 40, lsst::afw::gpu::USE_GPU);
         warpImage(resGpu, wcs1, inImgFlt, wcs2, lanGPU);
     }
 
@@ -329,8 +333,8 @@ void TestWarpGpu(
 
     for (int i = 2; i < 6; i++) {
 	    afwMath::LanczosWarpingKernel lanKernel(i);
-	    afwMath::WarpingControl wctrlCPU( lanKernel, defaultInterpLen, selCPU);
-        afwMath::WarpingControl wctrlGPU( lanKernel, defaultInterpLen, selGPU);
+	    afwMath::WarpingControl wctrlCPU(lanczosKernelName, "", 0, defaultInterpLen, selCPU);
+        afwMath::WarpingControl wctrlGPU(lanczosKernelName, "", 0, defaultInterpLen, selGPU);
         TimeOneKernelMI(inMIFlt, wcs1.clone(), wcs2.clone(), wctrlCPU, wctrlGPU, i);
     }
 
@@ -341,8 +345,8 @@ void TestWarpGpu(
 
     for (int i = 2; i < 6; i++) {
         afwMath::LanczosWarpingKernel lanKernel(i);
-        afwMath::WarpingControl wctrlCPU( lanKernel, defaultInterpLen, selCPU);
-        afwMath::WarpingControl wctrlGPU( lanKernel, defaultInterpLen, selGPU);
+        afwMath::WarpingControl wctrlCPU(lanczosKernelName, "", 0, defaultInterpLen, selCPU);
+        afwMath::WarpingControl wctrlGPU(lanczosKernelName, "", 0, defaultInterpLen, selGPU);
         TimeOneKernelMI(inMIDbl, wcs1.clone(), wcs2.clone(), wctrlCPU, wctrlGPU, i);
     }
 
