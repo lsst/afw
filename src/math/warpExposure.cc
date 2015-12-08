@@ -356,6 +356,7 @@ namespace {
         DestImageT &destImage,                      ///< remapped %image
         SrcImageT const &srcImage,                  ///< source %image
         afwMath::detail::PositionFunctor const &computeSrcPos,   ///< Functor to compute source position
+            ///< called with dest row, column; returns source position (as a Point2D)
         afwMath::WarpingControl const &control,     ///< warping parameters
         typename DestImageT::SinglePixel padValue   ///< value to use for undefined pixels
     ) {

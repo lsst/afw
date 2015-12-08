@@ -26,7 +26,7 @@
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
 
-
+#include <limits>
 #include "Eigen/Core"
 #include "lsst/base.h"
 #include "lsst/daf/base/Persistable.h"
@@ -219,6 +219,19 @@ public:
 
     virtual bool hasDistortion() const {    return false;};
 
+    afw::coord::CoordSystem getCoordSystem() const { return _coordSystem; };
+
+    double getEquinox() const;
+
+    /**
+     * Return true if a WCS has the same coordinate system and equinox as this one
+     *
+     * There are two special cases:
+     * - Equinox is ignored if the coordinate system is ICRS
+     * - FK5 J2000 is considered the same as ICRS
+     */
+    bool isSameSkySystem(Wcs const &wcs) const;
+
     /**
      * Return the linear part of the Wcs, the CD matrix in FITS-speak, as an AffineTransform.
      */
@@ -347,6 +360,12 @@ protected:
     // Protected virtual implementation for operator== (must be true in both directions for equality).
     virtual bool _isSubset(Wcs const & other) const;
 
+    // Return true if coordinate system is ICRS or FK5 J2000
+    bool _isIcrs() const {
+        return (getCoordSystem() == afw::coord::ICRS) ||
+            ((getCoordSystem() == afw::coord::FK5) && (getEquinox() == 2000));
+    }
+
     // Default constructor, only used by WcsFormatter
     Wcs();
 
@@ -442,6 +461,7 @@ public:
 protected:
     CONST_PTR(Wcs) _dst;
     CONST_PTR(Wcs) _src;
+    bool const _isSameSkySystem;
 };  
 
 

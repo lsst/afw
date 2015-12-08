@@ -120,6 +120,66 @@ class WcsTestCase(unittest.TestCase):
         derived = afwImage.TanWcs.cast(base)
         self.assertEqual(type(derived), afwImage.TanWcs)
 
+    def testGetCoordSys(self):
+        """Test getCoordSystem, getEquinox"""
+
+        def makeWcs(coordSysName, equinox):
+            md = dafBase.PropertyList()
+            for k, v in (
+                ("EQUINOX", equinox),
+                ("RADESYS", coordSysName),
+                ("CRPIX1" , 5353.0),
+                ("CRPIX2" , -35.0),
+                ("CD1_1"  , 0.0),
+                ("CD1_2"  , -5.611E-05),
+                ("CD2_1"  , -5.611E-05),
+                ("CD2_2"  , -0.0),
+                ("CRVAL1" , 4.5789875),
+                ("CRVAL2" , 16.30004444),
+                ("CUNIT1" , 'deg'),
+                ("CUNIT2" , 'deg'),
+                ("CTYPE1" , 'RA---TAN'),
+                ("CTYPE2" , 'DEC--TAN'),
+                ("CDELT1" , -5.611E-05),
+                ("CDELT2" , 5.611E-05),
+                ):
+                md.set(k, v)
+
+            return afwImage.makeWcs(md)
+
+        # all supported coordinate systems, as listed in Coord.h
+        CoordSysList = ("ICRS", "FK5", "GALACTIC", "ECLIPTIC", "TOPOCENTRIC")
+
+        def isIcrs(wcs):
+            """Return True if wcs is ICRS or FK5 J2000"""
+            csys = wcs.getCoordSystem()
+            if csys == afwCoord.ICRS:
+                return True
+            return csys == afwCoord.FK5 and wcs.getEquinox() == 2000
+
+        def refIsSameSkySystem(wcs1, wcs2):
+            if isIcrs(wcs1) and isIcrs(wcs2):
+                return True
+            return (wcs1.getCoordSystem() == wcs2.getCoordSystem()) and (wcs1.getEquinox() == wcs2.getEquinox())
+
+        for coordSysName in CoordSysList:
+            coordSysEnum = getattr(afwCoord, coordSysName)
+            for equinox in (1950, 1975, 2000):
+                wcs = makeWcs(coordSysName, equinox)
+                self.assertEqual(wcs.getCoordSystem(), coordSysEnum)
+                self.assertEqual(wcs.getEquinox(), equinox)
+                predIsIcrs = coordSysName == "ICRS" or (coordSysName == "FK5" and equinox == 2000)
+                self.assertEqual(predIsIcrs, isIcrs(wcs))
+                for coordSysName2 in CoordSysList:
+                    for equinox2 in (1950, 2000):
+                        wcs2 = makeWcs(coordSysName2, equinox2)
+                        try:
+                            self.assertEqual(refIsSameSkySystem(wcs, wcs2), wcs.isSameSkySystem(wcs2))
+                        except Exception:
+                            import ipdb; ipdb.set_trace()
+
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class WCSRotateFlip(unittest.TestCase):

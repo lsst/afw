@@ -26,6 +26,7 @@
 #include <sstream>
 #include <cmath>
 #include <cstring>
+#include <limits>
 
 #include "boost/format.hpp"
 
@@ -88,7 +89,8 @@ const int fitsToLsstPixels = -1;
 lsst::afw::image::Wcs::Wcs() :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1)) {
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+{
     _setWcslibParams();
     _initWcs();    
 }
@@ -104,7 +106,7 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
 {
     _setWcslibParams();
 
@@ -158,7 +160,7 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
 {
     _setWcslibParams();
     initWcsLib(crval, crpix, CD, 
@@ -459,7 +461,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _wcsfixCtrl(rhs._wcsfixCtrl), 
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
 {
     
     if (rhs._nWcsInfo > 0) {
@@ -824,6 +826,20 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
     return GeomPoint(imgcrd[0], imgcrd[1]); 
 }
 
+double Wcs::getEquinox() const {
+    if (_wcsInfo == nullptr) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return _wcsInfo->equinox;
+}
+
+bool Wcs::isSameSkySystem(Wcs const &wcs) const {
+    if (_isIcrs() && wcs._isIcrs()) {
+        return true;
+    }
+    return (getCoordSystem() == wcs.getCoordSystem()) && (getEquinox() == wcs.getEquinox());
+}
+
 /*
  * Worker routine for pixelToSky
  */
@@ -1117,7 +1133,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
     _wcsfixCtrl(0),
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afw::coord::CoordSystem>(-1))
+    _coordSystem(static_cast<afw::coord::CoordSystem>(-1))  // set by _initWcs
 {
     WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     if (!record.getSchema().contains(keys.schema)) {
@@ -1282,7 +1298,7 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
 
 
 XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
-    : XYTransform(), _dst(dst), _src(src)
+    : XYTransform(), _dst(dst), _src(src), _isSameSkySystem(dst->isSameSkySystem(*src))
 { }
 
 
@@ -1294,20 +1310,28 @@ PTR(afwGeom::XYTransform) XYTransformFromWcsPair::clone() const
 
 afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
 {
-    //
-    // TODO there is an alternate version of pixelToSky() which is designated for the 
-    // "knowledgeable user in need of performance".  This is probably better, but first I need 
-    // to understand exactly which checks are needed (e.g. I think we need to check by hand 
-    // that both Wcs's use the same celestial coordinate system)
-    //
-    PTR(afw::coord::Coord) x = _src->pixelToSky(pixel);
-    return _dst->skyToPixel(*x);
+    if (_isSameSkySystem) {
+        // high performance branch; no coordinate conversion required
+        afw::geom::Angle sky0, sky1;
+        _src->pixelToSky(pixel[0], pixel[1], sky0, sky1);
+        return _dst->skyToPixel(sky0, sky1);
+    } else {
+        PTR(afw::coord::Coord const) coordPtr{_src->pixelToSky(pixel)};
+        return _dst->skyToPixel(*coordPtr);
+    }
 }
 
 afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
 {
-    PTR(afw::coord::Coord) x = _dst->pixelToSky(pixel);
-    return _src->skyToPixel(*x);
+    if (_isSameSkySystem) {
+        // high performance branch; no coordinate conversion required
+        afw::geom::Angle sky0, sky1;
+        _dst->pixelToSky(pixel[0], pixel[1], sky0, sky1);
+        return _src->skyToPixel(sky0, sky1);
+    } else {
+        PTR(afw::coord::Coord const) coordPtr{_dst->pixelToSky(pixel)};
+        return _src->skyToPixel(*coordPtr);
+    }
 }
 
 PTR(afwGeom::XYTransform) XYTransformFromWcsPair::invert() const
