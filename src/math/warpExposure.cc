@@ -595,7 +595,8 @@ int afwMath::warpImage(
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwMath::detail::WcsPositionFunctor const computeSrcPos(destXY0, destWcs, srcWcs);
+    afwImage::XYTransformFromWcsPair xyTransform{destWcs.clone(), srcWcs.clone()};
+    afwMath::detail::XYTransformPositionFunctor const computeSrcPos{destXY0, xyTransform};
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 

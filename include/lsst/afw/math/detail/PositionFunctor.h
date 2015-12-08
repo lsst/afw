@@ -36,6 +36,7 @@
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Wcs.h"
 
@@ -68,37 +69,34 @@ namespace detail {
 
     /**
      * @brief Derived functor class to transform pixel position for a destination image
-     *        to its position in the source image.  The transform is from one WCS to another.
+     *        to its position in the source image.  The provided xyTransform must map
+     *        destination position to source position using reverseTransform
+     *        (hence forwardTransform will map source to destination).
      */    
-    class WcsPositionFunctor : public PositionFunctor {
+    class XYTransformPositionFunctor : public PositionFunctor {
     public:
-        typedef boost::shared_ptr<WcsPositionFunctor> Ptr;
-
-        explicit WcsPositionFunctor(
+        explicit XYTransformPositionFunctor(
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-            lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
-            lsst::afw::image::Wcs const &srcWcs         ///< WCS of source %image
+            lsst::afw::geom::XYTransform const &XYTransform///< srcPos = xyTransform.reverseTransform(destPos)
         ) :
             PositionFunctor(),
             _destXY0(destXY0),
-            _destWcs(destWcs),
-            _srcWcs(srcWcs)
+            _xyTransformPtr(XYTransform.clone())
         {}
         
-        virtual ~WcsPositionFunctor() {};
+        virtual ~XYTransformPositionFunctor() {};
 
         virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
-            double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
-            double const row = lsst::afw::image::indexToPosition(destRow + _destXY0[1]);
-            lsst::afw::geom::Angle sky1, sky2;
-            _destWcs.pixelToSky(col, row, sky1, sky2);
-            return _srcWcs.skyToPixel(sky1, sky2);
+            afw::geom::Point2D const destPos{
+                lsst::afw::image::indexToPosition(destCol + _destXY0[0]),
+                lsst::afw::image::indexToPosition(destRow + _destXY0[1])
+            };
+            return _xyTransformPtr->reverseTransform(destPos);
         }
 
     private:
-        lsst::afw::geom::Point2D const &_destXY0;
-        lsst::afw::image::Wcs const &_destWcs;
-        lsst::afw::image::Wcs const &_srcWcs;
+        lsst::afw::geom::Point2D const _destXY0;
+        PTR(lsst::afw::geom::XYTransform const) _xyTransformPtr;
     };
 
 

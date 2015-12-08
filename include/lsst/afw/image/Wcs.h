@@ -425,9 +425,6 @@ namespace detail {
  * Eventually there will be an XYTransform subclass which represents a camera distortion.
  * For now we can get a SIP camera distortion in a clunky way, by using an XYTransformFromWcsPair
  * with a SIP-distorted TanWcs and an undistorted Wcs.
- *
- * Note: this is very similar to class afw::math::detail::WcsPositionFunctor
- *   but watch out since the XY0 offset convention is different!!
  */
 class XYTransformFromWcsPair : public afw::geom::XYTransform
 {
