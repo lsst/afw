@@ -414,6 +414,7 @@ protected:
     int _wcshdrCtrl; ///< Controls messages to stderr from wcshdr (0 for none); see wcshdr.h for details
     int _nReject;
     coord::CoordSystem _coordSystem;
+    bool _skyAxesSwapped; ///< if true then the sky axes are swapped
 };
 
 namespace detail {

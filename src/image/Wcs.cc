@@ -119,8 +119,20 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
  */
 void Wcs::_initWcs()
 {
+    // first four characters of CTYPE1 (name of first axis)
+    std::string ctype1 = std::string(_wcsInfo->ctype[0]).substr(0, 4);
+
     if (_wcsInfo) {
-        _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+        if (ctype1[0] == 'G') {
+            _coordSystem = afwCoord::GALACTIC;
+            _skyAxesSwapped = (ctype1[2] == 'A'); // GLAT instead of GLON
+        } else if (ctype1[0] == 'E') {
+            _coordSystem = afwCoord::ECLIPTIC;
+            _skyAxesSwapped = (ctype1[2] == 'A'); // ELAT instead of ELON
+        } else {
+            _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+            _skyAxesSwapped = (ctype1[0] == 'D'); // DEC instead of RA
+        }
 
         // tell WCSlib that values have been updated
         _wcsInfo->flag = 0;
@@ -893,57 +905,24 @@ void Wcs::pixelToSky(double pixel1, double pixel2, afwGeom::Angle& sky1, afwGeom
 ///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
 ///sub-class of Coord
 CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const {
-
-    //Construct a coord object of the correct type
-    int const ncompare = 4;                       // we only care about type's first 4 chars
-    char *type = _wcsInfo->ctype[0];
-    char *radesys = _wcsInfo->radesys;
-    double equinox = _wcsInfo->equinox;
-
-    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
-        ;                                       // using an tr1::unordered_map
-        if(strcmp(radesys, "ICRS") == 0) {
-            return afwCoord::makeCoord(afwCoord::ICRS, sky0, sky1);
+    auto coordSystem = getCoordSystem();
+    if ((coordSystem == afwCoord::ICRS) || (coordSystem == afwCoord::GALACTIC)) {
+        // equinox not relevant
+        if (_skyAxesSwapped) {
+            return afwCoord::makeCoord(coordSystem, sky1, sky0);
+        } else {
+            return afwCoord::makeCoord(coordSystem, sky0, sky1);
         }
-        if(strcmp(radesys, "FK5") == 0) {
-            return afwCoord::makeCoord(afwCoord::FK5, sky0, sky1, equinox);
-        } else {   
-            throw LSST_EXCEPT(except::RuntimeError,
-                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
-                               radesys).str());
+    } else if ((coordSystem == afwCoord::FK5) || (coordSystem == afwCoord::ECLIPTIC)) {
+        if (_skyAxesSwapped) {
+            return afwCoord::makeCoord(coordSystem, sky1, sky0, _wcsInfo->equinox);
+        } else {
+            return afwCoord::makeCoord(coordSystem, sky0, sky1, _wcsInfo->equinox);
         }
-
-    } else if (strncmp(type, "GLON", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::GALACTIC, sky0, sky1);   
-    } else if (strncmp(type, "ELON", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky0, sky1, equinox);
-    } else if (strncmp(type, "DEC-", ncompare) == 0) {
-        //check for the case where the ctypes are swapped. Note how sky0 and sky1 are swapped as well
-
-        //Our default
-        if(strcmp(radesys, "ICRS") == 0) {
-            return afwCoord::makeCoord(afwCoord::ICRS, sky1, sky0);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            return afwCoord::makeCoord(afwCoord::FK5, sky1, sky0, equinox);
-        } else {   
-            throw LSST_EXCEPT(except::RuntimeError,
-                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
-                               radesys).str());
-        }
-    } else if (strncmp(type, "GLAT", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::GALACTIC, sky1, sky0);   
-    } else if (strncmp(type, "ELAT", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
-    } else {
-    //Give up in disgust
-        throw LSST_EXCEPT(except::RuntimeError,
-                          (boost::format("Can't create Coord object: Unrecognised sys %s") %
-                           type).str());
     }
-    
-    //Can't get here
-    assert(0);
+    throw LSST_EXCEPT(except::RuntimeError,
+                      (boost::format("Can't create Coord object: Unrecognised coordinate system %s") %
+                       coordSystem).str());
 }
 
 
