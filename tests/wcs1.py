@@ -52,10 +52,80 @@ currDir = os.path.abspath(os.path.dirname(__file__))
 InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-class WcsTestCase(unittest.TestCase):
+CoordSysList = [afwCoord.ICRS, afwCoord.FK5, afwCoord.ECLIPTIC, afwCoord.GALACTIC]
+
+def coordSysEquinoxIter(equinoxList=(1950, 1977, 2000)):
+    for coordSys in CoordSysList:
+        if coordSys in (afwCoord.FK5, afwCoord.ECLIPTIC):
+            for equinox in equinoxList:
+                yield (coordSys, equinox)
+        else:
+            yield (coordSys, 2000) # Coord's default
+
+def makeWcs(
+    pixelScale=0.2*afwGeom.arcseconds,
+    crPixPos=(2000.0, 1520.5),
+    crValDeg=(27.53, 87.123),
+    posAng=afwGeom.Angle(0.0),
+    doFlipX=False,
+    projection="TAN",
+    coordSys=afwCoord.ICRS,
+    equinox=2000
+):
+    """Make an simple TAN WCS with sensible defaults
+    
+    @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
+    @param[in] crPixPos: crPix for WCS, using the LSST standard; a pair of floats
+    @param[in] crValDeg: crVal for WCS, in degrees; a pair of floats
+    @param[in] posAng: position angle (afwGeom.Angle)
+    @param[in] doFlipX: flip X axis?
+    @param[in] projection: WCS projection (e.g. "TAN" or "STG")
+    @param[in] coordSys: coordinate system enum
+    @param[in] equinox: date of equinox; should be 2000 for ICRS or GALACTIC
+    """
+    if len(projection) != 3:
+        raise RuntimeError("projection=%r; must have length 3" % (projection,))
+
+    csysPrefixes, radesys = {
+        afwCoord.ICRS: (("RA", "DEC"), "ICRS"),
+        afwCoord.FK5:  (("RA", "DEC"), "FK5"),
+        afwCoord.ECLIPTIC: (("ELON", "ELAT"), None),
+        afwCoord.GALACTIC: (("GLON", "GLAT"), None),
+    }[coordSys]
+
+    ctypeList = [("%-4s-%3s" % (csysPrefixes[i], projection)).replace(" ", "-") for i in range(2)]
+    ps = dafBase.PropertySet()
+    crPixFits = [ind + 1.0 for ind in crPixPos] # convert pix position to FITS standard
+    posAngRad = posAng.asRadians()
+    pixelScaleDeg = pixelScale.asDegrees()
+    cdMat = numpy.array([[ math.cos(posAngRad), math.sin(posAngRad)],
+                         [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
+    if doFlipX:
+        cdMat[:,0] = -cdMat[:,0]
+    for i in range(2):
+        ip1 = i + 1
+        ps.add("CTYPE%1d" % (ip1,), ctypeList[i])
+        ps.add("CRPIX%1d" % (ip1,), crPixFits[i])
+        ps.add("CRVAL%1d" % (ip1,), crValDeg[i])
+    if radesys:
+        ps.add("RADESYS", radesys)
+    ps.add("EQUINOX", equinox)
+    ps.add("CD1_1", cdMat[0, 0])
+    ps.add("CD2_1", cdMat[1, 0])
+    ps.add("CD1_2", cdMat[0, 1])
+    ps.add("CD2_2", cdMat[1, 1])
+    return afwImage.makeWcs(ps)
+
+def localMakeCoord(coordSys, posDeg, equinox):
+    """Make a coord, ignoring equinox if necessary
+    """
+    if coordSys in (afwCoord.ICRS, afwCoord.GALACTIC):
+        return afwCoord.makeCoord(coordSys, posDeg[0]*afwGeom.degrees, posDeg[1]*afwGeom.degrees)
+    return afwCoord.makeCoord(coordSys, posDeg[0]*afwGeom.degrees, posDeg[1]*afwGeom.degrees, equinox)
+
+class WcsTestCase(utilsTests.TestCase):
     def testCD_PC(self):
         """Test that we can read a FITS file with both CD and PC keys (like early Suprimecam files)"""
-
         md = dafBase.PropertyList()
         for k, v in (
             ("EQUINOX", 2000.0),
@@ -120,36 +190,28 @@ class WcsTestCase(unittest.TestCase):
         derived = afwImage.TanWcs.cast(base)
         self.assertEqual(type(derived), afwImage.TanWcs)
 
+    def testCoordConversion(self):
+        """Test that skyToPixel and pixelToSky handle coordinate system and equinox correctly
+
+        Given two WCS that are identical except perhaps for coordinate system and equinox
+        compute: sky2 = wcs2.pixelToSky(wcs1.skyToPixel(sky1)
+        The result should be the same numerical values, but with wcs2's coordinate system and equinox
+        """
+        crValDeg=(27.53, 87.123)
+        for coordSys1, equinox1 in coordSysEquinoxIter():
+            wcs1 = makeWcs(crValDeg=crValDeg, coordSys=coordSys1, equinox=equinox1)
+            for coordSys2, equinox2 in coordSysEquinoxIter():
+                wcs2 = makeWcs(crValDeg=crValDeg, coordSys=coordSys2, equinox=equinox2)
+                for sky1Deg in (crValDeg, (18.52, 46.765)):
+                    coord1 = localMakeCoord(coordSys1, sky1Deg, equinox1)
+                    pixPos = wcs1.skyToPixel(coord1)
+                    coord2 = wcs2.pixelToSky(pixPos)
+
+                    desCoord2 = localMakeCoord(coordSys2, (coord1[0].asDegrees(), coord1[1].asDegrees()), equinox2)
+                    self.assertCoordsNearlyEqual(coord2, desCoord2)
+
     def testGetCoordSys(self):
         """Test getCoordSystem, getEquinox"""
-
-        def makeWcs(coordSysName, equinox):
-            md = dafBase.PropertyList()
-            for k, v in (
-                ("EQUINOX", equinox),
-                ("RADESYS", coordSysName),
-                ("CRPIX1" , 5353.0),
-                ("CRPIX2" , -35.0),
-                ("CD1_1"  , 0.0),
-                ("CD1_2"  , -5.611E-05),
-                ("CD2_1"  , -5.611E-05),
-                ("CD2_2"  , -0.0),
-                ("CRVAL1" , 4.5789875),
-                ("CRVAL2" , 16.30004444),
-                ("CUNIT1" , 'deg'),
-                ("CUNIT2" , 'deg'),
-                ("CTYPE1" , 'RA---TAN'),
-                ("CTYPE2" , 'DEC--TAN'),
-                ("CDELT1" , -5.611E-05),
-                ("CDELT2" , 5.611E-05),
-                ):
-                md.set(k, v)
-
-            return afwImage.makeWcs(md)
-
-        # all supported coordinate systems, as listed in Coord.h
-        CoordSysList = ("ICRS", "FK5", "GALACTIC", "ECLIPTIC", "TOPOCENTRIC")
-
         def isIcrs(wcs):
             """Return True if wcs is ICRS or FK5 J2000"""
             csys = wcs.getCoordSystem()
@@ -162,22 +224,15 @@ class WcsTestCase(unittest.TestCase):
                 return True
             return (wcs1.getCoordSystem() == wcs2.getCoordSystem()) and (wcs1.getEquinox() == wcs2.getEquinox())
 
-        for coordSysName in CoordSysList:
-            coordSysEnum = getattr(afwCoord, coordSysName)
-            for equinox in (1950, 1975, 2000):
-                wcs = makeWcs(coordSysName, equinox)
-                self.assertEqual(wcs.getCoordSystem(), coordSysEnum)
-                self.assertEqual(wcs.getEquinox(), equinox)
-                predIsIcrs = coordSysName == "ICRS" or (coordSysName == "FK5" and equinox == 2000)
-                self.assertEqual(predIsIcrs, isIcrs(wcs))
-                for coordSysName2 in CoordSysList:
-                    for equinox2 in (1950, 2000):
-                        wcs2 = makeWcs(coordSysName2, equinox2)
-                        try:
-                            self.assertEqual(refIsSameSkySystem(wcs, wcs2), wcs.isSameSkySystem(wcs2))
-                        except Exception:
-                            import ipdb; ipdb.set_trace()
-
+        for coordSys, equinox in coordSysEquinoxIter():
+            wcs = makeWcs(coordSys=coordSys, equinox=equinox)
+            self.assertEqual(wcs.getCoordSystem(), coordSys)
+            self.assertEqual(wcs.getEquinox(), equinox)
+            predIsIcrs = coordSys == afwCoord.ICRS or (coordSys == afwCoord.FK5 and equinox == 2000)
+            self.assertEqual(predIsIcrs, isIcrs(wcs))
+            for coordSys2, equinox2 in coordSysEquinoxIter():
+                wcs2 = makeWcs(coordSys=coordSys2, equinox=equinox2)
+                self.assertEqual(refIsSameSkySystem(wcs, wcs2), wcs.isSameSkySystem(wcs2))
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -131,7 +131,7 @@ public:
     void rotate(Coord const &axis, lsst::afw::geom::Angle const theta);
     lsst::afw::geom::Angle offset(lsst::afw::geom::Angle const phi, lsst::afw::geom::Angle const arcLen);
     
-    Coord::Ptr convert(CoordSystem system) const;
+    Coord::Ptr convert(CoordSystem system, double epoch=2000) const;
 
     virtual Fk5Coord toFk5(double const epoch) const;
     virtual Fk5Coord toFk5() const;

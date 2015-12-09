@@ -630,16 +630,21 @@ afwGeom::Angle afwCoord::Coord::offset(
 }
 
 
-
 /**
- * @brief Convert to a specified Coord type.
+ * @brief Convert to a specified Coord type at a specified epoch.
+ *
+ * @param[in] system  coordinate system to which to convert
+ * @param[in] epoch  epoch of coordinate system; only relevant for FK5 and Ecliptic coordinates
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterError if system = TOPOCENTRIC
+ *         (because observatory data is required) or if system not recognized
  */
-afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) const {
+afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system, double epoch) const {
 
     switch (system) {
       case FK5:
         {
-            Fk5Coord c1 = this->toFk5();
+            Fk5Coord c1 = this->toFk5(epoch);
             return boost::shared_ptr<Fk5Coord>(new Fk5Coord(c1.getLongitude(),
                                                             c1.getLatitude(),
                                                             c1.getEpoch()));
@@ -661,7 +666,7 @@ afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system) const {
         break;
       case ECLIPTIC:
         {
-            EclipticCoord c5 = this->toEcliptic();
+            EclipticCoord c5 = this->toEcliptic(epoch);
             return boost::shared_ptr<EclipticCoord>(new EclipticCoord(c5.getLongitude(),
                                                                       c5.getLatitude(),
                                                                       c5.getEpoch()));

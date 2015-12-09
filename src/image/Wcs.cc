@@ -778,7 +778,7 @@ GeomPoint Wcs::skyToPixel(lsst::afw::coord::Coord const & coord) const {
 
 afwCoord::Coord::Ptr
 Wcs::convertCoordToSky(afwCoord::Coord const & coord) const {
-    return coord.convert(_coordSystem);
+    return coord.convert(_coordSystem, _wcsInfo->equinox);
 }
 
 GeomPoint Wcs::skyToPixel(afwGeom::Angle sky1, afwGeom::Angle sky2) const {
