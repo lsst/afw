@@ -379,14 +379,12 @@ class WarpExposureTestCase(utilsTests.TestCase):
 
         originalExposure = afwImage.ExposureF(originalExposurePath)
         originalImage = originalExposure.getMaskedImage().getImage()
-        originalImage.writeFits("originalImage.fits")
         originalWcs = originalExposure.getWcs()
 
         swarpedImageName = "medswarp1%s.fits" % (kernelName,)
         swarpedImagePath = os.path.join(dataDir, swarpedImageName)
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
-        swarpedImage.writeFits("swarpedImage.fits")
 
         for changeEquinox in (False, True):
             swarpedMetadata = swarpedDecoratedImage.getMetadata()
@@ -401,7 +399,6 @@ class WarpExposureTestCase(utilsTests.TestCase):
             numGoodPix = afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
                               originalWcs, warpingControl)
             self.assertGreater(numGoodPix, 50)
-            afwWarpedImage.writeFits("medLancsoz3_%r.fits" % (changeEquinox,))
 
             afwWarpedImageArr = afwWarpedImage.getArray()
             noDataMaskArr = numpy.isnan(afwWarpedImageArr)
