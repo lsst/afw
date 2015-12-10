@@ -63,6 +63,7 @@ public:
    virtual double operator()(double x) const = 0;
 
    /// @return The x value such that y = f(x).
+   /// @param y  desired value of functor
    /// @param tol Convergence tolerance for the Newton-Raphson search 
    ///        such that abs(x_{iter} - x_{iter-1}) < tol.
    /// @param maxiter Maximum number of iterations in the N-R search.
