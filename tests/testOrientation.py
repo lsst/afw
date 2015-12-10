@@ -90,7 +90,7 @@ class OrientationTestCase(unittest.TestCase):
         for x in (-100.1, 0.0, 230.0):
             for y in (-45.0, 0.0, 25.1):
                 pixPos = afwGeom.Point2D(x, y)
-                fpPos = pixToFpTransform.forwardTransform(pixPos)
+                pixToFpTransform.forwardTransform(pixPos)
 
 
 

@@ -32,8 +32,6 @@ or
    >>> import box; box.run()
 """
 
-import os
-import sys
 import unittest
 import numpy
 
@@ -104,7 +102,7 @@ class Box2ITestCase(unittest.TestCase):
     def testOverflowDetection(self):
         try:
             box = geom.Box2I(geom.Point2I(2147483645, 149), geom.Extent2I(8,8))
-        except lsst.pex.exceptions.OverflowError as err:
+        except lsst.pex.exceptions.OverflowError:
             pass
         else:
             # On some platforms, sizeof(int) may be > 4, so this test doesn't overflow.

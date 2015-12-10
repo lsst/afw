@@ -120,7 +120,7 @@ class FootprintSetTestCase(unittest.TestCase):
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
         
-        ds = afwDetect.FootprintSet(afwImage.ImageU(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
+        afwDetect.FootprintSet(afwImage.ImageU(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""

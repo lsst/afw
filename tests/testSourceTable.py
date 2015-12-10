@@ -267,7 +267,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def testCast(self):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
-        sourceCat = baseCat.cast(lsst.afw.table.SourceCatalog)
+        baseCat.cast(lsst.afw.table.SourceCatalog)
 
     def testFootprints(self):
         '''Test round-tripping Footprints (inc. HeavyFootprints) to FITS
@@ -366,7 +366,6 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         expId = int(1257198)
         reserved = 32
         factory = lsst.afw.table.IdFactory.makeSource(expId, reserved)
-        upper = expId
         id1 = factory()
         id2 = factory()
         self.assertEqual(id2 - id1, 1)

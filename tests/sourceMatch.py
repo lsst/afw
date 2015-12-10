@@ -51,9 +51,9 @@ class SourceMatchTestCase(unittest.TestCase):
 
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
-        fluxKey = schema.addField("flux_flux", type=float)
-        fluxErrKey = schema.addField("flux_fluxSigma", type=float)
-        fluxFlagKey = schema.addField("flux_flag", type="Flag")
+        schema.addField("flux_flux", type=float)
+        schema.addField("flux_fluxSigma", type=float)
+        schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(schema)
         self.table.definePsfFlux("flux")
         self.ss1 = afwTable.SourceCatalog(self.table)
@@ -143,7 +143,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
             fields = line.split()
             objId = int(fields[0])
-            name = fields[1]
+            fields[1]
             mode = int(fields[2])
             ra, dec = [float(f) for f in fields[3:5]]
             psfMags = [float(f) for f in fields[5:]]
@@ -235,7 +235,7 @@ class SourceMatchTestCase(unittest.TestCase):
             for mat in matches:
                 s0 = mat[0]
                 s1 = mat[1]
-                d = mat[2]
+                mat[2]
                 print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
                 print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
                 

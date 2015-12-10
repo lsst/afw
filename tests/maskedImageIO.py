@@ -148,7 +148,7 @@ class MaskedImageTestCase(unittest.TestCase):
         """Test reading an F64 image and converting it to a MaskedImage"""
         im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
         im.set(666)
-        mi = afwImage.MaskedImageD(im)
+        afwImage.MaskedImageD(im)
 
     def testReadWriteXY0(self):
         """Test that we read and write (X0, Y0) correctly"""

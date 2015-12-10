@@ -36,7 +36,6 @@ import lsst.daf.persistence as dafPersist
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-import lsst.afw.image.testUtils as imTestUtils
 
 Verbosity = 0 # increase to see trace
 pexLog.Debug("lsst.afw", Verbosity)
@@ -209,7 +208,7 @@ class KernelIOTestCase(unittest.TestCase):
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         k = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
-        gArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
+        numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))

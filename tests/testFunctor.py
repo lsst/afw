@@ -25,7 +25,6 @@ Tests for lsst.afw.geom.Functor classes.
 """
 import unittest
 import numpy as np
-import numpy.random as random
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.pex.exceptions as pexExcept

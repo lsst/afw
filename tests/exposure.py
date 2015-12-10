@@ -362,11 +362,11 @@ class ExposureTestCase(unittest.TestCase):
 
         for xSubInd in (0, subDim.getX()-1):
             for ySubInd in (0, subDim.getY()-1):
-                p0 = mainWcs.pixelToSky(
+                mainWcs.pixelToSky(
                     afwImage.indexToPosition(xSubInd),
                     afwImage.indexToPosition(ySubInd),
                 )
-                p1 = subWcs.pixelToSky(
+                subWcs.pixelToSky(
                     afwImage.indexToPosition(xSubInd),
                     afwImage.indexToPosition(ySubInd),
                 )
@@ -486,8 +486,8 @@ class ExposureTestCase(unittest.TestCase):
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
-        m = afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
-        e = afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20))))
+        afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
+        afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20))))
 
     def testImageSlices(self):
         """Test image slicing, which generate sub-images using Box2I under the covers"""

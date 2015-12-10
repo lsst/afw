@@ -124,7 +124,7 @@ class HeavyFootprintTestCase(tests.TestCase):
         ctrl.setModifySource(afwDetect.HeavyFootprintCtrl.SET) # clear the pixels in the Footprint
         ctrl.setMaskVal(self.objectPixelVal[1])
 
-        hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi, ctrl)
+        afwDetect.makeHeavyFootprint(self.foot, self.mi, ctrl)
         #
         # Check that we cleared all the pixels
         #

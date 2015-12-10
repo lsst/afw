@@ -313,7 +313,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(0x1a, stats.getValue(afwMath.SUM))
 
         def tst():
-            stats = afwMath.makeStatistics(mask, afwMath.MEAN)
+            afwMath.makeStatistics(mask, afwMath.MEAN)
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, tst)
 
 
@@ -444,7 +444,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(weighted.getError(afwMath.MEAN)**2, variance/npix)
         self.assertAlmostEqual(weighted.getError(afwMath.MEANCLIP)**2, variance/npix)
         
-    def testMeanClip(self):
+    def testMeanClipSingleValue(self):
         """Verify that the 3-sigma clipped mean doesn't not return NaN for a single value."""
         stats = afwMath.makeStatistics(self.image, afwMath.MEANCLIP)
         self.assertEqual(stats.getValue(afwMath.MEANCLIP), self.val)

@@ -213,7 +213,7 @@ class SavingSubImagesTest(unittest.TestCase):
                 subXY0 = subImg.getMaskedImage().getXY0()
                 newXY0 = newImg.getMaskedImage().getXY0()
 
-                parentCrpix = self.parent.getWcs().getPixelOrigin()
+                self.parent.getWcs().getPixelOrigin()
                 subCrpix = subImg.getWcs().getPixelOrigin()
                 newCrpix = newImg.getWcs().getPixelOrigin()
 

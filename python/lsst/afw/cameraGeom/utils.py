@@ -369,7 +369,6 @@ class ButlerImage(FakeImageDataSource):
         ccdImage = im.Factory(bbox)
 
         ampImages = []
-        med0 = None
         for a in ccd:
             bias = im[a.getRawHorizontalOverscanBBox()]
             data = im[a.getRawDataBBox()]
@@ -629,7 +628,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
             imView[:] = im
-        except Exception as e:
+        except Exception:
             pass
 
     return camIm

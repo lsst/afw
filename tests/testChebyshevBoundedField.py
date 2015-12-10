@@ -31,7 +31,6 @@ or
    >>> import testSchema; testSchema.run()
 """
 
-import sys
 import os
 import unittest
 import numpy

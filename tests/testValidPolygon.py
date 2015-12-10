@@ -31,11 +31,9 @@ or
    >>> import testValidPolygonTestCase; testPolygonTestCase.run()
 """
 
-import sys
 import os
 import unittest
 import lsst.utils.tests as utilsTests
-import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable

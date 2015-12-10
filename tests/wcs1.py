@@ -394,8 +394,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertFalse(metadata.exists("CRPIX1"))
 
     def testAffineTransform(self):
-        a = self.wcs.getLinearTransform()
-        l = self.wcs.getCDMatrix()
+        self.wcs.getLinearTransform()
+        self.wcs.getCDMatrix()
 
     def testXY0(self):
         """Test that XY0 values are handled correctly when building an exposure and also when
@@ -537,7 +537,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
         self.assertAlmostEqual(cd[1,1], self.metadata.getAsDouble("CD2_2"))
 
     def testConstructor(self):
-        copy = afwImage.Wcs(self.wcs.getSkyOrigin().getPosition(afwGeom.degrees), self.wcs.getPixelOrigin(),
+        afwImage.Wcs(self.wcs.getSkyOrigin().getPosition(afwGeom.degrees), self.wcs.getPixelOrigin(),
                             self.wcs.getCDMatrix())
 
     def testAffineTransform(self):
