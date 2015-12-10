@@ -572,7 +572,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         Inputs:
         - kernelName: name of kernel in the form used by afwImage.makeKernel
         - useWarpExposure: if True, call warpExposure to warp an ExposureF,
-            else call warpImage to warp an ImageF
+            else call warpImage to warp an ImageF and also call the XYTransform version
         - useSubregion: if True then the original source exposure (from which the usual
             test exposure was extracted) is read and the correct subregion extracted
         - useDeepCopy: if True then the copy of the subimage is a deep copy,
@@ -638,6 +638,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         else:
             # path for saved afw-warped image
             afwWarpedImagePath = "afwWarpedImage1%s.fits" % (kernelName,)
+            afwWarpedImage2Path = "afwWarpedImage1%s_xyTransform.fits" % (kernelName,)
     
             afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
             originalImage = originalExposure.getMaskedImage().getImage()
@@ -666,7 +667,21 @@ class WarpExposureTestCase(utilsTests.TestCase):
                     afwWarpedImage.writeFits(afwWarpedImagePath)
                     print "Saved failed afw-warped image as: %s" % (afwWarpedImagePath,)
                 raise
-        
+
+            afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
+            xyTransform = afwImage.XYTransformFromWcsPair(warpedWcs, originalWcs)
+            afwMath.warpImage(afwWarpedImage2, originalImage, xyTransform, warpingControl)
+            msg = "afw xyTransform-based and WCS-based %s-warped images do not match" % (kernelName,)
+            try:
+                self.assertImagesNearlyEqual(afwWarpedImage2, afwWarpedImage,
+                    rtol=rtol, atol=atol, msg=msg)
+            except Exception:
+                if SAVE_FAILED_FITS_FILES:
+                    # save the image anyway
+                    afwWarpedImage.writeFits(afwWarpedImagePath)
+                    print "Saved failed afw-warped image as: %s" % (afwWarpedImage2Path,)
+                raise
+
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

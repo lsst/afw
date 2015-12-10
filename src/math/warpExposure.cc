@@ -606,12 +606,12 @@ template<typename DestImageT, typename SrcImageT>
 int afwMath::warpImage(
     DestImageT &destImage,
     SrcImageT const &srcImage,
-    afwGeom::AffineTransform const &affineTransform,
+    afwGeom::XYTransform const &xyTransform,
     afwMath::WarpingControl const &control,
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
-    afwMath::detail::AffineTransformPositionFunctor const computeSrcPos(destXY0, affineTransform);
+    afwMath::detail::XYTransformPositionFunctor const computeSrcPos(destXY0, xyTransform);
     return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
 }
 
@@ -646,6 +646,7 @@ int afwMath::warpCenteredImage(
     // moved slightly.  So we'll include a translation to move it back by an amount
     // centerPosition - translatedCenterPosition
     afwGeom::AffineTransform affTran(linearTransform, cLocal - linearTransform(cLocal));
+    afwGeom::AffineXYTransform affXYTransform(affTran);
 
     // now warp
 #if 0
@@ -657,7 +658,7 @@ int afwMath::warpCenteredImage(
     t += dt;
     std::cout <<srcImage.getWidth()<<"x"<<srcImage.getHeight()<<": "<< dt <<" "<< t <<std::endl;
 #else
-    int n = warpImage(destImage, srcImageCopy, affTran, control, padValue);
+    int n = warpImage(destImage, srcImageCopy, affXYTransform, control, padValue);
 #endif
 
     // fix the origin and we're done.
@@ -695,13 +696,13 @@ int afwMath::warpCenteredImage(
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwGeom::AffineTransform const &affineTransform, \
+        afwGeom::XYTransform const &xyTransform, \
         afwMath::WarpingControl const &control, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
-        afwGeom::AffineTransform const &affineTransform, \
+        afwGeom::XYTransform const &xyTransform, \
         afwMath::WarpingControl const &control, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \

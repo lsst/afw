@@ -68,16 +68,14 @@ namespace detail {
 
 
     /**
-     * @brief Derived functor class to transform pixel position for a destination image
-     *        to its position in the source image.  The provided xyTransform must map
-     *        destination position to source position using reverseTransform
-     *        (hence forwardTransform will map source to destination).
+     * @brief Functor class that wraps an XYTransform
      */    
     class XYTransformPositionFunctor : public PositionFunctor {
     public:
         explicit XYTransformPositionFunctor(
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-            lsst::afw::geom::XYTransform const &XYTransform///< srcPos = xyTransform.reverseTransform(destPos)
+            lsst::afw::geom::XYTransform const &XYTransform     ///< xy transform mapping source position
+                ///< to destination position in the forward direction (but only the reverse direction is used)
         ) :
             PositionFunctor(),
             _destXY0(destXY0),
@@ -97,38 +95,6 @@ namespace detail {
     private:
         lsst::afw::geom::Point2D const _destXY0;
         PTR(lsst::afw::geom::XYTransform const) _xyTransformPtr;
-    };
-
-
-    /**
-     * @brief Derived functor class to transform pixel position for a destination image
-     *        to its position in the source image via an AffineTransform.
-     */    
-    class AffineTransformPositionFunctor : public PositionFunctor {
-    public:
-        // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
-        // ... so we actually want to use the *inverse* transform of the affineTransform we were given.
-        // Thus _affineTransform is initialized to affineTransform.invert()
-        AffineTransformPositionFunctor(
-            lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-            lsst::afw::geom::AffineTransform const &affineTransform
-                ///< affine transformation mapping source position to destination position
-        ) :
-            PositionFunctor(),
-            _destXY0(destXY0),
-            _affineTransform() {
-            _affineTransform = affineTransform.invert();
-        }
-
-        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
-            double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
-            double const row = lsst::afw::image::indexToPosition(destRow + _destXY0[1]);
-            lsst::afw::geom::Point2D p = _affineTransform(lsst::afw::geom::Point2D(col, row));
-            return p;
-        }
-    private:
-        lsst::afw::geom::Point2D const &_destXY0;
-        lsst::afw::geom::AffineTransform _affineTransform;
     };
 
 }}}} // namespace lsst::afw::math::detail

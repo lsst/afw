@@ -496,14 +496,15 @@ namespace math {
     );
 
     /**
-     * \brief A variant of warpImage that uses an affine transformation instead of a WCS
+     * \brief A variant of warpImage that uses an XYTransform instead of a pair of WCS
      * to describe the transformation.
      */
     template<typename DestImageT, typename SrcImageT>
     int warpImage(
         DestImageT &destImage,              ///< remapped %image
         SrcImageT const &srcImage,          ///< source %image
-        lsst::afw::geom::AffineTransform const &affineTransform, ///< affine transformation to apply
+        lsst::afw::geom::XYTransform const &xyTransform, ///<  xy transform mapping source position
+            ///< to destination position in the forward direction (but only the reverse direction is used)
         WarpingControl const &control,      ///< control parameters
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
             typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
