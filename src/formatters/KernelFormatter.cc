@@ -218,7 +218,6 @@ void afwForm::KernelFormatter::update(dafBase::Persistable*,
 /** Serialize a Kernel to a Boost archive.  Handles text or XML
  * archives, input or output.
  * \param[in,out] ar Boost archive
- * \param[in] version Version of the Kernel class
  * \param[in,out] persistable Pointer to the Kernel as a Persistable
  */
 template <class Archive>

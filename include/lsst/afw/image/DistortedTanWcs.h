@@ -96,17 +96,17 @@ protected:
     /**
     Worker routine for skyToPixel
 
-    @param[in] sky1  sky position, longitude (e.g. RA)
-    @param[in] sky2  sky position, latitude (e.g. dec)
+    @param[in] pixel1  pixel position, x
+    @param[in] pixel2  pixel position, y
+    @param[in] skyTmp  sky position, longitude, latitude (e.g. RA, Dec)
     */
     virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
 
     /**
     Worker routine for pixelToSky
 
-    @param[in] pixel1  pixel position, x
-    @param[in] pixel2  pixel position, y
-    @param[out] sky  sky position (longitude, latitude, e.g. RA, Dec)
+    @param[out] sky1  sky position, longitude (e.g. RA)
+    @param[out] sky2  sky position, latitude (e.g. Dec)
     */
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
 

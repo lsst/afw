@@ -141,7 +141,7 @@ class WcsTestCase(unittest.TestCase):
 
     def testInputInvariance(self):
         pl = headerToPropertyList(self.header)
-        wcs = afwImage.makeWcs(pl)
+        afwImage.makeWcs(pl)
         for key, value in self.header.items():
             self.assertEqual(value, pl.get(key), "%s not invariant: %s vs %s" % (key, value, pl.get(key)))
 

@@ -171,7 +171,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(0x1a, stats.getValue(afwMath.SUM))
 
         def tst():
-            stats = afwMath.makeStatistics(mask, afwMath.MEAN)
+            afwMath.makeStatistics(mask, afwMath.MEAN)
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, tst)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

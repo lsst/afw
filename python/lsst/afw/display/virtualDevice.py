@@ -28,7 +28,6 @@ class DisplayImpl(object):
     def __init__(self, display, verbose=False):
         """! Initialise the display
         \param display The display object that we're providing the implementation for
-        \param frame an identifier for this display
         \param verbose be chatty?
         """
         self.display = display

@@ -332,7 +332,6 @@ class PolygonTest(utilsTests.TestCase):
                 import matplotlib.pyplot as plt
                 axes = small.plot(c='k')
                 large.plot(axes, c='b')
-                expected.plot(axes, c='r')
                 plt.show()
 
     def testReadWrite(self):

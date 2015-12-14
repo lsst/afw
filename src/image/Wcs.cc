@@ -26,6 +26,7 @@
 #include <sstream>
 #include <cmath>
 #include <cstring>
+#include <limits>
 
 #include "boost/format.hpp"
 
@@ -88,7 +89,8 @@ const int fitsToLsstPixels = -1;
 lsst::afw::image::Wcs::Wcs() :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1)) {
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+{
     _setWcslibParams();
     _initWcs();    
 }
@@ -104,7 +106,7 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
 {
     _setWcslibParams();
 
@@ -117,8 +119,20 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
  */
 void Wcs::_initWcs()
 {
+    // first four characters of CTYPE1 (name of first axis)
+    std::string ctype1 = std::string(_wcsInfo->ctype[0]).substr(0, 4);
+
     if (_wcsInfo) {
-        _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+        if (ctype1[0] == 'G') {
+            _coordSystem = afwCoord::GALACTIC;
+            _skyAxesSwapped = (ctype1[2] == 'A'); // GLAT instead of GLON
+        } else if (ctype1[0] == 'E') {
+            _coordSystem = afwCoord::ECLIPTIC;
+            _skyAxesSwapped = (ctype1[2] == 'A'); // ELAT instead of ELON
+        } else {
+            _coordSystem = afwCoord::makeCoordEnum(_wcsInfo->radesys);
+            _skyAxesSwapped = (ctype1[0] == 'D'); // DEC instead of RA
+        }
 
         // tell WCSlib that values have been updated
         _wcsInfo->flag = 0;
@@ -158,7 +172,7 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
 {
     _setWcslibParams();
     initWcsLib(crval, crpix, CD, 
@@ -459,7 +473,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _wcsfixCtrl(rhs._wcsfixCtrl), 
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))
+    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
 {
     
     if (rhs._nWcsInfo > 0) {
@@ -776,7 +790,7 @@ GeomPoint Wcs::skyToPixel(lsst::afw::coord::Coord const & coord) const {
 
 afwCoord::Coord::Ptr
 Wcs::convertCoordToSky(afwCoord::Coord const & coord) const {
-    return coord.convert(_coordSystem);
+    return coord.convert(_coordSystem, _wcsInfo->equinox);
 }
 
 GeomPoint Wcs::skyToPixel(afwGeom::Angle sky1, afwGeom::Angle sky2) const {
@@ -822,6 +836,20 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
      printf("(crval is (%.3f, %.3f))\n", crval->getLongitude().asDegrees(), crval->getLatitude().asDegrees());
      */
     return GeomPoint(imgcrd[0], imgcrd[1]); 
+}
+
+double Wcs::getEquinox() const {
+    if (_wcsInfo == nullptr) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    return _wcsInfo->equinox;
+}
+
+bool Wcs::isSameSkySystem(Wcs const &wcs) const {
+    if (_isIcrs() && wcs._isIcrs()) {
+        return true;
+    }
+    return (getCoordSystem() == wcs.getCoordSystem()) && (getEquinox() == wcs.getEquinox());
 }
 
 /*
@@ -877,57 +905,24 @@ void Wcs::pixelToSky(double pixel1, double pixel2, afwGeom::Angle& sky1, afwGeom
 ///\brief Given a sky position, use the values stored in ctype and radesys to return the correct
 ///sub-class of Coord
 CoordPtr Wcs::makeCorrectCoord(lsst::afw::geom::Angle sky0, lsst::afw::geom::Angle sky1) const {
-
-    //Construct a coord object of the correct type
-    int const ncompare = 4;                       // we only care about type's first 4 chars
-    char *type = _wcsInfo->ctype[0];
-    char *radesys = _wcsInfo->radesys;
-    double equinox = _wcsInfo->equinox;
-
-    if (strncmp(type, "RA--", ncompare) == 0) { // Our default.  If it's often something else, consider
-        ;                                       // using an tr1::unordered_map
-        if(strcmp(radesys, "ICRS") == 0) {
-            return afwCoord::makeCoord(afwCoord::ICRS, sky0, sky1);
+    auto coordSystem = getCoordSystem();
+    if ((coordSystem == afwCoord::ICRS) || (coordSystem == afwCoord::GALACTIC)) {
+        // equinox not relevant
+        if (_skyAxesSwapped) {
+            return afwCoord::makeCoord(coordSystem, sky1, sky0);
+        } else {
+            return afwCoord::makeCoord(coordSystem, sky0, sky1);
         }
-        if(strcmp(radesys, "FK5") == 0) {
-            return afwCoord::makeCoord(afwCoord::FK5, sky0, sky1, equinox);
-        } else {   
-            throw LSST_EXCEPT(except::RuntimeError,
-                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
-                               radesys).str());
+    } else if ((coordSystem == afwCoord::FK5) || (coordSystem == afwCoord::ECLIPTIC)) {
+        if (_skyAxesSwapped) {
+            return afwCoord::makeCoord(coordSystem, sky1, sky0, _wcsInfo->equinox);
+        } else {
+            return afwCoord::makeCoord(coordSystem, sky0, sky1, _wcsInfo->equinox);
         }
-
-    } else if (strncmp(type, "GLON", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::GALACTIC, sky0, sky1);   
-    } else if (strncmp(type, "ELON", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky0, sky1, equinox);
-    } else if (strncmp(type, "DEC-", ncompare) == 0) {
-        //check for the case where the ctypes are swapped. Note how sky0 and sky1 are swapped as well
-
-        //Our default
-        if(strcmp(radesys, "ICRS") == 0) {
-            return afwCoord::makeCoord(afwCoord::ICRS, sky1, sky0);
-        }
-        if(strcmp(radesys, "FK5") == 0) {
-            return afwCoord::makeCoord(afwCoord::FK5, sky1, sky0, equinox);
-        } else {   
-            throw LSST_EXCEPT(except::RuntimeError,
-                              (boost::format("Can't create Coord object: Unrecognised radesys %s") %
-                               radesys).str());
-        }
-    } else if (strncmp(type, "GLAT", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::GALACTIC, sky1, sky0);   
-    } else if (strncmp(type, "ELAT", ncompare) == 0) {
-        return afwCoord::makeCoord(afwCoord::ECLIPTIC, sky1, sky0, equinox);
-    } else {
-    //Give up in disgust
-        throw LSST_EXCEPT(except::RuntimeError,
-                          (boost::format("Can't create Coord object: Unrecognised sys %s") %
-                           type).str());
     }
-    
-    //Can't get here
-    assert(0);
+    throw LSST_EXCEPT(except::RuntimeError,
+                      (boost::format("Can't create Coord object: Unrecognised coordinate system %s") %
+                       coordSystem).str());
 }
 
 
@@ -1117,7 +1112,7 @@ Wcs::Wcs(afw::table::BaseRecord const & record) :
     _wcsfixCtrl(0),
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afw::coord::CoordSystem>(-1))
+    _coordSystem(static_cast<afw::coord::CoordSystem>(-1))  // set by _initWcs
 {
     WcsPersistenceHelper const & keys = WcsPersistenceHelper::get();
     if (!record.getSchema().contains(keys.schema)) {
@@ -1282,7 +1277,7 @@ int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Met
 
 
 XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs) src)
-    : XYTransform(), _dst(dst), _src(src)
+    : XYTransform(), _dst(dst), _src(src), _isSameSkySystem(dst->isSameSkySystem(*src))
 { }
 
 
@@ -1294,20 +1289,28 @@ PTR(afwGeom::XYTransform) XYTransformFromWcsPair::clone() const
 
 afwGeom::Point2D XYTransformFromWcsPair::forwardTransform(Point2D const &pixel) const
 {
-    //
-    // TODO there is an alternate version of pixelToSky() which is designated for the 
-    // "knowledgeable user in need of performance".  This is probably better, but first I need 
-    // to understand exactly which checks are needed (e.g. I think we need to check by hand 
-    // that both Wcs's use the same celestial coordinate system)
-    //
-    PTR(afw::coord::Coord) x = _src->pixelToSky(pixel);
-    return _dst->skyToPixel(*x);
+    if (_isSameSkySystem) {
+        // high performance branch; no coordinate conversion required
+        afw::geom::Angle sky0, sky1;
+        _src->pixelToSky(pixel[0], pixel[1], sky0, sky1);
+        return _dst->skyToPixel(sky0, sky1);
+    } else {
+        PTR(afw::coord::Coord const) coordPtr{_src->pixelToSky(pixel)};
+        return _dst->skyToPixel(*coordPtr);
+    }
 }
 
 afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) const
 {
-    PTR(afw::coord::Coord) x = _dst->pixelToSky(pixel);
-    return _src->skyToPixel(*x);
+    if (_isSameSkySystem) {
+        // high performance branch; no coordinate conversion required
+        afw::geom::Angle sky0, sky1;
+        _dst->pixelToSky(pixel[0], pixel[1], sky0, sky1);
+        return _src->skyToPixel(sky0, sky1);
+    } else {
+        PTR(afw::coord::Coord const) coordPtr{_dst->pixelToSky(pixel)};
+        return _src->skyToPixel(*coordPtr);
+    }
 }
 
 PTR(afwGeom::XYTransform) XYTransformFromWcsPair::invert() const

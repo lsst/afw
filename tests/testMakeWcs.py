@@ -95,7 +95,7 @@ class MakeWcsTestCase(unittest.TestCase):
         self.metadata.set("CTYPE1", "RA---TAN")
         self.metadata.set("CTYPE2", "DEC--TAN")
         
-        wcs0 = afwImage.makeWcs(self.metadata)
+        afwImage.makeWcs(self.metadata)
         wcs = afwImage.cast_TanWcs(afwImage.makeWcs(self.metadata))
         strRepresentation = str(wcs)
         self.assertNotEqual( strRepresentation.find("image::TanWcs"), -1, "non TanWcs object returned")

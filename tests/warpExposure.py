@@ -67,7 +67,8 @@ subExposurePath = os.path.join(dataDir, originalExposureName)
 originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
 originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
-def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN"):
+def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN",
+    radDecCSys="ICRS", equinox=2000):
     """Make a Wcs
     
     @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
@@ -95,8 +96,8 @@ def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX
         ps.add("CTYPE%1d" % (ip1,), ctypeList[i])
         ps.add("CRPIX%1d" % (ip1,), crPixFits[i])
         ps.add("CRVAL%1d" % (ip1,), crValDeg[i])
-    ps.add("RADECSYS", "ICRS")
-    ps.add("EQUINOX", 2000)
+    ps.add("RADECSYS", radDecCSys)
+    ps.add("EQUINOX", equinox)
     ps.add("CD1_1", cdMat[0, 0])
     ps.add("CD2_1", cdMat[1, 0])
     ps.add("CD1_2", cdMat[0, 1])
@@ -362,6 +363,53 @@ class WarpExposureTestCase(utilsTests.TestCase):
         """
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
+    def testNonIcrs(self):
+        """Test that warping to a non-ICRS-like coordinate system produces different results
+
+        It would be better to also test that the results are as expected,
+        but I have not been able to get swarp to perform this operation,
+        so have not found an independent means of generating the expected results.
+        """
+        kernelName = "lanczos3"
+        rtol=4e-5
+        atol=1e-2
+        warpingControl = afwMath.WarpingControl(
+            kernelName,
+        )
+
+        originalExposure = afwImage.ExposureF(originalExposurePath)
+        originalImage = originalExposure.getMaskedImage().getImage()
+        originalWcs = originalExposure.getWcs()
+
+        swarpedImageName = "medswarp1%s.fits" % (kernelName,)
+        swarpedImagePath = os.path.join(dataDir, swarpedImageName)
+        swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
+        swarpedImage = swarpedDecoratedImage.getImage()
+
+        for changeEquinox in (False, True):
+            swarpedMetadata = swarpedDecoratedImage.getMetadata()
+            if changeEquinox:
+                swarpedMetadata.set("RADECSYS", "FK5")
+                swarpedMetadata.set("EQUINOX", swarpedMetadata.get("EQUINOX") + 1)
+            warpedWcs = afwImage.makeWcs(swarpedMetadata)
+
+            afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
+            originalImage = originalExposure.getMaskedImage().getImage()
+            originalWcs = originalExposure.getWcs()
+            numGoodPix = afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
+                              originalWcs, warpingControl)
+            self.assertGreater(numGoodPix, 50)
+
+            afwWarpedImageArr = afwWarpedImage.getArray()
+            noDataMaskArr = numpy.isnan(afwWarpedImageArr)
+            if changeEquinox:
+                with self.assertRaises(AssertionError):
+                    self.assertImagesNearlyEqual(afwWarpedImage, swarpedImage,
+                        skipMask=noDataMaskArr, rtol=rtol, atol=atol)
+            else:
+                    self.assertImagesNearlyEqual(afwWarpedImage, swarpedImage,
+                        skipMask=noDataMaskArr, rtol=rtol, atol=atol)
+
     def testTicket2441(self):
         """Test ticket 2441: warpExposure sometimes mishandles zero-extent dest exposures"""
         fromWcs = makeWcs(
@@ -521,7 +569,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         Inputs:
         - kernelName: name of kernel in the form used by afwImage.makeKernel
         - useWarpExposure: if True, call warpExposure to warp an ExposureF,
-            else call warpImage to warp an ImageF
+            else call warpImage to warp an ImageF and also call the XYTransform version
         - useSubregion: if True then the original source exposure (from which the usual
             test exposure was extracted) is read and the correct subregion extracted
         - useDeepCopy: if True then the copy of the subimage is a deep copy,
@@ -587,6 +635,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         else:
             # path for saved afw-warped image
             afwWarpedImagePath = "afwWarpedImage1%s.fits" % (kernelName,)
+            afwWarpedImage2Path = "afwWarpedImage1%s_xyTransform.fits" % (kernelName,)
     
             afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
             originalImage = originalExposure.getMaskedImage().getImage()
@@ -615,7 +664,21 @@ class WarpExposureTestCase(utilsTests.TestCase):
                     afwWarpedImage.writeFits(afwWarpedImagePath)
                     print "Saved failed afw-warped image as: %s" % (afwWarpedImagePath,)
                 raise
-        
+
+            afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
+            xyTransform = afwImage.XYTransformFromWcsPair(warpedWcs, originalWcs)
+            afwMath.warpImage(afwWarpedImage2, originalImage, xyTransform, warpingControl)
+            msg = "afw xyTransform-based and WCS-based %s-warped images do not match" % (kernelName,)
+            try:
+                self.assertImagesNearlyEqual(afwWarpedImage2, afwWarpedImage,
+                    rtol=rtol, atol=atol, msg=msg)
+            except Exception:
+                if SAVE_FAILED_FITS_FILES:
+                    # save the image anyway
+                    afwWarpedImage.writeFits(afwWarpedImagePath)
+                    print "Saved failed afw-warped image as: %s" % (afwWarpedImage2Path,)
+                raise
+
         
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

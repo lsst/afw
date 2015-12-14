@@ -38,7 +38,6 @@ import unittest
 import numpy
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as logging
-import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
 import lsst.afw.coord as afwCoord
@@ -186,7 +185,7 @@ class FootprintTestCase(utilsTests.TestCase):
     def testGC(self):
         """Check that Footprints are automatically garbage collected (when MemoryTestCase runs)"""
 
-        f = afwDetect.Footprint()
+        afwDetect.Footprint()
 
     def testId(self):
         """Test uniqueness of IDs"""
@@ -718,7 +717,7 @@ class FootprintTestCase(utilsTests.TestCase):
         im.set(100)
 
         mi.setXY0(afwGeom.PointI(2, 2))
-        ds = afwDetect.FootprintSet(mi, afwDetect.Threshold(1), "DETECTED")
+        afwDetect.FootprintSet(mi, afwDetect.Threshold(1), "DETECTED")
 
         bitmask = mi.getMask().getPlaneBitMask("DETECTED")
         for y in range(im.getHeight()):
@@ -1131,7 +1130,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
-        ds = afwDetect.FootprintSet(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
+        afwDetect.FootprintSet(afwImage.MaskedImageF(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
         """Check that we found the correct number of objects and that they are correct"""

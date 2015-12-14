@@ -130,7 +130,7 @@ class InterpolateTestCase(unittest.TestCase):
                                        lambda : afwMath.makeInterpolate([], [],
                                                                         afwMath.Interpolate.CONSTANT))
 
-        interp = afwMath.makeInterpolate([0], [1], afwMath.Interpolate.CONSTANT)
+        afwMath.makeInterpolate([0], [1], afwMath.Interpolate.CONSTANT)
 
         self.assertRaises(pexExcept.OutOfRangeError,
                                        lambda : afwMath.makeInterpolate([0], [1],

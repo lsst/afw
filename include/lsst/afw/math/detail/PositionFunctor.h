@@ -36,6 +36,7 @@
 
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/geom/AffineTransform.h"
+#include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/image/Wcs.h"
 
@@ -67,70 +68,33 @@ namespace detail {
 
 
     /**
-     * @brief Derived functor class to transform pixel position for a destination image
-     *        to its position in the source image.  The transform is from one WCS to another.
+     * @brief Functor class that wraps an XYTransform
      */    
-    class WcsPositionFunctor : public PositionFunctor {
+    class XYTransformPositionFunctor : public PositionFunctor {
     public:
-        typedef boost::shared_ptr<WcsPositionFunctor> Ptr;
-
-        explicit WcsPositionFunctor(
+        explicit XYTransformPositionFunctor(
             lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-            lsst::afw::image::Wcs const &destWcs,       ///< WCS of remapped %image
-            lsst::afw::image::Wcs const &srcWcs         ///< WCS of source %image
+            lsst::afw::geom::XYTransform const &XYTransform     ///< xy transform mapping source position
+                ///< to destination position in the forward direction (but only the reverse direction is used)
         ) :
             PositionFunctor(),
             _destXY0(destXY0),
-            _destWcs(destWcs),
-            _srcWcs(srcWcs)
+            _xyTransformPtr(XYTransform.clone())
         {}
         
-        virtual ~WcsPositionFunctor() {};
+        virtual ~XYTransformPositionFunctor() {};
 
         virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
-            double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
-            double const row = lsst::afw::image::indexToPosition(destRow + _destXY0[1]);
-            lsst::afw::geom::Angle sky1, sky2;
-            _destWcs.pixelToSky(col, row, sky1, sky2);
-            return _srcWcs.skyToPixel(sky1, sky2);
+            afw::geom::Point2D const destPos{
+                lsst::afw::image::indexToPosition(destCol + _destXY0[0]),
+                lsst::afw::image::indexToPosition(destRow + _destXY0[1])
+            };
+            return _xyTransformPtr->reverseTransform(destPos);
         }
 
     private:
-        lsst::afw::geom::Point2D const &_destXY0;
-        lsst::afw::image::Wcs const &_destWcs;
-        lsst::afw::image::Wcs const &_srcWcs;
-    };
-
-
-    /**
-     * @brief Derived functor class to transform pixel position for a destination image
-     *        to its position in the source image via an AffineTransform.
-     */    
-    class AffineTransformPositionFunctor : public PositionFunctor {
-    public:
-        // NOTE: The transform will be called to locate a *source* pixel given a *dest* pixel
-        // ... so we actually want to use the *inverse* transform of the affineTransform we were given.
-        // Thus _affineTransform is initialized to affineTransform.invert()
-        AffineTransformPositionFunctor(
-            lsst::afw::geom::Point2D const &destXY0,    ///< xy0 of destination image
-            lsst::afw::geom::AffineTransform const &affineTransform
-                ///< affine transformation mapping source position to destination position
-        ) :
-            PositionFunctor(),
-            _destXY0(destXY0),
-            _affineTransform() {
-            _affineTransform = affineTransform.invert();
-        }
-
-        virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {
-            double const col = lsst::afw::image::indexToPosition(destCol + _destXY0[0]);
-            double const row = lsst::afw::image::indexToPosition(destRow + _destXY0[1]);
-            lsst::afw::geom::Point2D p = _affineTransform(lsst::afw::geom::Point2D(col, row));
-            return p;
-        }
-    private:
-        lsst::afw::geom::Point2D const &_destXY0;
-        lsst::afw::geom::AffineTransform _affineTransform;
+        lsst::afw::geom::Point2D const _destXY0;
+        PTR(lsst::afw::geom::XYTransform const) _xyTransformPtr;
     };
 
 }}}} // namespace lsst::afw::math::detail

@@ -300,9 +300,9 @@ class ButlerImage(FakeImageDataSource):
                  isTrimmed=True, verbose=False, background=numpy.nan, gravity=None, *args, **kwargs):
         """!Create an object that knows how to prepare images for showCamera using the butler
 
-        \param The butler to use.  If no butler is provided an empty image is returned
-        \param type The type of image to read (e.g. raw, bias, flat, calexp)
-        \param isTrimmed If true, the showCamera command expects to be given trimmed images
+        \param butler  The butler to use.  If no butler is provided an empty image is returned
+        \param type  The type of image to read (e.g. raw, bias, flat, calexp)
+        \param isTrimmed  If true, the showCamera command expects to be given trimmed images
         \param verbose  Be chatty (in particular, print any error messages from the butler)
         \param background  The value of any pixels that lie outside the CCDs
         \param  gravity  If the image returned by the butler is trimmed (e.g. some of the SuprimeCam CCDs)
@@ -369,7 +369,6 @@ class ButlerImage(FakeImageDataSource):
         ccdImage = im.Factory(bbox)
 
         ampImages = []
-        med0 = None
         for a in ccd:
             bias = im[a.getRawHorizontalOverscanBBox()]
             data = im[a.getRawDataBBox()]
@@ -502,6 +501,7 @@ def showCcd(ccd, imageSource=FakeImageDataSource(), display=None, frame=None, ov
     @param[in] ccd  Detector to use in display
     @param[in] imageSource  Source for producing images to display.  Must have a getCcdImage method.
     @param[in] display image display to use
+    @param[in] frame  frame ID on which to display
     @param[in] overlay  Show amp bounding boxes on the displayed image?
     @param[in] imageFactory  The image factory to use in generating the images.
     @param[in] binSize  Binning factor
@@ -628,7 +628,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
             imView[:] = im
-        except Exception as e:
+        except Exception:
             pass
 
     return camIm

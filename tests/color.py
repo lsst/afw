@@ -273,8 +273,8 @@ class ColorTestCase(unittest.TestCase):
         pass
 
     def testCtor(self):
-        c = afwImage.Color()
-        c = afwImage.Color(1.2)
+        afwImage.Color()
+        afwImage.Color(1.2)
 
     def testLambdaEff(self):
         f = afwImage.Filter("g")
@@ -309,7 +309,7 @@ class FilterTestCase(unittest.TestCase):
     def testCtor(self):
         """Test that we can construct a Filter"""
         # A filter of type 
-        f = afwImage.Filter("g")
+        afwImage.Filter("g")
 
     def testCtorFromMetadata(self):
         """Test building a Filter from metadata"""
@@ -379,11 +379,11 @@ class FilterTestCase(unittest.TestCase):
         # First FilterProperty
         #
         def tst():
-            gprime = self.defineFilterProperty("g", self.g_lambdaEff + 10)
+            self.defineFilterProperty("g", self.g_lambdaEff + 10)
 
         self.assertRaises(pexExcept.RuntimeError, tst)
-        gprime = self.defineFilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
-        gprime = self.defineFilterProperty("g", self.g_lambdaEff, True)
+        self.defineFilterProperty("g", self.g_lambdaEff + 10, True) # should not raise
+        self.defineFilterProperty("g", self.g_lambdaEff, True)
         #
         # Can redefine
         #

@@ -96,7 +96,7 @@ def assertMasksEqual(testCase, mask0, mask1, skipMask=None, msg="Masks differ"):
                         an object supporting one method: fail(self, msgStr)
     @param[in] mask0  mask 0, an lsst.afw.image.Mask, lsst.afw.image.Image,
         or transposed numpy array (see warning)
-    @param[in] mask0  mask 1, an lsst.afw.image.Mask, lsst.afw.image.Image,
+    @param[in] mask1  mask 1, an lsst.afw.image.Mask, lsst.afw.image.Image,
         or transposed numpy array (see warning)
     @param[in] skipMask  mask of pixels to skip, or None to compare all pixels;
         an lsst.afw.image.Mask, lsst.afw.image.Image, or transposed numpy array (see warning);
@@ -203,8 +203,6 @@ def assertMaskedImagesNearlyEqual(testCase, maskedImage0, maskedImage1,
 def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
     """!Compare the pixels of two image or mask arrays; return True if close, False otherwise
 
-    @param[in] testCase  unittest.TestCase instance the test is part of;
-                        an object supporting one method: fail(self, msgStr)
     @param[in] image0  image 0, an lsst.afw.image.Image, lsst.afw.image.Mask,
         or transposed numpy array (see warning)
     @param[in] image1  image 1, an lsst.afw.image.Image, lsst.afw.image.Mask,

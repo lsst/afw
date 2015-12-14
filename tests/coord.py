@@ -474,6 +474,10 @@ class CoordTestCase(unittest.TestCase):
         self.assertEqual(alphaPer[0], alphaPer2[0])
         self.assertEqual(alphaPer[1], alphaPer2[1])
 
+        # verify that convert(FK5, epoch) also works as precess
+        alphaPer3 = afwCoord.Fk5Coord(alpha1, delta1).convert(afwCoord.FK5, epoch)
+        self.assertEqual(alphaPer[0], alphaPer3[0])
+        self.assertEqual(alphaPer[1], alphaPer3[1])
         
         ### Galactic ###
         
@@ -525,7 +529,12 @@ class CoordTestCase(unittest.TestCase):
         venus214bc2 = venus2000.toEcliptic(ep)
         self.assertEqual(venus214bc[0], venus214bc2[0])
         self.assertEqual(venus214bc[1], venus214bc2[1])
-        
+
+        # verify that convert(ECLIPTIC, ep) is the same as precess(ep)
+        venus214bc3 = venus2000.convert(afwCoord.ECLIPTIC, ep)
+        self.assertEqual(venus214bc[0], venus214bc3[0])
+        self.assertEqual(venus214bc[1], venus214bc3[1])
+
         
     def testAngularSeparation(self):
         """Test measure of angular separation between two coords"""

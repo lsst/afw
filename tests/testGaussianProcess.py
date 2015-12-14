@@ -863,7 +863,6 @@ class GaussianProcessTestCase(unittest.TestCase):
                 muErr=-1.0 * muErr
             if muErr>worstMuErr:
                 worstMuErr=muErr
-                worstMu=mu[j]
 
             sigErr=(sig[j]-sigshld)/sigshld
             if sigErr<0.0:

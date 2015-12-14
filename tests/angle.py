@@ -33,7 +33,7 @@ or
    >>> import angle; angle.run()
 """
 
-import math, os, sys
+import math
 import unittest
 import numpy
 import lsst.utils.tests as tests

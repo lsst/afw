@@ -132,8 +132,6 @@ def wcsNearlyEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
     @param[in] maxDiffPix  maximum separation between pixel positions computed using Wcs.skyToPixel
     @param[in] nx  number of points in x for the grid of pixel positions
     @param[in] ny  number of points in y for the grid of pixel positions
-    @param[in] doShortCircuit  if True then stop at the first error, else test all values in the grid
-        and return information about the worst violations found
     """
     return not bool(_compareWcsOverBBox(
         wcs0 = wcs0,

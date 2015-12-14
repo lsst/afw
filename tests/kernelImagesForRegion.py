@@ -127,8 +127,8 @@ class KernelImagesForRegion(utilsTests.TestCase):
         rightInd = self.bbox.getMaxX() + 1
         bottomInd = self.bbox.getMinY()
         topInd = self.bbox.getMaxY() + 1
-        ctrXInd = int(round((leftInd + rightInd) / 2.0))
-        ctrYInd = int(round((bottomInd + topInd) / 2.0))
+        int(round((leftInd + rightInd) / 2.0))
+        int(round((bottomInd + topInd) / 2.0))
         
         for location, desIndex in (
             (region.BOTTOM_LEFT,  (leftInd,  bottomInd)),
@@ -159,6 +159,8 @@ class KernelImagesForRegion(utilsTests.TestCase):
         validHeights = (int(math.floor(floatHeight)), int(math.ceil(floatHeight)))
 
         totalHeight = 0
+        prevBBox = None
+        prevFirstBBox = None
         for yInd in range(ny):
             rowWidth = 0
             isOK = region.computeNextRow(regionRow)
