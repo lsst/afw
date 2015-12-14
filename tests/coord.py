@@ -112,6 +112,7 @@ class CoordTestCase(unittest.TestCase):
         # and see if they agree.
         for constructor, enum, cast, stringName in self.coordList:
             con = constructor(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
+            self.assertEqual(con.getCoordSystem(), enum)
             factories = []
             factories.append(afwCoord.makeCoord(enum, self.l * afwGeom.degrees, self.b * afwGeom.degrees))
             factories.append(afwCoord.makeCoord(afwCoord.makeCoordEnum(stringName), self.l * afwGeom.degrees, self.b * afwGeom.degrees))
@@ -119,6 +120,7 @@ class CoordTestCase(unittest.TestCase):
 
             print("Factory: ")
             for fac in factories:
+                self.assertEqual(fac.getCoordSystem(), enum)
                 self.assertAlmostEqual(con[0], fac[0])
                 self.assertAlmostEqual(con[1], fac[1])
                 print(" tried ", fac[0], fac[1],
@@ -334,16 +336,17 @@ class CoordTestCase(unittest.TestCase):
         pollux = afwCoord.Fk5Coord(alpha, delta)
 
         # bundle up a list of coords created with the specific and generic converters
-        coordList = [
-            [pollux.toFk5(),        pollux.convert(afwCoord.FK5)],
-            [pollux.toIcrs(),       pollux.convert(afwCoord.ICRS)],
-            [pollux.toGalactic(),   pollux.convert(afwCoord.GALACTIC)],
-            [pollux.toEcliptic(),   pollux.convert(afwCoord.ECLIPTIC)],
+        coordEnumList = [
+            [pollux.toFk5(),        afwCoord.FK5],
+            [pollux.toIcrs(),       afwCoord.ICRS],
+            [pollux.toGalactic(),   afwCoord.GALACTIC],
+            [pollux.toEcliptic(),   afwCoord.ECLIPTIC],
           ]
 
         # go through the list and see if specific and generic produce the same result ... they should!
         print("Convert: ")
-        for specific, generic in coordList:
+        for specific, enum in coordEnumList:
+            generic = pollux.convert(enum)
             # note that operator[]/__getitem__ is overloaded. It gets the internal (radian) values
             # ... the same as getPosition(afwGeom.radians)
             long1, lat1 = specific[0].asRadians(), specific[1].asRadians()
@@ -351,6 +354,8 @@ class CoordTestCase(unittest.TestCase):
             print("(specific) %.8f %.8f   (generic) %.8f %.8f" % (long1, lat1, long2, lat2))
             self.assertEqual(long1, long2)
             self.assertEqual(lat1, lat2)
+            self.assertEqual(specific.getCoordSystem(), enum)
+            self.assertEqual(generic.getCoordSystem(), enum)
 
         
     def testEcliptic(self):
@@ -418,6 +423,8 @@ class CoordTestCase(unittest.TestCase):
         altaz = sedna.toTopocentric(obs, obsDate)
         print("Topocentric (Sedna): ",
             altaz.getAltitude().asDegrees(), altaz.getAzimuth().asDegrees(), alt, az)
+
+        self.assertEqual(altaz.getCoordSystem(), afwCoord.TOPOCENTRIC)
         
         # precision is low as we don't account for as much as jpl (abberation, nutation, etc)
         self.assertAlmostEqual(altaz.getAltitude().asDegrees(), alt, 1)

@@ -677,6 +677,10 @@ afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system, double epoch) 
                           "Cannot make Topocentric with convert() (must also specify Observatory).\n"
                           "Instantiate TopocentricCoord() directly.");
         break;
+      case UNKNOWN:
+        throw LSST_EXCEPT(ex::InvalidParameterError,
+                          "Cannot convert to UNKNOWN coordinate system");
+        break;
       default:
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC allowed.");

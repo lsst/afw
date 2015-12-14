@@ -51,7 +51,7 @@ namespace coord {
 /*
  * Information about the coordinate system we support
  */
-enum CoordSystem { FK5, ICRS, GALACTIC, ECLIPTIC, TOPOCENTRIC };
+enum CoordSystem { UNKNOWN=-1, FK5, ICRS, GALACTIC, ECLIPTIC, TOPOCENTRIC };
 CoordSystem makeCoordEnum(std::string const system);
     
 class IcrsCoord;
@@ -99,6 +99,8 @@ public:
     }
 
     virtual std::string getClassName() const { return "Coord"; }
+
+    virtual CoordSystem getCoordSystem() const { return UNKNOWN; }
 
     // These are inline functions and are defined at the end of this header file
     lsst::afw::geom::Angle operator[](int const index) const;
@@ -168,6 +170,8 @@ public:
     virtual Coord::Ptr clone() const { return IcrsCoord::Ptr(new IcrsCoord(*this)); }
 
     virtual std::string getClassName() const { return "IcrsCoord"; }
+
+    virtual CoordSystem getCoordSystem() const { return ICRS; }
     
     virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude);
     
@@ -208,6 +212,8 @@ public:
     virtual Coord::Ptr clone() const { return Fk5Coord::Ptr(new Fk5Coord(*this)); }
 
     virtual std::string getClassName() const { return "Fk5Coord"; }
+
+    virtual CoordSystem getCoordSystem() const { return FK5; }
 
     Fk5Coord precess(double const epochTo) const;
     
@@ -250,6 +256,8 @@ public:
     virtual Coord::Ptr clone() const { return GalacticCoord::Ptr(new GalacticCoord(*this)); }
 
     virtual std::string getClassName() const { return "GalacticCoord"; }
+
+    virtual CoordSystem getCoordSystem() const { return GALACTIC; }
 
     virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude);
     
@@ -302,6 +310,8 @@ public:
 
     virtual std::string getClassName() const { return "EclipticCoord"; }
 
+    virtual CoordSystem getCoordSystem() const { return ECLIPTIC; }
+
     virtual std::pair<std::string, std::string> getCoordNames() const {
         return std::pair<std::string, std::string>("Lambda", "Beta");
     }
@@ -345,6 +355,8 @@ public:
     virtual Coord::Ptr clone() const { return TopocentricCoord::Ptr(new TopocentricCoord(*this)); }
 
     virtual std::string getClassName() const { return "TopocentricCoord"; }
+
+    virtual CoordSystem getCoordSystem() const { return TOPOCENTRIC; }
 
     Observatory getObservatory() const { return _obs; }
 
