@@ -1426,15 +1426,16 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
 std::ostream & afwCoord::operator<<(std::ostream & os, afwCoord::Coord const & coord) {
     auto const className = coord.getClassName();
+    auto const coordSystem = coord.getCoordSystem();
     os << (boost::format("%s(%.7f, %.7f")
             % className
             % coord[0].asDegrees()
             % coord[1].asDegrees()).str();
-    if (className == "TopocentricCoord") {
+    if (coordSystem == TOPOCENTRIC) {
         os << (boost::format(", %.12f, (%s)")
                 % coord.getEpoch()
                 % dynamic_cast<afwCoord::TopocentricCoord const &>(coord).getObservatory()).str();
-    } else if (className != "IcrsCoord" && className != "GalacticCoord") {
+    } else if (coordSystem != ICRS && coordSystem != GALACTIC) {
         os << (boost::format(", %.2f") % coord.getEpoch()).str();
     }
     os << ")";

@@ -70,6 +70,7 @@
 
 %include "lsst/afw/coord/Coord.h"
 
+// add __str__ and __repr__ methods to a specified Coord class (e.g. Fk5Coord)
 %define strCoord(TYPE)
 %extend lsst::afw::coord::TYPE {
     std::string __str__() const {
@@ -80,14 +81,15 @@
     %pythoncode %{
 def __repr__(self):
     className = self.getClassName()
+    coordSystem = self.getCoordSystem()
     argList = ["%r * afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
-    if className == "TopocentricCoord":
+    if coordSystem == TOPOCENTRIC:
         topoCoord = TopocentricCoord.cast(self)
         argList += [
             repr(self.getEpoch()),
             "(%r)" % (topoCoord.getObservatory(),),
         ]
-    elif className not in ("IcrsCoord", "GalacticCoord"):
+    elif coordSystem not in (ICRS, GALACTIC):
         argList.append(repr(self.getEpoch()))
     return "%s(%s)" % (self.getClassName(), ", ".join(argList))
     %}
