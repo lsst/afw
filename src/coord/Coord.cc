@@ -639,7 +639,7 @@ afwGeom::Angle afwCoord::Coord::offset(
  * @throw lsst::pex::exceptions::InvalidParameterError if system = TOPOCENTRIC
  *         (because observatory data is required) or if system not recognized
  */
-afwCoord::Coord::Ptr afwCoord::Coord::convert(CoordSystem system, double epoch) const {
+PTR(afwCoord::Coord) afwCoord::Coord::convert(CoordSystem system, double epoch) const {
 
     switch (system) {
       case FK5:
@@ -1217,7 +1217,7 @@ afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric() const {
  * @note Most of the other factories (which accept epochs) just call this one indirectly.
  *
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
         CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
         afwGeom::Angle const ra,              ///< right ascension
         afwGeom::Angle const dec,             ///< declination
@@ -1261,7 +1261,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note This factory assumes a default epoch
  * @note Most of the other factories (which don't accept epoch) call this one.
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
         CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
         afwGeom::Angle const ra,              ///< right ascension
         afwGeom::Angle const dec             ///< declination
@@ -1302,7 +1302,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  *
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
         CoordSystem const system,     ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,     ///< the coord in Point3D format
         double const epoch,            ///< epoch of coordinate
@@ -1318,7 +1318,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
  *
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
         CoordSystem const system,             ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point3D const &p3d,  ///< the coord in Point3D format
         bool normalize,                        ///< normalize the p3d provided
@@ -1333,7 +1333,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
         CoordSystem const system,               ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
         afwGeom::AngleUnit unit,       ///< the units (eg. degrees, radians)
@@ -1352,7 +1352,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
  *
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
         CoordSystem const system, ///< the system (equ, fk5, galactic ..)
         lsst::afw::geom::Point2D const &p2d,    ///< the (eg) ra,dec in a Point2D
         afwGeom::AngleUnit unit        ///< the units (eg. degrees, radians)
@@ -1369,7 +1369,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  * @note This factory accepts epoch.  There is an overloaded version which uses a default.
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
                                    CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
                                    std::string const ra,       ///< right ascension
                                    std::string const dec,      ///< declination
@@ -1382,7 +1382,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
  *
  * @note This factory uses a default epoch.  There is an overloaded version which accepts an epoch.
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
                                    CoordSystem const system,   ///< the system (equ, fk5, galactic ..)
                                    std::string const ra,       ///< right ascension
                                    std::string const dec       ///< declination
@@ -1395,7 +1395,7 @@ afwCoord::Coord::Ptr afwCoord::makeCoord(
 /**
  * @brief Lightweight factory to make an empty coord.
  */
-afwCoord::Coord::Ptr afwCoord::makeCoord(
+PTR(afwCoord::Coord) afwCoord::makeCoord(
                                    CoordSystem const system ///< the system (FK5, ICRS, etc)
                                   ) {
     switch (system) {

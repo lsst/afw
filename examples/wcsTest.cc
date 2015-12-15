@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     }
     std::cout << "Opening exposure " << inImagePath << std::endl;
 
-    PropertySet::Ptr miMetadata(new PropertySet);
+    auto miMetadata(new PropertySet);
     afwImage::Exposure<Pixel> exposure(inImagePath);
     if (!exposure.hasWcs()) {
             std::cerr << "Exposure does not have a WCS." << std::endl;
@@ -84,8 +84,8 @@ int main(int argc, char **argv) {
     afwGeom::Point2D minCoord = afwGeom::Point2D(1.0, 1.0);
     afwGeom::Point2D xy = afwGeom::Point2D(exposure.getWidth(), exposure.getHeight());
 
-    afwCoord::Coord::ConstPtr sky1 = wcs->pixelToSky(minCoord);
-    afwCoord::Coord::ConstPtr sky2 = wcs->pixelToSky(xy);
+    PTR(afwCoord::Coord const) sky1 = wcs->pixelToSky(minCoord);
+    PTR(afwCoord::Coord const) sky2 = wcs->pixelToSky(xy);
 
     afwGeom::Angle miRa1 = sky1->getLongitude();
     afwGeom::Angle miDecl1 = sky1->getLatitude();
@@ -114,8 +114,8 @@ int main(int argc, char **argv) {
     std::cout << "col, row of " << inImagePath << " at ("<< miRa2.asDegrees() << " " << miDecl2.asDegrees() <<") = "
         << "col: " << pix2[0] << " row: " << pix2[1] << std::endl << std::endl;
 
-    afwCoord::Coord::ConstPtr raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
-    afwCoord::Coord::ConstPtr raDecl2 = makeCoord(afwCoord::FK5, miRa2, miDecl2);
+    PTR(afwCoord::Coord const) raDecl1 = makeCoord(afwCoord::FK5, miRa1, miDecl1);
+    PTR(afwCoord::Coord const) raDecl2 = makeCoord(afwCoord::FK5, miRa2, miDecl2);
 
     afwGeom::Point2D pix3 = wcs->skyToPixel(*raDecl1);
     afwGeom::Point2D pix4 = wcs->skyToPixel(*raDecl2);
