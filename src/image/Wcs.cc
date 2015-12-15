@@ -89,7 +89,7 @@ const int fitsToLsstPixels = -1;
 lsst::afw::image::Wcs::Wcs() :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
     _initWcs();    
@@ -106,7 +106,7 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
 
@@ -172,7 +172,7 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
     initWcsLib(crval, crpix, CD, 
@@ -473,7 +473,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _wcsfixCtrl(rhs._wcsfixCtrl), 
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     
     if (rhs._nWcsInfo > 0) {
