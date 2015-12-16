@@ -70,9 +70,6 @@ class TopocentricCoord;
 class Coord {
 public:
 
-    typedef boost::shared_ptr<Coord> Ptr;
-    typedef boost::shared_ptr<Coord const> ConstPtr;
-
     Coord(lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit = lsst::afw::geom::degrees, double const epoch = 2000.0);
     Coord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0,
           bool normalize=true,
@@ -159,7 +156,6 @@ private:
  */
 class IcrsCoord : public Coord {
 public:
-    typedef boost::shared_ptr<IcrsCoord> Ptr;
 
     IcrsCoord(lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit = lsst::afw::geom::degrees) : Coord(p2d, unit, 2000.0) {}
     IcrsCoord(lsst::afw::geom::Point3D const &p3d, bool normalize=true, lsst::afw::geom::Angle const defaultLongitude = lsst::afw::geom::Angle(0.)) :
@@ -196,8 +192,6 @@ private:
 class Fk5Coord : public Coord {
 public:    
 
-    typedef boost::shared_ptr<Fk5Coord> Ptr;
-    
     Fk5Coord(lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit = lsst::afw::geom::degrees, double const epoch = 2000.0) :
         Coord(p2d, unit, epoch) {}
     Fk5Coord(lsst::afw::geom::Point3D const &p3d, double const epoch = 2000.0,
@@ -244,8 +238,6 @@ private:
 class GalacticCoord : public Coord {
 public:
     
-    typedef boost::shared_ptr<GalacticCoord> Ptr;
-    
     GalacticCoord(lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit = lsst::afw::geom::degrees) : Coord(p2d, unit) {}
     GalacticCoord(lsst::afw::geom::Point3D const &p3d,
                   bool normalize=true, lsst::afw::geom::Angle const defaultLongitude= lsst::afw::geom::Angle(0.)) :
@@ -287,8 +279,6 @@ private:
 class EclipticCoord : public Coord {
 public:
     
-    typedef boost::shared_ptr<EclipticCoord> Ptr;
-
     EclipticCoord(lsst::afw::geom::Point2D const &p2d,
                   lsst::afw::geom::AngleUnit unit = lsst::afw::geom::degrees,
                   double const epoch = 2000.0) :
@@ -339,8 +329,6 @@ private:
  */
 class TopocentricCoord : public Coord {
 public:
-    
-    typedef boost::shared_ptr<TopocentricCoord> Ptr;
     
     TopocentricCoord(lsst::afw::geom::Point2D const &p2d, lsst::afw::geom::AngleUnit unit, double const epoch,
                      Observatory const &obs) : Coord(p2d, unit, epoch), _obs(obs) {}
