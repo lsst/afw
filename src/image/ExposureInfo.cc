@@ -198,8 +198,8 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     //the position of the origin of the parent image relative to the origin of the sub-image.
     // _x0, _y0 >= 0, while LTV1 and LTV2 <= 0
 
-    data.imageMetadata->set("LTV1", -xy0.getX());
-    data.imageMetadata->set("LTV2", -xy0.getY());
+    data.imageMetadata->set("LTV1", static_cast<double>(-xy0.getX()));
+    data.imageMetadata->set("LTV2", static_cast<double>(-xy0.getY()));
 
     data.metadata->set("FILTER", getFilter().getName());
     if (hasDetector()) {
