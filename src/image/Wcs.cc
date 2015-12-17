@@ -60,7 +60,7 @@ typedef lsst::daf::base::PropertySet PropertySet;
 typedef lsst::daf::base::PropertyList PropertyList;
 typedef lsst::afw::image::Wcs Wcs;
 typedef lsst::afw::geom::Point2D GeomPoint;
-typedef lsst::afw::coord::Coord::Ptr CoordPtr;
+typedef PTR(lsst::afw::coord::Coord) CoordPtr;
 typedef lsst::afw::image::XYTransformFromWcsPair XYTransformFromWcsPair;
 
 //The amount of space allocated to strings in wcslib
@@ -89,7 +89,7 @@ const int fitsToLsstPixels = -1;
 lsst::afw::image::Wcs::Wcs() :
     daf::base::Citizen(typeid(this)),
     _wcsInfo(NULL), _nWcsInfo(0), _relax(0), _wcsfixCtrl(0), _wcshdrCtrl(0), _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
     _initWcs();    
@@ -106,7 +106,7 @@ Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
 
@@ -172,7 +172,7 @@ Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const
     _wcsfixCtrl(0), 
     _wcshdrCtrl(0),
     _nReject(0),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
     initWcsLib(crval, crpix, CD, 
@@ -473,7 +473,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     _wcsfixCtrl(rhs._wcsfixCtrl), 
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject),
-    _coordSystem(static_cast<afwCoord::CoordSystem>(-1))  // set by _initWcs
+    _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     
     if (rhs._nWcsInfo > 0) {
@@ -563,8 +563,8 @@ Wcs::~Wcs() {
 }
     
 
-Wcs::Ptr Wcs::clone(void) const {
-    return Wcs::Ptr(new Wcs(*this));
+PTR(Wcs) Wcs::clone(void) const {
+    return PTR(Wcs)(new Wcs(*this));
 }
 
 //
@@ -679,7 +679,7 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
     _wcsInfo->flag = 0;
 }
 
-PropertyList::Ptr Wcs::getFitsMetadata() const {
+PTR(PropertyList) Wcs::getFitsMetadata() const {
     return lsst::afw::formatters::WcsFormatter::generatePropertySet(*this);
 }
 
@@ -783,12 +783,12 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
 }
 
 GeomPoint Wcs::skyToPixel(lsst::afw::coord::Coord const & coord) const {
-    afwCoord::Coord::Ptr sky = convertCoordToSky(coord);
+    PTR(afwCoord::Coord) sky = convertCoordToSky(coord);
     return skyToPixelImpl(sky->getLongitude(), sky->getLatitude());
 }
 
 
-afwCoord::Coord::Ptr
+PTR(afwCoord::Coord)
 Wcs::convertCoordToSky(afwCoord::Coord const & coord) const {
     return coord.convert(_coordSystem, _wcsInfo->equinox);
 }
@@ -800,7 +800,7 @@ GeomPoint Wcs::skyToPixel(afwGeom::Angle sky1, afwGeom::Angle sky2) const {
 GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord) const {
     assert(_wcsInfo);
 
-    afwCoord::Coord::Ptr sky = convertCoordToSky(coord);
+    PTR(afwCoord::Coord) sky = convertCoordToSky(coord);
     double skyTmp[2];
     double imgcrd[2];
     double phi, theta;
@@ -832,7 +832,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
     /*
      printf("->iwc (%.3f, %.3f)\n", imgcrd[0], imgcrd[1]);
      printf("-> pix (%.2f, %.2f)\n", pixTmp[0], pixTmp[1]);
-     afwCoord::Coord::Ptr crval = getSkyOrigin();
+     PTR(afwCoord::Coord) crval = getSkyOrigin();
      printf("(crval is (%.3f, %.3f))\n", crval->getLongitude().asDegrees(), crval->getLatitude().asDegrees());
      */
     return GeomPoint(imgcrd[0], imgcrd[1]); 
@@ -1178,12 +1178,12 @@ namespace detail {
 /**
  * Define a trivial WCS that maps the lower left corner (LLC) pixel of an image to a given value
  */
-lsst::daf::base::PropertyList::Ptr
+PTR(lsst::daf::base::PropertyList)
 createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired WCS
                               int const x0,               ///< Column coordinate of LLC pixel
                               int const y0                ///< Row coordinate of LLC pixel
                              ) {
-    lsst::daf::base::PropertyList::Ptr wcsMetaData(new lsst::daf::base::PropertyList);
+    PTR(lsst::daf::base::PropertyList) wcsMetaData(new lsst::daf::base::PropertyList);
 
     wcsMetaData->set("CRVAL1" + wcsName, x0, "Column pixel of Reference Pixel");
     wcsMetaData->set("CRVAL2" + wcsName, y0, "Row pixel of Reference Pixel");

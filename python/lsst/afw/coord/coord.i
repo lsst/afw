@@ -24,6 +24,7 @@
  
 
 %{
+#include "lsst/base.h" // for PTR
 #include "lsst/afw/image.h"    
 #include "lsst/afw/geom.h"
 #include "lsst/daf/base.h"    
@@ -46,16 +47,16 @@
 // -----------------------------------------------------------------------
 // THESE CASTS ARE NOW DEPRECATED; USE E.G. `Fk5Coord.cast()` INSTEAD
 %inline %{
-    lsst::afw::coord::Fk5Coord::Ptr cast_Fk5(lsst::afw::coord::Coord::Ptr c) {
+    PTR(lsst::afw::coord::Fk5Coord) cast_Fk5(PTR(lsst::afw::coord::Coord) c) {
         return boost::dynamic_pointer_cast<lsst::afw::coord::Fk5Coord>(c);
     }
-    lsst::afw::coord::IcrsCoord::Ptr cast_Icrs(lsst::afw::coord::Coord::Ptr c) {
+    PTR(lsst::afw::coord::IcrsCoord) cast_Icrs(PTR(lsst::afw::coord::Coord) c) {
         return boost::dynamic_pointer_cast<lsst::afw::coord::IcrsCoord>(c);
     }
-    lsst::afw::coord::GalacticCoord::Ptr cast_Galactic(lsst::afw::coord::Coord::Ptr c) {
+    PTR(lsst::afw::coord::GalacticCoord) cast_Galactic(PTR(lsst::afw::coord::Coord) c) {
         return boost::dynamic_pointer_cast<lsst::afw::coord::GalacticCoord>(c);
     }
-    lsst::afw::coord::EclipticCoord::Ptr cast_Ecliptic(lsst::afw::coord::Coord::Ptr c) {
+    PTR(lsst::afw::coord::EclipticCoord) cast_Ecliptic(PTR(lsst::afw::coord::Coord) c) {
         return boost::dynamic_pointer_cast<lsst::afw::coord::EclipticCoord>(c);
     }
 %}
@@ -69,6 +70,7 @@
 
 %include "lsst/afw/coord/Coord.h"
 
+// add __str__ and __repr__ methods to a specified Coord class (e.g. Fk5Coord)
 %define strCoord(TYPE)
 %extend lsst::afw::coord::TYPE {
     std::string __str__() const {
@@ -79,14 +81,15 @@
     %pythoncode %{
 def __repr__(self):
     className = self.getClassName()
+    coordSystem = self.getCoordSystem()
     argList = ["%r * afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
-    if className == "TopocentricCoord":
+    if coordSystem == TOPOCENTRIC:
         topoCoord = TopocentricCoord.cast(self)
         argList += [
             repr(self.getEpoch()),
             "(%r)" % (topoCoord.getObservatory(),),
         ]
-    elif className not in ("IcrsCoord", "GalacticCoord"):
+    elif coordSystem not in (ICRS, GALACTIC):
         argList.append(repr(self.getEpoch()))
     return "%s(%s)" % (self.getClassName(), ", ".join(argList))
     %}

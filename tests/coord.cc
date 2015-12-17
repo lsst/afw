@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(eclipticConversion) {
     BOOST_CHECK_CLOSE(lamb, lamb0, 1.0e-6);
     BOOST_CHECK_CLOSE(beta, beta0, 1.0e-6);
 
-    afwCoord::Coord::Ptr test = afwCoord::makeCoord(afwCoord::makeCoordEnum("FK5"),
-                                                    lamb0 * afwGeom::degrees, beta0 * afwGeom::degrees);
+    auto test = afwCoord::makeCoord(afwCoord::makeCoordEnum("FK5"),
+                                    lamb0 * afwGeom::degrees, beta0 * afwGeom::degrees);
 
     BOOST_CHECK_EQUAL(test->getLongitude().asDegrees(), lamb0);
 }

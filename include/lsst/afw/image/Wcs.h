@@ -118,7 +118,7 @@ public:
      *
      *  Set stripMetadata=true to remove processed keywords from the PropertySet.
      */
-    friend Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
+    friend PTR(Wcs) makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata,
                             bool stripMetadata);
 
     Wcs(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
@@ -135,7 +135,7 @@ public:
     bool operator!=(Wcs const & other) const { return !(*this == other); }
 
     /// Returns CRVAL. This need not be the centre of the image.
-    lsst::afw::coord::Coord::Ptr getSkyOrigin() const;
+    PTR(lsst::afw::coord::Coord) getSkyOrigin() const;
 
     /// Returns CRPIX (corrected to LSST convention).
     lsst::afw::geom::Point2D getPixelOrigin() const;
@@ -382,13 +382,13 @@ protected:
     virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
     
-    afw::coord::Coord::Ptr makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
+    PTR(afw::coord::Coord) makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
 
     /**
      *  Given a Coord (as a shared pointer), return the sky position in the correct
      *  coordinate system for this Wcs.
      */
-    afw::coord::Coord::Ptr convertCoordToSky(coord::Coord const & coord) const;
+    PTR(afw::coord::Coord) convertCoordToSky(coord::Coord const & coord) const;
     
     virtual geom::AffineTransform linearizePixelToSkyInternal(
         geom::Point2D const & pix,
@@ -424,12 +424,12 @@ namespace detail {
     geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
-Wcs::Ptr makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool stripMetadata=false);
+PTR(Wcs) makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool stripMetadata=false);
 
 /*
  Note, CD matrix elements must be in degrees/pixel.
  */
-Wcs::Ptr makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
+PTR(Wcs) makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
     
 namespace detail {
