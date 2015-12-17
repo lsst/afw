@@ -31,6 +31,7 @@ from __future__ import absolute_import, division
 
 import os.path
 import unittest
+import numbers
 
 import lsst.utils
 import lsst.afw.image as afwImage
@@ -244,11 +245,15 @@ class SavingSubImagesTest(unittest.TestCase):
             subImg.writeFits(outFile)
             hdr = afwImage.readMetadata(outFile)
             
-            self.assertTrue( hdr.exists("LTV1"), "LTV1 not saved to fits header")
-            self.assertTrue( hdr.exists("LTV2"), "LTV2 not saved to fits header")
-            self.assertEqual(hdr.get("LTV1"), -1*x0, "LTV1 has wrong value")
-            self.assertEqual(hdr.get("LTV2"), -1*y0, "LTV1 has wrong value")
+            def checkLtvHeader(hdr, name, value):
+                # Per DM-4133, LTVn headers are required to be floating point
+                self.assertTrue(hdr.exists(name), name + " not saved to FITS header")
+                self.assertIsInstance(hdr.get(name), numbers.Real, name + " is not numeric")
+                self.assertNotIsInstance(hdr.get(name), numbers.Integral, name + " is an int")
+                self.assertEqual(hdr.get(name), value, name + " has wrong value")
 
+            checkLtvHeader(hdr, "LTV1", -1*x0)
+            checkLtvHeader(hdr, "LTV2", -1*y0)
 
             self.assertTrue( hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
             self.assertTrue( hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
