@@ -585,6 +585,65 @@ class TestWcsCompare(unittest.TestCase):
         self.assertNotEqual(distortedWcsCopy, sipWcsCopy)
         self.assertNotEqual(sipWcsCopy, distortedWcsCopy)
 
+class WcsTestCaseTPV(utilsTests.TestCase):
+
+    def test_simpleTPV(self):
+        """Check that pixel to sky transformations successfully use TPV distortion terms."""
+
+        # Sample headers taken from a Decam community pipeline-processed image,
+        # exposure 197383 HDU 1.
+        md = dafBase.PropertyList()
+        for k, v in (
+            ("EQUINOX", 2000.0),
+            ("RADESYS", 'FK5'),
+            ("CRPIX1" , 13415.2),
+            ("CRPIX2" , 6297.333),
+            ("CD1_1"  , -1.323029510822E-07),
+            ("CD1_2"  , 7.28753587529E-05),
+            ("CD2_1"  , -7.285886627477E-05),
+            ("CD2_2"  , -1.155562845953E-07),
+            ("CRVAL1" , 196.7761109337),
+            ("CRVAL2" , -18.43995836658),
+            ("CUNIT1" , 'deg'),
+            ("CUNIT2" , 'deg'),
+            ("CTYPE1" , 'RA---TPV'),
+            ("CTYPE2" , 'DEC--TPV'),
+            ("PV2_0"  ,  0.002613060368698),
+            ("PV2_1"  ,    0.9931337553477),
+            ("PV2_2"  , -0.009414892806073),
+            ("PV2_3"  ,                0.0),
+            ("PV2_4"  ,  0.008771460618847),
+            ("PV2_5"  ,   0.01826140592329),
+            ("PV2_6"  ,  -0.01066967054507),
+            ("PV2_7"  , -0.003739430249945),
+            ("PV2_8"  , -0.009387805146152),
+            ("PV2_9"  ,  0.007202907073747),
+            ("PV2_10" , -0.003683686751425),
+            ("PV1_0"  ,  0.004327364626353),
+            ("PV1_1"  ,     1.013758387216),
+            ("PV1_2"  ,  -0.01131609656961),
+            ("PV1_3"  ,                0.0),
+            ("PV1_4"  ,  0.008865811106037),
+            ("PV1_5"  ,  -0.01657049389296),
+            ("PV1_6"  ,   0.01202041999278),
+            ("PV1_7"  , 0.0008534196190617),
+            ("PV1_8"  , -0.007472254968395),
+            ("PV1_9"  ,  0.005805882078771),
+            ("PV1_10" , -0.004357212119479),
+            ):
+            md.set(k, v)
+
+        wcs = afwImage.makeWcs(md)
+
+        # Coordinates from astropy 1.1 (which calls wcslib).
+        x, y = 2000, 1000
+        ra, dec = 196.37231188377461, -17.606755752383453
+
+        sky = wcs.pixelToSky(x, y)
+        for i, v in enumerate([ra, dec]):
+            self.assertAlmostEqual(sky[i].asDegrees(), v)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -598,6 +657,7 @@ def suite():
     suites += unittest.makeSuite(WCSTestCaseCFHT)
     suites += unittest.makeSuite(WCSRotateFlip)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
+    suites += unittest.makeSuite(WcsTestCaseTPV)
 
     return unittest.TestSuite(suites)
 
