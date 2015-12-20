@@ -148,9 +148,9 @@ void Wcs::_initWcs()
         // npv is the number of PV cards read in the header. In the case of
         // TPV it is not set (even though PV cards are present in the header),
         // instead they are put in lin->disseq.
-        _hasDistortion = _wcsInfo->npv > 0;
-        _hasDistortion |= _wcsInfo->lin.dispre != NULL;
-        _hasDistortion |= _wcsInfo->lin.disseq != NULL;
+        _hasDistortion = _wcsInfo->npv > 0 ||
+                         _wcsInfo->lin.dispre != nullptr ||
+                         _wcsInfo->lin.disseq != nullptr;
 
     }
 }

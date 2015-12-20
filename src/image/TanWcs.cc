@@ -140,29 +140,35 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
             decodeSipHeader(*hackMetadata, "BP", _sipBp);
 
             // Remove SIP headers, so that wcslib cannot attempt to use them
-            const char* sipPrefixes[] = {"A", "B", "AP", "BP"};
+            std::vector<std::string> sipPrefixes = {"A", "B", "AP", "BP"};
 
-            char sipName[9];
-            char orderName[9];
-            for (int i=0; i < 4; i++) {
+            std::string sipName;
+            std::string orderName;
+            //for (int i=0; i < 4; i++) {
+            for (auto const &prefix: sipPrefixes) {
 
-                sprintf(orderName, "%s_ORDER", sipPrefixes[i]);
+                //sprintf(orderName, "%s_ORDER", prefix);
+                orderName = (boost::format("%1%_ORDER") % prefix).str();
+                //orderName << prefix << "_ORDER"
                 if(!hackMetadata->exists(orderName)) continue;
                 int order = hackMetadata->getAsInt(orderName);
 
                 for (int p = 0; p <= order; p++) {
                     for (int q = 0; p + q <= order; q++) {
-                        sprintf(sipName, "%s_%d_%d", sipPrefixes[i], p, q);
+                        sipName = (boost::format("%1%_%2%_%3%") % prefix % p % q).str();
+                        //sprintf(sipName, "%s_%d_%d", prefix, p, q);
                         if (hackMetadata->exists(sipName)) {
                             hackMetadata->remove(sipName);
                         }
                     }
                 }
-                sprintf(sipName, "%s_DMAX", sipPrefixes[i]);
+                //sprintf(sipName, "%s_DMAX", prefix]);
+                sipName = (boost::format("%1%_DMAX") % prefix).str();
                 if (hackMetadata->exists(sipName)) {
                     hackMetadata->remove(sipName);
                 }
-                sprintf(sipName, "%s_ORDER", sipPrefixes[i]);
+                //sprintf(sipName, "%s_ORDER", prefix]);
+                sipName = (boost::format("%1%_ORDER") % prefix).str();
                 if (hackMetadata->exists(sipName)) {
                     hackMetadata->remove(sipName);
                 }
