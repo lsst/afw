@@ -3,7 +3,7 @@ from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2016 AURA/LSST.
 # 
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division
 # 
 # You should have received a copy of the LSST License Statement and 
 # the GNU General Public License along with this program.  If not, 
-# see <http://www.lsstcorp.org/LegalNotices/>.
+# see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
 """
@@ -36,20 +36,20 @@ import os
 import re
 
 import numpy
-import unittest
 import pickle
+import unittest
 
+import lsst.afw.geom as afwGeom
+import lsst.afw.table as afwTable
+import lsst.daf.base as dafBase
 import lsst.utils
 import lsst.utils.tests as utilsTests
-import lsst.afw.table as afwTable
-import lsst.afw.geom as afwGeom
-import lsst.daf.base as dafBase
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class SourceMatchTestCase(unittest.TestCase):
-    """A test case for matching SourceSets"""
-
+    """A test case for matching SourceSets
+    """
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
         schema.addField("flux_flux", type=float)
@@ -88,9 +88,9 @@ class SourceMatchTestCase(unittest.TestCase):
         self.assertEqual(len(mat), nobj)
 
         cat = afwTable.packMatches(mat)
-            
+
         mat2 = afwTable.unpackMatches(cat, self.ss1, self.ss2)
-        
+
         for m1, m2, c in zip(mat, mat2, cat):
             self.assertEqual(m1.first, m2.first)
             self.assertEqual(m1.second, m2.second)
@@ -130,13 +130,12 @@ class SourceMatchTestCase(unittest.TestCase):
         self.checkPickle(mat)
 
     def testPhotometricCalib(self):
-        """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue"""
+        """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue
+        """
 
         band = 2                        # SDSS r
-        
-        #
+
         # Read SDSS catalogue
-        #
         ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
 
         sdss = afwTable.SourceCatalog(self.table)
@@ -167,12 +166,9 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(self.table.getPsfFluxKey(), psfMags[band])
 
         del ifd
-        #
+
         # Read catalalogue built from the template image
-        #
-        #
         # Read SDSS catalogue
-        #
         ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
 
         template = afwTable.SourceCatalog(self.table)
@@ -198,9 +194,8 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(self.table.getPsfFluxKey(), flux[0])
 
         del ifd
-        #
+
         # Actually do the match
-        #
         matches = afwTable.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(matches), 901)
@@ -212,9 +207,8 @@ class SourceMatchTestCase(unittest.TestCase):
                 s1 = mat[1]
                 d = mat[2]
                 print s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
-        #
+
         # Actually do the match
-        #
         for s in sdssSecondary:
             sdss.append(s)
 
@@ -222,9 +216,8 @@ class SourceMatchTestCase(unittest.TestCase):
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         self.checkPickle(matches)
-        #
+
         # Find the one that didn't match
-        #
         if False:
             matchIds = set()
             for s0, s1, d in matches:
@@ -246,7 +239,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 mat[2]
                 print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
                 print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
-                
+
     def checkPickle(self, matches, checkSlots=True):
         """Check that a match list pickles
 
@@ -301,13 +294,15 @@ class SourceMatchTestCase(unittest.TestCase):
 
 
     def assertEqualFloat(self, value1, value2):
-        """Compare floating point values, allowing for NAN"""
+        """Compare floating point values, allowing for NAN
+        """
         self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
-    """Returns a suite containing all the test cases in this module."""
+    """Returns a suite containing all the test cases in this module.
+    """
 
     utilsTests.init()
 
@@ -317,9 +312,9 @@ def suite():
     return unittest.TestSuite(suites)
 
 def run(shouldExit=False):
-    """Run the tests"""
+    """Run the tests
+    """
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
-
