@@ -59,7 +59,7 @@ def copySchema(schema, target, targetPrefix=None, sourcePrefix=None):
     return target
 
 def copyCatalog(catalog, target, sourceSchema=None, targetPrefix=None, sourcePrefix=None):
-    """Copy entries from one Catalog to another.
+    """Copy entries from one Catalog into another
 
     If sourcePrefix is set, only copy those keys that have that prefix.
     If targetPrefix is set, add that to the key name.
@@ -97,8 +97,17 @@ def copyCatalog(catalog, target, sourceSchema=None, targetPrefix=None, sourcePre
     return target
 
 def matchesToCatalog(matches, matchMeta):
-    """Denormalise matches into a Catalog of "unpacked matches" """
+    """Denormalise matches into a Catalog of "unpacked matches"
 
+    \param[in] matches    unpacked matches, i.e. a std::vector of Match objects whose schema
+                          has "first" and "second" attributes which, resepectively, contain the
+                          reference and source catalog entries, and a "distance" field (the
+                          measured distance between the reference and source objects)
+    \param[in] matchMeta  metadata for matches (must have .add attribute)
+
+    \return  lsst.afw.table.BaseCatalog of matches (with ref_ and src_ prefix identifiers
+             for referece and source entries, respectively)
+    """
     if len(matches) == 0:
         raise RuntimeError("No matches provided.")
 
