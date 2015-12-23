@@ -97,7 +97,14 @@ def copyCatalog(catalog, target, sourceSchema=None, targetPrefix=None, sourcePre
     return target
 
 def matchesToCatalog(matches, matchMeta):
-    """Denormalise matches into a Catalog of "unpacked matches" """
+    """Denormalise matches into a Catalog of "unpacked matches"
+
+    \param[in] matches    unpacked matches
+    \param[in] matchMeta  metadata for matches (must have .add attribute)
+
+    \return  lsst.afw.table.BaseCatalog of matches (with ref_ and src_ prefix identifiers
+             for referece and source entries, respectively)
+    """
 
     if len(matches) == 0:
         raise RuntimeError("No matches provided.")
