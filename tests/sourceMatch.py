@@ -43,6 +43,7 @@ import lsst.utils
 import lsst.utils.tests as utilsTests
 import lsst.afw.table as afwTable
 import lsst.afw.geom as afwGeom
+import lsst.daf.base as dafBase
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -58,9 +59,11 @@ class SourceMatchTestCase(unittest.TestCase):
         self.table.definePsfFlux("flux")
         self.ss1 = afwTable.SourceCatalog(self.table)
         self.ss2 = afwTable.SourceCatalog(self.table)
+        self.metadata = dafBase.PropertyList()
 
     def tearDown(self):
         del self.table
+        del self.metadata
         del self.ss1
         del self.ss2
 
@@ -74,8 +77,11 @@ class SourceMatchTestCase(unittest.TestCase):
 
             s = self.ss2.addNew()
             s.setId(2*nobj + i)
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
+            # Give slight offsets for Coord testing of matches to/from catalog in checkMatchToFromCatalog()
+            # Chosen such that the maximum offset (nobj*1E-7 deg = 0.36 arcsec) is within the maximum
+            # distance (1 arcsec) in afwTable.matchRaDec.
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.0010001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.0010001*i) * afwGeom.degrees)
 
         mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
 
@@ -95,6 +101,8 @@ class SourceMatchTestCase(unittest.TestCase):
 
         self.checkPickle(mat, checkSlots=False)
         self.checkPickle(mat2, checkSlots=False)
+
+        self.checkMatchToFromCatalog(mat, cat)
 
         if False:
             s0 = mat[0][0]
@@ -258,6 +266,39 @@ class SourceMatchTestCase(unittest.TestCase):
             if checkSlots:
                 self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
                 self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
+
+    def checkMatchToFromCatalog(self, matches, catalog):
+        """Check the conversion of matches to and from a catalog
+
+        Test the functions in lsst.afw.table.catalogMatches.py
+        Note that the return types and schemas of these functions do not necessarily match
+        those of the catalogs passed to them, so value entries are compared as opposed to
+        comparing the attributes as a whole.
+        """
+        catalog.setMetadata(self.metadata)
+        matchMeta = catalog.getTable().getMetadata()
+        matchToCat = afwTable.catalogMatches.matchesToCatalog(matches, matchMeta)
+        matchFromCat = afwTable.catalogMatches.matchesFromCatalog(matchToCat)
+        self.assertEqual(len(matches), len(matchToCat))
+        self.assertEqual(len(matches), len(matchFromCat))
+
+        for mat, cat, catM, matchC in zip(matches, catalog, matchToCat, matchFromCat):
+            self.assertEqual(mat.first.getId(), catM["ref_id"])
+            self.assertEqual(mat.first.getId(), matchC.first.getId())
+            self.assertEqual(mat.first.getCoord(), matchC.first.getCoord())
+            self.assertEqual(mat.second.getId(), cat["second"])
+            self.assertEqual(mat.second.getId(), catM["src_id"])
+            self.assertEqual(mat.second.getId(), matchC.second.getId())
+            self.assertEqual((mat.first.getRa(), mat.first.getDec()),
+                             (catM["ref_coord_ra"], catM["ref_coord_dec"]))
+            self.assertEqual((mat.second.getRa(), mat.second.getDec()),
+                             (catM["src_coord_ra"], catM["src_coord_dec"]))
+            self.assertEqual(mat.first.getCoord(), matchC.first.getCoord())
+            self.assertEqual(mat.second.getCoord(), matchC.second.getCoord())
+            self.assertEqual(mat.distance, matchC.distance)
+            self.assertEqual(mat.distance, cat["distance"])
+            self.assertEqual(mat.distance, catM["distance"])
+
 
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN"""
