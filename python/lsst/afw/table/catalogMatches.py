@@ -19,9 +19,15 @@
 # the GNU General Public License along with this program.  If not, 
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import
+
 import os.path
-import lsst.afw.table as afwTable
+
+from .tableLib import (BaseCatalog, SimpleCatalog, SourceCatalog, SimpleTable, SourceTable,
+                       Schema, ReferenceMatch)
 from lsst.utils import getPackageDir
+
+__all__ = ["copySchema", "copyCatalog", "matchesToCatalog", "matchesFromCatalog"]
 
 def copySchema(schema, target, targetPrefix=None, sourcePrefix=None):
     """Return a deep copy the provided schema
@@ -99,11 +105,11 @@ def matchesToCatalog(matches, matchMeta):
     refSchema = matches[0].first.getSchema()
     srcSchema = matches[0].second.getSchema()
 
-    mergedSchema = copySchema(refSchema, afwTable.Schema(), targetPrefix="ref_")
+    mergedSchema = copySchema(refSchema, Schema(), targetPrefix="ref_")
     mergedSchema = copySchema(srcSchema, mergedSchema, targetPrefix="src_")
     distKey = mergedSchema.addField("distance", type=float, doc="Distance between ref and src")
 
-    mergedCatalog = afwTable.BaseCatalog(mergedSchema)
+    mergedCatalog = BaseCatalog(mergedSchema)
     copyCatalog([m.first for m in matches], mergedCatalog, sourceSchema=refSchema, targetPrefix="ref_")
     copyCatalog([m.second for m in matches], mergedCatalog, sourceSchema=srcSchema, targetPrefix="src_")
     for m, r in zip(matches, mergedCatalog):
@@ -117,16 +123,24 @@ def matchesToCatalog(matches, matchMeta):
     return mergedCatalog
 
 def matchesFromCatalog(catalog, sourceSlotConfig=None, prefix=""):
-    """Generate a list of ReferenceMatches from a Catalog of "unpacked matches" """
+    """Generate a list of ReferenceMatches from a Catalog of "unpacked matches"
+
+    \param[in] catalog           catalog of matches.  Must have schema where reference entries are
+                                 prefixed with "ref_" and source entries are prefixed with "src_"
+    \param[in] sourceSlotConfig  configuration for source slots (optional)
+    \param[in] prefix            prefix for slot config setup (optional)
+
+    \returns   lsst.afw.table.ReferenceMatch of matches
+    """
     if catalog is None:
         # There are none
         return []
-    refSchema = copySchema(catalog.schema, afwTable.SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
-    refCatalog = afwTable.SimpleCatalog(refSchema)
+    refSchema = copySchema(catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
+    refCatalog = SimpleCatalog(refSchema)
     copyCatalog(catalog, refCatalog, sourcePrefix="ref_")
 
-    srcSchema = copySchema(catalog.schema, afwTable.SourceTable.makeMinimalSchema(), sourcePrefix="src_")
-    srcCatalog = afwTable.SourceCatalog(srcSchema)
+    srcSchema = copySchema(catalog.schema, SourceTable.makeMinimalSchema(), sourcePrefix="src_")
+    srcCatalog = SourceCatalog(srcSchema)
     copyCatalog(catalog, srcCatalog, sourcePrefix="src_")
 
     if sourceSlotConfig is not None:
@@ -135,6 +149,6 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None, prefix=""):
     matches = []
     distKey = catalog.schema.find("distance").key
     for ref, src, cat in zip(refCatalog, srcCatalog, catalog):
-        matches.append(afwTable.ReferenceMatch(ref, src, cat[distKey]))
+        matches.append(ReferenceMatch(ref, src, cat[distKey]))
 
     return matches
