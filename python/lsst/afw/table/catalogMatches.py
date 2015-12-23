@@ -122,8 +122,11 @@ def matchesToCatalog(matches, matchMeta):
     for m, r in zip(matches, mergedCatalog):
         r.set(distKey, m.distance)
 
-    # obtaining reference catalog name
-    catalogName = os.path.basename(getPackageDir("astrometry_net_data"))
+    # obtaining reference catalog name if one is setup
+    try:
+        catalogName = os.path.basename(getPackageDir("astrometry_net_data"))
+    except:
+        catalogName = 'NOT_SET'
     matchMeta.add('REFCAT', catalogName)
     mergedCatalog.getTable().setMetadata(matchMeta)
 
