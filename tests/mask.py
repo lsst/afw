@@ -37,7 +37,7 @@ import os.path
 
 import sys
 import unittest
-import numpy
+import numpy as np
 
 import lsst.utils
 import lsst.utils.tests as utilsTests
@@ -47,7 +47,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 
-numpy.random.seed(1)
+np.random.seed(1)
 
 try:
     type(display)
@@ -99,10 +99,7 @@ class MaskTestCase(unittest.TestCase):
         except Exception:
             self.maskFile = None
         else:
-            if True:
-                self.maskFile = os.path.join(dataDir, "small_MI.fits")
-            else:
-                self.maskFile = os.path.join(dataDir, "871034p_1_MI.fits")
+            self.maskFile = os.path.join(dataDir, "small_MI.fits")
 
     def tearDown(self):
         del self.mask1
@@ -120,11 +117,11 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(array1.shape[0], image2.getHeight())
         self.assertEqual(array1.shape[1], image2.getWidth())
         self.assertEqual(type(image3), afwImage.MaskU)
-        array1[:,:] = numpy.random.uniform(low=0, high=10, size=array1.shape)
         for j in range(image1.getHeight()):
             for i in range(image1.getWidth()):
                 self.assertEqual(image1.get(i, j), array1[j, i])
                 self.assertEqual(image2.get(i, j), array1[j, i])
+        array1[:,:] = np.random.uniform(low=0, high=10, size=array1.shape)
 
     def testInitializeMasks(self):
         val = 0x1234
@@ -198,7 +195,7 @@ class MaskTestCase(unittest.TestCase):
         
         del smask
         del mask2
-        
+
         self.assertEqual(self.mask1.get(0, 0), self.val1)
         self.assertEqual(self.mask1.get(1, 1), 666)
         self.assertEqual(self.mask1.get(4, 1), self.val1)
@@ -226,10 +223,6 @@ class MaskTestCase(unittest.TestCase):
         hdu = 3
         mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
 
-        if False:
-            import lsst.afw.display.ds9 as ds9
-            ds9.mtv(mask)
-
         self.assertEqual(mask.get(32, 1), 0)
         self.assertEqual(mask.get(50, 50), 0)
         self.assertEqual(mask.get(0, 0), 1)
@@ -248,16 +241,14 @@ class MaskTestCase(unittest.TestCase):
 
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             mask.writeFits(tmpFile)
-            #
+
             # Read it back
-            #
             md = lsst.daf.base.PropertySet()
             rmask = self.Mask(tmpFile, 0, md)
             
             self.assertEqual(mask.get(0, 0), rmask.get(0, 0))
-            #
+
             # Check that we wrote (and read) the metadata successfully
-            #
             mp_ = "MP_" if True else self.Mask.maskPlanePrefix() # currently private
             for (k, v) in self.Mask().getMaskPlaneDict().items():
                 self.assertEqual(md.get(mp_ + k), v)
@@ -622,9 +613,8 @@ def printMaskPlane(mask, plane,
                    xrange=range(250, 300, 10), yrange=range(300, 400, 20)):
     """Print parts of the specified plane of the mask"""
     
-    if True:
-        xrange = range(min(xrange), max(xrange), 25)
-        yrange = range(min(yrange), max(yrange), 25)
+    xrange = range(min(xrange), max(xrange), 25)
+    yrange = range(min(yrange), max(yrange), 25)
 
     for x in xrange:
         for y in yrange:
