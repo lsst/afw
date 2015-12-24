@@ -71,7 +71,7 @@ def showMaskDict(d=None, msg=None):
         print "%-15s" % msg,
     print sorted([(d[p], p) for p in d])
 
-class MaskTestCase(unittest.TestCase):
+class MaskTestCase(utilsTests.TestCase):
     """A test case for Mask"""
 
     def setUp(self):
@@ -94,12 +94,18 @@ class MaskTestCase(unittest.TestCase):
         self.mask2 = afwImage.MaskU(self.mask1.getDimensions())
         self.mask2.set(self.val2)
 
+        # TBD: #DM-609 this should be refactored to use @unittest.skipif checks
+        # for afwData above the tests that need it.
         try:
             dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
         except Exception:
             self.maskFile = None
         else:
             self.maskFile = os.path.join(dataDir, "small_MI.fits")
+            # Below: what to expect from the mask plane in the above data.
+            # For some tests, it is left-shifted by some number of mask planes.
+            self.expect = np.zeros((256, 256), dtype='i8')
+            self.expect[:,0] = 1
 
     def tearDown(self):
         del self.mask1
@@ -117,11 +123,8 @@ class MaskTestCase(unittest.TestCase):
         self.assertEqual(array1.shape[0], image2.getHeight())
         self.assertEqual(array1.shape[1], image2.getWidth())
         self.assertEqual(type(image3), afwImage.MaskU)
-        for j in range(image1.getHeight()):
-            for i in range(image1.getWidth()):
-                self.assertEqual(image1.get(i, j), array1[j, i])
-                self.assertEqual(image2.get(i, j), array1[j, i])
         array1[:,:] = np.random.uniform(low=0, high=10, size=array1.shape)
+        self.assertMasksEqual(image1, array1)
 
     def testInitializeMasks(self):
         val = 0x1234
@@ -135,23 +138,28 @@ class MaskTestCase(unittest.TestCase):
         self.mask2 |= self.mask1
         self.mask1 |= self.val2
         
-        self.assertEqual(self.mask1.get(0, 0), self.val1 | self.val2)
-        self.assertEqual(self.mask2.get(0, 0), self.val1 | self.val2)
-    
+        self.assertMasksEqual(self.mask1, self.mask2)
+        expect = np.empty_like(self.mask1.getArray())
+        expect[:] = self.val2 | self.val1
+        self.assertMasksEqual(self.mask1, expect)
+
     def testAndMasks(self):
         self.mask2 &= self.mask1
         self.mask1 &= self.val2
         
-        self.assertEqual(self.mask1.get(0, 0), self.val1 & self.val2)
-        self.assertEqual(self.mask1.get(0, 0), self.BAD | self.CR)
-        self.assertEqual(self.mask2.get(0, 0), self.val1 & self.val2)
+        self.assertMasksEqual(self.mask1, self.mask2)
+        expect = np.empty_like(self.mask1.getArray())
+        expect[:] = self.val1 & self.val2
+        self.assertMasksEqual(self.mask1, expect)
 
     def testXorMasks(self):
         self.mask2 ^= self.mask1
         self.mask1 ^= self.val2
         
-        self.assertEqual(self.mask1.get(0, 0), self.val1 ^ self.val2)
-        self.assertEqual(self.mask2.get(0, 0), self.val1 ^ self.val2)
+        self.assertMasksEqual(self.mask1, self.mask2)
+        expect = np.empty_like(self.mask1.getArray())
+        expect[:] = self.val1 ^ self.val2
+        self.assertMasksEqual(self.mask1, expect)
 
     def testLogicalMasksMismatch(self):
         "Test logical operations on Masks of different sizes"
@@ -180,9 +188,11 @@ class MaskTestCase(unittest.TestCase):
         dmask = afwImage.MaskU(self.mask1, True) # deep copy
         smask = afwImage.MaskU(self.mask1) # shallow copy
         
-        self.mask1 |= 32767             # should only change dmask
-        self.assertEqual(dmask.get(0, 0), self.val1)
-        self.assertEqual(smask.get(0, 0), self.val1 | 32767)
+        self.mask1 |= 32767             # should only change smask
+        temp = np.zeros_like(self.mask1.getArray()) | self.val1
+        self.assertMasksEqual(dmask, temp)
+        self.assertMasksEqual(smask, self.mask1)
+        self.assertMasksEqual(smask, temp | 32767)
 
     def testSubmasks(self):
         smask = afwImage.MaskU(self.mask1, 
@@ -211,9 +221,7 @@ class MaskTestCase(unittest.TestCase):
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
         mask = self.Mask(self.maskFile, 3) # will shift any unrecognised mask planes into unused slots
 
-        self.assertEqual(mask.get(32, 1), 0)
-        self.assertEqual(mask.get(50, 50), 0)
-        self.assertEqual(mask.get(0,  0), (1<<nMaskPlanes0))
+        self.assertMasksEqual(mask, self.expect<<nMaskPlanes0)
 
     def testReadFitsConform(self):
         if not self.maskFile:
@@ -223,9 +231,7 @@ class MaskTestCase(unittest.TestCase):
         hdu = 3
         mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
 
-        self.assertEqual(mask.get(32, 1), 0)
-        self.assertEqual(mask.get(50, 50), 0)
-        self.assertEqual(mask.get(0, 0), 1)
+        self.assertMasksEqual(mask, self.expect)
 
     def testWriteFits(self):
         if not self.maskFile:
@@ -235,9 +241,7 @@ class MaskTestCase(unittest.TestCase):
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
         mask = self.Mask(self.maskFile, 3)
 
-        self.assertEqual(mask.get(32, 1), 0)
-        self.assertEqual(mask.get(50, 50), 0)
-        self.assertEqual(mask.get(0, 0), (1<<nMaskPlanes0)) # as header had none of the canonical planes
+        self.assertMasksEqual(mask, self.expect<<nMaskPlanes0)
 
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             mask.writeFits(tmpFile)
@@ -246,7 +250,7 @@ class MaskTestCase(unittest.TestCase):
             md = lsst.daf.base.PropertySet()
             rmask = self.Mask(tmpFile, 0, md)
             
-            self.assertEqual(mask.get(0, 0), rmask.get(0, 0))
+            self.assertMasksEqual(mask, rmask)
 
             # Check that we wrote (and read) the metadata successfully
             mp_ = "MP_" if True else self.Mask.maskPlanePrefix() # currently private
