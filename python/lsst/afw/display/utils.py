@@ -370,3 +370,31 @@ def drawCoaddInputs(exposure, frame=None, ctype=None, bin=1, display="deferToFra
                             for point in ccdCorners]
             display.line([(coaddCorners[i].getX()/bin, coaddCorners[i].getY()/bin)
                       for i in range(-1, 4)], ctype=ctype)
+
+def drawSourceMatches(exposure, sources, matches, frame):
+    """Display an Exposure with overplotted sources and reference catalog matches.
+
+    Source positions are indicated by green circles; catalog positions by
+    yellow vertical crosses (+); match positions by red diagonal crosses (X).
+
+    @param[in] exposure  Exposure to display (lsst.afw.image.Exposure)
+    @param[in] sources   Sources to overplot (lsst.afw.table.SourceCatalog)
+    @param[in] matches   Matches to overplot (lsst.afw.table.ReferenceMatch)
+    @param[in] frame     Frame to use for display
+    """
+    disp = _getDisplayFromDisplayOrFrame(None, frame)
+    disp.mtv(exposure)
+    x0, y0 = exposure.getMaskedImage().getX0(), exposure.getMaskedImage().getY0()
+    wcs = exposure.getWcs()
+
+    with disp.Buffering():
+        for source in sources:
+            x, y = source.getX() - x0, source.getY() - y0
+            disp.dot('o', x, y, ctype="green", size=4)
+
+        for first, second, _ in matches:
+            catPos = wcs.skyToPixel(first.getCoord())
+            x1, y1 = catPos.getX() - x0, catPos.getY() - y0
+            disp.dot("+", x1, y1, ctype="yellow", size=8)
+            x2, y2 = second.getX() - x0, second.getY() - y0
+            disp.dot("x", x2, y2, ctype="red", size=8)
