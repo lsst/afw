@@ -144,9 +144,6 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None):
 
     \returns   lsst.afw.table.ReferenceMatch of matches
     """
-    if catalog is None:
-        # There are none
-        return []
     refSchema = copySchema(catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
     refCatalog = SimpleCatalog(refSchema)
     copyCatalog(catalog, refCatalog, sourcePrefix="ref_")
