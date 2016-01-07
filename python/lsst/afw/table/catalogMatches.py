@@ -24,45 +24,51 @@ from __future__ import absolute_import
 import os.path
 
 from .tableLib import (BaseCatalog, SimpleCatalog, SourceCatalog, SimpleTable, SourceTable,
-                       Schema, ReferenceMatch)
+                       Schema, SchemaMapper, ReferenceMatch)
 from lsst.utils import getPackageDir
 
 __all__ = ["copySchema", "copyCatalog", "matchesToCatalog", "matchesFromCatalog"]
 
-def copySchema(schema, target, targetPrefix=None, sourcePrefix=None):
-    """Return a deep copy the provided schema
+def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
+    """Create a SchemaMapper between the input source and target schemas
 
-    If sourcePrefix is set, only copy those keys that have that prefix.
-    If targetPrefix is set, add that to the key name.
+    \param[in]  sourceSchema  input source schema that fields will be mapped from
+    \param[in]  targetSchema  target schema that fields will be mapped to
+    \param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
+    \param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
+
+    \return     SchemaMapper between source and target schemas
     """
-    existing = set(target.getNames())
-    for keyName in schema.getNames():
+    m = SchemaMapper(sourceSchema, targetSchema)
+    for key, field in sourceSchema:
+        keyName = field.getName()
         if sourcePrefix is not None:
             if not keyName.startswith(sourcePrefix):
                 continue
-            keyNameFix = keyName[len(sourcePrefix):]
-        else:
-            keyNameFix = keyName
-        if keyNameFix in existing:
-            continue
-        field = schema.find(keyName).field
-        typeStr = field.getTypeString()
-        fieldDoc = field.getDoc()
-        fieldUnits = field.getUnits()
-        if typeStr in ("ArrayF", "ArrayD", "ArrayI", "CovF", "CovD"):
-            fieldSize = field.getSize()
-        else:
-            fieldSize = None
+            else:
+                keyName = field.getName().replace(sourcePrefix, "", 1)
+        m.addMapping(key, (targetPrefix or "") + keyName)
+    return m
 
-        target.addField((targetPrefix if targetPrefix is not None else "") + keyNameFix,
-                        type=typeStr, doc=fieldDoc, units=fieldUnits, size=fieldSize)
-    return target
+def copySchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
+    """Return a schema that is a deep copy of a mapping between source and target schemas
+    \param[in]  sourceSchema  input source schema that fields will be mapped from
+    \param[in]  targetSchema  target schema that fields will be mapped to
+    \param[in]  sourcePrefix  if set, only those keys with that prefix will be mapped
+    \param[in]  targetPrefix  if set, prepend it to the mapped (target) key name
 
-def copyCatalog(catalog, target, sourceSchema=None, targetPrefix=None, sourcePrefix=None):
+    \return     schema        schema that is the result of the mapping between source and target schemas
+    """
+    return makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix).getOutputSchema()
+
+def copyCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targetPrefix=None):
     """Copy entries from one Catalog into another
 
-    If sourcePrefix is set, only copy those keys that have that prefix.
-    If targetPrefix is set, add that to the key name.
+    \param[in]     catalog       source catalog to be copied from
+    \param[in/out] target        target catalog to be copied to (edited in place)
+    \param[in]     souceSchema   schema of source catalog (optional)
+    \param[in]     sourcePrefix  if set, only those keys with that prefix will be copied
+    \param[in]     targetPrefix  if set, prepend it to the copied (target) key name
     """
     if sourceSchema is None:
         sourceSchema = catalog.schema
@@ -75,26 +81,9 @@ def copyCatalog(catalog, target, sourceSchema=None, targetPrefix=None, sourcePre
     if len(catalog) != len(target):
         raise RuntimeError("Length mismatch: %d vs %d" % (len(catalog), len(target)))
 
-    sourceKeys = []
-    targetKeys = []
-    for k in sourceSchema.getNames():
-        if sourcePrefix is not None:
-            if not k.startswith(sourcePrefix):
-                continue
-            kFix = k[len(sourcePrefix):]
-        else:
-            kFix = k
-        sourceKeys.append(sourceSchema.find(k).key)
-        targetKeys.append(targetSchema.find((targetPrefix if targetPrefix is not None else "") + kFix).key)
-
+    m = makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix)
     for rFrom, rTo in zip(catalog, target):
-        for kFrom, kTo in zip(sourceKeys, targetKeys):
-            try:
-                rTo.set(kTo, rFrom.get(kFrom))
-            except:
-                print "Error setting: %s %s %s %s" % (type(rFrom), type(rTo), type(kFrom), type(kTo))
-
-    return target
+        rTo.assign(rFrom, m)
 
 def matchesToCatalog(matches, matchMeta):
     """Denormalise matches into a Catalog of "unpacked matches"
