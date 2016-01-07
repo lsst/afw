@@ -134,13 +134,13 @@ def matchesToCatalog(matches, matchMeta):
 
     return mergedCatalog
 
-def matchesFromCatalog(catalog, sourceSlotConfig=None, prefix=""):
+def matchesFromCatalog(catalog, sourceSlotConfig=None):
     """Generate a list of ReferenceMatches from a Catalog of "unpacked matches"
 
     \param[in] catalog           catalog of matches.  Must have schema where reference entries are
                                  prefixed with "ref_" and source entries are prefixed with "src_"
-    \param[in] sourceSlotConfig  configuration for source slots (optional)
-    \param[in] prefix            prefix for slot config setup (optional)
+    \param[in] sourceSlotConfig  an lsst.meas.base.baseMeasurement.SourceSlotConfig configuration
+                                 for source slots (optional)
 
     \returns   lsst.afw.table.ReferenceMatch of matches
     """
@@ -156,7 +156,7 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None, prefix=""):
     copyCatalog(catalog, srcCatalog, sourcePrefix="src_")
 
     if sourceSlotConfig is not None:
-        sourceSlotConfig.setupTable(srcCatalog.table, prefix=prefix)
+        sourceSlotConfig.setupSchema(srcCatalog.schema)
 
     matches = []
     distKey = catalog.schema.find("distance").key
