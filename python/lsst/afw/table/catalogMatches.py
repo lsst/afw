@@ -27,7 +27,7 @@ from .tableLib import (BaseCatalog, SimpleCatalog, SourceCatalog, SimpleTable, S
                        Schema, SchemaMapper, ReferenceMatch)
 from lsst.utils import getPackageDir
 
-__all__ = ["copySchema", "copyCatalog", "matchesToCatalog", "matchesFromCatalog"]
+__all__ = ["makeMergedSchema", "copyIntoCatalog", "matchesToCatalog", "matchesFromCatalog"]
 
 def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
     """Create a SchemaMapper between the input source and target schemas
@@ -50,7 +50,7 @@ def makeMapper(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None)
         m.addMapping(key, (targetPrefix or "") + keyName)
     return m
 
-def copySchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
+def makeMergedSchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None):
     """Return a schema that is a deep copy of a mapping between source and target schemas
     \param[in]  sourceSchema  input source schema that fields will be mapped from
     \param[in]  targetSchema  target schema that fields will be mapped to
@@ -61,7 +61,7 @@ def copySchema(sourceSchema, targetSchema, sourcePrefix=None, targetPrefix=None)
     """
     return makeMapper(sourceSchema, targetSchema, sourcePrefix, targetPrefix).getOutputSchema()
 
-def copyCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targetPrefix=None):
+def copyIntoCatalog(catalog, target, sourceSchema=None, sourcePrefix=None, targetPrefix=None):
     """Copy entries from one Catalog into another
 
     \param[in]     catalog       source catalog to be copied from
@@ -103,13 +103,13 @@ def matchesToCatalog(matches, matchMeta):
     refSchema = matches[0].first.getSchema()
     srcSchema = matches[0].second.getSchema()
 
-    mergedSchema = copySchema(refSchema, Schema(), targetPrefix="ref_")
-    mergedSchema = copySchema(srcSchema, mergedSchema, targetPrefix="src_")
+    mergedSchema = makeMergedSchema(refSchema, Schema(), targetPrefix="ref_")
+    mergedSchema = makeMergedSchema(srcSchema, mergedSchema, targetPrefix="src_")
     distKey = mergedSchema.addField("distance", type=float, doc="Distance between ref and src")
 
     mergedCatalog = BaseCatalog(mergedSchema)
-    copyCatalog([m.first for m in matches], mergedCatalog, sourceSchema=refSchema, targetPrefix="ref_")
-    copyCatalog([m.second for m in matches], mergedCatalog, sourceSchema=srcSchema, targetPrefix="src_")
+    copyIntoCatalog([m.first for m in matches], mergedCatalog, sourceSchema=refSchema, targetPrefix="ref_")
+    copyIntoCatalog([m.second for m in matches], mergedCatalog, sourceSchema=srcSchema, targetPrefix="src_")
     for m, r in zip(matches, mergedCatalog):
         r.set(distKey, m.distance)
 
@@ -133,13 +133,13 @@ def matchesFromCatalog(catalog, sourceSlotConfig=None):
 
     \returns   lsst.afw.table.ReferenceMatch of matches
     """
-    refSchema = copySchema(catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
+    refSchema = makeMergedSchema(catalog.schema, SimpleTable.makeMinimalSchema(), sourcePrefix="ref_")
     refCatalog = SimpleCatalog(refSchema)
-    copyCatalog(catalog, refCatalog, sourcePrefix="ref_")
+    copyIntoCatalog(catalog, refCatalog, sourcePrefix="ref_")
 
-    srcSchema = copySchema(catalog.schema, SourceTable.makeMinimalSchema(), sourcePrefix="src_")
+    srcSchema = makeMergedSchema(catalog.schema, SourceTable.makeMinimalSchema(), sourcePrefix="src_")
     srcCatalog = SourceCatalog(srcSchema)
-    copyCatalog(catalog, srcCatalog, sourcePrefix="src_")
+    copyIntoCatalog(catalog, srcCatalog, sourcePrefix="src_")
 
     if sourceSlotConfig is not None:
         sourceSlotConfig.setupSchema(srcCatalog.schema)
