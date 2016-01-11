@@ -3,7 +3,7 @@ from __future__ import absolute_import, division
 
 # 
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2016 AURA/LSST.
 # 
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -20,7 +20,7 @@ from __future__ import absolute_import, division
 # 
 # You should have received a copy of the LSST License Statement and 
 # the GNU General Public License along with this program.  If not, 
-# see <http://www.lsstcorp.org/LegalNotices/>.
+# see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
 """
@@ -36,19 +36,20 @@ import os
 import re
 
 import numpy
-import unittest
 import pickle
+import unittest
 
+import lsst.afw.geom as afwGeom
+import lsst.afw.table as afwTable
+import lsst.daf.base as dafBase
 import lsst.utils
 import lsst.utils.tests as utilsTests
-import lsst.afw.table as afwTable
-import lsst.afw.geom as afwGeom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class SourceMatchTestCase(unittest.TestCase):
-    """A test case for matching SourceSets"""
-
+    """A test case for matching SourceSets
+    """
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
         schema.addField("flux_flux", type=float)
@@ -58,9 +59,11 @@ class SourceMatchTestCase(unittest.TestCase):
         self.table.definePsfFlux("flux")
         self.ss1 = afwTable.SourceCatalog(self.table)
         self.ss2 = afwTable.SourceCatalog(self.table)
+        self.metadata = dafBase.PropertyList()
 
     def tearDown(self):
         del self.table
+        del self.metadata
         del self.ss1
         del self.ss2
 
@@ -74,17 +77,20 @@ class SourceMatchTestCase(unittest.TestCase):
 
             s = self.ss2.addNew()
             s.setId(2*nobj + i)
-            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.001*i) * afwGeom.degrees)
-            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.001*i) * afwGeom.degrees)
+            # Give slight offsets for Coord testing of matches to/from catalog in checkMatchToFromCatalog()
+            # Chosen such that the maximum offset (nobj*1E-7 deg = 0.36 arcsec) is within the maximum
+            # distance (1 arcsec) in afwTable.matchRaDec.
+            s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.0010001*i) * afwGeom.degrees)
+            s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.0010001*i) * afwGeom.degrees)
 
         mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(mat), nobj)
 
         cat = afwTable.packMatches(mat)
-            
+
         mat2 = afwTable.unpackMatches(cat, self.ss1, self.ss2)
-        
+
         for m1, m2, c in zip(mat, mat2, cat):
             self.assertEqual(m1.first, m2.first)
             self.assertEqual(m1.second, m2.second)
@@ -95,6 +101,8 @@ class SourceMatchTestCase(unittest.TestCase):
 
         self.checkPickle(mat, checkSlots=False)
         self.checkPickle(mat2, checkSlots=False)
+
+        self.checkMatchToFromCatalog(mat, cat)
 
         if False:
             s0 = mat[0][0]
@@ -122,13 +130,12 @@ class SourceMatchTestCase(unittest.TestCase):
         self.checkPickle(mat)
 
     def testPhotometricCalib(self):
-        """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue"""
+        """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue
+        """
 
         band = 2                        # SDSS r
-        
-        #
+
         # Read SDSS catalogue
-        #
         ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
 
         sdss = afwTable.SourceCatalog(self.table)
@@ -159,12 +166,9 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(self.table.getPsfFluxKey(), psfMags[band])
 
         del ifd
-        #
+
         # Read catalalogue built from the template image
-        #
-        #
         # Read SDSS catalogue
-        #
         ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
 
         template = afwTable.SourceCatalog(self.table)
@@ -190,9 +194,8 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(self.table.getPsfFluxKey(), flux[0])
 
         del ifd
-        #
+
         # Actually do the match
-        #
         matches = afwTable.matchRaDec(sdss, template, 1.0 * afwGeom.arcseconds, False)
 
         self.assertEqual(len(matches), 901)
@@ -204,9 +207,8 @@ class SourceMatchTestCase(unittest.TestCase):
                 s1 = mat[1]
                 d = mat[2]
                 print s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
-        #
+
         # Actually do the match
-        #
         for s in sdssSecondary:
             sdss.append(s)
 
@@ -214,9 +216,8 @@ class SourceMatchTestCase(unittest.TestCase):
         nmiss = 1                                              # one object doesn't match
         self.assertEqual(len(matches), len(sdssSecondary) - nmiss)
         self.checkPickle(matches)
-        #
+
         # Find the one that didn't match
-        #
         if False:
             matchIds = set()
             for s0, s1, d in matches:
@@ -238,7 +239,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 mat[2]
                 print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
                 print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
-                
+
     def checkPickle(self, matches, checkSlots=True):
         """Check that a match list pickles
 
@@ -259,14 +260,49 @@ class SourceMatchTestCase(unittest.TestCase):
                 self.assertEqualFloat(m1.first.getPsfFlux(), m2.first.getPsfFlux())
                 self.assertEqualFloat(m1.second.getPsfFlux(), m2.second.getPsfFlux())
 
+    def checkMatchToFromCatalog(self, matches, catalog):
+        """Check the conversion of matches to and from a catalog
+
+        Test the functions in lsst.afw.table.catalogMatches.py
+        Note that the return types and schemas of these functions do not necessarily match
+        those of the catalogs passed to them, so value entries are compared as opposed to
+        comparing the attributes as a whole.
+        """
+        catalog.setMetadata(self.metadata)
+        matchMeta = catalog.getTable().getMetadata()
+        matchToCat = afwTable.catalogMatches.matchesToCatalog(matches, matchMeta)
+        matchFromCat = afwTable.catalogMatches.matchesFromCatalog(matchToCat)
+        self.assertEqual(len(matches), len(matchToCat))
+        self.assertEqual(len(matches), len(matchFromCat))
+
+        for mat, cat, catM, matchC in zip(matches, catalog, matchToCat, matchFromCat):
+            self.assertEqual(mat.first.getId(), catM["ref_id"])
+            self.assertEqual(mat.first.getId(), matchC.first.getId())
+            self.assertEqual(mat.first.getCoord(), matchC.first.getCoord())
+            self.assertEqual(mat.second.getId(), cat["second"])
+            self.assertEqual(mat.second.getId(), catM["src_id"])
+            self.assertEqual(mat.second.getId(), matchC.second.getId())
+            self.assertEqual((mat.first.getRa(), mat.first.getDec()),
+                             (catM["ref_coord_ra"], catM["ref_coord_dec"]))
+            self.assertEqual((mat.second.getRa(), mat.second.getDec()),
+                             (catM["src_coord_ra"], catM["src_coord_dec"]))
+            self.assertEqual(mat.first.getCoord(), matchC.first.getCoord())
+            self.assertEqual(mat.second.getCoord(), matchC.second.getCoord())
+            self.assertEqual(mat.distance, matchC.distance)
+            self.assertEqual(mat.distance, cat["distance"])
+            self.assertEqual(mat.distance, catM["distance"])
+
+
     def assertEqualFloat(self, value1, value2):
-        """Compare floating point values, allowing for NAN"""
+        """Compare floating point values, allowing for NAN
+        """
         self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
-    """Returns a suite containing all the test cases in this module."""
+    """Returns a suite containing all the test cases in this module.
+    """
 
     utilsTests.init()
 
@@ -276,9 +312,9 @@ def suite():
     return unittest.TestSuite(suites)
 
 def run(shouldExit=False):
-    """Run the tests"""
+    """Run the tests
+    """
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
-
