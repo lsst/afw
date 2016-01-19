@@ -243,6 +243,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             for i in [0, 1]:
                 self.assertEqual(catalog[i].get(key), vals[i])
                 self.assertEqual(array[i], vals[i])
+        catalog[k1] = 4
+        f3v = numpy.random.randn(2)
+        catalog["f3"] = f3v
+        for i in [0, 1]:
+            self.assertEqual(catalog[i].get(k1), 4)
+            self.assertEqual(catalog[i].get(k3), f3v[i])
 
     def testUnsignedFitsPersistence(self):
         """Test FITS round-trip of unsigned short ints, since FITS handles unsigned columns differently

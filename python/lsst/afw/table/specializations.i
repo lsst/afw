@@ -21,7 +21,6 @@
 }
 %extend lsst::afw::table::BaseColumnView {
     ndarray::Array<U,1> __getitem__(Key<U> const & key) const { return (*self)[key]; }
-    void __setitem__(Key<U> const & key, ndarray::Array<U const,1> const & v) const { (*self)[key] = v; }
 }
 %enddef
 
@@ -98,12 +97,6 @@
 %extend lsst::afw::table::BaseColumnView {
     ndarray::Array<U,2> __getitem__(Key< lsst::afw::table::Array<U> > const & key) const {
         return (*self)[key];
-    }
-    void __setitem__(
-        Key< lsst::afw::table::Array<U> > const & key,
-        ndarray::Array<U const,2> const & v
-    ) const {
-        (*self)[key] = v;
     }
 }
 %enddef

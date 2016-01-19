@@ -154,6 +154,13 @@ public:
         }
         self->set(i, p);
     }
+    %feature("shadow") __setitem__ %{
+    def __setitem__(self, k, v):
+        try:
+            return $action(self, k, v)
+        except TypeError:
+            self.columns[k] = v
+    %}
     void __delitem__(std::ptrdiff_t i) {
         if (i < 0) i = self->size() + i;
         if (std::size_t(i) >= self->size()) {

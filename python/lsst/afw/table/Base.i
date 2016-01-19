@@ -558,7 +558,14 @@ def getBits(self, keys=None):
         schema = property(getSchema)
         def get(self, key):
             """Return the column for the given key or field name; synonym for __getitem__."""
+            # the __getitem__ overrides themselves are defined in macros in specializations.i
             return self[key]
+        def __setitem__(self, key, value):
+            """Set a full column to an array or scalar."""
+            self.get(key)[:] = value
+        def set(self, key, value):
+            """Set a full column to an array or scalar; synonym for __setitem__."""
+            self[key] = value
     %}
     // Allow field name strings be used in place of keys (but only in Python)
     %pythonprepend __getitem__ %{
