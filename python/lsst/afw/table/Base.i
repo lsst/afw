@@ -238,6 +238,8 @@ def __nonzero__(self): return not self.empty()
 
 // =============== Schemas and their components =============================================================
 
+%ignore lsst::afw::table::KeyBase::operator[];
+
 %include "lsst/afw/table/FieldBase.h"
 %include "lsst/afw/table/Field.h"
 %include "lsst/afw/table/KeyBase.h"
@@ -442,7 +444,7 @@ def asKey(self):
     %}
 }
 
-%ignore lsst::afw::table::BaseRecord::operator=;
+%ignore lsst::afw::table::BaseRecord::operator[];
 %include "lsst/afw/table/BaseRecord.h"
 
 %extend lsst::afw::table::BaseRecord {
@@ -515,6 +517,7 @@ def getBits(self, keys=None):
     return $action(self, arg)
 %}
 
+%ignore lsst::afw::table::BaseColumnView::operator[];
 %include "lsst/afw/table/BaseColumnView.h"
 
 %extend lsst::afw::table::BitsColumn {
