@@ -255,9 +255,9 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
     # so cast unsigned arrays into int64 (there may be a simple
     # way to safely use a smaller data type but I've not found it)
     if imageArr0.dtype.kind == "u":
-        imageArr0 = imageArr0.astype(np.int64)
+        imageArr0 = imageArr0.astype(np.promote_types(imageArr0.dtype, np.int8))
     if imageArr1.dtype.kind == "u":
-        imageArr1 = imageArr1.astype(np.int64)
+        imageArr1 = imageArr1.astype(np.promote_types(imageArr1.dtype, np.int8))
 
     if skipMaskArr is not None:
         skipMaskArr = np.array(skipMaskArr, dtype=bool)
