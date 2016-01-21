@@ -250,6 +250,15 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
             if arr.shape != imageArr0.shape:
                 raise TypeError("%s shape = %s != %s = image0 shape" % (name, arr.shape, imageArr0.shape))
 
+    # np.allclose mis-handled unsigned ints in numpy 1.8
+    # and subtraction doesn't give the desired answer in any case
+    # so cast unsigned arrays into int64 (there may be a simple
+    # way to safely use a smaller data type but I've not found it)
+    if imageArr0.dtype.kind == "u":
+        imageArr0 = imageArr0.astype(np.int64)
+    if imageArr1.dtype.kind == "u":
+        imageArr1 = imageArr1.astype(np.int64)
+
     if skipMaskArr is not None:
         skipMaskArr = np.array(skipMaskArr, dtype=bool)
         maskedArr0 = np.ma.array(imageArr0, copy=False, mask=skipMaskArr)
@@ -295,7 +304,7 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
     valMaskedArr2 = np.ma.array(imageArr1, copy=False, mask=valSkipMaskArr)
     valFilledArr1 = valMaskedArr1.filled(0.0)
     valFilledArr2 = valMaskedArr2.filled(0.0)
-    
+
     if not np.allclose(valFilledArr1, valFilledArr2, rtol=rtol, atol=atol):
         errArr = np.abs(valFilledArr1 - valFilledArr2)
         maxErr = errArr.max()

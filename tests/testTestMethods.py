@@ -24,6 +24,7 @@ from __future__ import absolute_import, division, print_function
 #
 import math
 import unittest
+import re
 
 import numpy as np
 
@@ -32,6 +33,7 @@ import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
+from lsst.afw.image.testUtils import imagesDiffer
 from lsst.afw.image.basicUtils import _compareWcsOverBBox
 
 class TestTestUtils(utilsTests.TestCase):
@@ -376,6 +378,23 @@ class TestTestUtils(utilsTests.TestCase):
 
             with self.assertRaises(TypeError):
                 self.assertMaskedImagesNearlyEqual(mi.getImage(), mi.getImage())
+
+    def testUnsignedImages(self):
+        """Unsigned images can give incorrect differences unless the test code is careful
+        """
+        image0 = np.zeros([5, 5], dtype=np.uint8)
+        image1 = np.zeros([5, 5], dtype=np.uint8)
+        image0[0,0] = 1
+        image1[0,1] = 2
+
+        # arrays differ by a maximum of 2
+        errMsg1 = imagesDiffer(image0, image1)
+        match = re.match(r"maxDiff *= *(\d+)", errMsg1, re.IGNORECASE)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), "2")
+
+        # arrays are equal to within 5
+        self.assertImagesNearlyEqual(image0, image1, atol=5)
 
 
 def makeRampMaskedImageWithNans(width, height, imgClass=afwImage.MaskedImageF):
