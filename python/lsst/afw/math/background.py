@@ -93,6 +93,14 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
                   approxOrderX, approxOrderY, approxWeighting)
         self._backgrounds.append(bgInfo)
 
+    def clone(self):
+        """Return a shallow copy
+
+        Shallow copies do not share backgrounds that are appended after copying,
+        but do share changes to contained background objects.
+        """
+        return BackgroundList(*self)
+
     def writeFits(self, fileName, flags=0):
         """Save our list of Backgrounds to a file
         @param fileName         FITS file to write
