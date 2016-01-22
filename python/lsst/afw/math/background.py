@@ -20,9 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import os
-import sys
 import lsst.daf.base as dafBase
-import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import FitsError, MemFileManager, reduceToFits
@@ -148,7 +146,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             md = dafBase.PropertyList()
             try:
                 img = afwImage.ImageF(fileName, hdu, md); hdu += 1
-            except FitsError as e:
+            except FitsError:
                 break
 
             msk = afwImage.MaskU( fileName, hdu);     hdu += 1
