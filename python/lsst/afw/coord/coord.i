@@ -82,7 +82,7 @@
 def __repr__(self):
     className = self.getClassName()
     coordSystem = self.getCoordSystem()
-    argList = ["%r * afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
+    argList = ["%r*afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
     if coordSystem == TOPOCENTRIC:
         topoCoord = TopocentricCoord.cast(self)
         argList += [
