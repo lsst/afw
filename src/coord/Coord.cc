@@ -1441,3 +1441,60 @@ std::ostream & afwCoord::operator<<(std::ostream & os, afwCoord::Coord const & c
     os << ")";
     return os;
 }
+
+namespace {
+
+// Heavy lifting for averageCoord
+PTR(afwCoord::Coord) doAverageCoord(
+    std::vector<PTR(afwCoord::Coord const)> const coords,
+    afwCoord::CoordSystem system
+    )
+{
+    assert(system != afwCoord::UNKNOWN); // Handled by caller
+    assert(coords.size() > 0); // Handled by caller
+    afwGeom::Point3D sum(0, 0, 0);
+    afwGeom::Point3D corr(0, 0, 0); // Kahan summation correction
+    for (auto&& cc : coords) {
+        afwGeom::Point3D const point = cc->getVector();
+        // Kahan summation
+        afwGeom::Extent3D const add = point - corr;
+        afwGeom::Point3D const temp = sum + add;
+        corr = (temp - afwGeom::Extent3D(sum)) - add;
+        sum = temp;
+    }
+    sum.scale(1.0/coords.size());
+    return makeCoord(system, sum);
+}
+
+} // anonymous namespace
+
+PTR(afwCoord::Coord) afwCoord::averageCoord(
+    std::vector<PTR(afwCoord::Coord const)> const coords,
+    afwCoord::CoordSystem system
+    )
+{
+    if (coords.size() == 0) {
+        throw LSST_EXCEPT(ex::LengthError, "No coordinates provided to average");
+    }
+
+    if (system == UNKNOWN) {
+        // Determine which system we're using, and check that every coordinate is in that system
+        system = coords[0]->getCoordSystem();
+        for (auto&& cc : coords) {
+            if (cc->getCoordSystem() != system) {
+                throw LSST_EXCEPT(ex::InvalidParameterError,
+                                  (boost::format("Coordinates are not all in the same system: %d vs %d") %
+                                   cc->getCoordSystem() % system).str());
+            }
+        }
+        return doAverageCoord(coords, system);
+    }
+
+    // Convert everything to the nominated coordinate system if necessary
+    std::vector<PTR(afwCoord::Coord const)> converted;
+    converted.reserve(coords.size());
+    for (auto&& cc : coords) {
+        converted.push_back(cc->getCoordSystem() == system ? cc : cc->convert(system));
+    }
+    return doAverageCoord(converted, system);
+}

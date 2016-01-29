@@ -49,7 +49,7 @@ import lsst.pex.exceptions       as pexEx
 ######################################
 # main body of code
 ######################################
-class CoordTestCase(unittest.TestCase):
+class CoordTestCase(utilsTests.TestCase):
 
     def setUp(self):
         # define some arbitrary values
@@ -720,6 +720,51 @@ class CoordTestCase(unittest.TestCase):
         c3 = afwCoord.IcrsCoord(self.ra, self.dec)
         self.assertTrue(c3 == c1)
         self.assertFalse(c3 != c1)
+
+    @utilsTests.debugger(Exception)
+    def testAverage(self):
+        """Tests for lsst.afw.coord.averageCoord"""
+        icrs = afwCoord.IcrsCoord(self.ra, self.dec)
+        gal = afwCoord.GalacticCoord(self.l*afwGeom.degrees, self.b*afwGeom.degrees)
+
+        # Mixed systems, no system provided
+        self.assertRaisesLsstCpp(pexEx.InvalidParameterError, afwCoord.averageCoord, [icrs, gal])
+
+        # Mixed systems, but target system provided
+        # Only checking this doesn't fail; will check accuracy later
+        afwCoord.averageCoord([icrs, gal], afwCoord.ICRS)
+        afwCoord.averageCoord([icrs, gal], afwCoord.FK5)
+
+        # Same system, no target system provided
+        result = afwCoord.averageCoord([icrs]*100)
+        self.assertEqual(result, icrs)
+
+        def circle(center, start, precision=1.0e-9):
+            """Generate points in a circle; test that average is in the center
+
+            Precision is specified in arcseconds.
+            """
+            coords = []
+            for ii in range(120):
+                new = start.clone()
+                new.rotate(center, ii*3*afwGeom.degrees)
+                coords.append(new)
+            result = afwCoord.averageCoord(coords)
+            distance = result.angularSeparation(center)
+            self.assertLess(distance.asArcseconds(), precision)
+
+        for center, start in (
+                # RA=0=360 border
+                (afwCoord.IcrsCoord(0*afwGeom.degrees, 0*afwGeom.degrees),
+                 afwCoord.IcrsCoord(5*afwGeom.degrees, 0*afwGeom.degrees)),
+                # North pole
+                (afwCoord.IcrsCoord(0*afwGeom.degrees, 90*afwGeom.degrees),
+                 afwCoord.IcrsCoord(0*afwGeom.degrees, 85*afwGeom.degrees)),
+                # South pole
+                (afwCoord.IcrsCoord(0*afwGeom.degrees, -90*afwGeom.degrees),
+                 afwCoord.IcrsCoord(0*afwGeom.degrees, -85*afwGeom.degrees)),
+                ):
+            circle(center, start)
 
 
 #################################################################

@@ -389,6 +389,22 @@ PTR(Coord) makeCoord(CoordSystem const system, lsst::afw::geom::Point3D const &p
                      bool normalize=true,
                      lsst::afw::geom::Angle const defaultLongitude=lsst::afw::geom::Angle(0.));
 
+/**
+ * Return average of a list of coordinates
+ *
+ * @param[in] coords  list of coords to average
+ * @param[in] system  coordinate system of returned result;
+ *                    if UNKNOWN then all input coordinates must have the same coordinate system,
+ *                    which is used for the result
+ *
+ * @throw  lsst::pex::exceptions::InvalidParameterError if system is UNKNOWN
+ *          and the coords do not all have the same coordinate system
+ */
+PTR(Coord) averageCoord(
+    std::vector<PTR(Coord const)> const coords,
+    CoordSystem system=UNKNOWN
+    );
+
 /*
  * Utility functions
  *

@@ -31,6 +31,8 @@
 #include "lsst/afw/coord/Coord.h"
 %}
 
+%include "std_vector.i"
+
 %useValueEquality(lsst::afw::coord::Coord);
 
 // The shared pointer declarations must precede the %include statement for Coord.h
@@ -41,6 +43,7 @@
 %shared_ptr(lsst::afw::coord::EclipticCoord);
 %shared_ptr(lsst::afw::coord::TopocentricCoord);
 
+%template(CoordVector) std::vector<PTR(lsst::afw::coord::Coord const)>;
 
 %rename(__getitem__) lsst::afw::coord::Coord::operator[];
 
@@ -82,7 +85,7 @@
 def __repr__(self):
     className = self.getClassName()
     coordSystem = self.getCoordSystem()
-    argList = ["%r * afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
+    argList = ["%r*afwGeom.degrees" % (pos.asDegrees(),) for pos in self]
     if coordSystem == TOPOCENTRIC:
         topoCoord = TopocentricCoord.cast(self)
         argList += [
