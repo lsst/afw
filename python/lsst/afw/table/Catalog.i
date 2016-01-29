@@ -140,8 +140,10 @@ public:
         elif isinstance(k, numpy.ndarray):
             return self.subset(k)
         try:
+            # this works only for integer arguments (single record access)
             return $action(self, k)
         except TypeError:
+            # when record access fails, try column access
             return self.columns[k]
     %}
     void __setitem__(std::ptrdiff_t i, PTR(RecordT) const & p) {
@@ -157,8 +159,10 @@ public:
     %feature("shadow") __setitem__ %{
     def __setitem__(self, k, v):
         try:
+            # this works only for integer arguments (single record access)
             return $action(self, k, v)
         except TypeError:
+            # when record access fails, try column access
             self.columns[k] = v
     %}
     void __delitem__(std::ptrdiff_t i) {
