@@ -238,6 +238,8 @@ def __nonzero__(self): return not self.empty()
 
 // =============== Schemas and their components =============================================================
 
+%ignore lsst::afw::table::KeyBase::operator[];
+
 %include "lsst/afw/table/FieldBase.h"
 %include "lsst/afw/table/Field.h"
 %include "lsst/afw/table/KeyBase.h"
@@ -442,7 +444,7 @@ def asKey(self):
     %}
 }
 
-%ignore lsst::afw::table::BaseRecord::operator=;
+%ignore lsst::afw::table::BaseRecord::operator[];
 %include "lsst/afw/table/BaseRecord.h"
 
 %extend lsst::afw::table::BaseRecord {
@@ -515,6 +517,7 @@ def getBits(self, keys=None):
     return $action(self, arg)
 %}
 
+%ignore lsst::afw::table::BaseColumnView::operator[];
 %include "lsst/afw/table/BaseColumnView.h"
 
 %extend lsst::afw::table::BitsColumn {
@@ -558,7 +561,14 @@ def getBits(self, keys=None):
         schema = property(getSchema)
         def get(self, key):
             """Return the column for the given key or field name; synonym for __getitem__."""
+            # the __getitem__ overrides themselves are defined in macros in specializations.i
             return self[key]
+        def __setitem__(self, key, value):
+            """Set a full column to an array or scalar."""
+            self.get(key)[:] = value
+        def set(self, key, value):
+            """Set a full column to an array or scalar; synonym for __setitem__."""
+            self[key] = value
     %}
     // Allow field name strings be used in place of keys (but only in Python)
     %pythonprepend __getitem__ %{
