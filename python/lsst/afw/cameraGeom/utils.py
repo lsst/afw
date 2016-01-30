@@ -58,7 +58,9 @@ def prepareWcsData(wcs, amp, isTrimmed=True):
         ampBox = amp.getRawBBox()
     wcs.flipImage(amp.getRawFlipX(), amp.getRawFlipY(), ampBox.getDimensions())
     #Shift WCS for trimming
-    wcs.shiftReferencePixel(-ampBox.getMinX(), -ampBox.getMinY())
+    if isTrimmed:
+        trim_shift = ampBox.getMin() - amp.getBBox().getMin()
+        wcs.shiftReferencePixel(-trim_shift.getX(), -trim_shift.getY())
     #Account for shift of amp data in larger ccd matrix
     offset = amp.getRawXYOffset()
     wcs.shiftReferencePixel(offset.getX(), offset.getY())
