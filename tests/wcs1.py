@@ -227,7 +227,9 @@ class WcsTestCase(utilsTests.TestCase):
         for coordSys, equinox in coordSysEquinoxIter():
             wcs = makeWcs(coordSys=coordSys, equinox=equinox)
             self.assertEqual(wcs.getCoordSystem(), coordSys)
-            self.assertEqual(wcs.getEquinox(), equinox)
+            if coordSys not in (afwCoord.ICRS, afwCoord.GALACTIC):
+                # ICRS and Galactic by definition does not have an equinox.
+                self.assertEqual(wcs.getEquinox(), equinox)
             predIsIcrs = coordSys == afwCoord.ICRS or (coordSys == afwCoord.FK5 and equinox == 2000)
             self.assertEqual(predIsIcrs, isIcrs(wcs))
             for coordSys2, equinox2 in coordSysEquinoxIter():
