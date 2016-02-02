@@ -482,9 +482,9 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
             throw LSST_EXCEPT(lsst::pex::exceptions::MemoryError, "Cannot allocate WCS info");
         }
 
-        _wcsInfo->flag = -1;
         int alloc = 1;                  //Unconditionally allocate memory when calling
         for (int i = 0; i != rhs._nWcsInfo; ++i) {
+            _wcsInfo[i].flag = -1;
             int status = wcscopy(alloc, &rhs._wcsInfo[i], &_wcsInfo[i]);
             if (status != 0) {
                 wcsvfree(&i, &_wcsInfo);
