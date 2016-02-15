@@ -194,7 +194,7 @@ class GroupView(collections.Mapping):
                                   is computed over.
         @param[in]  dtype         Data type for the output array.
         """
-        result = numpy.zeros(len(self), dtype=float)
+        result = numpy.zeros(len(self), dtype=dtype)
         if field is not None:
             key = self.schema.find(field).key
             f = lambda cat: function(cat.get(key))
@@ -214,7 +214,7 @@ class GroupView(collections.Mapping):
                                   is computed over.
         @param[in]  dtype         Data type for the output array.
         """
-        result = numpy.zeros(self.count, dtype=float)
+        result = numpy.zeros(self.count, dtype=dtype)
         if field is not None:
             key = self.schema.find(field).key
             f = lambda cat: function(cat.get(key))
