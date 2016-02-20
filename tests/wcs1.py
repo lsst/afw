@@ -236,6 +236,21 @@ class WcsTestCase(utilsTests.TestCase):
                 wcs2 = makeWcs(coordSys=coordSys2, equinox=equinox2)
                 self.assertEqual(refIsSameSkySystem(wcs, wcs2), wcs.isSameSkySystem(wcs2))
 
+    def testIcrsEquinox(self):
+        """Check that EQUINOX is not written to FITS for ICRS coordinates"""
+        def checkEquinoxHeader(coordSysName, writeEquinox):
+            coordSys = getattr(afwCoord, coordSysName)
+            for dummyWcs in (makeWcs(coordSys=coordSys), afwImage.TanWcs.cast(makeWcs(coordSys=coordSys))):
+                dummyWcs = afwImage.TanWcs.cast(makeWcs(coordSys=coordSys))
+                dummyExposure = afwImage.ExposureF()
+                dummyExposure.setWcs(dummyWcs)
+                with utilsTests.getTempFilePath(".fits") as tmpFile:
+                    dummyExposure.writeFits(tmpFile)
+                    metadata = afwImage.readMetadata(tmpFile)
+                    self.assertEqual(metadata.get("RADESYS"), coordSysName)
+                    self.assertTrue(("EQUINOX" in metadata.names()) == writeEquinox)
+        checkEquinoxHeader("ICRS", False)
+        checkEquinoxHeader("FK5", True)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

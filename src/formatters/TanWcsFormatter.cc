@@ -185,7 +185,11 @@ afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
     }
 
     wcsProps->add("NAXIS", wcs._wcsInfo[0].naxis, "number of data axes");
-    wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox, "Equinox of coordinates");
+    // EQUINOX is "not relevant" (FITS definition, version 3.0, page 30) when
+    // dealing with ICRS, and may confuse readers. Don't write it.
+    if (strncmp(wcs._wcsInfo[0].radesys, "ICRS", 4) != 0) {
+        wcsProps->add("EQUINOX", wcs._wcsInfo[0].equinox, "Equinox of coordinates");
+    }
     wcsProps->add("RADESYS", std::string(wcs._wcsInfo[0].radesys), "Coordinate system for equinox");
     wcsProps->add("CRPIX1", wcs._wcsInfo[0].crpix[0], "WCS Coordinate reference pixel");
     wcsProps->add("CRPIX2", wcs._wcsInfo[0].crpix[1], "WCS Coordinate reference pixel");
