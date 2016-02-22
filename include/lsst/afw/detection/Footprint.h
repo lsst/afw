@@ -234,6 +234,15 @@ public:
     bool isNormalized() const {return _normalized;}
 
     /**
+     * Find the mask bit in the Mask that fall in the Footprint
+     *
+     * \returns Return the bitwise OR of all the mask bits of all the mask pixels that fall in the Footprint
+     */
+    template<typename MaskT>
+    MaskT overlapsMask(typename image::Mask<MaskT> const& mask ///< Mask to inspect
+        ) const;
+
+    /**
      * Set the pixels in idImage that are in Footprint by adding the
      * specified value to the Image.
      *

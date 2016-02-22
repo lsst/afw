@@ -278,6 +278,40 @@ bool Footprint::contains(
     return false;
 }
 
+/******************************************************************************/
+/*
+ * Return the bitwise OR of all the mask bits of all the mask pixels that fall in the Footprint
+ */
+template<typename MaskT>
+MaskT Footprint::overlapsMask(image::Mask<MaskT> const& mask ///< Mask to inspect
+    ) const
+{
+    int const width = static_cast<int>(mask.getWidth());
+    int const height = static_cast<int>(mask.getHeight());
+
+    MaskT bitmask = 0;
+    for (Footprint::SpanList::const_iterator siter =
+             getSpans().begin(); siter != getSpans().end(); siter++) {
+        PTR(Span) const span = *siter;
+        int const y = span->getY() - mask.getY0();
+        if (y < 0 || y >= height) {
+            continue;
+        }
+
+        int x0 = span->getX0() - mask.getX0();
+        int x1 = span->getX1() - mask.getX0();
+        x0 = (x0 < 0) ? 0 : (x0 >= width ? width - 1 : x0);
+        x1 = (x1 < 0) ? 0 : (x1 >= width ? width - 1 : x1);
+
+        for (typename image::Image<MaskT>::x_iterator ptr = mask.x_at(x0, y),
+                 end = mask.x_at(x1 + 1, y); ptr != end; ++ptr) {
+            bitmask |= *ptr;
+        }
+    }
+
+    return bitmask;
+}
+
 namespace {
 
 /// Predicate for removing spans outside a bbox
@@ -2432,6 +2466,8 @@ void Footprint::insertIntoImage(                                        \
     std::set<boost::uint64_t> *oldIds,                                  \
     geom::Box2I const& region=geom::Box2I()                             \
     ) const;                                                            \
+template                                                                \
+PIXEL Footprint::overlapsMask(image::Mask<PIXEL> const& mask) const
 
 INSTANTIATE_MASK(boost::uint16_t);
 INSTANTIATE_MASK(int);
