@@ -241,7 +241,6 @@ class WcsTestCase(utilsTests.TestCase):
         def checkEquinoxHeader(coordSysName, writeEquinox):
             coordSys = getattr(afwCoord, coordSysName)
             for dummyWcs in (makeWcs(coordSys=coordSys), afwImage.TanWcs.cast(makeWcs(coordSys=coordSys))):
-                dummyWcs = afwImage.TanWcs.cast(makeWcs(coordSys=coordSys))
                 dummyExposure = afwImage.ExposureF()
                 dummyExposure.setWcs(dummyWcs)
                 with utilsTests.getTempFilePath(".fits") as tmpFile:
