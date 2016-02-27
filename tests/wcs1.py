@@ -240,8 +240,8 @@ class WcsTestCase(utilsTests.TestCase):
         """Check that EQUINOX is not written to FITS for ICRS coordinates"""
         def checkEquinoxHeader(coordSysName, writeEquinox):
             coordSys = getattr(afwCoord, coordSysName)
+            # We should get the same behaviour with both Wcs and TanWcs: check them both.
             for dummyWcs in (makeWcs(coordSys=coordSys), afwImage.TanWcs.cast(makeWcs(coordSys=coordSys))):
-                dummyWcs = afwImage.TanWcs.cast(makeWcs(coordSys=coordSys))
                 dummyExposure = afwImage.ExposureF()
                 dummyExposure.setWcs(dummyWcs)
                 with utilsTests.getTempFilePath(".fits") as tmpFile:
