@@ -111,7 +111,7 @@ typedef PointKey<int> Point2IKey;
 typedef PointKey<double> Point2DKey;
 
 /**
- *  @brief A FunctorKey used to get or set celestial coordiantes from a pair of Angle keys.
+ *  @brief A FunctorKey used to get or set celestial coordinates from a pair of Angle keys.
  *
  *  Coords are always stored and returned in the ICRS system. Coords in other
  *  systems may be assigned, but this will result in a conversion to ICRS.
