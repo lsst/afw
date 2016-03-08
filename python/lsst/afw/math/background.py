@@ -20,9 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import os
-import sys
 import lsst.daf.base as dafBase
-import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import FitsError, MemFileManager, reduceToFits
@@ -95,6 +93,14 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
                   approxOrderX, approxOrderY, approxWeighting)
         self._backgrounds.append(bgInfo)
 
+    def clone(self):
+        """Return a shallow copy
+
+        Shallow copies do not share backgrounds that are appended after copying,
+        but do share changes to contained background objects.
+        """
+        return BackgroundList(*self)
+
     def writeFits(self, fileName, flags=0):
         """Save our list of Backgrounds to a file
         @param fileName         FITS file to write
@@ -148,7 +154,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             md = dafBase.PropertyList()
             try:
                 img = afwImage.ImageF(fileName, hdu, md); hdu += 1
-            except FitsError as e:
+            except FitsError:
                 break
 
             msk = afwImage.MaskU( fileName, hdu);     hdu += 1
