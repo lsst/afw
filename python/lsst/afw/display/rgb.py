@@ -144,7 +144,8 @@ class Mapping(object):
 
     def mapIntensityToUint8(self, I):
         """Map an intensity into the range of a uint8, [0, 255] (but not converted to uint8)"""
-        return np.where(I <= 0, 0, np.where(I < self._uint8Max, I, self._uint8Max))
+        with np.errstate(invalid='ignore', divide='ignore'): # n.b. np.where can't and doesn't short-circuit
+            return np.where(I <= 0, 0, np.where(I < self._uint8Max, I, self._uint8Max))
 
     def _convertImagesToUint8(self, imageR, imageG, imageB):
         """Use the mapping to convert images imageR, imageG, and imageB to a triplet of uint8 images"""
@@ -244,7 +245,7 @@ class AsinhMapping(Mapping):
     See http://adsabs.harvard.edu/abs/2004PASP..116..133L
     """
 
-    def __init__(self, minimum, range, Q=8):
+    def __init__(self, minimum, dataRange, Q=8):
         Mapping.__init__(self, minimum)
 
         epsilon = 1.0/2**23            # 32bit floating point machine epsilon; sys.float_info.epsilon is 64bit
@@ -261,7 +262,7 @@ class AsinhMapping(Mapping):
             frac = 0.1                  # gradient estimated using frac*range is _slope
             self._slope = frac*self._uint8Max/np.arcsinh(frac*Q)
 
-        self._soften = Q/float(range);
+        self._soften = Q/float(dataRange);
 
     def mapIntensityToUint8(self, I):
         """Return an array which, when multiplied by an image, returns that image mapped to the range of a
@@ -280,7 +281,7 @@ class AsinhZScaleMapping(AsinhMapping):
     See AsinhMapping
     """
 
-    def __init__(self, image, Q=12, pedestal=None):
+    def __init__(self, image, Q=8, pedestal=None):
         """!
         Create an asinh mapping from an image, setting the linear part of the stretch using zscale
 
@@ -317,16 +318,16 @@ class AsinhZScaleMapping(AsinhMapping):
         image = computeIntensity(*image)
 
         zscale = ZScaleMapping(image)
-        range = zscale.maximum - zscale.minimum[0] # zscale.minimum is always a triple
+        dataRange = zscale.maximum - zscale.minimum[0] # zscale.minimum is always a triple
         minimum = zscale.minimum
 
         for i, level in enumerate(pedestal):
             minimum[i] += level
 
-        AsinhMapping.__init__(self, minimum, range, Q)
+        AsinhMapping.__init__(self, minimum, dataRange, Q)
         self._image = image             # support self.makeRgbImage()
 
-def makeRGB(imageR, imageG=None, imageB=None, minimum=0, range=5, Q=20, fileName=None,
+def makeRGB(imageR, imageG=None, imageB=None, minimum=0, dataRange=5, Q=8, fileName=None,
             saturatedBorderWidth=0, saturatedPixelValue=None,
             xSize=None, ySize=None, rescaleFactor=None):
     """Make a set of three images into an RGB image using an asinh stretch and optionally write it to disk
@@ -344,7 +345,7 @@ def makeRGB(imageR, imageG=None, imageB=None, minimum=0, range=5, Q=20, fileName
             raise ValueError("saturatedPixelValue must be set if saturatedBorderWidth is set")
         replaceSaturatedPixels(imageR, imageG, imageB, saturatedBorderWidth, saturatedPixelValue)
 
-    asinhMap = AsinhMapping(minimum, range, Q)
+    asinhMap = AsinhMapping(minimum, dataRange, Q)
     rgb = asinhMap.makeRgbImage(imageR, imageG, imageB,
                                 xSize=xSize, ySize=ySize, rescaleFactor=rescaleFactor)
 
@@ -383,16 +384,16 @@ def writeRGB(fileName, rgbImage):
 #
 class asinhMappingF(object):
     """!\deprecated Object used to support legacy API"""
-    def __init__(self, minimum, range, Q):
+    def __init__(self, minimum, dataRange, Q):
         self.minimum = minimum
-        self.range = range
+        self.dataRange = dataRange
         self.Q = Q
 
 class _RgbImageF(object):
     """!\deprecated Object used to support legacy API"""
     def __init__(self, imageR, imageG, imageB, mapping):
         """!\deprecated Legacy API"""
-        asinh = AsinhMapping(mapping.minimum, mapping.range, mapping.Q)
+        asinh = AsinhMapping(mapping.minimum, mapping.dataRange, mapping.Q)
         self.rgb = asinh.makeRgbImage(imageR, imageG, imageB)
 
     def write(self, fileName):
