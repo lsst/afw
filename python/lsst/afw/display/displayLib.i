@@ -63,3 +63,6 @@ Basic routines to talk to ds9
 
 %template(replaceSaturatedPixels)
         lsst::afw::display::replaceSaturatedPixels<lsst::afw::image::MaskedImage<float> >;
+
+%template(getZScale) lsst::afw::display::getZScale<boost::uint16_t>;
+%template(getZScale) lsst::afw::display::getZScale<float>;

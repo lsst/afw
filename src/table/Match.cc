@@ -119,7 +119,7 @@ bool doSelfMatchIfSame(
     Cat const & cat1, Cat const & cat2, Angle radius
 ) {
     if (&cat1 == &cat2) {
-        result = matchRaDec(cat1, radius, true);
+        result = matchRaDec(cat1, radius);
         return true;
     }
     return false;
@@ -127,9 +127,22 @@ bool doSelfMatchIfSame(
 
 } // anonymous
 
+
 template <typename Cat1, typename Cat2>
 std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
-matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
+matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest)
+{
+    MatchControl mc;
+    mc.findOnlyClosest = closest;
+
+    return matchRaDec(cat1, cat2, radius, mc);
+}
+
+template <typename Cat1, typename Cat2>
+std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
+matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
+           MatchControl const& mc)
+{
     typedef Match< typename Cat1::Record, typename Cat2::Record> MatchT;
     std::vector<MatchT> matches;
 
@@ -155,6 +168,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
     boost::scoped_array<Pos2> pos2(new Pos2[len2]);
     len1 = makeRecordPositions(cat1, pos1.get());
     len2 = makeRecordPositions(cat2, pos2.get());
+    PTR(typename Cat2::Record) nullRecord = boost::shared_ptr<typename Cat2::Record>();
     
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double minDec = pos1[i].dec - radius.asRadians();
@@ -166,13 +180,14 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
         size_t closestIndex = -1;          // Index of closest match (if any)
         double d2Include = d2Limit;     // Squared distance for inclusion of match
         bool found = false;             // Found anything?
+        size_t nMatches = 0;            // Number of matches
         for (size_t j = start; j < len2 && pos2[j].dec <= maxDec; ++j) {
             double dx = pos1[i].x - pos2[j].x;
             double dy = pos1[i].y - pos2[j].y;
             double dz = pos1[i].z - pos2[j].z;
             double d2 = dx*dx + dy*dy + dz*dz;
             if (d2 < d2Include) {
-                if (closest) {
+                if (mc.findOnlyClosest) {
                     d2Include = d2;
                     closestIndex = j;
                     found = true;
@@ -181,9 +196,13 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
                         MatchT(pos1[i].src, pos2[j].src, geom::Angle::fromUnitSphereDistanceSquared(d2))
                     );
                 }
+                ++nMatches;
             }
         }
-        if (closest && found) {
+        if (mc.includeMismatches && nMatches == 0) {
+            matches.push_back(MatchT(pos1[i].src, nullRecord, NAN));
+        }
+        if (mc.findOnlyClosest && found) {
             matches.push_back(
                 MatchT(pos1[i].src, pos2[closestIndex].src, 
                        geom::Angle::fromUnitSphereDistanceSquared(d2Include))
@@ -193,14 +212,32 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius, bool closest) {
     return matches;
 }
 
-template SimpleMatchVector matchRaDec(SimpleCatalog const &, SimpleCatalog const &, Angle, bool);
-template ReferenceMatchVector matchRaDec(SimpleCatalog const &, SourceCatalog const &, Angle, bool);
-template SourceMatchVector matchRaDec(SourceCatalog const &, SourceCatalog const &, Angle, bool);
+#define LSST_MATCH_RADEC(RTYPE, C1, C2)                                  \
+            template RTYPE matchRaDec(C1 const &, C2 const &, Angle, bool); \
+            template RTYPE matchRaDec(C1 const &, C2 const &, Angle, MatchControl const&)
 
+LSST_MATCH_RADEC(SimpleMatchVector, SimpleCatalog, SimpleCatalog);
+LSST_MATCH_RADEC(ReferenceMatchVector, SimpleCatalog, SourceCatalog);
+LSST_MATCH_RADEC(SourceMatchVector, SourceCatalog, SourceCatalog);
+
+#undef LSST_MATCH_RADEC
 
 template <typename Cat>
 std::vector< Match< typename Cat::Record, typename Cat::Record> >
-matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric) {
+matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric)
+{
+    MatchControl mc;
+    mc.symmetricMatch = symmetric;
+
+    return matchRaDec(cat, radius, mc);
+}
+
+template <typename Cat>
+std::vector< Match< typename Cat::Record, typename Cat::Record> >
+matchRaDec(Cat const &cat, geom::Angle radius,
+           MatchControl const& mc
+          )
+{
     typedef Match<typename Cat::Record,typename Cat::Record> MatchT;
     std::vector<MatchT> matches;
 
@@ -230,7 +267,7 @@ matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric) {
             if (d2 < d2Limit) {
                 Angle d = Angle::fromUnitSphereDistanceSquared(d2);
                 matches.push_back(MatchT(pos[i].src, pos[j].src, d));
-                if (symmetric) {
+                if (mc.symmetricMatch) {
                     matches.push_back(MatchT(pos[j].src, pos[i].src, d));
                 }
             }
@@ -239,12 +276,27 @@ matchRaDec(Cat const &cat, geom::Angle radius, bool symmetric) {
     return matches;
 }
 
-template SimpleMatchVector matchRaDec(SimpleCatalog const &, Angle, bool);
-template SourceMatchVector matchRaDec(SourceCatalog const &, Angle, bool);
+#define LSST_MATCH_RADEC(RTYPE, C)                                 \
+            template RTYPE matchRaDec(C const &, Angle, bool); \
+            template RTYPE matchRaDec(C const &, Angle, MatchControl const&)
 
+LSST_MATCH_RADEC(SimpleMatchVector, SimpleCatalog);
+LSST_MATCH_RADEC(SourceMatchVector, SourceCatalog);
+
+#undef LSST_MATCH_RADEC
 
 SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
-                        double radius, bool closest) {
+                        double radius, bool closest)
+{
+    MatchControl mc;
+    mc.findOnlyClosest = closest;
+
+    return matchXy(cat1, cat2, radius, mc);
+}
+
+SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
+                        double radius, MatchControl const& mc)
+{
     if (&cat1 == &cat2) {
         return matchXy(cat1, radius);
     }
@@ -256,6 +308,7 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     size_t len2 = cat2.size();
     boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
     boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
+    PTR(SourceRecord) nullRecord = boost::shared_ptr<SourceRecord>();
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i) {
         if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
@@ -292,21 +345,26 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
         size_t closestIndex = -1;          // Index of closest match (if any)
         double r2Include = r2;          // Squared radius for inclusion of match
         bool found = false;             // Found anything?
+        size_t nMatches = 0;            // Number of matches
         for (size_t j = start; j < len2 && (y2 = pos2[j]->getY()) <= maxY; ++j) {
             double dx = x - pos2[j]->getX();
             double dy = y - y2;
             double d2 = dx*dx + dy*dy;
             if (d2 < r2Include) {
-                if (closest) {
+                if (mc.findOnlyClosest) {
                     r2Include = d2;
                     closestIndex = j;
                     found = true;
                 } else {
                     matches.push_back(SourceMatch(pos1[i], pos2[j], std::sqrt(d2)));
                 }
+                ++nMatches;
             }
         }
-        if (closest && found) {
+        if (mc.includeMismatches && nMatches == 0) {
+            matches.push_back(SourceMatch(pos1[i], nullRecord, NAN));
+        }
+        if (mc.findOnlyClosest && found) {
             matches.push_back(SourceMatch(pos1[i], pos2[closestIndex], std::sqrt(r2Include)));
         }
     }
@@ -315,7 +373,19 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
 
 SourceMatchVector matchXy(
     SourceCatalog const & cat, double radius, bool symmetric
-) {
+                         )
+{
+    MatchControl mc;
+    mc.symmetricMatch = symmetric;
+
+    return matchXy(cat, radius, mc);
+}
+
+SourceMatchVector matchXy(
+                          SourceCatalog const & cat, double radius,
+                          MatchControl const& mc
+)
+{
     // setup match parameters
     double const r2 = radius*radius;
 
@@ -347,7 +417,7 @@ SourceMatchVector matchXy(
             if (d2 < r2) {
                 double d = std::sqrt(d2);
                 matches.push_back(SourceMatch(pos[i], pos[j], d));
-                if (symmetric) {
+                if (mc.symmetricMatch) {
                     matches.push_back(SourceMatch(pos[j], pos[i], d));
                 }
             }

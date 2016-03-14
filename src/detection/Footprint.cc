@@ -366,7 +366,12 @@ void Footprint::normalize() {
     if (_normalized) {
         return;
     }
-    assert(!_spans.empty());
+    if (_spans.empty()) {
+        _bbox = geom::Box2I();
+        _normalized = true;
+        _area = 0;
+        return;
+    }
     //
     // Check that the spans are sorted, and (more importantly) that each pixel appears
     // in only one span
