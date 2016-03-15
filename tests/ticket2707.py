@@ -46,19 +46,30 @@ class MatchXyTest(unittest.TestCase):
         self.cat2 = afwTable.SourceCatalog(self.table)
         self.nobj = 10
         self.nUniqueMatch = 0
+        self.matchRadius = 0.1  # Matching radius to use in tests (pixels)
         for i in range(self.nobj):
             j = self.nobj - i - 1
             r1, r2 = self.cat1.addNew(), self.cat2.addNew()
             r1.set(idKey, i)
             r2.set(idKey, self.nobj + j)
             if i % 3 != 0:
+                # These will provide the exact matches, though the two records we're setting right now won't
+                # match each other (because cat2 counts down in reverse).
                 r1.set(centroidKey, afwGeom.Point2D(i,i))
                 r2.set(centroidKey, afwGeom.Point2D(j,j))
                 self.nUniqueMatch += 1
             elif i == 3:
+                # Deliberately offset position in cat2 by 2 pixels and a bit so that it will match a
+                # different source. This gives us an extra match when we're not just getting the closest.
+                # The "2 pixels" makes it line up with a different source.
+                # The "a bit" is half a match radius, so that it's still within the matching radius, but it
+                # doesn't match another source exactly. If it matches another source exactly, then it's not
+                # clear which one will be taken as the match (in fact, it appears to depend on the compiler).
+                offset = 2 + 0.5*self.matchRadius
                 r1.set(centroidKey, afwGeom.Point2D(i,i))
-                r2.set(centroidKey, afwGeom.Point2D(j + 2,j + 2))
+                r2.set(centroidKey, afwGeom.Point2D(j + offset, j + offset))
             else:
+                # Test that we can handle NANs
                 r1.set(centroidKey, afwGeom.Point2D(nan,nan))
                 r2.set(centroidKey, afwGeom.Point2D(nan,nan))
 
@@ -69,7 +80,7 @@ class MatchXyTest(unittest.TestCase):
         del self.schema
 
     def testMatchXy(self):
-        matches = afwTable.matchXy(self.cat1, self.cat2, 0.01)
+        matches = afwTable.matchXy(self.cat1, self.cat2, self.matchRadius)
         self.assertEquals(len(matches), self.nUniqueMatch)
 
         for m in matches:
@@ -86,7 +97,7 @@ class MatchXyTest(unittest.TestCase):
                 mc = afwTable.MatchControl()
                 mc.findOnlyClosest = closest
                 mc.includeMismatches = includeMismatches
-                matches = afwTable.matchXy(self.cat1, self.cat2, 0.01, mc)
+                matches = afwTable.matchXy(self.cat1, self.cat2, self.matchRadius, mc)
 
                 if False:
                     for m in matches:
@@ -101,28 +112,36 @@ class MatchXyTest(unittest.TestCase):
                                 catMatches.append(m[0])
                         else:
                             catMismatches.append(m[0])
-                    matches = afwTable.matchXy(catMatches, self.cat2, 0.01, mc)
+                    matches = afwTable.matchXy(catMatches, self.cat2, self.matchRadius, mc)
                     mc.includeMismatches = False
-                    noMatches = afwTable.matchXy(catMismatches, self.cat2, 0.01, mc)
+                    noMatches = afwTable.matchXy(catMismatches, self.cat2, self.matchRadius, mc)
                     self.assertEquals(len(noMatches), 0)
 
+                # If we're not getting only the closest match, then we get an extra match due to the
+                # source we offset by 2 pixels and a bit.  Everything else should match exactly.
                 self.assertEquals(len(matches), self.nUniqueMatch if closest else self.nUniqueMatch + 1)
+                self.assertEquals(sum(1 for m in matches if m.distance == 0.0), self.nUniqueMatch)
                 for m in matches:
                     if closest:
                         self.assertEquals(m.first.getId() + self.nobj, m.second.getId())
-                    self.assertEquals(m.distance, 0.0)
+                    else:
+                        self.assertLessEqual(m.distance, self.matchRadius)
 
     def testSelfMatchXy(self):
         """Test doing a self-matches"""
         for symmetric in (True, False):
             mc = afwTable.MatchControl()
             mc.symmetricMatch = symmetric
-            matches = afwTable.matchXy(self.cat2, 0.01, mc)
+            matches = afwTable.matchXy(self.cat2, self.matchRadius, mc)
 
             if False:
                 for m in matches:
                     print m.first.getId(), m.second.getId(), m.distance
 
+            # There is only one source that matches another source when we do a self-match: the one
+            # offset by 2 pixels and a bit.
+            # If we're getting symmetric matches, that multiplies the expected number by 2 because it
+            # produces s1,s2 and s2,s1.
             self.assertEquals(len(matches), 2 if symmetric else 1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
