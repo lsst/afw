@@ -133,7 +133,7 @@ class RgbTestCase(unittest.TestCase):
         rgbImage = asinhMap.makeRgbImage(self.images[R], self.images[G], self.images[B])
 
         if display:
-            rgb.displayRGB(rgbImage)            
+            rgb.displayRGB(rgbImage)
 
     def testStarsAsinhZscale(self):
         """Test creating an RGB image using an asinh stretch estimated using zscale"""
@@ -245,7 +245,7 @@ class RgbTestCase(unittest.TestCase):
         #
         for f in [R, G, B]:
             self.assertTrue(np.isfinite(self.images[f].getImage().getArray()).all())
-        
+
         if False:
             ds9.mtv(self.images[B], frame=0, title="B")
             ds9.mtv(self.images[G], frame=1, title="G")
@@ -335,7 +335,7 @@ class RgbTestCase(unittest.TestCase):
         def tst():
             self.writeFileLegacyAPI("rgb.unknown")
         utilsTests.assertRaisesLsstCpp(self, ValueError, tst)
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
