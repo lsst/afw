@@ -306,11 +306,9 @@ class RgbTestCase(unittest.TestCase):
     @unittest.skipUnless(HAVE_MATPLOTLIB, NO_MATPLOTLIB_STRING)
     def testMakeRGBResize(self):
         """Test the function that does it all, including rescaling"""
-        fileName = "makeRGB.png"
-
         rgb.makeRGB(self.images[R], self.images[G], self.images[B], xSize=40, ySize=60)
 
-        with Tempfile(fileName, remove=True):
+        with utilsTests.getTempFilePath(".png") as fileName:
             rgb.makeRGB(self.images[R], self.images[G], self.images[B], fileName=fileName, rescaleFactor=0.5)
             self.assertTrue(os.path.exists(fileName))
 
