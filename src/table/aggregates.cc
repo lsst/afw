@@ -389,10 +389,12 @@ void CovarianceMatrixKey<T,N>::setElement(BaseRecord & record, int i, int j, T v
 template class CovarianceMatrixKey<float,2>;
 template class CovarianceMatrixKey<float,3>;
 template class CovarianceMatrixKey<float,4>;
+template class CovarianceMatrixKey<float,5>;
 template class CovarianceMatrixKey<float,Eigen::Dynamic>;
 template class CovarianceMatrixKey<double,2>;
 template class CovarianceMatrixKey<double,3>;
 template class CovarianceMatrixKey<double,4>;
+template class CovarianceMatrixKey<double,5>;
 template class CovarianceMatrixKey<double,Eigen::Dynamic>;
 
 }}} // namespace lsst::afw::table
