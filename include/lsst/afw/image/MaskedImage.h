@@ -359,8 +359,6 @@ public:
         };
 
     public:
-        template<typename, typename, typename> friend class const_MaskedImageLocator;
-
         typedef typename boost::tuple<typename ImageLocator::cached_location_t,
                                       typename MaskLocator::cached_location_t,
                                       typename VarianceLocator::cached_location_t> IMVCachedLocation;
@@ -517,6 +515,11 @@ public:
 
             return *this;
         }
+
+        // Workaround for DM-5590: clang-3.8 cannot access _loc from
+        // friend class const_MaskedImageLocator.
+        IMVLocator const & getLoc() const { return _loc; }
+
     protected:
         IMVLocator _loc;
     };
@@ -548,9 +551,9 @@ public:
                                        ConstReference> MaskedImageLocatorBase_t;
     public:
         const_MaskedImageLocator(MaskedImageLocator<ImageLocator, MaskLocator, VarianceLocator> const& iter) :
-            MaskedImageLocatorBase_t(const_ImageLocator(iter._loc.template get<0>()),
-                                     const_MaskLocator(iter._loc.template get<1>()),
-                                     const_VarianceLocator(iter._loc.template get<2>())
+            MaskedImageLocatorBase_t(const_ImageLocator(iter.getLoc().template get<0>()),
+                                     const_MaskLocator(iter.getLoc().template get<1>()),
+                                     const_VarianceLocator(iter.getLoc().template get<2>())
                                     ) {
             ;
         }
