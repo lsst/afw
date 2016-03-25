@@ -374,14 +374,14 @@ geom::Point2D TanWcs::undistortPixel(geom::Point2D const & pix) const {
 
     double f = 0;
     for (int i = 0; i < fOrder; ++i) {
-        for (int j = std::max(0, 2-i); j < fOrder - i; ++j) {
+        for (int j = 0; j < fOrder - i; ++j) {
             f += _sipA(i,j)*uPoly[i]*vPoly[j];
         }
     }
 
     double g = 0;
     for (int i = 0; i < gOrder; ++i) {
-        for(int j = std::max(0, 2-i); j < gOrder - i; ++j) {
+        for(int j = 0; j < gOrder - i; ++j) {
             g += _sipB(i,j)*uPoly[i]*vPoly[j];
         }
     }
