@@ -130,7 +130,12 @@
 }
 
 %extend lsst::afw::table::BaseColumnView {
-    ndarray::Array<bool const,1> __getitem__(
+    ndarray::Array<bool const,1,1> __getitem__(
+        lsst::afw::table::Key< lsst::afw::table::Flag > const & key
+    ) const {
+        return ndarray::copy((*self)[key]);
+    }
+    ndarray::Array<bool,1,1> get_bool_array(
         lsst::afw::table::Key< lsst::afw::table::Flag > const & key
     ) const {
         return ndarray::copy((*self)[key]);
