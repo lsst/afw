@@ -679,4 +679,11 @@ namespace lsst { namespace afw { namespace table {
 
 %declareCatalog(CatalogT, Base)
 
+// This needs to be here, not Catalog.i, to prevent it from being picked up in afw.detection, where _syntax.py is not available.
+%extend CatalogT<BaseRecord> {
+    %pythoncode %{
+    as_astropy_cols_meta = _syntax.BaseCatalog_as_astropy_cols_meta
+    %}
+}
+
 }}} // namespace lsst::afw::table

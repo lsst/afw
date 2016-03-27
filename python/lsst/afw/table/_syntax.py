@@ -202,3 +202,39 @@ def BaseColumnView_extract(self, *patterns, **kwds):
         else:
             d[name] = processArray(self.get(schemaItem.key))
     return d
+
+def BaseCatalog_as_astropy_cols_meta(self, copy):
+    import astropy.table
+    # TODO: should handle nested PropertyLists and multi-valued items,
+    # but that's code that belongs with PropertyList/PropertySet.
+    ps = self.getMetadata()
+    meta = collections.OrderedDict([(name, ps.get(name)) for name in ps.names()])
+    columns = []
+    items = self.schema.extract("*", ordered=True)
+    for name, item in items.iteritems():
+        key = item.key
+        unit = item.field.getUnits() or None  # use None instead of "" when empty
+        if key.getTypeString() == "String":
+            if not copy:
+                raise ValueError("Cannot extract string columns without copying.")
+            data = numpy.zeros(len(self), dtype=numpy.dtype((str, key.getSize())))
+            for i, record in enumerate(self):
+                data[i] = record.get(key)
+        elif key.getTypeString() == "Flag":
+            if not copy:
+                raise ValueError("Cannot extract packed bit columns without copying.")
+            data = self.columns.get_bool_array(key)
+        elif key.getTypeString() == "Angle":
+            data = self.columns.get(key)
+            unit = "radian"
+        else:
+            data = self.columns.get(key)
+        columns.append(
+            astropy.table.Column(
+                data,
+                name=item.field.getName(),
+                unit=unit,
+                description=item.field.getDoc()
+            )
+        )
+    return columns, meta, False
