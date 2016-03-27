@@ -63,6 +63,8 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %}
 
 %declareNumPyConverters(ndarray::Array<bool const,1>);
+%declareNumPyConverters(ndarray::Array<bool const,1,1>);
+%declareNumPyConverters(ndarray::Array<bool,1,1>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::table::RecordId const,1>);
 %declareNumPyConverters(ndarray::Array<boost::uint16_t const,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t const,1>);
