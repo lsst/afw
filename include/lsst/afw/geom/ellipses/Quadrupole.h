@@ -69,7 +69,7 @@ public:
     virtual std::string getName() const;
 
     /**
-     *  @brief Put the parameters into a "standard form", and throw InvalidEllipseParameters
+     *  @brief Put the parameters into a "standard form", and throw InvalidParameterError
      *         if they cannot be normalized.
      */
     virtual void normalize();
