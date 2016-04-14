@@ -349,6 +349,14 @@ struct GridTransformTest {
             )
         );
 
+        AffineTransform inverse1 = input.getGridTransform().invert();
+        AffineTransform inverse2 = AffineTransform(input.getGridTransform()).invert();
+        BOOST_CHECK_CLOSE(inverse1[0], inverse2[0], 1E-8);
+        BOOST_CHECK_CLOSE(inverse1[1], inverse2[1], 1E-8);
+        BOOST_CHECK_CLOSE(inverse1[2], inverse2[2], 1E-8);
+        BOOST_CHECK_CLOSE(inverse1[3], inverse2[3], 1E-8);
+        BOOST_CHECK_CLOSE(inverse1[4], inverse2[4], 1E-8);
+        BOOST_CHECK_CLOSE(inverse1[5], inverse2[5], 1E-8);
     }
 
 };
