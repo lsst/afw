@@ -46,41 +46,55 @@
 
 %define %Radius_POSTINCLUDE(RADIUS)
 %extend lsst::afw::geom::ellipses::RADIUS {
+
     double __float__() const {
         return static_cast<double const &>(*self);
     }
+
     double getValue() const {
         return static_cast<double const &>(*self);
     }
+
     void setValue(double value) {
         static_cast<double &>(*self) = value;
     }
+
     %pythoncode %{
+
     def __str__(self):
         return str(float(self))
+
     def __repr__(self):
         return "%s(%g)" % (self.getName(), float(self))
+
     %}
 }
 %enddef
 
 %define %Ellipticity_POSTINCLUDE(ELLIPTICITY)
 %extend lsst::afw::geom::ellipses::ELLIPTICITY {
+
     %feature("shadow") _getComplex %{
         def getComplex(self):
             return $action(self)
     %}
+
     std::complex<double> _getComplex() const {
         return self->getComplex();
     }
+
     void setComplex(std::complex<double> other) {
         self->getComplex() = other;
     }
+
     %pythoncode %{
+
     def __str__(self):
         return "(%g, %g)" % (self.getE1(), self.getE2())
+
     def __repr__(self):
         return "%s(%g, %g)" % (self.getName(), self.getE1(), self.getE2())
+
     %}
 }
 %enddef
@@ -107,9 +121,9 @@
 %define %Separable_PREINCLUDE(ELLIPTICITY, RADIUS)
 %shared_ptr(
     lsst::afw::geom::ellipses::Separable<
-        lsst::afw::geom::ellipses::ELLIPTICITY, 
+        lsst::afw::geom::ellipses::ELLIPTICITY,
         lsst::afw::geom::ellipses::RADIUS
-    > 
+    >
 );
 %rename(assign) lsst::afw::geom::ellipses::Separable<
         lsst::afw::geom::ellipses::ELLIPTICITY,
@@ -119,9 +133,9 @@
 
 
 %define %Separable_POSTINCLUDE(ELLIPTICITY, RADIUS)
-%template(Separable ## ELLIPTICITY ## RADIUS) 
+%template(Separable ## ELLIPTICITY ## RADIUS)
     lsst::afw::geom::ellipses::Separable<
-        lsst::afw::geom::ellipses::ELLIPTICITY, 
+        lsst::afw::geom::ellipses::ELLIPTICITY,
         lsst::afw::geom::ellipses::RADIUS
     >;
 %enddef
@@ -145,18 +159,22 @@
 %include "lsst/afw/geom/ellipses/Separable.h"
 
 %extend lsst::afw::geom::ellipses::Separable {
+
     %feature("shadow") _transform %{
         def transform(self, t):
             return $action(self, t)
     %}
+
     %feature("shadow") _transformInPlace %{
         def transformInPlace(self, t):
             $action(self, t)
     %}
+
     %feature("shadow") _convolve %{
         def convolve(self, t):
             return $action(self, t)
     %}
+
     %feature("shadow") _getGridTransform %{
         def getGridTransform(self):
             return $action(self)
@@ -169,9 +187,11 @@
             self->transform(t).copy()
         );
     }
+
     void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
        self->transform(t).inPlace();
     }
+
     lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr _convolve(
             lsst::afw::geom::ellipses::BaseCore const & other
     ) {
@@ -179,6 +199,7 @@
             self->convolve(other).copy()
         );
     }
+
     lsst::afw::geom::LinearTransform _getGridTransform() {
         return self->getGridTransform();
     }
@@ -188,11 +209,15 @@
     ) {
         return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
     }
+
     %pythoncode %{
+
     def __repr__(self):
         return "Separable(%r, %r)" % (self.getEllipticity(), self.getRadius())
+
     def __str__(self):
         return "(%s, %s)" % (self.getEllipticity(), self.getRadius())
+
     %}
 }
 

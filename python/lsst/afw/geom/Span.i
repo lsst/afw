@@ -45,8 +45,10 @@
     }
 
     %pythoncode %{
+
     def __len__(self):
         return self.getWidth()
+
     def __str__(self):
         """Print this Span"""
         return self.toString()

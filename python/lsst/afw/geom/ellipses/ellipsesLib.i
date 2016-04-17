@@ -76,14 +76,17 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 
 %define %EllipseCore_POSTINCLUDE(NAME)
 %extend lsst::afw::geom::ellipses::NAME {
+
     %feature("shadow") _transform %{
         def transform(self, t):
             return $action(self, t)
     %}
+
     %feature("shadow") _transformInPlace %{
         def transformInPlace(self, t):
             $action(self, t)
     %}
+
     %feature("shadow") _convolve %{
         def convolve(self, t):
             return $action(self, t)
@@ -101,9 +104,11 @@ Python interface to lsst::afw::geom::ellipses classes and functions
             self->transform(t).copy()
         );
     }
+
     void _transformInPlace(lsst::afw::geom::LinearTransform const & t) {
        self->transform(t).inPlace();
     }
+
     lsst::afw::geom::ellipses::NAME::Ptr _convolve(
         lsst::afw::geom::ellipses::BaseCore const & other
     ) {
@@ -111,6 +116,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
             self->convolve(other).copy()
         );
     }
+
     lsst::afw::geom::LinearTransform _getGridTransform() {
         return self->getGridTransform();
     }
@@ -120,6 +126,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     ) {
        return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::NAME>(p);
     }
+
 }
 %enddef
 
@@ -134,23 +141,31 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 
 %extend lsst::afw::geom::ellipses::Axes {
     %pythoncode %{
+
     def __repr__(self):
         return "Axes(a=%r, b=%r, theta=%r)" % (self.getA(), self.getB(), self.getTheta())
+
     def __reduce__(self):
         return (Axes, (self.getA(), self.getB(), self.getTheta()))
+
     def __str__(self):
         return "(a=%s, b=%s, theta=%s)" % (self.getA(), self.getB(), self.getTheta())
+
     %}
 }
 
 %extend lsst::afw::geom::ellipses::Quadrupole {
     %pythoncode %{
+
     def __repr__(self):
         return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIxx(), self.getIyy(), self.getIxy())
+
     def __reduce__(self):
         return (Quadrupole, (self.getIxx(), self.getIyy(), self.getIxy()))
+
     def __str__(self):
         return "(ixx=%s, iyy=%s, ixy=%s)" % (self.getIxx(), self.getIyy(), self.getIxy())
+
     %}
 }
 
@@ -170,47 +185,59 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %declareNumPyConverters(lsst::afw::geom::ellipses::Ellipse::ParameterVector);
 
 %extend lsst::afw::geom::ellipses::Ellipse {
+
     %feature("shadow") _transform %{
         def transform(self, t):
             return $action(self, t)
     %}
+
     %feature("shadow") _transformInPlace %{
         def transformInPlace(self, t):
             $action(self, t)
     %}
+
     %feature("shadow") _convolve %{
         def convolve(self, t):
             return $action(self, t)
     %}
+
     %feature("shadow") _getGridTransform %{
         def getGridTransform(self):
             return $action(self)
     %}
+
     %feature("shadow") getCorePtr %{
         def getCore(self):
             return $action(self).cast()
     %}
 
-
     lsst::afw::geom::ellipses::Ellipse _transform(lsst::afw::geom::AffineTransform const & t) {
         return self->transform(t);
     }
+
     void _transformInPlace(lsst::afw::geom::AffineTransform const & t) {
         self->transform(t).inPlace();
     }
+
     lsst::afw::geom::ellipses::Ellipse _convolve(lsst::afw::geom::ellipses::Ellipse const & other) {
         return self->convolve(other);
     }
+
     lsst::afw::geom::AffineTransform _getGridTransform() {
         return self->getGridTransform();
     }
+
     %pythoncode %{
+
     def __repr__(self):
         return "Ellipse(%r, %r)" % (self.getCore(), self.getCenter())
+
     def __reduce__(self):
         return (Ellipse, (self.getCore(), self.getCenter()))
+
     def __str__(self):
         return "(%s, %s)" % (self.getCore(), self.getCenter())
+
     %}
 }
 

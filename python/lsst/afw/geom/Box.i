@@ -35,15 +35,18 @@
 
 %include "lsst/afw/geom/Box.h"
 
-%extend lsst::afw::geom::Box2I {             
+%extend lsst::afw::geom::Box2I {
     %pythoncode %{
+
     Extent = Extent2I
     Point = Point2I
 
     def __repr__(self):
         return "Box2I(%r, %r)" % (self.getMin(), self.getDimensions())
+
     def __reduce__(self):
         return (Box2I, (self.getMin(), self.getMax()))
+
     def __str__(self):
         return "Box2I(%s, %s)" % (self.getMin(), self.getMax())
 
@@ -61,15 +64,18 @@
     %}
 }
 
-%extend lsst::afw::geom::Box2D {             
+%extend lsst::afw::geom::Box2D {
     %pythoncode %{
+
     Extent = Extent2D
     Point = Point2D
 
     def __repr__(self):
         return "Box2D(%r, %r)" % (self.getMin(), self.getDimensions())
+
     def __reduce__(self):
         return (Box2D, (self.getMin(), self.getDimensions()))
+
     def __str__(self):
         return "Box2D(%s, %s)" % (self.getMin(), self.getMax())
 

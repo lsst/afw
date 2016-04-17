@@ -40,21 +40,27 @@
 %template(PointBase ## N ## SUFFIX) lsst::afw::geom::PointBase<T,N>;
 %template(Point ## N ## SUFFIX) lsst::afw::geom::Point<T,N>;
 %CoordinateBase_POSTINCLUDE(T, N, lsst::afw::geom::Point<T,N>);
+
 %extend lsst::afw::geom::Point<T,N> {
+
     lsst::afw::geom::Extent<T,N> __sub__(lsst::afw::geom::Point<T,N> const & other) const {
         return *self - other;
     }
+
     lsst::afw::geom::Point<T,N> __add__(lsst::afw::geom::Extent<T,N> const & other) const {
         return *self + other;
     }
+
     lsst::afw::geom::Point<T,N> __sub__(lsst::afw::geom::Extent<T,N> const & other) const {
         return *self - other;
     }
+
     PyObject * __iadd__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<T,N> const & other) {
         *self += other;
         Py_INCREF(*PYTHON_SELF);
         return *PYTHON_SELF;
     }
+
     PyObject * __isub__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<T,N> const & other) {
         *self -= other;
         Py_INCREF(*PYTHON_SELF);
@@ -65,26 +71,33 @@
 
 %define %PointD_POSTINCLUDE(N)
 %Point_POSTINCLUDE(double,N,D)
+
 %extend lsst::afw::geom::Point<double,N> {
+
     lsst::afw::geom::Point<double,N> __add__(lsst::afw::geom::Extent<int,N> const & other) const {
         return *self + other;
     }
+
     PyObject * __iadd__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<int,N> const & other) {
         *self += other;
         Py_INCREF(*PYTHON_SELF);
         return *PYTHON_SELF;
     }
+
     lsst::afw::geom::Point<double,N> __sub__(lsst::afw::geom::Extent<int,N> const & other) const {
         return *self - other;
     }
+
     PyObject * __isub__(PyObject** PYTHON_SELF, lsst::afw::geom::Extent<int,N> const & other) {
         *self -= other;
         Py_INCREF(*PYTHON_SELF);
         return *PYTHON_SELF;
     }
+
     lsst::afw::geom::Extent<double,N> __sub__(lsst::afw::geom::Point<int,N> const & other) const {
         return *self - other;
     }
+
 }
 %enddef
 
