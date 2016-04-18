@@ -46,6 +46,16 @@
 
     %pythoncode %{
 
+    __swig_getmethods__["y"] = getY
+    __swig_getmethods__["x0"] = getX0
+    __swig_getmethods__["x1"] = getX1
+    __swig_getmethods__["min"] = getMin
+    __swig_getmethods__["max"] = getMax
+    __swig_getmethods__["begin"] = getBegin
+    __swig_getmethods__["end"] = getEnd
+    __swig_getmethods__["begin"] = getBegin
+    __swig_getmethods__["end"] = getEnd
+
     def __len__(self):
         return self.getWidth()
 

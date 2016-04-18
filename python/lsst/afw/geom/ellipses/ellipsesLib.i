@@ -142,6 +142,13 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %extend lsst::afw::geom::ellipses::Axes {
     %pythoncode %{
 
+    __swig_getmethods__["a"] = getA
+    __swig_setmethods__["a"] = setA
+    __swig_getmethods__["b"] = getA
+    __swig_setmethods__["b"] = setA
+    __swig_getmethods__["theta"] = getTheta
+    __swig_setmethods__["theta"] = setTheta
+
     def __repr__(self):
         return "Axes(a=%r, b=%r, theta=%r)" % (self.getA(), self.getB(), self.getTheta())
 
@@ -156,6 +163,13 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 
 %extend lsst::afw::geom::ellipses::Quadrupole {
     %pythoncode %{
+
+    __swig_getmethods__["ixx"] = getIxx
+    __swig_setmethods__["ixx"] = setIyy
+    __swig_getmethods__["iyy"] = getIyy
+    __swig_setmethods__["iyy"] = setIyy
+    __swig_getmethods__["ixy"] = getIxy
+    __swig_setmethods__["ixy"] = setIxy
 
     def __repr__(self):
         return "Quadrupole(ixx=%r, iyy=%r, ixy=%r)" % (self.getIxx(), self.getIyy(), self.getIxy())
@@ -228,6 +242,11 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     }
 
     %pythoncode %{
+
+    __swig_getmethods__["core"] = getCore
+    __swig_setmethods__["core"] = setCore
+    __swig_getmethods__["center"] = getCenter
+    __swig_setmethods__["center"] = setCenter
 
     def __repr__(self):
         return "Ellipse(%r, %r)" % (self.getCore(), self.getCenter())

@@ -41,6 +41,14 @@
     Extent = Extent2I
     Point = Point2I
 
+    __swig_getmethods__["min"] = getMin
+    __swig_getmethods__["max"] = getMax
+    __swig_getmethods__["begin"] = getBegin
+    __swig_getmethods__["end"] = getEnd
+    __swig_getmethods__["dimensions"] = getDimensions
+    __swig_getmethods__["width"] = getWidth
+    __swig_getmethods__["height"] = getHeight
+
     def __repr__(self):
         return "Box2I(%r, %r)" % (self.getMin(), self.getDimensions())
 
@@ -69,6 +77,13 @@
 
     Extent = Extent2D
     Point = Point2D
+
+    __swig_getmethods__["min"] = getMin
+    __swig_getmethods__["max"] = getMax
+    __swig_getmethods__["dimensions"] = getDimensions
+    __swig_getmethods__["width"] = getWidth
+    __swig_getmethods__["height"] = getHeight
+
 
     def __repr__(self):
         return "Box2D(%r, %r)" % (self.getMin(), self.getDimensions())

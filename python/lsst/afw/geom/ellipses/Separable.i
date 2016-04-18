@@ -212,6 +212,13 @@
 
     %pythoncode %{
 
+    __swig_getmethods__["e1"] = getE1
+    __swig_setmethods__["e2"] = setE1
+    __swig_getmethods__["radius"] = getE2
+    __swig_setmethods__["radius"] = setE2
+    __swig_getmethods__["theta"] = getRadius
+    __swig_setmethods__["theta"] = setRadius
+
     def __repr__(self):
         return "Separable(%r, %r)" % (self.getEllipticity(), self.getRadius())
 

@@ -54,6 +54,11 @@
 
     %pythoncode %{
 
+    __swig_getmethods__["x"] = getX
+    __swig_setmethods__["x"] = setX
+    __swig_getmethods__["y"] = getY
+    __swig_setmethods__["y"] = setY
+
     def __len__(self):
         return N
 
