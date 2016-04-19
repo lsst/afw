@@ -32,6 +32,7 @@
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/fits.h"
+#include "lsst/utils/Utils.h"
 
 using namespace std;
 
@@ -179,16 +180,41 @@ int test(void(*ftn)(void), string label)
 	return 0;
 }
 
+string GetGFilenamePath(int argc, char **argv)
+{
+    string inImagePath;
+    if (argc < 2) {
+        try {
+            string dataDir = lsst::utils::getPackageDir("afwdata");
+            //inImagePath = dataDir + "/data/fpC-002570-r6-0199_sub.fits"; //Also works - this one was not 
+            // used at all in the previous avatar of this test.
+            inImagePath = dataDir + "/data/fpC-005902-r6-0677_sub.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            cerr << "Usage: maskedImage1 [inputBaseName1] [inputBaseName2] [outputBaseName1] [outputBaseName2]" << endl;
+            cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+    else {
+        inImagePath = string(argv[1]);
+    }
+    return inImagePath;
+}
+
 //================================================================================
 //main
 
 int main(int argc, char **argv)
 {
+	/*cout << "argc: " << argc << endl; //REMOVE
 	if (argc >= 2)
 	{
 		stringstream ss;
+		cout << "gDebugdata: " << gDebugData << endl; //REMOVE
 		ss << argv[1];
+		cout << "argv[1]: " << ss.str() << endl; //REMOVE
 		ss >> gDebugData;
+		cout << "gDebugdata: " << gDebugData << endl; //REMOVE
 	}
 	
 	if (argc >= 3)
@@ -196,6 +222,8 @@ int main(int argc, char **argv)
 		stringstream ss;
 		ss << argv[2];
 		ss >> gFilename;
+		cout << "argv[2]: " << ss.str() << endl; //REMOVE
+		cout << "gFilename: " << gFilename << endl; //REMOVE
 		gFilenameStripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename);
 	}
 	
@@ -204,6 +232,8 @@ int main(int argc, char **argv)
 		stringstream ss;
 		ss << argv[3];
 		ss >> gFilename2;
+		cout << "argv[3]: " << ss.str() << endl; //REMOVE
+		cout << "gFilename2: " << gFilename2 << endl; //REMOVE
 		gFilename2Stripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename2);
 	}
 	
@@ -211,7 +241,10 @@ int main(int argc, char **argv)
 	cout << "gFilename:          " << gFilename << endl;
 	cout << "gFilename2:         " << gFilename2 << endl;
 	cout << "gFilenameStripped:  " << gFilenameStripped << endl;
-	cout << "gFilename2Stripped: " << gFilename2Stripped << endl;
+	cout << "gFilename2Stripped: " << gFilename2Stripped << endl;*/
+	
+	gFilename = GetGFilenamePath(argc, argv);
+	gFilenameStripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename);
 	
 	int numerrs = 0;
 	
