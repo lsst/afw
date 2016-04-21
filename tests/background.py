@@ -667,10 +667,13 @@ class BackgroundTestCase(unittest.TestCase):
             ds9.mtv(statsImage, frame=1)
 
         # the test is that this doesn't fail if the bug (#2297) is fixed
-        bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
-        self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
-        if display:
-            ds9.mtv(bkgdImage, frame=2)
+        for frame, interpStyle in enumerate([afwMath.Interpolate.CONSTANT, afwMath.Interpolate.LINEAR,
+                                             afwMath.Interpolate.NATURAL_SPLINE,
+                                             afwMath.Interpolate.AKIMA_SPLINE], 2):
+            bkgdImage = bkgd.getImageF(interpStyle, afwMath.REDUCE_INTERP_ORDER)
+            self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
+            if display:
+                ds9.mtv(bkgdImage, frame=frame)
 
     def testBadImage(self):
         """Test that an entirely bad image doesn't cause an absolute failure
@@ -690,16 +693,17 @@ class BackgroundTestCase(unittest.TestCase):
             bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
 
             bkgd = afwMath.makeBackground(mi, bctrl)
-            afwMath.cast_BackgroundMI(bkgd).getStatsImage()
 
-            # the test is that this doesn't fail if the bug (#2297) is fixed
-            bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
-            val = np.mean(bkgdImage[0:100, 0:100].getArray())
+            for interpStyle in [afwMath.Interpolate.CONSTANT, afwMath.Interpolate.LINEAR,
+                                afwMath.Interpolate.NATURAL_SPLINE, afwMath.Interpolate.AKIMA_SPLINE]:
+                # the test is that this doesn't fail if the bug (#2297) is fixed
+                bkgdImage = bkgd.getImageF(interpStyle, afwMath.REDUCE_INTERP_ORDER)
+                val = np.mean(bkgdImage[0:100, 0:100].getArray())
 
-            if np.isfinite(pix00):
-                self.assertEqual(val, pix00)
-            else:
-                self.assertTrue(np.isnan(val))
+                if np.isfinite(pix00):
+                    self.assertEqual(val, pix00)
+                else:
+                    self.assertTrue(np.isnan(val))
 
     def testBackgroundFromStatsImage(self):
         """Check that we can rebuild a Background from a BackgroundMI.getStatsImage()

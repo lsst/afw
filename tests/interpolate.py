@@ -126,7 +126,7 @@ class InterpolateTestCase(unittest.TestCase):
     def testInvalidInputs(self):
         """Test that invalid inputs cause an abort"""
 
-        self.assertRaises(pexExcept.InvalidParameterError,
+        self.assertRaises(pexExcept.OutOfRangeError,
             lambda : afwMath.makeInterpolate(np.array([], dtype=float), np.array([], dtype=float),
                                              afwMath.Interpolate.CONSTANT)
             )
