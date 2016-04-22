@@ -42,6 +42,8 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
+import lsst.pex.exceptions as pexExcept
+
 from kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 
 VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
@@ -56,15 +58,18 @@ except NameError:
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
-dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+try:
+    dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+    InputMaskedImagePath = os.path.join(dataDir, "medexp.fits")
+    FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
+except pexExcept.NotFoundError:
+    dataDir = None
 
 # input image contains a saturated star, a bad column, and a faint star
-InputMaskedImagePath = os.path.join(dataDir, "medexp.fits")
 InputBBox = afwGeom.Box2I(afwGeom.Point2I(52, 574), afwGeom.Extent2I(76, 80))
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve fully overwrites it
 ShiftedBBox = afwGeom.Box2I(afwGeom.Point2I(0, 460), afwGeom.Extent2I(76, 80))
-FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
 NoDataMaskPixel = afwImage.MaskU.getPlaneBitMask("NO_DATA")
@@ -172,6 +177,7 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
     return True
 
 class ConvolveTestCase(utilsTests.TestCase):
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def setUp(self):
         self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, afwImage.LOCAL, True)
         # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
@@ -194,6 +200,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         del self.cnvMaskedImage
         del self.cnvImage
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def runBasicTest(self, kernel, convControl, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08): 
         """Assert that afwMath::convolve gives the same result as reference convolution for a given kernel.
         
@@ -289,6 +296,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         # verify that basicConvolve does not write to edge pixels
         self.runBasicConvolveEdgeTest(kernel, kernelDescr)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def runBasicConvolveEdgeTest(self, kernel, kernelDescr):
         """Verify that basicConvolve does not write to edge pixels for this kind of kernel
         """

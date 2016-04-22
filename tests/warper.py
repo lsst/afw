@@ -35,18 +35,19 @@ import lsst.afw.math as afwMath
 import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
+import lsst.pex.exceptions as pexExcept
 
 VERBOSITY = 0                       # increase to see trace
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
 try:
-    afwDataDir = lsst.utils.getPackageDir("afwdata")
-except Exception:
-    warnings.warn("skipping all tests because afwdata is not setup")
+    afwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    afwdataDir = None
     dataDir = None
 else:
-    dataDir = os.path.join(afwDataDir, "data")
+    dataDir = os.path.join(afwdataDir, "data")
     originalExposureName = "medexp.fits"
     originalExposurePath = os.path.join(dataDir, originalExposureName)
     subExposureName = "medsub.fits"
@@ -68,6 +69,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         for useDeepCopy in (False, True):
             self.compareToSwarp("lanczos2", useSubregion=True, useDeepCopy=useDeepCopy)
     
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testBBox(self):
         """Test that the default bounding box includes all warped pixels
         """
@@ -105,7 +107,8 @@ class WarpExposureTestCase(utilsTests.TestCase):
 
         self.assertEquals(warpedExposure1.getFilter().getName(), originalFilter.getName())
         self.assertEquals(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
-        
+    
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testDestBBox(self):
         """Test that the destBBox argument works
         """
@@ -124,6 +127,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         )
         self.assertTrue(bbox == warpedExposure.getBBox(afwImage.PARENT))
     
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def getSwarpedImage(self, kernelName, useSubregion=False, useDeepCopy=False):
         """
         Inputs:
@@ -154,7 +158,8 @@ class WarpExposureTestCase(utilsTests.TestCase):
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
         swarpedWcs = afwImage.makeWcs(swarpedMetadata)
         return (originalExposure, swarpedImage, swarpedWcs)
-
+    
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def compareToSwarp(self, kernelName, 
                        useSubregion=False, useDeepCopy=False,
                        interpLength=10, cacheSize=100000,
@@ -219,8 +224,6 @@ def suite():
 
 def run(doExit=False):
     """Run the tests"""
-    if dataDir == None:
-        return
     utilsTests.run(suite(), doExit)
 
 if __name__ == "__main__":

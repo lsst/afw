@@ -5,7 +5,7 @@ from lsst.sconsUtils import scripts, env, targets
 
 afwdataDir = env.ProductDir("afwdata")
 # copy AFWDATA_DIR to the test's environment
-env["ENV"]["AFWDATA_DIR"] = afwdataDir
+#env["ENV"]["AFWDATA_DIR"] = afwdataDir
 
 # set up arguments for C++ tests
 #inFile = os.path.join(afwdataDir, "data", "871034p_1_MI.fits")
@@ -16,9 +16,12 @@ env["ENV"]["AFWDATA_DIR"] = afwdataDir
 #        (inFile, inFile),
 #    ramFitsIO =       "%s %s" % (inFileRamFitsIO1, inFileRamFitsIO2),
 #)
-
-#scripts.BasicSConscript.tests(args=testArgs)
-scripts.BasicSConscript.tests()
-#env.Depends("tests/PsfIo.py", "tests/testTableArchivesLib.py")
+if afwdataDir:
+	# copy AFWDATA_DIR to the test's environment
+	env["ENV"]["AFWDATA_DIR"] = afwdataDir
+	testArgs = dict(statistics = "--run_test=@afwdataRequired",)
+	scripts.BasicSConscript.tests(args=testArgs)
+else:
+	scripts.BasicSConscript.tests()
 
 env.Clean(targets["tests"], "#testTable.fits")

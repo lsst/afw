@@ -34,11 +34,11 @@ or
 """
 
 import os.path
-
 import shutil
 import sys
 import tempfile
 import unittest
+import numpy
 
 import lsst.utils
 import lsst.utils.tests as utilsTests
@@ -48,10 +48,14 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
-
-import numpy
+import lsst.pex.exceptions as pexExcept
 
 numpy.random.seed(1)
+
+try:
+    afwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    afwdataDir = None
 
 try:
     type(display)
@@ -545,7 +549,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         try:
             dataDir = lsst.utils.getPackageDir("afwdata")
-        except Exception:
+        except pexExcept.NotFoundError:
             self.fileForMetadata = None
         else:
             self.fileForMetadata = os.path.join(dataDir, "data", "small_MI.fits")
@@ -577,25 +581,17 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.dimage1.getImage().set(0, 0, 1 + 2*self.val1)
         self.assertNotEqual(dimage.getImage().get(0, 0), self.val1)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFits(self):
         """Test reading FITS files"""
-
-        try:        
-            dataDir = lsst.utils.getPackageDir("afwdata")
-        except Exception:
-            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
-            return
-
-        dataDir = os.path.join(dataDir, "data")
         
         hdus = {}
-        fileName = os.path.join(dataDir, "small_MI.fits")
         hdus["img"] = 2 # an S16 fits HDU
         hdus["msk"] = 3 # an U8 fits HDU
         hdus["var"] = 4 # an F32 fits HDU
 
-        imgU = afwImage.DecoratedImageU(fileName, hdus["img"]) # read as unsigned short
-        imgF = afwImage.DecoratedImageF(fileName, hdus["img"]) # read as float
+        imgU = afwImage.DecoratedImageU(self.fileForMetadata, hdus["img"]) # read as unsigned short
+        imgF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["img"]) # read as float
 
         self.assertEqual(imgU.getHeight(), 256)
         self.assertEqual(imgF.getImage().getWidth(), 256)
@@ -610,8 +606,8 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read an F32 image
         #
-        varU = afwImage.DecoratedImageF(fileName, hdus["var"]) # read as unsigned short
-        varF = afwImage.DecoratedImageF(fileName, hdus["var"]) # read as float
+        varU = afwImage.DecoratedImageF(self.fileForMetadata, hdus["var"]) # read as unsigned short
+        varF = afwImage.DecoratedImageF(self.fileForMetadata, hdus["var"]) # read as float
 
         self.assertEqual(varU.getHeight(), 256)
         self.assertEqual(varF.getImage().getWidth(), 256)
@@ -619,7 +615,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read a char image
         #
-        maskImg = afwImage.DecoratedImageU(fileName, hdus["msk"]).getImage() # read a char file
+        maskImg = afwImage.DecoratedImageU(self.fileForMetadata, hdus["msk"]).getImage() # read a char file
 
         self.assertEqual(maskImg.getHeight(), 256)
         self.assertEqual(maskImg.getWidth(), 256)
@@ -639,7 +635,6 @@ class DecoratedImageTestCase(unittest.TestCase):
             if self.fileForMetadata:
                 imgU = afwImage.DecoratedImageF(self.fileForMetadata)
             else:
-                print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS metadata I/O tests"
                 imgU = afwImage.DecoratedImageF()
 
             self.dimage1.writeFits(tmpFile, imgU.getMetadata())
@@ -670,12 +665,9 @@ class DecoratedImageTestCase(unittest.TestCase):
             self.assertEqual(im2.getX0(), x0)
             self.assertEqual(im2.getY0(), y0)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadMetadata(self):
-        if self.fileForMetadata:
-            im = afwImage.DecoratedImageF(self.fileForMetadata)
-        else:
-            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS metadata I/O tests"
-            return
+        im = afwImage.DecoratedImageF(self.fileForMetadata)
 
         meta = afwImage.readMetadata(self.fileForMetadata)
         self.assertTrue("NAXIS1" in meta.names())

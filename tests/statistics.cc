@@ -46,6 +46,7 @@ using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 namespace geom = lsst::afw::geom;
+namespace utf = boost::unit_test;
 
 typedef image::Image<float> Image;
 typedef image::DecoratedImage<float> DecoratedImage;
@@ -245,7 +246,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
 
 }
 
-BOOST_AUTO_TEST_CASE(StatisticsTestImages) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::label("afwdataRequired")) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     
     /* =============================================================================
      * Tests of mean and standard deviation for Russ Laher's noise images.

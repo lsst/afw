@@ -46,6 +46,7 @@ import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
+import lsst.pex.exceptions as pexExcept
 
 np.random.seed(1)
 
@@ -53,6 +54,11 @@ try:
     type(display)
 except NameError:
     display = False
+
+try:
+    afwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    afwdataDir = None
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -98,7 +104,7 @@ class MaskTestCase(utilsTests.TestCase):
         # for afwData above the tests that need it.
         try:
             dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-        except Exception:
+        except pexExcept.NotFoundError:
             self.maskFile = None
         else:
             self.maskFile = os.path.join(dataDir, "small_MI.fits")
@@ -213,31 +219,22 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertEqual(self.mask1.get(4, 2), self.val1)
         self.assertEqual(self.mask1.get(1, 3), self.val1)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFits(self):
-        if not self.maskFile:
-            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
-            return
-
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
         mask = self.Mask(self.maskFile, 3) # will shift any unrecognised mask planes into unused slots
 
         self.assertMasksEqual(mask, self.expect<<nMaskPlanes0)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFitsConform(self):
-        if not self.maskFile:
-            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
-            return
-        
         hdu = 3
         mask = afwImage.MaskU(self.maskFile, hdu, None, afwGeom.Box2I(), afwImage.LOCAL, True)
 
         self.assertMasksEqual(mask, self.expect)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testWriteFits(self):
-        if not self.maskFile:
-            print >> sys.stderr, "Warning: afwdata is not set up; not running the FITS I/O tests"
-            return
-
         nMaskPlanes0 = self.Mask.getNumPlanesUsed()
         mask = self.Mask(self.maskFile, 3)
 

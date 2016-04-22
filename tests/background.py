@@ -47,13 +47,17 @@ import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
+import lsst.pex.exceptions as pexExcept
 
 try:
     type(display)
 except NameError:
     display = False
 
-AfwdataDir = lsst.utils.getPackageDir("afwdata")
+try:
+    AfwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    AfwdataDir = None
 
 np.random.seed(1)
 
@@ -888,8 +892,8 @@ def suite():
 def run(shouldExit = False):
     """Run the tests
     """
-    if AfwdataDir is None:
-        print("Warning: afwdata is not setup so some tests will be skipped")
+    #if AfwdataDir is None:
+    #    print("Warning: afwdata is not setup so some tests will be skipped")
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":

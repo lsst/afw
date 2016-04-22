@@ -57,15 +57,18 @@ except:
 
 pexLog.Debug("lsst.afw.math", VERBOSITY)
 
-afwDataDir = lsst.utils.getPackageDir("afwdata")
-dataDir = os.path.join(afwDataDir, "data")
-
-originalExposureName = "medexp.fits"
-originalExposurePath = os.path.join(dataDir, originalExposureName)
-subExposureName = "medsub.fits"
-subExposurePath = os.path.join(dataDir, originalExposureName)
-originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
-originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
+try:
+    afwdataDir = lsst.utils.getPackageDir("afwdata")
+    dataDir = os.path.join(afwdataDir, "data")
+    
+    originalExposureName = "medexp.fits"
+    originalExposurePath = os.path.join(dataDir, originalExposureName)
+    subExposureName = "medsub.fits"
+    subExposurePath = os.path.join(dataDir, originalExposureName)
+    originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
+    originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
+except pexExcept.NotFoundError:
+    afwdataDir = None
 
 def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN",
     radDecCSys="ICRS", equinox=2000):
@@ -108,6 +111,7 @@ def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX
 class WarpExposureTestCase(utilsTests.TestCase):
     """Test case for warpExposure
     """
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testNullWarpExposure(self, interpLength=10):
         """Test that warpExposure maps an image onto itself.
         
@@ -155,6 +159,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
             skipMask=afwWarpedMask, msg=msg)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testNullWarpImage(self, interpLength=10):
         """Test that warpImage maps an image onto itself.
         """
@@ -175,6 +180,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         self.assertImagesNearlyEqual(originalImage, afwWarpedImage, skipMask=noDataMaskArr,
             atol=1e-5, msg=msg)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testNullWcs(self, interpLength=10):
         """Cannot warp from or into an exposure without a Wcs.
         """
@@ -363,6 +369,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         """
         self.compareToSwarp("nearest", useWarpExposure=True, atol=60)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testNonIcrs(self):
         """Test that warping to a non-ICRS-like coordinate system produces different results
 
@@ -558,6 +565,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             doImage=True, doMask=True, doVariance=True,
             rtol=rtol, atol=atol, msg=msg)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def compareToSwarp(self, kernelName, 
         useWarpExposure=True, useSubregion=False, useDeepCopy=False,
         interpLength=10, cacheSize=100000,

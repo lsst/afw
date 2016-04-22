@@ -33,10 +33,12 @@ import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
+import lsst.pex.exceptions as pexExcept
 
-dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-if not dataDir:
-    raise RuntimeError("You must set up afwdata to run these tests")
+try:
+    dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+except pexExcept.NotFoundError:
+    dataDir = None
 
 class MaskedImagePersistenceTestCase(unittest.TestCase):
     """A test case for MaskedImage Persistence"""
@@ -45,6 +47,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         # Check that two MaskedImages are identical (well, actually check only every 4th pixel)
         pass
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def setUp(self):
         # Create the additionalData PropertySet
         self.additionalData = dafBase.PropertySet()
@@ -70,6 +73,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         del self.infile
         del self.maskedImage
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsPersistence(self):
         """Test persisting to FITS"""
 
@@ -87,6 +91,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         # Check the resulting MaskedImage
         self.checkImages(self.maskedImage, maskedImage2)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBoostPersistence(self):
         """Persist the MaskedImage using boost"""
 

@@ -32,8 +32,12 @@ import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
+import lsst.pex.exceptions as pexExcept
 
-dataDir = lsst.utils.getPackageDir("afwdata")
+try:
+    dataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    dataDir = None
 
 class ImagePersistenceTestCase(unittest.TestCase):
     """A test case for Image Persistence"""
@@ -53,6 +57,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
                 assert pixel1 == pixel2, \
                         "Differing pixel2 at %d, %d: %f, %f" % (x, y, pixel1, pixel2)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def setUp(self):
         # Create the additionalData PropertySet
         self.additionalData = dafBase.PropertySet()
@@ -78,6 +83,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
         del self.infile
         del self.image
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsPersistence(self):
         """Test persisting to FITS"""
 
@@ -95,6 +101,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
         # Check the resulting Image
         self.checkImages(self.image, image2)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBoostPersistence(self):
         """Persist the image using boost"""
         with utilsTests.getTempFilePath(".boost") as boostFilePath:
@@ -112,6 +119,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
             # Check the resulting Image
             self.checkImages(self.image, image2)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBoostPersistenceU16(self):
         """Persist a U16 image using boost"""
         with utilsTests.getTempFilePath(".boost") as boostFilePath:
