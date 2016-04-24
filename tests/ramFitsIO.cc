@@ -206,42 +206,6 @@ string GetGFilenamePath(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-	/*cout << "argc: " << argc << endl; //REMOVE
-	if (argc >= 2)
-	{
-		stringstream ss;
-		cout << "gDebugdata: " << gDebugData << endl; //REMOVE
-		ss << argv[1];
-		cout << "argv[1]: " << ss.str() << endl; //REMOVE
-		ss >> gDebugData;
-		cout << "gDebugdata: " << gDebugData << endl; //REMOVE
-	}
-	
-	if (argc >= 3)
-	{
-		stringstream ss;
-		ss << argv[2];
-		ss >> gFilename;
-		cout << "argv[2]: " << ss.str() << endl; //REMOVE
-		cout << "gFilename: " << gFilename << endl; //REMOVE
-		gFilenameStripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename);
-	}
-	
-	if (argc >= 4)
-	{
-		stringstream ss;
-		ss << argv[3];
-		ss >> gFilename2;
-		cout << "argv[3]: " << ss.str() << endl; //REMOVE
-		cout << "gFilename2: " << gFilename2 << endl; //REMOVE
-		gFilename2Stripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename2);
-	}
-	
-	cout << "gDebugData:         " << gDebugData << endl;
-	cout << "gFilename:          " << gFilename << endl;
-	cout << "gFilename2:         " << gFilename2 << endl;
-	cout << "gFilenameStripped:  " << gFilenameStripped << endl;
-	cout << "gFilename2Stripped: " << gFilename2Stripped << endl;*/
 	
 	gFilename = GetGFilenamePath(argc, argv);
 	gFilenameStripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename);

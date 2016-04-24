@@ -38,10 +38,6 @@ namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
 
 int test(int argc, char**argv) {
-    /*if (argc < 5) {
-       cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << endl;
-       return EXIT_FAILURE;
-    }*/
     
     string dataDir, inImagePath1, inImagePath2, outImagePath1, outImagePath2;
     if (argc < 2) {
