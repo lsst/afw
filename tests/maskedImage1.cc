@@ -50,7 +50,7 @@ int test(int argc, char**argv) {
         } catch (lsst::pex::exceptions::NotFoundError) {
             cerr << "Usage: convolveGPU [fitsFile]" << endl;
             cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
-            return EXIT_FAILURE;
+            return EXIT_SUCCESS;
         }
     }
     else {

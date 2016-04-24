@@ -192,7 +192,7 @@ string GetGFilenamePath(int argc, char **argv)
         } catch (lsst::pex::exceptions::NotFoundError) {
             cerr << "Usage: maskedImage1 [inputBaseName1] [inputBaseName2] [outputBaseName1] [outputBaseName2]" << endl;
             cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
-            exit(EXIT_FAILURE);
+            exit(EXIT_SUCCESS);
         }
     }
     else {
