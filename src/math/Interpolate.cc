@@ -57,7 +57,7 @@ namespace {
         }
         std::size_t const len = x.size();
         if (len == 0) {
-            throw LSST_EXCEPT(pex::exceptions::InvalidParameterError,
+            throw LSST_EXCEPT(pex::exceptions::OutOfRangeError,
                               "You must provide at least 1 point");
         } else if (len == 1) {
             return std::make_pair(x, y);
