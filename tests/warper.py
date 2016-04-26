@@ -69,7 +69,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         for useDeepCopy in (False, True):
             self.compareToSwarp("lanczos2", useSubregion=True, useDeepCopy=useDeepCopy)
     
-    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBBox(self):
         """Test that the default bounding box includes all warped pixels
         """
@@ -108,7 +108,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         self.assertEquals(warpedExposure1.getFilter().getName(), originalFilter.getName())
         self.assertEquals(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
     
-    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testDestBBox(self):
         """Test that the destBBox argument works
         """
@@ -127,7 +127,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         )
         self.assertTrue(bbox == warpedExposure.getBBox(afwImage.PARENT))
     
-    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def getSwarpedImage(self, kernelName, useSubregion=False, useDeepCopy=False):
         """
         Inputs:
@@ -159,7 +159,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         swarpedWcs = afwImage.makeWcs(swarpedMetadata)
         return (originalExposure, swarpedImage, swarpedWcs)
     
-    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def compareToSwarp(self, kernelName, 
                        useSubregion=False, useDeepCopy=False,
                        interpLength=10, cacheSize=100000,

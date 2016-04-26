@@ -47,6 +47,8 @@ try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
 except pexExcept.NotFoundError:
     afwdataDir = None
+    InputImagePath = None
+    InputSmallImagePath = None
 else:
     InputImagePath = os.path.join(afwdataDir, "data", "871034p_1_MI")
     InputSmallImagePath = os.path.join(afwdataDir, "data", "small_img.fits")
@@ -302,18 +304,22 @@ class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
-        if afwdataDir is not None:
+        if InputSmallImagePath is not None:
             self.im = afwImage.DecoratedImageD(InputSmallImagePath)
     
             self.wcs = afwImage.makeWcs(self.im.getMetadata())
+        else:
+            self.im = None
+            self.wcs = None
     
             if False:
                 ds9.mtv(self.im, wcs=self.wcs)
 
     def tearDown(self):
-        if afwdataDir is not None:
-            del self.wcs
+        if self.im is not None:
             del self.im
+        if self.wcs is not None:
+            del self.wcs
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testCrpix(self):
@@ -486,13 +492,13 @@ class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        if afwdataDir is not None:
+        if InputImagePath is not None:
             path = InputImagePath + ".fits"
             self.metadata = afwImage.readMetadata(path)
             self.wcs = afwImage.makeWcs(self.metadata)
 
     def tearDown(self):
-        if afwdataDir is not None:
+        if InputImagePath is not None:
             del self.wcs
             del self.metadata
 

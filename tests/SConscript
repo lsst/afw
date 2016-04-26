@@ -5,12 +5,12 @@ from lsst.sconsUtils import scripts, env, targets
 
 afwdataDir = env.ProductDir("afwdata")
 
-if afwdataDir:
-	# copy AFWDATA_DIR to the test's environment
-	env["ENV"]["AFWDATA_DIR"] = afwdataDir
-	testArgs = dict(statistics = "--run_test=+StatisticsTestImages", background = "--run_test=+BackgroundTestImages",)
+if not afwdataDir:
+	testArgs = dict(statistics = "--run_test=!StatisticsTestImages", background = "--run_test=!BackgroundTestImages",)
 	scripts.BasicSConscript.tests(args=testArgs)
 else:
+	# copy AFWDATA_DIR to the test's environment
+	env["ENV"]["AFWDATA_DIR"] = afwdataDir
 	scripts.BasicSConscript.tests()
 
 env.Clean(targets["tests"], "#testTable.fits")
