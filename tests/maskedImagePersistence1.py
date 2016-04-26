@@ -47,7 +47,6 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         # Check that two MaskedImages are identical (well, actually check only every 4th pixel)
         pass
 
-    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def setUp(self):
         # Create the additionalData PropertySet
         self.additionalData = dafBase.PropertySet()
@@ -63,15 +62,17 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         self.persistence = dafPers.Persistence.getPersistence(policy)
 
         # Choose a file to manipulate
-        self.infile = os.path.join(dataDir, "small_MI.fits")
-
-        self.maskedImage = afwImage.MaskedImageF(self.infile)
+        if dataDir is not None:
+            self.infile = os.path.join(dataDir, "small_MI.fits")
+    
+            self.maskedImage = afwImage.MaskedImageF(self.infile)
         
     def tearDown(self):
-        del self.additionalData
-        del self.persistence
-        del self.infile
-        del self.maskedImage
+        if dataDir is not None:
+            del self.additionalData
+            del self.persistence
+            del self.infile
+            del self.maskedImage
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsPersistence(self):

@@ -59,6 +59,9 @@ pexLog.Debug("lsst.afw.math", VERBOSITY)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    afwdataDir = None
+else:
     dataDir = os.path.join(afwdataDir, "data")
     
     originalExposureName = "medexp.fits"
@@ -67,8 +70,6 @@ try:
     subExposurePath = os.path.join(dataDir, originalExposureName)
     originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
-except pexExcept.NotFoundError:
-    afwdataDir = None
 
 def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN",
     radDecCSys="ICRS", equinox=2000):

@@ -48,7 +48,7 @@ int test(int argc, char**argv) {
             outImagePath1 = "tests/file:maskedImage1_output_1.fits";
             outImagePath2 = "tests/file:maskedImage1_output_2.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
-            cerr << "Usage: convolveGPU [fitsFile]" << endl;
+            cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << endl;
             cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
             return EXIT_SUCCESS;
         }

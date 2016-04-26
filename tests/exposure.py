@@ -58,7 +58,9 @@ pexLog.Debug("lsst.afw.image", VERBOSITY)
 
 try:
         dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-        
+except pexExcept.NotFoundError:
+        dataDir = None
+else:
         InputMaskedImageName = "871034p_1_MI.fits"
         InputMaskedImageNameSmall = "small_MI.fits"
         InputImageNameSmall = "small"
@@ -68,8 +70,6 @@ try:
         inFilePath = os.path.join(dataDir, InputMaskedImageName)
         inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
         inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
-except pexExcept.NotFoundError:
-        dataDir = None
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

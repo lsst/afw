@@ -65,7 +65,6 @@ except NameError:
 
 class MaskedImageTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
-    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def setUp(self):
         # Set a (non-standard) initial Mask plane definition
         #
@@ -78,15 +77,18 @@ class MaskedImageTestCase(unittest.TestCase):
         for p in ("ZERO", "BAD", "SAT", "INTRP", "CR", "EDGE"):
             mask.addMaskPlane(p)
 
-        if False:
-            self.fileName = os.path.join(dataDir, "Small_MI.fits")
-        else:
-            self.fileName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
-        self.mi = afwImage.MaskedImageF(self.fileName)
+        if dataDir is not None:
+            if False:
+                self.fileName = os.path.join(dataDir, "Small_MI.fits")
+            else:
+                self.fileName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+            self.mi = afwImage.MaskedImageF(self.fileName)
 
     def tearDown(self):
-        del self.mi
+        if dataDir is not None:
+            del self.mi
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsRead(self):
         """Check if we read MaskedImages"""
 

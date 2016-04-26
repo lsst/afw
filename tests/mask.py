@@ -102,12 +102,8 @@ class MaskTestCase(utilsTests.TestCase):
 
         # TBD: #DM-609 this should be refactored to use @unittest.skipif checks
         # for afwData above the tests that need it.
-        try:
-            dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-        except pexExcept.NotFoundError:
-            self.maskFile = None
-        else:
-            self.maskFile = os.path.join(dataDir, "small_MI.fits")
+        if afwdataDir is not None:
+            self.maskFile = os.path.join(afwdataDir, "data", "small_MI.fits")
             # Below: what to expect from the mask plane in the above data.
             # For some tests, it is left-shifted by some number of mask planes.
             self.expect = np.zeros((256, 256), dtype='i8')

@@ -892,8 +892,6 @@ def suite():
 def run(shouldExit = False):
     """Run the tests
     """
-    #if AfwdataDir is None:
-    #    print("Warning: afwdata is not setup so some tests will be skipped")
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":

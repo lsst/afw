@@ -27,7 +27,6 @@ from __future__ import absolute_import, division
 Test cases to test image I/O
 """
 import os.path
-import pdb
 
 import unittest
 

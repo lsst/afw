@@ -264,12 +264,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::disabled()) { /* parasoft-supp
         imgfiles.push_back("v2_i2_p_m9_u16.fits");
 
         std::string afwdata_dir;
-        try {
-            afwdata_dir = lsst::utils::getPackageDir("afwdata");
-        } catch (lsst::pex::exceptions::NotFoundError) {
-            std::cout << "Warning: test skipped because afwdata is not setup" << std::endl;
-            return;
-        }
+        afwdata_dir = lsst::utils::getPackageDir("afwdata");
         for (vector<string>::iterator imgfile = imgfiles.begin(); imgfile != imgfiles.end(); ++imgfile) {
             
             string img_path = afwdata_dir + "/Statistics/" + *imgfile;

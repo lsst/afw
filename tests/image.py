@@ -547,12 +547,8 @@ class DecoratedImageTestCase(unittest.TestCase):
             )
         self.dimage1.getImage().set(self.val1)
 
-        try:
-            dataDir = lsst.utils.getPackageDir("afwdata")
-        except pexExcept.NotFoundError:
-            self.fileForMetadata = None
-        else:
-            self.fileForMetadata = os.path.join(dataDir, "data", "small_MI.fits")
+        if afwdataDir is not None:
+            self.fileForMetadata = os.path.join(afwdataDir, "data", "small_MI.fits")
             self.trueMetadata = {"RELHUMID" : 10.69}
 
     def tearDown(self):
@@ -628,6 +624,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
             afwImage.DecoratedImageF(tmpFile) # read as unsigned short
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testWriteFits(self):
         """Test writing FITS files"""
 
