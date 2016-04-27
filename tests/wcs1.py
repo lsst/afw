@@ -26,6 +26,7 @@ from __future__ import absolute_import, division
 import os.path
 import math
 import unittest
+import numpy
 
 import lsst.utils
 import lsst.daf.base as dafBase
@@ -34,19 +35,24 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
 import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
+import lsst.pex.exceptions as pexExcept
 import lsst
-import numpy
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
 
-dataDir = lsst.utils.getPackageDir("afwdata")
-if not dataDir:
-    raise RuntimeError("Must set up afwdata to run these tests")
-InputImagePath = os.path.join(dataDir, "data", "871034p_1_MI")
-InputSmallImagePath = os.path.join(dataDir, "data", "small_img.fits")
+try:
+    afwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    afwdataDir = None
+    InputImagePath = None
+    InputSmallImagePath = None
+else:
+    InputImagePath = os.path.join(afwdataDir, "data", "871034p_1_MI")
+    InputSmallImagePath = os.path.join(afwdataDir, "data", "small_img.fits")
+
 InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
 InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)
@@ -298,17 +304,24 @@ class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
-        self.im = afwImage.DecoratedImageD(InputSmallImagePath)
-
-        self.wcs = afwImage.makeWcs(self.im.getMetadata())
-
-        if False:
-            ds9.mtv(self.im, wcs=self.wcs)
+        if InputSmallImagePath is not None:
+            self.im = afwImage.DecoratedImageD(InputSmallImagePath)
+    
+            self.wcs = afwImage.makeWcs(self.im.getMetadata())
+        else:
+            self.im = None
+            self.wcs = None
+    
+            if False:
+                ds9.mtv(self.im, wcs=self.wcs)
 
     def tearDown(self):
-        del self.wcs
-        del self.im
+        if self.im is not None:
+            del self.im
+        if self.wcs is not None:
+            del self.wcs
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testCrpix(self):
         metadata = self.im.getMetadata()
         crpix0 = metadata.getAsDouble("CRPIX1")
@@ -319,6 +332,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertEqual(lsstCrpix[0], crpix0-1)
         self.assertEqual(lsstCrpix[1], crpix1-1)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testXyToRaDecArguments(self):
         """Check that conversion of xy to ra dec (and back again) works"""
         xy = afwGeom.Point2D(110, 123)
@@ -336,6 +350,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(raDec[0].asDegrees(), raDec2[0].asDegrees())
         self.assertAlmostEqual(raDec[1].asDegrees(), raDec2[1].asDegrees())
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
         # values from wcstools xy2sky (v3.8.1). Confirmed by ds9
@@ -345,6 +360,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
         self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) 
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
         raDec = afwCoord.makeCoord(afwCoord.ICRS, 244 * afwGeom.degrees, 20 * afwGeom.degrees)
@@ -369,6 +385,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.assertAlmostEqual(p1[0], p2[0])
         self.assertAlmostEqual(p1[1], p2[1])
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testInvalidRaDec(self):
         """Test a conversion for an invalid position.  Well, "test" isn't
         quite right as the result is invalid, but make sure that it still is"""
@@ -376,6 +393,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
         self.assertRaises(lsst.pex.exceptions.Exception, self.wcs.skyToPixel, raDec)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testCD(self):
         self.wcs.getCDMatrix()
 
@@ -399,6 +417,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         wcs = afwImage.makeWcs(md)
         self.assertTrue(numpy.all(wcs.getCDMatrix() == numpy.array([[2.0, 0.0], [0.0, 1.0]])))
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testStripKeywords(self):
         """Test that we can strip WCS keywords from metadata when constructing a Wcs"""
         metadata = self.im.getMetadata()
@@ -410,6 +429,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
         self.wcs = afwImage.makeWcs(metadata, strip)
         self.assertFalse(metadata.exists("CRPIX1"))
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testAffineTransform(self):
         self.wcs.getLinearTransform()
         self.wcs.getCDMatrix()
@@ -467,17 +487,20 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+@unittest.skipIf(afwdataDir is None, "afwdata not setup")
 class WCSTestCaseCFHT(unittest.TestCase):
     """A test case for WCS"""
 
     def setUp(self):
-        path = InputImagePath + ".fits"
-        self.metadata = afwImage.readMetadata(path)
-        self.wcs = afwImage.makeWcs(self.metadata)
+        if InputImagePath is not None:
+            path = InputImagePath + ".fits"
+            self.metadata = afwImage.readMetadata(path)
+            self.wcs = afwImage.makeWcs(self.metadata)
 
     def tearDown(self):
-        del self.wcs
-        del self.metadata
+        if InputImagePath is not None:
+            del self.wcs
+            del self.metadata
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""

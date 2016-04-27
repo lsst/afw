@@ -44,6 +44,12 @@ import lsst.afw.table as afwTable
 import lsst.daf.base as dafBase
 import lsst.utils
 import lsst.utils.tests as utilsTests
+import lsst.pex.exceptions as pexExcept
+
+try:
+    afwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    afwdataDir = None
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -136,6 +142,7 @@ class SourceMatchTestCase(unittest.TestCase):
         self.assertEqual(len(mat), 1)
         self.checkPickle(mat)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testPhotometricCalib(self):
         """Test matching the CFHT catalogue (as generated using LSST code) to the SDSS catalogue
         """
@@ -143,7 +150,7 @@ class SourceMatchTestCase(unittest.TestCase):
         band = 2                        # SDSS r
 
         # Read SDSS catalogue
-        ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "sdss.dat"), "r")
+        ifd = open(os.path.join(afwdataDir, "CFHT", "D2", "sdss.dat"), "r")
 
         sdss = afwTable.SourceCatalog(self.table)
         sdssSecondary = afwTable.SourceCatalog(self.table)
@@ -176,7 +183,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
         # Read catalalogue built from the template image
         # Read SDSS catalogue
-        ifd = open(os.path.join(lsst.utils.getPackageDir("afwdata"), "CFHT", "D2", "template.dat"), "r")
+        ifd = open(os.path.join(afwdataDir, "CFHT", "D2", "template.dat"), "r")
 
         template = afwTable.SourceCatalog(self.table)
 

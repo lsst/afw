@@ -29,6 +29,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/afw/image.h"
+#include "lsst/utils/Utils.h"
 
 using namespace std;
 using lsst::pex::logging::Trace;
@@ -37,9 +38,26 @@ namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
 
 int test(int argc, char**argv) {
-    if (argc < 5) {
-       cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << endl;
-       return EXIT_FAILURE;
+    
+    string dataDir, inImagePath1, inImagePath2, outImagePath1, outImagePath2;
+    if (argc < 2) {
+        try {
+            dataDir = lsst::utils::getPackageDir("afwdata");
+            inImagePath1 = dataDir + "/data/871034p_1_MI.fits";
+            inImagePath2 = dataDir + "/data/871034p_1_MI.fits"; // afw/tests/SConscript passes the same file twice in the previous avatar.
+            outImagePath1 = "tests/file:maskedImage1_output_1.fits";
+            outImagePath2 = "tests/file:maskedImage1_output_2.fits";
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            cerr << "Usage: inputBaseName1 inputBaseName2 outputBaseName1  outputBaseName2" << endl;
+            cerr << "Warning: tests not run! Setup afwdata if you wish to use the default fitsFile." << endl;
+            return EXIT_SUCCESS;
+        }
+    }
+    else {
+        inImagePath1 = string(argv[1]);
+        inImagePath2 = string(argv[2]);
+        outImagePath1 = string(argv[3]);
+        outImagePath2 = string(argv[4]);
     }
     
     Trace::setDestination(cout);
@@ -52,9 +70,9 @@ int test(int argc, char**argv) {
     //
     MaskedImage::Ptr testMaskedImage1;
     try {
-        testMaskedImage1 = MaskedImage::Ptr(new MaskedImage(argv[1]));
+        testMaskedImage1 = MaskedImage::Ptr(new MaskedImage(inImagePath1));
     } catch (pexEx::Exception &e) {
-        cerr << "Failed to open " << argv[1] << ": " << e.what() << endl;
+        cerr << "Failed to open " << inImagePath1 << ": " << e.what() << endl;
         return EXIT_FAILURE;
     }
 
@@ -71,9 +89,9 @@ int test(int argc, char**argv) {
 
     MaskedImage::Ptr testFlat;
     try {
-        testFlat = MaskedImage::Ptr(new MaskedImage(argv[2]));
+        testFlat = MaskedImage::Ptr(new MaskedImage(inImagePath2));
     } catch (pexEx::Exception &e) {
-        cerr << "Failed to open " << argv[2] << ": " << e.what() << endl;
+        cerr << "Failed to open " << inImagePath2 << ": " << e.what() << endl;
         return EXIT_FAILURE;
     }
     *testFlat->getVariance() = 20.0;
@@ -84,7 +102,7 @@ int test(int argc, char**argv) {
 
     // test of fits write
 
-    testMaskedImage2.writeFits(argv[3]);
+    testMaskedImage2.writeFits(outImagePath1);
 
     // test of subImage
 
@@ -95,7 +113,7 @@ int test(int argc, char**argv) {
         image::LOCAL
     );
     subMaskedImage1 *= 0.5;
-    subMaskedImage1.writeFits(argv[4]);
+    subMaskedImage1.writeFits(outImagePath2);
 
     // Check whether offsets have been correctly saved
     geom::Box2I region2(geom::Point2I(80, 110), geom::Extent2I(20, 30));
@@ -103,10 +121,10 @@ int test(int argc, char**argv) {
 
     cout << "Offsets: " << subMaskedImage2.getX0() << " " << subMaskedImage2.getY0() << endl;
 
-    testMaskedImage1->writeFits(argv[3]);
+    testMaskedImage1->writeFits(outImagePath1);
     
-    std::remove(argv[3]);
-    std::remove(argv[4]);
+    std::remove(outImagePath1.c_str());
+    std::remove(outImagePath2.c_str());
     
     return EXIT_SUCCESS;
 }

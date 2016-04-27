@@ -35,25 +35,29 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
+import lsst.pex.exceptions as pexExcept
 
 try:
     type(verbose)
 except NameError:
     verbose = 0
 
-dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+try:
+    dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+except pexExcept.NotFoundError:
+    dataDir = None
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class ReadFitsTestCase(unittest.TestCase):
     """A test case for reading FITS images"""
-
     def setUp(self):
         pass
 
     def tearDown(self):
         pass
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testU16(self):
         """Test reading U16 image"""
 
@@ -62,6 +66,7 @@ class ReadFitsTestCase(unittest.TestCase):
         col, row, val = 0, 0, 1154
         self.assertEqual(im.get(col, row), val)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testS16(self):
         """Test reading S16 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_img.fits"))
@@ -72,6 +77,7 @@ class ReadFitsTestCase(unittest.TestCase):
         col, row, val = 32, 1, 62
         self.assertEqual(im.get(col, row), val)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testF32(self):
         """Test reading F32 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "871034p_1_MI.fits"), 4)
@@ -79,6 +85,7 @@ class ReadFitsTestCase(unittest.TestCase):
         col, row, val = 32, 1, 39.11672
         self.assertAlmostEqual(im.get(col, row), val, 5)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testF64(self):
         """Test reading a U16 file into a F64 image"""
         im = afwImage.ImageD(os.path.join(dataDir, "small_img.fits"))
@@ -88,13 +95,13 @@ class ReadFitsTestCase(unittest.TestCase):
         #print "IM = ", im
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
-
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
             im.set(666)
             im.writeFits(tmpFile)
             afwImage.ImageD(tmpFile)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSubimage(self):
         """Test reading a subimage image"""
         fileName, hdu = os.path.join(dataDir, "871034p_1_MI.fits"), 4

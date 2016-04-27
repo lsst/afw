@@ -51,7 +51,10 @@ import lsst.afw.math as afwMath
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexEx
 
-dataDir = lsst.utils.getPackageDir("afwdata")
+try:
+    dataDir = lsst.utils.getPackageDir("afwdata")
+except pexEx.NotFoundError:
+    dataDir = None
 
 try:
     type(display)
@@ -74,15 +77,18 @@ class MaskedImageTestCase(unittest.TestCase):
         for p in ("ZERO", "BAD", "SAT", "INTRP", "CR", "EDGE"):
             mask.addMaskPlane(p)
 
-        if False:
-            self.fileName = os.path.join(dataDir, "Small_MI.fits")
-        else:
-            self.fileName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
-        self.mi = afwImage.MaskedImageF(self.fileName)
+        if dataDir is not None:
+            if False:
+                self.fileName = os.path.join(dataDir, "Small_MI.fits")
+            else:
+                self.fileName = os.path.join(dataDir, "CFHT", "D4", "cal-53535-i-797722_1.fits")
+            self.mi = afwImage.MaskedImageF(self.fileName)
 
     def tearDown(self):
-        del self.mi
+        if dataDir is not None:
+            del self.mi
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsRead(self):
         """Check if we read MaskedImages"""
 
@@ -95,6 +101,7 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assertEqual(image.get(32, 1), 3728)
         self.assertEqual(mask.get(0, 0), 2) # == BAD
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadImage(self):
         """Check if we can read a single-HDU image as a MaskedImage, setting the mask and variance
         planes to zero."""
@@ -109,6 +116,7 @@ class MaskedImageTestCase(unittest.TestCase):
         self.assert_(numpy.all(maskedImage.getVariance().getArray() == 0.0))
         self.assert_(numpy.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadConform(self):
         """Check if we read MaskedImages and make them replace Mask's plane dictionary"""
 
@@ -123,6 +131,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(mask.getMaskPlane("CR"), 3, "Plane CR has value specified in FITS file")
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadNoConform2(self):
         """Check that reading a mask doesn't invalidate the plane dictionary"""
 
@@ -131,6 +140,7 @@ class MaskedImageTestCase(unittest.TestCase):
         mask = self.mi.getMask()
         mask |= testMask
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadConform2(self):
         """Check that conforming a mask invalidates the plane dictionary"""
 

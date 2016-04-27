@@ -56,20 +56,24 @@ except:
 
 pexLog.Debug("lsst.afw.image", VERBOSITY)
 
-dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
-
-InputMaskedImageName = "871034p_1_MI.fits"
-InputMaskedImageNameSmall = "small_MI.fits"
-InputImageNameSmall = "small"
-OutputMaskedImageName = "871034p_1_MInew.fits"
-
-currDir = os.path.abspath(os.path.dirname(__file__))
-inFilePath = os.path.join(dataDir, InputMaskedImageName)
-inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
-inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
+try:
+        dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+except pexExcept.NotFoundError:
+        dataDir = None
+else:
+        InputMaskedImageName = "871034p_1_MI.fits"
+        InputMaskedImageNameSmall = "small_MI.fits"
+        InputImageNameSmall = "small"
+        OutputMaskedImageName = "871034p_1_MInew.fits"
+        
+        currDir = os.path.abspath(os.path.dirname(__file__))
+        inFilePath = os.path.join(dataDir, InputMaskedImageName)
+        inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
+        inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+@unittest.skipIf(dataDir is None, "afwdata not setup")
 class ExposureTestCase(unittest.TestCase):
     """
     A test case for the Exposure Class

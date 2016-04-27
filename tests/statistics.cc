@@ -46,6 +46,7 @@ using namespace std;
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
 namespace geom = lsst::afw::geom;
+namespace utf = boost::unit_test;
 
 typedef image::Image<float> Image;
 typedef image::DecoratedImage<float> DecoratedImage;
@@ -245,7 +246,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
 
 }
 
-BOOST_AUTO_TEST_CASE(StatisticsTestImages) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
+BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::description("requires afwdata to be setup")) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
     
     /* =============================================================================
      * Tests of mean and standard deviation for Russ Laher's noise images.
@@ -263,12 +264,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages) { /* parasoft-suppress  LsstDm-3-2a L
         imgfiles.push_back("v2_i2_p_m9_u16.fits");
 
         std::string afwdata_dir;
-        try {
-            afwdata_dir = lsst::utils::getPackageDir("afwdata");
-        } catch (lsst::pex::exceptions::NotFoundError) {
-            std::cout << "Warning: test skipped because afwdata is not setup" << std::endl;
-            return;
-        }
+        afwdata_dir = lsst::utils::getPackageDir("afwdata");
         for (vector<string>::iterator imgfile = imgfiles.begin(); imgfile != imgfiles.end(); ++imgfile) {
             
             string img_path = afwdata_dir + "/Statistics/" + *imgfile;

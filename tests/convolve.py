@@ -42,6 +42,8 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
+import lsst.pex.exceptions as pexExcept
+
 from kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 
 VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
@@ -56,15 +58,19 @@ except NameError:
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
 
-dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+try:
+    dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+except pexExcept.NotFoundError:
+    dataDir = None
+else:
+    InputMaskedImagePath = os.path.join(dataDir, "medexp.fits")
+    FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 # input image contains a saturated star, a bad column, and a faint star
-InputMaskedImagePath = os.path.join(dataDir, "medexp.fits")
 InputBBox = afwGeom.Box2I(afwGeom.Point2I(52, 574), afwGeom.Extent2I(76, 80))
 # the shifted BBox is for a same-sized region containing different pixels;
 # this is used to initialize the convolved image, to make sure convolve fully overwrites it
 ShiftedBBox = afwGeom.Box2I(afwGeom.Point2I(0, 460), afwGeom.Extent2I(76, 80))
-FullMaskedImage = afwImage.MaskedImageF(InputMaskedImagePath)
 
 EdgeMaskPixel = 1 << afwImage.MaskU.getMaskPlane("EDGE")
 NoDataMaskPixel = afwImage.MaskU.getPlaneBitMask("NO_DATA")
@@ -173,26 +179,28 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
 
 class ConvolveTestCase(utilsTests.TestCase):
     def setUp(self):
-        self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, afwImage.LOCAL, True)
-        # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
-        self.maskedImage.setXY0(300, 200)
-        self.xy0 = self.maskedImage.getXY0()
-
-        # provide destinations for the convolved MaskedImage and Image that contain junk
-        # to verify that convolve overwrites all pixels;
-        # make them deep copies so we can mess with them without affecting self.inImage
-        self.cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)
-        self.cnvImage = afwImage.ImageF(FullMaskedImage.getImage(), ShiftedBBox, afwImage.LOCAL, True)
-
-        self.width = self.maskedImage.getWidth()
-        self.height = self.maskedImage.getHeight()
-#         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.Box2I(afwGeom.Point2I(15, 17), afwGeom.Extent2I(10, 5)))
-#         smask.set(0x8)
+        if dataDir is not None:
+            self.maskedImage = afwImage.MaskedImageF(FullMaskedImage, InputBBox, afwImage.LOCAL, True)
+            # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
+            self.maskedImage.setXY0(300, 200)
+            self.xy0 = self.maskedImage.getXY0()
+    
+            # provide destinations for the convolved MaskedImage and Image that contain junk
+            # to verify that convolve overwrites all pixels;
+            # make them deep copies so we can mess with them without affecting self.inImage
+            self.cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)
+            self.cnvImage = afwImage.ImageF(FullMaskedImage.getImage(), ShiftedBBox, afwImage.LOCAL, True)
+    
+            self.width = self.maskedImage.getWidth()
+            self.height = self.maskedImage.getHeight()
+    #         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.Box2I(afwGeom.Point2I(15, 17), afwGeom.Extent2I(10, 5)))
+    #         smask.set(0x8)
 
     def tearDown(self):
-        del self.maskedImage
-        del self.cnvMaskedImage
-        del self.cnvImage
+        if dataDir is not None:
+            del self.maskedImage
+            del self.cnvMaskedImage
+            del self.cnvImage
 
     def runBasicTest(self, kernel, convControl, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08): 
         """Assert that afwMath::convolve gives the same result as reference convolution for a given kernel.
@@ -341,6 +349,7 @@ class ConvolveTestCase(utilsTests.TestCase):
             convControl.setMaxInterpolationDistance(maxInterpDist)
             self.assertEqual(convControl.getMaxInterpolationDistance(), maxInterpDist)
         
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
         """
@@ -361,6 +370,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         self.assertImagesNearlyEqual(self.cnvImage, self.maskedImage.getImage(), skipMask=skipMaskArr, msg=kernelDescr)
         self.assertMaskedImagesNearlyEqual(self.cnvMaskedImage, self.maskedImage, skipMask=skipMaskArr, msg=kernelDescr)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFixedKernelConvolve(self):
         """Test convolve with a fixed kernel
         """
@@ -375,6 +385,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         
         self.runStdTest(fixedKernel, kernelDescr="Gaussian FixedKernel")
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSeparableConvolve(self):
         """Test convolve of a separable kernel with a spatially invariant Gaussian function
         """
@@ -391,6 +402,7 @@ class ConvolveTestCase(utilsTests.TestCase):
             refKernel = analyticKernel,
             kernelDescr = "Gaussian Separable Kernel (compared to AnalyticKernel equivalent)")
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSpatiallyInvariantConvolve(self):
         """Test convolution with a spatially invariant Gaussian function
         """
@@ -402,6 +414,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         
         self.runStdTest(kernel, kernelDescr="Gaussian Analytic Kernel")
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSpatiallyVaryingAnalyticConvolve(self):
         """Test in-place convolution with a spatially varying AnalyticKernel
         """
@@ -436,6 +449,7 @@ class ConvolveTestCase(utilsTests.TestCase):
                 maxInterpDist = maxInterpDist,
                 rtol = rtol)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSpatiallyVaryingSeparableConvolve(self):
         """Test convolution with a spatially varying SeparableKernel
         """
@@ -466,6 +480,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         self.runStdTest(separableKernel, refKernel=analyticKernel,
             kernelDescr="Spatially Varying Gaussian Separable Kernel")
     
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testDeltaConvolve(self):
         """Test convolution with various delta function kernels using optimized code
         """
@@ -481,6 +496,7 @@ class ConvolveTestCase(utilsTests.TestCase):
 
                         self.runStdTest(kernel, kernelDescr="Delta Function Kernel")
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSpatiallyVaryingGaussianLinerCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of two Gaussian basis kernels.
         """
@@ -522,6 +538,7 @@ class ConvolveTestCase(utilsTests.TestCase):
                     maxInterpDist = maxInterpDist,
                     rtol = rtol)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testSpatiallyVaryingDeltaFunctionLinearCombination(self):
         """Test convolution with a spatially varying LinearCombinationKernel of delta function basis kernels.
         """
@@ -555,6 +572,7 @@ class ConvolveTestCase(utilsTests.TestCase):
                 maxInterpDist = maxInterpDist,
                 rtol = rtol)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testZeroWidthKernel(self):
         """Convolution by a 0x0 kernel should raise an exception.
         
@@ -573,6 +591,7 @@ class ConvolveTestCase(utilsTests.TestCase):
             self.assertRaises(Exception, afwMath.convolve, self.cnvMaskedImage, self.maskedImage, kernel,
                 convolutionControl)
 
+    @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testTicket873(self):
         """Demonstrate ticket 873: convolution of a MaskedImage with a spatially varying
         LinearCombinationKernel of basis kernels with low covariance gives incorrect variance.

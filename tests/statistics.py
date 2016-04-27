@@ -45,6 +45,12 @@ import lsst.afw.image.imageLib as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
+import lsst.pex.exceptions as pexExcept
+
+try:
+    afwdataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    afwdataDir = None
 
 try:
     type(display)
@@ -210,6 +216,7 @@ class StatisticsTestCase(utilsTests.TestCase):
         """Test that we can handle infinities correctly"""
         self._testBadValue(np.inf)
 
+    @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testSampleImageStats(self):
         """ Compare our results to known values in test data """
         
@@ -224,9 +231,6 @@ class StatisticsTestCase(utilsTests.TestCase):
         imgfiles.append("v2_i2_p_m9_u16.fits")
 
         afwdataDir = os.getenv("AFWDATA_DIR")
-        if not afwdataDir:
-            print >> sys.stderr, "Skipping tests as afwdata is not setup"
-            return
         
         for imgfile in imgfiles:
             

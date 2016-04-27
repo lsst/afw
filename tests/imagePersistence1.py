@@ -32,9 +32,14 @@ import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
 import lsst.pex.policy as pexPolicy
+import lsst.pex.exceptions as pexExcept
 
-dataDir = lsst.utils.getPackageDir("afwdata")
+try:
+    dataDir = lsst.utils.getPackageDir("afwdata")
+except pexExcept.NotFoundError:
+    dataDir = None
 
+@unittest.skipIf(dataDir is None, "afwdata not setup")
 class ImagePersistenceTestCase(unittest.TestCase):
     """A test case for Image Persistence"""
 

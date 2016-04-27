@@ -4,23 +4,13 @@ import os
 from lsst.sconsUtils import scripts, env, targets
 
 afwdataDir = env.ProductDir("afwdata")
-if afwdataDir is None:
-    print "Warning: afwdata is not set up; not running the tests!"
-else:
-    # copy AFWDATA_DIR to the test's environment
-    env["ENV"]["AFWDATA_DIR"] = afwdataDir
 
-    # set up arguments for C++ tests
-    inFile = os.path.join(afwdataDir, "data", "871034p_1_MI.fits")
-    inFileRamFitsIO1 = os.path.join(afwdataDir, "data", "fpC-002570-r6-0199_sub.fits")
-    inFileRamFitsIO2 = os.path.join(afwdataDir, "data", "fpC-005902-r6-0677_sub.fits")
-    testArgs = dict(
-        maskedImage1 =   "%s %s file:maskedImage1_output_1.fits file:maskedImage1_output_2.fits" % \
-            (inFile, inFile),
-        ramFitsIO =       "%s %s" % (inFileRamFitsIO1, inFileRamFitsIO2),
-    )
-    
-    scripts.BasicSConscript.tests(args=testArgs)
-    env.Depends("tests/PsfIo.py", "tests/testTableArchivesLib.py")
+if not afwdataDir:
+	testArgs = dict(statistics = "--run_test=!StatisticsTestImages", background = "--run_test=!BackgroundTestImages",)
+	scripts.BasicSConscript.tests(args=testArgs)
+else:
+	# copy AFWDATA_DIR to the test's environment
+	env["ENV"]["AFWDATA_DIR"] = afwdataDir
+	scripts.BasicSConscript.tests()
 
 env.Clean(targets["tests"], "#testTable.fits")
