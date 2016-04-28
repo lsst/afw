@@ -32,11 +32,11 @@ Kernel::PersistenceHelper::PersistenceHelper(int nSpatialFunctions) :
     schema(),
     dimensions(
         afw::table::PointKey<int>::addFields(
-            schema, "dimensions", "dimensions of a Kernel's images", "pixels"
+            schema, "dimensions", "dimensions of a Kernel's images", "pixel"
         )
     ),
     center(
-        afw::table::PointKey<int>::addFields(schema, "center", "center point in a Kernel image", "pixels")
+        afw::table::PointKey<int>::addFields(schema, "center", "center point in a Kernel image", "pixel")
     )
 {
     if (nSpatialFunctions > 0) {

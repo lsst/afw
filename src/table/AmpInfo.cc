@@ -144,23 +144,23 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
     bboxMin = PointKey<int>::addFields(schema,
         "bbox_min",
         "bbox of amplifier image data on assembled image, min point",
-        "pixels");
+        "pixel");
     bboxExtent = PointKey<int>::addFields(schema,
         "bbox_extent",
         "bbox of amplifier image data on assembled image, extent",
-        "pixels");
+        "pixel");
     gain = schema.addField<double>(
         "gain",
-        "amplifier gain in e-/ADU",
-        "e-/ADU");
+        "amplifier gain",
+        "electron adu^-1");
     saturation = schema.addField<int>(
         "saturation",
-        "saturation value, in ADU",
-        "ADU");
+        "saturation value",
+        "adu");
     readNoise = schema.addField<double>(
         "readnoise",
-        "amplifier read noise, in e-",
-        "e-");
+        "amplifier read noise",
+        "electron");
     readoutCorner = schema.addField<int>(
         "readoutcorner",
         "readout corner, in the frame of the assembled image");
@@ -180,19 +180,19 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
     rawBBoxMin = PointKey<int>::addFields(schema,
         "raw_bbox_min",
         "entire amplifier bbox on raw image, min point",
-        "pixels");
+        "pixel");
     rawBBoxExtent = PointKey<int>::addFields(schema,
         "raw_bbox_extent",
         "entire amplifier bbox on raw image, extent",
-        "pixels");
+        "pixel");
     rawDataBBoxMin = PointKey<int>::addFields(schema,
         "raw_databbox_min",
         "image data bbox on raw image, min point",
-        "pixels");
+        "pixel");
     rawDataBBoxExtent = PointKey<int>::addFields(schema,
         "raw_databbox_extent",
         "image data bbox on raw image, extent",
-        "pixels");
+        "pixel");
     rawFlipX = schema.addField<Flag>(
         "raw_flip_x",
         "flip row order to make assembled image?");
@@ -202,31 +202,31 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
     rawXYOffset = PointKey<int>::addFields(schema,
         "raw_xyoffset",
         "offset for assembling a raw CCD image: desired xy0 - raw xy0; 0,0 if raw data comes assembled",
-        "pixels");
+        "pixel");
     rawHorizontalOverscanBBoxMin = PointKey<int>::addFields(schema,
         "raw_horizontaloverscanbbox_min",
         "usable horizontal overscan bbox on raw image, min point",
-        "pixels");
+        "pixel");
     rawHorizontalOverscanBBoxExtent = PointKey<int>::addFields(schema,
         "raw_horizontaloverscanbbox_extent",
         "usable horizontal overscan bbox on raw image, extent",
-        "pixels");
+        "pixel");
     rawVerticalOverscanBBoxMin = PointKey<int>::addFields(schema,
         "raw_verticaloverscanbbox_min",
         "usable vertical overscan region raw image, min point",
-        "pixels");
+        "pixel");
     rawVerticalOverscanBBoxExtent = PointKey<int>::addFields(schema,
         "raw_verticaloverscanbbox_extent",
         "usable vertical overscan region raw image, extent",
-        "pixels");
+        "pixel");
     rawPrescanBBoxMin = PointKey<int>::addFields(schema,
         "raw_prescanbbox_min",
         "usable (horizontal) prescan bbox on raw image, min point",
-        "pixels");
+        "pixel");
     rawPrescanBBoxExtent = PointKey<int>::addFields(schema,
         "raw_prescanbbox_extent",
         "usable (horizontal) prescan bbox on raw image, extent",
-        "pixels");
+        "pixel");
     schema.getCitizen().markPersistent();
 }
 

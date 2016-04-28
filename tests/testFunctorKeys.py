@@ -65,7 +65,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
         schema = lsst.afw.table.Schema();
-        fKey0 = functorKeyType.addFields(schema, "a", "x or y", "pixels")
+        fKey0 = functorKeyType.addFields(schema, "a", "x or y", "pixel")
         xKey = schema.find("a_x").key
         yKey = schema.find("a_y").key
         # we create two equivalent functor keys, using the two different constructors
@@ -200,7 +200,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def testEllipseKey(self):
         schema = lsst.afw.table.Schema();
-        fKey0 = lsst.afw.table.EllipseKey.addFields(schema, "a", "ellipse", "pixels")
+        fKey0 = lsst.afw.table.EllipseKey.addFields(schema, "a", "ellipse", "pixel")
         qKey = lsst.afw.table.QuadrupoleKey(schema["a"])
         pKey = lsst.afw.table.Point2DKey(schema["a"])
         # we create two more equivalent functor keys, using the two different constructors
@@ -251,18 +251,18 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
             FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrix2%sKey" % fieldType.lower())
         else:
             FunctorKeyType = getattr(lsst.afw.table, "CovarianceMatrixX%sKey" % fieldType.lower())
-        fKey1 = FunctorKeyType.addFields(schema, "a", names, ["ux", "uy"], varianceOnly)
-        fKey2 = FunctorKeyType.addFields(schema, "b", names, "u", varianceOnly)
-        self.assertEqual(schema.find("a_xSigma").field.getUnits(), "ux")
-        self.assertEqual(schema.find("a_ySigma").field.getUnits(), "uy")
-        self.assertEqual(schema.find("b_xSigma").field.getUnits(), "u")
-        self.assertEqual(schema.find("b_ySigma").field.getUnits(), "u")
+        fKey1 = FunctorKeyType.addFields(schema, "a", names, ["m", "s"], varianceOnly)
+        fKey2 = FunctorKeyType.addFields(schema, "b", names, "kg", varianceOnly)
+        self.assertEqual(schema.find("a_xSigma").field.getUnits(), "m")
+        self.assertEqual(schema.find("a_ySigma").field.getUnits(), "s")
+        self.assertEqual(schema.find("b_xSigma").field.getUnits(), "kg")
+        self.assertEqual(schema.find("b_ySigma").field.getUnits(), "kg")
         dtype = numpy.float64 if fieldType == "D" else numpy.float32
         if varianceOnly:
             m = numpy.diagflat(numpy.random.randn(2)**2).astype(dtype)
         else:
-            self.assertEqual(schema.find("a_x_y_Cov").field.getUnits(), "ux uy")
-            self.assertEqual(schema.find("b_x_y_Cov").field.getUnits(), "u^2")
+            self.assertEqual(schema.find("a_x_y_Cov").field.getUnits(), "m s")
+            self.assertEqual(schema.find("b_x_y_Cov").field.getUnits(), "kg kg")
             v = numpy.random.randn(2, 2).astype(dtype)
             m = numpy.dot(v.transpose(), v)
         table = lsst.afw.table.BaseTable.make(schema)
@@ -376,8 +376,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         k1 = FunctorKeyType([a0, a1, a2])  # construct from a vector of keys
         k2 = FunctorKeyType(schema["a"])   # construct from SubSchema
         k3 = FunctorKeyType(c)             # construct from old-style Key<Array<T>>
-        k4 = FunctorKeyType.addFields(schema, "d", "doc for d", "camels", 4)
-        k5 = FunctorKeyType.addFields(schema, "e", "doc for e %3.1f", "camels", [2.1, 2.2])
+        k4 = FunctorKeyType.addFields(schema, "d", "doc for d", "barn", 4)
+        k5 = FunctorKeyType.addFields(schema, "e", "doc for e %3.1f", "barn", [2.1, 2.2])
         self.assertTrue(k1.isValid())
         self.assertTrue(k2.isValid())
         self.assertTrue(k3.isValid())

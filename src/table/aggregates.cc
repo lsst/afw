@@ -96,7 +96,7 @@ QuadrupoleKey QuadrupoleKey::addFields(
     std::string const & doc,
     CoordinateType coordType
 ) {
-    std::string unit = coordType == CoordinateType::PIXEL ? "pixels^2" : "radians^2";
+    std::string unit = coordType == CoordinateType::PIXEL ? "pixel^2" : "rad^2";
 
     Key<double> xxKey = schema.addField<double>(schema.join(name, "xx"), doc, unit);
     Key<double> yyKey = schema.addField<double>(schema.join(name, "yy"), doc, unit);
@@ -195,7 +195,7 @@ CovarianceMatrixKey<T,N> CovarianceMatrixKey<T,N>::addFields(
                     schema.addField<T>(
                         schema.join(prefix, names[j], names[i], "Cov"),
                         "uncertainty covariance between " + names[j] + " and " + names[i],
-                        (units[i] == units[j]) ? (units[i] + "^2") : (units[j] + " " + units[i])
+                        units[j] + (units[j].empty() || units[i].empty() ? "" : " ") + units[i]
                     )
                 );
             }

@@ -59,7 +59,7 @@ class SchemaTestCase(unittest.TestCase):
 
         schema = lsst.afw.table.Schema();
         ab_k = lsst.afw.table.CoordKey.addFields(schema, "a_b", "parent coord")
-        abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixels")
+        abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixel")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
         acf_k = schema.addField("a_c_f", type=numpy.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
@@ -132,11 +132,11 @@ class SchemaTestCase(unittest.TestCase):
 
     def testComparison(self):
         schema1 = lsst.afw.table.Schema()
-        schema1.addField("a", type=float, doc="doc for a", units="units for a")
-        schema1.addField("b", type=int, doc="doc for b", units="units for b")
+        schema1.addField("a", type=float, doc="doc for a", units="")
+        schema1.addField("b", type=int, doc="doc for b", units="")
         schema2 = lsst.afw.table.Schema()
-        schema2.addField("a", type=int, doc="doc for a", units="units for a")
-        schema2.addField("b", type=float, doc="doc for b", units="units for b")
+        schema2.addField("a", type=int, doc="doc for a", units="")
+        schema2.addField("b", type=float, doc="doc for b", units="")
         cmp1 = schema1.compare(schema2, lsst.afw.table.Schema.IDENTICAL)
         self.assertTrue(cmp1 & lsst.afw.table.Schema.EQUAL_NAMES)
         self.assertTrue(cmp1 & lsst.afw.table.Schema.EQUAL_DOCS)
