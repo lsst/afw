@@ -117,6 +117,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 
 %pythoncode %{
 from . import _syntax
+import astropy.units
 %}
 
 %include "lsst/afw/table/misc.h"
@@ -321,7 +322,13 @@ def find(self, k):
              pass
     raise KeyError("Field '%s' not found in Schema." % k)
 
-def addField(self, field, type=None, doc="", units="", size=None, doReplace=False):
+def checkUnits(self, parse_strict='raise'):
+    for schemaItem in self.asList():
+        astropy.units.Unit(schemaItem.getField().getUnits(), parse_strict=parse_strict)
+
+def addField(self, field, type=None, doc="", units="", size=None, doReplace=False, parse_strict='raise'):
+    # Check for astropy compatible unit string
+    astropy.units.Unit(units, parse_strict=parse_strict)
     if type is None:
         try:
             prefix, suffix = __builtins__['type'](field).__name__.split("_")
