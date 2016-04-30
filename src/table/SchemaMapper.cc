@@ -134,7 +134,7 @@ SchemaMapper::SchemaMapper(Schema const & input, bool shareAliasMap) :
 }
 
 SchemaMapper & SchemaMapper::operator=(SchemaMapper const & other) {
-    boost::scoped_ptr<Impl> tmp(new Impl(*other._impl));
+    std::unique_ptr<Impl> tmp(new Impl(*other._impl));
     _impl.swap(tmp);
     return *this;
 }

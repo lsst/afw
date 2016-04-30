@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(aliasMapLinks) {
 
     // Is it really dead?
     typedef std::vector<lsst::daf::base::Citizen const*> CensusVector;
-    boost::scoped_ptr<CensusVector const> census(lsst::daf::base::Citizen::census());
+    std::unique_ptr<CensusVector const> census(lsst::daf::base::Citizen::census());
     for (CensusVector::const_iterator i = census->begin(); i != census->end(); ++i) {
         BOOST_CHECK((**i).getId() != tableCitizenId);
     }

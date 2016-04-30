@@ -222,7 +222,7 @@ private:
 
     typedef detail::SchemaMapperImpl Impl;
 
-    boost::scoped_ptr<Impl> _impl;
+    std::unique_ptr<Impl> _impl;
 };
 
 template <typename Predicate>

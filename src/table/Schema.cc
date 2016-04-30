@@ -151,7 +151,7 @@ inline int findNamedSubfield(
 template <typename T, typename U>
 inline void makeSubfieldItem(
     SchemaItem<T> const & item, int index, char delimiter,
-    boost::scoped_ptr< SchemaItem<U> > & result,
+    std::unique_ptr< SchemaItem<U> > & result,
     boost::mpl::true_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {
     result.reset(
@@ -170,7 +170,7 @@ inline void makeSubfieldItem(
 template <typename T, typename U>
 inline void makeSubfieldItem(
     SchemaItem<T> const & item, int index, char delimiter,
-    boost::scoped_ptr< SchemaItem<U> > & result,
+    std::unique_ptr< SchemaItem<U> > & result,
     boost::mpl::false_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {}
 
@@ -202,7 +202,7 @@ struct ExtractItemByName : public boost::static_visitor<> {
 
     char delimiter;
     std::string name; // name we're looking for
-    mutable boost::scoped_ptr< SchemaItem<U> > result; // where we put the result to signal that we're done
+    mutable std::unique_ptr< SchemaItem<U> > result; // where we put the result to signal that we're done
 };
 
 } // anonymous
@@ -296,7 +296,7 @@ struct ExtractItemByKey : public boost::static_visitor<> {
 
     char delimiter;
     Key<U> key;
-    mutable boost::scoped_ptr< SchemaItem<U> > result;
+    mutable std::unique_ptr< SchemaItem<U> > result;
 };
 
 } // anonymous.
