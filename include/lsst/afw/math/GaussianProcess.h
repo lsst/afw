@@ -30,7 +30,7 @@
 #include <stdexcept>
 
 #include "ndarray/eigen.h"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/DateTime.h"
@@ -518,7 +518,7 @@ public:
     */
     GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
                     ndarray::Array<T,1,1> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarIn);
+                    std::shared_ptr< Covariogram<T> > const &covarIn);
 
     /**
      * @brief This is the constructor you call if you want the positions of your data 
@@ -543,7 +543,7 @@ public:
                     ndarray::Array<T,1,1> const &mn,
                     ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,1,1> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarIn);
+                    std::shared_ptr< Covariogram<T> > const &covarIn);
     /**
      * @brief this is the constructor to use in the case of a vector of input functions
      * and an unbounded/unnormalized parameter space
@@ -558,7 +558,7 @@ public:
     */
     GaussianProcess(ndarray::Array<T,2,2> const &dataIn,
                     ndarray::Array<T,2,2> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarIn);
+                    std::shared_ptr< Covariogram<T> > const &covarIn);
     /**
      * @brief this is the constructor to use in the case of a vector of input
      * functions using minima and maxima in parameter space
@@ -579,7 +579,7 @@ public:
                     ndarray::Array<T,1,1> const &mn,
                     ndarray::Array<T,1,1> const &mx,
                     ndarray::Array<T,2,2> const &ff,
-                    boost::shared_ptr< Covariogram<T> > const &covarIn);
+                    std::shared_ptr< Covariogram<T> > const &covarIn);
 
     /**
      * @brief Interpolate the function value at one point using a specified number of nearest neighbors
@@ -780,7 +780,7 @@ public:
      * @param [in] covar the Covariogram object that you wish to assign
      *
     */
-    void setCovariogram(boost::shared_ptr< Covariogram<T> > const &covar);
+    void setCovariogram(std::shared_ptr< Covariogram<T> > const &covar);
 
     /**
      * @brief set the value of the hyperparameter _lambda
@@ -822,7 +822,7 @@ public:
 
     KdTree<T> _kdTree;
 
-    boost::shared_ptr< Covariogram<T> > _covariogram;
+    std::shared_ptr< Covariogram<T> > _covariogram;
     mutable GaussianProcessTimer _timer;
 
 };

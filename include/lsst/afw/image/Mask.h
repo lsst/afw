@@ -35,7 +35,7 @@
 #include <string>
 
 #include "boost/cstdint.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
@@ -92,8 +92,8 @@ namespace detail {
 template<typename MaskPixelT=lsst::afw::image::MaskPixel>
 class Mask : public ImageBase<MaskPixelT> {
 public:
-    typedef boost::shared_ptr<Mask> Ptr;
-    typedef boost::shared_ptr<const Mask> ConstPtr;
+    typedef std::shared_ptr<Mask> Ptr;
+    typedef std::shared_ptr<const Mask> ConstPtr;
     typedef detail::MaskPlaneDict MaskPlaneDict;
     
     typedef detail::Mask_tag image_category;

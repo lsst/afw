@@ -37,7 +37,7 @@ SeparableXYTransform(Functor const & xfunctor, Functor const & yfunctor)
 }
 
 PTR(XYTransform) SeparableXYTransform::clone() const {
-   return boost::make_shared<SeparableXYTransform>(*_xfunctor, *_yfunctor);
+   return std::make_shared<SeparableXYTransform>(*_xfunctor, *_yfunctor);
 }
 
 Point2D SeparableXYTransform::forwardTransform(Point2D const & point) const {

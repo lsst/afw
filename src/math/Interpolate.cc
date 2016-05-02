@@ -31,7 +31,7 @@
 #include <algorithm>
 #include <map>
 #include "boost/format.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_interp.h"
 #include "gsl/gsl_spline.h"

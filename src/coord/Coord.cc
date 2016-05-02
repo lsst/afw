@@ -645,7 +645,7 @@ PTR(afwCoord::Coord) afwCoord::Coord::convert(CoordSystem system, double epoch) 
       case FK5:
         {
             Fk5Coord c1 = this->toFk5(epoch);
-            return boost::shared_ptr<Fk5Coord>(new Fk5Coord(c1.getLongitude(),
+            return std::shared_ptr<Fk5Coord>(new Fk5Coord(c1.getLongitude(),
                                                             c1.getLatitude(),
                                                             c1.getEpoch()));
         }
@@ -653,21 +653,21 @@ PTR(afwCoord::Coord) afwCoord::Coord::convert(CoordSystem system, double epoch) 
       case ICRS:
         {
             IcrsCoord c2 = this->toIcrs();
-            return boost::shared_ptr<IcrsCoord>(new IcrsCoord(c2.getLongitude(),
+            return std::shared_ptr<IcrsCoord>(new IcrsCoord(c2.getLongitude(),
                                                               c2.getLatitude()));
         }
         break;
       case GALACTIC:
         {
             GalacticCoord c4 = this->toGalactic();
-            return boost::shared_ptr<GalacticCoord>(new GalacticCoord(c4.getLongitude(),
+            return std::shared_ptr<GalacticCoord>(new GalacticCoord(c4.getLongitude(),
                                                                       c4.getLatitude()));
         }
         break;
       case ECLIPTIC:
         {
             EclipticCoord c5 = this->toEcliptic(epoch);
-            return boost::shared_ptr<EclipticCoord>(new EclipticCoord(c5.getLongitude(),
+            return std::shared_ptr<EclipticCoord>(new EclipticCoord(c5.getLongitude(),
                                                                       c5.getLatitude(),
                                                                       c5.getEpoch()));
         }
@@ -1226,7 +1226,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
     switch (system) {
       case FK5:
-        return boost::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
+        return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, epoch));
         break;
       case ICRS:
         throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -1237,7 +1237,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
                           "Galactic has no epoch, use overloaded makeCoord with (system, ra, dec).");
         break;
       case ECLIPTIC:
-        return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
+        return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, epoch));
         break;
       case TOPOCENTRIC:
         throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -1269,16 +1269,16 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
 
     switch (system) {
       case FK5:
-        return boost::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, 2000.0));
+        return std::shared_ptr<Fk5Coord>(new Fk5Coord(ra, dec, 2000.0));
         break;
       case ICRS:
-        return boost::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
+        return std::shared_ptr<IcrsCoord>(new IcrsCoord(ra, dec));
         break;
       case GALACTIC:
-        return boost::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec));
+        return std::shared_ptr<GalacticCoord>(new GalacticCoord(ra, dec));
         break;
       case ECLIPTIC:
-        return boost::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, 2000.0));
+        return std::shared_ptr<EclipticCoord>(new EclipticCoord(ra, dec, 2000.0));
         break;
       case TOPOCENTRIC:
         throw LSST_EXCEPT(ex::InvalidParameterError,
@@ -1400,16 +1400,16 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
                                   ) {
     switch (system) {
       case FK5:
-        return boost::shared_ptr<Fk5Coord>(new Fk5Coord());
+        return std::shared_ptr<Fk5Coord>(new Fk5Coord());
         break;
       case ICRS:
-        return boost::shared_ptr<IcrsCoord>(new IcrsCoord());
+        return std::shared_ptr<IcrsCoord>(new IcrsCoord());
         break;
       case GALACTIC:
-        return boost::shared_ptr<GalacticCoord>(new GalacticCoord());
+        return std::shared_ptr<GalacticCoord>(new GalacticCoord());
         break;
       case ECLIPTIC:
-        return boost::shared_ptr<EclipticCoord>(new EclipticCoord());
+        return std::shared_ptr<EclipticCoord>(new EclipticCoord());
         break;
       case TOPOCENTRIC:
         throw LSST_EXCEPT(ex::InvalidParameterError,

@@ -34,7 +34,7 @@
 #include <limits>
 #include <cmath>
 #include <cassert>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
@@ -660,7 +660,7 @@ namespace {
      * code repetition of the loops.
      */
     template<typename IsFinite, typename ImageT, typename MaskT, typename VarianceT>
-    boost::shared_ptr<std::vector<typename ImageT::Pixel> > makeVectorCopy(ImageT const &img,
+    std::shared_ptr<std::vector<typename ImageT::Pixel> > makeVectorCopy(ImageT const &img,
                                                                            MaskT const &msk,
                                                                            VarianceT const &,
                                                                            int const andMask
@@ -668,7 +668,7 @@ namespace {
     {
         // Note need to keep track of allPixelOrMask here ... processPixels() does that
         // and it always gets called
-        boost::shared_ptr<std::vector<typename ImageT::Pixel> >
+        std::shared_ptr<std::vector<typename ImageT::Pixel> >
             imgcp(new std::vector<typename ImageT::Pixel>(0));
         
         for (int i_y = 0; i_y < img.getHeight(); ++i_y) {
@@ -853,7 +853,7 @@ void afwMath::Statistics::doStatistics(
     if (flags & (MEDIAN | IQRANGE | MEANCLIP | STDEVCLIP | VARIANCECLIP)) {
 
         // make a vector copy of the image to get the median and quartiles (will move values)
-        boost::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp;
+        std::shared_ptr<std::vector<typename ImageT::Pixel> > imgcp;
         if (_sctrl.getNanSafe()) {
             imgcp = makeVectorCopy<ChkFin>(img, msk, var, _sctrl.getAndMask());
         } else {

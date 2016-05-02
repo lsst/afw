@@ -36,7 +36,7 @@ AffineXYTransform::AffineXYTransform(AffineTransform const &affineTransform)
 
 PTR(XYTransform) AffineXYTransform::clone() const
 {
-    return boost::make_shared<AffineXYTransform> (_forwardAffineTransform);
+    return std::make_shared<AffineXYTransform> (_forwardAffineTransform);
 }
 
 Point2D AffineXYTransform::forwardTransform(Point2D const &position) const

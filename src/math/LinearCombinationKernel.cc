@@ -163,7 +163,7 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
     }
     
     typedef lsst::afw::image::Image<Kernel::Pixel> KernelImage;
-    typedef boost::shared_ptr<KernelImage> KernelImagePtr;
+    typedef std::shared_ptr<KernelImage> KernelImagePtr;
     typedef std::vector<KernelImagePtr> KernelImageList;
     
     // create kernel images for new refactored basis kernels

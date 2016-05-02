@@ -182,7 +182,7 @@ BaseColumnView::~BaseColumnView() {}
 
 BaseColumnView::BaseColumnView(
     PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager
-) : _impl(boost::make_shared<Impl>(table, recordCount, buf, manager)) {}
+) : _impl(std::make_shared<Impl>(table, recordCount, buf, manager)) {}
 
 // =============== Explicit instantiations ==================================================================
 

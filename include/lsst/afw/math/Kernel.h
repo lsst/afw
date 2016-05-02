@@ -37,7 +37,7 @@
 #include <vector>
 
 #include "boost/mpl/or.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/make_shared.hpp"
 #include "boost/static_assert.hpp"
 #include "boost/type_traits/is_same.hpp"

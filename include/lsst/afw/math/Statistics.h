@@ -42,7 +42,7 @@
 #include <limits>
 #include "boost/iterator/iterator_adaptor.hpp"
 #include "boost/tuple/tuple.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/MaskedVector.h"
 
@@ -93,8 +93,8 @@ class StatisticsControl {
     typedef enum { WEIGHTS_FALSE=0, WEIGHTS_TRUE=1, WEIGHTS_NONE } WeightsBoolean; // initial state is NONE
 public:
 
-    typedef boost::shared_ptr<StatisticsControl> Ptr;
-    typedef boost::shared_ptr<StatisticsControl> const ConstPtr;
+    typedef std::shared_ptr<StatisticsControl> Ptr;
+    typedef std::shared_ptr<StatisticsControl> const ConstPtr;
     
     StatisticsControl(
         double numSigmaClip = 3.0, ///< number of standard deviations to clip at

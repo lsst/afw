@@ -36,7 +36,7 @@ InvertedXYTransform::InvertedXYTransform(CONST_PTR(XYTransform) base)
 PTR(XYTransform) InvertedXYTransform::clone() const
 {
     // deep copy
-    return boost::make_shared<InvertedXYTransform> (_base->clone());
+    return std::make_shared<InvertedXYTransform> (_base->clone());
 }
 
 PTR(XYTransform) InvertedXYTransform::invert() const

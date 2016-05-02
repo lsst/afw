@@ -25,7 +25,7 @@
 #ifndef LSST_AFW_MATH_AFFINE_TRANSFORM_H
 #define LSST_AFW_MATH_AFFINE_TRANSFORM_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "Eigen/Core"
 #include <iostream>
 #include "lsst/afw/geom/Point.h"
@@ -76,8 +76,8 @@ namespace geom {
  */
 class AffineTransform {
 public:
-    typedef boost::shared_ptr<AffineTransform> Ptr;
-    typedef boost::shared_ptr<AffineTransform const> ConstPtr;
+    typedef std::shared_ptr<AffineTransform> Ptr;
+    typedef std::shared_ptr<AffineTransform const> ConstPtr;
 
     enum Parameters {XX=0,YX=1,XY=2,YY=3,X=4,Y=5};
 

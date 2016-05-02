@@ -26,7 +26,7 @@
 #define LSST_AFW_IMAGE_EXPOSURE_H
 
 #include "boost/cstdint.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/make_shared.hpp"
 
 #include "lsst/base.h"
@@ -49,8 +49,8 @@ class Exposure : public lsst::daf::base::Persistable,
                  public lsst::daf::base::Citizen {
 public:
     typedef MaskedImage<ImageT, MaskT, VarianceT> MaskedImageT;
-    typedef boost::shared_ptr<Exposure> Ptr;
-    typedef boost::shared_ptr<Exposure const> ConstPtr;
+    typedef std::shared_ptr<Exposure> Ptr;
+    typedef std::shared_ptr<Exposure const> ConstPtr;
 
     // Class Constructors and Destructor
     explicit Exposure(

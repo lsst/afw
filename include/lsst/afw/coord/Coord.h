@@ -36,7 +36,7 @@
 #include <limits>
 #include <map>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/afw/geom/Point.h"

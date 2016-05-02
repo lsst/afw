@@ -274,7 +274,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     //
     // Accumulate the best-fit-image in bestFitImage
     //
-    typename ImageT::Ptr bestFitImage = boost::make_shared<ImageT>(eigenImages[0]->getDimensions());
+    typename ImageT::Ptr bestFitImage = std::make_shared<ImageT>(eigenImages[0]->getDimensions());
 
     for (int i = 0; i != nEigen; ++i) {
         bestFitImage->scaledPlus(x[i], *eigenImages[i]->getImage());

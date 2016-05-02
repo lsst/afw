@@ -32,7 +32,7 @@
 #include "Eigen/Core"
 #include "Eigen/LU"
 #include "boost/format.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/FunctionLibrary.h"

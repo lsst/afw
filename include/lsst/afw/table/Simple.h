@@ -52,7 +52,7 @@ public:
     typedef SortedCatalogT<SimpleRecord const> ConstCatalog;
 
     CONST_PTR(SimpleTable) getTable() const {
-        return boost::static_pointer_cast<SimpleTable const>(BaseRecord::getTable());
+        return std::static_pointer_cast<SimpleTable const>(BaseRecord::getTable());
     }
 
     //@{
@@ -156,19 +156,19 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(SimpleTable) clone() const { return boost::static_pointer_cast<SimpleTable>(_clone()); }
+    PTR(SimpleTable) clone() const { return std::static_pointer_cast<SimpleTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(SimpleRecord) makeRecord() { return boost::static_pointer_cast<SimpleRecord>(_makeRecord()); }
+    PTR(SimpleRecord) makeRecord() { return std::static_pointer_cast<SimpleRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
     PTR(SimpleRecord) copyRecord(BaseRecord const & other) {
-        return boost::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other));
+        return std::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
     PTR(SimpleRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
-        return boost::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other, mapper));
+        return std::static_pointer_cast<SimpleRecord>(BaseTable::copyRecord(other, mapper));
     }
 
 protected:

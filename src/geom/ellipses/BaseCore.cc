@@ -34,7 +34,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
 namespace {
 
-typedef std::map< std::string, boost::shared_ptr<BaseCore> > RegistryMap;
+typedef std::map< std::string, std::shared_ptr<BaseCore> > RegistryMap;
 
 RegistryMap & getRegistry() {
     static RegistryMap instance;

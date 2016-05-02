@@ -110,8 +110,8 @@ class Wcs : public lsst::daf::base::Persistable,
             public afw::table::io::Persistable
 {
 public:
-    typedef boost::shared_ptr<Wcs> Ptr;
-    typedef boost::shared_ptr<Wcs const> ConstPtr;
+    typedef std::shared_ptr<Wcs> Ptr;
+    typedef std::shared_ptr<Wcs const> ConstPtr;
 
     /**
      *  @brief Create a Wcs of the correct class using a FITS header.

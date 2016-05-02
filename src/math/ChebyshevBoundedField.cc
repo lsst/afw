@@ -255,11 +255,11 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::truncate(Control const & ctrl)
         packer.pack(packed, coefficients);
         packer.unpack(coefficients, packed);
     }
-    return boost::make_shared<ChebyshevBoundedField>(getBBox(), coefficients);
+    return std::make_shared<ChebyshevBoundedField>(getBBox(), coefficients);
 }
 
 PTR(ChebyshevBoundedField) ChebyshevBoundedField::relocate(geom::Box2I const & bbox) const {
-    return boost::make_shared<ChebyshevBoundedField>(bbox, _coefficients);
+    return std::make_shared<ChebyshevBoundedField>(bbox, _coefficients);
 }
 
 
@@ -363,7 +363,7 @@ public:
         LSST_ARCHIVE_ASSERT(nx * ny == keys.coefficients.getSize());
         ndarray::Array<double,2,2> coefficients = ndarray::allocate(ny, nx);
         ndarray::flatten<1>(coefficients) = record.get(keys.coefficients);
-        return boost::make_shared<ChebyshevBoundedField>(bbox, coefficients);
+        return std::make_shared<ChebyshevBoundedField>(bbox, coefficients);
     }
 
     ChebyshevBoundedFieldFactory(std::string const & name) : afw::table::io::PersistableFactory(name) {}
@@ -396,7 +396,7 @@ void ChebyshevBoundedField::write(OutputArchiveHandle & handle) const {
 }
 
 PTR(BoundedField) ChebyshevBoundedField::operator*(double const scale) const {
-    return boost::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients()*scale));
+    return std::make_shared<ChebyshevBoundedField>(getBBox(), ndarray::copy(getCoefficients()*scale));
 }
 
 // ------------------ explicit instantiation ----------------------------------------------------------------

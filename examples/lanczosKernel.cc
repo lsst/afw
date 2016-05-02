@@ -22,7 +22,7 @@
  
 #include <iostream>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/format.hpp"
 
 #include "lsst/afw/math/FunctionLibrary.h"

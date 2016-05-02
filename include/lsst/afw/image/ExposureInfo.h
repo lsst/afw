@@ -135,7 +135,7 @@ public:
     void setPsf(CONST_PTR(detection::Psf) psf) {
         // Psfs are immutable, so this is always safe; it'd be better to always just pass around
         // const or non-const pointers, instead of both, but this is more backwards-compatible.
-        _psf = boost::const_pointer_cast<detection::Psf>(psf);
+        _psf = std::const_pointer_cast<detection::Psf>(psf);
     }
 
     /// Does this exposure have a valid Polygon

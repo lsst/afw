@@ -73,7 +73,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         afw::table::BaseRecord const & record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
-        return boost::make_shared<GaussianPsf>(
+        return std::make_shared<GaussianPsf>(
             record.get(keys.dimensions.getX()),
             record.get(keys.dimensions.getY()),
             record.get(keys.sigma)
@@ -110,7 +110,7 @@ GaussianPsf::GaussianPsf(geom::Extent2I const & dimensions, double sigma) :
 }
 
 PTR(afw::detection::Psf) GaussianPsf::clone() const {
-    return boost::make_shared<GaussianPsf>(_dimensions, _sigma);
+    return std::make_shared<GaussianPsf>(_dimensions, _sigma);
 }
 
 std::string GaussianPsf::getPersistenceName() const { return "GaussianPsf"; }

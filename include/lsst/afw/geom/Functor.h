@@ -31,7 +31,7 @@
 #define LSST_AFW_GEOM_FUNCTOR_H
 
 #include <string>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 

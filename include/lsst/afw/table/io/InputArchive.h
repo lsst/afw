@@ -54,7 +54,7 @@ public:
     /// @brief Load an object of the given type and ID with error checking.
     template <typename T>
     PTR(T) get(int id) const {
-        PTR(T) p = boost::dynamic_pointer_cast<T>(get(id));
+        PTR(T) p = std::dynamic_pointer_cast<T>(get(id));
         LSST_ARCHIVE_ASSERT(p || id == 0);
         return p;
     }

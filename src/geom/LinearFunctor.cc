@@ -34,7 +34,7 @@ LinearFunctor::LinearFunctor(double slope, double intercept)
 }
 
 PTR(Functor) LinearFunctor::clone() const {
-   return boost::make_shared<LinearFunctor>(_slope, _intercept);
+   return std::make_shared<LinearFunctor>(_slope, _intercept);
 }
 
 double LinearFunctor::operator()(double x) const {

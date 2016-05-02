@@ -73,7 +73,7 @@ public:
     typedef ExposureCatalogT<ExposureRecord const> ConstCatalog;
 
     CONST_PTR(ExposureTable) getTable() const {
-        return boost::static_pointer_cast<ExposureTable const>(BaseRecord::getTable());
+        return std::static_pointer_cast<ExposureTable const>(BaseRecord::getTable());
     }
 
     RecordId getId() const;
@@ -192,19 +192,19 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(ExposureTable) clone() const { return boost::static_pointer_cast<ExposureTable>(_clone()); }
+    PTR(ExposureTable) clone() const { return std::static_pointer_cast<ExposureTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(ExposureRecord) makeRecord() { return boost::static_pointer_cast<ExposureRecord>(_makeRecord()); }
+    PTR(ExposureRecord) makeRecord() { return std::static_pointer_cast<ExposureRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
     PTR(ExposureRecord) copyRecord(BaseRecord const & other) {
-        return boost::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other));
+        return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
     PTR(ExposureRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
-        return boost::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other, mapper));
+        return std::static_pointer_cast<ExposureRecord>(BaseTable::copyRecord(other, mapper));
     }
 
 protected:

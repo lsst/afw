@@ -26,7 +26,7 @@
 #include <cmath>
 #include <vector>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/math/Interpolate.h"
 
 using namespace std;

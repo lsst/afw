@@ -51,14 +51,14 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
     //--------------------------------------------------------
     // THESE CASTS NOW DEPRECATED IN FAVOR OF %castShared
     %inline %{
-        boost::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
-        cast_SpatialCellImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
-            return boost::dynamic_pointer_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
+        std::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
+        cast_SpatialCellImageCandidate##NAME(std::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
+            return std::dynamic_pointer_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
         }
 
-        boost::shared_ptr<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >
-        cast_SpatialCellMaskedImageCandidate##NAME(boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
-             return boost::dynamic_pointer_cast<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >(candidate);
+        std::shared_ptr<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >
+        cast_SpatialCellMaskedImageCandidate##NAME(std::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
+             return std::dynamic_pointer_cast<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >(candidate);
         }
     %}
     //--------------------------------------------------------
@@ -74,7 +74,7 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 //
 
 %{
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/math/SpatialCell.h"
 %}
 
@@ -92,8 +92,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 
 %include "lsst/afw/math/SpatialCell.h"
 
-%template(SpatialCellCandidateList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCellCandidate> >;
-%template(SpatialCellList) std::vector<boost::shared_ptr<lsst::afw::math::SpatialCell> >;
+%template(SpatialCellCandidateList) std::vector<std::shared_ptr<lsst::afw::math::SpatialCellCandidate> >;
+%template(SpatialCellList) std::vector<std::shared_ptr<lsst::afw::math::SpatialCell> >;
 
 %SpatialCellImageCandidates(F, float);
 %SpatialCellImageCandidates(D, double);

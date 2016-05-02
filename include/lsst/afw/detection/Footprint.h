@@ -34,7 +34,7 @@
 #include <set>
 #include <cmath>
 #include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "ndarray.h"
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
@@ -64,8 +64,8 @@ class Footprint : public lsst::daf::base::Citizen,
                   public afw::table::io::Persistable
 {
 public:
-    typedef boost::shared_ptr<Footprint> Ptr;
-    typedef boost::shared_ptr<const Footprint> ConstPtr;
+    typedef std::shared_ptr<Footprint> Ptr;
+    typedef std::shared_ptr<const Footprint> ConstPtr;
 
     /// The Footprint's Span list
     typedef std::vector<Span::Ptr> SpanList;

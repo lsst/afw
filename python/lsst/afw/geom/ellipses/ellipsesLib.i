@@ -97,7 +97,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     lsst::afw::geom::ellipses::NAME::Ptr _transform(
         lsst::afw::geom::LinearTransform const & t
     ) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
+        return std::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
             self->transform(t).copy()
         );
     }
@@ -107,7 +107,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     lsst::afw::geom::ellipses::NAME::Ptr _convolve(
         lsst::afw::geom::ellipses::BaseCore const & other
     ) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
+        return std::static_pointer_cast<lsst::afw::geom::ellipses::NAME>(
             self->convolve(other).copy()
         );
     }
@@ -118,7 +118,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
     static lsst::afw::geom::ellipses::NAME::Ptr cast(
         lsst::afw::geom::ellipses::BaseCore::Ptr const & p
     ) {
-       return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::NAME>(p);
+       return std::dynamic_pointer_cast<lsst::afw::geom::ellipses::NAME>(p);
     }
 }
 %enddef

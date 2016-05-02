@@ -228,8 +228,8 @@ public:
             Key<int> k1 = schema["var1"];
             Key<int> k2 = schema["var2"];
             Key<int> k3 = schema["var3"];
-            PTR(Comparable) v2 = boost::dynamic_pointer_cast<Comparable>(archive.get(record.get(k2)));
-            PTR(Comparable) v3 = boost::dynamic_pointer_cast<Comparable>(archive.get(record.get(k3)));
+            PTR(Comparable) v2 = std::dynamic_pointer_cast<Comparable>(archive.get(record.get(k2)));
+            PTR(Comparable) v3 = std::dynamic_pointer_cast<Comparable>(archive.get(record.get(k3)));
             PTR(Persistable) r(new ExampleC(record.get(k1), v2, v3));
             return r;
         }
@@ -281,7 +281,7 @@ roundtripAndCompare(
     outputs.push_back(ndarray::Vector<PTR(Comparable),M>());
     InputArchive inArchive1(outArchive.getIndexCatalog(), catalogs);
     for (int i = 0; i < M; ++i) {
-        PTR(Comparable) outObj = boost::dynamic_pointer_cast<Comparable>(inArchive1.get(inputIds[i]));
+        PTR(Comparable) outObj = std::dynamic_pointer_cast<Comparable>(inArchive1.get(inputIds[i]));
         BOOST_CHECK_EQUAL(*outObj, *inputs[i]);
         outputs.back()[i] = outObj;
     }
@@ -297,7 +297,7 @@ roundtripAndCompare(
     InputArchive inArchive2 = InputArchive::readFits(inFits2);
     inFits2.closeFile();
     for (int i = 0; i < M; ++i) {
-        PTR(Comparable) outObj = boost::dynamic_pointer_cast<Comparable>(inArchive2.get(inputIds[i]));
+        PTR(Comparable) outObj = std::dynamic_pointer_cast<Comparable>(inArchive2.get(inputIds[i]));
         BOOST_CHECK_EQUAL(*outObj, *inputs[i]);
         outputs.back()[i] = outObj;
     }
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(Nested) {
     std::vector< ndarray::Vector<PTR(Comparable),1> > r2
         = roundtripAndCompare(ndarray::makeVector(c2), ndarray::makeVector(1,1));
     for (std::size_t i = 0; i < r2.size(); ++i) {
-        PTR(ExampleC) c3 = boost::dynamic_pointer_cast<ExampleC>(r2[i][0]);
+        PTR(ExampleC) c3 = std::dynamic_pointer_cast<ExampleC>(r2[i][0]);
         BOOST_REQUIRE(c3);
         BOOST_CHECK_EQUAL(c3->var2, c3->var3);
     }
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(Nested) {
     std::vector< ndarray::Vector<PTR(Comparable),2> > r3
         = roundtripAndCompare(ndarray::makeVector(a2,c2), ndarray::makeVector(1,1));
     for (std::size_t i = 0; i < r3.size(); ++i) {
-        PTR(ExampleC) c3 = boost::dynamic_pointer_cast<ExampleC>(r3[i][1]);
+        PTR(ExampleC) c3 = std::dynamic_pointer_cast<ExampleC>(r3[i][1]);
         BOOST_CHECK_EQUAL(c3->var3, c3->var3);
         BOOST_CHECK_EQUAL(c3->var3, r3[i][0]);
     }
@@ -448,7 +448,7 @@ PTR(T) roundtrip(T const * input) {
     inFits.setHdu(0);
     InputArchive inArchive = InputArchive::readFits(inFits);
     inFits.closeFile();
-    return boost::dynamic_pointer_cast<T>(inArchive.get(id));
+    return std::dynamic_pointer_cast<T>(inArchive.get(id));
 }
 
 template <typename T>

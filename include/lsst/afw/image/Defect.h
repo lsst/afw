@@ -41,7 +41,7 @@ namespace image {
  */
 class DefectBase {
 public:
-    typedef boost::shared_ptr<DefectBase> Ptr; //!< shared pointer to DefectBase
+    typedef std::shared_ptr<DefectBase> Ptr; //!< shared pointer to DefectBase
     
     explicit DefectBase(
         const geom::Box2I & bbox    //!< Bad pixels' bounding box

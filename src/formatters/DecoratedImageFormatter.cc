@@ -41,7 +41,7 @@
 static char const* SVNid __attribute__((unused)) =
     "$Id$";
 
-#include "boost/scoped_ptr.hpp"
+#include <memory>
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
 #include "boost/serialization/nvp.hpp"

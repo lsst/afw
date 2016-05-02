@@ -59,11 +59,11 @@ public:
 private:
 
     virtual PTR(afw::table::BaseTable) _clone() const {
-        return boost::make_shared<PeakTableImpl>(*this);
+        return std::make_shared<PeakTableImpl>(*this);
     }
 
     virtual PTR(afw::table::BaseRecord) _makeRecord() {
-        PTR(PeakRecord) record = boost::make_shared<PeakRecordImpl>(getSelf<PeakTableImpl>());
+        PTR(PeakRecord) record = std::make_shared<PeakRecordImpl>(getSelf<PeakTableImpl>());
         if (getIdFactory()) record->setId((*getIdFactory())());
         return record;
     }
@@ -93,7 +93,7 @@ protected:
 };
 
 void PeakFitsWriter::_writeTable(CONST_PTR(afw::table::BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(PeakTable) table = boost::dynamic_pointer_cast<PeakTable const>(t);
+    CONST_PTR(PeakTable) table = std::dynamic_pointer_cast<PeakTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -155,7 +155,7 @@ PTR(PeakTable) PeakTable::make(
     afw::table::Schema const & schema,
     bool forceNewTable
 ) {
-    typedef std::list< boost::weak_ptr<PeakTable> > CachedTableList;
+    typedef std::list< std::weak_ptr<PeakTable> > CachedTableList;
     static CachedTableList cache;
     if (!checkSchema(schema)) {
         throw LSST_EXCEPT(
@@ -164,7 +164,7 @@ PTR(PeakTable) PeakTable::make(
         );
     }
     if (forceNewTable) {
-        return boost::make_shared<PeakTableImpl>(schema, afw::table::IdFactory::makeSimple());
+        return std::make_shared<PeakTableImpl>(schema, afw::table::IdFactory::makeSimple());
     }
     CachedTableList::iterator iter = cache.begin();
     while (iter != cache.end()) {
@@ -185,7 +185,7 @@ PTR(PeakTable) PeakTable::make(
         }
     }
     // No match: we create a new table and put it in the cache
-    PTR(PeakTable) newTable = boost::make_shared<PeakTableImpl>(
+    PTR(PeakTable) newTable = std::make_shared<PeakTableImpl>(
         schema, afw::table::IdFactory::makeSimple()
     );
     cache.push_front(newTable);
@@ -216,7 +216,7 @@ PeakTable::MinimalSchema & PeakTable::getMinimalSchema() {
 
 PTR(afw::table::io::FitsWriter)
 PeakTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
-    return boost::make_shared<PeakFitsWriter>(fitsfile, flags);
+    return std::make_shared<PeakFitsWriter>(fitsfile, flags);
 }
 
 } // namespace detection

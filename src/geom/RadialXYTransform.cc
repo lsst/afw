@@ -57,12 +57,12 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs)
 
 PTR(XYTransform) RadialXYTransform::clone() const
 {
-    return boost::make_shared<RadialXYTransform> (_coeffs);    
+    return std::make_shared<RadialXYTransform> (_coeffs);    
 }
 
 PTR(XYTransform) RadialXYTransform::invert() const
 {
-    return boost::make_shared<RadialXYTransform> (_coeffs);
+    return std::make_shared<RadialXYTransform> (_coeffs);
 }
 
 Point2D RadialXYTransform::forwardTransform(Point2D const &p) const

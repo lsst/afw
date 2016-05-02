@@ -96,8 +96,8 @@ void statisticsStack(
  * @brief A function to compute some statistics of a stack of std::vectors
  */
 template<typename PixelT>
-boost::shared_ptr<std::vector<PixelT> > statisticsStack(
-        std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,      ///< Vectors to process
+std::shared_ptr<std::vector<PixelT> > statisticsStack(
+        std::vector<std::shared_ptr<std::vector<PixelT> > > &vectors,      ///< Vectors to process
         Property flags,              ///< statistics requested
         StatisticsControl const& sctrl=StatisticsControl(),  ///< control structure
         std::vector<lsst::afw::image::VariancePixel> const& wvector=std::vector<lsst::afw::image::VariancePixel>(0) ///< vector containing weights

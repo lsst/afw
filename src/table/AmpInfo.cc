@@ -38,11 +38,11 @@ public:
 private:
 
     virtual PTR(BaseTable) _clone() const {
-        return boost::make_shared<AmpInfoTableImpl>(*this);
+        return std::make_shared<AmpInfoTableImpl>(*this);
     }
 
     virtual PTR(BaseRecord) _makeRecord() {
-        return boost::make_shared<AmpInfoRecordImpl>(getSelf<AmpInfoTableImpl>());
+        return std::make_shared<AmpInfoRecordImpl>(getSelf<AmpInfoTableImpl>());
     }
 
 };
@@ -70,7 +70,7 @@ protected:
 };
 
 void AmpInfoFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(AmpInfoTable) table = boost::dynamic_pointer_cast<AmpInfoTable const>(t);
+    CONST_PTR(AmpInfoTable) table = std::dynamic_pointer_cast<AmpInfoTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -127,7 +127,7 @@ PTR(AmpInfoTable) AmpInfoTable::make(Schema const & schema) {
             "Schema for AmpInfo must contain at least the keys defined by makeMinimalSchema()."
         );
     }
-    return boost::make_shared<AmpInfoTableImpl>(schema);
+    return std::make_shared<AmpInfoTableImpl>(schema);
 }
 
 AmpInfoTable::AmpInfoTable(Schema const & schema) :
@@ -237,7 +237,7 @@ AmpInfoTable::MinimalSchema & AmpInfoTable::getMinimalSchema() {
 
 PTR(io::FitsWriter)
 AmpInfoTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
-    return boost::make_shared<AmpInfoFitsWriter>(fitsfile, flags);
+    return std::make_shared<AmpInfoFitsWriter>(fitsfile, flags);
 }
 //-------------------------------------------------------------------------------------------------
 // Getters and Setters

@@ -40,7 +40,7 @@ Python interface to lsst::afw::coord
 %template(pairSS) std::pair<std::string, std::string>;
 
 %{
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/geom.h"
 %}
 %template(pairAngleAngle) std::pair<lsst::afw::geom::Angle, lsst::afw::geom::Angle>;

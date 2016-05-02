@@ -362,7 +362,7 @@ namespace {
  */
     class IdSpan {
     public:
-        typedef boost::shared_ptr<IdSpan> Ptr;
+        typedef std::shared_ptr<IdSpan> Ptr;
         
         explicit IdSpan(int id, int y, int x0, int x1, double good) : 
             id(id), y(y), x0(x0), x1(x1), good(good) {}
@@ -921,7 +921,7 @@ namespace {
     template<typename MaskPixelT>
     class Startspan {
     public:
-        typedef std::vector<boost::shared_ptr<Startspan> > Ptr;
+        typedef std::vector<std::shared_ptr<Startspan> > Ptr;
         
         Startspan(detection::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
         ~Startspan() { delete _span; }

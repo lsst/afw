@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
 //
 //
 //    const unsigned int polyorder = 0;
-//    boost::shared_ptr<lsst::afw::math::PolynomialFunction1<FuncReturn> > polyFuncPtr(
+//    std::shared_ptr<lsst::afw::math::PolynomialFunction1<FuncReturn> > polyFuncPtr(
 //        new lsst::afw::math::PolynomialFunction1<FuncReturn>(polyorder)
 //        );
 //

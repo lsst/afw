@@ -38,7 +38,7 @@
 #include <functional>
 
 #include "boost/mpl/bool.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/afw/geom/Extent.h"
 #include "lsst/afw/geom/Box.h"
@@ -122,8 +122,8 @@ namespace image {
         typedef ndarray::Manager Manager;
     public:        
 
-        typedef boost::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase
-        typedef boost::shared_ptr<const ImageBase<PixelT> > ConstPtr; ///< A shared_ptr to a const ImageBase
+        typedef std::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase
+        typedef std::shared_ptr<const ImageBase<PixelT> > ConstPtr; ///< A shared_ptr to a const ImageBase
 
         typedef detail::basic_tag image_category; ///< trait class to identify type of %image
 
@@ -417,8 +417,8 @@ namespace image {
     class Image : public ImageBase<PixelT> {
     public:
         template<typename, typename, typename> friend class MaskedImage;
-        typedef boost::shared_ptr<Image<PixelT> > Ptr;
-        typedef boost::shared_ptr<const Image<PixelT> > ConstPtr;
+        typedef std::shared_ptr<Image<PixelT> > Ptr;
+        typedef std::shared_ptr<const Image<PixelT> > ConstPtr;
 
         typedef detail::Image_tag image_category;
 
@@ -617,9 +617,9 @@ namespace image {
                            public lsst::daf::base::Citizen {
     public:
         /// shared_ptr to a DecoratedImage
-        typedef boost::shared_ptr<DecoratedImage> Ptr;
+        typedef std::shared_ptr<DecoratedImage> Ptr;
         /// shared_ptr to a const DecoratedImage
-        typedef boost::shared_ptr<const DecoratedImage> ConstPtr;
+        typedef std::shared_ptr<const DecoratedImage> ConstPtr;
         /// shared_ptr to the Image
         typedef PTR(Image<PixelT>) ImagePtr;
         /// shared_ptr to the Image as const

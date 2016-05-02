@@ -35,7 +35,7 @@
 #include <string>
 
 #include "boost/format.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"

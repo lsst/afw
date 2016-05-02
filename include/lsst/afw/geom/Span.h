@@ -54,8 +54,8 @@ namespace geom {
 class Span {
 public:
 
-    typedef boost::shared_ptr<Span> Ptr;
-    typedef boost::shared_ptr<Span const> ConstPtr;
+    typedef std::shared_ptr<Span> Ptr;
+    typedef std::shared_ptr<Span const> ConstPtr;
 
     /// An iterator over points in the Span.
     typedef SpanPixelIterator Iterator;

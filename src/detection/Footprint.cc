@@ -55,7 +55,7 @@ namespace {
 /*
  * Compare two Span%s by y, then x0, then x1
  *
- * A utility functor passed to sort; needed to dereference the boost::shared_ptrs.
+ * A utility functor passed to sort; needed to dereference the std::shared_ptrs.
  */
     struct compareSpanByYX :
         public std::binary_function<Span::ConstPtr, Span::ConstPtr, bool> {
@@ -758,7 +758,7 @@ public:
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2u);
-        PTR(Footprint) result = boost::make_shared<Footprint>();
+        PTR(Footprint) result = std::make_shared<Footprint>();
         result->readSpans(catalogs.front());
         result->readPeaks(catalogs.back());
         return result;
@@ -973,7 +973,7 @@ PTR(Footprint) Footprint::transform(
     geom::Box2I tBoxI(tBoxD);
 
     // enumerate points in the new bbox that, when reverse-transformed, are within the given footprint.
-    PTR(Footprint) fpNew = boost::make_shared<Footprint>(getPeaks().getSchema(), 0, region);
+    PTR(Footprint) fpNew = std::make_shared<Footprint>(getPeaks().getSchema(), 0, region);
 
     for (int y = tBoxI.getBeginY(); y < tBoxI.getEndY(); ++y) {
         bool inSpan = false;            // Are we in a span?
@@ -1023,12 +1023,12 @@ PTR(Footprint) Footprint::findEdgePixels() const
     int const width = getBBox().getWidth(), height = getBBox().getHeight();
     if (height <= 2 || _spans.size() <= 2) {
         // Everything is on the edge
-        return boost::make_shared<Footprint>(*this);
+        return std::make_shared<Footprint>(*this);
     }
 
     // Get a list of pixels (in the form of a Footprint) that are on the edge horizontally
     // or have nothing above or below them.
-    PTR(Footprint) edges = boost::make_shared<Footprint>(getPeaks().getSchema());
+    PTR(Footprint) edges = std::make_shared<Footprint>(getPeaks().getSchema());
     int const xStart = getBBox().getMinX(), yStart = getBBox().getMinY();
     std::vector<bool> rowBefore(width, false); // Representation of the previous row
     std::vector<bool> rowNow(width, false);    // Representation of this row
@@ -1352,7 +1352,7 @@ template void set_footprint_array_ids<int>(
  * @param relativeIDs show the IDs starting at 1, not pmFootprint->id
  */
 template <typename IDImageT>
-typename boost::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
+typename std::shared_ptr<image::Image<IDImageT> > setFootprintArrayIDs(
     std::vector<PTR(Footprint)> const& footprints,
     bool const relativeIDs
 ) {
@@ -1384,7 +1384,7 @@ template image::Image<int>::Ptr setFootprintArrayIDs(
  * Set an image to the value of Footprint's ID wherever it may fall
  */
 template <typename IDImageT>
-typename boost::shared_ptr<image::Image<IDImageT> > setFootprintID(
+typename std::shared_ptr<image::Image<IDImageT> > setFootprintID(
                                           CONST_PTR(Footprint)& foot, // the Footprint to insert
                                           int const id // the desired ID
                                                                      ) {

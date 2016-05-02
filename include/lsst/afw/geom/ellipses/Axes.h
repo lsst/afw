@@ -45,8 +45,8 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 class Axes : public BaseCore {
 public:
 
-    typedef boost::shared_ptr<Axes> Ptr;
-    typedef boost::shared_ptr<Axes const> ConstPtr;
+    typedef std::shared_ptr<Axes> Ptr;
+    typedef std::shared_ptr<Axes const> ConstPtr;
 
     enum ParameterEnum { A=0, B=1, THETA=2 }; ///< Definitions for elements of a core vector.
 
@@ -60,7 +60,7 @@ public:
     void setTheta(double theta) { _vector[THETA] = theta; }
 
     /// @brief Deep copy the ellipse core.
-    Ptr clone() const { return boost::static_pointer_cast<Axes>(_clone()); }
+    Ptr clone() const { return std::static_pointer_cast<Axes>(_clone()); }
 
     /// Return a string that identifies this parametrization.
     virtual std::string getName() const;
@@ -108,7 +108,7 @@ public:
 #endif
 protected:
 
-    virtual BaseCore::Ptr _clone() const { return boost::make_shared<Axes>(*this); }
+    virtual BaseCore::Ptr _clone() const { return std::make_shared<Axes>(*this); }
 
     virtual void _assignToQuadrupole(double & ixx, double & iyy, double & ixy) const;
     virtual void _assignFromQuadrupole(double ixx, double iyy, double ixy);

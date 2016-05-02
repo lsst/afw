@@ -73,7 +73,7 @@ typename ImageT::Ptr offsetImage(ImageT const& inImage,  ///< The %image to offs
         afwGeom::Box2I box(afwGeom::Point2I(buffer, buffer), dims);
         buffImage->assign(inImage, box);
     } else {
-        buffImage = boost::make_shared<ImageT>(inImage);
+        buffImage = std::make_shared<ImageT>(inImage);
     }
 
     if (offsetKernel->getWidth() > buffImage->getWidth() || 

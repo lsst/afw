@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/ref.hpp"
 
 #include "ndarray.h"

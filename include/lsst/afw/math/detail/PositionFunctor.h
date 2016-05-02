@@ -58,7 +58,7 @@ namespace detail {
      */    
     class PositionFunctor {
     public:
-        typedef boost::shared_ptr<PositionFunctor> Ptr;
+        typedef std::shared_ptr<PositionFunctor> Ptr;
 
         explicit PositionFunctor() {};
         virtual ~PositionFunctor() {};

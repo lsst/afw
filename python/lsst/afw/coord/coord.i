@@ -51,16 +51,16 @@
 // THESE CASTS ARE NOW DEPRECATED; USE E.G. `Fk5Coord.cast()` INSTEAD
 %inline %{
     PTR(lsst::afw::coord::Fk5Coord) cast_Fk5(PTR(lsst::afw::coord::Coord) c) {
-        return boost::dynamic_pointer_cast<lsst::afw::coord::Fk5Coord>(c);
+        return std::dynamic_pointer_cast<lsst::afw::coord::Fk5Coord>(c);
     }
     PTR(lsst::afw::coord::IcrsCoord) cast_Icrs(PTR(lsst::afw::coord::Coord) c) {
-        return boost::dynamic_pointer_cast<lsst::afw::coord::IcrsCoord>(c);
+        return std::dynamic_pointer_cast<lsst::afw::coord::IcrsCoord>(c);
     }
     PTR(lsst::afw::coord::GalacticCoord) cast_Galactic(PTR(lsst::afw::coord::Coord) c) {
-        return boost::dynamic_pointer_cast<lsst::afw::coord::GalacticCoord>(c);
+        return std::dynamic_pointer_cast<lsst::afw::coord::GalacticCoord>(c);
     }
     PTR(lsst::afw::coord::EclipticCoord) cast_Ecliptic(PTR(lsst::afw::coord::Coord) c) {
-        return boost::dynamic_pointer_cast<lsst::afw::coord::EclipticCoord>(c);
+        return std::dynamic_pointer_cast<lsst::afw::coord::EclipticCoord>(c);
     }
 %}
 // -----------------------------------------------------------------------

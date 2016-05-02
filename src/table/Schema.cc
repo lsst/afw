@@ -5,7 +5,7 @@
 #include "boost/type_traits/is_same.hpp"
 #include "boost/mpl/and.hpp"
 #include "boost/mpl/bool.hpp"
-#include "boost/scoped_ptr.hpp"
+#include <memory>
 #include "boost/iterator/transform_iterator.hpp"
 #include "boost/iterator/filter_iterator.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
@@ -638,7 +638,7 @@ Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> cons
 
 int const Schema::VERSION;
 
-Schema::Schema() : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {}
+Schema::Schema() : _impl(std::make_shared<Impl>()), _aliases(std::make_shared<AliasMap>()) {}
 
 Schema::Schema(Schema const & other) :
     _impl(other._impl),
@@ -652,7 +652,7 @@ std::string Schema::join(std::string const & a, std::string const & b) const {
 
 void Schema::_edit() {
     if (!_impl.unique()) {
-        boost::shared_ptr<Impl> data(boost::make_shared<Impl>(*_impl));
+        std::shared_ptr<Impl> data(std::make_shared<Impl>(*_impl));
         _impl.swap(data);
     }
 }
@@ -725,13 +725,13 @@ int Schema::contains(SchemaItem<T> const & item, int flags) const {
 
 void Schema::setAliasMap(PTR(AliasMap) aliases) {
     if (!aliases) {
-        aliases = boost::make_shared<AliasMap>();
+        aliases = std::make_shared<AliasMap>();
     }
     _aliases = aliases;
 }
 
 void Schema::disconnectAliases() {
-    _aliases = boost::make_shared<AliasMap>(*_aliases);
+    _aliases = std::make_shared<AliasMap>(*_aliases);
 }
 
 //----- Stringification -------------------------------------------------------------------------------------

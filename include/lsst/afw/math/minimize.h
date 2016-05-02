@@ -35,7 +35,7 @@
  *
  * @ingroup afw
  */
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "Minuit2/FCNBase.h"
 
 #include "lsst/daf/base/Citizen.h"

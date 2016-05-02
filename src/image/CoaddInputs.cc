@@ -35,7 +35,7 @@ public:
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
         LSST_ARCHIVE_ASSERT(catalogs.size() == 2);
-        PTR(CoaddInputs) result = boost::make_shared<CoaddInputs>();
+        PTR(CoaddInputs) result = std::make_shared<CoaddInputs>();
         result->visits = table::ExposureCatalog::readFromArchive(archive, catalogs.front());
         result->ccds = table::ExposureCatalog::readFromArchive(archive, catalogs.back());
         return result;

@@ -228,7 +228,7 @@ lsst::daf::base::DateTime Calib::getMidTime () const
  * @warning This implementation ignores its arguments!
  */
 lsst::daf::base::DateTime Calib::getMidTime(
-        boost::shared_ptr<const lsst::afw::cameraGeom::Detector>, ///< description of focal plane (ignored)
+        std::shared_ptr<const lsst::afw::cameraGeom::Detector>, ///< description of focal plane (ignored)
         lsst::afw::geom::Point2I const&            ///< position in focal plane (ignored)
                                            ) const
 {

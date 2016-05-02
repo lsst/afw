@@ -35,7 +35,7 @@
  */
 #include <sstream>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"

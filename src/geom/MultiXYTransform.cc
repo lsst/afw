@@ -45,7 +45,7 @@ MultiXYTransform::MultiXYTransform(std::vector<CONST_PTR(XYTransform)> const &tr
 
 PTR(XYTransform) MultiXYTransform::clone() const
 {
-    return boost::make_shared<MultiXYTransform>(_transformList);
+    return std::make_shared<MultiXYTransform>(_transformList);
 }
 
 Point2D MultiXYTransform::forwardTransform(Point2D const &point) const
