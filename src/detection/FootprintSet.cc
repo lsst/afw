@@ -42,6 +42,7 @@
     cout << "Found " << sources.getFootprints()->size() << " sources" << std::endl;
  * \endcode
  */
+#include <memory>
 #include <algorithm>
 #include <cassert>
 #include <set>
@@ -933,7 +934,7 @@ namespace {
         static int detectedPlane;       // The MaskPlane to use for detected pixels
         static int stopPlane;           // The MaskPlane to use for pixels that signal us to stop searching
     private:
-        detection::Span::Ptr const _span; // The initial Span
+        detection::Span::ConstPtr _span; // The initial Span
         DIRECTION _direction;           // How to continue searching for further pixels
         bool _stop;                     // should we stop searching?
     };
