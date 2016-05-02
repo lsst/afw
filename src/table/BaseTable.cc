@@ -1,6 +1,8 @@
 // -*- lsst-c++ -*-
 
-#include "boost/make_shared.hpp"
+#include <memory>
+
+#include "boost/shared_ptr.hpp" // only for ndarray
 
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -74,7 +76,7 @@ public:
     // we reuse it immediately.  If it wasn't the last chunk allocated, it can't be reclaimed until
     // the entire block goes out of scope.
     static void reclaim(std::size_t recordSize, void * data, ndarray::Manager::Ptr const & manager) {
-        Ptr block = std::static_pointer_cast<Block>(manager);
+        Ptr block = boost::static_pointer_cast<Block>(manager);
         if (reinterpret_cast<char*>(data) + recordSize == block->_next) {
             block->_next -= recordSize;
         }
@@ -87,7 +89,7 @@ public:
         std::size_t recordCount,
         ndarray::Manager::Ptr & manager
     ) {
-        Ptr block = std::static_pointer_cast<Block>(manager);
+        Ptr block = boost::static_pointer_cast<Block>(manager);
         if (!block || static_cast<std::size_t>(block->_end - block->_next) < recordSize * recordCount) {
             block = Ptr(new Block(recordSize, recordCount));
             manager = block;
@@ -98,14 +100,14 @@ public:
         std::size_t recordSize,
         ndarray::Manager::Ptr const & manager
     ) {
-        Ptr block = std::static_pointer_cast<Block>(manager);
+        Ptr block = boost::static_pointer_cast<Block>(manager);
         return static_cast<std::size_t>(block->_end - block->_next) / recordSize;
     }
 
     // Get the next chunk from the block, making a new block and installing it into the table
     // if we're all out of space.
     static void * get(std::size_t recordSize, ndarray::Manager::Ptr & manager) {
-        Ptr block = std::static_pointer_cast<Block>(manager);
+        Ptr block = boost::static_pointer_cast<Block>(manager);
         if (!block || block->_next == block->_end) {
             block = Ptr(new Block(recordSize, BaseTable::nRecordsPerBlock));
             manager = block;
