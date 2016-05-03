@@ -192,7 +192,7 @@ public:
     void setFootprint(PTR(Footprint) const & footprint) { _footprint = footprint; }
 
     CONST_PTR(SourceTable) getTable() const {
-        return boost::static_pointer_cast<SourceTable const>(BaseRecord::getTable());
+        return std::static_pointer_cast<SourceTable const>(BaseRecord::getTable());
     }
 
     //@{
@@ -304,19 +304,19 @@ public:
     static Key<RecordId> getParentKey() { return getMinimalSchema().parent; }
 
     /// @copydoc BaseTable::clone
-    PTR(SourceTable) clone() const { return boost::static_pointer_cast<SourceTable>(_clone()); }
+    PTR(SourceTable) clone() const { return std::static_pointer_cast<SourceTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(SourceRecord) makeRecord() { return boost::static_pointer_cast<SourceRecord>(_makeRecord()); }
+    PTR(SourceRecord) makeRecord() { return std::static_pointer_cast<SourceRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
     PTR(SourceRecord) copyRecord(BaseRecord const & other) {
-        return boost::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other));
+        return std::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
     PTR(SourceRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
-        return boost::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other, mapper));
+        return std::static_pointer_cast<SourceRecord>(BaseTable::copyRecord(other, mapper));
     }
 
     DECLARE_SLOT_DEFINERS(`Psf', `Flux')
