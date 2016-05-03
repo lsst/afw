@@ -50,7 +50,10 @@ ver1, ver2, ver3 = 1, 3, 1
 NO_MATPLOTLIB_STRING = "Requires matplotlib >= %d.%d.%d" % (ver1, ver2, ver3)
 try:
     import matplotlib
-    versionInfo = tuple(int(s.strip("rc")) for s in matplotlib.__version__.split("."))
+    mplVersion = matplotlib.__version__
+    # Split at + to check for development version (PEP 440)
+    mplVersion = mplVersion.split('+')
+    versionInfo = tuple(int(s.strip("rc")) for s in mplVersion[0].split("."))
     HAVE_MATPLOTLIB = versionInfo >= (ver1, ver2, ver3)
 except ImportError:
     HAVE_MATPLOTLIB = False
