@@ -1,7 +1,6 @@
 // -*- lsst-c++ -*-
 #ifndef AFW_TABLE_BaseTable_h_INCLUDED
 #define AFW_TABLE_BaseTable_h_INCLUDED
-
 #include <memory>
 
 #include "lsst/base.h"

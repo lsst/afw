@@ -35,9 +35,8 @@
 #ifndef LSST_AFW_MATH_WARPEXPOSURE_H
 #define LSST_AFW_MATH_WARPEXPOSURE_H
 
-#include <string>
-
 #include <memory>
+#include <string>
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"

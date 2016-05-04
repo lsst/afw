@@ -2,9 +2,9 @@
 #ifndef AFW_TABLE_Schema_h_INCLUDED
 #define AFW_TABLE_Schema_h_INCLUDED
 
+#include <memory>
 #include <vector>
 
-#include <memory>
 #include "boost/ref.hpp"
 
 #include "ndarray.h"

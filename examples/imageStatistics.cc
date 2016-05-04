@@ -22,16 +22,16 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+#include <cmath>
 #include <iostream>
 #include <limits>
-#include <cmath>
+#include <memory>
+
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
 
 #include "lsst/afw/math/MaskedVector.h"
-
-#include <memory>
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;

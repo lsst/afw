@@ -21,9 +21,9 @@
  */
  
 #include <iostream>
+#include <memory>
 #include <vector>
 
-#include <memory>
 #include "boost/format.hpp"
 
 #include "lsst/afw/math.h"

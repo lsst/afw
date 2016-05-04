@@ -35,7 +35,6 @@
 #include <iostream>
 #include <limits>
 #include <map>
-
 #include <memory>
 
 #include "lsst/base.h"

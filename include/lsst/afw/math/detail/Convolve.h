@@ -33,9 +33,8 @@
  *
  * @ingroup afw
  */
-#include <sstream>
-
 #include <memory>
+#include <sstream>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
