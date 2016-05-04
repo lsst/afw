@@ -2,7 +2,7 @@
 #include <algorithm>
 
 #include "boost/geometry/geometry.hpp"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Extent.h"

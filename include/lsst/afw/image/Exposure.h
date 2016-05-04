@@ -27,7 +27,7 @@
 
 #include "boost/cstdint.hpp"
 #include <memory>
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/daf/base.h"

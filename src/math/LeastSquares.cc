@@ -26,7 +26,7 @@
 #include "Eigen/SVD"
 #include "Eigen/Cholesky"
 #include "boost/format.hpp"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/afw/math/LeastSquares.h"
 #include "lsst/pex/exceptions.h"

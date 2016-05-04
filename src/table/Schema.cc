@@ -1,7 +1,7 @@
 #include <list>
 #include <stdexcept>
 
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "boost/type_traits/is_same.hpp"
 #include "boost/mpl/and.hpp"
 #include "boost/mpl/bool.hpp"

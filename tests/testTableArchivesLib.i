@@ -98,7 +98,7 @@ protected:
 }
 
 %{
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"

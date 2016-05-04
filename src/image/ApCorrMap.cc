@@ -21,7 +21,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/table/io/InputArchive.h"

@@ -49,7 +49,7 @@
 %lsst_persistable(lsst::afw::image::TanWcs);
 
 %inline %{
-    #include <boost/make_shared.hpp>
+    #include <memory>
     #include <boost/serialization/serialization.hpp>
     #include <boost/archive/binary_oarchive.hpp>
     #include <boost/archive/binary_iarchive.hpp>

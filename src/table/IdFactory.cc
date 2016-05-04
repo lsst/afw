@@ -1,4 +1,4 @@
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"

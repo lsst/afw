@@ -28,7 +28,7 @@
 #include <vector>
 #include <utility> // for std::pair
 
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"

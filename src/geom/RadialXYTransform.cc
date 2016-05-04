@@ -26,7 +26,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/Angle.h"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 namespace pexEx = lsst::pex::exceptions;
 

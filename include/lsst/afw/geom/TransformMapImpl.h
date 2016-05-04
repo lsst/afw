@@ -27,7 +27,7 @@
  */
 #include <sstream>
 #include <utility>
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "lsst/pex/exceptions.h"
 
 namespace lsst {

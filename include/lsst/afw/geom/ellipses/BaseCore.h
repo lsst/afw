@@ -33,7 +33,7 @@
  */
 
 #include <memory>
-#include "boost/make_shared.hpp"
+#include <memory>
 #include <memory>
 #include "Eigen/Core"
 

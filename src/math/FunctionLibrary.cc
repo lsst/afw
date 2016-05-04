@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "boost/type_traits/is_same.hpp"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/table/io/OutputArchive.h"

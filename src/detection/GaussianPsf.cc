@@ -21,7 +21,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "ndarray/eigen.h"
 

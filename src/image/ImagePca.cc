@@ -28,7 +28,7 @@
  * @brief Utilities to support PCA analysis of a set of images
  */
 #include <algorithm>
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "lsst/utils/ieee.h"
 
 #include "Eigen/Core"
