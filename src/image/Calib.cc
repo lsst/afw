@@ -48,6 +48,10 @@ namespace lsst { namespace afw { namespace image {
  */
 Calib::Calib() : _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
 /**
+ * ctor from a given fluxMagnitude zero point
+ */
+Calib::Calib(double fluxMag0): _midTime(), _exptime(0.0), _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
+/**
  * ctor from a vector of Calibs
  *
  * \note All the input calibs must have the same zeropoint; throw InvalidParameterError if this isn't true
