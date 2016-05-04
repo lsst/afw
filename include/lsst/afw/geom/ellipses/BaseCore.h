@@ -33,8 +33,7 @@
  */
 
 #include <memory>
-#include <memory>
-#include <memory>
+
 #include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"

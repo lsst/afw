@@ -25,9 +25,9 @@
 #ifndef LSST_AFW_IMAGE_EXPOSURE_H
 #define LSST_AFW_IMAGE_EXPOSURE_H
 
+#include <memory>
+
 #include "boost/cstdint.hpp"
-#include <memory>
-#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/daf/base.h"

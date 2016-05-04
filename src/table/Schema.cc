@@ -1,11 +1,10 @@
 #include <list>
+#include <memory>
 #include <stdexcept>
 
-#include <memory>
 #include "boost/type_traits/is_same.hpp"
 #include "boost/mpl/and.hpp"
 #include "boost/mpl/bool.hpp"
-#include <memory>
 #include "boost/iterator/transform_iterator.hpp"
 #include "boost/iterator/filter_iterator.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
