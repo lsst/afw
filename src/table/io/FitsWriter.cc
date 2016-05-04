@@ -119,7 +119,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
     // write the version number to the fits header, plus any other metadata
     PTR(daf::base::PropertyList) metadata = table->getMetadata();
     if (!metadata) {
-        metadata = boost::make_shared<daf::base::PropertyList>();
+        metadata = std::make_shared<daf::base::PropertyList>();
     }
     metadata->set<int>("AFW_TABLE_VERSION", Schema::VERSION);
     _fits->writeMetadata(*metadata);
@@ -127,7 +127,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
     metadata->remove("AFW_TABLE_VERSION");
     _row = -1;
     _fits->addRows(nRows);
-    _processor = boost::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
+    _processor = std::make_shared<ProcessRecords>(_fits, schema, nFlags, _row);
 }
 
 //----- Code for writing FITS records -----------------------------------------------------------------------

@@ -165,7 +165,7 @@
     lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr _transform(
             lsst::afw::geom::LinearTransform const & t
     ) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(
+        return std::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(
             self->transform(t).copy()
         );
     }
@@ -175,7 +175,7 @@
     lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr _convolve(
             lsst::afw::geom::ellipses::BaseCore const & other
     ) {
-        return boost::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(
+        return std::static_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(
             self->convolve(other).copy()
         );
     }
@@ -186,7 +186,7 @@
     static lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_>::Ptr cast(
         lsst::afw::geom::ellipses::BaseCore::Ptr const & p
     ) {
-        return boost::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
+        return std::dynamic_pointer_cast<lsst::afw::geom::ellipses::Separable<Ellipticity_, Radius_> >(p);
     }
     %pythoncode %{
     def __repr__(self):

@@ -31,7 +31,7 @@
  */
 #include <vector>
 #include <cassert>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/utils/ieee.h"
@@ -358,8 +358,8 @@ namespace {
  *   to handle cases when we are, or are not, weighting
  */
 template<typename PixelT, bool isWeighted>
-typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
-        std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,  
+typename std::shared_ptr<std::vector<PixelT> > computeVectorStack(
+        std::vector<std::shared_ptr<std::vector<PixelT> > > &vectors,  
         afwMath::Property flags,               
         afwMath::StatisticsControl const& sctrl,
         WeightVector const &wvector=WeightVector()
@@ -367,7 +367,7 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
 {
     // create the image to be returned
     typedef std::vector<PixelT> Vect;
-    boost::shared_ptr<Vect> vecStack(new Vect(vectors[0]->size(), 0.0));
+    std::shared_ptr<Vect> vecStack(new Vect(vectors[0]->size(), 0.0));
 
     afwMath::MaskedVector<PixelT> pixelSet(vectors.size()); // values from a given pixel of each image
 
@@ -401,8 +401,8 @@ typename boost::shared_ptr<std::vector<PixelT> > computeVectorStack(
 
 
 template<typename PixelT>
-boost::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
-        std::vector<boost::shared_ptr<std::vector<PixelT> > > &vectors,  
+std::shared_ptr<std::vector<PixelT> > afwMath::statisticsStack(
+        std::vector<std::shared_ptr<std::vector<PixelT> > > &vectors,  
         afwMath::Property flags,               
         afwMath::StatisticsControl const& sctrl,
         WeightVector const &wvector
@@ -557,8 +557,8 @@ typename afwImage::MaskedImage<PixelT>::Ptr afwMath::statisticsStack(
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                          \
-    template boost::shared_ptr<std::vector<TYPE> > afwMath::statisticsStack<TYPE>( \
-            std::vector<boost::shared_ptr<std::vector<TYPE> > > &vectors, \
+    template std::shared_ptr<std::vector<TYPE> > afwMath::statisticsStack<TYPE>( \
+            std::vector<std::shared_ptr<std::vector<TYPE> > > &vectors, \
             afwMath::Property flags, \
             afwMath::StatisticsControl const& sctrl,    \
             WeightVector const &wvector);                               \

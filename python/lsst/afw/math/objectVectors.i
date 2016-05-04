@@ -32,9 +32,9 @@ that can alternatively be a vector of POTS, then:
 - Calling the constructor with a python list containing a mix of the objects and types causes an abort
 - SWIG will warn about a shadowed overloaded constructor (or function, presumably)
 */
-%template(Function1FList) std::vector<boost::shared_ptr<lsst::afw::math::Function1<float> > >;
-%template(Function1DList) std::vector<boost::shared_ptr<lsst::afw::math::Function1<double> > >;
-%template(Function2FList) std::vector<boost::shared_ptr<lsst::afw::math::Function2<float> > >;
-%template(Function2DList) std::vector<boost::shared_ptr<lsst::afw::math::Function2<double> > >;
+%template(Function1FList) std::vector<std::shared_ptr<lsst::afw::math::Function1<float> > >;
+%template(Function1DList) std::vector<std::shared_ptr<lsst::afw::math::Function1<double> > >;
+%template(Function2FList) std::vector<std::shared_ptr<lsst::afw::math::Function2<float> > >;
+%template(Function2DList) std::vector<std::shared_ptr<lsst::afw::math::Function2<double> > >;
 
-%template(KernelList) std::vector<boost::shared_ptr<lsst::afw::math::Kernel> >;
+%template(KernelList) std::vector<std::shared_ptr<lsst::afw::math::Kernel> >;

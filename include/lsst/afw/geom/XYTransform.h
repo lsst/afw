@@ -31,7 +31,7 @@
 #define LSST_AFW_GEOM_XYTRANSFORM_H
 
 #include <string>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/AffineTransform.h"

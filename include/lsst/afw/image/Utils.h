@@ -38,7 +38,7 @@
 
 #include "boost/format.hpp"
 #include "boost/mpl/bool.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/afw/image/lsstGil.h"
 #include "lsst/daf/base.h"

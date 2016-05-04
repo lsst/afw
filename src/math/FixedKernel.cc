@@ -146,7 +146,7 @@ public:
         ndarray::flatten<1>(
             ndarray::static_dimension_cast<2>(image.getArray())
         ) = record[keys.image];
-        PTR(FixedKernel) result = boost::make_shared<FixedKernel>(image);
+        PTR(FixedKernel) result = std::make_shared<FixedKernel>(image);
         result->setCtr(record.get(keys.center));
         return result;
     }

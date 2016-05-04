@@ -1,6 +1,6 @@
 // -*- lsst-c++ -*-
 
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "boost/type_traits/is_same.hpp"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -109,7 +109,7 @@ public:
         GaussianFunction2PersistenceHelper const & keys = GaussianFunction2PersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema().contains(keys.schema));
         table::BaseRecord const & record = catalogs.front().front();
-        return boost::make_shared< GaussianFunction2<ReturnT> >(
+        return std::make_shared< GaussianFunction2<ReturnT> >(
             record.get(keys.sigma1), record.get(keys.sigma2), record.get(keys.angle)
         );
     }
@@ -128,7 +128,7 @@ public:
         DoubleGaussianFunction2PersistenceHelper const & keys = DoubleGaussianFunction2PersistenceHelper::get();
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema().contains(keys.schema));
         table::BaseRecord const & record = catalogs.front().front();
-        return boost::make_shared< DoubleGaussianFunction2<ReturnT> >(
+        return std::make_shared< DoubleGaussianFunction2<ReturnT> >(
             record.get(keys.sigma1), record.get(keys.sigma2), record.get(keys.ampl2)
         );
     }
@@ -145,7 +145,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         PolynomialFunction2PersistenceHelper const keys(catalogs.front().getSchema());
-        return boost::make_shared< PolynomialFunction2<ReturnT> >(
+        return std::make_shared< PolynomialFunction2<ReturnT> >(
             keys.coefficients.extractVector(catalogs.front().front())
         );
     }
@@ -164,7 +164,7 @@ public:
         Chebyshev1Function2PersistenceHelper keys(catalogs.front().getSchema());
         table::BaseRecord const & record = catalogs.front().front();
         geom::Box2D bbox(record.get(keys.min), record.get(keys.max));
-        return boost::make_shared< Chebyshev1Function2<ReturnT> >(
+        return std::make_shared< Chebyshev1Function2<ReturnT> >(
             keys.coefficients.extractVector(record),
             bbox
         );

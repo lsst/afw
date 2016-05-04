@@ -35,7 +35,7 @@
 #include <map>
 #include <string>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/mpl/at.hpp"
 #include "boost/iterator/zip_iterator.hpp"
 
@@ -84,8 +84,8 @@ public:
     /// shared pointer to the variance Image
     typedef typename Image<VariancePixelT>::Ptr VariancePtr;
     /// shared pointer to a MaskedImage
-    typedef boost::shared_ptr<MaskedImage> Ptr;
-    typedef boost::shared_ptr<const MaskedImage> ConstPtr;
+    typedef std::shared_ptr<MaskedImage> Ptr;
+    typedef std::shared_ptr<const MaskedImage> ConstPtr;
     /// The Mask's MaskPlaneDict
     typedef typename Mask<MaskPixelT>::MaskPlaneDict MaskPlaneDict;
 

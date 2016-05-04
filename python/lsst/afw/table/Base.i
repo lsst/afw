@@ -52,7 +52,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %define %addCastMethod(CLS, BASE)
 %extend CLS {
     static PTR(CLS) _cast(PTR(BASE) base) {
-        return boost::dynamic_pointer_cast< CLS >(base);
+        return std::dynamic_pointer_cast< CLS >(base);
     }
 }
 %enddef

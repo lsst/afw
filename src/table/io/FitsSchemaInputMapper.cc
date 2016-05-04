@@ -117,7 +117,7 @@ public:
 };
 
 FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata, bool stripMetadata) :
-    _impl(boost::make_shared<Impl>())
+    _impl(std::make_shared<Impl>())
 {
     // Set the table version.  If AFW_TABLE_VERSION tag exists, use that
     // If not, set to 0 if it has an AFW_TYPE, Schema default otherwise (DM-590)

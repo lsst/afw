@@ -32,7 +32,7 @@
 //
 %define %maskedImagePtr(NAME, TYPE, PIXEL_TYPES...)
     %shared_ptr(lsst::afw::image::MaskedImage<PIXEL_TYPES>);
-    %template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::MaskedImage<PIXEL_TYPES> > >;
+    %template(vector##NAME##TYPE) std::vector<std::shared_ptr<lsst::afw::image::MaskedImage<PIXEL_TYPES> > >;
 %enddef
 
 //

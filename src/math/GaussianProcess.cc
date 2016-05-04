@@ -744,7 +744,7 @@ double KdTree < T > ::_distance(ndarray::Array < const T,1,1 >  const &p1,
 template  < typename T >
 GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
                                         ndarray::Array < T,1,1 >  const &ff,
-                                        boost::shared_ptr <  Covariogram < T >   >  const &covarIn)
+                                        std::shared_ptr <  Covariogram < T >   >  const &covarIn)
 
 {
     int i;
@@ -779,7 +779,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
                                         ndarray::Array < T,1,1 >  const &mn,
                                         ndarray::Array < T,1,1 >  const &mx,
                                         ndarray::Array < T,1,1 >  const &ff,
-                                        boost::shared_ptr <  Covariogram < T >   >  const &covarIn
+                                        std::shared_ptr <  Covariogram < T >   >  const &covarIn
                                         )
 {
 
@@ -822,7 +822,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 template  < typename T >
 GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
                                         ndarray::Array < T,2,2 >  const &ff,
-                                        boost::shared_ptr <Covariogram < T > >  const &covarIn)
+                                        std::shared_ptr <Covariogram < T > >  const &covarIn)
 {
 
     _covariogram = covarIn;
@@ -854,7 +854,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
                                     ndarray::Array < T,1,1 >  const &mn,
                                     ndarray::Array < T,1,1 >  const &mx,
                                     ndarray::Array < T,2,2 >  const &ff,
-                                    boost::shared_ptr <Covariogram < T > >  const &covarIn
+                                    std::shared_ptr <Covariogram < T > >  const &covarIn
                                     )
 {
 
@@ -1801,7 +1801,7 @@ void GaussianProcess < T > ::setKrigingParameter(T kk)
 }
 
 template  < typename T >
-void GaussianProcess < T > ::setCovariogram(boost::shared_ptr <  Covariogram < T >   >  const &covar){
+void GaussianProcess < T > ::setCovariogram(std::shared_ptr <  Covariogram < T >   >  const &covar){
      _covariogram = covar;
 }
 

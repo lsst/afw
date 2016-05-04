@@ -26,7 +26,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/XYTransform.h"
 #include "lsst/afw/geom/Angle.h"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 namespace pexEx = lsst::pex::exceptions;
 
@@ -57,12 +57,12 @@ RadialXYTransform::RadialXYTransform(std::vector<double> const &coeffs)
 
 PTR(XYTransform) RadialXYTransform::clone() const
 {
-    return boost::make_shared<RadialXYTransform> (_coeffs);    
+    return std::make_shared<RadialXYTransform> (_coeffs);    
 }
 
 PTR(XYTransform) RadialXYTransform::invert() const
 {
-    return boost::make_shared<RadialXYTransform> (_coeffs);
+    return std::make_shared<RadialXYTransform> (_coeffs);
 }
 
 Point2D RadialXYTransform::forwardTransform(Point2D const &p) const

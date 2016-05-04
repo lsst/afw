@@ -44,7 +44,7 @@ namespace math {
     };
 
     template<typename KernelT>
-    struct is_analyticKernel<boost::shared_ptr<KernelT> > : public is_analyticKernel<KernelT> {
+    struct is_analyticKernel<std::shared_ptr<KernelT> > : public is_analyticKernel<KernelT> {
     };
 
     template<>

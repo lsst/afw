@@ -37,7 +37,7 @@
 #include <vector>
 #include <string>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
@@ -73,8 +73,8 @@ namespace math {
      */
     class SpatialCellCandidate {
     public:
-        typedef boost::shared_ptr<SpatialCellCandidate> Ptr;
-        typedef boost::shared_ptr<const SpatialCellCandidate> ConstPtr;
+        typedef std::shared_ptr<SpatialCellCandidate> Ptr;
+        typedef std::shared_ptr<const SpatialCellCandidate> ConstPtr;
 
         enum Status {BAD = 0, GOOD = 1, UNKNOWN = 2};
 
@@ -132,8 +132,8 @@ namespace math {
     template<typename PixelT>
     class SpatialCellImageCandidate : public SpatialCellCandidate {
     public:
-        typedef boost::shared_ptr<SpatialCellImageCandidate> Ptr;
-        typedef boost::shared_ptr<const SpatialCellImageCandidate> ConstPtr;
+        typedef std::shared_ptr<SpatialCellImageCandidate> Ptr;
+        typedef std::shared_ptr<const SpatialCellImageCandidate> ConstPtr;
 
         /// ctor
         SpatialCellImageCandidate(float const xCenter, ///< The object's column-centre
@@ -188,8 +188,8 @@ namespace math {
     template<typename PixelT>
     class SpatialCellMaskedImageCandidate : public SpatialCellCandidate {
     public:
-        typedef boost::shared_ptr<SpatialCellMaskedImageCandidate> Ptr;
-        typedef boost::shared_ptr<const SpatialCellMaskedImageCandidate> ConstPtr;
+        typedef std::shared_ptr<SpatialCellMaskedImageCandidate> Ptr;
+        typedef std::shared_ptr<const SpatialCellMaskedImageCandidate> ConstPtr;
 
         /// ctor
         SpatialCellMaskedImageCandidate(float const xCenter, ///< The object's column-centre
@@ -289,8 +289,8 @@ namespace math {
      */
     class SpatialCell {
     public:
-        typedef boost::shared_ptr<SpatialCell> Ptr;
-        typedef boost::shared_ptr<const SpatialCell> ConstPtr;
+        typedef std::shared_ptr<SpatialCell> Ptr;
+        typedef std::shared_ptr<const SpatialCell> ConstPtr;
         typedef std::vector<PTR(SpatialCellCandidate)> CandidateList;
         typedef SpatialCellCandidateIterator iterator;
         /**
@@ -377,8 +377,8 @@ namespace math {
      */
     class SpatialCellSet {
     public:
-        typedef boost::shared_ptr<SpatialCellSet> Ptr;
-        typedef boost::shared_ptr<const SpatialCellSet> ConstPtr;
+        typedef std::shared_ptr<SpatialCellSet> Ptr;
+        typedef std::shared_ptr<const SpatialCellSet> ConstPtr;
         
         typedef std::vector<PTR(SpatialCell)> CellList;
 

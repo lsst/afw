@@ -27,7 +27,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/filesystem.hpp"
 #include "lsst/afw/image.h"
 #include "lsst/afw/image/Image.h"

@@ -21,9 +21,9 @@
  */
  
 #include <iostream>
+#include <memory>
 #include <vector>
 
-#include "boost/shared_ptr.hpp"
 #include "boost/format.hpp"
 
 #include "lsst/afw/math.h"

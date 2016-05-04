@@ -183,12 +183,12 @@ public:
             archive.get<AnalyticKernel::KernelFunction>(record.get(keys.kernelFunction));
         PTR(AnalyticKernel) result;
         if (keys.spatialFunctions.isValid()) {
-            result = boost::make_shared<AnalyticKernel>(
+            result = std::make_shared<AnalyticKernel>(
                 record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()), *kernelFunction,
                 keys.readSpatialFunctions(archive, record)
             );
         } else {
-            result = boost::make_shared<AnalyticKernel>(
+            result = std::make_shared<AnalyticKernel>(
                 record.get(keys.dimensions.getX()), record.get(keys.dimensions.getY()), *kernelFunction
             );
         }

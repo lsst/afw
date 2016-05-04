@@ -42,7 +42,7 @@
 }
 
 %include "lsst/afw/image/Calib.h"
-%template(vectorCalib) std::vector<boost::shared_ptr<const lsst::afw::image::Calib> >;
+%template(vectorCalib) std::vector<std::shared_ptr<const lsst::afw::image::Calib> >;
 
 %extend lsst::afw::image::Calib {
     %pythoncode %{

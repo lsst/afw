@@ -23,7 +23,7 @@
  */
 
 #include "lsst/afw/geom/XYTransform.h"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 namespace lsst {
 namespace afw {
@@ -35,7 +35,7 @@ IdentityXYTransform::IdentityXYTransform()
 
 PTR(XYTransform) IdentityXYTransform::clone() const
 {
-    return boost::make_shared<IdentityXYTransform> ();
+    return std::make_shared<IdentityXYTransform> ();
 }
 
 Point2D IdentityXYTransform::forwardTransform(Point2D const &point) const

@@ -96,7 +96,7 @@ BaseCore::Transformer::dTransform() const {
 }
 
 Ellipse::Ptr Ellipse::Transformer::copy() const {
-    Ellipse::Ptr r = boost::make_shared<Ellipse>(
+    Ellipse::Ptr r = std::make_shared<Ellipse>(
         input.getCore().transform(transform.getLinear()).copy(),
         transform(input.getCenter())
     );

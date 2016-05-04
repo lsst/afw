@@ -46,7 +46,7 @@ public:
     typedef afw::table::CatalogT<PeakRecord const> ConstCatalog;
 
     CONST_PTR(PeakTable) getTable() const {
-        return boost::static_pointer_cast<PeakTable const>(afw::table::BaseRecord::getTable());
+        return std::static_pointer_cast<PeakTable const>(afw::table::BaseRecord::getTable());
     }
 
     //@{
@@ -149,14 +149,14 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(PeakTable) clone() const { return boost::static_pointer_cast<PeakTable>(_clone()); }
+    PTR(PeakTable) clone() const { return std::static_pointer_cast<PeakTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(PeakRecord) makeRecord() { return boost::static_pointer_cast<PeakRecord>(_makeRecord()); }
+    PTR(PeakRecord) makeRecord() { return std::static_pointer_cast<PeakRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
     PTR(PeakRecord) copyRecord(afw::table::BaseRecord const & other) {
-        return boost::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other));
+        return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
@@ -164,7 +164,7 @@ public:
         afw::table::BaseRecord const & other,
         afw::table::SchemaMapper const & mapper
     ) {
-        return boost::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other, mapper));
+        return std::static_pointer_cast<PeakRecord>(afw::table::BaseTable::copyRecord(other, mapper));
     }
 
 protected:

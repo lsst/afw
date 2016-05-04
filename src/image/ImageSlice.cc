@@ -28,7 +28,7 @@
  * @author Steve Bickerton
  */
 #include <vector>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/ImageSlice.h"

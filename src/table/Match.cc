@@ -168,7 +168,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
     boost::scoped_array<Pos2> pos2(new Pos2[len2]);
     len1 = makeRecordPositions(cat1, pos1.get());
     len2 = makeRecordPositions(cat2, pos2.get());
-    PTR(typename Cat2::Record) nullRecord = boost::shared_ptr<typename Cat2::Record>();
+    PTR(typename Cat2::Record) nullRecord = std::shared_ptr<typename Cat2::Record>();
     
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double minDec = pos1[i].dec - radius.asRadians();
@@ -308,7 +308,7 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     size_t len2 = cat2.size();
     boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
     boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
-    PTR(SourceRecord) nullRecord = boost::shared_ptr<SourceRecord>();
+    PTR(SourceRecord) nullRecord = std::shared_ptr<SourceRecord>();
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i) {
         if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {

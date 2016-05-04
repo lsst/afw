@@ -1283,7 +1283,7 @@ XYTransformFromWcsPair::XYTransformFromWcsPair(CONST_PTR(Wcs) dst, CONST_PTR(Wcs
 
 PTR(afwGeom::XYTransform) XYTransformFromWcsPair::clone() const
 {
-    return boost::make_shared<XYTransformFromWcsPair>(_dst->clone(), _src->clone());
+    return std::make_shared<XYTransformFromWcsPair>(_dst->clone(), _src->clone());
 }
 
 
@@ -1316,5 +1316,5 @@ afwGeom::Point2D XYTransformFromWcsPair::reverseTransform(Point2D const &pixel) 
 PTR(afwGeom::XYTransform) XYTransformFromWcsPair::invert() const
 {
     // just swap src, dst
-    return boost::make_shared<XYTransformFromWcsPair> (_src, _dst);
+    return std::make_shared<XYTransformFromWcsPair> (_src, _dst);
 }

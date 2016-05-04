@@ -2,7 +2,7 @@
 #include <algorithm>
 
 #include "boost/geometry/geometry.hpp"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Extent.h"
@@ -463,7 +463,7 @@ PTR(Polygon) Polygon::subSample(double maxLength) const
 PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox) const
 {
     typedef afw::image::Image<float> Image;
-    PTR(Image) image = boost::make_shared<Image>(bbox);
+    PTR(Image) image = std::make_shared<Image>(bbox);
     image->setXY0(bbox.getMin());
     *image = 0.0;
     afw::geom::Box2D bounds = getBBox(); // Polygon bounds

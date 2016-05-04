@@ -230,7 +230,7 @@ using boost::serialization::make_nvp;
                       public Function<ReturnT>
     {
     public:
-        typedef boost::shared_ptr<Function1<ReturnT> > Ptr;
+        typedef std::shared_ptr<Function1<ReturnT> > Ptr;
 
         /**
          * @brief Construct a Function1 given the number of function parameters.
@@ -301,7 +301,7 @@ using boost::serialization::make_nvp;
                       public Function<ReturnT>
     {
     public:
-        typedef boost::shared_ptr<Function2<ReturnT> > Ptr;
+        typedef std::shared_ptr<Function2<ReturnT> > Ptr;
 
         /**
          * @brief Construct a Function2 given the number of function parameters.

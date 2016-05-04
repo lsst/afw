@@ -203,7 +203,7 @@ public:
                    HeavyFootprintCtrl const* ctrl=NULL
                   );
 private:
-    boost::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
+    std::shared_ptr<FootprintList> _footprints;        //!< the Footprints of detected objects
     geom::Box2I _region;                //!< The corners of the MaskedImage that the detections live in
 };
 

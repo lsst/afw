@@ -1,6 +1,8 @@
 // -*- lsst-c++ -*-
 
-#include "boost/make_shared.hpp"
+#include <memory>
+
+#include "boost/shared_ptr.hpp" // only for ndarray
 
 #include "lsst/afw/table/BaseColumnView.h"
 #include "lsst/afw/table/BaseRecord.h"
@@ -40,11 +42,11 @@ public:
 };
 
 PTR(BaseTable) BaseTableImpl::_clone() const {
-    return boost::make_shared<BaseTableImpl>(*this);
+    return std::make_shared<BaseTableImpl>(*this);
 }
 
 PTR(BaseRecord) BaseTableImpl::_makeRecord() {
-    return boost::make_shared<BaseRecordImpl>(shared_from_this());
+    return std::make_shared<BaseRecordImpl>(shared_from_this());
 }
 
 } // anonymous
@@ -163,7 +165,7 @@ std::size_t BaseTable::getBufferSize() const {
 }
 
 PTR(BaseTable) BaseTable::make(Schema const & schema) {
-    return boost::make_shared<BaseTableImpl>(schema);
+    return std::make_shared<BaseTableImpl>(schema);
 }
 
 PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input) {
@@ -179,7 +181,7 @@ PTR(BaseRecord) BaseTable::copyRecord(BaseRecord const & input, SchemaMapper con
 }
 
 PTR(io::FitsWriter) BaseTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
-    return boost::make_shared<io::FitsWriter>(fitsfile, flags);
+    return std::make_shared<io::FitsWriter>(fitsfile, flags);
 }
 
 BaseTable::BaseTable(Schema const & schema) : daf::base::Citizen(typeid(this)), _schema(schema) {

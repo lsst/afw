@@ -22,7 +22,7 @@
  
 #if !defined(TESTSPATIALCELL_H)
 #define TESTSPATIALCELL_H
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/pex/policy.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/geom.h"
@@ -34,7 +34,7 @@
  */
 class ExampleCandidate : public lsst::afw::math::SpatialCellMaskedImageCandidate<float> {
 public:
-    typedef boost::shared_ptr<ExampleCandidate> Ptr;
+    typedef std::shared_ptr<ExampleCandidate> Ptr;
     typedef float PixelT;
     typedef lsst::afw::image::MaskedImage<PixelT> MaskedImageT;
 

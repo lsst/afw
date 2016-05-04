@@ -60,7 +60,7 @@ public:
         _footprints(1, footprint),
         _source(sourceTable->makeRecord())
     {
-        PTR(Footprint) newFootprint = boost::make_shared<Footprint>(*footprint);
+        PTR(Footprint) newFootprint = std::make_shared<Footprint>(*footprint);
 
         _source->set(keys.footprint, true);
         // Replace all the Peaks in the merged Footprint with new ones that include the origin flags
@@ -337,7 +337,7 @@ void FootprintMergeList::addCatalog(
 
         if (!first) {
             _mergeList.push_back(
-                boost::make_shared<FootprintMerge>(
+                std::make_shared<FootprintMerge>(
                     foot, sourceTable, _peakTable, _peakSchemaMapper, keyIter->second
                 )
             );

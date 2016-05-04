@@ -1,4 +1,4 @@
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
@@ -15,7 +15,7 @@ public:
 
     virtual void notify(RecordId id) { _current = id; }
 
-    virtual PTR(IdFactory) clone() const { return boost::make_shared<SimpleIdFactory>(*this); }
+    virtual PTR(IdFactory) clone() const { return std::make_shared<SimpleIdFactory>(*this); }
 
     SimpleIdFactory() : _current(0) {}
 
@@ -49,7 +49,7 @@ public:
         _lower = newLower;
     }
 
-    virtual PTR(IdFactory) clone() const { return boost::make_shared<SourceIdFactory>(*this); }
+    virtual PTR(IdFactory) clone() const { return std::make_shared<SourceIdFactory>(*this); }
 
     SourceIdFactory(RecordId expId, int reserved) :
         _upper(expId << reserved),
@@ -73,11 +73,11 @@ private:
 } // anonymous
 
 PTR(IdFactory) IdFactory::makeSimple() {
-    return boost::make_shared<SimpleIdFactory>();
+    return std::make_shared<SimpleIdFactory>();
 }
 
 PTR(IdFactory) IdFactory::makeSource(RecordId expId, int reserved) {
-    return boost::make_shared<SourceIdFactory>(expId, reserved);
+    return std::make_shared<SourceIdFactory>(expId, reserved);
 }
 
 }}} // namespace lsst::afw::table

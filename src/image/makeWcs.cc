@@ -22,7 +22,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "Eigen/Core"
 #include "lsst/pex/logging.h"
 #include "lsst/afw/image/Wcs.h"

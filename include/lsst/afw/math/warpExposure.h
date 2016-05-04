@@ -35,9 +35,8 @@
 #ifndef LSST_AFW_MATH_WARPEXPOSURE_H
 #define LSST_AFW_MATH_WARPEXPOSURE_H
 
+#include <memory>
 #include <string>
-
-#include "boost/shared_ptr.hpp"
 
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"

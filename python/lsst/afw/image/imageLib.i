@@ -365,6 +365,6 @@ namespace lsst { namespace afw { namespace detection {
 
 %include "lsst/afw/image/Defect.h"
 
-%template(DefectSet) std::vector<boost::shared_ptr<lsst::afw::image::DefectBase> >;
+%template(DefectSet) std::vector<std::shared_ptr<lsst::afw::image::DefectBase> >;
 
 /************************************************************************************************************/

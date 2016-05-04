@@ -60,7 +60,7 @@ PTR(Psf::Image) Psf::computeImage(
         _cachedImagePosition = position;
     }
     if (owner == COPY) {
-        result = boost::make_shared<Image>(*result, true);
+        result = std::make_shared<Image>(*result, true);
     }
     return result;
 }
@@ -83,7 +83,7 @@ PTR(Psf::Image) Psf::computeKernelImage(
         _cachedKernelImagePosition = position;
     }
     if (owner == COPY) {
-        result = boost::make_shared<Image>(*result, true);
+        result = std::make_shared<Image>(*result, true);
     }
     return result;
 }
@@ -93,7 +93,7 @@ PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D position, image::Color
     if (color.isIndeterminate()) color = getAverageColor();
     // FixedKernel ctor will deep copy image, so we can use INTERNAL.
     PTR(Image) image = computeKernelImage(position, color, INTERNAL);
-    return boost::make_shared<math::FixedKernel>(*image);
+    return std::make_shared<math::FixedKernel>(*image);
 }
 
 double Psf::computePeak(geom::Point2D position, image::Color color) const {

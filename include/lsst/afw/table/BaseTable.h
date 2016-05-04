@@ -1,8 +1,7 @@
 // -*- lsst-c++ -*-
 #ifndef AFW_TABLE_BaseTable_h_INCLUDED
 #define AFW_TABLE_BaseTable_h_INCLUDED
-
-#include "boost/enable_shared_from_this.hpp"
+#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/daf/base/Citizen.h"
@@ -43,7 +42,7 @@ namespace table {
  */
 class BaseTable 
 #ifndef SWIG // swig complains about these not being %shared_ptrs, but it doesn't need to know about them
-: public boost::enable_shared_from_this<BaseTable>,
+: public std::enable_shared_from_this<BaseTable>,
   public daf::base::Citizen
 #endif
 {
@@ -167,13 +166,13 @@ protected:
     /// @brief Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
     PTR(Derived) getSelf() {
-        return boost::static_pointer_cast<Derived>(shared_from_this());
+        return std::static_pointer_cast<Derived>(shared_from_this());
     }
 
     /// @brief Convenience function for static-casting shared_from_this for use by derived classes.
     template <typename Derived>
     CONST_PTR(Derived) getSelf() const {
-        return boost::static_pointer_cast<Derived const>(shared_from_this());
+        return std::static_pointer_cast<Derived const>(shared_from_this());
     }
 
     virtual void handleAliasChange(std::string const & alias) {}
@@ -193,7 +192,7 @@ protected:
         _metadata(other._metadata) 
     {
         if (_metadata)
-            _metadata = boost::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
+            _metadata = std::static_pointer_cast<daf::base::PropertyList>(_metadata->deepCopy());
     }
 
 private:

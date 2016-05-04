@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_SchemaMapper_h_INCLUDED
 #define AFW_TABLE_SchemaMapper_h_INCLUDED
 
-#include "boost/scoped_ptr.hpp"
+#include <memory>
 
 #include "lsst/afw/table/detail/SchemaMapperImpl.h"
 
@@ -222,7 +222,7 @@ private:
 
     typedef detail::SchemaMapperImpl Impl;
 
-    boost::scoped_ptr<Impl> _impl;
+    std::unique_ptr<Impl> _impl;
 };
 
 template <typename Predicate>

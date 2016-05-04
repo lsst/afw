@@ -189,8 +189,8 @@ bool TestWarpGpu(
     const afwImage::Image<double> inPIDbl = *inMIDbl.getImage();
     const afwImage::Image<float>  inPIFlt = *inMIFlt.getImage();
 
-    boost::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =
-            boost::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(wctrCPU.getWarpingKernel());
+    std::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =
+            std::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(wctrCPU.getWarpingKernel());
 
     cout << "Image size: " << sizeX << " x " << sizeY << "   ";
     cout << "Interpolation length: " << wctrCPU.getInterpLength() << "   " << endl;

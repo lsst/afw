@@ -60,13 +60,13 @@ public:
      */
     template <typename ContainerT>
     static ContainerT apply(afw::fits::Fits & fits, int ioFlags, PTR(InputArchive) archive=PTR(InputArchive)()) {
-        PTR(daf::base::PropertyList) metadata = boost::make_shared<daf::base::PropertyList>();
+        PTR(daf::base::PropertyList) metadata = std::make_shared<daf::base::PropertyList>();
         fits.readMetadata(*metadata, true);
         FitsReader const * reader = _lookupFitsReader(*metadata);
         FitsSchemaInputMapper mapper(*metadata, true);
         reader->_setupArchive(fits, mapper, archive, ioFlags);
         PTR(BaseTable) table = reader->makeTable(mapper, metadata, ioFlags, true);
-        ContainerT container(boost::dynamic_pointer_cast<typename ContainerT::Table>(table));
+        ContainerT container(std::dynamic_pointer_cast<typename ContainerT::Table>(table));
         if (!container.getTable()) {
             throw LSST_EXCEPT(
                 pex::exceptions::RuntimeError,

@@ -21,7 +21,7 @@
  */
  
 %{
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/math/Background.h"
 %}
 
@@ -34,7 +34,7 @@
 %inline %{
    PTR(lsst::afw::math::BackgroundMI)
    cast_BackgroundMI(PTR(lsst::afw::math::Background) bback) {
-        return boost::dynamic_pointer_cast<lsst::afw::math::BackgroundMI>(bback);
+        return std::dynamic_pointer_cast<lsst::afw::math::BackgroundMI>(bback);
     }
 %}
 %extend lsst::afw::math::Background {

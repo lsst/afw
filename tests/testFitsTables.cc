@@ -72,12 +72,12 @@ BOOST_AUTO_TEST_CASE(testFits) {
 
     SourceCatalog vector(SourceTable::make(schema));
 
-    vector.getTable()->setMetadata(boost::make_shared<lsst::daf::base::PropertyList>());
+    vector.getTable()->setMetadata(std::make_shared<lsst::daf::base::PropertyList>());
     vector.getTable()->getMetadata()->add("SHEEP", 7.3, "total number of sheep on the farm");
     vector.getTable()->getMetadata()->add("MONKEYS", 155, "monkeys per tree");
 
     {
-        PTR(Footprint) fp1 = boost::make_shared<Footprint>();
+        PTR(Footprint) fp1 = std::make_shared<Footprint>();
         fp1->addSpan(0, 5, 8);
         fp1->addSpan(1, 4, 9);
         fp1->addSpan(2, 6, 7);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         r2->set(e_g_d_flag2, false);
         r2->set(a_b_p, lsst::afw::geom::Point2D(-32.1, 63.2));
         r2->set(a_s, "bar");
-        PTR(Footprint) fp2 = boost::make_shared<Footprint>();
+        PTR(Footprint) fp2 = std::make_shared<Footprint>();
         fp2->addSpan(3, 2, 7);
         fp2->addSpan(4, 3, 5);
         fp2->addPeak(4.2f, 3.3f, 32.1f);

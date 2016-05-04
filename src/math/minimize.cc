@@ -72,7 +72,7 @@ namespace {
         inline void setErrorDef(double def) {_errorDef=def;}
 #endif
     private:
-        boost::shared_ptr<afwMath::Function1<ReturnT> > _functionPtr;
+        std::shared_ptr<afwMath::Function1<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;
@@ -106,7 +106,7 @@ namespace {
         inline void setErrorDef(double def) {_errorDef=def;}
 #endif
     private:
-        boost::shared_ptr<afwMath::Function2<ReturnT> > _functionPtr;
+        std::shared_ptr<afwMath::Function2<ReturnT> > _functionPtr;
         std::vector<double> _measurementList;
         std::vector<double> _varianceList;
         std::vector<double> _xPositionList;

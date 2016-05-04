@@ -1,11 +1,10 @@
 #include <list>
+#include <memory>
 #include <stdexcept>
 
-#include "boost/make_shared.hpp"
 #include "boost/type_traits/is_same.hpp"
 #include "boost/mpl/and.hpp"
 #include "boost/mpl/bool.hpp"
-#include "boost/scoped_ptr.hpp"
 #include "boost/iterator/transform_iterator.hpp"
 #include "boost/iterator/filter_iterator.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
@@ -151,7 +150,7 @@ inline int findNamedSubfield(
 template <typename T, typename U>
 inline void makeSubfieldItem(
     SchemaItem<T> const & item, int index, char delimiter,
-    boost::scoped_ptr< SchemaItem<U> > & result,
+    std::unique_ptr< SchemaItem<U> > & result,
     boost::mpl::true_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {
     result.reset(
@@ -170,7 +169,7 @@ inline void makeSubfieldItem(
 template <typename T, typename U>
 inline void makeSubfieldItem(
     SchemaItem<T> const & item, int index, char delimiter,
-    boost::scoped_ptr< SchemaItem<U> > & result,
+    std::unique_ptr< SchemaItem<U> > & result,
     boost::mpl::false_ * // whether a match is possible based on the types of T and U; computed by caller
 ) {}
 
@@ -202,7 +201,7 @@ struct ExtractItemByName : public boost::static_visitor<> {
 
     char delimiter;
     std::string name; // name we're looking for
-    mutable boost::scoped_ptr< SchemaItem<U> > result; // where we put the result to signal that we're done
+    mutable std::unique_ptr< SchemaItem<U> > result; // where we put the result to signal that we're done
 };
 
 } // anonymous
@@ -296,7 +295,7 @@ struct ExtractItemByKey : public boost::static_visitor<> {
 
     char delimiter;
     Key<U> key;
-    mutable boost::scoped_ptr< SchemaItem<U> > result;
+    mutable std::unique_ptr< SchemaItem<U> > result;
 };
 
 } // anonymous.
@@ -638,7 +637,7 @@ Key<T> SchemaImpl::addFieldImpl(int elementSize, int elementCount, Field<T> cons
 
 int const Schema::VERSION;
 
-Schema::Schema() : _impl(boost::make_shared<Impl>()), _aliases(boost::make_shared<AliasMap>()) {}
+Schema::Schema() : _impl(std::make_shared<Impl>()), _aliases(std::make_shared<AliasMap>()) {}
 
 Schema::Schema(Schema const & other) :
     _impl(other._impl),
@@ -652,7 +651,7 @@ std::string Schema::join(std::string const & a, std::string const & b) const {
 
 void Schema::_edit() {
     if (!_impl.unique()) {
-        boost::shared_ptr<Impl> data(boost::make_shared<Impl>(*_impl));
+        std::shared_ptr<Impl> data(std::make_shared<Impl>(*_impl));
         _impl.swap(data);
     }
 }
@@ -725,13 +724,13 @@ int Schema::contains(SchemaItem<T> const & item, int flags) const {
 
 void Schema::setAliasMap(PTR(AliasMap) aliases) {
     if (!aliases) {
-        aliases = boost::make_shared<AliasMap>();
+        aliases = std::make_shared<AliasMap>();
     }
     _aliases = aliases;
 }
 
 void Schema::disconnectAliases() {
-    _aliases = boost::make_shared<AliasMap>(*_aliases);
+    _aliases = std::make_shared<AliasMap>(*_aliases);
 }
 
 //----- Stringification -------------------------------------------------------------------------------------

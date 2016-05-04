@@ -34,7 +34,7 @@
 #include <utility>
 
 #include "boost/mpl/bool.hpp"
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -46,8 +46,8 @@ namespace image {
     template <typename ImageT>
     class ImagePca {
     public:
-        typedef typename boost::shared_ptr<ImageT> Ptr;
-        typedef typename boost::shared_ptr<const ImageT> ConstPtr;
+        typedef typename std::shared_ptr<ImageT> Ptr;
+        typedef typename std::shared_ptr<const ImageT> ConstPtr;
 
         typedef std::vector<typename ImageT::Ptr> ImageList;
 

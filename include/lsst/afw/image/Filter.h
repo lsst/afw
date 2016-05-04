@@ -36,7 +36,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/base.h"
 #include "lsst/pex/policy/Policy.h"
 
@@ -55,8 +55,8 @@ namespace image {
  */
 class FilterProperty {
 public:
-    boost::shared_ptr<FilterProperty> Ptr;
-    boost::shared_ptr<FilterProperty const> ConstPtr;
+    std::shared_ptr<FilterProperty> Ptr;
+    std::shared_ptr<FilterProperty const> ConstPtr;
 
     explicit FilterProperty(std::string const& name, double lambdaEff, bool force=false) :
         _name(name), _lambdaEff(lambdaEff) { _insert(force); }

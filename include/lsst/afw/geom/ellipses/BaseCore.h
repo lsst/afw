@@ -32,9 +32,8 @@
  *  @note Do not include directly; use the main ellipse header file.
  */
 
-#include "boost/shared_ptr.hpp"
-#include "boost/make_shared.hpp"
 #include <memory>
+
 #include "Eigen/Core"
 
 #include "lsst/pex/exceptions.h"
@@ -60,8 +59,8 @@ public:
     template <typename Output> struct Converter;
 #endif
 
-    typedef boost::shared_ptr<BaseCore> Ptr;
-    typedef boost::shared_ptr<BaseCore const> ConstPtr;
+    typedef std::shared_ptr<BaseCore> Ptr;
+    typedef std::shared_ptr<BaseCore const> ConstPtr;
 
     typedef Eigen::Vector3d ParameterVector;  ///< Parameter vector type.
     typedef Eigen::Matrix3d Jacobian; ///< Parameter Jacobian matrix type.
@@ -196,7 +195,7 @@ protected:
 
     template <typename T>
     struct Registrar {
-        Registrar() { registerSubclass(boost::make_shared<T>()); }
+        Registrar() { registerSubclass(std::make_shared<T>()); }
     };
 
     virtual BaseCore::Ptr _clone() const = 0;
@@ -244,7 +243,7 @@ struct BaseCore::Converter {
     explicit Converter(BaseCore const & input_) : input(input_) {}
 
     operator Output() const { return Output(input); }
-    boost::shared_ptr<Output> copy() const { return boost::shared_ptr<Output>(new Output(input)); }
+    std::shared_ptr<Output> copy() const { return std::shared_ptr<Output>(new Output(input)); }
 };
 
 template <typename Output>

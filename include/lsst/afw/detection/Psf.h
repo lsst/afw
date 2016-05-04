@@ -26,7 +26,7 @@
 #include <string>
 #include <limits>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/daf/base.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
@@ -72,8 +72,8 @@ class Psf : public daf::base::Citizen, public daf::base::Persistable,
         return geom::Point2D(std::numeric_limits<double>::quiet_NaN());
     }
 public:
-    typedef boost::shared_ptr<Psf> Ptr;            ///< @deprecated shared_ptr to a Psf
-    typedef boost::shared_ptr<const Psf> ConstPtr; ///< @deprecated shared_ptr to a const Psf
+    typedef std::shared_ptr<Psf> Ptr;            ///< @deprecated shared_ptr to a Psf
+    typedef std::shared_ptr<const Psf> ConstPtr; ///< @deprecated shared_ptr to a const Psf
 
     typedef math::Kernel::Pixel Pixel; ///< Pixel type of Image returned by computeImage
     typedef image::Image<Pixel> Image; ///< Image type returned by computeImage

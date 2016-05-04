@@ -39,7 +39,7 @@
 #include <utility>
 #include <ctime>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/pointer_cast.hpp"
 #include "boost/cstdint.hpp"
 #include "boost/regex.hpp"
@@ -194,8 +194,8 @@ std::string afwMath::NearestWarpingKernel::NearestFunction1::toString(std::strin
     return os.str();
 }
 
-boost::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string name) {
-    typedef boost::shared_ptr<afwMath::SeparableKernel> KernelPtr;
+std::shared_ptr<afwMath::SeparableKernel> afwMath::makeWarpingKernel(std::string name) {
+    typedef std::shared_ptr<afwMath::SeparableKernel> KernelPtr;
     boost::cmatch matches;
     static const boost::regex LanczosRE("lanczos(\\d+)");
     if (name == "bilinear") {
@@ -233,7 +233,7 @@ void afwMath::WarpingControl::setWarpingKernel(
     if (_maskWarpingKernelPtr) {
         _testWarpingKernels(warpingKernel, *_maskWarpingKernelPtr);
     }
-    PTR(SeparableKernel) warpingKernelPtr(boost::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
+    PTR(SeparableKernel) warpingKernelPtr(std::static_pointer_cast<SeparableKernel>(warpingKernel.clone()));
     _testDevicePreference(_devicePreference, warpingKernelPtr);
     _warpingKernelPtr = warpingKernelPtr;
 }
@@ -263,7 +263,7 @@ void afwMath::WarpingControl::setMaskWarpingKernel(
     SeparableKernel const & maskWarpingKernel
 ) {
     _testWarpingKernels(*_warpingKernelPtr, maskWarpingKernel);
-    _maskWarpingKernelPtr = boost::static_pointer_cast<SeparableKernel>(maskWarpingKernel.clone());
+    _maskWarpingKernelPtr = std::static_pointer_cast<SeparableKernel>(maskWarpingKernel.clone());
 }
 
 
@@ -290,7 +290,7 @@ void afwMath::WarpingControl::_testDevicePreference(
     CONST_PTR(SeparableKernel) const &warpingKernelPtr
 ) const {
     CONST_PTR(LanczosWarpingKernel) const lanczosKernelPtr =
-        boost::dynamic_pointer_cast<const LanczosWarpingKernel>(warpingKernelPtr);
+        std::dynamic_pointer_cast<const LanczosWarpingKernel>(warpingKernelPtr);
     if (devicePreference == lsst::afw::gpu::USE_GPU && !lanczosKernelPtr) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
             "devicePreference = USE_GPU, but warping kernel not Lanczos");
@@ -314,7 +314,7 @@ int afwMath::warpExposure(
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "srcExposure has no Wcs");
     }
     typename DestExposureT::MaskedImageT mi = destExposure.getMaskedImage();
-    boost::shared_ptr<afwImage::Calib> calibCopy(new afwImage::Calib(*srcExposure.getCalib()));
+    std::shared_ptr<afwImage::Calib> calibCopy(new afwImage::Calib(*srcExposure.getCalib()));
     destExposure.setCalib(calibCopy);
     destExposure.setFilter(srcExposure.getFilter());
     return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(),
@@ -384,8 +384,8 @@ namespace {
         int interpLength = control.getInterpLength();
         lsst::afw::gpu::DevicePreference devPref = control.getDevicePreference();
 
-        boost::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =
-            boost::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(warpingKernelPtr);
+        std::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =
+            std::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(warpingKernelPtr);
 
         if (lsst::afw::gpu::isGpuEnabled()) {
             if(!lanczosKernelPtr) {

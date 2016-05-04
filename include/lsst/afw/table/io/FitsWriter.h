@@ -41,7 +41,7 @@ public:
     template <typename ContainerT>
     static void apply(Fits & fits, ContainerT const & container, int flags) {
         PTR(FitsWriter) writer
-            = boost::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits, flags);
+            = std::static_pointer_cast<BaseTable const>(container.getTable())->makeFitsWriter(&fits, flags);
         writer->write(container);
     }
 

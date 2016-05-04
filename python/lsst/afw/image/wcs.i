@@ -32,7 +32,7 @@
 %ignore lsst::afw::image::NoWcs;
 
 %{
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/image/DistortedTanWcs.h"
@@ -49,7 +49,7 @@
 %lsst_persistable(lsst::afw::image::TanWcs);
 
 %inline %{
-    #include <boost/make_shared.hpp>
+    #include <memory>
     #include <boost/serialization/serialization.hpp>
     #include <boost/archive/binary_oarchive.hpp>
     #include <boost/archive/binary_iarchive.hpp>
@@ -64,7 +64,7 @@
     PTR(lsst::daf::base::PropertySet) unpickleMetadata(std::string const& pick) {
         std::stringstream ss(pick);
         boost::archive::binary_iarchive ar(ss);
-        PTR(lsst::daf::base::PropertySet) header = boost::make_shared<lsst::daf::base::PropertySet>();
+        PTR(lsst::daf::base::PropertySet) header = std::make_shared<lsst::daf::base::PropertySet>();
         ar >> *header;
         return header;
     }
@@ -94,7 +94,7 @@
 %inline %{
     lsst::afw::image::TanWcs::Ptr
     cast_TanWcs(lsst::afw::image::Wcs::Ptr wcs) {
-        lsst::afw::image::TanWcs::Ptr tanWcs = boost::dynamic_pointer_cast<lsst::afw::image::TanWcs>(wcs);
+        lsst::afw::image::TanWcs::Ptr tanWcs = std::dynamic_pointer_cast<lsst::afw::image::TanWcs>(wcs);
         
         if(tanWcs.get() == NULL) {
             throw(LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError, "Up cast failed"));

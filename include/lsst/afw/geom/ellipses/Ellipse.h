@@ -57,8 +57,8 @@ public:
 
     typedef Eigen::Matrix<double,5,1> ParameterVector; ///< Parameter vector type.
 
-    typedef boost::shared_ptr<Ellipse> Ptr;
-    typedef boost::shared_ptr<Ellipse const> ConstPtr;
+    typedef std::shared_ptr<Ellipse> Ptr;
+    typedef std::shared_ptr<Ellipse const> ConstPtr;
 
     enum ParameterEnum { X=3, Y=4 }; ///< Definitions for elements of an ellipse vector.
 

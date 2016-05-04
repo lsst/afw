@@ -22,16 +22,16 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
  
+#include <cmath>
 #include <iostream>
 #include <limits>
-#include <cmath>
+#include <memory>
+
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Statistics.h"
 
 #include "lsst/afw/math/MaskedVector.h"
-
-#include "boost/shared_ptr.hpp"
 
 namespace image = lsst::afw::image;
 namespace math = lsst::afw::math;
@@ -137,7 +137,7 @@ int main() {
         ++j;
     }
 
-    boost::shared_ptr<std::vector<float> > vF = mv.getVector();
+    std::shared_ptr<std::vector<float> > vF = mv.getVector();
     
     // make a statistics control object and override some of the default properties
     math::StatisticsControl sctrl;

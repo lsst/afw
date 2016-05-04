@@ -98,7 +98,7 @@ protected:
 }
 
 %{
-#include "boost/make_shared.hpp"
+#include <memory>
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/CatalogVector.h"
@@ -133,7 +133,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         lsst::afw::table::BaseRecord const & record = catalogs.front().front();
         LSST_ARCHIVE_ASSERT(record.getSchema() == keys.schema);
-        return boost::make_shared<DummyPsf>(
+        return std::make_shared<DummyPsf>(
             record.get(keys.x)
         );
     }

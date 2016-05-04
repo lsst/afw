@@ -161,7 +161,7 @@ private:
 
     struct Impl;
 
-    boost::shared_ptr<Impl> _impl;
+    std::shared_ptr<Impl> _impl;
 };
 
 template <typename RecordT>
@@ -172,7 +172,7 @@ public:
     typedef typename RecordT::Table Table;
 
     /// @brief @copydoc BaseColumnView::getTable
-    PTR(Table) getTable() const { return boost::static_pointer_cast<Table>(BaseColumnView::getTable()); }
+    PTR(Table) getTable() const { return std::static_pointer_cast<Table>(BaseColumnView::getTable()); }
 
     /// @brief @copydoc BaseColumnView::make
     template <typename InputIterator>

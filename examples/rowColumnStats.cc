@@ -41,7 +41,7 @@ typedef image::Image<float> ImageF;
 typedef image::ImageSlice<float> ImageSliceF;
 typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
-typedef boost::shared_ptr<VecF> VecFPtr;
+typedef std::shared_ptr<VecF> VecFPtr;
 
 int main(int argc, char **argv) {
 

@@ -23,7 +23,7 @@
  */
 
 #include "lsst/afw/geom/XYTransform.h"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 namespace lsst {
 namespace afw {
@@ -63,7 +63,7 @@ AffineTransform XYTransform::linearizeReverseTransform(Point2D const &p) const
 /// default implementation; subclass may override
 PTR(XYTransform) XYTransform::invert() const
 {
-    return boost::make_shared<InvertedXYTransform> (this->clone());
+    return std::make_shared<InvertedXYTransform> (this->clone());
 }
 
 }}}

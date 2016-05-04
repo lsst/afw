@@ -23,7 +23,7 @@
  */
 
 #include "lsst/afw/geom/XYTransform.h"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 namespace lsst {
 namespace afw {
@@ -36,7 +36,7 @@ InvertedXYTransform::InvertedXYTransform(CONST_PTR(XYTransform) base)
 PTR(XYTransform) InvertedXYTransform::clone() const
 {
     // deep copy
-    return boost::make_shared<InvertedXYTransform> (_base->clone());
+    return std::make_shared<InvertedXYTransform> (_base->clone());
 }
 
 PTR(XYTransform) InvertedXYTransform::invert() const

@@ -33,7 +33,7 @@
 #include <list>
 #include <cmath>
 #include <boost/cstdint.hpp>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include "lsst/afw/detection/Footprint.h"
 
 namespace lsst {
@@ -151,7 +151,7 @@ HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> makeHeavyFootprint(
  * they overlap.  The peak list is the union of the two inputs.
  */
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-boost::shared_ptr<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> >
+std::shared_ptr<HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> >
 mergeHeavyFootprints(
     HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h1,
     HeavyFootprint<ImagePixelT, MaskPixelT, VariancePixelT> const& h2

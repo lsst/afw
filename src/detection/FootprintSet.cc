@@ -42,6 +42,7 @@
     cout << "Found " << sources.getFootprints()->size() << " sources" << std::endl;
  * \endcode
  */
+#include <memory>
 #include <algorithm>
 #include <cassert>
 #include <set>
@@ -362,7 +363,7 @@ namespace {
  */
     class IdSpan {
     public:
-        typedef boost::shared_ptr<IdSpan> Ptr;
+        typedef std::shared_ptr<IdSpan> Ptr;
         
         explicit IdSpan(int id, int y, int x0, int x1, double good) : 
             id(id), y(y), x0(x0), x1(x1), good(good) {}
@@ -921,7 +922,7 @@ namespace {
     template<typename MaskPixelT>
     class Startspan {
     public:
-        typedef std::vector<boost::shared_ptr<Startspan> > Ptr;
+        typedef std::vector<std::shared_ptr<Startspan> > Ptr;
         
         Startspan(detection::Span const *span, image::Mask<MaskPixelT> *mask, DIRECTION const dir);
         ~Startspan() { delete _span; }
@@ -933,7 +934,7 @@ namespace {
         static int detectedPlane;       // The MaskPlane to use for detected pixels
         static int stopPlane;           // The MaskPlane to use for pixels that signal us to stop searching
     private:
-        detection::Span::Ptr const _span; // The initial Span
+        detection::Span::ConstPtr _span; // The initial Span
         DIRECTION _direction;           // How to continue searching for further pixels
         bool _stop;                     // should we stop searching?
     };

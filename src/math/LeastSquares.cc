@@ -26,7 +26,7 @@
 #include "Eigen/SVD"
 #include "Eigen/Cholesky"
 #include "boost/format.hpp"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/afw/math/LeastSquares.h"
 #include "lsst/pex/exceptions.h"
@@ -363,13 +363,13 @@ LeastSquares::Factorization LeastSquares::getFactorization() const { return _imp
 LeastSquares::LeastSquares(Factorization factorization, int dimension) {
     switch (factorization) {
     case NORMAL_EIGENSYSTEM:
-        _impl = boost::make_shared<EigensystemSolver>(dimension);
+        _impl = std::make_shared<EigensystemSolver>(dimension);
         break;
     case NORMAL_CHOLESKY:
-        _impl = boost::make_shared<CholeskySolver>(dimension);
+        _impl = std::make_shared<CholeskySolver>(dimension);
         break;
     case DIRECT_SVD:
-        _impl = boost::make_shared<SvdSolver>(dimension);
+        _impl = std::make_shared<SvdSolver>(dimension);
         break;
     }
     _impl->factorization = factorization;

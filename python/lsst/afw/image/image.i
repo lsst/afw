@@ -48,7 +48,7 @@
 %lsst_persistable(lsst::afw::image::Image<PIXEL_TYPE>);
 %lsst_persistable(lsst::afw::image::DecoratedImage<PIXEL_TYPE>);
 
-%template(vector##NAME##TYPE) std::vector<boost::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> > >;
+%template(vector##NAME##TYPE) std::vector<std::shared_ptr<lsst::afw::image::Image<PIXEL_TYPE> > >;
 %template(NAME##Pca##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::Image<PIXEL_TYPE> >;
 %template(NAME##PcaM##TYPE) lsst::afw::image::ImagePca<lsst::afw::image::MaskedImage<PIXEL_TYPE> >;
 

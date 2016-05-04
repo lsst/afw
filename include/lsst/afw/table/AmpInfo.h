@@ -83,7 +83,7 @@ public:
     typedef CatalogT<AmpInfoRecord const> ConstCatalog;
 
     CONST_PTR(AmpInfoTable) getTable() const {
-        return boost::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
+        return std::static_pointer_cast<AmpInfoTable const>(BaseRecord::getTable());
     }
 
     //@{
@@ -225,19 +225,19 @@ public:
     //@}
 
     /// @copydoc BaseTable::clone
-    PTR(AmpInfoTable) clone() const { return boost::static_pointer_cast<AmpInfoTable>(_clone()); }
+    PTR(AmpInfoTable) clone() const { return std::static_pointer_cast<AmpInfoTable>(_clone()); }
 
     /// @copydoc BaseTable::makeRecord
-    PTR(AmpInfoRecord) makeRecord() { return boost::static_pointer_cast<AmpInfoRecord>(_makeRecord()); }
+    PTR(AmpInfoRecord) makeRecord() { return std::static_pointer_cast<AmpInfoRecord>(_makeRecord()); }
 
     /// @copydoc BaseTable::copyRecord
     PTR(AmpInfoRecord) copyRecord(BaseRecord const & other) {
-        return boost::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other));
+        return std::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other));
     }
 
     /// @copydoc BaseTable::copyRecord
     PTR(AmpInfoRecord) copyRecord(BaseRecord const & other, SchemaMapper const & mapper) {
-        return boost::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other, mapper));
+        return std::static_pointer_cast<AmpInfoRecord>(BaseTable::copyRecord(other, mapper));
     }
 
 protected:

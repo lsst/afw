@@ -25,7 +25,7 @@
 %{
 #include <vector>
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/afw/math/Function.h"
 #include "lsst/afw/math/FunctionLibrary.h"

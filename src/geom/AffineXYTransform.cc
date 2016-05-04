@@ -23,7 +23,7 @@
  */
 
 #include "lsst/afw/geom/XYTransform.h"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 namespace lsst {
 namespace afw {
@@ -36,7 +36,7 @@ AffineXYTransform::AffineXYTransform(AffineTransform const &affineTransform)
 
 PTR(XYTransform) AffineXYTransform::clone() const
 {
-    return boost::make_shared<AffineXYTransform> (_forwardAffineTransform);
+    return std::make_shared<AffineXYTransform> (_forwardAffineTransform);
 }
 
 Point2D AffineXYTransform::forwardTransform(Point2D const &position) const

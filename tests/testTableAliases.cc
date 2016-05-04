@@ -5,7 +5,7 @@
 #include "boost/test/unit_test.hpp"
 #pragma clang diagnostic pop
 
-#include "boost/scoped_ptr.hpp"
+#include <memory>
 
 #include "lsst/afw/table/AliasMap.h"
 #include "lsst/afw/table/Schema.h"
@@ -31,7 +31,7 @@ public:
     mutable std::string lastAliasChanged;
 
     static PTR(TestTable) make(lsst::afw::table::Schema const & schema) {
-        return boost::make_shared<TestTable>(schema);
+        return std::make_shared<TestTable>(schema);
     }
 
     explicit TestTable(lsst::afw::table::Schema const & schema) : lsst::afw::table::BaseTable(schema) {}
@@ -44,10 +44,10 @@ protected:
     // called at the right times.
     virtual void handleAliasChange(std::string const & alias) { lastAliasChanged = alias; }
 
-    virtual PTR(lsst::afw::table::BaseTable) _clone() const { return boost::make_shared<TestTable>(*this); }
+    virtual PTR(lsst::afw::table::BaseTable) _clone() const { return std::make_shared<TestTable>(*this); }
 
     virtual PTR(lsst::afw::table::BaseRecord) _makeRecord() {
-        return boost::make_shared<TestRecord>(getSelf<TestTable>());
+        return std::make_shared<TestRecord>(getSelf<TestTable>());
     }
 
 };
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(aliasMapLinks) {
 
     // Is it really dead?
     typedef std::vector<lsst::daf::base::Citizen const*> CensusVector;
-    boost::scoped_ptr<CensusVector const> census(lsst::daf::base::Citizen::census());
+    std::unique_ptr<CensusVector const> census(lsst::daf::base::Citizen::census());
     for (CensusVector::const_iterator i = census->begin(); i != census->end(); ++i) {
         BOOST_CHECK((**i).getId() != tableCitizenId);
     }

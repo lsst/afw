@@ -56,7 +56,7 @@ void BaseCore::Convolution::apply(BaseCore & result) const {
 }
 
 Ellipse::Ptr Ellipse::Convolution::copy() const {
-    return boost::make_shared<Ellipse>(
+    return std::make_shared<Ellipse>(
         self.getCore().convolve(other.getCore()).copy(),
         PointD(self.getCenter() + Extent2D(other.getCenter()))
     );

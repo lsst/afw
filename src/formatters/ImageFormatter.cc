@@ -40,7 +40,7 @@
 #endif
 static char const* SVNid __attribute__((unused)) = "$Id$";
 
-#include "boost/scoped_ptr.hpp"
+#include <memory>
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
 #include "boost/serialization/nvp.hpp"
@@ -261,7 +261,7 @@ void ImageFormatter<ImagePixelT>::delegateSerialize(
     }
     ar & make_nvp("width", width) & make_nvp("height", height);
     if (Archive::is_loading::value) {
-        boost::scoped_ptr<Image<ImagePixelT> > ni(
+        std::unique_ptr<Image<ImagePixelT> > ni(
             new Image<ImagePixelT>(geom::Extent2I(width, height))
         );
         typename Image<ImagePixelT>::Array array = ni->getArray();

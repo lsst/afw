@@ -21,7 +21,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "boost/make_shared.hpp"
+#include <memory>
 
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/table/io/InputArchive.h"
@@ -98,7 +98,7 @@ public:
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         PTR(ApCorrMap) result
-            = boost::make_shared<ApCorrMap>();
+            = std::make_shared<ApCorrMap>();
         for (
             table::BaseCatalog::const_iterator i = catalogs.front().begin();
             i != catalogs.front().end();

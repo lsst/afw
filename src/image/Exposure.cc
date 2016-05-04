@@ -26,7 +26,7 @@
 
 #include "boost/cstdint.hpp" 
 #include "boost/format.hpp" 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "boost/algorithm/string/trim.hpp"
 
 #include "lsst/daf/base/PropertySet.h"

@@ -190,7 +190,7 @@ public:
      *  @param[in]  fitsfile     FITS object to read from, already positioned at the desired HDU.
      */
     static PTR(T) readFits(fits::Fits & fitsfile) {
-        return boost::dynamic_pointer_cast<T>(Persistable::_readFits(fitsfile));
+        return std::dynamic_pointer_cast<T>(Persistable::_readFits(fitsfile));
     }
 
 #endif // !SWIG
@@ -203,7 +203,7 @@ public:
      *                           skips the primary HDU if it is empty.
      */
     static PTR(T) readFits(std::string const & fileName, int hdu=0) {
-        return boost::dynamic_pointer_cast<T>(Persistable::_readFits(fileName, hdu));
+        return std::dynamic_pointer_cast<T>(Persistable::_readFits(fileName, hdu));
     }
 
     /**
@@ -214,7 +214,7 @@ public:
      *                           skips the primary HDU if it is empty.
      */
     static PTR(T) readFits(fits::MemFileManager & manager, int hdu=0) {
-        return boost::dynamic_pointer_cast<T>(Persistable::_readFits(manager, hdu));
+        return std::dynamic_pointer_cast<T>(Persistable::_readFits(manager, hdu));
     }
 
 };

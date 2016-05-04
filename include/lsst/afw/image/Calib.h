@@ -33,7 +33,7 @@
 
 #include <cmath>
 #include <utility>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "ndarray_fwd.h"
 #include "lsst/base.h"
 #include "lsst/daf/base/DateTime.h"
@@ -81,8 +81,8 @@ inline double fluxErrFromABMagErr(double magErr, double mag) {
 
 class Calib : public table::io::PersistableFacade<Calib>, public table::io::Persistable {
 public :
-    typedef boost::shared_ptr<Calib> Ptr;
-    typedef boost::shared_ptr<Calib const> ConstPtr;
+    typedef std::shared_ptr<Calib> Ptr;
+    typedef std::shared_ptr<Calib const> ConstPtr;
 
     explicit Calib();
     explicit Calib(std::vector<CONST_PTR(Calib)> const& calibs);
@@ -90,7 +90,7 @@ public :
 
     void setMidTime(lsst::daf::base::DateTime const& midTime);
     lsst::daf::base::DateTime getMidTime () const;
-    lsst::daf::base::DateTime getMidTime(boost::shared_ptr<const lsst::afw::cameraGeom::Detector>,
+    lsst::daf::base::DateTime getMidTime(std::shared_ptr<const lsst::afw::cameraGeom::Detector>,
                                          lsst::afw::geom::Point2I const&) const;
 
     void setExptime(double exptime);

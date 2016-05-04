@@ -39,11 +39,11 @@ public:
 private:
 
     virtual PTR(BaseTable) _clone() const {
-        return boost::make_shared<SimpleTableImpl>(*this);
+        return std::make_shared<SimpleTableImpl>(*this);
     }
 
     virtual PTR(BaseRecord) _makeRecord() {
-        PTR(SimpleRecord) record = boost::make_shared<SimpleRecordImpl>(getSelf<SimpleTableImpl>());
+        PTR(SimpleRecord) record = std::make_shared<SimpleRecordImpl>(getSelf<SimpleTableImpl>());
         if (getIdFactory()) record->setId((*getIdFactory())());
         return record;
     }
@@ -73,7 +73,7 @@ protected:
 };
 
 void SimpleFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(SimpleTable) table = boost::dynamic_pointer_cast<SimpleTable const>(t);
+    CONST_PTR(SimpleTable) table = std::dynamic_pointer_cast<SimpleTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -131,7 +131,7 @@ PTR(SimpleTable) SimpleTable::make(Schema const & schema, PTR(IdFactory) const &
             "Schema for Simple must contain at least the keys defined by makeMinimalSchema()."
         );
     }
-    return boost::make_shared<SimpleTableImpl>(schema, idFactory);
+    return std::make_shared<SimpleTableImpl>(schema, idFactory);
 }
 
 SimpleTable::SimpleTable(Schema const & schema, PTR(IdFactory) const & idFactory) :
@@ -153,7 +153,7 @@ SimpleTable::MinimalSchema & SimpleTable::getMinimalSchema() {
 
 PTR(io::FitsWriter)
 SimpleTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
-    return boost::make_shared<SimpleFitsWriter>(fitsfile, flags);
+    return std::make_shared<SimpleFitsWriter>(fitsfile, flags);
 }
 
 template class CatalogT<SimpleRecord>;

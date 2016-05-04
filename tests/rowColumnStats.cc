@@ -49,7 +49,7 @@ namespace geom = lsst::afw::geom;
 typedef image::Image<float> ImageF;
 typedef image::MaskedImage<float> MImageF;
 typedef std::vector<float> VecF;
-typedef boost::shared_ptr<VecF> VecFPtr;
+typedef std::shared_ptr<VecF> VecFPtr;
 
 BOOST_AUTO_TEST_CASE(RowColumnStats) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 

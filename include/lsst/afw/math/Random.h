@@ -32,7 +32,7 @@
 #ifndef LSST_AFW_MATH_RANDOM_H
 #define LSST_AFW_MATH_RANDOM_H
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "gsl/gsl_rng.h"
 
@@ -137,7 +137,7 @@ public:
     double poisson(double const nu);
 
 private:
-    boost::shared_ptr< ::gsl_rng> _rng;
+    std::shared_ptr< ::gsl_rng> _rng;
     unsigned long _seed;
     Algorithm _algorithm;
 

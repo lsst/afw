@@ -65,7 +65,7 @@ PTR(Wcs) ExposureInfo::_cloneWcs(CONST_PTR(Wcs) wcs) {
 
 PTR(ApCorrMap) ExposureInfo::_cloneApCorrMap(PTR(ApCorrMap const) apCorrMap) {
     if (apCorrMap) {
-        return boost::make_shared<ApCorrMap>(*apCorrMap);
+        return std::make_shared<ApCorrMap>(*apCorrMap);
     }
     return PTR(ApCorrMap)();
 }
@@ -81,7 +81,7 @@ ExposureInfo::ExposureInfo(
     PTR(CoaddInputs) const & coaddInputs,
     PTR(ApCorrMap) const & apCorrMap
 ) : _wcs(_cloneWcs(wcs)),
-    _psf(boost::const_pointer_cast<detection::Psf>(psf)),
+    _psf(std::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
     _detector(detector),
     _validPolygon(polygon),
@@ -133,7 +133,7 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
 }
 
 void ExposureInfo::initApCorrMap() {
-    _apCorrMap = boost::make_shared<ApCorrMap>();
+    _apCorrMap = std::make_shared<ApCorrMap>();
 }
 
 ExposureInfo::~ExposureInfo() {}

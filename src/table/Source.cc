@@ -44,11 +44,11 @@ public:
 private:
 
     virtual PTR(BaseTable) _clone() const {
-        return boost::make_shared<SourceTableImpl>(*this);
+        return std::make_shared<SourceTableImpl>(*this);
     }
 
     virtual PTR(BaseRecord) _makeRecord() {
-        PTR(SourceRecord) record = boost::make_shared<SourceRecordImpl>(getSelf<SourceTableImpl>());
+        PTR(SourceRecord) record = std::make_shared<SourceRecordImpl>(getSelf<SourceTableImpl>());
         if (getIdFactory()) record->setId((*getIdFactory())());
         return record;
     }
@@ -118,7 +118,7 @@ private:
 };
 
 void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(SourceTable) table = boost::dynamic_pointer_cast<SourceTable const>(t);
+    CONST_PTR(SourceTable) table = std::dynamic_pointer_cast<SourceTable const>(t);
     if (!table) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -132,7 +132,7 @@ void SourceFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t n
         _outTable = BaseTable::make(_mapper.getOutputSchema());
         PTR(daf::base::PropertyList) metadata = table->getMetadata();
         if (metadata) {
-            metadata = boost::static_pointer_cast<daf::base::PropertyList>(metadata->deepCopy());
+            metadata = std::static_pointer_cast<daf::base::PropertyList>(metadata->deepCopy());
         } else {
             metadata.reset(new daf::base::PropertyList());
         }
@@ -270,7 +270,7 @@ public:
         PTR(io::InputArchive) const & archive
     ) const {
         SourceRecord & record = static_cast<SourceRecord&>(baseRecord);
-        PTR(Footprint) fp = boost::make_shared<Footprint>();
+        PTR(Footprint) fp = std::make_shared<Footprint>();
 
         // Load a regular Footprint from the span and peak columns.
         int spanElementCount = fits.getTableArraySize(row, _spanCol);
@@ -341,7 +341,7 @@ public:
             }
             // float HeavyFootprints were the only kind we ever saved using the old format
             typedef detection::HeavyFootprint<float,image::MaskPixel,image::VariancePixel> HeavyFootprint;
-            PTR(HeavyFootprint) heavy = boost::make_shared<HeavyFootprint>(*fp);
+            PTR(HeavyFootprint) heavy = std::make_shared<HeavyFootprint>(*fp);
             fits.readTableArray(row, _heavyPixCol,  N, heavy->getImageArray().getData());
             fits.readTableArray(row, _heavyMaskCol, N, heavy->getMaskArray().getData());
             fits.readTableArray(row, _heavyVarCol,  N, heavy->getVarianceArray().getData());
@@ -469,7 +469,7 @@ PTR(SourceTable) SourceTable::make(Schema const & schema, PTR(IdFactory) const &
             "Schema for Source must contain at least the keys defined by getMinimalSchema()."
         );
     }
-    return boost::make_shared<SourceTableImpl>(schema, idFactory);
+    return std::make_shared<SourceTableImpl>(schema, idFactory);
 }
 
 SourceTable::SourceTable(
@@ -500,7 +500,7 @@ SourceTable::MinimalSchema & SourceTable::getMinimalSchema() {
 }
 
 PTR(io::FitsWriter) SourceTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
-    return boost::make_shared<SourceFitsWriter>(fitsfile, flags);
+    return std::make_shared<SourceFitsWriter>(fitsfile, flags);
 }
 
 

@@ -24,7 +24,7 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/XYTransform.h"
-#include "boost/make_shared.hpp"
+#include <memory>
 
 namespace pexEx = lsst::pex::exceptions;
 
@@ -45,7 +45,7 @@ MultiXYTransform::MultiXYTransform(std::vector<CONST_PTR(XYTransform)> const &tr
 
 PTR(XYTransform) MultiXYTransform::clone() const
 {
-    return boost::make_shared<MultiXYTransform>(_transformList);
+    return std::make_shared<MultiXYTransform>(_transformList);
 }
 
 Point2D MultiXYTransform::forwardTransform(Point2D const &point) const

@@ -2,7 +2,7 @@
 #ifndef AFW_TABLE_IdFactory_h_INCLUDED
 #define AFW_TABLE_IdFactory_h_INCLUDED
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 
 #include "lsst/base.h"
 #include "lsst/afw/table/misc.h"

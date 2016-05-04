@@ -25,7 +25,7 @@
 #if !defined(LSST_AFW_MATH_MASKEDVECTOR_H)
 #define LSST_AFW_MATH_MASKEDVECTOR_H
 
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/Mask.h"
 
@@ -44,12 +44,12 @@ public:
 
     // Getters
     /// Return a (Ptr to) the MaskedImage's %image
-    boost::shared_ptr<std::vector<EntryT> > getVector(bool const noThrow=false) const {
+    std::shared_ptr<std::vector<EntryT> > getVector(bool const noThrow=false) const {
         if (!this->getImage() && !noThrow) {
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "MaskedVector's Image is NULL");
         }
 
-        boost::shared_ptr<std::vector<EntryT> > imgcp(new std::vector<EntryT>(0));
+        std::shared_ptr<std::vector<EntryT> > imgcp(new std::vector<EntryT>(0));
         for (int i_y = 0; i_y < this->getImage()->getHeight(); ++i_y) {
             for (typename lsst::afw::image::Image<EntryT>::x_iterator ptr = this->getImage()->row_begin(i_y);
                  ptr != this->getImage()->row_end(i_y); ++ptr) {

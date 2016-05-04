@@ -48,11 +48,11 @@ public:
 private:
 
     virtual PTR(BaseTable) _clone() const {
-        return boost::make_shared<ExposureTableImpl>(*this);
+        return std::make_shared<ExposureTableImpl>(*this);
     }
 
     virtual PTR(BaseRecord) _makeRecord() {
-        return boost::make_shared<ExposureRecordImpl>(getSelf<ExposureTableImpl>());
+        return std::make_shared<ExposureRecordImpl>(getSelf<ExposureTableImpl>());
     }
 
 };
@@ -171,7 +171,7 @@ protected:
 };
 
 void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t nRows) {
-    CONST_PTR(ExposureTable) inTable = boost::dynamic_pointer_cast<ExposureTable const>(t);
+    CONST_PTR(ExposureTable) inTable = std::dynamic_pointer_cast<ExposureTable const>(t);
     if (!inTable) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LogicError,
@@ -335,7 +335,7 @@ PTR(ExposureTable) ExposureTable::make(Schema const & schema) {
             "Schema for Exposure must contain at least the keys defined by makeMinimalSchema()."
         );
     }
-    return boost::make_shared<ExposureTableImpl>(schema);
+    return std::make_shared<ExposureTableImpl>(schema);
 }
 
 ExposureTable::ExposureTable(Schema const & schema) :
@@ -358,12 +358,12 @@ ExposureTable::MinimalSchema & ExposureTable::getMinimalSchema() {
 
 PTR(io::FitsWriter)
 ExposureTable::makeFitsWriter(fits::Fits * fitsfile, int flags) const {
-    return boost::make_shared<ExposureFitsWriter>(fitsfile, PTR(io::OutputArchive)(), flags);
+    return std::make_shared<ExposureFitsWriter>(fitsfile, PTR(io::OutputArchive)(), flags);
 }
 
 PTR(io::FitsWriter)
 ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) archive, int flags) const {
-    return boost::make_shared<ExposureFitsWriter>(fitsfile, archive, flags);
+    return std::make_shared<ExposureFitsWriter>(fitsfile, archive, flags);
 }
 
 //-----------------------------------------------------------------------------------------------------------

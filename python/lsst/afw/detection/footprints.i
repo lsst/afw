@@ -23,7 +23,7 @@
  */
  
 %{
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/detection/FootprintMerge.h"
@@ -45,7 +45,7 @@ typedef lsst::afw::geom::Span Span;
 %include "std_pair.i"
 %template(pairBB) std::pair<bool, bool>;
 
-%shared_vec(boost::shared_ptr<lsst::afw::detection::Footprint>);
+%shared_vec(std::shared_ptr<lsst::afw::detection::Footprint>);
 
 %ignore lsst::afw::detection::FootprintFunctor::operator();
 
@@ -53,7 +53,7 @@ typedef lsst::afw::geom::Span Span;
 // %template(VectorBox2I) std::vector<lsst::afw::geom::Box2I>;
 
 %declareTablePersistable(Footprint, lsst::afw::detection::Footprint);
-%shared_ptr(std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >);
+%shared_ptr(std::vector<std::shared_ptr<lsst::afw::detection::Footprint> >);
 
 %declareNumPyConverters(ndarray::Array<unsigned short,1,1>);
 %declareNumPyConverters(ndarray::Array<float,1,1>);
@@ -68,8 +68,8 @@ typedef lsst::afw::geom::Span Span;
 
 %rename(assign) lsst::afw::detection::Footprint::operator=;
 
-%template(SpanContainerT)      std::vector<boost::shared_ptr<lsst::afw::geom::Span> >;
-%template(FootprintList)       std::vector<boost::shared_ptr<lsst::afw::detection::Footprint> >;
+%template(SpanContainerT)      std::vector<std::shared_ptr<lsst::afw::geom::Span> >;
+%template(FootprintList)       std::vector<std::shared_ptr<lsst::afw::detection::Footprint> >;
 
 %include "lsst/afw/detection/Threshold.h"
 %include "lsst/afw/detection/Footprint.h"
@@ -109,7 +109,7 @@ typedef lsst::afw::geom::Span Span;
 }
  */
 
-    %template(HeavyFootprintPtrList ## NAME) std::vector<boost::shared_ptr<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> > >;
+    %template(HeavyFootprintPtrList ## NAME) std::vector<std::shared_ptr<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> > >;
 
 
     %template(makeHeavyFootprint ##NAME) lsst::afw::detection::makeHeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>;
@@ -124,7 +124,7 @@ typedef lsst::afw::geom::Span Span;
              * Cast a Footprint to a HeavyFootprint of a specified type
              */
             cast_HeavyFootprint##NAME(PTR(lsst::afw::detection::Footprint) foot) {
-            return boost::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
+            return std::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
         //------------------------------------------------------------------------
         PTR(lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE>)
@@ -133,7 +133,7 @@ typedef lsst::afw::geom::Span Span;
              */
             cast_HeavyFootprint(PTR(lsst::afw::detection::Footprint) foot,
                                 lsst::afw::image::MaskedImage<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> const&) {
-            return boost::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
+            return std::dynamic_pointer_cast<lsst::afw::detection::HeavyFootprint<PIXEL_TYPE, MASK_TYPE, VAR_TYPE> >(foot);
         }
     %}
 #define DERIVED_ARGS PIXEL_TYPE, MASK_TYPE, VAR_TYPE

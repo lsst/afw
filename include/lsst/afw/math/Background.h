@@ -30,7 +30,7 @@
  * @author Steve Bickerton
  */
 #include <boost/preprocessor/seq.hpp>
-#include "boost/shared_ptr.hpp"
+#include <memory>
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Box.h"

@@ -67,8 +67,8 @@ namespace image {
  */
 class TanWcs : public afw::table::io::PersistableFacade<TanWcs>, public lsst::afw::image::Wcs {
 public:
-    typedef boost::shared_ptr<lsst::afw::image::TanWcs> Ptr;
-    typedef boost::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;
+    typedef std::shared_ptr<lsst::afw::image::TanWcs> Ptr;
+    typedef std::shared_ptr<lsst::afw::image::TanWcs const> ConstPtr;
 
     /// Decode the SIP headers for a given matrix, if present.
     static void decodeSipHeader(

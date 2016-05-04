@@ -41,7 +41,7 @@ Python interface to lsst::afw::table::io classes
 #include "lsst/pex/exceptions.h"
 %}
 
-%include "boost_shared_ptr.i"
+%include "std_shared_ptr.i"
 %include "lsst/p_lsstSwig.i"
 %import "lsst/pex/exceptions/exceptionsLib.i"
 
