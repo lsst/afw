@@ -335,10 +335,6 @@ class RgbTestCase(unittest.TestCase):
             self.writeFileLegacyAPI(fileName)
             self.assertTrue(os.path.exists(fileName))
 
-        def tst():
-            self.writeFileLegacyAPI("rgb.unknown")
-        utilsTests.assertRaisesLsstCpp(self, ValueError, tst)
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
