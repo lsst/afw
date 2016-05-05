@@ -29,6 +29,8 @@
 #ifndef LSST_AFW_GEOM_EXTENT_H
 #define LSST_AFW_GEOM_EXTENT_H
 
+#include <tuple>
+
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
@@ -248,9 +250,9 @@ public:
     /// @brief Construct from a std::pair.
     explicit Extent(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
-    /// @brief Construct from boost::tuple.
-    explicit Extent(boost::tuple<T,T> const & xy) : 
-        Super(EigenVector(xy.template get<0>(), xy.template get<1>())) {}
+    /// @brief Construct from std::tuple.
+    explicit Extent(std::tuple<T,T> const & xy) : 
+        Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
 #ifdef SWIG
     T getX() const;
@@ -294,9 +296,9 @@ public:
     /// @brief Construct from a two-element array.
     explicit Extent(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
-    /// @brief Construct from boost::tuple.
-    explicit Extent(boost::tuple<T,T,T> const & xyz) : 
-        Super(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
+    /// @brief Construct from std::tuple.
+    explicit Extent(std::tuple<T,T,T> const & xyz) : 
+        Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
 
 #ifdef SWIG
     T getX() const;

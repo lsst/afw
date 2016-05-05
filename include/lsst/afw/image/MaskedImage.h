@@ -30,14 +30,15 @@
 #ifndef LSST_IMAGE_MASKEDIMAGE_H
 #define LSST_IMAGE_MASKEDIMAGE_H
 
-#include <ostream>
 #include <list>
 #include <map>
+#include <memory>
+#include <ostream>
 #include <string>
 
-#include <memory>
 #include "boost/mpl/at.hpp"
 #include "boost/iterator/zip_iterator.hpp"
+#include "boost/tuple/tuple.hpp" // cannot convert to std::tuple (yet) because of use with boost::gil
 
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/daf/base/Persistable.h"

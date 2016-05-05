@@ -30,11 +30,13 @@
  * @author Steve Bickerton
  * @ingroup afw
  */
+#include <cassert>
+#include <cmath>
 #include <iostream>
 #include <limits>
-#include <cmath>
-#include <cassert>
 #include <memory>
+#include <tuple>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
@@ -151,7 +153,7 @@ namespace {
 
     /*********************************************************************************************************/
     // return type for processPixels
-    typedef boost::tuple<int,                        // n
+    typedef std::tuple<int,                        // n
                          double,                     // sum
                          afwMath::Statistics::Value, // mean
                          afwMath::Statistics::Value, // variance
@@ -439,8 +441,8 @@ namespace {
                                               weightsAreMultiplicative, andMask, calcErrorFromInputVariance,
                                               doCheckFinite, doGetWeighted,
                                               maskPropagationThresholds);
-        nCrude = values.get<0>();
-        double sumCrude = values.get<1>();
+        nCrude = std::get<0>(values);
+        double sumCrude = std::get<1>(values);
         
         meanCrude = 0.0;
         if (nCrude > 0) {
@@ -581,7 +583,7 @@ namespace {
  * @param quartile  the desired percentile.
  *
  */
-    typedef boost::tuple<double, double, double> MedianQuartileReturn;
+    typedef std::tuple<double, double, double> MedianQuartileReturn;
 
     template<typename Pixel>
     MedianQuartileReturn medianAndQuartiles(std::vector<Pixel> &img)
@@ -837,13 +839,13 @@ void afwMath::Statistics::doStatistics(
                                           _sctrl.getNanSafe(), _sctrl.getWeighted(),
                                           _sctrl._maskPropagationThresholds);
 
-    _n = standard.get<0>();
-    _sum = standard.get<1>();
-    _mean = standard.get<2>();
-    _variance = standard.get<3>();
-    _min = standard.get<4>();
-    _max = standard.get<5>();
-    _allPixelOrMask = standard.get<6>();
+    _n = std::get<0>(standard);
+    _sum = std::get<1>(standard);
+    _mean = std::get<2>(standard);
+    _variance = std::get<3>(standard);
+    _min = std::get<4>(standard);
+    _max = std::get<5>(standard);
+    _allPixelOrMask = std::get<6>(standard);
 
     // ==========================================================
     // now only calculate it if it's specifically requested - these all cost more!
@@ -864,8 +866,8 @@ void afwMath::Statistics::doStatistics(
             _median = Value(percentile(*imgcp, 0.5), NaN);
         } else {
             MedianQuartileReturn mq = medianAndQuartiles(*imgcp);
-            _median = Value(mq.get<0>(), NaN);
-            _iqrange = mq.get<2>() - mq.get<1>();
+            _median = Value(std::get<0>(mq), NaN);
+            _iqrange = std::get<2>(mq) - std::get<1>(mq);
         }
         
         
@@ -884,9 +886,9 @@ void afwMath::Statistics::doStatistics(
                                                      _sctrl.getNanSafe(), _sctrl.getWeighted(),
                                                      _sctrl._maskPropagationThresholds);
                 
-                int const nClip = clipped.get<0>();
-                _meanclip = clipped.get<2>();     // clipped mean
-                double const varClip = clipped.get<3>().first;  // clipped variance
+                int const nClip = std::get<0>(clipped);
+                _meanclip = std::get<2>(clipped);     // clipped mean
+                double const varClip = std::get<3>(clipped).first;  // clipped variance
 
                 _varianceclip = Value(varClip, varianceError(varClip, nClip));
                 // ... ignore other values

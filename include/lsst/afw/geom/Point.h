@@ -29,6 +29,8 @@
 #ifndef LSST_AFW_GEOM_POINT_H
 #define LSST_AFW_GEOM_POINT_H
 
+#include <tuple>
+
 #include "lsst/afw/geom/CoordinateBase.h"
 #include "lsst/afw/geom/CoordinateExpr.h"
 #include "lsst/afw/geom/Extent.h"
@@ -213,9 +215,9 @@ public:
     /// @brief Construct from a std::pair.
     explicit Point(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
-    /// @brief Construct from boost::tuple.
-    explicit Point(boost::tuple<T,T> const & xy) : 
-        Super(EigenVector(xy.template get<0>(), xy.template get<1>())) {}
+    /// @brief Construct from std::tuple.
+    explicit Point(std::tuple<T,T> const & xy) : 
+        Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
 #ifdef SWIG
     T getX() const;
@@ -263,9 +265,9 @@ public:
     /// @brief Construct from a two-element array.
     explicit Point(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
-    /// @brief Construct from boost::tuple.
-    explicit Point(boost::tuple<T,T,T> const & xyz) : 
-        Super(EigenVector(xyz.template get<0>(), xyz.template get<1>(), xyz.template get<2>())) {}
+    /// @brief Construct from std::tuple.
+    explicit Point(std::tuple<T,T,T> const & xyz) : 
+        Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
 
 #ifdef SWIG
     T getX() const;
