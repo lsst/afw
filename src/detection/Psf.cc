@@ -3,7 +3,6 @@
 #include <typeinfo>
 #include <cmath>
 
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/math/offsetImage.h"
 
@@ -20,7 +19,7 @@ bool comparePsfEvalPoints(geom::Point2D const & a, geom::Point2D const & b) {
 }
 
 bool isPointNull(geom::Point2D const & p) {
-    return utils::isnan(p.getX()) && utils::isnan(p.getY());
+    return std::isnan(p.getX()) && std::isnan(p.getY());
 }
 
 } // anonymous

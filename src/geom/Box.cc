@@ -23,7 +23,6 @@
 #include <cmath>
 #include <limits>
 
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/geom/Box.h"
 
 namespace geom = lsst::afw::geom;
@@ -75,8 +74,8 @@ geom::Box2I::Box2I(Box2D const & other, EdgeHandlingEnum edgeHandling) : _minimu
         *this = Box2I();
         return;
     }
-    if (!utils::isfinite(other.getMinX()) || !utils::isfinite(other.getMinY())
-        || !utils::isfinite(other.getMaxX()) || !utils::isfinite(other.getMaxY())) {
+    if (!std::isfinite(other.getMinX()) || !std::isfinite(other.getMinY())
+        || !std::isfinite(other.getMaxX()) || !std::isfinite(other.getMaxY())) {
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterError,
             "Cannot convert non-finite Box2D to Box2I"

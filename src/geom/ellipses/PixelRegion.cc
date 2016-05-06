@@ -21,7 +21,7 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-#include "lsst/utils/ieee.h"
+#include <cmath>
 #include "lsst/afw/geom/ellipses/PixelRegion.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
 
@@ -35,7 +35,7 @@ PixelRegion::PixelRegion(Ellipse const & ellipse) :
     _detQ = q(0,0) * q(1,1) - q(0, 1) * q(0, 1);
     _invQxx = q(1,1) / _detQ;
     _alpha = q(0,1) / _detQ / _invQxx; // == -invQxy / invQxx
-    if (lsst::utils::isnan(_alpha)) {
+    if (std::isnan(_alpha)) {
         _alpha = 0.0;
     }
 }

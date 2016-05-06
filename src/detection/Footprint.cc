@@ -29,6 +29,7 @@
 #include <string>
 #include <typeinfo>
 #include <algorithm>
+#include <cmath>
 #include "boost/format.hpp"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
@@ -43,7 +44,6 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/io/InputArchive.h"
 #include "lsst/afw/table/io/OutputArchive.h"
-#include "lsst/utils/ieee.h"
 
 namespace lsst {
 namespace afw {
@@ -2291,7 +2291,7 @@ psErrorCode pmFootprintCullPeaks(psImage const *img, // the image wherein lives 
         assert (x >= 0 && x < subImg->numCols && y >= 0 && y < subImg->numRows);
         float const stdev = std::sqrt(subWt->data.F32[y][x]);
         float threshold = subImg->data.F32[y][x] - nsigma_delta*stdev;
-        if (lsst::utils::isnan(threshold) || threshold < min_threshold) {
+        if (std::isnan(threshold) || threshold < min_threshold) {
 #if 1                                   // min_threshold is assumed to be below the detection threshold,
                                         // so all the peaks are pmFootprint, and this isn't the brightest
             (void)psArrayRemoveIndex(fp->peaks, i);

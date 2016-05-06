@@ -31,9 +31,8 @@
  */
 #include <iostream>
 #include <limits>
-#include <vector>
 #include <cmath>
-#include "lsst/utils/ieee.h"
+#include <vector>
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Background.h"

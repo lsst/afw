@@ -38,7 +38,6 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/geom/Angle.h"
 
 using namespace std;
@@ -97,7 +96,7 @@ namespace {
     public:
         template<typename T>
         bool operator()(T val) const {
-            return lsst::utils::isfinite(static_cast<float>(val));
+            return std::isfinite(static_cast<float>(val));
         }
     };
 
@@ -493,7 +492,7 @@ namespace {
         double const center = clipinfo.first;
         double const cliplimit = clipinfo.second;
 
-        if (lsst::utils::isnan(center) || lsst::utils::isnan(cliplimit)) {
+        if (std::isnan(center) || std::isnan(cliplimit)) {
             return StandardReturn(0, NaN,
                                   afwMath::Statistics::Value(NaN, NaN),
                                   afwMath::Statistics::Value(NaN, NaN), NaN, NaN, ~0x0);

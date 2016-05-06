@@ -28,8 +28,8 @@
  * @brief Utilities to support PCA analysis of a set of images
  */
 #include <algorithm>
+#include <cmath>
 #include <memory>
-#include "lsst/utils/ieee.h"
 
 #include "Eigen/Core"
 #include "Eigen/SVD"
@@ -332,7 +332,7 @@ double do_updateBadPixels(
                         float const var = iptr.variance()/(flux_i*flux_i);
                         float const ivar = 1.0/var;
 
-                        if (lsst::utils::isfinite(value*ivar)) {
+                        if (std::isfinite(value*ivar)) {
                             *mptr += value*ivar;
                             *wptr += ivar;
                         }
@@ -470,7 +470,7 @@ double innerProduct(Image1T const& lhs, ///< first image
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr) {
                 typename Image1T::Pixel val = *lptr;
-                if (lsst::utils::isfinite(val)) {
+                if (std::isfinite(val)) {
                     sum += val*val;
                 }
             }
@@ -487,7 +487,7 @@ double innerProduct(Image1T const& lhs, ///< first image
             for (typename Image1T::const_x_iterator lptr = lhs.row_begin(y) + border,
                      lend = lhs.row_end(y) - border; lptr != lend; ++lptr, ++rptr) {
                 double const tmp = (*lptr)*(*rptr);
-                if (lsst::utils::isfinite(tmp)) {
+                if (std::isfinite(tmp)) {
                     sum += tmp;
                 }
             }

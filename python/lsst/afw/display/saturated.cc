@@ -3,8 +3,8 @@
  *
  * Handle saturated pixels when making colour images
  */
+#include <cmath>
 #include "boost/format.hpp"
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/detection.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "Rgb.h"
@@ -61,7 +61,7 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
 
     }
 
-    bool const useMaxPixel = !utils::isfinite(saturatedPixelValue);
+    bool const useMaxPixel = !std::isfinite(saturatedPixelValue);
 
     SetPixels<typename ImageT::Image>
         setR(*rim.getImage()),
