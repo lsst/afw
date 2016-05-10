@@ -96,7 +96,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         # the meas field is added using a functor key, but the error is added
         # as scalars, as we lack a ResultKey functor as exists in meas_base
         self.centroidKey = lsst.afw.table.Point2DKey.addFields(self.schema,
-            "b", "", "pixels")
+            "b", "", "pixel")
         self.xErrKey = self.schema.addField("b_xSigma", type = "F")
         self.yErrKey = self.schema.addField("b_ySigma", type = "F")
         self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")

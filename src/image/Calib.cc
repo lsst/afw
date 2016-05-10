@@ -499,11 +499,11 @@ private:
     CalibSchema() :
         schema(),
         midTime(schema.addField<boost::int64_t>(
-                    "midtime", "middle of the time of the exposure relative to Unix epoch", "nanoseconds"
+                    "midtime", "middle of the time of the exposure relative to Unix epoch", "ns"
                 )),
-        expTime(schema.addField<double>("exptime", "exposure time", "seconds")),
-        fluxMag0(schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "dn")),
-        fluxMag0Sigma(schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "dn"))
+        expTime(schema.addField<double>("exptime", "exposure time", "s")),
+        fluxMag0(schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "count")),
+        fluxMag0Sigma(schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count"))
     {
         schema.getCitizen().markPersistent();
     }

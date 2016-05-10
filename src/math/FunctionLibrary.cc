@@ -86,8 +86,8 @@ struct Chebyshev1Function2PersistenceHelper : public PolynomialFunction2Persiste
 
     explicit Chebyshev1Function2PersistenceHelper(int nCoefficients) :
         PolynomialFunction2PersistenceHelper(nCoefficients),
-        min(table::PointKey<double>::addFields(schema, "min", "minimum point for function's bbox", "pixels")),
-        max(table::PointKey<double>::addFields(schema, "max", "maximum point for function's bbox", "pixels"))
+        min(table::PointKey<double>::addFields(schema, "min", "minimum point for function's bbox", "pixel")),
+        max(table::PointKey<double>::addFields(schema, "max", "maximum point for function's bbox", "pixel"))
     {}
 
     explicit Chebyshev1Function2PersistenceHelper(table::Schema const & schema_) :

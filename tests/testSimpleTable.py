@@ -282,7 +282,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testTicket2262(self):
         """Test that we can construct an array field in Python"""
-        f1 = lsst.afw.table.Field["ArrayF"]("name", "doc", "units", 5)
+        f1 = lsst.afw.table.Field["ArrayF"]("name", "doc", "barn", 5)
         f2 = lsst.afw.table.Field["ArrayD"]("name", "doc", 5)
         self.assertEqual(f1.getSize(), 5)
         self.assertEqual(f2.getSize(), 5)
@@ -293,7 +293,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("a_b_c2", type="Flag")
         schema.addField("a_d1", type=numpy.int32)
         schema.addField("a_d2", type=numpy.float32)
-        pointKey = lsst.afw.table.Point2IKey.addFields(schema, "q_e1", "doc for point field", "pixels")
+        pointKey = lsst.afw.table.Point2IKey.addFields(schema, "q_e1", "doc for point field", "pixel")
         schema.addField("q_e2_xxSigma", type=numpy.float32)
         schema.addField("q_e2_yySigma", type=numpy.float32)
         schema.addField("q_e2_xySigma", type=numpy.float32)
@@ -502,13 +502,13 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testRename(self):
         """Test field-renaming functionality in Field, SchemaMapper"""
-        field1i = lsst.afw.table.Field[int]("i1", "doc for i", "units for i")
+        field1i = lsst.afw.table.Field[int]("i1", "doc for i", "m")
         field2i = field1i.copyRenamed("i2")
         self.assertEqual(field1i.getName(), "i1")
         self.assertEqual(field2i.getName(), "i2")
         self.assertEqual(field1i.getDoc(), field2i.getDoc())
         self.assertEqual(field1i.getUnits(), field2i.getUnits())
-        field1a = lsst.afw.table.Field["ArrayF"]("a1", "doc for a", "units for a", 3)
+        field1a = lsst.afw.table.Field["ArrayF"]("a1", "doc for a", "s", 3)
         field2a = field1a.copyRenamed("a2")
         self.assertEqual(field1a.getName(), "a1")
         self.assertEqual(field2a.getName(), "a2")

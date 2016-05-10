@@ -59,7 +59,7 @@ class SchemaTestCase(unittest.TestCase):
 
         schema = lsst.afw.table.Schema();
         ab_k = lsst.afw.table.CoordKey.addFields(schema, "a_b", "parent coord")
-        abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixels")
+        abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixel")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
         acf_k = schema.addField("a_c_f", type=numpy.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
@@ -106,6 +106,25 @@ class SchemaTestCase(unittest.TestCase):
         keys2 = map(lambda x: x.key, schema4.asList())
         self.assertEqual(keys, keys2)
 
+    def testUnits(self):
+        schema = lsst.afw.table.Schema();
+	# first insert some valid units
+        schema.addField("a", type="I", units="pixel")
+        schema.addField("b", type="I", units="m2")
+        schema.addField("c", type="I", units="electron / adu")
+        schema.addField("d", type="I", units="kg m s^(-2)")
+        schema.addField("e", type="I", units="GHz / Mpc")
+        schema.addField("f", type="Angle", units="deg")
+        schema.addField("g", type="Angle", units="rad")
+        schema.checkUnits()
+	# now try inserting invalid units
+        self.assertRaises(ValueError, schema.addField, "a", type="I", units="camel")
+        self.assertRaises(ValueError, schema.addField, "b", type="I", units="pixels^2^2")
+	# add invalid units in silent mode, should work fine
+        schema.addField("h", type="I", units="lala", parse_strict='silent')
+	# Now this check should raise because there is an invalid unit
+	self.assertRaises(ValueError, schema.checkUnits)
+
     def testInspection(self):
         schema = lsst.afw.table.Schema()
         keys = []
@@ -132,11 +151,11 @@ class SchemaTestCase(unittest.TestCase):
 
     def testComparison(self):
         schema1 = lsst.afw.table.Schema()
-        schema1.addField("a", type=float, doc="doc for a", units="units for a")
-        schema1.addField("b", type=int, doc="doc for b", units="units for b")
+        schema1.addField("a", type=float, doc="doc for a", units="m")
+        schema1.addField("b", type=int, doc="doc for b", units="s")
         schema2 = lsst.afw.table.Schema()
-        schema2.addField("a", type=int, doc="doc for a", units="units for a")
-        schema2.addField("b", type=float, doc="doc for b", units="units for b")
+        schema2.addField("a", type=int, doc="doc for a", units="m")
+        schema2.addField("b", type=float, doc="doc for b", units="s")
         cmp1 = schema1.compare(schema2, lsst.afw.table.Schema.IDENTICAL)
         self.assertTrue(cmp1 & lsst.afw.table.Schema.EQUAL_NAMES)
         self.assertTrue(cmp1 & lsst.afw.table.Schema.EQUAL_DOCS)

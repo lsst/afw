@@ -328,9 +328,9 @@ struct PersistenceHelper {
         schema(),
         orderX(schema.addField<int>("order_x", "maximum Chebyshev function order in x")),
         bboxMin(table::PointKey<int>::addFields(
-            schema, "bbox_min", "lower-left corner of bounding box", "pixels")),
+            schema, "bbox_min", "lower-left corner of bounding box", "pixel")),
         bboxMax(table::PointKey<int>::addFields(
-            schema, "bbox_max", "upper-right corner of bounding box", "pixels")),
+            schema, "bbox_max", "upper-right corner of bounding box", "pixel")),
         coefficients(
             schema.addField< table::Array<double> >(
                 "coefficients", "Chebyshev function coefficients, ordered by y then x", nx*ny

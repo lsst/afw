@@ -786,9 +786,9 @@ public:
 private:
     FootprintPersistenceHelper() :
         spanSchema(),
-        spanY(spanSchema.addField<int>("y", "row position of span", "pixels")),
-        spanX0(spanSchema.addField<int>("x0", "first column of span (inclusive)", "pixels")),
-        spanX1(spanSchema.addField<int>("x1", "first column of span (inclusive)", "pixels"))
+        spanY(spanSchema.addField<int>("y", "row position of span", "pixel")),
+        spanX0(spanSchema.addField<int>("x0", "first column of span (inclusive)", "pixel")),
+        spanX1(spanSchema.addField<int>("x1", "first column of span (inclusive)", "pixel"))
     {
         spanSchema.getCitizen().markPersistent();
     }

@@ -98,7 +98,7 @@ private:
 
     explicit DeltaFunctionKernelPersistenceHelper() :
         Kernel::PersistenceHelper(0),
-        pixel(table::PointKey<int>::addFields(schema, "pixel", "position of nonzero pixel", "pixels"))
+        pixel(table::PointKey<int>::addFields(schema, "pixel", "position of nonzero pixel", "pixel"))
     {
        schema.getCitizen().markPersistent();
     }

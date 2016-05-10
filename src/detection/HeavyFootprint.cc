@@ -252,13 +252,13 @@ private:
     HeavyFootprintPersistenceHelper() :
         schema(),
         image(schema.addField< afw::table::Array<ImagePixelT> >(
-                  "image", "image pixels for HeavyFootprint", "dn"
+                  "image", "image pixels for HeavyFootprint", "count"
               )),
         mask(schema.addField< afw::table::Array<MaskPixelT> >(
                  "mask", "mask pixels for HeavyFootprint"
              )),
         variance(schema.addField< afw::table::Array<VariancePixelT> >(
-                     "variance", "variance pixels for HeavyFootprint", "dn^2"
+                     "variance", "variance pixels for HeavyFootprint", "count^2"
                  ))
     {
         schema.getCitizen().markPersistent();

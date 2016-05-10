@@ -1045,8 +1045,8 @@ struct WcsPersistenceHelper : private boost::noncopyable {
 private:
     WcsPersistenceHelper() :
         schema(),
-        crval(table::PointKey<double>::addFields(schema, "crval", "celestial reference point", "degrees")),
-        crpix(table::PointKey<double>::addFields(schema, "crpix", "pixel reference point", "pixels")),
+        crval(table::PointKey<double>::addFields(schema, "crval", "celestial reference point", "deg")),
+        crpix(table::PointKey<double>::addFields(schema, "crpix", "pixel reference point", "pixel")),
         cd(schema.addField< table::Array<double> >(
                "cd", "linear transform matrix, ordered (1_1, 2_1, 1_2, 2_2)", 4)),
         ctype1(schema.addField< std::string >("ctype1", "coordinate type", 72)),
