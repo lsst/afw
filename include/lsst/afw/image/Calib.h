@@ -85,6 +85,7 @@ public :
     typedef std::shared_ptr<Calib const> ConstPtr;
 
     explicit Calib();
+    explicit Calib(double fluxMag0);
     explicit Calib(std::vector<CONST_PTR(Calib)> const& calibs);
     explicit Calib(CONST_PTR(lsst::daf::base::PropertySet));
 
