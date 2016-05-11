@@ -29,11 +29,11 @@
 #ifndef LSST_AFW_GEOM_COORDINATEBASE_H
 #define LSST_AFW_GEOM_COORDINATEBASE_H
 
+#include <iostream>
+#include <tuple>
 #include <utility>
 
 #include "Eigen/Core"
-#include <iostream>
-#include "boost/tuple/tuple.hpp"
 
 namespace lsst { namespace afw { namespace geom {
 
@@ -131,8 +131,8 @@ public:
     /// \brief Return a std::pair representation of the coordinate object.
     std::pair<T,T> asPair() const { return std::make_pair(_vector.x(),_vector.y()); }
 
-    /// \brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T> asTuple() const { return boost::make_tuple(_vector.x(),_vector.y()); }
+    /// \brief Return a std::tuple representation of the coordinate object.
+    std::tuple<T,T> asTuple() const { return std::make_tuple(_vector.x(),_vector.y()); }
 
 protected:
 
@@ -180,9 +180,9 @@ public:
     void setY(T y) { _vector.y() = y; }
     void setZ(T z) { _vector.z() = z; }
 
-    /// \brief Return a boost::tuple representation of the coordinate object.
-    boost::tuple<T,T,T> asTuple() const {
-        return boost::make_tuple(_vector.x(), _vector.y(), _vector.z()); 
+    /// \brief Return a std::tuple representation of the coordinate object.
+    std::tuple<T,T,T> asTuple() const {
+        return std::make_tuple(_vector.x(), _vector.y(), _vector.z()); 
     }
 
 protected:
