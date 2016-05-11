@@ -28,12 +28,12 @@
  */
 #include <limits>
 #include <algorithm>
+#include <cmath>
+#include <memory>
 #include <numeric>
 #include "Eigen/Core"
 #include "Eigen/LU"
 #include "boost/format.hpp"
-#include <memory>
-#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -164,7 +164,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
                  end = im.row_end(iy); ptr != end; ++ptr, ++alpha) {
             double const val = ptr.image();
             double const ivar = ctrl.getWeighting() ? 1/ptr.variance() : 1.0;
-            if (!lsst::utils::isfinite(val + ivar)) {
+            if (!std::isfinite(val + ivar)) {
                 continue;
             }
 

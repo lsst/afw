@@ -39,7 +39,6 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/math/Statistics.h"
-#include "lsst/utils/ieee.h"
 
 using namespace std;
 
@@ -64,7 +63,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         
         BOOST_CHECK_EQUAL(stats.getValue(math::NPOINT), img.getWidth()*img.getHeight());
         BOOST_CHECK_EQUAL(mean, img(0, 0));
-        BOOST_CHECK(lsst::utils::isnan(dmean)); // we didn't ask for the error, so it's a NaN
+        BOOST_CHECK(std::isnan(dmean)); // we didn't ask for the error, so it's a NaN
         BOOST_CHECK_EQUAL(sd, 0);
     }
 

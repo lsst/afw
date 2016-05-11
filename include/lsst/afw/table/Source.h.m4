@@ -130,7 +130,6 @@ m4def(`DEFINE_FLUX_COLUMN_GETTERS',
 #include "boost/array.hpp"
 #include "boost/type_traits/is_convertible.hpp"
 
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/detection/Footprint.h"
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/aggregates.h"

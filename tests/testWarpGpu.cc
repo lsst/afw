@@ -40,7 +40,6 @@
 #include <cmath>
 
 #include "lsst/daf/base.h"
-#include "lsst/utils/ieee.h"
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/exceptions.h"
@@ -81,8 +80,8 @@ double CvRmsd(const afwImage::Image<T1>& imgA, const afwImage::Image<T2>& imgB)
         for (int y = 0; y < dimY; y++) {
             const double valA = imgA(x, y);
             const double valB = imgB(x, y);
-            if (lsst::utils::isnan(valA) || lsst::utils::isnan(valB)) continue;
-            if (lsst::utils::isinf(valA) || lsst::utils::isinf(valB)) continue;
+            if (std::isnan(valA) || std::isnan(valB)) continue;
+            if (std::isinf(valA) || std::isinf(valB)) continue;
 
             cnt++;
             avgSum += (valA + valB) / 2;
@@ -159,8 +158,8 @@ string DecimalPlaces(int places, double val)
 
 bool IsErrorAcceptable(double val, double limit)
 {
-    if (lsst::utils::isnan(val)) return false;
-    if (lsst::utils::isinf(val)) return false;
+    if (std::isnan(val)) return false;
+    if (std::isinf(val)) return false;
     return val < limit;
 }
 

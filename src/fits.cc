@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <complex>
+#include <cmath>
 #include <sstream>
 
 #include "fitsio.h"
@@ -16,7 +17,6 @@ extern "C" {
 #include "boost/format.hpp"
 #include "boost/scoped_array.hpp"
 
-#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Log.h"
 #include "lsst/afw/fits.h"
@@ -219,10 +219,10 @@ namespace {
 /// an empty string is returned.
 std::string nonFiniteDoubleToString(double value)
 {
-    if (utils::isfinite(value)) {
+    if (std::isfinite(value)) {
         return "";
     }
-    if (utils::isnan(value)) {
+    if (std::isnan(value)) {
         return "NAN";
     }
     if (value < 0) {

@@ -43,7 +43,6 @@
 #include <ctime>
 
 #include "lsst/daf/base.h"
-#include "lsst/utils/ieee.h"
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
@@ -96,8 +95,8 @@ double CvRmsd(afwImage::Image<T1>& imgA, afwImage::Image<T2>& imgB)
         for (int y = 0; y < dimY; y++) {
             const double valA = imgA(x, y);
             const double valB = imgB(x, y);
-            if (lsst::utils::isnan(valA) && lsst::utils::isnan(valB)) continue;
-            if (lsst::utils::isinf(valA) && lsst::utils::isinf(valB)) continue;
+            if (std::isnan(valA) && std::isnan(valB)) continue;
+            if (std::isinf(valA) && std::isinf(valB)) continue;
 
             cnt++;
             avgSum += (valA + valB) / 2;
@@ -137,8 +136,8 @@ double DiffCnt(afwImage::Mask<T>& imgA, afwImage::Mask<T>& imgB)
 
 string NumToStr(double num)
 {
-    if (lsst::utils::isnan(num))       return string("NAN!!!");
-    else if (lsst::utils::isinf(num))  return string("INF!!!");
+    if (std::isnan(num))       return string("NAN!!!");
+    else if (std::isinf(num))  return string("INF!!!");
     else {
         stringstream ss;
         ss << num;
@@ -296,8 +295,8 @@ string Sel(bool b, const char* onTrue, const char* onFalse)
 
 bool IsErrorAcceptable(double val, double limit)
 {
-    if (lsst::utils::isnan(val)) return false;
-    if (lsst::utils::isinf(val)) return false;
+    if (std::isnan(val)) return false;
+    if (std::isinf(val)) return false;
     return val < limit;
 }
 

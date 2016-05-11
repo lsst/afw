@@ -9,11 +9,11 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <cmath>
 #include <map>
 
 #include "boost/filesystem.hpp"
 
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/table/Source.h"
 
 struct EqualityCompare {
@@ -26,7 +26,7 @@ struct EqualityCompare {
     }
 
     bool operator()(float a, float b) const {
-        return std::fabs(a - b) < 1E-8 || (lsst::utils::isnan(a) && lsst::utils::isnan(b));
+        return std::fabs(a - b) < 1E-8 || (std::isnan(a) && std::isnan(b));
     }
 
     bool operator()(

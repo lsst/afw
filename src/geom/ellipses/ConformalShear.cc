@@ -21,11 +21,11 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+#include <cmath>
+
 #include "lsst/afw/geom/ellipses/ConformalShear.h"
 #include "lsst/afw/geom/ellipses/ReducedShear.h"
 #include "lsst/afw/geom/ellipses/Distortion.h"
-
-#include <boost/math/special_functions/atanh.hpp>
 
 namespace lsst { namespace afw { namespace geom { namespace ellipses {
 
@@ -39,7 +39,7 @@ ConformalShear & ConformalShear::operator=(Distortion const & other) {
     if (delta < 1E-8) {
         _complex = other.getComplex() * (1.0 + delta * delta / 3.0);
     } else {
-        double eta = boost::math::atanh(delta);
+        double eta = std::atanh(delta);
         _complex = other.getComplex() * eta / delta;
     }
     return *this;
@@ -50,7 +50,7 @@ ConformalShear & ConformalShear::operator=(ReducedShear const & other) {
     if (g < 1E-8) {
         _complex = other.getComplex() * 2.0 * (1.0 + g * g / 3.0);
     } else {
-        double eta = 2.0 * boost::math::atanh(g);
+        double eta = 2.0 * std::atanh(g);
         _complex = other.getComplex() * eta / g;
     }
     return *this;
@@ -64,7 +64,7 @@ detail::EllipticityBase::Jacobian ConformalShear::dAssign(Distortion const & oth
         alpha = 1.0 + delta * delta / 3.0;
         beta = 2.0 / 3.0;
     } else {
-        double eta = boost::math::atanh(delta);
+        double eta = std::atanh(delta);
         alpha = eta / delta;
         beta = (1.0 / (1.0 - delta * delta) - alpha) / (delta * delta);
     }
@@ -83,7 +83,7 @@ detail::EllipticityBase::Jacobian ConformalShear::dAssign(ReducedShear const & o
         alpha = 2.0 * (1.0 + g * g / 3.0);
         beta = 4.0 / 3.0;
     } else {
-        double eta = 2.0 * boost::math::atanh(g);
+        double eta = 2.0 * std::atanh(g);
         alpha = eta / g;
         beta = 1.0 * (2.0 / (1.0 - g * g) - alpha) / (g * g);
     }

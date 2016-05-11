@@ -10,12 +10,12 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <cmath>
 #include <map>
 
 #include "boost/filesystem.hpp"
 #include "Eigen/Core"
 
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/ArchiveIndexSchema.h"
 #include "lsst/afw/table/io/OutputArchive.h"

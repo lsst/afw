@@ -43,7 +43,6 @@
 #include <ctime>
 
 #include "lsst/utils/Utils.h"
-#include "lsst/utils/ieee.h"
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
@@ -94,8 +93,8 @@ double CvRmsd(afwImage::Image<T1>& imgA, afwImage::Image<T2>& imgB)
         for (int y = 0; y < dimY; y++) {
             const double valA = imgA(x, y);
             const double valB = imgB(x, y);
-            if (lsst::utils::isnan(valA) && lsst::utils::isnan(valB)) continue;
-            if (lsst::utils::isinf(valA) && lsst::utils::isinf(valB)) continue;
+            if (std::isnan(valA) && std::isnan(valB)) continue;
+            if (std::isinf(valA) && std::isinf(valB)) continue;
 
             cnt++;
             avgSum += (valA + valB) / 2;

@@ -27,7 +27,6 @@
 
 #include "boost/scoped_array.hpp"
 
-#include "lsst/utils/ieee.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/logging/Log.h"
@@ -82,7 +81,7 @@ size_t makeRecordPositions(
     for (typename Cat::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i) {
         geom::Angle ra = i->get(raKey);
         geom::Angle dec = i->get(decKey);
-        if (lsst::utils::isnan(ra.asRadians()) || lsst::utils::isnan(dec.asRadians())) {
+        if (std::isnan(ra.asRadians()) || std::isnan(dec.asRadians())) {
             continue;
         }
         double cosDec    = std::cos(dec);
@@ -311,7 +310,7 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     PTR(SourceRecord) nullRecord = std::shared_ptr<SourceRecord>();
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i) {
-        if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
+        if (std::isnan(i->getX()) || std::isnan(i->getY())) {
             continue;
         }
         pos1[n] = i;
@@ -320,7 +319,7 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     len1 = n;
     n = 0;
     for (SourceCatalog::const_iterator i(cat2.begin()), e(cat2.end()); i != e; ++i) {
-        if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
+        if (std::isnan(i->getX()) || std::isnan(i->getY())) {
             continue;
         }
         pos2[n] = i;
@@ -394,7 +393,7 @@ SourceMatchVector matchXy(
     boost::scoped_array<PTR(SourceRecord)> pos(new PTR(SourceRecord)[len]);
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i) {
-        if (lsst::utils::isnan(i->getX()) || lsst::utils::isnan(i->getY())) {
+        if (std::isnan(i->getX()) || std::isnan(i->getY())) {
             continue;
         }
         pos[n] = i;

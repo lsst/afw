@@ -33,7 +33,6 @@
 #include <limits>
 #include <vector>
 #include <cmath>
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Interpolate.h"
 #include "lsst/afw/math/Approximate.h"
@@ -66,11 +65,11 @@ namespace {
             culledRefs.clear();
         }
 
-        bool const haveDefault = !lsst::utils::isnan(defaultValue);
+        bool const haveDefault = !std::isnan(defaultValue);
 
         for (std::vector<double>::const_iterator pVal = values.begin(), pRef = refs.begin();
              pRef != refs.end(); ++pRef, ++pVal) {
-            if (!lsst::utils::isnan(*pRef)) {
+            if (!std::isnan(*pRef)) {
                 culledValues.push_back(*pVal);
                 culledRefs.push_back(*pRef);
             } else if(haveDefault) {

@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <array>
+#include <cmath>
 
 #include "boost/regex.hpp"
 #include "boost/lexical_cast.hpp"
@@ -11,7 +12,6 @@
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index/member.hpp"
-#include "boost/math/special_functions/round.hpp"
 
 #include "lsst/pex/logging.h"
 #include "lsst/afw/table/io/FitsSchemaInputMapper.h"
@@ -708,7 +708,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
         }
         if (item.tccls == "Covariance") {
             double v = 0.5 * (std::sqrt(1 + 8 * size) - 1);
-            int n = boost::math::iround(v);
+            int n = std::lround(v);
             if (n * (n + 1) != size * 2) {
                 throw LSST_EXCEPT(
                     afw::fits::FitsError,

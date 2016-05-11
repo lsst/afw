@@ -9,7 +9,6 @@
 
 #include <cmath>
 #include <limits>
-#include "lsst/utils/ieee.h"
 #include "lsst/afw/image/Filter.h"
 
 namespace lsst {
@@ -30,7 +29,7 @@ public :
     explicit Color(double g_r=std::numeric_limits<double>::quiet_NaN()) : _g_r(g_r) {}
 
     /// Whether the color is the special value that indicates that it is unspecified.
-    bool isIndeterminate() const { return utils::isnan(_g_r); }
+    bool isIndeterminate() const { return std::isnan(_g_r); }
 
     //@{
     /**
