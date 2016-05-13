@@ -64,7 +64,7 @@ namespace geom {
 template<typename CoordSysT>
 class TransformMap {
 public:
-    typedef std::map<CoordSysT, CONST_PTR(XYTransform)> Transforms;
+    typedef std::map<CoordSysT, std::shared_ptr<XYTransform const>> Transforms;
     typedef CoordSysT CoordSys; // needed by SWIG; see TransformMap.i
 
     /**
