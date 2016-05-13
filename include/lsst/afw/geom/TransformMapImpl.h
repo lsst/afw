@@ -57,8 +57,12 @@ TransformMap<CoordSysT>::TransformMap(
 
     // insert identity transform for nativeCoordSys, if not already provided
     if (!contains(nativeCoordSys)) {
-        _transforms.insert(std::make_pair(nativeCoordSys,
-            std::make_shared<IdentityXYTransform>()));
+        // Avoiding std::make_pair here to work around probable XCode 6.2 standard library bug.
+        std::pair<CoordSysT,std::shared_ptr<IdentityXYTransform> pair(
+            nativeCoordSys,
+            std::make_shared<IdentityXYTransform>()
+        );
+        _transforms.insert(pair);
     }
 }
 
