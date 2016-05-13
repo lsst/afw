@@ -10,6 +10,7 @@ setupRequired(eigen)
 setupRequired(gsl)
 setupRequired(fftw)
 setupRequired(utils)
+setupRequired(astropy)
 setupOptional(pyfits)
 setupOptional(matplotlib)
 
