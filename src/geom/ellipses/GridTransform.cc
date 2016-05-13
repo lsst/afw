@@ -140,4 +140,9 @@ Ellipse::GridTransform::operator AffineTransform () const {
     return AffineTransform(linear, linear(Point2D() - _input.getCenter()));
 }
 
+AffineTransform Ellipse::GridTransform::invert() const {
+    return AffineTransform(_coreGt.invert(), afw::geom::Extent2D(_input.getCenter()));
+}
+
+
 }}}} // namespace lsst::afw::geom::ellipses
