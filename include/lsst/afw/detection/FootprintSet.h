@@ -27,6 +27,8 @@
  * \file
  * \brief Represent a collections of footprints associated with image data
  */
+#include <cstdint>
+
 #include "lsst/afw/geom.h"
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
@@ -43,7 +45,7 @@ namespace detection {
 /// This is independent of the template parameters for FootprintSet, and
 /// including it within FootprintSet makes it difficult for SWIG to interpret
 /// the type.
-typedef boost::uint64_t FootprintIdPixel;
+typedef std::uint64_t FootprintIdPixel;
 
 /************************************************************************************************************/
 /*!
@@ -83,10 +85,10 @@ public:
                  Threshold const& threshold,
                  int const npixMin=1);
 
-    FootprintSet(image::Image<boost::uint16_t> const& img,
+    FootprintSet(image::Image<std::uint16_t> const& img,
                  Threshold const& threshold,
                  int const npixMin=1, bool const setPeaks=true);
-    FootprintSet(image::MaskedImage<boost::uint16_t, image::MaskPixel> const& img,
+    FootprintSet(image::MaskedImage<std::uint16_t, image::MaskPixel> const& img,
                  Threshold const& threshold,
                  std::string const& planeName = "",
                  int const npixMin=1, bool const setPeaks=true);

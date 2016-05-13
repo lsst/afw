@@ -25,6 +25,8 @@
 //
 
 %{
+#include <cstdint>
+
 #include "lsst/afw/image/ImageSlice.h"
 %}
 
@@ -128,7 +130,7 @@ __truediv__ = __div__
 %enddef
 
 
- //%slice(ImageSlice, U, boost::uint16_t);
+ //%slice(ImageSlice, U, std::uint16_t);
  //%slice(ImageSlice, I, int);
 %slice(ImageSlice, F, float);
 %slice(ImageSlice, D, double);

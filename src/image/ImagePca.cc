@@ -29,6 +29,7 @@
  */
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 
 #include "Eigen/Core"
@@ -511,8 +512,8 @@ double innerProduct(Image1T const& lhs, ///< first image
     template double innerProduct(Image<T> const&, Image<U> const&, int);    \
     template double innerProduct(Image<U> const&, Image<T> const&, int);
 
-INSTANTIATE(boost::uint16_t)
-INSTANTIATE(boost::uint64_t)
+INSTANTIATE(std::uint16_t)
+INSTANTIATE(std::uint64_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)

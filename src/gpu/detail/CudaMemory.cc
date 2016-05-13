@@ -37,6 +37,8 @@
 
 #ifdef GPU_BUILD
 
+#include <cstdint>
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 
@@ -95,7 +97,7 @@ void GpuMemOwner<T>::CopyToImageBase(lsst::afw::image::ImageBase<T>& img) const
 INSTANTIATE(double)
 INSTANTIATE(float)
 INSTANTIATE(int)
-INSTANTIATE(boost::uint16_t)
+INSTANTIATE(std::uint16_t)
 /// \endcond
 
 

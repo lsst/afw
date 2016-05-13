@@ -26,6 +26,7 @@
  * \file
  * \brief Implementation for ImageBase and Image
  */
+#include <cstdint>
 #include <iostream>
 #include "boost/mpl/vector.hpp"
 #pragma clang diagnostic push
@@ -573,7 +574,7 @@ image::Image<PixelT>::Image(
         unsigned int,
         float,
         double,
-        boost::uint64_t
+        std::uint64_t
     > fits_image_types;
 
     if (!metadata) {
@@ -891,11 +892,11 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
 //
 /// \cond
 #define INSTANTIATE_OPERATOR(OP_EQ, T) \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint16_t> const& rhs); \
+   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<std::uint16_t> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<float> const& rhs); \
    template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<boost::uint64_t> const& rhs);
+   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<std::uint64_t> const& rhs);
 
 #define INSTANTIATE(T) \
    template class image::ImageBase<T>; \
@@ -905,9 +906,9 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
    INSTANTIATE_OPERATOR(*=, T); \
    INSTANTIATE_OPERATOR(/=, T)
 
-INSTANTIATE(boost::uint16_t);
+INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);
-INSTANTIATE(boost::uint64_t);
+INSTANTIATE(std::uint64_t);
 /// \endcond

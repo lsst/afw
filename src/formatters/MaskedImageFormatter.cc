@@ -41,6 +41,8 @@
 static char const* SVNid __attribute__((unused)) =
     "$Id$";
 
+#include <cstdint>
+
 #include "boost/serialization/shared_ptr.hpp"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -78,7 +80,7 @@ public:
     static std::string name();
 };
 
-template<> std::string MaskedImageFormatterTraits<boost::uint16_t, MaskPixel, VariancePixel>::name() {
+template<> std::string MaskedImageFormatterTraits<std::uint16_t, MaskPixel, VariancePixel>::name() {
     static std::string name = "MaskedImageU";
     return name;
 }
@@ -94,7 +96,7 @@ template<> std::string MaskedImageFormatterTraits<double, MaskPixel, VariancePix
     static std::string name = "MaskedImageD";
     return name;
 }
-template<> std::string MaskedImageFormatterTraits<boost::uint64_t, MaskPixel, VariancePixel>::name() {
+template<> std::string MaskedImageFormatterTraits<std::uint64_t, MaskPixel, VariancePixel>::name() {
     static std::string name = "MaskedImageL";
     return name;
 }

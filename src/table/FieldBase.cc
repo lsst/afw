@@ -1,5 +1,6 @@
 // -*- lsst-c++ -*-
 
+#include <cstdint>
 #include <limits>
 
 #include "boost/format.hpp"
@@ -15,13 +16,13 @@ namespace {
 
 template <typename T> struct TypeTraits;
 
-template <> struct TypeTraits<boost::uint16_t> {
+template <> struct TypeTraits<std::uint16_t> {
     static char const * getName() { return "U"; }
 };
-template <> struct TypeTraits<boost::int32_t> {
+template <> struct TypeTraits<std::int32_t> {
     static char const * getName() { return "I"; }
 };
-template <> struct TypeTraits<boost::int64_t> {
+template <> struct TypeTraits<std::int64_t> {
     static char const * getName() { return "L"; }
 };
 template <> struct TypeTraits<float> {

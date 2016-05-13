@@ -28,6 +28,7 @@
  * Classes to support calibration (e.g. photometric zero points, exposure times)
  */
 #include <cmath>
+#include <cstdint>
 
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
@@ -485,7 +486,7 @@ namespace {
 class CalibSchema {
 public:
     table::Schema schema;
-    table::Key<boost::int64_t> midTime;
+    table::Key<std::int64_t> midTime;
     table::Key<double> expTime;
     table::Key<double> fluxMag0;
     table::Key<double> fluxMag0Sigma;
@@ -506,7 +507,7 @@ public:
 private:
     CalibSchema() :
         schema(),
-        midTime(schema.addField<boost::int64_t>(
+        midTime(schema.addField<std::int64_t>(
                     "midtime", "middle of the time of the exposure relative to Unix epoch", "ns"
                 )),
         expTime(schema.addField<double>("exptime", "exposure time", "s")),

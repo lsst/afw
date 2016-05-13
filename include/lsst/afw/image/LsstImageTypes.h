@@ -27,10 +27,10 @@
 #if !defined(LSST_AFW_LSST_IMAGE_TYPE_H)
 #define LSST_AFW_LSST_IMAGE_TYPE_H 1
 
-#include "boost/cstdint.hpp"
+#include <cstdint>
 
 namespace lsst { namespace afw { namespace image {
-    typedef boost::uint16_t MaskPixel;  ///! default type for Masks and MaskedImage Masks
+    typedef std::uint16_t MaskPixel;  ///! default type for Masks and MaskedImage Masks
     typedef float VariancePixel;        ///! default type for MaskedImage variance images
 }}}
 #endif

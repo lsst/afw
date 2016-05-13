@@ -2,6 +2,8 @@
 #ifndef LSST_AFW_TABLE_Flag_h_INCLUDED
 #define LSST_AFW_TABLE_Flag_h_INCLUDED
 
+#include <cstdint>
+
 #include "lsst/afw/table/misc.h"
 #include "lsst/afw/table/FieldBase.h"
 #include "lsst/afw/table/KeyBase.h"
@@ -27,7 +29,7 @@ template <>
 struct FieldBase<Flag> {
 
     typedef bool Value;        ///< @brief the type returned by BaseRecord::get
-    typedef boost::int64_t Element;   ///< @brief the actual storage type (shared by multiple flag fields)
+    typedef std::int64_t Element;   ///< @brief the actual storage type (shared by multiple flag fields)
 
     /// @brief Return the number of subfield elements (always one for scalars).
     int getElementCount() const { return 1; }

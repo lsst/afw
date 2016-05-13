@@ -27,6 +27,8 @@
  * Tell doxygen to (usually) ignore this file \cond GIL_IMAGE_INTERNALS
  */
 
+#include <cstdint>
+
 #if !defined(GIL_LSST_H)
 #define GIL_LSST_H 1
 /*
@@ -313,13 +315,13 @@ namespace lsst { namespace afw { namespace image { namespace detail {
         struct unknown {};                  // two unused and unimplemented types
         struct unknown_u {};
         /*
-         * Return long long type (as type) if it's a synonym for boost::int64_t
+         * Return long long type (as type) if it's a synonym for std::int64_t
          * We also need unsigned long long (as type_u), because "unsigned unknown" won't compile
          */ 
         struct CheckBoost64 {
-            typedef boost::mpl::if_<std::is_same<long long, boost::int64_t>,
+            typedef boost::mpl::if_<std::is_same<long long, std::int64_t>,
                                     long long, struct unknown>::type type;
-            typedef boost::mpl::if_<std::is_same<long long, boost::int64_t>,
+            typedef boost::mpl::if_<std::is_same<long long, std::int64_t>,
                                     unsigned long long, struct unknown_u>::type type_u;
         };
     }

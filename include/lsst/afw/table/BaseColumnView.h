@@ -2,6 +2,8 @@
 #ifndef AFW_TABLE_BaseColumnView_h_INCLUDED
 #define AFW_TABLE_BaseColumnView_h_INCLUDED
 
+#include <cstdint>
+
 #include "lsst/afw/table/BaseTable.h"
 
 namespace lsst { namespace afw { namespace table {
@@ -38,7 +40,7 @@ class BaseColumnView;
 class BitsColumn {
 public:
 
-    typedef boost::int64_t IntT;
+    typedef std::int64_t IntT;
 
     ndarray::Array<IntT,1,1> getArray() const { return _array; }
 

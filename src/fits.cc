@@ -1,5 +1,6 @@
 // -*- lsst-c++ -*-
 
+#include <cstdint>
 #include <cstdio>
 #include <complex>
 #include <cmath>
@@ -13,7 +14,6 @@ extern "C" {
 #include "boost/regex.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/preprocessor/seq/for_each.hpp"
-#include "boost/cstdint.hpp"
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
@@ -41,13 +41,13 @@ std::string strip(std::string const & s) {
 
 char getFormatCode(bool*) { return 'X'; }
 char getFormatCode(std::string*) { return 'A'; }
-char getFormatCode(boost::int8_t*) { return 'S'; }
-char getFormatCode(boost::uint8_t*) { return 'B'; }
-char getFormatCode(boost::int16_t*) { return 'I'; }
-char getFormatCode(boost::uint16_t*) { return 'U'; }
-char getFormatCode(boost::int32_t*) { return 'J'; }
-char getFormatCode(boost::uint32_t*) { return 'V'; }
-char getFormatCode(boost::int64_t*) { return 'K'; }
+char getFormatCode(std::int8_t*) { return 'S'; }
+char getFormatCode(std::uint8_t*) { return 'B'; }
+char getFormatCode(std::int16_t*) { return 'I'; }
+char getFormatCode(std::uint16_t*) { return 'U'; }
+char getFormatCode(std::int32_t*) { return 'J'; }
+char getFormatCode(std::uint32_t*) { return 'V'; }
+char getFormatCode(std::int64_t*) { return 'K'; }
 char getFormatCode(float*) { return 'E'; }
 char getFormatCode(double*) { return 'D'; }
 char getFormatCode(std::complex<float>*) { return 'C'; }
@@ -101,8 +101,8 @@ template <> struct FitsBitPix<short> { static int const CONSTANT = SHORT_IMG; };
 template <> struct FitsBitPix<unsigned short> { static int const CONSTANT = USHORT_IMG; };
 template <> struct FitsBitPix<int> { static int const CONSTANT = LONG_IMG; }; // not a typo!
 template <> struct FitsBitPix<unsigned int> { static int const CONSTANT = ULONG_IMG; };
-template <> struct FitsBitPix<boost::int64_t> { static int const CONSTANT = LONGLONG_IMG; };
-template <> struct FitsBitPix<boost::uint64_t> { static int const CONSTANT = LONGLONG_IMG; };
+template <> struct FitsBitPix<std::int64_t> { static int const CONSTANT = LONGLONG_IMG; };
+template <> struct FitsBitPix<std::uint64_t> { static int const CONSTANT = LONGLONG_IMG; };
 template <> struct FitsBitPix<float> { static int const CONSTANT = FLOAT_IMG; };
 template <> struct FitsBitPix<double> { static int const CONSTANT = DOUBLE_IMG; };
 
@@ -618,7 +618,7 @@ void MetadataIterationFunctor::operator()(
         add(key, bool(value == "T" || value == "t"), comment);
     } else if (boost::regex_match(value, intRegex)) {
         // convert the string to an int
-        boost::int64_t val;
+        std::int64_t val;
         converter >> val;
         if (val < (1LL << 31) && val > -(1LL << 31)) {
             add(key, static_cast<int>(val), comment);
@@ -691,14 +691,14 @@ void writeKeyFromProperty(
         } else {
             writeKeyImpl(fits, key.c_str(), metadata.get<long long>(key), comment);
         }
-    } else if (valueType == typeid(boost::int64_t)) {
+    } else if (valueType == typeid(std::int64_t)) {
         if (metadata.isArray(key)) {
-            std::vector<boost::int64_t> tmp = metadata.getArray<boost::int64_t>(key);
+            std::vector<std::int64_t> tmp = metadata.getArray<std::int64_t>(key);
             for (std::size_t i = 0; i != tmp.size(); ++i) {
                 writeKeyImpl(fits, key.c_str(), tmp[i], comment);
             }
         } else {
-            writeKeyImpl(fits, key.c_str(), metadata.get<boost::int64_t>(key), comment);
+            writeKeyImpl(fits, key.c_str(), metadata.get<std::int64_t>(key), comment);
         }
     } else if (valueType == typeid(double)) {
         if (metadata.isArray(key)) {
@@ -1163,15 +1163,15 @@ void Fits::closeFile() {
     (float)(double)(std::complex<float>)(std::complex<double>)(std::string)
 
 #define COLUMN_TYPES                                                    \
-    (bool)(std::string)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
-    (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
+    (bool)(std::string)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t) \
+    (std::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define COLUMN_ARRAY_TYPES                                              \
-    (bool)(char)(boost::uint8_t)(boost::int16_t)(boost::uint16_t)(boost::int32_t)(boost::uint32_t) \
-    (boost::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
+    (bool)(char)(std::uint8_t)(std::int16_t)(std::uint16_t)(std::int32_t)(std::uint32_t) \
+    (std::int64_t)(float)(double)(lsst::afw::geom::Angle)(std::complex<float>)(std::complex<double>)
 
 #define IMAGE_TYPES                                                     \
-    (unsigned char)(short)(unsigned short)(int)(unsigned int)(boost::int64_t)(boost::uint64_t) \
+    (unsigned char)(short)(unsigned short)(int)(unsigned int)(std::int64_t)(std::uint64_t) \
     (float)(double)
 
 BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_KEY_OPS, _, KEY_TYPES)

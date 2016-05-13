@@ -37,6 +37,8 @@
 #include <cuda_runtime.h>
 #endif
 
+#include <cstdint>
+
 #include "lsst/afw/geom/Box.h"
 
 #include "lsst/afw/math/Kernel.h"
@@ -531,12 +533,12 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 INSTANTIATE(double, double)
 INSTANTIATE(double, float)
 INSTANTIATE(double, int)
-INSTANTIATE(double, boost::uint16_t)
+INSTANTIATE(double, std::uint16_t)
 INSTANTIATE(float, float)
 INSTANTIATE(float, int)
-INSTANTIATE(float, boost::uint16_t)
+INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
-INSTANTIATE(boost::uint16_t, boost::uint16_t)
+INSTANTIATE(std::uint16_t, std::uint16_t)
 /// \endcond
 
 }

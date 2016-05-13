@@ -2,7 +2,8 @@
 #ifndef AFW_TABLE_misc_h_INCLUDED
 #define AFW_TABLE_misc_h_INCLUDED
 
-#include "boost/cstdint.hpp"
+#include <cstdint>
+
 #include "boost/mpl/if.hpp"
 
 #include "lsst/afw/geom/Angle.h"
@@ -16,7 +17,7 @@ namespace lsst { namespace afw { namespace table {
  *  FITS isn't fond of uint64, so we can save a lot of pain by using signed ints here unless
  *  we really need unsigned.
  */
-typedef boost::int64_t RecordId;
+typedef std::int64_t RecordId;
 
 enum class CoordinateType {
     PIXEL,

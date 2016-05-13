@@ -23,6 +23,7 @@
  */
  
 %{
+#include <cstdint>
 #include <memory>
 #include "lsst/afw/detection/Threshold.h"
 #include "lsst/afw/detection/Footprint.h"
@@ -95,7 +96,7 @@ typedef lsst::afw::geom::Span Span;
     %template(intersectMask) intersectMask<lsst::afw::image::MaskPixel>;
     %footprintOperations(unsigned short)
     %footprintOperations(int)
-    %footprintOperations(boost::uint64_t)
+    %footprintOperations(std::uint64_t)
 }
 
 %define %heavyFootprints(NAME, PIXEL_TYPE, MASK_TYPE, VAR_TYPE)
@@ -179,11 +180,11 @@ typedef lsst::afw::geom::Span Span;
 %thresholdOperations(lsst::afw::image::MaskedImage);
 %imageOperations(F, float);
 %imageOperations(D, double);
-%footprintImageOperations(boost::uint16_t);
+%footprintImageOperations(std::uint16_t);
 %footprintImageOperations(int);
-%footprintImageOperations(boost::uint64_t);
+%footprintImageOperations(std::uint64_t);
 %maskOperations(lsst::afw::image::MaskPixel);
-%template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<boost::uint16_t> >;
+%template(FootprintFunctorMaskU) lsst::afw::detection::FootprintFunctor<lsst::afw::image::Mask<std::uint16_t> >;
 
 // because stupid SWIG's %template doesn't work on these functions
 %define %footprintArrayTemplates(T)
@@ -255,7 +256,7 @@ typedef lsst::afw::geom::Span Span;
 %}
 %enddef
 
-%footprintArrayTemplates(boost::uint16_t);
+%footprintArrayTemplates(std::uint16_t);
 %footprintArrayTemplates(int);
 %footprintArrayTemplates(float);
 %footprintArrayTemplates(double);

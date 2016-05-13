@@ -1,12 +1,12 @@
 // -*- lsst-c++ -*-
 
+#include <cstdint>
 #include <cstdio>
 #include <array>
 #include <cmath>
 
 #include "boost/regex.hpp"
 #include "boost/lexical_cast.hpp"
-#include "boost/cstdint.hpp"
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -663,28 +663,28 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
               // that's all we ever write, and CFITSIO will complain later if they aren't)
         if (size == 1) {
             if (item.tccls == "Array") {
-                return StandardReader<Array<boost::uint16_t>>::make(schema, item, size);
+                return StandardReader<Array<std::uint16_t>>::make(schema, item, size);
             }
-            return StandardReader<boost::uint16_t>::make(schema, item);
+            return StandardReader<std::uint16_t>::make(schema, item);
         }
         if (size == 0) {
-            return VariableLengthArrayReader<boost::uint16_t>::make(schema, item);
+            return VariableLengthArrayReader<std::uint16_t>::make(schema, item);
         }
-        return StandardReader<Array<boost::uint16_t>>::make(schema, item, size);
+        return StandardReader<Array<std::uint16_t>>::make(schema, item, size);
     case 'J': // 32-bit integers - can only be scalars, Point fields, or Arrays
         if (size == 0) {
-            return VariableLengthArrayReader<boost::int32_t>::make(schema, item);
+            return VariableLengthArrayReader<std::int32_t>::make(schema, item);
         }
         if (item.tccls == "Point") {
-            return PointConversionReader<boost::int32_t>::make(schema, item);
+            return PointConversionReader<std::int32_t>::make(schema, item);
         }
         if (size > 1 || item.tccls == "Array") {
-            return StandardReader<Array<boost::int32_t>>::make(schema, item, size);
+            return StandardReader<Array<std::int32_t>>::make(schema, item, size);
         }
-        return StandardReader<boost::int32_t>::make(schema, item);
+        return StandardReader<std::int32_t>::make(schema, item);
     case 'K': // 64-bit integers - can only be scalars.
         if (size == 1) {
-            return StandardReader<boost::int64_t>::make(schema, item);
+            return StandardReader<std::int64_t>::make(schema, item);
         }
     case 'E': // floats
         if (size == 0) {

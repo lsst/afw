@@ -25,6 +25,7 @@
  *
  * \brief Footprint and associated classes
  */
+#include <cstdint>
 #include <cassert>
 #include <string>
 #include <typeinfo>
@@ -573,10 +574,10 @@ namespace {
     doInsertIntoImage(geom::Box2I const& _region, // unpacked from Footprint
                       Footprint::SpanList const& _spans,      // unpacked from Footprint
                       image::Image<PixelT>& idImage, // Image to contain the footprint
-                      boost::uint64_t const id, // Add/replace id to idImage for pixels in Footprint
+                      std::uint64_t const id, // Add/replace id to idImage for pixels in Footprint
                       geom::Box2I const& region,              // Footprint's region (default: getRegion())
                       long const mask=0x0,                    // Don't overwrite bits in this mask
-                      std::set<boost::uint64_t> *oldIds=NULL // if non-NULL, set the IDs that were overwritten
+                      std::set<std::uint64_t> *oldIds=NULL // if non-NULL, set the IDs that were overwritten
                    )
     {
         int width, height, x0, y0;
@@ -604,7 +605,7 @@ namespace {
                               str(boost::format("Id 0x%x sets bits in the protected mask 0x%x") % id % mask));
         }
 
-        typename std::set<boost::uint64_t>::const_iterator pos; // hint on where to insert into oldIds
+        typename std::set<std::uint64_t>::const_iterator pos; // hint on where to insert into oldIds
         if (oldIds) {
             pos = oldIds->begin();
         }
@@ -685,7 +686,7 @@ template<typename PixelT>
 void
 Footprint::insertIntoImage(
     typename image::Image<PixelT>& idImage,
-    boost::uint64_t const id,
+    std::uint64_t const id,
     geom::Box2I const& region
 ) const
 {
@@ -696,10 +697,10 @@ template<typename PixelT>
 void
 Footprint::insertIntoImage(
     image::Image<PixelT>& idImage,
-    boost::uint64_t const id,
+    std::uint64_t const id,
     bool overwriteId,
     long const mask,
-    std::set<boost::uint64_t> *oldIds,
+    std::set<std::uint64_t> *oldIds,
     geom::Box2I const& region
 ) const
 {
@@ -727,8 +728,8 @@ void Footprint::include(std::vector<PTR(Footprint)> const & others, bool ignoreS
     for (std::vector<PTR(Footprint)>::const_iterator i = others.begin(); i != others.end(); ++i) {
         bbox.include((**i).getBBox());
     }
-    boost::uint16_t bits = 0x1;
-    image::Mask<boost::uint16_t> mask(bbox);
+    std::uint16_t bits = 0x1;
+    image::Mask<std::uint16_t> mask(bbox);
     if (!ignoreSelf) {
         setMaskFromFootprint(&mask, *this, bits);
     }
@@ -1810,15 +1811,15 @@ PTR(Footprint) mergeFootprints(Footprint const& foot1, Footprint const& foot2) {
 /************************************************************************************************************/
 
 void nearestFootprint(std::vector<PTR(Footprint)> const& foots,
-                      image::Image<boost::uint16_t>::Ptr argmin,
-                      image::Image<boost::uint16_t>::Ptr dist)
+                      image::Image<std::uint16_t>::Ptr argmin,
+                      image::Image<std::uint16_t>::Ptr dist)
 {
     /*
      * insert the footprints into an image, set all the pixels to the
      * Manhattan distance from the nearest set pixel.
      */
-    typedef boost::uint16_t dtype;
-    typedef boost::uint16_t itype;
+    typedef std::uint16_t dtype;
+    typedef std::uint16_t itype;
 
     const itype nil = 0xffff;
 
@@ -1949,7 +1950,7 @@ PTR(Footprint) shrinkFootprint(
 /************************************************************************************************************/
 
 std::vector<geom::Box2I> footprintToBBoxList(Footprint const& foot) {
-    typedef boost::uint16_t ImageT;
+    typedef std::uint16_t ImageT;
     geom::Box2I fpBBox = foot.getBBox();
     image::Image<ImageT>::Ptr idImage(
         new image::Image<ImageT>(fpBBox.getDimensions())
@@ -2459,32 +2460,32 @@ template								\
 INSTANTIATE_NUMERIC(float);
 INSTANTIATE_NUMERIC(double);
 // There's no reason these shouldn't have setImageFromFootprint(), etc, instantiated
-INSTANTIATE_NUMERIC(boost::uint16_t);
+INSTANTIATE_NUMERIC(std::uint16_t);
 INSTANTIATE_NUMERIC(int);
-INSTANTIATE_NUMERIC(boost::uint64_t);
+INSTANTIATE_NUMERIC(std::uint64_t);
 
 
 #define INSTANTIATE_MASK(PIXEL)                                         \
 template                                                                \
 void Footprint::insertIntoImage(                                        \
     lsst::afw::image::Image<PIXEL>& idImage,                            \
-    boost::uint64_t const id,                                           \
+    std::uint64_t const id,                                           \
     geom::Box2I const& region=geom::Box2I()                             \
     ) const;                                                            \
 template                                                                \
 void Footprint::insertIntoImage(                                        \
     lsst::afw::image::Image<PIXEL>& idImage,                            \
-    boost::uint64_t const id,                                           \
+    std::uint64_t const id,                                           \
     bool const overwriteId, long const idMask,                          \
-    std::set<boost::uint64_t> *oldIds,                                  \
+    std::set<std::uint64_t> *oldIds,                                  \
     geom::Box2I const& region=geom::Box2I()                             \
     ) const;                                                            \
 template                                                                \
 PIXEL Footprint::overlapsMask(image::Mask<PIXEL> const& mask) const
 
-INSTANTIATE_MASK(boost::uint16_t);
+INSTANTIATE_MASK(std::uint16_t);
 INSTANTIATE_MASK(int);
-INSTANTIATE_MASK(boost::uint64_t);
+INSTANTIATE_MASK(std::uint64_t);
 
 
 }}}

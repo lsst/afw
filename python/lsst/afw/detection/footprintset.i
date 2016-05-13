@@ -1,6 +1,8 @@
 
 
 %{
+#include <cstdint>
+
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/table/Source.h"
 %}
@@ -21,7 +23,7 @@
 %enddef
 
 %extend lsst::afw::detection::FootprintSet {
-%footprintSetOperations(boost::uint16_t)
+%footprintSetOperations(std::uint16_t)
 %footprintSetOperations(int)
 %footprintSetOperations(float)
 %footprintSetOperations(double)

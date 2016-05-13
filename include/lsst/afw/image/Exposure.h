@@ -27,8 +27,6 @@
 
 #include <memory>
 
-#include "boost/cstdint.hpp"
-
 #include "lsst/base.h"
 #include "lsst/daf/base.h"
 #include "lsst/afw/image/MaskedImage.h"

@@ -35,7 +35,7 @@
  * @ingroup afw
  */
 
-#include "boost/cstdint.hpp"
+#include <cstdint>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -108,10 +108,10 @@ void mathDetail::assertDimensionsOK(
 INSTANTIATE(double, double)
 INSTANTIATE(double, float)
 INSTANTIATE(double, int)
-INSTANTIATE(double, boost::uint16_t)
+INSTANTIATE(double, std::uint16_t)
 INSTANTIATE(float, float)
 INSTANTIATE(float, int)
-INSTANTIATE(float, boost::uint16_t)
+INSTANTIATE(float, std::uint16_t)
 INSTANTIATE(int, int)
-INSTANTIATE(boost::uint16_t, boost::uint16_t)
+INSTANTIATE(std::uint16_t, std::uint16_t)
 /// \endcond

@@ -37,7 +37,7 @@ Basic routines to talk to lsst::afw::image classes
 
 
 %{
-#include "boost/cstdint.hpp"
+#include <cstdint>
 
 #include "lsst/daf/base.h"
 #include "lsst/daf/persistence.h"
@@ -308,8 +308,8 @@ def __int__(self):
              PIXEL_TYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %enddef
 
-%exposurePtr(boost::uint16_t);
-%exposurePtr(boost::uint64_t);
+%exposurePtr(std::uint16_t);
+%exposurePtr(std::uint64_t);
 %exposurePtr(int);
 %exposurePtr(float);
 %exposurePtr(double);
@@ -328,14 +328,14 @@ namespace lsst { namespace afw { namespace detection {
 
 %include "lsst/afw/image/Exposure.h"
 
-%exposure(U, boost::uint16_t);
-%exposure(L, boost::uint64_t);
+%exposure(U, std::uint16_t);
+%exposure(L, std::uint64_t);
 %exposure(I, int);
 %exposure(F, float);
 %exposure(D, double);
 
 
-%extend lsst::afw::image::Exposure<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+%extend lsst::afw::image::Exposure<std::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %newobject convertF;
     lsst::afw::image::Exposure<float,
          lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF()
@@ -345,7 +345,7 @@ namespace lsst { namespace afw { namespace detection {
     }
 }
 
-%extend lsst::afw::image::Exposure<boost::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+%extend lsst::afw::image::Exposure<std::uint64_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %newobject convertD;
     lsst::afw::image::Exposure<double,
          lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertD()

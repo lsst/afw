@@ -26,6 +26,7 @@
  * \file
  * \brief Implementation for MaskedImage
  */
+#include <cstdint>
 #include <typeinfo>
 #include <sys/stat.h>
 #pragma clang diagnostic push
@@ -837,9 +838,9 @@ typename image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::fast_itera
 //
 // Explicit instantiations
 //
-template class image::MaskedImage<boost::uint16_t>;
+template class image::MaskedImage<std::uint16_t>;
 template class image::MaskedImage<int>;
 template class image::MaskedImage<float>;
 template class image::MaskedImage<double>;
-template class image::MaskedImage<boost::uint64_t>;
+template class image::MaskedImage<std::uint64_t>;
 

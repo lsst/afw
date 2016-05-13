@@ -41,6 +41,7 @@
 static char const* SVNid __attribute__((unused)) =
     "$Id$";
 
+#include <cstdint>
 #include <memory>
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/binary_object.hpp"
@@ -78,7 +79,7 @@ public:
     static std::string name();
 };
 
-template<> std::string DecoratedImageFormatterTraits<boost::uint16_t>::name() {
+template<> std::string DecoratedImageFormatterTraits<std::uint16_t>::name() {
     static std::string name = "DecoratedImageU";
     return name;
 }
@@ -94,7 +95,7 @@ template<> std::string DecoratedImageFormatterTraits<double>::name() {
     static std::string name = "DecoratedImageD";
     return name;
 }
-template<> std::string DecoratedImageFormatterTraits<boost::uint64_t>::name() {
+template<> std::string DecoratedImageFormatterTraits<std::uint64_t>::name() {
     static std::string name = "DecoratedImageL";
     return name;
 }
@@ -236,11 +237,11 @@ lsst::daf::persistence::Formatter::Ptr DecoratedImageFormatter<ImagePixelT>::cre
     template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_oarchive&, int const, Persistable*); \
     template void DecoratedImageFormatter<ImagePixelT >::delegateSerialize(boost::archive::binary_iarchive&, int const, Persistable*);
 
-InstantiateFormatter(boost::uint16_t);
+InstantiateFormatter(std::uint16_t);
 InstantiateFormatter(int);
 InstantiateFormatter(float);
 InstantiateFormatter(double);
-InstantiateFormatter(boost::uint64_t);
+InstantiateFormatter(std::uint64_t);
 
 #undef InstantiateFormatter
 

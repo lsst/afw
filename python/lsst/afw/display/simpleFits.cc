@@ -33,6 +33,7 @@ namespace posix {                       // here so no-one includes them first ou
 }
 #endif //!DOXYGEN
 using namespace posix;
+#include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -513,13 +514,13 @@ void writeBasicFits(std::string const& filename,                 // file to writ
 #define INSTANTIATE_IMAGE(T) INSTANTIATE(lsst::afw::image::Image<T>)
 #define INSTANTIATE_MASK(T)  INSTANTIATE(lsst::afw::image::Mask<T>)
 
-INSTANTIATE_IMAGE(boost::uint16_t);
+INSTANTIATE_IMAGE(std::uint16_t);
 INSTANTIATE_IMAGE(int);
 INSTANTIATE_IMAGE(float);
 INSTANTIATE_IMAGE(double);
-INSTANTIATE_IMAGE(boost::uint64_t);
+INSTANTIATE_IMAGE(std::uint64_t);
 
-INSTANTIATE_MASK(boost::uint16_t);
+INSTANTIATE_MASK(std::uint16_t);
 /// \endcond
             
 }}}
