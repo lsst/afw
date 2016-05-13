@@ -686,4 +686,16 @@ namespace lsst { namespace afw { namespace table {
 
 %declareCatalog(CatalogT, Base)
 
+// This needs to be here, not Catalog.i, to prevent it from being picked up in afw.detection, where _syntax.py is not available.
+%extend CatalogT<BaseRecord> {
+    %pythoncode %{
+    asAstropy = _syntax.BaseCatalog_asAstropy
+
+    def __astropy_table__(self, cls, copy, **kwds):
+        """Implement interface called by Astropy table constructors to construct a view or copy.
+        """
+        return _syntax.BaseCatalog_asAstropy(cls=cls, copy=copy)
+    %}
+}
+
 }}} // namespace lsst::afw::table
