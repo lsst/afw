@@ -63,6 +63,8 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %}
 
 %declareNumPyConverters(ndarray::Array<bool const,1>);
+%declareNumPyConverters(ndarray::Array<bool const,1,1>);
+%declareNumPyConverters(ndarray::Array<bool,1,1>);
 %declareNumPyConverters(ndarray::Array<lsst::afw::table::RecordId const,1>);
 %declareNumPyConverters(ndarray::Array<boost::uint16_t const,1>);
 %declareNumPyConverters(ndarray::Array<boost::int32_t const,1>);
@@ -683,5 +685,17 @@ for _d in (Field, Key, SchemaItem, _suffixes):
 namespace lsst { namespace afw { namespace table {
 
 %declareCatalog(CatalogT, Base)
+
+// This needs to be here, not Catalog.i, to prevent it from being picked up in afw.detection, where _syntax.py is not available.
+%extend CatalogT<BaseRecord> {
+    %pythoncode %{
+    asAstropy = _syntax.BaseCatalog_asAstropy
+
+    def __astropy_table__(self, cls, copy, **kwds):
+        """Implement interface called by Astropy table constructors to construct a view or copy.
+        """
+        return _syntax.BaseCatalog_asAstropy(cls=cls, copy=copy)
+    %}
+}
 
 }}} // namespace lsst::afw::table
