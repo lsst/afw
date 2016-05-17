@@ -694,7 +694,7 @@ namespace lsst { namespace afw { namespace table {
     def __astropy_table__(self, cls, copy, **kwds):
         """Implement interface called by Astropy table constructors to construct a view or copy.
         """
-        return _syntax.BaseCatalog_asAstropy(cls=cls, copy=copy)
+        return _syntax.BaseCatalog_asAstropy(cls=cls, copy=copy, **kwds)
     %}
 }
 
