@@ -100,8 +100,15 @@ public:
     double getReadNoise() const;
     void setReadNoise(double readNoise); ///< amplifier read noise, in e-
 
-    int getSaturation() const;
-    void setSaturation(int saturation); ///< saturation value, in ADU
+    double getSaturation() const;
+    void setSaturation(double saturation); ///< level in ADU above which pixels are considered saturated;
+        ///< use `nan` if no such level applies",
+
+    double getSuspectLevel() const;
+    void setSuspectLevel(double suspectLevel); ///< level in ADU above which pixels are considered suspicious,
+        ///< meaning they may be affected by unknown systematics; for example if non-linearity corrections
+        ///< above a certain level are unstable then that would be a useful value for suspectLevel;
+        ///< use `nan` if no such level applies",
 
     ReadoutCorner getReadoutCorner() const;
     void setReadoutCorner(ReadoutCorner val); ///< set readout corner
@@ -204,7 +211,8 @@ public:
     static PointKey<int> getBBoxExtentKey() { return getMinimalSchema().bboxExtent; }
     static Key<double> getGainKey() { return getMinimalSchema().gain; }
     static Key<double> getReadNoiseKey() { return getMinimalSchema().readNoise; }
-    static Key<int> getSaturationKey() { return getMinimalSchema().saturation; }
+    static Key<double> getSaturationKey() { return getMinimalSchema().saturation; }
+    static Key<double> getSuspectLevelKey() { return getMinimalSchema().suspectLevel; }
     static Key<int> getReadoutCornerKey() { return getMinimalSchema().readoutCorner; }
     static Key< Array<double> > getLinearityCoeffsKey() { return getMinimalSchema().linearityCoeffs; }
     static Key<std::string> getLinearityTypeKey() { return getMinimalSchema().linearityType; }
@@ -256,7 +264,8 @@ private:
         PointKey<int> bboxExtent;
         Key<double> gain;
         Key<double> readNoise;
-        Key<int> saturation;
+        Key<double> saturation;
+        Key<double> suspectLevel;
         Key<int> readoutCorner;
         Key< Array<double> > linearityCoeffs;
         Key<std::string> linearityType;

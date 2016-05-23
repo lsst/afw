@@ -153,9 +153,15 @@ AmpInfoTable::MinimalSchema::MinimalSchema() {
         "gain",
         "amplifier gain",
         "electron adu^-1");
-    saturation = schema.addField<int>(
+    saturation = schema.addField<double>(
         "saturation",
-        "saturation value",
+        "level above which pixels are considered saturated; use `nan` if no such level applies",
+        "adu");
+    suspectLevel = schema.addField<double>(
+        "suspectlevel",
+        "level above which pixels are considered suspicious, meaning they may be affected by unknown "
+            "systematics; for example if non-linearity corrections above a certain level are unstable "
+            "then that would be a useful value for suspectLevel; use `nan` if no such level applies",
         "adu");
     readNoise = schema.addField<double>(
         "readnoise",
@@ -259,8 +265,12 @@ void AmpInfoRecord::setBBox(geom::Box2I const &bbox) {
 double AmpInfoRecord::getGain() const { return get(AmpInfoTable::getGainKey()); }
 void AmpInfoRecord::setGain(double gain) { set(AmpInfoTable::getGainKey(), gain); }
 
-int AmpInfoRecord::getSaturation() const { return get(AmpInfoTable::getSaturationKey()); }
-void AmpInfoRecord::setSaturation(int saturation) { set(AmpInfoTable::getSaturationKey(), saturation); }
+double AmpInfoRecord::getSaturation() const { return get(AmpInfoTable::getSaturationKey()); }
+void AmpInfoRecord::setSaturation(double saturation) { set(AmpInfoTable::getSaturationKey(), saturation); }
+
+double AmpInfoRecord::getSuspectLevel() const { return get(AmpInfoTable::getSuspectLevelKey()); }
+void AmpInfoRecord::setSuspectLevel(double suspectLevel) {
+    set(AmpInfoTable::getSuspectLevelKey(), suspectLevel); }
 
 double AmpInfoRecord::getReadNoise() const { return get(AmpInfoTable::getReadNoiseKey()); }
 void AmpInfoRecord::setReadNoise(double readNoise) { set(AmpInfoTable::getReadNoiseKey(), readNoise); }
