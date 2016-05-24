@@ -1,12 +1,12 @@
 // -*- lsst-c++ -*-
 
-#include <cstdint>
-#include <cstdio>
 #include <array>
 #include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <string>
 
 #include "boost/regex.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -187,7 +187,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
     std::vector<std::string> keyList = metadata.getOrderedNames();
     for (std::vector<std::string>::const_iterator key = keyList.begin(); key != keyList.end(); ++key) {
         if (key->compare(0, 5, "TTYPE") == 0) {
-            int column = boost::lexical_cast<int>(key->substr(5)) - 1;
+            int column = std::stoi(key->substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
@@ -202,7 +202,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
                 metadata.remove(*key);
             }
         } else if (key->compare(0, 5, "TFLAG") == 0) {
-            int bit = boost::lexical_cast<int>(key->substr(5)) - 1;
+            int bit = std::stoi(key->substr(5)) - 1;
             auto iter = _impl->byBit().lower_bound(bit);
             if (iter == _impl->byBit().end() || iter->bit != bit) {
                 iter = _impl->byBit().insert(iter, FitsSchemaItem(-1, bit));
@@ -216,7 +216,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
                 metadata.remove(*key);
             }
         } else if (key->compare(0, 4, "TDOC") == 0) {
-            int column = boost::lexical_cast<int>(key->substr(4)) - 1;
+            int column = std::stoi(key->substr(4)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
@@ -226,7 +226,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
                 metadata.remove(*key);
             }
         } else if (key->compare(0, 5, "TFDOC") == 0) {
-            int bit = boost::lexical_cast<int>(key->substr(5)) - 1;
+            int bit = std::stoi(key->substr(5)) - 1;
             auto iter = _impl->byBit().lower_bound(bit);
             if (iter == _impl->byBit().end() || iter->bit != bit) {
                 iter = _impl->byBit().insert(iter, FitsSchemaItem(-1, bit));
@@ -236,7 +236,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
                 metadata.remove(*key);
             }
         } else if (key->compare(0, 5, "TUNIT") == 0) {
-            int column = boost::lexical_cast<int>(key->substr(5)) - 1;
+            int column = std::stoi(key->substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
@@ -246,7 +246,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
                 metadata.remove(*key);
             }
         } else if (key->compare(0, 5, "TCCLS") == 0) {
-            int column = boost::lexical_cast<int>(key->substr(5)) - 1;
+            int column = std::stoi(key->substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
@@ -256,7 +256,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
                 metadata.remove(*key);
             }
         } else if (key->compare(0, 5, "TFORM") == 0) {
-            int column = boost::lexical_cast<int>(key->substr(5)) - 1;
+            int column = std::stoi(key->substr(5)) - 1;
             auto iter = _impl->byColumn().lower_bound(column);
             if (iter == _impl->byColumn().end() || iter->column != column) {
                 iter = _impl->byColumn().insert(iter, FitsSchemaItem(column, -1));
@@ -311,7 +311,7 @@ FitsSchemaInputMapper::FitsSchemaInputMapper(daf::base::PropertyList & metadata,
         }
         int nFlags = 1;
         if (m[1].matched) {
-            nFlags = boost::lexical_cast<int>(m[1].str());
+            nFlags = std::stoi(m[1].str());
         }
         _impl->flagKeys.resize(nFlags);
         _impl->flagWorkspace.reset(new bool[nFlags]);
@@ -588,9 +588,9 @@ public:
         static boost::regex const regex("(.*)(\\^(\\d+))?", boost::regex::perl);
         boost::smatch m;
         if (!boost::regex_match(oldUnits, m, regex)) {
-            int oldPower = boost::lexical_cast<int>(m[2]);
+            int oldPower = std::stoi(m[2]);
             int newPower = std::sqrt(oldPower);
-            return boost::lexical_cast<std::string>(newPower);
+            return std::to_string(newPower);
         }
         return oldUnits;
     }
@@ -649,7 +649,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
     }
     int size = 1;
     if (m[1].matched) {
-        size = boost::lexical_cast<int>(m[1].str());
+        size = std::stoi(m[1].str());
     }
     char code = m[3].str()[0];
     if (m[2].matched) {
@@ -717,7 +717,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
             }
             std::vector<std::string> names(n);
             for (int i = 0; i < n; ++i) {
-                names[i] = boost::lexical_cast<std::string>(i);
+                names[i] = std::to_string(i);
             }
             return CovarianceConversionReader<float,Eigen::Dynamic>::make(schema, item, names);
         }

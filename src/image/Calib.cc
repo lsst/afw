@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -29,9 +29,9 @@
  */
 #include <cmath>
 #include <cstdint>
+#include <string>
 
 #include "boost/format.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string/trim.hpp"
 
 #include "ndarray.h"
@@ -113,7 +113,7 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
             exptime = metadata->getAsDouble(key);
         } catch (lsst::pex::exceptions::TypeError & err) {
             std::string exptimeStr = metadata->getAsString(key);
-            exptime = boost::lexical_cast<double>(exptimeStr);
+            exptime = std::stod(exptimeStr);
         }
     }
 
