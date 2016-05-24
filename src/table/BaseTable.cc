@@ -143,7 +143,7 @@ private:
         std::fill(_next, _end, 0); // initialize to zero; we'll later initialize floats to NaN.
     }
 
-    boost::scoped_array<AllocType> _mem;
+    std::unique_ptr<AllocType[]> _mem;
     char * _next;
     char * _end;
 };

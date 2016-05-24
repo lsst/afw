@@ -1,5 +1,7 @@
 // -*- lsst-c++ -*-
 
+#include <memory>
+
 #include "boost/cstdint.hpp"
 
 #include "lsst/afw/table/io/FitsWriter.h"
@@ -187,7 +189,7 @@ struct FitsWriter::ProcessRecords {
     mutable int bit;
     int nFlags;
     Fits * fits;
-    boost::scoped_array<bool> flags;
+    std::unique_ptr<bool[]> flags;
     BaseRecord const * record;
     Schema schema;
 };

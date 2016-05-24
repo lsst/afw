@@ -15,7 +15,6 @@ extern "C" {
 #include "boost/preprocessor/seq/for_each.hpp"
 #include "boost/cstdint.hpp"
 #include "boost/format.hpp"
-#include "boost/scoped_array.hpp"
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Log.h"

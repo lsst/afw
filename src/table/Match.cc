@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008, 2009, 2010, 2016 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -24,8 +24,7 @@
  
 #include <algorithm>
 #include <cmath>
-
-#include "boost/scoped_array.hpp"
+#include <memory>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/logging/Trace.h"
@@ -163,8 +162,8 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
 
     typedef RecordPos<typename Cat1::Record> Pos1;
     typedef RecordPos<typename Cat2::Record> Pos2;
-    boost::scoped_array<Pos1> pos1(new Pos1[len1]);
-    boost::scoped_array<Pos2> pos2(new Pos2[len2]);
+    std::unique_ptr<Pos1[]> pos1(new Pos1[len1]);
+    std::unique_ptr<Pos2[]> pos2(new Pos2[len2]);
     len1 = makeRecordPositions(cat1, pos1.get());
     len2 = makeRecordPositions(cat2, pos2.get());
     PTR(typename Cat2::Record) nullRecord = std::shared_ptr<typename Cat2::Record>();
@@ -253,7 +252,7 @@ matchRaDec(Cat const &cat, geom::Angle radius,
     // Build position list
     size_t len = cat.size();
     typedef RecordPos<typename Cat::Record> Pos;
-    boost::scoped_array<Pos> pos(new Pos[len]);
+    std::unique_ptr<Pos[]> pos(new Pos[len]);
     len = makeRecordPositions(cat, pos.get());
 
     for (size_t i = 0; i < len; ++i) {
@@ -305,8 +304,8 @@ SourceMatchVector matchXy(SourceCatalog const &cat1, SourceCatalog const &cat2,
     // copy and sort array of pointers on y
     size_t len1 = cat1.size();
     size_t len2 = cat2.size();
-    boost::scoped_array<PTR(SourceRecord)> pos1(new PTR(SourceRecord)[len1]);
-    boost::scoped_array<PTR(SourceRecord)> pos2(new PTR(SourceRecord)[len2]);
+    std::unique_ptr<PTR(SourceRecord)[]> pos1(new PTR(SourceRecord)[len1]);
+    std::unique_ptr<PTR(SourceRecord)[]> pos2(new PTR(SourceRecord)[len2]);
     PTR(SourceRecord) nullRecord = std::shared_ptr<SourceRecord>();
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat1.begin()), e(cat1.end()); i != e; ++i) {
@@ -390,7 +389,7 @@ SourceMatchVector matchXy(
 
     // copy and sort array of pointers on y
     size_t len = cat.size();
-    boost::scoped_array<PTR(SourceRecord)> pos(new PTR(SourceRecord)[len]);
+    std::unique_ptr<PTR(SourceRecord)[]> pos(new PTR(SourceRecord)[len]);
     size_t n = 0;
     for (SourceCatalog::const_iterator i(cat.begin()), e(cat.end()); i != e; ++i) {
         if (std::isnan(i->getX()) || std::isnan(i->getY())) {
