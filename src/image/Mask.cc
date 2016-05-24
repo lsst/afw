@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -47,7 +47,6 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-#include "boost/lambda/lambda.hpp"
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
@@ -1058,22 +1057,13 @@ void Mask<MaskPixelT>::checkMaskDictionaries(Mask<MaskPixelT> const &other) {
     }
 }        
 
-/************************************************************************************************************/
-//
-// N.b. We could use the STL, but I find boost::lambda clearer, and more easily extended
-// to e.g. setting random numbers
-//    transform_pixels(_getRawView(), _getRawView(), lambda::ret<PixelT>(lambda::_1 + val));
-// is equivalent to
-//    transform_pixels(_getRawView(), _getRawView(), std::bind2nd(std::plus<PixelT>(), val));
-//
-namespace bl = boost::lambda;
-
 /**
  * \brief OR a bitmask into a Mask
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::operator|=(MaskPixelT const val) {
-    transform_pixels(_getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 | val));
+    transform_pixels(_getRawView(), _getRawView(),
+                     [&val](MaskPixelT const& l) -> MaskPixelT { return l | val; });
 }
 
 /**
@@ -1088,7 +1078,8 @@ void Mask<MaskPixelT>::operator|=(Mask const &rhs) {
                           str(boost::format("Images are of different size, %dx%d v %dx%d") %
                               this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()));
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 | bl::_2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     [](MaskPixelT const& l, MaskPixelT const& r) -> MaskPixelT { return l | r; });
 }
 
 /**
@@ -1096,7 +1087,8 @@ void Mask<MaskPixelT>::operator|=(Mask const &rhs) {
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::operator&=(MaskPixelT const val) {
-    transform_pixels(_getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 & val));
+    transform_pixels(_getRawView(), _getRawView(),
+                     [&val](MaskPixelT const& l) { return l & val; });
 }
 
 /**
@@ -1111,7 +1103,8 @@ void Mask<MaskPixelT>::operator&=(Mask const &rhs) {
                           str(boost::format("Images are of different size, %dx%d v %dx%d") %
                               this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()));
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 & bl::_2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     [](MaskPixelT const& l, MaskPixelT const& r) -> MaskPixelT { return l & r; });
 }
 
 /**
@@ -1119,7 +1112,8 @@ void Mask<MaskPixelT>::operator&=(Mask const &rhs) {
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::operator^=(MaskPixelT const val) {
-    transform_pixels(_getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 ^ val));
+    transform_pixels(_getRawView(), _getRawView(),
+                     [&val](MaskPixelT const& l) -> MaskPixelT { return l ^ val; });
 }
 
 /**
@@ -1134,7 +1128,8 @@ void Mask<MaskPixelT>::operator^=(Mask const &rhs) {
                           str(boost::format("Images are of different size, %dx%d v %dx%d") %
                               this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()));
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<MaskPixelT>(bl::_1 ^ bl::_2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     [](MaskPixelT const& l, MaskPixelT const& r) -> MaskPixelT { return l ^ r; });
 }
 
 /**

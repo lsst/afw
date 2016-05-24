@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -30,7 +30,6 @@
 #include <sys/stat.h>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-#include "boost/lambda/lambda.hpp"
 #pragma clang diagnostic pop
 #include "boost/regex.hpp"
 #include "boost/filesystem/path.hpp"
@@ -42,7 +41,6 @@
 #include "lsst/afw/image/fits/fits_io.h"
 #include "lsst/afw/fits.h"
 
-namespace bl = boost::lambda;
 namespace image = lsst::afw::image;
 
 /** Constructors
