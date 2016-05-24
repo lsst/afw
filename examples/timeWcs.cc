@@ -52,8 +52,7 @@ void timeWcs(
             maxErr[i] = std::fmax(maxErr[i], std::fabs(retPixPos[i] - pixPos[i]));
         }
     }
-    // separate casts for CLOCKS_PER_SEC and nIter is necessary to avoid incorrect results,
-    // perhaps due to overflow
+    // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
     double usecPerIter = 1.0e6*(clock() - startClock)/
         (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     std::cout << usecPerIter << " usec per iteration; max round trip error = " << maxErr << " pixels\n";
