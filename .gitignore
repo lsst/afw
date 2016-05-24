@@ -50,6 +50,7 @@ examples/timeImageIterators
 examples/timePixelAccess
 examples/timePixelAccessGil
 examples/timeSpatiallyVaryingConvolve
+examples/timeWcs
 examples/vwconvert
 examples/wcsTest
 examples/image
