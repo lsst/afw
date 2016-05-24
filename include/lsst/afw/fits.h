@@ -18,7 +18,6 @@
 #include <string>
 
 #include <boost/format.hpp>
-#include <boost/scoped_array.hpp>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
