@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -30,7 +30,6 @@
 #include "boost/mpl/vector.hpp"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-variable"
-#include "boost/lambda/lambda.hpp"
 #pragma clang diagnostic pop
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
@@ -639,33 +638,19 @@ void image::swap(Image<PixelT>& a, Image<PixelT>& b) {
 }
 
 /************************************************************************************************************/
-//
-// N.b. We could use the STL, but I find boost::lambda clearer, and more easily extended
-// to e.g. setting random numbers
-//    transform_pixels(_gilView, _gilView, lambda::ret<PixelT>(lambda::_1 + rhs));
-// is equivalent to
-//    transform_pixels(_gilView, _gilView, std::bind2nd(std::plus<PixelT>(), rhs));
-//
-namespace bl = boost::lambda;
-
-// dstn: being a bear of little brain when it comes to templated lambdas, I found it easier to
-// write out this sqrt function which does the casts explicitly.
-template<typename PixelT>
-static PixelT mysqrt(PixelT x) {
-    return static_cast<PixelT>(std::sqrt(x));
-}
 
 // In-place, per-pixel, sqrt().
 template<typename PixelT>
 void image::Image<PixelT>::sqrt() {
      transform_pixels(_getRawView(), _getRawView(),
-                      boost::bind(mysqrt<PixelT>, bl::_1));
+                      [](PixelT const& l) -> PixelT { return static_cast<PixelT>(std::sqrt(l)); });
 }
 
 /// Add scalar rhs to lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator+=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 + rhs));
+    transform_pixels(_getRawView(), _getRawView(),
+                     [&rhs](PixelT const& l) -> PixelT { return l + rhs; });
 }
 
 /// Add Image rhs to lhs
@@ -676,7 +661,8 @@ void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 + bl::_2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     [](PixelT const& l, PixelT const& r) -> PixelT { return l + r; });
 }
 
 /**
@@ -705,13 +691,14 @@ void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) 
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     bl::ret<PixelT>(bl::_1 + bl::ret<PixelT>(c*bl::_2)));
+                     [&c](PixelT const& l, PixelT const& r) -> PixelT { return l + static_cast<PixelT>(c*r); });
 }
 
 /// Subtract scalar rhs from lhs
 template<typename PixelT>
 void image::Image<PixelT>::operator-=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 - rhs));
+    transform_pixels(_getRawView(), _getRawView(),
+                     [&rhs](PixelT const& l) -> PixelT { return l - rhs; });
 }
 
 /// Subtract Image rhs from lhs
@@ -722,7 +709,8 @@ void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 - bl::_2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     [](PixelT const& l, PixelT const& r) -> PixelT { return l - r; });
 }
 
 /// Subtract Image c*rhs from lhs
@@ -734,7 +722,7 @@ void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs)
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     bl::ret<PixelT>(bl::_1 - bl::ret<PixelT>(c*bl::_2)));
+                     [&c](PixelT const& l, PixelT const& r) -> PixelT { return l - static_cast<PixelT>(c*r); });
 }
 
 /**
@@ -757,7 +745,8 @@ void image::Image<PixelT>::operator-=(
 /// Multiply lhs by scalar rhs
 template<typename PixelT>
 void image::Image<PixelT>::operator*=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 * rhs));
+    transform_pixels(_getRawView(), _getRawView(),
+                     [&rhs](PixelT const& l) -> PixelT { return l*rhs; });
 }
 
 /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
@@ -768,7 +757,8 @@ void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 * bl::_2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     [](PixelT const& l, PixelT const& r) -> PixelT { return l*r; });
 }
 
 /// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
@@ -780,7 +770,7 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     bl::ret<PixelT>(bl::_1 * bl::ret<PixelT>(c*bl::_2)));
+                     [&c](PixelT const& l, PixelT const& r) -> PixelT { return l*static_cast<PixelT>(c*r); });
 }
 
 /// Divide lhs by scalar rhs
@@ -788,7 +778,8 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
 /// \note Floating point types implement this by multiplying by the 1/rhs
 template<typename PixelT>
 void image::Image<PixelT>::operator/=(PixelT const rhs) {
-    transform_pixels(_getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 / rhs));
+    transform_pixels(_getRawView(), _getRawView(),
+                     [&rhs](PixelT const& l) -> PixelT { return l/rhs; });
 }
 //
 // Specialize float and double for efficiency
@@ -815,7 +806,8 @@ void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
-    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(), bl::ret<PixelT>(bl::_1 / bl::_2));
+    transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
+                     [](PixelT const& l, PixelT const& r) -> PixelT { return l/r; });
 }
 
 /// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
@@ -827,7 +819,7 @@ void image::Image<PixelT>::scaledDivides(double const c, Image<PixelT> const& rh
                            this->getWidth() % this->getHeight() % rhs.getWidth() % rhs.getHeight()).str());
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
-                     bl::ret<PixelT>(bl::_1 / bl::ret<PixelT>(c*bl::_2)));
+                     [&c](PixelT const& l, PixelT const& r) -> PixelT { return l/static_cast<PixelT>(c*r); });
 }
 
 /************************************************************************************************************/
