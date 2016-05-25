@@ -128,14 +128,20 @@ private:
   *
 */
 template <typename T>
-class Covariogram : public lsst::daf::base::Citizen
-                   #ifndef SWIG
-                    , private boost::noncopyable
-                    #endif
-{
+class Covariogram : public lsst::daf::base::Citizen {
 public:
     virtual ~Covariogram();
    
+#ifndef SWIG
+    // No copying
+    Covariogram (const Covariogram&) = delete;
+    Covariogram& operator=(const Covariogram&) = delete;
+
+    // No moving
+    Covariogram (Covariogram&&) = delete;
+    Covariogram& operator=(Covariogram&&) = delete;
+#endif
+
     /**
      * @brief construct a Covariogram assigning default values to the hyper parameters
     */
@@ -238,12 +244,21 @@ private:
 */
 
 template <typename T>
-class KdTree
-        #ifndef SWIG
-        : private boost::noncopyable
-        #endif
-{
+class KdTree {
 public:
+
+#ifndef SWIG
+    // No copying
+    KdTree (const KdTree&) = delete;
+    KdTree& operator=(const KdTree&) = delete;
+
+    // No moving
+    KdTree (KdTree&&) = delete;
+    KdTree& operator=(KdTree&&) = delete;
+
+    // Add default constructor (which is no longer generated)
+    KdTree() = default;
+#endif
 
     /**
      * @brief Build a KD Tree to store the data for GaussianProcess
@@ -496,13 +511,19 @@ private:
 */
 
 template <typename T>
-class GaussianProcess
-                  #ifndef SWIG
-                  : private boost::noncopyable
-                  #endif
-{
+class GaussianProcess {
 
 public:
+
+#ifndef SWIG
+    // No copying
+    GaussianProcess (const GaussianProcess&) = delete;
+    GaussianProcess& operator=(const GaussianProcess&) = delete;
+
+    // No moving
+    GaussianProcess (GaussianProcess&&) = delete;
+    GaussianProcess& operator=(GaussianProcess&&) = delete;
+#endif
 
     /**
       * @brief This is the constructor you call if you do not wish to normalize the positions

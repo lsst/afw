@@ -771,7 +771,7 @@ public:
 namespace {
 
 // Singleton helper class that manages the schema and keys for persisting a Footprint
-class FootprintPersistenceHelper : private boost::noncopyable {
+class FootprintPersistenceHelper {
 public:
     table::Schema spanSchema;
     table::Key<int> spanY;
@@ -782,6 +782,14 @@ public:
         static FootprintPersistenceHelper instance;
         return instance;
     }
+
+    // No copying
+    FootprintPersistenceHelper (const FootprintPersistenceHelper&) = delete;
+    FootprintPersistenceHelper& operator=(const FootprintPersistenceHelper&) = delete;
+
+    // No moving
+    FootprintPersistenceHelper (FootprintPersistenceHelper&&) = delete;
+    FootprintPersistenceHelper& operator=(FootprintPersistenceHelper&&) = delete;
 
 private:
     FootprintPersistenceHelper() :

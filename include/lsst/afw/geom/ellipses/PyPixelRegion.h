@@ -33,7 +33,7 @@
 // need it to be in the include path when we compile SWIG modules, not just when
 // we generate them.
 
-class PyPixelRegionIterator : private boost::noncopyable {
+class PyPixelRegionIterator {
 public:
 
     lsst::afw::geom::Span get() const { return *_current; }
@@ -51,6 +51,14 @@ public:
     }
 
     ~PyPixelRegionIterator() { Py_XDECREF(_owner); }
+
+    // No copying
+    PyPixelRegionIterator (const PyPixelRegionIterator&) = delete;
+    PyPixelRegionIterator& operator=(const PyPixelRegionIterator&) = delete;
+
+    // No moving
+    PyPixelRegionIterator (PyPixelRegionIterator&&) = delete;
+    PyPixelRegionIterator& operator=(PyPixelRegionIterator&&) = delete;
 
 private:
     lsst::afw::geom::ellipses::PixelRegion::Iterator _current;

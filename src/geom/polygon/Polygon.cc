@@ -547,7 +547,7 @@ PTR(afw::image::Image<float>) Polygon::createImage(afw::geom::Box2I const& bbox)
  */
 namespace {
 
-struct PolygonSchema : private boost::noncopyable {
+struct PolygonSchema {
     afw::table::Schema schema;
     afw::table::PointKey<double> vertices;
 
@@ -555,6 +555,15 @@ struct PolygonSchema : private boost::noncopyable {
         static PolygonSchema instance;
         return instance;
     }
+
+    // No copying
+    PolygonSchema (const PolygonSchema&) = delete;
+    PolygonSchema& operator=(const PolygonSchema&) = delete;
+
+    // No moving
+    PolygonSchema (PolygonSchema&&) = delete;
+    PolygonSchema& operator=(PolygonSchema&&) = delete;
+
 private:
     PolygonSchema() : schema(),
                       vertices(afw::table::PointKey<double>::addFields(schema, "vertices",

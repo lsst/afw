@@ -58,7 +58,7 @@ private:
 };
 
 // Schema prepended when saving an Exposure table
-struct PersistenceSchema : private boost::noncopyable {
+struct PersistenceSchema {
     Schema schema;
     Key<int> wcs;
     Key<int> psf;
@@ -116,6 +116,14 @@ struct PersistenceSchema : private boost::noncopyable {
         output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
         output.setValidPolygon(archive.get<geom::polygon::Polygon>(input.get(validPolygon)));
     }
+
+    // No copying
+    PersistenceSchema (const PersistenceSchema&) = delete;
+    PersistenceSchema& operator=(const PersistenceSchema&) = delete;
+
+    // No moving
+    PersistenceSchema (PersistenceSchema&&) = delete;
+    PersistenceSchema& operator=(PersistenceSchema&&) = delete;
 
 private:
     PersistenceSchema() :

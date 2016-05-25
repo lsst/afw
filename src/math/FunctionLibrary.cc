@@ -13,7 +13,7 @@ namespace lsst { namespace afw { namespace math {
 namespace {
 
 // Singleton persistence schema for 2-d Gaussians
-struct GaussianFunction2PersistenceHelper : private boost::noncopyable {
+struct GaussianFunction2PersistenceHelper {
     table::Schema schema;
     table::Key<double> sigma1;
     table::Key<double> sigma2;
@@ -23,6 +23,15 @@ struct GaussianFunction2PersistenceHelper : private boost::noncopyable {
         static GaussianFunction2PersistenceHelper instance;
         return instance;
     }
+
+    // No copying
+    GaussianFunction2PersistenceHelper (const GaussianFunction2PersistenceHelper&) = delete;
+    GaussianFunction2PersistenceHelper& operator=(const GaussianFunction2PersistenceHelper&) = delete;
+
+    // No moving
+    GaussianFunction2PersistenceHelper (GaussianFunction2PersistenceHelper&&) = delete;
+    GaussianFunction2PersistenceHelper& operator=(GaussianFunction2PersistenceHelper&&) = delete;
+
 private:
     GaussianFunction2PersistenceHelper() :
         schema(),
@@ -35,7 +44,7 @@ private:
 };
 
 // Singleton persistence schema for 2-d circular DoubleGaussians
-struct DoubleGaussianFunction2PersistenceHelper : private boost::noncopyable {
+struct DoubleGaussianFunction2PersistenceHelper {
     table::Schema schema;
     table::Key<double> sigma1;
     table::Key<double> sigma2;
@@ -45,6 +54,15 @@ struct DoubleGaussianFunction2PersistenceHelper : private boost::noncopyable {
         static DoubleGaussianFunction2PersistenceHelper instance;
         return instance;
     }
+
+    // No copying
+    DoubleGaussianFunction2PersistenceHelper (const DoubleGaussianFunction2PersistenceHelper&) = delete;
+    DoubleGaussianFunction2PersistenceHelper& operator=(const DoubleGaussianFunction2PersistenceHelper&) = delete;
+
+    // No moving
+    DoubleGaussianFunction2PersistenceHelper (DoubleGaussianFunction2PersistenceHelper&&) = delete;
+    DoubleGaussianFunction2PersistenceHelper& operator=(DoubleGaussianFunction2PersistenceHelper&&) = delete;
+
 private:
     DoubleGaussianFunction2PersistenceHelper() :
         schema(),

@@ -26,11 +26,20 @@ namespace lsst { namespace afw { namespace table {
  */
 class BaseRecord
 #ifndef SWIG // swig complains about these not being %shared_ptr, and it doesn't need to know about them
-    : public daf::base::Citizen,
-      private boost::noncopyable
+    : public daf::base::Citizen
 #endif
 {
 public:
+
+#ifndef SWIG
+    // No copying
+    BaseRecord (const BaseRecord&) = delete;
+    BaseRecord& operator=(const BaseRecord&) = delete;
+
+    // No moving
+    BaseRecord (BaseRecord&&) = delete;
+    BaseRecord& operator=(BaseRecord&&) = delete;
+#endif
 
     /// The associated table class.
     typedef BaseTable Table;

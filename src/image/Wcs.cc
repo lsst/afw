@@ -1025,7 +1025,7 @@ namespace {
 
 // Read-only singleton struct containing the schema and keys that a simple Wcs is mapped
 // to in record persistence.
-struct WcsPersistenceHelper : private boost::noncopyable {
+struct WcsPersistenceHelper {
     table::Schema schema;
     table::PointKey<double> crval;
     table::PointKey<double> crpix;
@@ -1041,6 +1041,14 @@ struct WcsPersistenceHelper : private boost::noncopyable {
         static WcsPersistenceHelper instance;
         return instance;
     };
+
+    // No copying
+    WcsPersistenceHelper (const WcsPersistenceHelper&) = delete;
+    WcsPersistenceHelper& operator=(const WcsPersistenceHelper&) = delete;
+
+    // No moving
+    WcsPersistenceHelper (WcsPersistenceHelper&&) = delete;
+    WcsPersistenceHelper& operator=(WcsPersistenceHelper&&) = delete;
 
 private:
     WcsPersistenceHelper() :
