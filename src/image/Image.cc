@@ -32,7 +32,6 @@
 #pragma clang diagnostic ignored "-Wunused-variable"
 #include "boost/lambda/lambda.hpp"
 #pragma clang diagnostic pop
-#include "boost/bind/bind.hpp"
 #include "boost/format.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/gil/gil_all.hpp"

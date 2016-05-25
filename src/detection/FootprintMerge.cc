@@ -19,8 +19,6 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
-#include "boost/bind.hpp"
-
 #include "lsst/afw/detection/FootprintMerge.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/table/IdFactory.h"
