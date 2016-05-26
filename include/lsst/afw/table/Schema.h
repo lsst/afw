@@ -5,8 +5,6 @@
 #include <memory>
 #include <vector>
 
-#include "boost/ref.hpp"
-
 #include "ndarray.h"
 #include "lsst/base.h"
 #include "lsst/afw/table/Key.h"
@@ -196,13 +194,11 @@ public:
      *  SchemaItems of all supported field types - even those that are not present in this
      *  particular Schema.
      *
-     *  The functor will be passed by value by default; use boost::ref to pass it by reference.
-     *
      *  Fields will be processed in the order they were added to the schema.
      */
     template <typename F>
-    void forEach(F func) const {
-        Impl::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
+    void forEach(F&& func) const {
+        Impl::VisitorWrapper<F> visitor(std::forward<F>(func));
         std::for_each(_impl->getItems().begin(), _impl->getItems().end(), visitor);
     }
 
