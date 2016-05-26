@@ -32,3 +32,4 @@ from .cameraGeomEnumDicts import *
 from .makePixelToTanPixel import *
 from .assembleImage import *
 from .rotateBBoxBy90 import *
+NullLinearityType = "None"  # linearity type indicating no linearity correction wanted
