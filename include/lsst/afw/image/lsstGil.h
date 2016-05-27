@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -32,10 +32,11 @@
 /*
  * Extend the gil types to provide non-scaling float/int32 images, type bits32[fs]_noscale
  */
+#include <type_traits>
+
 #include "boost/mpl/assert.hpp"
 #include "boost/mpl/bool.hpp"
 #include "boost/mpl/if.hpp"
-#include "boost/type_traits/is_same.hpp"
 
 //#define BOOST_GIL_USE_CONCEPT_CHECK 1
 
@@ -316,9 +317,9 @@ namespace lsst { namespace afw { namespace image { namespace detail {
          * We also need unsigned long long (as type_u), because "unsigned unknown" won't compile
          */ 
         struct CheckBoost64 {
-            typedef boost::mpl::if_<boost::is_same<long long, boost::int64_t>,
+            typedef boost::mpl::if_<std::is_same<long long, boost::int64_t>,
                                     long long, struct unknown>::type type;
-            typedef boost::mpl::if_<boost::is_same<long long, boost::int64_t>,
+            typedef boost::mpl::if_<std::is_same<long long, boost::int64_t>,
                                     unsigned long long, struct unknown_u>::type type_u;
         };
     }

@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -35,10 +35,11 @@
  *  to be attractive (because the number of instantiations is combinatorial).
  */
 
+#include <type_traits>
+
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/Footprint.h"
 #include <boost/static_assert.hpp>
-#include <boost/type_traits.hpp>
 
 namespace lsst{
 namespace afw{
@@ -85,7 +86,7 @@ void flattenArray(
 ) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N-1, D> DestT; 
-    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
+    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
 
     checkConvertArray(fp, dest, src, xy0);
 
@@ -113,7 +114,7 @@ void flattenArray(
 ) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N-1, D> DestT; 
-    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
+    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
 
     checkConvertArray(fp, dest, src, xy0);
 
@@ -131,14 +132,14 @@ void flattenArray(
 }
 
 template <typename T, int N, int C>
-ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
+ndarray::Array<typename std::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
     geom::Point2I const & xy0
 ) {
     ndarray::Vector<int,N-1> shape 
         = ndarray::concatenate(fp.getArea(), src.getShape().template last<N-2>());
-    ndarray::Array<typename boost::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
+    ndarray::Array<typename std::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
     flattenArray(fp, src, dest, xy0);
     return dest;
 }
@@ -153,7 +154,7 @@ void expandArray(
 {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N+1, D> DestT; 
-    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
+    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
 
     checkConvertArray(fp, src, dest, xy0);
 
@@ -177,7 +178,7 @@ void expandArray(
 {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N+1, D> DestT; 
-    BOOST_STATIC_ASSERT(!boost::is_const<U>::value);
+    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
 
     checkConvertArray(fp, src, dest, xy0);
 
@@ -195,7 +196,7 @@ void expandArray(
 }
 
 template <typename T, int N, int C>
-ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
+ndarray::Array<typename std::remove_const<T>::type, N+1, N+1> expandArray(
     Footprint const & fp,
     ndarray::Array<T, N, C> const & src,
     geom::Box2I const & bbox
@@ -204,7 +205,7 @@ ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
     if (box.isEmpty()) {
         box = fp.getBBox();
     }
-    ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
+    ndarray::Array<typename std::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
             ndarray::makeVector(box.getHeight(), box.getWidth()), 
             src.getShape().template last<N-1>()

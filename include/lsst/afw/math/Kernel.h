@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -34,13 +34,12 @@
  * @ingroup afw
  */
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "boost/mpl/or.hpp"
 #include "boost/static_assert.hpp"
-#include "boost/type_traits/is_same.hpp"
-#include "boost/type_traits/is_base_and_derived.hpp"
 
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/vector.hpp"

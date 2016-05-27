@@ -4,8 +4,6 @@
 
 #include "boost/cstdint.hpp"
 #include "boost/mpl/if.hpp"
-#include "boost/type_traits/is_const.hpp"
-#include "boost/type_traits/add_const.hpp"
 
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord/Coord.h"

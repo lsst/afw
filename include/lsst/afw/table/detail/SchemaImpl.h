@@ -9,8 +9,6 @@
 
 #include "boost/variant.hpp"
 #include "boost/mpl/transform.hpp"
-#include "boost/type_traits/remove_const.hpp"
-#include "boost/type_traits/remove_reference.hpp"
 
 #include "lsst/daf/base/Citizen.h"
 

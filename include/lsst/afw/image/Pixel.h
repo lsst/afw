@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -24,8 +24,9 @@
 #define LSST_AFW_IMAGE_PIXEL_H
 
 #include <cmath>
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <type_traits>
 
 namespace lsst { namespace afw { namespace image { namespace pixel {
 
@@ -561,7 +562,7 @@ ExprT1 operator+=(ExprT1& e1, ExprT2 e2) {
 //
 // Implementations of add that work for arithmetic or MaskedImage pixels
 //
-// The choice is made on the basis of boost::is_arithmetic
+// The choice is made on the basis of std::is_arithmetic
 namespace {
     template <typename ExprT1,typename ExprT2>
     ExprT1 doPlus(ExprT1 e1, ExprT2 e2,
@@ -590,7 +591,7 @@ inline ExprT1 plus(ExprT1& lhs,          ///< Left hand value
                    ExprT2 const& rhs,    ///< Right hand value
                    float covariance      ///< Assume that covariance is 2*alpha*sqrt(vx*vy) (if variances are known)
                  ) {
-    return doPlus(lhs, rhs, covariance, typename boost::is_arithmetic<ExprT1>::type());
+    return doPlus(lhs, rhs, covariance, typename std::is_arithmetic<ExprT1>::type());
 }
 
 //------------------------------------------

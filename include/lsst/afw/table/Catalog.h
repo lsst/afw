@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_Catalog_h_INCLUDED
 #define AFW_TABLE_Catalog_h_INCLUDED
 
+#include <type_traits>
 #include <vector>
 
 #include "boost/iterator/iterator_adaptor.hpp"
@@ -369,7 +370,7 @@ public:
      *  Will throw RuntimeError if records are not contiguous.
      */
     ColumnView getColumnView() const {
-        if (boost::is_const<RecordT>::value) {
+        if (std::is_const<RecordT>::value) {
             throw LSST_EXCEPT(
                 pex::exceptions::LogicError,
                 "Cannot get a column view from a CatalogT<RecordT const> (as column views are always "
