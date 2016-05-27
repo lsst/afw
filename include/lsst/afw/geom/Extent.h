@@ -32,8 +32,6 @@
 #include <tuple>
 #include <type_traits>
 
-#include <boost/static_assert.hpp>
-
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/CoordinateExpr.h"
 
@@ -316,7 +314,8 @@ template<typename T>
 template<typename U>
 Extent<T, 2>::Extent(Extent<U, 2> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
+    static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
+            "can only construct from Extent of different but integral type");
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
 };
@@ -325,7 +324,8 @@ template<typename T>
 template<typename U>
 Extent<T, 2>::Extent(Point<U, 2> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
+    static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
+            "can only construct from Extent of different but integral type");
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
 };
@@ -335,7 +335,8 @@ template<typename T>
 template<typename U>
 Extent<T, 3>::Extent(Extent<U, 3> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
+    static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
+            "can only construct from Extent of different but integral type");
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
     this->setZ(static_cast<T>(other.getZ()));
@@ -346,7 +347,8 @@ template<typename T>
 template<typename U>
 Extent<T, 3>::Extent(Point<U, 3> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
+    static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
+            "can only construct from Extent of different but integral type");
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
     this->setZ(static_cast<T>(other.getZ()));

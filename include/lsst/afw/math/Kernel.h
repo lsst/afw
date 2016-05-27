@@ -39,7 +39,6 @@
 #include <vector>
 
 #include "boost/mpl/or.hpp"
-#include "boost/static_assert.hpp"
 
 #include "boost/serialization/shared_ptr.hpp"
 #include "boost/serialization/vector.hpp"
