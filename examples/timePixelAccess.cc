@@ -45,7 +45,9 @@ void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix
             }
         }
     }
-    double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
+    // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
+    double secPerIter = (clock() - startTime)/
+        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     double const megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
     std::cout << boost::format("Pixel Iterator\t%d\t%d\t%g\t%-8g\t%-8.1f") %
         nCols % nRows % megaPix % secPerIter % (megaPix/secPerIter) << std::endl;
@@ -59,7 +61,8 @@ void timePixelAccess(ImageT const &image, typename ImageT::SinglePixel const pix
             }
         }
     }
-    secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
+    secPerIter = (clock() - startTime)/
+        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     std::cout << boost::format("Pixel Locator\t%d\t%d\t%g\t%-8g\t%-8.1f") %
         nCols % nRows % megaPix % secPerIter % (megaPix/secPerIter) << std::endl;
 }

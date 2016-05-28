@@ -66,8 +66,9 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
             // convolve
             afwMath::convolve(resImage, image, analyticKernel, true);
         }
-        double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
-        
+        // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
+        double secPerIter = (clock() - startTime)/
+            (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
         double mOps = static_cast<double>(
             (imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
@@ -88,7 +89,8 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
             // convolve
             afwMath::convolve(resImage, image, separableKernel, true);
         }
-        double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
+        double secPerIter = (clock() - startTime)/
+            (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
         
         double mOps = static_cast<double>((
             imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;

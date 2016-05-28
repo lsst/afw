@@ -66,7 +66,9 @@ int main(int argc, char **argv) {
     for (unsigned iter = 0; iter < nIter; ++iter) {
         image1 += image2;
     }
-    double secPerIter = (clock() - startTime) / static_cast<double> (nIter * CLOCKS_PER_SEC);
+    // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
+    double secPerIter = (clock() - startTime)/
+        (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     double megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
     double secPerMPixPerIter = secPerIter / static_cast<double>(megaPix);
     std::cout << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
