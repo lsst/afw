@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(testFits) {
     BOOST_CHECK_EQUAL( readVector.getTable()->getMetadata()->nameCount(),
                        vector.getTable()->getMetadata()->nameCount() );
 
-    ExtractSchemaStrings func1;  schema.forEach(boost::ref(func1));
-    ExtractSchemaStrings func2;  readVector.getSchema().forEach(boost::ref(func2));
+    ExtractSchemaStrings func1;  schema.forEach(func1);
+    ExtractSchemaStrings func2;  readVector.getSchema().forEach(func2);
     BOOST_CHECK( func1.names == func2.names );
     BOOST_CHECK( func1.docs == func2.docs );
     BOOST_CHECK( func1.units == func2.units );

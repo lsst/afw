@@ -138,8 +138,8 @@ public:
      *  The order of iteration is the same as the order in which mappings were added.
      */
     template <typename F>
-    void forEach(F func) const {
-        Impl::VisitorWrapper<typename boost::unwrap_reference<F>::type &> visitor(func);
+    void forEach(F&& func) const {
+        Impl::VisitorWrapper<F> visitor(std::forward<F>(func));
         std::for_each(_impl->_map.begin(), _impl->_map.end(), visitor);
     }
 
