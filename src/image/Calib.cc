@@ -482,7 +482,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitu
    
 namespace {
 
-class CalibSchema : private boost::noncopyable {
+class CalibSchema {
 public:
     table::Schema schema;
     table::Key<boost::int64_t> midTime;
@@ -494,6 +494,14 @@ public:
         static CalibSchema instance;
         return instance;
     }
+
+    // No copying
+    CalibSchema (const CalibSchema&) = delete;
+    CalibSchema& operator=(const CalibSchema&) = delete;
+
+    // No moving
+    CalibSchema (CalibSchema&&) = delete;
+    CalibSchema& operator=(CalibSchema&&) = delete;
 
 private:
     CalibSchema() :

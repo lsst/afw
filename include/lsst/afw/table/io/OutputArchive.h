@@ -2,8 +2,6 @@
 #ifndef AFW_TABLE_IO_OutputArchive_h_INCLUDED
 #define AFW_TABLE_IO_OutputArchive_h_INCLUDED
 
-#include "boost/noncopyable.hpp"
-
 #include "lsst/base.h"
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -108,7 +106,7 @@ private:
  *  OutputArchiveHandle provides an interface to add additional catalogs and save nested
  *  Persistables to the same archive.
  */
-class OutputArchiveHandle : private boost::noncopyable {
+class OutputArchiveHandle {
 public:
 
     /**
@@ -138,6 +136,14 @@ public:
     //@}
 
     ~OutputArchiveHandle();
+
+    // No copying
+    OutputArchiveHandle (const OutputArchiveHandle&) = delete;
+    OutputArchiveHandle& operator=(const OutputArchiveHandle&) = delete;
+
+    // No moving
+    OutputArchiveHandle (OutputArchiveHandle&&) = delete;
+    OutputArchiveHandle& operator=(OutputArchiveHandle&&) = delete;
 
 private:
 

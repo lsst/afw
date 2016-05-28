@@ -86,13 +86,21 @@ namespace lsst { namespace afw { namespace math {
 
 namespace {
 
-struct DeltaFunctionKernelPersistenceHelper : public Kernel::PersistenceHelper, private boost::noncopyable {
+struct DeltaFunctionKernelPersistenceHelper : public Kernel::PersistenceHelper {
     table::PointKey<int> pixel;
 
     static DeltaFunctionKernelPersistenceHelper const & get() {
         static DeltaFunctionKernelPersistenceHelper const instance;
         return instance;
     }
+
+    // No copying
+    DeltaFunctionKernelPersistenceHelper (const DeltaFunctionKernelPersistenceHelper&) = delete;
+    DeltaFunctionKernelPersistenceHelper& operator=(const DeltaFunctionKernelPersistenceHelper&) = delete;
+
+    // No moving
+    DeltaFunctionKernelPersistenceHelper (DeltaFunctionKernelPersistenceHelper&&) = delete;
+    DeltaFunctionKernelPersistenceHelper& operator=(DeltaFunctionKernelPersistenceHelper&&) = delete;
 
 private:
 

@@ -2,8 +2,6 @@
 #ifndef AFW_TABLE_IO_Persistable_h_INCLUDED
 #define AFW_TABLE_IO_Persistable_h_INCLUDED
 
-#include "boost/noncopyable.hpp"
-
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 
@@ -228,7 +226,7 @@ public:
  *  and instantiate exactly one instance of the derived factory with static duration (usually
  *  the class and instance are both defined in an anonymous namespace in a source file).
  */
-class PersistableFactory : private boost::noncopyable {
+class PersistableFactory {
 protected:
     typedef io::InputArchive InputArchive; // convenient for derived classes not in afw::table::io
     typedef io::CatalogVector CatalogVector;
@@ -260,6 +258,14 @@ public:
     static PersistableFactory const & lookup(std::string const & name, std::string const & module="");
 
     virtual ~PersistableFactory() {}
+
+    // No copying
+    PersistableFactory (const PersistableFactory&) = delete;
+    PersistableFactory& operator=(const PersistableFactory&) = delete;
+
+    // No moving
+    PersistableFactory (PersistableFactory&&) = delete;
+    PersistableFactory& operator=(PersistableFactory&&) = delete;
 };
 
 #endif // !SWIG

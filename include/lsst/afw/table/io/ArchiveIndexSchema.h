@@ -9,8 +9,6 @@
  *  source files.
  */
 
-#include "boost/noncopyable.hpp"
-
 #include "lsst/base.h"
 #include "lsst/afw/table/Schema.h"
 
@@ -33,7 +31,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  name returned by Persistable::getPersistenceName() and used by InputArchive to
  *  look up a PersistableFactory in the registry.
  */
-struct ArchiveIndexSchema : private boost::noncopyable {
+struct ArchiveIndexSchema {
     Schema schema;
     Key<int> id;
     Key<int> catArchive;  // 'cat.archive' in schema
@@ -48,6 +46,14 @@ struct ArchiveIndexSchema : private boost::noncopyable {
 
     /// Return the singleton instance.
     static ArchiveIndexSchema const & get();
+
+    // No copying
+    ArchiveIndexSchema (const ArchiveIndexSchema&) = delete;
+    ArchiveIndexSchema& operator=(const ArchiveIndexSchema&) = delete;
+
+    // No moving
+    ArchiveIndexSchema (ArchiveIndexSchema&&) = delete;
+    ArchiveIndexSchema& operator=(ArchiveIndexSchema&&) = delete;
 
 private:
     ArchiveIndexSchema();

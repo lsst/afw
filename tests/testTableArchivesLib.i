@@ -105,7 +105,7 @@ protected:
 
 namespace {
 
-struct DummyPsfPersistenceHelper : private boost::noncopyable {
+struct DummyPsfPersistenceHelper {
     lsst::afw::table::Schema schema;
     lsst::afw::table::Key<double> x;
 
@@ -113,6 +113,14 @@ struct DummyPsfPersistenceHelper : private boost::noncopyable {
         static DummyPsfPersistenceHelper instance;
         return instance;
     }
+
+    // No copying
+    DummyPsfPersistenceHelper (const DummyPsfPersistenceHelper&) = delete;
+    DummyPsfPersistenceHelper& operator=(const DummyPsfPersistenceHelper&) = delete;
+
+    // No moving
+    DummyPsfPersistenceHelper (DummyPsfPersistenceHelper&&) = delete;
+    DummyPsfPersistenceHelper& operator=(DummyPsfPersistenceHelper&&) = delete;
 
 private:
     DummyPsfPersistenceHelper() :

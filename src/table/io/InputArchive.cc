@@ -32,7 +32,7 @@ struct IndexSortCompare {
 
 // ----- InputArchive::Impl ---------------------------------------------------------------------------------
 
-class InputArchive::Impl : private boost::noncopyable {
+class InputArchive::Impl {
 public:
 
     PTR(Persistable) get(int id, InputArchive const & self) {
@@ -148,6 +148,14 @@ public:
         _map.insert(std::make_pair(0, PTR(Persistable)()));
         _index.sort(IndexSortCompare());
     }
+
+    // No copying
+    Impl (const Impl&) = delete;
+    Impl& operator=(const Impl&) = delete;
+
+    // No moving
+    Impl (Impl&&) = delete;
+    Impl& operator=(Impl&&) = delete;
 
     Map _map;
     BaseCatalog _index;

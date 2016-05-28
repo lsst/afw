@@ -102,7 +102,7 @@ template <typename T> int getBitPix();
 /**
  *  @brief Lifetime-management for memory that goes into FITS memory files.
  */
-class MemFileManager : private boost::noncopyable {
+class MemFileManager {
 public:
 
     /**
@@ -159,6 +159,14 @@ public:
 
     ~MemFileManager() { reset(); }
 
+    // No copying
+    MemFileManager (const MemFileManager&) = delete;
+    MemFileManager& operator=(const MemFileManager&) = delete;
+
+    // No moving
+    MemFileManager (MemFileManager&&) = delete;
+    MemFileManager& operator=(MemFileManager&&) = delete;
+
     /// @brief Return the buffer
     void* getData() const { return _ptr; }
 
@@ -190,7 +198,7 @@ private:
  *  @note All functions that take a row or column number below are 0-indexed; the internal cfitsio
  *  calls are all 1-indexed.
  */
-class Fits : private boost::noncopyable {
+class Fits {
     template <typename T> void createImageImpl(int nAxis, long * nAxes);
     template <typename T> void writeImageImpl(T const * data, int nElements);
     template <typename T> void readImageImpl(int nAxis, T * data, long * begin, long * end, long * increment);
@@ -486,6 +494,14 @@ public:
     void closeFile();
 
     ~Fits() { if ((fptr) && (behavior & AUTO_CLOSE)) closeFile(); }
+
+    // No copying
+    Fits (const Fits&) = delete;
+    Fits& operator=(const Fits&) = delete;
+
+    // No moving
+    Fits (Fits&&) = delete;
+    Fits& operator=(Fits&&) = delete;
 
     void * fptr;  // the actual cfitsio fitsfile pointer; void to avoid including fitsio.h here.
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
