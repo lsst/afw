@@ -173,7 +173,8 @@ public:
         }
 
         /// @brief Construct the wrapper.
-        explicit VisitorWrapper(F func) : _func(func) {}
+        template <typename T>
+        explicit VisitorWrapper(T&& func) : _func(std::forward<T>(func)) {}
 
     private:
         F _func;

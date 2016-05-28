@@ -212,7 +212,7 @@ void SchemaMapper::addMinimalSchema(Schema const & minimal, bool doMap) {
 SchemaMapper SchemaMapper::removeMinimalSchema(Schema const & input, Schema const & minimal) {
     SchemaMapper mapper(input);
     RemoveMinimalSchema f(&mapper, minimal);
-    input.forEach(boost::ref(f));
+    input.forEach(f);
     return mapper;
 }
 

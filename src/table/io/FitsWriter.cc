@@ -65,7 +65,7 @@ struct ProcessSchema {
     // Create and apply the functor to a schema.
     static void apply(Fits & fits, Schema const & schema) {
         ProcessSchema f = { &fits, 0 };
-        schema.forEach(boost::ref(f));
+        schema.forEach(f);
     }
 
     template <typename T>
@@ -180,7 +180,7 @@ struct FitsWriter::ProcessRecords {
         col = 0;
         bit = 0;
         if (nFlags) ++col;
-        schema.forEach(boost::ref(*this));
+        schema.forEach(*this);
         if (nFlags) fits->writeTableArray(row, 0, nFlags, flags.get());
     }
 
