@@ -39,7 +39,6 @@
 
 #include "lsst/afw/detection/FootprintArray.h"
 #include "lsst/afw/detection/Footprint.h"
-#include <boost/static_assert.hpp>
 
 namespace lsst{
 namespace afw{
@@ -86,7 +85,7 @@ void flattenArray(
 ) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N-1, D> DestT; 
-    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
+    static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, dest, src, xy0);
 
@@ -114,7 +113,7 @@ void flattenArray(
 ) {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N-1, D> DestT; 
-    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
+    static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, dest, src, xy0);
 
@@ -154,7 +153,7 @@ void expandArray(
 {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N+1, D> DestT; 
-    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
+    static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, src, dest, xy0);
 
@@ -178,7 +177,7 @@ void expandArray(
 {
     typedef ndarray::Array<T, N, C> SourceT; 
     typedef ndarray::Array<U, N+1, D> DestT; 
-    BOOST_STATIC_ASSERT(!std::is_const<U>::value);
+    static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, src, dest, xy0);
 
