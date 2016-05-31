@@ -30,7 +30,8 @@
 //
 //##====----------------                                ----------------====##/
 
-#include "boost/cstdint.hpp"
+#include <cstdint>
+
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
@@ -39,7 +40,7 @@
 #include "lsst/daf/persistence/DbTsvStorage.h"
 #include "lsst/afw/formatters/Utils.h"
 
-using boost::int64_t;
+using std::int64_t;
 namespace ex = lsst::pex::exceptions;
 using lsst::daf::base::PropertySet;
 using lsst::pex::policy::Policy;

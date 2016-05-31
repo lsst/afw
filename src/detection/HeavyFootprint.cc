@@ -25,6 +25,7 @@
  *
  * \brief HeavyFootprint and associated classes
  */
+#include <cstdint>
 #include <cassert>
 #include <string>
 #include <typeinfo>
@@ -59,8 +60,8 @@ namespace {
     };
 
     template<>
-    struct setPixel<boost::uint16_t> {
-        typedef boost::uint16_t T;
+    struct setPixel<std::uint16_t> {
+        typedef std::uint16_t T;
 
         setPixel(T val) : _mask(~val) {}
 
@@ -275,7 +276,7 @@ template <typename ImagePixelT,
           typename MaskPixelT=image::MaskPixel,
           typename VariancePixelT=image::VariancePixel>
 struct ComputeSuffix;
-template <> struct ComputeSuffix<boost::uint16_t> { static std::string apply() { return "U"; } };
+template <> struct ComputeSuffix<std::uint16_t> { static std::string apply() { return "U"; } };
 template <> struct ComputeSuffix<float> { static std::string apply() { return "F"; } };
 template <> struct ComputeSuffix<double> { static std::string apply() { return "D"; } };
 template <> struct ComputeSuffix<int> { static std::string apply() { return "I"; } };
@@ -352,7 +353,7 @@ HeavyFootprint<ImagePixelT,MaskPixelT,VariancePixelT>::Factory::registration(
     template PTR(HeavyFootprint<TYPE>) mergeHeavyFootprints<TYPE>( \
         HeavyFootprint<TYPE> const&, HeavyFootprint<TYPE> const&);
 
-INSTANTIATE(boost::uint16_t);
+INSTANTIATE(std::uint16_t);
 INSTANTIATE(double);
 INSTANTIATE(float);
 INSTANTIATE(int);

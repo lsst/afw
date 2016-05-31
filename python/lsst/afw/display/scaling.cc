@@ -2,6 +2,7 @@
  * Calculate some scalings.  Legacy code from NAOJ, which could probably be rewritten in python
  * if the need arose.  It could certainly use more LSST primitives (e.g. line fitting)
  */
+#include <cstdint>
 #include <cmath>
 #include <algorithm>
 #include <cstdio>
@@ -242,6 +243,6 @@ getZScale(image::Image<T> const& image,
     template std::pair<double, double> \
         getZScale(image::Image<T> const& image, int const nSamples, double const contrast)
 
-INSTANTIATE_GETZSCALE(boost::uint16_t);
+INSTANTIATE_GETZSCALE(std::uint16_t);
 INSTANTIATE_GETZSCALE(float);
 }}}

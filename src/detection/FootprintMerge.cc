@@ -19,6 +19,10 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+#include <cstdint>
+
+#include "boost/bind.hpp"
+
 #include "lsst/afw/detection/FootprintMerge.h"
 #include "lsst/afw/detection/FootprintSet.h"
 #include "lsst/afw/table/IdFactory.h"
@@ -32,8 +36,8 @@ FootprintSet mergeFootprintPair(Footprint const &foot1, Footprint const &foot2) 
     geom::Box2I bbox(foot1.getBBox());
     bbox.include(foot2.getBBox());
 
-    boost::uint16_t bits = 0x1;
-    image::Mask<boost::uint16_t> mask(bbox);
+    std::uint16_t bits = 0x1;
+    image::Mask<std::uint16_t> mask(bbox);
     setMaskFromFootprint(&mask, foot1, bits);
     setMaskFromFootprint(&mask, foot2, bits);
     FootprintSet fpSet(mask, Threshold(bits, Threshold::BITMASK));

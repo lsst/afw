@@ -23,6 +23,8 @@
  */
  
 %{
+#include <cstdint>
+
 #include "lsst/afw/math/warpExposure.h"
 #include "lsst/afw/image/Mask.h"
 %}
@@ -58,8 +60,8 @@
     lsst::afw::image::Image<SRCIMAGEPIXEL> >;
 %enddef
 
-%WarpFuncsByType(float, boost::uint16_t);
-%WarpFuncsByType(double, boost::uint16_t);
+%WarpFuncsByType(float, std::uint16_t);
+%WarpFuncsByType(double, std::uint16_t);
 %WarpFuncsByType(float, int);
 %WarpFuncsByType(double, int);
 %WarpFuncsByType(float, float);
@@ -92,10 +94,10 @@
     lsst::afw::image::MaskedImage<PIXELT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> >;
 %enddef
 
-imageTransforms(boost::uint16_t, 0);
+imageTransforms(std::uint16_t, 0);
 imageTransforms(int, 0);
 imageTransforms(float, 1);
 imageTransforms(double, 1);
 
-%template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Mask<boost::uint16_t> >;
-%template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Mask<boost::uint16_t> >;
+%template(rotateImageBy90) lsst::afw::math::rotateImageBy90<lsst::afw::image::Mask<std::uint16_t> >;
+%template(flipImage) lsst::afw::math::flipImage<lsst::afw::image::Mask<std::uint16_t> >;

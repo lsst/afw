@@ -32,7 +32,6 @@
 #include <algorithm>
 #include <list>
 #include <cmath>
-#include <boost/cstdint.hpp>
 #include <memory>
 #include "lsst/afw/detection/Footprint.h"
 

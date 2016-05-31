@@ -23,6 +23,8 @@
  */
  
 %{
+#include <cstdint>
+
 #   include "lsst/afw/image/MaskedImage.h"
 %}
 
@@ -164,14 +166,14 @@ __itruediv__ = __idiv__
 %maskedImagePtr(MaskedImage, F, float,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, D, double, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImagePtr(MaskedImage, I, int,    lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
-%maskedImagePtr(MaskedImage, U, boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImagePtr(MaskedImage, U, std::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %include "lsst/afw/image/MaskedImage.h"
 
 %maskedImage(MaskedImage, D, double,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImage(MaskedImage, F, float,   lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 %maskedImage(MaskedImage, I, int,     lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
-%maskedImage(MaskedImage, U, boost::uint16_t,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
+%maskedImage(MaskedImage, U, std::uint16_t,  lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel);
 
 %extend lsst::afw::image::MaskedImage<float, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %newobject convertD;
@@ -188,7 +190,7 @@ __itruediv__ = __idiv__
     %}
 }
 
-%extend lsst::afw::image::MaskedImage<boost::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
+%extend lsst::afw::image::MaskedImage<std::uint16_t, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> {
     %newobject convertF;
      lsst::afw::image::MaskedImage<float,
                                    lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel> convertF() {

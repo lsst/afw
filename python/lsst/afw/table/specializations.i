@@ -176,14 +176,14 @@
     %}
 }
 
-%specializeScalar(boost::uint16_t, U)
-%specializeScalar(boost::int32_t, I)
-%specializeScalar(boost::int64_t, L)
+%specializeScalar(std::uint16_t, U)
+%specializeScalar(std::int32_t, I)
+%specializeScalar(std::int64_t, L)
 %specializeScalar(float, F)
 %specializeScalar(double, D)
 %specializeScalar(lsst::afw::geom::Angle, Angle)
 
-%specializeArray(boost::uint16_t, U)
+%specializeArray(std::uint16_t, U)
 %specializeArray(int, I)
 %specializeArray(float, F)
 %specializeArray(double, D)

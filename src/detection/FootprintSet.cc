@@ -42,6 +42,7 @@
     cout << "Found " << sources.getFootprints()->size() << " sources" << std::endl;
  * \endcode
  */
+#include <cstdint>
 #include <memory>
 #include <algorithm>
 #include <cassert>
@@ -69,7 +70,7 @@ namespace geom = lsst::afw::geom;
 namespace {
     /// Don't let doxygen see this block  \cond
 
-    typedef boost::uint64_t IdPixelT;    // Type of temporary Images used in merging Footprints
+    typedef std::uint64_t IdPixelT;    // Type of temporary Images used in merging Footprints
 
     struct Threshold_traits {
     };
@@ -221,7 +222,7 @@ namespace {
          * losing any peaks that it might contain.  We'll preserve the overwritten Ids in case we need to
          * get them back (n.b. Footprints that overlap, but both if which survive, will appear in this list)
          */
-        typedef std::map<int, std::set<boost::uint64_t> > OldIdMap;
+        typedef std::map<int, std::set<std::uint64_t> > OldIdMap;
         OldIdMap overwrittenIds;        // here's a map from id -> overwritten IDs
 
         IdPixelT id = 1;                     // the ID inserted into the image
@@ -234,7 +235,7 @@ namespace {
                     growFootprint(*foot, rLhs, isotropic) : growFootprint(*foot, rLhs, left, right, up, down);
             }
 
-            std::set<boost::uint64_t> overwritten;
+            std::set<std::uint64_t> overwritten;
             foot->insertIntoImage(*idImage, id, true, 0x0, &overwritten);
 
             if (!overwritten.empty()) {
@@ -253,7 +254,7 @@ namespace {
                     growFootprint(*foot, rRhs, isotropic) : growFootprint(*foot, rRhs, left, right, up, down);
             }
 
-            std::set<boost::uint64_t> overwritten;
+            std::set<std::uint64_t> overwritten;
             foot->insertIntoImage(*idImage, id, true, lhsIdMask, &overwritten);
 
             if (!overwritten.empty()) {
@@ -281,22 +282,22 @@ namespace {
 
             idFinder.apply(*foot);      // find the (mangled) [lr]hsFootprint IDs that contribute to foot
 
-            std::set<boost::uint64_t> lhsFootprintIndxs, rhsFootprintIndxs; // indexes into [lr]hsFootprints
+            std::set<std::uint64_t> lhsFootprintIndxs, rhsFootprintIndxs; // indexes into [lr]hsFootprints
 
             for (std::set<IdPixelT>::iterator idptr = idFinder.getIds().begin(),
                      idend = idFinder.getIds().end(); idptr != idend; ++idptr) {
                 unsigned int indx = *idptr;
                 if ((indx & lhsIdMask) > 0) {
-                    boost::uint64_t i = (indx & lhsIdMask) - 1;
+                    std::uint64_t i = (indx & lhsIdMask) - 1;
                     lhsFootprintIndxs.insert(i);
                     /*
                      * Now allow for Footprints that vanished beneath this one
                      */
                     OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
                     if (mapPtr != overwrittenIds.end()) {
-                        std::set<boost::uint64_t> &overwritten = mapPtr->second;
+                        std::set<std::uint64_t> &overwritten = mapPtr->second;
 
-                        for (std::set<boost::uint64_t>::iterator ptr = overwritten.begin(),
+                        for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(),
                                  end = overwritten.end(); ptr != end; ++ptr){
                             lhsFootprintIndxs.insert((*ptr & lhsIdMask) - 1);
                         }
@@ -305,16 +306,16 @@ namespace {
                 indx >>= lhsIdNbit;
 
                 if (indx > 0) {
-                    boost::uint64_t i = indx - 1;
+                    std::uint64_t i = indx - 1;
                     rhsFootprintIndxs.insert(i);
                     /*
                      * Now allow for Footprints that vanished beneath this one
                      */
                     OldIdMap::iterator mapPtr = overwrittenIds.find(indx);
                     if (mapPtr != overwrittenIds.end()) {
-                        std::set<boost::uint64_t> &overwritten = mapPtr->second;
+                        std::set<std::uint64_t> &overwritten = mapPtr->second;
 
-                        for (std::set<boost::uint64_t>::iterator ptr = overwritten.begin(),
+                        for (std::set<std::uint64_t>::iterator ptr = overwritten.begin(),
                                  end = overwritten.end(); ptr != end; ++ptr) {
                             rhsFootprintIndxs.insert(*ptr - 1);
                         }
@@ -327,9 +328,9 @@ namespace {
              */
             detection::PeakCatalog &peaks = foot->getPeaks();
 
-            for (std::set<boost::uint64_t>::iterator ptr = lhsFootprintIndxs.begin(),
+            for (std::set<std::uint64_t>::iterator ptr = lhsFootprintIndxs.begin(),
                      end = lhsFootprintIndxs.end(); ptr != end; ++ptr) {
-                boost::uint64_t i = *ptr;
+                std::uint64_t i = *ptr;
                 assert (i < lhsFootprints.size());
                 detection::PeakCatalog const& oldPeaks = lhsFootprints[i]->getPeaks();
 
@@ -342,9 +343,9 @@ namespace {
                                    peaks.getInternal().end(), SortPeaks());
             }
 
-            for (std::set<boost::uint64_t>::iterator ptr = rhsFootprintIndxs.begin(),
+            for (std::set<std::uint64_t>::iterator ptr = rhsFootprintIndxs.begin(),
                      end = rhsFootprintIndxs.end(); ptr != end; ++ptr) {
-                boost::uint64_t i = *ptr;
+                std::uint64_t i = *ptr;
                 assert (i < rhsFootprints.size());
                 detection::PeakCatalog const& oldPeaks = rhsFootprints[i]->getPeaks();
 
@@ -1517,7 +1518,7 @@ template detection::FootprintSet::FootprintSet(image::Mask<image::MaskPixel> con
 template void detection::FootprintSet::setMask(image::Mask<image::MaskPixel> *, std::string const &);
 template void detection::FootprintSet::setMask(PTR(image::Mask<image::MaskPixel>), std::string const &);
 
-INSTANTIATE(boost::uint16_t);
+INSTANTIATE(std::uint16_t);
 INSTANTIATE(int);
 INSTANTIATE(float);
 INSTANTIATE(double);

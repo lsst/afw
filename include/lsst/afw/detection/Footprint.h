@@ -33,7 +33,7 @@
 #include <list>
 #include <set>
 #include <cmath>
-#include <boost/cstdint.hpp>
+#include <cstdint>
 #include <memory>
 #include "ndarray.h"
 #include "lsst/base.h"
@@ -252,7 +252,7 @@ public:
      */
     template<typename PixelT>
     void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
-                         boost::uint64_t const id,
+                         std::uint64_t const id,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
 
@@ -271,9 +271,9 @@ public:
      */
     template<typename PixelT>
     void insertIntoImage(typename lsst::afw::image::Image<PixelT>& idImage,
-                         boost::uint64_t const id,
+                         std::uint64_t const id,
                          bool const overwriteId, long const idMask,
-                         typename std::set<boost::uint64_t> *oldIds,
+                         typename std::set<std::uint64_t> *oldIds,
                          geom::Box2I const& region=geom::Box2I()
     ) const;
 
@@ -381,8 +381,8 @@ private:
  footprint 0, and its distance is 2.
  */
 void nearestFootprint(std::vector<PTR(Footprint)> const& foots,
-                      lsst::afw::image::Image<boost::uint16_t>::Ptr argmin,
-                      lsst::afw::image::Image<boost::uint16_t>::Ptr dist);
+                      lsst::afw::image::Image<std::uint16_t>::Ptr argmin,
+                      lsst::afw::image::Image<std::uint16_t>::Ptr dist);
 
 /**
    Merges two Footprints -- appends their peaks, and unions their

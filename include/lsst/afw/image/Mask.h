@@ -34,7 +34,6 @@
 #include <map>
 #include <string>
 
-#include "boost/cstdint.hpp"
 #include <memory>
 
 #include "lsst/base.h"

@@ -25,6 +25,8 @@
  *
  * Rotate an Image (or Mask or MaskedImage) by a fixed angle or number of quarter turns
  */
+#include <cstdint>
+
 #include "lsst/afw/math/offsetImage.h"
 
 namespace afwImage = lsst::afw::image;
@@ -150,12 +152,12 @@ PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
     template afwImage::MaskedImage<TYPE>::Ptr flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB); 
     
 
-INSTANTIATE(boost::uint16_t)
+INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-template afwImage::Mask<boost::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<boost::uint16_t> const&, int); 
-template afwImage::Mask<boost::uint16_t>::Ptr flipImage(afwImage::Mask<boost::uint16_t> const&, bool flipLR, bool flipTB); 
+template afwImage::Mask<std::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<std::uint16_t> const&, int); 
+template afwImage::Mask<std::uint16_t>::Ptr flipImage(afwImage::Mask<std::uint16_t> const&, bool flipLR, bool flipTB); 
 /// \endcond
 
 }}}

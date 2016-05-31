@@ -41,6 +41,8 @@
 static char const* SVNid __attribute__((unused)) =
     "$Id$";
 
+#include <cstdint>
+
 #include "boost/serialization/shared_ptr.hpp"
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -81,7 +83,7 @@ public:
 };
 
 template<>
-std::string ExposureFormatterTraits<boost::uint16_t, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+std::string ExposureFormatterTraits<std::uint16_t, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
     static std::string name = "ExposureU";
     return name;
 }
@@ -101,7 +103,7 @@ std::string ExposureFormatterTraits<double, afwImg::MaskPixel, afwImg::VarianceP
     return name;
 }
 template<>
-std::string ExposureFormatterTraits<boost::uint64_t, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
+std::string ExposureFormatterTraits<std::uint64_t, afwImg::MaskPixel, afwImg::VariancePixel>::name() {
     static std::string name = "ExposureL";
     return name;
 }

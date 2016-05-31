@@ -23,6 +23,8 @@
  */
  
 %{
+#include <cstdint>
+
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/KernelFunctions.h"
 #include "lsst/afw/formatters/KernelFormatter.h"
@@ -102,12 +104,12 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %templateKernel(double, double);
 %templateKernel(double, float);
 %templateKernel(double, int);
-%templateKernel(double, boost::uint16_t);
+%templateKernel(double, std::uint16_t);
 %templateKernel(float, float);
 %templateKernel(float, int);
-%templateKernel(float, boost::uint16_t);
+%templateKernel(float, std::uint16_t);
 %templateKernel(int, int);
-%templateKernel(boost::uint16_t, boost::uint16_t);
+%templateKernel(std::uint16_t, std::uint16_t);
   
 //-------------------------------------------------------------------------
 // THIS CAST INTERFACE NOW DEPRECATED IN FAVOR OF %castShared

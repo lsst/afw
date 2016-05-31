@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "boost/cstdint.hpp"
-
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/table/BaseRecord.h"

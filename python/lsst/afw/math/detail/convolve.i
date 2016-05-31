@@ -23,6 +23,8 @@
  */
  
 %{
+#include <cstdint>
+
 #include "lsst/afw/math/detail/Convolve.h"
 %}
 
@@ -67,9 +69,9 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 %templateConvolve(double, double);
 %templateConvolve(double, float);
 %templateConvolve(double, int);
-%templateConvolve(double, boost::uint16_t);
+%templateConvolve(double, std::uint16_t);
 %templateConvolve(float, float);
 %templateConvolve(float, int);
-%templateConvolve(float, boost::uint16_t);
+%templateConvolve(float, std::uint16_t);
 %templateConvolve(int, int);
-%templateConvolve(boost::uint16_t, boost::uint16_t);
+%templateConvolve(std::uint16_t, std::uint16_t);

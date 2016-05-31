@@ -23,6 +23,8 @@
  */
  
 %{
+#include <cstdint>
+
 #   include "lsst/afw/image/Mask.h"
 %}
 
@@ -107,9 +109,9 @@ def __ixor__(*args):
 //
 // Must go Before the %include
 //
-%ignore lsst::afw::image::Mask<boost::uint16_t>::operator();
-%shared_ptr(lsst::afw::image::Mask<boost::uint16_t>);
+%ignore lsst::afw::image::Mask<std::uint16_t>::operator();
+%shared_ptr(lsst::afw::image::Mask<std::uint16_t>);
 
 %include "lsst/afw/image/Mask.h"
 
-%mask(Mask, U, boost::uint16_t);
+%mask(Mask, U, std::uint16_t);

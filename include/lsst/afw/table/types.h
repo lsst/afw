@@ -2,6 +2,7 @@
 #ifndef AFW_TABLE_types_h_INCLUDED
 #define AFW_TABLE_types_h_INCLUDED
 
+#include <cstdint>
 #include <cstring>
 #include <iostream>
 
@@ -28,13 +29,13 @@
 // Scalar types: those that can serve as elements for other types, and use the default FieldBase template.
 #define AFW_TABLE_SCALAR_FIELD_TYPE_N 6
 #define AFW_TABLE_SCALAR_FIELD_TYPES                                    \
-    RecordId, boost::uint16_t, boost::int32_t, float, double, Angle
+    RecordId, std::uint16_t, std::int32_t, float, double, Angle
 #define AFW_TABLE_SCALAR_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_SCALAR_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Arrays types: the types we allow for Array fields.
 #define AFW_TABLE_ARRAY_FIELD_TYPE_N 4
 #define AFW_TABLE_ARRAY_FIELD_TYPES             \
-    boost::uint16_t, int, float, double
+    std::uint16_t, int, float, double
 #define AFW_TABLE_ARRAY_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_ARRAY_FIELD_TYPES BOOST_PP_RPAREN()
 
 // Field types: all the types we allow for fields.
@@ -42,7 +43,7 @@
 #define AFW_TABLE_FIELD_TYPES                                   \
     AFW_TABLE_SCALAR_FIELD_TYPES,                               \
     Flag, std::string,                                          \
-    Array<boost::uint16_t>, Array<int>, Array<float>, Array<double>
+    Array<std::uint16_t>, Array<int>, Array<float>, Array<double>
 
 #define AFW_TABLE_FIELD_TYPE_TUPLE BOOST_PP_LPAREN() AFW_TABLE_FIELD_TYPES BOOST_PP_RPAREN()
 

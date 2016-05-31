@@ -23,6 +23,8 @@
  */
  
 %{
+#include <cstdint>
+
 #   include "lsst/afw/image/Image.h"
 #   include "lsst/afw/image/ImagePca.h"
 %}
@@ -153,8 +155,8 @@ __itruediv__ = __idiv__
 %ignore lsst::afw::image::ImageBase::y_at;
 %ignore lsst::afw::image::ImageBase::xy_at;
 
-%imagePtr(boost::uint16_t);
-%imagePtr(boost::uint64_t);
+%imagePtr(std::uint16_t);
+%imagePtr(std::uint64_t);
 %imagePtr(int);
 %imagePtr(float);
 %imagePtr(double);
@@ -164,15 +166,15 @@ __itruediv__ = __idiv__
 %include "lsst/afw/image/ImagePca.h"
 %include "lsst/afw/image/Mask.h"
 
-%image(Image, U, boost::uint16_t);
-%image(Image, L, boost::uint64_t);
+%image(Image, U, std::uint16_t);
+%image(Image, L, std::uint64_t);
 %image(Image, I, int);
 %image(Image, F, float);
 %image(Image, D, double);
 
 %template(vectorBBox) std::vector<lsst::afw::geom::BoxI>;         
 
-%extend lsst::afw::image::Image<boost::uint16_t> {
+%extend lsst::afw::image::Image<std::uint16_t> {
     %newobject convertF;
     lsst::afw::image::Image<float> convertF() {
        return lsst::afw::image::Image<float>(*self, true);
@@ -185,7 +187,7 @@ __itruediv__ = __idiv__
     %}
 }
 
-%extend lsst::afw::image::Image<boost::uint64_t> {
+%extend lsst::afw::image::Image<std::uint64_t> {
     %newobject convertD;
     lsst::afw::image::Image<double> convertD() {
        return lsst::afw::image::Image<double>(*self, true);
@@ -217,8 +219,8 @@ __itruediv__ = __idiv__
         return lsst::afw::image::Image<double>(*self, true);
     }
     %newobject convertU;
-    lsst::afw::image::Image<boost::uint16_t> convertU() {
-        return lsst::afw::image::Image<boost::uint16_t>(*self, true);
+    lsst::afw::image::Image<std::uint16_t> convertU() {
+        return lsst::afw::image::Image<std::uint16_t>(*self, true);
     }
     %pythoncode %{
     def convertU16(self, *args):

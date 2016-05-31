@@ -25,6 +25,8 @@
  *
  * Bin an Image or MaskedImage by an integral factor (the same in x and y)
  */
+#include <cstdint>
+
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/math/offsetImage.h"
 
@@ -104,7 +106,7 @@ PTR(ImageT) binImage(ImageT const& in,  ///< The %image to bin
     template afwImage::MaskedImage<TYPE>::Ptr \
              binImage(afwImage::MaskedImage<TYPE> const&, int, int, lsst::afw::math::Property const); \
 
-INSTANTIATE(boost::uint16_t)
+INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)

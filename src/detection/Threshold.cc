@@ -19,6 +19,7 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+#include <cstdint>
 #include <cmath>
 #include <string>
 #include <boost/format.hpp>
@@ -152,7 +153,7 @@ template double Threshold::getValue(image::TYPE<unsigned short> const&) const; \
 template double Threshold::getValue(image::TYPE<int> const&) const; \
 template double Threshold::getValue(image::TYPE<float> const&) const; \
 template double Threshold::getValue(image::TYPE<double> const&) const; \
-template double Threshold::getValue(image::TYPE<boost::uint64_t> const&) const;
+template double Threshold::getValue(image::TYPE<std::uint64_t> const&) const;
 
 #ifndef DOXYGEN
 INSTANTIATE(Image);

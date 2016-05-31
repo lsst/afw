@@ -3,6 +3,8 @@
  */
 
 %{
+#include <cstdint>
+
 #include "lsst/afw/table/Catalog.h"
 %}
 
@@ -346,8 +348,8 @@ std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T value, Key<T>
 %template(sort) lsst::afw::table::CatalogT::sort< TYPE >;
 %enddef
 
-%instantiateCatalogSortMethods(boost::int32_t)
-%instantiateCatalogSortMethods(boost::int64_t)
+%instantiateCatalogSortMethods(std::int32_t)
+%instantiateCatalogSortMethods(std::int64_t)
 %instantiateCatalogSortMethods(float)
 %instantiateCatalogSortMethods(double)
 %instantiateCatalogSortMethods(lsst::afw::geom::Angle)
@@ -355,8 +357,8 @@ std::pair<int,int> _Catalog_equal_range(Catalog const & catalog, T value, Key<T>
 // Macro that should be used to instantiate a Catalog type.
 %define %declareCatalog(TMPL, PREFIX)
 %pythondynamic TMPL< PREFIX ## Record >;
-%instantiateCatalogSearchMethods(PREFIX, TMPL, boost::int32_t)
-%instantiateCatalogSearchMethods(PREFIX, TMPL, boost::int64_t)
+%instantiateCatalogSearchMethods(PREFIX, TMPL, std::int32_t)
+%instantiateCatalogSearchMethods(PREFIX, TMPL, std::int64_t)
 %instantiateCatalogSearchMethods(PREFIX, TMPL, float)
 %instantiateCatalogSearchMethods(PREFIX, TMPL, double)
 %instantiateCatalogSearchMethods(PREFIX, TMPL, lsst::afw::geom::Angle)
