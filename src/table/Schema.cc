@@ -1,8 +1,8 @@
 #include <list>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 
-#include "boost/type_traits/is_same.hpp"
 #include "boost/mpl/and.hpp"
 #include "boost/mpl/bool.hpp"
 #include "boost/iterator/transform_iterator.hpp"
@@ -190,7 +190,7 @@ struct ExtractItemByName : public boost::static_visitor<> {
         // the field needs to have named subfields.
         // This typedef is boost::mpl::true_ if all the above is true, and boost::mpl::false_ otherwise.
         typedef typename boost::mpl::and_<
-            boost::is_same<U, typename Field<T>::Element>,
+            std::is_same<U, typename Field<T>::Element>,
             boost::mpl::bool_<KeyBase<T>::HAS_NAMED_SUBFIELDS>
         >::type IsMatchPossible;
         // We use that type to dispatch one of the two overloads of findNamedSubfield.
@@ -283,7 +283,7 @@ struct ExtractItemByKey : public boost::static_visitor<> {
         // But we also know that the subfield needs to have type U.
         // This typedef is boost::mpl::true_ if the above is true, and boost::mpl::false_ otherwise.
         typedef typename boost::mpl::and_<
-            boost::is_same<U, typename Field<T>::Element>,
+            std::is_same<U, typename Field<T>::Element>,
             boost::mpl::bool_<KeyBase<T>::HAS_NAMED_SUBFIELDS>
         >::type IsMatchPossible;
         // We use that type to dispatch one of the two overloads of findKeySubfield.

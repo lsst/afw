@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -30,10 +30,9 @@
 #define LSST_AFW_GEOM_EXTENT_H
 
 #include <tuple>
+#include <type_traits>
 
-#include <boost/type_traits/is_integral.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/type_traits/is_same.hpp>
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/CoordinateExpr.h"
@@ -317,7 +316,7 @@ template<typename T>
 template<typename U>
 Extent<T, 2>::Extent(Extent<U, 2> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
 };
@@ -326,7 +325,7 @@ template<typename T>
 template<typename U>
 Extent<T, 2>::Extent(Point<U, 2> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
 };
@@ -336,7 +335,7 @@ template<typename T>
 template<typename U>
 Extent<T, 3>::Extent(Extent<U, 3> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
     this->setZ(static_cast<T>(other.getZ()));
@@ -347,7 +346,7 @@ template<typename T>
 template<typename U>
 Extent<T, 3>::Extent(Point<U, 3> const & other) 
 {
-    BOOST_STATIC_ASSERT( (!boost::is_same<T,U>::value && boost::is_integral<U>::value) );
+    BOOST_STATIC_ASSERT( (!std::is_same<T,U>::value && std::is_integral<U>::value) );
     this->setX(static_cast<T>(other.getX()));
     this->setY(static_cast<T>(other.getY()));
     this->setZ(static_cast<T>(other.getZ()));

@@ -2,6 +2,8 @@
 #ifndef AFW_TABLE_IO_FitsReader_h_INCLUDED
 #define AFW_TABLE_IO_FitsReader_h_INCLUDED
 
+#include <type_traits>
+
 #include "lsst/afw/fits.h"
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/io/InputArchive.h"
@@ -79,7 +81,7 @@ public:
             mapper.readRecord(
                 // We need to be able to support reading Catalog<T const>, since it shares the same template
                 // as Catalog<T> (which invokes this method in readFits).
-                const_cast<typename boost::remove_const<typename ContainerT::Record>::type&>(
+                const_cast<typename std::remove_const<typename ContainerT::Record>::type&>(
                     *container.addNew()
                 ),
                 fits, row

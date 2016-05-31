@@ -1,6 +1,6 @@
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016  AURA/LSST.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -19,8 +19,9 @@
  * the GNU General Public License along with this program.  If not, 
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+#include <type_traits>
+
 #include "boost/tr1/functional.hpp"
-#include "boost/type_traits.hpp"
 
 #include "ndarray.h"
 
@@ -107,7 +108,7 @@ void flattenArray(
  \endcode
  */     
 template <typename T, int N, int C>
-ndarray::Array<typename boost::remove_const<T>::type, N-1, N-1> flattenArray(
+ndarray::Array<typename std::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
     ndarray::Array<T,N,C> const & src,
     lsst::afw::geom::Point2I const & xy0 = lsst::afw::geom::Point2I()
@@ -178,7 +179,7 @@ void expandArray(
  * @param[in]  bbox    bounding box of the returned array.
  */
 template <typename T, int N, int C>
-ndarray::Array<typename boost::remove_const<T>::type, N+1, N+1> expandArray(
+ndarray::Array<typename std::remove_const<T>::type, N+1, N+1> expandArray(
     Footprint const & fp,
     ndarray::Array<T, N, C> const & src,
     lsst::afw::geom::Box2I const & bbox = lsst::afw::geom::Box2I()
