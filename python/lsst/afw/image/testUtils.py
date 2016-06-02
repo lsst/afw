@@ -26,6 +26,7 @@ from __future__ import absolute_import, division
 import numpy as np
 
 import lsst.utils.tests
+from .imageLib import ImageF
 from .basicUtils import makeMaskedImageFromArrays
 
 # the asserts are automatically imported so unit tests can find them without special imports;
@@ -46,6 +47,25 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     variance = np.zeros(npSize, dtype=np.float32) + variance
     
     return makeMaskedImageFromArrays(image, mask, variance)
+
+def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
+        """!Make an image whose values are a linear ramp
+
+        @param[in] bbox  bounding box of image (an lsst.afw.geom.Box2I)
+        @param[in] start  starting ramp value, inclusive
+        @param[in] stop  ending ramp value, inclusive; if None, increase by integer values
+        @param[in] imageClass  type of image (e.g. lsst.afw.image.ImageF)
+        """
+        im = imageClass(bbox)
+        imDim = im.getDimensions()
+        numPix = imDim[0]*imDim[1]
+        imArr = im.getArray()
+        if stop is None:
+            # increase by integer values
+            stop = start + numPix - 1
+        rampArr = np.linspace(start=start, stop=stop, endpoint=True, num=numPix, dtype=imArr.dtype)
+        imArr[:] = np.reshape(rampArr, (imDim[1], imDim[0])) # numpy arrays are transposed w.r.t. afwImage
+        return im
 
 @lsst.utils.tests.inTestCase
 def assertImagesNearlyEqual(testCase, image0, image1, skipMask=None,
