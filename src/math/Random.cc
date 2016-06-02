@@ -2,7 +2,7 @@
 
 /* 
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016 LSST Corporation.
  * 
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -32,7 +32,6 @@
 #include <cstdlib>
 
 #include "boost/format.hpp"
-#include "boost/lexical_cast.hpp"
 
 #include "gsl/gsl_errno.h"
 #include "gsl/gsl_randist.h"
@@ -202,10 +201,13 @@ math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
 {
     std::string const seed(policy->getString("rngSeed"));
     try {
-        _seed = boost::lexical_cast<unsigned long>(seed);
-    } catch(boost::bad_lexical_cast &) {
+        _seed = std::stoul(seed);
+    } catch(std::invalid_argument &) {
         throw LSST_EXCEPT(ex::RuntimeError,
-        (boost::format("Invalid \"rngSeed\" policy value: \"%1%\"") % seed).str());
+        (boost::format("Invalid argument in \"rngSeed\" policy value: \"%1%\"") % seed).str());
+    } catch(std::out_of_range &) {
+        throw LSST_EXCEPT(ex::RuntimeError,
+        (boost::format("Out of range in \"rngSeed\" policy value: \"%1%\"") % seed).str());
     }
     initialize(policy->getString("rngAlgorithm"));
 }

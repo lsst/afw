@@ -1,7 +1,7 @@
 // -*- lsst-c++ -*-
 /*
  * LSST Data Management System
- * Copyright 2008-2014 LSST Corporation.
+ * Copyright 2008-2016 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -20,6 +20,8 @@
  * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
+
+#include <string>
 
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/arrays.h"
@@ -45,7 +47,7 @@ ArrayKey<T> ArrayKey<T>::addFields(
     );
     for (int i = 1; i < result._size; ++i) {
         schema.addField<T>(
-            schema.join(name, boost::lexical_cast<std::string>(i)),
+            schema.join(name, std::to_string(i)),
             (boost::format(doc) % docData[i]).str(),
             unit
         );
@@ -71,7 +73,7 @@ ArrayKey<T> ArrayKey<T>::addFields(
     );
     for (int i = 1; i < result._size; ++i) {
         schema.addField<T>(
-            schema.join(name, boost::lexical_cast<std::string>(i)),
+            schema.join(name, std::to_string(i)),
             doc,
             unit
         );
@@ -104,7 +106,7 @@ ArrayKey<T>::ArrayKey(SubSchema const & s) : _begin(s["0"]), _size(1) {
     Key<T> current;
     while (true) {
         try {
-            current = s[boost::lexical_cast<std::string>(_size)];
+            current = s[std::to_string(_size)];
         } catch (pex::exceptions::NotFoundError &) {
             return;
         }
