@@ -41,7 +41,7 @@ import shutil
 import tempfile
 
 import numpy
-import pyfits
+import astropy.io.fits as pyfits
 
 import lsst.utils
 import lsst.utils.tests as utilsTests

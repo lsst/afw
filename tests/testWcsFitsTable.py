@@ -24,7 +24,7 @@ from __future__ import absolute_import, division
 #
 
 import unittest
-import pyfits
+import astropy.io.fits as pyfits
 
 import lsst.afw.image
 import lsst.afw.geom
