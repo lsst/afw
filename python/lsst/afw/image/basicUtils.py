@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2008-2016 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -10,14 +10,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -41,7 +41,8 @@ def makeImageFromArray(array):
     """Construct an Image from a NumPy array, inferring the Image type from the NumPy type.
     Return None if input is None.
     """
-    if array is None: return None
+    if array is None:
+        return None
     cls = getattr(imageLib, "Image%s" % (suffixes[str(array.dtype.type)],))
     return cls(array)
 
@@ -49,7 +50,8 @@ def makeMaskFromArray(array):
     """Construct an Mask from a NumPy array, inferring the Mask type from the NumPy type.
     Return None if input is None.
     """
-    if array is None: return None
+    if array is None:
+        return None
     cls = getattr(imageLib, "Mask%s" % (suffixes[str(array.dtype.type)],))
     return cls(array)
 
@@ -145,8 +147,8 @@ def wcsNearlyEqualOverBBox(wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
     ))
 
 @lsst.utils.tests.inTestCase
-def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds, maxDiffPix=0.01,
-    nx=5, ny=5, msg="WCSs differ"):
+def assertWcsNearlyEqualOverBBox(testCase, wcs0, wcs1, bbox, maxDiffSky=0.01*afwGeom.arcseconds,
+    maxDiffPix=0.01, nx=5, ny=5, msg="WCSs differ"):
     """!Compare pixelToSky and skyToPixel for two WCS over a rectangular grid of pixel positions
 
     If the WCS are too divergent, call testCase.fail; the message describes the largest error measured
