@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2008-2016 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -10,14 +10,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -112,7 +112,7 @@ def defineFiltersFromPolicy(filterPolicy, reset=False):
         if p.exists("alias"):
             for a in p.getArray("alias"):
                 afwImage.Filter.defineAlias(p.get("name"), a)
-            
+
 class CalibNoThrow(object):
     """A class intended to be used with python's with statement, to return NaNs for negative fluxes
     instead of raising exceptions (exceptions may be raised for other purposes).

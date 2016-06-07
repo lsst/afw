@@ -1,8 +1,8 @@
 from __future__ import absolute_import, division
-# 
+#
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+# Copyright 2008-2016 LSST Corporation.
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -10,19 +10,19 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
 ##\file
-## \brief Utilities to help write tests, mostly using numpy 
+## \brief Utilities to help write tests, mostly using numpy
 import numpy as np
 
 import lsst.utils.tests
@@ -35,7 +35,7 @@ __all__ = ["assertImagesNearlyEqual", "assertMasksEqual", "assertMaskedImagesNea
 
 def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     """Make a gaussian noise MaskedImageF
-    
+
     Inputs:
     - dimensions: dimensions of output array (cols, rows)
     - sigma; sigma of image plane's noise distribution
@@ -45,7 +45,7 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     image = np.random.normal(loc=0.0, scale=sigma, size=npSize).astype(np.float32)
     mask = np.zeros(npSize, dtype=np.uint16)
     variance = np.zeros(npSize, dtype=np.float32) + variance
-    
+
     return makeMaskedImageFromArrays(image, mask, variance)
 
 def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
@@ -141,7 +141,7 @@ def assertMaskedImagesNearlyEqual(testCase, maskedImage0, maskedImage1,
     doImage=True, doMask=True, doVariance=True, skipMask=None,
     rtol=1.0e-05, atol=1e-08, msg="Masked images differ"):
     """!Assert that two masked images are nearly equal, including non-finite values
-    
+
     @param[in] testCase  unittest.TestCase instance the test is part of;
                         an object supporting one method: fail(self, msgStr)
     @param[in] maskedImage0  masked image 0 (an lsst.afw.image.MaskedImage or
