@@ -168,6 +168,8 @@ void mathDetail::convolveRegionWithInterpolation(
     InConstLocator inLocator = inImage.xy_at(fullBBox.getMinX(), fullBBox.getMinY());
     OutLocator outLocator = outImage.xy_at(goodBBox.getMinX(), goodBBox.getMinY());
     for (int j = 0; ; ) {
+        auto inLocatorInitialPosition = inLocator;
+        auto outLocatorInitialPosition = outLocator;
         afwMath::scaledPlus(
             workingImages.deltaImage, xfrac, workingImages.rightImage, -xfrac, workingImages.leftImage);
         for (int i = 0; ; ) {
@@ -189,8 +191,15 @@ void mathDetail::convolveRegionWithInterpolation(
         workingImages.leftImage += workingImages.leftDeltaImage;
         workingImages.rightImage += workingImages.rightDeltaImage;
         workingImages.kernelImage.assign(workingImages.leftImage);
-        inLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
-        outLocator += lsst::afw::image::detail::difference_type(-goodBBox.getWidth(), 1);
+
+        // Workaround for DM-5822
+        // Boost GIL locator won't decrement in x-dimension for some strange and still
+        // not understood reason. So instead store position at start of previous row,
+        // reset and move down.
+        inLocator = inLocatorInitialPosition;
+        outLocator = outLocatorInitialPosition;
+        ++inLocator.y();
+        ++outLocator.y();
     }
 }
 
