@@ -247,7 +247,8 @@ class WcsTestCase(utilsTests.TestCase):
         def checkEquinoxHeader(coordSysName, writeEquinox):
             coordSys = getattr(afwCoord, coordSysName)
             # We should get the same behaviour with both Wcs and TanWcs: check them both.
-            for dummyWcs in (makeWcs(coordSys=coordSys), afwImage.TanWcs.cast(makeWcs(coordSys=coordSys))):
+            for dummyWcs in (makeWcs(coordSys=coordSys, projection="SIN"),
+                             makeWcs(coordSys=coordSys, projection="TAN")):
                 dummyExposure = afwImage.ExposureF()
                 dummyExposure.setWcs(dummyWcs)
                 with utilsTests.getTempFilePath(".fits") as tmpFile:
