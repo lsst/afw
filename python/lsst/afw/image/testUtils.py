@@ -31,7 +31,8 @@ from .basicUtils import makeMaskedImageFromArrays
 
 # the asserts are automatically imported so unit tests can find them without special imports;
 # the other functions are hidden unless explicitly asked for
-__all__ = ["assertImagesNearlyEqual", "assertMasksEqual", "assertMaskedImagesNearlyEqual"]
+__all__ = ["assertImagesNearlyEqual", "assertMasksEqual", "assertMaskedImagesNearlyEqual",
+           "assertImagesEqual", "assertMaskedImagesEqual"]
 
 def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
     """Make a gaussian noise MaskedImageF
@@ -107,6 +108,15 @@ def assertImagesNearlyEqual(testCase, image0, image1, skipMask=None,
     errStr = imagesDiffer(image0, image1, skipMask=skipMask, rtol=rtol, atol=atol)
     if errStr:
         testCase.fail("%s: %s" % (msg, errStr))
+
+@lsst.utils.tests.inTestCase
+def assertImagesEqual(*args, **kwds):
+    """!Assert that two images are exactly equal, including non-finite values.
+
+    All arguments are forwarded to assertImagesNearlyEqual aside from atol and rtol,
+    which are set to zero.
+    """
+    return assertImagesNearlyEqual(*args, atol=0, rtol=0, **kwds)
 
 @lsst.utils.tests.inTestCase
 def assertMasksEqual(testCase, mask0, mask1, skipMask=None, msg="Masks differ"):
@@ -219,6 +229,17 @@ def assertMaskedImagesNearlyEqual(testCase, maskedImage0, maskedImage1,
 
     if errStrList:
         testCase.fail("%s: %s" % (msg, "; ".join(errStrList)))
+
+
+@lsst.utils.tests.inTestCase
+def assertMaskedImagesEqual(*args, **kwds):
+    """!Assert that two masked images are exactly equal, including non-finite values.
+
+    All arguments are forwarded to assertMaskedImagesNearlyEqual aside from atol and rtol,
+    which are set to zero.
+    """
+    return assertMaskedImagesNearlyEqual(*args, atol=0, rtol=0, **kwds)
+
 
 def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
     """!Compare the pixels of two image or mask arrays; return True if close, False otherwise
