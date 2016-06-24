@@ -187,7 +187,7 @@ class MaskedImageTestCase(unittest.TestCase):
 def tmpFits(*hdus):
     # Given a list of numpy arrays, create a temporary FITS file that
     # contains them as consecutive HDUs. Yield it, then remove it.
-    hdus = [pyfits.PrimaryHDU(hdus[0])] + [pyfits.hdu.ImageHDU(hdu) for hdu in hdus[1:]]
+    hdus = [pyfits.PrimaryHDU(hdus[0])] + [pyfits.ImageHDU(hdu) for hdu in hdus[1:]]
     hdulist = pyfits.HDUList(hdus)
     tempdir = tempfile.mkdtemp()
     try:

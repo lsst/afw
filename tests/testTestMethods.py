@@ -227,6 +227,8 @@ class TestTestUtils(utilsTests.TestCase):
         mi1 = mi.Factory(mi, True)
 
         # a masked image should be exactly equal to itself
+        self.assertMaskedImagesEqual(mi0, mi1)
+        self.assertMaskedImagesEqual(mi1, mi0)
         self.assertMaskedImagesNearlyEqual(mi0, mi1, atol=0, rtol=0)
         self.assertMaskedImagesNearlyEqual(mi1, mi0, atol=0, rtol=0)
         self.assertMaskedImagesNearlyEqual(mi0.getArrays(), mi1, atol=0, rtol=0)
@@ -235,6 +237,8 @@ class TestTestUtils(utilsTests.TestCase):
         for getName in ("getImage", "getVariance"):
             plane0 = getattr(mi0, getName)()
             plane1 = getattr(mi1, getName)()
+            self.assertImagesEqual(plane0, plane1)
+            self.assertImagesEqual(plane1, plane0)
             self.assertImagesNearlyEqual(plane0, plane1, atol=0, rtol=0)
             self.assertImagesNearlyEqual(plane1, plane0, atol=0, rtol=0)
             self.assertImagesNearlyEqual(plane0.getArray(), plane1, atol=0, rtol=0)
@@ -378,6 +382,7 @@ class TestTestUtils(utilsTests.TestCase):
 
             with self.assertRaises(TypeError):
                 self.assertMaskedImagesNearlyEqual(mi.getImage(), mi.getImage())
+
 
     def testUnsignedImages(self):
         """Unsigned images can give incorrect differences unless the test code is careful
