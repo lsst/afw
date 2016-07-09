@@ -20,8 +20,6 @@ from __future__ import absolute_import, division
 # the GNU General Public License along with this program.  If not, 
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import math
-import numpy
 import lsst.afw.geom as afwGeom
 
 __all__ = ["makePixelToTanPixel"]
@@ -39,27 +37,15 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm, plate
     @param[in] plateScale  plate scale of the camera in arcsec/mm (a double)
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-
-    meanPixelSizeMm = (pixelSizeMm[0] + pixelSizeMm[1]) / 2.0
-    radPerMeanPix = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians() * meanPixelSizeMm
-
-    detCtrPix = afwGeom.Box2D(bbox).getCenter()
-    detCtrTanPix = detCtrPix # by definition
-
-    detCtrPupil = focalPlaneToPupil.forwardTransform(pixelToFocalPlane.forwardTransform(detCtrPix))
-
-    pupilTanPixAngRad = -orientation.getYaw().asRadians()
-    pupilTanPixSin = math.sin(pupilTanPixAngRad)
-    pupilTanPixCos = math.cos(pupilTanPixAngRad)
-    tanPixToPupilRotMat = numpy.array((
-        (pupilTanPixCos, pupilTanPixSin),
-        (-pupilTanPixSin, pupilTanPixCos),
-    )) * radPerMeanPix
-    tanPixToPupilRotTransform = afwGeom.AffineTransform(tanPixToPupilRotMat)
-
-    tanPixCtrMinus0Pupil = tanPixToPupilRotTransform(detCtrTanPix)
-    tanPix0Pupil = numpy.array(detCtrPupil) - numpy.array(tanPixCtrMinus0Pupil)
-
-    tanPixToPupilAffine = afwGeom.AffineTransform(tanPixToPupilRotMat, numpy.array(tanPix0Pupil))
+    pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
+    # pupilToTanPix is affine and matches pupilToPix at pupil center
+    # Note: focal plane to pupil is typically a radial transform,
+    # and linearizing the inverse transform of that may fail,
+    # so linearize the forward direction instead. (pixelToPupil is pixelToFocalPlane,
+    # an affine transform, followed by focalPlaneToPupil,
+    # so the same consideration applies to pixelToPupil)
+    pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
+    tanPixToPupilAffine = pixelToPupil.linearizeForwardTransform(pixAtPupilCtr)
     pupilToTanPix = afwGeom.AffineXYTransform(tanPixToPupilAffine.invert())
-    return afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil, pupilToTanPix))
+
+    return afwGeom.MultiXYTransform((pixelToPupil, pupilToTanPix))

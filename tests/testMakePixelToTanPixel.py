@@ -26,14 +26,73 @@ Tests for lsst.afw.cameraGeom.Detector
 """
 import unittest
 
-import numpy
+import math
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom import makePixelToTanPixel
 
-class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
+class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
+    def testSimpleCurvedFocalPlane(self):
+        """Test a trivial curved focal plane with square pixels
+
+        The CCD's lower left pixel is centered on the boresight
+        pupil center = focal plane center
+        CCD x is along focal plane x
+        """
+        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(1000, 1000))
+        pixelSizeMm = afwGeom.Extent2D(0.02, 0.02)
+        plateScale = 25.0   # arcsec/mm
+        yaw = 0 * afwGeom.degrees
+        fpPosition = afwGeom.Point2D(0, 0)  # focal-plane position of ref position on detector (mm)
+        refPoint = afwGeom.Point2D(0, 0)  # ref position on detector (pos of lower left corner)
+        orientation = cameraGeom.Orientation(
+            fpPosition,
+            refPoint,
+            yaw,
+        )
+        pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
+        plateScaleRad = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians()
+        focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
+        pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
+
+        pixelToTanPixel = makePixelToTanPixel(
+            bbox=bbox,
+            orientation=orientation,
+            focalPlaneToPupil=focalPlaneToPupil,
+            pixelSizeMm=pixelSizeMm,
+            plateScale=plateScale,
+        )
+
+        # pupil center should be pixel position 0, 0 and tan pixel position 0, 0
+        pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
+        self.assertPairsNearlyEqual(pixAtPupilCtr, [0, 0])
+        tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
+        self.assertPairsNearlyEqual(tanPixAtPupilCr, [0, 0])
+
+        # build same camera geometry transforms without optical distortion
+        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform((0.0, plateScaleRad))
+        pixelToPupilNoDistortion = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToPupilNoDistortion))
+
+        for x in (100, 200, 1000):
+            for y in (100, 500, 800):
+                pixPos = afwGeom.Point2D(x, y)
+                tanPixPos = pixelToTanPixel.forwardTransform(pixPos)
+                # pix to tan pix should be radial
+                self.assertAlmostEqual(
+                    math.atan2(pixPos[1], pixPos[0]),
+                    math.atan2(tanPixPos[1], tanPixPos[0]),
+                )
+
+                # for a given pupil angle (which, together with a pointing, gives a position on the sky):
+                # - pupil to pixels gives pixPos
+                # - undistorted pupil to pixels gives tanPixPos
+                pupilPos = pixelToPupil.forwardTransform(pixPos)
+                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(pupilPos)
+                self.assertPairsNearlyEqual(desTanPixPos, tanPixPos)
+
     def testCurvedFocalPlane(self):
         """Test a curved focal plane (with rectangular pixels)
         """
@@ -48,8 +107,10 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             refPoint,
             yaw,
         )
+        pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
         plateScaleRad = afwGeom.Angle(plateScale, afwGeom.arcseconds).asRadians()
         focalPlaneToPupil = afwGeom.RadialXYTransform((0.0, plateScaleRad, 0.0, 0.001 * plateScaleRad))
+        pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
 
         pixelToTanPixel = makePixelToTanPixel(
             bbox = bbox,
@@ -59,42 +120,35 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
             plateScale = plateScale,
         )
 
-        # the center point of the detector should not move
-        ctrPointPix = afwGeom.Box2D(bbox).getCenter()
-        ctrPointTanPix = pixelToTanPixel.forwardTransform(ctrPointPix)
+        # the center point of the pupil frame should not move
+        pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
+        tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
         for i in range(2):
-            self.assertAlmostEquals(ctrPointTanPix[i], ctrPointPix[i])
+            self.assertAlmostEquals(pixAtPupilCtr[i], tanPixAtPupilCr[i])
 
-        # two points separated by x pixels in tan pixels coordinates
-        # should be separated x * rad/tanPix in pupil coordinates,
-        # where rad/tanPix = plate scale in rad/MM * mean pixel size in mm
-        radPerTanPixel = plateScaleRad * (pixelSizeMm[0] + pixelSizeMm[1]) / 2.0
-        pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
-        pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))
-        prevPointPupil = None
-        prevPointTanPix = None
-        for pointPix in (
-            afwGeom.Point2D(0, 0),
-            afwGeom.Point2D(1000, 2000),
-            afwGeom.Point2D(-100.5, 27.23),
-            afwGeom.Point2D(-95.3, 0.0),
-        ):
-            pointPupil = pixelToPupil.forwardTransform(pointPix)
-            pointTanPix = pixelToTanPixel.forwardTransform(pointPix)
-            if prevPointPupil:
-                pupilSep = numpy.linalg.norm(pointPupil - prevPointPupil)
-                tanPixSep = numpy.linalg.norm(pointTanPix - prevPointTanPix)
-                self.assertAlmostEquals(tanPixSep * radPerTanPixel, pupilSep)
-            prevPointPupil = pointPupil
-            prevPointTanPix = pointTanPix
+        # build same camera geometry transforms without optical distortion
+        focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform((0.0, plateScaleRad))
+        pixelToPupilNoDistortion = afwGeom.MultiXYTransform(
+            (pixelToFocalPlane, focalPlaneToPupilNoDistortion))
+
+        for x in (100, 200, 1000):
+            for y in (100, 500, 800):
+                pixPos = afwGeom.Point2D(x, y)
+                tanPixPos = pixelToTanPixel.forwardTransform(pixPos)
+
+                # for a given pupil position (which, together with a pointing, gives a position on the sky):
+                # - pupil to pixels gives pixPos
+                # - undistorted pupil to pixels gives tanPixPos
+                pupilPos = pixelToPupil.forwardTransform(pixPos)
+                desTanPixPos = pixelToPupilNoDistortion.reverseTransform(pupilPos)
+                self.assertPairsNearlyEqual(desTanPixPos, tanPixPos)
 
 
     def testFlatFocalPlane(self):
         """Test an undistorted focal plane (with rectangular pixels)
         """
         bbox = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(1000, 1000))
-        pixSizeFactor = numpy.array((1.2, 0.8))
-        pixelSizeMm = afwGeom.Extent2D(0.02 * pixSizeFactor[0], 0.02 * pixSizeFactor[1])
+        pixelSizeMm = afwGeom.Extent2D(0.02, 0.03)
         plateScale = 25.0   # arcsec/mm
         yaw = afwGeom.Angle(20, afwGeom.degrees)
         fpPosition = afwGeom.Point2D(50, 25) # focal-plane position of ref position on detector (mm)
@@ -116,16 +170,14 @@ class MakePixelToTanPixelTestCaseCase(unittest.TestCase):
         )
 
         # with no distortion, this should be a unity transform
-        ctrPointPix = numpy.array(afwGeom.Box2D(bbox).getCenter())
         for pointPix in (
             afwGeom.Point2D(0, 0),
             afwGeom.Point2D(1000, 2000),
             afwGeom.Point2D(-100.5, 27.23),
         ):
             pointTanPix = pixelToTanPixel.forwardTransform(pointPix)
-            predPointTanPix = ((numpy.array(pointPix) - ctrPointPix) * pixSizeFactor) + ctrPointPix
             for i in range(2):
-                self.assertAlmostEquals(pointTanPix[i], predPointTanPix[i])
+                self.assertAlmostEquals(pointTanPix[i], pointPix[i])
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
