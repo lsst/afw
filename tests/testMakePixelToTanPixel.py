@@ -34,6 +34,10 @@ import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom import makePixelToTanPixel
 
 
+def setup_module(module):
+    lsst.utils.tests.init()
+
+
 class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
 
     def testSimpleCurvedFocalPlane(self):
@@ -125,8 +129,7 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
         # the center point of the pupil frame should not move
         pixAtPupilCtr = pixelToPupil.reverseTransform(afwGeom.Point2D(0, 0))
         tanPixAtPupilCr = pixelToTanPixel.forwardTransform(pixAtPupilCtr)
-        for i in range(2):
-            self.assertAlmostEquals(pixAtPupilCtr[i], tanPixAtPupilCr[i])
+        self.assertPairsNearlyEqual(pixAtPupilCtr, tanPixAtPupilCr)
 
         # build same camera geometry transforms without optical distortion
         focalPlaneToPupilNoDistortion = afwGeom.RadialXYTransform((0.0, plateScaleRad))
@@ -177,24 +180,12 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
             afwGeom.Point2D(-100.5, 27.23),
         ):
             pointTanPix = pixelToTanPixel.forwardTransform(pointPix)
-            for i in range(2):
-                self.assertAlmostEquals(pointTanPix[i], pointPix[i])
+            self.assertPairsNearlyEqual(pointTanPix, pointPix)
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
-    lsst.utils.tests.init()
-
-    suites = []
-    suites += unittest.makeSuite(MakePixelToTanPixelTestCaseCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
+class MyMemoryTestCase(lsst.utils.tests.MemoryTestCase):
+    pass
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
