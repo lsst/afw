@@ -25,7 +25,7 @@ import lsst.afw.geom as afwGeom
 __all__ = ["makePixelToTanPixel"]
 
 
-def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm, plateScale):
+def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm):
     """!Make an XYTransform whose forward direction converts PIXEL to TAN_PIXEL for one detector
 
     PIXELS and TAN_PIXELS are defined in @ref afwCameraGeomCoordSys in doc/cameraGeom.dox
@@ -35,7 +35,6 @@ def makePixelToTanPixel(bbox, orientation, focalPlaneToPupil, pixelSizeMm, plate
     @param[in] focalPlaneToPupil  an lsst.afw.math.XYTransform that converts from focal plane (mm)
         to pupil coordinates (radians) in the forward direction
     @param[in] pixelSizeMm  size of the pixel in mm in X and Y (an lsst.afw.geom.Extent2D)
-    @param[in] plateScale  plate scale of the camera in arcsec/mm (a double)
     """
     pixelToFocalPlane = orientation.makePixelFpTransform(pixelSizeMm)
     pixelToPupil = afwGeom.MultiXYTransform((pixelToFocalPlane, focalPlaneToPupil))

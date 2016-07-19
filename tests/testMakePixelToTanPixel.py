@@ -68,7 +68,6 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
             orientation=orientation,
             focalPlaneToPupil=focalPlaneToPupil,
             pixelSizeMm=pixelSizeMm,
-            plateScale=plateScale,
         )
 
         # pupil center should be pixel position 0, 0 and tan pixel position 0, 0
@@ -123,7 +122,6 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
             orientation=orientation,
             focalPlaneToPupil=focalPlaneToPupil,
             pixelSizeMm=pixelSizeMm,
-            plateScale=plateScale,
         )
 
         # the center point of the pupil frame should not move
@@ -170,7 +168,6 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
             orientation=orientation,
             focalPlaneToPupil=focalPlaneToPupil,
             pixelSizeMm=pixelSizeMm,
-            plateScale=plateScale,
         )
 
         # with no distortion, this should be a unity transform

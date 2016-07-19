@@ -87,7 +87,6 @@ class DetectorWrapper(object):
             orientation = self.orientation,
             focalPlaneToPupil = focalPlaneToPupil,
             pixelSizeMm = self.pixelSize,
-            plateScale = self.plateScale,
         )
 
         self.transMap = {
