@@ -76,9 +76,8 @@ possible to add others:
 - \anchor afwCameraGeomACTUAL_PIXELS __ACTUAL_PIXELS__: like PIXELS, but takes into account pixel-level
   distortions (deviations from the nominal model of uniformly spaced rectangular pixels).
 - \anchor afwCameraGeomTAN_IXELS __TAN_PIXELS__: is a variant of PIXELS with estimated optical distortion
-  removed. TAN_PIXELS is an affine transformation from PUPIL coordinates, whose center, orientation and
-  scale match PIXELS at the center of the detector. If the detector has rectangular pixels then
-  TAN_PIXEL scale is based on the mean of the x and y pixel size at the center of the detector.
+  removed. TAN_PIXELS is an affine transformation from PUPIL coordinates, where PIXELS and TAN_PIXELS match
+  at the center of the pupil frame.
 
 \section afwCameraGeomBasicUsage Basic Usage
 

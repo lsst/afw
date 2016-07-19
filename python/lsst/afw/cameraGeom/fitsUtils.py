@@ -282,8 +282,7 @@ class DetectorBuilder(object):
 
         detConfig = afwCameraGeom.DetectorConfig()
         self.defaultDetectorMap.setAttributes(detConfig, self.detectorMetadata, self.doRaise)
-        self.detector = afwCameraGeom.makeDetector(detConfig, ampInfo, self.focalPlaneToPupil,
-                self.plateScale)
+        self.detector = afwCameraGeom.makeDetector(detConfig, ampInfo, self.focalPlaneToPupil)
         return self.detector
 
     def makeCalib(self):

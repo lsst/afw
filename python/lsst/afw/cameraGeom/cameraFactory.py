@@ -11,13 +11,12 @@ __all__ = ["makeCameraFromPath", "makeCameraFromCatalogs", "makeDetector"]
 cameraSysList = [PUPIL, FOCAL_PLANE, PIXELS, TAN_PIXELS, ACTUAL_PIXELS]
 cameraSysMap = dict((sys.getSysName(), sys) for sys in cameraSysList)
 
-def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil, plateScale):
+def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil):
     """!Make a Detector instance from a detector config and amp info catalog
 
     @param detectorConfig  config for this detector (an lsst.pex.config.Config)
     @param ampInfoCatalog  amplifier information for this detector (an lsst.afw.table.AmpInfoCatalog)
     @param focalPlaneToPupil  FOCAL_PLANE to PUPIL XYTransform
-    @param plateScale  nominal plate scale (arcsec/mm)
     @return detector (an lsst.afw.cameraGeom.Detector)
     """
     orientation = makeOrientation(detectorConfig)
@@ -35,7 +34,6 @@ def makeDetector(detectorConfig, ampInfoCatalog, focalPlaneToPupil, plateScale):
         orientation = orientation,
         focalPlaneToPupil = focalPlaneToPupil,
         pixelSizeMm = pixelSizeMm,
-        plateScale = plateScale,
     )
 
     return Detector(
@@ -117,7 +115,6 @@ def makeCameraFromCatalogs(cameraConfig, ampInfoCatDict):
             detectorConfig = detectorConfig,
             ampInfoCatalog = ampInfoCatalog,
             focalPlaneToPupil = focalPlaneToPupil,
-            plateScale = cameraConfig.plateScale,
         ))
 
     return Camera(cameraConfig.name, detectorList, transformMap)
