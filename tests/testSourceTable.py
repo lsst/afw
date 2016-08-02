@@ -102,7 +102,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.centroidFlagKey = self.schema.addField("b_flag", type="Flag")
 
         self.shapeKey = lsst.afw.table.QuadrupoleKey.addFields(self.schema,
-            "c", "", lsst.afw.table.PIXEL)
+            "c", "", lsst.afw.table.CoordinateType_PIXEL)
         self.xxErrKey = self.schema.addField("c_xxSigma", type = "F")
         self.xyErrKey = self.schema.addField("c_xySigma", type = "F")
         self.yyErrKey = self.schema.addField("c_yySigma", type = "F")
