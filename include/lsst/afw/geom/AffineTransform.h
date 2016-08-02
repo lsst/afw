@@ -180,6 +180,30 @@ public:
         return *this;
     }
 
+    AffineTransform & operator+=(AffineTransform const & other) {
+        _linear += other._linear;
+        _translation += other._translation;
+        return *this;
+    }
+
+    AffineTransform operator+(AffineTransform const & other) {
+        AffineTransform tmp(*this);
+        tmp += other;
+        return tmp;
+    }
+
+    AffineTransform & operator-=(AffineTransform const & other) {
+        _linear -= other._linear;
+        _translation -= other._translation;
+        return *this;
+    }
+
+    AffineTransform operator-(AffineTransform const & other) {
+        AffineTransform tmp(*this);
+        tmp -= other;
+        return tmp;
+    }
+
     /**
      *  \brief Construct a new AffineTransform that represents a uniform scaling.
      *
