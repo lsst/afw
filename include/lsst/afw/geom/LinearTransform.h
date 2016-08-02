@@ -105,6 +105,28 @@ public:
         return *this;
     }
 
+    LinearTransform & operator+=(LinearTransform const & other) {
+        _matrix += other._matrix;
+        return *this;
+    }
+
+    LinearTransform operator+(LinearTransform const & other) {
+        LinearTransform tmp(*this);
+        tmp += other;
+        return tmp;
+    }
+
+    LinearTransform & operator-=(LinearTransform const & other) {
+        _matrix -= other._matrix;
+        return *this;
+    }
+
+    LinearTransform operator-(LinearTransform const & other) {
+        LinearTransform tmp(*this);
+        tmp -= other;
+        return tmp;
+    }
+
     ParameterVector const getParameterVector() const;
     void setParameterVector(ParameterVector const & vector);
 
@@ -115,7 +137,6 @@ public:
     double const & operator[](int i) const {
         return const_cast<Matrix&>(_matrix)(i % 2, i / 2);
     }
-
 
     LinearTransform const invert() const;
 
