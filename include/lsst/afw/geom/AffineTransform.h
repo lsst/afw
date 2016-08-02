@@ -109,7 +109,7 @@ public:
     ) : _linear(linear), _translation(translation) {}
 
     /** Construct an AffineTransform from a LinearTransform. */
-    explicit AffineTransform(LinearTransform const & linear)
+    AffineTransform(LinearTransform const & linear)
       : _linear(linear), _translation() {}
 
     /** Construct a translation-only AffineTransform from an Extent2D. */
