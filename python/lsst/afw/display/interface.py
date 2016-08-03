@@ -537,7 +537,7 @@ class Display(object):
             k, x, y = ev.k, ev.x, ev.y      # for now
 
             try:
-                if self.callbacks[k](k, x, y):
+                if self._callbacks[k](k, x, y):
                     break
             except KeyError:
                 print >> sys.stderr, "No callback is registered for %s" % k
