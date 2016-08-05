@@ -159,6 +159,14 @@ class DisplayTestCase(unittest.TestCase):
 
             im = afwImage.MaskU(self.fileName, 3)
             dummy.mtv(im)
+    
+    def testInteract(self):
+        """Check that interact exits when a q, \c CR, or \c ESC is pressed, or if a callback function
+        returns a ``True`` value.
+        If this is run using the virtualDevice a "q" is automatically triggered.
+        If running the tests using ds9 you will be expected to do this manually.
+        """
+        self.display0.interact()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
