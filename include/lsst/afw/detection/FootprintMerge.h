@@ -47,7 +47,7 @@ class FootprintMerge;
  *  existing FootprintMerge, the Footprint will be added to it.  If not, then a new FootprintMerge will be
  *  created and added to the vector.
  *
- *  The search algorithm uses a brute force approach over the current list.  This should be fine if we 
+ *  The search algorithm uses a brute force approach over the current list.  This should be fine if we
  *  are operating on smallish number of objects, such as at the tract level.
  *
  */

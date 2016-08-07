@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_MATH_DETAIL_CONVOLVE_H
 #define LSST_AFW_MATH_DETAIL_CONVOLVE_H
 /**
@@ -57,21 +57,21 @@ namespace detail {
             InImageT const& inImage,
             lsst::afw::math::Kernel const& kernel,
             lsst::afw::math::ConvolutionControl const& convolutionControl);
-    
+
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
             OutImageT& convolvedImage,
             InImageT const& inImage,
             lsst::afw::math::DeltaFunctionKernel const& kernel,
             lsst::afw::math::ConvolutionControl const&);
-    
+
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
             OutImageT& convolvedImage,
             InImageT const& inImage,
             lsst::afw::math::LinearCombinationKernel const& kernel,
             lsst::afw::math::ConvolutionControl const& convolutionControl);
-    
+
     template <typename OutImageT, typename InImageT>
     void basicConvolve(
             OutImageT& convolvedImage,
@@ -135,7 +135,7 @@ namespace detail {
         enum Location {
             BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT
         };
-    
+
         KernelImagesForRegion(
                 KernelConstPtr kernelPtr,
                 lsst::afw::geom::Box2I const &bbox,
@@ -151,7 +151,7 @@ namespace detail {
                 ImagePtr topLeftImagePtr,
                 ImagePtr topRightImagePtr);
 
-        /** 
+        /**
          * Get the bounding box for the region
          */
         lsst::afw::geom::Box2I getBBox() const { return _bbox; };
@@ -181,7 +181,7 @@ namespace detail {
         void _computeImage(Location location) const;
         inline void _insertImage(Location location, ImagePtr imagePtr) const;
         void _moveUp(bool isFirst, int newHeight);
-        
+
         // static helper functions
         static inline int _computeNextSubregionLength(int length, int nDivisions);
         static std::vector<int> _computeSubregionLengths(int length, int nDivisions);
@@ -195,7 +195,7 @@ namespace detail {
 
         static int const _MinInterpolationSize;
     };
-    
+
     /**
      * @brief A row of KernelImagesForRegion
      *
@@ -206,7 +206,7 @@ namespace detail {
         typedef std::vector<PTR(KernelImagesForRegion)> RegionList;
         typedef RegionList::iterator Iterator;
         typedef RegionList::const_iterator ConstIterator;
-        
+
         RowOfKernelImagesForRegion(int nx, int ny);
         /**
          * @brief Return the begin iterator for the list
@@ -244,14 +244,14 @@ namespace detail {
         bool hasData() const { return static_cast<bool>(_regionList[0]); };
         bool isLastRow() const { return _yInd + 1 >= _ny; };
         int incrYInd() { return ++_yInd; };
-        
+
     private:
         int _nx;
         int _ny;
         int _yInd;
         RegionList _regionList;
     };
-    
+
     template <typename OutImageT, typename InImageT>
     void convolveWithInterpolation(
             OutImageT &outImage,
@@ -321,7 +321,7 @@ const {
     if (imagePtr) {
         if (_kernelPtr->getDimensions() != imagePtr->getDimensions()) {
             std::ostringstream os;
-            os << "image dimensions = ( " 
+            os << "image dimensions = ( "
                 << imagePtr->getWidth() << ", " << imagePtr->getHeight()
                 << ") != (" << _kernelPtr->getWidth() << ", " << _kernelPtr->getHeight()
                 << ") = kernel dimensions";

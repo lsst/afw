@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -60,11 +60,11 @@ def readImage(filename=None):
             raise RuntimeError("You must provide a filename or setup afwdata to run these examples")
 
         filename = os.path.join(afwDataDir, "CFHT", "D4", "cal-53535-i-797722_1")
-        
+
         bbox = afwGeom.Box2I(afwGeom.Point2I(270, 2530), afwGeom.Extent2I(512, 512))
     else:
         bbox = None
-        
+
     mi = afwImage.MaskedImageF(filename, 0, None, bbox, afwImage.LOCAL)
     mi.setXY0(afwGeom.Point2I(0, 0))
     #
@@ -75,7 +75,7 @@ def readImage(filename=None):
     bctrl.setNxSample(int(mi.getWidth()/256) + 1)
     bctrl.setNySample(int(mi.getHeight()/256) + 1)
     sctrl = bctrl.getStatisticsControl()
-    sctrl.setNumSigmaClip(3.0)  
+    sctrl.setNumSigmaClip(3.0)
     sctrl.setNumIter(2)
 
     im = mi.getImage()
@@ -143,7 +143,7 @@ def SpatialCellSetDemo(filename=None):
 
     cellSet.visitCandidates(visitor)
     print "There are %d candidates" % (visitor.getN())
-    
+
     ctypes = ["red", "yellow", "cyan", ]
     for i in range(cellSet.getCellList().size()):
         cell = cellSet.getCellList()[i]

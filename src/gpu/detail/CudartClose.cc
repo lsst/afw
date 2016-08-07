@@ -27,7 +27,7 @@
  *
  * @brief Calls cudaThreadExit from a destructor of a global object.
  *
- * When using library libcudart.so (CUDA 3.2) from Python, it fails to properly close the library 
+ * When using library libcudart.so (CUDA 3.2) from Python, it fails to properly close the library
  * resulting in segmentation fault. This file is intended to solve that problem by
  * automatically deinitializing the library just prior to exiting.
  *

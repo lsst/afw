@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -180,7 +180,7 @@ const {
     if (regionRow.isLastRow()) {
         return false;
     }
-    
+
     bool hasData = regionRow.hasData();
     int startY;
     if (hasData) {
@@ -193,7 +193,7 @@ const {
     int remHeight = 1 + this->_bbox.getMaxY() - startY;
     int remYDiv = regionRow.getNY() - yInd;
     int height = _computeNextSubregionLength(remHeight, remYDiv);
-    
+
     if (hasData) {
         // Move each region up one segment
         bool isFirst = true;
@@ -218,7 +218,7 @@ const {
             int width = _computeNextSubregionLength(remWidth, remXDiv);
             --remXDiv;
             remWidth -= width;
-            
+
             KernelImagesForRegion::Ptr regionPtr(new KernelImagesForRegion(
                 _kernelPtr,
                 afwGeom::Box2I(blCorner, afwGeom::Extent2I(width, height)),
@@ -229,11 +229,11 @@ const {
                 tlImagePtr,
                 trImageNullPtr));
             *rgnIter = regionPtr;
-            
+
             if (!tlImagePtr) {
                 regionPtr->getImage(TOP_LEFT);
             }
-            
+
             blCorner += afwGeom::Extent2I(width, 0);
             blImagePtr = regionPtr->getImage(BOTTOM_RIGHT);
             tlImagePtr = regionPtr->getImage(TOP_RIGHT);

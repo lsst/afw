@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 
 /**
  * @file
@@ -186,7 +186,7 @@ math::Random::Random(std::string const & algorithm, unsigned long seed)
  * and must not be positive.
  *
  * @param[in] policy    policy which contains the algorithm and seed to
- *                      to use for random number generation 
+ *                      to use for random number generation
  * @return              a newly created random number generator
  *
  * @throw lsst::pex::exceptions::InvalidParameterError
@@ -216,7 +216,7 @@ math::Random::Random(lsst::pex::policy::Policy::Ptr const policy)
 /**
  * Creates a deep copy of this random number generator. Both this random number
  * and its copy will subsequently produce an identical stream of random numbers.
- * 
+ *
  * @return  a deep copy of this random number generator
  *
  * @throw lsst::pex::exceptions::MemoryError

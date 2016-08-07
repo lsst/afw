@@ -19,7 +19,7 @@
 struct EqualityCompare {
 
     bool operator()(
-        lsst::afw::detection::Span::Ptr const & a, 
+        lsst::afw::detection::Span::Ptr const & a,
         lsst::afw::detection::Span::Ptr const & b
     ) const {
         return a->getY() == b->getY() && a->getX0() == b->getX0() && a->getX1() == b->getX1();
@@ -48,7 +48,7 @@ struct ExtractSchemaStrings {
         docs.push_back(item.field.getDoc());
         units.push_back(item.field.getUnits());
     }
-    
+
     mutable std::vector<std::string> names;
     mutable std::vector<std::string> docs;
     mutable std::vector<std::string> units;
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
         fp1->addPeak(6.8f, 0.8f, 23.2f);
         PTR(SourceRecord) r1 = vector.getTable()->makeRecord();
         r1->setFootprint(fp1);
-        
+
         r1->set(a_b_i, 314);
         r1->set(a_b_i_valid, true);
         r1->set(a_c_f, 3.14f);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(testFits) {
     BOOST_CHECK( func1.names == func2.names );
     BOOST_CHECK( func1.docs == func2.docs );
     BOOST_CHECK( func1.units == func2.units );
-    
+
     {
         SourceRecord const & a1 = vector[0];
         SourceRecord const & b1 = readVector[0];

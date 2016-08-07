@@ -26,7 +26,7 @@ namespace lsst { namespace afw { namespace table {
  *
  *  Sometimes, however, we'd like to get a shared_ptr from an iterator (especially because records
  *  are noncopyable).  With that in mind, CatalogIterator is implicitly convertible to the shared_ptr
- *  type it holds internally, and can also be assigned a shared_ptr to set the pointer in the 
+ *  type it holds internally, and can also be assigned a shared_ptr to set the pointer in the
  *  underlying container.  This conversion makes sense from the perspective that both iterators
  *  and smart pointers mimic the interface of pointers and provide the same interface to get at
  *  the underlying record.
@@ -193,7 +193,7 @@ public:
      */
     CatalogT<RecordT> subset(std::ptrdiff_t startd, std::ptrdiff_t stopd, std::ptrdiff_t step) const {
         /* Python's slicing syntax is weird and wonderful.
-         
+
          Both the "start" and "stop" indices can be negative, which means the
          abs() of the index less than the size; [-1] means the last item.
          Moreover, it's possible to have a negative index less than -len(); it

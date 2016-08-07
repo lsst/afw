@@ -93,7 +93,7 @@ class XYTransformTestCase(unittest.TestCase):
                     self.assertAlmostEqual(tweakedToPoint[i], linToPoint[i], places=2)
                     self.assertAlmostEqual(tweakedFromPoint[i], linRoundTripPoint[i], places=2)
 
-    def checkConfig(self, tClass, tConfig, filePath): 
+    def checkConfig(self, tClass, tConfig, filePath):
         """Check round trip of config
         """
         tConfig.save(filePath)

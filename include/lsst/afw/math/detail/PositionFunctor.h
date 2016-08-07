@@ -55,7 +55,7 @@ namespace detail {
      * put *here*, where should I go to find it in the source image?'.  Instantiating a Functor derived from
      * this base class creates a callable function which accepts (destination) col,row and returns
      * (source image) col,row (in the form of a Point2D).
-     */    
+     */
     class PositionFunctor {
     public:
         typedef std::shared_ptr<PositionFunctor> Ptr;
@@ -69,7 +69,7 @@ namespace detail {
 
     /**
      * @brief Functor class that wraps an XYTransform
-     */    
+     */
     class XYTransformPositionFunctor : public PositionFunctor {
     public:
         explicit XYTransformPositionFunctor(
@@ -81,7 +81,7 @@ namespace detail {
             _destXY0(destXY0),
             _xyTransformPtr(XYTransform.clone())
         {}
-        
+
         virtual ~XYTransformPositionFunctor() {};
 
         virtual lsst::afw::geom::Point2D operator()(int destCol, int destRow) const {

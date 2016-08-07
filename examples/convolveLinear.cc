@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -65,9 +65,9 @@ int main(int argc, char **argv) {
     {
         // read in fits file
         afwImage::MaskedImage<ImagePixel> mImage(inImagePath);
-        
+
         // construct basis kernels
-        
+
         afwMath::KernelList kernelList;
         for (int ii = 0; ii < 3; ++ii) {
             double majorSigma = (ii == 1) ? MaxSigma : MinSigma;
@@ -79,12 +79,12 @@ int main(int argc, char **argv) {
             );
             kernelList.push_back(basisKernelPtr);
         }
-        
+
         // construct spatially varying linear combination kernel
         int const polyOrder = 1;
         afwMath::PolynomialFunction2<double> polyFunc(polyOrder);
         afwMath::LinearCombinationKernel kernel(kernelList, polyFunc);
-    
+
         // Get copy of spatial parameters (all zeros), set and feed back to the kernel
         std::vector<std::vector<double> > polyParams = kernel.getSpatialParameters();
         // Set spatial parameters for basis kernel 0
@@ -107,11 +107,11 @@ int main(int argc, char **argv) {
         std::cout << "Kernel size: " << KernelCols << " x " << KernelRows << std::endl;
         std::cout << "Number of basis kernels: " << kernel.getNBasisKernels() << std::endl;
         std::cout << "Spatial order: " << polyOrder << std::endl;
-    
+
         // convolve
         afwImage::MaskedImage<ImagePixel> resMaskedImage(mImage.getDimensions());
         afwMath::convolve(resMaskedImage, mImage, kernel, false);
-        
+
         // write results
         resMaskedImage.writeFits(outImagePath);
         std::cout << "Saved convolved image as " << outImagePath << std::endl;
@@ -122,5 +122,5 @@ int main(int argc, char **argv) {
          std::cerr << "Leaked memory blocks:" << std::endl;
          lsst::daf::base::Citizen::census(std::cerr);
      }
-    
+
 }

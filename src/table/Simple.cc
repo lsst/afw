@@ -30,7 +30,7 @@ public:
 class SimpleTableImpl : public SimpleTable {
 public:
 
-    explicit SimpleTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) : 
+    explicit SimpleTableImpl(Schema const & schema, PTR(IdFactory) const & idFactory) :
         SimpleTable(schema, idFactory)
     {}
 
@@ -67,7 +67,7 @@ public:
     explicit SimpleFitsWriter(Fits * fits, int flags) : io::FitsWriter(fits, flags) {}
 
 protected:
-    
+
     virtual void _writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRows);
 
 };

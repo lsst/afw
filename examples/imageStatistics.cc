@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -55,13 +55,13 @@ typedef math::MaskedVector<float> MaskedVectorF;
  */
 template<typename Image>
 void printStats(Image &img, math::StatisticsControl const &sctrl) {
-    
+
     // initialize a Statistics object with any stats we might want
     ImgStat stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN | math::VARIANCE |
                                          math::ERRORS | math::MIN | math::MAX | math::VARIANCECLIP |
                                          math::MEANCLIP | math::MEDIAN | math::IQRANGE | math::STDEVCLIP,
                                          sctrl);
-    
+
     // get various stats with getValue() and their errors with getError()
     double const npoint    = stats.getValue(math::NPOINT);
     double const mean      = stats.getValue(math::MEAN);
@@ -94,7 +94,7 @@ void printStats(Image &img, math::StatisticsControl const &sctrl) {
     std::cout << "median:    " << median << std::endl;
     std::cout << "iqrange:   " << iqrange << std::endl;
     std::cout << std::endl;
-    
+
 }
 
 
@@ -106,10 +106,10 @@ int main() {
     MaskedImageF mimg(img.getDimensions());
     std::vector<double> v(0);
     MaskedVectorF mv(wid*wid);
-    
+
     // fill it with some noise (Cauchy noise in this case)
     for (int j = 0; j != img.getHeight(); ++j) {
-        
+
         int k = 0;
         MaskedImageF::x_iterator mip = mimg.row_begin(j);
         for (ImageF::x_iterator ip = img.row_begin(j); ip != img.row_end(j); ++ip) {
@@ -118,9 +118,9 @@ int main() {
 
             // throw in the occassional nan ... 1% of the time
             if ( static_cast<double>(std::rand())/RAND_MAX < 0.01 ) { xLorentz = NAN; }
-            
+
             *ip = xLorentz;
-            
+
             // mask the odd rows
             // variance actually diverges for Cauchy noise ... but stats doesn't access this.
             *mip = MaskedImageF::Pixel(xLorentz, (k%2) ? 0x1 : 0x0, (k%2) ? 1.0e99 : 1.0);
@@ -138,7 +138,7 @@ int main() {
     }
 
     std::shared_ptr<std::vector<float> > vF = mv.getVector();
-    
+
     // make a statistics control object and override some of the default properties
     math::StatisticsControl sctrl;
     sctrl.setNumIter(3);
@@ -166,12 +166,12 @@ int main() {
     sctrl.setAndMask(0x0);
     std::cout << "image::MaskedImage (weighted)" << std::endl;
     printStats(mimg, sctrl);
-    
+
     // Now try the specialization to get NPOINT and SUM (bitwise OR) for an image::Mask
     math::Statistics mskstat = makeStatistics(*mimg.getMask(), (math::NPOINT | math::SUM), sctrl);
     std::cout << "image::Mask" << std::endl;
     std::cout << mskstat.getValue(math::NPOINT) << " " << mskstat.getValue(math::SUM) << std::endl;
-    
+
     return 0;
 
 }

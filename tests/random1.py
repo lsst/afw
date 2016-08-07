@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -118,7 +118,7 @@ class RandomImageTestCase(unittest.TestCase):
     def testRandomGaussianImage(self):
         afwMath.randomGaussianImage(self.image, self.rand)
         #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
-        
+
     def testRandomChisqImage(self):
         nu = 10
         afwMath.randomChisqImage(self.image, self.rand, nu)
@@ -128,7 +128,7 @@ class RandomImageTestCase(unittest.TestCase):
                   (nu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE))
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), nu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), 2*nu, 1)
-        
+
     def testRandomPoissonImage(self):
         mu = 10
         afwMath.randomPoissonImage(self.image, self.rand, mu)
@@ -138,7 +138,7 @@ class RandomImageTestCase(unittest.TestCase):
                   (mu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE))
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), mu, 1)
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

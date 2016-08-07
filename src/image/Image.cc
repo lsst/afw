@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief Implementation for ImageBase and Image
@@ -68,8 +68,8 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_allocateVi
     );
     manager = r.first;
     return boost::gil::interleaved_view(
-        dimensions.getX(), dimensions.getY(), 
-        (typename _view_t::value_type* )r.second, 
+        dimensions.getX(), dimensions.getY(),
+        (typename _view_t::value_type* )r.second,
         dimensions.getX()*sizeof(PixelT)
     );
 }
@@ -78,20 +78,20 @@ typename image::ImageBase<PixelT>::_view_t image::ImageBase<PixelT>::_makeSubVie
     geom::Extent2I const & dimensions, geom::Extent2I const & offset, const _view_t & view
 ) {
     if (offset.getX() < 0 || offset.getY() < 0 ||
-        offset.getX() + dimensions.getX() > view.width() || 
+        offset.getX() + dimensions.getX() > view.width() ||
         offset.getY() + dimensions.getY() > view.height()
     ) {
         throw LSST_EXCEPT(
             lsst::pex::exceptions::LengthError,
             (boost::format("Box2I(Point2I(%d,%d),Extent2I(%d,%d)) doesn't fit in image %dx%d") %
-                offset.getX() % offset.getY() % 
+                offset.getX() % offset.getY() %
                 dimensions.getX() % dimensions.getY() %
                 view.width() % view.height()
             ).str()
         );
     }
     return boost::gil::subimage_view(
-        view, 
+        view,
         offset.getX(), offset.getY(),
         dimensions.getX(), dimensions.getY()
     );
@@ -154,7 +154,7 @@ image::ImageBase<PixelT>::ImageBase(
  * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
  *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this is probably what you want 
+ * this is probably what you want
  */
 template<typename PixelT>
 image::ImageBase<PixelT>::ImageBase(
@@ -170,7 +170,7 @@ image::ImageBase<PixelT>::ImageBase(
     _gilView(_makeSubView(bbox.getDimensions(), _origin - rhs._origin, rhs._gilView))
 {
     if (deep) {
-        ImageBase tmp(getBBox());        
+        ImageBase tmp(getBBox());
         tmp.assign(*this);                  // now copy the pixels
         swap(tmp);
     }
@@ -192,8 +192,8 @@ image::ImageBase<PixelT>::ImageBase(Array const & array, bool deep, geom::Point2
     _manager(array.getManager()),
     _gilView(
         boost::gil::interleaved_view(
-            array.template getSize<1>(), array.template getSize<0>(), 
-            (typename _view_t::value_type* )array.getData(), 
+            array.template getSize<1>(), array.template getSize<0>(),
+            (typename _view_t::value_type* )array.getData(),
             array.template getStride<0>() * sizeof(PixelT)
         )
     )
@@ -215,7 +215,7 @@ template<typename PixelT>
 image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& rhs) {
     ImageBase tmp(rhs);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
-    
+
     return *this;
 }
 
@@ -276,7 +276,7 @@ typename image::ImageBase<PixelT>::PixelReference image::ImageBase<PixelT>::oper
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
                            x % y % (getWidth() - 1) % (getHeight() - 1)).str());
     }
-                                          
+
     return const_cast<typename image::ImageBase<PixelT>::PixelReference>(
         static_cast<typename image::ImageBase<PixelT>::PixelConstReference>(_gilView(x, y)[0])
     );
@@ -298,14 +298,14 @@ typename image::ImageBase<PixelT>::PixelConstReference
                           (boost::format("Index (%d, %d) is out of range [0--%d], [0--%d]") %
                            x % y % (this->getWidth() - 1) % (this->getHeight() - 1)).str());
     }
-                                          
+
     return _gilView(x, y)[0];
 }
 
 template<typename PixelT>
 void image::ImageBase<PixelT>::swap(ImageBase &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
-    
+
     swap(_manager, rhs._manager);   // just swapping the pointers
     swap(_gilView, rhs._gilView);
     swap(_origin, rhs._origin);
@@ -404,10 +404,10 @@ typename image::ImageBase<PixelT>::fast_iterator image::ImageBase<PixelT>::end(
 ) const {
     if (!contiguous) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
-                          "Only contiguous == true makes sense"); 
+                          "Only contiguous == true makes sense");
     }
     if (!this->isContiguous()) {
-        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, 
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Image's pixels are not contiguous");
     }
 
@@ -428,7 +428,7 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(PixelT const rhs) 
 // On to Image itself.  ctors, cctors, and operator=
 //
 /**
- * Create an initialised Image of the specified size 
+ * Create an initialised Image of the specified size
  *
  * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
  * which may be conveniently used to make objects of an appropriate size
@@ -444,7 +444,7 @@ image::Image<PixelT>::Image(unsigned int width, ///< number of columns
 }
 
 /**
- * Create an initialised Image of the specified size 
+ * Create an initialised Image of the specified size
  *
  * \note Many lsst::afw::image and lsst::afw::math objects define a \c dimensions member
  * which may be conveniently used to make objects of an appropriate size
@@ -453,7 +453,7 @@ template<typename PixelT>
 image::Image<PixelT>::Image(geom::Extent2I const & dimensions, ///< Number of columns, rows
                             PixelT initialValue ///< Initial value
                            ) :
-    image::ImageBase<PixelT>(dimensions) 
+    image::ImageBase<PixelT>(dimensions)
 {
     *this = initialValue;
 }
@@ -488,7 +488,7 @@ image::Image<PixelT>::Image(Image const& rhs, ///< Right-hand-side Image
  * The bbox ignores X0/Y0 if origin == LOCAL, and uses it if origin == PARENT.
  *
  * \note Unless \c deep is \c true, the new %image will share the old %image's pixels;
- * this is probably what you want 
+ * this is probably what you want
  */
 template<typename PixelT>
 image::Image<PixelT>::Image(Image const& rhs,  ///< Right-hand-side Image
@@ -517,7 +517,7 @@ image::Image<PixelT>& image::Image<PixelT>::operator=(PixelT const rhs) {
 template<typename PixelT>
 image::Image<PixelT>& image::Image<PixelT>::operator=(Image const& rhs) {
     this->ImageBase<PixelT>::operator=(rhs);
-    
+
     return *this;
 }
 
@@ -565,11 +565,11 @@ image::Image<PixelT>::Image(
     geom::Box2I const& bbox,
     ImageOrigin const origin
 ) : image::ImageBase<PixelT>() {
-    
+
     typedef boost::mpl::vector<
-        unsigned char, 
-        unsigned short, 
-        short, 
+        unsigned char,
+        unsigned short,
+        short,
         int,
         unsigned int,
         float,
@@ -677,7 +677,7 @@ void image::Image<PixelT>::operator+=(
         double const yPos = this->indexToPosition(y, image::Y);
         double xPos = this->indexToPosition(0, image::X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
-             ptr != end; ++ptr, ++xPos) {            
+             ptr != end; ++ptr, ++xPos) {
             *ptr += function(xPos, yPos);
         }
     }
@@ -737,7 +737,7 @@ void image::Image<PixelT>::operator-=(
         double const yPos = this->indexToPosition(y, image::Y);
         double xPos = this->indexToPosition(0, image::X);
         for (typename Image<PixelT>::x_iterator ptr = this->row_begin(y), end = this->row_end(y);
-             ptr != end; ++ptr, ++xPos) {            
+             ptr != end; ++ptr, ++xPos) {
             *ptr -= function(xPos, yPos);
         }
     }

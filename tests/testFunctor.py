@@ -72,7 +72,7 @@ class FunctorTestCase(unittest.TestCase):
             # Check for exceeding maximum iterations.
             self.assertRaises(pexExcept.RuntimeError, func.inverse,
                               self.y0, 1e-10, 1)
-    
+
 def suite():
     """Return a suite containing all of the test cases in this module."""
     lsst.utils.tests.init()

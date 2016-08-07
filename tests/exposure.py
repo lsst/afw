@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -65,7 +65,7 @@ else:
         InputMaskedImageNameSmall = "small_MI.fits"
         InputImageNameSmall = "small"
         OutputMaskedImageName = "871034p_1_MInew.fits"
-        
+
         currDir = os.path.abspath(os.path.dirname(__file__))
         inFilePath = os.path.join(dataDir, InputMaskedImageName)
         inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
@@ -102,7 +102,7 @@ class ExposureTestCase(unittest.TestCase):
         filterPolicy = pexPolicy.Policy()
         filterPolicy.add("lambdaEff", 470.0)
         afwImage.Filter.define(afwImage.FilterProperty("g", filterPolicy))
-            
+
     def tearDown(self):
         del self.smallExposure
         del self.wcs
@@ -130,29 +130,29 @@ class ExposureTestCase(unittest.TestCase):
         blankHeight = maskedImageBlank.getHeight()
         if blankWidth != blankHeight != 0:
             self.fail("%s = %s != 0" % (blankWidth, blankHeight))
-        
+
         maskedImageMiOnly = self.exposureMiOnly.getMaskedImage()
         miOnlyWidth = maskedImageMiOnly.getWidth()
         miOnlyHeight = maskedImageMiOnly.getHeight()
         self.assertAlmostEqual(miOnlyWidth, self.width)
         self.assertAlmostEqual(miOnlyHeight, self.height)
-        
+
         # NOTE: Unittests for Exposures created from a MaskedImage and
         # a WCS object are incomplete.  No way to test the validity of
         # the WCS being copied/created.
-        
+
         maskedImageMiWcs = self.exposureMiWcs.getMaskedImage()
         miWcsWidth = maskedImageMiWcs.getWidth()
         miWcsHeight = maskedImageMiWcs.getHeight()
         self.assertAlmostEqual(miWcsWidth, self.width)
         self.assertAlmostEqual(miWcsHeight, self.height)
-       
+
         maskedImageCrWcs = self.exposureCrWcs.getMaskedImage()
         crWcsWidth = maskedImageCrWcs.getWidth()
         crWcsHeight = maskedImageCrWcs.getHeight()
         if crWcsWidth != crWcsHeight != 0:
             self.fail("%s != %s != 0" % (crWcsWidth, crWcsHeight))
-        
+
         maskedImageCrOnly = self.exposureCrOnly.getMaskedImage()
         crOnlyWidth = maskedImageCrOnly.getWidth()
         crOnlyHeight = maskedImageCrOnly.getHeight()
@@ -167,7 +167,7 @@ class ExposureTestCase(unittest.TestCase):
         """
         Test if a WCS can be obtained from each Exposure created with
         a WCS.
-    
+
         Test that appropriate exceptions are thrown if a WCS is
         requested from an Exposure that was not created with a WCS.
         Python turns the pex::exceptions in the Exposure and
@@ -183,9 +183,9 @@ class ExposureTestCase(unittest.TestCase):
         # These two should pass
         self.exposureMiWcs.getWcs()
         self.exposureCrWcs.getWcs()
-       
+
         self.assertTrue(not self.exposureCrOnly.getWcs())
-            
+
     def testSetMembers(self):
         """
         Test that the MaskedImage and the WCS of an Exposure can be set.
@@ -201,7 +201,7 @@ class ExposureTestCase(unittest.TestCase):
         self.assertEquals(exposure.getDetector().getName(), self.detector.getName())
         self.assertEquals(exposure.getDetector().getSerial(), self.detector.getSerial())
         self.assertEquals(exposure.getFilter().getName(), "g")
-        
+
         try:
             exposure.getWcs()
         except pexExcept.Exception as e:
@@ -232,12 +232,12 @@ class ExposureTestCase(unittest.TestCase):
         self.assertTrue(exposure.hasPsf())
 
         exposure.setPsf(DummyPsf(1.0)) # we can reset the Psf
-         
+
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
         self.exposureMiWcs.setMaskedImage(maskedImage)
         exposure.setWcs(self.wcs)
-       
+
     def testHasWcs(self):
         """
         Test if an Exposure has a WCS or not.
@@ -248,7 +248,7 @@ class ExposureTestCase(unittest.TestCase):
         self.assertTrue(self.exposureMiWcs.hasWcs())
         self.assertTrue(self.exposureCrWcs.hasWcs())
         self.assertFalse(self.exposureCrOnly.hasWcs())
-       
+
     def testGetSubExposure(self):
         """
         Test that a subExposure of the original Exposure can be obtained.
@@ -257,20 +257,20 @@ class ExposureTestCase(unittest.TestCase):
         lsst::pex::exceptions::InvalidParameter if the requested
         subRegion is not fully contained within the original
         MaskedImage.
-        
+
         """
         #
         # This subExposure is valid
         #
         subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
-        
+
         self.checkWcs(self.exposureCrWcs, subExposure)
 
         # this subRegion is not valid and should trigger an exception
         # from the MaskedImage class and should trigger an exception
         # from the WCS class for the MaskedImage 871034p_1_MI.
-        
+
         subRegion3 = afwGeom.Box2I(afwGeom.Point2I(100, 100), afwGeom.Extent2I(10, 10))
         def getSubRegion():
             self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3, afwImage.LOCAL)
@@ -291,11 +291,11 @@ class ExposureTestCase(unittest.TestCase):
         subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
         parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
-        
+
         parentPos = parentPos.getPosition()
-        
+
         subExpPos = subExposure.getWcs().pixelToSky(0,0).getPosition()
-        
+
         for i in range(2):
             self.assertAlmostEqual(parentPos[i], subExpPos[i], 9, "Wcs in sub image has changed")
 
@@ -305,23 +305,23 @@ class ExposureTestCase(unittest.TestCase):
         # This should pass without an exception
         mainExposure = afwImage.ExposureF(inFilePathSmall)
         mainExposure.setDetector(self.detector)
-        
+
         subBBox = afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.Extent2I(40, 50))
         subExposure = mainExposure.Factory(mainExposure, subBBox, afwImage.LOCAL)
         self.checkWcs(mainExposure, subExposure)
         det = subExposure.getDetector()
         self.assertTrue(det)
-        
+
         subExposure = afwImage.ExposureF(inFilePathSmall, subBBox, afwImage.LOCAL)
-        
+
         self.checkWcs(mainExposure, subExposure)
-        
+
         # This should throw an exception
         def getExposure():
             afwImage.ExposureF(inFilePathSmallImage)
-        
+
         self.assertRaises(lsst.afw.fits.FitsError, getExposure)
-        
+
         mainExposure.setPsf(self.psf)
 
         # Make sure we can write without an exception
@@ -422,7 +422,7 @@ class ExposureTestCase(unittest.TestCase):
         # det.setCenterPixel(afwGeom.Point2D(999.0, 437.8))
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[0], x0)
         # self.assertEqual(exposureU.getDetector().getCenterPixel()[1], y0)
-    
+
     def testDeepCopyData(self):
         """Make sure a deep copy of an Exposure has its own data (ticket #2625)
         """
@@ -446,7 +446,7 @@ class ExposureTestCase(unittest.TestCase):
         self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
         self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
 
-    
+
     def testDeepCopySubData(self):
         """Make sure a deep copy of a subregion of an Exposure has its own data (ticket #2625)
         """
@@ -470,7 +470,7 @@ class ExposureTestCase(unittest.TestCase):
         self.assertTrue(numpy.allclose(mi.getImage().getArray(), 100))
         self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
         self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
-    
+
     def testDeepCopyMetadata(self):
         """Make sure a deep copy of an Exposure has a deep copy of metadata (ticket #2568)
         """
@@ -560,7 +560,7 @@ class ExposureTestCase(unittest.TestCase):
             exposure2.writeFits(tmpFile)
             exposure3 = afwImage.ExposureF(tmpFile)
             self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
-        
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

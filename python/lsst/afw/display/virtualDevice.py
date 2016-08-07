@@ -136,7 +136,7 @@ class DisplayImpl(object):
 
     def _show(self):
         """Show the requested display
-        """    
+        """
         if self.verbose:
             print "virtual[%s]._show()" % self.display.frame
 
@@ -144,13 +144,13 @@ class DisplayImpl(object):
         """Pan to (colc, rowc)
         \param c Desired column (x) position
         \param r Desired row (y) position
-        """    
+        """
         if self.verbose:
             print "virtual[%s]._pan(%.2f, %.2f)" % (self.display.frame, r, c)
 
     def _zoom(self, zoomfac):
         """Set the zoom
         \param zoomfac  Zoom factor to use
-        """    
+        """
         if self.verbose:
             print "virtual[%s]._zoom(%g)" % (self.display.frame, zoomfac)

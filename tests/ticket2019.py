@@ -62,7 +62,7 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
         self.assertEqual(mi.getMask().get(50, 50), 1)
         self.assertEqual(mi.getMask().get(51, 50), 0)
 
-            
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -82,7 +82,7 @@ def run(shouldExit = False):
 if __name__ == "__main__":
     run(True)
 
-        
-        
 
-        
+
+
+

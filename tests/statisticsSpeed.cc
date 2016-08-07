@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <limits>
 #include <cmath>
@@ -56,7 +56,7 @@ typedef image::Image<float> Image;
  */
 BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
 
-    // make a ramp image 
+    // make a ramp image
     int const nx = 8192;
     int const ny = nx;
     Image imgSimple(geom::Extent2I(nx, ny));
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2
         BOOST_CHECK_EQUAL(statsMinMax.getValue(math::MIN), 3*z0);
         double tMinMax = timer.elapsed();
 
-        
+
         bool isFasterWithSimple = (tSimple < tNanSafe && tSimple < tMinMax);
         bool isSlowerWithMinMax = (tMinMax > tNanSafe && tMinMax > tSimple);
 
@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(StatisticsNanSafeSlower) { /* parasoft-suppress  LsstDm-3-2
             std::cerr << "Warning: statistics were faster with min/max requested." << std::endl;
             std::cerr << "  This is should resolve with g++ >= 4.2, and opt=3" << std::endl;
         }
-        
-#if 0        
+
+#if 0
         BOOST_CHECK(isFasterWithSimple);
         BOOST_CHECK(isSlowerWithMinMax);
 #endif

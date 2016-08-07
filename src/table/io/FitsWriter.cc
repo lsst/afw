@@ -139,7 +139,7 @@ void FitsWriter::_writeTable(CONST_PTR(BaseTable) const & table, std::size_t nRo
 // We instantiate one of these, then reuse it on all the records after updating the data
 // members that tell it which record and row number it's on.
 struct FitsWriter::ProcessRecords {
-    
+
     template <typename T>
     void operator()(SchemaItem<T> const & item) const {
         fits->writeTableArray(row, col, item.key.getElementCount(), record->getElement(item.key));
@@ -161,7 +161,7 @@ struct FitsWriter::ProcessRecords {
         fits->writeTableScalar(row, col, record->get(item.key));
         ++col;
     }
-    
+
     void operator()(SchemaItem<Flag> const & item) const {
         flags[bit] = record->get(item.key);
         ++bit;

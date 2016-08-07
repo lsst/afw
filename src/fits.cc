@@ -259,7 +259,7 @@ void updateKeyImpl(Fits & fits, char const * key, T const & value, char const * 
         const_cast<T *>(&value),
         const_cast<char*>(comment),
         &fits.status
-    );    
+    );
 }
 
 void updateKeyImpl(Fits & fits, char const * key, std::string const & value, char const * comment) {
@@ -269,7 +269,7 @@ void updateKeyImpl(Fits & fits, char const * key, std::string const & value, cha
         const_cast<char*>(value.c_str()),
         const_cast<char*>(comment),
         &fits.status
-    );    
+    );
 }
 
 void updateKeyImpl(Fits & fits, char const * key, bool const & value, char const * comment) {
@@ -309,7 +309,7 @@ void writeKeyImpl(Fits & fits, char const * key, T const & value, char const * c
         const_cast<T *>(&value),
         const_cast<char*>(comment),
         &fits.status
-    );    
+    );
 }
 
 void writeKeyImpl(Fits & fits, char const * key, std::string const & value, char const * comment) {
@@ -437,7 +437,7 @@ namespace {
 template <typename T>
 void readKeyImpl(Fits & fits, char const * key, T & value) {
     fits_read_key(
-        reinterpret_cast<fitsfile*>(fits.fptr), 
+        reinterpret_cast<fitsfile*>(fits.fptr),
         FitsType<T>::CONSTANT,
         const_cast<char*>(key),
         &value,
@@ -653,7 +653,7 @@ void MetadataIterationFunctor::operator()(
 void writeKeyFromProperty(
     Fits & fits, daf::base::PropertySet const & metadata, std::string const & key, char const * comment=0
 ) {
-    std::type_info const & valueType = metadata.typeOf(key); 
+    std::type_info const & valueType = metadata.typeOf(key);
     if (valueType == typeid(bool)) {
         if (metadata.isArray(key)) {
             std::vector<bool> tmp = metadata.getArray<bool>(key);
@@ -864,7 +864,7 @@ void Fits::writeTableScalar(std::size_t row, int col, std::string const & value)
     // terminator.
     char const * tmp = value.c_str();
     fits_write_col(
-        reinterpret_cast<fitsfile*>(fptr), 
+        reinterpret_cast<fitsfile*>(fptr),
         TSTRING,
         col + 1, row + 1,
         1, 1,
@@ -880,9 +880,9 @@ template <typename T>
 void Fits::readTableArray(std::size_t row, int col, int nElements, T * value) {
     int anynul = false;
     fits_read_col(
-        reinterpret_cast<fitsfile*>(fptr), 
-        FitsTableType<T>::CONSTANT, 
-        col + 1, row + 1, 
+        reinterpret_cast<fitsfile*>(fptr),
+        FitsTableType<T>::CONSTANT,
+        col + 1, row + 1,
         1, nElements,
         0,
         value,
@@ -903,9 +903,9 @@ void Fits::readTableScalar(std::size_t row, int col, std::string & value) {
     // but we only want one element.
     char * tmp = &buf.front();
     fits_read_col(
-        reinterpret_cast<fitsfile*>(fptr), 
-        TSTRING, 
-        col + 1, row + 1, 
+        reinterpret_cast<fitsfile*>(fptr),
+        TSTRING,
+        col + 1, row + 1,
         1, 1,
         0,
         &tmp,
@@ -959,7 +959,7 @@ void Fits::createEmpty() {
     long naxes = 0;
     fits_create_img(reinterpret_cast<fitsfile*>(fptr), 8, 0, &naxes, &status);
     if (behavior & AUTO_CHECK) {
-        LSST_FITS_CHECK_STATUS(*this, "Creating empty image HDU");    
+        LSST_FITS_CHECK_STATUS(*this, "Creating empty image HDU");
     }
 }
 
@@ -1029,21 +1029,21 @@ Fits::Fits(std::string const & filename, std::string const & mode, int behavior_
     if (mode == "r" || mode == "rb") {
         fits_open_file(
             reinterpret_cast<fitsfile**>(&fptr),
-            const_cast<char*>(filename.c_str()), 
+            const_cast<char*>(filename.c_str()),
             READONLY,
             &status
         );
     } else if (mode == "w" || mode == "wb") {
         boost::filesystem::remove(filename); // cfitsio doesn't like over-writing files
         fits_create_file(
-            reinterpret_cast<fitsfile**>(&fptr), 
+            reinterpret_cast<fitsfile**>(&fptr),
             const_cast<char*>(filename.c_str()),
             &status
         );
     } else if (mode == "a" || mode == "ab") {
         fits_open_file(
             reinterpret_cast<fitsfile**>(&fptr),
-            const_cast<char*>(filename.c_str()), 
+            const_cast<char*>(filename.c_str()),
             READWRITE,
             &status
         );

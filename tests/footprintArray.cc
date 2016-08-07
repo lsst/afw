@@ -1,8 +1,8 @@
 // -*- lsst-c++ -*-
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,17 +10,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE FootprintArray
@@ -77,22 +77,22 @@ BOOST_AUTO_TEST_CASE(conversion) {
 
     doRoundTrip(footprint, v, geom::Box2I(geom::Point2I(0, 2), geom::Extent2I(15, 12)));
 
-    BOOST_CHECK_THROW( 
+    BOOST_CHECK_THROW(
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(1, 0), geom::Extent2I(9, 10))),
         lsst::pex::exceptions::InvalidParameterError
     );
 
-    BOOST_CHECK_THROW( 
+    BOOST_CHECK_THROW(
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(0, 5), geom::Extent2I(10, 5))),
         lsst::pex::exceptions::InvalidParameterError
     );
 
-    BOOST_CHECK_THROW( 
+    BOOST_CHECK_THROW(
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(9, 10))),
         lsst::pex::exceptions::InvalidParameterError
     );
 
-    BOOST_CHECK_THROW( 
+    BOOST_CHECK_THROW(
         detection::expandArray(footprint, v, geom::Box2I(geom::Point2I(0, 0), geom::Extent2I(10, 9))),
         lsst::pex::exceptions::InvalidParameterError
     );

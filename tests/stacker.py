@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -37,7 +37,7 @@ or
 ##########################
 # simpleStacker.py
 # Steve Bickerton
-# An example executible which calls the example 'stack' code 
+# An example executible which calls the example 'stack' code
 
 import unittest
 import numpy
@@ -64,7 +64,7 @@ class StackTestCase(utilsTests.TestCase):
         self.nImg = 10
         self.nX, self.nY = 64, 64
         self.values = [1.0, 2.0, 2.0, 3.0, 8.0 ]
-        
+
     def testMean(self):
         """ Test the statisticsStack() function for a MEAN"""
 
@@ -81,14 +81,14 @@ class StackTestCase(utilsTests.TestCase):
         # Test in-place stacking
         afwMath.statisticsStack(imgStack, imgList, afwMath.MEAN)
         self.assertEqual(imgStack.get(self.nX//2, self.nY//2), knownMean)
-        
+
     def testStatistics(self):
         """ Test the statisticsStack() function """
-        
+
         imgList = afwImage.vectorImageF()
         for val in self.values:
             imgList.push_back(afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val))
-            
+
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         mean = reduce(lambda x, y: x+y, self.values)/float(len(self.values))
         self.assertAlmostEqual(imgStack.get(self.nX//2, self.nY//2), mean)
@@ -99,7 +99,7 @@ class StackTestCase(utilsTests.TestCase):
 
     def testWeightedStack(self):
         """ Test statisticsStack() function when weighting by a variance plane"""
-        
+
         sctrl = afwMath.StatisticsControl()
         sctrl.setWeighted(True)
         mimgList = afwImage.vectorMaskedImageF()
@@ -119,7 +119,7 @@ class StackTestCase(utilsTests.TestCase):
 
     def testConstantWeightedStack(self):
         """ Test statisticsStack() function when weighting by a vector of weights"""
-        
+
         sctrl = afwMath.StatisticsControl()
         imgList = afwImage.vectorImageF()
         weights = afwMath.vectorF()
@@ -146,7 +146,7 @@ class StackTestCase(utilsTests.TestCase):
 
         def tst():
             afwMath.statisticsStack(imgList, afwMath.MEAN | afwMath.MEANCLIP, sctrl)
-            
+
         self.assertRaises(pexEx.InvalidParameterError, tst)
 
 
@@ -154,7 +154,7 @@ class StackTestCase(utilsTests.TestCase):
         """ Make sure that a single file put into the stacker is returned unscathed"""
 
         imgList = afwImage.vectorMaskedImageF()
-        
+
         img = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
         for y in range(img.getHeight()):
             simg = img.Factory(
@@ -249,11 +249,11 @@ class StackTestCase(utilsTests.TestCase):
         mimg1.set(0, 0, (1, 0x4, 1)) # set 0100
         mimg2 = afwImage.MaskedImageF(afwGeom.Extent2I(1, 1))
         mimg2.set(0, 0, (2, 0x3, 1)) # set 0010 and 0001
-        
+
         imgList = afwImage.vectorMaskedImageF()
         imgList.push_back(mimg1)
         imgList.push_back(mimg2)
-        
+
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(0x1) # andmask only 0001
 
@@ -264,7 +264,7 @@ class StackTestCase(utilsTests.TestCase):
         # now try with sctrl (andmask = 0x0001), should see 0x0100 for all output mask pixels
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl)
         self.assertEqual(imgStack.get(0, 0)[1], 0x4)
-        
+
     def test2145(self):
         """The how-to-repeat from #2145"""
         Size = 5
@@ -279,7 +279,7 @@ class StackTestCase(utilsTests.TestCase):
             varArr[:] = numpy.random.normal(10, 0.1, (Size, Size))
             maskedImageList.append(mi)
             weightList.append(1.0)
-            
+
         stack = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, weightList)
         if False:
             print "image=", stack.getImage().getArray()

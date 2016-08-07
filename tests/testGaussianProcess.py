@@ -30,7 +30,7 @@ import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pex
 
 class GaussianProcessTestCase(unittest.TestCase):
-    
+
     def testTooManyNeighbors(self):
         """
         Test that GaussianProcess checks if too many neighbours are requested

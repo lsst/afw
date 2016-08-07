@@ -26,7 +26,7 @@ struct SchemaItem {
 #ifndef SWIG  // see comment block in tableLib.i; workaround to avoid dangling references
     Key<T> key;
     Field<T> field;
-#endif 
+#endif
     SchemaItem(Key<T> const & key_, Field<T> const & field_) : key(key_), field(field_) {}
 };
 
@@ -136,8 +136,8 @@ public:
     ItemContainer const & getItems() const { return _items; }
 
     /// Default constructor.
-    explicit SchemaImpl() : 
-        daf::base::Citizen(typeid(this)), 
+    explicit SchemaImpl() :
+        daf::base::Citizen(typeid(this)),
         _recordSize(0), _lastFlagField(-1), _lastFlagBit(-1), _items()
     {}
 
@@ -156,7 +156,7 @@ public:
         /// Call the wrapped function.
         template <typename T>
         void operator()(SchemaItem<T> const & x) const { _func(x); };
-    
+
         /**
          *  @brief Invoke the visitation.
          *

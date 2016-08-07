@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <cmath>
 #include <memory>
@@ -47,11 +47,11 @@ int main() {
     float const sky = 100.0;                 // photo-e
     float const A = 100.0;                   // peak star brightness in photo-e
     int const nStar = 100;
-    
+
     // declare an image.
     ImageF img(geom::Extent2I(wid, wid));
     img = sky;
-    
+
     // put sky and some fake stars in the image, and add uniform noise
     for (int iS = 0; iS < nStar; ++iS) {
         int const xStar = static_cast<int>(wid * static_cast<float>(rand())/RAND_MAX);
@@ -66,7 +66,7 @@ int main() {
                 // add the noise on the last pass
                 if (iS == nStar - 1) {
                     /// \todo Change to a Poisson variate
-                    *ip += sqrt(*ip)*2.0*(static_cast<float>(rand())/RAND_MAX - 0.5); 
+                    *ip += sqrt(*ip)*2.0*(static_cast<float>(rand())/RAND_MAX - 0.5);
                 }
                 ++iX;
             }
@@ -78,7 +78,7 @@ int main() {
 
     // could also use a string! (commented-out, but will work)
     //math::BackgroundControl bgCtrl("NATURAL_SPLINE");
-    
+
     // we can control the background estimate
     bgCtrl.setNxSample(5);
     bgCtrl.setNySample(5);
@@ -89,16 +89,16 @@ int main() {
 
     // initialize a background object
     PTR(math::Background) back = math::makeBackground(img, bgCtrl);
-    
+
     // can get an individual pixel or a whole frame.
     float const MID = std::dynamic_pointer_cast<math::BackgroundMI>(back)->getPixel(xcen, ycen);
     ImageF::Ptr bg = back->getImage<ImageF::Pixel>();
-    
+
     // create a background-subtracted image
     ImageF sub(img.getDimensions());
     sub.assign(img);
     sub -= *bg;
-    
+
     // output what we've made
     cout << xcen << " " << ycen << " center pixel: " << MID << endl;
     img.writeFits("example_Background_fak.fits");

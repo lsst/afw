@@ -106,7 +106,7 @@ class Display(object):
         SAT=GREEN,
     )
     _defaultMaskTransparency = {}
-    
+
     def __init__(self, frame, backend=None, *args, **kwargs):
         """!Create an object able to display images and overplot glyphs
 
@@ -312,7 +312,7 @@ class Display(object):
         \c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
 
         The advantage of using the symbolic names is that the python interpreter can detect typos.
-        
+
         """
 
         if isinstance(name, dict):
@@ -325,7 +325,7 @@ class Display(object):
 
     def getMaskPlaneColor(self, name):
         """!Return the colour associated with the specified mask plane name"""
-        
+
         return self._maskPlaneColors.get(name)
 
     def setMaskTransparency(self, transparency=None, name=None):
@@ -491,7 +491,7 @@ class Display(object):
         \param unit Units for min and max (e.g. Percent, Absolute, Sigma; None if min==minmax|zscale)
         \param *args Optional arguments
         \param **kwargs Optional keyword arguments
-        """    
+        """
         if min in ("minmax", "zscale"):
             assert max == None, "You may not specify \"%s\" and max" % min
             assert unit == None, "You may not specify \"%s\" and unit" % min
@@ -601,7 +601,7 @@ def h_callback(k, x, y):
 # Handle Displays, including the default one (the frame to use when a user specifies None)
 #
 # If the default frame is None, image display is disabled
-# 
+#
 def setDefaultBackend(backend):
     Display.setDefaultBackend(backend)
 

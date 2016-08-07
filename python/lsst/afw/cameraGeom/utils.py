@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -90,7 +90,7 @@ def plotFocalPlane(camera, pupilSizeDeg_x=0, pupilSizeDeg_y=None, dx=0.1, dy=0.1
         if pupilSizeDeg_y is None:
             pupilSizeDeg_y = pupilSizeDeg_x
 
-        pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2., 
+        pupil_gridx, pupil_gridy = numpy.meshgrid(numpy.arange(0., pupilSizeDeg_x+dx, dx) - pupilSizeDeg_x/2.,
                                                   numpy.arange(0., pupilSizeDeg_y+dy, dy) -  pupilSizeDeg_y/2.)
         pupil_gridx, pupil_gridy = pupil_gridx.flatten(), pupil_gridy.flatten()
     else:
@@ -249,7 +249,7 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
 
 class FakeImageDataSource(object):
     """A class to retrieve synthetic images for display by the show* methods"""
-    def __init__(self, isTrimmed=True, verbose=False, background=numpy.nan, 
+    def __init__(self, isTrimmed=True, verbose=False, background=numpy.nan,
                  showAmpGain=True, markSize=10, markValue=0,
                  ampImValue=None, scaleGain=lambda gain: (gain*1000)//10):
         """!Construct a FakeImageDataSource
@@ -297,7 +297,7 @@ class FakeImageDataSource(object):
 
 class ButlerImage(FakeImageDataSource):
     """A class to return an Image of a given Ccd using the butler"""
-    
+
     def __init__(self, butler=None, type="raw",
                  isTrimmed=True, verbose=False, background=numpy.nan, gravity=None, *args, **kwargs):
         """!Create an object that knows how to prepare images for showCamera using the butler
@@ -320,14 +320,14 @@ class ButlerImage(FakeImageDataSource):
         self.gravity = gravity
         self.background = background
         self.verbose = verbose
-    
+
     def _prepareImage(self, ccd, im, binSize, allowRotate=True):
         if binSize > 1:
             im = afwMath.binImage(im, binSize)
-    
+
         if allowRotate:
             im = afwMath.rotateImageBy90(im, ccd.getOrientation().getNQuarter())
-                
+
         return im
 
     def getCcdImage(self, ccd, imageFactory=afwImage.ImageF, binSize=1):
@@ -354,7 +354,7 @@ class ButlerImage(FakeImageDataSource):
                                          **self.kwargs).getMaskedImage().getImage()
                 except Exception as e:
                     pass
-                    
+
             if e:
                 if self.verbose:
                     print "Reading %s: %s" % (ccd.getId(), e)
@@ -366,7 +366,7 @@ class ButlerImage(FakeImageDataSource):
             if hasattr(im, 'convertF'):
                 im = im.convertF()
         else:
-            return self._prepareImage(ccd, im, binSize, allowRotate=False) # calexps were rotated by the ISR 
+            return self._prepareImage(ccd, im, binSize, allowRotate=False) # calexps were rotated by the ISR
 
         ccdImage = im.Factory(bbox)
 
@@ -481,7 +481,7 @@ def showAmp(amp, imageSource=FakeImageDataSource(isTrimmed=False), display=None,
             if amp.getHasRawInfo() and ampImSize == amp.getRawBBox().getDimensions():
                 bboxes = [(amp.getRawBBox(), 0.49, afwDisplay.GREEN),]
                 xy0 = bboxes[0][0].getMin()
-                bboxes.append((amp.getRawHorizontalOverscanBBox(), 0.49, afwDisplay.RED)) 
+                bboxes.append((amp.getRawHorizontalOverscanBBox(), 0.49, afwDisplay.RED))
                 bboxes.append((amp.getRawDataBBox(), 0.49, afwDisplay.BLUE))
                 bboxes.append((amp.getRawPrescanBBox(), 0.49, afwDisplay.YELLOW))
                 bboxes.append((amp.getRawVerticalOverscanBBox(), 0.49, afwDisplay.MAGENTA))
@@ -620,13 +620,13 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
 
     assert imageSource.isTrimmed, "isTrimmed is False isn't supported by getCcdInCamBBoxList"
 
-    boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin) 
+    boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin)
     for det, bbox in itertools.izip(ccdList, boxList):
         im = imageSource.getCcdImage(det, imageFactory, binSize)
 
         nQuarter = det.getOrientation().getNQuarter()
         im = afwMath.rotateImageBy90(im, nQuarter)
-        
+
         imView = camIm.Factory(camIm, bbox, afwImage.LOCAL)
         try:
             imView[:] = im
@@ -640,9 +640,9 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
                ctype=afwDisplay.GREEN, textSize=1.25, originAtCenter=True, display=None, **kwargs):
     """!Show a Camera on display, with the specified display
 
-    The rotation of the sensors is snapped to the nearest multiple of 90 deg. 
+    The rotation of the sensors is snapped to the nearest multiple of 90 deg.
     Also note that the pixel size is constant over the image array. The lower left corner (LLC) of each
-    sensor amp is snapped to the LLC of the pixel containing the LLC of the image. 
+    sensor amp is snapped to the LLC of the pixel containing the LLC of the image.
     if overlay show the IDs and detector boundaries
 
     @param[in] camera  Camera to show

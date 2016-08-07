@@ -62,7 +62,7 @@ def computeIntensity(imageR, imageG=None, imageB=None):
 
 class Mapping(object):
     """!Baseclass to map red, blue, green intensities into uint8 values"""
-    
+
     def __init__(self, minimum=None, image=None):
         """!Create a mapping
         \param minimum  Intensity that should be mapped to black (a scalar or array for R, G, B)
@@ -377,7 +377,7 @@ def writeRGB(fileName, rgbImage):
     """
     import matplotlib.image
     matplotlib.image.imsave(fileName, rgbImage)
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 #
 # Support the legacy API

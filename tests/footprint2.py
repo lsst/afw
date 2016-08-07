@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -74,7 +74,7 @@ def cmpPeaks(im, a, b):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class Object(object):
-    def __init__(self, val, spans):            
+    def __init__(self, val, spans):
         self.val = val
         self.spans = spans
 
@@ -113,13 +113,13 @@ class FootprintSetTestCase(unittest.TestCase):
 
         if False and display:
             ds9.mtv(self.im, frame=0)
-        
+
     def tearDown(self):
         del self.im
 
     def testGC(self):
         """Check that FootprintSets are automatically garbage collected (when MemoryTestCase runs)"""
-        
+
         afwDetect.FootprintSet(afwImage.ImageU(afwGeom.Extent2I(10, 20)), afwDetect.Threshold(10))
 
     def testFootprints(self):
@@ -131,7 +131,7 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
+
     def testFootprints2(self):
         """Check that we found the correct number of objects using FootprintSet"""
         ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
@@ -141,7 +141,7 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
+
 
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
@@ -150,7 +150,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         idImage = afwImage.ImageU(self.im.getDimensions())
         idImage.set(0)
-        
+
         for foot in objects:
             foot.insertIntoImage(idImage, foot.getId())
 
@@ -186,9 +186,9 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertEqual(len(objects), len(self.objects))
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
-            
+
     def testGrow2(self):
-        """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests""" 
+        """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
         #Can't set mask plane as the image is not a masked image.
         ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
 
@@ -243,7 +243,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         self.assertTrue(fctrl.isLeft()[1])
         self.assertFalse(fctrl.isRight()[1])
-        
+
     def testGrowCircular(self):
         """Grow footprints in all 4 directions using the FootprintSet/FootprintControl constructor """
         im = afwImage.MaskedImageF(11, 11)
@@ -339,7 +339,7 @@ class FootprintSetTestCase(unittest.TestCase):
                     self.assertNotEqual(im.getMask().get(x0, y), 0)
 
             self.assertEqual(foot.getNpix(), ny + nextra)
-        
+
     def testGrowLRUD2(self):
         """Grow footprints in various directions using the FootprintSet/FootprintControl constructor
 
@@ -359,13 +359,13 @@ class FootprintSetTestCase(unittest.TestCase):
             grown = afwDetect.FootprintSet(fs, ngrow, fctrl)
             im.getMask().set(0)
             afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
-            
+
             if display:
                 ds9.mtv(im)
-                
+
             self.assertEqual(len(grown.getFootprints()), 1)
             foot = grown.getFootprints()[0]
-                
+
             npix = 1 + 2*ngrow
             npix += 3 + 2*ngrow         # 3: distance between pair of set pixels 000X0X000
             self.assertEqual(foot.getNpix(), npix)
@@ -375,7 +375,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
         im = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
         im.set(0)
-        
+
         import numpy
         for x in range(im.getWidth()):
             im.set(x, im.getHeight() - 1, (numpy.Inf, 0x0, 0))
@@ -389,7 +389,7 @@ class FootprintSetTestCase(unittest.TestCase):
             ds9.mtv(im)
 
         self.assertEqual(len(objects), 1)
-            
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class PeaksInFootprintsTestCase(unittest.TestCase):
@@ -422,10 +422,10 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         for obj in self.objects:
             for x, y, I in obj:
                 self.im.getImage().set(x, y, I)
-                
+
         if False and display:
             ds9.mtv(self.im, frame=0)
-        
+
     def setUp(self):
         self.im, self.fs = None, None
 
@@ -436,11 +436,11 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
     def doTestPeaks(self, dwidth=0, dheight=0, x0=0, y0=0, threshold=10, callback=None, polarity=True, grow=0):
         """Worker routine for tests
         polarity:  True if should search for +ve pixels"""
-        
+
         self.doSetUp(dwidth, dheight, x0, y0)
         if not polarity:
             self.im *= -1
-            
+
         if callback:
             callback()
         #
@@ -524,12 +524,12 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
     def testSinglePeakAtEdge(self):
         """Test that we handle Peaks correctly at the edge"""
-        
+
         self.doTestPeaks(dheight=-1)
 
     def testSingleNegativePeakAtEdge(self):
         """Test that we handle -ve Peaks correctly at the edge"""
-        
+
         self.doTestPeaks(dheight=-1, polarity=False)
 
     def testMultiPeak(self):
@@ -577,7 +577,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         self.im.getImage().set(0)
         self.peaks = []
-        
+
         I = 11
         for x, y in [(4, 7), (5, 7), (6, 7), (7, 7), (8, 7),
                      (4, 6),                                     (8, 6),
@@ -590,7 +590,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         self.im.getImage().set(4, 7, 15)
         self.peaks.append([(4, 7,),])
-        
+
         self.im.getImage().set(6, 5, 30)
         self.peaks[0].append((6, 5,))
 
@@ -640,7 +640,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
             threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, False)
             fs2 = afwDetect.FootprintSet(self.im, threshold)
-            
+
             msk = self.im.getMask()
             afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
 
@@ -659,7 +659,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         def callback():
             self.im.set(0)
             self.peaks, self.objects = [], []
-            
+
             for x, y, I in [[6, 4, 20], [6, 5, 10]]:
                 self.im.getImage().set(x, y, I)
             self.peaks.append([[6, 4]])

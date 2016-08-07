@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import math, re
@@ -44,7 +44,7 @@ def makeGaussianKernelList(kWidth, kHeight, gaussParamsList):
     """Create a list of gaussian kernels.
 
     This is useful for constructing a LinearCombinationKernel.
-    
+
     Inputs:
     - kWidth, kHeight: width and height of kernel
     - gaussParamsList: a list of parameters for GaussianFunction2D (each a 3-tuple of floats)
@@ -88,11 +88,11 @@ class KernelTestCase(unittest.TestCase):
                         x = col - kernel.getCtrX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
-                
+
                 kernel.setKernelParameters((xsigma, ysigma, 0.0))
                 kImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(kImage, True)
-                
+
                 kArr = kImage.getArray().transpose()
                 if not numpy.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
@@ -103,17 +103,17 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
             self.fail(errStr)
-        
+
         kernel.setKernelParameters((1.5, 0.2, 0.7))
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
-        
+
         self.verifyCache(kernel, hasCache=False)
-    
+
     def verifyCache(self, kernel, hasCache=False):
         """Verify the kernel cache
-        
+
         @param kernel: kernel to test
         @param hasCache: set True if this kind of kernel supports a cache, False otherwise
         """
@@ -148,7 +148,7 @@ class KernelTestCase(unittest.TestCase):
                             "shrinkBBox returned box with wrong minimum")
                         newFullBBox = kernel.growBBox(shrunkBBox)
                         self.assert_(newFullBBox == fullBBox, "growBBox(shrinkBBox(x)) != x")
-    
+
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
         """
@@ -174,10 +174,10 @@ class KernelTestCase(unittest.TestCase):
                     afwMath.DeltaFunctionKernel, 0, kHeight, afwGeom.Point2I(kWidth, kHeight))
                 self.assertRaises(pexExcept.InvalidParameterError,
                     afwMath.DeltaFunctionKernel, kWidth, 0, afwGeom.Point2I(kWidth, kHeight))
-                            
+
         kernel = afwMath.DeltaFunctionKernel(5, 6, afwGeom.Point2I(1, 1))
         self.basicTests(kernel, 0)
-        
+
         self.verifyCache(kernel, hasCache=False)
 
     def testFixedKernel(self):
@@ -185,7 +185,7 @@ class KernelTestCase(unittest.TestCase):
         """
         kWidth = 5
         kHeight = 6
-        
+
         inArr = numpy.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
@@ -193,17 +193,17 @@ class KernelTestCase(unittest.TestCase):
         for row in range(inImage.getHeight()):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
-        
+
         kernel = afwMath.FixedKernel(inImage)
         self.basicTests(kernel, 0)
         outImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(outImage, False)
-        
+
         outArr = outImage.getArray().transpose()
         if not numpy.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" % \
                 (kernel.__class__.__name__, inArr, outArr))
-        
+
         normInArr = inArr / inArr.sum()
         normOutImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(normOutImage, True)
@@ -215,7 +215,7 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernel.clone())
         if errStr:
             self.fail(errStr)
-        
+
         self.verifyCache(kernel, hasCache=False)
 
     def testLinearCombinationKernelDelta(self):
@@ -223,7 +223,7 @@ class KernelTestCase(unittest.TestCase):
         """
         kWidth = 3
         kHeight = 2
-        
+
         # create list of kernels
         basisKernelList = makeDeltaFunctionKernelList(kWidth, kHeight)
         basisImArrList = []
@@ -246,7 +246,7 @@ class KernelTestCase(unittest.TestCase):
             if not numpy.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" % \
                     (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
-        
+
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
@@ -259,7 +259,7 @@ class KernelTestCase(unittest.TestCase):
         """
         kWidth = 4
         kHeight = 3
-        
+
         polyFunc1 = afwMath.PolynomialFunction1D(0)
         polyFunc2 = afwMath.PolynomialFunction2D(0)
         analKernel = afwMath.AnalyticKernel(kWidth, kHeight, polyFunc2)
@@ -283,19 +283,19 @@ class KernelTestCase(unittest.TestCase):
             self.basicTestComputeImageRaise(fixedKernel, doRaise, "FixedKernel")
             self.basicTestComputeImageRaise(sepKernel,   doRaise, "SeparableKernel")
             self.basicTestComputeImageRaise(lcKernel,    doRaise, "LinearCombinationKernel")
-        
+
         lcKernel.setKernelParameters([0])
         self.basicTestComputeImageRaise(lcKernel, True, "LinearCombinationKernel")
 
     def testLinearCombinationKernelAnalytic(self):
         """Test LinearCombinationKernel using analytic basis kernels.
-        
+
         The basis kernels are mutable so that we can verify that the
         LinearCombinationKernel has private copies of the basis kernels.
         """
         kWidth = 5
         kHeight = 8
-        
+
         # create list of kernels
         basisImArrList = []
         basisKernelList = afwMath.KernelList()
@@ -311,7 +311,7 @@ class KernelTestCase(unittest.TestCase):
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
         self.assert_(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, len(kParams))
-        
+
         # make sure the linear combination kernel has private copies of its basis kernels
         # by altering the local basis kernels and making sure the new images do NOT match
         modBasisImArrList = []
@@ -320,7 +320,7 @@ class KernelTestCase(unittest.TestCase):
             modBasisImage = afwImage.ImageD(basisKernel.getDimensions())
             basisKernel.computeImage(modBasisImage, True)
             modBasisImArrList.append(modBasisImage.getArray())
-        
+
         for ii in range(len(basisKernelList)):
             kParams = [0.0]*len(basisKernelList)
             kParams[ii] = 1.0
@@ -334,7 +334,7 @@ class KernelTestCase(unittest.TestCase):
             if numpy.allclose(kImArr, modBasisImArrList[ii]):
                 self.fail("%s = %s == %s for *modified* %s'th basis kernel" % \
                     (kernel.__class__.__name__, kImArr, modBasisImArrList[ii], ii))
-        
+
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
@@ -364,7 +364,7 @@ class KernelTestCase(unittest.TestCase):
                         x = col - kernel.getCtrX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
-                
+
                 kernel.setKernelParameters((xsigma, ysigma))
                 kImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(kImage, True)
@@ -376,12 +376,12 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
             self.fail(errStr)
-        
+
         kernel.setKernelParameters((1.2, 0.6))
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's kernel parameters")
-        
+
         self.verifyCache(kernel, hasCache=True)
 
     def testMakeBadKernels(self):
@@ -389,7 +389,7 @@ class KernelTestCase(unittest.TestCase):
         """
         kWidth = 4
         kHeight = 3
-        
+
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         spFunc = afwMath.PolynomialFunction2D(1)
@@ -406,7 +406,7 @@ class KernelTestCase(unittest.TestCase):
                 self.fail("Should have failed with wrong # of spatial functions")
             except pexExcept.Exception:
                 pass
-        
+
         for numKernelParams in (1, 3):
             spFuncList = afwMath.Function2DList()
             for ii in range(numKernelParams):
@@ -437,11 +437,11 @@ class KernelTestCase(unittest.TestCase):
                     self.fail("Should have failed with point not on kernel")
                 except pexExcept.Exception:
                     pass
-                    
+
 
     def testSVAnalyticKernel(self):
         """Test spatially varying AnalyticKernel using a Gaussian function
-        
+
         Just tests cloning.
         """
         kWidth = 5
@@ -449,7 +449,7 @@ class KernelTestCase(unittest.TestCase):
 
         # spatial model
         spFunc = afwMath.PolynomialFunction2D(1)
-        
+
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
@@ -461,7 +461,7 @@ class KernelTestCase(unittest.TestCase):
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc, spFunc)
         kernel.setSpatialParameters(sParams)
-        
+
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
@@ -513,7 +513,7 @@ class KernelTestCase(unittest.TestCase):
         imArr += 0.2
         imArr[:, kHeight//2] = 0.8
         basisImArrList.append(imArr)
-        
+
         # create a list of basis kernels from the images
         basisKernelList = afwMath.KernelList()
         for basisImArr in basisImArrList:
@@ -523,14 +523,14 @@ class KernelTestCase(unittest.TestCase):
 
         # create spatially varying linear combination kernel
         spFunc = afwMath.PolynomialFunction2D(1)
-        
+
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
             (0.0, 1.0, 0.0),
             (0.0, 0.0, 1.0),
         )
-        
+
         kernel = afwMath.LinearCombinationKernel(basisKernelList, spFunc)
         self.assert_(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, 2, 3)
@@ -571,7 +571,7 @@ class KernelTestCase(unittest.TestCase):
 
     def testSVSeparableKernel(self):
         """Test spatially varying SeparableKernel using a Gaussian function
-        
+
         Just tests cloning.
         """
         kWidth = 5
@@ -579,7 +579,7 @@ class KernelTestCase(unittest.TestCase):
 
         # spatial model
         spFunc = afwMath.PolynomialFunction2D(1)
-        
+
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
@@ -590,7 +590,7 @@ class KernelTestCase(unittest.TestCase):
         gaussFunc = afwMath.GaussianFunction1D(1.0)
         kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc, gaussFunc, spFunc)
         kernel.setSpatialParameters(sParams)
-        
+
         kernelClone = kernel.clone()
         errStr = self.compareKernels(kernel, kernelClone)
         if errStr:
@@ -604,7 +604,7 @@ class KernelTestCase(unittest.TestCase):
         errStr = self.compareKernels(kernel, kernelClone)
         if not errStr:
             self.fail("Clone was modified by changing original's spatial parameters")
-    
+
     def testSetCtr(self):
         """Test setCtrCol/Row"""
         kWidth = 3
@@ -621,7 +621,7 @@ class KernelTestCase(unittest.TestCase):
 
     def testZeroSizeKernel(self):
         """Creating a kernel with width or height < 1 should raise an exception.
-        
+
         Note: this ignores the default constructors, which produce kernels with height = width = 0.
         The default constructors are only intended to support persistence, not to produce useful kernels.
         """
@@ -752,7 +752,7 @@ class KernelTestCase(unittest.TestCase):
 
     def compareKernels(self, kernel1, kernel2, compareParams=True, newCtr1=(0, 0)):
         """Compare two kernels; return None if they match, else return a string kernelDescribing a difference.
-        
+
         kernel1: one kernel to test
         kernel2: the other kernel to test
         compareParams: compare spatial parameters and kernel parameters if they exist
@@ -782,7 +782,7 @@ class KernelTestCase(unittest.TestCase):
                         (kernel1.getKernelParameters(), kernel2.getKernelParameters()))
         if retStrs:
             return "; ".join(retStrs)
-        
+
         im1 = afwImage.ImageD(kernel1.getDimensions())
         im2 = afwImage.ImageD(kernel2.getDimensions())
         if kernel1.isSpatiallyVarying():
@@ -825,7 +825,7 @@ class KernelTestCase(unittest.TestCase):
             self.assertEqual(type(base), afwMath.Kernel)
             derived = Class.cast(base)
             self.assertEqual(type(derived), Class)
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -46,7 +46,7 @@ import lsst.afw.math as afwMath
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class StatisticsTestCase(unittest.TestCase):
-    
+
     """A test case to check that special values (NaN and Masks) are begin handled in Statistics"""
     def setUp(self):
         self.valL, self.valR = 10, 20
@@ -65,8 +65,8 @@ class StatisticsTestCase(unittest.TestCase):
         self.mimgL.set(self.valL, 0x0, self.valL)
         self.mimgR = afwImage.MaskedImageF(self.mimg, self.bboxR, afwImage.LOCAL)
         self.mimgR.set(self.valR, 0x0, self.valR)
-        
-        
+
+
     def tearDown(self):
         del self.mimg
         del self.mimgL
@@ -90,7 +90,7 @@ class StatisticsTestCase(unittest.TestCase):
 
         # set the right side to NaN and stats should be just for the left side
         self.mimgR.set(numpy.nan, 0x0, self.valR)
-        
+
         statsNaN = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean = self.valL
         stdev = 0.0
@@ -98,7 +98,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(statsNaN.getValue(afwMath.MEAN), mean)
         self.assertEqual(statsNaN.getValue(afwMath.STDEV), stdev)
 
-        
+
     # Verify that Masked pixels are being ignored according to the andMask
     # (by default, StatisticsControl.andMask = 0x0)
     # We'll set the L and R sides of an image to two different values and verify mean and stdev
@@ -120,14 +120,14 @@ class StatisticsTestCase(unittest.TestCase):
         #  Stats should be just for the left side!
         maskBit = 0x1
         self.mimgR.getMask().set(maskBit)
-        
+
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(maskBit)
         statsNaN = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
-        
+
         mean = self.valL
         stdev = 0.0
-        
+
         self.assertEqual(statsNaN.getValue(afwMath.NPOINT), nL)
         self.assertEqual(statsNaN.getValue(afwMath.MEAN), mean)
         self.assertEqual(statsNaN.getValue(afwMath.STDEV), stdev)
@@ -144,7 +144,7 @@ class StatisticsTestCase(unittest.TestCase):
         sctrl.setWeighted(True)
         stats = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV, sctrl)
         nL, nR = self.mimgL.getWidth()*self.mimgL.getHeight(), self.mimgR.getWidth()*self.mimgR.getHeight()
-        
+
         mean = 1.0*(nL + nR)/(nL/self.valL + nR/self.valR)
 
         # get the stats for the image with two values
@@ -173,12 +173,12 @@ class StatisticsTestCase(unittest.TestCase):
         #
         # The correct formula:
         stddev = numpy.sqrt(variance*wsum**2/(wsum**2 - wwsum))
-        
+
         # get the stats for the image with two values
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mean, 10)
         self.assertAlmostEqual(stats.getValue(afwMath.STDEV), stddev, 10)
-        
-        
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

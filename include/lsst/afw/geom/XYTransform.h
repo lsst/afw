@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -63,17 +63,17 @@ public:
     /**
      * @brief virtuals for forward and reverse transforms
      *
-     * These routines are responsible for throwing exceptions if the 'point' arg 
+     * These routines are responsible for throwing exceptions if the 'point' arg
      * is outside the domain of the transform.
      */
     virtual Point2D forwardTransform(Point2D const &point) const = 0;
     virtual Point2D reverseTransform(Point2D const &point) const = 0;
-    
+
     /**
      * @brief linearized forward and reversed transforms
      *
      * These are virtual but not pure virtual; there is a default implementation which
-     * calls forwardTransform() or reverseTransform() and takes finite differences with step 
+     * calls forwardTransform() or reverseTransform() and takes finite differences with step
      * size equal to one.
      *
      * The following should always be satisfied for an arbitrary Point2D p
@@ -92,7 +92,7 @@ class IdentityXYTransform : public XYTransform
 {
 public:
     IdentityXYTransform();
-    
+
     virtual PTR(XYTransform) clone() const;
     virtual Point2D forwardTransform(Point2D const &point) const;
     virtual Point2D reverseTransform(Point2D const &point) const;
@@ -117,7 +117,7 @@ public:
     virtual AffineTransform linearizeForwardTransform(Point2D const &point) const;
     virtual AffineTransform linearizeReverseTransform(Point2D const &point) const;
 
-protected:    
+protected:
     CONST_PTR(XYTransform) _base;
 };
 
@@ -126,7 +126,7 @@ protected:
  * @brief Wrap a sequence of multiple XYTransforms
  *
  * forwardTransform executes transformList[i].forwardTransform in order 0, 1, 2..., e.g.
- *  
+ *
  * MultiXYTransform.forwardTransform(p) =
  *   transformList[n].forwardTransform(...(transformList[1].forwardTransform(transformList[0].forwardTransform(p))...)
  */
@@ -164,7 +164,7 @@ public:
     /// get underlying reverse AffineTransform
     AffineTransform getReverseTransform() const;
 
-protected:    
+protected:
     AffineTransform _forwardAffineTransform;
     AffineTransform _reverseAffineTransform;
 };
@@ -211,18 +211,18 @@ public:
     static Point2D              polyEval(std::vector<double> const &coeffs, Point2D const &p);
     static double               polyEvalDeriv(std::vector<double> const &coeffs, double x);
 
-    static AffineTransform      polyEvalJacobian(std::vector<double> const &coeffs, 
+    static AffineTransform      polyEvalJacobian(std::vector<double> const &coeffs,
                                                  Point2D const &p);
 
-    static double               polyEvalInverse(std::vector<double> const &coeffs, 
+    static double               polyEvalInverse(std::vector<double> const &coeffs,
                                                 std::vector<double> const &icoeffs, double x);
 
-    static Point2D              polyEvalInverse(std::vector<double> const &coeffs, 
-                                                std::vector<double> const &icoeffs, 
+    static Point2D              polyEvalInverse(std::vector<double> const &coeffs,
+                                                std::vector<double> const &icoeffs,
                                                 Point2D const &p);
 
-    static AffineTransform      polyEvalInverseJacobian(std::vector<double> const &coeffs, 
-                                                        std::vector<double> const &icoeffs, 
+    static AffineTransform      polyEvalInverseJacobian(std::vector<double> const &coeffs,
+                                                        std::vector<double> const &icoeffs,
                                                         Point2D const &p);
 
     static AffineTransform      makeAffineTransform(double x, double y, double f, double g);

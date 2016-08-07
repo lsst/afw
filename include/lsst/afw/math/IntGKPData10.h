@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #if !defined(LSST_AFW_MATH_INTGKPDATA10_H)
 #define LSST_AFW_MATH_INTGKPDATA10_H 1
 
@@ -38,20 +38,20 @@
 
 namespace lsst { namespace afw { namespace math {
 
-namespace details {            
-            
+namespace details {
+
     static const int NGKPLEVELS = 5;
-    
-    inline int gkp_n(int level) { 
+
+    inline int gkp_n(int level) {
         assert(level >= 0 && level < NGKPLEVELS);
         static const int ngkp[NGKPLEVELS] = {5, 5, 11, 22, 44};
-        return ngkp[level]; 
+        return ngkp[level];
     }
-    
+
     template <class T>
     inline const std::vector<T>& gkp_x(int level) {
-        
-        // x10, abscissae common to the 10-, 21-, 43- and 87-point rule 
+
+        // x10, abscissae common to the 10-, 21-, 43- and 87-point rule
         static const T ax10[5] = {
             0.973906528517171720077964012084452,
             0.865063366688984510732096688423493,
@@ -60,8 +60,8 @@ namespace details {
             0.148874338981631210884826001129720
         };
         static const std::vector<T> vx10(ax10, ax10 + 5);
-        
-        // x21, abscissae common to the 21-, 43- and 87-point rule 
+
+        // x21, abscissae common to the 21-, 43- and 87-point rule
         static const T ax21[5] = {
             0.995657163025808080735527280689003,
             0.930157491355708226001207180059508,
@@ -70,8 +70,8 @@ namespace details {
             0.294392862701460198131126603103866
         };
         static const std::vector<T> vx21(ax21, ax21 + 5);
-        
-        // x43, abscissae common to the 43- and 87-point rule 
+
+        // x43, abscissae common to the 43- and 87-point rule
         static const T ax43[11] = {
             0.999333360901932081394099323919911,
             0.987433402908088869795961478381209,
@@ -86,8 +86,8 @@ namespace details {
             0.074650617461383322043914435796506
         };
         static const std::vector<T> vx43(ax43, ax43 + 11);
-        
-        // x87, abscissae of the 87-point rule 
+
+        // x87, abscissae of the 87-point rule
         static const T ax87[22] = {
             0.999902977262729234490529830591582,
             0.997989895986678745427496322365960,
@@ -113,7 +113,7 @@ namespace details {
             0.037352123394619870814998165437704
         };
         static const std::vector<T> vx87(ax87, ax87 + 22);
-        
+
         // x175, new abscissae of the 175-point rule
         static const T ax175[44] = {
             0.9999863601049729677997719,
@@ -162,16 +162,16 @@ namespace details {
             0.01867941779948308845140053
         };
         static const std::vector<T> vx175(ax175, ax175 + 44);
-        
+
         static const std::vector<T>* x[NGKPLEVELS] = {&vx10, &vx21, &vx43, &vx87, &vx175};
-        
+
         assert(level >= 0 && level < NGKPLEVELS);
         return *x[level];
     }
 
     template <class T>
     inline const std::vector<T>& gkp_wa(int level) {
-        
+
         // w21a, weights of the 21-point formula for abscissae x10
         static const T aw21a[5] = {
             0.032558162307964727478818972459390,
@@ -279,8 +279,8 @@ namespace details {
 
   template <class T>
   inline const std::vector<T>& gkp_wb(int level) {
-      
-      // w10, weights of the 10-point formula 
+
+      // w10, weights of the 10-point formula
       static const T aw10b[6] = {
           0.066671344308688137593568809893332,
           0.149451349150580593145776339657697,
@@ -402,13 +402,13 @@ namespace details {
       assert(level >= 0 && level < NGKPLEVELS);
       return *wb[level];
   }
-    
+
 #ifdef EXTRA_PREC_H
 
     template<>
     inline const std::vector<Quad>& gkp_x<Quad>(int level) {
-        
-        // x10, abscissae common to the 10-, 21-, 43- and 87-point rule 
+
+        // x10, abscissae common to the 10-, 21-, 43- and 87-point rule
         static const Quad ax10[5] = {
             "0.973906528517171720077964012084452",
             "0.865063366688984510732096688423493",
@@ -418,7 +418,7 @@ namespace details {
         };
         static const std::vector<Quad> vx10(ax10, ax10 + 5);
 
-        // x21, abscissae common to the 21-, 43- and 87-point rule 
+        // x21, abscissae common to the 21-, 43- and 87-point rule
         static const Quad ax21[5] = {
             "0.995657163025808080735527280689003",
             "0.930157491355708226001207180059508",
@@ -428,7 +428,7 @@ namespace details {
         };
         static const std::vector<Quad> vx21(ax21, ax21 + 5);
 
-        // x43, abscissae common to the 43- and 87-point rule 
+        // x43, abscissae common to the 43- and 87-point rule
         static const Quad ax43[11] = {
             "0.999333360901932081394099323919911",
             "0.987433402908088869795961478381209",
@@ -444,7 +444,7 @@ namespace details {
         };
         static const std::vector<Quad> vx43(ax43, ax43 + 11);
 
-        // x87, abscissae of the 87-point rule 
+        // x87, abscissae of the 87-point rule
         static const Quad ax87[22] = {
             "0.999902977262729234490529830591582",
             "0.997989895986678745427496322365960",
@@ -528,7 +528,7 @@ namespace details {
 
   template<>
   inline const std::vector<Quad>& gkp_wa<Quad>(int level) {
-      
+
       // w21a, weights of the 21-point formula for abscissae x10
       static const Quad aw21a[5] = {
           "0.032558162307964727478818972459390",
@@ -636,8 +636,8 @@ namespace details {
 
   template<>
   inline const std::vector<Quad>& gkp_wb<Quad>(int level) {
-      
-      // w10, weights of the 10-point formula 
+
+      // w10, weights of the 10-point formula
       static const Quad aw10b[6] = {
           "0.066671344308688137593568809893332",
           "0.149451349150580593145776339657697",
@@ -759,7 +759,7 @@ namespace details {
       assert(level >= 0 && level < NGKPLEVELS);
       return *wb[level];
   }
-    
+
 #endif
 
 } // end of namespace details

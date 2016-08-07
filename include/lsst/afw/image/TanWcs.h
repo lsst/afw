@@ -1,8 +1,8 @@
 // -*- lsst-c++ -*-
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,14 +10,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -50,18 +50,18 @@ namespace image {
 /**
  *  @brief Implementation of the WCS standard for the special case of the Gnomonic
  *  (tangent plane) projection.
- * 
+ *
  *  This class treats the special case of tangent plane projection. It extends the Wcs standard by
  *  optionally accounting for distortion in the image plane using the Simple Imaging Polynomial (SIP)
  *  convention.
  *  This convention is described in Shupe et al. (2005) (Astronomical Data Analysis Software and Systems
  *  XIV, Asp Conf. Series Vol XXX, Ed: Shopbell et al.), and descibed in some more detail in
  *  http://web.ipac.caltech.edu/staff/fmasci/home/wise/codeVdist.html
- * 
+ *
  *  To convert from pixel coordintates to radec ("intermediate world coordinates"), first use the matrices
  *  _sipA and _sipB to calculate undistorted coorinates (i.e where on the chip the image would lie if
  *  the optics gave undistorted images), then pass these undistorted coorinates wcsp2s() to calculate radec.
- * 
+ *
  *  For the reverse, radec -> pixels, convert the radec to undistorted coords, and then use the _sipAp and
  *  _sipBp matrices to add in the distortion terms.
  */

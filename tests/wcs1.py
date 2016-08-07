@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -79,7 +79,7 @@ def makeWcs(
     equinox=2000
 ):
     """Make an simple TAN WCS with sensible defaults
-    
+
     @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
     @param[in] crPixPos: crPix for WCS, using the LSST standard; a pair of floats
     @param[in] crValDeg: crVal for WCS, in degrees; a pair of floats
@@ -177,7 +177,7 @@ class WcsTestCase(utilsTests.TestCase):
             if not badPC:
                 for i in (1, 2,):
                     for j in (1, 2,):
-                        self.assertEqual(md.get("CD%d_%d" % (i, j)), 
+                        self.assertEqual(md.get("CD%d_%d" % (i, j)),
                                          md.get("CDELT%d" % i)*md.get("PC00%d00%d" % (i, j)))
 
             wcs = afwImage.makeWcs(md)
@@ -277,7 +277,7 @@ class WCSRotateFlip(unittest.TestCase):
     def testRotation(self):
         # Origin for LSST pixels is (0,0).  Need to subtract one when rotating to avoid off by one.
         # E.g. UR (507, 1999) goes to (0,0) for nRot = 2
-        q1 = {0:afwGeom.Point2D(100., 1600.), 
+        q1 = {0:afwGeom.Point2D(100., 1600.),
               1:afwGeom.Point2D(self.size.getY() - 1600. - 1, 100.),
               2:afwGeom.Point2D(self.size.getX() - 100. - 1, self.size.getY() - 1600. - 1),
               3:afwGeom.Point2D(1600., self.size.getX() - 100. - 1)}
@@ -307,12 +307,12 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def setUp(self):
         if InputSmallImagePath is not None:
             self.im = afwImage.DecoratedImageD(InputSmallImagePath)
-    
+
             self.wcs = afwImage.makeWcs(self.im.getMetadata())
         else:
             self.im = None
             self.wcs = None
-    
+
             if False:
                 ds9.mtv(self.im, wcs=self.wcs)
 
@@ -355,11 +355,11 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
         # values from wcstools xy2sky (v3.8.1). Confirmed by ds9
-        raDec0 = afwGeom.Point2D(245.15984167, +19.1960472) 
+        raDec0 = afwGeom.Point2D(245.15984167, +19.1960472)
         raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
 
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
-        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) 
+        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testIdentity(self):

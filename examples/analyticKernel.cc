@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 
 #include "boost/format.hpp"
@@ -45,12 +45,12 @@ int main() {
 
     lsst::afw::math::GaussianFunction2<Pixel> gaussFunc(majorSigma, minorSigma, angle);
     lsst::afw::math::AnalyticKernel gaussKernel(kernelCols, kernelRows, gaussFunc);
-    
+
     cout << boost::format("Gaussian Kernel with majorSigma=%.1f, minorSigma=%.1f\n\n") %
         majorSigma % minorSigma;
-    
+
     lsst::afw::math::printKernel(gaussKernel, true);
-    
+
     // now show a spatially varying version
     unsigned int polyOrder = 1;
     lsst::afw::math::PolynomialFunction2<Pixel> polyFunc(polyOrder);
@@ -66,7 +66,7 @@ int main() {
     polyParams[1][1] =  0.0;
     polyParams[1][2] =  1.0;
     gaussSpVarKernel.setSpatialParameters(polyParams);
-    
+
     cout << "Spatial Parameters:" << endl;
     for (unsigned int row = 0; row < polyParams.size(); ++row) {
         if (row == 0) {

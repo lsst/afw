@@ -60,7 +60,7 @@ public:
             throw LSST_EXCEPT(
                 pex::exceptions::InvalidParameterError,
                 (boost::format("Exposure ID '%s' is too large.") % expId).str()
-            );            
+            );
         }
     }
 

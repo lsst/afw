@@ -111,7 +111,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     PTR(daf::base::PropertySet) maskMetadata,
     PTR(daf::base::PropertySet) varianceMetadata
 ) : lsst::daf::base::Citizen(typeid(this)),
-    _image(), _mask(), _variance() 
+    _image(), _mask(), _variance()
 {
     fits::Fits fitsfile(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     *this = MaskedImage(fitsfile, metadata, bbox, origin, conformMasks, needAllHdus,
@@ -126,7 +126,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     PTR(daf::base::PropertySet) maskMetadata,
     PTR(daf::base::PropertySet) varianceMetadata
 ) : lsst::daf::base::Citizen(typeid(this)),
-    _image(), _mask(), _variance() 
+    _image(), _mask(), _variance()
 {
     fits::Fits fitsfile(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     *this = MaskedImage(fitsfile, metadata, bbox, origin, conformMasks, needAllHdus,
@@ -173,7 +173,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     PTR(daf::base::PropertySet) maskMetadata,
     PTR(daf::base::PropertySet) varianceMetadata
 ) : lsst::daf::base::Citizen(typeid(this)),
-    _image(), _mask(), _variance() 
+    _image(), _mask(), _variance()
 {
     // When reading a standard Masked Image, we expect four HDUs:
     // * The primary (HDU 1) is empty;
@@ -674,7 +674,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthError,
                 (boost::format("Dimension mismatch: Image %dx%d v. Mask %dx%d") %
-                    _image->getWidth() % _image->getHeight() % 
+                    _image->getWidth() % _image->getHeight() %
                     _mask->getWidth() % _mask->getHeight()
                 ).str()
             );
@@ -689,7 +689,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::conformSizes()
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthError,
                 (boost::format("Dimension mismatch: Image %dx%d v. Variance %dx%d") %
-                    _image->getWidth() % _image->getHeight() % 
+                    _image->getWidth() % _image->getHeight() %
                     _variance->getWidth() % _variance->getHeight()
                 ).str()
             );

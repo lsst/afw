@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #if !defined(LSST_AFW_IMAGE_SLICE_H)
 #define LSST_AFW_IMAGE_SLICE_H
 /**
@@ -43,7 +43,7 @@ namespace afw {
 namespace image {
 
 
-    
+
 /**
  * @class ImageSlice
  * @brief A class to specify a slice of an image
@@ -54,17 +54,17 @@ template<typename PixelT>
 class ImageSlice : public Image<PixelT> {
 public:
     enum ImageSliceType {ROW, COLUMN};
-    
+
     explicit ImageSlice(Image<PixelT> const &img);
     ~ImageSlice() {}
     ImageSliceType getImageSliceType() const { return _sliceType; }
-    
+
 private:
     ImageSliceType _sliceType;
 };
-    
 
-    
+
+
 namespace details {
 
 /*
@@ -73,7 +73,7 @@ namespace details {
  *    The templates allow the compiler to do this efficiently.
  *
  */
-    
+
 template<typename PixelT>
 struct Plus     { PixelT operator()(PixelT const imgPix, PixelT const slcPix) { return imgPix + slcPix; } };
 template<typename PixelT>
@@ -91,9 +91,9 @@ struct Div      { PixelT operator()(PixelT const imgPix, PixelT const slcPix) { 
 template<typename OperatorT, typename PixelT>
 void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
              typename ImageSlice<PixelT>::ImageSliceType sliceType) {
-    
+
     OperatorT op;
-    
+
     if (sliceType == ImageSlice<PixelT>::ROW) {
         for (int y = 0; y < img.getHeight(); ++y) {
             typename ImageSlice<PixelT>::x_iterator pSlc = slc.row_begin(0);
@@ -112,53 +112,53 @@ void operate(Image<PixelT> &img, ImageSlice<PixelT> const &slc,
             }
         }
     }
-    
+
 }
 }
 
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // overload +
-template<typename PixelT>    
+template<typename PixelT>
 typename Image<PixelT>::Ptr operator+(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
-template<typename PixelT>    
+template<typename PixelT>
 typename Image<PixelT>::Ptr operator+(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
-template<typename PixelT>    
+template<typename PixelT>
 void operator+=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 
 
 // -----------------------------------------------------------------
 // overload -
-template<typename PixelT>    
+template<typename PixelT>
 typename Image<PixelT>::Ptr operator-(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
 template<typename PixelT>
 void operator-=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 
-    
+
 // ******************************************************************
 // overload *
-template<typename PixelT>    
+template<typename PixelT>
 typename Image<PixelT>::Ptr operator*(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
-    
-template<typename PixelT>    
+
+template<typename PixelT>
 typename Image<PixelT>::Ptr operator*(ImageSlice<PixelT> const &slc, Image<PixelT> const &img);
 
-template<typename PixelT>    
+template<typename PixelT>
 void operator*=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 
 
 // ///////////////////////////////////////////////////////////////////
 // overload /
-template<typename PixelT>    
+template<typename PixelT>
 typename Image<PixelT>::Ptr operator/(Image<PixelT> const &img, ImageSlice<PixelT> const &slc);
 
-template<typename PixelT>    
+template<typename PixelT>
 void operator/=(Image<PixelT> &img, ImageSlice<PixelT> const &slc);
 
-        
+
 }}}
 
 #endif

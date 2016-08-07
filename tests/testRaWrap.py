@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -37,7 +37,7 @@ class WCSTestRaWrap(unittest.TestCase):
         mydir = lsst.utils.getPackageDir('afw')
         self.assertTrue(mydir is not None)
         self.datadir = os.path.join(mydir, 'tests')
-        
+
     def test1(self):
         # This fails due to #1386
         #wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs')
@@ -48,7 +48,7 @@ class WCSTestRaWrap(unittest.TestCase):
         crval = wcs1.getSkyOrigin()
         cd = wcs1.getCDMatrix()
         print cd
-        crval_p = afwGeom.Point2D(crval.getLongitude().asDegrees(), 
+        crval_p = afwGeom.Point2D(crval.getLongitude().asDegrees(),
                                  crval.getLatitude().asDegrees())
         origin = wcs1.getPixelOrigin()
         print crval_p

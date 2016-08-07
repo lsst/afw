@@ -112,5 +112,5 @@ or truncate the expansion (as is often a good idea with a Chebyshev expansion); 
 order one lower than the original fit.
 \until getImage
  */
- 
+
 }}}

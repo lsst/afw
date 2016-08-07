@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -128,12 +128,12 @@ class PointTestCase(CoordinateTestCase):
         e1 = geom.Point2I(1, 2)
         e2 = geom.Point2I(e1)
         self.assertClose(tuple(e1), tuple(e2))
-        
+
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Point2D(e1)
         self.assertClose(tuple(e1), tuple(e2))
 
-        
+
         e1 = geom.Point2I(1, 3)
         e2 = geom.Point2D(e1)
         self.assertClose(tuple(e1), tuple(e2))
@@ -142,7 +142,7 @@ class PointTestCase(CoordinateTestCase):
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Point3I(e1)
         self.assertClose(tuple(e1), tuple(e2))
-        
+
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Point3D(e1)
         self.assertClose(tuple(e1), tuple(e2))
@@ -192,7 +192,7 @@ class ExtentTestCase(CoordinateTestCase):
         e1 = geom.Extent2I(1,2)
         e2 = geom.Extent2D(e1)
         self.assertClose(tuple(e1), tuple(e2))
-        
+
         #test extent from extent 3-d
         e1 = geom.Extent3I(1, 2, 3)
         e2 = geom.Extent3I(e1)

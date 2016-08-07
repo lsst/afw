@@ -12,7 +12,7 @@ def getids(c):
 def printids(c):
     print getids(c)
 
-            
+
 
 class IndexingCatalogTestCase(unittest.TestCase):
 
@@ -117,5 +117,5 @@ def run(shouldExit = False):
 if __name__ == "__main__":
     run(True)
 
-        
-        
+
+

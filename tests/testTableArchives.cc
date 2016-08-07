@@ -88,7 +88,7 @@ public:
     class Factory : public PersistableFactory {
     public:
         explicit Factory(std::string const & name) : PersistableFactory(name) {}
-        
+
         virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const {
             BaseRecord const & record = catalogs.front().front();
             Schema const & schema = record.getSchema();
@@ -145,7 +145,7 @@ public:
     class Factory : public PersistableFactory {
     public:
         explicit Factory(std::string const & name) : PersistableFactory(name) {}
-        
+
         virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const {
             BaseRecord const & record1 = catalogs.front().front();
             Schema const & schema1 = record1.getSchema();
@@ -221,7 +221,7 @@ public:
     class Factory : public PersistableFactory {
     public:
         explicit Factory(std::string const & name) : PersistableFactory(name) {}
-        
+
         virtual PTR(Persistable) read(InputArchive const & archive, CatalogVector const & catalogs) const {
             BaseRecord const & record = catalogs.front().front();
             Schema const & schema = record.getSchema();

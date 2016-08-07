@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -67,7 +67,7 @@ class AngleTestCase(unittest.TestCase):
         self.assertTrue(afwGeom.isAngle(self.pi))
         self.assertFalse(afwGeom.isAngle(self.pi.asRadians()))
         self.assertFalse(afwGeom.isAngle(math.pi))
-        
+
         def tst():
             self.pi - math.pi           # subtracting a float from an Angle
         self.assertRaises(TypeError, tst)
@@ -129,7 +129,7 @@ class AngleTestCase(unittest.TestCase):
         self.assertAlmostEqual(math.sin(self.d),  0.0, places=15)
         thirty = 30.*afwGeom.degrees
         self.assertAlmostEqual(math.sin(thirty), 0.5, places=15)
-    
+
     def testWrap(self):
         eps = numpy.finfo(float).eps
         oneEightyWithSlop = 180 * (1 + eps)
@@ -166,7 +166,7 @@ class AngleTestCase(unittest.TestCase):
                     # a sanity check in case wrapCtr gives the wrong answer
                     self.assertAlmostEqual(math.sin(posAngRad), sinAng)
                     self.assertAlmostEqual(math.cos(posAngRad), cosAng)
-                    
+
                     ctrAng = angRad * afwGeom.radians
                     ctrAng.wrapCtr()
                     ctrAngRad = ctrAng.asRadians()
@@ -221,9 +221,9 @@ class AngleTestCase(unittest.TestCase):
                             self.assertAlmostEqual(nearErrAng.asRadians(), 0)
                             self.assertAlmostEqual(math.sin(nearAngRad), sinAng)
                             self.assertAlmostEqual(math.cos(nearAngRad), cosAng)
-                            
-    
-        
+
+
+
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

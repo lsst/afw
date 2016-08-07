@@ -731,7 +731,7 @@ using boost::serialization::make_nvp;
 
         virtual ReturnT operator() (double x) const {
             double xPrime = (x + _offset) * _scale;
-            
+
             // Clenshaw function for solving the Chebyshev polynomial
             // Non-recursive version from Kresimir Cosic
             int const order = _order;

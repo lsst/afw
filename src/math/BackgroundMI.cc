@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2015 AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -124,7 +124,7 @@ BackgroundMI::BackgroundMI(ImageT const& img, ///< ImageT (or MaskedImage) whose
         for (int iY = 0; iY < nySample; ++iY) {
             ImageT subimg = ImageT(img, geom::Box2I(geom::Point2I(_xorig[iX], _yorig[iY]),
                                                     geom::Extent2I(_xsize[iX], _ysize[iY])), image::LOCAL);
-            
+
             std::pair<double, double> res = makeStatistics(subimg, bgCtrl.getStatisticsProperty() | ERRORS,
                                                            *bgCtrl.getStatisticsControl()).getResult();
             im(iX, iY) = res.first;
@@ -155,13 +155,13 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
     // Set _grid as a transitional measure
     std::vector<double> _grid(_statsImage.getHeight());
     std::copy(im.col_begin(iX), im.col_end(iX), _grid.begin());
-    
+
     // remove nan from the grid values before computing columns
     // if we do it here (ie. in _setGridColumns), it should
     // take care of all future occurrences, so we don't need to do this elsewhere
     std::vector<double> ycenTmp, gridTmp;
     cullNan(_ycen, _grid, ycenTmp, gridTmp);
-    
+
     PTR(Interpolate) intobj;
     try {
         intobj = makeInterpolate(ycenTmp, gridTmp, interpStyle);
@@ -195,7 +195,7 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
         LSST_EXCEPT_ADD(e, "setting _gridcolumns");
         throw;
     }
-        
+
     for (int iY = 0; iY < height; ++iY) {
         _gridColumns[iX][iY] = intobj->interpolate(ypix[iY]);
     }
@@ -325,7 +325,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
     if (_bctrl->getApproximateControl()->getStyle() != ApproximateControl::UNKNOWN) {
         return doGetApproximate<PixelT>(*_bctrl->getApproximateControl(), _asUsedUndersampleStyle)->getImage();
     }
-    
+
     // =============================================================
     // --> We'll store nxSample fully-interpolated columns to interpolate the rows over
     // make a vector containing the y pixel coords for the column
@@ -380,7 +380,7 @@ PTR(image::Image<PixelT>) BackgroundMI::doGetImage(
                     if (bgTmp.empty()) {
                         xcenTmp.push_back(0);
                         bgTmp.push_back(defaultValue);
-                        
+
                         intobj = makeInterpolate(xcenTmp, bgTmp, Interpolate::CONSTANT);
                         break;
                     } else {

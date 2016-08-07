@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2012 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -58,13 +58,13 @@ class MatchFitsTestCase(unittest.TestCase):
             match = afwTable.SimpleMatch(self.cat1[index], self.cat2[self.size - index - 1], index)
             if debug: print "Inject:", match.first.getId(), match.second.getId()
             self.matches.push_back(match)
-    
+
     def tearDown(self):
         del self.schema
         del self.cat1
         del self.cat2
         del self.matches
-        
+
     def testMatches(self, matches=None):
         if matches is None:
             matches = self.matches
@@ -93,9 +93,9 @@ class MatchFitsTestCase(unittest.TestCase):
         cat2.sort()
         # just test that the next line doesn't segv
         afwTable.unpackMatches(packed, cat1, cat2)
-        
-        
-        
+
+
+
 #################################################################
 # Test suite boiler plate
 #################################################################

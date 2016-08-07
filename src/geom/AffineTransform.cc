@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include "Eigen/LU"
 
 #include <iomanip>
@@ -57,7 +57,7 @@ void geom::AffineTransform::setParameterVector(
  */
 geom::AffineTransform::Matrix const geom::AffineTransform::getMatrix() const {
     Matrix r;
-    r << 
+    r <<
         (*this)[XX], (*this)[XY], (*this)[X],
         (*this)[YX], (*this)[YY], (*this)[Y],
         0.0,         0.0,         1.0;
@@ -103,7 +103,7 @@ std::ostream& geom::operator<<(std::ostream& os, lsst::afw::geom::AffineTransfor
     geom::AffineTransform::Matrix const & matrix = transform.getMatrix();
     int prec = os.precision(7);
     os.setf(std::ios::fixed);
-    os << "AffineTransform([(" << std::setw(10) << matrix(0,0) << "," << std::setw(10) << matrix(0,1) 
+    os << "AffineTransform([(" << std::setw(10) << matrix(0,0) << "," << std::setw(10) << matrix(0,1)
        << "," << std::setw(10) << matrix(0,2) << "),\n";
     os << "                 (" << std::setw(10) << matrix(1,0) << "," << std::setw(10) << matrix(1,1)
        << "," << std::setw(10) << matrix(1,2) << "),\n";

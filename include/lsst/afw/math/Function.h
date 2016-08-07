@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_MATH_FUNCTION_H
 #define LSST_AFW_MATH_FUNCTION_H
 /**
@@ -114,9 +114,9 @@ using boost::serialization::make_nvp;
             _params(params),
             _isCacheValid(false)
         {}
-        
+
         virtual ~Function() {}
-    
+
         /**
          * @brief Return the number of function parameters
          *
@@ -125,7 +125,7 @@ using boost::serialization::make_nvp;
         unsigned int getNParameters() const {
             return _params.size();
         }
-        
+
         /**
          * @brief Get one function parameter without range checking
          *
@@ -136,7 +136,7 @@ using boost::serialization::make_nvp;
         const {
             return _params[ind];
         }
-        
+
         /**
          * @brief Return all function parameters
          *
@@ -154,7 +154,7 @@ using boost::serialization::make_nvp;
          * @warning: subclasses must override if true.
          */
         virtual bool isLinearCombination() const { return false; }
-        
+
         /**
          * @brief Set one function parameter without range checking
          */
@@ -165,7 +165,7 @@ using boost::serialization::make_nvp;
             _isCacheValid = false;
             _params[ind] = newValue;
         }
-        
+
         /**
          * @brief Set all function parameters
          *
@@ -183,7 +183,7 @@ using boost::serialization::make_nvp;
             _isCacheValid = false;
             _params = params;
         }
-    
+
         /**
          * @brief Return a string representation of the function
          *
@@ -207,7 +207,7 @@ using boost::serialization::make_nvp;
         virtual std::string getPythonModule() const { return "lsst.afw.math"; }
 
         /* Default constructor: intended only for serialization */
-        explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}   
+        explicit Function() : lsst::daf::base::Citizen(typeid(this)), _params(0), _isCacheValid(false) {}
 
     private: // serialization support
         friend class boost::serialization::access;
@@ -217,7 +217,7 @@ using boost::serialization::make_nvp;
         }
     };
 
-    
+
     /**
      * @brief A Function taking one argument.
      *
@@ -251,9 +251,9 @@ using boost::serialization::make_nvp;
         :
             Function<ReturnT>(params)
         {}
-        
+
         virtual ~Function1() {}
-        
+
         /**
          * @brief Return a pointer to a deep copy of this function
          *
@@ -265,10 +265,10 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr clone() const = 0; 
-    
+        virtual Ptr clone() const = 0;
+
         virtual ReturnT operator() (double x) const = 0;
-        
+
         virtual std::string toString(std::string const& prefix="") const {
             return std::string("Function1: ") + Function<ReturnT>::toString(prefix);
         }
@@ -277,8 +277,8 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit Function1() : Function<ReturnT>() {}    
-    
+        explicit Function1() : Function<ReturnT>() {}
+
     private: // serialization
         friend class boost::serialization::access;
 #ifndef SWIG // SWIG doesn't like base_object
@@ -287,8 +287,8 @@ using boost::serialization::make_nvp;
             ar & make_nvp("fn", boost::serialization::base_object<Function<ReturnT> >(*this));
         }
 #endif
-    };    
-    
+    };
+
     /**
      * @brief A Function taking two arguments.
      *
@@ -324,9 +324,9 @@ using boost::serialization::make_nvp;
         :
             Function<ReturnT>(params)
         {}
-        
+
         virtual ~Function2() {}
-        
+
         /**
          * @brief Return a pointer to a deep copy of this function
          *
@@ -338,8 +338,8 @@ using boost::serialization::make_nvp;
          *
          * @return a pointer to a deep copy of the function
          */
-        virtual Ptr clone() const = 0; 
-    
+        virtual Ptr clone() const = 0;
+
         virtual ReturnT operator() (double x, double y) const = 0;
 
         virtual std::string toString(std::string const& prefix="") const {
@@ -355,8 +355,8 @@ using boost::serialization::make_nvp;
 
     protected:
         /* Default constructor: intended only for serialization */
-        explicit Function2() : Function<ReturnT>() {}    
-    
+        explicit Function2() : Function<ReturnT>() {}
+
     private:
         friend class boost::serialization::access;
 #ifndef SWIG // SWIG doesn't like base_object
@@ -413,16 +413,16 @@ using boost::serialization::make_nvp;
             Function2<ReturnT>(params),
             _order(BasePolynomialFunction2::orderFromNParameters(static_cast<int>(params.size())))
         {}
-        
+
         virtual ~BasePolynomialFunction2() {}
-        
+
         /**
          * @brief Get the polynomial order
          */
         int getOrder() const { return _order; }
-       
+
         virtual bool isLinearCombination() const { return true; }
-        
+
         /**
          * @brief Compute number of parameters from polynomial order.
          *
@@ -436,7 +436,7 @@ using boost::serialization::make_nvp;
             }
             return (order + 1) * (order + 2) / 2;
         }
-        
+
         /**
          * @brief Compute polynomial order from the number of parameters
          *
@@ -461,7 +461,7 @@ using boost::serialization::make_nvp;
             }
             return order;
         }
-        
+
         /**
          * Return the derivative of the Function with respect to its parameters
          *
@@ -492,7 +492,7 @@ using boost::serialization::make_nvp;
         int _order; ///< order of polynomial
 
         /* Default constructor: intended only for serialization */
-        explicit BasePolynomialFunction2() : Function2<ReturnT>(1), _order(0) {}    
+        explicit BasePolynomialFunction2() : Function2<ReturnT>(1), _order(0) {}
 
     private:
         friend class boost::serialization::access;

@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -73,7 +73,7 @@ class CalibTestCase(unittest.TestCase):
 
     def testTime(self):
         """Test the exposure time information"""
-        
+
         isoDate = "1995-01-26T07:32:00.000000000Z"
         self.calib.setMidTime(dafBase.DateTime(isoDate))
         self.assertEqual(isoDate, self.calib.getMidTime().toString())
@@ -90,7 +90,7 @@ class CalibTestCase(unittest.TestCase):
 
     def testPhotom(self):
         """Test the zero-point information"""
-        
+
         flux, fluxErr = 1000.0, 10.0
         flux0, flux0Err = 1e12, 1e10
         self.calib.setFluxMag0(flux0)
@@ -126,14 +126,14 @@ class CalibTestCase(unittest.TestCase):
         num = 5
 
         mag, magErr = self.calib.getMagnitude(flux, fluxErr) # Result assumed to be true: tested elsewhere
-        
+
         fluxList = numpy.array([flux for i in range(num)], dtype=float)
         fluxErrList = numpy.array([fluxErr for i in range(num)], dtype=float)
 
         magList = self.calib.getMagnitude(fluxList)
         for m in magList:
             self.assertEqual(m, mag)
-        
+
         mags, magErrs = self.calib.getMagnitude(fluxList, fluxErrList)
 
         for m, dm in zip(mags, magErrs):
@@ -155,8 +155,8 @@ class CalibTestCase(unittest.TestCase):
 
     def testCtorFromMetadata(self):
         """Test building a Calib from metadata"""
-        
-        isoDate = "1995-01-26T07:32:00.000000000Z" 
+
+        isoDate = "1995-01-26T07:32:00.000000000Z"
         exptime = 123.4
         flux0, flux0Err = 1e12, 1e10
         flux, fluxErr = 1000.0, 10.0
@@ -172,13 +172,13 @@ class CalibTestCase(unittest.TestCase):
         self.assertEqual(isoDate, self.calib.getMidTime().toString())
         self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
         self.assertEqual(self.calib.getExptime(), exptime)
-        
+
         self.assertEqual(flux0, self.calib.getFluxMag0()[0])
         self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
         self.assertEqual(22.5, self.calib.getMagnitude(flux))
         # Error just in flux
         self.calib.setFluxMag0(flux0, 0)
-        
+
         self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1], 2.5/math.log(10)*fluxErr/flux)
 
         #
@@ -213,7 +213,7 @@ class CalibTestCase(unittest.TestCase):
             calibs.append(calib)
 
         ocalib = afwImage.Calib(calibs)
-        
+
         self.assertEqual(ocalib.getExptime(), ncalib*exptime)
         self.assertAlmostEqual(calibs[ncalib//2].getMidTime().get(), ocalib.getMidTime().get())
         #
@@ -243,7 +243,7 @@ class CalibTestCase(unittest.TestCase):
             for m in mags:
                 if m is not None:
                     self.assertTrue(numpy.isnan(m))
-        
+
         afwImage.Calib.setThrowOnNegativeFlux(True)
 
         for func in funcs:
@@ -304,12 +304,12 @@ class FilterTestCase(unittest.TestCase):
 
     def testCtor(self):
         """Test that we can construct a Filter"""
-        # A filter of type 
+        # A filter of type
         afwImage.Filter("g")
 
     def testCtorFromMetadata(self):
         """Test building a Filter from metadata"""
-        
+
         metadata = dafBase.PropertySet()
         metadata.add("FILTER", "g")
 
@@ -404,7 +404,7 @@ class FilterTestCase(unittest.TestCase):
 
         def tst():
             afwImage.Filter.define(g, afwImage.Filter("g").getId() + 10) # different ID
-            
+
         self.assertRaises(pexExcept.RuntimeError, tst)
 
     def testUnknownFilter(self):
@@ -416,14 +416,14 @@ class FilterTestCase(unittest.TestCase):
         # Force definition
         f = afwImage.Filter(badFilter, True)
         self.assertEqual(f.getName(), badFilter) # name is correctly defined
-        
+
         self.assertRaises(pexExcept.NotFoundError,
                                   lambda : f.getFilterProperty().getLambdaEff()) # can't use Filter f
         #
         # Now define badFilter
         #
         lambdaEff = 666.0; self.defineFilterProperty(badFilter, lambdaEff)
-        
+
         self.assertEqual(f.getFilterProperty().getLambdaEff(), lambdaEff) # but now we can
         #
         # Check that we didn't accidently define the unknown filter

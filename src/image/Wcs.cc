@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -48,7 +48,7 @@
 #include "lsst/afw/table/io/CatalogVector.h"
 #include "lsst/afw/table/aggregates.h"
 
-namespace except = lsst::pex::exceptions; 
+namespace except = lsst::pex::exceptions;
 namespace afwImg = lsst::afw::image;
 namespace afwCoord = lsst::afw::coord;
 namespace afwGeom = lsst::afw::geom;
@@ -92,7 +92,7 @@ lsst::afw::image::Wcs::Wcs() :
     _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
-    _initWcs();    
+    _initWcs();
 }
 
 
@@ -100,10 +100,10 @@ lsst::afw::image::Wcs::Wcs() :
 ///out which (if any) sub-class of Wcs is appropriate
 Wcs::Wcs(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata):
     daf::base::Citizen(typeid(this)),
-    _wcsInfo(NULL), 
-    _nWcsInfo(0), 
-    _relax(0), 
-    _wcsfixCtrl(0), 
+    _wcsInfo(NULL),
+    _nWcsInfo(0),
+    _relax(0),
+    _wcsfixCtrl(0),
     _wcshdrCtrl(0),
     _nReject(0),
     _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
@@ -160,29 +160,29 @@ void Wcs::_initWcs()
 ///
 ///\note LSST units are zero indexed while FITs units are 1 indexed. So a value of crpix stored in a fits
 ///header of 127,127 corresponds to a pixel position in LSST units of 128, 128
-Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD, 
+Wcs::Wcs(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD,
          std::string const & ctype1, std::string const & ctype2,
          double equinox, std::string const & raDecSys,
          std::string const & cunits1, std::string const & cunits2
 ):
     daf::base::Citizen(typeid(this)),
-    _wcsInfo(NULL), 
-    _nWcsInfo(0), 
-    _relax(0), 
-    _wcsfixCtrl(0), 
+    _wcsInfo(NULL),
+    _nWcsInfo(0),
+    _relax(0),
+    _wcsfixCtrl(0),
     _wcshdrCtrl(0),
     _nReject(0),
     _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
     _setWcslibParams();
-    initWcsLib(crval, crpix, CD, 
+    initWcsLib(crval, crpix, CD,
                ctype1, ctype2,
                equinox, raDecSys,
                cunits1, cunits2);
     _initWcs();
 }
-               
-    
+
+
 ///Parse a fits header, extract the relevant metadata and create a Wcs object
 void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& header){
     /// Access control for the input header
@@ -201,7 +201,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             }
             return _hackHeader;
         }
-        
+
         /// Ctor
         HeaderAccess(CONST_PTR(lsst::daf::base::PropertySet) const& header) :
             _constHeader(header), _hackHeader() {}
@@ -233,8 +233,8 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         throw LSST_EXCEPT(except::InvalidParameterError, msg);
     }
 
-    //While the standard does not insist on CRVAL and CRPIX being present, it 
-    //is almost certain their absence indicates a problem.   
+    //While the standard does not insist on CRVAL and CRPIX being present, it
+    //is almost certain their absence indicates a problem.
     //Check for CRPIX
     if( !access.toRead()->exists("CRPIX1") && !access.toRead()->exists("CRPIX1a")) {
         string msg = "Neither CRPIX1 not CRPIX1a found";
@@ -291,7 +291,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     // We own the data, and wcslib is slack about constness, so no qualms with casting away const
     char *hdrString = const_cast<char*>(metadataStr.c_str());
     //printf("wcspih string:\n%s\n", hdrString);
-    
+
     nCards = lsst::afw::formatters::countFitsHeaderCards(access.toRead()); // we may have dropped some
     int pihStatus = wcspih(hdrString, nCards, _relax, _wcshdrCtrl, &_nReject, &_nWcsInfo, &_wcsInfo);
 
@@ -299,7 +299,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
         throw LSST_EXCEPT(except::RuntimeError,
                           (boost::format("Could not parse FITS WCS: wcspih status = %d (%s)") %
                            pihStatus % wcs_errmsg[pihStatus]).str());
-    }    
+    }
 
     //Run wcsfix on _wcsInfo to try and fix any problems it knows about.
     const int *naxes = NULL;            // should be {NAXIS1, NAXIS2, ...} to check cylindrical projections
@@ -316,9 +316,9 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
             }
         }
     }
-    
+
     //The Wcs standard requires a default value for RADESYS if the keyword
-    //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code 
+    //doesn't exist in header, but wcslib doesn't set it. So we do so here. This code
     //conforms to Calabretta & Greisen 2002 \S 3.1
     if (!(access.toRead()->exists("RADESYS") || access.toRead()->exists("RADESYSa"))) {
         // If RADECSYS exists, use that (counter to Calabretta & Greisen 2002 \S 3.1, but commonly used).
@@ -362,7 +362,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
     }
 }
 
-///\brief Manually initialise a wcs struct using values passed by the constructor    
+///\brief Manually initialise a wcs struct using values passed by the constructor
 ///\param crval The sky position of the reference point
 ///\param crpix The pixel position corresponding to crval in LSST units
 ///\param CD    Matrix describing transformations from pixel to sky positions
@@ -372,7 +372,7 @@ void Wcs::initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& head
 ///\param raDecSys System used to describe right ascension or declination, e.g FK4, FK5 or ICRS
 ///\param cunits1 Units of sky position. One of deg, arcmin or arcsec
 ///\param cunits2 Units of sky position. One of deg, arcmin or arcsec
-void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD, 
+void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Matrix2d const & CD,
                      std::string const & ctype1, std::string const & ctype2,
                      double equinox, std::string const & raDecSys,
                      std::string const & cunits1, std::string const & cunits2) {
@@ -388,21 +388,21 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
     isValid |= (cunits1 == "arcmin");
     isValid |= (cunits1 == "arcsec");
     isValid |= (cunits1 == "mas");
-    
+
     if (!isValid) {
         string msg =  "CUNITS1 must be one of {deg|arcmin|arcsec|mas}";
         throw LSST_EXCEPT(except::InvalidParameterError, msg);
-    }        
+    }
 
     isValid = (cunits2 == "deg");
     isValid |= (cunits2 == "arcmin");
     isValid |= (cunits2 == "arcsec");
     isValid |= (cunits2 == "mas");
-    
+
     if (!isValid) {
         string msg =  "CUNITS2 must be one of {deg|arcmin|arcsec|mas}";
         throw LSST_EXCEPT(except::InvalidParameterError, msg);
-    }        
+    }
 
     //Initialise the wcs struct
     _wcsInfo = static_cast<struct wcsprm *>(malloc(sizeof(struct wcsprm)));
@@ -417,7 +417,7 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
                           (boost::format("Failed to allocate memory with wcsini. Status %d: %s") %
                            status % wcs_errmsg[status] ).str());
     }
-    
+
     //Set crval, crpix and CD. Internally to the class, we use fits units for consistency with
     //wcslib.
     _wcsInfo->crval[0] = crval.getX();
@@ -446,11 +446,11 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
     strncpy(_wcsInfo->ctype[1], ctype2.c_str(), STRLEN);
     strncpy(_wcsInfo->radesys, raDecSys.c_str(), STRLEN);
     _wcsInfo->equinox = equinox;
-    
+
     //Set the units
     strncpy(_wcsInfo->cunit[0], cunits1.c_str(), STRLEN);
     strncpy(_wcsInfo->cunit[1], cunits2.c_str(), STRLEN);
-    
+
     _nWcsInfo = 1;   //Specify that we have only one coordinate representation
 
     //Tell wcslib that we are need to set up internal values
@@ -465,17 +465,17 @@ void Wcs::initWcsLib(GeomPoint const & crval, GeomPoint const & crpix, Eigen::Ma
 
 
 ///Copy constructor
-Wcs::Wcs(afwImg::Wcs const & rhs) : 
+Wcs::Wcs(afwImg::Wcs const & rhs) :
     daf::base::Citizen(typeid(this)),
-    _wcsInfo(NULL), 
-    _nWcsInfo(rhs._nWcsInfo), 
-    _relax(rhs._relax), 
-    _wcsfixCtrl(rhs._wcsfixCtrl), 
+    _wcsInfo(NULL),
+    _nWcsInfo(rhs._nWcsInfo),
+    _relax(rhs._relax),
+    _wcsfixCtrl(rhs._wcsfixCtrl),
     _wcshdrCtrl(rhs._wcshdrCtrl),
     _nReject(rhs._nReject),
     _coordSystem(afwCoord::UNKNOWN)  // set by _initWcs
 {
-    
+
     if (rhs._nWcsInfo > 0) {
         _wcsInfo = static_cast<struct wcsprm *>(calloc(rhs._nWcsInfo, sizeof(struct wcsprm)));
         if (_wcsInfo == NULL) {
@@ -496,7 +496,7 @@ Wcs::Wcs(afwImg::Wcs const & rhs) :
     }
     _initWcs();
 }
-       
+
 bool Wcs::operator==(Wcs const & other) const {
     if (&other == this) return true;
     // We do a bidirectional test with a virtual member function in case one of us is a derived
@@ -561,7 +561,7 @@ Wcs::~Wcs() {
         wcsvfree(&_nWcsInfo, &_wcsInfo);
     }
 }
-    
+
 
 PTR(Wcs) Wcs::clone(void) const {
     return PTR(Wcs)(new Wcs(*this));
@@ -590,7 +590,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
 
     //If naxis != 2, I'm not sure if any of what follows is correct
     assert(naxis == 2);
-    
+
     Eigen::Matrix2d C;
 
     for (int i=0; i< naxis; ++i){
@@ -604,7 +604,7 @@ Eigen::Matrix2d Wcs::getCDMatrix() const {
 
 void Wcs::flipImage(int flipLR, int flipTB, afwGeom::Extent2I dimensions) const {
     assert(_wcsInfo);
-    
+
     int const naxis = _wcsInfo->naxis;
 
     //If naxis != 2, I'm not sure if any of what follows is correct
@@ -632,7 +632,7 @@ void Wcs::rotateImageBy90(int nQuarter, afwGeom::Extent2I dimensions) const {
         nQuarter += 4;
     }
 
-    
+
     int const naxis = _wcsInfo->naxis;
 
     //If naxis != 2, I'm not sure if any of what follows is correct
@@ -779,7 +779,7 @@ GeomPoint Wcs::skyToPixelImpl(afwGeom::Angle sky1, // RA (or, more generally, lo
 
     // wcslib assumes 1-indexed coords
     return afwGeom::Point2D(pixTmp[0] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels,
-                            pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels); 
+                            pixTmp[1] + lsst::afw::image::PixelZeroPos + fitsToLsstPixels);
 }
 
 GeomPoint Wcs::skyToPixel(lsst::afw::coord::Coord const & coord) const {
@@ -835,7 +835,7 @@ GeomPoint Wcs::skyToIntermediateWorldCoord(lsst::afw::coord::Coord const & coord
      PTR(afwCoord::Coord) crval = getSkyOrigin();
      printf("(crval is (%.3f, %.3f))\n", crval->getLongitude().asDegrees(), crval->getLatitude().asDegrees());
      */
-    return GeomPoint(imgcrd[0], imgcrd[1]); 
+    return GeomPoint(imgcrd[0], imgcrd[1]);
 }
 
 double Wcs::getEquinox() const {
@@ -859,13 +859,13 @@ void
 Wcs::pixelToSkyImpl(double pixel1, double pixel2, afwGeom::Angle skyTmp[2]) const
 {
     assert(_wcsInfo);
-    
+
     // wcslib assumes 1-indexed coordinates
     double pixTmp[2] = { pixel1 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels,
-                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels}; 
+                         pixel2 - lsst::afw::image::PixelZeroPos + lsstToFitsPixels};
     double imgcrd[2];
     double phi, theta;
-    
+
     double sky[2];
     int status = 0;
     status = wcsp2s(_wcsInfo, 1, 2, pixTmp, imgcrd, &phi, &theta, sky, &status);
@@ -1213,17 +1213,17 @@ createTrivialWcsAsPropertySet(std::string const& wcsName, ///< Name of desired W
 afwGeom::Point2I getImageXY0FromMetadata(std::string const& wcsName,            ///< the WCS to search (E.g. "A")
                                       lsst::daf::base::PropertySet *metadata ///< the metadata, maybe containing the WCS
                                      ) {
-        
+
     int x0 = 0;                         // Our value of X0
     int y0 = 0;                         // Our value of Y0
-    
+
     try {
         //
         // Only use WCS if CRPIX[12] == 1 and CRVAL[12] is present
         //
         if (metadata->getAsDouble("CRPIX1" + wcsName) == 1 &&
             metadata->getAsDouble("CRPIX2" + wcsName) == 1) {
-            
+
             x0 = metadata->getAsInt("CRVAL1" + wcsName);
             y0 = metadata->getAsInt("CRVAL2" + wcsName);
             //

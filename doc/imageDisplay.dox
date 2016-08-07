@@ -8,7 +8,7 @@ namespace lsst { namespace afw { namespace image {
  - \ref afwSecImageDisplayConfiguration
  - \ref afwSecImageDisplayMosaics
  - \ref afwSecDs9Firewall
- 
+
 \section afwSecImageDisplay  Displaying images in the LSST framework
 
 In April 2015 we restructured the image display code to be backend agnostic, while still only supporting a
@@ -114,7 +114,7 @@ afwDisplay.getDisplay(1).mtv(mi.getMask())
 
 \subsubsection afwSecImageDisplayConfiguration How to Configure the Display Device
 
-You won't need to configure the display code at all if you're happy with ds9, as it is 
+You won't need to configure the display code at all if you're happy with ds9, as it is
 the default-default backend when available (\em i.e. if you have display_ds9 setup).
 
 At some point we may add a configuration mechanism using environment variables and/or dot files,
@@ -155,7 +155,7 @@ display.mtv(mosaic)                        # display it
 m.drawLabels(["Label 1", "Label 2", "Label 3"], display) # label the panels
 
 # alternative way to build a mosaic
-images = [im1, im2, im3]               
+images = [im1, im2, im3]
 labels = ["Label 1", "Label 2", "Label 3"]
 
 mosaic = m.makeMosaic(images)

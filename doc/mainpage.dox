@@ -36,7 +36,7 @@ You can use \ref afwSecDisplay "displaying images" to display Image%s and their 
 
 %Image Pixels may be accessed via iterators or locators;
 the former are simpler if you want single-pixel access, while the latter provide
-you with access to a pixel's friends and neighbours. The following tutorials are available:   
+you with access to a pixel's friends and neighbours. The following tutorials are available:
 - \link imageIterators Image iterators\endlink
 - \link imageLocators Image locators\endlink
 - \link maskedImageIterators MaskedImage iterators\endlink

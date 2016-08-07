@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #if !defined(LSST_AFW_IMAGE_PIXEL_H)
 #define LSST_AFW_IMAGE_PIXEL_H
 
@@ -211,7 +211,7 @@ public:
     friend bool operator==(Pixel const& lhs, T1 const& rhs) {
         return lhs.image() == rhs.image() && lhs.mask() == rhs.mask() && lhs.variance() == rhs.variance();
     }
-    
+
     /// Return true iff two pixels are unequal (in at least one of image, mask, and variance)
     template<typename T1>
     friend bool operator!=(Pixel const& lhs, T1 const& rhs) {
@@ -256,7 +256,7 @@ public:
             std::divides<ImagePixelT>, bitwise_or<MaskPixelT>, variance_divides<VariancePixelT> >(tmp, e2);
         return tmp;
     }
-    
+
 private:
     ImagePixelT& _image;
     MaskPixelT& _mask;
@@ -335,7 +335,7 @@ struct bitwise_or : public std::binary_function<T1, T1, T1> {
         return x;
     }
 };
-    
+
 ///
 /// \brief Calculate the variance when we divide two Pixels
 ///
@@ -368,7 +368,7 @@ struct variance_multiplies {
         T1 const y2 = y*y;
         return x2*vy + y2*vx;
     }
-    
+
     T1 operator()(T1 const&, T1 const& y, T1 const& vx) const {
         return vx*y*y;
     }
@@ -399,7 +399,7 @@ struct variance_plus {
 ///
 template <typename T1>
 struct variance_plus_covar {
-    variance_plus_covar(double alpha=0) : _alpha(alpha) {}    
+    variance_plus_covar(double alpha=0) : _alpha(alpha) {}
 
     T1 operator()(T1 const&, T1 const&, T1 const& vx, T1 const& vy) const {
         return vx + vy + 2*_alpha*sqrt(vx*vy);
@@ -410,7 +410,7 @@ struct variance_plus_covar {
 private:
     double _alpha;
 };
-                
+
 /************************************************************************************************************/
 /// Class for representing Unary operations
 template <typename ExprT1, typename ImageBinOp, typename MaskBinOp, typename VarianceBinOp>
@@ -423,7 +423,7 @@ public:
     UnaryExpr(ExprT1 e1,
               ImageBinOp imageOp=ImageBinOp(), MaskBinOp maskOp=MaskBinOp(), VarianceBinOp varOp=VarianceBinOp()) :
         _expr1(e1), _imageOp(imageOp), _maskOp(maskOp), _varOp(varOp) {}
-    
+
     /// evaluate the %image part of the expression
     ImagePixelT image() const {
         return _imageOp(_expr1.image());
@@ -522,7 +522,7 @@ private:
     MaskBinOp _maskOp;
     VarianceBinOp _varOp;
 };
-                
+
 /************************************************************************************************************/
 /// Template for -e1
 template <typename ExprT1>

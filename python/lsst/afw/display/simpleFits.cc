@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief Write a FITS image to a file descriptor; useful for talking to DS9
@@ -27,7 +27,7 @@
  * This version knows about LSST data structures
  */
 #ifndef DOXYGEN // Doxygen doesn't like includes inside namespaces
-namespace posix {                       // here so no-one includes them first outside namespace posix {} 
+namespace posix {                       // here so no-one includes them first outside namespace posix {}
 #   include <unistd.h>
 #   include <fcntl.h>
 }
@@ -70,7 +70,7 @@ public:
     ~Card() {}
 
     int write(int fd, int ncard, char *record) const;
-    
+
     std::string keyword;
     boost::any value;
     std::string comment;
@@ -121,9 +121,9 @@ int Card::write(int fd,
             }
             ncard = 0;
     }
-   
+
     return ncard;
-}   
+}
 /// \endcond
 
 /*****************************************************************************/
@@ -221,7 +221,7 @@ namespace {
     {
         int i;
         char record[FITS_SIZE + 1];             /* write buffer */
-   
+
         int ncard = 0;
         if (primary) {
             Card card("SIMPLE", true);
@@ -230,7 +230,7 @@ namespace {
             Card card("XTENSION", "IMAGE");
             ncard = card.write(fd, ncard, record);
         }
-    
+
         {
             Card card("BITPIX", bitpix);
             ncard = card.write(fd, ncard, record);
@@ -277,10 +277,10 @@ namespace {
                            ) {
         const int bytes_per_pixel = (bitpix > 0 ? bitpix : -bitpix)/8;
         int nbyte = npixel*bytes_per_pixel;
-    
+
         if (nbyte%FITS_SIZE != 0) {
             char record[FITS_SIZE + 1]; /* write buffer */
-        
+
             nbyte = FITS_SIZE - nbyte%FITS_SIZE;
             memset(record, ' ', nbyte);
             if (write(fd, record, nbyte) != nbyte) {
@@ -309,14 +309,14 @@ namespace {
             buff = new char[FITS_SIZE*bytes_per_pixel];
             allocated = true;
         }
-    
+
         int nbyte = end - begin;
         int nwrite = (nbyte > FITS_SIZE) ? FITS_SIZE : nbyte;
         for (char *ptr = begin; ptr != end; nbyte -= nwrite, ptr += nwrite) {
             if (end - ptr < nwrite) {
                 nwrite = end - ptr;
             }
-            
+
             if (swap_bytes) {
                 memcpy(buff, ptr, nwrite);
                 if (bitpix == 16) {     // flip high-order bit
@@ -341,17 +341,17 @@ namespace {
                     buff = ptr;
                 }
             }
-            
+
             if (write(fd, buff, nwrite) != nwrite) {
                 perror("Error writing image: ");
                 break;
             }
         }
-        
+
         if (allocated) {
             delete buff;
         }
-        
+
         return (nbyte == 0 ? 0 : -1);
     }
 }
@@ -421,11 +421,11 @@ void writeBasicFits(int fd,                                      // file descrip
 
         image::Wcs::Ptr newWcs = Wcs->clone(); //Create a copy
         newWcs->shiftReferencePixel(-data.getX0(), -data.getY0());
-        
+
         lsst::daf::base::PropertySet::Ptr metadata = newWcs->getFitsMetadata();
 
         NameList paramNames = metadata->paramNames();
-        
+
         for (NameList::const_iterator i = paramNames.begin(), end = paramNames.end(); i != end; ++i) {
             if (*i == "SIMPLE" ||
                 *i == "BITPIX" ||
@@ -459,7 +459,7 @@ void writeBasicFits(int fd,                                      // file descrip
     int naxes[naxis];                   /* values of NAXIS1 etc */
     naxes[0] = data.getWidth();
     naxes[1] = data.getHeight();
-    
+
     write_fits_hdr(fd, bitpix, naxis, naxes, cards, 1);
     for (int y = 0; y != data.getHeight(); ++y) {
         if (write_fits_data(fd, bitpix, (char *)(data.row_begin(y)), (char *)(data.row_end(y))) < 0){
@@ -469,7 +469,7 @@ void writeBasicFits(int fd,                                      // file descrip
     }
 
     pad_to_fits_record(fd, data.getWidth()*data.getHeight(), bitpix);
-}   
+}
 
 /******************************************************************************/
 
@@ -522,5 +522,5 @@ INSTANTIATE_IMAGE(std::uint64_t);
 
 INSTANTIATE_MASK(std::uint16_t);
 /// \endcond
-            
+
 }}}

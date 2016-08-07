@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include "lsst/afw/geom/ellipses/Transformer.h"
@@ -62,7 +62,7 @@ BaseCore::Transformer::d() const {
     mid(1,2) = 2*transform[LinearTransform::YY]*transform[LinearTransform::YX];
     mid(2,0) = transform[LinearTransform::YX]*transform[LinearTransform::XX];
     mid(2,1) = transform[LinearTransform::YY]*transform[LinearTransform::XY];
-    mid(2,2) = transform[LinearTransform::XX]*transform[LinearTransform::YY] 
+    mid(2,2) = transform[LinearTransform::XX]*transform[LinearTransform::YY]
         + transform[LinearTransform::XY]*transform[LinearTransform::YX];
     return lhs * mid * rhs;
 }
@@ -78,13 +78,13 @@ BaseCore::Transformer::dTransform() const {
         2.0*(transform[LinearTransform::XX]*m(0,0) + transform[LinearTransform::XY]*m(0,1));
     mid(0, LinearTransform::XY) =
         2.0*(transform[LinearTransform::XX]*m(0,1) + transform[LinearTransform::XY]*m(1,1));
-    mid(1, LinearTransform::YX) = 
+    mid(1, LinearTransform::YX) =
         2.0*(transform[LinearTransform::YX]*m(0,0) + transform[LinearTransform::YY]*m(0,1));
-    mid(1, LinearTransform::YY) = 
+    mid(1, LinearTransform::YY) =
         2.0*(transform[LinearTransform::YX]*m(0,1) + transform[LinearTransform::YY]*m(1,1));
-    mid(2, LinearTransform::XX) = 
+    mid(2, LinearTransform::XX) =
         transform[LinearTransform::YX]*m(0,0) + transform[LinearTransform::YY]*m(0,1);
-    mid(2, LinearTransform::XY) = 
+    mid(2, LinearTransform::XY) =
         transform[LinearTransform::YX]*m(0,1) + transform[LinearTransform::YY]*m(1,1);
     mid(2, LinearTransform::YX) =
         transform[LinearTransform::XX]*m(0,0) + transform[LinearTransform::XY]*m(0,1);
@@ -108,7 +108,7 @@ void Ellipse::Transformer::inPlace() {
     input.getCore().transform(transform.getLinear()).inPlace();
 }
 
-Ellipse::Transformer::DerivativeMatrix 
+Ellipse::Transformer::DerivativeMatrix
 Ellipse::Transformer::d() const {
     DerivativeMatrix r = DerivativeMatrix::Zero();
     r.block<2,2>(3,3) = transform.getLinear().getMatrix();

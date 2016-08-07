@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -54,7 +54,7 @@ def sinc(x):
 
 def referenceChebyshev1(x, n):
     """Reference implementation of Chebyshev polynomials of the first kind
-    
+
     f(x) = T_n(x)
     """
     # from Wikipedia
@@ -66,7 +66,7 @@ def referenceChebyshev1(x, n):
 
 def referenceChebyshev1Polynomial1(x, params):
     """Reference implementation of a 1-D polynomial of Chebyshev polynomials of the first kind
-    
+
     f(x) = params[0] T_0(x) + params[1] T_1(x) + params[2] T_2(x)
     """
     retVal = 0.0
@@ -76,7 +76,7 @@ def referenceChebyshev1Polynomial1(x, params):
 
 def referenceChebyshev1Polynomial2(x, y, params):
     """Reference implementation of a 2-D polynomial of Chebyshev polynomials of the first kind
-    
+
     f(x) =   params[0] T_0(x) T_0(y)                                                        # order 0
            + params[1] T_1(x) T_0(y) + params[2] T_0(x) T_1(y)                              # order 1
            + params[3] T_2(x) T_0(y) + params[4] T_1(x) T_1(y) + params[5] T_0(x) T_2(y)    # order 2
@@ -107,7 +107,7 @@ class FunctionTestCase(unittest.TestCase):
         ranges = ((-1, 1), (-1, 0), (0, 1), (-17, -2), (-65.3, 2.132))
         rangeIter = itertools.cycle(ranges)
         nPoints = 9
-        
+
         for order in range(maxOrder + 1):
             xMin, xMax = rangeIter.next()
             xMean = (xMin + xMax) / 2.0
@@ -119,9 +119,9 @@ class FunctionTestCase(unittest.TestCase):
             f.setParameters(params)
             g = afwMath.Chebyshev1Function1D(params, xMin, xMax)
             h = f.clone()
-            
+
             self.assertEqual(f.getNParameters(), g.getNParameters())
-            
+
             self.assertEqual(f.getMinX(), xMin)
             self.assertEqual(f.getMaxX(), xMax)
             self.assertEqual(f.getOrder(), order)
@@ -167,7 +167,7 @@ class FunctionTestCase(unittest.TestCase):
         yRangeIter = itertools.cycle(ranges)
         yRangeIter.next() # make x and y ranges off from each other
         nPoints = 7 # number of points in x and y at which to test the functions
-        
+
         for order in range(maxOrder + 1):
             xMin, xMax = xRangeIter.next()
             xMean = (xMin + xMax) / 2.0
@@ -185,10 +185,10 @@ class FunctionTestCase(unittest.TestCase):
             f.setParameters(params)
             g = afwMath.Chebyshev1Function2D(params, xyRange)
             h = f.clone()
-            
+
             self.assertEqual(f.getNParameters(), g.getNParameters())
             self.assertEqual(f.getNParameters(), h.getNParameters())
-            
+
             self.assertEqual(f.getXYRange(), xyRange)
             self.assertEqual(f.getOrder(), order)
 
@@ -247,7 +247,7 @@ class FunctionTestCase(unittest.TestCase):
             predNParams = numParamsFromOrder(order)
             self.assertEqual(f.getNParameters(), predNParams)
             afwMath.Chebyshev1Function2D(numpy.zeros(predNParams, dtype=float))
-        
+
         # test that the wrong number of parameters raises an exception
         validNumParams = set()
         for order in range(MaxOrder+1):
@@ -256,7 +256,7 @@ class FunctionTestCase(unittest.TestCase):
             if numParams in validNumParams:
                 continue
             self.assertRaises(Exception, afwMath.Chebyshev1Function2D, numpy.zeros(numParams, dtype=float))
-        
+
         # test that changing parameters clears the cache
         # for simplicity use the xyRange that requires no normalization
         order = 3
@@ -272,7 +272,7 @@ class FunctionTestCase(unittest.TestCase):
             if not numpy.allclose(predVal, f(x, y)):
                 self.fail("%s = %s != %s for x=%s, y=%s, params=%s" % \
                     (type(f).__name__, f(x, y), predVal, x, y, params))
-    
+
     def testChebyshev1Function2DTruncate(self):
         """A test for Chebyshev1Function2D.truncate"""
         maxOrder = 6
@@ -282,7 +282,7 @@ class FunctionTestCase(unittest.TestCase):
         yRangeIter = itertools.cycle(ranges)
         yRangeIter.next() # make x and y ranges off from each other
         nPoints = 7 # number of points in x and y at which to test the functions
-        
+
         for order in range(maxOrder + 1):
             xMin, xMax = xRangeIter.next()
             xMean = (xMin + xMax) / 2.0
@@ -291,13 +291,13 @@ class FunctionTestCase(unittest.TestCase):
             yMin, yMax = yRangeIter.next()
             yMean = (yMin + yMax) / 2.0
             yDelta = (yMax - yMin) / float(nPoints - 1)
-            
+
             xyRange = afwGeom.Box2D(afwGeom.Point2D(xMin, yMin), afwGeom.Point2D(xMax, yMax))
 
             fullNParams = afwMath.Chebyshev1Function2D.nParametersFromOrder(order)
             fullParams = nrange(fullNParams, deltaParam, deltaParam)
             fullPoly = afwMath.Chebyshev1Function2D(fullParams, xyRange)
-            
+
             for tooBigTruncOrder in range(order + 1, order + 3):
                 self.assertRaises(Exception, fullPoly.truncate, tooBigTruncOrder)
 
@@ -309,15 +309,15 @@ class FunctionTestCase(unittest.TestCase):
                 self.assertEqual(f.getNParameters(), truncNParams)
 
                 g = afwMath.Chebyshev1Function2D(fullParams[0:truncNParams], xyRange)
-                
+
                 self.assertEqual(f.getNParameters(), g.getNParameters())
-                
+
                 self.assertEqual(f.getOrder(), truncOrder)
                 self.assertEqual(f.getXYRange(), xyRange)
-    
+
                 self.assertEqual(g.getOrder(), truncOrder)
                 self.assertEqual(g.getXYRange(), xyRange)
-    
+
                 minXNorm = None
                 maxXNorm = None
                 for x in numpy.arange(xMin, xMax + xDelta/2.0, xDelta):
@@ -326,7 +326,7 @@ class FunctionTestCase(unittest.TestCase):
                         minXNorm = xNorm
                     if maxXNorm == None or xNorm > maxXNorm:
                         maxXNorm = xNorm
-    
+
                     minYNorm = None
                     maxYNorm = None
                     for y in numpy.arange(yMin, yMax + yDelta/2.0, yDelta):
@@ -335,27 +335,27 @@ class FunctionTestCase(unittest.TestCase):
                             minYNorm = yNorm
                         if maxYNorm == None or yNorm > maxYNorm:
                             maxYNorm = yNorm
-    
+
                             if not numpy.allclose(f(x, y), g(x, y)):
                                 self.fail(
     "%s = %s != %s = %s for x=%s, xMin=%s, xMax=%s, xNorm=%s, yMin=%s, yMax=%s, yNorm=%s, truncParams=%s; order constructor" % \
     (type(f).__name__, f(x, y), g(x, y), type(g).__name__, x, xMin, xMax, xNorm, yMin, yMax, yNorm, truncParams))
-    
+
                     if not numpy.allclose((minYNorm, maxYNorm), (-1.0, 1.0)):
                         raise RuntimeError(
                             "Invalid y normalization: yMin=%s, yMax=%s, min/max yNorm=(%s, %s) != (-1, 1)" %
                             (yMin, yMax, minYNorm, maxYNorm))
-    
+
                 if not numpy.allclose((minXNorm, maxXNorm), (-1.0, 1.0)):
                     raise RuntimeError(
                         "Invalid x normalization: xMin=%s, xMax=%s, min/max xNorm=(%s, %s) != (-1, 1)" %
                         (xMin, xMax, minXNorm, maxXNorm))
-        
+
     def testGaussianFunction1D(self):
         """A test for GaussianFunction1D"""
         def basicGaussian(x, sigma):
             return (1.0 / (sigma * math.sqrt(2 * math.pi))) * math.exp(-x**2 / (2.0 * sigma**2))
-        
+
         f = afwMath.GaussianFunction1D(1.0)
         for xsigma in (0.1, 1.0, 3.0):
             f.setParameters((xsigma,))
@@ -413,7 +413,7 @@ class FunctionTestCase(unittest.TestCase):
                     if not numpy.allclose(approxArea, 1.0):
                         self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
                             (type(f).__name__, approxArea, sigma1, sigma2))
-    
+
     def testDoubleGaussianFunction2D(self):
         """A test for DoubleGaussianFunction2D
         Assumes GaussianFunction2D is correct (tested elsewhere)
@@ -450,12 +450,12 @@ class FunctionTestCase(unittest.TestCase):
                     if not numpy.allclose(approxArea, 1.0):
                         self.fail("%s area = %s != 1.0 for sigma1=%s, sigma2=%s" % \
                             (type(f).__name__, approxArea, sigma1, sigma2))
-    
+
     def testIntegerDeltaFunction2D(self):
         """A test for IntegerDeltaFunction2D"""
         def basicDelta(x, xo):
             return (x == xo)
-        
+
         for xo in numpy.arange(-5.0, 5.0, 1.0):
             for yo in numpy.arange(-5.0, 5.0, 1.0):
                 f = afwMath.IntegerDeltaFunction2D(xo, yo)
@@ -469,17 +469,17 @@ class FunctionTestCase(unittest.TestCase):
                         if predVal != g(x, y):
                             self.fail("%s = %s != %s for x=%s, y=%s, xo=%s, yo=%s; clone" % \
                                 (type(g).__name__, g(x, y), predVal, x, y, xo, yo))
-    
+
     def testLanczosFunction1D(self):
         """A test for LanczosFunction1D"""
         def basicLanczos1(x, n):
             return sinc(x) * sinc(x / float(n))
-        
+
         for n in range(1, 5):
             f = afwMath.LanczosFunction1D(n)
             self.assertEquals(f.getOrder(), n)
 
-            
+
             for xOffset in (-10.0, 0.0, 0.05):
                 f.setParameters((xOffset,))
                 g = f.clone()
@@ -515,15 +515,15 @@ class FunctionTestCase(unittest.TestCase):
                             predVal = basicLanczos1(xAdj, n) * basicLanczos1(yAdj, n)
                             if not numpy.allclose(predVal, f(x, y)):
                                 self.fail("%s = %s != %s for n=%s, x=%s, " +
-                                          "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" % 
+                                          "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s" %
                                           (type(f).__name__, f(x, y), predVal, n, x,
                                            xOffset, yOffset, xAdj, yAdj))
                             if not numpy.allclose(predVal, g(x, y)):
                                 self.fail("%s = %s != %s for n=%s, x=%s, " +
-                                          "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s; clone" % 
+                                          "xOffset=%s, yOffset=%s, xAdj=%s, yAdj=%s; clone" %
                                           (type(g).__name__, g(x, y), predVal, n, x,
                                            xOffset, yOffset, xAdj, yAdj))
-       
+
     def testPolynomialFunction1D(self):
         """A test for PolynomialFunction1D
         """
@@ -535,7 +535,7 @@ class FunctionTestCase(unittest.TestCase):
                 ii -= 1
                 retVal = retVal * x + params[ii]
             return retVal
-        
+
         maxOrder = 4
         deltaParam = 0.3
 
@@ -547,10 +547,10 @@ class FunctionTestCase(unittest.TestCase):
             g = afwMath.PolynomialFunction1D(order)
             g.setParameters(params)
             h = f.clone()
-            
+
             self.assertEqual(f.getOrder(), order)
             self.assertEqual(g.getOrder(), order)
-            
+
             for x in numpy.arange(-10.0, 10.1, 1.0):
                 predVal = basic1DPoly(x, params)
                 if not numpy.allclose(predVal, f(x)):
@@ -582,10 +582,10 @@ class FunctionTestCase(unittest.TestCase):
                             raise RuntimeError("invalid # params=%d" % (numParams,))
                         return retVal
                 order += 1
-        
+
         numParamsList = (1, 3, 6, 10)
         deltaParam = 0.3
-        
+
         # test function values
         for order, numParams in enumerate(numParamsList):
             params = nrange(numParams, deltaParam, deltaParam)
@@ -596,7 +596,7 @@ class FunctionTestCase(unittest.TestCase):
 
             self.assertEqual(f.getOrder(), order)
             self.assertEqual(g.getOrder(), order)
-            
+
             # vary x in the inner loop to exercise the caching
             for y in numpy.arange(-10.0, 10.1, 2.5):
                 for x in numpy.arange(-10.0, 10.1, 2.5):
@@ -610,7 +610,7 @@ class FunctionTestCase(unittest.TestCase):
                     if not numpy.allclose(predVal, h(x, y)):
                         self.fail("%s = %s != %s for x=%s, y=%s, params=%s; clone" % \
                             (type(h).__name__, h(x, y), predVal, x, y, params))
-        
+
         # test that the number of parameters is correct for the given order
         def numParamsFromOrder(order):
             return (order + 1) * (order + 2) // 2
@@ -620,7 +620,7 @@ class FunctionTestCase(unittest.TestCase):
             predNParams = numParamsFromOrder(order)
             self.assertEqual(f.getNParameters(), predNParams)
             afwMath.PolynomialFunction2D(numpy.zeros(predNParams, dtype=float))
-        
+
         # test that the wrong number of parameters raises an exception
         validNumParams = set()
         for order in range(MaxOrder+1):
@@ -629,7 +629,7 @@ class FunctionTestCase(unittest.TestCase):
             if numParams in validNumParams:
                 continue
             self.assertRaises(Exception, afwMath.PolynomialFunction2D, numpy.zeros(numParams, dtype=float))
-        
+
         # test that changing parameters clears the cache
         order = 3
         numParams = numParamsFromOrder(order)
@@ -695,7 +695,7 @@ class FunctionTestCase(unittest.TestCase):
             derived = Class.cast(base)
             self.assertEqual(type(derived), Class)
 
-            
+
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

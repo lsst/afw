@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /// \file
 /// \brief Implementations of Mask class methods
 
@@ -117,11 +117,11 @@ namespace {
         bool empty() const {
             return _dict.empty();
         }
-        
+
         void clear() {
             _dict.clear();
         }
-        
+
         std::size_t size() const {
             return _dict.size();
         }
@@ -136,7 +136,7 @@ namespace {
         detail::MaskPlaneDict const& getMaskPlaneDict() const {
             return _dict;
         }
-        
+
         std::size_t getHash() const {
             return _hash;
         }
@@ -153,7 +153,7 @@ namespace {
             }
 
             return _hash;
-        }        
+        }
     };
 
     bool operator!=(MapWithHash const& lhs, MapWithHash const& rhs) {
@@ -237,7 +237,7 @@ namespace {
 
             if (first) {
                 setInitMaskBits(_defaultMaskDict);
-                
+
                 first = false;
             }
 
@@ -253,11 +253,11 @@ namespace {
         void addDict(MapWithHash *dict) {
             _dicts[dict] = _dictCounter++;
         }
-            
+
         void eraseDict(MapWithHash *dict) {
             _dicts.erase(dict);
         }
-        
+
         PTR(detail::MaskDict) incrDefaultVersion() {
             _defaultMaskDict = PTR(detail::MaskDict)(new detail::MaskDict(*_defaultMaskDict.get()));
             addDict(_defaultMaskDict.get());
@@ -307,10 +307,10 @@ MaskDict::setDefaultDict(PTR(MaskDict) dict)
 {
     return _state.setDefaultDict(dict);
 }
-            
+
 PTR(MaskDict) MaskDict::clone() const {
     PTR(MaskDict) dict(new MaskDict(*this));
-    
+
     _state.addDict(dict.get());
 
     return dict;
@@ -341,7 +341,7 @@ MaskDict::getUnusedPlane() const
                         );
     assert(it != end());
     int id = it->second + 1;        // The maskPlane to use if there are no gaps
-        
+
     for (int i = 0; i < id; ++i) {
         MapWithHash::const_iterator const it = // is i already used in this Mask?
             std::find_if(begin(), end(), std::bind(std::equal_to<int>(),
@@ -359,7 +359,7 @@ int
 detail::MaskDict::getMaskPlane(const std::string& name) const
 {
     MapWithHash::const_iterator i = find(name);
-    
+
     return (i == end()) ? -1 : i->second;
 }
 }
@@ -378,9 +378,9 @@ namespace {
         dict->add("BAD", ++i);
         dict->add("SAT", ++i);           // should be SATURATED
         dict->add("INTRP", ++i);         // should be INTERPOLATED
-        dict->add("CR", ++i);            // 
-        dict->add("EDGE", ++i);          // 
-        dict->add("DETECTED", ++i);      // 
+        dict->add("CR", ++i);            //
+        dict->add("EDGE", ++i);          //
+        dict->add("DETECTED", ++i);      //
         dict->add("DETECTED_NEGATIVE", ++i);
         dict->add("SUSPECT", ++i);
         dict->add("NO_DATA", ++i);
@@ -530,7 +530,7 @@ template<typename MaskPixelT>
 Mask<MaskPixelT>& Mask<MaskPixelT>::operator=(const Mask<MaskPixelT>& rhs) {
     Mask tmp(rhs);
     swap(tmp);                        // See Meyers, Effective C++, Item 11
-    
+
     return *this;
 }
 
@@ -580,11 +580,11 @@ Mask<MaskPixelT>::Mask(
     ImageOrigin const origin,
     bool const conformMasks
 ) :
-    ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict()) 
+    ImageBase<MaskPixelT>(), _maskDict(detail::MaskDict::makeMaskDict())
 {
     // These are the permitted input file types
     typedef boost::mpl::vector<
-        unsigned char, 
+        unsigned char,
         unsigned short,
         short
     >fits_mask_types;
@@ -596,13 +596,13 @@ Mask<MaskPixelT>::Mask(
     fits_read_image<fits_mask_types>(fitsfile, *this, *metadata, bbox, origin);
 
     // look for mask planes in the file
-    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata); 
+    MaskPlaneDict fileMaskDict = parseMaskPlaneMetadata(metadata);
     PTR(detail::MaskDict) fileMD = detail::MaskDict::makeMaskDict(fileMaskDict);
 
     if (*fileMD == *detail::MaskDict::makeMaskDict()) { // file is already consistent with Mask
         return;
     }
-    
+
     if (conformMasks) {                 // adopt the definitions in the file
         _maskDict = detail::MaskDict::setDefaultDict(fileMD);
     }
@@ -660,7 +660,7 @@ void Mask<MaskPixelT>::writeFits(
 namespace {
     struct addPlaneFunctor {
         addPlaneFunctor(std::string const& name, int id) : _name(name), _id(id) {}
-        
+
         void operator()(MapWithHash *dict) {
             detail::MaskPlaneDict::const_iterator const it = // is id already used in this Mask?
                 std::find_if(dict->begin(), dict->end(),
@@ -670,7 +670,7 @@ namespace {
             if (it != dict->end()) {          // mask plane is already in use
                 return;
             }
-            
+
             if (dict->find(_name) == dict->end()) { // not already set
                 dict->add(_name, _id);
             }
@@ -713,7 +713,7 @@ int Mask<MaskPixelT>::addMaskPlane(const std::string& name)
                           str(boost::format("Max number of planes (%1%) already used") % getNumPlanesMax()));
     }
 
-    _state.forEachMaskDict(addPlaneFunctor(name, id));    
+    _state.forEachMaskDict(addPlaneFunctor(name, id));
 
     return id;
 }
@@ -803,7 +803,7 @@ MaskPixelT Mask<MaskPixelT>::getBitMaskNoThrow(int planeId) {
 template<typename MaskPixelT>
 MaskPixelT Mask<MaskPixelT>::getBitMask(int planeId) {
     MaskPlaneDict const& mpd = _maskPlaneDict()->getMaskPlaneDict();
-    
+
     for (MaskPlaneDict::const_iterator i = mpd.begin(); i != mpd.end(); ++i) {
         if (planeId == i->second) {
             MaskPixelT const bitmask = getBitMaskNoThrow(planeId);
@@ -825,7 +825,7 @@ MaskPixelT Mask<MaskPixelT>::getBitMask(int planeId) {
 template<typename MaskPixelT>
 int Mask<MaskPixelT>::getMaskPlane(const std::string& name) {
     int const plane = getMaskPlaneNoThrow(name);
-    
+
     if (plane < 0) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError,
                           str(boost::format("Invalid mask plane name: %s") % name));
@@ -938,7 +938,7 @@ void Mask<MaskPixelT>::conformMaskPlanes(
             if (canonicalPlaneNumber < 0) {                  // no such plane; add it
                 canonicalPlaneNumber = addMaskPlane(name);
             }
-        
+
             if (canonicalPlaneNumber == currentPlaneNumber) {
                 keepBitmask |= getBitMask(canonicalPlaneNumber); // bit is unchanged, so preserve it
             } else {
@@ -1055,7 +1055,7 @@ void Mask<MaskPixelT>::checkMaskDictionaries(Mask<MaskPixelT> const &other) {
     if (*_maskDict != *other._maskDict) {
         throw LSST_EXCEPT(pexExcept::RuntimeError, "Mask dictionaries do not match");
     }
-}        
+}
 
 /**
  * \brief OR a bitmask into a Mask
@@ -1139,7 +1139,7 @@ template<typename MaskPixelT>
 void Mask<MaskPixelT>::setMaskPlaneValues(int const planeId,
                                                     int const x0, int const x1, int const y) {
     MaskPixelT const bitMask = getBitMask(planeId);
-    
+
     for (int x = x0; x <= x1; x++) {
         operator()(x, y) = operator()(x, y) | bitMask;
     }
@@ -1202,7 +1202,7 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
             MaskPlaneDict::const_iterator plane = newDict.find(planeName);
             if (plane != newDict.end() && planeId != plane->second) {
                throw LSST_EXCEPT(pexExcept::RuntimeError,
-                                 "File specifies plane " + planeName + " twice"); 
+                                 "File specifies plane " + planeName + " twice");
             }
             for (MaskPlaneDict::const_iterator j = newDict.begin(); j != newDict.end(); ++j) {
                 if (planeId == j->second) {
@@ -1218,7 +1218,7 @@ typename Mask<MaskPixelT>::MaskPlaneDict Mask<MaskPixelT>::parseMaskPlaneMetadat
                                   str(boost::format("Max number of planes (%1%) already used") %
                                       getNumPlanesMax()));
             }
-            newDict[planeName] = planeId; 
+            newDict[planeName] = planeId;
         }
     }
     return newDict;

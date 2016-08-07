@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2014 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_MATH_AFFINE_TRANSFORM_H
 #define LSST_AFW_MATH_AFFINE_TRANSFORM_H
 
@@ -90,30 +90,30 @@ public:
     AffineTransform() : _linear(), _translation() {}
 
     /** Construct an AffineTransform from a 3x3 matrix. */
-    explicit AffineTransform(Eigen::Matrix3d const & matrix) 
-      : _linear(matrix.block<2,2>(0,0)), 
-        _translation(matrix.block<2,1>(0,2)) 
+    explicit AffineTransform(Eigen::Matrix3d const & matrix)
+      : _linear(matrix.block<2,2>(0,0)),
+        _translation(matrix.block<2,1>(0,2))
     {}
 
     /** Construct an AffineTransform with no translation from a 2x2 matrix. */
-    explicit AffineTransform(Eigen::Matrix2d const & linear) 
+    explicit AffineTransform(Eigen::Matrix2d const & linear)
       : _linear(linear), _translation() {}
 
     /** Construct a translation-only AffineTransform from a vector. */
-    explicit AffineTransform(Eigen::Vector2d const & translation) 
+    explicit AffineTransform(Eigen::Vector2d const & translation)
       : _linear(), _translation(translation) {}
 
     /** Construct an AffineTransform from a 2x2 matrix and vector. */
     explicit AffineTransform(
         Eigen::Matrix2d const & linear, Eigen::Vector2d const & translation
     ) : _linear(linear), _translation(translation) {}
-    
+
     /** Construct an AffineTransform from a LinearTransform. */
-    explicit AffineTransform(LinearTransform const & linear) 
+    explicit AffineTransform(LinearTransform const & linear)
       : _linear(linear), _translation() {}
 
     /** Construct a translation-only AffineTransform from an Extent2D. */
-    explicit AffineTransform(Extent2D const & translation) 
+    explicit AffineTransform(Extent2D const & translation)
       : _linear(), _translation(translation) {}
 
     /** Construct an AffineTransform from a LinearTransform and Extent2D. */
@@ -128,21 +128,21 @@ public:
     bool isIdentity() const { return getMatrix().isIdentity(); }
 
 
-    /** 
-     * Transform a Point object. 
+    /**
+     * Transform a Point object.
      *
      * The result is affected by the translation parameters of the transform
      */
-    Point2D operator()(Point2D const &p) const {         
+    Point2D operator()(Point2D const &p) const {
         return Point2D(_linear(p) + _translation);
     }
 
     /**
-     * Transform an Extent object. 
+     * Transform an Extent object.
      *
      * The result is unaffected by the translation parameters of the transform
      */
-    Extent2D operator()(Extent2D const &p) const {         
+    Extent2D operator()(Extent2D const &p) const {
         return Extent2D(_linear(p));
     }
 
@@ -153,15 +153,15 @@ public:
     LinearTransform & getLinear() {return _linear;}
 
     Matrix const getMatrix() const;
-    
+
     ParameterVector const getParameterVector() const;
     void setParameterVector(ParameterVector const & vector);
 
-    double & operator[](int i) { 
-        return (i < 4) ? _linear[i] : _translation[i - 4]; 
+    double & operator[](int i) {
+        return (i < 4) ? _linear[i] : _translation[i - 4];
     }
-    double operator[](int i) const { 
-        return (i < 4) ? _linear[i] : _translation[i - 4]; 
+    double operator[](int i) const {
+        return (i < 4) ? _linear[i] : _translation[i - 4];
     }
 
     /**
@@ -192,12 +192,12 @@ public:
      *     \end{array}\right]
      *  \f$
      */
-    static AffineTransform makeScaling(double s) { 
+    static AffineTransform makeScaling(double s) {
         return AffineTransform(LinearTransform::makeScaling(s));
     }
 
     /**
-     *  \brief Construct a new AffineTransform that represents a non-uniform 
+     *  \brief Construct a new AffineTransform that represents a non-uniform
      *  scaling.
      *
      *  \return An AffineTransform with matrix
@@ -209,7 +209,7 @@ public:
      *     \end{array}\right]
      *  \f$
      */
-    static AffineTransform makeScaling(double s, double t) { 
+    static AffineTransform makeScaling(double s, double t) {
         return AffineTransform(LinearTransform::makeScaling(s, t));
     }
     /**
@@ -240,7 +240,7 @@ public:
      *     \end{array}\right]
      *  \f$
      */
-    static AffineTransform makeTranslation(Extent2D translation) { 
+    static AffineTransform makeTranslation(Extent2D translation) {
         return AffineTransform(translation);
     }
 

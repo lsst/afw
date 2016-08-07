@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -149,7 +149,7 @@ class ImageTestCase(unittest.TestCase):
     def testAddImages(self):
         self.image2 += self.image1
         self.image1 += self.val1
-        
+
         self.assertEqual(self.image1.get(0, 0), 2*self.val1)
         self.assertEqual(self.image2.get(0, 0), self.val1 + self.val2)
 
@@ -257,13 +257,13 @@ class ImageTestCase(unittest.TestCase):
     def testAddScaledImages(self):
         c = 10.0
         self.image1.scaledPlus(c, self.image2)
-        
+
         self.assertEqual(self.image1.get(0, 0), self.val1 + c*self.val2)
-    
+
     def testSubtractImages(self):
         self.image2 -= self.image1
         self.image1 -= self.val1
-        
+
         self.assertEqual(self.image1.get(0, 0), 0)
         self.assertEqual(self.image2.get(0, 0), self.val2 - self.val1)
 
@@ -273,14 +273,14 @@ class ImageTestCase(unittest.TestCase):
         for j in range(self.image1.getHeight()):
             for i in range(self.image1.getWidth()):
                 self.assertEqual(self.image1.get(i, j), self.val1 - self.function(i, j))
-    
+
     def testArithmeticImagesMismatch(self):
         "Test arithmetic operations on Images of different sizes"
         i1 = afwImage.ImageF(100, 100)
         i1.set(100)
         i2 = afwImage.ImageF(10, 10)
         i2.set(10)
-        
+
         def tst1(i1, i2):
             i1 -= i2
         def tst2(i1, i2):
@@ -306,43 +306,43 @@ class ImageTestCase(unittest.TestCase):
         for tst in tsts21:
             self.assertRaises(lsst.pex.exceptions.LengthError, tst, i2, i1)
 
-        
+
     def testSubtractScaledImages(self):
         c = 10.0
         self.image1.scaledMinus(c, self.image2)
-        
+
         self.assertEqual(self.image1.get(0, 0), self.val1 - c*self.val2)
-    
+
     def testMultiplyImages(self):
         self.image2 *= self.image1
         self.image1 *= self.val1
-        
+
         self.assertEqual(self.image1.get(0, 0), self.val1*self.val1)
         self.assertEqual(self.image2.get(0, 0), self.val2*self.val1)
-    
+
     def testMultiplesScaledImages(self):
         c = 10.0
         self.image1.scaledMultiplies(c, self.image2)
-        
+
         self.assertEqual(self.image1.get(0, 0), self.val1 * c*self.val2)
-    
+
     def testDivideImages(self):
         self.image2 /= self.image1
         self.image1 /= self.val1
-        
+
         self.assertEqual(self.image1.get(0, 0), 1)
         self.assertEqual(self.image2.get(0, 0), self.val2/self.val1)
-    
+
     def testDividesScaledImages(self):
         c = 10.0
         self.image1.scaledDivides(c, self.image2)
-        
+
         self.assertAlmostEqual(self.image1.get(0, 0), self.val1/(c*self.val2))
-    
+
     def testCopyConstructors(self):
         dimage = afwImage.ImageF(self.image1, True) # deep copy
         simage = afwImage.ImageF(self.image1) # shallow copy
-        
+
         self.image1 += 2                # should only change dimage
         self.assertEqual(dimage.get(0, 0), self.val1)
         self.assertEqual(simage.get(0, 0), self.val1 + 2)
@@ -355,10 +355,10 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(imageU.get(0, 0), self.val1)
         self.assertEqual(imageF.get(0, 0), self.val1)
         self.assertEqual(imageD.get(0, 0), self.val1)
-            
+
     def checkImgPatch(self, img, x0=0, y0=0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0)"""
-        
+
         self.assertEqual(img.get(x0 - 1, y0 - 1), self.val1)
         self.assertEqual(img.get(x0,     y0),     666)
         self.assertEqual(img.get(x0 + 3, y0),     self.val1)
@@ -371,7 +371,7 @@ class ImageTestCase(unittest.TestCase):
 
         im = afwImage.ImageF(10, 20)
         x0 = y0 = 0
-        
+
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
         self.assertEqual(im.getXY0(), afwGeom.Point2I(x0, y0))
@@ -390,13 +390,13 @@ class ImageTestCase(unittest.TestCase):
 
     def testSubimages(self):
         simage1 = afwImage.ImageF(
-            self.image1, 
+            self.image1,
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL)
-        
-        
+
+
         simage = afwImage.ImageF(
-                simage1, 
+                simage1,
                 afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
                 afwImage.LOCAL
         )
@@ -419,14 +419,14 @@ class ImageTestCase(unittest.TestCase):
         #printImg(afwImage.ImageF(self.image1, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         simage1 = afwImage.ImageF(
-            self.image1, 
+            self.image1,
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
         )
         simage1.setXY0(afwGeom.Point2I(0, 0)) # reset origin; doesn't affect pixel coordinate systems
 
         simage = afwImage.ImageF(
-            simage1, 
+            simage1,
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
             afwImage.LOCAL
         )
@@ -438,14 +438,14 @@ class ImageTestCase(unittest.TestCase):
         simage[:] = image2
         del simage
         del image2
-        
+
         self.checkImgPatch(self.image1, 2, 2)
         self.checkImgPatch(simage1, 1, 1)
 
     def testBadSubimages(self):
         def tst():
             afwImage.ImageF(
-                self.image1, 
+                self.image1,
                 afwGeom.Box2I(afwGeom.Point2I(1, -1), afwGeom.Extent2I(10, 5)),
                 afwImage.LOCAL
             )
@@ -522,7 +522,7 @@ class ImageTestCase(unittest.TestCase):
         """Test that clone works properly"""
         im = afwImage.ImageF(10, 20)
         im[0, 0] = 100
-        
+
         im2 = im.clone()                # check that clone with no arguments makes a deep copy
         self.assertEqual(im.getDimensions(), im2.getDimensions())
         self.assertEqual(im.get(0,0), im2.get(0,0))
@@ -534,7 +534,7 @@ class ImageTestCase(unittest.TestCase):
         self.assertEqual(im.get(0,0), im2.get(0,0))
         im2[0,0] += 10
         self.assertNotEqual(float(im[0,0]), float(im2[0,0])) # equivalent to im.get(0, 0) etc.
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class DecoratedImageTestCase(unittest.TestCase):
@@ -567,7 +567,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         self.assertEqual(dimage.getWidth(), self.width)
         self.assertEqual(dimage.getHeight(), self.height)
         self.assertEqual(dimage.getImage().get(0, 0), self.val1)
-    
+
     def testCopyConstructors(self):
         dimage = afwImage.DecoratedImageF(self.dimage1, True) # deep copy
         self.dimage1.getImage().set(0, 0, 1 + 2*self.val1)
@@ -580,7 +580,7 @@ class DecoratedImageTestCase(unittest.TestCase):
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testReadFits(self):
         """Test reading FITS files"""
-        
+
         hdus = {}
         hdus["img"] = 2 # an S16 fits HDU
         hdus["msk"] = 3 # an U8 fits HDU
@@ -679,7 +679,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         bbox    = afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(5, 5))
         subImage = image.Factory(image, bbox)
         subImageF = subImage.convertFloat()
-        
+
         if display:
             ds9.mtv(subImage, frame=0, title="subImage")
             ds9.mtv(subImageF, frame=1, title="converted subImage")

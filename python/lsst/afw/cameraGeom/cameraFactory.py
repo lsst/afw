@@ -60,7 +60,7 @@ def makeOrientation(detectorConfig):
     pitch = afwGeom.Angle(detectorConfig.pitchDeg, afwGeom.degrees)
     roll = afwGeom.Angle(detectorConfig.rollDeg, afwGeom.degrees)
     return Orientation(offset, refPos, yaw, pitch, roll)
-    
+
 def makeTransformDict(transformConfigDict):
     """!Make a dictionary of CameraSys: lsst.afw.geom.XYTransform from a config dict.
 

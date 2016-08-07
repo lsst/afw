@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include <type_traits>
@@ -41,7 +41,7 @@ class Footprint;
  * @brief Flatten the first two dimensions of an array
  *
  * Use this footprint to map 2-D points in the source to 1-D position in
- * the destination. This forces a deep copy of the relevant parts of the 
+ * the destination. This forces a deep copy of the relevant parts of the
  * source.
  *
  * @param[in]  fp      footprint to operate on
@@ -52,7 +52,7 @@ class Footprint;
  *
  * For example,
  \code
- flattenArray(foot, image.getArray(), array, image.getXY0()); 
+ flattenArray(foot, image.getArray(), array, image.getXY0());
  \endcode
  */
 template <typename T, typename U, int N, int C, int D>
@@ -67,7 +67,7 @@ void flattenArray(
  * @brief Flatten the first two dimensions of an array
  *
  * Use this footprint to map 2-D points in the source to 1-D position in
- * the destination. This forces a deep copy of the relevant parts of the 
+ * the destination. This forces a deep copy of the relevant parts of the
  * source.
  *
  * @param[in]  fp      footprint to operate on
@@ -79,8 +79,8 @@ void flattenArray(
  *
  * For example,
  \code
- flattenArray(foot, image.getArray(), array, pixelOp(), image.getXY0()); 
- \endcode 
+ flattenArray(foot, image.getArray(), array, pixelOp(), image.getXY0());
+ \endcode
  */
 template <typename T, typename U, int N, int C, int D, typename PixelOpT>
 void flattenArray(
@@ -104,9 +104,9 @@ void flattenArray(
  *
  * For example,
  \code
- array = flattenArray(foot, image.getArray(), image.getXY0()); 
+ array = flattenArray(foot, image.getArray(), image.getXY0());
  \endcode
- */     
+ */
 template <typename T, int N, int C>
 ndarray::Array<typename std::remove_const<T>::type, N-1, N-1> flattenArray(
     Footprint const & fp,
@@ -130,7 +130,7 @@ ndarray::Array<typename std::remove_const<T>::type, N-1, N-1> flattenArray(
  *
  * For example,
  \code
- expandArray(foot, array, image.getArray(), image.getXY0()); 
+ expandArray(foot, array, image.getArray(), image.getXY0());
  \endcode
  */
 template <typename T, typename U, int N, int C, int D>

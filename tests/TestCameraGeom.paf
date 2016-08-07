@@ -117,7 +117,7 @@ Ccd: {
 Ccd: {
     pixelSize: 10.0e-3                    # pixel size (mm)
     ptype: "default"
-    
+
     offsetUnit: 'mm'                    # the units of 'offset' values for CCDs
     nCol: 2                             # number of columns of amps; 2 == Left and Right
     nRow: 4                             # number of rows of amps
@@ -160,7 +160,7 @@ Ccd: {
     Amp: {
         serial: 5
         ptype: "default"
-        flipLR: true 
+        flipLR: true
         nQuarter: 0
         hdu: 0
         diskCoordSys: "amp"

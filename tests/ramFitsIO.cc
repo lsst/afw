@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 //  -*- lsst-c++ -*-
 #include <string>
 #include <vector>
@@ -79,22 +79,22 @@ PTR(afwFits::MemFileManager) readFile(string filename)
 		ifs.read(reinterpret_cast<char*>(result->getData()), result->getLength());
 		ifs.close();
 	}
-	
+
 	cout << "Filename/length: " << gFilename << " / " << fileLen << " bytes" << endl;
-	
+
 	return result;
 }
 
 string stripHierarchyFromPath(string filepath)
 {
 	cout << "filepath A: " << filepath << endl;
-	
+
 	size_t lastSlash = filepath.rfind("/");
 	if (lastSlash != string::npos)
 		filepath = filepath.substr(lastSlash + 1);
-	
+
 	cout << "filepath B: " << filepath << endl;
-	
+
 	return filepath;
 }
 
@@ -105,16 +105,16 @@ void test6()
 {
 	if (gFilename == "")
 		throw runtime_error("Must specify SDSS image filename on command line");
-	
+
 	//Read FITS file from disk into an Image
 	PTR(dafBase::PropertySet) miMetadata(new dafBase::PropertySet);
 	PTR(ImageF) image(new ImageF(gFilename, 0, miMetadata));
-	
+
 	//Write the Image to a RAM FITS file
 	image->writeFits(string(gFilenameStripped + "_imageOut.fit").c_str());
     afwFits::MemFileManager manager;
 	image->writeFits(manager);
-	
+
 	//Write the RAM FITS file to disk
 	ofstream ofs;
 	ofs.open(string(gFilenameStripped + "_imageRamOut.fit").c_str());
@@ -130,18 +130,18 @@ void test7()
 {
 	if (gFilename == "")
 		throw runtime_error("Must specify SDSS image filename on command line");
-	
+
 	//Read FITS file from disk into an Exposure
 	dafBase::PropertySet::Ptr miMetadata(new dafBase::PropertySet);
 	ImageF::Ptr image = ImageF::Ptr(new ImageF(gFilename, 0, miMetadata));
 	MaskedImageF maskedImage(image);
-	afwImage::Wcs::Ptr wcsFromFITS = afwImage::makeWcs(miMetadata); 
+	afwImage::Wcs::Ptr wcsFromFITS = afwImage::makeWcs(miMetadata);
 	ExposureF exposure(maskedImage, wcsFromFITS);
-	
+
 	//Write the Exposure to a RAM FITS file
     afwFits::MemFileManager manager;
 	exposure.writeFits(manager);
-	
+
 	//Write the RAM FITS file to disk
 	ofstream ofs;
 	ofs.open(string(gFilenameStripped + "_exposureRamOut.fit").c_str());
@@ -159,7 +159,7 @@ void test7()
 int test(void(*ftn)(void), string label)
 {
 	cout << endl << "Running test " << label << "..." << endl;
-	
+
 	try
 	{
 		(*ftn)();
@@ -176,7 +176,7 @@ int test(void(*ftn)(void), string label)
 		cerr << "  Caught a default exception" << endl;
 		return 2;
 	}
-	
+
 	return 0;
 }
 
@@ -186,7 +186,7 @@ string GetGFilenamePath(int argc, char **argv)
     if (argc < 2) {
         try {
             string dataDir = lsst::utils::getPackageDir("afwdata");
-            //inImagePath = dataDir + "/data/fpC-002570-r6-0199_sub.fits"; //Also works - this one was not 
+            //inImagePath = dataDir + "/data/fpC-002570-r6-0199_sub.fits"; //Also works - this one was not
             // used at all in the previous avatar of this test.
             inImagePath = dataDir + "/data/fpC-005902-r6-0677_sub.fits";
         } catch (lsst::pex::exceptions::NotFoundError) {
@@ -206,12 +206,12 @@ string GetGFilenamePath(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-	
+
 	gFilename = GetGFilenamePath(argc, argv);
 	gFilenameStripped = "./tests/ramFitsIO_" + stripHierarchyFromPath(gFilename);
-	
+
 	int numerrs = 0;
-	
+
 	cout << "Testing RAM FITS..." << endl;
 
 	numerrs += test(&test6, "6") ? 1 : 0;
@@ -220,8 +220,8 @@ int main(int argc, char **argv)
 	numerrs += test(&test7, "7") ? 1 : 0;
 	if (numerrs != 0)
 		return EXIT_FAILURE;
-	
+
 	cout << "Done testing.  Num failed tests: " << numerrs << endl;
-	
+
 	return EXIT_SUCCESS;
 }

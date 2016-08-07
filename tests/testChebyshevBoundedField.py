@@ -182,7 +182,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                         self.assertEqual(field3.getCoefficients()[i,j], 0.0)
                     else:
                         self.assertEqual(field3.getCoefficients()[i,j], field1.getCoefficients()[i,j])
-                
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

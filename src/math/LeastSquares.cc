@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010, 2011 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -37,7 +37,7 @@ namespace lsst { namespace afw { namespace math {
 class LeastSquares::Impl {
 public:
 
-    enum StateFlags { 
+    enum StateFlags {
         LOWER_FISHER_MATRIX     = 0x001,
         FULL_FISHER_MATRIX      = 0x002,
         RHS_VECTOR              = 0x004,
@@ -115,8 +115,8 @@ public:
 
     virtual void updateDiagnostic() = 0;
 
-    Impl(int dimension_, double threshold_=std::numeric_limits<double>::epsilon()) : 
-        state(0), dimension(dimension_), rank(dimension_), threshold(threshold_), 
+    Impl(int dimension_, double threshold_=std::numeric_limits<double>::epsilon()) :
+        state(0), dimension(dimension_), rank(dimension_), threshold(threshold_),
         log("afw.math.LeastSquares")
         {}
 
@@ -131,7 +131,7 @@ public:
     explicit EigensystemSolver(int dimension) :
         Impl(dimension), _eig(dimension), _svd(), _tmp(dimension)
     {}
-    
+
     virtual void factor() {
         ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
         _eig.compute(fisher);
@@ -199,18 +199,18 @@ public:
             return;
         }
         if (_eig.info() == Eigen::Success) {
-            covariance.asEigen() = 
+            covariance.asEigen() =
                 _eig.eigenvectors().rightCols(rank)
                 * _eig.eigenvalues().tail(rank).array().inverse().matrix().asDiagonal()
                 * _eig.eigenvectors().rightCols(rank).adjoint();
         } else {
-            covariance.asEigen() = 
+            covariance.asEigen() =
                 _svd.matrixU().leftCols(rank)
                 * _svd.singularValues().head(rank).array().inverse().matrix().asDiagonal()
                 * _svd.matrixU().leftCols(rank).adjoint();
         }
     }
-        
+
 private:
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> _eig;
     Eigen::JacobiSVD<Eigen::MatrixXd> _svd; // only used if Eigendecomposition fails, should be very rare
@@ -221,7 +221,7 @@ class CholeskySolver : public LeastSquares::Impl {
 public:
 
     explicit CholeskySolver(int dimension) : Impl(dimension, 0.0), _ldlt(dimension) {}
-    
+
     virtual void factor() {
         ensure(LOWER_FISHER_MATRIX | RHS_VECTOR);
         _ldlt.compute(fisher);
@@ -246,7 +246,7 @@ public:
         cov.setIdentity();
         cov = _ldlt.solve(cov);
     }
-        
+
 private:
     Eigen::LDLT<Eigen::MatrixXd> _ldlt;
 };
@@ -255,7 +255,7 @@ class SvdSolver : public LeastSquares::Impl {
 public:
 
     explicit SvdSolver(int dimension) : Impl(dimension), _svd(), _tmp(dimension) {}
-    
+
     virtual void factor() {
         if (!(state & DESIGN_AND_DATA)) {
             throw LSST_EXCEPT(
@@ -301,15 +301,15 @@ public:
             covariance.asEigen().setZero();
             return;
         }
-        covariance.asEigen() = 
+        covariance.asEigen() =
             _svd.matrixV().leftCols(rank)
             * _svd.singularValues().head(rank).array().inverse().square().matrix().asDiagonal()
             * _svd.matrixV().leftCols(rank).adjoint();
     }
-        
+
 private:
     Eigen::JacobiSVD<Eigen::MatrixXd> _svd;
-    Eigen::VectorXd _tmp;    
+    Eigen::VectorXd _tmp;
 };
 
 } // anonymous

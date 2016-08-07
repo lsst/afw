@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief An Image with associated metadata
@@ -91,7 +91,7 @@ image::DecoratedImage<PixelT>::DecoratedImage(
     const bool deep            ///< Make deep copy?
 ) :
     lsst::daf::base::Citizen(typeid(this)),
-    _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain) 
+    _image(new Image<PixelT>(*src._image, deep)), _gain(src._gain)
 {
     setMetadata(src.getMetadata());
 }
@@ -104,14 +104,14 @@ template<typename PixelT>
 image::DecoratedImage<PixelT>& image::DecoratedImage<PixelT>::operator=(const DecoratedImage& src) {
     DecoratedImage tmp(src);
     swap(tmp);                          // See Meyers, Effective C++, Item 11
-    
+
     return *this;
 }
 
 template<typename PixelT>
 void image::DecoratedImage<PixelT>::swap(DecoratedImage &rhs) {
     using std::swap;                    // See Meyers, Effective C++, Item 25
-    
+
     swap(_image, rhs._image);           // just swapping the pointers
     swap(_gain, rhs._gain);
 }

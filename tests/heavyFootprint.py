@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -55,13 +55,13 @@ except NameError:
     display = False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-        
+
 class HeavyFootprintTestCase(tests.TestCase):
     """A test case for HeavyFootprint"""
     def setUp(self):
         self.mi = afwImage.MaskedImageF(20, 10)
         self.objectPixelVal = (10, 0x1, 100)
-        
+
         self.foot = afwDetect.Footprint()
         for y, x0, x1 in [(2, 10, 13),
                           (3, 11, 14)]:
@@ -85,7 +85,7 @@ class HeavyFootprintTestCase(tests.TestCase):
         # Check we didn't modify the input image
         #
         self.assertTrue(np.all(np.equal(self.mi.getImage().getArray(), imi.getImage().getArray())))
-        
+
         omi = self.mi.Factory(self.mi.getDimensions())
         omi.set((1, 0x4, 0.1))
         hfoot.insert(omi)
@@ -114,7 +114,7 @@ class HeavyFootprintTestCase(tests.TestCase):
         # Check that it's iterable
         for x in arr:
             pass
-        
+
 
 
     def testSetFootprint(self):
@@ -188,7 +188,7 @@ class HeavyFootprintTestCase(tests.TestCase):
         #
         # This isn't quite a full test, as hfoot is already a HeavyFootprint,
         # the complete test is in testMakeHeavy
-        #        
+        #
         self.assertNotEqual(afwDetect.cast_HeavyFootprint(hfoot, self.mi), None,
                             "Cast to the right sort of HeavyFootprint")
         self.assertNotEqual(afwDetect.HeavyFootprintF.cast(hfoot), None,
@@ -202,7 +202,7 @@ class HeavyFootprintTestCase(tests.TestCase):
     def testMergeHeavyFootprints(self):
         mi = afwImage.MaskedImageF(20, 10)
         objectPixelVal = (42, 0x9, 400)
-        
+
         foot = afwDetect.Footprint()
         for y, x0, x1 in [(1, 9, 12),
                           (2, 12, 13),
@@ -217,7 +217,7 @@ class HeavyFootprintTestCase(tests.TestCase):
         hfoot1.normalize()
         hfoot2.normalize()
         hsum = afwDetect.mergeHeavyFootprintsF(hfoot1, hfoot2)
-        
+
         bb = hsum.getBBox()
         self.assertEquals(bb.getMinX(), 9)
         self.assertEquals(bb.getMaxX(), 15)

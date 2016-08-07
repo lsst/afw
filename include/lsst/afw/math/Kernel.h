@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_MATH_KERNEL_H
 #define LSST_AFW_MATH_KERNEL_H
 /**
@@ -226,7 +226,7 @@ using boost::serialization::make_nvp;
         void setDimensions(geom::Extent2I dims) {
             _width = dims.getX();
             _height = dims.getY();
-            
+
         }
         inline void setWidth(int width) { _width = width; }
         inline void setHeight(int height) { _height = height; }
@@ -244,7 +244,7 @@ using boost::serialization::make_nvp;
         inline int getHeight() const {
             return _height;
         }
-        
+
         /**
          * @brief Return index of kernel's center
          */
@@ -269,7 +269,7 @@ using boost::serialization::make_nvp;
         inline int getCtrY() const {
             return _ctrY;
         }
-        
+
         /**
          * @brief return parent bounding box, with XY0 = -center
          */
@@ -321,7 +321,7 @@ using boost::serialization::make_nvp;
         virtual double getKernelParameter(unsigned int i) const {
             return getKernelParameters()[i];
         }
-        
+
         /**
          * @brief Return the current kernel parameters
          *
@@ -330,16 +330,16 @@ using boost::serialization::make_nvp;
          * If there are no kernel parameters then returns an empty vector.
          */
         virtual std::vector<double> getKernelParameters() const;
-        
+
         /**
          * Given a bounding box for pixels one wishes to compute by convolving an image with this kernel,
          * return the bounding box of pixels that must be accessed on the image to be convolved.
          * Thus the box shifted by -kernel.getCtr() and its size is expanded by kernel.getDimensions()-1.
          *
-         * @return the bbox expanded by the kernel. 
+         * @return the bbox expanded by the kernel.
          */
         lsst::afw::geom::Box2I growBBox(lsst::afw::geom::Box2I const &bbox) const;
-        
+
         /**
          * Given a bounding box for an image one wishes to convolve with this kernel,
          * return the bounding box for the region of pixels that can be computed.
@@ -466,12 +466,12 @@ using boost::serialization::make_nvp;
         virtual void computeCache(
             int const   ///< desired cache size
         ) {}
-        
+
         /**
          * @brief Get the current size of the kernel cache (0 if none or if caches not supported)
          */
         virtual int getCacheSize() const { return 0; };
-        
+
 #if 0                                   // fails to compile with icc; is it actually used?
         virtual void toFile(std::string fileName) const;
 #endif
@@ -503,7 +503,7 @@ using boost::serialization::make_nvp;
          * so that computeImage can be const.
          */
         void setKernelParametersFromSpatialModel(double x, double y) const;
-        
+
         /**
          * @brief Low-level version of computeImage
          *
@@ -528,7 +528,7 @@ using boost::serialization::make_nvp;
         int _ctrX;
         int _ctrY;
         unsigned int _nKernelParams;
-        
+
         // prevent copying and assignment (to avoid problems from type slicing)
         Kernel(const Kernel&);
         Kernel& operator=(const Kernel&);
@@ -567,7 +567,7 @@ using boost::serialization::make_nvp;
          */
         explicit FixedKernel(
             lsst::afw::math::Kernel const& kernel,      ///< Kernel to convert to Fixed
-            lsst::afw::geom::Point2D const& pos         ///< desired position 
+            lsst::afw::geom::Point2D const& pos         ///< desired position
         );
 
         virtual ~FixedKernel() {}
@@ -667,7 +667,7 @@ using boost::serialization::make_nvp;
 
         virtual PTR(Kernel) clone() const;
 
-        
+
         /**
          * @brief Compute an image (pixellized representation of the kernel) in place
          *
@@ -865,7 +865,7 @@ using boost::serialization::make_nvp;
         * @brief Get the sum of the pixels of each fixed basis kernel
         */
         std::vector<double> getKernelSumList() const;
-        
+
         /**
          * @brief Get the number of basis kernels
          */
@@ -877,12 +877,12 @@ using boost::serialization::make_nvp;
          * @throw lsst::pex::exceptions::InvalidParameterError if the check fails
          */
         void checkKernelList(const KernelList &kernelList) const;
-        
+
         /**
          * Return true if all basis kernels are instances of DeltaFunctionKernel
          */
         bool isDeltaFunctionBasis() const { return _isDeltaFunctionBasis; };
-        
+
         /**
          * @brief Refactor the kernel as a linear combination of N bases where N is the number of parameters
          * for the spatial model.
@@ -942,7 +942,7 @@ using boost::serialization::make_nvp;
          * @brief Set _kernelList by cloning each input kernel and update the kernel image cache.
          */
         void _setKernelList(KernelList const &kernelList);
-        
+
         KernelList _kernelList; ///< basis kernels
         std::vector<PTR(lsst::afw::image::Image<Pixel>)> _kernelImagePtrList;
             ///< image of each basis kernel (a cache)
@@ -1076,7 +1076,7 @@ using boost::serialization::make_nvp;
         virtual void computeCache(
             int const cacheSize ///< cache size (number of double precision array elements in the x and y caches)
         );
-        
+
         /**
          * @brief Get the current cache size (0 if none)
          */

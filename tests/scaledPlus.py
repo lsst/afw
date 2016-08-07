@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -58,7 +58,7 @@ class ScaledPlus(utilsTests.TestCase):
 
     def runScaledAddTest(self, coeff0, coeff1):
         """Run one test of scaledPlus
-        
+
         Inputs:
         - coeff0: coefficient of image 0
         - coeff1: coefficient of image 1
@@ -67,17 +67,17 @@ class ScaledPlus(utilsTests.TestCase):
         desMaskedImage[:] = self.maskedImage0
         desMaskedImage *= coeff0
         desMaskedImage.scaledPlus(coeff1, self.maskedImage1)
-        
+
         actMaskedImage = afwImage.MaskedImageF(afwGeom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actMaskedImage.getImage(), self.random)
         afwMath.randomUniformImage(actMaskedImage.getVariance(), self.random)
 
         afwMath.scaledPlus(actMaskedImage, coeff0, self.maskedImage0, coeff1, self.maskedImage1)
-        
+
         actImage = afwImage.ImageF(afwGeom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actImage, self.random)
         afwMath.scaledPlus(actImage, coeff0, self.maskedImage0.getImage(), coeff1, self.maskedImage1.getImage())
-        
+
         msg = "scaledPlus failed for images; coeff0=%s, coeff1=%s" % (coeff0, coeff1)
         self.assertImagesNearlyEqual(actImage, desMaskedImage.getImage(), msg=msg)
         msg = "scaledPlus failed for masked images; coeff0=%s, coeff1=%s" % (coeff0, coeff1)

@@ -30,7 +30,7 @@ Spline::_allocateSpline(int const nknot)
         _coeffs[i].reserve(nknot);
     }
 }
-                
+
 /**
  * Interpolate a Spline.
  */
@@ -86,22 +86,22 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
      * so the derivative is
      *    val = _coeff[1][i] + dx*(_coeff[2][i] + dx*_coeff[3][i]/2))
      */
-   
+
     int ind = -1;                        // no idea initially
     for (int i = 0; i != n; ++i) {
         ind = search_array(x[i], &_knots[0], nknot, ind);
-       
+
         if(ind < 0) {			// off bottom
             ind = 0;
         } else if(ind >= nknot) {		// off top
             ind = nknot - 1;
         }
-       
+
         double const dx = x[i] - _knots[ind];
         dydx[i] = _coeffs[1][ind] + dx*(_coeffs[2][ind] + dx*_coeffs[3][ind]/2);
     }
 }
-                
+
 /*****************************************************************************/
 /**
  * Adapted from
@@ -223,7 +223,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                         int const nknot = ntau;
 
                         _allocateSpline(nknot);
-        
+
                         _knots[0] = tau[0];
                         for (int i = 1; i < nknot;i++) {
                             _knots[i] = tau[i];
@@ -233,7 +233,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                                                    % (i - 1)  % tau[i - 1] % tau[i]).str());
                             }
                         }
-        
+
                         if(ntau == 2) {
                             _coeffs[0][0] = gtau[0];
                             _coeffs[1][0] = (gtau[1] - gtau[0])/(tau[1] - tau[0]);
@@ -261,7 +261,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                             _coeffs[2][2] = _coeffs[2][0];
                             _coeffs[3][2] = 0;
                         }
-       
+
                         return;
                     }
 /*
@@ -281,7 +281,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                         s[i].resize(ntau);
                     }
 /*
- * Construct delta tau and first and second (divided) differences of data 
+ * Construct delta tau and first and second (divided) differences of data
  */
 
                     for (int i = 0; i < ntau - 1; i++) {
@@ -335,7 +335,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                     double onemzt = 0;
                     double zt2 = 0;
                     double z_half = 0;
-    
+
                     for (int i = 1; i < ntau - 2; ++i) {
                         /*
                          * construct z[i] and zeta[i]
@@ -351,7 +351,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                                 }
                             }
                         }
-       
+
                         s[4][i] = z;
 /*
   set up part of the i-th equation which depends on the i-th interval
@@ -375,7 +375,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                                 s[1][i] = 1;
                             }
                             s[2][i] = s[0][i]/6;
-           
+
                             if(z != 0) {			/* we'll get a new knot */
                                 nknot++;
                             }
@@ -391,7 +391,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                             s[5][i] = onemzt*factor/6;
                             s[1][i] += s[0][i]/3;
                             s[2][i] = s[5][i]*s[0][i];
-           
+
                             if(onemzt != 0) {			/* we'll get a new knot */
                                 nknot++;
                             }
@@ -426,7 +426,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
  * set r[0] = r[1] and eliminate x1 from the second equation
  */
                             s[3][0] = s[3][1];
-           
+
                             s[1][1] += ratio*s[2][0];
                             s[2][1] += ratio*entry3;
                             s[3][1] = ratio*s[3][1];
@@ -454,7 +454,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
                             s[1][i + 1] = s[0][i]*((1 - zeta*alpha)*factor/2 - s[5][i]);
                         }
                     }
-    
+
                     s[4][ntau - 2] = 0.5;
 /*
  * last two equations, which enforce continuity of third derivative and
@@ -507,7 +507,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
     {
         int const nknot0 = nknot;
         int nknot = ntau;
-    
+
         for (int i = 0; i < ntau - 1; ++i) {
             double const z = s[4][i];
             if((z < 0.5 && z != 0.0) || (z > 0.5 && (1 - z) != 0.0)) {
@@ -538,7 +538,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
 	      double const c = s[3][i + 1]/6;
 	      double const d = s[3][i]*s[5][i];
 	      j++;
-	      
+
 	      double const del = zeta*s[0][i];
 	      _knots[j] = tau[i] + del;
 	      zt2 = zeta*zeta;
@@ -604,7 +604,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
  * easier if we _do_ generate them
  */
     double const del = tau[ntau - 1] - _knots[nknot - 2];
-    
+
     _coeffs[0][nknot - 1] = _coeffs[0][nknot - 2] +
       del*(_coeffs[1][nknot - 2] + del*(_coeffs[2][nknot - 2]/2 +
 				       del*_coeffs[3][nknot - 2]/6));
@@ -615,7 +615,7 @@ Spline::derivative(std::vector<double> const& x, ///< points to evaluate derivat
 
     assert (j + 1 == nknot);
 }
-                
+
 /*****************************************************************************/
 /*
  * Here's the code to fit smoothing splines through data points
@@ -727,13 +727,13 @@ SmoothedSpline::SmoothedSpline(
  * allocate scratch space
  */
     _allocateSpline(n);
-   
+
     double *y = &_coeffs[0][0];
     double *c[3];
     c[0] = &_coeffs[1][0];
     c[1] = &_coeffs[2][0];
     c[2] = &_coeffs[3][0];
-    
+
     std::vector<double> scratch(7*(n+2)); // scratch space
 
     double *r[3];
@@ -771,7 +771,7 @@ SmoothedSpline::SmoothedSpline(
             if (gf1 > gf2) {
                 break;
             }
-	 
+
             if (p <= 0) {
                 break;
             }
@@ -779,20 +779,20 @@ SmoothedSpline::SmoothedSpline(
             gf2 = gf1;
             r1 /= ratio;
         }
-      
+
         if(p <= 0) {
             set_r3 = false;
             r3 = 0;			/* placate compiler */
         } else {
             r3 = ratio * r2;
             set_r3 = true;
-	 
+
             for (;;) {
                 gf3 = spfit1(&x[0], avh, &sdf[0], n, r3, &p, &q, avar, stat, y, c, r, t, u, v);
                 if (gf3 >= gf2) {
                     break;
                 }
-	    
+
                 if (q <= 0) {
                     break;
                 }
@@ -801,7 +801,7 @@ SmoothedSpline::SmoothedSpline(
                 r3 = ratio*r3;
             }
         }
-      
+
         if(p > 0 && q > 0) {
             assert (set_r3);
             r2 = r3;
@@ -832,7 +832,7 @@ SmoothedSpline::SmoothedSpline(
                     r4 = r1 + delta;
                     gf4 = spfit1(&x[0], avh, &sdf[0], n, r4, &p, &q, avar, stat, y, c, r, t, u, v);
                 }
-	    
+
                 err = (r2 - r1) / (r1 + r2);
             } while(err*err + 1 > 1 && err > 1e-6);
 
@@ -1015,7 +1015,7 @@ spfit1(const double x[],
    g = 0;
    h = 0;
    r[0][-1] = r[0][0] = 0;
-   
+
    for (int i = 1; i < n - 1; ++i) {
       r[2][i-2] = g*r[0][i - 2];
       r[1][i-1] = f*r[0][i - 1];
@@ -1091,7 +1091,7 @@ spfit1(const double x[],
       stat[4] = stat[5] - stat[3];
       fun = stat[2];
    }
-   
+
    *pp = p; *pq = q;
 
    return(fun);
@@ -1117,9 +1117,9 @@ spcof1(const double x[],
    double h;
    int i;
    double qh;
-   
+
    qh = q/(avh*avh);
-   
+
    for (i = 0; i < n; ++i) {
       a[i] = y[i] - p * dy[i] * v[i];
       u[i] = qh*u[i];
@@ -1250,7 +1250,7 @@ TautSpline::calculateTautSplineEvenOdd(std::vector<double> const& _tau,
     }
     int const i0 = ii + 1;
     int const nknot = sp._knots.size() - i0;
-   
+
     _allocateSpline(nknot);
 
     for (int i = i0; i != static_cast<int>(sp._knots.size()); ++i) {
@@ -1368,7 +1368,7 @@ do_quadratic(double a, double b, double c, std::vector<double> & roots)
         }
    } else {
       double const tmp = b*b - 4*a*c;
-      
+
       if(tmp >= 0) {
           if (b >= 0) {
               roots.push_back((-b - sqrt(tmp))/(2*a));
@@ -1410,7 +1410,7 @@ do_cubic(double a, double b, double c, double d, std::vector<double> & roots)
     double const sq3 = sq*sq*sq;
     if(::fabs(r) < sq3) {                   // three real roots
         double const theta = ::acos(r/sq3); // sq3 cannot be zero
-        
+
         roots.push_back(-2*sq*cos(theta/3) - b/3);
         roots.push_back(-2*sq*cos((theta + afwGeom::TWOPI)/3) - b/3);
         roots.push_back(-2*sq*cos((theta - afwGeom::TWOPI)/3) - b/3);
@@ -1426,7 +1426,7 @@ do_cubic(double a, double b, double c, double d, std::vector<double> & roots)
         if(roots[0] > roots[1]) {
             std::swap(roots[0], roots[1]);
         }
-        
+
         return;
     } else if(::fabs(r) == sq3) {		/* no more than two real roots */
         double const aa = -((r < 0) ? -::pow(-r,1.0/3.0) : ::pow(r,1.0/3.0));
@@ -1437,7 +1437,7 @@ do_cubic(double a, double b, double c, double d, std::vector<double> & roots)
         } else {
             roots.push_back(2*aa - b/3);
             roots.push_back(-aa - b/3);
-            
+
             if(roots[0] > roots[1]) {
                 std::swap(roots[0], roots[1]);
             }

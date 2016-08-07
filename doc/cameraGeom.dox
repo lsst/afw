@@ -153,5 +153,5 @@ supported coordinate systems.
 
 \ref camera.Camera "Camera" and Detector both contain CameraTransformMaps.
  */
- 
+
 }}} // namespace lsst::afw::cameraGeom

@@ -68,11 +68,11 @@ class Camera(DetectorCollection):
     def _transformSingleSysArray(self, positionList, fromSys, toSys):
         """!Transform an array of points from once CameraSys to another CameraSys
         @warning This method only handles a single jump, not a transform linked by a common native sys.
-        
+
         @param[in] positionList List of Point2D objects, one per position
         @param[in] fromSys  Initial camera coordinate system
         @param[in] toSys  Destination camera coordinate system
-        
+
         @returns an array of Point2D objects containing the transformed coordinates in the destination system.
         """
         if fromSys.hasDetectorName():

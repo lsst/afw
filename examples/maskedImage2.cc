@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /// \file
 #include "lsst/afw/image/MaskedImage.h"
 
@@ -45,8 +45,8 @@ int main() {
     for (int y = 1; y != in.getHeight() - 1; ++y) {
         for (ImageT::xy_locator ptr =  in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y),
                                optr = out.xy_at(1, y); ptr != end; ++ptr.x(), ++optr.x()) {
-            *optr = ptr(-1,-1) + 2*ptr(0,-1) +   ptr(1,-1) + 
-                  2*ptr(-1, 0) + 4*ptr(0, 0) + 2*ptr(1, 0) + 
+            *optr = ptr(-1,-1) + 2*ptr(0,-1) +   ptr(1,-1) +
+                  2*ptr(-1, 0) + 4*ptr(0, 0) + 2*ptr(1, 0) +
                     ptr(-1, 1) + 2*ptr(0, 1) +   ptr(1, 1);
         }
     }
@@ -60,7 +60,7 @@ int main() {
 
     for (int y = 1; y != in.getHeight() - 1; ++y) {
         // "dot" means "cursor location" in emacs
-        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y); 
+        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y);
 
         xy_loc::cached_location_t nw = dot.cache_location(-1,-1);
         xy_loc::cached_location_t n  = dot.cache_location( 0,-1);
@@ -95,7 +95,7 @@ int main() {
 
     for (int y = 1; y != in.getHeight() - 1; ++y) {
         // "dot" means "cursor location" in emacs
-        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y); 
+        xy_loc dot = in.xy_at(1, y), end = in.xy_at(in.getWidth() - 1, y);
 
         for (ImageT::x_iterator optr = out2->row_begin(y) + 1; dot != end; ++dot.x(), ++optr) {
             *optr = dot[nw] + 2*dot[n] +   dot[ne] +
@@ -110,7 +110,7 @@ int main() {
         ImageT center = ImageT(
             *out2,
             geom::Box2I(
-                geom::Point2I(1, 1), 
+                geom::Point2I(1, 1),
                 in.getDimensions() - geom::Extent2I(-2)
             ),
             image::LOCAL

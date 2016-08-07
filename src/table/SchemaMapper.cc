@@ -31,7 +31,7 @@ struct KeyPairCompareEqual : public boost::static_visitor<bool> {
     bool operator()(std::pair< Key<U>, Key<U> > const & pair) const {
         return _target == pair.first;
     }
-    
+
     bool operator()(detail::SchemaMapperImpl::KeyPairVariant const & v) const {
         return boost::apply_visitor(*this, v);
     }

@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -55,7 +55,7 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
         break;
     case 1:
         outImage.reset(new ImageT(afwGeom::Extent2I(inImage.getHeight(), inImage.getWidth())));
-                       
+
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::y_iterator optr = outImage->col_begin(inImage.getHeight() - y - 1);
             for (typename ImageT::x_iterator iptr = inImage.row_begin(y), end = inImage.row_end(y);
@@ -63,11 +63,11 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
                 *optr = *iptr;
             }
         }
-        
+
         break;
     case 2:
         outImage.reset(new ImageT(inImage.getDimensions()));
-        
+
         for (int y = 0; y != inImage.getHeight(); ++y) {
             typename ImageT::x_iterator optr = outImage->x_at(inImage.getWidth() - 1,
                                                               inImage.getHeight() - y - 1);
@@ -87,7 +87,7 @@ typename ImageT::Ptr rotateImageBy90(ImageT const& inImage, ///< The %image to r
                 *optr = *iptr;
             }
         }
-        
+
         break;
     }
 
@@ -149,15 +149,15 @@ PTR(ImageT) flipImage(ImageT const& inImage, ///< The %image to flip
     template afwImage::Image<TYPE>::Ptr rotateImageBy90(afwImage::Image<TYPE> const&, int); \
     template afwImage::MaskedImage<TYPE>::Ptr rotateImageBy90(afwImage::MaskedImage<TYPE> const&, int); \
     template afwImage::Image<TYPE>::Ptr flipImage(afwImage::Image<TYPE> const&, bool flipLR, bool flipTB); \
-    template afwImage::MaskedImage<TYPE>::Ptr flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB); 
-    
+    template afwImage::MaskedImage<TYPE>::Ptr flipImage(afwImage::MaskedImage<TYPE> const&, bool flipLR, bool flipTB);
+
 
 INSTANTIATE(std::uint16_t)
 INSTANTIATE(int)
 INSTANTIATE(float)
 INSTANTIATE(double)
-template afwImage::Mask<std::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<std::uint16_t> const&, int); 
-template afwImage::Mask<std::uint16_t>::Ptr flipImage(afwImage::Mask<std::uint16_t> const&, bool flipLR, bool flipTB); 
+template afwImage::Mask<std::uint16_t>::Ptr rotateImageBy90(afwImage::Mask<std::uint16_t> const&, int);
+template afwImage::Mask<std::uint16_t>::Ptr flipImage(afwImage::Mask<std::uint16_t> const&, bool flipLR, bool flipTB);
 /// \endcond
 
 }}}

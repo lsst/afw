@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief Support for PCA analysis of 2-D images
@@ -63,7 +63,7 @@ namespace image {
         typename ImageT::Ptr getMean() const;
         virtual void analyze();
         virtual double updateBadPixels(unsigned long mask, int const ncomp);
-        
+
         /// Return Eigen values
         std::vector<double> const& getEigenValues() const { return _eigenValues; }
         /// Return Eigen images
@@ -77,14 +77,14 @@ namespace image {
         geom::Extent2I _dimensions;      // width/height of images on _imageList
 
         bool _constantWeight;           // should all stars have the same weight?
-        
+
         std::vector<double> _eigenValues; // Eigen values
         ImageList _eigenImages;           // Eigen images
     };
 
 template <typename Image1T, typename Image2T>
 double innerProduct(Image1T const& lhs, Image2T const& rhs, int const border=0);
-    
+
 }}}
 
 #endif

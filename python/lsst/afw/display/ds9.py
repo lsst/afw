@@ -87,7 +87,7 @@ def dot(symb, c, r, frame=None, size=2, ctype=None, origin=afwImage.PARENT, *arg
 
 def line(points, frame=None, origin=afwImage.PARENT, symbs=False, ctype=None, size=0.5):
     return getDisplay(frame, create=True).line(points, origin, symbs, ctype, size)
-    
+
 def scale(algorithm, min, max=None, frame=None):
     return getDisplay(frame, create=True).scale(algorithm, min, max)
 

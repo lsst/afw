@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /*
  * This C++ example does the same thing as SpatialCellExample.py.  The latter of the python version
  * is that you can set display == True and see what's going on
@@ -87,7 +87,7 @@ void SpatialCellSetDemo() {
              candidate != candidateEnd; ++candidate) {
             afwGeom::Box2I box =
                 dynamic_cast<ExampleCandidate *>((*candidate).get())->getBBox();
-            
+
 #if 0
             std::cout << boost::format("%d %5.2f %5.2f %d\n")
                 % i % (*candidate)->getXCenter() % (*candidate)->getYCenter() % (w*h);
@@ -99,7 +99,7 @@ void SpatialCellSetDemo() {
     }
     /*
      * Now count the good and bad candidates
-     */        
+     */
     for (unsigned int i = 0; i != cellSet.getCellList().size(); ++i) {
         afwMath::SpatialCell::Ptr cell = cellSet.getCellList()[i];
         cell->visitCandidates(&visitor);
@@ -125,15 +125,15 @@ readImage() {
         std::string dataDir = lsst::utils::getPackageDir("afwdata");
 
         std::string filename = dataDir + "/CFHT/D4/cal-53535-i-797722_1.fits";
-        
+
         afwGeom::Box2I bbox = afwGeom::Box2I(
-            afwGeom::Point2I(270, 2530), 
+            afwGeom::Point2I(270, 2530),
             afwGeom::Extent2I(512, 512)
         );
-        
+
         lsst::daf::base::PropertySet::Ptr md;
         mi.reset(new afwImage::MaskedImage<PixelT>(filename, md, bbox));
-        
+
     } catch (lsst::pex::exceptions::NotFoundError &e) {
         std::cerr << e << std::endl;
         exit(1);

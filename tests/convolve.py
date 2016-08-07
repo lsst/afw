@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -88,7 +88,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
     """Reference code to convolve a kernel with a masked image.
 
     Warning: slow (especially for spatially varying kernels).
-    
+
     Inputs:
     - imMaskVar: (image, mask, variance) numpy arrays
     - xy0: xy offset of imMaskVar relative to parent image
@@ -102,7 +102,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
     # transposes throughout the rest of the file, I have transposed only the inputs and outputs.
     #  - Jim Bosch, 3/4/2011
     image, mask, variance = (imMaskVar[0].transpose(), imMaskVar[1].transpose(), imMaskVar[2].transpose())
-    
+
     if doCopyEdge:
         # copy input arrays to output arrays and set EDGE bit of mask; non-edge pixels are overwritten below
         retImage = image.copy()
@@ -117,7 +117,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
         retMask[:, :] = NoDataMaskPixel
         retVariance = numpy.zeros(variance.shape, dtype=image.dtype)
         retVariance[:, :] = numpy.inf
-    
+
     kWidth = kernel.getWidth()
     kHeight = kernel.getHeight()
     numCols = image.shape[0] + 1 - kWidth
@@ -154,7 +154,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
                 retMask[retCol, retRow] = numpy.bitwise_or.reduce((subMask * (kImArr != 0)).flat)
             else:
                 retMask[retCol, retRow] = numpy.bitwise_or.reduce(subMask.flat)
-            
+
 
             retCol += 1
         retRow += 1
@@ -184,13 +184,13 @@ class ConvolveTestCase(utilsTests.TestCase):
             # use a huge XY0 to make emphasize any errors related to not handling xy0 correctly.
             self.maskedImage.setXY0(300, 200)
             self.xy0 = self.maskedImage.getXY0()
-    
+
             # provide destinations for the convolved MaskedImage and Image that contain junk
             # to verify that convolve overwrites all pixels;
             # make them deep copies so we can mess with them without affecting self.inImage
             self.cnvMaskedImage = afwImage.MaskedImageF(FullMaskedImage, ShiftedBBox, afwImage.LOCAL, True)
             self.cnvImage = afwImage.ImageF(FullMaskedImage.getImage(), ShiftedBBox, afwImage.LOCAL, True)
-    
+
             self.width = self.maskedImage.getWidth()
             self.height = self.maskedImage.getHeight()
     #         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.Box2I(afwGeom.Point2I(15, 17), afwGeom.Extent2I(10, 5)))
@@ -202,9 +202,9 @@ class ConvolveTestCase(utilsTests.TestCase):
             del self.cnvMaskedImage
             del self.cnvImage
 
-    def runBasicTest(self, kernel, convControl, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08): 
+    def runBasicTest(self, kernel, convControl, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08):
         """Assert that afwMath::convolve gives the same result as reference convolution for a given kernel.
-        
+
         Inputs:
         - kernel: convolution kernel
         - convControl: convolution control parameters (afwMath.ConvolutionControl)
@@ -212,7 +212,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         - kernelDescr: description of kernel
         - rtol: relative tolerance (see below)
         - atol: absolute tolerance (see below)
-        
+
         rtol and atol are positive, typically very small numbers.
         The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
         to compare against the absolute difference between "a" and "b".
@@ -228,7 +228,7 @@ class ConvolveTestCase(utilsTests.TestCase):
 
         imMaskVar = self.maskedImage.getArrays()
         xy0 = self.maskedImage.getXY0()
-        
+
         refCnvImMaskVarArr = refConvolve(imMaskVar, xy0, refKernel, doNormalize, doCopyEdge)
         refMaskedImage = afwImage.makeMaskedImageFromArrays(*refCnvImMaskVarArr)
 
@@ -257,7 +257,7 @@ class ConvolveTestCase(utilsTests.TestCase):
     def runStdTest(self, kernel, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08,
         maxInterpDist=10):
         """Assert that afwMath::convolve gives the same result as reference convolution for a given kernel.
-        
+
         Inputs:
         - kernel: convolution kernel
         - refKernel: kernel to use for refConvolve (if None then kernel is used)
@@ -265,17 +265,17 @@ class ConvolveTestCase(utilsTests.TestCase):
         - rtol: relative tolerance (see below)
         - atol: absolute tolerance (see below)
         - maxInterpDist: maximum allowed distance for linear interpolation during convolution
-        
+
         rtol and atol are positive, typically very small numbers.
         The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
         to compare against the absolute difference between "a" and "b".
         """
         if VERBOSITY > 0:
             print "Test convolution with", kernelDescr
-        
+
         convControl = afwMath.ConvolutionControl()
         convControl.setMaxInterpolationDistance(maxInterpDist)
-        
+
         # verify dimension assertions:
         # - output image dimensions = input image dimensions
         # - input image width and height >= kernel width and height
@@ -338,17 +338,17 @@ class ConvolveTestCase(utilsTests.TestCase):
         for doNormalize in (False, True):
             convControl.setDoNormalize(doNormalize)
             self.assertEqual(convControl.getDoNormalize(), doNormalize)
-        
+
         self.assert_(not convControl.getDoCopyEdge())
         for doCopyEdge in (False, True):
             convControl.setDoCopyEdge(doCopyEdge)
             self.assert_(convControl.getDoCopyEdge() == doCopyEdge)
-        
+
         self.assertEqual(convControl.getMaxInterpolationDistance(), 10)
         for maxInterpDist in (0, 1, 2, 10, 100):
             convControl.setMaxInterpolationDistance(maxInterpDist)
             self.assertEqual(convControl.getMaxInterpolationDistance(), maxInterpDist)
-        
+
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testUnityConvolution(self):
         """Verify that convolution with a centered delta function reproduces the original.
@@ -360,10 +360,10 @@ class ConvolveTestCase(utilsTests.TestCase):
         doCopyEdge = False
 
         afwMath.convolve(self.cnvImage, self.maskedImage.getImage(), kernel, doNormalize, doCopyEdge)
-        
+
         afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, doNormalize, doCopyEdge)
         cnvImMaskVarArr = self.cnvMaskedImage.getArrays()
-        
+
         skipMaskArr = numpy.array(numpy.isnan(cnvImMaskVarArr[0]), dtype=numpy.uint16)
 
         kernelDescr = "Centered DeltaFunctionKernel (testing unity convolution)"
@@ -382,7 +382,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         kernelImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         analyticKernel.computeImage(kernelImage, False)
         fixedKernel = afwMath.FixedKernel(kernelImage)
-        
+
         self.runStdTest(fixedKernel, kernelDescr="Gaussian FixedKernel")
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
@@ -396,7 +396,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         separableKernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         analyticKernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc2)
-        
+
         self.runStdTest(
             separableKernel,
             refKernel = analyticKernel,
@@ -411,7 +411,7 @@ class ConvolveTestCase(utilsTests.TestCase):
 
         kFunc =  afwMath.GaussianFunction2D(2.5, 1.5, 0.5)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc)
-        
+
         self.runStdTest(kernel, kernelDescr="Gaussian Analytic Kernel")
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
@@ -423,7 +423,7 @@ class ConvolveTestCase(utilsTests.TestCase):
 
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
-        
+
         minSigma = 1.5
         maxSigma = 1.501
 
@@ -438,7 +438,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, kFunc, sFunc)
         kernel.setSpatialParameters(sParams)
-        
+
         for maxInterpDist, rtol, methodStr in (
             (0,   1.0e-5, "brute force"),
             (10,  1.0e-5, "interpolation over 10 x 10 pixels"),
@@ -461,7 +461,7 @@ class ConvolveTestCase(utilsTests.TestCase):
 
         minSigma = 0.1
         maxSigma = 3.0
-        
+
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
@@ -479,7 +479,7 @@ class ConvolveTestCase(utilsTests.TestCase):
 
         self.runStdTest(separableKernel, refKernel=analyticKernel,
             kernelDescr="Spatially Varying Gaussian Separable Kernel")
-    
+
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testDeltaConvolve(self):
         """Test convolution with various delta function kernels using optimized code
@@ -507,7 +507,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         for nBasisKernels in (3, 4):
             # at 3 the kernel will not be refactored, at 4 it will be
             sFunc = afwMath.PolynomialFunction2D(1)
-            
+
             # spatial parameters are a list of entries, one per kernel parameter;
             # each entry is a list of spatial parameters
             sParams = (
@@ -516,7 +516,7 @@ class ConvolveTestCase(utilsTests.TestCase):
                 (0.0,  0.0/self.width,  0.01/self.height),
                 (0.5,  0.005/self.width,  -0.005/self.height),
             )[:nBasisKernels]
-            
+
             gaussParamsList = (
                 (1.5, 1.5, 0.0),
                 (2.5, 1.5, 0.0),
@@ -526,7 +526,7 @@ class ConvolveTestCase(utilsTests.TestCase):
             basisKernelList = makeGaussianKernelList(kWidth, kHeight, gaussParamsList)
             kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)
             kernel.setSpatialParameters(sParams)
-    
+
             for maxInterpDist, rtol, methodStr in (
                 (0,   1.0e-5, "brute force"),
                 (10,  1.0e-5, "interpolation over 10 x 10 pixels"),
@@ -547,7 +547,7 @@ class ConvolveTestCase(utilsTests.TestCase):
 
         # create spatially model
         sFunc = afwMath.PolynomialFunction2D(1)
-        
+
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
@@ -556,7 +556,7 @@ class ConvolveTestCase(utilsTests.TestCase):
             (0.0,  0.0/self.width,  1.0/self.height),
             (0.5, 0.0, 0.0),
             )
-        
+
         basisKernelList = makeDeltaFunctionKernelList(kWidth, kHeight)
         kernel = afwMath.LinearCombinationKernel(basisKernelList, sFunc)
         kernel.setSpatialParameters(sParams)
@@ -575,7 +575,7 @@ class ConvolveTestCase(utilsTests.TestCase):
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testZeroWidthKernel(self):
         """Convolution by a 0x0 kernel should raise an exception.
-        
+
         The only way to produce a 0x0 kernel is to use the default constructor
         (which exists only to support persistence; it does not produce a useful kernel).
         """
@@ -598,7 +598,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         """
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
-        
+
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
@@ -606,7 +606,7 @@ class ConvolveTestCase(utilsTests.TestCase):
             (0.0,  1.0/self.width,  0.0/self.height),
             (0.0,  0.0/self.width,  1.0/self.height),
         )
-        
+
         # create three kernels with some non-overlapping pixels
         # (non-zero pixels in one kernel vs. zero pixels in other kernels);
         # note: the extreme example of this is delta function kernels, but this is less extreme

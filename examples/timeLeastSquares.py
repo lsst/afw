@@ -82,7 +82,7 @@ def plot(results):
 def main():
     results = run()
     plot(results)
-    
+
 
 if __name__ == "__main__":
     main()

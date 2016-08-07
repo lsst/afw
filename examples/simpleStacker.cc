@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,21 +11,21 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file simpleStacker.cc
  * @author Steve Bickerton
- * @brief An example executible which calls the example 'stack' code 
+ * @brief An example executible which calls the example 'stack' code
  *
  */
 #include <iostream>
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     } else {
         sctrl.setWeighted(false);
     }
-    
+
     // regular image
     std::vector<ImageF::Ptr> imgList;
     for (int iImg = 0; iImg < nImg; ++iImg) {
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     std::cout << "MaskedImage:                " << (*mimgStack->getImage())(nX/2, nY/2) << std::endl;
     MImageF::Ptr wmimgStack = math::statisticsStack<float>(mimgList, math::MEAN, sctrl, wvec);
     std::cout << "MaskedImage (const weight): " << (*wmimgStack->getImage())(nX/2, nY/2) << std::endl;
-    
+
 
 
     // std::vector, and also with a constant weight vector
@@ -101,5 +101,5 @@ int main(int argc, char **argv) {
     std::cout << "Vector:                     " << (*vecStack)[nX*nY/2] << std::endl;
     VecFPtr wvecStack = math::statisticsStack<float>(vecList, math::MEAN, sctrl, wvec);
     std::cout << "Vector (const weight):      " << (*wvecStack)[nX*nY/2] << std::endl;
-    
+
 }

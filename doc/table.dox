@@ -268,5 +268,5 @@ namespace lsst { namespace afw { namespace table {
  *  </tr>
  *  </table>
  */
- 
+
 }}} // namespace lsst::afw::table

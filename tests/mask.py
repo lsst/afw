@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -72,7 +72,7 @@ def showMaskDict(d=None, msg=None):
         d = d.getMaskPlaneDict()
     except AttributeError:
         pass
-        
+
     if msg:
         print "%-15s" % msg,
     print sorted([(d[p], p) for p in d])
@@ -132,14 +132,14 @@ class MaskTestCase(utilsTests.TestCase):
         val = 0x1234
         msk = afwImage.MaskU(afwGeom.ExtentI(10, 10), val)
         self.assertEqual(msk.get(0, 0), val)
-        
+
     def testSetGetMasks(self):
         self.assertEqual(self.mask1.get(0, 0), self.val1)
-    
+
     def testOrMasks(self):
         self.mask2 |= self.mask1
         self.mask1 |= self.val2
-        
+
         self.assertMasksEqual(self.mask1, self.mask2)
         expect = np.empty_like(self.mask1.getArray())
         expect[:] = self.val2 | self.val1
@@ -148,7 +148,7 @@ class MaskTestCase(utilsTests.TestCase):
     def testAndMasks(self):
         self.mask2 &= self.mask1
         self.mask1 &= self.val2
-        
+
         self.assertMasksEqual(self.mask1, self.mask2)
         expect = np.empty_like(self.mask1.getArray())
         expect[:] = self.val1 & self.val2
@@ -157,7 +157,7 @@ class MaskTestCase(utilsTests.TestCase):
     def testXorMasks(self):
         self.mask2 ^= self.mask1
         self.mask1 ^= self.val2
-        
+
         self.assertMasksEqual(self.mask1, self.mask2)
         expect = np.empty_like(self.mask1.getArray())
         expect[:] = self.val1 ^ self.val2
@@ -169,27 +169,27 @@ class MaskTestCase(utilsTests.TestCase):
         i1.set(100)
         i2 = afwImage.MaskU(afwGeom.ExtentI(10, 10))
         i2.set(10)
-        
+
         def tst(i1, i2): i1 |= i2
         self.assertRaises(lsst.pex.exceptions.LengthError, tst, i1, i2)
 
         def tst2(i1, i2): i1 &= i2
         self.assertRaises(lsst.pex.exceptions.LengthError, tst2, i1, i2)
-    
+
         def tst2(i1, i2): i1 ^= i2
         self.assertRaises(lsst.pex.exceptions.LengthError, tst2, i1, i2)
-    
+
     def testMaskPlanes(self):
         planes = self.Mask().getMaskPlaneDict()
         self.assertEqual(len(planes), self.Mask.getNumPlanesUsed())
-        
+
         for k in sorted(planes.keys()):
             self.assertEqual(planes[k], self.Mask.getMaskPlane(k))
-            
+
     def testCopyConstructors(self):
         dmask = afwImage.MaskU(self.mask1, True) # deep copy
         smask = afwImage.MaskU(self.mask1) # shallow copy
-        
+
         self.mask1 |= 32767             # should only change smask
         temp = np.zeros_like(self.mask1.getArray()) | self.val1
         self.assertMasksEqual(dmask, temp)
@@ -197,14 +197,14 @@ class MaskTestCase(utilsTests.TestCase):
         self.assertMasksEqual(smask, temp | 32767)
 
     def testSubmasks(self):
-        smask = afwImage.MaskU(self.mask1, 
+        smask = afwImage.MaskU(self.mask1,
                                afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.ExtentI(3, 2)),
                                afwImage.LOCAL)
         mask2 = afwImage.MaskU(smask.getDimensions())
 
         mask2.set(666)
         smask[:] = mask2
-        
+
         del smask
         del mask2
 
@@ -242,7 +242,7 @@ class MaskTestCase(utilsTests.TestCase):
             # Read it back
             md = lsst.daf.base.PropertySet()
             rmask = self.Mask(tmpFile, 0, md)
-            
+
             self.assertMasksEqual(mask, rmask)
 
             # Check that we wrote (and read) the metadata successfully
@@ -371,7 +371,7 @@ class OldMaskTestCase(unittest.TestCase):
             for x in range(0, 300):
                 for y in range(300, 400, 20):
                     self.pixelList.push_back(afwImage.PixelCoord(x, y))
-                    
+
     def tearDown(self):
         del self.testMask
         del self.subTestMask
@@ -394,12 +394,12 @@ class OldMaskTestCase(unittest.TestCase):
 
         for p in range(0, nextra):
             self.testMask.removeAndClearMaskPlane(pname(p))
-        
+
         self.assertEqual(nplane + nextra, self.Mask.getNumPlanesUsed(), "Adding and removing planes")
 
         for p in range(0, nextra):
             self.Mask.removeMaskPlane(pname(p))
-        
+
         self.assertEqual(nplane, self.testMask.getNumPlanesUsed(), "Adding and removing planes")
 
     def testMetadata(self):
@@ -450,7 +450,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.testMask.removeAndClearMaskPlane("BP")
 
         d = testMask2.getMaskPlaneDict()
-        
+
         checkPlaneBP()                                        # still present in default mask
         self.assertTrue("BP" in testMask2.getMaskPlaneDict()) # should still be in testMask2
 
@@ -488,14 +488,14 @@ class OldMaskTestCase(unittest.TestCase):
         """Test mask plane operations invalidated by Mask changes"""
 
         testMask3 = self.Mask(self.testMask.getDimensions())
-        
+
         name = "Great Timothy"
         self.Mask.addMaskPlane(name)
         testMask3.removeAndClearMaskPlane(name)
 
         self.Mask.getMaskPlane(name)    # should be fine
         self.assertRaises(IndexError, lambda : testMask3.getMaskPlaneDict()[name])
-            
+
         def tst():
             self.testMask |= testMask3
 
@@ -561,7 +561,7 @@ class OldMaskTestCase(unittest.TestCase):
         """Test conformMaskPlanes() when the two planes are different"""
 
         testMask3 = afwImage.MaskU(self.testMask.getDimensions())
-        
+
         name1 = "Great Timothy"
         name2 = "Our Boss"
         p1 = self.Mask.addMaskPlane(name1)
@@ -609,7 +609,7 @@ class OldMaskTestCase(unittest.TestCase):
 def printMaskPlane(mask, plane,
                    xrange=range(250, 300, 10), yrange=range(300, 400, 20)):
     """Print parts of the specified plane of the mask"""
-    
+
     xrange = range(min(xrange), max(xrange), 25)
     yrange = range(min(yrange), max(yrange), 25)
 

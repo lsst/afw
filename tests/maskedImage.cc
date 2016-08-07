@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -80,7 +80,7 @@ void y_gradient(ImageT & src, ImageT & dst) {
             //src_loc.mask() |= 2;          // uncomment to check const checking
             //src_loc.variance() = 0.0;     // uncomment to check const checking
         }
-        
+
         src_loc += std::make_pair(-src.getWidth(), 1);
     }
 }
@@ -94,7 +94,7 @@ namespace {
         if (title != "") {
             cout << title << endl;
         }
-        
+
         for (int i = img.getHeight() - 1; i >= 0; --i) {
             for (ImageT::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.image() << " ";
@@ -107,7 +107,7 @@ namespace {
         if (title != "") {
             cout << title << endl;
         }
-        
+
         for (int i = img.getHeight() - 1; i >= 0; --i) {
             for (ImageT::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.mask() << " ";
@@ -120,7 +120,7 @@ namespace {
         if (title != "") {
             cout << title << endl;
         }
-        
+
         for (int i = img.getHeight() - 1; i >= 0; --i) {
             for (ImageT::x_iterator ptr = img.row_begin(i), end = img.row_end(i); ptr != end; ++ptr) {
                 cout << ptr.variance() << " ";
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     *ptr = 100;                         // sets *ptr to (100, 0, 0)
     ptr.mask() = 0x10;
     ptr.variance() = 3;
-    
+
     BOOST_CHECK_EQUAL(ptr.image(),    100);
     BOOST_CHECK_EQUAL(ptr.mask(),     0x10);
     BOOST_CHECK_EQUAL(ptr.variance(), 3);
@@ -217,12 +217,12 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     *img.getImage() = 10;
     *img.getMask() = 0x1;
     *img.getVariance() = 2.5;
-    
+
     *ptr += *ptr2;
     BOOST_CHECK_EQUAL(ptr.image(),    14);
     BOOST_CHECK_EQUAL(ptr.mask(),     0x9);
-    BOOST_CHECK_EQUAL(ptr.variance(), 10.5);    
-    
+    BOOST_CHECK_EQUAL(ptr.variance(), 10.5);
+
     ptr2.mask() = 0x2;
     *ptr -= *ptr2;
     BOOST_CHECK_EQUAL(ptr.image(),    10);
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(setValues) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     BOOST_CHECK_EQUAL((*img.getImage())(0,0), 111);
     BOOST_CHECK_EQUAL((*img.getMask())(0,0), 0);
     BOOST_CHECK_EQUAL((*img.getVariance())(0,0), 0);
-    
+
     img = ImageT::Pixel(333, 0x666, 666);
     BOOST_CHECK_EQUAL((*img.getImage())(0,0), 333);
     BOOST_CHECK_EQUAL((*img.getMask())(0,0), 0x666);
@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(Pixels) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a Lss
     cout << "Logical: " << (ww == ww) <<  " " << (ww == v) << endl;
 
     ww = makeSinglePixel(10, 0x0, 1);
-    cout << "ww: " << ww << "   ww + ww (ignoring covariance): " << (ww + ww) << 
+    cout << "ww: " << ww << "   ww + ww (ignoring covariance): " << (ww + ww) <<
 #if 0
         "   ww + ww: " << plus(ww, ww, 1) <<
 #endif
@@ -329,22 +329,22 @@ BOOST_AUTO_TEST_CASE(iterators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     }
     //
     // Check begin() and our ability to increment it
-    //        
+    //
     {
         ImageT::iterator ptr = img.begin();
         ptr += img.getWidth() + 1;           // move to (1,1)
-        
+
         BOOST_CHECK_EQUAL(ptr.image(), 101);
         BOOST_CHECK_EQUAL(ptr.mask(), img.getWidth() + 1);
         BOOST_CHECK_EQUAL(ptr.variance(), 202);
     }
     //
     // Check {col,row}_begin() and our ability to increment them
-    //        
+    //
     {
         ImageT::x_iterator rptr = img.row_begin(1);
         rptr += 1;                       // move to (1,1)
-        
+
         BOOST_CHECK_EQUAL(rptr.image(), 101);
         BOOST_CHECK_EQUAL(rptr.mask(), img.getWidth() + 1);
         BOOST_CHECK_EQUAL(rptr.variance(), 202);
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(iterators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     {
         ImageT::y_iterator cptr = img.col_begin(2);
         cptr += 1;                       // move to (2,1)
-        
+
         BOOST_CHECK_EQUAL(cptr.image(), 201);
         BOOST_CHECK_EQUAL(cptr.mask(), img.getWidth() + 2);
         BOOST_CHECK_EQUAL(cptr.variance(), 402);
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(iterators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a 
     //
     {
         ImageT::const_iterator ptr = img.at(1,1);
-        
+
         BOOST_CHECK_EQUAL(ptr.image(), 101);
         BOOST_CHECK_EQUAL(ptr.mask(), img.getWidth() + 1);
         BOOST_CHECK_EQUAL(ptr.variance(), 202);
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(locators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a L
         loc.y() += 1;     // loc == img.xy_at(3, 4);
         BOOST_REQUIRE(img.getWidth() >= 4);
         BOOST_REQUIRE(img.getHeight() >= 5);
-        
+
         BOOST_CHECK_EQUAL(loc.image(), 304);
         BOOST_CHECK_EQUAL(loc.mask(), 4*img.getWidth() + 3);
         BOOST_CHECK_EQUAL(loc.variance(), 608);
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(locators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a L
         ImageT::xy_locator loc = img.xy_at(1,1);
         ImageT::xy_locator::cached_location_t above = loc.cache_location(0,  1);
         ImageT::xy_locator::cached_location_t below = loc.cache_location(0, -1);
-        
+
         BOOST_CHECK_EQUAL(loc.image(above), 102);
         BOOST_CHECK_EQUAL(loc.mask(above), 2*img.getWidth() + 1);
         BOOST_CHECK_EQUAL(loc.variance(below), 200);
@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_CASE(locators) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a L
 
         ImageT::xy_locator loc = img.xy_at(1,1);
         ImageT::x_iterator iter = img.x_at(1,1);
-        
+
         ImageT::Pixel pix = *loc;
 
         *iter = *iter + *loc;

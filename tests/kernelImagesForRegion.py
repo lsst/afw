@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import math
@@ -63,7 +63,7 @@ class KernelImagesForRegion(utilsTests.TestCase):
 
     def assertRegionCorrect(self, region):
         """Assert that a region has correct corner images
-        
+
         This test is only relevant for operations that try to reuse the image array data
         """
         regionCopy = mathDetail.KernelImagesForRegion(region.getKernel(), region.getBBox(), region.getXY0(), region.getDoNormalize())
@@ -90,7 +90,7 @@ class KernelImagesForRegion(utilsTests.TestCase):
 
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
-        
+
         minSigma = 0.1
         maxSigma = 3.0
 
@@ -105,7 +105,7 @@ class KernelImagesForRegion(utilsTests.TestCase):
             (yOrigin, 0.0,    ySlope),
             (0.0, 0.0, 0.0),
         )
-   
+
         kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         kernel.setSpatialParameters(sParams)
@@ -129,7 +129,7 @@ class KernelImagesForRegion(utilsTests.TestCase):
         topInd = self.bbox.getMaxY() + 1
         int(round((leftInd + rightInd) / 2.0))
         int(round((bottomInd + topInd) / 2.0))
-        
+
         for location, desIndex in (
             (region.BOTTOM_LEFT,  (leftInd,  bottomInd)),
             (region.BOTTOM_RIGHT, (rightInd, bottomInd)),
@@ -201,12 +201,12 @@ class KernelImagesForRegion(utilsTests.TestCase):
             self.assert_(rowWidth == self.bbox.getWidth())
         self.assert_(totalHeight == self.bbox.getHeight())
         self.assert_(not region.computeNextRow(regionRow))
-    
+
     def testExactImages(self):
         """Confirm that kernel image at each location is correct
         """
         desImage = afwImage.ImageD(afwGeom.Extent2I(self.kernel.getWidth(), self.kernel.getHeight()))
-        
+
         for doNormalize in (False, True):
             region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
             for location in (
@@ -219,11 +219,11 @@ class KernelImagesForRegion(utilsTests.TestCase):
                 xPos = afwImage.indexToPosition(pixelIndex[0] + self.xy0[0])
                 yPos = afwImage.indexToPosition(pixelIndex[1] + self.xy0[1])
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
-                
+
                 actImage = region.getImage(location)
                 msg = "exact image(%s) incorrect" % (LocNameDict[location],)
                 self.assertImagesNearlyEqual(actImage, desImage, msg=msg)
-    
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

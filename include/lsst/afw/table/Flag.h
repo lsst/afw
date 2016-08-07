@@ -126,7 +126,7 @@ public:
 
     /// Stringification.
     inline friend std::ostream & operator<<(std::ostream & os, Key<Flag> const & key) {
-        return os << "Key['" << Key<Flag>::getTypeString() << "'](offset=" << key.getOffset() 
+        return os << "Key['" << Key<Flag>::getTypeString() << "'](offset=" << key.getOffset()
                   << ", bit=" << key.getBit() << ")";
     }
 
@@ -141,7 +141,7 @@ private:
     }
 
     /// Used to implement RecordBase::set.
-    void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const { 
+    void setValue(Element * p, ndarray::Manager::Ptr const &, Value v) const {
         if (v) {
             *p |= (Element(1) << _bit);
         } else {

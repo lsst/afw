@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -63,7 +63,7 @@ except pexExcept.NotFoundError:
     afwdataDir = None
 else:
     dataDir = os.path.join(afwdataDir, "data")
-    
+
     originalExposureName = "medexp.fits"
     originalExposurePath = os.path.join(dataDir, originalExposureName)
     subExposureName = "medsub.fits"
@@ -74,7 +74,7 @@ else:
 def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX=False, projection="TAN",
     radDecCSys="ICRS", equinox=2000):
     """Make a Wcs
-    
+
     @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
     @param[in] crPixPos: crPix for WCS, using the LSST standard; a pair of floats
     @param[in] crValCoord: crVal for WCS (afwCoord.Coord)
@@ -115,7 +115,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testNullWarpExposure(self, interpLength=10):
         """Test that warpExposure maps an image onto itself.
-        
+
         Note:
         - NO_DATA and off-CCD pixels must be ignored
         - bad mask pixels get smeared out so we have to excluded all bad mask pixels
@@ -138,23 +138,23 @@ class WarpExposureTestCase(utilsTests.TestCase):
         afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl)
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull.fits")
-        
+
         self.assertEquals(afwWarpedExposure.getFilter().getName(), originalFilter.getName())
         self.assertEquals(afwWarpedExposure.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
-        
+
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
         noDataBitMask = afwWarpedMask.getPlaneBitMask("NO_DATA")
         afwWarpedMaskedImageArrSet = afwWarpedMaskedImage.getArrays()
         afwWarpedMaskArr = afwWarpedMaskedImageArrSet[1]
-        
+
         # compare all non-DATA pixels of image and variance, but relax specs a bit
         # because of minor noise introduced by bad pixels
         noDataMaskArr = afwWarpedMaskArr & noDataBitMask
         msg = "afw null-warped MaskedImage (all pixels, relaxed tolerance)"
         self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
             doMask=False, skipMask=noDataMaskArr, atol=1e-5, msg=msg)
-        
+
         # compare good pixels (mask=0) of image, mask and variance using full tolerance
         msg = "afw null-warped MaskedImage (good pixels, max tolerance)"
         self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, originalExposure.getMaskedImage(),
@@ -199,7 +199,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             self.fail("warping into a destination Exception with no Wcs should fail")
         except Exception:
             pass
-    
+
     def testWarpIntoSelf(self, interpLength=10):
         """Cannot warp in-place
         """
@@ -222,7 +222,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             self.fail("warpImage<Image> in place (dest is src) should fail")
         except Exception:
             pass
-    
+
     def testWarpingControl(self):
         """Test the basic mechanics of WarpingControl
         """
@@ -233,7 +233,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             for newInterpLength in (3, 7, 9):
                 wc.setInterpLength(newInterpLength)
                 self.assertEqual(wc.getInterpLength(), newInterpLength)
-        
+
         for cacheSize in (0, 100):
             wc = afwMath.WarpingControl("lanczos3", "bilinear", cacheSize)
             self.assertTrue(wc.hasMaskWarpingKernel())
@@ -245,7 +245,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
                 self.assertEqual(wc.getCacheSize(), newCacheSize)
                 self.assertEqual(wc.getWarpingKernel().getCacheSize(), newCacheSize)
                 self.assertEqual(wc.getMaskWarpingKernel().getCacheSize(), newCacheSize)
-    
+
     def testWarpingControlError(self):
         """Test error handling of WarpingControl
         """
@@ -257,7 +257,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         ):
             self.assertRaises(pexExcept.Exception,
                 afwMath.WarpingControl, kernelName, maskKernelName)
-        
+
         # error: new mask kernel larger than main kernel
         warpingControl = afwMath.WarpingControl("bilinear")
         for maskKernelName in ("lanczos3", "lanczos4"):
@@ -269,7 +269,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         for kernelName in ("bilinear", "lanczos3"):
             self.assertRaises(pexExcept.Exception,
                 warpingControl.setWarpingKernelName, kernelName)
-        
+
         # error: GPU only works with Lanczos kernels
         self.assertRaises(pexExcept.Exception,
             afwMath.WarpingControl, "bilinear", "", 0, 0, afwGpu.USE_GPU)
@@ -292,7 +292,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         ):
             # this should not raise any exception
             afwMath.WarpingControl(kernelName, maskKernelName)
-        
+
         # invalid kernel names
         for kernelName, maskKernelName in (
             ("badname", ""),
@@ -318,7 +318,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
                     maskKernelName=maskKernelName,
                     growFullMask=growFullMask,
                 )
-        
+
     def testMatchSwarpBilinearImage(self):
         """Test that warpExposure matches swarp using a bilinear warping kernel
         """
@@ -427,7 +427,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(10, 10), fromWcs)
-        
+
         toWcs = makeWcs(
             pixelScale = afwGeom.Angle(0.00011, afwGeom.degrees),
             projection = "CEA",
@@ -436,7 +436,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             doFlipX = True,
         )
         toExp = afwImage.ExposureF(afwImage.MaskedImageF(0,0), toWcs)
-        
+
         warpControl = afwMath.WarpingControl("lanczos3")
         # if a bug described in ticket #2441 is present, this will raise an exception:
         numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
@@ -457,10 +457,10 @@ class WarpExposureTestCase(utilsTests.TestCase):
         except Exception as e:
             print "Failed: %r != %r: %s" % (orArr, desOrArr, e)
             raise
-    
+
     def testSmallSrc(self):
         """Verify that a source image that is too small will not raise an exception
-        
+
         This tests another bug that was fixed in ticket #2441
         """
         fromWcs = makeWcs(
@@ -470,7 +470,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(359, 0), afwGeom.degrees),
         )
         fromExp = afwImage.ExposureF(afwImage.MaskedImageF(1, 1), fromWcs)
-        
+
         toWcs = makeWcs(
             pixelScale = afwGeom.Angle(1.1e-8, afwGeom.degrees),
             projection = "TAN",
@@ -488,11 +488,11 @@ class WarpExposureTestCase(utilsTests.TestCase):
         self.assertTrue(numpy.all(numpy.isinf(varArr)))
         noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
         self.assertTrue(numpy.all(maskArr == noDataBitMask))
-    
+
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
        rtol=4e-05, atol=1e-2):
         """Verify that using a separate mask warping kernel produces the correct results
-        
+
         Inputs:
         - kernelName: name of warping kernel in the form used by afwImage.makeKernel
         - maskKernelName: name of mask warping kernel in the form used by afwImage.makeKernel
@@ -515,7 +515,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             crValCoord = afwCoord.IcrsCoord(afwGeom.Point2D(41.65, 32.95), afwGeom.degrees),
             posAng = afwGeom.Angle(31, afwGeom.degrees),
         )
-        
+
         srcMaskedImage = afwImage.MaskedImageF(100, 101)
         srcExposure = afwImage.ExposureF(srcMaskedImage, srcWcs)
 
@@ -525,7 +525,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         srcArrays[0][:] = numpy.random.normal(10000, 1000, size=shape)
         srcArrays[2][:] = numpy.random.normal( 9000,  900, size=shape)
         srcArrays[1][:] = numpy.reshape(numpy.arange(0, shape[0] * shape[1], 1, dtype=numpy.uint16), shape)
-        
+
         warpControl = afwMath.WarpingControl(
             kernelName,
             maskKernelName,
@@ -538,7 +538,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         destExposure = afwImage.ExposureF(destMaskedImage, destWcs)
         afwMath.warpExposure(destExposure, srcExposure, warpControl)
 
-        # now compute with two separate mask planes        
+        # now compute with two separate mask planes
         warpControl.setGrowFullMask(0)
         narrowMaskedImage = afwImage.MaskedImageF(110, 121)
         narrowExposure = afwImage.ExposureF(narrowMaskedImage, destWcs)
@@ -559,7 +559,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         predMask = (broadArrays[1] & growFullMask) | (narrowArrays[1] & ~growFullMask).astype(numpy.uint16)
         predArraySet = (broadArrays[0], predMask, broadArrays[2])
         predExposure = afwImage.makeMaskedImageFromArrays(*predArraySet)
-        
+
         msg = "Separate mask warping failed; warpingKernel=%s; maskWarpingKernel=%s" % \
                 (kernelName, maskKernelName)
         self.assertMaskedImagesNearlyEqual(destExposure.getMaskedImage(), predExposure,
@@ -567,14 +567,14 @@ class WarpExposureTestCase(utilsTests.TestCase):
             rtol=rtol, atol=atol, msg=msg)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
-    def compareToSwarp(self, kernelName, 
+    def compareToSwarp(self, kernelName,
         useWarpExposure=True, useSubregion=False, useDeepCopy=False,
         interpLength=10, cacheSize=100000,
         rtol=4e-05, atol=1e-2):
         """Compare warpExposure to swarp for given warping kernel.
-        
+
         Note that swarp only warps the image plane, so only test that plane.
-        
+
         Inputs:
         - kernelName: name of kernel in the form used by afwImage.makeKernel
         - useWarpExposure: if True, call warpExposure to warp an ExposureF,
@@ -612,11 +612,11 @@ class WarpExposureTestCase(utilsTests.TestCase):
         swarpedImage = swarpedDecoratedImage.getImage()
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
         warpedWcs = afwImage.makeWcs(swarpedMetadata)
-        
+
         if useWarpExposure:
             # path for saved afw-warped image
             afwWarpedImagePath = "afwWarpedExposure1%s.fits" % (kernelName,)
-    
+
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
             afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl)
@@ -630,7 +630,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
 
             if display:
                 ds9.mtv(swarpedMaskedImage, frame=2, title="SWarped")
-            
+
             msg = "afw and swarp %s-warped differ (ignoring bad pixels)" % (kernelName,)
             try:
                 self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, swarpedMaskedImage,
@@ -645,7 +645,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             # path for saved afw-warped image
             afwWarpedImagePath = "afwWarpedImage1%s.fits" % (kernelName,)
             afwWarpedImage2Path = "afwWarpedImage1%s_xyTransform.fits" % (kernelName,)
-    
+
             afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
@@ -659,7 +659,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
                 ds9.mtv(diff, frame=3, title="swarp - afw")
             if SAVE_FITS_FILES:
                 afwWarpedImage.writeFits(afwWarpedImagePath)
-            
+
             afwWarpedImageArr = afwWarpedImage.getArray()
             noDataMaskArr = numpy.isnan(afwWarpedImageArr)
             msg = "afw and swarp %s-warped images do not match (ignoring NaN pixels)" % \
@@ -688,7 +688,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
                     print "Saved failed afw-warped image as: %s" % (afwWarpedImage2Path,)
                 raise
 
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

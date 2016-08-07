@@ -1,8 +1,8 @@
 // -*- lsst-c++ -*-
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010, 2011 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,14 +10,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #ifndef AFW_TABLE_AmpInfo_h_INCLUDED
@@ -51,15 +51,15 @@ class AmpInfoTable;
  * Here is a pictorial example showing the meaning of flipX and flipY:
  *
  *    CCD with 4 amps        Desired assembled output      Use these parameters
- *   
- *    --x         x--            y                       
+ *
+ *    --x         x--            y
  *   |  amp1    amp2 |           |                               flipX       flipY
  *   y               y           |                       amp1    False       True
  *                               | CCD image             amp2    True        True
  *   y               y           |                       amp3    False       False
  *   |  amp3    amp4 |           |                       amp4    True        False
  *    --x         x--             ----------- x
- *   
+ *
  * @note:
  * * All bounding boxes are parent boxes with respect to the raw image.
  * * The overscan and underscan bounding boxes are regions containing USABLE data,
@@ -96,7 +96,7 @@ public:
 
     double getGain() const;
     void setGain(double gain); ///< amplifier gain in e-/ADU
-    
+
     double getReadNoise() const;
     void setReadNoise(double readNoise); ///< amplifier read noise, in e-
 
@@ -145,7 +145,7 @@ public:
 
     geom::Box2I getRawPrescanBBox() const;
     void setRawPrescanBBox(geom::Box2I const &bbox); ///< bounding box of usable (horizontal) prescan pixels on raw image
-    
+
     //@}
 
 protected:
@@ -192,7 +192,7 @@ public:
 
     /**
      *  @brief Return true if the given schema is a valid AmpInfoTable schema.
-     *  
+     *
      *  This will always be true if the given schema was originally constructed
      *  using makeMinimalSchema(), and will rarely be true otherwise.
      */

@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -43,7 +43,7 @@ import lsst.pex.exceptions as pexExcept
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class InterpolateTestCase(unittest.TestCase):
-    
+
     """A test case for Interpolate Linear"""
     def setUp(self):
         self.n = 10
@@ -58,7 +58,7 @@ class InterpolateTestCase(unittest.TestCase):
             self.x[i] = i
             self.y1[i] = self.dydx*self.x[i] + self.y0
             self.y2[i] = self.d2ydx2*self.x[i]*self.x[i] + self.dydx*self.x[i] + self.y0
-            
+
         self.xtest = 4.5
         self.y1test = self.dydx*self.xtest + self.y0
         self.y2test = self.d2ydx2*self.xtest*self.xtest + self.dydx*self.xtest + self.y0
@@ -79,12 +79,12 @@ class InterpolateTestCase(unittest.TestCase):
 
 
     def testNaturalSplineRamp(self):
-        
+
         # === test the Spline interpolator =======================
         # specify interp type with the string interface
         yinterpS = afwMath.makeInterpolate(self.x, self.y1, afwMath.Interpolate.NATURAL_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
-        
+
         self.assertEqual(youtS, self.y1test)
 
     def testAkimaSplineParabola(self):
@@ -92,14 +92,14 @@ class InterpolateTestCase(unittest.TestCase):
         # specify interp type with the enum style interface
         yinterpS = afwMath.makeInterpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
-        
+
 
         self.assertEqual(youtS, self.y2test)
 
     def testConstant(self):
         """test the constant interpolator"""
         # [xy]vec:   point samples
-        # [xy]vec_c: centered values        
+        # [xy]vec_c: centered values
         xvec =   np.array([    0.0, 1.0, 2.0, 3.0,  4.0,  5.0,  6.0,  7.0,  8.0,  9.0])
         xvec_c = np.array([-0.5, 0.5, 1.5, 2.5,  3.5,  4.5,  5.5,  6.5,  7.5,  8.5, 9.5])
         yvec =   np.array([    1.0, 2.4, 5.0, 8.4, 13.0, 18.4, 25.0, 32.6, 41.0, 50.6])

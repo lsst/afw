@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -87,7 +87,7 @@ class MaskedImageTestCase(unittest.TestCase):
         #
         self.BAD = afwImage.MaskU_getPlaneBitMask("BAD")
         self.EDGE = afwImage.MaskU_getPlaneBitMask("EDGE")
-        
+
         self.mimage.getMask().set(self.EDGE)
         centre = afwImage.MaskU(
             self.mimage.getMask(),
@@ -126,7 +126,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         self.assertEqual(self.mimage.getMask().get(1, 1), self.EDGE)
         self.assertEqual(self.mimage.getMask().get(2, 2), 0x0)
-    
+
     def testMaskedImageFromImage(self):
         w, h = 10, 20
         dims = afwGeom.Extent2I(w, h)
@@ -208,7 +208,7 @@ class MaskedImageTestCase(unittest.TestCase):
         # add an image
         self.mimage2 += self.mimage
 
-        self.assertEqual(self.mimage2.get(0, 0), (self.imgVal1 + self.imgVal2, self.EDGE, 
+        self.assertEqual(self.mimage2.get(0, 0), (self.imgVal1 + self.imgVal2, self.EDGE,
                                                  self.varVal1 + self.varVal2))
 
         # Add an Image<int> to a MaskedImage<int>
@@ -222,7 +222,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         # add a scalar
         self.mimage += self.imgVal1
-        
+
         self.assertEqual(self.mimage.get(0, 0), (2*self.imgVal1, self.EDGE, self.varVal1))
 
         self.assertEqual(self.mimage.getMask().get(1, 1), self.EDGE)
@@ -234,7 +234,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         for i, j in [(2, 3)]:
             self.assertEqual(self.mimage.getImage().get(i, j), self.imgVal1 + self.function(i, j))
-    
+
     def testAddScaledImages(self):
         "Test addition by a scaled MaskedImage"
         # add an image
@@ -380,7 +380,7 @@ class MaskedImageTestCase(unittest.TestCase):
         i1.set(100)
         i2 = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
         i2.set(10)
-        
+
         def tst1(i1, i2):
             i1 -= i2
         def tst2(i1, i2):
@@ -406,7 +406,7 @@ class MaskedImageTestCase(unittest.TestCase):
         for tst in tsts21:
             self.assertRaises(lsst.pex.exceptions.LengthError, tst, i2, i1)
 
-            
+
     def testMultiplyImages(self):
         """Test multiplication"""
         # Multiply by a MaskedImage
@@ -428,7 +428,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         # multiply by a scalar
         self.mimage *= self.imgVal1
-        
+
         self.assertEqual(self.mimage.get(0, 0),
                          (self.imgVal1*self.imgVal1, self.EDGE, self.varVal1*pow(self.imgVal1, 2)))
 
@@ -472,7 +472,7 @@ class MaskedImageTestCase(unittest.TestCase):
             mimage = self.mimage2.Factory(self.mimage2, True)
             image = afwImage.ImageI(mimage.getDimensions(), 1)
             mimage /= image
-            
+
             self.assertEqual(mimage.get(0, 0), (self.imgVal2, 0x0, self.varVal2))
 
         # Divide a MaskedImage<int> by an Image<int>; this divides the variance Image<float>
@@ -487,14 +487,14 @@ class MaskedImageTestCase(unittest.TestCase):
 
         # divide by a scalar
         self.mimage /= self.imgVal1
-        
+
         self.assertEqual(self.mimage.getImage().get(0, 0), self.imgVal1/self.imgVal1)
         self.assertEqual(self.mimage.getMask().get(0, 0), self.EDGE)
         self.assertAlmostEqual(self.mimage.getVariance().get(0, 0), self.varVal1/pow(self.imgVal1, 2), 9)
 
         self.assertEqual(self.mimage.getMask().get(1, 1), self.EDGE)
         self.assertEqual(self.mimage.getMask().get(2, 2), 0x0)
-        
+
     def testScaledDivideImages(self):
         """Test division by a scaled image"""
         # Divide by an image
@@ -513,7 +513,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def testCopyConstructors(self):
         dimage = afwImage.MaskedImageF(self.mimage, True) # deep copy
         simage = afwImage.MaskedImageF(self.mimage) # shallow copy
-        
+
         self.mimage += 2                # should only change dimage
         self.assertEqual(dimage.getImage().get(0, 0), self.imgVal1)
         self.assertEqual(simage.getImage().get(0, 0), self.imgVal1 + 2)
@@ -521,7 +521,7 @@ class MaskedImageTestCase(unittest.TestCase):
     def checkImgPatch12(self, img, x0, y0):
         """Check that a patch of an image is correct; origin of patch is at (x0, y0) in full image
         N.b. This isn't a general routine!  Works only for testSubimages[12]"""
-        
+
         self.assertEqual(img.get(x0 - 1, y0 - 1), (self.imgVal1, self.EDGE, self.varVal1))
         self.assertEqual(img.get(x0,     y0),     (666,          self.BAD,  0))
         self.assertEqual(img.get(x0 + 3, y0),     (self.imgVal1, 0x0,       self.varVal1))
@@ -534,7 +534,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         im = afwImage.MaskedImageF(afwGeom.ExtentI(10, 20))
         x0 = y0 = 0
-        
+
         self.assertEqual(im.getX0(), x0)
         self.assertEqual(im.getY0(), y0)
         self.assertEqual(im.getXY0(), afwGeom.PointI(x0, y0))
@@ -557,7 +557,7 @@ class MaskedImageTestCase(unittest.TestCase):
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
             )
-        
+
         simage = afwImage.MaskedImageF(
             smimage,
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(3, 2)),
@@ -584,7 +584,7 @@ class MaskedImageTestCase(unittest.TestCase):
         #printImg(afwImage.ImageF(self.mimage, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         smimage = afwImage.MaskedImageF(
-            self.mimage, 
+            self.mimage,
             afwGeom.Box2I(afwGeom.Point2I(1, 1), afwGeom.Extent2I(10, 5)),
             afwImage.LOCAL
             )
@@ -602,7 +602,7 @@ class MaskedImageTestCase(unittest.TestCase):
         simage[:] = mimage2
         del simage
         del mimage2
-        
+
         self.checkImgPatch12(self.mimage, 2, 2)
         self.checkImgPatch12(smimage, 1, 1)
 
@@ -623,20 +623,20 @@ class MaskedImageTestCase(unittest.TestCase):
         for deep in (True, False):
             mimage = self.mimage.Factory(
                 self.mimage,
-                afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.Extent2I(64, 64)), 
+                afwGeom.Box2I(afwGeom.Point2I(10, 10), afwGeom.Extent2I(64, 64)),
                 afwImage.LOCAL,
                 deep)
             mimage.setXY0(afwGeom.Point2I(0, 0))
             mimage2 = mimage.Factory(mimage)
-            
+
             if display:
                 ds9.mtv(mimage2)
-                
+
             self.checkImgPatch3(mimage2, deep)
 
     def testSetCopiedMask(self):
         """Check that we can set the Mask with a copied Mask"""
-        
+
         crMask = self.mimage.getMask().Factory(self.mimage.getMask(), True)
         msk = self.mimage.getMask()
         msk |= crMask

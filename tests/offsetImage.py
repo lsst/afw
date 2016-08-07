@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -63,7 +63,7 @@ class offsetImageTestCase(unittest.TestCase):
 
     def testSetFluxConvervation(self):
         """Test that flux is preserved"""
-        
+
         for algorithm in ("lanczos5", "bilinear", "nearest"):
             outImage = afwMath.offsetImage(self.inImage, 0, 0, algorithm)
             self.assertEqual(outImage.get(50, 50), self.background)
@@ -76,7 +76,7 @@ class offsetImageTestCase(unittest.TestCase):
 
     def testSetIntegerOffset(self):
         """Test that we can offset by positive and negative amounts"""
-        
+
         self.inImage.set(50, 50, 400)
 
         if False and display:
@@ -84,12 +84,12 @@ class offsetImageTestCase(unittest.TestCase):
             ds9.mtv(self.inImage, frame=frame)
             ds9.pan(50, 50, frame=frame)
             ds9.dot("+", 50, 50, frame=frame)
-        
+
         for algorithm in ("lanczos5", "bilinear", "nearest"):
             for delta in [-0.49, 0.51]:
                 for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
                     outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, algorithm)
-                
+
                     if False and display:
                         frame += 1
                         ds9.mtv(outImage, frame=frame)
@@ -139,7 +139,7 @@ class offsetImageTestCase(unittest.TestCase):
                 ):
                     im = afwImage.ImageF(size, size)
                     im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
-                    
+
 
                     if display:
                         ds9.mtv(im, frame=0)
@@ -165,12 +165,12 @@ class offsetImageTestCase(unittest.TestCase):
 # the following would be preferable if there was an easy way to NaN pixels
 #
 #         stats = afwMath.makeStatistics(im, afwMath.MEAN | afwMath.MAX | afwMath.MIN)
-# 
+#
 #         if not False:
 #             print "mean = %g, min = %g, max = %g" % (stats.getValue(afwMath.MEAN),
 #                                                      stats.getValue(afwMath.MIN),
 #                                                      stats.getValue(afwMath.MAX))
-#             
+#
 #         self.assertTrue(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
 #         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
 #         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
@@ -178,12 +178,12 @@ class offsetImageTestCase(unittest.TestCase):
 
 def getOrigFracShift(dx, dy):
     """Return the predicted integer shift to XY0 and the fractional shift that offsetImage will use
-    
+
     offsetImage preserves the origin if dx and dy both < 1 pixel; larger shifts are to the nearest pixel.
     """
     if (abs(dx) < 1) and (abs(dy) < 1):
         return (0, 0, dx, dy)
-    
+
     dOrigX = math.floor(dx + 0.5)
     dOrigY = math.floor(dy + 0.5)
     dFracX = dx - dOrigX

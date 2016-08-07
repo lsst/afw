@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #if !defined(LSST_DETECTION_FOOTPRINTCTRL_H)
@@ -27,7 +27,7 @@
  */
 
 namespace lsst {
-namespace afw { 
+namespace afw {
 namespace detection {
 /*!
  * \brief A Control Object for Footprints, controlling e.g. how they are grown
@@ -79,9 +79,9 @@ public:
     }
 
 #undef DEFINE_ACCESSORS
-private:    
+private:
     TBool _circular;                    // grow in all directions ( == left & right & up & down)
-    TBool _isotropic;                   // go to the expense of as isotropic a grow as possible 
+    TBool _isotropic;                   // go to the expense of as isotropic a grow as possible
     TBool _left, _right, _up, _down;    // grow in selected directions?
 };
 
@@ -106,7 +106,7 @@ private:
         void setMaskVal(long maskVal) { _maskVal = maskVal; }
         double getVarianceVal() const { return _varianceVal; }
     void setVarianceVal(double varianceVal) { _varianceVal = varianceVal; }
-    
+
 private:
     ModifySource _modifySource;
     double _imageVal;

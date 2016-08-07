@@ -1,10 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -57,7 +57,7 @@ class SpatialCellTestCase(unittest.TestCase):
         for i in (0, 1, 4, 3, 2):       # must be all numbers in range(self.nCandidate)
             x, y = i, 5*i
             candidateList.append(testLib.TestCandidate(x, y, getFlux(x)))
-    
+
         self.cell = afwMath.SpatialCell("Test", afwGeom.Box2I(), candidateList)
         self.assertEqual(self.cell.getLabel(), "Test")
 
@@ -126,7 +126,7 @@ class SpatialCellTestCase(unittest.TestCase):
             i += 1
 
         self.assertEqual(i, self.nCandidate)
-        
+
     def testSortCandidates(self):
         """Check that we can update ratings and maintain order"""
         ratings0 = [cand.getCandidateRating() for cand in self.cell]
@@ -154,7 +154,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
     def makeTestCandidateCellSet(self):
         """Populate a SpatialCellSet"""
-        
+
         if False:                       # Print the bboxes for the cells
             print
             for i in range(len(self.cellSet.getCellList())):
@@ -198,7 +198,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
         cell0 = self.cellSet.getCellList()[0]
         self.assertFalse(cell0.empty())
         self.assertEqual(cell0[0].getXCenter(), 0.0)
-        
+
         self.assertEqual(self.cellSet.getCellList()[1][0].getXCenter(), 305.0)
 
         self.assertTrue(self.cellSet.getCellList()[2].empty())
@@ -222,10 +222,10 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         self.cellSet.visitCandidates(visitor)
         self.assertEqual(visitor.getN(), self.NTestCandidates)
-    
+
         self.cellSet.visitCandidates(visitor, 1)
         self.assertEqual(visitor.getN(), 3)
-    
+
     def testGetCandidateById(self):
         """Check that we can lookup candidates by ID"""
 
@@ -238,7 +238,7 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         def tst():
             self.cellSet.getCandidateById(-1) # non-existent ID
-            
+
         self.assertEqual(self.cellSet.getCandidateById(-1, True), None)
         self.assertRaises(pexExcept.NotFoundError, tst)
 
@@ -248,13 +248,13 @@ class SpatialCellSetTestCase(unittest.TestCase):
             # only works for tests where dx,dx is some multiple of sx,sy
             assert(dx//sx == float(dx)/float(sx))
             assert(dy//sy == float(dy)/float(sy))
-            
+
             bbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(dx, dy))
             cset = afwMath.SpatialCellSet(bbox, sx, sy)
             for cell in cset.getCellList():
                 label  = cell.getLabel()
                 nx, ny = [int(z) for z in label.split()[1].split('x')]
-                
+
                 cbbox  = cell.getBBox()
 
                 self.assertEqual(cbbox.getMinX(), nx*sx + x0)
@@ -319,7 +319,7 @@ class TestMaskedImageCandidateCase(unittest.TestCase):
         self.assertEqual(im.get(0, 0), flux) # This is how TestMaskedImageCandidate sets its pixels
         self.assertEqual(im.getWidth(), width)
         self.assertEqual(im.getHeight(), height)
-        
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():

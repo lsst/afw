@@ -53,7 +53,7 @@ public:
 
     void saveCatalog(
         BaseCatalog const & catalog, int id,
-        std::string const & name, std::string const & module, 
+        std::string const & name, std::string const & module,
         int catPersistable
     ) {
         PTR(BaseRecord) indexRecord = _index.addNew();
@@ -111,14 +111,14 @@ public:
             iter->writeFits(fitsfile);
         }
     }
-    
+
     Impl() : _nextId(1), _map(), _index(ArchiveIndexSchema::get().schema) {
         PTR(daf::base::PropertyList) metadata(new daf::base::PropertyList());
         metadata->set("EXTTYPE", "ARCHIVE_INDEX");
         metadata->set("AR_CATN", 0, "# of this catalog relative to the start of this archive");
         _index.getTable()->setMetadata(metadata);
     }
-    
+
     int _nextId;
     Map _map;
     BaseCatalog _index;

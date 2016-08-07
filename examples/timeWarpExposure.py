@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -77,7 +77,7 @@ def timeWarp(destExposure, srcExposure, warpingControl):
 
 def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd):
     """Make an RA/Dec WCS from another RA/Dec WCS
-    
+
     @param projName: projection, e,g, "TAN"
     @param destCtrInd: pixel index of center of WCS; used to compute CRPIX;
         typically the center of the destination exposure
@@ -118,7 +118,7 @@ def makeWcs(projName, destCtrInd, skyOffset, rotAng, scaleFac, srcWcs, srcCtrInd
     ps.add("CD1_2", destScale * math.sin(destAngleRad))
     ps.add("CD2_2", destScale * math.cos(destAngleRad))
     return afwImage.makeWcs(ps)
-    
+
 
 def run():
     if len(sys.argv) < 2:
@@ -131,21 +131,21 @@ def run():
     srcWcs = srcExposure.getWcs()
     srcDim = srcExposure.getDimensions()
     srcCtrInd = [int(d / 2) for d in srcDim]
-    
+
     # make the destination exposure small enough that even after rotation and offset
     # (by reasonable amounts) there are no edge pixels
     destDim = afwGeom.Extent2I(*[int(sd * 0.5) for sd in srcDim])
     destExposure = afwImage.ExposureF(destDim)
     destCtrInd = [int(d / 2) for d in destDim]
-    
+
     maskKernelName = ""
     cacheSize = 0
-    
+
     print "Warping", InputExposurePath
     print "Source (sub)image size:", srcDim
     print "Destination image size:", destDim
     print
-    
+
     print "test# interp  scaleFac     skyOffset     rotAng   kernel   goodPix time/iter"
     print '       (pix)              (RA, Dec ")    (deg)                      (sec)'
     testNum = 1
@@ -179,7 +179,7 @@ def run():
                     print "%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (
                         testNum, interpLength, scaleFac, skyOffsetArcSec[0], skyOffsetArcSec[1],
                         rotAng, kernelName, goodPix, dTime/float(nIter))
-                    
+
                     if SaveImages:
                         destExposure.writeFits("warpedExposure%03d.fits" % (testNum,))
                     testNum += 1

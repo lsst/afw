@@ -51,7 +51,7 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         color = ' # color=%s' % ctype
 
     regions = []
-    
+
     r += 1
     c += 1                      # ds9 uses 1-based coordinates
     if isinstance(symb, afwGeom.ellipses.Axes):
@@ -74,10 +74,10 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         regions.append('circle %g %g %gi%s' % (c, r, size, color))
     else:
         color = re.sub("^ # ", "", color) # skip the leading " # "
-        
+
         angle = ""
         if textAngle is not None:
-            angle += " textangle=%.1f"%(textAngle) 
+            angle += " textangle=%.1f"%(textAngle)
 
         font = ""
         if size != 2 or fontFamily != "helvetica":

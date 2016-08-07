@@ -72,7 +72,7 @@ class ImagePrinter(object):
     def dimenStr(self, val=None):
         if val is None:
             val = self.val
-            
+
         # Make sure &foo works, too.
         type = val.type
         if type.code == gdb.TYPE_CODE_REF:
@@ -82,7 +82,7 @@ class ImagePrinter(object):
         arr = val["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
 
         return "%dx%d+%d+%d" % (
-            #val["getWidth"](), val["getHeight"](), 
+            #val["getWidth"](), val["getHeight"](),
             gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
             arr[0], arr[1])
 
@@ -153,9 +153,9 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
 
         if var.type.code == gdb.TYPE_CODE_PTR:
             var = var.dereference()     # be nice
-            
+
         pixelTypeName = str(var.type.template_argument(0))
-        
+
         if len(args) < 2:
             raise gdb.GdbError("Please specify a pixel's x and y indexes")
 

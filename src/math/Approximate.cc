@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2015 AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @brief Approximate values for a set of x,y vector<>s
  * @ingroup afw
@@ -113,7 +113,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
         ApproximateControl const& ctrl        ///< desired approximation algorithm
                                                   )
     : Approximate<PixelT>(xVec, yVec, bbox, ctrl),
-      _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), geom::Box2D(bbox)))    
+      _poly(math::Chebyshev1Function2<double>(ctrl.getOrderX(), geom::Box2D(bbox)))
 {
 #if !defined(NDEBUG)
     {
@@ -149,7 +149,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
                 _poly.setParameter(i, 1.0);
                 termCoeffs[i].push_back(_poly(x, y));
                 _poly.setParameter(i, 0.0);
-            }            
+            }
         }
     }
     // We'll solve A*c = b
@@ -204,7 +204,7 @@ ApproximateChebyshev<PixelT>::ApproximateChebyshev(
     Eigen::Map<Eigen::VectorXd> c(&cvec[0], nTerm); // N.b. c shares memory with cvec
 
     solveMatrix_Eigen(A, b, c);
-    
+
     _poly.setParameters(cvec);
 }
 
@@ -232,7 +232,7 @@ ApproximateChebyshev<PixelT>::doGetImage(int orderX,  ///< Order of approximatio
     math::Chebyshev1Function2<double> poly =
         (orderX == Approximate<PixelT>::_ctrl.getOrderX() &&
          orderY == Approximate<PixelT>::_ctrl.getOrderY()) ? _poly : _poly.truncate(orderX);
-    
+
     typedef typename image::Image<typename Approximate<PixelT>::OutPixelT> ImageT;
 
     PTR(ImageT) im(new ImageT(Approximate<PixelT>::_bbox));

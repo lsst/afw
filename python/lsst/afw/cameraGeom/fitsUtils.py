@@ -83,9 +83,9 @@ class HeaderDetectorMap(HeaderMap):
         obj.__setattr__(attrName, transform(value))
 
 class DetectorBuilder(object):
-    def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1., 
+    def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1.,
                  radialCoeffs=(0., 1.), clobberMetadata=False, doRaise=True):
-        ''' @param[in] detectorFileName  FITS file containing the detector description. 
+        ''' @param[in] detectorFileName  FITS file containing the detector description.
                                          May use [] notation to specify an extension in an MEF.
             @param[in] ampFileNameList   List of FITS file names to use in building the amps.
                                          May contain duplicate entries if the raw data are assembled.

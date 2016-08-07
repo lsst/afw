@@ -1,9 +1,9 @@
 #!/usr/bin/env python2
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -183,7 +183,7 @@ class Box2ITestCase(unittest.TestCase):
         self.assertEqual(corners[2], box.getMax())
         self.assertEqual(corners[3].getX(), box.getMinX())
         self.assertEqual(corners[3].getY(), box.getMaxY())
-        
+
     def testRelations(self):
         box = geom.Box2I(geom.Point2I(-2,-3), geom.Point2I(2,1), True)
         self.assertNotEqual(box, (3,4,5)) # should not throw
@@ -392,7 +392,7 @@ class Box2DTestCase(unittest.TestCase):
         x00, y00, x11, y11 = (8,11,13,16)
         lrx00,lry00,lrx11,lry11 = (1,11,6,16)
         tbx00,tby00,tbx11,tby11 = (8,3,13,8)
-      
+
         box0 = geom.Box2I(geom.Point2I(x00, y00),
                 geom.Point2I(x11, y11))
         box1 = geom.Box2I(geom.Point2I(x00, y00),
@@ -406,7 +406,7 @@ class Box2DTestCase(unittest.TestCase):
         self.assertEqual(box0.getMaxX(), lrx11);
         self.assertEqual(box0.getMaxY(), lry11);
 
-        #test flip TB 
+        #test flip TB
         self.assertEqual(box1.getMinX(), tbx00);
         self.assertEqual(box1.getMinY(), tby00);
         self.assertEqual(box1.getMaxX(), tbx11);
@@ -417,7 +417,7 @@ class Box2DTestCase(unittest.TestCase):
         x00, y00, x11, y11 = (8.3,11.4,13.2,16.9)
         lrx00,lry00,lrx11,lry11 = (1.9,11.4,6.8,16.9)
         tbx00,tby00,tbx11,tby11 = (8.3,3.7,13.2,9.2)
-      
+
         box0 = geom.Box2D(geom.Point2D(x00, y00),
                 geom.Point2D(x11, y11))
         box1 = geom.Box2D(geom.Point2D(x00, y00),
@@ -431,7 +431,7 @@ class Box2DTestCase(unittest.TestCase):
         self.assertAlmostEqual(box0.getMaxX(), lrx11, places=6);
         self.assertAlmostEqual(box0.getMaxY(), lry11, places=6);
 
-        #test flip TB 
+        #test flip TB
         self.assertAlmostEqual(box1.getMinX(), tbx00, places=6);
         self.assertAlmostEqual(box1.getMinY(), tby00, places=6);
         self.assertAlmostEqual(box1.getMaxX(), tbx11, places=6);

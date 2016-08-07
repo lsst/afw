@@ -10,7 +10,7 @@ int main(int argc, char const * argv[]) {
 
     lsst::daf::base::Citizen::setNewCallbackId(memId);
     lsst::daf::base::Citizen::setDeleteCallbackId(memId);
-    
+
     std::string filename = "memleak.fits";
     {
         SourceCatalog cat(SourceTable::makeMinimalSchema());
@@ -20,7 +20,7 @@ int main(int argc, char const * argv[]) {
         SourceCatalog readVector = SourceCatalog::readFits(filename);
     }
 
-    lsst::daf::base::Citizen::census(std::cout);    
+    lsst::daf::base::Citizen::census(std::cout);
 
     return 0;
 }

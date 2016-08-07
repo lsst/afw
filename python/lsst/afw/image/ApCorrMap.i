@@ -80,7 +80,7 @@
             """__imul__(self, double scale) -> self"""
             _imageLib.ApCorrMap___imul__(*args)
             return args[0]
-    
+
         def __idiv__(*args):
             """__idiv__(self, double scale) -> self"""
             _imageLib.ApCorrMap___idiv__(*args)

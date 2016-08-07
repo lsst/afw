@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -46,7 +46,7 @@
 namespace lsst {
 namespace afw {
 
-// forward declarations    
+// forward declarations
 namespace image {
     template<typename ImagePixelT> class Image;
     template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT> class MaskedImage;
@@ -276,9 +276,9 @@ namespace math {
     };
 
     /************************************************************************************************************/
-    /** 
+    /**
      * @brief Class to ensure constraints for spatial modeling
-     * 
+     *
      * A given %image is divided up into cells, with each cell represented by an instance of this class.
      * Each cell itself contains a list of instances of classes derived from SpatialCellCandidate.  One class
      * member from each cell will be chosen to fit to a spatial model.  In case of a poor fit, the next class
@@ -299,7 +299,7 @@ namespace math {
         SpatialCell(std::string const& label,
                     lsst::afw::geom::Box2I const& bbox=lsst::afw::geom::Box2I(),
                     CandidateList const& candidateList=CandidateList());
-        
+
         /**
          * Destructor
          */
@@ -371,19 +371,19 @@ namespace math {
         CandidateList _candidateList;   // List of all candidates in the cell
         bool _ignoreBad;                // Don't include BAD candidates when traversing the list
     };
-    
-    /** 
+
+    /**
      * @brief A collection of SpatialCells covering an entire %image
      */
     class SpatialCellSet {
     public:
         typedef std::shared_ptr<SpatialCellSet> Ptr;
         typedef std::shared_ptr<const SpatialCellSet> ConstPtr;
-        
+
         typedef std::vector<PTR(SpatialCell)> CellList;
 
         SpatialCellSet(lsst::afw::geom::Box2I const& region, int xSize, int ySize=0);
-        
+
         /**
          * Destructor
          */
@@ -393,7 +393,7 @@ namespace math {
          * Return our SpatialCells
          */
         CellList& getCellList() { return _cellList; }
-        
+
         /**
          * Return the bounding box of the %image
          */
