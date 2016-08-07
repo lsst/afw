@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -118,7 +119,7 @@ class SourceMatchTestCase(unittest.TestCase):
         if False:
             s0 = mat[0][0]
             s1 = mat[0][1]
-            print s0.getRa(), s1.getRa(), s0.getId(), s1.getId()
+            print(s0.getRa(), s1.getRa(), s0.getId(), s1.getId())
 
     def testNaNPositions(self):
         ss1 = afwTable.SourceCatalog(self.table)
@@ -223,7 +224,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 s0 = mat[0]
                 s1 = mat[1]
                 d = mat[2]
-                print s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
+                print(s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
 
         # Actually do the match
         for s in sdssSecondary:
@@ -245,7 +246,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
             for s in sdssSecondary:
                 if s.getId() not in matchIds:
-                    print "RHL", s.getId()
+                    print("RHL", s.getId())
 
         matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
@@ -256,8 +257,8 @@ class SourceMatchTestCase(unittest.TestCase):
                 s0 = mat[0]
                 s1 = mat[1]
                 mat[2]
-                print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
-                print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
+                print(s0.getId(), s1.getId(), s0.getRa(), s0.getDec(), end=' ')
+                print(s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
 
     def testMismatches(self):
         """ Chech that matchRaDec works as expected when using

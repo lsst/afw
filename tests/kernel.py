@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -797,8 +798,8 @@ class KernelTestCase(unittest.TestCase):
                 im1Arr = im1.getArray()
                 im2Arr = im2.getArray()
                 if not numpy.allclose(im1Arr, im2Arr):
-                    print "im1Arr =", im1Arr
-                    print "im2Arr =", im2Arr
+                    print("im1Arr =", im1Arr)
+                    print("im2Arr =", im2Arr)
                     return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
 
         if newCtr1 != None:

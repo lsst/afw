@@ -4,6 +4,7 @@
 Usage:
 ./countMaskBits.py path-to-masked-image
 """
+from __future__ import print_function
 import sys
 import os
 
@@ -77,21 +78,21 @@ if __name__ == "__main__":
     maskBitNameDict = getMaskBitNameDict(mask)
     maskArr = maskedImage.getMask().getArray()
     bitIndList = sorted(maskBitNameDict.keys())
-    print "Bit Mask Plane Name    # Pixels"
+    print("Bit Mask Plane Name    # Pixels")
     for bitInd in bitIndList:
         planeName = maskBitNameDict[bitInd]
         bitMask = 1 << bitInd
         count = numpy.sum(maskArr & bitMask > 0)
-        print "%3d %-18s %d" % (bitInd, planeName, count)
+        print("%3d %-18s %d" % (bitInd, planeName, count))
 
-    print
-    print "Interpolation: \"bad\" pixels have any of these bits set: %s" % (BadPixelList,)
+    print()
+    print("Interpolation: \"bad\" pixels have any of these bits set: %s" % (BadPixelList,))
     numBad, numInterp, numBadAndInterp = countInterp(maskedImage)
-    print "%d bad; %d interp; %d bad & interp; %d bad and not interp; %d good but interp" % \
-        (numBad, numInterp, numBadAndInterp, numBad - numBadAndInterp, numInterp - numBadAndInterp)
+    print("%d bad; %d interp; %d bad & interp; %d bad and not interp; %d good but interp" % \
+        (numBad, numInterp, numBadAndInterp, numBad - numBadAndInterp, numInterp - numBadAndInterp))
 
-    print
+    print()
     numImNotFinite, numVarNotFinite, numImNotEdgeOrFinite, numVarNotEdgeOrFinite = countNotFinite(maskedImage)
-    print "%d non-finite image pixels; of these %d are not EDGE" % (numImNotFinite, numImNotEdgeOrFinite)
-    print "%d non-finite variance pixels; of these %d are not EDGE" % (numVarNotFinite, numVarNotEdgeOrFinite)
+    print("%d non-finite image pixels; of these %d are not EDGE" % (numImNotFinite, numImNotEdgeOrFinite))
+    print("%d non-finite variance pixels; of these %d are not EDGE" % (numVarNotFinite, numVarNotEdgeOrFinite))
 

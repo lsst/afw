@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -482,7 +483,7 @@ class FootprintTestCase(utilsTests.TestCase):
         if display:
             idImage = afwImage.ImageU(imwidth, imheight)
             for i, foot in enumerate([initial, shrunk]):
-                print foot.getNpix()
+                print(foot.getNpix())
                 foot.insertIntoImage(idImage, i+1);
             ds9.mtv(idImage)
 

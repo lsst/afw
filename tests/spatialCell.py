@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -32,8 +33,6 @@ or
    python
    >>> import SpatialCell; SpatialCell.run()
 """
-
-
 import unittest
 
 import lsst.utils.tests as utilsTests
@@ -156,12 +155,12 @@ class SpatialCellSetTestCase(unittest.TestCase):
         """Populate a SpatialCellSet"""
 
         if False:                       # Print the bboxes for the cells
-            print
+            print()
             for i in range(len(self.cellSet.getCellList())):
                 cell = self.cellSet.getCellList()[i]
-                print i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getMinX(), cell.getBBox().getMinY(),
+                print(i, "%3d,%3d -- %3d,%3d" % (cell.getBBox().getMinX(), cell.getBBox().getMinY(),
                                                  cell.getBBox().getMaxX(), cell.getBBox().getMaxY()), \
-                                                 cell.getLabel()
+                                                 cell.getLabel())
         self.assertEqual(len(self.cellSet.getCellList()), 6)
 
         self.NTestCandidates = 0                                      # number of candidates

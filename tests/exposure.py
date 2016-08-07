@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -205,7 +206,7 @@ class ExposureTestCase(unittest.TestCase):
         try:
             exposure.getWcs()
         except pexExcept.Exception as e:
-            print "caught expected exception (getWcs): %s" % e
+            print("caught expected exception (getWcs): %s" % e)
             pass
         #
         # Test the Calib member.  The Calib tests are in color.py, here we just check that it's in Exposure

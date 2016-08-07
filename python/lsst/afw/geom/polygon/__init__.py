@@ -22,4 +22,5 @@
 
 """lsst.afw.geom.polygon
 """
-from polygonLib import *
+from __future__ import absolute_import
+from .polygonLib import *

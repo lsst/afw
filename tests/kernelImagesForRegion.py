@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -185,7 +186,7 @@ class KernelImagesForRegion(utilsTests.TestCase):
                 try:
                     self.assertRegionCorrect(subregion)
                 except:
-                    print "failed on xInd=%s, yInd=%s" % (xInd, yInd)
+                    print("failed on xInd=%s, yInd=%s" % (xInd, yInd))
                     raise
                 bbox = subregion.getBBox()
                 rowWidth += bbox.getWidth()

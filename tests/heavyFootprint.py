@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -101,16 +102,16 @@ class HeavyFootprintTestCase(tests.TestCase):
 
         # Check that we can call getImageArray(), etc
         arr = hfoot.getImageArray()
-        print arr
+        print(arr)
         # Check that it's iterable
         for x in arr:
             pass
         arr = hfoot.getMaskArray()
-        print arr
+        print(arr)
         for x in arr:
             pass
         arr = hfoot.getVarianceArray()
-        print arr
+        print(arr)
         # Check that it's iterable
         for x in arr:
             pass

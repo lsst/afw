@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010, 2015 LSST Corporation.
@@ -150,7 +151,7 @@ class Display(object):
 
             for k in sorted(self._callbacks.keys()):
                 doc = self._callbacks[k].__doc__
-                print "   %-6s %s" % (k, doc.split("\n")[0] if doc else "???")
+                print("   %-6s %s" % (k, doc.split("\n")[0] if doc else "???"))
 
         self.setCallback('h', _h_callback)
 
@@ -338,7 +339,7 @@ class Display(object):
             return
 
         if transparency is not None and (transparency < 0 or transparency > 100):
-            print >> sys.stderr, "Mask transparency should be in the range [0, 100]; clipping"
+            print("Mask transparency should be in the range [0, 100]; clipping", file=sys.stderr)
             if transparency < 0:
                 transparency = 0
             else:
@@ -369,7 +370,7 @@ class Display(object):
 
         if re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
             if wcs:
-                raise RuntimeError, "You may not specify a wcs with an Exposure"
+                raise RuntimeError("You may not specify a wcs with an Exposure")
             data, wcs = data.getMaskedImage(), data.getWcs()
         elif re.search("::DecoratedImage<", repr(data)): # it's a DecoratedImage; display it
             data, wcs = data.getImage(), afwImage.makeWcs(data.getMetadata())
@@ -386,7 +387,7 @@ class Display(object):
         elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
             self._impl._mtv(data.getImage(), data.getMask(True), wcs, title)
         else:
-            raise RuntimeError, "Unsupported type %s" % repr(data)
+            raise RuntimeError("Unsupported type %s" % repr(data))
     #
     # Graphics commands
     #
@@ -506,7 +507,7 @@ class Display(object):
         """!Zoom frame by specified amount, optionally panning also"""
 
         if (rowc and colc is None) or (colc and rowc is None):
-            raise RuntimeError, "Please specify row and column center to pan about"
+            raise RuntimeError("Please specify row and column center to pan about")
 
         if rowc is not None:
             if origin == afwImage.PARENT and self._xy0 is not None:
@@ -532,13 +533,13 @@ class Display(object):
             Exit with q, \c CR, \c ESC, or any other callback function that returns a ``True`` value.
         """
         interactFinished = False
-        
+
         while not interactFinished:
             ev = self._impl._getEvent()
             if not ev:
                 continue
             k, x, y = ev.k, ev.x, ev.y      # for now
-            
+
             if k not in self._callbacks:
                 logger.warn("No callback registered for {0}".format(k))
             else:
@@ -593,7 +594,7 @@ def noop_callback(k, x, y):
     return False
 
 def h_callback(k, x, y):
-    print "Enter q or <ESC> to leave interactive mode, h for this help, or a letter to fire a callback"
+    print("Enter q or <ESC> to leave interactive mode, h for this help, or a letter to fire a callback")
     return False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

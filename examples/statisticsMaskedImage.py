@@ -23,6 +23,7 @@
 #
 
 #
+from __future__ import print_function
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -71,7 +72,7 @@ def showSetAndMask():
         sctrl.setAndMask(masks[i])
         stat = afwMath.makeStatistics(mimg, afwMath.MEAN, sctrl)
         answer = stat.getValue(afwMath.MEAN)
-        print explanations[i], " (got %.1f)" % (answer)
+        print(explanations[i], " (got %.1f)" % (answer))
 
 
 

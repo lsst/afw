@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -47,24 +48,24 @@ class WCSTestRaWrap(unittest.TestCase):
 
         crval = wcs1.getSkyOrigin()
         cd = wcs1.getCDMatrix()
-        print cd
+        print(cd)
         crval_p = afwGeom.Point2D(crval.getLongitude().asDegrees(),
                                  crval.getLatitude().asDegrees())
         origin = wcs1.getPixelOrigin()
-        print crval_p
-        print origin
+        print(crval_p)
+        print(origin)
         wcs2 = afwImage.Wcs(crval_p, origin, cd)
 
         for wcs in [wcs1,wcs2]:
-            print wcs
-            print 'x, y, RA, Dec, pixscale("/pix), pixscale2'
+            print(wcs)
+            print('x, y, RA, Dec, pixscale("/pix), pixscale2')
             for x,y in [(0,0),(300,0),(350,0),(360,0),(370,0),(380,0),(400,0)]:
                 radec = wcs.pixelToSky(x,y)
                 ra  = radec.getLongitude().asDegrees()
                 dec = radec.getLatitude ().asDegrees()
                 pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.Point2D(x,y)))
                 ps2 = wcs.pixelScale().asArcseconds()
-                print x,y,ra,dec,pixscale,ps2
+                print(x,y,ra,dec,pixscale,ps2)
                 self.assertTrue(abs(pixscale - 0.2) < 1e-3)
                 self.assertTrue(abs(ps2 - 0.2) < 1e-3)
 

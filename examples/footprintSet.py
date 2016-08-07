@@ -25,6 +25,7 @@
 """
 Examples of using Footprints
 """
+from __future__ import print_function
 
 import sys
 import lsst.afw.image as afwImage
@@ -75,7 +76,7 @@ def run(frame=6):
     polarity = False                     # look for objects below background
     threshold = afwDetect.Threshold(level, afwDetect.Threshold.VALUE, polarity)
     fs2 = afwDetect.FootprintSet(im, threshold, "DETECTED_NEGATIVE")
-    print "Detected %d objects below background" % len(fs2.getFootprints())
+    print("Detected %d objects below background" % len(fs2.getFootprints()))
     #
     # Search in S/N (n.b. the peak's -10sigma)
     #

@@ -58,7 +58,7 @@ class HeaderMap(dict):
                     #otherwise assume the default value is transformed.
                     value = attrDict['default']
                     self._applyVal(obj, value, key, lambda x: x)
-            except Exception, e:
+            except Exception as e:
                 if doRaise:
                     raise
                 else:

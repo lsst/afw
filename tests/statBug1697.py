@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -47,7 +48,7 @@ class weightedStatsBugTestCase(unittest.TestCase):
         nBadImg = numpy.logical_not(numpy.isfinite(arrayList[0])).sum()
         nBadMsk = numpy.sum(numpy.bitwise_and(arrayList[1], badPixelMask) > 0)
         nBadVar = numpy.logical_not(numpy.isfinite(arrayList[2])).sum()
-        print "%d bad image pixels, %d bad mask pixels, %d bad variance pixels" % (nBadImg, nBadMsk, nBadVar)
+        print("%d bad image pixels, %d bad mask pixels, %d bad variance pixels" % (nBadImg, nBadMsk, nBadVar))
         self.assertEqual(nBadImg, 0)
         self.assertEqual(nBadMsk, 0)
         self.assertEqual(nBadVar, 0)
@@ -68,13 +69,13 @@ class weightedStatsBugTestCase(unittest.TestCase):
         statsCtrl.setAndMask(badPixelMask)
 
         for weight in (300.0, 10.0, 1.0):
-            print "Testing with weight=%0.1f" % (weight,)
+            print("Testing with weight=%0.1f" % (weight,))
             maskedImageList = afwImage.vectorMaskedImageF() # [] is rejected by afwMath.statisticsStack
             weightList = []
 
             nx, ny = 256, 256
             for i in range(3):
-                print "Processing ", i
+                print("Processing ", i)
                 maskedImage = afwImage.MaskedImageF(nx, ny)
                 maskedImageList.append(maskedImage)
 
@@ -84,7 +85,7 @@ class weightedStatsBugTestCase(unittest.TestCase):
 
             self.reportBadPixels(maskedImage, badPixelMask)
 
-            print "Stack: ",
+            print("Stack: ", end=' ')
             coaddMaskedImage = afwMath.statisticsStack(
                 maskedImageList, afwMath.MEANCLIP, statsCtrl, weightList)
             self.reportBadPixels(coaddMaskedImage, badPixelMask)

@@ -26,6 +26,7 @@
 Support for cameraGeom
 """
 from __future__ import division
+from __future__ import print_function
 import math
 import numpy
 import itertools
@@ -357,7 +358,7 @@ class ButlerImage(FakeImageDataSource):
 
             if e:
                 if self.verbose:
-                    print "Reading %s: %s" % (ccd.getId(), e)
+                    print("Reading %s: %s" % (ccd.getId(), e))
 
         if im is None:
             return self._prepareImage(ccd, imageFactory(*bbox.getDimensions()), binSize)
@@ -610,7 +611,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
             for corner in camera[detName].getCorners(FOCAL_PLANE):
                 camBbox.include(corner)
 
-    pixelSize_o = camera[camera.getNameIter().next()].getPixelSize()
+    pixelSize_o = camera[next(camera.getNameIter())].getPixelSize()
     camBbox = getCameraImageBBox(camBbox, pixelSize_o, bufferSize*binSize)
     origin = camBbox.getMin()
 

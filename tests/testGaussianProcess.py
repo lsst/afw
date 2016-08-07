@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -100,7 +101,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.001)
 
@@ -140,9 +141,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if z == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for squared exponent covariogram\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for squared exponent covariogram\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
@@ -193,9 +194,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if z == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for neural net covariogram\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for neural net covariogram\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
@@ -250,7 +251,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             gg = gp.GaussianProcessD(data,mins,maxs,fn,nn)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.0045)
 
@@ -288,9 +289,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if z == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for Gaussian process using min-max normalization\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for Gaussian process using min-max normalization\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
@@ -328,7 +329,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.002)
 
@@ -345,7 +346,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             try:
                 gg.addPoint(test,mushld)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
 
         f = open("tests/data/gp_additive_test_solutions.sav")
@@ -382,9 +383,9 @@ class GaussianProcessTestCase(unittest.TestCase):
                 worstSigErr = err
 
 
-        print "\nThe errors for the test of adding points to the Gaussian process\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for the test of adding points to the Gaussian process\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
 
 
         self.assertTrue(worstMuErr < tol)
@@ -412,19 +413,19 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             kd.Initialize(data)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         kds = gp.KdTreeD()
 
         try:
             kds.Initialize(data)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         try:
             kds.removePoint(2)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         worstErr=-1.0
         for i in range(100):
@@ -439,12 +440,12 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             kd.removePoint(2)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         try:
             kds.removePoint(10)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         for i in range(99):
             if i > 10:
@@ -458,12 +459,12 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             kd.removePoint(10)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         try:
             kds.removePoint(21)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         for i in range(98):
             if i > 21:
@@ -473,7 +474,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                 if dd>worstErr:
                     worstErr=dd
         self.assertTrue(worstErr<tol)
-        print "\nworst distance error in kdTest ",worstErr,"\n"
+        print("\nworst distance error in kdTest ",worstErr,"\n")
 
 
     def testBatch(self):
@@ -503,7 +504,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.0032)
 
@@ -563,9 +564,9 @@ class GaussianProcessTestCase(unittest.TestCase):
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstVarErr < tol)
 
-        print "\nThe errors for batch interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstVarErr
+        print("\nThe errors for batch interpolation\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstVarErr)
 
     def testSelf(self):
         """
@@ -594,7 +595,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             gg = gp.GaussianProcessD(data,fn,xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setKrigingParameter(30.0)
         gg.setLambda(0.00002)
@@ -615,7 +616,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             try:
                 mu = gg.selfInterpolate(variance,i,kk)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
 
             err = mu - mushld
@@ -634,9 +635,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if i == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for self interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for self interpolation\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
@@ -672,7 +673,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             gg=gp.GaussianProcessD(data,fn,nn);
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.0045)
 
@@ -704,9 +705,9 @@ class GaussianProcessTestCase(unittest.TestCase):
                     worstSigErr=sigErr
 
 
-        print "\nThe errors for vector interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector interpolation\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
@@ -721,7 +722,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             try:
                 gg.selfInterpolate(mu,sig,i,kk);
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
             for j in range(4):
                 mushld[j]=float(s[j])
@@ -742,9 +743,9 @@ class GaussianProcessTestCase(unittest.TestCase):
 
 
 
-        print "\nThe errors for vector self interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector self interpolation\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
@@ -770,7 +771,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             ggbatch=gp.GaussianProcessD(batchData,batchFunctions,nn)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         ggbatch.setLambda(0.0045)
 
@@ -805,9 +806,9 @@ class GaussianProcessTestCase(unittest.TestCase):
                 if sigErr>worstSigErr:
                     worstSigErr=sigErr
 
-        print "\nThe errors for vector batch interpolation with variance\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector batch interpolation with variance\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
@@ -824,8 +825,8 @@ class GaussianProcessTestCase(unittest.TestCase):
                     worstMuErr=muErr
 
 
-        print "\nThe errors for vector batch interpolation without variance\n"
-        print "worst mu error ",worstMuErr
+        print("\nThe errors for vector batch interpolation without variance\n")
+        print("worst mu error ",worstMuErr)
         self.assertTrue(worstMuErr < tol)
 
 
@@ -841,7 +842,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             try:
                 gg.addPoint(vv,vvf)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
         f=open("tests/data/gp_vector_add_solutions.sav","r")
         ff=f.readlines()
@@ -851,7 +852,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             try:
                 gg.selfInterpolate(mu,sig,i,kk);
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
             for j in range(4):
                 mushld[j]=float(s[j])
@@ -870,9 +871,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if sigErr>worstSigErr:
                 worstSigErr=sigErr
 
-        print "\nThe errors for vector add interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector add interpolation\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
@@ -907,7 +908,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             gg=gp.GaussianProcessD(data,fn,xx);
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.002)
 
@@ -916,7 +917,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             try:
                 gg.removePoint(j)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
             j=j+1
 
@@ -948,9 +949,9 @@ class GaussianProcessTestCase(unittest.TestCase):
                     worstSigErr=sigErr
 
 
-        print "\nThe errors for subtraction interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for subtraction interpolation\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
@@ -965,7 +966,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             try:
                 gg.selfInterpolate(mu,sig,i,kk);
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
             for j in range(4):
                 mushld[j]=float(s[j])
@@ -984,9 +985,9 @@ class GaussianProcessTestCase(unittest.TestCase):
                 if sigErr>worstSigErr:
                     worstSigErr=sigErr
 
-        print "\nThe errors for subtraction self interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for subtraction self interpolation\n")
+        print("worst mu error ",worstMuErr)
+        print("worst sig2 error ",worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 

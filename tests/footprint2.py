@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -497,18 +498,18 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
                 npeak = len(self.peaks[i])
 
             if npeak != len(foot.getPeaks()):
-                print "RHL", foot.repr()
+                print("RHL", foot.repr())
                 #print "RHL", [(p.repr().split(":")[0], p.getIx(), p.getIy()) for p in foot.getPeaks()]
-                print "RHL", [(p.getId(), p.getIx(), p.getIy()) for p in foot.getPeaks()]
-                print "RHL", [p[0:2] for p in self.peaks[i]]
+                print("RHL", [(p.getId(), p.getIx(), p.getIy()) for p in foot.getPeaks()])
+                print("RHL", [p[0:2] for p in self.peaks[i]])
 
             self.assertEqual(len(foot.getPeaks()), npeak)
 
             for j, p in enumerate(foot.getPeaks()):
                 trueX, trueY, peakVal = self.peaks[i][j]
                 if (p.getIx(), p.getIy()) != (trueX, trueY):
-                    print "RHL", [(pp.getId(), pp.getIx(), pp.getIy()) for pp in foot.getPeaks()]
-                    print "RHL", [pp[0:2] for pp in self.peaks[i]]
+                    print("RHL", [(pp.getId(), pp.getIx(), pp.getIy()) for pp in foot.getPeaks()])
+                    print("RHL", [pp[0:2] for pp in self.peaks[i]])
 
                 self.assertEqual((p.getIx(), p.getIy()), (trueX, trueY))
 

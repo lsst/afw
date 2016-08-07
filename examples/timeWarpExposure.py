@@ -22,6 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import print_function
 import math
 import sys
 import os
@@ -141,13 +142,13 @@ def run():
     maskKernelName = ""
     cacheSize = 0
 
-    print "Warping", InputExposurePath
-    print "Source (sub)image size:", srcDim
-    print "Destination image size:", destDim
-    print
+    print("Warping", InputExposurePath)
+    print("Source (sub)image size:", srcDim)
+    print("Destination image size:", destDim)
+    print()
 
-    print "test# interp  scaleFac     skyOffset     rotAng   kernel   goodPix time/iter"
-    print '       (pix)              (RA, Dec ")    (deg)                      (sec)'
+    print("test# interp  scaleFac     skyOffset     rotAng   kernel   goodPix time/iter")
+    print('       (pix)              (RA, Dec ")    (deg)                      (sec)')
     testNum = 1
     for interpLength in (0, 1, 5, 10):
         for scaleFac in (1.2,): # (1.0, 1.5):
@@ -176,9 +177,9 @@ def run():
                     )
                     destExposure.setWcs(destWcs)
                     dTime, nIter, goodPix = timeWarp(destExposure, srcExposure, warpingControl)
-                    print "%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (
+                    print("%4d  %5d  %8.1f  %6.1f, %6.1f  %7.1f %10s %8d %6.2f" % (
                         testNum, interpLength, scaleFac, skyOffsetArcSec[0], skyOffsetArcSec[1],
-                        rotAng, kernelName, goodPix, dTime/float(nIter))
+                        rotAng, kernelName, goodPix, dTime/float(nIter)))
 
                     if SaveImages:
                         destExposure.writeFits("warpedExposure%03d.fits" % (testNum,))

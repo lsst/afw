@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -455,7 +456,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         try:
             self.assertTrue(numpy.all(orArr == desOrArr))
         except Exception as e:
-            print "Failed: %r != %r: %s" % (orArr, desOrArr, e)
+            print("Failed: %r != %r: %s" % (orArr, desOrArr, e))
             raise
 
     def testSmallSrc(self):
@@ -639,7 +640,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             except Exception:
                 if SAVE_FAILED_FITS_FILES:
                     afwWarpedExposure.writeFits(afwWarpedImagePath)
-                    print "Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,)
+                    print("Saved failed afw-warped exposure as: %s" % (afwWarpedImagePath,))
                 raise
         else:
             # path for saved afw-warped image
@@ -671,7 +672,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
                 if SAVE_FAILED_FITS_FILES:
                     # save the image anyway
                     afwWarpedImage.writeFits(afwWarpedImagePath)
-                    print "Saved failed afw-warped image as: %s" % (afwWarpedImagePath,)
+                    print("Saved failed afw-warped image as: %s" % (afwWarpedImagePath,))
                 raise
 
             afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
@@ -685,7 +686,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
                 if SAVE_FAILED_FITS_FILES:
                     # save the image anyway
                     afwWarpedImage.writeFits(afwWarpedImagePath)
-                    print "Saved failed afw-warped image as: %s" % (afwWarpedImage2Path,)
+                    print("Saved failed afw-warped image as: %s" % (afwWarpedImage2Path,))
                 raise
 
 

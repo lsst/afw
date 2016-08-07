@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -74,8 +75,8 @@ def showMaskDict(d=None, msg=None):
         pass
 
     if msg:
-        print "%-15s" % msg,
-    print sorted([(d[p], p) for p in d])
+        print("%-15s" % msg, end=' ')
+    print(sorted([(d[p], p) for p in d]))
 
 class MaskTestCase(utilsTests.TestCase):
     """A test case for Mask"""
@@ -616,9 +617,9 @@ def printMaskPlane(mask, plane,
     for x in xrange:
         for y in yrange:
             if False:                   # mask(x,y) confuses swig
-                print x, y, mask(x, y), mask(x, y, plane)
+                print(x, y, mask(x, y), mask(x, y, plane))
             else:
-                print x, y, mask(x, y, plane)
+                print(x, y, mask(x, y, plane))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

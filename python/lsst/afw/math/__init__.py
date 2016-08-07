@@ -22,6 +22,7 @@
 
 """Application Framework math code including Function, minimize, Kernel and convolve
 """
-from mathLib import *
-from warper import *
-from background import *
+from __future__ import absolute_import
+from .mathLib import *
+from .warper import *
+from .background import *

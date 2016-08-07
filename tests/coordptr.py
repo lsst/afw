@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -51,9 +52,9 @@ class CoordPtrTestCase(unittest.TestCase):
 
     def testMakeCoord(self):
         c = coord.Coord(1 * afwGeom.degrees,2 * afwGeom.degrees)
-        print type(c)
+        print(type(c))
         c = coord.makeCoord(coord.FK5, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
-        print type(c)
+        print(type(c))
 
     def testMakeWcs(self):
         afwdataDir = lsst.utils.getPackageDir("afw")
@@ -63,7 +64,7 @@ class CoordPtrTestCase(unittest.TestCase):
         wcs = image.makeWcs(fitsHdr)
 
         c = wcs.pixelToSky(0,0)
-        print type(c)
+        print(type(c))
         c.getPosition()
 
     def testCoordCast(self):

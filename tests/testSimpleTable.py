@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -32,7 +33,6 @@ or
    python
    >>> import testSimpleTable; testSimpleTable.run()
 """
-
 import os.path
 import unittest
 import numpy
@@ -41,7 +41,7 @@ try:
     import pyfits
 except ImportError:
     pyfits = None
-    print "WARNING: pyfits not available; some tests will not be run"
+    print("WARNING: pyfits not available; some tests will not be run")
 
 import lsst.utils.tests
 import lsst.pex.exceptions

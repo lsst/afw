@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -706,16 +707,16 @@ class DecoratedImageTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def printImg(img):
-    print "%4s " % "",
+    print("%4s " % "", end=' ')
     for c in range(img.getWidth()):
-        print "%7d" % c,
-    print
+        print("%7d" % c, end=' ')
+    print()
 
     for r in range(img.getHeight() - 1, -1, -1):
-        print "%4d " % r,
+        print("%4d " % r, end=' ')
         for c in range(img.getWidth()):
-            print "%7.1f" % float(img.get(c, r)),
-        print
+            print("%7.1f" % float(img.get(c, r)), end=' ')
+        print()
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

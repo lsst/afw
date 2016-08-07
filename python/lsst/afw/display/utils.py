@@ -144,7 +144,7 @@ class Mosaic(object):
             images = self.images
 
         if self.nImage == 0:
-            raise RuntimeError, "You must provide at least one image"
+            raise RuntimeError("You must provide at least one image")
 
         self.xsize, self.ysize = 0, 0
         for im in images:
@@ -184,7 +184,7 @@ class Mosaic(object):
             if nx*ny < self.nImage:
                 ny += 1
         else:
-            raise RuntimeError, ("Unknown mosaicing mode: %s" % mode)
+            raise RuntimeError("Unknown mosaicing mode: %s" % mode)
 
         self.nx, self.ny = nx, ny
 
@@ -233,7 +233,7 @@ class Mosaic(object):
     """
 
         if mode not in ("square", "x", "y"):
-            raise RuntimeError, ("Unknown mosaicing mode: %s" % mode)
+            raise RuntimeError("Unknown mosaicing mode: %s" % mode)
 
         self.mode = mode
 
@@ -257,7 +257,7 @@ class Mosaic(object):
             return
 
         if len(labels) != self.nImage:
-            raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
+            raise RuntimeError("You provided %d labels for %d panels" % (len(labels), self.nImage))
 
         display = _getDisplayFromDisplayOrFrame(display, frame)
         if not display:

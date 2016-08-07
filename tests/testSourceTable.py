@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
+
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -31,7 +33,6 @@ or
    python
    >>> import testSourceTable; testSourceTable.run()
 """
-
 import os
 import unittest
 import numpy
@@ -325,7 +326,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                     f,fn2 = tempfile.mkstemp(prefix='testHeavyFootprint-', suffix='.fits')
                     os.close(f)
                     MI.writeFits(fn2)
-                    print 'wrote', fn2
+                    print('wrote', fn2)
 
             self.assertTrue(all((mim2.getImage().getArray() == mim3.getImage().getArray()).ravel()))
             self.assertTrue(all((mim2.getMask().getArray() == mim3.getMask().getArray()).ravel()))

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -24,7 +25,7 @@ import lsst.daf.base as dafBase
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import FitsError, MemFileManager, reduceToFits
-import mathLib as afwMath
+from . import mathLib as afwMath
 
 class BackgroundList(object):
     """A list-like class to contain a list of (afwMath.Background, interpStyle, undersampleStyle) tuples

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -118,7 +119,7 @@ class MakeWcsTestCase(unittest.TestCase):
         crpix = afwGeom.Point2D(m.getDouble("CRPIX1"), m.getDouble("CRPIX2"))
         cd11, cd12 = m.getDouble("CD1_1"), m.getDouble("CD1_2")
         cd21, cd22 = m.getDouble("CD2_1"), m.getDouble("CD2_2")
-        print 'CRVAL:', crval
+        print('CRVAL:', crval)
 
         # this is defined at the c++ level in src/image/makeWcs.cc
         wcsMade = afwImage.makeWcs(crval, crpix, cd11, cd12, cd21, cd22)

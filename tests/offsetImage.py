@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -159,7 +160,7 @@ class offsetImageTestCase(unittest.TestCase):
                         self.assertLess(abs(imGoodVals.max()), maxLim*amp)
                         self.assertLess(abs(imGoodVals.min()), maxLim*amp)
                     except:
-                        print "failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy)
+                        print("failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy))
                         raise
 
 # the following would be preferable if there was an easy way to NaN pixels

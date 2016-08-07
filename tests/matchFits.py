@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -56,7 +57,7 @@ class MatchFitsTestCase(unittest.TestCase):
         for i in range(self.numMatches):
             index = 2*i
             match = afwTable.SimpleMatch(self.cat1[index], self.cat2[self.size - index - 1], index)
-            if debug: print "Inject:", match.first.getId(), match.second.getId()
+            if debug: print("Inject:", match.first.getId(), match.second.getId())
             self.matches.push_back(match)
 
     def tearDown(self):
@@ -71,7 +72,7 @@ class MatchFitsTestCase(unittest.TestCase):
         self.assertEqual(len(matches), self.numMatches)
         for m in matches:
             str(m) # Check __str__ works
-            if debug: print "Test:", m.first.getId(), m.second.getId()
+            if debug: print("Test:", m.first.getId(), m.second.getId())
             self.assertEqual(m.first.getId(), m.second.getId())
 
     def testIO(self):

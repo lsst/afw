@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -32,7 +33,6 @@ or
    python
    >>> import color; color.run()
 """
-
 
 import math
 import unittest
@@ -347,8 +347,8 @@ class FilterTestCase(unittest.TestCase):
         g = afwImage.FilterProperty.lookup("g")
 
         if False:
-            print "Filter: %s == %d lambda_{eff}=%g" % (f.getName(), f.getId(),
-                                                        f.getFilterProperty().getLambdaEff())
+            print("Filter: %s == %d lambda_{eff}=%g" % (f.getName(), f.getId(),
+                                                        f.getFilterProperty().getLambdaEff()))
 
         self.assertEqual(f.getName(), "g")
         self.assertEqual(f.getId(), 1)

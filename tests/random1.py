@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -124,8 +125,8 @@ class RandomImageTestCase(unittest.TestCase):
         afwMath.randomChisqImage(self.image, self.rand, nu)
         stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
         if False:
-            print "nu = %g.  mean = %g, variance = %g" % \
-                  (nu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE))
+            print("nu = %g.  mean = %g, variance = %g" % \
+                  (nu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE)))
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), nu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), 2*nu, 1)
 
@@ -134,8 +135,8 @@ class RandomImageTestCase(unittest.TestCase):
         afwMath.randomPoissonImage(self.image, self.rand, mu)
         stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
         if False:
-            print "mu = %g.  mean = %g, variance = %g" % \
-                  (mu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE))
+            print("mu = %g.  mean = %g, variance = %g" % \
+                  (mu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE)))
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), mu, 1)
 

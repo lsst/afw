@@ -22,6 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import print_function
 import math
 import sys
 import os
@@ -178,19 +179,19 @@ def timeSet(outImage, inImage, kernelFunction, kernelDescr, convControl, spOrder
         )
     for methodDescr, maxInterpolationDistance in methodDescrInterpDistList:
         convControl.setMaxInterpolationDistance(maxInterpolationDistance)
-        print "%s using %s" % (kernelDescr, methodDescr)
-        print "ImWid\tImHt\tKerWid\tKerHt\tSec/Cnv"
+        print("%s using %s" % (kernelDescr, methodDescr))
+        print("ImWid\tImHt\tKerWid\tKerHt\tSec/Cnv")
         for kSize in (5, 11, 19):
             kernel = kernelFunction(kSize, imSize, spOrder)
             dur, nIter = timeConvolution(outImage, inImage, kernel, convControl)
-            print "%d\t%d\t%d\t%d\t%0.2f" % (imSize[0], imSize[1], kSize, kSize, dur/float(nIter))
-    print
+            print("%d\t%d\t%d\t%d\t%0.2f" % (imSize[0], imSize[1], kSize, kSize, dur/float(nIter)))
+    print()
 
 def run():
     convControl = afwMath.ConvolutionControl()
     convControl.setDoNormalize(True)
     spOrder = 3
-    print "All kernels use a spatial model of a Polynomial2 of order %s" % (spOrder,)
+    print("All kernels use a spatial model of a Polynomial2 of order %s" % (spOrder,))
 
     for imageClass in (
         afwImage.ImageF,
@@ -198,7 +199,7 @@ def run():
         afwImage.MaskedImageF,
         afwImage.MaskedImageD,
     ):
-        print "\n*** Test convolution with %s ***\n" % (imageClass.__name__,)
+        print("\n*** Test convolution with %s ***\n" % (imageClass.__name__,))
         if len(sys.argv) < 2:
             inImage = imageClass(InputMaskedImagePath)
             # to get original behavior change True to False:
