@@ -31,6 +31,7 @@ or
    python
    >>> import box; box.run()
 """
+from builtins import range
 
 import unittest
 import numpy

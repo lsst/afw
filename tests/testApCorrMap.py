@@ -30,6 +30,7 @@ or
    python
    >>> import testSchema; testSchema.run()
 """
+from __future__ import division
 
 import os
 import unittest
@@ -67,7 +68,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         same addresses (i.e. so we can compare after serialization).
         """
         self.assertEqual(len(a), len(b))
-        for name, value in a.items():
+        for name, value in list(a.items()):
             value2 = b.get(name)
             self.assertIsNotNone(value2)
             self.assertEqual(value.getBBox(), value2.getBBox())
@@ -80,11 +81,11 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         mapping."""
         self.assertEqual(len(self.map), 3)
         self.assertEqual(collections.OrderedDict(self.map),
-                         {name: value for (name, value) in self.map.items()})
-        self.assertEqual(collections.OrderedDict(self.map).keys(), self.map.keys())
-        self.assertEqual(collections.OrderedDict(self.map).values(), self.map.values())
-        self.assertEqual(collections.OrderedDict(self.map).items(), self.map.items())
-        self.assertEqual(collections.OrderedDict(self.map).keys(), list(self.map))
+                         {name: value for (name, value) in list(self.map.items())})
+        self.assertEqual(list(collections.OrderedDict(self.map).keys()), list(self.map.keys()))
+        self.assertEqual(list(collections.OrderedDict(self.map).values()), list(self.map.values()))
+        self.assertEqual(list(collections.OrderedDict(self.map).items()), list(self.map.items()))
+        self.assertEqual(list(collections.OrderedDict(self.map).keys()), list(self.map))
         self.assertTrue("b" in self.map)
         self.assertTrue("d" not in self.map)
         self.map["d"] = lsst.afw.math.ChebyshevBoundedField(self.bbox, numpy.random.randn(2, 2))

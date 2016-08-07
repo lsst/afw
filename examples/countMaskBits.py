@@ -23,7 +23,7 @@ def getMaskBitNameDict(mask):
     """
     maskBitNameDict = dict()
     maskNameBitDict = mask.getMaskPlaneDict()
-    for name, ind in maskNameBitDict.iteritems():
+    for name, ind in maskNameBitDict.items():
         maskBitNameDict[ind] = name
     return maskBitNameDict
 

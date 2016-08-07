@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import range
 
 #
 # LSST Data Management System
@@ -87,7 +88,7 @@ class ImageTestCase(unittest.TestCase):
         self.image2 = afwImage.ImageF(self.image1.getDimensions())
         self.image2.set(self.val2)
         self.function = afwMath.PolynomialFunction2D(2)
-        self.function.setParameters(range(self.function.getNParameters()))
+        self.function.setParameters(list(range(self.function.getNParameters())))
 
     def tearDown(self):
         del self.image1

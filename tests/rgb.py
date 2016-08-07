@@ -31,6 +31,8 @@ or
    python
    >>> import rgb; rgb.run()
 """
+from __future__ import division
+from builtins import range
 
 import os
 import math
@@ -288,12 +290,12 @@ class RgbTestCase(unittest.TestCase):
         map = rgb.AsinhZScaleMapping(rgbImages[0])
 
         for xSize, ySize, frac in [(self.images[R].getWidth()/2, self.images[R].getHeight()/2, None),
-                                   (2*self.images[R].getWidth(), None,                         None),
-                                   (self.images[R].getWidth()/2, None,                         None),
-                                   (None,                        self.images[R].getHeight()/2, None),
-                                   (None,                        None,                         0.5),
-                                   (None,                        None,                         2),
-                               ]:
+                                   (2*self.images[R].getWidth(), None, None),
+                                   (self.images[R].getWidth()/2, None, None),
+                                   (None, self.images[R].getHeight()/2, None),
+                                   (None, None, 0.5),
+                                   (None, None, 2),
+                                   ]:
             rgbImage = map.makeRgbImage(*rgbImages, xSize=xSize, ySize=ySize, rescaleFactor=frac)
 
             h, w = rgbImage.shape[0:2]

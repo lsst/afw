@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import range
 
 #
 # LSST Data Management System
@@ -48,7 +49,7 @@ LocNameDict = {
     mathDetail.KernelImagesForRegion.TOP_RIGHT: "TOP_RIGHT",
 }
 
-NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.iteritems())
+NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.items())
 
 class KernelImagesForRegion(utilsTests.TestCase):
     def setUp(self):

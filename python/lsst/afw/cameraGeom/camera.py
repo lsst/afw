@@ -20,6 +20,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 from __future__ import absolute_import, division
+from builtins import range
 from .cameraGeomLib import CameraPoint, CameraSysPrefix, PIXELS
 from .detectorCollection import DetectorCollection
 import lsst.afw.geom as afwGeom

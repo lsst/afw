@@ -23,6 +23,7 @@
 """
 Tests for lsst.afw.geom.SeparableXYTransform class.
 """
+from builtins import zip
 import unittest
 import numpy as np
 import numpy.random as random

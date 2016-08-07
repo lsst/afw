@@ -1,4 +1,6 @@
 from __future__ import print_function
+from builtins import range
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010, 2015 LSST Corporation.
@@ -277,7 +279,7 @@ class Display(object):
     def delAllDisplays():
         """!Delete and close all known display
         """
-        for disp in Display._displays.values():
+        for disp in list(Display._displays.values()):
             disp.close()
         Display._displays = {}
 

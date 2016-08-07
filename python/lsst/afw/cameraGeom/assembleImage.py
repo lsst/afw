@@ -20,7 +20,7 @@ from __future__ import absolute_import, division
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import itertools
+from builtins import zip
 
 __ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage']
 
@@ -45,7 +45,7 @@ def _insertPixelChunk(outView, inView, amplifier, hasArrays):
         inArrList = [inView.getArray()]
         outArrList = [outView.getArray()]
 
-    for inArr, outArr in itertools.izip(inArrList, outArrList):
+    for inArr, outArr in zip(inArrList, outArrList):
         outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):

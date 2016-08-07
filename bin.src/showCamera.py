@@ -21,6 +21,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 from __future__ import print_function
+from builtins import input
 import sys
 import matplotlib.pyplot as plt
 
@@ -77,6 +78,6 @@ if __name__ == '__main__':
                                    showFig=not args.outputFile, savePath=args.outputFile)
 
     if not args.outputFile:
-        print("Hit any key to exit", end=' '); raw_input()
+        print("Hit any key to exit", end=' '); input()
 
     sys.exit(0)

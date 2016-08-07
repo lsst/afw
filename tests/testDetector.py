@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -26,6 +27,7 @@ Tests for lsst.afw.cameraGeom.Detector
 """
 import itertools
 import unittest
+from builtins import zip
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -181,7 +183,7 @@ class DetectorTestCase(unittest.TestCase):
         dw = DetectorWrapper()
         for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
             cornerList = dw.detector.getCorners(cameraSys)
-            for fromPoint, toPoint in itertools.izip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
+            for fromPoint, toPoint in zip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
                 predToCameraPoint = dw.detector.transform(
                     dw.detector.makeCameraPoint(fromPoint, cameraGeom.PIXELS),
                     cameraSys,

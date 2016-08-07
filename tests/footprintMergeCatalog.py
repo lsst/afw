@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import division
 import unittest
 import lsst.utils.tests as tests
 import lsst.pex.exceptions
@@ -12,10 +13,10 @@ import numpy as np
 
 def insertPsf(pos, im, psf, kernelSize, flux):
     for x, y in pos:
-        x0 = x-kernelSize/2
-        y0 = y-kernelSize/2
-        tmpbox =  afwGeom.Box2I(afwGeom.Point2I(x0,y0),afwGeom.Extent2I(kernelSize,kernelSize))
-        tmp = psf.computeImage(afwGeom.Point2D(x0,y0))
+        x0 = x-kernelSize//2
+        y0 = y-kernelSize//2
+        tmpbox = afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(kernelSize, kernelSize))
+        tmp = psf.computeImage(afwGeom.Point2D(x0, y0))
         tmp *= flux
         im.getImage()[tmpbox] += tmp
 

@@ -3,6 +3,10 @@ Code that works with gdb 7.1's python pretty printing.  When gdb >= 7.2 is widel
 file should be deleted (it's only used after importing gdb.printing fails)
 """
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from builtins import object
 import gdb
 import re
 
@@ -205,7 +209,7 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
             print("%8d" % x, end=' ')
         print("")
 
-        for y in reversed(range(y0, y0 + ny)):
+        for y in reversed(list(range(y0, y0 + ny))):
             print("%-4d" % y, end=' ')
             for x in range(x0, x0 + nx):
                 print("%8s" % (dataFmt % self.get(var, x, y)), end=' ')

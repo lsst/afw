@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import zip
+from builtins import range
 
 #
 # LSST Data Management System
@@ -294,7 +296,8 @@ class FilterTestCase(unittest.TestCase):
         #
         wavelengths = defineSdssFilters(self)
         self.filters = tuple(sorted(wavelengths.keys()))
-        self.g_lambdaEff = [lambdaEff for name, lambdaEff in wavelengths.items() if name == "g"][0] # for tests
+        self.g_lambdaEff = [lambdaEff for name,
+                            lambdaEff in wavelengths.items() if name == "g"][0]  # for tests
 
     def defineFilterProperty(self, name, lambdaEff, force=False):
         return afwImage.FilterProperty(name, lambdaEff, force);

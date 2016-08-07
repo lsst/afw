@@ -114,7 +114,7 @@ class MultiXYTransformConfig(Config):
 def makeMultiTransform(config):
     """Make an MultiXYTransform
     """
-    transformKeys = sorted(config.transformDict.iterkeys())
+    transformKeys = sorted(config.transformDict.keys())
     transformList = [config.transformDict[key].transform.apply() for key in transformKeys]
     return MultiXYTransform(transformList)
 makeMultiTransform.ConfigClass = MultiXYTransformConfig

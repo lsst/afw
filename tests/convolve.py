@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import range
 
 #
 # LSST Data Management System
@@ -125,7 +126,7 @@ def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
     numRows = image.shape[1] + 1 - kHeight
     if numCols < 0 or numRows < 0:
         raise RuntimeError("image must be larger than kernel in both dimensions")
-    colRange = range(numCols)
+    colRange = list(range(numCols))
 
 
     kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
@@ -168,11 +169,11 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
     """
     mpDictA = maskedImageA.getMask().getMaskPlaneDict()
     mpDictB = maskedImageB.getMask().getMaskPlaneDict()
-    if mpDictA.keys() != mpDictB.keys():
+    if list(mpDictA.keys()) != list(mpDictB.keys()):
         print("mpDictA.keys()  ", mpDictA.keys())
         print("mpDictB.keys()  ", mpDictB.keys())
         return False
-    if mpDictA.values() != mpDictB.values():
+    if list(mpDictA.values()) != list(mpDictB.values()):
         print("mpDictA.values()", mpDictA.values())
         print("mpDictB.values()", mpDictB.values())
         return False

@@ -1,3 +1,6 @@
+from builtins import zip
+from builtins import range
+from builtins import object
 import numpy
 import collections
 import lsst.afw.geom
@@ -30,7 +33,7 @@ class MultiMatch(object):
         self.dataIdKeys = {}
         outSchema = self.mapper.editOutputSchema()
         self.objectKey = outSchema.addField("object", type=numpy.int64, doc="Unique ID for joined sources")
-        for name, dataType in dataIdFormat.iteritems():
+        for name, dataType in dataIdFormat.items():
             self.dataIdKeys[name] = outSchema.addField(name, type=dataType, doc="'%s' data ID component")
         # self.result will be a catalog containing the union of all matched records, with an 'object' ID
         # column that can be used to group matches.  Sources that have ambiguous matches may appear
@@ -51,7 +54,7 @@ class MultiMatch(object):
         """Create a new result record from the given input record, using the given data ID and object ID
         to fill in additional columns."""
         outputRecord = self.table.copyRecord(inputRecord, self.mapper)
-        for name, key in self.dataIdKeys.iteritems():
+        for name, key in self.dataIdKeys.items():
             outputRecord.set(key, dataId[name])
         outputRecord.set(self.objectKey, objId)
         return outputRecord
@@ -92,7 +95,7 @@ class MultiMatch(object):
             self.result.append(self.makeRecord(newRecord, dataId, objId))
         # Add any unmatched sources from the new catalog as new objects to both the joined result catalog
         # and the reference catalog.
-        for newRecord in newById.itervalues():
+        for newRecord in newById.values():
             resultRecord = self.makeRecord(newRecord, dataId, self.nextObjId)
             self.nextObjId += 1
             self.result.append(resultRecord)
@@ -180,7 +183,7 @@ class GroupView(collections.Mapping):
         catalog for that group.
         """
         mask = numpy.zeros(len(self), dtype=bool)
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             mask[i] = predicate(self.groups[i])
         return type(self)(self.schema, self.ids[mask], self.groups[mask])
 
@@ -200,7 +203,7 @@ class GroupView(collections.Mapping):
             f = lambda cat: function(cat.get(key))
         else:
             f = function
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             result[i] = f(self.groups[i])
         return result
 
@@ -221,7 +224,7 @@ class GroupView(collections.Mapping):
         else:
             f = function
         last = 0
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             next = last + len(self.groups[i])
             result[last:next] = f(self.groups[i])
             last = next

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
 
 #
 # LSST Data Management System
@@ -333,9 +334,9 @@ class StatisticsTestCase(utilsTests.TestCase):
         self.assertEqual(afwMath.makeStatistics(sorted(values), afwMath.MEDIAN).getValue(), 2)
 
         # check some other possible ways it could show up
-        values = range(10)
+        values = list(range(10))
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 4.5)
-        values = range(11)
+        values = list(range(11))
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 5.0)
 
 

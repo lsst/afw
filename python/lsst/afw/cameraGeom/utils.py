@@ -27,9 +27,13 @@ Support for cameraGeom
 """
 from __future__ import division
 from __future__ import print_function
+from builtins import zip
+from builtins import next
+from builtins import str
+from builtins import range
+from builtins import object
 import math
 import numpy
-import itertools
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -236,7 +240,7 @@ def makeImageFromCcd(ccd, isTrimmed=True, showAmpGain=True, imageFactory=afwImag
 
     if len(ampImages) > 0:
         ccdImage = imageFactory(bbox)
-        for ampImage, amp in itertools.izip(ampImages, ccd):
+        for ampImage, amp in zip(ampImages, ccd):
             if isTrimmed:
                 assembleAmplifierImage(ccdImage, ampImage, amp)
             else:
@@ -381,7 +385,7 @@ class ButlerImage(FakeImageDataSource):
             ampImages.append(data)
 
         ccdImage = imageFactory(bbox)
-        for ampImage, amp in itertools.izip(ampImages, ccd):
+        for ampImage, amp in zip(ampImages, ccd):
             if self.isTrimmed:
                 assembleAmplifierImage(ccdImage, ampImage, amp)
             else:
@@ -622,7 +626,7 @@ def makeImageFromCamera(camera, detectorNameList=None, background=numpy.nan, buf
     assert imageSource.isTrimmed, "isTrimmed is False isn't supported by getCcdInCamBBoxList"
 
     boxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize_o, origin)
-    for det, bbox in itertools.izip(ccdList, boxList):
+    for det, bbox in zip(ccdList, boxList):
         im = imageSource.getCcdImage(det, imageFactory, binSize)
 
         nQuarter = det.getOrientation().getNQuarter()
@@ -702,7 +706,7 @@ def showCamera(camera, imageSource=FakeImageDataSource(), imageFactory=afwImage.
             with display.Buffering():
                 camBbox = getCameraImageBBox(camBbox, pixelSize, bufferSize*binSize)
                 bboxList = getCcdInCamBBoxList(ccdList, binSize, pixelSize, camBbox.getMin())
-                for bbox, ccd in itertools.izip(bboxList, ccdList):
+                for bbox, ccd in zip(bboxList, ccdList):
                     nQuarter = ccd.getOrientation().getNQuarter()
                     # borderWidth to 0.5 to align with the outside edge of the pixel
                     displayUtils.drawBBox(bbox, borderWidth=0.5, ctype=ctype, display=display)

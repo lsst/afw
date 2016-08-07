@@ -23,6 +23,9 @@
 #
 
 from __future__ import print_function
+from __future__ import division
+from builtins import input
+from builtins import zip
 import math
 import numpy
 import matplotlib.pyplot as plt
@@ -124,4 +127,4 @@ if __name__ == '__main__':
     camera = Mapper().camera
 
     main(camera, showDistortion=args.showDistortion, sample=2)
-    print("Hit any key to exit", end=' '); raw_input()
+    print("Hit any key to exit", end=' '); input()

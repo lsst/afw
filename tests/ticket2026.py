@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import range
 import unittest
 
 import lsst.utils.tests
@@ -56,10 +57,10 @@ class IndexingCatalogTestCase(unittest.TestCase):
     def assertSlice(self, cat, start, stop, step=None):
         if step is None:
             c = cat[start:stop]
-            tru = range(10)[start:stop]
+            tru = list(range(10))[start:stop]
         else:
             c = cat[start:stop:step]
-            tru = range(10)[start:stop:step]
+            tru = list(range(10))[start:stop:step]
         printids(c)
         self.assertEqual(getids(c), tru)
 

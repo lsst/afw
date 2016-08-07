@@ -22,6 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import division
 import os
 import lsst.utils
 import lsst.afw.image as afwImage

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
 
 #
 # LSST Data Management System
@@ -49,8 +50,8 @@ class ImagePersistenceTestCase(unittest.TestCase):
         assert image.getWidth() == image2.getWidth()
         assert image.getY0() == image2.getY0()
         assert image.getX0() == image2.getX0()
-        for x in xrange(0, image.getWidth(), 2):
-            for y in xrange(0, image.getHeight(), 2):
+        for x in range(0, image.getWidth(), 2):
+            for y in range(0, image.getHeight(), 2):
                 pixel1 = image.get(x, y)
                 pixel2 = image2.get(x, y)
                 # Persisting through Boost text archives causes conversion error!

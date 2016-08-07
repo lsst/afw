@@ -1,3 +1,4 @@
+from __future__ import division
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010, 2015 LSST Corporation.

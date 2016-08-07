@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
 
 #
 # LSST Data Management System
@@ -36,8 +37,8 @@ class ImageIoTestCase(unittest.TestCase):
         self.assertEqual(image.getWidth(), original.getWidth())
         self.assertEqual(image.getY0(), original.getY0())
         self.assertEqual(image.getX0(), original.getX0())
-        for x in xrange(0, original.getWidth()):
-            for y in xrange(0, image.getHeight()):
+        for x in range(0, original.getWidth()):
+            for y in range(0, image.getHeight()):
                 self.assertEqual(image.get(x, y), original.get(x, y))
 
     def setUp(self):
@@ -53,8 +54,8 @@ class ImageIoTestCase(unittest.TestCase):
                       afwImage.ImageD,
                       ):
             image = Image(self.cols, self.rows)
-            for x in xrange(0, self.cols):
-                for y in xrange(0, self.rows):
+            for x in range(0, self.cols):
+                for y in range(0, self.rows):
                     image.set(x, y, x + y)
 
             with utilsTests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:

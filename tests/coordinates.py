@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import zip
+from builtins import range
 
 #
 # LSST Data Management System
@@ -121,7 +123,7 @@ class PointTestCase(CoordinateTestCase):
         span = geom.Span(4, 3, 8)
         points = list(span)
         self.assertEqual(len(span), len(points))
-        self.assertEqual(points, [geom.Point2I(x, 4) for x in xrange(3, 9)])
+        self.assertEqual(points, [geom.Point2I(x, 4) for x in range(3, 9)])
 
     def testConstructors(self):
         #test 2-d

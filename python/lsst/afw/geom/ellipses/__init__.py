@@ -23,6 +23,7 @@
 """lsst.afw.geom.ellipses
 """
 from __future__ import absolute_import
+from builtins import object
 from .ellipsesLib import *
 import weakref
 import numpy

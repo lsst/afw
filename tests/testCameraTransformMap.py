@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -26,6 +28,7 @@ Tests for lsst.afw.cameraGeom.CameraTransformMap
 """
 import itertools
 import unittest
+from builtins import zip
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -174,7 +177,7 @@ class CameraTransformMapTestCase(unittest.TestCase):
                 toList = self.transformMap.transform(fromList, fromSys, toSys)
 
                 self.assertEquals(len(fromList), len(toList))
-                for fromPoint, toPoint in itertools.izip(fromList, toList):
+                for fromPoint, toPoint in zip(fromList, toList):
                     predToPoint = self.transformMap.transform(fromPoint, fromSys, toSys)
                     for i in range(2):
                         self.assertAlmostEqual(predToPoint[i], toPoint[i])
