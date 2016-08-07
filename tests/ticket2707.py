@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -101,7 +102,7 @@ class MatchXyTest(unittest.TestCase):
 
                 if False:
                     for m in matches:
-                        print closest, m.first.getId(), m.second.getId(), m.distance
+                        print(closest, m.first.getId(), m.second.getId(), m.distance)
 
                 if includeMismatches:
                     catMatches = afwTable.SourceCatalog(self.table)
@@ -136,7 +137,7 @@ class MatchXyTest(unittest.TestCase):
 
             if False:
                 for m in matches:
-                    print m.first.getId(), m.second.getId(), m.distance
+                    print(m.first.getId(), m.second.getId(), m.distance)
 
             # There is only one source that matches another source when we do a self-match: the one
             # offset by 2 pixels and a bit.

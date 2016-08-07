@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys
 import lsst.afw.table as afwTable
+from functools import reduce
 
 
 def concatenate(catalogList):
@@ -26,8 +28,8 @@ def concatenate(catalogList):
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print "catTables.py: Concatenate multiple FITS tables (catalogs) from lsst.afw.table"
-        print "Usage: catTables.py OUT IN1 IN2 [IN3...]"
+        print("catTables.py: Concatenate multiple FITS tables (catalogs) from lsst.afw.table")
+        print("Usage: catTables.py OUT IN1 IN2 [IN3...]")
         sys.exit(1)
 
     outName = sys.argv[1]

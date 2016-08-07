@@ -31,6 +31,7 @@ or
    python
    >>> import SpatialCellExample; SpatialCellExample.run()
 """
+from __future__ import print_function
 
 import os
 import sys
@@ -81,8 +82,8 @@ def readImage(filename=None):
     im = mi.getImage()
     try:
         backobj = afwMath.makeBackground(im, bctrl)
-    except Exception, e:
-        print >> sys.stderr, e,
+    except Exception as e:
+        print(e, end=' ', file=sys.stderr)
 
         bctrl.setInterpStyle(afwMath.Interpolate.CONSTANT)
         backobj = afwMath.makeBackground(im, bctrl)
@@ -142,7 +143,7 @@ def SpatialCellSetDemo(filename=None):
     visitor = testSpatialCellLib.ExampleCandidateVisitor()
 
     cellSet.visitCandidates(visitor)
-    print "There are %d candidates" % (visitor.getN())
+    print("There are %d candidates" % (visitor.getN()))
 
     ctypes = ["red", "yellow", "cyan", ]
     for i in range(cellSet.getCellList().size()):
@@ -181,13 +182,13 @@ def SpatialCellSetDemo(filename=None):
         cell.visitCandidates(visitor)
 
         cell.setIgnoreBad(False)        # include BAD in cell.size()
-        print "%s nobj=%d N_good=%d NPix_good=%d" % \
-              (cell.getLabel(), cell.size(), visitor.getN(), visitor.getNPix())
+        print("%s nobj=%d N_good=%d NPix_good=%d" % \
+              (cell.getLabel(), cell.size(), visitor.getN(), visitor.getNPix()))
 
 
     cellSet.setIgnoreBad(True)           # don't visit BAD candidates
     cellSet.visitCandidates(visitor)
-    print "There are %d good candidates" % (visitor.getN())
+    print("There are %d good candidates" % (visitor.getN()))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 

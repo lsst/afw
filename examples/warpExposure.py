@@ -22,6 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import print_function
 import optparse
 
 import lsst.afw.image as afwImage
@@ -57,9 +58,9 @@ where exposure arguments are paths to Exposure fits files"""
     srcExposurePath = args[0]
     refExposurePath = args[1]
     destExposurePath = args[2]
-    print "Remapping exposure      :", srcExposurePath
-    print "to match wcs and bbox of:", refExposurePath
-    print "using", kernelName, "kernel"
+    print("Remapping exposure      :", srcExposurePath)
+    print("to match wcs and bbox of:", refExposurePath)
+    print("using", kernelName, "kernel")
 
     warpingControl = afwMath.WarpingControl(kernelName)
 
@@ -68,13 +69,13 @@ where exposure arguments are paths to Exposure fits files"""
     destExposure = afwImage.ExposureF(refExposurePath)
 
     if opt.verbosity > 0:
-        print "Verbosity =", opt.verbosity
+        print("Verbosity =", opt.verbosity)
         lsst.pex.logging.Trace_setVerbosity("lsst.afw.math", opt.verbosity)
 
     numGoodPixels = afwMath.warpExposure(destExposure, srcExposure, warpingControl)
-    print "Warped exposure has %s good pixels" % (numGoodPixels)
+    print("Warped exposure has %s good pixels" % (numGoodPixels))
 
-    print "Writing warped exposure to %s" % (destExposurePath,)
+    print("Writing warped exposure to %s" % (destExposurePath,))
     destExposure.writeFits(destExposurePath)
 
 if __name__ == "__main__":
@@ -82,5 +83,5 @@ if __name__ == "__main__":
     main()
     # check for memory leaks
     if dafBase.Citizen_census(0, memId0) != 0:
-        print dafBase.Citizen_census(0, memId0), "Objects leaked:"
-        print dafBase.Citizen_census(dafBase.cout, memId0)
+        print(dafBase.Citizen_census(0, memId0), "Objects leaked:")
+        print(dafBase.Citizen_census(dafBase.cout, memId0))

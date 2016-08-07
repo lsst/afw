@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import gdb
 import math, re
 
@@ -54,7 +56,7 @@ Like optparse.OptionParser's API, but with an initial command name argument
         """Raise GdbError rather than exiting"""
         if status == 0:
             if msg:
-                print >> sys.stderr, msg
+                print(msg, file=sys.stderr)
         else:
             raise gdb.GdbError(msg)
 
@@ -267,7 +269,7 @@ try:
                     ny = NY
 
                 if nx == 1 and ny == 1:
-                    print "%g" % self._vget(var, x0)
+                    print("%g" % self._vget(var, x0))
                     return
             else:
                 NX = 0, var["m_storage"]["n"]
@@ -285,26 +287,26 @@ try:
                     nx = NX
 
                 if nx == 1:
-                    print "%g" % self._vget(var, x0)
+                    print("%g" % self._vget(var, x0))
                     return
             #
             # OK, finally time to print
             #
             if isMatrix:
-                print "%-4s" % "",
+                print("%-4s" % "", end=' ')
                 for x in range(x0, min(NX, x0 + nx)):
-                    print "%*d" % (opts.formatWidth, x),
-                print ""
+                    print("%*d" % (opts.formatWidth, x), end=' ')
+                print("")
 
                 for y in range(y0, min(NY, y0 + ny)):
-                    print "%-4d" % y,
+                    print("%-4d" % y, end=' ')
                     for x in range(x0, min(NX, x0 + nx)):
-                        print "%*s" % (opts.formatWidth, (opts.dataFmt % self._mget(var, x, y))),
-                    print ""
+                        print("%*s" % (opts.formatWidth, (opts.dataFmt % self._mget(var, x, y))), end=' ')
+                    print("")
             else:
                 for x in range(x0, min(NX, x0 + nx)):
-                    print "%*s" % (opts.formatWidth, (opts.dataFmt % self._vget(var, x))),
-                print ""
+                    print("%*s" % (opts.formatWidth, (opts.dataFmt % self._vget(var, x))), end=' ')
+                print("")
 
     PrintEigenCommand()
 
@@ -366,7 +368,7 @@ try:
 
             citizen = citizen.dereference()
 
-            print citizen
+            print(citizen)
 
     PrintCitizenCommand()
 
@@ -644,7 +646,7 @@ try:
 
             if re.search(r"MaskedImage", str(var.type)) and \
                     not re.search(r"::Image(\s*&)?$", str(var.type)):
-                print "N.b. %s is a MaskedImage; showing image" % (opts.image)
+                print("N.b. %s is a MaskedImage; showing image" % (opts.image))
                 var = var["_image"]
 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -680,16 +682,16 @@ try:
             #
             # OK, finally time to print
             #
-            print "%-4s" % "",
+            print("%-4s" % "", end=' ')
             for x in range(x0, x0 + nx):
-                print "%*d" % (opts.formatWidth, x),
-            print ""
+                print("%*d" % (opts.formatWidth, x), end=' ')
+            print("")
 
             for y in reversed(range(y0, y0 + ny)):
-                print "%-4d" % y,
+                print("%-4d" % y, end=' ')
                 for x in range(x0, x0 + nx):
-                    print "%*s" % (opts.formatWidth, dataFmt % self.get(var, x, y)),
-                print ""
+                    print("%*s" % (opts.formatWidth, dataFmt % self.get(var, x, y)), end=' ')
+                print("")
 
     PrintImageCommand()
 
@@ -884,6 +886,6 @@ try:
         return printer
 
     printers.append(build_daf_base_dictionary())
-except ImportError, e:
-    print "RHL", e
-    from printers_oldgdb import *
+except ImportError as e:
+    print("RHL", e)
+    from .printers_oldgdb import *

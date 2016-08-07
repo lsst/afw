@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -47,7 +48,7 @@ class FootprintTestCase(unittest.TestCase):
 
         self.assertEqual(len(test.getSpans()), len(control.getSpans()))
         for s0, s1 in zip(test.getSpans(), control.getSpans()):
-            print s0.getY(), s0.getX0(), s0.getX1(), s1.getY(), s1.getX0(), s1.getX1()
+            print(s0.getY(), s0.getX0(), s0.getX1(), s1.getY(), s1.getX0(), s1.getX1())
             self.assertEqual(s0.getX0(), s1.getX0())
             self.assertEqual(s0.getX1(), s1.getX1())
             self.assertEqual(s0.getY(), s1.getY())

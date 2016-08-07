@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -32,7 +33,6 @@ or
    python
    >>> import spline; spline.run()
 """
-
 import math
 import unittest
 
@@ -151,7 +151,7 @@ class SplineTestCase(unittest.TestCase):
             y = afwMath.vectorD()
             sp.interpolate(self.x, y)
             for x, y in zip(self.x, y):
-                print x, y
+                print(x, y)
         #
         # Solve sin(x) = 0.5
         #

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -20,5 +21,5 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-from coordLib import *
-from utils import *
+from .coordLib import *
+from .utils import *

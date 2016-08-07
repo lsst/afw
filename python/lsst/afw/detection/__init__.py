@@ -22,4 +22,5 @@
 
 """Application Framework detection-related classes including Source
 """
-from detectionLib import *
+from __future__ import absolute_import
+from .detectionLib import *

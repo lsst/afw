@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -34,7 +35,6 @@ or
    >>> display.backend = "ds9"   # optional
    >>> display.run()
 """
-
 import os
 import unittest
 
@@ -141,8 +141,8 @@ class DisplayTestCase(unittest.TestCase):
 
         colorGenerator = self.display0.maskColorGenerator(omitBW=True)
         for i in range(10):
-            print i, next(colorGenerator),
-        print
+            print(i, next(colorGenerator), end=' ')
+        print()
 
     def testImageTypes(self):
         """Check that we can display a range of types of image"""

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -168,12 +169,12 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
     mpDictA = maskedImageA.getMask().getMaskPlaneDict()
     mpDictB = maskedImageB.getMask().getMaskPlaneDict()
     if mpDictA.keys() != mpDictB.keys():
-        print "mpDictA.keys()  ", mpDictA.keys()
-        print "mpDictB.keys()  ", mpDictB.keys()
+        print("mpDictA.keys()  ", mpDictA.keys())
+        print("mpDictB.keys()  ", mpDictB.keys())
         return False
     if mpDictA.values() != mpDictB.values():
-        print "mpDictA.values()", mpDictA.values()
-        print "mpDictB.values()", mpDictB.values()
+        print("mpDictA.values()", mpDictA.values())
+        print("mpDictB.values()", mpDictB.values())
         return False
     return True
 
@@ -242,8 +243,8 @@ class ConvolveTestCase(utilsTests.TestCase):
                 self.maskedImage, refMaskedImage, self.cnvMaskedImage]), frame=0)
             if False:
                 for (x, y) in ((0, 0), (1, 0), (0, 1), (50, 50)):
-                    print "Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask().get(x, y),
-                    self.cnvMaskedImage.getMask().get(x, y))
+                    print("Mask(%d,%d) 0x%x 0x%x" % (x, y, refMaskedImage.getMask().get(x, y),
+                    self.cnvMaskedImage.getMask().get(x, y)))
 
         self.assertImagesNearlyEqual(self.cnvImage, refMaskedImage.getImage(), atol=atol, rtol=rtol)
         self.assertMaskedImagesNearlyEqual(self.cnvMaskedImage, refMaskedImage, atol=atol, rtol=rtol)
@@ -271,7 +272,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         to compare against the absolute difference between "a" and "b".
         """
         if VERBOSITY > 0:
-            print "Test convolution with", kernelDescr
+            print("Test convolution with", kernelDescr)
 
         convControl = afwMath.ConvolutionControl()
         convControl.setMaxInterpolationDistance(maxInterpDist)

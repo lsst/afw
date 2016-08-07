@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -100,9 +101,9 @@ class AngleTestCase(unittest.TestCase):
         a2 = 2.0 * afwGeom.arcseconds
         a1 = 0.5 * afwGeom.arcseconds
         a3 = 0.5 * afwGeom.arcseconds
-        print 'a1', a1
-        print 'a2', a2
-        print 'a3', a3
+        print('a1', a1)
+        print('a2', a2)
+        print('a3', a3)
         self.assertEqual(a1 == a3, True)
         self.assertEqual(a1 != a2, True)
         self.assertEqual(a1 <= a2, True)

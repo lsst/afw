@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -92,7 +93,7 @@ class CameraGeomTestCase(unittest.TestCase):
                     self.assertTrue(cp == cp2)
                     self.assertFalse(cp != cp2)
 
-            det = camera[camera.getNameIter().next()]
+            det = camera[next(camera.getNameIter())]
             cp = camera.makeCameraPoint(point, FOCAL_PLANE)
             self.checkCamPoint(cp, point, FOCAL_PLANE)
             cp = camera.makeCameraPoint(point, det.makeCameraSys(PIXELS))
@@ -288,7 +289,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testCameraGeomUtils(self):
         if not display:
-            print "display variable not set; skipping cameraGeomUtils test"
+            print("display variable not set; skipping cameraGeomUtils test")
             return
         for cw in self.cameraList:
             camera = cw.camera

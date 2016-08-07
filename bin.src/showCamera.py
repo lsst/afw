@@ -20,6 +20,7 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import print_function
 import sys
 import matplotlib.pyplot as plt
 
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     try:
         __import__(obsPackageName)
     except:
-        print >> sys.stderr, "Unable to import %s -- is it setup?" % (obsPackageName,)
+        print("Unable to import %s -- is it setup?" % (obsPackageName,), file=sys.stderr)
         sys.exit(1)
 
     obsPackage = sys.modules[obsPackageName] # __import__ returns the top-level module, so look ours up
@@ -57,7 +58,7 @@ if __name__ == '__main__':
     try:
         mapper = getattr(obsPackage, mapperName)
     except AttributeError:
-        print >> sys.stderr, "Unable to find mapper %s in %s" % (mapperName, obsPackageName)
+        print("Unable to find mapper %s in %s" % (mapperName, obsPackageName), file=sys.stderr)
         sys.exit(1)
     #
     # Control verbosity from butler
@@ -76,6 +77,6 @@ if __name__ == '__main__':
                                    showFig=not args.outputFile, savePath=args.outputFile)
 
     if not args.outputFile:
-        print "Hit any key to exit",; raw_input()
+        print("Hit any key to exit", end=' '); raw_input()
 
     sys.exit(0)

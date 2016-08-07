@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -23,7 +24,7 @@ import lsst.pex.config as pexConfig
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.gpu as afwGpu
-import mathLib
+from . import mathLib
 
 __all__ = ["Warper", "WarperConfig"]
 

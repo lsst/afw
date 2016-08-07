@@ -22,6 +22,7 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import print_function
 import math
 import numpy
 import matplotlib.pyplot as plt
@@ -117,10 +118,10 @@ if __name__ == '__main__':
     elif args.camera.lower() == "lsstsim":
         from lsst.obs.lsstSim import LsstSimMapper as Mapper
     else:
-        print >> sys.stderr, "Unknown camera %s" % args.camera
+        print("Unknown camera %s" % args.camera, file=sys.stderr)
         sys.exit(1)
 
     camera = Mapper().camera
 
     main(camera, showDistortion=args.showDistortion, sample=2)
-    print "Hit any key to exit",; raw_input()
+    print("Hit any key to exit", end=' '); raw_input()

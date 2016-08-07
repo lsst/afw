@@ -28,6 +28,7 @@
 # Steve Bickerton
 # An example executible which calls the example 'stack' code
 #
+from __future__ import print_function
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -46,7 +47,7 @@ def main():
 
     imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
 
-    print imgStack.get(nX/2, nY/2)
+    print(imgStack.get(nX/2, nY/2))
 
 
 #######################################

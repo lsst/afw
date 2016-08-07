@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -164,7 +165,7 @@ class WcsTestCase(utilsTests.TestCase):
 
         for badPC in (False, True):
             if verbose:
-                print "Checking PC coefficients: badPC =", badPC
+                print("Checking PC coefficients: badPC =", badPC)
             for k, v in (
                 ("PC001001",  0.0),
                 ("PC001002", -1.0 if badPC else 1.0),
@@ -366,23 +367,23 @@ class WCSTestCaseSDSS(unittest.TestCase):
         """Convert from ra, dec to col, row and back again"""
         raDec = afwCoord.makeCoord(afwCoord.ICRS, 244 * afwGeom.degrees, 20 * afwGeom.degrees)
         if verbose:
-            print 'testIdentity'
-            print 'wcs:'
+            print('testIdentity')
+            print('wcs:')
             for x in self.wcs.getFitsMetadata().toList():
-                print '  ', x
-            print 'raDec:', raDec
-            print type(self.wcs)
+                print('  ', x)
+            print('raDec:', raDec)
+            print(type(self.wcs))
         rowCol = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(rowCol)
 
         if verbose:
-            print 'rowCol:', rowCol
-            print 'raDec2:', raDec2
+            print('rowCol:', rowCol)
+            print('raDec2:', raDec2)
 
         p1 = raDec.getPosition()
         p2 = raDec.getPosition()
         if verbose:
-            print 'p1,p2', p1,p2
+            print('p1,p2', p1,p2)
         self.assertAlmostEqual(p1[0], p2[0])
         self.assertAlmostEqual(p1[1], p2[1])
 
@@ -465,8 +466,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
         exposure = afwImage.ExposureF(bbox, wcs)
         pixPos = afwGeom.Box2D(bbox).getMax()
         if verbose:
-            print "XY0=", exposure.getXY0()
-            print "pixPos=", pixPos
+            print("XY0=", exposure.getXY0())
+            print("pixPos=", pixPos)
         skyPos = wcs.pixelToSky(pixPos)
 
         with utilsTests.getTempFilePath(".fits") as tmpFile:
@@ -481,7 +482,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
                 unpPixPos = unpWcs.skyToPixel(skyPos)
 
                 if verbose:
-                    print "useExposure=%s; unp pixPos=%s" % (useExposure, unpPixPos)
+                    print("useExposure=%s; unp pixPos=%s" % (useExposure, unpPixPos))
 
                 for i in range(2):
                     self.assertAlmostEqual(unpPixPos[i], 1009.5)

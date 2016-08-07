@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from functools import reduce
 
 #
 # LSST Data Management System
@@ -33,6 +34,7 @@ or
    python
    >>> import Stacker; Stacker.run()
 """
+from __future__ import print_function
 
 ##########################
 # simpleStacker.py
@@ -282,8 +284,8 @@ class StackTestCase(utilsTests.TestCase):
 
         stack = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, weightList)
         if False:
-            print "image=", stack.getImage().getArray()
-            print "variance=", stack.getVariance().getArray()
+            print("image=", stack.getImage().getArray())
+            print("variance=", stack.getVariance().getArray())
         self.assertNotEqual(numpy.sum(stack.getVariance().getArray()), 0.0)
 
     def testRejectedMaskPropagation(self):

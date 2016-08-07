@@ -109,7 +109,7 @@ class FunctionTestCase(unittest.TestCase):
         nPoints = 9
 
         for order in range(maxOrder + 1):
-            xMin, xMax = rangeIter.next()
+            xMin, xMax = next(rangeIter)
             xMean = (xMin + xMax) / 2.0
             xDelta = (xMax - xMin) / float(nPoints - 1)
 
@@ -165,15 +165,15 @@ class FunctionTestCase(unittest.TestCase):
         ranges = ((-1, 1), (-1, 0), (0, 1), (-17, -2), (-65.3, 2.132))
         xRangeIter = itertools.cycle(ranges)
         yRangeIter = itertools.cycle(ranges)
-        yRangeIter.next() # make x and y ranges off from each other
+        next(yRangeIter) # make x and y ranges off from each other
         nPoints = 7 # number of points in x and y at which to test the functions
 
         for order in range(maxOrder + 1):
-            xMin, xMax = xRangeIter.next()
+            xMin, xMax = next(xRangeIter)
             xMean = (xMin + xMax) / 2.0
             xDelta = (xMax - xMin) / float(nPoints - 1)
 
-            yMin, yMax = yRangeIter.next()
+            yMin, yMax = next(yRangeIter)
             yMean = (yMin + yMax) / 2.0
             yDelta = (yMax - yMin) / float(nPoints - 1)
 
@@ -280,15 +280,15 @@ class FunctionTestCase(unittest.TestCase):
         ranges = ((-1, 1), (-17, -2), (-65.3, 2.132))
         xRangeIter = itertools.cycle(ranges)
         yRangeIter = itertools.cycle(ranges)
-        yRangeIter.next() # make x and y ranges off from each other
+        next(yRangeIter) # make x and y ranges off from each other
         nPoints = 7 # number of points in x and y at which to test the functions
 
         for order in range(maxOrder + 1):
-            xMin, xMax = xRangeIter.next()
+            xMin, xMax = next(xRangeIter)
             xMean = (xMin + xMax) / 2.0
             xDelta = (xMax - xMin) / float(nPoints - 1)
 
-            yMin, yMax = yRangeIter.next()
+            yMin, yMax = next(yRangeIter)
             yMean = (yMin + yMax) / 2.0
             yDelta = (yMax - yMin) / float(nPoints - 1)
 

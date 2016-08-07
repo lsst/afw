@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 import unittest
 
 import lsst.utils.tests
@@ -10,7 +11,7 @@ import lsst.afw.table as afwTable
 def getids(c):
     return [s.getId()-1 for s in c]
 def printids(c):
-    print getids(c)
+    print(getids(c))
 
 
 
@@ -24,10 +25,10 @@ class IndexingCatalogTestCase(unittest.TestCase):
         catcopy = catalog.copy()
         catsub = catalog[:]
         catsub2 = catalog.subset(0, 1, 1)
-        print 'catalog', catalog
-        print 'catcopy', catcopy
-        print 'catsub', catsub
-        print 'catsub2', catsub2
+        print('catalog', catalog)
+        print('catcopy', catcopy)
+        print('catsub', catsub)
+        print('catsub2', catsub2)
         self.assertEqual(type(catalog), type(catcopy))
         self.assertEqual(type(catalog), type(catsub))
         self.assertEqual(type(catalog), type(catsub2))
@@ -43,9 +44,9 @@ class IndexingCatalogTestCase(unittest.TestCase):
         catalog.addNew()
         catalog[1] = catalog[2]
         del catalog[2]
-        print catalog
+        print(catalog)
         for src in catalog:
-            print src.getId()
+            print(src.getId())
         self.assertEqual(len(catalog), 2)
         self.assertEqual(catalog[0].getId(), 1)
         self.assertEqual(catalog[1].getId(), 3)
@@ -68,34 +69,34 @@ class IndexingCatalogTestCase(unittest.TestCase):
         catalog = afwTable.SourceCatalog(table)
         for i in range(10):
             catalog.addNew()
-        print 'Catalog:', printids(catalog)
-        print 'Empty range (4,4)'
+        print('Catalog:', printids(catalog))
+        print('Empty range (4,4)')
         self.assertSlice(catalog, 4, 4)
-        print 'Count by 2 (1,7,2)'
+        print('Count by 2 (1,7,2)')
         self.assertSlice(catalog, 1, 7, 2)
-        print 'Normal range (4,7)'
+        print('Normal range (4,7)')
         self.assertSlice(catalog, 4, 7)
-        print 'Normal range 2 (4,10)'
+        print('Normal range 2 (4,10)')
         self.assertSlice(catalog, 4, 10)
-        print 'Normal range 3 (4,15)'
+        print('Normal range 3 (4,15)')
         self.assertSlice(catalog, 4, 15)
-        print 'Negative indexed range (-20,-1)'
+        print('Negative indexed range (-20,-1)')
         self.assertSlice(catalog, -20, -1)
-        print 'Negative end (1,-3)'
+        print('Negative end (1,-3)')
         self.assertSlice(catalog, 1, -3)
-        print 'Negative step (6:1:-2)'
+        print('Negative step (6:1:-2)')
         self.assertSlice(catalog, 6, 1, -2)
-        print 'Negative step (6:0:-2)'
+        print('Negative step (6:0:-2)')
         self.assertSlice(catalog, 6, 0 ,-2)
-        print 'Negative step (-1:-12:-2)'
+        print('Negative step (-1:-12:-2)')
         self.assertSlice(catalog, -1, -12, -2)
-        print 'Negative step (6:0:-1)'
+        print('Negative step (6:0:-1)')
         self.assertSlice(catalog, 6, 0, -1)
-        print 'Negative step (6:-20:-1)'
+        print('Negative step (6:-20:-1)')
         self.assertSlice(catalog, 6, -20, -1)
-        print 'Negative step (6:-20:-2)'
+        print('Negative step (6:-20:-2)')
         self.assertSlice(catalog, 6, -20, -2)
-        print 'Negative step (5:-20:-2)'
+        print('Negative step (5:-20:-2)')
         self.assertSlice(catalog, 5, -20, -2)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

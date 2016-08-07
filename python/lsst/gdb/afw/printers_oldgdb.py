@@ -2,6 +2,7 @@
 Code that works with gdb 7.1's python pretty printing.  When gdb >= 7.2 is widely available this
 file should be deleted (it's only used after importing gdb.printing fails)
 """
+from __future__ import print_function
 import gdb
 import re
 
@@ -145,7 +146,7 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
         var = gdb.parse_and_eval(imgName)
 
         if re.search(r"MaskedImage", str(var.type)):
-            print "N.b. %s is a MaskedImage; showing image" % (imgName)
+            print("N.b. %s is a MaskedImage; showing image" % (imgName))
             var = var["_image"]
 
         if re.search(r"shared_ptr<", str(var.type)):
@@ -163,7 +164,7 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
         y0 = gdb.parse_and_eval(args.pop(0))
 
         if len(args) == 0:
-            print "%g" % self.get(var, x0, y0)
+            print("%g" % self.get(var, x0, y0))
             return
 
         nx = int(args.pop(0))
@@ -199,16 +200,16 @@ Usage: image x0 y0 [nx [ny] [centerPatch] [obeyXY0]]
         else:
             dataFmt = "%.2f"
 
-        print "%-4s" % "",
+        print("%-4s" % "", end=' ')
         for x in range(x0, x0 + nx):
-            print "%8d" % x,
-        print ""
+            print("%8d" % x, end=' ')
+        print("")
 
         for y in reversed(range(y0, y0 + ny)):
-            print "%-4d" % y,
+            print("%-4d" % y, end=' ')
             for x in range(x0, x0 + nx):
-                print "%8s" % (dataFmt % self.get(var, x, y)),
-            print ""
+                print("%8s" % (dataFmt % self.get(var, x, y)), end=' ')
+            print("")
 
 
 PrintImageCommand()
@@ -248,7 +249,7 @@ class Printer(object):
         # A small sanity check.
         # FIXME
         if not self.compiled_rx.match(name + '<>'):
-            raise ValueError, 'libstdc++ programming error: "%s" does not match' % name
+            raise ValueError('libstdc++ programming error: "%s" does not match' % name)
         printer = RxPrinter(name, function)
         self.subprinters.append(printer)
         self.lookup[name] = printer

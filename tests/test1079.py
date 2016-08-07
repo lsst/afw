@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -94,11 +95,11 @@ class SavingSubImagesTest(unittest.TestCase):
 
         #Useful for debugging
         if False:
-            print self.parent.getMaskedImage().getXY0()
-            print subImg.getMaskedImage().getXY0()
-            print self.parent.getWcs().getFitsMetadata().toString()
-            print subImg.getWcs().getFitsMetadata().toString()
-            print self.oParent, oSubImage
+            print(self.parent.getMaskedImage().getXY0())
+            print(subImg.getMaskedImage().getXY0())
+            print(self.parent.getWcs().getFitsMetadata().toString())
+            print(subImg.getWcs().getFitsMetadata().toString())
+            print(self.oParent, oSubImage)
 
         for i in range(2):
             self.assertEqual(llc[i], subImgLlc[i], "Corner of sub-image not correct")
@@ -118,11 +119,11 @@ class SavingSubImagesTest(unittest.TestCase):
 
         #Useful for debugging
         if False:
-            print self.parent.getMaskedImage().getXY0()
-            print subImg.getMaskedImage().getXY0()
-            print self.parent.getWcs().getFitsMetadata().toString()
-            print subImg.getWcs().getFitsMetadata().toString()
-            print self.oParent, oSubImage
+            print(self.parent.getMaskedImage().getXY0())
+            print(subImg.getMaskedImage().getXY0())
+            print(self.parent.getWcs().getFitsMetadata().toString())
+            print(subImg.getWcs().getFitsMetadata().toString())
+            print(self.oParent, oSubImage)
 
         for i in range(2):
             self.assertEqual(llc[i], subImgLlc[i], "Corner of sub-image not correct")
@@ -185,8 +186,8 @@ class SavingSubImagesTest(unittest.TestCase):
 
 
         if False:
-            print sub0
-            print subsub0
+            print(sub0)
+            print(subsub0)
 
 
         for i in range(2):
@@ -219,9 +220,9 @@ class SavingSubImagesTest(unittest.TestCase):
                 newCrpix = newImg.getWcs().getPixelOrigin()
 
                 if False:
-                    print self.parent.getWcs().getFitsMetadata().toString()
-                    print subImg.getWcs().getFitsMetadata().toString()
-                    print newImg.getWcs().getFitsMetadata().toString()
+                    print(self.parent.getWcs().getFitsMetadata().toString())
+                    print(subImg.getWcs().getFitsMetadata().toString())
+                    print(newImg.getWcs().getFitsMetadata().toString())
 
                 for i in range(2):
                     self.assertEqual(subXY0[i], newXY0[i], "Origin has changed; deep = %s" % deep)

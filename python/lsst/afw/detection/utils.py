@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -20,17 +22,17 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import detectionLib as afwDetect
+from . import detectionLib as afwDetect
 
 def writeFootprintAsDefects(fd, foot):
     """Write foot as a set of Defects to fd"""
 
     bboxes = afwDetect.footprintToBBoxList(foot)
     for bbox in bboxes:
-        print >> fd, """\
+        print("""\
 Defects: {
     x0:     %4d                         # Starting column
     width:  %4d                         # number of columns
     y0:     %4d                         # Starting row
     height: %4d                         # number of rows
-}""" % (bbox.getMinX(), bbox.getWidth(), bbox.getMinY(), bbox.getHeight())
+}""" % (bbox.getMinX(), bbox.getWidth(), bbox.getMinY(), bbox.getHeight()), file=fd)

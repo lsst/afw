@@ -22,5 +22,6 @@
 
 """Application Framework shared GPU code
 """
-from gpuLib import *
+from __future__ import absolute_import
+from .gpuLib import *
 

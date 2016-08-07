@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
 
 #
 # LSST Data Management System
@@ -46,7 +47,7 @@ class MinimizeTestCase(unittest.TestCase):
         measurements = []
         for x, y in zip(xPositions, yPositions):
             measurements.append(polyFunc(x, y))
-        print "measurements=", measurements
+        print("measurements=", measurements)
 
         # Set up initial guesses
         nParameters = polyFunc.getNParameters()
@@ -66,8 +67,8 @@ class MinimizeTestCase(unittest.TestCase):
             0.1,
         )
 
-        print "modelParams=", modelParams
-        print "fitParams  =", fitResults.parameterList
+        print("modelParams=", modelParams)
+        print("fitParams  =", fitResults.parameterList)
         self.assert_(fitResults.isValid, "fit failed")
         if not numpy.allclose(modelParams, fitResults.parameterList):
             self.fail("fit not accurate")
