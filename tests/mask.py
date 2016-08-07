@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import range
 
 #
 # LSST Data Management System
@@ -247,7 +248,7 @@ class MaskTestCase(utilsTests.TestCase):
             self.assertMasksEqual(mask, rmask)
 
             # Check that we wrote (and read) the metadata successfully
-            mp_ = "MP_" if True else self.Mask.maskPlanePrefix() # currently private
+            mp_ = "MP_" if True else self.Mask.maskPlanePrefix()  # currently private
             for (k, v) in self.Mask().getMaskPlaneDict().items():
                 self.assertEqual(md.get(mp_ + k), v)
 
@@ -307,8 +308,7 @@ class MaskTestCase(utilsTests.TestCase):
         mask = afwImage.MaskU(100, 200, {FOO : val}
                               )
         mpd = mask.getMaskPlaneDict()
-        self.assertTrue(FOO in mpd.keys()) # n.b. there's a bug in swig 2.1.15; mpd[XXX] corrupts memory
-                                           # if XXX isn't a valid key
+        self.assertTrue(FOO in mpd.keys())
         self.assertEqual(mpd[FOO], val)
 
     def testImageSlices(self):
@@ -344,8 +344,8 @@ class MaskTestCase(utilsTests.TestCase):
             bitmask = self.Mask.getPlaneBitMask(p)
             allBits |= bitmask
             self.assertEqual(im.interpret(bitmask), p)
-            im.getArray()[0,i] = bitmask
-            self.assertEqual(im.getAsString(i,0), p)
+            im.getArray()[0, i] = bitmask
+            self.assertEqual(im.getAsString(i, 0), p)
         self.assertEqual(self.Mask.interpret(allBits), ",".join(planes.keys()))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -608,11 +608,11 @@ class OldMaskTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 def printMaskPlane(mask, plane,
-                   xrange=range(250, 300, 10), yrange=range(300, 400, 20)):
+                   xrange=list(range(250, 300, 10)), yrange=list(range(300, 400, 20))):
     """Print parts of the specified plane of the mask"""
 
-    xrange = range(min(xrange), max(xrange), 25)
-    yrange = range(min(yrange), max(yrange), 25)
+    xrange = list(range(min(xrange), max(xrange), 25))
+    yrange = list(range(min(yrange), max(yrange), 25))
 
     for x in xrange:
         for y in yrange:

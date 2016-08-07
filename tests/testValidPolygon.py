@@ -30,6 +30,7 @@ or
    python
    >>> import testValidPolygonTestCase; testPolygonTestCase.run()
 """
+from builtins import zip
 
 import os
 import unittest

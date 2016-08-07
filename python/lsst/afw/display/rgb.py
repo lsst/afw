@@ -1,3 +1,5 @@
+from __future__ import division
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2015-2016 LSST/AURA
@@ -257,12 +259,12 @@ class AsinhMapping(Mapping):
                 Q = Qmax
 
         if False:
-            self._slope = self._uint8Max/Q # gradient at origin is self._slope
+            self._slope = self._uint8Max/Q  # gradient at origin is self._slope
         else:
             frac = 0.1                  # gradient estimated using frac*range is _slope
             self._slope = frac*self._uint8Max/np.arcsinh(frac*Q)
 
-        self._soften = Q/float(dataRange);
+        self._soften = Q/float(dataRange)
 
     def mapIntensityToUint8(self, I):
         """Return an array which, when multiplied by an image, returns that image mapped to the range of a

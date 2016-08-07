@@ -20,6 +20,8 @@
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 from __future__ import absolute_import
+from builtins import zip
+from builtins import range
 
 import os.path
 

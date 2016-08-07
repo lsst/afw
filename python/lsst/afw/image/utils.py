@@ -1,4 +1,6 @@
 from __future__ import absolute_import, division
+from past.builtins import basestring
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2008-2016 LSST Corporation.

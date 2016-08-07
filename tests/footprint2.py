@@ -1,6 +1,10 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from past.builtins import cmp
+from builtins import zip
+from builtins import range
+from builtins import object
 
 #
 # LSST Data Management System

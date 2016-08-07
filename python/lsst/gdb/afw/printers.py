@@ -1,5 +1,10 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from builtins import object
+from past.builtins import long
 import gdb
 import math, re
 
@@ -687,7 +692,7 @@ try:
                 print("%*d" % (opts.formatWidth, x), end=' ')
             print("")
 
-            for y in reversed(range(y0, y0 + ny)):
+            for y in reversed(list(range(y0, y0 + ny))):
                 print("%-4d" % y, end=' ')
                 for x in range(x0, x0 + nx):
                     print("%*s" % (opts.formatWidth, dataFmt % self.get(var, x, y)), end=' ')

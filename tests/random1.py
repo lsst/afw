@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import str
+from builtins import range
 
 #
 # LSST Data Management System
@@ -46,7 +48,7 @@ import lsst.afw.geom as afwGeom
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def checkRngEquivalence(rng1, rng2):
-    for i in xrange(1000):
+    for i in range(1000):
         assert rng1.uniform() == rng2.uniform()
 
 def getSeed():

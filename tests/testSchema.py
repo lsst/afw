@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import zip
 
 #
 # LSST Data Management System
@@ -103,7 +104,7 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(keys[3].getBit(), 1)
         for n1, n2 in zip(schema4.getOrderedNames(), "abcd"):
             self.assertEqual(n1, n2)
-        keys2 = map(lambda x: x.key, schema4.asList())
+        keys2 = [x.key for x in schema4.asList()]
         self.assertEqual(keys, keys2)
 
     def testUnits(self):

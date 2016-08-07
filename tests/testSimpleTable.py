@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
 from __future__ import print_function
+from builtins import zip
+from builtins import range
 
 #
 # LSST Data Management System
@@ -301,11 +303,11 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("q_e2_xx_xy_Cov", type=numpy.float32)
         schema.addField("q_e2_yy_xy_Cov", type=numpy.float32)
         covKey = lsst.afw.table.CovarianceMatrix3fKey(schema["q_e2"], ["xx", "yy", "xy"])
-        self.assertEqual(schema.extract("a_b_*", ordered=True).keys(), ["a_b_c1", "a_b_c2"])
-        self.assertEqual(schema.extract("*1", ordered=True).keys(), ["a_b_c1", "a_d1"])
-        self.assertEqual(schema.extract("a_b_*", "*2", ordered=True).keys(),
+        self.assertEqual(list(schema.extract("a_b_*", ordered=True).keys()), ["a_b_c1", "a_b_c2"])
+        self.assertEqual(list(schema.extract("*1", ordered=True).keys()), ["a_b_c1", "a_d1"])
+        self.assertEqual(list(schema.extract("a_b_*", "*2", ordered=True).keys()),
                          ["a_b_c1", "a_b_c2", "a_d2"])
-        self.assertEqual(schema.extract(regex=r"a_(.+)1", sub=r"\1f", ordered=True).keys(), ["b_cf", "df"])
+        self.assertEqual(list(schema.extract(regex=r"a_(.+)1", sub=r"\1f", ordered=True).keys()), ["b_cf", "df"])
         catalog = lsst.afw.table.BaseCatalog(schema)
         for i in range(5):
             record = catalog.addNew()
@@ -667,7 +669,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         filename = os.path.join(os.path.split(__file__)[0], "data", "CompoundFieldConversion.fits")
         cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
         record2 = cat2[0]
-        for k, v in geomValues.iteritems():
+        for k, v in geomValues.items():
             self.assertEqual(record2.get(k), v, msg=k)
         covZKey = lsst.afw.table.CovarianceMatrixXfKey(cat2.schema["cov_z"], ["0", "1", "2", "3"])
         covPKey = lsst.afw.table.CovarianceMatrix2fKey(cat2.schema["cov_p"], ["x", "y"])

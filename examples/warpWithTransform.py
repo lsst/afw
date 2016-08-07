@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import division
+from builtins import range
 import sys, math
 
 import lsst.afw.image as afwImage

@@ -32,6 +32,8 @@ or
    python
    >>> import rowColumnStats; rowColumnStats.run()
 """
+from __future__ import division
+from builtins import range
 
 ##########################
 # rowColumnStats.py
@@ -114,12 +116,12 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
         imgDiv = self.img / columnSlice
 
         for i in range(self.n):
-            self.assertAlmostEqual(imgAdd.get(0, i),  self.img.get(0, i) + columnSlice.get(0, i))
-            self.assertAlmostEqual(imgAdd2.get(0, i),  imgAdd.get(0, i))
-            self.assertAlmostEqual(imgSub.get(0, i),  self.img.get(0, i) - columnSlice.get(0, i))
-            self.assertAlmostEqual(imgMul.get(0, i),  self.img.get(0, i) * columnSlice.get(0, i))
-            self.assertAlmostEqual(imgMul2.get(0, i),  imgMul.get(0, i))
-            self.assertAlmostEqual(imgDiv.get(0, i),  self.img.get(0, i) / columnSlice.get(0, i))
+            self.assertAlmostEqual(imgAdd.get(0, i), self.img.get(0, i) + columnSlice.get(0, i))
+            self.assertAlmostEqual(imgAdd2.get(0, i), imgAdd.get(0, i))
+            self.assertAlmostEqual(imgSub.get(0, i), self.img.get(0, i) - columnSlice.get(0, i))
+            self.assertAlmostEqual(imgMul.get(0, i), self.img.get(0, i) * columnSlice.get(0, i))
+            self.assertAlmostEqual(imgMul2.get(0, i), imgMul.get(0, i))
+            self.assertAlmostEqual(imgDiv.get(0, i), self.img.get(0, i) / columnSlice.get(0, i))
 
 
 #################################################################

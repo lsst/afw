@@ -1,3 +1,5 @@
+from __future__ import division
+from builtins import object
 import re, warnings
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
@@ -48,7 +50,7 @@ class HeaderMap(dict):
            @param[in]      metadata  Metadata object used for applying the mapping
            @param[in]      doRaise   Raise exceptions on calling methods on the input object that do not exist?
         """
-        for key, attrDict in self.iteritems():
+        for key, attrDict in self.items():
             try:
                 value = getByKey(metadata, attrDict['keyName'])
                 if value is not None:

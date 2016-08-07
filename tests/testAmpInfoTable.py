@@ -26,6 +26,7 @@ Tests for lsst.afw.table.AmpInfoTable, etc.
 """
 import itertools
 import unittest
+from builtins import zip
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -128,7 +129,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 self.assertEquals(rawXYOffset, record.getRawXYOffset())
 
         self.assertEquals(len(self.catalog), 2)
-        for i, data in enumerate(itertools.izip(nameRawInfoList, self.catalog)):
+        for i, data in enumerate(zip(nameRawInfoList, self.catalog)):
             name, hasRawInfo = data[0]
             record = data[1]
             self.assertEquals(name, self.catalog[i].getName())
@@ -140,7 +141,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.catalog.writeFits(fileName)
             catCopy = afwTable.AmpInfoCatalog.readFits(fileName)
             self.assertEquals(type(self.catalog), type(catCopy))
-            for rec1, rec2 in itertools.izip(self.catalog, catCopy):
+            for rec1, rec2 in zip(self.catalog, catCopy):
                 self.assertEquals(rec1.getName(), rec2.getName())
                 self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
 

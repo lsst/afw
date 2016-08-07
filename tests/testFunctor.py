@@ -23,6 +23,7 @@
 """
 Tests for lsst.afw.geom.Functor classes.
 """
+from __future__ import division
 import unittest
 import numpy as np
 import lsst.utils.tests
@@ -34,6 +35,7 @@ def num_deriv(func, x, eps=1e-7):
     xp = x + h
     dx = xp - x
     return (func(x + dx) - func(x))/dx
+
 
 class FunctorTestCase(unittest.TestCase):
     def setUp(self):

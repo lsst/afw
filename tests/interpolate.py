@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import zip
+from builtins import range
 
 #
 # LSST Data Management System
@@ -115,7 +117,7 @@ class InterpolateTestCase(unittest.TestCase):
         n = len(yvec)
         self.assertEqual(interp.interpolate(xvec[n - 1] + 10), yvec[n - 1])
 
-        for x, y in reversed(zip(xvec_c, yvec_c)): # test caching as we go backwards
+        for x, y in reversed(list(zip(xvec_c, yvec_c))): # test caching as we go backwards
             self.assertAlmostEqual(interp.interpolate(x + 0.1), y)
             self.assertAlmostEqual(interp.interpolate(x), y)
 

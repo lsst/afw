@@ -56,7 +56,7 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.ab11 = self.schema.addField("ab11", type=int, doc="")
         self.ab12 = self.schema.addField("ab12", type=int, doc="")
         self.dict = dict(q="a", r="a1", s="ab", t="ab11")
-        for k, v in self.dict.iteritems():
+        for k, v in self.dict.items():
             self.schema.getAliasMap().set(k, v)
 
     def tearDown(self):
@@ -83,12 +83,12 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
 
         # Check that iteration works
         self.assertEqual(dict(aliases), self.dict)
-        for n, (k, v) in enumerate(aliases.iteritems()):
+        for n, (k, v) in enumerate(aliases.items()):
             self.assertEqual(aliases.get(k), v)
             self.assertEqual(aliases[k], v)
         self.assertEqual(n + 1, len(aliases))
-        self.assertEqual(aliases.keys(), [k for k, v in aliases.iteritems()])
-        self.assertEqual(aliases.values(), [v for k, v in aliases.iteritems()])
+        self.assertEqual(list(aliases.keys()), [k for k, v in aliases.items()])
+        self.assertEqual(list(aliases.values()), [v for k, v in aliases.items()])
 
         # Try removing something using the C++-named methods
         self.assertTrue(aliases.erase("q"))

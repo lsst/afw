@@ -1,5 +1,8 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from __future__ import print_function
+from builtins import str
+from builtins import range
 from functools import reduce
 
 #
@@ -34,7 +37,6 @@ or
    python
    >>> import Stacker; Stacker.run()
 """
-from __future__ import print_function
 
 ##########################
 # simpleStacker.py

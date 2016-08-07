@@ -34,7 +34,7 @@
 from __future__ import absolute_import, division, print_function
 import math
 import unittest
-from itertools import izip
+from builtins import zip
 
 import numpy as np
 
@@ -157,7 +157,7 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
         """Check that the source and reference object catalogs have equal centroids and coords"""
         self.assertEqual(len(self.sourceCat), len(self.refCat))
 
-        for src, refObj in izip(self.sourceCat, self.refCat):
+        for src, refObj in zip(self.sourceCat, self.refCat):
             srcCentroid = src.get(self.srcCentroidKey)
             refCentroid = refObj.get(self.refCentroidKey)
             self.assertPairsNearlyEqual(srcCentroid, refCentroid, maxDiff=maxPixDiff)

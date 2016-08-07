@@ -25,6 +25,7 @@ from __future__ import absolute_import, division
 
 import numpy
 import unittest
+from past.builtins import long
 
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
@@ -46,14 +47,14 @@ class HeaderTestCase(unittest.TestCase):
 
         exp = afwImage.ExposureI(0,0)
         metadata = exp.getMetadata()
-        for k,v in header.items():
+        for k, v in header.items():
             metadata.add(k, v)
 
         exp.writeFits(filename)
 
         exp = afwImage.ExposureI(filename)
         metadata = exp.getMetadata()
-        for k,v in header.items():
+        for k, v in header.items():
             self.assertTrue(metadata.exists(k))
             if isinstance(v, float) and numpy.isnan(v):
                 self.assertTrue(isinstance(metadata.get(k), float))

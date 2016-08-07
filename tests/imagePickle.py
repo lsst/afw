@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
 
 #
 # LSST Data Management System
@@ -65,8 +66,8 @@ class ImagePickleTestCase(unittest.TestCase):
         self.assertEqual(image.getWidth(), original.getWidth())
         self.assertEqual(image.getY0(), original.getY0())
         self.assertEqual(image.getX0(), original.getX0())
-        for x in xrange(0, original.getWidth()):
-            for y in xrange(0, image.getHeight()):
+        for x in range(0, original.getWidth()):
+            for y in range(0, image.getHeight()):
                 self.assertEqual(image.get(x, y), original.get(x, y))
 
     def checkImages(self, original):

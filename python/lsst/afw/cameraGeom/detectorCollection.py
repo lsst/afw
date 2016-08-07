@@ -20,6 +20,8 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 from __future__ import absolute_import, division
+from past.builtins import basestring
+from builtins import object
 from lsst.afw.geom import Box2D
 from .cameraGeomLib import FOCAL_PLANE
 
@@ -45,7 +47,7 @@ class DetectorCollection(object):
     def __iter__(self):
         """!Support the iter function: return an iterator over all detectors in this collection
         """
-        return self._idDetectorDict.itervalues()
+        return iter(self._idDetectorDict.values())
 
     def __len__(self):
         """!Support the len function: return the number of detectors
@@ -75,12 +77,12 @@ class DetectorCollection(object):
     def getNameIter(self):
         """!Get an iterator over detector names
         """
-        return self._nameDetectorDict.iterkeys()
+        return iter(self._nameDetectorDict.keys())
 
     def getIdIter(self):
         """!Get an iterator over detector IDs
         """
-        return self._idDetectorDict.iterkeys()
+        return iter(self._idDetectorDict.keys())
 
     def getFpBBox(self):
         """!Return a focal plane bounding box that encompasses all detectors

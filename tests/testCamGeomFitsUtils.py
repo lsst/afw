@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.

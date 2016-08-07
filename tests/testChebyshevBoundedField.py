@@ -30,6 +30,8 @@ or
    python
    >>> import testSchema; testSchema.run()
 """
+from __future__ import division
+from builtins import range
 
 import os
 import unittest

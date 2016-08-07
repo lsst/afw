@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
 
 #
 # LSST Data Management System
@@ -179,7 +180,7 @@ class ImagePcaTestCase(unittest.TestCase):
         self.assertEqual(len(eImages), numInputs)
 
         # Test for orthogonality
-        for i1, i2 in itertools.combinations(range(len(eImages)), 2):
+        for i1, i2 in itertools.combinations(list(range(len(eImages))), 2):
             inner = afwImage.innerProduct(eImages[i1], eImages[i2])
             norm1 = eImages[i1].getArray().sum()
             norm2 = eImages[i2].getArray().sum()

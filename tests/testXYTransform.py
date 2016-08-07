@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import range
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -226,7 +228,7 @@ class XYTransformTestCase(unittest.TestCase):
             radial = radialClass(radialConfig)
             self.assertEquals(type(radial), RadialXYTransform)
             self.assertEquals(len(radial.getCoeffs()), len(radialConfig.coeffs))
-            for coeff, predCoeff in itertools.izip(radial.getCoeffs(), radialConfig.coeffs):
+            for coeff, predCoeff in zip(radial.getCoeffs(), radialConfig.coeffs):
                 self.assertAlmostEqual(coeff, predCoeff)
             self.checkBasics(radial)
             for fromPoint in self.fromIter():

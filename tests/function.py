@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 from __future__ import absolute_import, division
+from builtins import next
+from builtins import range
 
 #
 # LSST Data Management System
