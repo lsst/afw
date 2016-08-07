@@ -139,7 +139,7 @@ import astropy.units
         if (!result) return 0;
         Py_ssize_t n = 0;
         for (std::set<std::string>::const_iterator i = input.begin(); i != input.end(); ++i, ++n) {
-            PyObject * s = PyString_FromStringAndSize(i->data(), i->size());
+            PyObject * s = PyBytes_FromStringAndSize(i->data(), i->size());
             if (!s) return 0;
             PyTuple_SET_ITEM(result.get(), n, s);
         }
