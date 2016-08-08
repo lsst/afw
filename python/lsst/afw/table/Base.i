@@ -122,6 +122,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %pythoncode %{
 from . import _syntax
 import astropy.units
+from past.builtins import basestring
 %}
 
 %include "lsst/afw/table/misc.h"
@@ -225,7 +226,7 @@ def itervalues(self):
     for k, v in self.iteritems():
         yield v
 def __iter__(self):
-    return self.iterkeys()
+    return iter(self.keys())
 
 def items(self): return list(self.iteritems())
 def keys(self): return list(self.iterkeys())
@@ -237,7 +238,7 @@ def __delitem__(self, alias):
     if not self.erase(alias):
         raise KeyError(alias)
 def __len__(self): return self.size()
-def __nonzero__(self): return not self.empty()
+def __bool__(self): return not self.empty()
 %}
 }
 
@@ -317,7 +318,7 @@ def find(self, k):
          attr = "_find_" + suffix
          method = getattr(self, attr)
          return method(k)
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_find_" + suffix
          method = getattr(self, attr)
          try:
@@ -362,7 +363,7 @@ def addField(self, field, type=None, doc="", units="", size=None, doReplace=Fals
 %pythoncode %{
 
 def find(self, k):
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_find_" + suffix
          method = getattr(self, attr)
          try:
@@ -372,7 +373,7 @@ def find(self, k):
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 
 def asField(self):
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_asField_" + suffix
          method = getattr(self, attr)
          try:
@@ -382,7 +383,7 @@ def asField(self):
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 
 def asKey(self):
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_asKey_" + suffix
          method = getattr(self, attr)
          try:
@@ -594,6 +595,7 @@ def getBits(self, keys=None):
 %include "lsst/afw/table/Flag.h"
 
 %pythoncode %{
+from past.builtins import long
 from ..geom import Angle, Point2D, Point2I
 from ..geom.ellipses import Quadrupole
 from ..coord import Coord, IcrsCoord
@@ -676,7 +678,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %pythoncode %{
 # underscores here prevent these from becoming global names
 for _d in (Field, Key, SchemaItem, _suffixes):
-    for _k, _v in aliases.iteritems():
+    for _k, _v in aliases.items():
         _d[_k] = _d[_v]
 %}
 
