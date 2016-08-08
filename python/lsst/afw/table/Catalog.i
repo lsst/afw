@@ -220,7 +220,7 @@ public:
     columns = property(__getColumns, doc="a column view of the catalog")
 
     def __iter__(self):
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             yield self[i]
 
     def get(self, k):

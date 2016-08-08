@@ -94,7 +94,7 @@ Python bindings for classes describing the the geometry of a mosaic camera
 %extend lsst::afw::cameraGeom::Detector {
     %pythoncode %{
         def __iter__(self):
-            for i in xrange(len(self)):
+            for i in range(len(self)):
                 yield self[i]
     %}
 }
