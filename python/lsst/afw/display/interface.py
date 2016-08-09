@@ -29,6 +29,9 @@ import sys
 import importlib
 import lsst.afw.geom  as afwGeom
 import lsst.afw.image as afwImage
+import lsst.log
+
+logger = lsst.log.Log.getLogger("afw.display.interface")
 
 __all__ = (
     "WHITE", "BLACK", "RED", "GREEN", "BLUE", "CYAN", "MAGENTA", "YELLOW", "ORANGE",
@@ -526,24 +529,23 @@ class Display(object):
 
     def interact(self):
         """!Enter an interactive loop, listening for key presses in display and firing callbacks.
-
-        Exit with q, \c CR, or \c ESC
-    """
-
-        while True:
+            Exit with q, \c CR, \c ESC, or any other callback function that returns a ``True`` value.
+        """
+        interactFinished = False
+        
+        while not interactFinished:
             ev = self._impl._getEvent()
             if not ev:
                 continue
             k, x, y = ev.k, ev.x, ev.y      # for now
-
-            try:
-                if self.callbacks[k](k, x, y):
-                    break
-            except KeyError:
-                print >> sys.stderr, "No callback is registered for %s" % k
-            except Exception, e:
-                print >> sys.stderr, "Display.callbacks[%s](%s, %s, %s) failed: %s" % \
-                    (k, k, x, y, e)
+            
+            if k not in self._callbacks:
+                logger.warn("No callback registered for {0}".format(k))
+            else:
+                try:
+                    interactFinished = self._callbacks[k](k, x, y)
+                except Exception as e:
+                    logger.error("Display._callbacks[{0}]({0},{1},{2}) failed: {3}".format(k, x, y, e))
 
     def setCallback(self, k, func=None, noRaise=False):
         """!Set the callback for key k to be func, returning the old callback
