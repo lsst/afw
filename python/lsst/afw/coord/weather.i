@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2016 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -22,31 +22,12 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-%define coordLib_DOCSTRING
-"
-Python interface to lsst::afw::coord
-"
-%enddef
-
-%feature("autodoc", "1");
-%module(package="lsst.afw.coord", docstring=coordLib_DOCSTRING) coordLib
-
-%include "lsst/p_lsstSwig.i"
-
-%lsst_exceptions();
-%initializeNumPy(afw_coord)
-
-%include "std_pair.i"
-%template(pairSS) std::pair<std::string, std::string>;
-
 %{
-#include <memory>
-#include "lsst/afw/geom.h"
+#include "lsst/afw/coord/Weather.h"
 %}
-%template(pairAngleAngle) std::pair<lsst::afw::geom::Angle, lsst::afw::geom::Angle>;
 
-%import "lsst/daf/base/baseLib.i"
-%import "lsst/afw/geom/geomLib.i"
-%include "observatory.i"
-%include "weather.i"
-%include "coord.i"
+%useValueEquality(lsst::afw::coord::Weather);
+
+%include "lsst/afw/coord/Weather.h"
+
+%addStreamRepr(lsst::afw::coord::Weather);

@@ -28,6 +28,7 @@
 #define LSST_COORD_H
 
 #include "lsst/afw/coord/Observatory.h"
+#include "lsst/afw/coord/Weather.h"
 #include "lsst/afw/coord/Coord.h"
 
 #endif // LSST_COORD_H
