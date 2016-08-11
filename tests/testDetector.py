@@ -35,7 +35,9 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
+
 class DetectorTestCase(unittest.TestCase):
+
     def testBasics(self):
         """Test getters and other basics
         """
@@ -44,9 +46,9 @@ class DetectorTestCase(unittest.TestCase):
         for methodName in ("begin", "end", "size"):
             if hasattr(detector, methodName):
                 self.assertFalse(hasattr(detector, methodName))
-        self.assertEquals(dw.name,   detector.getName())
-        self.assertEquals(dw.id,   detector.getId())
-        self.assertEquals(dw.type,   detector.getType())
+        self.assertEquals(dw.name, detector.getName())
+        self.assertEquals(dw.id, detector.getId())
+        self.assertEquals(dw.type, detector.getType())
         self.assertEquals(dw.serial, detector.getSerial())
         bbox = detector.getBBox()
         for i in range(2):
@@ -58,7 +60,7 @@ class DetectorTestCase(unittest.TestCase):
         orientation = detector.getOrientation()
 
         transformMap = detector.getTransformMap()
-        self.assertEquals(len(transformMap), len(dw.transMap) + 1) # add 1 for null transform
+        self.assertEquals(len(transformMap), len(dw.transMap) + 1)  # add 1 for null transform
         for cameraSys in dw.transMap:
             self.assertTrue(cameraSys in transformMap)
 
@@ -71,7 +73,7 @@ class DetectorTestCase(unittest.TestCase):
         self.assertEquals(orientation.getFpPosition(), offset)
         nativeCoordSys = transformMap.getNativeCoordSys()
         self.assertEquals(nativeCoordSys,
-            cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
+                          cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
 
     def testConstructorErrors(self):
         """Test constructor errors
@@ -223,7 +225,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

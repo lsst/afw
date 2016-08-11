@@ -38,23 +38,24 @@ try:
 except NameError:
     verbose = 0
 
+
 class DistortedTanWcsTestCase(unittest.TestCase):
     """Test that makeWcs correctly returns a Wcs or TanWcs object
        as appropriate based on the contents of a fits header
     """
 
     def setUp(self):
-        #metadata taken from CFHT data
-        #v695856-e0/v695856-e0-c000-a00.sci_img.fits
+        # metadata taken from CFHT data
+        # v695856-e0/v695856-e0-c000-a00.sci_img.fits
 
         metadata = dafBase.PropertySet()
 
         metadata.set("RADECSYS", 'FK5')
-        metadata.set("EQUINOX",                2000.)
-        metadata.setDouble("CRVAL1",     215.604025685476)
-        metadata.setDouble("CRVAL2",     53.1595451514076)
-        metadata.setDouble("CRPIX1",     1109.99981456774)
-        metadata.setDouble("CRPIX2",     560.018167811613)
+        metadata.set("EQUINOX", 2000.)
+        metadata.setDouble("CRVAL1", 215.604025685476)
+        metadata.setDouble("CRVAL2", 53.1595451514076)
+        metadata.setDouble("CRPIX1", 1109.99981456774)
+        metadata.setDouble("CRPIX2", 560.018167811613)
         metadata.set("CTYPE1", "RA---TAN")
         metadata.set("CTYPE2", "DEC--TAN")
         metadata.setDouble("CD1_1", 5.10808596133527E-05)
@@ -127,7 +128,7 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertTrue(outWcs.hasDistortion())
         self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is not None)
-        del exposure # avoid accidental reuse
+        del exposure  # avoid accidental reuse
         del outWcs
 
         # return the original WCS if the exposure's WCS has distortion
@@ -175,6 +176,7 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         del exposure
         del outWcs
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     utilsTests.init()
@@ -183,6 +185,7 @@ def suite():
     suites += unittest.makeSuite(DistortedTanWcsTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

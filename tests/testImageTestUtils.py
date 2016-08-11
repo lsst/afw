@@ -7,8 +7,10 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.image.testUtils import makeRampImage
 
+
 class MakeRampImageTestCase(lsst.utils.tests.TestCase):
     """!Unit tests for makeRampImage"""
+
     def testUnitInterval(self):
         """!Test small ramp images with unit interval for known values
         """
@@ -53,6 +55,7 @@ def suite():
     suites += unittest.makeSuite(MakeRampImageTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(exit=False):
     """!Run the tests"""

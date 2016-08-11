@@ -38,7 +38,8 @@ or
    >>> import footprint1; footprint1.run()
 """
 
-import math, sys
+import math
+import sys
 import unittest
 import numpy
 import lsst.utils.tests as utilsTests
@@ -64,6 +65,7 @@ try:
 except NameError:
     display = False
 
+
 def toString(*args):
     """toString written in python"""
     if len(args) == 1:
@@ -74,7 +76,9 @@ def toString(*args):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class Object(object):
+
     def __init__(self, val, spans):
         self.val = val
         self.spans = spans
@@ -98,16 +102,18 @@ class Object(object):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class SpanTestCase(unittest.TestCase):
+
     def testLessThan(self):
-        span1 = afwDetect.Span(42, 0, 100);
-        span2 = afwDetect.Span(41, 0, 100);
-        span3 = afwDetect.Span(43, 0, 100);
-        span4 = afwDetect.Span(42, -100, 100);
-        span5 = afwDetect.Span(42, 100, 200);
-        span6 = afwDetect.Span(42, 0, 10);
-        span7 = afwDetect.Span(42, 0, 200);
-        span8 = afwDetect.Span(42, 0, 100);
+        span1 = afwDetect.Span(42, 0, 100)
+        span2 = afwDetect.Span(41, 0, 100)
+        span3 = afwDetect.Span(43, 0, 100)
+        span4 = afwDetect.Span(42, -100, 100)
+        span5 = afwDetect.Span(42, 100, 200)
+        span6 = afwDetect.Span(42, 0, 10)
+        span7 = afwDetect.Span(42, 0, 200)
+        span8 = afwDetect.Span(42, 0, 100)
 
         def assertOrder(x1, x2):
             self.assertTrue(x1 < x2)
@@ -124,6 +130,7 @@ class SpanTestCase(unittest.TestCase):
 
 
 class ThresholdTestCase(unittest.TestCase):
+
     def testThresholdFactory(self):
         """
         Test the creation of a Threshold object
@@ -174,8 +181,10 @@ class ThresholdTestCase(unittest.TestCase):
         except:
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
 
+
 class FootprintTestCase(utilsTests.TestCase):
     """A test case for Footprint"""
+
     def setUp(self):
         self.foot = afwDetect.Footprint()
 
@@ -197,7 +206,7 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertNotEqual(self.foot.getId(), afwDetect.Footprint().getId())
 
     def testIntersectMask(self):
-        bbox = afwGeom.BoxI(afwGeom.PointI(0,0), afwGeom.ExtentI(10))
+        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.ExtentI(10))
         fp = afwDetect.Footprint(bbox)
         maskBBox = afwGeom.BoxI(bbox)
         maskBBox.grow(-2)
@@ -217,7 +226,7 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertEqual(fp.getArea(), maskBBox.getArea() - innerBBox.getArea())
 
     def testTablePersistence(self):
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25), afwGeom.Point2D(9,15))
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(8, 6, 0.25), afwGeom.Point2D(9, 15))
         fp1 = afwDetect.Footprint(ellipse)
         fp1.addPeak(6, 7, 2)
         fp1.addPeak(8, 9, 3)
@@ -323,7 +332,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
     def testFootprintFromCircle(self):
         """Create an elliptical Footprint"""
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9,15))
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9, 15))
         foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30)))
 
         idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
@@ -338,7 +347,7 @@ class FootprintTestCase(utilsTests.TestCase):
         """Create an elliptical Footprint"""
         cen = afwGeom.Point2D(23, 25)
         a, b, theta = 25, 15, 30
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)),  cen)
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(a, b, math.radians(theta)), cen)
         foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(50, 60)))
 
         idImage = afwImage.ImageU(afwGeom.Extent2I(foot.getRegion().getWidth(), foot.getRegion().getHeight()))
@@ -367,11 +376,11 @@ class FootprintTestCase(utilsTests.TestCase):
                         "theta: %g v. %g" % (theta, math.degrees(axes.getTheta())))
 
     def testCopy(self):
-        bbox = afwGeom.BoxI(afwGeom.PointI(0,2), afwGeom.PointI(5,6))
+        bbox = afwGeom.BoxI(afwGeom.PointI(0, 2), afwGeom.PointI(5, 6))
 
         fp = afwDetect.Footprint(bbox, bbox)
 
-        #test copy construct
+        # test copy construct
         fp2 = afwDetect.Footprint(fp)
 
         self.assertEqual(fp2.getBBox(), bbox)
@@ -384,9 +393,9 @@ class FootprintTestCase(utilsTests.TestCase):
             self.assertEqual(s.getY(), y)
             self.assertEqual(s.getX0(), bbox.getMinX())
             self.assertEqual(s.getX1(), bbox.getMaxX())
-            y+=1
+            y += 1
 
-        #test assignment
+        # test assignment
         fp3 = afwDetect.Footprint()
         fp3.assign(fp)
         self.assertEqual(fp3.getBBox(), bbox)
@@ -399,12 +408,12 @@ class FootprintTestCase(utilsTests.TestCase):
             self.assertEqual(s.getY(), y)
             self.assertEqual(s.getX0(), bbox.getMinX())
             self.assertEqual(s.getX1(), bbox.getMaxX())
-            y+=1
+            y += 1
 
     def testShrink(self):
-        width, height = 5, 10 # Size of footprint
-        x0, y0 = 50, 50 # Position of footprint
-        imwidth, imheight = 100, 100 # Size of image
+        width, height = 5, 10  # Size of footprint
+        x0, y0 = 50, 50  # Position of footprint
+        imwidth, imheight = 100, 100  # Size of image
 
         foot = afwDetect.Footprint(afwGeom.Box2I(afwGeom.Point2I(x0, y0), afwGeom.Extent2I(width, height)),
                                    afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(imwidth, imheight)))
@@ -412,10 +421,10 @@ class FootprintTestCase(utilsTests.TestCase):
 
         # Add some peaks to the original footprint and check that those lying outside
         # the shrunken footprint are omitted from the returned shrunken footprint.
-        foot.addPeak(50, 50, 1) # should be omitted in shrunken footprint
-        foot.addPeak(52, 52, 2) # should be kept in shrunken footprint
-        foot.addPeak(50, 59, 3) # should be omitted in shrunken footprint
-        self.assertEqual(len(foot.getPeaks()), 3) # check that all three peaks were added
+        foot.addPeak(50, 50, 1)  # should be omitted in shrunken footprint
+        foot.addPeak(52, 52, 2)  # should be kept in shrunken footprint
+        foot.addPeak(50, 59, 3)  # should be omitted in shrunken footprint
+        self.assertEqual(len(foot.getPeaks()), 3)  # check that all three peaks were added
 
         # Shrinking by one pixel makes each dimension *two* pixels shorter.
         shrunk = afwDetect.shrinkFootprint(foot, 1, True)
@@ -445,9 +454,9 @@ class FootprintTestCase(utilsTests.TestCase):
         nshrink = 4
 
         ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(1.5*radius, 2*radius, 0),
-                                          afwGeom.Point2D(x0,y0))
+                                          afwGeom.Point2D(x0, y0))
         foot = afwDetect.Footprint(ellipse, afwGeom.Box2I(afwGeom.Point2I(0, 0),
-                                   afwGeom.Extent2I(imwidth, imheight)))
+                                                          afwGeom.Extent2I(imwidth, imheight)))
         self.assertNotEqual(afwDetect.shrinkFootprint(foot, nshrink, False),
                             afwDetect.shrinkFootprint(foot, nshrink, True))
 
@@ -462,23 +471,23 @@ class FootprintTestCase(utilsTests.TestCase):
         # These are the correct values for footprint sizes given the paramters
         # above.
         circle_npix = 29
-        initial_npix = circle_npix * 2 - 1 # touch at one pixel
+        initial_npix = circle_npix * 2 - 1  # touch at one pixel
         shrunk_npix = 26
 
         box = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(imwidth, imheight))
 
         e1 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
-                                          afwGeom.Point2D(x1, y1))
-        f1 = afwDetect.Footprint(e1,box)
+                                     afwGeom.Point2D(x1, y1))
+        f1 = afwDetect.Footprint(e1, box)
         self.assertEqual(f1.getNpix(), circle_npix)
 
         e2 = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(radius, radius, 0),
-                                          afwGeom.Point2D(x2, y2))
-        f2 = afwDetect.Footprint(e2,box)
+                                     afwGeom.Point2D(x2, y2))
+        f2 = afwDetect.Footprint(e2, box)
         self.assertEqual(f2.getNpix(), circle_npix)
 
         initial = afwDetect.mergeFootprints(f1, f2)
-        initial.setRegion(f2.getRegion()) # merge does not propagate the region
+        initial.setRegion(f2.getRegion())  # merge does not propagate the region
         self.assertEqual(initial_npix, initial.getNpix())
 
         shrunk = afwDetect.shrinkFootprint(initial, nshrink, True)
@@ -488,7 +497,7 @@ class FootprintTestCase(utilsTests.TestCase):
             idImage = afwImage.ImageU(imwidth, imheight)
             for i, foot in enumerate([initial, shrunk]):
                 print(foot.getNpix())
-                foot.insertIntoImage(idImage, i+1);
+                foot.insertIntoImage(idImage, i+1)
             ds9.mtv(idImage)
 
     def testShrinkEightVertical(self):
@@ -567,7 +576,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
     def testFootprintToBBoxList(self):
         """Test footprintToBBoxList"""
-        region = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(12,10))
+        region = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(12, 10))
         foot = afwDetect.Footprint(0, region)
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
@@ -608,7 +617,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
     def testWriteDefect(self):
         """Write a Footprint as a set of Defects"""
-        region = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(12,10))
+        region = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(12, 10))
         foot = afwDetect.Footprint(0, region)
         for y, x0, x1 in [(3, 3, 5), (3, 7, 7),
                           (4, 2, 3), (4, 5, 7),
@@ -624,30 +633,29 @@ class FootprintTestCase(utilsTests.TestCase):
 
         afwDetectUtils.writeFootprintAsDefects(fd, foot)
 
-
     def testNormalize(self):
         """Test Footprint.normalize"""
         w, h = 12, 10
-        region = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Extent2I(w,h))
+        region = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(w, h))
         im = afwImage.ImageU(afwGeom.Extent2I(w, h))
         im.set(0)
         #
         # Create a footprint;  note that these Spans overlap
         #
         for spans, box in (([(3, 5, 6),
-                             (4, 7, 7), ], afwGeom.Box2I(afwGeom.Point2I(5,3), afwGeom.Point2I(7,4))),
+                             (4, 7, 7), ], afwGeom.Box2I(afwGeom.Point2I(5, 3), afwGeom.Point2I(7, 4))),
                            ([(3, 3, 5), (3, 6, 9),
                              (4, 2, 3), (4, 5, 7), (4, 8, 8),
                              (5, 2, 3), (5, 5, 8), (5, 6, 7),
                              (6, 3, 5),
-                             ], afwGeom.Box2I(afwGeom.Point2I(2,3), afwGeom.Point2I(9,6)))
-                      ):
+                             ], afwGeom.Box2I(afwGeom.Point2I(2, 3), afwGeom.Point2I(9, 6)))
+                           ):
 
             foot = afwDetect.Footprint(0, region)
             for y, x0, x1 in spans:
                 foot.addSpan(y, x0, x1)
 
-                for x in range(x0, x1 + 1): # also insert into im
+                for x in range(x0, x1 + 1):  # also insert into im
                     im.set(x, y, 1)
 
             idImage = afwImage.ImageU(afwGeom.Extent2I(w, h))
@@ -731,7 +739,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
     def testTransform(self):
         dims = afwGeom.Extent2I(512, 512)
-        bbox = afwGeom.Box2I(afwGeom.Point2I(0,0), dims)
+        bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), dims)
         radius = 5
         offset = afwGeom.Extent2D(123, 456)
         crval = afwCoord.Coord(0*afwGeom.degrees, 0*afwGeom.degrees)
@@ -768,14 +776,14 @@ class FootprintTestCase(utilsTests.TestCase):
         self.assertEqual(fpTarget.getArea(), fpTarget3.getArea())
 
     def testCopyWithinFootprintImage(self):
-        W,H = 10,10
-        dims = afwGeom.Extent2I(W,H)
+        W, H = 10, 10
+        dims = afwGeom.Extent2I(W, H)
         source = afwImage.ImageF(dims)
         dest = afwImage.ImageF(dims)
         sa = source.getArray()
         for i in range(H):
             for j in range(W):
-                sa[i,j] = 100 * i + j
+                sa[i, j] = 100 * i + j
 
         self.foot.addSpan(4, 3, 6)
         self.foot.addSpan(5, 2, 4)
@@ -783,19 +791,19 @@ class FootprintTestCase(utilsTests.TestCase):
         afwDetect.copyWithinFootprintImage(self.foot, source, dest)
 
         da = dest.getArray()
-        self.assertEqual(da[4,2], 0)
-        self.assertEqual(da[4,3], 403)
-        self.assertEqual(da[4,4], 404)
-        self.assertEqual(da[4,5], 405)
-        self.assertEqual(da[4,6], 406)
-        self.assertEqual(da[4,7], 0)
-        self.assertEqual(da[5,1], 0)
-        self.assertEqual(da[5,2], 502)
-        self.assertEqual(da[5,3], 503)
-        self.assertEqual(da[5,4], 504)
-        self.assertEqual(da[5,5], 0)
-        self.assertTrue(numpy.all(da[:4,:] == 0))
-        self.assertTrue(numpy.all(da[6:,:] == 0))
+        self.assertEqual(da[4, 2], 0)
+        self.assertEqual(da[4, 3], 403)
+        self.assertEqual(da[4, 4], 404)
+        self.assertEqual(da[4, 5], 405)
+        self.assertEqual(da[4, 6], 406)
+        self.assertEqual(da[4, 7], 0)
+        self.assertEqual(da[5, 1], 0)
+        self.assertEqual(da[5, 2], 502)
+        self.assertEqual(da[5, 3], 503)
+        self.assertEqual(da[5, 4], 504)
+        self.assertEqual(da[5, 5], 0)
+        self.assertTrue(numpy.all(da[:4, :] == 0))
+        self.assertTrue(numpy.all(da[6:, :] == 0))
 
     def testCopyWithinFootprintOutside(self):
         """Copy a footprint that is larger than the image"""
@@ -807,20 +815,20 @@ class FootprintTestCase(utilsTests.TestCase):
         source.set(1.0)
 
         foot = afwDetect.Footprint()
-        foot.addSpan(50, 50, 60) # Oversized on the source image, right; only some pixels overlap
-        foot.addSpan(60, 0, 100) # Oversized on the source, left and right; and on sub-target image, top
-        foot.addSpan(99, 0, 1000) # Oversized on the source image, top, left and right; aiming for segfault
+        foot.addSpan(50, 50, 60)  # Oversized on the source image, right; only some pixels overlap
+        foot.addSpan(60, 0, 100)  # Oversized on the source, left and right; and on sub-target image, top
+        foot.addSpan(99, 0, 1000)  # Oversized on the source image, top, left and right; aiming for segfault
 
         afwDetect.copyWithinFootprintImage(foot, source, subTarget)
 
         expected = numpy.zeros((100, 100))
-        expected[50,50:55] = 1.0
+        expected[50, 50:55] = 1.0
 
         self.assertTrue(numpy.all(target.getArray() == expected))
 
     def testCopyWithinFootprintMaskedImage(self):
-        W,H = 10,10
-        dims = afwGeom.Extent2I(W,H)
+        W, H = 10, 10
+        dims = afwGeom.Extent2I(W, H)
         source = afwImage.MaskedImageF(dims)
         dest = afwImage.MaskedImageF(dims)
         sa = source.getImage().getArray()
@@ -828,9 +836,9 @@ class FootprintTestCase(utilsTests.TestCase):
         sm = source.getMask().getArray()
         for i in range(H):
             for j in range(W):
-                sa[i,j] = 100 * i + j
-                sv[i,j] = 100 * j + i
-                sm[i,j] = 1
+                sa[i, j] = 100 * i + j
+                sv[i, j] = 100 * j + i
+                sm[i, j] = 1
 
         self.foot.addSpan(4, 3, 6)
         self.foot.addSpan(5, 2, 4)
@@ -841,38 +849,38 @@ class FootprintTestCase(utilsTests.TestCase):
         dv = dest.getVariance().getArray()
         dm = dest.getMask().getArray()
 
-        self.assertEqual(da[4,2], 0)
-        self.assertEqual(da[4,3], 403)
-        self.assertEqual(da[4,4], 404)
-        self.assertEqual(da[4,5], 405)
-        self.assertEqual(da[4,6], 406)
-        self.assertEqual(da[4,7], 0)
-        self.assertEqual(da[5,1], 0)
-        self.assertEqual(da[5,2], 502)
-        self.assertEqual(da[5,3], 503)
-        self.assertEqual(da[5,4], 504)
-        self.assertEqual(da[5,5], 0)
-        self.assertTrue(numpy.all(da[:4,:] == 0))
-        self.assertTrue(numpy.all(da[6:,:] == 0))
+        self.assertEqual(da[4, 2], 0)
+        self.assertEqual(da[4, 3], 403)
+        self.assertEqual(da[4, 4], 404)
+        self.assertEqual(da[4, 5], 405)
+        self.assertEqual(da[4, 6], 406)
+        self.assertEqual(da[4, 7], 0)
+        self.assertEqual(da[5, 1], 0)
+        self.assertEqual(da[5, 2], 502)
+        self.assertEqual(da[5, 3], 503)
+        self.assertEqual(da[5, 4], 504)
+        self.assertEqual(da[5, 5], 0)
+        self.assertTrue(numpy.all(da[:4, :] == 0))
+        self.assertTrue(numpy.all(da[6:, :] == 0))
 
-        self.assertEqual(dv[4,2], 0)
-        self.assertEqual(dv[4,3], 304)
-        self.assertEqual(dv[4,4], 404)
-        self.assertEqual(dv[4,5], 504)
-        self.assertEqual(dv[4,6], 604)
-        self.assertEqual(dv[4,7], 0)
-        self.assertEqual(dv[5,1], 0)
-        self.assertEqual(dv[5,2], 205)
-        self.assertEqual(dv[5,3], 305)
-        self.assertEqual(dv[5,4], 405)
-        self.assertEqual(dv[5,5], 0)
-        self.assertTrue(numpy.all(dv[:4,:] == 0))
-        self.assertTrue(numpy.all(dv[6:,:] == 0))
+        self.assertEqual(dv[4, 2], 0)
+        self.assertEqual(dv[4, 3], 304)
+        self.assertEqual(dv[4, 4], 404)
+        self.assertEqual(dv[4, 5], 504)
+        self.assertEqual(dv[4, 6], 604)
+        self.assertEqual(dv[4, 7], 0)
+        self.assertEqual(dv[5, 1], 0)
+        self.assertEqual(dv[5, 2], 205)
+        self.assertEqual(dv[5, 3], 305)
+        self.assertEqual(dv[5, 4], 405)
+        self.assertEqual(dv[5, 5], 0)
+        self.assertTrue(numpy.all(dv[:4, :] == 0))
+        self.assertTrue(numpy.all(dv[6:, :] == 0))
 
         self.assertTrue(numpy.all(dm[4, 3:7] == 1))
         self.assertTrue(numpy.all(dm[5, 2:5] == 1))
-        self.assertTrue(numpy.all(dm[:4,:] == 0))
-        self.assertTrue(numpy.all(dm[6:,:] == 0))
+        self.assertTrue(numpy.all(dm[:4, :] == 0))
+        self.assertTrue(numpy.all(dm[6:, :] == 0))
         self.assertTrue(numpy.all(dm[4, :3] == 0))
         self.assertTrue(numpy.all(dm[4, 7:] == 0))
 
@@ -891,22 +899,22 @@ class FootprintTestCase(utilsTests.TestCase):
         f1.addSpan(13, 30, 40)
         f1.addSpan(13, 50, 60)
 
-        f1.addSpan(15, 10,20)
-        f1.addSpan(15, 31,40)
-        f1.addSpan(15, 51,60)
+        f1.addSpan(15, 10, 20)
+        f1.addSpan(15, 31, 40)
+        f1.addSpan(15, 51, 60)
 
-        f2.addSpan(8,  10, 20)
-        f2.addSpan(9,  20, 30)
-        f2.addSpan(10,  0,  9)
+        f2.addSpan(8, 10, 20)
+        f2.addSpan(9, 20, 30)
+        f2.addSpan(10, 0, 9)
         f2.addSpan(10, 35, 65)
         f2.addSpan(10, 70, 80)
 
         f2.addSpan(13, 49, 54)
         f2.addSpan(14, 10, 30)
 
-        f2.addSpan(15, 21,30)
-        f2.addSpan(15, 41,50)
-        f2.addSpan(15, 61,70)
+        f2.addSpan(15, 21, 30)
+        f2.addSpan(15, 41, 50)
+        f2.addSpan(15, 61, 70)
 
         f1.normalize()
         f2.normalize()
@@ -915,7 +923,7 @@ class FootprintTestCase(utilsTests.TestCase):
         fB = afwDetect.mergeFootprints(f2, f1)
 
         ims = []
-        for i,f in enumerate([f1,f2,fA,fB]):
+        for i, f in enumerate([f1, f2, fA, fB]):
             im1 = afwImage.ImageU(100, 100)
             im1.set(0)
             imbb = im1.getBBox()
@@ -923,7 +931,7 @@ class FootprintTestCase(utilsTests.TestCase):
             f.insertIntoImage(im1, 1)
             ims.append(im1)
 
-        for i,merged in enumerate([ims[2],ims[3]]):
+        for i, merged in enumerate([ims[2], ims[3]]):
             m = merged.getArray()
             a1 = ims[0].getArray()
             a2 = ims[1].getArray()
@@ -940,8 +948,8 @@ class FootprintTestCase(utilsTests.TestCase):
             matplotlib.use('Agg')
             import pylab as plt
             plt.clf()
-            for i,im1 in enumerate(ims):
-                plt.subplot(4,1, i+1)
+            for i, im1 in enumerate(ims):
+                plt.subplot(4, 1, i+1)
                 plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
                 plt.axis([0, 100, 0, 20])
             plt.savefig('merge2.png')
@@ -958,7 +966,7 @@ class FootprintTestCase(utilsTests.TestCase):
 
     def testClipToNonzero(self):
         # create a circular footprint
-        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9,15))
+        ellipse = afwGeomEllipses.Ellipse(afwGeomEllipses.Axes(6, 6, 0), afwGeom.Point2D(9, 15))
         bb = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 30))
         foot = afwDetect.Footprint(ellipse, bb)
 
@@ -978,8 +986,8 @@ class FootprintTestCase(utilsTests.TestCase):
             plt.savefig('clipnz1.png')
 
         source = afwImage.ImageF(bb)
-        source.getArray()[:,:] = 1.
-        source.getArray()[:,0:10] = 0.
+        source.getArray()[:, :] = 1.
+        source.getArray()[:, 0:10] = 0.
 
         foot.clipToNonzero(source)
         foot.normalize()
@@ -992,13 +1000,13 @@ class FootprintTestCase(utilsTests.TestCase):
 
         if plots:
             plt.clf()
-            plt.subplot(1,2,1)
+            plt.subplot(1, 2, 1)
             plt.imshow(source.getArray(), **ima)
-            plt.subplot(1,2,2)
+            plt.subplot(1, 2, 2)
             plt.imshow(img.getArray(), **ima)
             plt.savefig('clipnz2.png')
 
-        source.getArray()[:12,:] = 0.
+        source.getArray()[:12, :] = 0.
         foot.clipToNonzero(source)
         foot.normalize()
 
@@ -1011,9 +1019,9 @@ class FootprintTestCase(utilsTests.TestCase):
 
         if plots:
             plt.clf()
-            plt.subplot(1,2,1)
+            plt.subplot(1, 2, 1)
             plt.imshow(source.getArray(), **ima)
-            plt.subplot(1,2,2)
+            plt.subplot(1, 2, 2)
             img = afwImage.ImageU(bb)
             foot.insertIntoImage(img, 1)
             plt.imshow(img.getArray(), **ima)
@@ -1088,7 +1096,6 @@ class FootprintTestCase(utilsTests.TestCase):
 
         self.assertTrue(numpy.all(trueEdges == edgeImage.getArray()))
 
-
     def testEdge(self):
         """Test for Footprint::findEdgePixels()"""
         foot = afwDetect.Footprint()
@@ -1161,13 +1168,13 @@ class FootprintSetTestCase(unittest.TestCase):
         """Check that we found the correct number of objects using FootprintSet and PIXEL_STDEV"""
         threshold = 4.5                 # in units of sigma
 
-        self.ms.set(2, 4, (10, 0x0, 36)) # not detected (high variance)
+        self.ms.set(2, 4, (10, 0x0, 36))  # not detected (high variance)
 
         y, x = self.objects[2].spans[0][0:2]
         self.ms.set(x, y, (threshold, 0x0, 1.0))
 
         ds = afwDetect.FootprintSet(self.ms,
-                                        afwDetect.createThreshold(threshold, "pixel_stdev"), "OBJECT")
+                                    afwDetect.createThreshold(threshold, "pixel_stdev"), "OBJECT")
 
         objects = ds.getFootprints()
 
@@ -1207,7 +1214,6 @@ class FootprintSetTestCase(unittest.TestCase):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(idImage.get(x, sp.getY()), objects[i].getId())
-
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
@@ -1260,6 +1266,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class MaskFootprintSetTestCase(unittest.TestCase):
     """A test case for generating FootprintSet from Masks"""
 
@@ -1304,6 +1311,7 @@ class MaskFootprintSetTestCase(unittest.TestCase):
                 i += 1
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 class NaNFootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet when the image contains NaNs"""
@@ -1351,6 +1359,7 @@ class NaNFootprintSetTestCase(unittest.TestCase):
             self.assertEqual(objects[i], self.objects[i])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""

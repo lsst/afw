@@ -41,6 +41,7 @@ try:
 except AttributeError:
     math.isnan = lambda x: x != x
 
+
 class Ticket1045TestCase(unittest.TestCase):
 
     def setUp(self):
@@ -51,7 +52,7 @@ class Ticket1045TestCase(unittest.TestCase):
 
     def testTicket1045(self):
         values = [1.08192, 1.08792, 1.08774, 1.09953, 1.1122, 1.09408, 0.879792, 1.12235, 1.10115, 1.08999]
-        knownMean, knownStdev =  num.mean(values), 0.069903889977279199
+        knownMean, knownStdev = num.mean(values), 0.069903889977279199
 
         # this was reported to work
         dmean1 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
@@ -100,12 +101,12 @@ class Ticket1045TestCase(unittest.TestCase):
 
         # check the median with no values
         vals = []
+
         def tst():
             stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
             median = stat.getValue(afwMath.MEDIAN)
             return median
         self.assertRaises(pexExcept.InvalidParameterError, tst)
-
 
     def testUnexpectedNan1051(self):
 
@@ -113,7 +114,7 @@ class Ticket1045TestCase(unittest.TestCase):
         npValues = num.array(values)
 
         meanClip = afwMath.makeStatistics(values, afwMath.MEANCLIP).getValue()
-        iKept = num.array([0, 1, 2, 4, 5, 7]) # note ... it will clip indices 3 and 6
+        iKept = num.array([0, 1, 2, 4, 5, 7])  # note ... it will clip indices 3 and 6
         knownMeanClip = num.mean(npValues[iKept])
         self.assertEqual(meanClip, knownMeanClip)
 
@@ -130,10 +131,9 @@ def suite():
     return unittest.TestSuite(suites)
 
 
-def run(shouldExit = False):
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
-

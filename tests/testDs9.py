@@ -39,21 +39,23 @@ import unittest
 import lsst.utils.tests as tests
 import lsst.afw.image as afwImage
 try:
-    import  lsst.afw.display.ds9 as ds9
+    import lsst.afw.display.ds9 as ds9
 except Exception:
     ds9 = None
 
 if ds9:
     try:
-        ds9.mtv(afwImage.ImageF(1,1))
+        ds9.mtv(afwImage.ImageF(1, 1))
     except Exception as e:
         print("Unable to use ds9: %s" % e)
         ds9 = None
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class DisplayTestCase(unittest.TestCase):
     """A test case for Display"""
+
     def setUp(self):
         pass
 
@@ -106,7 +108,7 @@ class DisplayTestCase(unittest.TestCase):
         ds9.erase()
 
         exp = afwImage.ExposureF(300, 350)
-        ds9.mtv(exp, title="parent") # tells display0 about the image's xy0
+        ds9.mtv(exp, title="parent")  # tells display0 about the image's xy0
 
         with ds9.Buffering():
             ds9.dot('o', 200, 220)
@@ -120,7 +122,7 @@ class DisplayTestCase(unittest.TestCase):
         ds9.erase()
 
         exp = afwImage.ExposureF(300, 350)
-        ds9.mtv(exp, title="parent") # tells display0 about the image's xy0
+        ds9.mtv(exp, title="parent")  # tells display0 about the image's xy0
 
         with ds9.Buffering():
             ds9.dot('hello', 200, 200)
@@ -137,6 +139,7 @@ class DisplayTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     tests.init()
@@ -145,6 +148,7 @@ def suite():
     suites += unittest.makeSuite(DisplayTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

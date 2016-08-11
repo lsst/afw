@@ -55,9 +55,10 @@ CHEBYSHEV_T = [
     lambda x: (4*x**2 - 3)*x,
     lambda x: (8*x**2 - 8)*x**2 + 1,
     lambda x: ((16*x**2 - 20)*x**2 + 5)*x,
-    ]
+]
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
@@ -105,7 +106,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             ty = numpy.array([CHEBYSHEV_T[i](sy*y) for i in range(coefficients.shape[0])])
             assert tx.shape == (coefficients.shape[1], x.size)
             assert ty.shape == (coefficients.shape[0], y.size)
-            z2 = numpy.array([numpy.dot(ty[:,i], numpy.dot(coefficients, tx[:,i]))
+            z2 = numpy.array([numpy.dot(ty[:, i], numpy.dot(coefficients, tx[:, i]))
                               for i in range(nPoints)])
             self.assertClose(z1, z2, rtol=1E-13)
 
@@ -181,9 +182,9 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             for i in range(config3.orderY + 1):
                 for j in range(config3.orderX + 1):
                     if config3.triangular and i + j > max(config3.orderX, config3.orderY):
-                        self.assertEqual(field3.getCoefficients()[i,j], 0.0)
+                        self.assertEqual(field3.getCoefficients()[i, j], 0.0)
                     else:
-                        self.assertEqual(field3.getCoefficients()[i,j], field1.getCoefficients()[i,j])
+                        self.assertEqual(field3.getCoefficients()[i, j], field1.getCoefficients()[i, j])
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -198,7 +199,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

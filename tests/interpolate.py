@@ -44,9 +44,11 @@ import lsst.pex.exceptions as pexExcept
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class InterpolateTestCase(unittest.TestCase):
 
     """A test case for Interpolate Linear"""
+
     def setUp(self):
         self.n = 10
         self.x = np.zeros(self.n, dtype=float)
@@ -79,7 +81,6 @@ class InterpolateTestCase(unittest.TestCase):
 
         self.assertEqual(youtL, self.y1test)
 
-
     def testNaturalSplineRamp(self):
 
         # === test the Spline interpolator =======================
@@ -95,17 +96,16 @@ class InterpolateTestCase(unittest.TestCase):
         yinterpS = afwMath.makeInterpolate(self.x, self.y2, afwMath.Interpolate.AKIMA_SPLINE)
         youtS = yinterpS.interpolate(self.xtest)
 
-
         self.assertEqual(youtS, self.y2test)
 
     def testConstant(self):
         """test the constant interpolator"""
         # [xy]vec:   point samples
         # [xy]vec_c: centered values
-        xvec =   np.array([    0.0, 1.0, 2.0, 3.0,  4.0,  5.0,  6.0,  7.0,  8.0,  9.0])
-        xvec_c = np.array([-0.5, 0.5, 1.5, 2.5,  3.5,  4.5,  5.5,  6.5,  7.5,  8.5, 9.5])
-        yvec =   np.array([    1.0, 2.4, 5.0, 8.4, 13.0, 18.4, 25.0, 32.6, 41.0, 50.6])
-        yvec_c = np.array([ 1.0, 1.7, 3.7, 6.7, 10.7, 15.7, 21.7, 28.8, 36.8, 45.8, 50.6])
+        xvec = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0])
+        xvec_c = np.array([-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5])
+        yvec = np.array([1.0, 2.4, 5.0, 8.4, 13.0, 18.4, 25.0, 32.6, 41.0, 50.6])
+        yvec_c = np.array([1.0, 1.7, 3.7, 6.7, 10.7, 15.7, 21.7, 28.8, 36.8, 45.8, 50.6])
 
         interp = afwMath.makeInterpolate(xvec, yvec, afwMath.Interpolate.CONSTANT)
 
@@ -117,7 +117,7 @@ class InterpolateTestCase(unittest.TestCase):
         n = len(yvec)
         self.assertEqual(interp.interpolate(xvec[n - 1] + 10), yvec[n - 1])
 
-        for x, y in reversed(list(zip(xvec_c, yvec_c))): # test caching as we go backwards
+        for x, y in reversed(list(zip(xvec_c, yvec_c))):  # test caching as we go backwards
             self.assertAlmostEqual(interp.interpolate(x + 0.1), y)
             self.assertAlmostEqual(interp.interpolate(x), y)
 
@@ -129,16 +129,16 @@ class InterpolateTestCase(unittest.TestCase):
         """Test that invalid inputs cause an abort"""
 
         self.assertRaises(pexExcept.OutOfRangeError,
-            lambda : afwMath.makeInterpolate(np.array([], dtype=float), np.array([], dtype=float),
-                                             afwMath.Interpolate.CONSTANT)
-            )
+                          lambda: afwMath.makeInterpolate(np.array([], dtype=float), np.array([], dtype=float),
+                                                          afwMath.Interpolate.CONSTANT)
+                          )
 
         afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
                                 afwMath.Interpolate.CONSTANT)
 
         self.assertRaises(pexExcept.OutOfRangeError,
-            lambda : afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
-                                             afwMath.Interpolate.LINEAR))
+                          lambda: afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
+                                                          afwMath.Interpolate.LINEAR))
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -153,7 +153,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

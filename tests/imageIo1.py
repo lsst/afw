@@ -50,8 +50,10 @@ except pexExcept.NotFoundError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class ReadFitsTestCase(unittest.TestCase):
     """A test case for reading FITS images"""
+
     def setUp(self):
         pass
 
@@ -93,7 +95,7 @@ class ReadFitsTestCase(unittest.TestCase):
         col, row, val = 0, 0, 1154
         self.assertEqual(im.get(col, row), val)
 
-        #print "IM = ", im
+        # print "IM = ", im
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
         with utilsTests.getTempFilePath(".fits") as tmpFile:
@@ -143,10 +145,10 @@ class ReadFitsTestCase(unittest.TestCase):
         import lsst.daf.base as dafBase
 
         with utilsTests.getTempFilePath(".fits") as tmpFile:
-            im = afwImage.ImageF(afwGeom.ExtentI(10,20))
+            im = afwImage.ImageF(afwGeom.ExtentI(10, 20))
             md = dafBase.PropertySet()
-            keys = {"BAD" : False,
-                    "GOOD" : True,
+            keys = {"BAD": False,
+                    "GOOD": True,
                     }
             for k, v in keys.items():
                 md.add(k, v)
@@ -163,7 +165,7 @@ class ReadFitsTestCase(unittest.TestCase):
         with utilsTests.getTempFilePath(".fits") as tmpFile:
             longString = ' '.join(['This is a long string.'] * 8)
 
-            expOrig = afwImage.ExposureF(100,100)
+            expOrig = afwImage.ExposureF(100, 100)
             mdOrig = expOrig.getMetadata()
             mdOrig.set(keyWord, longString)
             expOrig.writeFits(tmpFile)
@@ -172,6 +174,7 @@ class ReadFitsTestCase(unittest.TestCase):
             self.assertEqual(expNew.getMetadata().get(keyWord), longString)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -182,6 +185,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

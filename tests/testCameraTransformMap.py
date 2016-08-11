@@ -35,9 +35,11 @@ import lsst.pex.exceptions
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 
+
 class TransformWrapper(object):
     """Wrap a TransformMap transformation as a function(Point2D)->Point2D
     """
+
     def __init__(self, transformMap, fromSys, toSys):
         self.transformMap = transformMap
         self.fromSys = fromSys
@@ -46,15 +48,18 @@ class TransformWrapper(object):
     def __call__(self, point):
         return self.transformMap.transform(point, self.fromSys, self.toSys)
 
+
 class FuncPair(object):
     """Wrap a pair of function(Point2D)->Point2D functions as a single such function
     """
+
     def __init__(self, func1, func2):
         self.func1 = func1
         self.func2 = func2
 
     def __call__(self, point):
         return self.func2(self.func1(point))
+
 
 def unityTransform(point):
     """Unity function(Point2D)->Point2D
@@ -63,6 +68,7 @@ def unityTransform(point):
 
 
 class CameraTransformMapTestCase(unittest.TestCase):
+
     def setUp(self):
         self.nativeSys = cameraGeom.FOCAL_PLANE
         self.pupilTransform = afwGeom.RadialXYTransform([0, 0.5, 0.005])
@@ -104,7 +110,6 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.assertTrue(len(csList) == 2)
         self.assertTrue(self.nativeSys in csList)
         self.assertTrue(cameraGeom.PUPIL in csList)
-
 
     def testIteration(self):
         """Test iteration, len and indexing
@@ -184,6 +189,7 @@ class CameraTransformMapTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -194,7 +200,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

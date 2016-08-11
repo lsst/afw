@@ -55,22 +55,23 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class ExposureTableTestCase(unittest.TestCase):
 
     @staticmethod
     def createWcs():
         metadata = lsst.daf.base.PropertySet()
-        metadata.set("SIMPLE",                    "T")
-        metadata.set("BITPIX",                  -32)
-        metadata.set("NAXIS",                    2)
-        metadata.set("NAXIS1",                 1024)
-        metadata.set("NAXIS2",                 1153)
+        metadata.set("SIMPLE", "T")
+        metadata.set("BITPIX", -32)
+        metadata.set("NAXIS", 2)
+        metadata.set("NAXIS1", 1024)
+        metadata.set("NAXIS2", 1153)
         metadata.set("RADECSYS", 'FK5')
-        metadata.set("EQUINOX",                2000.)
-        metadata.setDouble("CRVAL1",     215.604025685476)
-        metadata.setDouble("CRVAL2",     53.1595451514076)
-        metadata.setDouble("CRPIX1",     1109.99981456774)
-        metadata.setDouble("CRPIX2",     560.018167811613)
+        metadata.set("EQUINOX", 2000.)
+        metadata.setDouble("CRVAL1", 215.604025685476)
+        metadata.setDouble("CRVAL2", 53.1595451514076)
+        metadata.setDouble("CRPIX1", 1109.99981456774)
+        metadata.setDouble("CRPIX2", 560.018167811613)
         metadata.set("CTYPE1", 'RA---SIN')
         metadata.set("CTYPE2", 'DEC--SIN')
         metadata.setDouble("CD1_1", 5.10808596133527E-05)
@@ -95,16 +96,16 @@ class ExposureTableTestCase(unittest.TestCase):
         self.psf = DummyPsf(2.0)
         self.bbox0 = lsst.afw.geom.Box2I(
             lsst.afw.geom.Box2D(
-                self.wcs.getPixelOrigin() - lsst.afw.geom.Extent2D( 5.0,  4.0),
+                self.wcs.getPixelOrigin() - lsst.afw.geom.Extent2D(5.0, 4.0),
                 self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(20.0, 30.0)
-                )
             )
+        )
         self.bbox1 = lsst.afw.geom.Box2I(
             lsst.afw.geom.Box2D(
                 self.wcs.getPixelOrigin() - lsst.afw.geom.Extent2D(15.0, 40.0),
-                self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D( 3.0,  6.0)
-                )
+                self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(3.0, 6.0)
             )
+        )
         self.calib = lsst.afw.image.Calib()
         self.calib.setFluxMag0(56.0, 2.2)
         self.calib.setExptime(50.0)
@@ -157,7 +158,8 @@ class ExposureTableTestCase(unittest.TestCase):
             self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
             self.assertTrue(self.cat[1].getPsf() is None)
             self.assertTrue(self.cat[1].getCalib() is None)
-            self.assertEqual(self.cat[0].getWcs().getId(), self.cat[1].getWcs().getId()) # compare citizen IDs
+            self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
+                             1].getWcs().getId())  # compare citizen IDs
             self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
 
     def testGeometry(self):
@@ -173,7 +175,7 @@ class ExposureTableTestCase(unittest.TestCase):
         wcs2 = lsst.afw.image.Wcs(
             crval2.getPosition(), self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
             self.wcs.getCDMatrix() * 1.1
-            )
+        )
         for x1, y1 in points:
             p1 = lsst.afw.geom.Point2D(x1, y1)
             c = self.wcs.pixelToSky(x1, y1)
@@ -197,7 +199,7 @@ class ExposureTableTestCase(unittest.TestCase):
         coaddInputs = lsst.afw.image.CoaddInputs(
             lsst.afw.table.ExposureTable.makeMinimalSchema(),
             lsst.afw.table.ExposureTable.makeMinimalSchema()
-            )
+        )
         coaddInputs.visits.addNew().setId(2)
         coaddInputs.ccds.addNew().setId(3)
         coaddInputs.ccds.addNew().setId(4)
@@ -215,6 +217,7 @@ class ExposureTableTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -225,7 +228,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

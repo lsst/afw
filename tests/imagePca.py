@@ -55,6 +55,7 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class ImagePcaTestCase(unittest.TestCase):
     """A test case for ImagePca"""
 
@@ -146,7 +147,7 @@ class ImagePcaTestCase(unittest.TestCase):
             period = 5*(i+1)
             fx = np.sin(2*math.pi/period*x + 2*math.pi/numBases*i)
             fy = np.sin(2*math.pi/period*y + 2*math.pi/numBases*i)
-            array[x,y] = fx + fy
+            array[x, y] = fx + fy
             bases.append(im)
 
         if display:
@@ -214,6 +215,7 @@ class ImagePcaTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -223,6 +225,7 @@ def suite():
     suites += unittest.makeSuite(ImagePcaTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

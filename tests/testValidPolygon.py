@@ -44,13 +44,14 @@ from lsst.afw.geom.polygon import Polygon
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class ValidPolygonTestCase(utilsTests.TestCase):
 
     def setUp(self):
         self.bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Point2I(20, 20))
-        x=[0,0,10,10]
-        y=[0,10,10,0]
-        self.polygon=Polygon([afwGeom.Point2D(xc,yc) for xc,yc in zip(x,y)])
+        x = [0, 0, 10, 10]
+        y = [0, 10, 10, 0]
+        self.polygon = Polygon([afwGeom.Point2D(xc, yc) for xc, yc in zip(x, y)])
 
     def testPersistence(self):
         """Test that we can round-trip an ValidPolygon through FITS persistence."""
@@ -98,6 +99,7 @@ class ValidPolygonTestCase(utilsTests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -108,7 +110,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

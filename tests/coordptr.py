@@ -36,10 +36,10 @@ import os
 import unittest
 
 import lsst.utils
-import lsst.afw.image            as image
-import lsst.afw.geom             as afwGeom
-import lsst.afw.coord.coordLib   as coord
-import lsst.utils.tests          as utilsTests
+import lsst.afw.image as image
+import lsst.afw.geom as afwGeom
+import lsst.afw.coord.coordLib as coord
+import lsst.utils.tests as utilsTests
 
 
 class CoordPtrTestCase(unittest.TestCase):
@@ -51,7 +51,7 @@ class CoordPtrTestCase(unittest.TestCase):
         pass
 
     def testMakeCoord(self):
-        c = coord.Coord(1 * afwGeom.degrees,2 * afwGeom.degrees)
+        c = coord.Coord(1 * afwGeom.degrees, 2 * afwGeom.degrees)
         print(type(c))
         c = coord.makeCoord(coord.FK5, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
         print(type(c))
@@ -63,7 +63,7 @@ class CoordPtrTestCase(unittest.TestCase):
 
         wcs = image.makeWcs(fitsHdr)
 
-        c = wcs.pixelToSky(0,0)
+        c = wcs.pixelToSky(0, 0)
         print(type(c))
         c.getPosition()
 
@@ -79,6 +79,8 @@ class CoordPtrTestCase(unittest.TestCase):
 #################################################################
 # Test suite boiler plate
 #################################################################
+
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -89,7 +91,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(exit = False):
+
+def run(exit=False):
     """Run the tests"""
     utilsTests.run(suite(), exit)
 

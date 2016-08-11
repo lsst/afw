@@ -33,7 +33,9 @@ import lsst.utils.tests as tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDet
 
+
 class FootprintTestCase(unittest.TestCase):
+
     def testCircle(self):
         xc, yc = 30, 50
         radius = 10

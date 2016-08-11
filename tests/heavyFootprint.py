@@ -58,8 +58,10 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class HeavyFootprintTestCase(tests.TestCase):
     """A test case for HeavyFootprint"""
+
     def setUp(self):
         self.mi = afwImage.MaskedImageF(20, 10)
         self.objectPixelVal = (10, 0x1, 100)
@@ -79,10 +81,10 @@ class HeavyFootprintTestCase(tests.TestCase):
     def testCreate(self):
         """Check that we can create a HeavyFootprint"""
 
-        imi = self.mi.Factory(self.mi, True) # copy of input image
+        imi = self.mi.Factory(self.mi, True)  # copy of input image
 
         hfoot = afwDetect.makeHeavyFootprint(self.foot, self.mi)
-        self.assertNotEqual(hfoot.getId(), None) # check we can call a base-class method
+        self.assertNotEqual(hfoot.getId(), None)  # check we can call a base-class method
         #
         # Check we didn't modify the input image
         #
@@ -117,13 +119,11 @@ class HeavyFootprintTestCase(tests.TestCase):
         for x in arr:
             pass
 
-
-
     def testSetFootprint(self):
         """Check that we can create a HeavyFootprint and set the pixels under it"""
 
         ctrl = afwDetect.HeavyFootprintCtrl()
-        ctrl.setModifySource(afwDetect.HeavyFootprintCtrl.SET) # clear the pixels in the Footprint
+        ctrl.setModifySource(afwDetect.HeavyFootprintCtrl.SET)  # clear the pixels in the Footprint
         ctrl.setMaskVal(self.objectPixelVal[1])
 
         afwDetect.makeHeavyFootprint(self.foot, self.mi, ctrl)
@@ -226,7 +226,7 @@ class HeavyFootprintTestCase(tests.TestCase):
         self.assertEquals(bb.getMinY(), 1)
         self.assertEquals(bb.getMaxY(), 3)
 
-        msum = afwImage.MaskedImageF(20,10)
+        msum = afwImage.MaskedImageF(20, 10)
         hsum.insert(msum)
 
         sa = msum.getImage().getArray()
@@ -247,7 +247,6 @@ class HeavyFootprintTestCase(tests.TestCase):
         self.assertTrue(np.all(sm[2, 12:14] == objectPixelVal[1] | self.objectPixelVal[1]))
         self.assertTrue(np.all(sm[2, 10:12] == self.objectPixelVal[1]))
 
-
         if False:
             import matplotlib
             matplotlib.use('Agg')
@@ -259,19 +258,19 @@ class HeavyFootprintTestCase(tests.TestCase):
             im3 = afwImage.ImageF(bb)
             hsum.insert(im3)
             plt.clf()
-            plt.subplot(1,3,1)
+            plt.subplot(1, 3, 1)
             plt.imshow(im1.getArray(), interpolation='nearest', origin='lower')
-            plt.subplot(1,3,2)
+            plt.subplot(1, 3, 2)
             plt.imshow(im2.getArray(), interpolation='nearest', origin='lower')
-            plt.subplot(1,3,3)
+            plt.subplot(1, 3, 3)
             plt.imshow(im3.getArray(), interpolation='nearest', origin='lower')
             plt.savefig('merge.png')
 
     def testFitsPersistence(self):
         heavy1 = afwDetect.HeavyFootprintF(self.foot)
         heavy1.getImageArray()[:] = np.random.randn(self.foot.getArea()).astype(np.float32)
-        heavy1.getMaskArray()[:] =  np.random.randint(low=0, high=2,
-                                                      size=self.foot.getArea()).astype(np.uint16)
+        heavy1.getMaskArray()[:] = np.random.randint(low=0, high=2,
+                                                     size=self.foot.getArea()).astype(np.uint16)
         heavy1.getVarianceArray()[:] = np.random.randn(self.foot.getArea()).astype(np.float32)
         filename = "heavyFootprint-testFitsPersistence.fits"
         heavy1.writeFits(filename)
@@ -298,7 +297,7 @@ class HeavyFootprintTestCase(tests.TestCase):
             for y, x0, x1 in [(5, 3, 7),
                               (6, 3, 4),
                               (6, 6, 7),
-                              (7, 3, 7),]:
+                              (7, 3, 7), ]:
                 fp1.addSpan(y, x0, x1)
                 fp2.addSpan(y + yOffset, x0 + xOffset, x1 + xOffset)
                 for x in range(x0, x1 + 1):

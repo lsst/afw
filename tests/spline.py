@@ -48,8 +48,10 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class SplineTestCase(unittest.TestCase):
     """A test case for Image"""
+
     def smooth(self, x, differentiate=False):
         if differentiate:
             return math.cos(x)
@@ -67,7 +69,7 @@ class SplineTestCase(unittest.TestCase):
 
     def setUp(self):
         x, x2, ySin, yND = [], [], [], []
-        for i in range(0,40):
+        for i in range(0, 40):
             x.append(0.1*i)
             for j in range(4):
                 x2.append(0.1*(i + 0.25*j))
@@ -95,7 +97,7 @@ class SplineTestCase(unittest.TestCase):
         sp.interpolate(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
-            self.assertAlmostEqual(y, self.smooth(x), 1) # fails at 2 places!
+            self.assertAlmostEqual(y, self.smooth(x), 1)  # fails at 2 places!
 
     def testNaturalSplineDerivative1(self):
         """Test fitting a natural spline to a smooth function and finding its derivative"""
@@ -116,7 +118,7 @@ class SplineTestCase(unittest.TestCase):
         sp.interpolate(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
-            self.assertAlmostEqual(y, self.noDerivative(x), 1) # fails at 2 places!
+            self.assertAlmostEqual(y, self.noDerivative(x), 1)  # fails at 2 places!
 
     def testTautSpline1(self):
         """Test fitting a taut spline to a smooth function"""
@@ -164,6 +166,7 @@ class SplineTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -173,6 +176,7 @@ def suite():
     suites += unittest.makeSuite(SplineTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

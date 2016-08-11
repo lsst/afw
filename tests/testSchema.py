@@ -58,24 +58,24 @@ class SchemaTestCase(unittest.TestCase):
             self.assertEqual(col.key, key)
             self.assertEqual(col.field.getName(), name)
 
-        schema = lsst.afw.table.Schema();
+        schema = lsst.afw.table.Schema()
         ab_k = lsst.afw.table.CoordKey.addFields(schema, "a_b", "parent coord")
         abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixel")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
         acf_k = schema.addField("a_c_f", type=numpy.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
 
-        #Basic test for all native key types.
+        # Basic test for all native key types.
         for name, key in (("a_b_i", abi_k), ("a_c_f", acf_k), ("e_g_d", egd_k)):
             testKey(name, key)
 
-        #Extra tests for special types
-        self.assertEqual(ab_k.getRa(), schema["a_b_ra"].asKey());
+        # Extra tests for special types
+        self.assertEqual(ab_k.getRa(), schema["a_b_ra"].asKey())
         abpx_si = schema.find("a_b_p_x")
-        self.assertEqual(abp_k.getX(), abpx_si.key);
+        self.assertEqual(abp_k.getX(), abpx_si.key)
         self.assertEqual(abpx_si.field.getName(), "a_b_p_x")
         self.assertEqual(abpx_si.field.getDoc(), "point")
-        self.assertEqual(abp_k.getX(), schema["a_b_p_x"].asKey());
+        self.assertEqual(abp_k.getX(), schema["a_b_p_x"].asKey())
         self.assertEqual(schema.getNames(), ('a_b_dec', 'a_b_i', 'a_b_p_x', 'a_b_p_y', 'a_b_ra', 'a_c_f',
                                              'e_g_d'))
         self.assertEqual(schema.getNames(True), ("a", "e"))
@@ -108,8 +108,8 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(keys, keys2)
 
     def testUnits(self):
-        schema = lsst.afw.table.Schema();
-	# first insert some valid units
+        schema = lsst.afw.table.Schema()
+        # first insert some valid units
         schema.addField("a", type="I", units="pixel")
         schema.addField("b", type="I", units="m2")
         schema.addField("c", type="I", units="electron / adu")
@@ -118,13 +118,13 @@ class SchemaTestCase(unittest.TestCase):
         schema.addField("f", type="Angle", units="deg")
         schema.addField("g", type="Angle", units="rad")
         schema.checkUnits()
-	# now try inserting invalid units
+        # now try inserting invalid units
         self.assertRaises(ValueError, schema.addField, "a", type="I", units="camel")
         self.assertRaises(ValueError, schema.addField, "b", type="I", units="pixels^2^2")
-	# add invalid units in silent mode, should work fine
+        # add invalid units in silent mode, should work fine
         schema.addField("h", type="I", units="lala", parse_strict='silent')
-	# Now this check should raise because there is an invalid unit
-	self.assertRaises(ValueError, schema.checkUnits)
+        # Now this check should raise because there is an invalid unit
+        self.assertRaises(ValueError, schema.checkUnits)
 
     def testInspection(self):
         schema = lsst.afw.table.Schema()
@@ -282,6 +282,7 @@ class SchemaMapperTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -293,7 +294,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

@@ -60,8 +60,10 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class StatisticsTestCase(utilsTests.TestCase):
     """A test case for Statistics"""
+
     def setUp(self):
         self.val = 10
         self.image = afwImage.ImageF(afwGeom.Extent2I(100, 200))
@@ -96,7 +98,7 @@ class StatisticsTestCase(utilsTests.TestCase):
         self.assertEqual(stats.getValue(afwMath.NPOINT)*stats.getValue(afwMath.MEAN),
                          stats.getValue(afwMath.SUM))
         self.assertEqual(stats.getValue(afwMath.MEAN), self.val)
-        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN))) # didn't ask for error, so it's a NaN
+        self.assertTrue(np.isnan(stats.getError(afwMath.MEAN)))  # didn't ask for error, so it's a NaN
         self.assertEqual(stats.getValue(afwMath.STDEV), 0)
 
     def testStats2(self):
@@ -121,7 +123,7 @@ class StatisticsTestCase(utilsTests.TestCase):
         #
         # Add 1 to every other row, so the variance is 1/4
         #
-        self.assertEqual(image2.getHeight()%2, 0)
+        self.assertEqual(image2.getHeight() % 2, 0)
         width = image2.getWidth()
         for y in range(1, image2.getHeight(), 2):
             sim = image2.Factory(image2, afwGeom.Box2I(afwGeom.Point2I(0, y), afwGeom.Extent2I(width, 1)),
@@ -129,8 +131,8 @@ class StatisticsTestCase(utilsTests.TestCase):
             sim += 1
 
         if display:
-            ds9.mtv(self.image, frame = 0)
-            ds9.mtv(image2, frame = 1)
+            ds9.mtv(self.image, frame=0)
+            ds9.mtv(image2, frame=1)
 
         stats = afwMath.makeStatistics(image2,
                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.ERRORS)
@@ -138,7 +140,7 @@ class StatisticsTestCase(utilsTests.TestCase):
         n = stats.getValue(afwMath.NPOINT)
         sd = stats.getValue(afwMath.STDEV)
 
-        self.assertEqual(mean[0],  image2.get(0, 0) + 0.5)
+        self.assertEqual(mean[0], image2.get(0, 0) + 0.5)
         self.assertEqual(sd, 1/math.sqrt(4.0)*math.sqrt(n/(n - 1)))
         self.assertAlmostEqual(mean[1], sd/math.sqrt(image2.getWidth()*image2.getHeight()), 10)
 
@@ -154,7 +156,7 @@ class StatisticsTestCase(utilsTests.TestCase):
         #
         # Check we get the correct sum even when clipping
         #
-        self.assertEqual(stats.getValue(afwMath.NPOINT)*
+        self.assertEqual(stats.getValue(afwMath.NPOINT) *
                          afwMath.makeStatistics(image2, afwMath.MEAN).getValue(),
                          stats.getValue(afwMath.SUM))
 
@@ -164,7 +166,7 @@ class StatisticsTestCase(utilsTests.TestCase):
 
         self.assertEqual(stats.getValue(afwMath.MEDIAN), self.val)
 
-        values = [1.0, 2.0, 3.0, 2.0 ]
+        values = [1.0, 2.0, 3.0, 2.0]
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 2.0)
 
     def testIqrange(self):
@@ -255,10 +257,8 @@ class StatisticsTestCase(utilsTests.TestCase):
             self.assertAlmostEqual(mean, trueMean, 8)
             self.assertAlmostEqual(stdev, trueStdev, 8)
 
-
     def testStatisticsRamp(self):
         """ Tests Statistics on a 'ramp' (image with constant gradient) """
-
 
         nx = 101
         ny = 64
@@ -303,7 +303,6 @@ class StatisticsTestCase(utilsTests.TestCase):
         stats = afwMath.makeStatistics(img, afwMath.MEANCLIP)
         self.assertEqual(z0 + dzdx*(nx - 1)/2.0, stats.getValue(afwMath.MEANCLIP))
 
-
     def testMask(self):
         mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
         mask.set(0x0)
@@ -320,7 +319,6 @@ class StatisticsTestCase(utilsTests.TestCase):
         def tst():
             afwMath.makeStatistics(mask, afwMath.MEAN)
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, tst)
-
 
     def testTicket1025(self):
         """
@@ -339,7 +337,6 @@ class StatisticsTestCase(utilsTests.TestCase):
         values = list(range(11))
         self.assertEqual(afwMath.makeStatistics(values, afwMath.MEDIAN).getValue(), 5.0)
 
-
     def testTicket1123(self):
         """
         Ticket #1123 reported that the Statistics stack routine throws an exception
@@ -353,28 +350,27 @@ class StatisticsTestCase(utilsTests.TestCase):
         mimg.set([self.val, 0x1, self.val])
 
         # test the case with no valid pixels ... both mean and stdev should be nan
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
-        mean  = stat.getValue(afwMath.MEAN)
+        stat = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
+        mean = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertNotEqual(mean, mean)   # NaN does not equal itself
-        self.assertNotEqual(stdev, stdev) # NaN does not equal itself
+        self.assertNotEqual(stdev, stdev)  # NaN does not equal itself
 
         # test the case with one valid pixel ... mean is ok, but stdev should still be nan
         mimg.getMask().set(1, 1, 0x0)
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
-        mean  = stat.getValue(afwMath.MEAN)
+        stat = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
+        mean = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertEqual(mean, self.val)
-        self.assertNotEqual(stdev, stdev) # NaN does not equal itself
+        self.assertNotEqual(stdev, stdev)  # NaN does not equal itself
 
         # test the case with two valid pixels ... both mean and stdev are ok
         mimg.getMask().set(1, 2, 0x0)
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
-        mean  = stat.getValue(afwMath.MEAN)
+        stat = afwMath.makeStatistics(mimg, afwMath.MEAN | afwMath.STDEV, ctrl)
+        mean = stat.getValue(afwMath.MEAN)
         stdev = stat.getValue(afwMath.STDEV)
         self.assertEqual(mean, self.val)
         self.assertEqual(stdev, 0.0)
-
 
     def testTicket1125(self):
         """Ticket 1125 reported that the clipped routines were aborting when called with no valid pixels. """
@@ -385,17 +381,15 @@ class StatisticsTestCase(utilsTests.TestCase):
         ctrl.setAndMask(~0x0)
 
         # test the case with no valid pixels ... try MEANCLIP and STDEVCLIP
-        stat  = afwMath.makeStatistics(mimg, afwMath.MEANCLIP | afwMath.STDEVCLIP, ctrl)
-        mean  = stat.getValue(afwMath.MEANCLIP)
+        stat = afwMath.makeStatistics(mimg, afwMath.MEANCLIP | afwMath.STDEVCLIP, ctrl)
+        mean = stat.getValue(afwMath.MEANCLIP)
         stdev = stat.getValue(afwMath.STDEVCLIP)
         self.assertNotEqual(mean, mean)   # NaN does not equal itself
-        self.assertNotEqual(stdev, stdev) # NaN does not equal itself
-
-
+        self.assertNotEqual(stdev, stdev)  # NaN does not equal itself
 
     def testWeightedSum(self):
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10))
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
         mi.getImage().set(1.0)
         mi.getVariance().set(0.1)
 
@@ -413,7 +407,8 @@ class StatisticsTestCase(utilsTests.TestCase):
         weight, mean = 0.1, 1.0
 
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10)); npix = 10*10
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        npix = 10*10
         mi.getImage().set(mean)
         mi.getVariance().set(np.nan)
 
@@ -433,7 +428,8 @@ class StatisticsTestCase(utilsTests.TestCase):
         weight, mean, variance = 0.1, 1.0, 10.0
 
         ctrl = afwMath.StatisticsControl()
-        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10,10)); npix = 10*10
+        mi = afwImage.MaskedImageF(afwGeom.Extent2I(10, 10))
+        npix = 10*10
         mi.getImage().set(mean)
         mi.getVariance().set(variance)
 
@@ -482,6 +478,7 @@ class StatisticsTestCase(utilsTests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -492,7 +489,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

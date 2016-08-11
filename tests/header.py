@@ -34,6 +34,7 @@ import lsst.utils.tests as utilsTests
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class HeaderTestCase(unittest.TestCase):
     """Test that headers round-trip"""
+
     def testHeaders(self):
         filename = "tests/header.fits"
         header = {"STR": "String",
@@ -45,7 +46,7 @@ class HeaderTestCase(unittest.TestCase):
                   "LONG": long(987654321),
                   }
 
-        exp = afwImage.ExposureI(0,0)
+        exp = afwImage.ExposureI(0, 0)
         metadata = exp.getMetadata()
         for k, v in header.items():
             metadata.add(k, v)
@@ -74,6 +75,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

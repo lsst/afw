@@ -37,7 +37,9 @@ def headerToPropertyList(header):
         pl.add(key, value)
     return pl
 
+
 class WcsTestCase(unittest.TestCase):
+
     def setUp(self):
         # Actual WCS from processing Suprime-Cam
         self.width = 2048
@@ -154,7 +156,6 @@ class WcsTestCase(unittest.TestCase):
             self.assertEqual(wcs1.pixelToSky(point), wcs2.pixelToSky(point))
 
 
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -166,6 +167,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

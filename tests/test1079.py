@@ -26,10 +26,10 @@ from builtins import range
 #
 
 
-##test1079
-##\brief Test that the wcs of sub-images are written and read from disk correctly
-##$Id$
-##\author Fergal Mullally
+# test1079
+# \brief Test that the wcs of sub-images are written and read from disk correctly
+# $Id$
+# \author Fergal Mullally
 
 import os.path
 import unittest
@@ -46,6 +46,7 @@ try:
     type(verbose)
 except NameError:
     verbose = 0
+
 
 class SavingSubImagesTest(unittest.TestCase):
     """
@@ -65,14 +66,14 @@ class SavingSubImagesTest(unittest.TestCase):
         self.llcParent = self.parent.getMaskedImage().getXY0()
         self.oParent = self.parent.getWcs().getPixelOrigin()
 
-        #A list of pixel positions to test
+        # A list of pixel positions to test
         self.testPositions = []
         self.testPositions.append(afwGeom.Point2D(128, 128))
-        self.testPositions.append(afwGeom.Point2D(0,0))
-        self.testPositions.append(afwGeom.Point2D(20,30))
-        self.testPositions.append(afwGeom.Point2D(60,50))
+        self.testPositions.append(afwGeom.Point2D(0, 0))
+        self.testPositions.append(afwGeom.Point2D(20, 30))
+        self.testPositions.append(afwGeom.Point2D(60, 50))
         self.testPositions.append(afwGeom.Point2D(80, 80))
-        self.testPositions.append(afwGeom.Point2D(255,255))
+        self.testPositions.append(afwGeom.Point2D(255, 255))
 
         self.parent.getMaskedImage().set(0)
         for p in self.testPositions:
@@ -94,7 +95,7 @@ class SavingSubImagesTest(unittest.TestCase):
         subImgLlc = subImg.getMaskedImage().getXY0()
         oSubImage = subImg.getWcs().getPixelOrigin()
 
-        #Useful for debugging
+        # Useful for debugging
         if False:
             print(self.parent.getMaskedImage().getXY0())
             print(subImg.getMaskedImage().getXY0())
@@ -106,19 +107,18 @@ class SavingSubImagesTest(unittest.TestCase):
             self.assertEqual(llc[i], subImgLlc[i], "Corner of sub-image not correct")
             self.assertAlmostEqual(self.oParent[i], oSubImage[i], 6, "Crpix of sub-image not correct")
 
-
     def testInvarianceOfCrpix2(self):
         """For sub-images loaded from disk, test that crpix is the same for parent and sub-image.
         Also tests that llc of sub-image saved correctly"""
 
-        #Load sub-image directly off of disk
+        # Load sub-image directly off of disk
         llc = afwGeom.Point2I(20, 30)
         bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
         subImg = afwImage.ExposureF(self.parentFile, bbox, afwImage.LOCAL)
         oSubImage = subImg.getWcs().getPixelOrigin()
         subImgLlc = subImg.getMaskedImage().getXY0()
 
-        #Useful for debugging
+        # Useful for debugging
         if False:
             print(self.parent.getMaskedImage().getXY0())
             print(subImg.getMaskedImage().getXY0())
@@ -129,7 +129,6 @@ class SavingSubImagesTest(unittest.TestCase):
         for i in range(2):
             self.assertEqual(llc[i], subImgLlc[i], "Corner of sub-image not correct")
             self.assertAlmostEqual(self.oParent[i], oSubImage[i], 6, "Crpix of sub-image not correct")
-
 
     def testInvarianceOfPixelToSky(self):
 
@@ -145,11 +144,11 @@ class SavingSubImagesTest(unittest.TestCase):
                 ds9.mtv(subImg, frame=1)
 
             for p in self.testPositions:
-                subP = p - afwGeom.Extent2D(llc[0], llc[1]) # pixel in subImg
+                subP = p - afwGeom.Extent2D(llc[0], llc[1])  # pixel in subImg
 
                 if \
-                       subP[0] < 0 or subP[0] >= bbox.getWidth() or \
-                       subP[1] < 0 or subP[1] >= bbox.getHeight():
+                        subP[0] < 0 or subP[0] >= bbox.getWidth() or \
+                        subP[1] < 0 or subP[1] >= bbox.getHeight():
                     continue
 
                 adParent = self.parent.getWcs().pixelToSky(p)
@@ -171,11 +170,10 @@ class SavingSubImagesTest(unittest.TestCase):
         bbox = afwGeom.Box2I(llc1, afwGeom.Extent2I(60, 50))
         subImg = afwImage.ExposureF(self.parentFile, bbox, afwImage.LOCAL)
 
-
         llc2 = afwGeom.Point2I(22, 23)
 
-        #This subsub image should fail. Although it's big enough to fit in the parent image
-        #it's too small for the sub-image
+        # This subsub image should fail. Although it's big enough to fit in the parent image
+        # it's too small for the sub-image
         bbox = afwGeom.Box2I(llc2, afwGeom.Extent2I(100, 110))
         self.assertRaises(lsst.pex.exceptions.Exception, afwImage.ExposureF, subImg, bbox, afwImage.LOCAL)
 
@@ -183,13 +181,11 @@ class SavingSubImagesTest(unittest.TestCase):
         subSubImg = afwImage.ExposureF(subImg, bbox, afwImage.LOCAL)
 
         sub0 = subImg.getMaskedImage().getXY0()
-        subsub0= subSubImg.getMaskedImage().getXY0()
-
+        subsub0 = subSubImg.getMaskedImage().getXY0()
 
         if False:
             print(sub0)
             print(subsub0)
-
 
         for i in range(2):
             self.assertEqual(llc1[i], sub0[i], "XY0 don't match (1)")
@@ -200,7 +196,6 @@ class SavingSubImagesTest(unittest.TestCase):
 
         for i in range(2):
             self.assertAlmostEqual(subCrpix[i], subsubCrpix[i], 6, "crpix don't match")
-
 
     def testRoundTrip(self):
         """Test that saving and retrieving an image doesn't alter the metadata"""
@@ -227,16 +222,16 @@ class SavingSubImagesTest(unittest.TestCase):
 
                 for i in range(2):
                     self.assertEqual(subXY0[i], newXY0[i], "Origin has changed; deep = %s" % deep)
-                    self.assertAlmostEqual(subCrpix[i], newCrpix[i], 6,"crpix has changed; deep = %s" % deep)
+                    self.assertAlmostEqual(subCrpix[i], newCrpix[i], 6, "crpix has changed; deep = %s" % deep)
 
     def testFitsHeader(self):
         """Test that XY0 and crpix are written to the header as expected"""
 
-        #getPixelOrigin() returns origin in lsst coordinates, so need to add 1 to
-        #compare to values stored in fits headers
+        # getPixelOrigin() returns origin in lsst coordinates, so need to add 1 to
+        # compare to values stored in fits headers
         parentCrpix = self.parent.getWcs().getPixelOrigin()
 
-        #Make a sub-image
+        # Make a sub-image
         x0, y0 = 20, 30
         llc = afwGeom.Point2I(x0, y0)
         bbox = afwGeom.Box2I(llc, afwGeom.Extent2I(60, 50))
@@ -257,14 +252,15 @@ class SavingSubImagesTest(unittest.TestCase):
             checkLtvHeader(hdr, "LTV1", -1*x0)
             checkLtvHeader(hdr, "LTV2", -1*y0)
 
-            self.assertTrue( hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
-            self.assertTrue( hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
+            self.assertTrue(hdr.exists("CRPIX1"), "CRPIX1 not saved to fits header")
+            self.assertTrue(hdr.exists("CRPIX2"), "CRPIX2 not saved to fits header")
 
             fitsCrpix = [hdr.get("CRPIX1"), hdr.get("CRPIX2")]
             self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")
             self.assertAlmostEqual(fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1]+1, 6, "CRPIX2 saved wrong")
 
 #####
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -274,6 +270,7 @@ def suite():
     suites += unittest.makeSuite(SavingSubImagesTest)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

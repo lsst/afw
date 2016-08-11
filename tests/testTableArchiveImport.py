@@ -28,6 +28,7 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 
+
 class ArchiveImportTestCase(unittest.TestCase):
 
     def testArchiveImports(self):
@@ -37,6 +38,7 @@ class ArchiveImportTestCase(unittest.TestCase):
         exposure = afwImage.ExposureF(filename)
         self.assert_(exposure.getPsf() is not None)
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     utilsTests.init()
@@ -45,6 +47,7 @@ def suite():
     suites += unittest.makeSuite(ArchiveImportTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(exit=False):
     """Run the utilsTests"""

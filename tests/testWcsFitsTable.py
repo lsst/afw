@@ -31,13 +31,14 @@ import lsst.afw.geom
 import lsst.utils.tests as utilsTests
 import lsst.daf.base
 
+
 class WcsFitsTableTestCase(unittest.TestCase):
     """Test that we can read and write Wcs objects saved to FITS binary tables.
     """
 
     def setUp(self):
-        #metadata taken from CFHT data
-        #v695856-e0/v695856-e0-c000-a00.sci.fits
+        # metadata taken from CFHT data
+        # v695856-e0/v695856-e0-c000-a00.sci.fits
 
         self.metadata = lsst.daf.base.PropertySet()
 
@@ -184,13 +185,15 @@ class WcsFitsTableTestCase(unittest.TestCase):
         exp = lsst.afw.image.ExposureF(fileName)
         del fileName
 
-        self.assertFalse(exp.getWcs().isPersistable(), "Test assumes that ZPN projections are not persistable")
+        self.assertFalse(exp.getWcs().isPersistable(),
+                         "Test assumes that ZPN projections are not persistable")
 
         with utilsTests.getTempFilePath(".fits") as fileName:
             exp.writeFits(fileName)
             exp2 = lsst.afw.image.ExposureF(fileName)
             self.assertEqual(exp.getWcs(), exp2.getWcs())
 #####
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -200,6 +203,7 @@ def suite():
     suites += unittest.makeSuite(WcsFitsTableTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

@@ -28,6 +28,7 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
 
+
 class ImageIoTestCase(unittest.TestCase):
     """A test case for Image Persistence"""
 
@@ -66,6 +67,7 @@ class ImageIoTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     utilsTests.init()
@@ -75,6 +77,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

@@ -47,12 +47,15 @@ import lsst.afw.geom as afwGeom
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def checkRngEquivalence(rng1, rng2):
     for i in range(1000):
         assert rng1.uniform() == rng2.uniform()
 
+
 def getSeed():
     return int(time.time() * 1000000.0) % 1000000
+
 
 class RandomTestCase(unittest.TestCase):
     """A test case for lsst.afw.math.Random"""
@@ -95,6 +98,7 @@ class RandomTestCase(unittest.TestCase):
         r2 = afwMath.Random(pol)
         checkRngEquivalence(r1, r2)
 
+
 class RandomImageTestCase(unittest.TestCase):
     """A test case for lsst.afw.math.Random applied to Images"""
 
@@ -127,7 +131,7 @@ class RandomImageTestCase(unittest.TestCase):
         afwMath.randomChisqImage(self.image, self.rand, nu)
         stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
         if False:
-            print("nu = %g.  mean = %g, variance = %g" % \
+            print("nu = %g.  mean = %g, variance = %g" %
                   (nu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE)))
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), nu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), 2*nu, 1)
@@ -137,12 +141,13 @@ class RandomImageTestCase(unittest.TestCase):
         afwMath.randomPoissonImage(self.image, self.rand, mu)
         stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.VARIANCE)
         if False:
-            print("mu = %g.  mean = %g, variance = %g" % \
+            print("mu = %g.  mean = %g, variance = %g" %
                   (mu, stats.getValue(afwMath.MEAN), stats.getValue(afwMath.VARIANCE)))
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), mu, 1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -155,10 +160,10 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
+
 def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
-

@@ -52,6 +52,7 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class offsetImageTestCase(unittest.TestCase):
     """A test case for offsetImage"""
 
@@ -128,20 +129,19 @@ class offsetImageTestCase(unittest.TestCase):
         self.calcGaussian(refIm, xc, yc, amp, sigma1)
 
         for dx in (-55.5, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
-            0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 99.3):
+                   0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 99.3):
             for dy in (-3.7, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
-                0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 2.99999):
+                       0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 2.99999):
                 dOrigX, dOrigY, dFracX, dFracY = getOrigFracShift(dx, dy)
                 self.calcGaussian(unshiftedIm, xc - dFracX, yc - dFracY, amp, sigma1)
 
                 for algorithm, maxMean, maxLim in (
                     ("lanczos5", 1e-8, 0.0015),
                     ("bilinear", 1e-8, 0.03),
-                    ("nearest",  1e-8, 0.2),
+                    ("nearest", 1e-8, 0.2),
                 ):
                     im = afwImage.ImageF(size, size)
                     im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
-
 
                     if display:
                         ds9.mtv(im, frame=0)
@@ -221,8 +221,8 @@ class transformImageTestCase(unittest.TestCase):
 
         frame = 2
         for flipLR, flipTB, x, y in [(True, False, 19, 0),
-                                     (True, True,  19, 9),
-                                     (False, True, 0,  9),
+                                     (True, True, 19, 9),
+                                     (False, True, 0, 9),
                                      (False, False, 0, 0)]:
             outImage = afwMath.flipImage(self.inImage, flipLR, flipTB)
             if display:
@@ -233,9 +233,10 @@ class transformImageTestCase(unittest.TestCase):
     def testMask(self):
         """Test that we can flip a Mask"""
         mask = afwImage.MaskU(10, 20)
-        afwMath.flipImage(mask, True, False) # for a while, swig couldn't handle the resulting Mask::Ptr
+        afwMath.flipImage(mask, True, False)  # for a while, swig couldn't handle the resulting Mask::Ptr
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 class binImageTestCase(unittest.TestCase):
     """A test case for binning images"""
@@ -292,6 +293,7 @@ class binImageTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -303,6 +305,7 @@ def suite():
     suites += unittest.makeSuite(binImageTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

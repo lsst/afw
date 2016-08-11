@@ -32,7 +32,9 @@ import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 
+
 class AmpInfoTableTestCase(unittest.TestCase):
+
     def setUp(self):
         self.schema = afwTable.AmpInfoTable.makeMinimalSchema()
         self.catalog = afwTable.AmpInfoCatalog(self.schema)
@@ -146,10 +148,6 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
 
 
-
-
-
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -162,7 +160,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

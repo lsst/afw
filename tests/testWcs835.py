@@ -37,24 +37,23 @@ class TanSipTestCases(unittest.TestCase):
     """
 
     def setUp(self):
-        #metadata taken from CFHT data
-        #v695856-e0/v695856-e0-c000-a00.sci_img.fits
+        # metadata taken from CFHT data
+        # v695856-e0/v695856-e0-c000-a00.sci_img.fits
 
         metadata = dafBase.PropertySet()
 
-        metadata.set("SIMPLE",                    "T")
-        metadata.set("BITPIX",                  -32)
-        metadata.set("NAXIS",                    2)
-        metadata.set("NAXIS1",                 1024)
-        metadata.set("NAXIS2",                 1153)
+        metadata.set("SIMPLE", "T")
+        metadata.set("BITPIX", -32)
+        metadata.set("NAXIS", 2)
+        metadata.set("NAXIS1", 1024)
+        metadata.set("NAXIS2", 1153)
         metadata.set("RADECSYS", 'FK5')
-        metadata.set("EQUINOX",                2000.)
+        metadata.set("EQUINOX", 2000.)
 
-
-        metadata.setDouble("CRVAL1",     215.604025685476)
-        metadata.setDouble("CRVAL2",     53.1595451514076)
-        metadata.setDouble("CRPIX1",     1109.99981456774)
-        metadata.setDouble("CRPIX2",     560.018167811613)
+        metadata.setDouble("CRVAL1", 215.604025685476)
+        metadata.setDouble("CRVAL2", 53.1595451514076)
+        metadata.setDouble("CRPIX1", 1109.99981456774)
+        metadata.setDouble("CRPIX2", 560.018167811613)
         metadata.set("CTYPE1", 'RA---TAN-SIP')
         metadata.set("CTYPE2", 'DEC--TAN-SIP')
 
@@ -63,9 +62,7 @@ class TanSipTestCases(unittest.TestCase):
         metadata.setDouble("CD2_2", -5.10281493481982E-05)
         metadata.setDouble("CD2_1", -8.27440751733828E-07)
 
-
         self.metadata = metadata
-
 
     def tearDown(self):
         del self.metadata
@@ -75,6 +72,7 @@ class TanSipTestCases(unittest.TestCase):
 
 #####
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     tests.init()
@@ -83,6 +81,7 @@ def suite():
     suites += unittest.makeSuite(TanSipTestCases)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

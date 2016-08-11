@@ -51,6 +51,7 @@ numpy.random.seed(5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def makePositiveSymmetricMatrix(size):
     """Return a random symmetric matrix with only positive eigenvalues, suitable
     for use as a covariance matrix.
@@ -62,10 +63,11 @@ def makePositiveSymmetricMatrix(size):
             m[i, j] = m[j, i]
     return m
 
+
 class FunctorKeysTestCase(lsst.utils.tests.TestCase):
 
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
-        schema = lsst.afw.table.Schema();
+        schema = lsst.afw.table.Schema()
         fKey0 = functorKeyType.addFields(schema, "a", "x or y", "pixel")
         xKey = schema.find("a_x").key
         yKey = schema.find("a_y").key
@@ -152,10 +154,10 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertNotEqual(coord.getLatitude(), record.get(fKey0).getDec())
         self.assertEqual(coord.toIcrs().getDec(), record.get(fKey0).getDec())
 
-
     def testQuadrupoleKey(self):
-        schema = lsst.afw.table.Schema();
-        fKey0 = lsst.afw.table.QuadrupoleKey.addFields(schema, "a", "moments", lsst.afw.table.CoordinateType_PIXEL)
+        schema = lsst.afw.table.Schema()
+        fKey0 = lsst.afw.table.QuadrupoleKey.addFields(
+            schema, "a", "moments", lsst.afw.table.CoordinateType_PIXEL)
         xxKey = schema.find("a_xx").key
         yyKey = schema.find("a_yy").key
         xyKey = schema.find("a_xy").key
@@ -200,7 +202,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(xyKey), p.getIxy())
 
     def testEllipseKey(self):
-        schema = lsst.afw.table.Schema();
+        schema = lsst.afw.table.Schema()
         fKey0 = lsst.afw.table.EllipseKey.addFields(schema, "a", "ellipse", "pixel")
         qKey = lsst.afw.table.QuadrupoleKey(schema["a"])
         pKey = lsst.afw.table.Point2DKey(schema["a"])
@@ -226,8 +228,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # create a record from the test schema, and fill it using the constituent keys
         table = lsst.afw.table.BaseTable.make(schema)
         record = table.makeRecord()
-        record.set(qKey, lsst.afw.geom.ellipses.Quadrupole(4,3,1))
-        record.set(pKey, lsst.afw.geom.Point2D(5,6))
+        record.set(qKey, lsst.afw.geom.ellipses.Quadrupole(4, 3, 1))
+        record.set(pKey, lsst.afw.geom.Point2D(5, 6))
         # test that the return type and value is correct
         self.assertIsInstance(record.get(fKey1), lsst.afw.geom.ellipses.Ellipse)
         self.assertClose(record.get(fKey1).getCore().getIxx(), record.get(qKey).getIxx(), rtol=1E-14)
@@ -237,7 +239,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record.get(fKey1).getCenter().getX(), record.get(pKey).getX())
         # test that we can set using the functor key
         e = lsst.afw.geom.ellipses.Ellipse(lsst.afw.geom.ellipses.Quadrupole(8, 16, 4),
-                                           lsst.afw.geom.Point2D(5,6))
+                                           lsst.afw.geom.Point2D(5, 6))
         record.set(fKey1, e)
         self.assertClose(record.get(fKey1).getCore().getIxx(), e.getCore().getIxx(), rtol=1E-14)
         self.assertClose(record.get(fKey1).getCore().getIyy(), e.getCore().getIyy(), rtol=1E-14)
@@ -272,7 +274,6 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertClose(record.get(fKey1), m, rtol=1E-6)
         record.set(fKey2, m*2)
         self.assertClose(record.get(fKey2), m*2, rtol=1E-6)
-
 
     def doTestCovarianceMatrixKey(self, fieldType, parameterNames, varianceOnly, dynamicSize):
         schema = lsst.afw.table.Schema()
@@ -322,7 +323,8 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         # index and the second digit is the column index.
         for i in range(len(parameterNames)):
             record.set(sigmaKeys[i], ((i+1)*10 + (i+1))**0.5)
-            if varianceOnly: continue
+            if varianceOnly:
+                continue
             for j in range(i):
                 if covKeys[k].isValid():
                     record.set(covKeys[k], (i+1)*10 + (j+1))
@@ -336,14 +338,15 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.assertClose(matrix1, matrix2)
         k = 0
         for i in range(len(parameterNames)):
-            self.assertClose(matrix1[i,i], (i+1)*10 + (i+1), rtol=1E-7)
-            if varianceOnly: continue
+            self.assertClose(matrix1[i, i], (i+1)*10 + (i+1), rtol=1E-7)
+            if varianceOnly:
+                continue
             for j in range(i):
                 if covKeys[k].isValid():
-                    self.assertClose(matrix1[i,j], (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(matrix2[i,j], (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(matrix1[j,i], (i+1)*10 + (j+1), rtol=1E-7)
-                    self.assertClose(matrix2[j,i], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(matrix1[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(matrix2[i, j], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(matrix1[j, i], (i+1)*10 + (j+1), rtol=1E-7)
+                    self.assertClose(matrix2[j, i], (i+1)*10 + (j+1), rtol=1E-7)
                     self.assertClose(fKey1.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
                     self.assertClose(fKey2.getElement(record, i, j), (i+1)*10 + (j+1), rtol=1E-7)
                     v = numpy.random.randn()
@@ -431,7 +434,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 
