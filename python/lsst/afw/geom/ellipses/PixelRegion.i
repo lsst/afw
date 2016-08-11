@@ -59,12 +59,15 @@
 
 %extend PyPixelRegionIterator {
 %pythoncode %{
-def next(self):
+def __next__(self):
     if self.atEnd():
         raise StopIteration()
     current = self.get()
     self.increment()
     return current
+
+next = __next__
+
 def __iter__(self):
     return self
 %}
