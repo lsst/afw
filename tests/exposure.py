@@ -59,21 +59,22 @@ except:
 pexLog.Debug("lsst.afw.image", VERBOSITY)
 
 try:
-        dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
+    dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
 except pexExcept.NotFoundError:
-        dataDir = None
+    dataDir = None
 else:
-        InputMaskedImageName = "871034p_1_MI.fits"
-        InputMaskedImageNameSmall = "small_MI.fits"
-        InputImageNameSmall = "small"
-        OutputMaskedImageName = "871034p_1_MInew.fits"
+    InputMaskedImageName = "871034p_1_MI.fits"
+    InputMaskedImageNameSmall = "small_MI.fits"
+    InputImageNameSmall = "small"
+    OutputMaskedImageName = "871034p_1_MInew.fits"
 
-        currDir = os.path.abspath(os.path.dirname(__file__))
-        inFilePath = os.path.join(dataDir, InputMaskedImageName)
-        inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
-        inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
+    currDir = os.path.abspath(os.path.dirname(__file__))
+    inFilePath = os.path.join(dataDir, InputMaskedImageName)
+    inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
+    inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 @unittest.skipIf(dataDir is None, "afwdata not setup")
 class ExposureTestCase(unittest.TestCase):
@@ -86,7 +87,7 @@ class ExposureTestCase(unittest.TestCase):
         maskedImageMD = afwImage.readMetadata(inFilePathSmall)
 
         self.smallExposure = afwImage.ExposureF(inFilePathSmall)
-        self.width =  maskedImage.getWidth()
+        self.width = maskedImage.getWidth()
         self.height = maskedImage.getHeight()
         self.wcs = afwImage.makeWcs(maskedImageMD)
         self.psf = DummyPsf(2.0)
@@ -96,7 +97,7 @@ class ExposureTestCase(unittest.TestCase):
         self.exposureMiOnly = afwImage.makeExposure(maskedImage)
         self.exposureMiWcs = afwImage.makeExposure(maskedImage, self.wcs)
         self.exposureCrWcs = afwImage.ExposureF(100, 100, self.wcs)         # n.b. the (100, 100, ...) form
-        self.exposureCrOnly = afwImage.ExposureF(afwGeom.ExtentI(100, 100)) # test with ExtentI(100, 100) too
+        self.exposureCrOnly = afwImage.ExposureF(afwGeom.ExtentI(100, 100))  # test with ExtentI(100, 100) too
 
         afwImage.Filter.reset()
         afwImage.FilterProperty.reset()
@@ -233,7 +234,7 @@ class ExposureTestCase(unittest.TestCase):
         exposure.setPsf(self.psf)
         self.assertTrue(exposure.hasPsf())
 
-        exposure.setPsf(DummyPsf(1.0)) # we can reset the Psf
+        exposure.setPsf(DummyPsf(1.0))  # we can reset the Psf
 
         # Test that we can set the MaskedImage and WCS of an Exposure
         # that already has both
@@ -274,6 +275,7 @@ class ExposureTestCase(unittest.TestCase):
         # from the WCS class for the MaskedImage 871034p_1_MI.
 
         subRegion3 = afwGeom.Box2I(afwGeom.Point2I(100, 100), afwGeom.Extent2I(10, 10))
+
         def getSubRegion():
             self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion3, afwImage.LOCAL)
 
@@ -284,19 +286,20 @@ class ExposureTestCase(unittest.TestCase):
         # small_MI (cols, rows) = (256, 256)
 
         subRegion4 = afwGeom.Box2I(afwGeom.Point2I(250, 250), afwGeom.Extent2I(10, 10))
+
         def getSubRegion():
             self.exposureCrWcs.Factory(self.exposureCrWcs, subRegion4, afwImage.LOCAL)
 
         self.assertRaises(pexExcept.LengthError, getSubRegion)
 
-        #check the sub- and parent- exposures are using the same Wcs transformation
+        # check the sub- and parent- exposures are using the same Wcs transformation
         subBBox = afwGeom.Box2I(afwGeom.Point2I(40, 50), afwGeom.Extent2I(10, 10))
         subExposure = self.exposureCrWcs.Factory(self.exposureCrWcs, subBBox, afwImage.LOCAL)
-        parentPos = self.exposureCrWcs.getWcs().pixelToSky(0,0)
+        parentPos = self.exposureCrWcs.getWcs().pixelToSky(0, 0)
 
         parentPos = parentPos.getPosition()
 
-        subExpPos = subExposure.getWcs().pixelToSky(0,0).getPosition()
+        subExpPos = subExposure.getWcs().pixelToSky(0, 0).getPosition()
 
         for i in range(2):
             self.assertAlmostEqual(parentPos[i], subExpPos[i], 9, "Wcs in sub image has changed")
@@ -448,7 +451,6 @@ class ExposureTestCase(unittest.TestCase):
         self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
         self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
 
-
     def testDeepCopySubData(self):
         """Make sure a deep copy of a subregion of an Exposure has its own data (ticket #2625)
         """
@@ -458,7 +460,7 @@ class ExposureTestCase(unittest.TestCase):
         mi.getMask().set(5)
         mi.getVariance().set(200)
 
-        bbox = afwGeom.Box2I(afwGeom.Point2I(1,0), afwGeom.Extent2I(5, 4))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(1, 0), afwGeom.Extent2I(5, 4))
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         miCopy = expCopy.getMaskedImage()
         miCopy.getImage().set(-50)
@@ -483,7 +485,7 @@ class ExposureTestCase(unittest.TestCase):
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
         self.assertEqual(expCopyMeta.get("foo"), 6)
-        self.assertEqual(expMeta.get("foo"), 5) # this will fail if the bug is present
+        self.assertEqual(expMeta.get("foo"), 5)  # this will fail if the bug is present
 
     def testDeepCopySubMetadata(self):
         """Make sure a deep copy of a subregion of an Exposure has a deep copy of metadata (ticket #2568)
@@ -491,12 +493,12 @@ class ExposureTestCase(unittest.TestCase):
         exp = afwImage.ExposureF(10, 10)
         expMeta = exp.getMetadata()
         expMeta.set("foo", 5)
-        bbox = afwGeom.Box2I(afwGeom.Point2I(1,0), afwGeom.Extent2I(5, 5))
+        bbox = afwGeom.Box2I(afwGeom.Point2I(1, 0), afwGeom.Extent2I(5, 5))
         expCopy = exp.Factory(exp, bbox, afwImage.PARENT, True)
         expCopyMeta = expCopy.getMetadata()
         expCopyMeta.set("foo", 6)
         self.assertEqual(expCopyMeta.get("foo"), 6)
-        self.assertEqual(expMeta.get("foo"), 5) # this will fail if the bug is present
+        self.assertEqual(expMeta.get("foo"), 5)  # this will fail if the bug is present
 
     def testMakeExposureLeaks(self):
         """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
@@ -514,14 +516,14 @@ class ExposureTestCase(unittest.TestCase):
         sexp = exp[..., -3:]
         self.assertEqual(sexp.getDimensions(), afwGeom.ExtentI(exp.getWidth(), 3))
         self.assertEqual(sexp.getMaskedImage().get(sexp.getWidth() - 1, sexp.getHeight() - 1),
-                          exp.getMaskedImage().get( exp.getWidth() - 1,  exp.getHeight() - 1))
+                         exp.getMaskedImage().get(exp.getWidth() - 1, exp.getHeight() - 1))
 
     def testConversionToScalar(self):
         """Test that even 1-pixel Exposures can't be converted to scalars"""
         im = afwImage.ExposureF(10, 20)
 
-        self.assertRaises(TypeError, float, im) # only single pixel images may be converted
-        self.assertRaises(TypeError, float, im[0,0]) # actually, can't convert (img, msk, var) to scalar
+        self.assertRaises(TypeError, float, im)  # only single pixel images may be converted
+        self.assertRaises(TypeError, float, im[0, 0])  # actually, can't convert (img, msk, var) to scalar
 
     def testReadMetadata(self):
         with utilsTests.getTempFilePath(".fits") as tmpFile:
@@ -577,6 +579,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

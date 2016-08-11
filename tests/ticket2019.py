@@ -7,11 +7,13 @@ import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 import lsst.afw.geom as afwGeom
 
+
 class SourceHeavyFootprintTestCase(unittest.TestCase):
+
     def test1(self):
         im = afwImage.ImageF(100, 100)
         im += 42.
-        fp = afwDet.Footprint(afwGeom.Point2I(50,50), 10.)
+        fp = afwDet.Footprint(afwGeom.Point2I(50, 50), 10.)
         #seed = 42
         #rand = afwMath.Random(afwMath.Random.MT19937, seed)
         #afwMath.randomGaussianImage(im, rand)
@@ -75,14 +77,10 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
-
-
-
-
-

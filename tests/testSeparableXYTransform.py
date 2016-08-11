@@ -30,7 +30,9 @@ import numpy.random as random
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 
+
 class SeparableXYTransformTestCase(unittest.TestCase):
+
     def setUp(self):
         random.seed(48091)
         self.xpars = 5, 30
@@ -47,8 +49,10 @@ class SeparableXYTransformTestCase(unittest.TestCase):
                                      random.uniform(self.ypars[-1] - dxy,
                                                     self.ypars[-1], size=npts)))
         self.functorClass = afwGeom.LinearFunctor
+
     def tearDown(self):
         pass
+
     def test_roundtrip(self):
         xfunctor = self.functorClass(*self.xpars)
         yfunctor = self.functorClass(*self.ypars)
@@ -59,6 +63,7 @@ class SeparableXYTransformTestCase(unittest.TestCase):
             pt1 = transform.reverseTransform(tmp)
             self.assertAlmostEquals((pt1 - pt0).computeNorm(), 0, places=6)
 
+
 def suite():
     """Return a suite containing all of the test cases in this module."""
     lsst.utils.tests.init()
@@ -66,6 +71,7 @@ def suite():
     suites += unittest.makeSuite(SeparableXYTransformTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     lsst.utils.tests.run(suite(), shouldExit)

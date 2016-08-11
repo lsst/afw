@@ -48,6 +48,7 @@ import lsst.afw.math as afwMath
 class StatisticsTestCase(unittest.TestCase):
 
     """A test case to check that special values (NaN and Masks) are begin handled in Statistics"""
+
     def setUp(self):
         self.valL, self.valR = 10, 20
         self.nRow, self.nCol = 100, 200
@@ -65,7 +66,6 @@ class StatisticsTestCase(unittest.TestCase):
         self.mimgL.set(self.valL, 0x0, self.valL)
         self.mimgR = afwImage.MaskedImageF(self.mimg, self.bboxR, afwImage.LOCAL)
         self.mimgR.set(self.valR, 0x0, self.valR)
-
 
     def tearDown(self):
         del self.mimg
@@ -97,7 +97,6 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(statsNaN.getValue(afwMath.NPOINT), nL)
         self.assertEqual(statsNaN.getValue(afwMath.MEAN), mean)
         self.assertEqual(statsNaN.getValue(afwMath.STDEV), stdev)
-
 
     # Verify that Masked pixels are being ignored according to the andMask
     # (by default, StatisticsControl.andMask = 0x0)
@@ -132,8 +131,6 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(statsNaN.getValue(afwMath.MEAN), mean)
         self.assertEqual(statsNaN.getValue(afwMath.STDEV), stdev)
 
-
-
     # Verify that pixels are being weighted according to the variance plane (1/var)
     # We'll set the L and R sides of an image to two different values and verify mean
     # ... then set R-side Variance to equal the Image value, and set 'weighted' and try again ...
@@ -164,7 +161,7 @@ class StatisticsTestCase(unittest.TestCase):
         wsum = 1.0/self.valR + 1.0/self.valL
         wwsum = 1.0/self.valR**2 + 1.0/self.valL**2
         mean = vsum/wsum
-        variance = vsum2/wsum - mean**2 # biased variance
+        variance = vsum2/wsum - mean**2  # biased variance
 
         n = 2
         # original estimate; just a rewrite of the usual n/(n - 1) correction
@@ -191,7 +188,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

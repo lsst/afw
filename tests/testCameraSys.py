@@ -29,7 +29,9 @@ import unittest
 import lsst.utils.tests
 import lsst.afw.cameraGeom as cameraGeom
 
+
 class CameraSysTestCase(unittest.TestCase):
+
     def testBasics(self):
         """Test CameraSys and CameraSysPrefix
         """
@@ -113,7 +115,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

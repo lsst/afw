@@ -46,7 +46,8 @@ It causes inconsistency at the destructor, and SEGV arrises.
 The example file above has been copied and is used in the below test.
 """
 
-import os, os.path
+import os
+import os.path
 import unittest
 import pickle
 
@@ -59,6 +60,7 @@ DATA = os.path.join("tests", "data", "ticket2233.fits")
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class WcsFormatterTest(unittest.TestCase):
     """Test the WCS formatter, by round-trip pickling."""
+
     def setUp(self):
         exposure = afwImage.ExposureF(DATA)
         self.wcs = exposure.getWcs()
@@ -83,6 +85,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

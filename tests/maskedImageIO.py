@@ -64,8 +64,10 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class MaskedImageTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
+
     def setUp(self):
         # Set a (non-standard) initial Mask plane definition
         #
@@ -100,7 +102,7 @@ class MaskedImageTestCase(unittest.TestCase):
             ds9.mtv(self.mi)
 
         self.assertEqual(image.get(32, 1), 3728)
-        self.assertEqual(mask.get(0, 0), 2) # == BAD
+        self.assertEqual(mask.get(0, 0), 2)  # == BAD
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadImage(self):
@@ -110,8 +112,8 @@ class MaskedImageTestCase(unittest.TestCase):
         image = afwImage.ImageF(filename)
         maskedImage = afwImage.MaskedImageF(filename)
         exposure = afwImage.ExposureF(filename)
-        self.assertEqual(image.get(0,0), maskedImage.getImage().get(0,0))
-        self.assertEqual(image.get(0,0), exposure.getMaskedImage().getImage().get(0,0))
+        self.assertEqual(image.get(0, 0), maskedImage.getImage().get(0, 0))
+        self.assertEqual(image.get(0, 0), exposure.getMaskedImage().getImage().get(0, 0))
         self.assert_(numpy.all(maskedImage.getMask().getArray() == 0))
         self.assert_(numpy.all(exposure.getMaskedImage().getMask().getArray() == 0))
         self.assert_(numpy.all(maskedImage.getVariance().getArray() == 0.0))
@@ -128,7 +130,7 @@ class MaskedImageTestCase(unittest.TestCase):
         mask = self.mi.getMask()
 
         self.assertEqual(image.get(32, 1), 3728)
-        self.assertEqual(mask.get(0, 0), 1) # i.e. not shifted 1 place to the right
+        self.assertEqual(mask.get(0, 0), 1)  # i.e. not shifted 1 place to the right
 
         self.assertEqual(mask.getMaskPlane("CR"), 3, "Plane CR has value specified in FITS file")
 
@@ -150,6 +152,7 @@ class MaskedImageTestCase(unittest.TestCase):
                                   hdu, metadata, bbox, afwImage.LOCAL, conformMasks)
 
         mask = self.mi.getMask()
+
         def tst(mask=mask):
             mask |= testMask
 
@@ -233,6 +236,7 @@ class MultiExtensionTestCase(object):
     #              remainder..
     #
     # See also the discussion at DM-2599.
+
     def _checkMaskedImage(self, mim, width, height, val1, val2, val3):
         # Check that the input image has dimensions width & height and that the image, mask and
         # variance have mean val1, val2 & val3 respectively.
@@ -271,6 +275,7 @@ class MultiExtensionTestCase(object):
 
 class MaskedMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
     """Derived version of MultiExtensionTestCase for MaskedImages."""
+
     def _constructImage(self, filename, hdu=None, needAllHdus=False):
         # Construct an instance of MaskedImageF by loading from filename. If hdu
         # is specified, load that HDU specifically. Pass through needAllHdus
@@ -320,6 +325,7 @@ class MaskedMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
 
 class ExposureMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
     """Derived version of MultiExtensionTestCase for Exposures."""
+
     def _constructImage(self, filename, hdu=None, needAllHdus=False):
         # Construct an instance of ExposureF by loading from filename. If hdu
         # is specified, load that HDU specifically. needAllHdus exists for API
@@ -349,6 +355,7 @@ def suite():
     suites += unittest.makeSuite(ExposureMultiExtensionTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

@@ -46,17 +46,21 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def makeArray(size, dtype):
     return numpy.array(numpy.random.randn(*size), dtype=dtype)
+
 
 def makeCov(size, dtype):
     m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
     return numpy.dot(m, m.transpose())
 
+
 def makeWcs():
     crval = lsst.afw.coord.Coord(lsst.afw.geom.Point2D(1.606631, 5.090329))
     crpix = lsst.afw.geom.Point2D(2036., 2000.)
     return lsst.afw.image.makeWcs(crval, crpix, 5.399452e-5, -1.30770e-5, 1.30770e-5, 5.399452e-5)
+
 
 class SourceTableTestCase(lsst.utils.tests.TestCase):
 
@@ -201,6 +205,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -211,7 +216,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

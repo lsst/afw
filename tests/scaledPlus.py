@@ -31,13 +31,15 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 
-VERBOSITY = 0 # increase to see trace
+VERBOSITY = 0  # increase to see trace
 
 pexLog.Debug("lsst.afw", VERBOSITY)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class ScaledPlus(utilsTests.TestCase):
+
     def setUp(self):
         self.random = afwMath.Random()
         self.imWidth = 200
@@ -76,7 +78,8 @@ class ScaledPlus(utilsTests.TestCase):
 
         actImage = afwImage.ImageF(afwGeom.Extent2I(self.imWidth, self.imHeight))
         afwMath.randomUniformImage(actImage, self.random)
-        afwMath.scaledPlus(actImage, coeff0, self.maskedImage0.getImage(), coeff1, self.maskedImage1.getImage())
+        afwMath.scaledPlus(actImage, coeff0, self.maskedImage0.getImage(),
+                           coeff1, self.maskedImage1.getImage())
 
         msg = "scaledPlus failed for images; coeff0=%s, coeff1=%s" % (coeff0, coeff1)
         self.assertImagesNearlyEqual(actImage, desMaskedImage.getImage(), msg=msg)
@@ -100,6 +103,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(doExit=False):
     """Run the tests"""

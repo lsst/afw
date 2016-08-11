@@ -48,6 +48,7 @@ lsst.pex.logging.getDefaultLog().setThresholdFor("afw.math.LeastSquares", -10)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class LeastSquaresTestCase(unittest.TestCase):
 
     def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
@@ -174,6 +175,7 @@ def suite():
     suites += unittest.makeSuite(LeastSquaresTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

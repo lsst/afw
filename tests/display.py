@@ -52,13 +52,15 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class DisplayTestCase(unittest.TestCase):
     """A test case for Display"""
+
     def setUp(self):
         global oldBackend
         if backend != oldBackend:
             afwDisplay.setDefaultBackend(backend)
-            afwDisplay.delAllDisplays() # as some may use the old backend
+            afwDisplay.delAllDisplays()  # as some may use the old backend
 
             oldBackend = backend
 
@@ -123,7 +125,7 @@ class DisplayTestCase(unittest.TestCase):
         self.display0.erase()
 
         exp = afwImage.ExposureF(self.fileName)
-        self.display0.mtv(exp, title="parent") # tells display0 about the image's xy0
+        self.display0.mtv(exp, title="parent")  # tells display0 about the image's xy0
 
         with self.display0.Buffering():
             self.display0.dot('o', 200, 220)
@@ -161,7 +163,7 @@ class DisplayTestCase(unittest.TestCase):
 
             im = afwImage.MaskU(self.fileName, 3)
             dummy.mtv(im)
-    
+
     def testInteract(self):
         """Check that interact exits when a q, \c CR, or \c ESC is pressed, or if a callback function
         returns a ``True`` value.
@@ -172,6 +174,7 @@ class DisplayTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     tests.init()
@@ -180,6 +183,7 @@ def suite():
     suites += unittest.makeSuite(DisplayTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

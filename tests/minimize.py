@@ -33,12 +33,14 @@ import numpy
 import lsst.utils.tests as utilsTests
 import lsst.afw.math as afwMath
 
+
 class MinimizeTestCase(unittest.TestCase):
+
     def testMinimize2(self):
 
-        variances   = numpy.array([0.01, 0.01, 0.01, 0.01])
-        xPositions   = numpy.array([0.0, 1.0, 0.0, 1.0])
-        yPositions   = numpy.array([0.0, 0.0, 1.0, 1.0])
+        variances = numpy.array([0.01, 0.01, 0.01, 0.01])
+        xPositions = numpy.array([0.0, 1.0, 0.0, 1.0])
+        yPositions = numpy.array([0.0, 0.0, 1.0, 1.0])
 
         polyOrder = 1
         polyFunc = afwMath.PolynomialFunction2D(polyOrder)
@@ -53,7 +55,7 @@ class MinimizeTestCase(unittest.TestCase):
         # Set up initial guesses
         nParameters = polyFunc.getNParameters()
         initialParameters = numpy.zeros(nParameters, float)
-        stepsize  = numpy.ones(nParameters, float)
+        stepsize = numpy.ones(nParameters, float)
         stepsize *= 0.1
 
         # Minimize!

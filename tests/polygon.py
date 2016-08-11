@@ -38,6 +38,7 @@ from lsst.afw.geom.polygon import Polygon, SinglePolygonException
 
 DEBUG = False
 
+
 def circle(radius, num, x0=0.0, y0=0.0):
     """Generate points on a circle
 
@@ -51,7 +52,9 @@ def circle(radius, num, x0=0.0, y0=0.0):
     y = radius*numpy.sin(theta) + y0
     return numpy.array([x, y]).transpose()
 
+
 class PolygonTest(utilsTests.TestCase):
+
     def setUp(self):
         self.x0 = 0.0
         self.y0 = 0.0
@@ -69,7 +72,7 @@ class PolygonTest(utilsTests.TestCase):
         if y0 is None:
             y0 = self.y0
         points = circle(radius, num, x0=x0, y0=y0)
-        return Polygon([afwGeom.Point2D(x,y) for x,y in reversed(points)])
+        return Polygon([afwGeom.Point2D(x, y) for x, y in reversed(points)])
 
     def square(self, size=1.0, x0=0, y0=0):
         """Generate a square
@@ -87,7 +90,7 @@ class PolygonTest(utilsTests.TestCase):
             self.assertEqual(poly, poly)
             self.assertNotEqual(poly, self.square(1.0, 2.0, 3.0))
             self.assertEqual(poly.getNumEdges(), num)
-            self.assertEqual(len(poly.getVertices()), num + 1) # One extra for the closing point
+            self.assertEqual(len(poly.getVertices()), num + 1)  # One extra for the closing point
             self.assertEqual(len(poly.getEdges()), num)
             perimeter = 0.0
             for p1, p2 in poly.getEdges():
@@ -162,7 +165,7 @@ class PolygonTest(utilsTests.TestCase):
         """Test Polygon.intersection"""
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
-        poly3 = self.square(1.0,  0.0,  0.0)
+        poly3 = self.square(1.0, 0.0, 0.0)
         poly4 = self.square(1.0, +5.0, +5.0)
 
         # intersectionSingle: assumes there's a single intersection (convex polygons)
@@ -186,7 +189,7 @@ class PolygonTest(utilsTests.TestCase):
         """Test Polygon.union"""
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
-        poly3 = Polygon([afwGeom.Point2D(x,y) for x,y in
+        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
                          ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
                           (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))])
         poly4 = self.square(1.0, +5.0, +5.0)
@@ -217,9 +220,9 @@ class PolygonTest(utilsTests.TestCase):
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
 
-        poly3 = Polygon([afwGeom.Point2D(x,y) for x,y in
+        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
                          ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
-        poly4 = Polygon([afwGeom.Point2D(x,y) for x,y in
+        poly4 = Polygon([afwGeom.Point2D(x, y) for x, y in
                          ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
 
         diff1 = poly1.symDifference(poly2)
@@ -237,7 +240,7 @@ class PolygonTest(utilsTests.TestCase):
         poly1 = self.square(2.0, -1.0, -1.0)
         poly2 = self.square(2.0, +1.0, +1.0)
         poly = poly1.unionSingle(poly2)
-        expected = Polygon([afwGeom.Point2D(x,y) for x,y in
+        expected = Polygon([afwGeom.Point2D(x, y) for x, y in
                             ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
                              (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))])
         self.assertEqual(poly.convexHull(), expected)
@@ -283,7 +286,7 @@ class PolygonTest(utilsTests.TestCase):
             self.assertEqual(len(poly), num)
             points1 = [p for p in poly]
             points2 = poly.getVertices()
-            self.assertEqual(points2[0], points2[-1]) # Closed representation
+            self.assertEqual(points2[0], points2[-1])  # Closed representation
             for p1, p2 in zip(points1, points2):
                 self.assertEqual(p1, p2)
             for i, p1 in enumerate(points1):
@@ -319,7 +322,6 @@ class PolygonTest(utilsTests.TestCase):
             self.assertAlmostEqual(polyCenter[0], subCenter[0])
             self.assertAlmostEqual(polyCenter[1], subCenter[1])
 
-
     def testTransform2(self):
         scale = 2.0
         shift = afwGeom.Extent2D(3.0, 4.0)
@@ -340,11 +342,12 @@ class PolygonTest(utilsTests.TestCase):
         """Test that polygons can be read and written to fits files"""
         for num in range(3, 30):
             poly = self.polygon(num)
-            filename='polygon.fits'
+            filename = 'polygon.fits'
             poly.writeFits(filename)
-            poly2=Polygon.readFits(filename)
+            poly2 = Polygon.readFits(filename)
             self.assertEqual(poly, poly2)
             os.remove(filename)
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -355,6 +358,7 @@ def suite():
     suites += unittest.makeSuite(PolygonTest)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

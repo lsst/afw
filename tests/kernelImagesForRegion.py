@@ -36,7 +36,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
 
-VERBOSITY = 0 # increase to see trace
+VERBOSITY = 0  # increase to see trace
 
 pexLog.Debug("lsst.afw", VERBOSITY)
 
@@ -51,7 +51,9 @@ LocNameDict = {
 
 NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.items())
 
+
 class KernelImagesForRegion(utilsTests.TestCase):
+
     def setUp(self):
         boxCorner = afwGeom.Point2I(11, 50)
         boxExtent = afwGeom.Extent2I(100, 99)
@@ -68,7 +70,8 @@ class KernelImagesForRegion(utilsTests.TestCase):
 
         This test is only relevant for operations that try to reuse the image array data
         """
-        regionCopy = mathDetail.KernelImagesForRegion(region.getKernel(), region.getBBox(), region.getXY0(), region.getDoNormalize())
+        regionCopy = mathDetail.KernelImagesForRegion(
+            region.getKernel(), region.getBBox(), region.getXY0(), region.getDoNormalize())
 
         for location in (
             region.BOTTOM_LEFT,
@@ -104,11 +107,11 @@ class KernelImagesForRegion(utilsTests.TestCase):
         yOrigin = minSigma - (self.xy0[1] * ySlope)
         sParams = (
             (xOrigin, xSlope, 0.0),
-            (yOrigin, 0.0,    ySlope),
+            (yOrigin, 0.0, ySlope),
             (0.0, 0.0, 0.0),
         )
 
-        kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
+        kFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         kernel.setSpatialParameters(sParams)
         return kernel
@@ -133,16 +136,16 @@ class KernelImagesForRegion(utilsTests.TestCase):
         int(round((bottomInd + topInd) / 2.0))
 
         for location, desIndex in (
-            (region.BOTTOM_LEFT,  (leftInd,  bottomInd)),
+            (region.BOTTOM_LEFT, (leftInd, bottomInd)),
             (region.BOTTOM_RIGHT, (rightInd, bottomInd)),
-            (region.TOP_LEFT,     (leftInd,  topInd)),
-            (region.TOP_RIGHT,    (rightInd, topInd)),
+            (region.TOP_LEFT, (leftInd, topInd)),
+            (region.TOP_RIGHT, (rightInd, topInd)),
         ):
             desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
             self.assert_(region.getPixelIndex(location) == desPixIndex,
-                "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
-                    desPixIndex)
-            )
+                         "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
+                                                           desPixIndex)
+                         )
 
     def testComputeNextRow(self):
         """Test computeNextRow method and the resulting RowOfKernelImagesForRegion
@@ -238,6 +241,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(doExit=False):
     """Run the tests"""

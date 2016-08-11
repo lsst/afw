@@ -35,7 +35,9 @@ import lsst.pex.exceptions
 from lsst.afw.geom import Extent2D, Point2D, xyTransformRegistry, OneXYTransformConfig, \
     IdentityXYTransform, AffineXYTransform, RadialXYTransform
 
+
 class RefMultiAffineTransform(object):
+
     def __init__(self, affineTransformList):
         self.affineTransformList = affineTransformList
 
@@ -44,7 +46,9 @@ class RefMultiAffineTransform(object):
             point = tr(point)
         return point
 
+
 class RefMultiXYTransform(object):
+
     def __init__(self, transformList):
         self.transformList = transformList
 
@@ -68,6 +72,7 @@ class RefMultiXYTransform(object):
 
 
 class XYTransformTestCase(unittest.TestCase):
+
     def fromIter(self):
         for x in (-1.1, 0, 2.2):
             for y in (3.1, 0, 2.1):
@@ -172,11 +177,11 @@ class XYTransformTestCase(unittest.TestCase):
         """
         affineClass = xyTransformRegistry["affine"]
         affineConfig = affineClass.ConfigClass()
-        rotAng = 0.25 # radians
+        rotAng = 0.25  # radians
         xScale = 1.2
         yScale = 0.8
         affineConfig.linear = (
-             math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
+            math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
         with lsst.utils.tests.getTempFilePath(".py") as filePath:
@@ -197,11 +202,11 @@ class XYTransformTestCase(unittest.TestCase):
         affineClass = xyTransformRegistry["affine"]
         affineConfig = affineClass.ConfigClass()
         affineConfig.translation = (-2.1, 3.4)
-        rotAng = 0.832 # radians
+        rotAng = 0.832  # radians
         xScale = 3.7
         yScale = 45.3
         affineConfig.linear = (
-             math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
+            math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
         with lsst.utils.tests.getTempFilePath(".py") as filePath:
@@ -245,9 +250,9 @@ class XYTransformTestCase(unittest.TestCase):
         """
         for badCoeffs in (
             (0.1,),     # len(coeffs) must be > 1
-            (0.1, 1.0), # coeffs[0] must be zero
-            (0.0, 0.0), # coeffs[1] must be nonzero
-            (0.0, 0.0, 0.1), # coeffs[1] must be nonzero
+            (0.1, 1.0),  # coeffs[0] must be zero
+            (0.0, 0.0),  # coeffs[1] must be nonzero
+            (0.0, 0.0, 0.1),  # coeffs[1] must be nonzero
         ):
             self.assertRaises(lsst.pex.exceptions.Exception, RadialXYTransform, badCoeffs)
 
@@ -264,11 +269,11 @@ class XYTransformTestCase(unittest.TestCase):
         wrapper0.transform.retarget(affineClass)
         affineConfig0 = wrapper0.transform
         affineConfig0.translation = (-2.1, 3.4)
-        rotAng = 0.832 # radians
+        rotAng = 0.832  # radians
         xScale = 3.7
         yScale = 45.3
         affineConfig0.linear = (
-             math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
+            math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
 
@@ -276,11 +281,11 @@ class XYTransformTestCase(unittest.TestCase):
         wrapper1.transform.retarget(affineClass)
         affineConfig1 = wrapper1.transform
         affineConfig1.translation = (26.5, -35.1)
-        rotAng = -0.25 # radians
+        rotAng = -0.25  # radians
         xScale = 1.45
         yScale = 0.9
         affineConfig1.linear = (
-             math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
+            math.cos(rotAng) * xScale, math.sin(rotAng) * yScale,
             -math.sin(rotAng) * xScale, math.cos(rotAng) * yScale,
         )
 
@@ -320,7 +325,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

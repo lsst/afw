@@ -39,7 +39,9 @@ import unittest
 import lsst.utils.tests as utilsTests
 import lsst.afw.table as afwTable
 
+
 class MatchFitsTestCase(unittest.TestCase):
+
     def setUp(self):
         self.size = 10
         self.numMatches = self.size//2
@@ -59,7 +61,8 @@ class MatchFitsTestCase(unittest.TestCase):
         for i in range(self.numMatches):
             index = 2*i
             match = afwTable.SimpleMatch(self.cat1[index], self.cat2[self.size - index - 1], index)
-            if debug: print("Inject:", match.first.getId(), match.second.getId())
+            if debug:
+                print("Inject:", match.first.getId(), match.second.getId())
             self.matches.push_back(match)
 
     def tearDown(self):
@@ -73,8 +76,9 @@ class MatchFitsTestCase(unittest.TestCase):
             matches = self.matches
         self.assertEqual(len(matches), self.numMatches)
         for m in matches:
-            str(m) # Check __str__ works
-            if debug: print("Test:", m.first.getId(), m.second.getId())
+            str(m)  # Check __str__ works
+            if debug:
+                print("Test:", m.first.getId(), m.second.getId())
             self.assertEqual(m.first.getId(), m.second.getId())
 
     def testIO(self):
@@ -98,7 +102,6 @@ class MatchFitsTestCase(unittest.TestCase):
         afwTable.unpackMatches(packed, cat1, cat2)
 
 
-
 #################################################################
 # Test suite boiler plate
 #################################################################
@@ -111,6 +114,7 @@ def suite():
     suites += unittest.makeSuite(MatchFitsTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

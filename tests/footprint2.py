@@ -57,6 +57,7 @@ try:
 except NameError:
     display = False
 
+
 def toString(*args):
     """toString written in python"""
     if len(args) == 1:
@@ -64,6 +65,7 @@ def toString(*args):
 
     y, x0, x1 = args
     return "%d: %d..%d" % (y, x0, x1)
+
 
 def cmpPeaks(im, a, b):
     """Comparison function to sort by (decreasing) peak height"""
@@ -78,7 +80,9 @@ def cmpPeaks(im, a, b):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class Object(object):
+
     def __init__(self, val, spans):
         self.val = val
         self.spans = spans
@@ -98,6 +102,7 @@ class Object(object):
         return True
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
@@ -147,7 +152,6 @@ class FootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
 
-
     def testFootprintsImageId(self):
         """Check that we can insert footprints into an Image"""
         ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
@@ -166,7 +170,6 @@ class FootprintSetTestCase(unittest.TestCase):
             for sp in objects[i].getSpans():
                 for x in range(sp.getX0(), sp.getX1() + 1):
                     self.assertEqual(idImage.get(x, sp.getY()), objects[i].getId())
-
 
     def testFootprintSetImageId(self):
         """Check that we can insert a FootprintSet into an Image, setting relative IDs"""
@@ -194,7 +197,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
     def testGrow2(self):
         """Grow some more interesting shaped Footprints.  Informative with display, but no numerical tests"""
-        #Can't set mask plane as the image is not a masked image.
+        # Can't set mask plane as the image is not a masked image.
         ds = afwDetect.FootprintSet(self.im, afwDetect.Threshold(10))
 
         idImage = afwImage.ImageU(self.im.getDimensions())
@@ -224,8 +227,8 @@ class FootprintSetTestCase(unittest.TestCase):
     def testFootprintControl(self):
         """Test the FootprintControl constructor"""
         fctrl = afwDetect.FootprintControl()
-        self.assertFalse(fctrl.isCircular()[0]) # not set
-        self.assertFalse(fctrl.isIsotropic()[0]) # not set
+        self.assertFalse(fctrl.isCircular()[0])  # not set
+        self.assertFalse(fctrl.isIsotropic()[0])  # not set
 
         fctrl.growIsotropic(False)
         self.assertTrue(fctrl.isCircular()[0])
@@ -236,8 +239,8 @@ class FootprintSetTestCase(unittest.TestCase):
         #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         fctrl = afwDetect.FootprintControl()
         fctrl.growLeft(False)
-        self.assertTrue(fctrl.isLeft()[0]) # it's now set
-        self.assertFalse(fctrl.isLeft()[1]) # ... but False
+        self.assertTrue(fctrl.isLeft()[0])  # it's now set
+        self.assertFalse(fctrl.isLeft()[1])  # ... but False
 
         #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         fctrl = afwDetect.FootprintControl(True, False, False, False)
@@ -295,7 +298,7 @@ class FootprintSetTestCase(unittest.TestCase):
             afwDetect.FootprintControl(False, True, False, False),
             afwDetect.FootprintControl(True, False, False, False),
             afwDetect.FootprintControl(True, True, False, False),
-                      ):
+        ):
             grown = afwDetect.FootprintSet(fs, ngrow, fctrl)
             im.getMask().set(0)
             afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
@@ -323,7 +326,7 @@ class FootprintSetTestCase(unittest.TestCase):
             afwDetect.FootprintControl(False, False, True, False),
             afwDetect.FootprintControl(False, False, False, True),
             afwDetect.FootprintControl(False, False, True, True),
-                      ):
+        ):
             grown = afwDetect.FootprintSet(fs, ngrow, fctrl)
             im.getMask().set(0)
             afwDetect.setMaskFromFootprintList(im.getMask(), grown.getFootprints(), 0x10)
@@ -354,7 +357,7 @@ class FootprintSetTestCase(unittest.TestCase):
         for fctrl, xy in [
             (afwDetect.FootprintControl(True, True, False, False), [(4, 5), (5, 6), (6, 5)]),
             (afwDetect.FootprintControl(False, False, True, True), [(5, 4), (6, 5), (5, 6)]),
-            ]:
+        ]:
             im = afwImage.MaskedImageF(11, 11)
             for x, y in xy:
                 im.set(x, y, (10,))
@@ -397,6 +400,7 @@ class FootprintSetTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class PeaksInFootprintsTestCase(unittest.TestCase):
     """A test case for detecting Peaks within Footprints"""
 
@@ -407,12 +411,12 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         # Objects that we should detect
         #
         self.objects, self.peaks = [], []
-        self.objects.append([[4, 1, 10], [3, 2, 10], [4, 2, 20], [5, 2, 10], [4, 3, 10],])
+        self.objects.append([[4, 1, 10], [3, 2, 10], [4, 2, 20], [5, 2, 10], [4, 3, 10], ])
         self.peaks.append([[4, 2]])
-        self.objects.append([[9, 7, 30], [10, 7, 29], [12, 7, 25], [10, 8, 27], [11, 8, 26],])
+        self.objects.append([[9, 7, 30], [10, 7, 29], [12, 7, 25], [10, 8, 27], [11, 8, 26], ])
         self.peaks.append([[9, 7]])
-        self.objects.append([[3, 8, 10], [4, 8, 10],])
-        self.peaks.append([[3, 8], [4, 8],])
+        self.objects.append([[3, 8, 10], [4, 8, 10], ])
+        self.peaks.append([[3, 8], [4, 8], ])
 
         for pp in self.peaks:           # allow for x0, y0
             for p in pp:
@@ -494,8 +498,8 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             # is treated as a Peak
             #
             if (dwidth != 0 or dheight != 0):
-                if (foot.getBBox().getMinX() == 0 or foot.getBBox().getMaxX() == self.im.getWidth()  - 1 or
-                    foot.getBBox().getMinY() == 0 or foot.getBBox().getMaxY() == self.im.getHeight() - 1):
+                if (foot.getBBox().getMinX() == 0 or foot.getBBox().getMaxX() == self.im.getWidth() - 1 or
+                        foot.getBBox().getMinY() == 0 or foot.getBBox().getMaxY() == self.im.getHeight() - 1):
                     npeak = 1
 
             if npeak is None:
@@ -503,7 +507,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
             if npeak != len(foot.getPeaks()):
                 print("RHL", foot.repr())
-                #print "RHL", [(p.repr().split(":")[0], p.getIx(), p.getIy()) for p in foot.getPeaks()]
+                # print "RHL", [(p.repr().split(":")[0], p.getIx(), p.getIy()) for p in foot.getPeaks()]
                 print("RHL", [(p.getId(), p.getIx(), p.getIy()) for p in foot.getPeaks()])
                 print("RHL", [p[0:2] for p in self.peaks[i]])
 
@@ -585,16 +589,16 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         I = 11
         for x, y in [(4, 7), (5, 7), (6, 7), (7, 7), (8, 7),
-                     (4, 6),                                     (8, 6),
-                     (4, 5),                                     (8, 5),
-                     (4, 4),                                     (8, 4),
-                     (4, 3),                                     (8, 3),
+                     (4, 6), (8, 6),
+                     (4, 5), (8, 5),
+                     (4, 4), (8, 4),
+                     (4, 3), (8, 3),
                      ]:
             self.im.getImage().set(x, y, I)
             I -= 1e-3
 
         self.im.getImage().set(4, 7, 15)
-        self.peaks.append([(4, 7,),])
+        self.peaks.append([(4, 7,), ])
 
         self.im.getImage().set(6, 5, 30)
         self.peaks[0].append((6, 5,))
@@ -634,6 +638,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         """Merge positive and negative Footprints"""
         x0, y0 = 5, 6
         dwidth, dheight = 6, 7
+
         def callback():
             x, y, I = x0 + 10, y0 + 4, -20
             self.im.getImage().set(x, y, I)
@@ -641,13 +646,15 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         for grow1, grow2 in [(1, 1), (3, 3), (6, 6), ]:
             peaks2 = []
-            self.doTestPeaks(threshold=10, callback=callback, grow=0, x0=x0, y0=y0, dwidth=dwidth, dheight=dheight)
+            self.doTestPeaks(threshold=10, callback=callback, grow=0,
+                             x0=x0, y0=y0, dwidth=dwidth, dheight=dheight)
 
             threshold = afwDetect.Threshold(10, afwDetect.Threshold.VALUE, False)
             fs2 = afwDetect.FootprintSet(self.im, threshold)
 
             msk = self.im.getMask()
-            afwDetect.setMaskFromFootprintList(msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
+            afwDetect.setMaskFromFootprintList(
+                msk, fs2.getFootprints(), msk.getPlaneBitMask("DETECTED_NEGATIVE"))
 
             self.fs.merge(fs2, grow1, grow2)
             self.peaks[-2] += peaks2
@@ -694,6 +701,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     tests.init()
@@ -703,6 +711,7 @@ def suite():
     suites += unittest.makeSuite(PeaksInFootprintsTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

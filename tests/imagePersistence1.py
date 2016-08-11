@@ -40,6 +40,7 @@ try:
 except pexExcept.NotFoundError:
     dataDir = None
 
+
 @unittest.skipIf(dataDir is None, "afwdata not setup")
 class ImagePersistenceTestCase(unittest.TestCase):
     """A test case for Image Persistence"""
@@ -57,7 +58,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
                 # Persisting through Boost text archives causes conversion error!
                 # assert abs(pixel1 - pixel2) / pixel1 < 1e-7, \
                 assert pixel1 == pixel2, \
-                        "Differing pixel2 at %d, %d: %f, %f" % (x, y, pixel1, pixel2)
+                    "Differing pixel2 at %d, %d: %f, %f" % (x, y, pixel1, pixel2)
 
     def setUp(self):
         # Create the additionalData PropertySet
@@ -141,6 +142,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     utilsTests.init()
@@ -150,6 +152,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

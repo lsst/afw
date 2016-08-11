@@ -47,13 +47,14 @@ numpy.random.seed(500)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class EllipseTestCase(unittest.TestCase):
 
     def setUp(self):
         self.cores = [
             lsst.afw.geom.ellipses.Axes(4, 3, 1),
             lsst.afw.geom.ellipses.Quadrupole(5, 3, -1)
-            ]
+        ]
         self.classes = [lsst.afw.geom.ellipses.Axes, lsst.afw.geom.ellipses.Quadrupole]
         for s in lsst.afw.geom.ellipses.Separable.values():
             self.cores.append(s(0.5, 0.3, 2.1))
@@ -80,23 +81,22 @@ class EllipseTestCase(unittest.TestCase):
                 self.assertClose(conv.getTraceRadius(), traceRadius * 3)
                 self.assertClose(conv.getArea(), area * 9)
 
-
     def testAccessors(self):
         for core in self.cores:
             vec = numpy.random.randn(3) * 1E-3 + core.getParameterVector()
             core.setParameterVector(vec)
-            self.assert_((core.getParameterVector()==vec).all())
+            self.assert_((core.getParameterVector() == vec).all())
             center = lsst.afw.geom.Point2D(*numpy.random.randn(2))
             ellipse = lsst.afw.geom.ellipses.Ellipse(core, center)
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
             self.assertEqual(lsst.afw.geom.Point2D, type(ellipse.getCenter()))
-            newcore = lsst.afw.geom.ellipses.Axes(1,2,3)
+            newcore = lsst.afw.geom.ellipses.Axes(1, 2, 3)
             newcore.normalize()
             core.assign(newcore)
             ellipse.setCore(core)
             self.assertClose(core.getParameterVector(), ellipse.getCore().getParameterVector())
-            self.assert_((core.clone().getParameterVector()==core.getParameterVector()).all())
+            self.assert_((core.clone().getParameterVector() == core.getParameterVector()).all())
             self.assert_(core is not core.clone())
             self.assert_((lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector()
                           == ellipse.getParameterVector()).all())
@@ -104,7 +104,7 @@ class EllipseTestCase(unittest.TestCase):
 
     def testTransform(self):
         for core in self.cores:
-            transform = lsst.afw.geom.LinearTransform(numpy.random.randn(2,2))
+            transform = lsst.afw.geom.LinearTransform(numpy.random.randn(2, 2))
             t1 = core.transform(transform)
             core.transformInPlace(transform)
             self.assert_(t1 is not core)
@@ -135,6 +135,7 @@ class EllipseTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -144,6 +145,7 @@ def suite():
     suites += unittest.makeSuite(EllipseTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

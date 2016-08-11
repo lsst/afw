@@ -39,11 +39,11 @@ or
 
 import math
 import unittest
-import lsst.afw.geom             as afwGeom
-import lsst.afw.coord            as afwCoord
-import lsst.utils.tests          as utilsTests
-import lsst.daf.base             as dafBase
-import lsst.pex.exceptions       as pexEx
+import lsst.afw.geom as afwGeom
+import lsst.afw.coord as afwCoord
+import lsst.utils.tests as utilsTests
+import lsst.daf.base as dafBase
+import lsst.pex.exceptions as pexEx
 
 # todo: see if we can give an Fk5 and an ecliptic at a different epoch and get the right answer
 # todo: make sure ICrs stuff works
@@ -51,25 +51,26 @@ import lsst.pex.exceptions       as pexEx
 ######################################
 # main body of code
 ######################################
+
+
 class CoordTestCase(utilsTests.TestCase):
 
     def setUp(self):
         # define some arbitrary values
-        self.ra, self.raKnown  = "10:00:00.00", 10.0
+        self.ra, self.raKnown = "10:00:00.00", 10.0
         self.dec, self.decKnown = "-02:30:00.00", -2.5
         self.l = 100.0
         self.b = 30.0
 
         # a handy list of coords we want to test
         self.coordList = [
-            [afwCoord.Fk5Coord,      afwCoord.FK5,      afwCoord.cast_Fk5,      "FK5"],
-            [afwCoord.IcrsCoord,     afwCoord.ICRS,     afwCoord.cast_Icrs,     "ICRS"],
+            [afwCoord.Fk5Coord, afwCoord.FK5, afwCoord.cast_Fk5, "FK5"],
+            [afwCoord.IcrsCoord, afwCoord.ICRS, afwCoord.cast_Icrs, "ICRS"],
             [afwCoord.GalacticCoord, afwCoord.GALACTIC, afwCoord.cast_Galactic, "GALACTIC"],
             [afwCoord.EclipticCoord, afwCoord.ECLIPTIC, afwCoord.cast_Ecliptic, "ECLIPTIC"],
             # we can't factory an Topocentric ... Observatory must be specified.
             # [afwCoord.TopocentricCoord, afwCoord.TOPOCENTRIC]
-            ]
-
+        ]
 
     def coordIter(self, includeCoord=True):
         """Return a collection of coords, one per class
@@ -83,7 +84,7 @@ class CoordTestCase(utilsTests.TestCase):
         for coordClass, enum, cast, stringName in self.coordList:
             yield coordClass(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
 
-        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0) # peyton
+        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0)  # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
         epoch = obsDate.get(dafBase.DateTime.EPOCH)
         yield afwCoord.TopocentricCoord(
@@ -93,19 +94,17 @@ class CoordTestCase(utilsTests.TestCase):
             obs,
         )
 
-
     def testFormat(self):
         """Test formatting"""
         # make an arbitrary coord with the string constructor.
         # check that calling the getFooStr() accessors gets back what we started with.
         equ = afwCoord.Fk5Coord(self.ra, self.dec)
-        ## FIXME -- hours here?
+        # FIXME -- hours here?
         self.assertAlmostEqual(equ.getRa().asHours(), self.raKnown)
         self.assertAlmostEqual(equ.getDec().asDegrees(), self.decKnown)
 
         print("Format: %s  %s" % (equ.getRaStr(afwGeom.hours), self.ra))
         self.assertEqual(equ.getRaStr(afwGeom.hours), self.ra)
-
 
     def testFactory(self):
         """Test the Factory function makeCoord()"""
@@ -117,7 +116,8 @@ class CoordTestCase(utilsTests.TestCase):
             self.assertEqual(con.getCoordSystem(), enum)
             factories = []
             factories.append(afwCoord.makeCoord(enum, self.l * afwGeom.degrees, self.b * afwGeom.degrees))
-            factories.append(afwCoord.makeCoord(afwCoord.makeCoordEnum(stringName), self.l * afwGeom.degrees, self.b * afwGeom.degrees))
+            factories.append(afwCoord.makeCoord(afwCoord.makeCoordEnum(stringName),
+                                                self.l * afwGeom.degrees, self.b * afwGeom.degrees))
             factories.append(afwCoord.makeCoord(enum, afwGeom.Point2D(self.l, self.b), afwGeom.degrees))
 
             print("Factory: ")
@@ -126,8 +126,7 @@ class CoordTestCase(utilsTests.TestCase):
                 self.assertAlmostEqual(con[0], fac[0])
                 self.assertAlmostEqual(con[1], fac[1])
                 print(" tried ", fac[0], fac[1],
-                     "(expected ", con[0], con[1], ")")
-
+                      "(expected ", con[0], con[1], ")")
 
             # can we create an empty coord, and use reset() to fill it?
             c = afwCoord.makeCoord(enum)
@@ -136,18 +135,15 @@ class CoordTestCase(utilsTests.TestCase):
             self.assertEqual(myCoord.getLongitude().asDegrees(), 1.0)
             self.assertEqual(myCoord.getLatitude().asDegrees(), 1.0)
 
-
         # verify that makeCoord throws when given an epoch for an epochless system
         self.assertRaises(pexEx.Exception,
                           lambda: afwCoord.makeCoord(afwCoord.GALACTIC, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0))
         self.assertRaises(pexEx.Exception,
                           lambda: afwCoord.makeCoord(afwCoord.ICRS, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0))
 
-
     def testCoordEnum(self):
         """Verify that makeCoordEnum throws an exception for non-existant systems."""
         self.assertRaises(pexEx.Exception, lambda: afwCoord.makeCoordEnum("FOO"))
-
 
     def testGetClassName(self):
         """Test getClassName, including after cloning
@@ -156,7 +152,6 @@ class CoordTestCase(utilsTests.TestCase):
             className = type(coord).__name__
             self.assertEqual(coord.getClassName(), className)
             self.assertEqual(coord.clone().getClassName(), className)
-
 
     def testIter(self):
         """Test iteration
@@ -169,7 +164,6 @@ class CoordTestCase(utilsTests.TestCase):
 
             # raise if we ask for too many values
             self.assertRaises(Exception, c.__getitem__, 2)
-
 
     def testStrRepr(self):
         """Test __str__ and __repr__
@@ -192,7 +186,6 @@ class CoordTestCase(utilsTests.TestCase):
             }.get(className, 3)         # default to long, lat, epoch
             self.assertEqual(len(coordStr.split(",")), numArgs)
             self.assertEqual(len(coordRepr.split(",")), numArgs)
-
 
     def testPosition(self):
         """Test the getPosition() method"""
@@ -223,7 +216,6 @@ class CoordTestCase(utilsTests.TestCase):
         equ3 = afwCoord.Fk5Coord(pHrs, afwGeom.hours)
         self.assertAlmostEqual(equ3.getRa().asRadians(), equ.getRa().asRadians())
 
-
     def testVector(self):
         """Test the getVector() method, and make sure the constructors take Point3D"""
 
@@ -244,10 +236,9 @@ class CoordTestCase(utilsTests.TestCase):
             # convert back
             equBack = afwCoord.Fk5Coord(p3d)
             print("Vector (back): ", equBack.getRa().asDegrees(), equ[0],
-                 equBack.getDec().asDegrees(), equ[1])
+                  equBack.getDec().asDegrees(), equ[1])
             self.assertAlmostEqual(equBack.getRa().asDegrees(), equ[0])
             self.assertAlmostEqual(equBack.getDec().asDegrees(), equ[1])
-
 
         # and try some un-normalized ones too
         coordList = []
@@ -271,16 +262,15 @@ class CoordTestCase(utilsTests.TestCase):
             self.assertAlmostEqual(equKnown[0], ra)
             self.assertAlmostEqual(equKnown[1], dec)
 
-
     def testTicket1761(self):
         """Ticket 1761 found that non-normalized inputs caused failures. """
 
-        c = afwCoord.Coord(afwGeom.Point3D(0,1,0))
+        c = afwCoord.Coord(afwGeom.Point3D(0, 1, 0))
         dfltLong = 0.0 * afwGeom.radians
 
         norm = False
         c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm, dfltLong)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, norm, dfltLong)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6, 0.6), 2000.0, norm, dfltLong)
         sep1 = c.angularSeparation(c1).asDegrees()
         sep2 = c.angularSeparation(c2).asDegrees()
         known1 = 45.286483672428574
@@ -295,7 +285,7 @@ class CoordTestCase(utilsTests.TestCase):
         # normalize and sep1, sep2 should both equal 54.7356
         norm = True
         c1 = afwCoord.Coord(afwGeom.Point3D(0.1, 0.1, 0.1), 2000.0, norm, dfltLong)
-        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6 ,0.6), 2000.0, norm, dfltLong)
+        c2 = afwCoord.Coord(afwGeom.Point3D(0.6, 0.6, 0.6), 2000.0, norm, dfltLong)
         sep1 = c.angularSeparation(c1).asDegrees()
         sep2 = c.angularSeparation(c2).asDegrees()
         known = 54.735610317245339
@@ -305,7 +295,6 @@ class CoordTestCase(utilsTests.TestCase):
         self.assertAlmostEqual(sep1, known)
         self.assertAlmostEqual(sep2, known)
 
-
     def testNames(self):
         """Test the names of the Coords (Useful with Point2D form)"""
 
@@ -313,22 +302,21 @@ class CoordTestCase(utilsTests.TestCase):
         radec1, known1 = afwCoord.Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec3, known3 = afwCoord.Fk5Coord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         radec4, known4 = afwCoord.IcrsCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
-        lb, known5     = afwCoord.GalacticCoord(self.ra, self.dec).getCoordNames(), ["L", "B"]
+        lb, known5 = afwCoord.GalacticCoord(self.ra, self.dec).getCoordNames(), ["L", "B"]
         lambet, known6 = afwCoord.EclipticCoord(self.ra, self.dec).getCoordNames(), ["Lambda", "Beta"]
-        altaz, known7  = afwCoord.TopocentricCoord(self.ra, self.dec, 2000.0,
-                                             afwCoord.Observatory(0 * afwGeom.degrees, 0 * afwGeom.degrees, 0)).getCoordNames(), ["Az", "Alt"]
+        altaz, known7 = afwCoord.TopocentricCoord(self.ra, self.dec, 2000.0,
+                                                  afwCoord.Observatory(0 * afwGeom.degrees, 0 * afwGeom.degrees, 0)).getCoordNames(), ["Az", "Alt"]
 
-        pairs = [ [radec1, known1],
-                  [radec3, known3],
-                  [radec4, known4],
-                  [lb,     known5],
-                  [lambet, known6],
-                  [altaz,  known7], ]
+        pairs = [[radec1, known1],
+                 [radec3, known3],
+                 [radec4, known4],
+                 [lb, known5],
+                 [lambet, known6],
+                 [altaz, known7], ]
 
         for pair, known in (pairs):
             self.assertEqual(pair[0], known[0])
             self.assertEqual(pair[1], known[1])
-
 
     def testConvert(self):
         """Verify that the generic convert() method works"""
@@ -339,11 +327,11 @@ class CoordTestCase(utilsTests.TestCase):
 
         # bundle up a list of coords created with the specific and generic converters
         coordEnumList = [
-            [pollux.toFk5(),        afwCoord.FK5],
-            [pollux.toIcrs(),       afwCoord.ICRS],
-            [pollux.toGalactic(),   afwCoord.GALACTIC],
-            [pollux.toEcliptic(),   afwCoord.ECLIPTIC],
-          ]
+            [pollux.toFk5(), afwCoord.FK5],
+            [pollux.toIcrs(), afwCoord.ICRS],
+            [pollux.toGalactic(), afwCoord.GALACTIC],
+            [pollux.toEcliptic(), afwCoord.ECLIPTIC],
+        ]
 
         # go through the list and see if specific and generic produce the same result ... they should!
         print("Convert: ")
@@ -358,7 +346,6 @@ class CoordTestCase(utilsTests.TestCase):
             self.assertEqual(lat1, lat2)
             self.assertEqual(specific.getCoordSystem(), enum)
             self.assertEqual(generic.getCoordSystem(), enum)
-
 
     def testEcliptic(self):
         """Verify Ecliptic Coordinate Transforms"""
@@ -385,19 +372,18 @@ class CoordTestCase(utilsTests.TestCase):
         self.assertAlmostEqual(polluxEcl.toFk5().getDec().asDegrees(),
                                polluxEqu.getDec().asDegrees(), 13)
 
-
     def testGalactic(self):
         """Verify Galactic coordinate transforms"""
 
         # Try converting Sag-A to galactic and make sure we get the right answer
         # Sagittarius A (very nearly the galactic center)
-        sagAKnownEqu = afwCoord.Fk5Coord("17:45:40.04","-29:00:28.1")
+        sagAKnownEqu = afwCoord.Fk5Coord("17:45:40.04", "-29:00:28.1")
         sagAKnownGal = afwCoord.GalacticCoord(359.94432 * afwGeom.degrees, -0.04619 * afwGeom.degrees)
 
         sagAGal = sagAKnownEqu.toGalactic()
         print("Galactic (Sag-A):  (transformed) %.5f %.5f   (known) %.5f %.5f\n" %
-             (sagAGal.getL().asDegrees(), sagAGal.getB().asDegrees(),
-              sagAKnownGal.getL().asDegrees(), sagAKnownGal.getB().asDegrees()))
+              (sagAGal.getL().asDegrees(), sagAGal.getB().asDegrees(),
+               sagAKnownGal.getL().asDegrees(), sagAKnownGal.getB().asDegrees()))
 
         # verify ... to 4 places, the accuracy of the galactic pole in Fk5
         self.assertAlmostEqual(sagAGal.getL().asDegrees(), sagAKnownGal.getL().asDegrees(), 4)
@@ -409,22 +395,21 @@ class CoordTestCase(utilsTests.TestCase):
         self.assertAlmostEqual(sagAGal.toFk5().getDec().asDegrees(),
                                sagAKnownEqu.getDec().asDegrees(), 12)
 
-
     def testTopocentric(self):
         """Verify Altitude/Azimuth coordinate transforms"""
 
         # try converting the RA,Dec of Sedna (on the specified date) to Alt/Az
 
         # sedna (from jpl) for 2010-03-03 00:00 UT
-        ra, dec = "03:26:42.61",  "+06:32:07.1"
+        ra, dec = "03:26:42.61", "+06:32:07.1"
         az, alt = 231.5947, 44.3375
-        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0) # peyton
+        obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0)  # peyton
         obsDate = dafBase.DateTime(2010, 3, 3, 0, 0, 0, dafBase.DateTime.TAI)
         epoch = obsDate.get(dafBase.DateTime.EPOCH)
         sedna = afwCoord.Fk5Coord(ra, dec, epoch)
         altaz = sedna.toTopocentric(obs, obsDate)
         print("Topocentric (Sedna): ",
-            altaz.getAltitude().asDegrees(), altaz.getAzimuth().asDegrees(), alt, az)
+              altaz.getAltitude().asDegrees(), altaz.getAzimuth().asDegrees(), alt, az)
 
         self.assertEqual(altaz.getCoordSystem(), afwCoord.TOPOCENTRIC)
 
@@ -437,11 +422,10 @@ class CoordTestCase(utilsTests.TestCase):
         ra2, dec2 = sedna2.getRa().asDegrees(), sedna2.getDec().asDegrees()
 
         print("Topocentric roundtrip (Sedna): ",
-            sedna.getRa().asDegrees(), ra2, sedna.getDec().asDegrees(), dec2)
+              sedna.getRa().asDegrees(), ra2, sedna.getDec().asDegrees(), dec2)
 
         self.assertAlmostEqual(sedna.getRa().asDegrees(), ra2)
         self.assertAlmostEqual(sedna.getDec().asDegrees(), dec2)
-
 
     def testPrecess(self):
         """Test precession calculations in different coordinate systems"""
@@ -495,14 +479,12 @@ class CoordTestCase(utilsTests.TestCase):
         epochNew = 2010.0
         self.assertRaises(AttributeError, lambda: gal.precess(epochNew))
 
-
         ### Icrs ###
 
         # make sure Icrs throws an exception. As there's no epoch, there's no precess() method.
         icrs = afwCoord.IcrsCoord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
         epochNew = 2010.0
         self.assertRaises(AttributeError, lambda: icrs.precess(epochNew))
-
 
         ### Ecliptic ###
 
@@ -522,13 +504,13 @@ class CoordTestCase(utilsTests.TestCase):
         year = 1920
         lamb214bc, beta214bc = 148.37119237032144, 1.7610036104147864
 
-        venus2000  = afwCoord.EclipticCoord(lamb2000 * afwGeom.degrees, beta2000 * afwGeom.degrees, 2000.0)
+        venus2000 = afwCoord.EclipticCoord(lamb2000 * afwGeom.degrees, beta2000 * afwGeom.degrees, 2000.0)
         ep = dafBase.DateTime(year, 6, 30, 0, 0, 0,
-                               dafBase.DateTime.TAI).get(dafBase.DateTime.EPOCH)
+                              dafBase.DateTime.TAI).get(dafBase.DateTime.EPOCH)
         venus214bc = venus2000.precess(ep)
         print("Precession (Ecliptic, Venus): %.4f %.4f  (known) %.4f %.4f" %
-             (venus214bc.getLambda().asDegrees(), venus214bc.getBeta().asDegrees(),
-              lamb214bc, beta214bc))
+              (venus214bc.getLambda().asDegrees(), venus214bc.getBeta().asDegrees(),
+               lamb214bc, beta214bc))
 
         # 3 places precision (accuracy of our controls)
         self.assertAlmostEqual(venus214bc.getLambda().asDegrees(), lamb214bc, 3)
@@ -543,7 +525,6 @@ class CoordTestCase(utilsTests.TestCase):
         venus214bc3 = venus2000.convert(afwCoord.ECLIPTIC, ep)
         self.assertEqual(venus214bc[0], venus214bc3[0])
         self.assertEqual(venus214bc[1], venus214bc3[1])
-
 
     def testAngularSeparation(self):
         """Test measure of angular separation between two coords"""
@@ -569,7 +550,6 @@ class CoordTestCase(utilsTests.TestCase):
         # machine precision
         self.assertAlmostEqual(deg, epsilon.asDegrees())
 
-
     def testTicket1394(self):
         """Ticket #1394 bug: coord within epsilon of RA=0 leads to negative RA and fails bounds check. """
 
@@ -579,7 +559,6 @@ class CoordTestCase(utilsTests.TestCase):
                                afwGeom.Point3D(0.6070619982, -1.264309928e-16, 0.7946544723))
 
         self.assertEqual(c[0], 0.0)
-
 
     def testRotate(self):
         """Verify rotation of coord about a user provided axis."""
@@ -615,7 +594,6 @@ class CoordTestCase(utilsTests.TestCase):
             self.assertAlmostEqual(lon.asDegrees(), longitude)
             self.assertAlmostEqual(lat.asDegrees(), latitude + arcLen)
 
-
     def testOffset(self):
         """Verify offset of coord along a great circle."""
 
@@ -625,13 +603,13 @@ class CoordTestCase(utilsTests.TestCase):
 
         #   lon,   lat    phi, arcLen,     expLong,      expLat, expPhi2
         trials = [
-            [lon0, lat0,  0.0, arcLen, lon0+arcLen,        lat0,   0.0],  # along celestial equator
-            [lon0, lat0, 90.0, arcLen,        lon0, lat0+arcLen,  90.0],  # along a meridian
-            [lon0, lat0, 45.0,  180.0,  lon0+180.0,       -lat0, -45.0],  # 180 arc (should go to antip. pt)
-            [lon0, lat0, 45.0,   90.0,   lon0+90.0,   lat0+45.0,   0.0],  #
-            [0.0,  90.0,  0.0,   90.0,        90.0,         0.0, -90.0],  # from pole, phi=0
-            [0.0,  90.0, 90.0,   90.0,       180.0,         0.0, -90.0],  # from pole, phi=90
-            ]
+            [lon0, lat0, 0.0, arcLen, lon0+arcLen, lat0, 0.0],  # along celestial equator
+            [lon0, lat0, 90.0, arcLen, lon0, lat0+arcLen, 90.0],  # along a meridian
+            [lon0, lat0, 45.0, 180.0, lon0+180.0, -lat0, -45.0],  # 180 arc (should go to antip. pt)
+            [lon0, lat0, 45.0, 90.0, lon0+90.0, lat0+45.0, 0.0],  #
+            [0.0, 90.0, 0.0, 90.0, 90.0, 0.0, -90.0],  # from pole, phi=0
+            [0.0, 90.0, 90.0, 90.0, 180.0, 0.0, -90.0],  # from pole, phi=90
+        ]
 
         for trial in trials:
 
@@ -646,11 +624,11 @@ class CoordTestCase(utilsTests.TestCase):
 
             print("Offset: %.10f %.10f %.10f  %.10f %.10f %.10f" % (lon, lat, phi2, longExp, latExp, phi2Exp))
             print("Measured: %.10f %.10f %.10f %.10f" %
-                   (offset[0].asDegrees(), offset[1].asDegrees(), phi, arc))
+                  (offset[0].asDegrees(), offset[1].asDegrees(), phi, arc))
             self.assertAlmostEqual(lon, longExp, 12)
             self.assertAlmostEqual(lat, latExp, 12)
             self.assertAlmostEqual(phi2.asDegrees(), phi2Exp, 12)
-            if arc != 180.0: # in that case, angle doesn't matter
+            if arc != 180.0:  # in that case, angle doesn't matter
                 self.assertAlmostEqual(offset[0].asDegrees() + 180.0, phi, 12)
             self.assertAlmostEqual(offset[1].asDegrees(), arc, 12)
 
@@ -679,7 +657,7 @@ class CoordTestCase(utilsTests.TestCase):
         gal = afwCoord.GalacticCoord(0.0 * afwGeom.radians, 0.0 * afwGeom.radians)
         clone = gal.clone()
         gal_names = gal.getCoordNames()      # ("L", "B")
-        clone_names = clone.getCoordNames()  #("Ra", "Dec")
+        clone_names = clone.getCoordNames()  # ("Ra", "Dec")
 
         self.assertEqual(gal_names[0], clone_names[0])
         self.assertEqual(gal_names[1], clone_names[1])
@@ -693,12 +671,12 @@ class CoordTestCase(utilsTests.TestCase):
         """Declination -1 < delta < 0 always prints positive as a string"""
 
         # from how-to-reproduce code reported on 3093 ticket
-        ra   = 26.468676561631767*afwGeom.degrees
+        ra = 26.468676561631767*afwGeom.degrees
         decl = -0.6684668814164008
 
         # also make sure we didn't break the original functionality
         # Test above/below +/-1
-        declIn    = [          decl,     -1.0*decl,     decl - 1.0,   -decl + 1.0]
+        declIn = [decl, -1.0*decl, decl - 1.0, -decl + 1.0]
         declKnown = ["-00:40:06.48", "00:40:06.48", "-01:40:06.48", "01:40:06.48"]
 
         for i in range(len(declIn)):
@@ -765,7 +743,7 @@ class CoordTestCase(utilsTests.TestCase):
                 # South pole
                 (afwCoord.IcrsCoord(0*afwGeom.degrees, -90*afwGeom.degrees),
                  afwCoord.IcrsCoord(0*afwGeom.degrees, -85*afwGeom.degrees)),
-                ):
+        ):
             circle(center, start)
 
 
@@ -782,7 +760,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

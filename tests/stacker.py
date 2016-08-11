@@ -62,12 +62,14 @@ except:
 ######################################
 # main body of code
 ######################################
+
+
 class StackTestCase(utilsTests.TestCase):
 
     def setUp(self):
         self.nImg = 10
         self.nX, self.nY = 64, 64
-        self.values = [1.0, 2.0, 2.0, 3.0, 8.0 ]
+        self.values = [1.0, 2.0, 2.0, 3.0, 8.0]
 
     def testMean(self):
         """ Test the statisticsStack() function for a MEAN"""
@@ -138,7 +140,6 @@ class StackTestCase(utilsTests.TestCase):
         wmean = reduce(lambda x, y: x + y, wvalues)/float(wsum)
         self.assertAlmostEqual(imgStack.get(self.nX//2, self.nY//2), wmean)
 
-
     def testRequestMoreThanOneStat(self):
         """ Make sure we throw an exception if someone requests more than one type of statistics. """
 
@@ -152,7 +153,6 @@ class StackTestCase(utilsTests.TestCase):
             afwMath.statisticsStack(imgList, afwMath.MEAN | afwMath.MEANCLIP, sctrl)
 
         self.assertRaises(pexEx.InvalidParameterError, tst)
-
 
     def testReturnInputs(self):
         """ Make sure that a single file put into the stacker is returned unscathed"""
@@ -183,7 +183,7 @@ class StackTestCase(utilsTests.TestCase):
         mimgVec = afwImage.vectorMaskedImageF()
 
         DETECTED = afwImage.MaskU_getPlaneBitMask("DETECTED")
-        EDGE =  afwImage.MaskU_getPlaneBitMask("EDGE")
+        EDGE = afwImage.MaskU_getPlaneBitMask("EDGE")
         INTRP = afwImage.MaskU_getPlaneBitMask("INTRP")
         SAT = afwImage.MaskU_getPlaneBitMask("SAT")
 
@@ -192,9 +192,9 @@ class StackTestCase(utilsTests.TestCase):
         sctrl.setAndMask(INTRP | SAT)
         sctrl.setNoGoodPixelsMask(EDGE)
 
-        edgeBBox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 20)) # set these pixels to EDGE
+        edgeBBox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(20, 20))  # set these pixels to EDGE
         width, height = 512, 512
-	dim=afwGeom.Extent2I(width, height)
+        dim = afwGeom.Extent2I(width, height)
         val, maskVal = 10, DETECTED
         for i in range(4):
             mimg = afwImage.MaskedImageF(dim)
@@ -202,7 +202,7 @@ class StackTestCase(utilsTests.TestCase):
             #
             # Set part of the image to NaN (with the INTRP bit set)
             #
-            llc = afwGeom.Point2I(width//2*(i//2), height//2*(i%2))
+            llc = afwGeom.Point2I(width//2*(i//2), height//2*(i % 2))
             bbox = afwGeom.Box2I(llc, dim//2)
 
             smimg = mimg.Factory(mimg, bbox, afwImage.LOCAL)
@@ -250,16 +250,16 @@ class StackTestCase(utilsTests.TestCase):
         """Ticket 1412: ignored mask bits are propegated to output stack."""
 
         mimg1 = afwImage.MaskedImageF(afwGeom.Extent2I(1, 1))
-        mimg1.set(0, 0, (1, 0x4, 1)) # set 0100
+        mimg1.set(0, 0, (1, 0x4, 1))  # set 0100
         mimg2 = afwImage.MaskedImageF(afwGeom.Extent2I(1, 1))
-        mimg2.set(0, 0, (2, 0x3, 1)) # set 0010 and 0001
+        mimg2.set(0, 0, (2, 0x3, 1))  # set 0010 and 0001
 
         imgList = afwImage.vectorMaskedImageF()
         imgList.push_back(mimg1)
         imgList.push_back(mimg2)
 
         sctrl = afwMath.StatisticsControl()
-        sctrl.setAndMask(0x1) # andmask only 0001
+        sctrl.setAndMask(0x1)  # andmask only 0001
 
         # try first with no sctrl (no andmask set), should see 0x0111 for all output mask pixels
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
@@ -307,17 +307,17 @@ class StackTestCase(utilsTests.TestCase):
         for i in range(4):
             mi = afwImage.MaskedImageF(4, 1)
             imArr, maskArr, varArr = mi.getArrays()
-            imArr[:,:] = numpy.ones((1, 4), dtype=numpy.float32)
+            imArr[:, :] = numpy.ones((1, 4), dtype=numpy.float32)
             maskedImageList.append(mi)
             partialSum += imArr
         # add one more image with all permutations of the first two bits set in different pixels
         mi = afwImage.MaskedImageF(4, 1)
         imArr, maskArr, varArr = mi.getArrays()
-        imArr[0,:] = finalImage
-        maskArr[0,1] |= (1 << rejectedBit)
-        maskArr[0,2] |= (1 << propagatedBit)
-        maskArr[0,3] |= (1 << rejectedBit)
-        maskArr[0,3] |= (1 << propagatedBit)
+        imArr[0, :] = finalImage
+        maskArr[0, 1] |= (1 << rejectedBit)
+        maskArr[0, 2] |= (1 << propagatedBit)
+        maskArr[0, 3] |= (1 << rejectedBit)
+        maskArr[0, 3] |= (1 << propagatedBit)
         maskedImageList.append(mi)
 
         # these will always be rejected
@@ -327,10 +327,10 @@ class StackTestCase(utilsTests.TestCase):
         # Uniform weights: we should only see pixel 2 set with propagatedBit, because it's not rejected;
         # pixel 3 is rejected, but its weight (0.2) below the propagation threshold (0.3)
         stack1 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [1.0, 1.0, 1.0, 1.0, 1.0])
-        self.assertEqual(stack1.get(0,0)[1], 0x0)
-        self.assertEqual(stack1.get(1,0)[1], 0x0)
-        self.assertEqual(stack1.get(2,0)[1], 1 << propagatedBit)
-        self.assertEqual(stack1.get(3,0)[1], 0x0)
+        self.assertEqual(stack1.get(0, 0)[1], 0x0)
+        self.assertEqual(stack1.get(1, 0)[1], 0x0)
+        self.assertEqual(stack1.get(2, 0)[1], 1 << propagatedBit)
+        self.assertEqual(stack1.get(3, 0)[1], 0x0)
         self.assertClose(stack1.getImage().getArray(),
                          (partialSum + finalImage) / numpy.array([5.0, 4.0, 5.0, 4.0]),
                          rtol=1E-7)
@@ -341,10 +341,10 @@ class StackTestCase(utilsTests.TestCase):
         # Note that rejectedBit is never propagated, because we didn't include it in statsCtrl (of course,
         # normally the bits we'd propagate and the bits we'd reject would be the same)
         stack2 = afwMath.statisticsStack(maskedImageList, afwMath.MEAN, statsCtrl, [1.0, 1.0, 1.0, 1.0, 2.0])
-        self.assertEqual(stack2.get(0,0)[1], 0x0)
-        self.assertEqual(stack2.get(1,0)[1], 0x0)
-        self.assertEqual(stack2.get(2,0)[1], 1 << propagatedBit)
-        self.assertEqual(stack2.get(3,0)[1], 1 << propagatedBit)
+        self.assertEqual(stack2.get(0, 0)[1], 0x0)
+        self.assertEqual(stack2.get(1, 0)[1], 0x0)
+        self.assertEqual(stack2.get(2, 0)[1], 1 << propagatedBit)
+        self.assertEqual(stack2.get(3, 0)[1], 1 << propagatedBit)
         self.assertClose(stack2.getImage().getArray(),
                          (partialSum + 2*finalImage) / numpy.array([6.0, 4.0, 6.0, 4.0]),
                          rtol=1E-7)
@@ -352,6 +352,8 @@ class StackTestCase(utilsTests.TestCase):
 #################################################################
 # Test suite boiler plate
 #################################################################
+
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -362,7 +364,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

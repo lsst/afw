@@ -11,6 +11,7 @@ import lsst.afw.table as afwTable
 import numpy as np
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def insertPsf(pos, im, psf, kernelSize, flux):
     for x, y in pos:
         x0 = x-kernelSize//2
@@ -19,6 +20,7 @@ def insertPsf(pos, im, psf, kernelSize, flux):
         tmp = psf.computeImage(afwGeom.Point2D(x0, y0))
         tmp *= flux
         im.getImage()[tmpbox] += tmp
+
 
 def mergeCatalogs(catList, names, peakDist, idFactory, indivNames=[], samePeakDist=-1.):
     schema = afwTable.SourceTable.makeMinimalSchema()
@@ -31,9 +33,10 @@ def mergeCatalogs(catList, names, peakDist, idFactory, indivNames=[], samePeakDi
     mergedList = merged.getMergedSourceCatalog(catList, indivNames, peakDist,
                                                schema, idFactory, samePeakDist)
     nob = len(mergedList)
-    npeaks = sum([ len(ob.getFootprint().getPeaks()) for ob in mergedList])
+    npeaks = sum([len(ob.getFootprint().getPeaks()) for ob in mergedList])
 
     return mergedList, nob, npeaks
+
 
 def isPeakInCatalog(peak, catalog):
     for record in catalog:
@@ -44,23 +47,23 @@ def isPeakInCatalog(peak, catalog):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class FootprintMergeCatalogTestCase(tests.TestCase):
 
     def setUp(self):
-
         """Build up three different sets of objects that are to be merged"""
         pos1 = [(40, 40), (220, 35), (40, 48), (220, 50),
-                (67, 67),(150, 50), (40, 90), (70, 160),
+                (67, 67), (150, 50), (40, 90), (70, 160),
                 (35, 255), (70, 180), (250, 200), (120, 120),
-                (170, 180),(100, 210), (20, 210),
+                (170, 180), (100, 210), (20, 210),
                 ]
         pos2 = [(43, 45), (215, 31), (171, 258), (211, 117),
                 (48, 99), (70, 160), (125, 45), (251, 33),
-                (37, 170),(134, 191), (79, 223),(258, 182)
+                (37, 170), (134, 191), (79, 223), (258, 182)
                 ]
-        pos3 = [(70,170),(219,41),(253,173),(253,192)]
+        pos3 = [(70, 170), (219, 41), (253, 173), (253, 192)]
 
-        box = afwGeom.Box2I(afwGeom.Point2I(0,0), afwGeom.Point2I(300,300))
+        box = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Point2I(300, 300))
         psfsig = 1.
         kernelSize = 41
         flux = 1000
@@ -102,7 +105,6 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         del self.catalog3
         del self.table
 
-
     def testMerge1(self):
         # Add the first catalog only
         merge, nob, npeak = mergeCatalogs([self.catalog1], ["1"], [-1],
@@ -125,18 +127,18 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         # Add the first catalog and second catalog with the wrong name, which should result
         # an exception being raised
         self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError,
-                                 mergeCatalogs, [self.catalog1,self.catalog2], ["1","2"], [0, 0],
-                                 self.idFactory, ["1","3"])
+                                 mergeCatalogs, [self.catalog1, self.catalog2], ["1", "2"], [0, 0],
+                                 self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of peakDist elements,
         # which should raise an exception
-        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1,self.catalog2], ["1","2"], [0],
-                          self.idFactory, ["1","3"])
+        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1, self.catalog2], ["1", "2"], [0],
+                          self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of filters,
         # which should raise an exception
-        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1,self.catalog2], ["1"], [0],
-                          self.idFactory, ["1","3"])
+        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1, self.catalog2], ["1"], [0],
+                          self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with minPeak < 1 so it will not add new peaks
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2],
@@ -260,7 +262,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         peakIndex = 0
         for record in merge:
             for peak in record.getFootprint().getPeaks():
-                numPeak = np.sum([peak.get("merge_peak_1"),peak.get("merge_peak_2"),
+                numPeak = np.sum([peak.get("merge_peak_1"), peak.get("merge_peak_2"),
                                   peak.get("merge_peak_3")])
                 if peakIndex in multiPeakIndex:
                     self.assertTrue(numPeak > 1)
@@ -270,6 +272,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     tests.init()
@@ -278,6 +281,7 @@ def suite():
     suites += unittest.makeSuite(FootprintMergeCatalogTestCase)
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

@@ -33,7 +33,9 @@ import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 from lsst.afw.cameraGeom.fitsUtils import getByKey, setByKey, HeaderAmpMap, HeaderDetectorMap, DetectorBuilder
 
+
 class TestAmpObject(object):
+
     def name(self, a):
         self.name = a
 
@@ -43,11 +45,15 @@ class TestAmpObject(object):
     def defaultval(self, c):
         self.defaultval = c
 
+
 class TestDetObject(object):
+
     def __init__(self):
         return
 
+
 class FitsUtilsTestCase(unittest.TestCase):
+
     def toTestStr(self, string):
         return "Test String"
 
@@ -65,7 +71,6 @@ class FitsUtilsTestCase(unittest.TestCase):
         self.mdMapList = [('NAME', 'name'),
                           ('TESTSEC', 'testsec', None, self.toTestStr),
                           ('TESTDEF', 'defaultval', 'Default', None)]
-
 
     def tearDown(self):
         del self.metadata
@@ -112,12 +117,13 @@ class FitsUtilsTestCase(unittest.TestCase):
         """
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             self.exposure.writeFits(tmpFile)
-            #test that it raises without setting non-defaulted keywords
+            # test that it raises without setting non-defaulted keywords
             self.assertRaises(Exception, DetectorBuilder(tmpFile, [tmpFile, tmpFile]))
-            #ignore non-defaulted keywords
+            # ignore non-defaulted keywords
             detBuilder = DetectorBuilder(tmpFile, [tmpFile, ], doRaise=False)
             detBuilder.makeCalib()
-            detBuilder.makeExposure(afwImage.ImageF(10,10), afwImage.MaskU(10,10), afwImage.ImageF(10,10))
+            detBuilder.makeExposure(afwImage.ImageF(10, 10), afwImage.MaskU(10, 10), afwImage.ImageF(10, 10))
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -129,7 +135,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

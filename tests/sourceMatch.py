@@ -56,9 +56,11 @@ except pexExcept.NotFoundError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class SourceMatchTestCase(unittest.TestCase):
     """A test case for matching SourceSets
     """
+
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
         schema.addField("flux_flux", type=float)
@@ -196,7 +198,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 continue
 
             fields = line.split()
-            id, flags = [int(f) for f in  fields[0:2]]
+            id, flags = [int(f) for f in fields[0:2]]
             ra, dec = [float(f) for f in fields[2:4]]
             flux = [float(f) for f in fields[4:]]
 
@@ -355,13 +357,13 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(mat.distance, cat["distance"])
             self.assertEqual(mat.distance, catM["distance"])
 
-
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN
         """
         self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module.
@@ -373,6 +375,7 @@ def suite():
     suites += unittest.makeSuite(SourceMatchTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests

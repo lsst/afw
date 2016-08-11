@@ -40,6 +40,7 @@ try:
 except pexExcept.NotFoundError:
     dataDir = None
 
+
 class MaskedImagePersistenceTestCase(unittest.TestCase):
     """A test case for MaskedImage Persistence"""
 
@@ -86,7 +87,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         storageList = dafPers.StorageList([storage])
 
         # Let's do the retrieval!
-        maskedImage2 = afwImage.MaskedImageF.swigConvert( \
+        maskedImage2 = afwImage.MaskedImageF.swigConvert(
             self.persistence.unsafeRetrieve("MaskedImageF", storageList, self.additionalData))
 
         # Check the resulting MaskedImage
@@ -103,7 +104,6 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         self.persistence.persist(self.maskedImage, storageList, self.additionalData)
 
 
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -115,6 +115,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""
