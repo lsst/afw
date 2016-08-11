@@ -80,7 +80,7 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
         try:
             _disp = importlib.import_module(dt, package="lsst.display")
             break
-        except ImportError as e:
+        except (ImportError, SystemError) as e:
             pass
 
     if not _disp:
@@ -169,7 +169,7 @@ class Display(object):
         self.close()
 
     def close(self):
-        if self._impl:
+        if hasattr(self, "_impl") and self._impl:
             del self._impl
             self._impl = None
 
