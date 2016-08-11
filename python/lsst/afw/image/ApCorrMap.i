@@ -48,7 +48,7 @@
         PyObject * r = PyList_New(self->size());
         Py_ssize_t n = 0;
         for (lsst::afw::image::ApCorrMap::Iterator i = self->begin(); i != self->end(); ++i, ++n) {
-            PyList_SET_ITEM(r, n, PyBytes_FromStringAndSize(i->first.data(), i->first.size()));
+            PyList_SET_ITEM(r, n, SWIG_FromCharPtrAndSize(i->first.data(), i->first.size()));
         }
         return r;
     }
