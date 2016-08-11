@@ -34,6 +34,7 @@ import os
 import os.path
 import unittest
 import string
+import re
 
 import numpy
 
@@ -81,7 +82,6 @@ NoDataMaskPixel = afwImage.MaskU.getPlaneBitMask("NO_DATA")
 # Set this to match the afw code
 IgnoreKernelZeroPixels = True
 
-NullTranslator = string.maketrans("", "")
 GarbageChars = string.punctuation + string.whitespace
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -206,6 +206,13 @@ class ConvolveTestCase(utilsTests.TestCase):
             del self.cnvMaskedImage
             del self.cnvImage
 
+    @staticmethod
+    def _removeGarbageChars(instring):
+        # str.translate on python2 differs to that on python3
+        # Performance is not critical in this helper function so use a regex
+        print("Translating '{}' -> '{}'".format(instring, re.sub("[" + GarbageChars + "]" , "", instring)))
+        return re.sub("[" + GarbageChars + "]", "", instring)
+
     def runBasicTest(self, kernel, convControl, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08):
         """Assert that afwMath::convolve gives the same result as reference convolution for a given kernel.
 
@@ -224,7 +231,7 @@ class ConvolveTestCase(utilsTests.TestCase):
         if refKernel == None:
             refKernel = kernel
         # strip garbage characters (whitespace and punctuation) to make a short description for saving files
-        shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
+        shortKernelDescr = self._removeGarbageChars(kernelDescr)
 
         doNormalize = convControl.getDoNormalize()
         doCopyEdge = convControl.getDoCopyEdge()
@@ -330,7 +337,7 @@ class ConvolveTestCase(utilsTests.TestCase):
                                                doVariance=True, rtol=0, atol=0, msg=msg)
         except Exception:
             # write out the images, then fail
-            shortKernelDescr = kernelDescr.translate(NullTranslator, GarbageChars)
+            shortKernelDescr = self.removeGarbageChars(kernelDescr)
             cnvMaskedImage.writeFits("actBasicConvolve%s" % (shortKernelDescr,))
             cnvMaskedImageCopy.writeFits("desBasicConvolve%s" % (shortKernelDescr,))
             raise
