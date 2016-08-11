@@ -143,7 +143,9 @@ class SpatialCellTestCase(unittest.TestCase):
 
         self.cell.sortCandidates()
         self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in self.cell])
-        self.assertEqual(sorted(ratings0, lambda a, b: int(b - a)),
+        def sortKey(a):
+            return -a
+        self.assertEqual(sorted(ratings0, key=sortKey),
                          [cand.getCandidateRating() for cand in self.cell])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -286,7 +288,9 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         self.cellSet.sortCandidates()
         self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in cell1])
-        self.assertEqual(sorted(ratings0, lambda a, b: int(b - a)),
+        def sortKey(a):
+            return -a
+        self.assertEqual(sorted(ratings0, key=sortKey),
                          [cand.getCandidateRating() for cand in cell1])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
