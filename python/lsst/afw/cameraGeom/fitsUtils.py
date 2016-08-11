@@ -65,7 +65,7 @@ class HeaderMap(dict):
                     raise
                 else:
                     warnings.warn('WARNING: Failed to set %s attribute with %s value: %s'%
-                                  (key, value, e.message))
+                                  (key, value, str(e)))
 
     def _applyVal(self, obj, value, attrName, transform):
         raise NotImplementedError('Must be implemented in sub-class')
