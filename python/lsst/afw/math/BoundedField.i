@@ -24,3 +24,10 @@
 %instantiateBoundedField(double)
 
 %usePointerEquality(lsst::afw::math::BoundedField)
+
+%extend lsst::afw::math::BoundedField {
+    %pythoncode %{
+# Derive true div from the div that SWIG gives us
+__truediv__ = __div__
+    %}
+}
