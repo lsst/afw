@@ -46,14 +46,10 @@ namespace ex           = lsst::pex::exceptions;
 namespace afwGeom      = lsst::afw::geom;
 
 
-
-/**
- * @brief Constructor for the observatory with lat/long as afwGeom::Angles
- */
 coord::Observatory::Observatory(
-                                afwGeom::Angle const longitude, ///< observatory longitude (+ve E of Greenwich)
-                                afwGeom::Angle const latitude,  ///< observatory latitude
-                                double const elevation  ///< observatory elevation
+                                afwGeom::Angle const longitude,
+                                afwGeom::Angle const latitude,
+                                double const elevation
                                ) :
     _latitude(latitude),
     _longitude(longitude),
@@ -61,30 +57,17 @@ coord::Observatory::Observatory(
 }
 
 
-
-/*
- * @brief Constructor for the observatory with lat/long as strings
- *
- * @note RA is assumed to be in DMS, not HMS!
- *
- */
 coord::Observatory::Observatory(
-                                std::string const longitude, ///< observatory longitude
-                                std::string const latitude,  ///< observatory latitude
-                                double const elevation       ///< observatory elevation
-                               ) :
+                                std::string const longitude,
+                                std::string const latitude,
+                                double const elevation
+                               ) : 
     _latitude(dmsStringToAngle(latitude)),
     _longitude(dmsStringToAngle(longitude)),
     _elevation(elevation) {
 }
 
 
-
-
-/**
- * @brief The main access method for the longitudinal coordinate
- *
- */
 afwGeom::Angle coord::Observatory::getLongitude() const {
     return _longitude;
 }
@@ -111,7 +94,7 @@ void coord::Observatory::setLatitude(
 }
 
 /**
- * @brief Set the longitude
+ * @brief Set the longitude, positive eastward
  */
 void coord::Observatory::setLongitude(
                                       afwGeom::Angle const longitude ///< the longitude
@@ -121,7 +104,7 @@ void coord::Observatory::setLongitude(
 
 
 /**
- * @brief Set the Elevation
+ * @brief Set the geodetic elevation (meters above reference spheroid)
  */
 void coord::Observatory::setElevation(
                                       double const elevation ///< the elevation
