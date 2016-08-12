@@ -85,5 +85,9 @@
             """__idiv__(self, double scale) -> self"""
             _imageLib.ApCorrMap___idiv__(*args)
             return args[0]
+
+        # Support python2 future division
+        __itruediv__ = __idiv__
+
 %}
 }
