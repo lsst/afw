@@ -43,12 +43,18 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
 import lsst.pex.exceptions as pexExcept
+from lsst.log import Log
 
 from kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 
 VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
 
 pexLog.Debug("lsst.afw", VERBOSITY)
+Log.getLogger("lsst.afw.math.convolve").setLevel(Log.INFO)
+Log.getLogger("lsst.afw.math.convolve.basic").setLevel(Log.TRACE)
+Log.getLogger("lsst.afw.math.convolve.KernelImagesForRegion").setLevel(Log.TRACE)
+Log.getLogger("lsst.afw.math.convolve.WithInterpolation").setLevel(Log.TRACE)
+Log.getLogger("lsst.afw.math.convolve.WithBruteForce").setLevel(Log.TRACE)
 
 try:
     display

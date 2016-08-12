@@ -38,7 +38,7 @@
 #include <vector>
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/ConvolveImage.h"
 #include "lsst/afw/math/Kernel.h"
@@ -49,7 +49,6 @@
 #include "lsst/afw/gpu/IsGpuBuild.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
@@ -165,21 +164,21 @@ void mathDetail::basicConvolve(
     // dispatch the correct version of basicConvolve. The case that fails is convolving with a kernel
     // obtained from a pointer or reference to a Kernel (base class), e.g. as used in LinearCombinationKernel.
     if (IS_INSTANCE(kernel, afwMath::DeltaFunctionKernel)) {
-        pexLog::TTrace<4>("lsst.afw.math.convolve",
+        LOGL_TRACE("lsst.afw.math.convolve.basic",
             "generic basicConvolve: dispatch to DeltaFunctionKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::DeltaFunctionKernel const*>(&kernel),
             convolutionControl);
         return;
     } else if (IS_INSTANCE(kernel, afwMath::SeparableKernel)) {
-        pexLog::TTrace<4>("lsst.afw.math.convolve",
+        LOGL_TRACE("lsst.afw.math.convolve.basic",
             "generic basicConvolve: dispatch to SeparableKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::SeparableKernel const*>(&kernel),
             convolutionControl);
         return;
     } else if (IS_INSTANCE(kernel, afwMath::LinearCombinationKernel) && kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<4>("lsst.afw.math.convolve",
+        LOGL_TRACE("lsst.afw.math.convolve.basic",
             "generic basicConvolve: dispatch to spatially varying LinearCombinationKernel basicConvolve");
         mathDetail::basicConvolve(convolvedImage, inImage,
             *dynamic_cast<afwMath::LinearCombinationKernel const*>(&kernel),
@@ -189,12 +188,12 @@ void mathDetail::basicConvolve(
     // OK, use general (and slower) form
     if (kernel.isSpatiallyVarying() && (convolutionControl.getMaxInterpolationDistance() > 1)) {
         // use linear interpolation
-        pexLog::TTrace<3>("lsst.afw.math.convolve", "generic basicConvolve: using linear interpolation");
+        LOGL_DEBUG("lsst.afw.math.convolve.basic", "generic basicConvolve: using linear interpolation");
         mathDetail::convolveWithInterpolation(convolvedImage, inImage, kernel, convolutionControl);
 
     } else {
         // use brute force
-        pexLog::TTrace<3>("lsst.afw.math.convolve", "generic basicConvolve: using brute force");
+        LOGL_DEBUG("lsst.afw.math.convolve.basic", "generic basicConvolve: using brute force");
         mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,convolutionControl);
     }
 }
@@ -227,7 +226,7 @@ void mathDetail::basicConvolve(
     int const inStartX = kernel.getPixel().getX();
     int const inStartY = kernel.getPixel().getY();
 
-    pexLog::TTrace<3>("lsst.afw.math.convolve", "DeltaFunctionKernel basicConvolve");
+    LOGL_DEBUG("lsst.afw.math.convolve.basic", "DeltaFunctionKernel basicConvolve");
 
     for (int i = 0; i < cnvHeight; ++i) {
         typename InImageT::x_iterator inPtr = inImage.x_at(inStartX, i +  inStartY);
@@ -265,7 +264,7 @@ void mathDetail::basicConvolve(
 {
     if (!kernel.isSpatiallyVarying()) {
         // use the standard algorithm for the spatially invariant case
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        LOGL_DEBUG("lsst.afw.math.convolve.basic",
             "basicConvolve for LinearCombinationKernel: spatially invariant; using brute force");
         return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
@@ -306,11 +305,11 @@ void mathDetail::basicConvolve(
             refKernelPtr = kernel.clone();
         }
         if (convolutionControl.getMaxInterpolationDistance() > 1) {
-            pexLog::TTrace<3>("lsst.afw.math.convolve",
+            LOGL_DEBUG("lsst.afw.math.convolve.basic",
                 "basicConvolve for LinearCombinationKernel: using interpolation");
             return mathDetail::convolveWithInterpolation(convolvedImage, inImage, *refKernelPtr, convolutionControl);
         } else {
-            pexLog::TTrace<3>("lsst.afw.math.convolve",
+            LOGL_DEBUG("lsst.afw.math.convolve.basic",
                 "basicConvolve for LinearCombinationKernel: maxInterpolationError < 0; using brute force");
             return mathDetail::convolveWithBruteForce(convolvedImage, inImage, *refKernelPtr,
                 convolutionControl.getDoNormalize());
@@ -352,7 +351,7 @@ void mathDetail::basicConvolve(
     KernelVector kernelYVec(kernel.getHeight());
 
     if (kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        LOGL_DEBUG("lsst.afw.math.convolve.basic",
             "SeparableKernel basicConvolve: kernel is spatially varying");
 
         for (int cnvY = goodBBox.getMinY(); cnvY <= goodBBox.getMaxY(); ++cnvY) {
@@ -384,7 +383,7 @@ void mathDetail::basicConvolve(
         // This is circular buffer along y (to avoid shifting pixels before setting each new row);
         // so for each new row the kernel y vector is rotated to match the order of the x-convolved data.
 
-        pexLog::TTrace<3>("lsst.afw.math.convolve",
+        LOGL_DEBUG("lsst.afw.math.convolve.basic",
             "SeparableKernel basicConvolve: kernel is spatially invariant");
 
         kernel.computeVectors(kernelXVec, kernelYVec, convolutionControl.getDoNormalize());
@@ -499,7 +498,7 @@ void mathDetail::convolveWithBruteForce(
     KernelXYLocator const kernelLoc = kernelImage.xy_at(0,0);
 
     if (kernel.isSpatiallyVarying()) {
-        pexLog::TTrace<5>("lsst.afw.math.convolve",
+        LOGL_TRACE("lsst.afw.math.convolve.WithBruteForce",
             "convolveWithBruteForce: kernel is spatially varying");
 
         CheckForceGpuOnUnsupportedKernel(convolutionControl);
@@ -521,7 +520,7 @@ void mathDetail::convolveWithBruteForce(
             }
         }
     } else {
-        pexLog::TTrace<5>("lsst.afw.math.convolve",
+        LOGL_TRACE("lsst.afw.math.convolve.WithBruteForce",
             "convolveWithBruteForce: kernel is spatially invariant");
 
         CheckForceGpuOnNoGpu(convolutionControl);
