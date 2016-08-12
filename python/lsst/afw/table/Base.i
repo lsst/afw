@@ -605,8 +605,8 @@ Key = {}
 SchemaItem = {}
 _suffixes = {}
 aliases = {
-    int: "I",
     long: "L",
+    int: "I",
     float: "D",
     str: "String",
     numpy.uint16: "U",
