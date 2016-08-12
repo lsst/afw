@@ -36,9 +36,11 @@ or
    >>> import unittest; T=load("Random_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
 
+import sys
 import time
 import unittest
 
+import lsst.pex.exceptions
 import lsst.pex.policy as pexPolicy
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
@@ -113,10 +115,24 @@ class RandomImageTestCase(unittest.TestCase):
         for i in range(100):
             self.rand.uniformInt(10000)
         state = self.rand.getState()
+        self.assertIsInstance(state, bytes)
         v1 = [self.rand.uniformInt(10000) for i in range(100)]
         self.rand.setState(state)
         v2 = [self.rand.uniformInt(10000) for i in range(100)]
         self.assertEqual(v1, v2)
+
+    def testStateRaisesType(self):
+        with self.assertRaises(TypeError):
+            self.rand.setState(self.rand)
+
+    @unittest.skipIf(sys.version_info.major < 3, "setState can not distinguish unicode from bytes")
+    def testStateRaisesUnicodeType(self):
+        with self.assertRaises(TypeError):
+            self.rand.setState(u"\u03bc not bytes")
+
+    def testStateRaisesLength(self):
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            self.rand.setState(b"too small")
 
     def testRandomUniformImage(self):
         afwMath.randomUniformImage(self.image, self.rand)
