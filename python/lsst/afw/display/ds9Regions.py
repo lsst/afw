@@ -46,7 +46,7 @@ ignored otherwise).
 
 N.b. objects derived from BaseCore include Axes and Quadrupole.
 """
-    if ctype == None:
+    if ctype is None:
         color = ""                       # the default
     else:
         color = ' # color=%s' % ctype
