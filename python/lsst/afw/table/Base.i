@@ -596,6 +596,7 @@ def getBits(self, keys=None):
 
 %pythoncode %{
 from past.builtins import long
+from builtins import str as futurestr
 from ..geom import Angle, Point2D, Point2I
 from ..geom.ellipses import Quadrupole
 from ..coord import Coord, IcrsCoord
@@ -609,6 +610,7 @@ aliases = {
     int: "I",
     float: "D",
     str: "String",
+    futurestr: "String",
     numpy.uint16: "U",
     numpy.int32: "I",
     numpy.int64: "L",
