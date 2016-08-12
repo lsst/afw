@@ -275,8 +275,8 @@ class RgbTestCase(unittest.TestCase):
     def testStarsResizeToSize(self):
         """Test creating an RGB image of a specified size"""
 
-        xSize = self.images[R].getWidth()/2
-        ySize = self.images[R].getHeight()/2
+        xSize = self.images[R].getWidth()//2
+        ySize = self.images[R].getHeight()//2
         for rgbImages in ([self.images[R], self.images[G], self.images[B]],
                           [afwImage.ImageU(_.getArray().astype('uint16')) for _ in [
                               self.images[R], self.images[G], self.images[B]]]):
@@ -293,10 +293,10 @@ class RgbTestCase(unittest.TestCase):
         rgbImages = [self.images[R], self.images[G], self.images[B]]
         map = rgb.AsinhZScaleMapping(rgbImages[0])
 
-        for xSize, ySize, frac in [(self.images[R].getWidth()/2, self.images[R].getHeight()/2, None),
+        for xSize, ySize, frac in [(self.images[R].getWidth()//2, self.images[R].getHeight()//2, None),
                                    (2*self.images[R].getWidth(), None, None),
-                                   (self.images[R].getWidth()/2, None, None),
-                                   (None, self.images[R].getHeight()/2, None),
+                                   (self.images[R].getWidth()//2, None, None),
+                                   (None, self.images[R].getHeight()//2, None),
                                    (None, None, 0.5),
                                    (None, None, 2),
                                    ]:
