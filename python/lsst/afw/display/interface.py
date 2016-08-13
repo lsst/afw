@@ -76,15 +76,26 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
     and import the ds9 implementation of DisplayImpl from lsst.display.ds9
     """
     _disp = None
+    exc = None
     for dt in (backend, ".%s" % backend, "lsst.afw.display.%s" % backend):
+        exc = None
+        # only specify the root package if we are not doing an absolute import
+        impargs = {}
+        if not dt.startswith("lsst"):
+            impargs["package"] = "lsst.display"
         try:
-            _disp = importlib.import_module(dt, package="lsst.display")
+            _disp = importlib.import_module(dt, **impargs)
             break
         except (ImportError, SystemError) as e:
-            pass
+            # Copy the exception into outer scope
+            exc = e
 
     if not _disp:
-        raise e
+        if exc is not None:
+            # re-raise the final exception
+            raise exc
+        else:
+            raise ImportError("Could not load the requested backend: {}".format(backend))
 
     return _disp.DisplayImpl(display, *args, **kwargs)
 
