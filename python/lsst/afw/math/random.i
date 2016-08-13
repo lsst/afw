@@ -26,6 +26,30 @@
 
 %shared_ptr(lsst::afw::math::Random);
 
+
+%extend lsst::afw::math::Random {
+
+    PyObject * getState() const {
+        std::string state = self->getState();
+        return PyBytes_FromStringAndSize(state.data(), state.size());
+    }
+
+    PyObject * setState(PyObject * state) {
+        char * buffer = nullptr;
+        Py_ssize_t len = 0;
+        if (PyBytes_AsStringAndSize(state, &buffer, &len) == 0) {
+            std::string state(buffer, len);
+            self->setState(state);
+            Py_RETURN_NONE;
+        }
+        return nullptr;
+    }
+
+}
+
+%ignore lsst::afw::math::Random::getState;
+%ignore lsst::afw::math::Random::setState;
+
 %include "lsst/afw/math/Random.h"
 
 %define %randomImage(TYPE)
