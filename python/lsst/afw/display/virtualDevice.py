@@ -41,7 +41,7 @@ class DisplayImpl(object):
 
     def _close(self):
         """!Close the display, cleaning up any allocated resources"""
-        if self.verbose:
+        if hasattr(self, "verbose") and self.verbose and hasattr(self, "display"):
             print("virtual[%s]._close()" % (self.display.frame))
 
     def _buffer(self, enable=True):
