@@ -34,13 +34,15 @@
         return PyBytes_FromStringAndSize(state.data(), state.size());
     }
 
-    void setState(PyObject * state) {
+    PyObject * setState(PyObject * state) {
         char * buffer = nullptr;
         Py_ssize_t len = 0;
         if (PyBytes_AsStringAndSize(state, &buffer, &len) == 0) {
             std::string state(buffer, len);
             self->setState(state);
+            Py_RETURN_NONE;
         }
+        return nullptr;
     }
 
 }
