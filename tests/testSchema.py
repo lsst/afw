@@ -104,7 +104,7 @@ class SchemaTestCase(unittest.TestCase):
         self.assertEqual(keys[3].getBit(), 1)
         for n1, n2 in zip(schema4.getOrderedNames(), "abcd"):
             self.assertEqual(n1, n2)
-        keys2 = [x.key for x in schema4.asList()]
+        keys2 = [x.key for x in schema4]
         self.assertEqual(keys, keys2)
 
     def testUnits(self):
