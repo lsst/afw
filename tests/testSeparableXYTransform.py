@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
