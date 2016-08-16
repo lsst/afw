@@ -67,7 +67,7 @@ def toString(*args):
     return "%d: %d..%d" % (y, x0, x1)
 
 
-def keyPeaks(im, pos):
+def peakFromImage(im, pos):
     """Function to extract the sort key of peak height. Sort by decreasing peak height."""
     val = im.get(pos[0], pos[1])[0]
     return -1.0 * val
@@ -449,11 +449,11 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         #
         # Sort self.peaks in decreasing peak height to match Footprint.getPeaks()
         #
-        def peakKey(p):
+        def peakDescending(p):
             return p[2] * -1.0
         for i, peaks in enumerate(self.peaks):
             self.peaks[i] = sorted([(x, y, self.im.getImage().get(x, y)) for x, y in peaks],
-                                   key=peakKey)
+                                   key=peakDescending)
 
         threshold = afwDetect.Threshold(threshold, afwDetect.Threshold.VALUE, polarity)
         fs = afwDetect.FootprintSet(self.im, threshold, "BINNED1")
@@ -571,9 +571,9 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.im.getImage().set(10, 4, 20)
             self.peaks[-2].append((10, 4, ))
 
-            def peaksKey(p):
-                return keyPeaks(self.im, p)
-            self.peaks[0] = sorted(sum(self.peaks, []), key=peaksKey)
+            def peaksSortKey(p):
+                return peakFromImage(self.im, p)
+            self.peaks[0] = sorted(sum(self.peaks, []), key=peaksSortKey)
 
         self.doTestPeaks(x0=0, y0=2, dwidth=2, dheight=2, callback=callback, grow=2)
 
@@ -658,9 +658,9 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.peaks[-2] += peaks2
 
             if grow1 + grow2 > 2:                                                         # grow merged all peaks
-                def peaksKey(p):
-                    return keyPeaks(self.im, p)
-                self.peaks[0] = sorted(sum(self.peaks, []), key=peaksKey)
+                def peaksSortKey(p):
+                    return peakFromImage(self.im, p)
+                self.peaks[0] = sorted(sum(self.peaks, []), key=peaksSortKey)
 
             afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
 
@@ -693,9 +693,9 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         self.fs.merge(fs2, grow1, grow2)
         self.peaks[0] += peaks2
 
-        def peaksKey(p):
-            return keyPeaks(self.im, p)
-        self.peaks[0] = sorted(sum(self.peaks, []), key=peaksKey)
+        def peaksSortKey(p):
+            return peakFromImage(self.im, p)
+        self.peaks[0] = sorted(sum(self.peaks, []), key=peaksSortKey)
 
         afwDetect.setMaskFromFootprintList(msk, self.fs.getFootprints(), msk.getPlaneBitMask("EDGE"))
 
