@@ -81,12 +81,14 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
         exc = None
         # only specify the root package if we are not doing an absolute import
         impargs = {}
-        if not dt.startswith("lsst"):
+        if dt.startswith("."):
             impargs["package"] = "lsst.display"
         try:
             _disp = importlib.import_module(dt, **impargs)
             break
         except (ImportError, SystemError) as e:
+            # SystemError can be raised in Python 3.5 if a relative import
+            # is attempted when the root package, lsst.display, does not exist.
             # Copy the exception into outer scope
             exc = e
 
