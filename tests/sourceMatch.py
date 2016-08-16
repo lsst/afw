@@ -1,10 +1,13 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from __future__ import print_function
+from builtins import zip
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008-2016 AURA/LSST.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +15,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -53,9 +56,11 @@ except pexExcept.NotFoundError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class SourceMatchTestCase(unittest.TestCase):
     """A test case for matching SourceSets
     """
+
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
         schema.addField("flux_flux", type=float)
@@ -118,7 +123,7 @@ class SourceMatchTestCase(unittest.TestCase):
         if False:
             s0 = mat[0][0]
             s1 = mat[0][1]
-            print s0.getRa(), s1.getRa(), s0.getId(), s1.getId()
+            print(s0.getRa(), s1.getRa(), s0.getId(), s1.getId())
 
     def testNaNPositions(self):
         ss1 = afwTable.SourceCatalog(self.table)
@@ -193,7 +198,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 continue
 
             fields = line.split()
-            id, flags = [int(f) for f in  fields[0:2]]
+            id, flags = [int(f) for f in fields[0:2]]
             ra, dec = [float(f) for f in fields[2:4]]
             flux = [float(f) for f in fields[4:]]
 
@@ -223,7 +228,7 @@ class SourceMatchTestCase(unittest.TestCase):
                 s0 = mat[0]
                 s1 = mat[1]
                 d = mat[2]
-                print s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
+                print(s0.getRa(), s0.getDec(), s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
 
         # Actually do the match
         for s in sdssSecondary:
@@ -245,7 +250,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
             for s in sdssSecondary:
                 if s.getId() not in matchIds:
-                    print "RHL", s.getId()
+                    print("RHL", s.getId())
 
         matches = afwTable.matchRaDec(sdss, 1.0*afwGeom.arcseconds)
         self.assertEqual(len(matches), 2*(len(sdssSecondary) - nmiss))
@@ -256,8 +261,8 @@ class SourceMatchTestCase(unittest.TestCase):
                 s0 = mat[0]
                 s1 = mat[1]
                 mat[2]
-                print s0.getId(), s1.getId(), s0.getRa(), s0.getDec(),
-                print s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux()
+                print(s0.getId(), s1.getId(), s0.getRa(), s0.getDec(), end=' ')
+                print(s1.getRa(), s1.getDec(), s0.getPsfFlux(), s1.getPsfFlux())
 
     def testMismatches(self):
         """ Chech that matchRaDec works as expected when using
@@ -352,13 +357,13 @@ class SourceMatchTestCase(unittest.TestCase):
             self.assertEqual(mat.distance, cat["distance"])
             self.assertEqual(mat.distance, catM["distance"])
 
-
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN
         """
         self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module.
@@ -370,6 +375,7 @@ def suite():
     suites += unittest.makeSuite(SourceMatchTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests

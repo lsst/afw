@@ -1,4 +1,6 @@
 from __future__ import absolute_import, division
+from builtins import range
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2016 LSST Corporation.
@@ -80,8 +82,8 @@ class BoxGrid(object):
     def __iter__(self):
         """!Return an iterator over all boxes, where column varies most quickly
         """
-        for row in xrange(self.numColRow[1]):
-            for col in xrange(self.numColRow[0]):
+        for row in range(self.numColRow[1]):
+            for col in range(self.numColRow[0]):
                 yield self[col, row]
 
 

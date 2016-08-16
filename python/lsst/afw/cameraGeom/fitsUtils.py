@@ -1,3 +1,5 @@
+from __future__ import division
+from builtins import object
 import re, warnings
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
@@ -48,7 +50,7 @@ class HeaderMap(dict):
            @param[in]      metadata  Metadata object used for applying the mapping
            @param[in]      doRaise   Raise exceptions on calling methods on the input object that do not exist?
         """
-        for key, attrDict in self.iteritems():
+        for key, attrDict in self.items():
             try:
                 value = getByKey(metadata, attrDict['keyName'])
                 if value is not None:
@@ -58,12 +60,12 @@ class HeaderMap(dict):
                     #otherwise assume the default value is transformed.
                     value = attrDict['default']
                     self._applyVal(obj, value, key, lambda x: x)
-            except Exception, e:
+            except Exception as e:
                 if doRaise:
                     raise
                 else:
                     warnings.warn('WARNING: Failed to set %s attribute with %s value: %s'%
-                                  (key, value, e.message))
+                                  (key, value, str(e)))
 
     def _applyVal(self, obj, value, attrName, transform):
         raise NotImplementedError('Must be implemented in sub-class')
@@ -83,9 +85,9 @@ class HeaderDetectorMap(HeaderMap):
         obj.__setattr__(attrName, transform(value))
 
 class DetectorBuilder(object):
-    def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1., 
+    def __init__(self, detectorFileName, ampFileNameList, inAmpCoords=True, plateScale=1.,
                  radialCoeffs=(0., 1.), clobberMetadata=False, doRaise=True):
-        ''' @param[in] detectorFileName  FITS file containing the detector description. 
+        ''' @param[in] detectorFileName  FITS file containing the detector description.
                                          May use [] notation to specify an extension in an MEF.
             @param[in] ampFileNameList   List of FITS file names to use in building the amps.
                                          May contain duplicate entries if the raw data are assembled.

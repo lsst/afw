@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <cstdio>
 #include <string>
 #include <algorithm>
@@ -80,7 +80,7 @@ void printT(afwImage::Image<PixelT>& src, const std::string& _title = "") {
             printf("%4g ", static_cast<float>((*src_it)[0]));
         }
 #endif
-        
+
         printf("\n");
     }
 }
@@ -102,14 +102,14 @@ void y_gradient(const afwImage::Image<PixelT>& src, const afwImage::Image<PixelT
 
     for (int r = 1; r < src.getHeight() - 1; ++r) {
         for (typename afwImage::Image<PixelT>::x_iterator dst_it = dst.row_begin(r);
-            dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {            
+            dst_it != dst.row_end(r); ++dst_it, ++src_loc.x()) {
 #if USE_CACHE_LOCATION                  // this version is faster
             *dst_it = (src_loc[above] - src_loc[below])/2;
 #else  // but this is possible too, and more general (but slower)
             *dst_it = (src_loc(0, 1) - src_loc(0, -1))/2;
 #endif
         }
-        
+
         src_loc += afwImage::detail::difference_type(-src.getWidth(), 1);
     }
 }
@@ -162,20 +162,20 @@ int main() {
 
     afwImage::Image<float> mmg(img, true);
     mmg = -1;                           // shouldn't modify img
-    
+
     printf("sub images\n");
 
     // img will be modified
     afwImage::Image<float> simg1(
         img, afwGeom::Box2I(
-            afwGeom::Point2I(1, 1), 
+            afwGeom::Point2I(1, 1),
             afwGeom::Extent2I(7, 3)
         ),
         afwImage::LOCAL
     );
     afwImage::Image<float> simg(
         simg1, afwGeom::Box2I(
-            afwGeom::Point2I(0, 0), 
+            afwGeom::Point2I(0, 0),
             afwGeom::Extent2I(5, 2)
         ),
         afwImage::LOCAL
@@ -196,13 +196,13 @@ int main() {
         std::fill(img.row_begin(r), img.row_end(r), 100*(1 + r));
     }
     print(img, "ramp img");
-    
+
     afwImage::Image<float> grad_y(img.getDimensions());
     grad_y = 0;
     y_gradient(img, grad_y);
 
     print(grad_y, "grad_y");
-    
+
     afwImage::Image<unsigned short> u16(img.getDimensions());
     u16 = 100;
     afwImage::Image<float> fl32(u16, true); // must be true as all type conversions are deep

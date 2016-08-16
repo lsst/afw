@@ -1,5 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from __future__ import print_function
+from builtins import zip
+from builtins import range
 
 #
 # LSST Data Management System
@@ -32,7 +35,6 @@ or
    python
    >>> import testSimpleTable; testSimpleTable.run()
 """
-
 import os.path
 import unittest
 import numpy
@@ -41,7 +43,7 @@ try:
     import pyfits
 except ImportError:
     pyfits = None
-    print "WARNING: pyfits not available; some tests will not be run"
+    print("WARNING: pyfits not available; some tests will not be run")
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -60,16 +62,19 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def makeArray(size, dtype):
     return numpy.array(numpy.random.randn(size), dtype=dtype)
+
 
 def makeCov(size, dtype):
     m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
     r = numpy.dot(m, m.transpose())  # not quite symmetric for single-precision on some platforms
     for i in range(r.shape[0]):
         for j in range(i):
-            r[i,j] = r[j,i]
+            r[i, j] = r[j, i]
     return r
+
 
 class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
@@ -146,7 +151,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=numpy.int32))
         self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
         self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
-        for k in (k10, k11): self.assertEqual(k.subfields, tuple(range(k.getSize())))
+        for k in (k10, k11):
+            self.assertEqual(k.subfields, tuple(range(k.getSize())))
         sub1 = k11.slice(1, 3)
         sub2 = k11[0:2]
         self.assertClose(record.get(sub1), record.get(k11)[1:3], rtol=0, atol=0)
@@ -205,7 +211,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
         catalog[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
         catalog[0].set(k6, lsst.afw.geom.Angle(0.25))
-        catalog[0].set(k7, numpy.array([2,3,4,1], dtype=numpy.uint16))
+        catalog[0].set(k7, numpy.array([2, 3, 4, 1], dtype=numpy.uint16))
         col1a = catalog[k1]
         self.assertEqual(col1a.shape, (1,))
         catalog.addNew()
@@ -219,7 +225,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
         catalog[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
         catalog[1].set(k6, lsst.afw.geom.Angle(0.15))
-        catalog[1].set(k7, numpy.array([5,6,8,7], dtype=numpy.uint16))
+        catalog[1].set(k7, numpy.array([5, 6, 8, 7], dtype=numpy.uint16))
         col1b = catalog[k1]
         self.assertEqual(col1b.shape, (2,))
         columns = catalog.getColumnView()
@@ -301,11 +307,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         schema.addField("q_e2_xx_xy_Cov", type=numpy.float32)
         schema.addField("q_e2_yy_xy_Cov", type=numpy.float32)
         covKey = lsst.afw.table.CovarianceMatrix3fKey(schema["q_e2"], ["xx", "yy", "xy"])
-        self.assertEqual(schema.extract("a_b_*", ordered=True).keys(), ["a_b_c1", "a_b_c2"])
-        self.assertEqual(schema.extract("*1", ordered=True).keys(), ["a_b_c1", "a_d1"])
-        self.assertEqual(schema.extract("a_b_*", "*2", ordered=True).keys(),
+        self.assertEqual(list(schema.extract("a_b_*", ordered=True).keys()), ["a_b_c1", "a_b_c2"])
+        self.assertEqual(list(schema.extract("*1", ordered=True).keys()), ["a_b_c1", "a_d1"])
+        self.assertEqual(list(schema.extract("a_b_*", "*2", ordered=True).keys()),
                          ["a_b_c1", "a_b_c2", "a_d2"])
-        self.assertEqual(schema.extract(regex=r"a_(.+)1", sub=r"\1f", ordered=True).keys(), ["b_cf", "df"])
+        self.assertEqual(list(schema.extract(regex=r"a_(.+)1", sub=r"\1f",
+                                             ordered=True).keys()), ["b_cf", "df"])
         catalog = lsst.afw.table.BaseCatalog(schema)
         for i in range(5):
             record = catalog.addNew()
@@ -314,7 +321,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             record.set("a_d1", numpy.random.randint(100))
             record.set("a_d2", numpy.random.randn())
             record.set(pointKey, lsst.afw.geom.Point2I(numpy.random.randint(10), numpy.random.randint(10)))
-            record.set(covKey, numpy.random.randn(3,3).astype(numpy.float32))
+            record.set(covKey, numpy.random.randn(3, 3).astype(numpy.float32))
         d = record.extract("*")
         self.assertEqual(set(d.keys()), set(schema.getNames()))
         self.assertEqual(d["a_b_c1"], record.get("a_b_c1"))
@@ -333,7 +340,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             ({"where": sliceIdx}, sliceIdx),
             ({"where": boolIdx, "copy": True}, boolIdx),
             ({"where": sliceIdx, "copy": True}, sliceIdx),
-            ]:
+        ]:
             d = catalog.extract("*", **kwds)
             self.assert_(numpy.all(d["a_b_c1"] == catalog.get("a_b_c1")[idx]))
             self.assert_(numpy.all(d["a_b_c2"] == catalog.get("a_b_c2")[idx]))
@@ -436,9 +443,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertTrue((cat2[key] == numpy.array([1], dtype=int)).all())
         self.assertEqual(cat2[0], cat1[0])  # records compare using pointer equality
         cat3 = cat1[numpy.array([True, True, False], dtype=bool)]
-        self.assertTrue((cat3[key] == numpy.array([1,2], dtype=int)).all())
+        self.assertTrue((cat3[key] == numpy.array([1, 2], dtype=int)).all())
         cat4 = cat1[numpy.array([True, False, True], dtype=bool)]
-        self.assertTrue((cat4.copy(deep=True)[key] == numpy.array([1,3], dtype=int)).all())
+        self.assertTrue((cat4.copy(deep=True)[key] == numpy.array([1, 3], dtype=int)).all())
 
     def testTicket2938(self):
         """Test heterogenous catalogs that have records from multiple tables"""
@@ -450,7 +457,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat.append(t1.makeRecord())
         self.assertEqual(cat[-1].getTable(), t1)
         self.assertRaises(lsst.pex.exceptions.RuntimeError,
-                                             cat.getColumnView)
+                          cat.getColumnView)
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             cat.writeFits(filename)  # shouldn't throw
             schema.addField("d", type=float, doc="doc for d")
@@ -481,7 +488,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat.sort(kf)
         self.assertTrue(cat.isSorted(kf))
         r10 = cat.find(10, kf)
-        self.assertTrue(r10 is None or r10.get(kf) == 10.0) # latter case virtually impossible
+        self.assertTrue(r10 is None or r10.get(kf) == 10.0)  # latter case virtually impossible
         i0 = cat.lower_bound(-0.5, kf)
         i1 = cat.upper_bound(0.5, kf)
         for i in range(i0, i1):
@@ -552,20 +559,20 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         k2a = schema.addField("f2", doc="f2a", type="Flag")
         k3a = schema.addField("f3", doc="f3a", type="ArrayF", size=4)
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                                             schema.addField, "f1", doc="f1b", type="I")
+                          schema.addField, "f1", doc="f1b", type="I")
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                                             schema.addField, "f2", doc="f2b", type="Flag")
+                          schema.addField, "f2", doc="f2b", type="Flag")
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                                             schema.addField, "f1", doc="f1b", type="F")
+                          schema.addField, "f1", doc="f1b", type="F")
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                                             schema.addField, "f2", doc="f2b", type="F")
+                          schema.addField, "f2", doc="f2b", type="F")
         self.assertRaises(lsst.pex.exceptions.TypeError,
-                                             schema.addField, "f1", doc="f1b", type="F", doReplace=True)
+                          schema.addField, "f1", doc="f1b", type="F", doReplace=True)
         self.assertRaises(lsst.pex.exceptions.TypeError,
-                                             schema.addField, "f2", doc="f2b", type="F", doReplace=True)
+                          schema.addField, "f2", doc="f2b", type="F", doReplace=True)
         self.assertRaises(lsst.pex.exceptions.TypeError,
-                                             schema.addField, "f3", doc="f3b", type="ArrayF",
-                                             size=3, doReplace=True)
+                          schema.addField, "f3", doc="f3b", type="ArrayF",
+                          size=3, doReplace=True)
         k1b = schema.addField("f1", doc="f1b", type="I", doReplace=True)
         self.assertEqual(k1a, k1b)
         self.assertEqual(schema.find(k1a).field.getDoc(), "f1b")
@@ -622,7 +629,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(numpy.all(record1.get(kb) == b1))
         self.assertTrue(numpy.all(record1.get(kc) == c1))
         record1[kb][2] = 4.5
-        self.assertEqual(record2[kb][2], 3.5) # copy in assign() should be deep
+        self.assertEqual(record2[kb][2], 3.5)  # copy in assign() should be deep
         mapper = lsst.afw.table.SchemaMapper(schema)
         kb2 = mapper.addMapping(kb)
         cat2 = lsst.afw.table.BaseCatalog(mapper.getOutputSchema())
@@ -667,7 +674,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         filename = os.path.join(os.path.split(__file__)[0], "data", "CompoundFieldConversion.fits")
         cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
         record2 = cat2[0]
-        for k, v in geomValues.iteritems():
+        for k, v in geomValues.items():
             self.assertEqual(record2.get(k), v, msg=k)
         covZKey = lsst.afw.table.CovarianceMatrixXfKey(cat2.schema["cov_z"], ["0", "1", "2", "3"])
         covPKey = lsst.afw.table.CovarianceMatrix2fKey(cat2.schema["cov_p"], ["x", "y"])
@@ -677,6 +684,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertClose(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -688,7 +696,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

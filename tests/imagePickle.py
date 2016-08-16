@@ -1,5 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from builtins import range
 
 #
 # LSST Data Management System
@@ -33,8 +34,10 @@ import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 
+
 class ImagePickleTestCase(unittest.TestCase):
     """A test case for Image pickling"""
+
     def setUp(self):
         self.xSize = 4
         self.ySize = 7
@@ -56,7 +59,7 @@ class ImagePickleTestCase(unittest.TestCase):
         return image
 
     def createPattern(self):
-        yy, xx = numpy.ogrid[0:self.ySize, 0:self.xSize] # NB: numpy operates 'backwards'
+        yy, xx = numpy.ogrid[0:self.ySize, 0:self.xSize]  # NB: numpy operates 'backwards'
         return self.xSize*yy + xx
 
     def assertImagesEqual(self, image, original):
@@ -65,8 +68,8 @@ class ImagePickleTestCase(unittest.TestCase):
         self.assertEqual(image.getWidth(), original.getWidth())
         self.assertEqual(image.getY0(), original.getY0())
         self.assertEqual(image.getX0(), original.getX0())
-        for x in xrange(0, original.getWidth()):
-            for y in xrange(0, image.getHeight()):
+        for x in range(0, original.getWidth()):
+            for y in range(0, image.getHeight()):
                 self.assertEqual(image.get(x, y), original.get(x, y))
 
     def checkImages(self, original):
@@ -94,7 +97,7 @@ class ImagePickleTestCase(unittest.TestCase):
                                afwGeom.Point2D(0.0, 0.0), scale, 0.0, 0.0, scale)
         for MaskedImage in (afwImage.MaskedImageF,
                             afwImage.MaskedImageD,
-                        ):
+                            ):
             image = self.createMaskedImage(MaskedImage)
             self.checkImages(image)
             exposure = afwImage.makeExposure(image, wcs)
@@ -112,6 +115,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

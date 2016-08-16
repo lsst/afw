@@ -1,10 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,18 +12,19 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import os, os.path
+import os
+import os.path
 import unittest
 
 import lsst.afw.image as afwImage
@@ -35,6 +36,7 @@ DATA = os.path.join("tests", "data", "ticket2352.fits")
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class ReadMefTest(unittest.TestCase):
     """Test the reading of a multi-extension FITS (MEF) file"""
+
     def checkExtName(self, name, value, extNum):
         filename = DATA + "[%s]" % name
 
@@ -43,7 +45,7 @@ class ReadMefTest(unittest.TestCase):
         self.assertEqual(header.get("EXTNAME").strip(), name)
 
         image = afwImage.ImageI(filename)
-        self.assertEqual(image.get(0,0), value)
+        self.assertEqual(image.get(0, 0), value)
 
     def testExtName(self):
         self.checkExtName("ONE", 1, 2)
@@ -55,7 +57,7 @@ class ReadMefTest(unittest.TestCase):
         self.assertEqual(header.get("EXT_NUM"), extNum)
 
     def testExtNum(self):
-        self.checkExtNum(0, 2) # Should skip PHU
+        self.checkExtNum(0, 2)  # Should skip PHU
         self.checkExtNum(1, 1)
         self.checkExtNum(2, 2)
         self.checkExtNum(3, 3)
@@ -73,6 +75,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

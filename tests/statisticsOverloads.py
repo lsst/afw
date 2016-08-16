@@ -1,10 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +13,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -49,9 +50,11 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class StatisticsTestCase(unittest.TestCase):
-    
+
     """A test case to check all overloaded makeStatistics() factories for Statistics"""
+
     def setUp(self):
         self.val = 10
         self.nRow, self.nCol = 100, 200
@@ -75,14 +78,20 @@ class StatisticsTestCase(unittest.TestCase):
         self.imgD = afwImage.ImageD(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
         self.vecD = afwMath.vectorD(self.nRow*self.nCol, self.val)
 
-        self.imgList  = [self.imgI,  self.imgF,  self.imgD]
+        self.imgList = [self.imgI, self.imgF, self.imgD]
         self.mimgList = [self.mimgI, self.mimgF, self.mimgD]
-        self.vecList  = [self.vecI,  self.vecF,  self.vecD]
-        
+        self.vecList = [self.vecI, self.vecF, self.vecD]
+
     def tearDown(self):
-        del self.mimgI; del self.mimgF; del self.mimgD
-        del self.imgI; del self.imgF; del self.imgD
-        del self.vecI; del self.vecF; del self.vecD
+        del self.mimgI
+        del self.mimgF
+        del self.mimgD
+        del self.imgI
+        del self.imgF
+        del self.imgD
+        del self.vecI
+        del self.vecF
+        del self.vecD
 
         del self.mimgList
         del self.imgList
@@ -144,18 +153,16 @@ class StatisticsTestCase(unittest.TestCase):
                                          afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
                                          self.sctrl)
             statsF = afwMath.StatisticsF(self.mimgF.getImage(), self.mimgF.getMask(),
-                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
+                                         afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
                                          self.sctrl)
             statsD = afwMath.StatisticsD(self.mimgD.getImage(), self.mimgD.getMask(),
-                                        afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
+                                         afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM,
                                          self.sctrl)
 
             self.compareStatistics(statsI, self.mimgI.getWidth()*self.mimgI.getHeight())
             self.compareStatistics(statsF, self.mimgF.getWidth()*self.mimgF.getHeight())
             self.compareStatistics(statsD, self.mimgD.getWidth()*self.mimgD.getHeight())
-        
-        
-            
+
     # Test the Mask specialization
     def testMask(self):
         mask = afwImage.MaskU(afwGeom.Extent2I(10, 10))
@@ -176,6 +183,7 @@ class StatisticsTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -186,7 +194,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

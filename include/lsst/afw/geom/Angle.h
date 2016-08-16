@@ -62,7 +62,7 @@ class Angle;
  * \code
  *    Angle pi = 180*degrees;
  * \endcode
- * is equivalent to 
+ * is equivalent to
  * \code
  *    Angle pi(180, degrees);
  * \endcode
@@ -151,9 +151,9 @@ public:
 		if (_val >= TWOPI)
 			_val = 0.0;
 	}
-	
+
 	/** Wrap this angle to the range [-pi, pi)
-	
+
 	@warning Exact limits are only guaranteed for radians; limits for other units
 	may be slightly squishy, due to roundoff errors. Whether there are any violations is unknown;
 	please update this comment if you can prove that the limits are or are not valid for all supported units.
@@ -175,9 +175,9 @@ public:
             }
         }
 	}
-	
+
 	/** Wrap this angle such that pi <= this - refAng < pi
-	
+
 	@warning Exact limits are only guaranteed for radians; limits for other units
 	may be slightly squishy due to roundoff errors. There are known violations
 	that are demonstrated in testWrap in tests/angle.py.
@@ -201,7 +201,7 @@ public:
             _val -= _val * 2.0 * std::numeric_limits<double>::epsilon();
         }
 	}
-	
+
 
 #define ANGLE_OPUP_TYPE(OP, TYPE)                             \
     Angle& operator OP(TYPE const& d) {						  \
@@ -280,7 +280,7 @@ inline const Angle operator /(Angle const a, double d) {
 
 template<typename T>
 	double operator /(T const lhs, Angle const rhs);
-            
+
 /************************************************************************************************************/
 /**
  * \brief Allow a user to check if they have an angle (yes; they could do this themselves via trivial TMP)

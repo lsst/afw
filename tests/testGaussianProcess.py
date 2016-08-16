@@ -1,5 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from __future__ import print_function
+from builtins import range
 
 #
 # LSST Data Management System
@@ -29,35 +31,36 @@ import lsst.afw.math as gp
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pex
 
+
 class GaussianProcessTestCase(unittest.TestCase):
-    
+
     def testTooManyNeighbors(self):
         """
         Test that GaussianProcess checks if too many neighbours are requested
         """
         nData = 100                        # number of data points
         dimen = 10                         # dimension of each point
-        data = np.zeros((nData,dimen))
+        data = np.zeros((nData, dimen))
         fn = np.zeros(nData)
         gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
         test = np.zeros(dimen)
         sigma = np.empty(1)
         mu_arr = np.empty(1)
 
-        self.assertRaises(pex.Exception,gg.interpolate,sigma,test,2*nData)
-        self.assertRaises(pex.Exception,gg.interpolate,sigma,test,-5)
-        self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,0,2*nData)
-        self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,0,-5)
-        self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,-1,nData-1)
+        self.assertRaises(pex.Exception, gg.interpolate, sigma, test, 2*nData)
+        self.assertRaises(pex.Exception, gg.interpolate, sigma, test, -5)
+        self.assertRaises(pex.Exception, gg.selfInterpolate, sigma, 0, 2*nData)
+        self.assertRaises(pex.Exception, gg.selfInterpolate, sigma, 0, -5)
+        self.assertRaises(pex.Exception, gg.selfInterpolate, sigma, -1, nData-1)
         # the following segfaults, for unknown reasons, so run directly instead
-        #self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
+        # self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
         try:
-            gg.interpolate(mu_arr,sigma,2*nData)
+            gg.interpolate(mu_arr, sigma, 2*nData)
             self.fail("gg.interpolate(mu_arr,sigma,2*nData) did not fail")
         except pex.Exception:
             pass
-        self.assertRaises(pex.Exception,gg.interpolate,mu_arr,sigma,2*nData)
-        self.assertRaises(pex.Exception,gg.interpolate,mu_arr,sigma,-5)
+        self.assertRaises(pex.Exception, gg.interpolate, mu_arr, sigma, 2*nData)
+        self.assertRaises(pex.Exception, gg.interpolate, mu_arr, sigma, -5)
 
     def testInterpolate(self):
         """
@@ -72,20 +75,20 @@ class GaussianProcessTestCase(unittest.TestCase):
         coordinate values with minima and maxima.
         """
 
-        pp = 2000 #number of data points
-        dd = 10 #number of dimensions
-        kk = 15 #number of nearest neighbors being used
-        tol = 1.0e-3 #the largest relative error that will be tolerated
+        pp = 2000  # number of data points
+        dd = 10  # number of dimensions
+        kk = 15  # number of nearest neighbors being used
+        tol = 1.0e-3  # the largest relative error that will be tolerated
 
-        data = np.zeros((pp,dd),dtype = float) #input data points
-        fn = np.zeros((pp),dtype = float) #input function values
-        test = np.zeros((dd),dtype = float) #query points
-        sigma = np.zeros((1),dtype = float) #variance
+        data = np.zeros((pp, dd), dtype=float)  # input data points
+        fn = np.zeros((pp), dtype=float)  # input function values
+        test = np.zeros((dd), dtype=float)  # query points
+        sigma = np.zeros((1), dtype=float)  # variance
 
-        xx=gp.SquaredExpCovariogramD()
+        xx = gp.SquaredExpCovariogramD()
         xx.setEllSquared(100.0)
 
-        #read in the input data
+        # read in the input data
         f = open("tests/data/gp_exp_covar_data.sav")
         ff = f.readlines()
         f.close()
@@ -96,34 +99,34 @@ class GaussianProcessTestCase(unittest.TestCase):
             for j in range(10):
                 data[i][j] = float(s[j])
 
-        #first try the squared exponential covariogram (the default)
+        # first try the squared exponential covariogram (the default)
         try:
-            gg = gp.GaussianProcessD(data,fn,xx)
+            gg = gp.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.001)
 
-        #now, read in the test points and their corresponding known solutions
+        # now, read in the test points and their corresponding known solutions
         f = open("tests/data/gp_exp_covar_solutions.sav")
         ff = f.readlines()
         f.close()
 
-        worstMuErr = -1.0 #keep track of the worst fractional error in mu
-        worstSigErr = -1.0 #keep track of the worst fractional error in the variance
+        worstMuErr = -1.0  # keep track of the worst fractional error in mu
+        worstSigErr = -1.0  # keep track of the worst fractional error in the variance
 
         for z in range(len(ff)):
-            s = ff[z].split() #s will store the zth line of the solution file
+            s = ff[z].split()  # s will store the zth line of the solution file
             for i in range(dd):
-                test[i] = float(s[i]) #read in the test point coordinates
+                test[i] = float(s[i])  # read in the test point coordinates
 
-            mushld = float(s[dd + kk]) #read in what mu should be
-            sigshld = float(s[dd + kk + 1]) #read in what the variance should be
+            mushld = float(s[dd + kk])  # read in what mu should be
+            sigshld = float(s[dd + kk + 1])  # read in what the variance should be
 
-            mu = gg.interpolate(sigma,test,kk)
+            mu = gg.interpolate(sigma, test, kk)
 
             err = (mu - mushld)
-            if mushld !=  0.0:
+            if mushld != 0.0:
                 err = err/mushld
 
             if err < 0.0:
@@ -132,7 +135,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                 worstMuErr = err
 
             err = (sigma[0] - sigshld)
-            if sigshld !=  0.0:
+            if sigshld != 0.0:
                 err = err/sigshld
 
             if err < 0.0:
@@ -140,18 +143,18 @@ class GaussianProcessTestCase(unittest.TestCase):
             if z == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for squared exponent covariogram\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for squared exponent covariogram\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
-        #now try with the Neural Network covariogram
+        # now try with the Neural Network covariogram
 
         kk = 50
 
-        nn=gp.NeuralNetCovariogramD()
+        nn = gp.NeuralNetCovariogramD()
         nn.setSigma0(1.23)
         nn.setSigma1(0.452)
 
@@ -173,10 +176,10 @@ class GaussianProcessTestCase(unittest.TestCase):
             mushld = float(s[dd + kk])
             sigshld = float(s[dd + kk + 1])
 
-            mu = gg.interpolate(sigma,test,kk)
+            mu = gg.interpolate(sigma, test, kk)
 
             err = (mu - mushld)
-            if mushld !=  0.0:
+            if mushld != 0.0:
                 err = err/mushld
 
             if err < 0.0:
@@ -185,7 +188,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                 worstMuErr = err
 
             err = (sigma[0] - sigshld)
-            if sigshld !=  0.0:
+            if sigshld != 0.0:
                 err = err/sigshld
 
             if err < 0.0:
@@ -193,9 +196,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if z == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for neural net covariogram\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for neural net covariogram\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
@@ -215,22 +218,21 @@ class GaussianProcessTestCase(unittest.TestCase):
         dd = 10
         kk = 50
         tol = 1.0e-4
-        data = np.zeros((pp,dd),dtype = float)
-        fn = np.zeros((pp),dtype = float)
-        test = np.zeros((dd),dtype = float)
-        sigma = np.zeros((1),dtype = float)
+        data = np.zeros((pp, dd), dtype=float)
+        fn = np.zeros((pp), dtype=float)
+        test = np.zeros((dd), dtype=float)
+        sigma = np.zeros((1), dtype=float)
 
-        mins = np.zeros((dd),dtype = float)
-        maxs = np.zeros((dd),dtype = float)
+        mins = np.zeros((dd), dtype=float)
+        maxs = np.zeros((dd), dtype=float)
 
-        nn=gp.NeuralNetCovariogramD()
+        nn = gp.NeuralNetCovariogramD()
         nn.setSigma0(0.555)
         nn.setSigma1(0.112)
 
         f = open("tests/data/gp_exp_covar_data.sav")
         ff = f.readlines()
         f.close()
-
 
         for i in range(len(ff)):
             s = ff[i].split()
@@ -248,9 +250,9 @@ class GaussianProcessTestCase(unittest.TestCase):
         mins[2] = 0.0
         maxs[2] = 10.0
         try:
-            gg = gp.GaussianProcessD(data,mins,maxs,fn,nn)
+            gg = gp.GaussianProcessD(data, mins, maxs, fn, nn)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.0045)
 
@@ -268,19 +270,19 @@ class GaussianProcessTestCase(unittest.TestCase):
             mushld = float(s[dd + kk])
             sigshld = float(s[dd + kk + 1])
 
-            mu = gg.interpolate(sigma,test,kk)
+            mu = gg.interpolate(sigma, test, kk)
 
             err = (mu - mushld)
-            if mushld !=  0.0:
+            if mushld != 0.0:
                 err = err/mushld
 
             if err < 0.0:
                 err = -1.0 * err
             if z == 0 or err > worstMuErr:
-                 worstMuErr = err
+                worstMuErr = err
 
             err = (sigma[0] - sigshld)
-            if sigshld !=  0.0:
+            if sigshld != 0.0:
                 err = err/sigshld
 
             if err < 0.0:
@@ -288,9 +290,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if z == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for Gaussian process using min-max normalization\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for Gaussian process using min-max normalization\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
@@ -305,35 +307,34 @@ class GaussianProcessTestCase(unittest.TestCase):
         kk = 15
         tol = 1.0e-4
 
-        data = np.zeros((pp,dd),dtype = float)
-        fn = np.zeros((pp),dtype = float)
-        test = np.zeros((dd),dtype = float)
-        sigma = np.zeros((1),dtype = float)
+        data = np.zeros((pp, dd), dtype=float)
+        fn = np.zeros((pp), dtype=float)
+        test = np.zeros((dd), dtype=float)
+        sigma = np.zeros((1), dtype=float)
 
-        xx=gp.SquaredExpCovariogramD()
+        xx = gp.SquaredExpCovariogramD()
         xx.setEllSquared(5.0)
 
         f = open("tests/data/gp_additive_test_root.sav")
         ff = f.readlines()
         f.close()
 
-
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             fn[i] = float(s[10])
             for j in range(10):
                 data[i][j] = float(s[j])
 
-        #establish the Gaussian Process
+        # establish the Gaussian Process
         try:
-            gg = gp.GaussianProcessD(data,fn,xx)
+            gg = gp.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.002)
 
-        #now add new points to it and see if GaussianProcess.interpolate performs
-        #correctly
+        # now add new points to it and see if GaussianProcess.interpolate performs
+        # correctly
         f = open("tests/data/gp_additive_test_data.sav")
         ff = f.readlines()
         f.close()
@@ -343,10 +344,9 @@ class GaussianProcessTestCase(unittest.TestCase):
                 test[i] = float(s[i])
                 mushld = float(s[dd])
             try:
-                gg.addPoint(test,mushld)
+                gg.addPoint(test, mushld)
             except pex.Exception as e:
-                print e.what()
-
+                print(e.what())
 
         f = open("tests/data/gp_additive_test_solutions.sav")
         ff = f.readlines()
@@ -363,7 +363,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             mushld = float(s[dd + kk])
             sigshld = float(s[dd + kk + 1])
 
-            mu = gg.interpolate(sigma,test,kk)
+            mu = gg.interpolate(sigma, test, kk)
 
             err = (mu - mushld)
             if mushld != 0:
@@ -381,11 +381,9 @@ class GaussianProcessTestCase(unittest.TestCase):
             if z == 0 or err > worstSigErr:
                 worstSigErr = err
 
-
-        print "\nThe errors for the test of adding points to the Gaussian process\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
-
+        print("\nThe errors for the test of adding points to the Gaussian process\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
@@ -397,8 +395,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         """
         pp = 100
         dd = 5
-        data = np.zeros((pp,dd),dtype = float)
-        tol=1.0e-10
+        data = np.zeros((pp, dd), dtype=float)
+        tol = 1.0e-10
 
         f = open("tests/data/kd_test_data.sav")
         ff = f.readlines()
@@ -412,69 +410,68 @@ class GaussianProcessTestCase(unittest.TestCase):
         try:
             kd.Initialize(data)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         kds = gp.KdTreeD()
 
         try:
             kds.Initialize(data)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         try:
             kds.removePoint(2)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
-        worstErr=-1.0
+        worstErr = -1.0
         for i in range(100):
             if i > 2:
-                dd=0.0
+                dd = 0.0
                 for j in range(5):
-                    dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
-                if dd>worstErr:
-                    worstErr=dd
-        self.assertTrue(worstErr<tol)
+                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
+                if dd > worstErr:
+                    worstErr = dd
+        self.assertTrue(worstErr < tol)
 
         try:
             kd.removePoint(2)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         try:
             kds.removePoint(10)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         for i in range(99):
             if i > 10:
-                dd=0.0
+                dd = 0.0
                 for j in range(5):
-                    dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
-                if dd>worstErr:
-                    worstErr=dd
-        self.assertTrue(worstErr<tol)
+                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
+                if dd > worstErr:
+                    worstErr = dd
+        self.assertTrue(worstErr < tol)
 
         try:
             kd.removePoint(10)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         try:
             kds.removePoint(21)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         for i in range(98):
             if i > 21:
-                dd=0.0
+                dd = 0.0
                 for j in range(5):
-                    dd = dd+(kd.getData(i,j)-kds.getData(i-1,j))*(kd.getData(i,j)-kds.getData(i-1,j))
-                if dd>worstErr:
-                    worstErr=dd
-        self.assertTrue(worstErr<tol)
-        print "\nworst distance error in kdTest ",worstErr,"\n"
-
+                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
+                if dd > worstErr:
+                    worstErr = dd
+        self.assertTrue(worstErr < tol)
+        print("\nworst distance error in kdTest ", worstErr, "\n")
 
     def testBatch(self):
         """
@@ -485,10 +482,10 @@ class GaussianProcessTestCase(unittest.TestCase):
         dd = 10
         tol = 1.0e-3
 
-        data = np.zeros((pp,dd),dtype = float)
-        fn = np.zeros((pp),dtype = float)
+        data = np.zeros((pp, dd), dtype=float)
+        fn = np.zeros((pp), dtype=float)
 
-        f = open("tests/data/gp_exp_covar_data.sav","r");
+        f = open("tests/data/gp_exp_covar_data.sav", "r")
         ff = f.readlines()
         f.close()
         for i in range(100):
@@ -497,27 +494,27 @@ class GaussianProcessTestCase(unittest.TestCase):
                 data[i][j] = float(s[j])
             fn[i] = float(s[dd])
 
-        xx=gp.SquaredExpCovariogramD();
+        xx = gp.SquaredExpCovariogramD()
         xx.setEllSquared(2.0)
 
         try:
-            gg = gp.GaussianProcessD(data,fn,xx)
+            gg = gp.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.0032)
 
-        f = open("tests/data/gp_batch_solutions.sav","r")
+        f = open("tests/data/gp_batch_solutions.sav", "r")
         ff = f.readlines()
         f.close()
 
         ntest = len(ff)
-        mushld = np.zeros((ntest),dtype = float)
-        varshld = np.zeros((ntest),dtype = float)
-        mu = np.zeros((ntest),dtype = float)
-        var = np.zeros((ntest),dtype = float)
+        mushld = np.zeros((ntest), dtype=float)
+        varshld = np.zeros((ntest), dtype=float)
+        mu = np.zeros((ntest), dtype=float)
+        var = np.zeros((ntest), dtype=float)
 
-        queries = np.zeros((ntest,dd),dtype = float)
+        queries = np.zeros((ntest, dd), dtype=float)
 
         for i in range(ntest):
             s = ff[i].split()
@@ -526,14 +523,14 @@ class GaussianProcessTestCase(unittest.TestCase):
             mushld[i] = float(s[dd])
             varshld[i] = float(s[dd + 1])
 
-        #test with variance calculation
-        gg.batchInterpolate(mu,var,queries)
+        # test with variance calculation
+        gg.batchInterpolate(mu, var, queries)
 
         worstMuErr = -1.0
         worstVarErr = -1.0
         for i in range(ntest):
             err = mu[i]-mushld[i]
-            if mushld[i] !=  0.0:
+            if mushld[i] != 0.0:
                 err = err/mushld[i]
             if err < 0.0:
                 err = -1.0 * err
@@ -548,12 +545,12 @@ class GaussianProcessTestCase(unittest.TestCase):
             if err > worstVarErr:
                 worstVarErr = err
 
-        #test without variance interpolation
-        #continue keeping track of worstMuErr
-        gg.batchInterpolate(mu,queries)
+        # test without variance interpolation
+        # continue keeping track of worstMuErr
+        gg.batchInterpolate(mu, queries)
         for i in range(ntest):
             err = mu[i]-mushld[i]
-            if mushld[i] !=  0.0:
+            if mushld[i] != 0.0:
                 err = err/mushld[i]
             if err < 0.0:
                 err = -1.0 * err
@@ -563,9 +560,9 @@ class GaussianProcessTestCase(unittest.TestCase):
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstVarErr < tol)
 
-        print "\nThe errors for batch interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstVarErr
+        print("\nThe errors for batch interpolation\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstVarErr)
 
     def testSelf(self):
         """
@@ -576,10 +573,10 @@ class GaussianProcessTestCase(unittest.TestCase):
         tol = 1.0e-3
         kk = 20
 
-        data = np.zeros((pp,dd),dtype = float)
-        fn = np.zeros((pp),dtype = float)
+        data = np.zeros((pp, dd), dtype=float)
+        fn = np.zeros((pp), dtype=float)
 
-        f = open("tests/data/gp_exp_covar_data.sav","r");
+        f = open("tests/data/gp_exp_covar_data.sav", "r")
         ff = f.readlines()
         f.close()
         for i in range(pp):
@@ -588,21 +585,20 @@ class GaussianProcessTestCase(unittest.TestCase):
                 data[i][j] = float(s[j])
             fn[i] = float(s[dd])
 
-
-        xx=gp.SquaredExpCovariogramD()
+        xx = gp.SquaredExpCovariogramD()
         xx.setEllSquared(20.0)
         try:
-            gg = gp.GaussianProcessD(data,fn,xx)
+            gg = gp.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setKrigingParameter(30.0)
         gg.setLambda(0.00002)
 
-        f = open("tests/data/gp_self_solutions.sav","r")
+        f = open("tests/data/gp_self_solutions.sav", "r")
         ff = f.readlines()
         f.close()
-        variance = np.zeros((1),dtype = float)
+        variance = np.zeros((1), dtype=float)
 
         worstMuErr = -1.0
         worstSigErr = -1.0
@@ -613,13 +609,12 @@ class GaussianProcessTestCase(unittest.TestCase):
             sig2shld = float(s[1])
 
             try:
-                mu = gg.selfInterpolate(variance,i,kk)
+                mu = gg.selfInterpolate(variance, i, kk)
             except pex.Exception as e:
-                print e.what()
-
+                print(e.what())
 
             err = mu - mushld
-            if mushld !=  0.0:
+            if mushld != 0.0:
                 err = err/mushld
             if err < 0.0:
                 err = err * (-1.0)
@@ -627,16 +622,16 @@ class GaussianProcessTestCase(unittest.TestCase):
                 worstMuErr = err
 
             err = variance[0] - sig2shld
-            if sig2shld !=  0.0:
+            if sig2shld != 0.0:
                 err = err/sig2shld
             if err < 0.0:
                 err = err * (-1.0)
             if i == 0 or err > worstSigErr:
                 worstSigErr = err
 
-        print "\nThe errors for self interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for self interpolation\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
@@ -645,359 +640,352 @@ class GaussianProcessTestCase(unittest.TestCase):
         This will test interpolate using a vector of functions
         """
 
-        tol=1.0e-3
-        data=np.zeros((2000,10), dtype = float)
-        fn=np.zeros((2000,4), dtype = float)
-        mu=np.zeros((4), dtype=float)
-        sig=np.zeros((4), dtype = float)
-        mushld=np.zeros((4), dtype = float)
-        vv=np.zeros((10), dtype = float)
-        vvf=np.zeros((4), dtype = float)
+        tol = 1.0e-3
+        data = np.zeros((2000, 10), dtype=float)
+        fn = np.zeros((2000, 4), dtype=float)
+        mu = np.zeros((4), dtype=float)
+        sig = np.zeros((4), dtype=float)
+        mushld = np.zeros((4), dtype=float)
+        vv = np.zeros((10), dtype=float)
+        vvf = np.zeros((4), dtype=float)
 
-        kk=30
+        kk = 30
 
-        f=open("tests/data/gp_vector_data.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_vector_data.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             for j in range(10):
-                data[i][j]=float(s[j])
+                data[i][j] = float(s[j])
             for j in range(4):
-                fn[i][j]=float(s[j+10])
+                fn[i][j] = float(s[j+10])
 
-        nn=gp.NeuralNetCovariogramD()
+        nn = gp.NeuralNetCovariogramD()
         nn.setSigma0(2.25)
         nn.setSigma1(0.76)
         try:
-            gg=gp.GaussianProcessD(data,fn,nn);
+            gg = gp.GaussianProcessD(data, fn, nn)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.0045)
 
-        worstMuErr=-1.0
-        worstSigErr=-1.0
-        f=open("tests/data/gp_vector_solutions.sav","r")
-        ff=f.readlines()
+        worstMuErr = -1.0
+        worstSigErr = -1.0
+        f = open("tests/data/gp_vector_solutions.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             for j in range(10):
-                vv[j]=float(s[j])
+                vv[j] = float(s[j])
             for j in range(4):
-                mushld[j]=float(s[j+10])
-            sigshld=float(s[14])
+                mushld[j] = float(s[j+10])
+            sigshld = float(s[14])
 
-            gg.interpolate(mu,sig,vv,kk)
+            gg.interpolate(mu, sig, vv, kk)
 
             for j in range(4):
-                muErr= (mu[j]-mushld[j])/mushld[j]
+                muErr = (mu[j]-mushld[j])/mushld[j]
                 sigErr = (sig[j]-sigshld)/sigshld
                 if muErr < 0.0:
                     muErr = -1.0 * muErr
                 if sigErr < 0.0:
                     sigErr = -1.0 * sigErr
                 if (muErr > worstMuErr):
-                    worstMuErr=muErr
+                    worstMuErr = muErr
                 if (sigErr > worstSigErr):
-                    worstSigErr=sigErr
+                    worstSigErr = sigErr
 
-
-        print "\nThe errors for vector interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector interpolation\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
-        worstMuErr=-1.0
-        worstSigErr=-1.0
+        worstMuErr = -1.0
+        worstSigErr = -1.0
 
-        f=open("tests/data/gp_vector_selfinterpolate_solutions.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_vector_selfinterpolate_solutions.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             try:
-                gg.selfInterpolate(mu,sig,i,kk);
+                gg.selfInterpolate(mu, sig, i, kk)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
             for j in range(4):
-                mushld[j]=float(s[j])
-                sigshld=float(s[4])
+                mushld[j] = float(s[j])
+                sigshld = float(s[4])
 
             for j in range(4):
-                muErr=(mu[j]-mushld[j])/mushld[j]
+                muErr = (mu[j]-mushld[j])/mushld[j]
                 if muErr < -1.0:
-                    muErr=-1.0 * muErr
-                if muErr>worstMuErr:
-                    worstMuErr=muErr
+                    muErr = -1.0 * muErr
+                if muErr > worstMuErr:
+                    worstMuErr = muErr
 
-                sigErr=(sig[j]-sigshld)/sigshld
-                if sigErr<-1.0:
+                sigErr = (sig[j]-sigshld)/sigshld
+                if sigErr < -1.0:
                     sigErr = -1.0*sigErr
-                if sigErr>worstSigErr:
-                    worstSigErr=sigErr
+                if sigErr > worstSigErr:
+                    worstSigErr = sigErr
 
-
-
-        print "\nThe errors for vector self interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector self interpolation\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
-        queries=np.zeros((100,10), dtype = float)
-        batchMu=np.zeros((100,4), dtype = float)
-        batchSig=np.zeros((100,4), dtype = float)
-        batchMuShld=np.zeros((100,4), dtype = float)
-        batchSigShld=np.zeros((100,4), dtype = float)
-        batchData=np.zeros((200,10), dtype = float)
-        batchFunctions=np.zeros((200,4), dtype = float)
+        queries = np.zeros((100, 10), dtype=float)
+        batchMu = np.zeros((100, 4), dtype=float)
+        batchSig = np.zeros((100, 4), dtype=float)
+        batchMuShld = np.zeros((100, 4), dtype=float)
+        batchSigShld = np.zeros((100, 4), dtype=float)
+        batchData = np.zeros((200, 10), dtype=float)
+        batchFunctions = np.zeros((200, 4), dtype=float)
 
-        f=open("tests/data/gp_vectorbatch_data.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_vectorbatch_data.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             for j in range(10):
-                batchData[i][j]=float(s[j])
+                batchData[i][j] = float(s[j])
             for j in range(4):
-                batchFunctions[i][j]=float(s[j+10])
-
+                batchFunctions[i][j] = float(s[j+10])
 
         try:
-            ggbatch=gp.GaussianProcessD(batchData,batchFunctions,nn)
+            ggbatch = gp.GaussianProcessD(batchData, batchFunctions, nn)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         ggbatch.setLambda(0.0045)
 
-        f=open("tests/data/gp_vectorbatch_solutions.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_vectorbatch_solutions.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             for j in range(10):
-                queries[i][j]=float(s[j])
+                queries[i][j] = float(s[j])
             for j in range(4):
-                batchMuShld[i][j]=float(s[j+10])
-            sigShld=float(s[14])
+                batchMuShld[i][j] = float(s[j+10])
+            sigShld = float(s[14])
             for j in range(4):
-                batchSigShld[i][j]=sigShld
+                batchSigShld[i][j] = sigShld
 
-
-        ggbatch.batchInterpolate(batchMu,batchSig,queries)
-        worstMuErr=-1.0
-        worstSigErr=-1.0
+        ggbatch.batchInterpolate(batchMu, batchSig, queries)
+        worstMuErr = -1.0
+        worstSigErr = -1.0
         for i in range(100):
             for j in range(4):
-                muErr=(batchMu[i][j]-batchMuShld[i][j])/batchMuShld[i][j]
-                sigErr=(batchSig[i][j]-batchSigShld[i][j])/batchSigShld[i][j]
+                muErr = (batchMu[i][j]-batchMuShld[i][j])/batchMuShld[i][j]
+                sigErr = (batchSig[i][j]-batchSigShld[i][j])/batchSigShld[i][j]
                 if muErr < 0.0:
                     muErr = muErr * (-1.0)
                 if sigErr < 0.0:
                     sigErr = sigErr * (-1.0)
 
-                if muErr>worstMuErr:
-                    worstMuErr=muErr
-                if sigErr>worstSigErr:
-                    worstSigErr=sigErr
+                if muErr > worstMuErr:
+                    worstMuErr = muErr
+                if sigErr > worstSigErr:
+                    worstSigErr = sigErr
 
-        print "\nThe errors for vector batch interpolation with variance\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector batch interpolation with variance\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
-        ggbatch.batchInterpolate(batchMu,queries)
-        worstMuErr=-1.0
-        worstSigErr=-1.0
+        ggbatch.batchInterpolate(batchMu, queries)
+        worstMuErr = -1.0
+        worstSigErr = -1.0
         for i in range(100):
             for j in range(4):
-                muErr=(batchMu[i][j]-batchMuShld[i][j])/batchMuShld[i][j]
+                muErr = (batchMu[i][j]-batchMuShld[i][j])/batchMuShld[i][j]
                 if muErr < 0.0:
                     muErr = muErr * (-1.0)
 
-                if muErr>worstMuErr:
-                    worstMuErr=muErr
+                if muErr > worstMuErr:
+                    worstMuErr = muErr
 
-
-        print "\nThe errors for vector batch interpolation without variance\n"
-        print "worst mu error ",worstMuErr
+        print("\nThe errors for vector batch interpolation without variance\n")
+        print("worst mu error ", worstMuErr)
         self.assertTrue(worstMuErr < tol)
 
-
-        f=open("tests/data/gp_vector_add_data.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_vector_add_data.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             for j in range(10):
-                vv[j]=float(s[j])
+                vv[j] = float(s[j])
             for j in range(4):
-                vvf[j]=float(s[j+10])
+                vvf[j] = float(s[j+10])
             try:
-                gg.addPoint(vv,vvf)
+                gg.addPoint(vv, vvf)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
-        f=open("tests/data/gp_vector_add_solutions.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_vector_add_solutions.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             try:
-                gg.selfInterpolate(mu,sig,i,kk);
+                gg.selfInterpolate(mu, sig, i, kk)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
             for j in range(4):
-                mushld[j]=float(s[j])
-            sigshld=float(s[4])
+                mushld[j] = float(s[j])
+            sigshld = float(s[4])
 
             for j in range(4):
-                muErr=(mu[j]-mushld[j])/mushld[j]
+                muErr = (mu[j]-mushld[j])/mushld[j]
             if muErr < 0.0:
-                muErr=-1.0 * muErr
-            if muErr>worstMuErr:
-                worstMuErr=muErr
+                muErr = -1.0 * muErr
+            if muErr > worstMuErr:
+                worstMuErr = muErr
 
-            sigErr=(sig[j]-sigshld)/sigshld
-            if sigErr<0.0:
+            sigErr = (sig[j]-sigshld)/sigshld
+            if sigErr < 0.0:
                 sigErr = -1.0*sigErr
-            if sigErr>worstSigErr:
-                worstSigErr=sigErr
+            if sigErr > worstSigErr:
+                worstSigErr = sigErr
 
-        print "\nThe errors for vector add interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for vector add interpolation\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
 
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
-
 
     def testSubtraction(self):
         """
         This will test interpolate after subtracting points
         """
 
-        tol=1.0e-3
-        data=np.zeros((2000,10), dtype = float)
-        fn=np.zeros((2000,4), dtype = float)
-        mu=np.zeros((4), dtype=float)
-        sig=np.zeros((4), dtype = float)
-        mushld=np.zeros((4), dtype = float)
-        vv=np.zeros((10), dtype = float)
-        kk=30
+        tol = 1.0e-3
+        data = np.zeros((2000, 10), dtype=float)
+        fn = np.zeros((2000, 4), dtype=float)
+        mu = np.zeros((4), dtype=float)
+        sig = np.zeros((4), dtype=float)
+        mushld = np.zeros((4), dtype=float)
+        vv = np.zeros((10), dtype=float)
+        kk = 30
 
-        f=open("tests/data/gp_subtraction_data.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_subtraction_data.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             for j in range(10):
-                data[i][j]=float(s[j])
+                data[i][j] = float(s[j])
             for j in range(4):
-                fn[i][j]=float(s[j+10])
+                fn[i][j] = float(s[j+10])
 
-        xx=gp.SquaredExpCovariogramD()
+        xx = gp.SquaredExpCovariogramD()
         xx.setEllSquared(2.3)
         try:
-            gg=gp.GaussianProcessD(data,fn,xx);
+            gg = gp.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
-            print e.what()
+            print(e.what())
 
         gg.setLambda(0.002)
 
-        j=1
+        j = 1
         for i in range(1000):
             try:
                 gg.removePoint(j)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
-            j=j+1
+            j = j+1
 
-        worstMuErr=-1.0
-        worstSigErr=-1.0
-        f=open("tests/data/gp_subtraction_solutions.sav","r")
-        ff=f.readlines()
+        worstMuErr = -1.0
+        worstSigErr = -1.0
+        f = open("tests/data/gp_subtraction_solutions.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             for j in range(10):
-                vv[j]=float(s[j])
+                vv[j] = float(s[j])
             for j in range(4):
-                mushld[j]=float(s[j+10])
-            sigshld=float(s[14])
+                mushld[j] = float(s[j+10])
+            sigshld = float(s[14])
 
-            gg.interpolate(mu,sig,vv,kk)
+            gg.interpolate(mu, sig, vv, kk)
 
             for j in range(4):
-                muErr= (mu[j]-mushld[j])/mushld[j]
+                muErr = (mu[j]-mushld[j])/mushld[j]
                 sigErr = (sig[j]-sigshld)/sigshld
                 if muErr < 0.0:
                     muErr = -1.0 * muErr
                 if sigErr < 0.0:
                     sigErr = -1.0 * sigErr
                 if (muErr > worstMuErr):
-                    worstMuErr=muErr
+                    worstMuErr = muErr
                 if (sigErr > worstSigErr):
-                    worstSigErr=sigErr
+                    worstSigErr = sigErr
 
-
-        print "\nThe errors for subtraction interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for subtraction interpolation\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
 
-        worstMuErr=-1.0
-        worstSigErr=-1.0
+        worstMuErr = -1.0
+        worstSigErr = -1.0
 
-        f=open("tests/data/gp_subtraction_selfinterpolate_solutions.sav","r")
-        ff=f.readlines()
+        f = open("tests/data/gp_subtraction_selfinterpolate_solutions.sav", "r")
+        ff = f.readlines()
         f.close()
         for i in range(len(ff)):
-            s=ff[i].split()
+            s = ff[i].split()
             try:
-                gg.selfInterpolate(mu,sig,i,kk);
+                gg.selfInterpolate(mu, sig, i, kk)
             except pex.Exception as e:
-                print e.what()
+                print(e.what())
 
             for j in range(4):
-                mushld[j]=float(s[j])
-                sigshld=float(s[4])
+                mushld[j] = float(s[j])
+                sigshld = float(s[4])
 
             for j in range(4):
-                muErr=(mu[j]-mushld[j])/mushld[j]
+                muErr = (mu[j]-mushld[j])/mushld[j]
                 if muErr < 0.0:
-                    muErr=-1.0 * muErr
-                if muErr>worstMuErr:
-                    worstMuErr=muErr
+                    muErr = -1.0 * muErr
+                if muErr > worstMuErr:
+                    worstMuErr = muErr
 
-                sigErr=(sig[j]-sigshld)/sigshld
-                if sigErr<0.0:
+                sigErr = (sig[j]-sigshld)/sigshld
+                if sigErr < 0.0:
                     sigErr = -1.0*sigErr
-                if sigErr>worstSigErr:
-                    worstSigErr=sigErr
+                if sigErr > worstSigErr:
+                    worstSigErr = sigErr
 
-        print "\nThe errors for subtraction self interpolation\n"
-        print "worst mu error ",worstMuErr
-        print "worst sig2 error ",worstSigErr
+        print("\nThe errors for subtraction self interpolation\n")
+        print("worst mu error ", worstMuErr)
+        print("worst sig2 error ", worstSigErr)
         self.assertTrue(worstMuErr < tol)
         self.assertTrue(worstSigErr < tol)
+
 
 def suite():
     utilsTests.init()
     suites = []
-    suites  +=  unittest.makeSuite(GaussianProcessTestCase)
+    suites += unittest.makeSuite(GaussianProcessTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
-    utilsTests.run(suite(),shouldExit)
+
+def run(shouldExit=False):
+    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)

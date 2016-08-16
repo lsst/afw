@@ -248,8 +248,8 @@ public:
     /**
      *  @brief Add a FITS header key to the bottom of the header.
      *
-     *  If the key is HISTORY or COMMENT and the value is a std::string or C-string, 
-     *  a special HISTORY or COMMENT key will be appended (and the comment argument 
+     *  If the key is HISTORY or COMMENT and the value is a std::string or C-string,
+     *  a special HISTORY or COMMENT key will be appended (and the comment argument
      *  will be ignored if present).
      */
     template <typename T>
@@ -506,7 +506,7 @@ public:
     void * fptr;  // the actual cfitsio fitsfile pointer; void to avoid including fitsio.h here.
     int status;   // the cfitsio status indicator that gets passed to every cfitsio call.
     int behavior; // bitwise OR of BehaviorFlags
-}; 
+};
 
 #endif // !SWIG
 

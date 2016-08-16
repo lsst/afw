@@ -1,3 +1,4 @@
+from __future__ import division
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010, 2015 LSST Corporation.
@@ -45,13 +46,13 @@ ignored otherwise).
 
 N.b. objects derived from BaseCore include Axes and Quadrupole.
 """
-    if ctype == None:
+    if ctype is None:
         color = ""                       # the default
     else:
         color = ' # color=%s' % ctype
 
     regions = []
-    
+
     r += 1
     c += 1                      # ds9 uses 1-based coordinates
     if isinstance(symb, afwGeom.ellipses.Axes):
@@ -74,10 +75,10 @@ N.b. objects derived from BaseCore include Axes and Quadrupole.
         regions.append('circle %g %g %gi%s' % (c, r, size, color))
     else:
         color = re.sub("^ # ", "", color) # skip the leading " # "
-        
+
         angle = ""
         if textAngle is not None:
-            angle += " textangle=%.1f"%(textAngle) 
+            angle += " textangle=%.1f"%(textAngle)
 
         font = ""
         if size != 2 or fontFamily != "helvetica":

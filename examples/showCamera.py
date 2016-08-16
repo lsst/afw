@@ -22,6 +22,10 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import print_function
+from __future__ import division
+from builtins import input
+from builtins import zip
 import math
 import numpy
 import matplotlib.pyplot as plt
@@ -54,7 +58,7 @@ def main(camera, sample=20, showDistortion=True):
 
             ccd = cameraGeom.cast_Ccd(ccd)
             ccd.setTrimmed(True)
-            
+
             width, height = ccd.getAllPixels(True).getDimensions()
 
             corners = ((0.0,0.0), (0.0, height), (width, height), (width, 0.0), (0.0, 0.0))
@@ -81,10 +85,10 @@ def main(camera, sample=20, showDistortion=True):
 
                     # Calculate offset (in CCD pixels) due to distortion
                     distortion = dist.distort(afwGeom.Point2D(x, y), ccd) - afwGeom.Extent2D(x, y)
-                    
+
                     # Calculate the distorted position
                     distorted = position + cameraGeom.FpPoint(distortion)*ccd.getPixelSize()
-                    
+
                     xDistort.append(distorted.getMm().getX())
                     yDistort.append(distorted.getMm().getY())
 
@@ -103,7 +107,7 @@ def main(camera, sample=20, showDistortion=True):
 if __name__ == '__main__':
     import argparse
     import sys
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("camera", help="Name of camera to show")
     parser.add_argument("--showDistortion", action="store_true", help="Show distortion?")
@@ -117,10 +121,10 @@ if __name__ == '__main__':
     elif args.camera.lower() == "lsstsim":
         from lsst.obs.lsstSim import LsstSimMapper as Mapper
     else:
-        print >> sys.stderr, "Unknown camera %s" % args.camera
+        print("Unknown camera %s" % args.camera, file=sys.stderr)
         sys.exit(1)
-    
+
     camera = Mapper().camera
 
     main(camera, showDistortion=args.showDistortion, sample=2)
-    print "Hit any key to exit",; raw_input()
+    print("Hit any key to exit", end=' '); input()

@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 
 /** @file
  * @brief Implementation of TanWcsFormatter class
@@ -201,16 +201,16 @@ afwForm::TanWcsFormatter::generatePropertySet(afwImg::TanWcs const& wcs) {
     wcsProps->add("CRVAL2", wcs._wcsInfo[0].crval[1], "WCS Ref value (DEC in decimal degrees)");
     wcsProps->add("CUNIT1", std::string(wcs._wcsInfo[0].cunit[0]));
     wcsProps->add("CUNIT2", std::string(wcs._wcsInfo[0].cunit[1]));
-    
-    //Hack. Because wcslib4.3 gets confused when it's passed RA---TAN-SIP, 
+
+    //Hack. Because wcslib4.3 gets confused when it's passed RA---TAN-SIP,
     //we set the value of ctypes to just RA---TAN, regardless of whether
-    //the SIP types are present. But when we persist to a file, we need to 
-    //check whether the SIP polynomials were actually there and correct 
-    //ctypes if necessary. Bad things will happen if someone tries to 
+    //the SIP types are present. But when we persist to a file, we need to
+    //check whether the SIP polynomials were actually there and correct
+    //ctypes if necessary. Bad things will happen if someone tries to
     //use a system other than RA---TAN and DEC--TAN
     std::string ctype1(wcs._wcsInfo[0].ctype[0]);
     std::string ctype2(wcs._wcsInfo[0].ctype[1]);
-    
+
     if (wcs._hasDistortion) {
         if (ctype1.rfind("-SIP") == std::string::npos) {
             ctype1 += "-SIP";
@@ -244,14 +244,14 @@ void afwForm::TanWcsFormatter::delegateSerialize(
     ar & ip->_coordSystem;
 
     ar & ip->_hasDistortion;
-    
+
     if(ip->_hasDistortion) {
         serializeEigenArray(ar, ip->_sipA);
         serializeEigenArray(ar, ip->_sipAp);
         serializeEigenArray(ar, ip->_sipB);
         serializeEigenArray(ar, ip->_sipBp);
     }
-        
+
     // If we are loading, create the array of Wcs parameter structs
     if (Archive::is_loading::value) {
         ip->_wcsInfo =

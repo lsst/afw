@@ -1,10 +1,12 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from __future__ import print_function
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +14,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 import math
@@ -34,7 +36,7 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
 
-VERBOSITY = 0 # increase to see trace
+VERBOSITY = 0  # increase to see trace
 
 pexLog.Debug("lsst.afw", VERBOSITY)
 
@@ -47,9 +49,11 @@ LocNameDict = {
     mathDetail.KernelImagesForRegion.TOP_RIGHT: "TOP_RIGHT",
 }
 
-NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.iteritems())
+NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.items())
+
 
 class KernelImagesForRegion(utilsTests.TestCase):
+
     def setUp(self):
         boxCorner = afwGeom.Point2I(11, 50)
         boxExtent = afwGeom.Extent2I(100, 99)
@@ -63,10 +67,11 @@ class KernelImagesForRegion(utilsTests.TestCase):
 
     def assertRegionCorrect(self, region):
         """Assert that a region has correct corner images
-        
+
         This test is only relevant for operations that try to reuse the image array data
         """
-        regionCopy = mathDetail.KernelImagesForRegion(region.getKernel(), region.getBBox(), region.getXY0(), region.getDoNormalize())
+        regionCopy = mathDetail.KernelImagesForRegion(
+            region.getKernel(), region.getBBox(), region.getXY0(), region.getDoNormalize())
 
         for location in (
             region.BOTTOM_LEFT,
@@ -90,7 +95,7 @@ class KernelImagesForRegion(utilsTests.TestCase):
 
         # create spatial model
         sFunc = afwMath.PolynomialFunction2D(1)
-        
+
         minSigma = 0.1
         maxSigma = 3.0
 
@@ -102,11 +107,11 @@ class KernelImagesForRegion(utilsTests.TestCase):
         yOrigin = minSigma - (self.xy0[1] * ySlope)
         sParams = (
             (xOrigin, xSlope, 0.0),
-            (yOrigin, 0.0,    ySlope),
+            (yOrigin, 0.0, ySlope),
             (0.0, 0.0, 0.0),
         )
-   
-        kFunc =  afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
+
+        kFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kCols, kRows, kFunc, sFunc)
         kernel.setSpatialParameters(sParams)
         return kernel
@@ -129,18 +134,18 @@ class KernelImagesForRegion(utilsTests.TestCase):
         topInd = self.bbox.getMaxY() + 1
         int(round((leftInd + rightInd) / 2.0))
         int(round((bottomInd + topInd) / 2.0))
-        
+
         for location, desIndex in (
-            (region.BOTTOM_LEFT,  (leftInd,  bottomInd)),
+            (region.BOTTOM_LEFT, (leftInd, bottomInd)),
             (region.BOTTOM_RIGHT, (rightInd, bottomInd)),
-            (region.TOP_LEFT,     (leftInd,  topInd)),
-            (region.TOP_RIGHT,    (rightInd, topInd)),
+            (region.TOP_LEFT, (leftInd, topInd)),
+            (region.TOP_RIGHT, (rightInd, topInd)),
         ):
             desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
             self.assert_(region.getPixelIndex(location) == desPixIndex,
-                "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
-                    desPixIndex)
-            )
+                         "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
+                                                           desPixIndex)
+                         )
 
     def testComputeNextRow(self):
         """Test computeNextRow method and the resulting RowOfKernelImagesForRegion
@@ -185,7 +190,7 @@ class KernelImagesForRegion(utilsTests.TestCase):
                 try:
                     self.assertRegionCorrect(subregion)
                 except:
-                    print "failed on xInd=%s, yInd=%s" % (xInd, yInd)
+                    print("failed on xInd=%s, yInd=%s" % (xInd, yInd))
                     raise
                 bbox = subregion.getBBox()
                 rowWidth += bbox.getWidth()
@@ -201,12 +206,12 @@ class KernelImagesForRegion(utilsTests.TestCase):
             self.assert_(rowWidth == self.bbox.getWidth())
         self.assert_(totalHeight == self.bbox.getHeight())
         self.assert_(not region.computeNextRow(regionRow))
-    
+
     def testExactImages(self):
         """Confirm that kernel image at each location is correct
         """
         desImage = afwImage.ImageD(afwGeom.Extent2I(self.kernel.getWidth(), self.kernel.getHeight()))
-        
+
         for doNormalize in (False, True):
             region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, doNormalize)
             for location in (
@@ -219,11 +224,11 @@ class KernelImagesForRegion(utilsTests.TestCase):
                 xPos = afwImage.indexToPosition(pixelIndex[0] + self.xy0[0])
                 yPos = afwImage.indexToPosition(pixelIndex[1] + self.xy0[1])
                 self.kernel.computeImage(desImage, doNormalize, xPos, yPos)
-                
+
                 actImage = region.getImage(location)
                 msg = "exact image(%s) incorrect" % (LocNameDict[location],)
                 self.assertImagesNearlyEqual(actImage, desImage, msg=msg)
-    
+
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -236,6 +241,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(doExit=False):
     """Run the tests"""

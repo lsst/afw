@@ -28,4 +28,4 @@ ReadoutCornerValNameDict = {
     tableLib.UR: "UR",
     tableLib.UL: "UL",
 }
-ReadoutCornerNameValDict = dict((val, key) for key, val in ReadoutCornerValNameDict.iteritems())
+ReadoutCornerNameValDict = {val: key for key, val in ReadoutCornerValNameDict.items()}

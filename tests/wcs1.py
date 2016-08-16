@@ -1,10 +1,12 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from __future__ import print_function
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +14,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -60,13 +62,15 @@ InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName
 
 CoordSysList = [afwCoord.ICRS, afwCoord.FK5, afwCoord.ECLIPTIC, afwCoord.GALACTIC]
 
+
 def coordSysEquinoxIter(equinoxList=(1950, 1977, 2000)):
     for coordSys in CoordSysList:
         if coordSys in (afwCoord.FK5, afwCoord.ECLIPTIC):
             for equinox in equinoxList:
                 yield (coordSys, equinox)
         else:
-            yield (coordSys, 2000) # Coord's default
+            yield (coordSys, 2000)  # Coord's default
+
 
 def makeWcs(
     pixelScale=0.2*afwGeom.arcseconds,
@@ -79,7 +83,7 @@ def makeWcs(
     equinox=2000
 ):
     """Make an simple TAN WCS with sensible defaults
-    
+
     @param[in] pixelScale: desired scale, as sky/pixel, an afwGeom.Angle
     @param[in] crPixPos: crPix for WCS, using the LSST standard; a pair of floats
     @param[in] crValDeg: crVal for WCS, in degrees; a pair of floats
@@ -94,20 +98,20 @@ def makeWcs(
 
     csysPrefixes, radesys = {
         afwCoord.ICRS: (("RA", "DEC"), "ICRS"),
-        afwCoord.FK5:  (("RA", "DEC"), "FK5"),
+        afwCoord.FK5: (("RA", "DEC"), "FK5"),
         afwCoord.ECLIPTIC: (("ELON", "ELAT"), None),
         afwCoord.GALACTIC: (("GLON", "GLAT"), None),
     }[coordSys]
 
     ctypeList = [("%-4s-%3s" % (csysPrefixes[i], projection)).replace(" ", "-") for i in range(2)]
     ps = dafBase.PropertySet()
-    crPixFits = [ind + 1.0 for ind in crPixPos] # convert pix position to FITS standard
+    crPixFits = [ind + 1.0 for ind in crPixPos]  # convert pix position to FITS standard
     posAngRad = posAng.asRadians()
     pixelScaleDeg = pixelScale.asDegrees()
-    cdMat = numpy.array([[ math.cos(posAngRad), math.sin(posAngRad)],
+    cdMat = numpy.array([[math.cos(posAngRad), math.sin(posAngRad)],
                          [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
     if doFlipX:
-        cdMat[:,0] = -cdMat[:,0]
+        cdMat[:, 0] = -cdMat[:, 0]
     for i in range(2):
         ip1 = i + 1
         ps.add("CTYPE%1d" % (ip1,), ctypeList[i])
@@ -122,6 +126,7 @@ def makeWcs(
     ps.add("CD2_2", cdMat[1, 1])
     return afwImage.makeWcs(ps)
 
+
 def localMakeCoord(coordSys, posDeg, equinox):
     """Make a coord, ignoring equinox if necessary
     """
@@ -129,28 +134,30 @@ def localMakeCoord(coordSys, posDeg, equinox):
         return afwCoord.makeCoord(coordSys, posDeg[0]*afwGeom.degrees, posDeg[1]*afwGeom.degrees)
     return afwCoord.makeCoord(coordSys, posDeg[0]*afwGeom.degrees, posDeg[1]*afwGeom.degrees, equinox)
 
+
 class WcsTestCase(utilsTests.TestCase):
+
     def testCD_PC(self):
         """Test that we can read a FITS file with both CD and PC keys (like early Suprimecam files)"""
         md = dafBase.PropertyList()
         for k, v in (
             ("EQUINOX", 2000.0),
             ("RADESYS", 'FK5'),
-            ("CRPIX1" , 5353.0),
-            ("CRPIX2" , -35.0),
-            ("CD1_1"  , 0.0),
-            ("CD1_2"  , -5.611E-05),
-            ("CD2_1"  , -5.611E-05),
-            ("CD2_2"  , -0.0),
-            ("CRVAL1" , 4.5789875),
-            ("CRVAL2" , 16.30004444),
-            ("CUNIT1" , 'deg'),
-            ("CUNIT2" , 'deg'),
-            ("CTYPE1" , 'RA---TAN'),
-            ("CTYPE2" , 'DEC--TAN'),
-            ("CDELT1" , -5.611E-05),
-            ("CDELT2" , 5.611E-05),
-            ):
+            ("CRPIX1", 5353.0),
+            ("CRPIX2", -35.0),
+            ("CD1_1", 0.0),
+            ("CD1_2", -5.611E-05),
+            ("CD2_1", -5.611E-05),
+            ("CD2_2", -0.0),
+            ("CRVAL1", 4.5789875),
+            ("CRVAL2", 16.30004444),
+            ("CUNIT1", 'deg'),
+            ("CUNIT2", 'deg'),
+            ("CTYPE1", 'RA---TAN'),
+            ("CTYPE2", 'DEC--TAN'),
+            ("CDELT1", -5.611E-05),
+            ("CDELT2", 5.611E-05),
+        ):
             md.set(k, v)
 
         wcs = afwImage.makeWcs(md)
@@ -164,20 +171,20 @@ class WcsTestCase(utilsTests.TestCase):
 
         for badPC in (False, True):
             if verbose:
-                print "Checking PC coefficients: badPC =", badPC
+                print("Checking PC coefficients: badPC =", badPC)
             for k, v in (
-                ("PC001001",  0.0),
+                ("PC001001", 0.0),
                 ("PC001002", -1.0 if badPC else 1.0),
-                ("PC002001",  1.0 if badPC else -1.0),
-                ("PC002002",  0.0),
-                ):
+                ("PC002001", 1.0 if badPC else -1.0),
+                ("PC002002", 0.0),
+            ):
                 md.set(k, v)
 
             # Check Greisen and Calabretta A&A 395 1061 (2002), Eq. 3
             if not badPC:
                 for i in (1, 2,):
                     for j in (1, 2,):
-                        self.assertEqual(md.get("CD%d_%d" % (i, j)), 
+                        self.assertEqual(md.get("CD%d_%d" % (i, j)),
                                          md.get("CDELT%d" % i)*md.get("PC00%d00%d" % (i, j)))
 
             wcs = afwImage.makeWcs(md)
@@ -203,7 +210,7 @@ class WcsTestCase(utilsTests.TestCase):
         compute: sky2 = wcs2.pixelToSky(wcs1.skyToPixel(sky1)
         The result should be the same numerical values, but with wcs2's coordinate system and equinox
         """
-        crValDeg=(27.53, 87.123)
+        crValDeg = (27.53, 87.123)
         for coordSys1, equinox1 in coordSysEquinoxIter():
             wcs1 = makeWcs(crValDeg=crValDeg, coordSys=coordSys1, equinox=equinox1)
             for coordSys2, equinox2 in coordSysEquinoxIter():
@@ -213,7 +220,8 @@ class WcsTestCase(utilsTests.TestCase):
                     pixPos = wcs1.skyToPixel(coord1)
                     coord2 = wcs2.pixelToSky(pixPos)
 
-                    desCoord2 = localMakeCoord(coordSys2, (coord1[0].asDegrees(), coord1[1].asDegrees()), equinox2)
+                    desCoord2 = localMakeCoord(
+                        coordSys2, (coord1[0].asDegrees(), coord1[1].asDegrees()), equinox2)
                     self.assertCoordsNearlyEqual(coord2, desCoord2)
 
     def testGetCoordSys(self):
@@ -261,8 +269,10 @@ class WcsTestCase(utilsTests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class WCSRotateFlip(unittest.TestCase):
     """A test case for the methods to rotate and flip a wcs under similar operations to the image pixels"""
+
     def setUp(self):
         self.size = afwGeom.Extent2I(509, 2000)
 
@@ -277,13 +287,13 @@ class WCSRotateFlip(unittest.TestCase):
     def testRotation(self):
         # Origin for LSST pixels is (0,0).  Need to subtract one when rotating to avoid off by one.
         # E.g. UR (507, 1999) goes to (0,0) for nRot = 2
-        q1 = {0:afwGeom.Point2D(100., 1600.), 
-              1:afwGeom.Point2D(self.size.getY() - 1600. - 1, 100.),
-              2:afwGeom.Point2D(self.size.getX() - 100. - 1, self.size.getY() - 1600. - 1),
-              3:afwGeom.Point2D(1600., self.size.getX() - 100. - 1)}
+        q1 = {0: afwGeom.Point2D(100., 1600.),
+              1: afwGeom.Point2D(self.size.getY() - 1600. - 1, 100.),
+              2: afwGeom.Point2D(self.size.getX() - 100. - 1, self.size.getY() - 1600. - 1),
+              3: afwGeom.Point2D(1600., self.size.getX() - 100. - 1)}
         wcs = self.makeWcs()
         pos0 = wcs.pixelToSky(q1[0])
-        for rot in (1,2,3):
+        for rot in (1, 2, 3):
             wcs = self.makeWcs()
             wcs.rotateImageBy90(rot, self.size)
             self.assertEqual(pos0, wcs.pixelToSky(q1[rot]))
@@ -301,18 +311,19 @@ class WCSRotateFlip(unittest.TestCase):
         wcs.flipImage(False, True, self.size)
         self.assertEqual(pos0, wcs.pixelToSky(q1['flipTB']))
 
+
 class WCSTestCaseSDSS(unittest.TestCase):
     """A test case for WCS using a small (SDSS) image with a slightly weird WCS"""
 
     def setUp(self):
         if InputSmallImagePath is not None:
             self.im = afwImage.DecoratedImageD(InputSmallImagePath)
-    
+
             self.wcs = afwImage.makeWcs(self.im.getMetadata())
         else:
             self.im = None
             self.wcs = None
-    
+
             if False:
                 ds9.mtv(self.im, wcs=self.wcs)
 
@@ -355,34 +366,34 @@ class WCSTestCaseSDSS(unittest.TestCase):
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
         # values from wcstools xy2sky (v3.8.1). Confirmed by ds9
-        raDec0 = afwGeom.Point2D(245.15984167, +19.1960472) 
+        raDec0 = afwGeom.Point2D(245.15984167, +19.1960472)
         raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()
 
         self.assertAlmostEqual(raDec.getX(), raDec0.getX(), 5)
-        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5) 
+        self.assertAlmostEqual(raDec.getY(), raDec0.getY(), 5)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testIdentity(self):
         """Convert from ra, dec to col, row and back again"""
         raDec = afwCoord.makeCoord(afwCoord.ICRS, 244 * afwGeom.degrees, 20 * afwGeom.degrees)
         if verbose:
-            print 'testIdentity'
-            print 'wcs:'
+            print('testIdentity')
+            print('wcs:')
             for x in self.wcs.getFitsMetadata().toList():
-                print '  ', x
-            print 'raDec:', raDec
-            print type(self.wcs)
+                print('  ', x)
+            print('raDec:', raDec)
+            print(type(self.wcs))
         rowCol = self.wcs.skyToPixel(raDec)
         raDec2 = self.wcs.pixelToSky(rowCol)
 
         if verbose:
-            print 'rowCol:', rowCol
-            print 'raDec2:', raDec2
+            print('rowCol:', rowCol)
+            print('raDec2:', raDec2)
 
         p1 = raDec.getPosition()
         p2 = raDec.getPosition()
         if verbose:
-            print 'p1,p2', p1,p2
+            print('p1,p2', p1, p2)
         self.assertAlmostEqual(p1[0], p2[0])
         self.assertAlmostEqual(p1[1], p2[1])
 
@@ -457,16 +468,16 @@ class WCSTestCaseSDSS(unittest.TestCase):
             return afwImage.makeWcs(ps)
 
         wcs = makeWcs(
-            crPixPos = (100.0, 100.0),
-            crValDeg = (10.0, 35.0),
-            projection = "STG", # also fails for TAN
+            crPixPos=(100.0, 100.0),
+            crValDeg=(10.0, 35.0),
+            projection="STG",  # also fails for TAN
         )
 
         exposure = afwImage.ExposureF(bbox, wcs)
         pixPos = afwGeom.Box2D(bbox).getMax()
         if verbose:
-            print "XY0=", exposure.getXY0()
-            print "pixPos=", pixPos
+            print("XY0=", exposure.getXY0())
+            print("pixPos=", pixPos)
         skyPos = wcs.pixelToSky(pixPos)
 
         with utilsTests.getTempFilePath(".fits") as tmpFile:
@@ -481,12 +492,13 @@ class WCSTestCaseSDSS(unittest.TestCase):
                 unpPixPos = unpWcs.skyToPixel(skyPos)
 
                 if verbose:
-                    print "useExposure=%s; unp pixPos=%s" % (useExposure, unpPixPos)
+                    print("useExposure=%s; unp pixPos=%s" % (useExposure, unpPixPos))
 
                 for i in range(2):
                     self.assertAlmostEqual(unpPixPos[i], 1009.5)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 @unittest.skipIf(afwdataDir is None, "afwdata not setup")
 class WCSTestCaseCFHT(unittest.TestCase):
@@ -505,10 +517,10 @@ class WCSTestCaseCFHT(unittest.TestCase):
 
     def test_RaTan_DecTan(self):
         """Check the RA---TAN, DEC--TAN WCS conversion"""
-        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition() # position read off ds9
+        raDec = self.wcs.pixelToSky(0.0, 0.0).getPosition()  # position read off ds9
 
-        self.assertAlmostEqual(raDec[0], 17.87673, 5) # ra from ds9
-        self.assertAlmostEqual(raDec[1],  7.72231, 5) # dec from ds9
+        self.assertAlmostEqual(raDec[0], 17.87673, 5)  # ra from ds9
+        self.assertAlmostEqual(raDec[1], 7.72231, 5)  # dec from ds9
 
     def testPlateScale(self):
         """Test that we can measure the area of a pixel"""
@@ -525,7 +537,7 @@ class WCSTestCaseCFHT(unittest.TestCase):
             icrs, sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(side/cosdec, 0), afwGeom.degrees
         )
         sky01 = afwCoord.makeCoord(
-            icrs, sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(0,side), afwGeom.degrees
+            icrs, sky00.getPosition(afwGeom.degrees) + afwGeom.Extent2D(0, side), afwGeom.degrees
         )
         p10 = self.wcs.skyToPixel(sky10) - p00
         p01 = self.wcs.skyToPixel(sky01) - p00
@@ -565,32 +577,33 @@ class WCSTestCaseCFHT(unittest.TestCase):
         sky00 = self.wcs.pixelToSky(afwGeom.Point2D(0, 0)).getPosition()
 
         new = self.wcs.clone()
-        self.wcs.pixelToSky(afwGeom.Point2D(10, 10)) # shouldn't affect new
+        self.wcs.pixelToSky(afwGeom.Point2D(10, 10))  # shouldn't affect new
 
         nsky00 = new.pixelToSky(afwGeom.Point2D(0, 0)).getPosition()
         self.assertEqual((sky00[0], sky00[1]), (nsky00[0], nsky00[1]))
 
     def testCD(self):
         cd = self.wcs.getCDMatrix()
-        self.assertAlmostEqual(cd[0,0], self.metadata.getAsDouble("CD1_1"))
-        self.assertAlmostEqual(cd[0,1], self.metadata.getAsDouble("CD1_2"))
-        self.assertAlmostEqual(cd[1,0], self.metadata.getAsDouble("CD2_1"))
-        self.assertAlmostEqual(cd[1,1], self.metadata.getAsDouble("CD2_2"))
+        self.assertAlmostEqual(cd[0, 0], self.metadata.getAsDouble("CD1_1"))
+        self.assertAlmostEqual(cd[0, 1], self.metadata.getAsDouble("CD1_2"))
+        self.assertAlmostEqual(cd[1, 0], self.metadata.getAsDouble("CD2_1"))
+        self.assertAlmostEqual(cd[1, 1], self.metadata.getAsDouble("CD2_2"))
 
     def testConstructor(self):
         afwImage.Wcs(self.wcs.getSkyOrigin().getPosition(afwGeom.degrees), self.wcs.getPixelOrigin(),
-                            self.wcs.getCDMatrix())
+                     self.wcs.getCDMatrix())
 
     def testAffineTransform(self):
         sky00g = afwGeom.Point2D(10, 10)
         sky00c = afwCoord.makeCoord(afwCoord.ICRS, sky00g, afwGeom.degrees)
         a = self.wcs.linearizeSkyToPixel(sky00c)
         pix00g = self.wcs.skyToPixel(sky00c)
-        pix00gApprox = a(sky00g);
+        pix00gApprox = a(sky00g)
         self.assertAlmostEqual(pix00g.getX(), pix00gApprox.getX())
         self.assertAlmostEqual(pix00g.getY(), pix00gApprox.getY())
         b = a.invert()
-        self.assertAlmostEqual(self.wcs.pixArea(sky00g), abs(b[b.XX]* b[b.YY] - b[b.XY]*b[b.YX]))
+        self.assertAlmostEqual(self.wcs.pixArea(sky00g), abs(b[b.XX] * b[b.YY] - b[b.XY]*b[b.YX]))
+
 
 class TestWcsCompare(unittest.TestCase):
 
@@ -628,6 +641,7 @@ class TestWcsCompare(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     utilsTests.init()
@@ -641,6 +655,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

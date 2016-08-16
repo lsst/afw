@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * @brief A coordinate class intended to represent absolute positions.
@@ -62,7 +62,7 @@ public:
      *  Note that these return CoordinateExpr, not bool.
      *
      *  Unlike most arithmetic and assignment operators, scalar interoperability is provided
-     *  for comparisons; expressions like 
+     *  for comparisons; expressions like
      *  \code
      *    if (all(point.gt(0))) ...
      *  \endcode
@@ -100,11 +100,11 @@ public:
     }
     Point<T,N> & operator+=(Extent<T,N> const & other) {
         this->_vector += other.asEigen();
-        return static_cast<Point<T,N> &>(*this); 
+        return static_cast<Point<T,N> &>(*this);
     }
     Point<T,N> & operator-=(Extent<T,N> const & other) {
         this->_vector -= other.asEigen();
-        return static_cast<Point<T,N> &>(*this); 
+        return static_cast<Point<T,N> &>(*this);
     }
     //@}
 
@@ -121,7 +121,7 @@ public:
         // the cast to double is lame but Eigen seems to require they be the same type
         return (this->asEigen() - other.asEigen()).squaredNorm();
     }
-    
+
     std::string toString() const {
         std::stringstream out;
         out << "Point(";
@@ -171,7 +171,7 @@ public:
     explicit Point(EigenVector const & vector) : Super(vector) {}
 
     /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}          
+    explicit Point(Extent<T,N> const & other) : Super(other.asEigen()) {}
 
     void swap(Point & other) { this->_swap(other); }
 };
@@ -204,7 +204,7 @@ public:
     explicit Point(EigenVector const & vector) : Super(vector) {}
 
     /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,2> const & other) : Super(other.asEigen()) {}          
+    explicit Point(Extent<T,2> const & other) : Super(other.asEigen()) {}
 
     /// @brief Explicit constructor from a pair of doubles.
     explicit Point(T x, T y) : Super(EigenVector(x,y)) {}
@@ -216,7 +216,7 @@ public:
     explicit Point(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
     /// @brief Construct from std::tuple.
-    explicit Point(std::tuple<T,T> const & xy) : 
+    explicit Point(std::tuple<T,T> const & xy) :
         Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
 #ifdef SWIG
@@ -257,7 +257,7 @@ public:
     explicit Point(EigenVector const & vector) : Super(vector) {}
 
     /// @brief Explicit constructor from Extent.
-    explicit Point(Extent<T,3> const & other) : Super(other.asEigen()) {}          
+    explicit Point(Extent<T,3> const & other) : Super(other.asEigen()) {}
 
     /// @brief Explicit constructor from a sequence of doubles.
     explicit Point(T x, T y, T z) : Super(EigenVector(x,y,z)) {}
@@ -266,7 +266,7 @@ public:
     explicit Point(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
     /// @brief Construct from std::tuple.
-    explicit Point(std::tuple<T,T,T> const & xyz) : 
+    explicit Point(std::tuple<T,T,T> const & xyz) :
         Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
 
 #ifdef SWIG

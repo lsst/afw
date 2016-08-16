@@ -1,10 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,20 +13,21 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
 import unittest
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
+
 
 class ImageIoTestCase(unittest.TestCase):
     """A test case for Image Persistence"""
@@ -36,8 +38,8 @@ class ImageIoTestCase(unittest.TestCase):
         self.assertEqual(image.getWidth(), original.getWidth())
         self.assertEqual(image.getY0(), original.getY0())
         self.assertEqual(image.getX0(), original.getX0())
-        for x in xrange(0, original.getWidth()):
-            for y in xrange(0, image.getHeight()):
+        for x in range(0, original.getWidth()):
+            for y in range(0, image.getHeight()):
                 self.assertEqual(image.get(x, y), original.get(x, y))
 
     def setUp(self):
@@ -53,8 +55,8 @@ class ImageIoTestCase(unittest.TestCase):
                       afwImage.ImageD,
                       ):
             image = Image(self.cols, self.rows)
-            for x in xrange(0, self.cols):
-                for y in xrange(0, self.rows):
+            for x in range(0, self.cols):
+                for y in range(0, self.rows):
                     image.set(x, y, x + y)
 
             with utilsTests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:
@@ -65,6 +67,7 @@ class ImageIoTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     utilsTests.init()
@@ -74,6 +77,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

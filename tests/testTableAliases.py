@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
 #
 # LSST Data Management System
@@ -47,6 +47,7 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class TableAliasTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
@@ -56,7 +57,7 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.ab11 = self.schema.addField("ab11", type=int, doc="")
         self.ab12 = self.schema.addField("ab12", type=int, doc="")
         self.dict = dict(q="a", r="a1", s="ab", t="ab11")
-        for k, v in self.dict.iteritems():
+        for k, v in self.dict.items():
             self.schema.getAliasMap().set(k, v)
 
     def tearDown(self):
@@ -83,12 +84,12 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
 
         # Check that iteration works
         self.assertEqual(dict(aliases), self.dict)
-        for n, (k, v) in enumerate(aliases.iteritems()):
+        for n, (k, v) in enumerate(aliases.items()):
             self.assertEqual(aliases.get(k), v)
             self.assertEqual(aliases[k], v)
         self.assertEqual(n + 1, len(aliases))
-        self.assertEqual(aliases.keys(), [k for k, v in aliases.iteritems()])
-        self.assertEqual(aliases.values(), [v for k, v in aliases.iteritems()])
+        self.assertEqual(list(aliases.keys()), [k for k, v in aliases.items()])
+        self.assertEqual(list(aliases.values()), [v for k, v in aliases.items()])
 
         # Try removing something using the C++-named methods
         self.assertTrue(aliases.erase("q"))
@@ -125,7 +126,7 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
     def testRecursiveAliases(self):
         """Test that multi-level alias replacement works.
         """
-        self.schema.setAliasMap(None) # remove all current aliases
+        self.schema.setAliasMap(None)  # remove all current aliases
         # applying the following aliases recursively should let us use 'u1' to get to the 'a11' field
         self.schema.getAliasMap().set("t2", "a1")
         self.schema.getAliasMap().set("u", "t2")
@@ -134,11 +135,10 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
     def testCycle(self):
         """Test that multi-level aliases that form a cycle produce an exception, not an infinite loop.
         """
-        self.schema.setAliasMap(None) # remove all current aliases
+        self.schema.setAliasMap(None)  # remove all current aliases
         self.schema.getAliasMap().set("t", "a")
         self.schema.getAliasMap().set("a", "t")
         self.assertRaises(lsst.pex.exceptions.RuntimeError, self.schema.find, "t")
-
 
     def testReplace(self):
         aliases = self.schema.getAliasMap()
@@ -162,6 +162,7 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -172,7 +173,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

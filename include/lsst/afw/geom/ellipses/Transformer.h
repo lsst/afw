@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -40,7 +40,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
 /**
  *  @brief A temporary-only expression object for ellipse core transformations.
  *
- *  Transformer simply provides a clean syntax for transform-related operations, including 
+ *  Transformer simply provides a clean syntax for transform-related operations, including
  *  in-place and new-object transformations, derivatives of the transformations,
  *  and implicit conversion to a shared_ptr to a new transformed core.
  */
@@ -48,7 +48,7 @@ class BaseCore::Transformer {
 public:
 
     /// Matrix type for derivative with respect to input ellipse parameters.
-    typedef Eigen::Matrix3d DerivativeMatrix; 
+    typedef Eigen::Matrix3d DerivativeMatrix;
 
     /// Matrix type for derivative with respect to transform parameters.
     typedef Eigen::Matrix<double,3,4> TransformDerivativeMatrix;
@@ -67,7 +67,7 @@ public:
 
     /// @brief Return the derivative of transformed core with respect to input core.
     DerivativeMatrix d() const;
-    
+
     /// @brief Return the derivative of transformed core with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 
@@ -79,7 +79,7 @@ public:
 /**
  *  @brief A temporary-only expression object for ellipse transformations.
  *
- *  Transformer simply provides a clean syntax for transform-related operations, including 
+ *  Transformer simply provides a clean syntax for transform-related operations, including
  *  in-place and new-object transformations, derivatives of the transformations, and implicit
  *  conversion to an auto_ptr to a new transformed ellipse.
  */
@@ -101,12 +101,12 @@ public:
 
     /// @brief %Transform the ellipse in-place.
     void inPlace();
-    
+
     void apply(Ellipse & other) const;
 
     /// @brief Return the derivative of transform output ellipse with respect to input ellipse.
     DerivativeMatrix d() const;
-    
+
     /// @brief Return the derivative of transform output ellipse with respect to transform parameters.
     TransformDerivativeMatrix dTransform() const;
 

@@ -1,9 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -41,6 +41,7 @@ try:
 except AttributeError:
     math.isnan = lambda x: x != x
 
+
 class Ticket1045TestCase(unittest.TestCase):
 
     def setUp(self):
@@ -51,7 +52,7 @@ class Ticket1045TestCase(unittest.TestCase):
 
     def testTicket1045(self):
         values = [1.08192, 1.08792, 1.08774, 1.09953, 1.1122, 1.09408, 0.879792, 1.12235, 1.10115, 1.08999]
-        knownMean, knownStdev =  num.mean(values), 0.069903889977279199
+        knownMean, knownStdev = num.mean(values), 0.069903889977279199
 
         # this was reported to work
         dmean1 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
@@ -64,7 +65,7 @@ class Ticket1045TestCase(unittest.TestCase):
         # (problem was due to error in median)
         knownMeanClip = 1.097431111111111
         knownStdevClip = 0.012984991763998597
-        
+
         dmean2 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEANCLIP | afwMath.STDEVCLIP)
         mean2 = dmean2.getValue(afwMath.MEANCLIP)
         stdev2 = dmean2.getValue(afwMath.STDEVCLIP)
@@ -100,20 +101,20 @@ class Ticket1045TestCase(unittest.TestCase):
 
         # check the median with no values
         vals = []
+
         def tst():
             stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
             median = stat.getValue(afwMath.MEDIAN)
             return median
         self.assertRaises(pexExcept.InvalidParameterError, tst)
 
-        
     def testUnexpectedNan1051(self):
-        
+
         values = [7824.0, 7803.0, 7871.0, 7567.0, 7813.0, 7809.0, 8011.0, 7807.0]
         npValues = num.array(values)
-        
+
         meanClip = afwMath.makeStatistics(values, afwMath.MEANCLIP).getValue()
-        iKept = num.array([0, 1, 2, 4, 5, 7]) # note ... it will clip indices 3 and 6
+        iKept = num.array([0, 1, 2, 4, 5, 7])  # note ... it will clip indices 3 and 6
         knownMeanClip = num.mean(npValues[iKept])
         self.assertEqual(meanClip, knownMeanClip)
 
@@ -130,10 +131,9 @@ def suite():
     return unittest.TestSuite(suites)
 
 
-def run(shouldExit = False):
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
     run(True)
- 

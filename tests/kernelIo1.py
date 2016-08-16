@@ -1,10 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +13,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -37,11 +38,12 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 
-Verbosity = 0 # increase to see trace
+Verbosity = 0  # increase to see trace
 pexLog.Debug("lsst.afw", Verbosity)
 # pexLog.Debug("afw.math.KernelFormatter", 30)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 class KernelIOTestCase(unittest.TestCase):
     """A test case for Kernel I/O"""
@@ -63,7 +65,7 @@ class KernelIOTestCase(unittest.TestCase):
         """
         kWidth = 5
         kHeight = 6
-        
+
         inArr = numpy.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
@@ -71,7 +73,7 @@ class KernelIOTestCase(unittest.TestCase):
         for row in range(inImage.getHeight()):
             for col in range(inImage.getWidth()):
                 inImage.set(col, row, inArr[col, row])
-        
+
         k = afwMath.FixedKernel(inImage)
 
         pol = pexPolicy.Policy()
@@ -97,15 +99,15 @@ class KernelIOTestCase(unittest.TestCase):
 
         outArr = outImage.getArray().transpose()
         if not numpy.allclose(inArr, outArr):
-            self.fail("%s = %s != %s (not normalized)" % \
-                    (k2.__class__.__name__, inArr, outArr))
+            self.fail("%s = %s != %s (not normalized)" %
+                      (k2.__class__.__name__, inArr, outArr))
         normInArr = inArr / inArr.sum()
         normOutImage = afwImage.ImageD(k2.getDimensions())
         k2.computeImage(normOutImage, True)
         normOutArr = normOutImage.getArray().transpose()
         if not numpy.allclose(normOutArr, normInArr):
-            self.fail("%s = %s != %s (normalized)" % \
-                    (k2.__class__.__name__, normInArr, normOutArr))
+            self.fail("%s = %s != %s (normalized)" %
+                      (k2.__class__.__name__, normInArr, normOutArr))
 
     def testAnalyticKernel(self):
         """Test AnalyticKernel using a Gaussian function
@@ -132,29 +134,29 @@ class KernelIOTestCase(unittest.TestCase):
                             x = col - k.getCtrX()
                             fArr[col, row] = gaussFunc(x, y)
                     fArr /= fArr.sum()
-                    
+
                     k.setKernelParameters((xsigma, ysigma, angle))
-    
+
                     storageList = dafPersist.StorageList()
                     storage = persistence.getPersistStorage("XmlStorage", loc)
                     storageList.append(storage)
                     persistence.persist(k, storageList, additionalData)
-    
+
                     storageList2 = dafPersist.StorageList()
                     storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                     storageList2.append(storage2)
                     x = persistence.unsafeRetrieve("AnalyticKernel",
-                            storageList2, additionalData)
+                                                   storageList2, additionalData)
                     k2 = afwMath.AnalyticKernel.swigConvert(x)
-    
+
                     self.kernelCheck(k, k2)
-    
+
                     kImage = afwImage.ImageD(k2.getDimensions())
                     k2.computeImage(kImage, True)
                     kArr = kImage.getArray().transpose()
                     if not numpy.allclose(fArr, kArr):
-                        self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
-                                (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
+                        self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
+                                  (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -180,7 +182,7 @@ class KernelIOTestCase(unittest.TestCase):
                         storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                         storageList2.append(storage2)
                         x = persistence.unsafeRetrieve("DeltaFunctionKernel",
-                                storageList2, additionalData)
+                                                       storageList2, additionalData)
                         k2 = afwMath.DeltaFunctionKernel.swigConvert(x)
 
                         self.kernelCheck(kernel, k2)
@@ -221,7 +223,7 @@ class KernelIOTestCase(unittest.TestCase):
                         x = col - k.getCtrX()
                         fArr[col, row] = gaussFunc(x, y)
                 fArr /= fArr.sum()
-                
+
                 k.setKernelParameters((xsigma, ysigma))
 
                 storageList = dafPersist.StorageList()
@@ -233,7 +235,7 @@ class KernelIOTestCase(unittest.TestCase):
                 storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                 storageList2.append(storage2)
                 x = persistence.unsafeRetrieve("SeparableKernel",
-                        storageList2, additionalData)
+                                               storageList2, additionalData)
                 k2 = afwMath.SeparableKernel.swigConvert(x)
 
                 self.kernelCheck(k, k2)
@@ -242,15 +244,15 @@ class KernelIOTestCase(unittest.TestCase):
                 k2.computeImage(kImage, True)
                 kArr = kImage.getArray().transpose()
                 if not numpy.allclose(fArr, kArr):
-                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" % \
-                        (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
-    
+                    self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
+                              (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
+
     def testLinearCombinationKernel(self):
         """Test LinearCombinationKernel using a set of delta basis functions
         """
         kWidth = 3
         kHeight = 2
-        
+
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
         loc = dafPersist.LogicalLocation("tests/data/kernel5.boost")
@@ -266,7 +268,7 @@ class KernelIOTestCase(unittest.TestCase):
                 kernel.computeImage(basisImage, True)
                 basisImArrList.append(basisImage.getArray().transpose().copy())
                 kVec.append(kernel)
-        
+
         kParams = [0.0]*len(kVec)
         k = afwMath.LinearCombinationKernel(kVec, kParams)
         for ii in range(len(kVec)):
@@ -283,7 +285,7 @@ class KernelIOTestCase(unittest.TestCase):
             storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
             storageList2.append(storage2)
             x = persistence.unsafeRetrieve("LinearCombinationKernel",
-                    storageList2, additionalData)
+                                           storageList2, additionalData)
             k2 = afwMath.LinearCombinationKernel.swigConvert(x)
 
             self.kernelCheck(k, k2)
@@ -292,8 +294,8 @@ class KernelIOTestCase(unittest.TestCase):
             k2.computeImage(kIm, True)
             kImArr = kIm.getArray().transpose()
             if not numpy.allclose(kImArr, basisImArrList[ii]):
-                self.fail("%s = %s != %s for the %s'th basis kernel" % \
-                    (k2.__class__.__name__, kImArr, basisImArrList[ii], ii))
+                self.fail("%s = %s != %s for the %s'th basis kernel" %
+                          (k2.__class__.__name__, kImArr, basisImArrList[ii], ii))
 
     def testSVLinearCombinationKernel(self):
         """Test a spatially varying LinearCombinationKernel
@@ -316,7 +318,7 @@ class KernelIOTestCase(unittest.TestCase):
         imArr += 0.2
         imArr[:, kHeight//2] = 0.8
         basisImArrList.append(imArr)
-        
+
         # create a list of basis kernels from the images
         kVec = afwMath.KernelList()
         for basisImArr in basisImArrList:
@@ -326,14 +328,14 @@ class KernelIOTestCase(unittest.TestCase):
 
         # create spatially varying linear combination kernel
         spFunc = afwMath.PolynomialFunction2D(1)
-        
+
         # spatial parameters are a list of entries, one per kernel parameter;
         # each entry is a list of spatial parameters
         sParams = (
             (0.0, 1.0, 0.0),
             (0.0, 0.0, 1.0),
         )
-        
+
         k = afwMath.LinearCombinationKernel(kVec, spFunc)
         k.setSpatialParameters(sParams)
 
@@ -346,7 +348,7 @@ class KernelIOTestCase(unittest.TestCase):
         storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
         storageList2.append(storage2)
         x = persistence.unsafeRetrieve("LinearCombinationKernel",
-                storageList2, additionalData)
+                                       storageList2, additionalData)
         k2 = afwMath.LinearCombinationKernel.swigConvert(x)
 
         self.kernelCheck(k, k2)
@@ -363,9 +365,9 @@ class KernelIOTestCase(unittest.TestCase):
             kImArr = kImage.getArray().transpose()
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
             if not numpy.allclose(kImArr, refKImArr):
-                self.fail("%s = %s != %s at colPos=%s, rowPos=%s" % \
-                    (k2.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
-    
+                self.fail("%s = %s != %s at colPos=%s, rowPos=%s" %
+                          (k2.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
+
     def testSetCtr(self):
         """Test setCtrCol/Row"""
         kWidth = 3
@@ -392,7 +394,7 @@ class KernelIOTestCase(unittest.TestCase):
                 storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                 storageList2.append(storage2)
                 x = persistence.unsafeRetrieve("AnalyticKernel",
-                        storageList2, additionalData)
+                                               storageList2, additionalData)
                 k2 = afwMath.AnalyticKernel.swigConvert(x)
 
                 self.kernelCheck(k, k2)
@@ -412,6 +414,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

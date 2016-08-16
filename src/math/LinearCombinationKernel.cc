@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include <numeric>
@@ -161,11 +161,11 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
     if (!firstSpFuncPtr->isLinearCombination()) {
         return PTR(Kernel)();
     }
-    
+
     typedef lsst::afw::image::Image<Kernel::Pixel> KernelImage;
     typedef std::shared_ptr<KernelImage> KernelImagePtr;
     typedef std::vector<KernelImagePtr> KernelImageList;
-    
+
     // create kernel images for new refactored basis kernels
     int const nSpatialParameters = this->getNSpatialParameters();
     KernelImageList newKernelImagePtrList;
@@ -175,7 +175,7 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
         newKernelImagePtrList.push_back(kernelImagePtr);
     }
     KernelImage kernelImage(this->getDimensions());
-    std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncPtrIter = 
+    std::vector<Kernel::SpatialFunctionPtr>::const_iterator spFuncPtrIter =
         this->_spatialFunctionList.begin();
     afwMath::KernelList::const_iterator kIter = _kernelList.begin();
     afwMath::KernelList::const_iterator const kEnd = _kernelList.end();
@@ -183,14 +183,14 @@ PTR(afwMath::Kernel) afwMath::LinearCombinationKernel::refactor() const {
         if (typeid(**spFuncPtrIter) != typeid(*firstSpFuncPtr)) {
             return PTR(Kernel)();
         }
-    
+
         (**kIter).computeImage(kernelImage, false);
         for (int i = 0; i < nSpatialParameters; ++i) {
             double spParam = (*spFuncPtrIter)->getParameter(i);
             newKernelImagePtrList[i]->scaledPlus(spParam, kernelImage);
         }
     }
-    
+
     // create new kernel; the basis kernels are fixed kernels computed above
     // and the corresponding spatial model is the same function as the original kernel,
     // but with all coefficients zero except coeff_i = 1.0
@@ -333,7 +333,7 @@ public:
         LinearCombinationKernelPersistenceHelper const keys(catalogs.front().getSchema());
         afw::table::BaseRecord const & record = catalogs.front().front();
         geom::Extent2I dimensions(record.get(keys.dimensions));
-        std::vector<PTR(Kernel)> componentList(keys.components.getSize());        
+        std::vector<PTR(Kernel)> componentList(keys.components.getSize());
         for (std::size_t i = 0; i < componentList.size(); ++i) {
             componentList[i] = archive.get<Kernel>(record[keys.components[i]]);
         }

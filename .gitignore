@@ -7,6 +7,7 @@
 *Lib.py
 _build.*
 *~
+*.dSYM/
 core.*
 .sconf_temp
 .sconsign.dblite

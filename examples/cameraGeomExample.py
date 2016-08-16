@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 import lsst.afw.cameraGeom.testUtils as testUtils
 import lsst.afw.cameraGeom as cameraGeom
 import lsst.afw.geom as afwGeom

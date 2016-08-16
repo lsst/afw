@@ -45,7 +45,7 @@ namespace math {
 /**
   * @class GaussianProcessTimer
   *
-  * @brief This is a structure for keeping track of how long the 
+  * @brief This is a structure for keeping track of how long the
   * interpolation methods spend on different parts of the interpolation
   *
   * _eigenTime keeps track of how much time is spent using Eigen's linear algebra packages
@@ -55,7 +55,7 @@ namespace math {
   *
   * _searchTime keeps track of how much time is spent on nearest neighbor searches (when applicable)
   *
-  * _varianceTime keeps track of how much time is spent calculating the variance of our 
+  * _varianceTime keeps track of how much time is spent calculating the variance of our
   * interpolated function value (note: time spent using Eigen packages for this purpose
   * is tallied here, not in _eigenTime)
   *
@@ -131,7 +131,7 @@ template <typename T>
 class Covariogram : public lsst::daf::base::Citizen {
 public:
     virtual ~Covariogram();
-   
+
 #ifndef SWIG
     // No copying
     Covariogram (const Covariogram&) = delete;
@@ -164,7 +164,7 @@ public:
 /**
  * @class SquaredExpCovariogram
  *
- * @brief a Covariogram that falls off as the negative exponent of the square 
+ * @brief a Covariogram that falls off as the negative exponent of the square
  * of the distance between the points
  *
  * Contains one hyper parameter (_ellSquared) encoding the square of the
@@ -179,7 +179,7 @@ public:
     explicit SquaredExpCovariogram();
 
     /**
-     * @brief set the _ellSquared hyper parameter (the square of the characteristic 
+     * @brief set the _ellSquared hyper parameter (the square of the characteristic
      * length scale of the covariogram)
     */
     void setEllSquared(double ellSquared);
@@ -196,7 +196,7 @@ private:
 /**
   * @class NeuralNetCovariogram
   *
-  * @brief a Covariogram that recreates a neural network with one hidden layer 
+  * @brief a Covariogram that recreates a neural network with one hidden layer
   * and infinite units in that layer
   *
   * Contains two hyper parameters (_sigma0 and _sigma1) that characterize the expected
@@ -263,7 +263,7 @@ public:
     /**
      * @brief Build a KD Tree to store the data for GaussianProcess
      *
-     * @param [in] dt an array, the rows of which are the data points 
+     * @param [in] dt an array, the rows of which are the data points
      * (dt[i][j] is the jth component of the ith data point)
      *
      * @throw pex_exceptions RuntimeError if the tree is not properly constructed
@@ -338,7 +338,7 @@ public:
      *
      * @param [in] dex the index of the point you want to remove from the tree
      *
-     * @throw pex_exceptions RuntimeError if the entire tree is not poperly constructed after 
+     * @throw pex_exceptions RuntimeError if the entire tree is not poperly constructed after
      * the point has been removed
     */
     void removePoint(int dex);
@@ -368,10 +368,10 @@ private:
     //_tree stores the relationships between data points
     //_tree[i][DIMENSION] is the dimension on which the ith node segregates its daughters
     //
-    //_tree[i][LT] is the branch of the tree down which the daughters' DIMENSIONth component 
+    //_tree[i][LT] is the branch of the tree down which the daughters' DIMENSIONth component
     //is less than the parent's
     //
-    //_tree[i][GEQ] is the branch of the tree down which the daughters' DIMENSIONth component is 
+    //_tree[i][GEQ] is the branch of the tree down which the daughters' DIMENSIONth component is
     //greather than or equal to the parent's
     //
     //_tree[i][PARENT] is the parent node of the ith node
@@ -414,7 +414,7 @@ private:
     int _findNode(ndarray::Array<const T,1,1> const &v) const;
 
    /**
-    * @brief This method actually looks for the neighbors, determining whether or 
+    * @brief This method actually looks for the neighbors, determining whether or
     * not to descend branches of the tree
     *
     * @param [in] v the point whose neighbors you are looking for
@@ -424,8 +424,8 @@ private:
     * @param [in] from the index of the point you last considered as a nearest neighbor
     *  (so the search does not backtrack along the tree)
     *
-    * The class KdTree keeps track of how many neighbors you want and how many 
-    * neighbors you have found and what their distances from v are in the class member 
+    * The class KdTree keeps track of how many neighbors you want and how many
+    * neighbors you have found and what their distances from v are in the class member
     * variables _neighborsWanted, _neighborsFound, _neighborCandidates,
     * and _neighborDistances
    */
@@ -496,10 +496,10 @@ private:
  * The data will be stored in a KD Tree for easy nearest neighbor searching when interpolating.
  *
  * The array _function[] will contain the values of the function being interpolated.
- * You can provide a two dimensional array _function[][] if you wish to interpolate a vector of functions.  
- * In this case _function[i][j] is the jth function associated with the ith data point.  Note: presently, 
+ * You can provide a two dimensional array _function[][] if you wish to interpolate a vector of functions.
+ * In this case _function[i][j] is the jth function associated with the ith data point.  Note: presently,
  * the covariance matrices do not relate elements of _function[i][]
- * to each other, so the variances returned will be identical for all functions evaluated at 
+ * to each other, so the variances returned will be identical for all functions evaluated at
  * the same point in parameter space.
  *
  * _data[i][j] will be the jth component of the ith data point.
@@ -531,8 +531,8 @@ public:
       *
       * @param [in] dataIn an ndarray containing the data points; the ith row of datain is the ith data point
       *
-      * @param [in] ff a one-dimensional ndarray containing the values 
-      * of the scalar function associated with each data point. This is the 
+      * @param [in] ff a one-dimensional ndarray containing the values
+      * of the scalar function associated with each data point. This is the
       * function you are interpolating
       *
       * @param [in] covarIn is the input covariogram
@@ -542,15 +542,15 @@ public:
                     std::shared_ptr< Covariogram<T> > const &covarIn);
 
     /**
-     * @brief This is the constructor you call if you want the positions of your data 
+     * @brief This is the constructor you call if you want the positions of your data
      * points normalized by the span of each dimension and you have only one function
      *
      * @param [in] dataIn an ndarray containing the data points; the ith row of datain is the ith data point
      *
-     * @param [in] mn a one-dimensional ndarray containing the minimum values of each dimension 
+     * @param [in] mn a one-dimensional ndarray containing the minimum values of each dimension
      * (for normalizing the positions of data points)
      *
-     * @param [in] mx a one-dimensional ndarray containing the maximum values of each dimension 
+     * @param [in] mx a one-dimensional ndarray containing the maximum values of each dimension
      * (for normalizing the positions of data points)
      *
      * @param [in] ff a one-dimensional ndarray containing the values of the scalar
@@ -615,8 +615,8 @@ public:
      *
      * the interpolated value of the function will be returned at the end of this method
      *
-     * Note: if you used a normalized parameter space, you should not normalize 
-     * vin before inputting.  The code will remember that you want a normalized 
+     * Note: if you used a normalized parameter space, you should not normalize
+     * vin before inputting.  The code will remember that you want a normalized
      * parameter space, and will apply the normalization when you call interpolate
     */
     T interpolate(ndarray::Array<T,1,1> variance,
@@ -643,7 +643,7 @@ public:
                      int numberOfNeighbors) const;
 
     /**
-     * @brief This method will interpolate the function on a data point 
+     * @brief This method will interpolate the function on a data point
      * for purposes of optimizing hyper parameters
      *
      * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the
@@ -653,7 +653,7 @@ public:
      *
      * @param [in] numberOfNeighbors the number of nearest neighbors to be used in the interpolation
      *
-     * @throw pex_exceptions RuntimeError if the nearest neighbor search does 
+     * @throw pex_exceptions RuntimeError if the nearest neighbor search does
      * not find the data point itself as the nearest neighbor
      *
      * The interpolated value of the function will be returned at the end of this method
@@ -730,7 +730,7 @@ public:
                           ndarray::Array<T,2,2> const &queries) const;
 
     /**
-     * @brief This is the version of batchInterpolate (with variances) 
+     * @brief This is the version of batchInterpolate (with variances)
      * that is called for a vector of functions
     */
     void batchInterpolate(ndarray::Array<T,2,2> mu,
@@ -821,7 +821,7 @@ public:
      * @brief Give the user acces to _timer, an object keeping track of the time spent on
      * various processes within interpolate
      *
-     * This will return a GaussianProcessTimer object.  The user can, for example, 
+     * This will return a GaussianProcessTimer object.  The user can, for example,
      * see how much time has been spent on Eigen's linear algebra package (see the
      * comments on the GaussianProcessTimer class) using code like
      *

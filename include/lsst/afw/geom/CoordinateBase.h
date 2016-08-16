@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief A CRTP base class for coordinate objects, providing partial specializations for 2D and 3D.
@@ -72,7 +72,7 @@ protected:
 
     /**
      *  \brief Initialize all elements to a scalar.
-     *  
+     *
      *  A public constructor with the same signature is expected for subclasses.
      */
     explicit CoordinateBase(T val = static_cast<T>(0)) : _vector(EigenVector::Constant(val)) {}
@@ -82,7 +82,7 @@ protected:
      *
      *  A public constructor with the same signature is expected for subclasses.
      */
-    template <typename Vector> 
+    template <typename Vector>
     explicit CoordinateBase(Eigen::MatrixBase<Vector> const & vector) : _vector(vector) {}
 
     void _swap(CoordinateBase & other) {_vector.swap(other._vector);}
@@ -91,7 +91,7 @@ protected:
 
 template <typename Derived, typename T, int N>
 bool allclose(
-    CoordinateBase<Derived,T,N> const & a, CoordinateBase<Derived,T,N> const & b, 
+    CoordinateBase<Derived,T,N> const & a, CoordinateBase<Derived,T,N> const & b,
     T rtol = static_cast<T>(1E-5),
     T atol = static_cast<T>(1E-8)
 );
@@ -182,7 +182,7 @@ public:
 
     /// \brief Return a std::tuple representation of the coordinate object.
     std::tuple<T,T,T> asTuple() const {
-        return std::make_tuple(_vector.x(), _vector.y(), _vector.z()); 
+        return std::make_tuple(_vector.x(), _vector.y(), _vector.z());
     }
 
 protected:

@@ -66,7 +66,7 @@ Planes: 0 1 1
 >>> Mask.removeMaskPlane("P0")
 >>> Mask.removeMaskPlane("P1")
 >>> showMask(Mask(), "default Mask")
-default Mask    
+default Mask
 >>> showMask(msk, "msk")
 msk             ('P0', 0) ('P1', 1)
 >>> p1 = Mask.addMaskPlane("P1")

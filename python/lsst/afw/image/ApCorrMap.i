@@ -48,7 +48,7 @@
         PyObject * r = PyList_New(self->size());
         Py_ssize_t n = 0;
         for (lsst::afw::image::ApCorrMap::Iterator i = self->begin(); i != self->end(); ++i, ++n) {
-            PyList_SET_ITEM(r, n, PyString_FromStringAndSize(i->first.data(), i->first.size()));
+            PyList_SET_ITEM(r, n, SWIG_FromCharPtrAndSize(i->first.data(), i->first.size()));
         }
         return r;
     }
@@ -80,10 +80,14 @@
             """__imul__(self, double scale) -> self"""
             _imageLib.ApCorrMap___imul__(*args)
             return args[0]
-    
+
         def __idiv__(*args):
             """__idiv__(self, double scale) -> self"""
             _imageLib.ApCorrMap___idiv__(*args)
             return args[0]
+
+        # Support python2 future division
+        __itruediv__ = __idiv__
+
 %}
 }

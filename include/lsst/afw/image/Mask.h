@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief LSST bitmasks
@@ -94,7 +94,7 @@ public:
     typedef std::shared_ptr<Mask> Ptr;
     typedef std::shared_ptr<const Mask> ConstPtr;
     typedef detail::MaskPlaneDict MaskPlaneDict;
-    
+
     typedef detail::Mask_tag image_category;
 
 #if !defined(SWIG)
@@ -106,14 +106,14 @@ public:
     };
 #endif
 
-    // Constructors        
+    // Constructors
     explicit Mask(
         unsigned int width, unsigned int height,
         MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(
         unsigned int width, unsigned int height,
-        MaskPixelT initialValue, 
+        MaskPixelT initialValue,
         MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(
@@ -121,8 +121,8 @@ public:
         MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(
-        geom::Extent2I const & dimensions, 
-        MaskPixelT initialValue, 
+        geom::Extent2I const & dimensions,
+        MaskPixelT initialValue,
         MaskPlaneDict const& planeDefs=MaskPlaneDict()
     );
     explicit Mask(geom::Box2I const & bbox,
@@ -213,12 +213,12 @@ public:
 
     Mask(const Mask& src, const bool deep=false);
     Mask(
-        const Mask& src, 
-        const geom::Box2I & bbox,  
-        ImageOrigin const origin=PARENT, 
+        const Mask& src,
+        const geom::Box2I & bbox,
+        ImageOrigin const origin=PARENT,
         const bool deep=false
     );
-    
+
     explicit Mask(ndarray::Array<MaskPixelT,2,1> const & array, bool deep=false,
                   geom::Point2I const & xy0=geom::Point2I());
 
@@ -310,7 +310,7 @@ public:
     std::string getAsString(int x, int y) { return interpret((*this)(x, y)); }
 
     // Mask Plane ops
-    
+
     void clearAllMaskPlanes();
     void clearMaskPlane(int plane);
     void setMaskPlaneValues(const int plane, const int x0, const int x1, const int y);
@@ -322,7 +322,7 @@ public:
     static int addMaskPlane(const std::string& name);
     static void removeMaskPlane(const std::string& name);
     void removeAndClearMaskPlane(const std::string& name, bool const removeFromDefault=false);
-    
+
     static int getMaskPlane(const std::string& name);
     static MaskPixelT getPlaneBitMask(const std::string& name);
 
@@ -335,15 +335,15 @@ public:
     //
     // This one isn't static, it fixes up a given Mask's planes
     void conformMaskPlanes(const MaskPlaneDict& masterPlaneDict);
-        
+
 private:
     //LSST_PERSIST_FORMATTER(lsst::afw::formatters::MaskFormatter)
     PTR(detail::MaskDict) _maskDict;    // our bitplane dictionary
-    
+
     static PTR(detail::MaskDict) _maskPlaneDict();
     static int _setMaskPlaneDict(MaskPlaneDict const& mpd);
     static const std::string maskPlanePrefix;
-    
+
     static int addMaskPlane(std::string name, int plane);
 
     static int getMaskPlaneNoThrow(const std::string& name);
@@ -363,7 +363,7 @@ private:
 
 template<typename PixelT>
 void swap(Mask<PixelT>& a, Mask<PixelT>& b);
-    
+
 }}}  // lsst::afw::image
-        
+
 #endif // LSST_AFW_IMAGE_MASK_H

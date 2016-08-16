@@ -7,7 +7,7 @@ undefine(`format')dnl ' Stop m4 expanding format
 //
 dnl comment to go into the output file
 // This file is machine generated from Runtime.h.m4. Please do not edit directly
-//         
+//
 dnl
 /** @file
   * @brief LSST exception handler classes for Image exceptions

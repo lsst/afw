@@ -30,7 +30,7 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *
  *  There are also a few smaller, "helper" classes:
  *
- *   - *PersistableFacade* is a 
+ *   - *PersistableFacade* is a
  *  <a href=http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern>CRTP</a>
  *  base class for Persistables that adds static member functions for reading from FITS
  *  and returning a derived type.
@@ -200,5 +200,5 @@ namespace lsst { namespace afw { namespace table { namespace io {
  *  distinct objects rather than a large number of similar objects, especially because the FITS
  *  standard specifies a minimum size for FITS headers, resulting in a lot of wasted space.
  */
- 
+
 }}}} // namespace lsst::afw::table::io

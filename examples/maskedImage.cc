@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <string>
 #include <algorithm>
@@ -69,7 +69,7 @@ void y_gradient(image::MaskedImage<PixelT> & src, image::MaskedImage<PixelT> & d
             //src_loc.mask() |= 2;          // uncomment to check const checking
             //src_loc.variance() = 0.0;     // uncomment to check const checking
         }
-        
+
         src_loc += std::make_pair(-src.getWidth(), 1);
     }
 }
@@ -81,7 +81,7 @@ namespace {
         if (title != "") {
             cout << title << endl;
         }
-        
+
         for (int i = img.getHeight() - 1; i >= 0; --i) {
             for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i);
                  ptr != end; ++ptr) {
@@ -95,7 +95,7 @@ namespace {
         if (title != "") {
             cout << title << endl;
         }
-        
+
         for (int i = img.getHeight() - 1; i >= 0; --i) {
             for (image::MaskedImage<ImagePixelT>::x_iterator ptr = img.row_begin(i), end = img.row_end(i);
                  ptr != end; ++ptr) {
@@ -174,7 +174,7 @@ int main() {
     cout << endl;
     printVariance(img, "variance(image)");
     cout << endl;
-    
+
     printImage(grad_y, "gradient");
     cout << endl;
     printVariance(grad_y, "variance(gradient)");

@@ -295,7 +295,7 @@ namespace math {
         void setCacheSize(
             int cacheSize ///< cache size
         ) { _cacheSize = cacheSize; };
-        
+
         /**
          * @brief get the interpolation length (pixels)
          */
@@ -312,7 +312,7 @@ namespace math {
         void setInterpLength(
             int interpLength ///< interpolation length (pixels)
         ) { _interpLength = interpLength; };
-        
+
         /**
          * @brief get the GPU device preference
          */
@@ -327,12 +327,12 @@ namespace math {
             _testDevicePreference(devicePreference, _warpingKernelPtr);
             _devicePreference = devicePreference;
         }
-        
+
         /**
          * @brief get the warping kernel
          */
         PTR(SeparableKernel) getWarpingKernel() const;
-        
+
         /**
          * @brief set the warping kernel by name
          */
@@ -358,7 +358,7 @@ namespace math {
          * @brief return true if there is a mask kernel
          */
         bool hasMaskWarpingKernel() const { return static_cast<bool>(_maskWarpingKernelPtr); }
-        
+
         /**
          * @brief set or clear the mask warping kernel by name
          */
@@ -399,7 +399,7 @@ namespace math {
             SeparableKernel const &warpingKernel,       ///< warping kernel
             SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
         ) const;
-        
+
         /**
          * @brief test if GPU device preference and main warping kernel are compatible
          *
@@ -514,7 +514,7 @@ namespace math {
     /**
      * @brief Warp an image with a LinearTranform about a specified point.
      *        This enables warping an image of e.g. a PSF without translating the centroid.
-     */    
+     */
     template<typename DestImageT, typename SrcImageT>
     int warpCenteredImage(
         DestImageT &destImage,              ///< remapped %image

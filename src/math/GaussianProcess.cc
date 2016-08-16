@@ -211,7 +211,7 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
         tbuff.deep() = _tree;
 
         _room += _roomStep;
-   
+
         _tree = allocate(ndarray::makeVector(_room, 4));
         _data = allocate(ndarray::makeVector(_room, _dimensions));
 
@@ -280,9 +280,9 @@ int KdTree < T > ::_testTree() const{
 
     int i,j,output;
     std::vector < int >  isparent;
-    
+
     output=1;
-    
+
     for (i = 0; i < _pts; i++ ) isparent.push_back(0);
 
     j = 0;
@@ -354,7 +354,7 @@ void KdTree < T > ::_organize(ndarray::Array < int,1,1 >  const &use,
             }
             mean = mean/double(ct);
             var = var/double(ct) - mean*mean;
-            if(i == 0 || var > varbest || 
+            if(i == 0 || var > varbest ||
 	       (var == varbest && parent >= 0 && i > _tree[parent][DIMENSION])) {
                     idim = i;
                     varbest = var;
@@ -799,7 +799,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     _krigingParameter = T(1.0);
 
     _max = allocate(ndarray::makeVector(_dimensions));
-    _min = allocate(ndarray::makeVector(_dimensions)); 
+    _min = allocate(ndarray::makeVector(_dimensions));
     _max.deep() = mx;
     _min.deep() = mn;
     _useMaxMin = 1;
@@ -900,17 +900,17 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                                       ndarray::Array < T,1,1 >  const &vin,
                                       int numberOfNeighbors) const
 {
-    
+
     if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
-    
+
     if(numberOfNeighbors > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
-    
+
     int i,j;
     T fbar,mu;
 
@@ -937,9 +937,9 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
 
     vv = allocate(ndarray::makeVector(_dimensions));
     if(_useMaxMin == 1){
-        //if you constructed this Gaussian process with minimum and maximum 
+        //if you constructed this Gaussian process with minimum and maximum
 	//values for the dimensions of your parameter space,
-        //the point you are interpolating must be scaled to match the data so 
+        //the point you are interpolating must be scaled to match the data so
 	//that the selected nearest neighbors are appropriate
 
         for(i = 0; i < _dimensions; i++ ) vv[i] = (vin[i] - _min[i])/(_max[i] - _min[i]);
@@ -1018,7 +1018,7 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
-    
+
     if(numberOfNeighbors > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
@@ -1049,9 +1049,9 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
 
 
     if(_useMaxMin == 1) {
-        //if you constructed this Gaussian process with minimum and maximum 
+        //if you constructed this Gaussian process with minimum and maximum
 	//values for the dimensions of your parameter space,
-        //the point you are interpolating must be scaled to match the data so 
+        //the point you are interpolating must be scaled to match the data so
 	//that the selected nearest neighbors are appropriate
 
         for(i = 0; i < _dimensions; i++ )vv[i] = (vin[i] - _min[i])/(_max[i] - _min[i]);
@@ -1131,7 +1131,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
-    
+
     if(numberOfNeighbors > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
@@ -1223,7 +1223,7 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
     for(i = 0; i < numberOfNeighbors; i++ )bb(i) = covarianceTestPoint[i];
 
     xx = ldlt.solve(bb);
-  
+
     for(i = 0; i < numberOfNeighbors; i++ ){
         variance(0) -= covarianceTestPoint[i]*xx(i,0);
     }
@@ -1245,17 +1245,17 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
     }
-    
+
     if(numberOfNeighbors + 1 > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
-    
+
     if(dex < 0 || dex >=_kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked to self interpolate on a point that does not exist\n");
     }
-    
+
     int i,j,ii;
     T fbar;
 
@@ -1387,7 +1387,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
     batchCovariance.resize(_pts, _pts);
     queryCovariance.resize(_pts, 1);
 
-  
+
     for(i = 0; i < _pts; i++ ) {
 
         batchCovariance(i, i) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(i)) + _lambda;
@@ -1464,12 +1464,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
     Eigen::Matrix  < T,Eigen::Dynamic,Eigen::Dynamic >  queryCovariance;
     Eigen::LDLT < Eigen::Matrix < T,Eigen::Dynamic,Eigen::Dynamic >   >  ldlt;
 
-    ndarray::Array < T,1,1 >  v1; 
+    ndarray::Array < T,1,1 >  v1;
 
     _timer.start();
 
     nQueries = queries.template getSize < 0 > ();
-  
+
 
 
     v1 = allocate(ndarray::makeVector(_dimensions));
@@ -1685,7 +1685,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
             }
         }
 
-      
+
     }//ifn = 0 through _nFunctions
 
     _timer.addToTotal(nQueries);
@@ -1915,6 +1915,6 @@ void NeuralNetCovariogram < T > ::setSigma1(double sigma1)
         template class gpn::GaussianProcess < T > ; \
         template class gpn::Covariogram < T > ; \
         template class gpn::SquaredExpCovariogram < T > ;\
-        template class gpn::NeuralNetCovariogram < T > ; 
+        template class gpn::NeuralNetCovariogram < T > ;
 
 INSTANTIATEGP(double);

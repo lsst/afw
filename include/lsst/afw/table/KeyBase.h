@@ -6,7 +6,7 @@
 
 #include "lsst/afw/table/misc.h"
 
-namespace lsst { namespace afw { namespace table { 
+namespace lsst { namespace afw { namespace table {
 
 class BaseRecord;
 

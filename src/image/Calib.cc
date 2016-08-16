@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  *
@@ -120,13 +120,13 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
     key = "FLUXMAG0";
     if (metadata->exists(key)) {
         fluxMag0 = metadata->getAsDouble(key);
-        
+
         key = "FLUXMAG0ERR";
         if (metadata->exists(key)) {
             fluxMag0Sigma = metadata->getAsDouble(key);
         }
     }
-        
+
     _midTime = midTime;
     _exptime = exptime;
     _fluxMag0 = fluxMag0;
@@ -183,7 +183,7 @@ int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata 
         metadata->remove(key);
         nstripped++;
     }
-        
+
     key = "FLUXMAG0ERR";
     if (metadata->exists(key)) {
         metadata->remove(key);
@@ -321,7 +321,7 @@ inline void convertToMagWithErr(double *mag, double *magErr, double fluxMag0, do
 {
     double const rat = flux/fluxMag0;
     double const ratErr = ::sqrt((::pow(fluxErr, 2) + ::pow(flux*fluxMag0InvSNR, 2))/::pow(fluxMag0, 2));
-    
+
     *mag = -2.5*::log10(rat);
     *magErr = 2.5/::log(10.0)*ratErr/rat;
 }
@@ -370,7 +370,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getFlux(
     checkNegativeFlux0(_fluxMag0);
     if (mag.size() != magErr.size()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
-                          (boost::format("Size of mag (%d) and magErr (%d) don't match") % 
+                          (boost::format("Size of mag (%d) and magErr (%d) don't match") %
                            mag.size() % magErr.size()).str());
     }
 
@@ -449,7 +449,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitu
     checkNegativeFlux0(_fluxMag0);
     if (flux.size() != fluxErr.size()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
-                          (boost::format("Size of flux (%d) and fluxErr (%d) don't match") % 
+                          (boost::format("Size of flux (%d) and fluxErr (%d) don't match") %
                            flux.size() % fluxErr.size()).str());
     }
 
@@ -480,7 +480,7 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitu
     }
     return std::make_pair(mag, magErr);
 }
-   
+
 namespace {
 
 class CalibSchema {
@@ -490,7 +490,7 @@ public:
     table::Key<double> expTime;
     table::Key<double> fluxMag0;
     table::Key<double> fluxMag0Sigma;
-    
+
     static CalibSchema const & get() {
         static CalibSchema instance;
         return instance;

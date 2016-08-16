@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -83,7 +83,7 @@ void mathDetail::convolveWithInterpolation(
 
     // compute region covering good area of output image
     afwGeom::Box2I fullBBox = afwGeom::Box2I(
-        afwGeom::Point2I(0, 0), 
+        afwGeom::Point2I(0, 0),
         afwGeom::Extent2I(outImage.getWidth(), outImage.getHeight()));
     afwGeom::Box2I goodBBox = kernel.shrinkBBox(fullBBox);
     KernelImagesForRegion goodRegion(KernelImagesForRegion(
@@ -138,7 +138,7 @@ void mathDetail::convolveRegionWithInterpolation(
     typedef typename InImageT::const_xy_locator InConstLocator;
     typedef KernelImagesForRegion::Image KernelImage;
     typedef KernelImage::const_xy_locator KernelConstLocator;
-    
+
     CONST_PTR(afwMath::Kernel) kernelPtr = region.getKernel();
     geom::Extent2I const kernelDimensions(kernelPtr->getDimensions());
     workingImages.leftImage.assign(*region.getImage(KernelImagesForRegion::BOTTOM_LEFT));
@@ -147,12 +147,12 @@ void mathDetail::convolveRegionWithInterpolation(
 
     afwGeom::Box2I const goodBBox = region.getBBox();
     afwGeom::Box2I const fullBBox = kernelPtr->growBBox(goodBBox);
-    
+
     // top and right images are computed one beyond bbox boundary,
     // so the distance between edge images is bbox width/height pixels
     double xfrac = 1.0 / static_cast<double>(goodBBox.getWidth());
     double yfrac = 1.0 / static_cast<double>(goodBBox.getHeight());
-    afwMath::scaledPlus(workingImages.leftDeltaImage, 
+    afwMath::scaledPlus(workingImages.leftDeltaImage,
          yfrac,  *region.getImage(KernelImagesForRegion::TOP_LEFT),
         -yfrac, workingImages.leftImage);
     afwMath::scaledPlus(workingImages.rightDeltaImage,
@@ -160,7 +160,7 @@ void mathDetail::convolveRegionWithInterpolation(
         -yfrac, workingImages.rightImage);
 
     KernelConstLocator const kernelLocator = workingImages.kernelImage.xy_at(0, 0);
-    
+
     // The loop is a bit odd for efficiency: the initial value of workingImages.kernelImage
     // and related kernel images are set when they are allocated,
     // so they are not computed in the loop until after the convolution; to save cpu cycles

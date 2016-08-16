@@ -436,7 +436,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
     if (gpuDetail::TryToSelectCudaDevice(!forceProcessing) == false) {
         return std::pair<int, WarpImageGpuStatus::ReturnCode>(-1, WarpImageGpuStatus::NO_GPU);
     }
-        
+
     int const mainKernelSize = 2 * lanczosKernel.getOrder();
     //do not process if the kernel is too large for allocated GPU local memory
     if (mainKernelSize * 2 > gpu::SIZE_MAX_WARPING_KERNEL) {

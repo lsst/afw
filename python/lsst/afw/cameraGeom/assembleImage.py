@@ -1,26 +1,26 @@
 from __future__ import absolute_import, division
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import itertools
+from builtins import zip
 
 __ALL__ = ['assembleAmplifierImage', 'assembleAmplifierRawImage']
 
@@ -45,7 +45,7 @@ def _insertPixelChunk(outView, inView, amplifier, hasArrays):
         inArrList = [inView.getArray()]
         outArrList = [outView.getArray()]
 
-    for inArr, outArr in itertools.izip(inArrList, outArrList):
+    for inArr, outArr in zip(inArrList, outArrList):
         outArr[:] = inArr[ySlice, xSlice] # y,x because numpy arrays are transposed w.r.t. afw Images
 
 def assembleAmplifierImage(destImage, rawImage, amplifier):
@@ -58,7 +58,7 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
 
     @throw RuntimeError if:
     - image types do not match
-    - amplifier has no raw amplifier info 
+    - amplifier has no raw amplifier info
     """
     if not amplifier.getHasRawInfo():
         raise RuntimeError("amplifier must contain raw amplifier info")

@@ -106,7 +106,7 @@ public:
      *
      *  No checking is done to ensure the Key belongs to the correct schema.
      */
-    template <typename T> 
+    template <typename T>
     typename Field<T>::Reference operator[](Key<T> const & key) {
         return key.getReference(getElement(key), _manager);
     }
@@ -118,11 +118,11 @@ public:
      *
      *  No checking is done to ensure the Key belongs to the correct schema.
      */
-    template <typename T> 
+    template <typename T>
     typename Field<T>::ConstReference operator[](Key<T> const & key) const {
         return key.getConstReference(getElement(key), _manager);
     }
-    
+
     /**
      *  @brief Return the value of a field for the given key.
      *
@@ -136,7 +136,7 @@ public:
     /**
      *  @brief Set value of a field for the given key.
      *
-     *  This method has an additional template parameter because some fields 
+     *  This method has an additional template parameter because some fields
      *  accept and convert different types to the stored field type.
      *
      *  No checking is done to ensure the Key belongs to the correct schema.

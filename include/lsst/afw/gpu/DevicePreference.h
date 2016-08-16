@@ -55,7 +55,7 @@ namespace gpu {
  *    If a GPU can not be used, an exception will be thrown.
  *
  * @note To test whether a certain function call is GPU-accelerated, a dummy function call should be made,
- *       with the DevicePreference parameter set to USE_GPU. If it does not throw an exception, then 
+ *       with the DevicePreference parameter set to USE_GPU. If it does not throw an exception, then
  *       the given function call is GPU-accelerated.
  */
 enum DevicePreference { AUTO, AUTO_WITH_CPU_FALLBACK, USE_CPU, USE_GPU };

@@ -29,7 +29,7 @@
 #define LSST_AFW_DISPLAY_RGB_H 1
 
 namespace lsst { namespace afw { namespace display {
-                
+
 template<typename ImageT>
 void
 replaceSaturatedPixels(ImageT & rim,    //< R image (e.g. i)

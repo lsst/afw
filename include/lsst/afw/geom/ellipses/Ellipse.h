@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -43,7 +43,7 @@ namespace lsst { namespace afw { namespace geom { namespace ellipses {
  *  @brief An ellipse defined by an arbitrary BaseCore and a center point.
  *
  *  An ellipse is composed of its center coordinate and its Core - a parametrization of the
- *  ellipticity and size of the ellipse.  Setting the core of an ellipse never changes the 
+ *  ellipticity and size of the ellipse.  Setting the core of an ellipse never changes the
  *  type of the contained core, it merely sets the parameters of that core by converting
  *  the parameters.
  */
@@ -110,7 +110,7 @@ public:
 
     /**
      *  @name Coordinate transforms
-     *  
+     *
      *  These member functions transform the ellipse by the given AffineTransform.
      *  The transform can be done in-place by calling inPlace() on the returned
      *  expression object, or returned as a new shared_ptr by calling copy().

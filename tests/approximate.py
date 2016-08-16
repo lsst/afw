@@ -1,10 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +13,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -48,12 +49,14 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class ApproximateTestCase(unittest.TestCase):
-    
+
     """A test case for Approximate"""
+
     def setUp(self):
         pass
-    
+
     def tearDown(self):
         pass
 
@@ -81,7 +84,7 @@ class ApproximateTestCase(unittest.TestCase):
 
     def testLinearRamp(self):
         """Fit a ramp"""
-        
+
         binsize = 1
         ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
         #
@@ -95,7 +98,7 @@ class ApproximateTestCase(unittest.TestCase):
         # Here's the range that the approximation should be valid (and also the
         # bbox of the image returned by getImage)
         #
-        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth()  - 1,
+        bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth() - 1,
                                                                  binsize*ramp.getHeight() - 1))
 
         order = 3                       # 1 would be enough to fit the ramp
@@ -111,7 +114,7 @@ class ApproximateTestCase(unittest.TestCase):
                     for x in xVec:
                         for y in yVec:
                             ds9.dot('+', x, y, size=0.4, frame=1)
-            
+
             for x, y in aim.getBBox().getCorners():
                 self.assertEqual(aim.get(x, y), rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y)
 
@@ -119,8 +122,8 @@ class ApproximateTestCase(unittest.TestCase):
         """Check that we enforce the condition orderX == orderY"""
 
         self.assertRaises(pexExcept.InvalidParameterError,
-                                       lambda : 
-                                       afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, 1, 2))
+                          lambda:
+                          afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, 1, 2))
 
     def testNoFinitePoints(self):
         """Check that makeApproximate throws a RuntimeError if grid has no finite points and weights to fit
@@ -129,12 +132,12 @@ class ApproximateTestCase(unittest.TestCase):
         for badValue in [(3, 0x1, 0), (np.nan, 0x1, 1)]:
             ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
             ramp.set(badValue)
-            bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth()  - 1,
+            bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth() - 1,
                                                                      binsize*ramp.getHeight() - 1))
             order = 2
             actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
             self.assertRaises(pexExcept.RuntimeError,
-                              lambda : afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl))
+                              lambda: afwMath.makeApproximate(xVec, yVec, ramp, bbox, actrl))
 
     def testLinearRampAsBackground(self):
         """Fit a ramp"""
@@ -173,9 +176,10 @@ class ApproximateTestCase(unittest.TestCase):
         # Check that we can't "truncate" the expansion to a higher order than we requested
         #
         self.assertRaises(pexExcept.InvalidParameterError,
-                                       lambda : approx.getImage(orderMax + 1, orderMax + 1))
+                          lambda: approx.getImage(orderMax + 1, orderMax + 1))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -187,7 +191,8 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     utilsTests.run(suite(), shouldExit)
 

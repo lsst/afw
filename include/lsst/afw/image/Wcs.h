@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 
 #ifndef LSST_AFW_IMAGE_WCS_H
 #define LSST_AFW_IMAGE_WCS_H
@@ -56,19 +56,19 @@ namespace afw {
     }
 namespace image {
 
-/// 
+///
 /// @brief Implementation of the WCS standard for a any projection
-/// 
+///
 /// Implements a single representation of the World Coordinate
 /// System of a two dimensional image  The standard is defined in two papers
 /// - Greisen & Calabretta, 2002 A&A 395, 1061
 /// - Calabretta & Greisen, 2002, A&A 395, 1077
-///  
+///
 /// In its simplest sense, Wcs is used to convert from position in the sky (in
 /// right ascension and declination) to pixel position on an image (and back
 /// again). It is, however, much more general than that and can understand a
 /// myriad of different coordinate systems.
-/// 
+///
 /// A wcs can be constructed from a reference position (crval, crpix) and a
 /// translation matrix. Alternatively, if you have the header from a FITS file,
 /// you can create a Wcs object with the makeWcs() function. This function
@@ -81,22 +81,22 @@ namespace image {
 /// \code
 /// import lsst.afw.image as afwImg
 /// fitsHeader = afwImg.readMetadata(filename)
-/// 
+///
 /// if 0:
 ///     #This doesn't work
 ///     wcs = afwImg.Wcs(fitsHeader)
-///     
+///
 /// wcs = afwImg.makeWcs(fitsHeader)
-/// 
+///
 /// pixelPosition = wcs.skyToPixel(ra, dec)
 /// skyPosition = wcs.skyToPixel(xPosition, yPosition)
 /// \endcode
-/// 
-/// 
+///
+///
 /// o[
 /// This class is implemented in by calls to the wcslib library
 /// by Mark Calabretta http://www.atnf.csiro.au/people/mcalabre/WCS/
-/// 
+///
 /// Note that we violate the WCS standard in one minor way. The standard states
 /// that none of the CRPIX or CRVAL keywords are required, for the header to be
 /// valid, and the appropriate values should be set to 0.0 if the keywords are
@@ -122,7 +122,7 @@ public:
                             bool stripMetadata);
 
     Wcs(lsst::afw::geom::Point2D const & crval, lsst::afw::geom::Point2D const & crpix,
-        Eigen::Matrix2d const & CD, 
+        Eigen::Matrix2d const & CD,
         std::string const & ctype1="RA---TAN", std::string const & ctype2="DEC--TAN",
         double equinox=2000, std::string const & raDecSys="ICRS",
         std::string const & cunits1="deg", std::string const & cunits2="deg"
@@ -130,7 +130,7 @@ public:
 
     virtual ~Wcs();
     virtual Ptr clone(void) const;
-    
+
     bool operator==(Wcs const & other) const;
     bool operator!=(Wcs const & other) const { return !(*this == other); }
 
@@ -148,10 +148,10 @@ public:
 
     /// Rotate image by nQuarter times 90 degrees.
     virtual void rotateImageBy90(int nQuarter, lsst::afw::geom::Extent2I dimensions) const;
-    
+
     /// Return a PropertyList containing FITS header keywords that can be used to save the Wcs.x
     virtual PTR(lsst::daf::base::PropertyList) getFitsMetadata() const;
-    
+
     /**
      *  Does the Wcs follow the convention of North=Up, East=Left?
      *
@@ -164,10 +164,10 @@ public:
 
     /// Sky area covered by a pixel at position \c pix00 in units of square degrees.
     double pixArea(lsst::afw::geom::Point2D pix00) const;
-    
+
     /// Returns the pixel scale [Angle/pixel]
     geom::Angle pixelScale() const;
-    
+
     /**
      *  @brief Convert from pixel position to sky coordinates (e.g. RA/dec)
      *
@@ -256,7 +256,7 @@ public:
         coord::Coord const & coord,
         geom::AngleUnit skyUnit = geom::degrees
     ) const;
-    
+
     /**
      * @brief Return the local linear approximation to Wcs::pixelToSky at a point given in pixel coordinates.
      *
@@ -335,13 +335,13 @@ public:
 
     /// @brief Whether the Wcs is persistable using afw::table::io archives.
     virtual bool isPersistable() const;
-        
+
 private:
     //Allow the formatter to access private goo
     LSST_PERSIST_FORMATTER(lsst::afw::formatters::WcsFormatter)
-    
+
     void initWcsLib(geom::Point2D const & crval, geom::Point2D const & crpix,
-                    Eigen::Matrix2d const & CD, 
+                    Eigen::Matrix2d const & CD,
                     std::string const & ctype1, std::string const & ctype2,
                     double equinox, std::string const & raDecSys,
                     std::string const & cunits1, std::string const & cunits2
@@ -375,13 +375,13 @@ protected:
 
     // Construct from a record; used by WcsFactory for afw::table::io persistence.
     explicit Wcs(afw::table::BaseRecord const & record);
-    
+
     Wcs(Wcs const & rhs);
-    Wcs& operator= (const Wcs &);        
+    Wcs& operator= (const Wcs &);
 
     virtual void pixelToSkyImpl(double pixel1, double pixel2, geom::Angle skyTmp[2]) const;
     virtual geom::Point2D skyToPixelImpl(geom::Angle sky1, geom::Angle sky2) const;
-    
+
     PTR(afw::coord::Coord) makeCorrectCoord(geom::Angle sky0, geom::Angle sky1) const;
 
     /**
@@ -389,7 +389,7 @@ protected:
      *  coordinate system for this Wcs.
      */
     PTR(afw::coord::Coord) convertCoordToSky(coord::Coord const & coord) const;
-    
+
     virtual geom::AffineTransform linearizePixelToSkyInternal(
         geom::Point2D const & pix,
         coord::Coord const & coord,
@@ -402,11 +402,11 @@ protected:
         geom::AngleUnit skyUnit
     ) const;
 
-    
+
     void initWcsLibFromFits(CONST_PTR(lsst::daf::base::PropertySet) const& fitsMetadata);
     void _initWcs();
     void _setWcslibParams();
-    
+
     struct wcsprm* _wcsInfo;
     int _nWcsInfo;
     int _relax; ///< Degree of permissiveness for wcspih (0 for strict); see wcshdr.h for details.
@@ -420,7 +420,7 @@ protected:
 namespace detail {
     PTR(lsst::daf::base::PropertyList)
     createTrivialWcsAsPropertySet(std::string const& wcsName, int const x0=0, int const y0=0);
-    
+
     geom::Point2I getImageXY0FromMetadata(std::string const& wcsName, lsst::daf::base::PropertySet *metadata);
 }
 
@@ -431,7 +431,7 @@ PTR(Wcs) makeWcs(PTR(lsst::daf::base::PropertySet) const& fitsMetadata, bool str
  */
 PTR(Wcs) makeWcs(coord::Coord const & crval, geom::Point2D const & crpix,
                  double CD11, double CD12, double CD21, double CD22);
-    
+
 namespace detail {
     int stripWcsKeywords(PTR(lsst::daf::base::PropertySet) const& metadata, ///< Metadata to be stripped
                          CONST_PTR(Wcs) const& wcs ///< A Wcs with (implied) keywords
@@ -458,12 +458,12 @@ public:
     virtual PTR(afw::geom::XYTransform) clone() const;
     virtual Point2D forwardTransform(Point2D const &pixel) const;
     virtual Point2D reverseTransform(Point2D const &pixel) const;
-    
+
 protected:
     CONST_PTR(Wcs) _dst;
     CONST_PTR(Wcs) _src;
     bool const _isSameSkySystem;
-};  
+};
 
 
 }}} // lsst::afw::image

@@ -11,7 +11,7 @@ namespace lsst { namespace afw { namespace table {
 namespace {
 
 struct MatchKey {
-    bool operator()(SchemaItem<Flag> const & item) const { 
+    bool operator()(SchemaItem<Flag> const & item) const {
         return item.key == target;
     }
 
@@ -21,7 +21,7 @@ struct MatchKey {
 };
 
 struct MatchName {
-    bool operator()(SchemaItem<Flag> const & item) const { 
+    bool operator()(SchemaItem<Flag> const & item) const {
         return item.field.getName() == target;
     }
 
@@ -116,7 +116,7 @@ BaseColumnView::operator[](Key<Flag> const & key) const {
                     reinterpret_cast<char *>(_impl->buf) + key.getOffset()
                 ),
                 ndarray::makeVector(_impl->recordCount),
-                ndarray::makeVector(int(_impl->table->getSchema().getRecordSize() 
+                ndarray::makeVector(int(_impl->table->getSchema().getRecordSize()
                                         / sizeof(Field<Flag>::Element))),
                 _impl->manager
             )
@@ -130,7 +130,7 @@ BitsColumn BaseColumnView::getBits(std::vector< Key<Flag> > const & keys) const 
     if (keys.size() > sizeof(BitsColumn::IntT)) {
         throw LSST_EXCEPT(
             pex::exceptions::LengthError,
-            (boost::format("Too many keys passed to getBits(); %d > %d.") 
+            (boost::format("Too many keys passed to getBits(); %d > %d.")
              % keys.size() % sizeof(BitsColumn::IntT)).str()
         );
     }
@@ -152,7 +152,7 @@ struct ExtractFlagItems {
     void operator()(SchemaItem<Flag> const & item) const {
         items->push_back(item);
     }
-    
+
     std::vector< SchemaItem<Flag> > * items;
 };
 
@@ -165,7 +165,7 @@ BitsColumn BaseColumnView::getAllBits() const {
     if (result._items.size() > sizeof(BitsColumn::IntT)) {
         throw LSST_EXCEPT(
             pex::exceptions::LengthError,
-            (boost::format("Too many Flag keys in schema; %d > %d.") 
+            (boost::format("Too many Flag keys in schema; %d > %d.")
              % result._items.size() % sizeof(BitsColumn::IntT)).str()
         );
     }
@@ -178,7 +178,7 @@ BitsColumn BaseColumnView::getAllBits() const {
 }
 
 // needs to be in source file so it can (implicitly) call Impl's (implicit) dtor
-BaseColumnView::~BaseColumnView() {} 
+BaseColumnView::~BaseColumnView() {}
 
 BaseColumnView::BaseColumnView(
     PTR(BaseTable) const & table, int recordCount, void * buf, ndarray::Manager::Ptr const & manager

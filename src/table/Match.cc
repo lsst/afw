@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010, 2016 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -147,7 +147,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
     if (doSelfMatchIfSame(matches, cat1, cat2, radius)) return matches;
 
     if (radius < 0.0 || (radius > (45. * geom::degrees))) {
-        throw LSST_EXCEPT(pex::exceptions::RangeError, 
+        throw LSST_EXCEPT(pex::exceptions::RangeError,
                           "match radius out of range (0 to 45 degrees)");
     }
     if (cat1.size() == 0 || cat2.size() == 0) {
@@ -155,7 +155,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
     }
     // setup match parameters
     double const d2Limit = radius.toUnitSphereDistanceSquared();
-    
+
     // Build position lists
     size_t len1 = cat1.size();
     size_t len2 = cat2.size();
@@ -167,7 +167,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
     len1 = makeRecordPositions(cat1, pos1.get());
     len2 = makeRecordPositions(cat2, pos2.get());
     PTR(typename Cat2::Record) nullRecord = std::shared_ptr<typename Cat2::Record>();
-    
+
     for (size_t i = 0, start = 0; i < len1; ++i) {
         double minDec = pos1[i].dec - radius.asRadians();
         while (start < len2 && pos2[start].dec < minDec) { ++start; }
@@ -202,7 +202,7 @@ matchRaDec(Cat1 const & cat1, Cat2 const & cat2, Angle radius,
         }
         if (mc.findOnlyClosest && found) {
             matches.push_back(
-                MatchT(pos1[i].src, pos2[closestIndex].src, 
+                MatchT(pos1[i].src, pos2[closestIndex].src,
                        geom::Angle::fromUnitSphereDistanceSquared(d2Include))
             );
         }
@@ -456,7 +456,7 @@ unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & seco
     Key<RecordId> inKey1 = matches.getSchema()["first"];
     Key<RecordId> inKey2 = matches.getSchema()["second"];
     Key<double> keyD = matches.getSchema()["distance"];
-    if (!first.isSorted() || !second.isSorted()) 
+    if (!first.isSorted() || !second.isSorted())
         throw LSST_EXCEPT(
             pex::exceptions::InvalidParameterError,
             "Catalogs passed to unpackMatches must be sorted."

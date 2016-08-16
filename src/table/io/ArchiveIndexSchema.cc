@@ -18,7 +18,7 @@ ArchiveIndexSchema::ArchiveIndexSchema() :
        )),
     catArchive(
         schema.addField<int>(
-            "cat.archive", 
+            "cat.archive",
             "index of the catalog this entry points to, from the perspective of the archive"
         )),
     catPersistable(

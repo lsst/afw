@@ -1,7 +1,7 @@
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -9,14 +9,14 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -24,6 +24,9 @@
 ## \brief Utilities to use with displaying images
 
 from __future__ import absolute_import, division, print_function
+from builtins import str
+from builtins import range
+from builtins import object
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -80,7 +83,7 @@ class Mosaic(object):
     m.drawLabels(["Label 1", "Label 2", "Label 3"], display) # label the panels
 
     # alternative way to build a mosaic
-    images = [im1, im2, im3]               
+    images = [im1, im2, im3]
     labels = ["Label 1", "Label 2", "Label 3"]
 
     mosaic = m.makeMosaic(images)
@@ -114,7 +117,7 @@ class Mosaic(object):
         """Reset the list of images to be mosaiced"""
         self.images = []                # images to mosaic together
         self.labels = []                # labels for images
-        
+
     def append(self, image, label=None, ctype=None):
         """Add an image to the list of images to be mosaiced
         Set may be cleared with Mosaic.reset()
@@ -136,7 +139,7 @@ class Mosaic(object):
 
         Note that this mosaic is a patchwork of the input images;  if you want to
         make a mosaic of a set images of the sky, you probably want to use the coadd code
-        
+
         If display or frame (deprecated) is specified, display the mosaic
         """
 
@@ -144,7 +147,7 @@ class Mosaic(object):
             images = self.images
 
         if self.nImage == 0:
-            raise RuntimeError, "You must provide at least one image"
+            raise RuntimeError("You must provide at least one image")
 
         self.xsize, self.ysize = 0, 0
         for im in images:
@@ -172,7 +175,7 @@ class Mosaic(object):
 
             if nx > self.nImage:
                 nx = self.nImage
-                
+
             assert(nx*ny >= self.nImage)
         elif mode == "x":
             nx, ny = self.nImage, 1
@@ -184,7 +187,7 @@ class Mosaic(object):
             if nx*ny < self.nImage:
                 ny += 1
         else:
-            raise RuntimeError, ("Unknown mosaicing mode: %s" % mode)
+            raise RuntimeError("Unknown mosaicing mode: %s" % mode)
 
         self.nx, self.ny = nx, ny
 
@@ -214,7 +217,7 @@ class Mosaic(object):
 
             if images == self.images:
                 self.drawLabels(display=display)
-            
+
         return mosaic
 
     def setGutter(self, gutter):
@@ -233,7 +236,7 @@ class Mosaic(object):
     """
 
         if mode not in ("square", "x", "y"):
-            raise RuntimeError, ("Unknown mosaicing mode: %s" % mode)
+            raise RuntimeError("Unknown mosaicing mode: %s" % mode)
 
         self.mode = mode
 
@@ -257,12 +260,12 @@ class Mosaic(object):
             return
 
         if len(labels) != self.nImage:
-            raise RuntimeError, ("You provided %d labels for %d panels" % (len(labels), self.nImage))
+            raise RuntimeError("You provided %d labels for %d panels" % (len(labels), self.nImage))
 
         display = _getDisplayFromDisplayOrFrame(display, frame)
         if not display:
             return
-            
+
         with display.Buffering():
             for i in range(len(labels)):
                 if labels[i]:
@@ -298,7 +301,7 @@ All BBox coordinates are divided by bin, as is right and proper for overlaying o
     x0 /= bin; y0 /= bin
     x1 /= bin; y1 /= bin
     borderWidth /= bin
-    
+
     display = _getDisplayFromDisplayOrFrame(display, frame)
     display.line([(x0 - borderWidth, y0 - borderWidth),
               (x0 - borderWidth, y1 + borderWidth),

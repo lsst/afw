@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file Coord.cc
  * @brief Provide functions to handle coordinates
@@ -53,9 +53,9 @@ namespace afwGeom  = lsst::afw::geom;
 namespace dafBase  = lsst::daf::base;
 
 namespace {
-    
+
 typedef std::map<std::string, afwCoord::CoordSystem> CoordSystemMap;
-    
+
 CoordSystemMap const getCoordSystemMap() {
     CoordSystemMap idMap;
     idMap["FK5"]         = afwCoord::FK5;
@@ -126,10 +126,10 @@ afwCoord::CoordSystem afwCoord::makeCoordEnum(std::string const system) {
 
 namespace {
 
-double const NaN          = std::numeric_limits<double>::quiet_NaN();    
+double const NaN          = std::numeric_limits<double>::quiet_NaN();
 double const JD2000       = 2451544.50;
 
-    
+
 /*
  * A local class to handle dd:mm:ss coordinates
  *
@@ -144,7 +144,7 @@ double const JD2000       = 2451544.50;
 class Dms {
 public:
     Dms() {};
-    
+
     // note that isSouth is needed to specify coords between dec = 0, and dec = -1
     // otherwise, d = -0 gets carried as d = 0 ... need a way to specify it explicitly
     Dms(int const d, int const m, double const s, bool const isSouth=false) {
@@ -162,15 +162,15 @@ public:
         min  = static_cast<int>(std::floor((absVal - deg)*60.0));
         sec  = ((absVal - deg)*60.0 - min)*60.0;
     }
-    
+
     int deg;
     int min;
     double sec;
     int sign;
 };
 
-    
-    
+
+
 /**
  * Store the Fk5 coordinates of the Galactic pole (and vice-versa) for coordinate transforms.
  *
@@ -197,7 +197,7 @@ afwGeom::Angle meanSiderealTimeGreenwich(
     double const T = (jd - 2451545.0)/36525.0;
     return (280.46061837 + 360.98564736629*(jd - 2451545.0) + 0.000387933*T*T - (T*T*T/38710000.0)) * afwGeom::degrees;
 }
-    
+
 
 /*
  * A pair of utility functions to go from cartesian to spherical
@@ -251,7 +251,7 @@ std::pair<afwGeom::Angle, afwGeom::Angle> pointToLonLat(lsst::afw::geom::Point3D
     return lonLat;
 }
 
-    
+
 } // end anonymous namespace
 
 
@@ -281,10 +281,10 @@ static std::string angleToXmsString(afwGeom::Angle const a, afwGeom::AngleUnit c
         s = "-" + s;
     }
     return s;
-    
+
 }
 
-    
+
 /**
  * @brief a Function to convert a coordinate in decimal degrees to a string with form dd:mm:ss
  *
@@ -511,11 +511,11 @@ afwCoord::Coord afwCoord::Coord::transform(
     double const alphaGP  = poleFrom[0];
     double const deltaGP  = poleFrom[1];
     double const lCP      = poleTo[0];
-    
+
     double const alpha = getLongitude();
     double const delta = getLatitude();
-    
-    afwGeom::Angle const l = (lCP - std::atan2(std::sin(alpha - alphaGP), 
+
+    afwGeom::Angle const l = (lCP - std::atan2(std::sin(alpha - alphaGP),
                                                std::tan(delta)*std::cos(deltaGP) - std::cos(alpha - alphaGP)*std::sin(deltaGP))) * afwGeom::radians;
     afwGeom::Angle const b = std::asin( (std::sin(deltaGP)*std::sin(delta) + std::cos(deltaGP)*std::cos(delta)*std::cos(alpha - alphaGP))) * afwGeom::radians;
     return Coord(l, b);
@@ -534,7 +534,7 @@ void afwCoord::Coord::rotate(
     double const c = std::cos(theta);
     double const mc = 1.0 - c;
     double const s = std::sin(theta);
-    
+
     // convert to cartesian
     afwGeom::Point3D const x = getVector();
     afwGeom::Point3D const u = axis.getVector();
@@ -547,7 +547,7 @@ void afwCoord::Coord::rotate(
     xprime[0] = (ux*ux + (1.0 - ux*ux)*c)*x[0] +  (ux*uy*mc - uz*s)*x[1] +  (ux*uz*mc + uy*s)*x[2];
     xprime[1] = (uy*uy + (1.0 - uy*uy)*c)*x[1] +  (uy*uz*mc - ux*s)*x[2] +  (ux*uy*mc + uz*s)*x[0];
     xprime[2] = (uz*uz + (1.0 - uz*uz)*c)*x[2] +  (uz*ux*mc - uy*s)*x[0] +  (uy*uz*mc + ux*s)*x[1];
-    
+
     // in-situ
     std::pair<afwGeom::Angle, afwGeom::Angle> lonLat = pointToLonLat(xprime);
     _longitude = lonLat.first;
@@ -571,7 +571,7 @@ afwGeom::Angle afwCoord::Coord::offset(
     // let v = vector in the direction arcLen points (tangent to surface of sphere)
     // thus: |v| = arcLen
     //       angle phi = orientation of v in a tangent plane, measured wrt to a parallel of declination
-    
+
     // To do the rotation, use rotate() method.
     // - must provide an axis of rotation: take the cross product r x v to get that axis (pole)
 
@@ -589,7 +589,7 @@ afwGeom::Angle afwCoord::Coord::offset(
 
     // v is a linear combination of u and w
     // v = arcLen*cos(phi)*u + arcLen*sin(phi)*w
-    
+
     // Thus, we must:
     // - create u vector
     // - solve w vector (r cross u)
@@ -603,9 +603,9 @@ afwGeom::Angle afwCoord::Coord::offset(
     Eigen::Vector3d axisVector = r.cross(v);
     axisVector.normalize();
     Coord axisCoord = Coord(afwGeom::Point3D(axisVector), getEpoch());
-    
+
     rotate(axisCoord, arcLen);
-    
+
     // now get the position angle at our destination
     // u2 . v2 = arcLen*cos(phi2)
     // w2 . v2 = arcLen*sin(phi2)
@@ -685,9 +685,9 @@ PTR(afwCoord::Coord) afwCoord::Coord::convert(CoordSystem system, double epoch) 
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC allowed.");
         break;
-        
+
     }
-    
+
 }
 
 
@@ -883,10 +883,10 @@ afwCoord::GalacticCoord afwCoord::Fk5Coord::toGalactic() const {
     } else {
         c = *this;
     }
-    
+
     Coord ct = c.transform(Fk5PoleInGalactic(), GalacticPoleInFk5());
     return GalacticCoord(ct.getLongitude(), ct.getLatitude());
-    
+
 }
 
 /**
@@ -896,7 +896,7 @@ afwCoord::EclipticCoord afwCoord::Fk5Coord::toEcliptic(double const epoch) const
     afwGeom::Angle const eclPoleIncl = eclipticPoleInclination(epoch);
     Coord const eclPoleInEquatorial(270.0 * afwGeom::degrees, (90.0 * afwGeom::degrees) - eclPoleIncl, epoch);
     Coord const equPoleInEcliptic(90.0 * afwGeom::degrees, (90.0 * afwGeom::degrees) - eclPoleIncl, epoch);
-    Coord c = transform(equPoleInEcliptic, eclPoleInEquatorial); 
+    Coord c = transform(equPoleInEcliptic, eclPoleInEquatorial);
     return EclipticCoord(c.getLongitude(), c.getLatitude(), epoch);
 }
 /**
@@ -928,7 +928,7 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     // ra/dec of the target
     afwGeom::Angle const alpha           = fk5.getRa();
     afwGeom::Angle const delta           = fk5.getDec();
-                               
+
     afwGeom::Angle const H               = theta0 + L - alpha;
 
     // compute the altitude, h
@@ -938,12 +938,12 @@ afwCoord::TopocentricCoord afwCoord::Fk5Coord::toTopocentric(
     // compute the azimuth, A
     double const tanAnumerator   = std::sin(H);
     double const tanAdenominator = (std::cos(H) * std::sin(phi) - std::tan(delta) * std::cos(phi));
-    
+
     // Equations used here assume azimuth is with respect to South
     // but we use the North as our origin ... must add 180 deg
     afwGeom::Angle A = (180.0*afwGeom::degrees) + atan2(tanAnumerator, tanAdenominator)* afwGeom::radians;
     A.wrap();
-    
+
     return TopocentricCoord(A, h, obsDate.get(dafBase::DateTime::EPOCH), obs);
 }
 
@@ -961,7 +961,7 @@ afwCoord::Fk5Coord afwCoord::Fk5Coord::precess(
     if ( fabs(getEpoch() - epochTo) < epochTolerance) {
         return Fk5Coord(getLongitude(), getLatitude(), getEpoch());
     }
-    
+
     dafBase::DateTime const dateFrom(getEpoch(), dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
     dafBase::DateTime const dateTo(epochTo, dafBase::DateTime::EPOCH, dafBase::DateTime::TAI);
     double const jd0 = dateFrom.get(dafBase::DateTime::JD);
@@ -982,14 +982,14 @@ afwCoord::Fk5Coord afwCoord::Fk5Coord::precess(
     Fk5Coord fk5 = this->toFk5();
     afwGeom::Angle const alpha0 = fk5.getRa();
     afwGeom::Angle const delta0 = fk5.getDec();
-    
+
     double const a = std::cos(delta0) * std::sin((alpha0 + xi));
     double const b = std::cos(theta)  * std::cos(delta0) * std::cos((alpha0 + xi)) - std::sin(theta) * std::sin(delta0);
     double const c = std::sin(theta)  * std::cos(delta0) * std::cos((alpha0 + xi)) + std::cos(theta) * std::sin(delta0);
 
     afwGeom::Angle const alpha = (std::atan2(a,b) + z) * afwGeom::radians;
     afwGeom::Angle const delta = std::asin(c) * afwGeom::radians;
-    
+
     return Fk5Coord(alpha, delta, epochTo);
 }
 
@@ -1062,7 +1062,7 @@ afwCoord::Fk5Coord afwCoord::GalacticCoord::toFk5() const {
 /**
  * @brief Convert ourself from Galactic to Galactic ... a no-op
  */
-afwCoord::GalacticCoord afwCoord::GalacticCoord::toGalactic() const { 
+afwCoord::GalacticCoord afwCoord::GalacticCoord::toGalactic() const {
     return GalacticCoord(getLongitude(), getLatitude());
 }
 
@@ -1131,7 +1131,7 @@ afwCoord::EclipticCoord afwCoord::EclipticCoord::precess(
  * @brief Convert ourself from Topocentric to Fk5
  */
 afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
-     
+
     afwGeom::Angle const phi      = _obs.getLatitude();
     afwGeom::Angle const L        = _obs.getLongitude();
 
@@ -1141,7 +1141,7 @@ afwCoord::Fk5Coord afwCoord::TopocentricCoord::toFk5(double const epoch) const {
     A.wrap();
     afwGeom::Angle const h        = getAltitude();
 
-    
+
     double const jd       = dafBase::DateTime(epoch,
                                               dafBase::DateTime::EPOCH,
                                               dafBase::DateTime::TAI).get(dafBase::DateTime::JD);
@@ -1182,7 +1182,7 @@ afwCoord::TopocentricCoord afwCoord::TopocentricCoord::toTopocentric(
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           (boost::format("Expected date %g, saw %g") % getEpoch() % date.get()).str());
     }
-        
+
     return TopocentricCoord(getLongitude(), getLatitude(), getEpoch(), _obs);
 }
 
@@ -1248,7 +1248,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
         throw LSST_EXCEPT(ex::InvalidParameterError,
             "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
         break;
-        
+
     }
 
 }
@@ -1289,11 +1289,11 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
         throw LSST_EXCEPT(ex::InvalidParameterError,
             "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, and TOPOCENTRIC allowed.");
         break;
-        
+
     }
 
 }
-    
+
 
 
 /**
@@ -1420,7 +1420,7 @@ PTR(afwCoord::Coord) afwCoord::makeCoord(
         throw LSST_EXCEPT(ex::InvalidParameterError,
                           "Undefined CoordSystem: only FK5, ICRS, GALACTIC, ECLIPTIC, allowed.");
         break;
-        
+
     }
 }
 

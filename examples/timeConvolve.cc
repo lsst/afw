@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <sstream>
 #include <ctime>
@@ -55,12 +55,12 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
 
     std::cout << std::endl << "Analytic Kernel" << std::endl;
     std::cout << "ImWid\tImHt\tKerWid\tKerHt\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
-    
+
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
         afwMath::GaussianFunction2<KernelType> gaussFunc(Sigma, Sigma, 0);
         afwMath::AnalyticKernel analyticKernel(kSize, kSize, gaussFunc);
-        
+
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
@@ -78,12 +78,12 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
 
     std::cout << std::endl << "Separable Kernel" << std::endl;
     std::cout << "ImWid\tImHt\tKerWid\tKerHt\tMOps\tCnvSec\tMOpsPerSec" << std::endl;
-    
+
     for (unsigned kSize = MinKernelSize; kSize <= MaxKernelSize; kSize += DeltaKernelSize) {
         // construct kernel
         afwMath::GaussianFunction1<KernelType> gaussFunc(Sigma);
         afwMath::SeparableKernel separableKernel(kSize, kSize, gaussFunc, gaussFunc);
-        
+
         clock_t startTime = clock();
         for (unsigned int iter = 0; iter < nIter; ++iter) {
             // convolve
@@ -91,7 +91,7 @@ void timeConvolution(ImageClass &image, unsigned int nIter) {
         }
         double secPerIter = (clock() - startTime)/
             (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
-        
+
         double mOps = static_cast<double>((
             imHeight + 1 - kSize) * (imWidth + 1 - kSize) * kSize * kSize) / 1.0e6;
         double mOpsPerSec = mOps / secPerIter;
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
     std::cout << std::endl << "Image " << inImagePath << std::endl;
     afwImage::Image<ImageType> image(inImagePath);
     timeConvolution(image, nIter);
-    
+
     std::cout << std::endl << "MaskedImage " << inImagePath << std::endl;
     afwImage::MaskedImage<ImageType> mImage(inImagePath);
     timeConvolution(mImage, nIter);

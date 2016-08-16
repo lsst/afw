@@ -46,7 +46,7 @@ extra virtual methods).  I chose to save a pointer to the parent %image, and the
 \until }
 
 It's possible to iterate over all the objects in a SpatialCellSet (we'll do so in a moment), but the simplest
-way to visit all cells is to pass in a visitor object.  The \c ExampleCandidateVisitor object (defined in 
+way to visit all cells is to pass in a visitor object.  The \c ExampleCandidateVisitor object (defined in
 \link testSpatialCell.h\endlink) counts the candidates and the number of pixels contained in their bounding boxes.
 
 \skipline visitor
@@ -66,7 +66,7 @@ them as \c BAD.
 
 What does \c BAD mean (other options are \c UNKNOWN and \c GOOD)?  Basically that that object is to be
 ignored. It no longer appears in the size of the SpatialCell%s, it is skipped by the iterators, and the
-visitors pass it by.  You can turn this behaviour off with \c setIgnoreBad.  
+visitors pass it by.  You can turn this behaviour off with \c setIgnoreBad.
 
 Note that we pass the visitor \e before we decide to ignore \c BAD so \c getN() and \c getNPix() return
 the number of good objects/pixels.

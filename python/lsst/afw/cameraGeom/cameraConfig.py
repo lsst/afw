@@ -4,7 +4,7 @@ from lsst.afw.geom import TransformMapConfig
 __all__ = ["CameraConfig", "DetectorConfig"]
 
 class DetectorConfig(pexConfig.Config):
-    """!A configuration that represents (and can be used to construct) a Detector 
+    """!A configuration that represents (and can be used to construct) a Detector
     """
     transformDict = pexConfig.ConfigField("Dictionary of camera transforms keyed on the transform type.", TransformMapConfig)
     name = pexConfig.Field("Name of detector slot", str)
@@ -32,7 +32,7 @@ class DetectorConfig(pexConfig.Config):
     # Depending on the choice of detector coordinates, the pixel grid may need to be transposed before rotation to put
     # it in camera coordinates.
     transposeDetector = pexConfig.Field("Transpose the pixel grid before orienting in focal plane?", bool)
-    
+
 class CameraConfig(pexConfig.Config):
     """!A configuration that represents (and can be used to construct) a Camera
     """
@@ -41,7 +41,7 @@ class CameraConfig(pexConfig.Config):
     name = pexConfig.Field("Name of this camera", str)
 
     plateScale = pexConfig.Field("Plate scale of the camera in arcsec/mm", float)
-    # Note that the radial transform will also apply a scaling, so all coefficients should be 
+    # Note that the radial transform will also apply a scaling, so all coefficients should be
     # scaled by the plate scale in appropriate units
     radialCoeffs = pexConfig.ListField("Coefficients for radial distortion", float)
     # The following is commented until radialXYTransform supports an offset (ticket/3155)

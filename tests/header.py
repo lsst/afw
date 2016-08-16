@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
 
 #
@@ -25,6 +25,7 @@ from __future__ import absolute_import, division
 
 import numpy
 import unittest
+from past.builtins import long
 
 import lsst.afw.image as afwImage
 import lsst.utils.tests as utilsTests
@@ -33,6 +34,7 @@ import lsst.utils.tests as utilsTests
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class HeaderTestCase(unittest.TestCase):
     """Test that headers round-trip"""
+
     def testHeaders(self):
         filename = "tests/header.fits"
         header = {"STR": "String",
@@ -44,16 +46,16 @@ class HeaderTestCase(unittest.TestCase):
                   "LONG": long(987654321),
                   }
 
-        exp = afwImage.ExposureI(0,0)
+        exp = afwImage.ExposureI(0, 0)
         metadata = exp.getMetadata()
-        for k,v in header.items():
+        for k, v in header.items():
             metadata.add(k, v)
 
         exp.writeFits(filename)
 
         exp = afwImage.ExposureI(filename)
         metadata = exp.getMetadata()
-        for k,v in header.items():
+        for k, v in header.items():
             self.assertTrue(metadata.exists(k))
             if isinstance(v, float) and numpy.isnan(v):
                 self.assertTrue(isinstance(metadata.get(k), float))
@@ -73,6 +75,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

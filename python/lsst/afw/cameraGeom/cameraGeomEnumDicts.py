@@ -28,4 +28,4 @@ DetectorTypeValNameDict = {
     cameraGeomLib.GUIDER:    "GUIDER",
     cameraGeomLib.WAVEFRONT: "WAVEFRONT",
 }
-DetectorTypeNameValDict = dict((val, key) for key, val in DetectorTypeValNameDict.iteritems())
+DetectorTypeNameValDict = {val: key for key, val in DetectorTypeValNameDict.items()}

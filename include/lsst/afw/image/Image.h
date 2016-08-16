@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief Support for 2-D images
@@ -98,12 +98,12 @@ namespace image {
     struct Reference {
         typedef typename boost::gil::channel_traits<PixelT>::reference type; ///< reference type
     };
-    /// \brief metafunction to extract const reference type from PixelT    
+    /// \brief metafunction to extract const reference type from PixelT
     template<typename PixelT>
     struct ConstReference {
         typedef typename boost::gil::channel_traits<PixelT>::const_reference type; ///< const reference type
     };
-    
+
     enum ImageOrigin {PARENT, LOCAL};
 
     /// \brief The base class for all %image classed (Image, Mask, MaskedImage, ...)
@@ -120,7 +120,7 @@ namespace image {
 
 
         typedef ndarray::Manager Manager;
-    public:        
+    public:
 
         typedef std::shared_ptr<ImageBase<PixelT> > Ptr; ///< A shared_ptr to an ImageBase
         typedef std::shared_ptr<const ImageBase<PixelT> > ConstPtr; ///< A shared_ptr to a const ImageBase
@@ -264,7 +264,7 @@ namespace image {
          * The origin can be reset with \c setXY0
          */
         geom::Point2I getXY0() const { return _origin; }
-        
+
         /**
          * @brief Convert image position to index (nearest integer and fractional parts)
          *
@@ -295,10 +295,10 @@ namespace image {
         ) const {
             return ind + PixelZeroPos + (xy == X ? getX0() : getY0());
         }
-        
+
         /// Return the %image's size;  useful for passing to constructors
         geom::Extent2I getDimensions() const { return geom::Extent2I(getWidth(), getHeight()); }
-        
+
         void swap(ImageBase &rhs);
 
         Array getArray();
@@ -336,7 +336,7 @@ namespace image {
         y_iterator col_begin(int x) const {
             return _gilView.col_begin(x);
         }
-        
+
         /// Return an \c y_iterator to the end of the \c y'th row
         y_iterator col_end(int x) const {
             return _gilView.col_end(x);
@@ -395,8 +395,8 @@ namespace image {
 #if !defined(SWIG)
         static _view_t _allocateView(geom::Extent2I const & dimensions, Manager::Ptr & manager);
         static _view_t _makeSubView(
-            geom::Extent2I const & dimensions, 
-            geom::Extent2I const & offset, 
+            geom::Extent2I const & dimensions,
+            geom::Extent2I const & offset,
             const _view_t & view
         );
 
@@ -405,7 +405,7 @@ namespace image {
 #endif
         inline bool isContiguous() const {
             return begin()+getWidth()*getHeight() == end();
-        }    
+        }
     };
 
     template<typename PixelT>
@@ -431,12 +431,12 @@ namespace image {
         };
 #endif
         template<typename OtherPixelT> friend class Image; // needed by generalised copy constructors
-        
+
         explicit Image(unsigned int width, unsigned int height, PixelT initialValue=0);
         explicit Image(geom::Extent2I const & dimensions=geom::Extent2I(), PixelT initialValue=0);
         explicit Image(geom::Box2I const & bbox, PixelT initialValue=0);
 
-        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=PARENT, 
+        explicit Image(Image const & rhs, geom::Box2I const & bbox, ImageOrigin const origin=PARENT,
                        const bool deep=false);
         Image(const Image& rhs, const bool deep=false);
 
@@ -455,7 +455,7 @@ namespace image {
         explicit Image(
             std::string const & fileName, int hdu=0,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
-            geom::Box2I const & bbox=geom::Box2I(), 
+            geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
         );
 
@@ -474,7 +474,7 @@ namespace image {
         explicit Image(
             fits::MemFileManager & manager, int hdu=0,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
-            geom::Box2I const & bbox=geom::Box2I(), 
+            geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
         );
 
@@ -490,7 +490,7 @@ namespace image {
         explicit Image(
             fits::Fits & fitsfile,
             PTR(lsst::daf::base::PropertySet) metadata=PTR(lsst::daf::base::PropertySet)(),
-            geom::Box2I const & bbox=geom::Box2I(), 
+            geom::Box2I const & bbox=geom::Box2I(),
             ImageOrigin origin=PARENT
         );
 
@@ -595,7 +595,7 @@ namespace image {
     private:
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::ImageFormatter<PixelT>)
     };
-    
+
     template<typename LhsPixelT, typename RhsPixelT>
     void operator+=(Image<LhsPixelT> &lhs, Image<RhsPixelT> const& rhs);
     template<typename LhsPixelT, typename RhsPixelT>
@@ -630,9 +630,9 @@ namespace image {
         explicit DecoratedImage(PTR(Image<PixelT>) rhs);
         DecoratedImage(DecoratedImage const& rhs, const bool deep=false);
         explicit DecoratedImage(
-            std::string const& fileName, 
-            const int hdu=0, 
-            geom::Box2I const& bbox=geom::Box2I(), 
+            std::string const& fileName,
+            const int hdu=0,
+            geom::Box2I const& bbox=geom::Box2I(),
             ImageOrigin const origin = PARENT
         );
 
@@ -645,7 +645,7 @@ namespace image {
         int getWidth() const { return _image->getWidth(); }
         /// Return the number of rows in the %image
         int getHeight() const { return _image->getHeight(); }
-        
+
         /// Return the %image's column-origin
         int getX0() const { return _image->getX0(); }
         /// Return the %image's row-origin
@@ -655,7 +655,7 @@ namespace image {
         const geom::Extent2I getDimensions() const { return _image->getDimensions(); }
 
         void swap(DecoratedImage &rhs);
-        
+
         void writeFits(
             std::string const& fileName,
             CONST_PTR(lsst::daf::base::PropertySet) metadata = CONST_PTR(lsst::daf::base::PropertySet)(),
@@ -679,7 +679,7 @@ namespace image {
         LSST_PERSIST_FORMATTER(lsst::afw::formatters::DecoratedImageFormatter<PixelT>)
         PTR(Image<PixelT>) _image;
         PTR(lsst::daf::base::PropertySet) _metadata;
-        
+
         double _gain;
 
         void init();

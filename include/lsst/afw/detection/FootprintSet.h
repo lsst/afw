@@ -1,8 +1,8 @@
 //  -*- lsst-c++ -*-
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,17 +10,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #if !defined(LSST_DETECTION_FOOTPRINT_SET_H)
 #define LSST_DETECTION_FOOTPRINT_SET_H
 /**
@@ -123,14 +123,14 @@ public:
     FootprintSet(FootprintSet const&);
     FootprintSet(FootprintSet const& set, int rGrow, FootprintControl const& ctrl);
     FootprintSet(FootprintSet const& set, int rGrow, bool isotropic=true);
-    FootprintSet(FootprintSet const& footprints1, 
+    FootprintSet(FootprintSet const& footprints1,
                  FootprintSet const& footprints2,
                  bool const includePeaks);
 
     FootprintSet& operator=(FootprintSet const& rhs);
 
     void swap(FootprintSet& rhs) {
-        using std::swap;                    // See Meyers, Effective C++, Item 25        
+        using std::swap;                    // See Meyers, Effective C++, Item 25
         swap(*_footprints, *rhs.getFootprints());
         geom::Box2I rhsRegion = rhs.getRegion();
         rhs.setRegion(getRegion());
@@ -145,7 +145,7 @@ public:
     /**:
      * Return the Footprint%s of detected objects
      */
-    PTR(FootprintList) getFootprints() { return _footprints; } 
+    PTR(FootprintList) getFootprints() { return _footprints; }
 
     /**:
      * Set the Footprint%s of detected objects
@@ -156,7 +156,7 @@ public:
      * Retun the Footprint%s of detected objects
      */
     CONST_PTR(FootprintList) const getFootprints() const { return _footprints; }
-    
+
     /**
      *  @brief Add a new record corresponding to each footprint to a SourceCatalog.
      *
@@ -172,7 +172,7 @@ public:
     /**
      * Return the corners of the MaskedImage
      */
-    geom::Box2I const getRegion() const { return _region; } 
+    geom::Box2I const getRegion() const { return _region; }
 
     PTR(image::Image<FootprintIdPixel>) insertIntoImage(
         const bool relativeIDs
@@ -184,10 +184,10 @@ public:
         std::string const& planeName   ///< Here's the name of the mask plane to fit
     ) {
         setMaskFromFootprintList(
-            mask, 
+            mask,
             _footprints,                // calling getFootprints() confuses clang++ 3.0 and leaks memory
             image::Mask<MaskPixelT>::getPlaneBitMask(planeName)
-        );        
+        );
     }
 
     template <typename MaskPixelT>

@@ -1,9 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
-# 
+from builtins import range
+from builtins import object
+#
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +13,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
@@ -26,15 +28,18 @@ Tests for lsst.afw.cameraGeom.CameraTransformMap
 """
 import itertools
 import unittest
+from builtins import zip
 
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 
+
 class TransformWrapper(object):
     """Wrap a TransformMap transformation as a function(Point2D)->Point2D
     """
+
     def __init__(self, transformMap, fromSys, toSys):
         self.transformMap = transformMap
         self.fromSys = fromSys
@@ -43,15 +48,18 @@ class TransformWrapper(object):
     def __call__(self, point):
         return self.transformMap.transform(point, self.fromSys, self.toSys)
 
+
 class FuncPair(object):
     """Wrap a pair of function(Point2D)->Point2D functions as a single such function
     """
+
     def __init__(self, func1, func2):
         self.func1 = func1
         self.func2 = func2
 
     def __call__(self, point):
         return self.func2(self.func1(point))
+
 
 def unityTransform(point):
     """Unity function(Point2D)->Point2D
@@ -60,6 +68,7 @@ def unityTransform(point):
 
 
 class CameraTransformMapTestCase(unittest.TestCase):
+
     def setUp(self):
         self.nativeSys = cameraGeom.FOCAL_PLANE
         self.pupilTransform = afwGeom.RadialXYTransform([0, 0.5, 0.005])
@@ -101,7 +110,6 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.assertTrue(len(csList) == 2)
         self.assertTrue(self.nativeSys in csList)
         self.assertTrue(cameraGeom.PUPIL in csList)
-
 
     def testIteration(self):
         """Test iteration, len and indexing
@@ -174,12 +182,13 @@ class CameraTransformMapTestCase(unittest.TestCase):
                 toList = self.transformMap.transform(fromList, fromSys, toSys)
 
                 self.assertEquals(len(fromList), len(toList))
-                for fromPoint, toPoint in itertools.izip(fromList, toList):
+                for fromPoint, toPoint in zip(fromList, toList):
                     predToPoint = self.transformMap.transform(fromPoint, fromSys, toSys)
                     for i in range(2):
                         self.assertAlmostEqual(predToPoint[i], toPoint[i])
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -191,7 +200,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

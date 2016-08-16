@@ -251,7 +251,7 @@ public:
     );
 
 protected:
- 
+
     /**
      *  Main constructor for subclasses.
      *

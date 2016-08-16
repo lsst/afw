@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_TABLE_MATCH_H
 #define LSST_AFW_TABLE_MATCH_H
 
@@ -59,7 +59,7 @@ public:
 /**
  *  @brief Lightweight representation of a geometric match between two records.
  *
- *  This is a template so it can hold derived record classes without a lot of 
+ *  This is a template so it can hold derived record classes without a lot of
  *  casting and properly use Angle for the distance when we do spherical coordinate
  *  matches.
  */
@@ -70,7 +70,7 @@ struct Match {
     double distance; // may be pixels or radians
 
     Match() : first(), second(), distance(0.0) {}
-    
+
     Match(PTR(Record1) const & r1, PTR(Record2) const & r2, double dist)
         : first(r1), second(r2), distance(dist) {}
 
@@ -148,7 +148,7 @@ SourceMatchVector matchXy(SourceCatalog const &cat, double radius, bool symmetri
 #ifndef SWIG // swig will be confused by the nested names below; repeated with typedefs in match.i
 
 /************************************************************************************************************/
-/** 
+/**
  * Compute all tuples (s1,s2,d) where s1 belings to @a cat1, s2 belongs to @a cat2 and
  * d, the distance between s1 and s2, is at most @a radius. If cat1 and
  * cat2 are identical, then this call is equivalent to @c matchRaDec(cat1,radius).

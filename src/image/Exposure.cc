@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*- // fixed format comment for emacs
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,20 +11,20 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
 #include <stdexcept>
 
-#include "boost/format.hpp" 
+#include "boost/format.hpp"
 #include <memory>
 #include <cstdint>
 #include "boost/algorithm/string/trim.hpp"
@@ -60,14 +60,14 @@ namespace cameraGeom = lsst::afw::cameraGeom;
   * for views and copying.
   *
   * An Exposure can get and return its MaskedImage, Wcs, and a subExposure.
-  * The getSubExposure member takes a BBox region defining the subRegion of 
+  * The getSubExposure member takes a BBox region defining the subRegion of
   * the original Exposure to be returned.  The member retrieves the MaskedImage
   * corresponding to the subRegion.  The MaskedImage class throws an exception
   * for any subRegion extending beyond the original MaskedImage bounding
   * box. This member is not yet fully implemented because it requires the Wcs
   * class to return the Wcs metadata to the member so the CRPIX values of the
   * Wcs can be adjusted to reflect the new subMaskedImage origin.  The
-  * getSubExposure member will eventually return a subExposure consisting of   
+  * getSubExposure member will eventually return a subExposure consisting of
   * the subMAskedImage and the Wcs object with its corresponding adjusted
   * metadata.
   *
@@ -80,8 +80,8 @@ namespace cameraGeom = lsst::afw::cameraGeom;
 
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
-  */          
-template<typename ImageT, typename MaskT, typename VarianceT> 
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     unsigned int width,                 ///< number of columns
     unsigned int height,                ///< number of rows
@@ -94,8 +94,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
-  */          
-template<typename ImageT, typename MaskT, typename VarianceT> 
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Extent2I const & dimensions, ///< desired image width/height
     CONST_PTR(Wcs) wcs          ///< the Wcs
@@ -107,8 +107,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 
 /** @brief Construct an Exposure with a blank MaskedImage of specified size (default 0x0) and
   * a Wcs (which may be default constructed)
-  */          
-template<typename ImageT, typename MaskT, typename VarianceT> 
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     afwGeom::Box2I const & bbox, ///< desired image width/height, and origin
     CONST_PTR(Wcs) wcs ///< the Wcs
@@ -119,8 +119,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 {}
 
 /** @brief Construct an Exposure from a MaskedImage
-  */               
-template<typename ImageT, typename MaskT, typename VarianceT> 
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     MaskedImageT &maskedImage, ///< the MaskedImage
     CONST_PTR(Wcs) wcs  ///< the Wcs
@@ -132,8 +132,8 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
 
 
 /** @brief Copy an Exposure
-  */        
-template<typename ImageT, typename MaskT, typename VarianceT> 
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     Exposure const &src, ///< Parent Exposure
     bool const deep      ///< Should we copy the pixels?
@@ -147,11 +147,11 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
   *
   * @throw a lsst::pex::exceptions::InvalidParameter if the requested subRegion
   * is not fully contained by the original MaskedImage BBox.
-  */        
-template<typename ImageT, typename MaskT, typename VarianceT> 
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     Exposure const &src, ///< Parent Exposure
-    afwGeom::Box2I const& bbox,    ///< Desired region in Exposure 
+    afwGeom::Box2I const& bbox,    ///< Desired region in Exposure
     ImageOrigin const origin,   ///< Coordinate system for bbox
     bool const deep      ///< Should we copy the pixels?
 ) :
@@ -160,7 +160,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _info(new ExposureInfo(*src.getInfo(), deep))
 {}
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     std::string const & fileName, afwGeom::Box2I const& bbox,
     ImageOrigin origin, bool conformMasks
@@ -173,7 +173,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     fits::MemFileManager & manager, afwGeom::Box2I const & bbox,
     ImageOrigin origin, bool conformMasks
@@ -186,7 +186,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     fits::Fits & fitsfile, afwGeom::Box2I const & bbox,
     ImageOrigin origin, bool conformMasks
@@ -196,7 +196,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _readFits(fitsfile, bbox, origin, conformMasks);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::_readFits(
     fits::Fits & fitsfile, afwGeom::Box2I const & bbox,
     ImageOrigin origin, bool conformMasks
@@ -210,19 +210,19 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::_readFits(
 
 /** Destructor
  */
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::~Exposure(){}
 
 // SET METHODS
 
 /** @brief Set the MaskedImage of the Exposure.
-  */   
-template<typename ImageT, typename MaskT, typename VarianceT> 
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setMaskedImage(MaskedImageT &maskedImage){
-    _maskedImage = maskedImage; 
+    _maskedImage = maskedImage;
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const& origin) {
     afwGeom::Point2I old(_maskedImage.getXY0());
     if (_info->hasWcs())
@@ -233,19 +233,19 @@ void afwImage::Exposure<ImageT, MaskT, VarianceT>::setXY0(afwGeom::Point2I const
 
 // Write FITS
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(std::string const & fileName) const {
     fits::Fits fitsfile(fileName, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::MemFileManager & manager) const {
     fits::Fits fitsfile(manager, "w", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
     writeFits(fitsfile);
 }
 
-template<typename ImageT, typename MaskT, typename VarianceT> 
+template<typename ImageT, typename MaskT, typename VarianceT>
 void afwImage::Exposure<ImageT, MaskT, VarianceT>::writeFits(fits::Fits & fitsfile) const {
     ExposureInfo::FitsWriteData data = _info->_startWriteFits(getXY0());
     _maskedImage.writeFits(

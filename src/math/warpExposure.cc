@@ -68,7 +68,7 @@ namespace afwMath = lsst::afw::math;
 
 
 //
-// A helper function for the warping kernels which provides error-checking: 
+// A helper function for the warping kernels which provides error-checking:
 // the warping kernels are designed to work in two cases
 //    0 < x < 1  and ctrX=(size-1)/2
 //    -1 < x < 0  and ctrX=(size+1)/2
@@ -129,12 +129,12 @@ PTR(afwMath::Kernel) afwMath::BilinearWarpingKernel::clone() const {
  * *  0.0 or 1.0 if the kernel center index is 0 in this axis
  * * -1.0 or 0.0 if the kernel center index is 1 in this axis
  */
-afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const 
+afwMath::Kernel::Pixel afwMath::BilinearWarpingKernel::BilinearFunction1::operator() (double x) const
 {
     //
     // this->_params[0] = value of x where we want to interpolate the function
     // x = integer value of x where we evaluate the function in the interpolation
-    // 
+    //
     // The following weird-looking expression has no if/else statements, is roundoff-tolerant,
     // and works in the following two cases:
     //     0 < this->_params[0] < 1,  x \in {0,1}
@@ -301,9 +301,9 @@ void afwMath::WarpingControl::_testDevicePreference(
 
 template<typename DestExposureT, typename SrcExposureT>
 int afwMath::warpExposure(
-    DestExposureT &destExposure,       
-    SrcExposureT const &srcExposure,  
-    afwMath::WarpingControl const &control, 
+    DestExposureT &destExposure,
+    SrcExposureT const &srcExposure,
+    afwMath::WarpingControl const &control,
     typename DestExposureT::MaskedImageT::SinglePixel padValue
     )
 {
@@ -399,8 +399,8 @@ namespace {
                 if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
                     try {
                         std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage, 
-                                                             *lanczosKernelPtr, *maskWarpingKernelPtr, 
+                                           afwMath::detail::warpImageGPU(destImage, srcImage,
+                                                             *lanczosKernelPtr, *maskWarpingKernelPtr,
                                                              computeSrcPos,  interpLength, padValue, false);
                         if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
                     }
@@ -409,7 +409,7 @@ namespace {
                     catch(lsst::afw::gpu::GpuRuntimeError) { }
                 } else if (devPref != lsst::afw::gpu::USE_CPU) {
                     std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage, 
+                                           afwMath::detail::warpImageGPU(destImage, srcImage,
                                                                       *lanczosKernelPtr, *maskWarpingKernelPtr,
                                                                       computeSrcPos, interpLength, padValue,
                                                                       devPref == lsst::afw::gpu::USE_GPU);
@@ -421,7 +421,7 @@ namespace {
                 }
             }
         }
-        
+
         int numGoodPixels = 0;
 
         // Get the source MaskedImage and a pixel accessor to it.
@@ -449,7 +449,7 @@ namespace {
 
         int const maxCol = destWidth - 1;
         int const maxRow = destHeight - 1;
-        
+
         afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
 
         if (interpLength > 0) {
@@ -572,7 +572,7 @@ namespace {
                     afwGeom::Point2D srcPos = computeSrcPos(col, row);
                     double relativeArea = computeRelativeArea(srcPos, srcPosView[col-1], srcPosView[col]);
                     srcPosView[col] = srcPos;
-                    
+
                     if (warpAtOnePoint(destXIter, srcPos, relativeArea,
                         typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
                         ++numGoodPixels;

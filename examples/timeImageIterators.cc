@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,17 +9,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <sstream>
 #include <ctime>
@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 
     int const DefNIter = 100;
     int const DefNCols = 1024;
-    
+
     if ((argc == 2) && (argv[1][0] == '-')) {
         std::cout << "Usage: timeImageAddition [nIter [nCols [nRows]]]" << std::endl;
         std::cout << "nIter (default " << DefNIter << ") is the number of iterations" << std::endl;
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
         std::cout << "nRows (default = nCols) is the number of rows" << std::endl;
         return 1;
     }
-    
+
     unsigned nIter = DefNIter;
     if (argc > 1) {
         std::istringstream(argv[1]) >> nIter;
@@ -56,9 +56,9 @@ int main(int argc, char **argv) {
     if (argc > 3) {
         std::istringstream(argv[3]) >> nRows;
     }
-    
+
     ImageT image(geom::Extent2I(nCols, nRows));
-    
+
     std::cout << "\tCols\tRows\tMPix\tSecPerIter\tMPix/sec" << std::endl;
     //
     // Use the STL iterators
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
             *ptr += 1;
         }
     }
-    
+
     double const megaPix = static_cast<double>(nCols * nRows) / 1.0e6;
 
     // separate casts for CLOCKS_PER_SEC and nIter avoids incorrect results, perhaps due to overflow
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    
+
     secPerIter = (clock() - startTime)/
         (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     std::cout << "Per row\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
             *ptr += 1;
         }
     }
-    
+
     secPerIter = (clock() - startTime)/
         (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     std::cout << "STL 2\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
             *ptr += 1;
         }
     }
-    
+
     secPerIter = (clock() - startTime)/
         (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     std::cout << "Vector\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
             varray[i] += 1;
         }
     }
-    
+
     secPerIter = (clock() - startTime)/
         (static_cast<double>(CLOCKS_PER_SEC)*static_cast<double>(nIter));
     std::cout << "Varray\t" << nCols << "\t" << nRows << "\t" << megaPix << "\t" << secPerIter << "\t\t" <<

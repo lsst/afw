@@ -1,7 +1,7 @@
-/* 
- * LSST Data Management System 
+/*
+ * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include <cstdint>
@@ -40,9 +40,9 @@ namespace detection {
 
 Threshold::ThresholdType Threshold::parseTypeString(std::string const & typeStr) {
     if (typeStr.compare("bitmask") == 0) {
-        return Threshold::BITMASK;           
+        return Threshold::BITMASK;
     } else if (typeStr.compare("value") == 0) {
-        return Threshold::VALUE;           
+        return Threshold::VALUE;
     } else if (typeStr.compare("stdev") == 0) {
         return Threshold::STDEV;
     } else if (typeStr.compare("variance") == 0) {
@@ -54,7 +54,7 @@ Threshold::ThresholdType Threshold::parseTypeString(std::string const & typeStr)
             lsst::pex::exceptions::InvalidParameterError,
             (boost::format("Unsupported Threshold type: %s") % typeStr).str()
         );
-    }    
+    }
 }
 
 std::string Threshold::getTypeString(ThresholdType const & type) {
@@ -110,13 +110,13 @@ double Threshold::getValue(const double param) const {
 template<typename ImageT>
 double Threshold::getValue(ImageT const& image) const {
     double param = -1;                  // Parameter for getValue()
-    if (_type == STDEV || 
+    if (_type == STDEV ||
         _type == VARIANCE) {
         math::Statistics stats = math::makeStatistics(image, math::STDEVCLIP);
         double const sd = stats.getValue(math::STDEVCLIP);
 
         pexLogging::TTrace<3>("afw.detection", "St. Dev = %g", sd);
-        
+
         if (_type == VARIANCE) {
             param = sd*sd;
         } else {
@@ -130,14 +130,14 @@ double Threshold::getValue(ImageT const& image) const {
  * \brief Factory method for creating Threshold objects
  *
  * @param value value of threshold
- * @param typeStr string representation of a ThresholdType. This parameter is 
+ * @param typeStr string representation of a ThresholdType. This parameter is
  *                optional. Allowed values are: "variance", "value", "stdev", "pixel_stdev"
  * @param polarity If true detect positive objects, false for negative
  *
  * @return desired Threshold
  */
 Threshold createThreshold(
-    double const value,                  
+    double const value,
     std::string const typeStr,
     bool const polarity
 ) {

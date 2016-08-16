@@ -26,6 +26,7 @@ This module is imported by tableLib.py, and should not need to be imported by an
 I've moved the code out of the .i file here to avoid recompiling when only pure-Python code is
 changed.
 """
+from builtins import zip
 
 import fnmatch
 import re
@@ -67,7 +68,7 @@ def Schema_extract(self, *patterns, **kwds):
     for item in self:
         trueName = item.field.getName()
         names = [trueName]
-        for alias, target in self.getAliasMap().iteritems():
+        for alias, target in self.getAliasMap().items():
             if trueName.startswith(target):
                 names.append(trueName.replace(target, alias, 1))
         for name in names:
@@ -123,7 +124,7 @@ def BaseRecord_extract(self, *patterns, **kwds):
         d = self.schema.extract(*patterns, **kwds).copy()
     elif kwds:
         raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
-    for name, schemaItem in d.items():  # can't use iteritems because we might be adding/deleting elements
+    for name, schemaItem in list(d.items()):  # must use list because we might be adding/deleting elements
         key = schemaItem.key
         if split and key.HAS_NAMED_SUBFIELDS:
             for subname, subkey in zip(key.subfields, key.subkeys):
@@ -188,14 +189,14 @@ def BaseColumnView_extract(self, *patterns, **kwds):
     if d is None:
         d = self.schema.extract(*patterns, **kwds).copy()
     elif kwds:
-        raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
+        raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".list(kwds.keys()))
     def processArray(a):
         if where is not None:
             a = a[where]
         if copy:
             a = numpy.ascontiguousarray(a)
         return a
-    for name, schemaItem in d.items(): # can't use iteritems because we might be adding/deleting elements
+    for name, schemaItem in list(d.items()):  # must use list because we might be adding/deleting elements
         key = schemaItem.key
         if key.getTypeString() == "String":
             del d[name]
@@ -230,7 +231,7 @@ def BaseCatalog_asAstropy(self, cls=None, copy=False, unviewable="copy"):
     meta = ps.toOrderedDict() if ps is not None else None
     columns = []
     items = self.schema.extract("*", ordered=True)
-    for name, item in items.iteritems():
+    for name, item in items.items():
         key = item.key
         unit = item.field.getUnits() or None  # use None instead of "" when empty
         if key.getTypeString() == "String":

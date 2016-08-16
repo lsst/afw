@@ -1,3 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
+from builtins import object
+from past.builtins import long
 import gdb
 import math, re
 
@@ -47,14 +54,14 @@ Like optparse.OptionParser's API, but with an initial command name argument
         opts.help = help
         if help:
             args = []
-    
+
         return opts, args
 
     def exit(self, status=0, msg=""):
         """Raise GdbError rather than exiting"""
         if status == 0:
             if msg:
-                print >> sys.stderr, msg
+                print(msg, file=sys.stderr)
         else:
             raise gdb.GdbError(msg)
 
@@ -80,7 +87,7 @@ try:
             self.val = val
 
         def to_string(self):
-            import pdb; pdb.set_trace() 
+            import pdb; pdb.set_trace()
             return self.val["_v0"]
 
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -116,7 +123,7 @@ try:
             m_data = var["m_storage"]["m_data"]
             if False:
                 # convert to a pointer to the start of the array
-                import pdb; pdb.set_trace() 
+                import pdb; pdb.set_trace()
                 m_data = m_data.address.cast(m_data.type)
 
             try:
@@ -148,7 +155,7 @@ try:
         elif val.type.code == gdb.TYPE_CODE_FLT:
             val = float(val)
 
-        return val            
+        return val
 
     class EigenMatrixPrinter(object):
         "Print an Eigen Matrix"
@@ -213,7 +220,7 @@ try:
                 parser.add_option("eigenObject", help="Expression giving Eigen::Matrix/Vector to show")
                 parser.add_option("nx", help="Width of patch to print", type="int", default=0, nargs="?")
                 parser.add_option("ny", help="Height of patch to print", type="int", default=0, nargs="?")
-                
+
                 opts =  parser.parse_args(args)
                 if opts.help:
                     return
@@ -221,7 +228,7 @@ try:
                 (opts, args) = parser.parse_args(args)
                 if opts.help:
                     return
-                
+
                 if not args:
                     raise gdb.GdbError("Please specify an object")
                 opts.eigenObject = args.pop(0)
@@ -239,7 +246,7 @@ try:
 
             if not re.search(r"(Eigen|LinearTransform)::(Matrix|Vector)", str(var.type)):
                 raise gdb.GdbError("Please specify an eigen matrix or vector, not %s" % var.type)
-                
+
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"].dereference()
 
@@ -253,21 +260,21 @@ try:
                 if opts.origin:
                     if len(opts.origin) != 2:
                         raise gdb.GdbError("Please specify both x0 and y0")
-                        
+
                     x0 = gdb.parse_and_eval(opts.origin[0])
                     y0 = gdb.parse_and_eval(opts.origin[1])
                 else:
                     x0, y0 = 0, 0
-                    
+
                 nx = opts.nx
                 ny = opts.ny
                 if nx == 0:
                     nx = NX
                 if ny == 0:
                     ny = NY
-                    
+
                 if nx == 1 and ny == 1:
-                    print "%g" % self._vget(var, x0)
+                    print("%g" % self._vget(var, x0))
                     return
             else:
                 NX = 0, var["m_storage"]["n"]
@@ -279,32 +286,32 @@ try:
                     x0 = gdb.parse_and_eval(opts.origin[0])
                 else:
                     x0 = 0
-                    
+
                 nx = opts.nx
                 if nx == 0:
                     nx = NX
 
                 if nx == 1:
-                    print "%g" % self._vget(var, x0)
+                    print("%g" % self._vget(var, x0))
                     return
             #
             # OK, finally time to print
             #
             if isMatrix:
-                print "%-4s" % "",
+                print("%-4s" % "", end=' ')
                 for x in range(x0, min(NX, x0 + nx)):
-                    print "%*d" % (opts.formatWidth, x),
-                print ""
+                    print("%*d" % (opts.formatWidth, x), end=' ')
+                print("")
 
                 for y in range(y0, min(NY, y0 + ny)):
-                    print "%-4d" % y,
+                    print("%-4d" % y, end=' ')
                     for x in range(x0, min(NX, x0 + nx)):
-                        print "%*s" % (opts.formatWidth, (opts.dataFmt % self._mget(var, x, y))),
-                    print ""
+                        print("%*s" % (opts.formatWidth, (opts.dataFmt % self._mget(var, x, y))), end=' ')
+                    print("")
             else:
                 for x in range(x0, min(NX, x0 + nx)):
-                    print "%*s" % (opts.formatWidth, (opts.dataFmt % self._vget(var, x))),
-                print ""
+                    print("%*s" % (opts.formatWidth, (opts.dataFmt % self._vget(var, x))), end=' ')
+                print("")
 
     PrintEigenCommand()
 
@@ -344,14 +351,14 @@ try:
                 opts, args =  parser.parse_args(args)
                 if opts.help:
                     return
-                
+
                 if not args:
                     raise gdb.GdbError("Please specify an object")
                 opts.object = args.pop(0)
 
                 if args:
                     raise gdb.GdbError("Unrecognised trailing arguments: %s" % " ".join(args))
-            
+
             var = gdb.parse_and_eval(opts.object)
             if re.search(r"shared_ptr<", str(var.type)):
                 var = var["px"]
@@ -363,10 +370,10 @@ try:
 
             if not citizen:
                 raise gdb.GdbError("Failed to cast %s to Citizen -- is it a subclass?" % opts.object)
-            
+
             citizen = citizen.dereference()
 
-            print citizen
+            print(citizen)
 
     PrintCitizenCommand()
 
@@ -523,7 +530,7 @@ try:
 
             x0, y0 = arr[0], arr[1]
             return "%dx%d%s%d%s%d" % (
-                #val["getWidth"](), val["getHeight"](), 
+                #val["getWidth"](), val["getHeight"](),
                 gilView["_dimensions"]["x"], gilView["_dimensions"]["y"],
                 ["", "+"][x0 >= 0], x0, # i.e. "+" if x0 >= 0 else "" in python >= 2.5
                 ["", "+"][y0 >= 0], y0)
@@ -624,7 +631,7 @@ try:
                     val = opts.origin[i]
                     if opts.center[i] is not None:
                         raise gdb.GdbError("You may not specify both --center and --origin")
-                        
+
                 val = gdb.parse_and_eval(val)
                 if i == 0: x0 = val
                 else: y0 = val
@@ -644,7 +651,7 @@ try:
 
             if re.search(r"MaskedImage", str(var.type)) and \
                     not re.search(r"::Image(\s*&)?$", str(var.type)):
-                print "N.b. %s is a MaskedImage; showing image" % (opts.image)
+                print("N.b. %s is a MaskedImage; showing image" % (opts.image))
                 var = var["_image"]
 
             if re.search(r"shared_ptr<", str(var.type)):
@@ -674,22 +681,22 @@ try:
 
             if opts.xy0 and not opts.all:
                 arr = var["_origin"]["_vector"]["m_storage"]["m_data"]["array"]
-                
+
                 x0 -= arr[0]
                 y0 -= arr[1]
             #
             # OK, finally time to print
             #
-            print "%-4s" % "",
+            print("%-4s" % "", end=' ')
             for x in range(x0, x0 + nx):
-                print "%*d" % (opts.formatWidth, x),
-            print ""
+                print("%*d" % (opts.formatWidth, x), end=' ')
+            print("")
 
-            for y in reversed(range(y0, y0 + ny)):
-                print "%-4d" % y,
+            for y in reversed(list(range(y0, y0 + ny))):
+                print("%-4d" % y, end=' ')
                 for x in range(x0, x0 + nx):
-                    print "%*s" % (opts.formatWidth, dataFmt % self.get(var, x, y)),
-                print ""
+                    print("%*s" % (opts.formatWidth, dataFmt % self.get(var, x, y)), end=' ')
+                print("")
 
     PrintImageCommand()
 
@@ -756,7 +763,7 @@ try:
 
         def to_string(self):
             return "{schema = %s, md=%s}" % (self.val["_schema"], self.val["_metadata"])
-        
+
     class TableSchemaPrinter(object):
         "Print a table::Schema"
 
@@ -769,7 +776,7 @@ try:
             names = re.sub(r"^[^{]*{|}|[\[\]\"\"]|\s*=\s*[^,]*", "", names)
 
             return "%s" % (names)
-        
+
     #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     printers = []
@@ -787,7 +794,7 @@ try:
 
     def build_boost_dictionary():
         """Surely this must be somewhere standard?"""
-        
+
         printer = gdb.printing.RegexpCollectionPrettyPrinter("rhl-boost")
 
         printer.add_printer('boost::shared_ptr',
@@ -801,7 +808,7 @@ try:
 
     def build_eigen_dictionary():
         """Surely this must be somewhere standard?"""
-        
+
         printer = gdb.printing.RegexpCollectionPrettyPrinter("rhl-eigen")
 
         printer.add_printer('eigen::Matrix',
@@ -812,7 +819,7 @@ try:
         return printer
 
     printers.append(build_eigen_dictionary())
-       
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
     def build_afw_dictionary():
@@ -884,6 +891,6 @@ try:
         return printer
 
     printers.append(build_daf_base_dictionary())
-except ImportError, e:
-    print "RHL", e
-    from printers_oldgdb import *
+except ImportError as e:
+    print("RHL", e)
+    from .printers_oldgdb import *

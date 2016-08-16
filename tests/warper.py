@@ -1,9 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """Basic test of Warp (the warping algorithm is thoroughly tested in lsst.afw.math)
@@ -55,9 +55,11 @@ else:
     originalFullExposureName = os.path.join("CFHT", "D4", "cal-53535-i-797722_1.fits")
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
+
 class WarpExposureTestCase(utilsTests.TestCase):
     """Test case for Warp
     """
+
     def testMatchSwarpLanczos2Exposure(self):
         """Test that warpExposure matches swarp using a lanczos2 warping kernel.
         """
@@ -68,7 +70,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
         """
         for useDeepCopy in (False, True):
             self.compareToSwarp("lanczos2", useSubregion=True, useDeepCopy=useDeepCopy)
-    
+
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBBox(self):
         """Test that the default bounding box includes all warped pixels
@@ -79,7 +81,8 @@ class WarpExposureTestCase(utilsTests.TestCase):
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
         filterPolicyFile = pexPolicy.DefaultPolicyFile("afw", "SdssFilters.paf", "tests")
-        filterPolicy = pexPolicy.Policy.createPolicy(filterPolicyFile, filterPolicyFile.getRepositoryPath(), True)
+        filterPolicy = pexPolicy.Policy.createPolicy(
+            filterPolicyFile, filterPolicyFile.getRepositoryPath(), True)
         imageUtils.defineFiltersFromPolicy(filterPolicy, reset=True)
 
         originalFilter = afwImage.Filter("i")
@@ -107,7 +110,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
 
         self.assertEquals(warpedExposure1.getFilter().getName(), originalFilter.getName())
         self.assertEquals(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
-    
+
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testDestBBox(self):
         """Test that the destBBox argument works
@@ -116,17 +119,17 @@ class WarpExposureTestCase(utilsTests.TestCase):
         warper = afwMath.Warper(kernelName)
         originalExposure, swarpedImage, swarpedWcs = self.getSwarpedImage(
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
-        
+
         bbox = afwGeom.Box2I(afwGeom.Point2I(100, 25), afwGeom.Extent2I(3, 7))
         warpedExposure = warper.warpExposure(
-            destWcs = swarpedWcs,
-            srcExposure = originalExposure,
-            destBBox = bbox,
-            border = -2, # should be ignored
-            maxBBox = afwGeom.Box2I(afwGeom.Point2I(1, 2), afwGeom.Extent2I(8, 9)), # should be ignored
+            destWcs=swarpedWcs,
+            srcExposure=originalExposure,
+            destBBox=bbox,
+            border=-2,  # should be ignored
+            maxBBox=afwGeom.Box2I(afwGeom.Point2I(1, 2), afwGeom.Extent2I(8, 9)),  # should be ignored
         )
         self.assertTrue(bbox == warpedExposure.getBBox(afwImage.PARENT))
-    
+
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def getSwarpedImage(self, kernelName, useSubregion=False, useDeepCopy=False):
         """
@@ -136,7 +139,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             test exposure was extracted) is read and the correct subregion extracted
         - useDeepCopy: if True then the copy of the subimage is a deep copy,
             else it is a shallow copy; ignored if useSubregion is False
-        
+
         Returns:
         - originalExposure
         - swarpedImage
@@ -158,16 +161,16 @@ class WarpExposureTestCase(utilsTests.TestCase):
         swarpedMetadata = swarpedDecoratedImage.getMetadata()
         swarpedWcs = afwImage.makeWcs(swarpedMetadata)
         return (originalExposure, swarpedImage, swarpedWcs)
-    
+
     @unittest.skipIf(dataDir is None, "afwdata not setup")
-    def compareToSwarp(self, kernelName, 
+    def compareToSwarp(self, kernelName,
                        useSubregion=False, useDeepCopy=False,
                        interpLength=10, cacheSize=100000,
                        rtol=4e-05, atol=1e-2):
         """Compare warpExposure to swarp for given warping kernel.
-        
+
         Note that swarp only warps the image plane, so only test that plane.
-        
+
         Inputs:
         - kernelName: name of kernel in the form used by afwImage.makeKernel
         - useSubregion: if True then the original source exposure (from which the usual
@@ -193,9 +196,9 @@ class WarpExposureTestCase(utilsTests.TestCase):
         # warning: this test assumes that the swarped image is smaller than it needs to be
         # to hold all of the warped pixels
         afwWarpedExposure = warper.warpExposure(
-            destWcs = swarpedWcs,
-            srcExposure = originalExposure,
-            maxBBox = maxBBox,
+            destWcs=swarpedWcs,
+            srcExposure=originalExposure,
+            maxBBox=maxBBox,
         )
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
 
@@ -205,9 +208,9 @@ class WarpExposureTestCase(utilsTests.TestCase):
 
         msg = "afw and swarp %s-warped %s (ignoring bad pixels)"
         self.assertImagesNearlyEqual(afwWarpedMaskedImage.getImage(), swarpedImage,
-            skipMask=noDataMask, rtol=rtol, atol=atol, msg=msg)
-        
-        
+                                     skipMask=noDataMask, rtol=rtol, atol=atol, msg=msg)
+
+
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 def suite():
@@ -221,6 +224,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(doExit=False):
     """Run the tests"""

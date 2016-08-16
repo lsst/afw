@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief A coordinate class intended to represent offsets and dimensions.
@@ -90,7 +90,7 @@ public:
      *  Note that these return CoordinateExpr, not bool.
      *
      *  Unlike most arithmetic and assignment operators, scalar interoperability is provided
-     *  for comparisons; expressions like 
+     *  for comparisons; expressions like
      *  \code
      *    if (all(extent.gt(0))) ...
      *  \endcode
@@ -208,7 +208,7 @@ public:
 
     /// \brief Return the L2 norm of the Extent (sqrt(x^2 + y^2 + ...)).
     T computeNorm() const { return this->asEigen().norm(); }
-    
+
     void swap(Extent & other) { this->_swap(other); }
 };
 
@@ -248,7 +248,7 @@ public:
     explicit Extent(std::pair<T,T> const & xy) : Super(EigenVector(xy.first, xy.second)) {}
 
     /// @brief Construct from std::tuple.
-    explicit Extent(std::tuple<T,T> const & xy) : 
+    explicit Extent(std::tuple<T,T> const & xy) :
         Super(EigenVector(std::get<0>(xy), std::get<1>(xy))) {}
 
 #ifdef SWIG
@@ -294,7 +294,7 @@ public:
     explicit Extent(T const xyz[3]) : Super(EigenVector(xyz[0], xyz[1], xyz[2])) {}
 
     /// @brief Construct from std::tuple.
-    explicit Extent(std::tuple<T,T,T> const & xyz) : 
+    explicit Extent(std::tuple<T,T,T> const & xyz) :
         Super(EigenVector(std::get<0>(xyz), std::get<1>(xyz), std::get<2>(xyz))) {}
 
 #ifdef SWIG
@@ -312,7 +312,7 @@ public:
 // Constructor for any 2D type from 2I type
 template<typename T>
 template<typename U>
-Extent<T, 2>::Extent(Extent<U, 2> const & other) 
+Extent<T, 2>::Extent(Extent<U, 2> const & other)
 {
     static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
             "can only construct from Extent of different but integral type");
@@ -322,7 +322,7 @@ Extent<T, 2>::Extent(Extent<U, 2> const & other)
 
 template<typename T>
 template<typename U>
-Extent<T, 2>::Extent(Point<U, 2> const & other) 
+Extent<T, 2>::Extent(Point<U, 2> const & other)
 {
     static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
             "can only construct from Extent of different but integral type");
@@ -333,7 +333,7 @@ Extent<T, 2>::Extent(Point<U, 2> const & other)
 // Constructor for any 3D type from 3I type
 template<typename T>
 template<typename U>
-Extent<T, 3>::Extent(Extent<U, 3> const & other) 
+Extent<T, 3>::Extent(Extent<U, 3> const & other)
 {
     static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
             "can only construct from Extent of different but integral type");
@@ -345,7 +345,7 @@ Extent<T, 3>::Extent(Extent<U, 3> const & other)
 // Constructor for any 3D type from 3I type
 template<typename T>
 template<typename U>
-Extent<T, 3>::Extent(Point<U, 3> const & other) 
+Extent<T, 3>::Extent(Point<U, 3> const & other)
 {
     static_assert((!std::is_same<T,U>::value && std::is_integral<U>::value),
             "can only construct from Extent of different but integral type");

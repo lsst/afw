@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file ImageSlice.cc
  * @brief Provide functions to operate on rows/columns of images
@@ -45,7 +45,7 @@ namespace ex            = lsst::pex::exceptions;
 template<typename PixelT>
 afwImage::ImageSlice<PixelT>::ImageSlice(
     image::Image<PixelT> const &img ///< The image to represent as a slice.
-                                        ) : 
+                                        ) :
     afwImage::Image<PixelT>(img),
     _sliceType(ROW)
 {
@@ -54,7 +54,7 @@ afwImage::ImageSlice<PixelT>::ImageSlice(
     if (img.getWidth() != 1 && img.getHeight() != 1) {
         throw LSST_EXCEPT(ex::OutOfRangeError, "Input image must be a slice (width or height == 1)");
     }  else if (img.getWidth() == 1 && img.getHeight() == 1) {
-        throw LSST_EXCEPT(ex::InvalidParameterError, 
+        throw LSST_EXCEPT(ex::InvalidParameterError,
                           "1x1 image ambiguous (could be row or column).  "
                           "Perhaps a constant would be better than a slice? ");
     } else if (img.getWidth() == 1 && img.getHeight() != 1) {
@@ -85,9 +85,9 @@ afwImage::ImageSlice<PixelT>::ImageSlice(
  *
  * We require two of these, one for image+slice (this one) and one for slice+image (next one down)
  */
-template<typename PixelT>    
+template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
-    afwImage::Image<PixelT> const &img,     ///< The Image     
+    afwImage::Image<PixelT> const &img,     ///< The Image
     afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
@@ -102,7 +102,7 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
  *
  * We require two of these, one for image+slice (previous one) and one for slice+image (this)
  */
-template<typename PixelT>    
+template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
     afwImage::ImageSlice<PixelT> const &slc, ///< The ImageSlice
     afwImage::Image<PixelT> const &img       ///< The Image
@@ -117,9 +117,9 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator+(
  *
  * We'll only allow 'image += slice'.  It doesn't make sense to add an image to a slice.
  */
-template<typename PixelT>    
+template<typename PixelT>
 void afwImage::operator+=(
-                          afwImage::Image<PixelT> &img,     ///< The Image     
+                          afwImage::Image<PixelT> &img,     ///< The Image
                           afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
                          ) {
     afwImage::details::operate<afwImage::details::Plus<PixelT> >(img, slc, slc.getImageSliceType());
@@ -137,9 +137,9 @@ void afwImage::operator+=(
  *
  * We'll only allow 'image - slice', as 'slice - image' doesn't make sense.
  */
-template<typename PixelT>    
+template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator-(
-    afwImage::Image<PixelT> const &img,     ///< The Image     
+    afwImage::Image<PixelT> const &img,     ///< The Image
     afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
@@ -153,9 +153,9 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator-(
  *
  * Only 'image -= slice' is defined.  'slice -= image' wouldn't make sense.
  */
-template<typename PixelT>    
+template<typename PixelT>
 void afwImage::operator-=(
-                          afwImage::Image<PixelT> &img,     ///< The Image     
+                          afwImage::Image<PixelT> &img,     ///< The Image
                           afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
                          ) {
     details::operate<details::Minus<PixelT> >(img, slc, slc.getImageSliceType());
@@ -171,9 +171,9 @@ void afwImage::operator-=(
  *
  * We'll define both 'image*slice' (this one) and 'slice*image' (next one down).
  */
-template<typename PixelT>    
+template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
-    afwImage::Image<PixelT> const &img,      ///< The Image     
+    afwImage::Image<PixelT> const &img,      ///< The Image
     afwImage::ImageSlice<PixelT> const &slc  ///< The ImageSlice
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
@@ -187,9 +187,9 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
  *
  * We'll define both 'image*slice' (this one) and 'slice*image' (next one down).
  */
-template<typename PixelT>    
+template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
-    afwImage::ImageSlice<PixelT> const &slc, ///< The Image     
+    afwImage::ImageSlice<PixelT> const &slc, ///< The Image
     afwImage::Image<PixelT> const &img       ///< The ImageSlice
                                                          ) {
     return afwImage::operator*(img, slc);
@@ -200,9 +200,9 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator*(
  *
  * Only 'image *= slice' is defined, as 'slice *= image' doesn't make sense.
  */
-template<typename PixelT>    
+template<typename PixelT>
 void afwImage::operator*=(
-                          afwImage::Image<PixelT> &img,     ///< The Image     
+                          afwImage::Image<PixelT> &img,     ///< The Image
                           afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
                          ) {
     details::operate<details::Mult<PixelT> >(img, slc, slc.getImageSliceType());
@@ -220,9 +220,9 @@ void afwImage::operator*=(
  *
  * Only 'image / slice' is defined, as 'slice / image' doesn't make sense.
  */
-template<typename PixelT>    
+template<typename PixelT>
 typename afwImage::Image<PixelT>::Ptr afwImage::operator/(
-    afwImage::Image<PixelT> const &img,     ///< The Image     
+    afwImage::Image<PixelT> const &img,     ///< The Image
     afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
                                                          ) {
     typename afwImage::Image<PixelT>::Ptr retImg(new afwImage::Image<PixelT>(img, true));
@@ -236,9 +236,9 @@ typename afwImage::Image<PixelT>::Ptr afwImage::operator/(
  *
  * Only 'image /= slice' is defined, as 'slice /= image' doesn't make sense.
  */
-template<typename PixelT>    
+template<typename PixelT>
 void afwImage::operator/=(
-                          afwImage::Image<PixelT> &img,     ///< The Image     
+                          afwImage::Image<PixelT> &img,     ///< The Image
                           afwImage::ImageSlice<PixelT> const &slc ///< The ImageSlice
                          ) {
     details::operate<details::Div<PixelT> >(img, slc, slc.getImageSliceType());
@@ -262,7 +262,7 @@ void afwImage::operator/=(
 #define INSTANTIATE_SLICE_OP_ASYM(TYPE, OP) \
     template afwImage::Image<TYPE>::Ptr afwImage::operator OP(afwImage::Image<TYPE> const &img, \
                                                               afwImage::ImageSlice<TYPE> const &slc)
-    
+
 
 #define INSTANTIATE_SLICE_OPEQ(TYPE, OP)                                \
     template void afwImage::operator OP(afwImage::Image<TYPE> &img,     \

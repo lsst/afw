@@ -1,11 +1,14 @@
+from builtins import range
 import unittest
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 from lsst.afw.geom.testUtils import BoxGrid
 
+
 class BoxGridTestCase(lsst.utils.tests.TestCase):
     """!Unit tests for BoxGrid"""
+
     def test3By4(self):
         """!Test a 3x4 box divided into a 3x2 grid, such that each sub-box is 1x2
         """
@@ -50,6 +53,7 @@ class BoxGridTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(tuple(box.getMin()), (desColStart, desRowStart))
                 self.assertEqual(tuple(box.getDimensions()), (desWidth, desHeight))
 
+
 def suite():
     """!Returns a suite containing all the test cases in this module."""
     lsst.utils.tests.init()
@@ -58,6 +62,7 @@ def suite():
     suites += unittest.makeSuite(BoxGridTestCase)
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(exit=False):
     """!Run the tests"""

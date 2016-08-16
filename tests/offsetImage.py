@@ -1,10 +1,12 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from __future__ import print_function
+from builtins import range
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +14,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -50,6 +52,7 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class offsetImageTestCase(unittest.TestCase):
     """A test case for offsetImage"""
 
@@ -63,7 +66,7 @@ class offsetImageTestCase(unittest.TestCase):
 
     def testSetFluxConvervation(self):
         """Test that flux is preserved"""
-        
+
         for algorithm in ("lanczos5", "bilinear", "nearest"):
             outImage = afwMath.offsetImage(self.inImage, 0, 0, algorithm)
             self.assertEqual(outImage.get(50, 50), self.background)
@@ -76,7 +79,7 @@ class offsetImageTestCase(unittest.TestCase):
 
     def testSetIntegerOffset(self):
         """Test that we can offset by positive and negative amounts"""
-        
+
         self.inImage.set(50, 50, 400)
 
         if False and display:
@@ -84,12 +87,12 @@ class offsetImageTestCase(unittest.TestCase):
             ds9.mtv(self.inImage, frame=frame)
             ds9.pan(50, 50, frame=frame)
             ds9.dot("+", 50, 50, frame=frame)
-        
+
         for algorithm in ("lanczos5", "bilinear", "nearest"):
             for delta in [-0.49, 0.51]:
                 for dx, dy in [(2, 3), (-2, 3), (-2, -3), (2, -3)]:
                     outImage = afwMath.offsetImage(self.inImage, dx + delta, dy + delta, algorithm)
-                
+
                     if False and display:
                         frame += 1
                         ds9.mtv(outImage, frame=frame)
@@ -126,20 +129,19 @@ class offsetImageTestCase(unittest.TestCase):
         self.calcGaussian(refIm, xc, yc, amp, sigma1)
 
         for dx in (-55.5, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
-            0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 99.3):
+                   0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 99.3):
             for dy in (-3.7, -1.500001, -1.5, -1.499999, -1.00001, -1.0, -0.99999, -0.5,
-                0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 2.99999):
+                       0.0, 0.5, 0.99999, 1.0, 1.00001, 1.499999, 1.5, 1.500001, 2.99999):
                 dOrigX, dOrigY, dFracX, dFracY = getOrigFracShift(dx, dy)
                 self.calcGaussian(unshiftedIm, xc - dFracX, yc - dFracY, amp, sigma1)
 
                 for algorithm, maxMean, maxLim in (
                     ("lanczos5", 1e-8, 0.0015),
                     ("bilinear", 1e-8, 0.03),
-                    ("nearest",  1e-8, 0.2),
+                    ("nearest", 1e-8, 0.2),
                 ):
                     im = afwImage.ImageF(size, size)
                     im = afwMath.offsetImage(unshiftedIm, dx, dy, algorithm)
-                    
 
                     if display:
                         ds9.mtv(im, frame=0)
@@ -159,18 +161,18 @@ class offsetImageTestCase(unittest.TestCase):
                         self.assertLess(abs(imGoodVals.max()), maxLim*amp)
                         self.assertLess(abs(imGoodVals.min()), maxLim*amp)
                     except:
-                        print "failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy)
+                        print("failed on algorithm=%s; dx = %s; dy = %s" % (algorithm, dx, dy))
                         raise
 
 # the following would be preferable if there was an easy way to NaN pixels
 #
 #         stats = afwMath.makeStatistics(im, afwMath.MEAN | afwMath.MAX | afwMath.MIN)
-# 
+#
 #         if not False:
 #             print "mean = %g, min = %g, max = %g" % (stats.getValue(afwMath.MEAN),
 #                                                      stats.getValue(afwMath.MIN),
 #                                                      stats.getValue(afwMath.MAX))
-#             
+#
 #         self.assertTrue(abs(stats.getValue(afwMath.MEAN)) < 1e-7)
 #         self.assertTrue(abs(stats.getValue(afwMath.MIN)) < 1.2e-3*amp)
 #         self.assertTrue(abs(stats.getValue(afwMath.MAX)) < 1.2e-3*amp)
@@ -178,12 +180,12 @@ class offsetImageTestCase(unittest.TestCase):
 
 def getOrigFracShift(dx, dy):
     """Return the predicted integer shift to XY0 and the fractional shift that offsetImage will use
-    
+
     offsetImage preserves the origin if dx and dy both < 1 pixel; larger shifts are to the nearest pixel.
     """
     if (abs(dx) < 1) and (abs(dy) < 1):
         return (0, 0, dx, dy)
-    
+
     dOrigX = math.floor(dx + 0.5)
     dOrigY = math.floor(dy + 0.5)
     dFracX = dx - dOrigX
@@ -219,8 +221,8 @@ class transformImageTestCase(unittest.TestCase):
 
         frame = 2
         for flipLR, flipTB, x, y in [(True, False, 19, 0),
-                                     (True, True,  19, 9),
-                                     (False, True, 0,  9),
+                                     (True, True, 19, 9),
+                                     (False, True, 0, 9),
                                      (False, False, 0, 0)]:
             outImage = afwMath.flipImage(self.inImage, flipLR, flipTB)
             if display:
@@ -231,9 +233,10 @@ class transformImageTestCase(unittest.TestCase):
     def testMask(self):
         """Test that we can flip a Mask"""
         mask = afwImage.MaskU(10, 20)
-        afwMath.flipImage(mask, True, False) # for a while, swig couldn't handle the resulting Mask::Ptr
+        afwMath.flipImage(mask, True, False)  # for a while, swig couldn't handle the resulting Mask::Ptr
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 
 class binImageTestCase(unittest.TestCase):
     """A test case for binning images"""
@@ -290,6 +293,7 @@ class binImageTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -301,6 +305,7 @@ def suite():
     suites += unittest.makeSuite(binImageTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

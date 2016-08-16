@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2016  AURA/LSST.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -30,7 +30,7 @@
  *  This is an includeable template source file; it should be included whenever
  *  the functions declared in FootprintArray.h are used.  Note that while
  *  FootprintArray.h is included by afw/detection.h, FootprintArray.cc is not.
- *  
+ *
  *  The functions here have too many template parameters for explicit instantiation
  *  to be attractive (because the number of instantiations is combinatorial).
  */
@@ -60,7 +60,7 @@ namespace {
     {
         geom::Box2I fpBox = fp.getBBox();
         geom::Box2I imBox(xy0, geom::Extent2I(dest.template getSize<1>(), dest.template getSize<0>()));
-        
+
         if (src.template getSize<0>() != fp.getArea()) {
             throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                               str(boost::format("Array outer size (%d) does not match"
@@ -83,8 +83,8 @@ void flattenArray(
     ndarray::Array<U, N-1, D> const & dest,
     geom::Point2I const & xy0
 ) {
-    typedef ndarray::Array<T, N, C> SourceT; 
-    typedef ndarray::Array<U, N-1, D> DestT; 
+    typedef ndarray::Array<T, N, C> SourceT;
+    typedef ndarray::Array<U, N-1, D> DestT;
     static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, dest, src, xy0);
@@ -96,7 +96,7 @@ void flattenArray(
 
         std::copy(
             row.begin() + span.getX0() - xy0.getX(),
-            row.begin() + span.getX1() + 1 - xy0.getX(), 
+            row.begin() + span.getX1() + 1 - xy0.getX(),
             destIter
         );
         destIter += span.getWidth();
@@ -111,8 +111,8 @@ void flattenArray(
     PixelOpT const& pixelOp,
     geom::Point2I const & xy0
 ) {
-    typedef ndarray::Array<T, N, C> SourceT; 
-    typedef ndarray::Array<U, N-1, D> DestT; 
+    typedef ndarray::Array<T, N, C> SourceT;
+    typedef ndarray::Array<U, N-1, D> DestT;
     static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, dest, src, xy0);
@@ -136,7 +136,7 @@ ndarray::Array<typename std::remove_const<T>::type, N-1, N-1> flattenArray(
     ndarray::Array<T,N,C> const & src,
     geom::Point2I const & xy0
 ) {
-    ndarray::Vector<int,N-1> shape 
+    ndarray::Vector<int,N-1> shape
         = ndarray::concatenate(fp.getArea(), src.getShape().template last<N-2>());
     ndarray::Array<typename std::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
     flattenArray(fp, src, dest, xy0);
@@ -151,8 +151,8 @@ void expandArray(
     geom::Point2I const & xy0
                 )
 {
-    typedef ndarray::Array<T, N, C> SourceT; 
-    typedef ndarray::Array<U, N+1, D> DestT; 
+    typedef ndarray::Array<T, N, C> SourceT;
+    typedef ndarray::Array<U, N+1, D> DestT;
     static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, src, dest, xy0);
@@ -175,8 +175,8 @@ void expandArray(
     geom::Point2I const & xy0
                 )
 {
-    typedef ndarray::Array<T, N, C> SourceT; 
-    typedef ndarray::Array<U, N+1, D> DestT; 
+    typedef ndarray::Array<T, N, C> SourceT;
+    typedef ndarray::Array<U, N+1, D> DestT;
     static_assert(!std::is_const<U>::value, "destination array is not writable");
 
     checkConvertArray(fp, src, dest, xy0);
@@ -206,7 +206,7 @@ ndarray::Array<typename std::remove_const<T>::type, N+1, N+1> expandArray(
     }
     ndarray::Array<typename std::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
-            ndarray::makeVector(box.getHeight(), box.getWidth()), 
+            ndarray::makeVector(box.getHeight(), box.getWidth()),
             src.getShape().template last<N-1>()
         )
     );

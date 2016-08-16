@@ -1,8 +1,8 @@
 // -*- lsst-c++ -*-
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -10,17 +10,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #ifndef LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED
 #define LSST_AFW_IMAGE_fits_io_mpl_h_INCLUDED
 
@@ -46,9 +46,9 @@ public:
                         daf::base::PropertySet & metadata,
                         geom::Box2I const& bbox,
                         ImageOrigin const origin
-    ) : _fitsfile(&fitsfile), _array(array), _xy0(xy0), 
+    ) : _fitsfile(&fitsfile), _array(array), _xy0(xy0),
         _metadata(metadata), _bbox(bbox), _origin(origin) { }
-    
+
     // read directly into the desired type if the file's the same type
     void operator()(typename ImageT::Pixel) {
         try {
@@ -59,7 +59,7 @@ public:
         }
     }
 
-    template <typename OtherPixel> 
+    template <typename OtherPixel>
         void operator()(OtherPixel) { // read and convert into the desired type
         try {
             ndarray::Array<OtherPixel,2,2> array;
@@ -82,7 +82,7 @@ private:
 };
 
 } // anonymous
-            
+
 template<typename supported_fits_types, typename ImageT>
 void fits_read_image(
     fits::Fits & fitsfile, ImageT& img,

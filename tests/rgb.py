@@ -31,6 +31,8 @@ or
    python
    >>> import rgb; rgb.run()
 """
+from __future__ import division
+from builtins import range
 
 import os
 import math
@@ -72,6 +74,7 @@ except NameError:
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def saturate(image, satValue):
     """Simulate saturation on an image, so we can test 'replaceSaturatedPixels'
 
@@ -86,10 +89,12 @@ def saturate(image, satValue):
 
 R, G, B = 2, 1, 0
 
+
 class RgbTestCase(unittest.TestCase):
     """A test case for Rgb"""
+
     def setUp(self):
-        self.min, self.range, self.Q = 0, 5, 20 # asinh
+        self.min, self.range, self.Q = 0, 5, 20  # asinh
 
         width, height = 85, 75
         self.images = []
@@ -97,10 +102,10 @@ class RgbTestCase(unittest.TestCase):
         self.images.append(afwImage.ImageF(afwGeom.ExtentI(width, height)))
         self.images.append(afwImage.ImageF(afwGeom.ExtentI(width, height)))
 
-        for (x, y, A, g_r, r_i) in [(15, 15, 1000,  1.0,  2.0),
+        for (x, y, A, g_r, r_i) in [(15, 15, 1000, 1.0, 2.0),
                                     (50, 45, 5500, -1.0, -0.5),
-                                    (30, 30,  600,  1.0,  2.5),
-                                    (45, 15, 20000,  1.0,  1.0),
+                                    (30, 30, 600, 1.0, 2.5),
+                                    (45, 15, 20000, 1.0, 1.0),
                                     ]:
             for i in range(len(self.images)):
                 if i == B:
@@ -123,7 +128,8 @@ class RgbTestCase(unittest.TestCase):
             randomImage *= 2
             convolvedImage += randomImage
             self.images[i][:] = convolvedImage
-        del convolvedImage; del randomImage
+        del convolvedImage
+        del randomImage
 
     def tearDown(self):
         for im in self.images:
@@ -269,8 +275,8 @@ class RgbTestCase(unittest.TestCase):
     def testStarsResizeToSize(self):
         """Test creating an RGB image of a specified size"""
 
-        xSize = self.images[R].getWidth()/2
-        ySize = self.images[R].getHeight()/2
+        xSize = self.images[R].getWidth()//2
+        ySize = self.images[R].getHeight()//2
         for rgbImages in ([self.images[R], self.images[G], self.images[B]],
                           [afwImage.ImageU(_.getArray().astype('uint16')) for _ in [
                               self.images[R], self.images[G], self.images[B]]]):
@@ -287,13 +293,13 @@ class RgbTestCase(unittest.TestCase):
         rgbImages = [self.images[R], self.images[G], self.images[B]]
         map = rgb.AsinhZScaleMapping(rgbImages[0])
 
-        for xSize, ySize, frac in [(self.images[R].getWidth()/2, self.images[R].getHeight()/2, None),
-                                   (2*self.images[R].getWidth(), None,                         None),
-                                   (self.images[R].getWidth()/2, None,                         None),
-                                   (None,                        self.images[R].getHeight()/2, None),
-                                   (None,                        None,                         0.5),
-                                   (None,                        None,                         2),
-                               ]:
+        for xSize, ySize, frac in [(self.images[R].getWidth()//2, self.images[R].getHeight()//2, None),
+                                   (2*self.images[R].getWidth(), None, None),
+                                   (self.images[R].getWidth()//2, None, None),
+                                   (None, self.images[R].getHeight()//2, None),
+                                   (None, None, 0.5),
+                                   (None, None, 2),
+                                   ]:
             rgbImage = map.makeRgbImage(*rgbImages, xSize=xSize, ySize=ySize, rescaleFactor=frac)
 
             h, w = rgbImage.shape[0:2]
@@ -337,6 +343,7 @@ class RgbTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -346,6 +353,7 @@ def suite():
     suites += unittest.makeSuite(RgbTestCase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
     return unittest.TestSuite(suites)
+
 
 def run(shouldExit=False):
     """Run the tests"""

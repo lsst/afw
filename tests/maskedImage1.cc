@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <typeinfo>
 #include <cstdio>
 
@@ -38,7 +38,7 @@ namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
 
 int test(int argc, char**argv) {
-    
+
     string dataDir, inImagePath1, inImagePath2, outImagePath1, outImagePath2;
     if (argc < 2) {
         try {
@@ -59,10 +59,10 @@ int test(int argc, char**argv) {
         outImagePath1 = string(argv[3]);
         outImagePath2 = string(argv[4]);
     }
-    
+
     Trace::setDestination(cout);
     Trace::setVerbosity(".", 0);
-    
+
     typedef image::MaskedImage<float> MaskedImage;
 
     //
@@ -78,7 +78,7 @@ int test(int argc, char**argv) {
 
     *testMaskedImage1->getVariance() = 10.0;
     testMaskedImage1->getMask()->addMaskPlane("CR");
-    
+
     // verify that copy constructor and operator= build and do not leak
     MaskedImage::Image testImage(geom::Extent2I(100, 100));
     MaskedImage::Image imageCopy(testImage);
@@ -108,7 +108,7 @@ int test(int argc, char**argv) {
 
     geom::Box2I region(geom::Point2I(100, 600), geom::Extent2I(200, 300));
     MaskedImage subMaskedImage1 = MaskedImage(
-        *testMaskedImage1, 
+        *testMaskedImage1,
         region,
         image::LOCAL
     );
@@ -122,10 +122,10 @@ int test(int argc, char**argv) {
     cout << "Offsets: " << subMaskedImage2.getX0() << " " << subMaskedImage2.getY0() << endl;
 
     testMaskedImage1->writeFits(outImagePath1);
-    
+
     std::remove(outImagePath1.c_str());
     std::remove(outImagePath2.c_str());
-    
+
     return EXIT_SUCCESS;
 }
 

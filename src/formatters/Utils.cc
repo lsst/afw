@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 //
 //##====----------------                                ----------------====##/
 //
@@ -66,7 +66,7 @@ int extractSliceId(CONST_PTR(PropertySet) const& properties) {
     }
     return sliceId;
 }
-                        
+
 int extractVisitId(CONST_PTR(PropertySet) const& properties) {
     if (properties->isArray("visitId")) {
         throw LSST_EXCEPT(ex::RuntimeError, "\"visitId\" property has multiple values");
@@ -144,7 +144,7 @@ int64_t extractAmpExposureId(CONST_PTR(PropertySet) const& properties) {
 
 /**
  * Extracts and returns the string-valued @c "itemName" property from the given data property object.
- *  
+ *
  * @throw lsst::pex::exceptions::InvalidParameterError
  *        If the given pointer is null, or the @c PropertySet pointed
  *        to does not contain a unique property named @c "itemName".
@@ -155,7 +155,7 @@ std::string const getItemName(CONST_PTR(PropertySet) const& properties) {
     }
     if (properties->isArray("itemName")) {
         throw LSST_EXCEPT(ex::InvalidParameterError, "\"itemName\" property has multiple values");
-    } 
+    }
     return properties->getAsString("itemName");
 }
 
@@ -303,7 +303,7 @@ std::string formatFitsProperties(CONST_PTR(lsst::daf::base::PropertySet) const& 
        } else {
            out = (boost::format("%-8s= ") % name).str();
        }
-       
+
        if (type == typeid(int)) {
            out += (boost::format("%20d") % prop->get<int>(*i)).str();
        } else if (type == typeid(double)) {

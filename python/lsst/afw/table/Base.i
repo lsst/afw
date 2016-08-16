@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,14 +9,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
@@ -122,6 +122,7 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 %pythoncode %{
 from . import _syntax
 import astropy.units
+from past.builtins import basestring
 %}
 
 %include "lsst/afw/table/misc.h"
@@ -139,7 +140,7 @@ import astropy.units
         if (!result) return 0;
         Py_ssize_t n = 0;
         for (std::set<std::string>::const_iterator i = input.begin(); i != input.end(); ++i, ++n) {
-            PyObject * s = PyString_FromStringAndSize(i->data(), i->size());
+            PyObject * s = SWIG_FromCharPtrAndSize(i->data(), i->size());
             if (!s) return 0;
             PyTuple_SET_ITEM(result.get(), n, s);
         }
@@ -225,7 +226,7 @@ def itervalues(self):
     for k, v in self.iteritems():
         yield v
 def __iter__(self):
-    return self.iterkeys()
+    return iter(self.keys())
 
 def items(self): return list(self.iteritems())
 def keys(self): return list(self.iterkeys())
@@ -237,7 +238,7 @@ def __delitem__(self, alias):
     if not self.erase(alias):
         raise KeyError(alias)
 def __len__(self): return self.size()
-def __nonzero__(self): return not self.empty()
+def __bool__(self): return not self.empty()
 %}
 }
 
@@ -317,7 +318,7 @@ def find(self, k):
          attr = "_find_" + suffix
          method = getattr(self, attr)
          return method(k)
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_find_" + suffix
          method = getattr(self, attr)
          try:
@@ -362,7 +363,7 @@ def addField(self, field, type=None, doc="", units="", size=None, doReplace=Fals
 %pythoncode %{
 
 def find(self, k):
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_find_" + suffix
          method = getattr(self, attr)
          try:
@@ -372,7 +373,7 @@ def find(self, k):
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 
 def asField(self):
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_asField_" + suffix
          method = getattr(self, attr)
          try:
@@ -382,7 +383,7 @@ def asField(self):
     raise KeyError("Field '%s' not found in Schema." % self.getPrefix())
 
 def asKey(self):
-    for suffix in _suffixes.itervalues():
+    for suffix in _suffixes.values():
          attr = "_asKey_" + suffix
          method = getattr(self, attr)
          try:
@@ -594,6 +595,8 @@ def getBits(self, keys=None):
 %include "lsst/afw/table/Flag.h"
 
 %pythoncode %{
+from past.builtins import long
+from builtins import str as futurestr
 from ..geom import Angle, Point2D, Point2I
 from ..geom.ellipses import Quadrupole
 from ..coord import Coord, IcrsCoord
@@ -603,10 +606,11 @@ Key = {}
 SchemaItem = {}
 _suffixes = {}
 aliases = {
-    int: "I",
     long: "L",
+    int: "I",
     float: "D",
     str: "String",
+    futurestr: "String",
     numpy.uint16: "U",
     numpy.int32: "I",
     numpy.int64: "L",
@@ -676,7 +680,7 @@ _suffixes[FieldBase_ ## PYNAME.getTypeString()] = #PYNAME
 %pythoncode %{
 # underscores here prevent these from becoming global names
 for _d in (Field, Key, SchemaItem, _suffixes):
-    for _k, _v in aliases.iteritems():
+    for _k, _v in aliases.items():
         _d[_k] = _d[_v]
 %}
 

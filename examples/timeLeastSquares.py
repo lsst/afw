@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import division
 import timeit
 import sys
 import numpy
@@ -82,7 +83,7 @@ def plot(results):
 def main():
     results = run()
     plot(results)
-    
+
 
 if __name__ == "__main__":
     main()

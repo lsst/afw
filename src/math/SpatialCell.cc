@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -68,7 +68,7 @@ void SpatialCellCandidate::setStatus(Status status) {
         _status = status;
         return;
     }
-    
+
     throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
                       (boost::format("Saw unknown status %d") % status).str());
 }
@@ -86,7 +86,7 @@ SpatialCell::SpatialCell(std::string const& label, ///< string representing "nam
     _candidateList(candidateList),
     _ignoreBad(true)
 {
-    lsst::pex::logging::TTrace<3>("lsst.afw.math.SpatialCell", 
+    lsst::pex::logging::TTrace<3>("lsst.afw.math.SpatialCell",
                                   "Cell %s : created with %d candidates",
                                   this->_label.c_str(), this->_candidateList.size());
     sortCandidates();
@@ -190,14 +190,14 @@ void SpatialCell::visitCandidates(CandidateVisitor *visitor, ///< Pass this obje
     if (reset) {
         visitor->reset();
     }
-    
+
     int i = 0;
     for (SpatialCell::iterator candidate = begin(), candidateEnd = end();
          candidate != candidateEnd; ++candidate, ++i) {
         if (nMaxPerCell > 0 && i == nMaxPerCell) { // we've processed all the candidates we want
             return;
         }
-        
+
         try {
             visitor->processCandidate((*candidate).get());
         } catch(lsst::pex::exceptions::Exception &e) {
@@ -210,7 +210,7 @@ void SpatialCell::visitCandidates(CandidateVisitor *visitor, ///< Pass this obje
         }
     }
 }
-    
+
 /**
  * Call the visitor's processCandidate method for each Candidate in the SpatialCell (const version)
  *
@@ -238,7 +238,7 @@ void SpatialCell::visitCandidates(
         if (i == nMaxPerCell) {   // we've processed all the candidates we want
             return;
         }
-        
+
         try {
             visitor->processCandidate((*candidate).get());
         } catch(lsst::pex::exceptions::LengthError &e) {
@@ -265,7 +265,7 @@ void SpatialCell::visitAllCandidates(CandidateVisitor *visitor, ///< Pass this o
     if (reset) {
         visitor->reset();
     }
-    
+
     int i = 0;
     for (SpatialCell::iterator candidate = begin(false), candidateEnd = end(false);
          candidate != candidateEnd; ++candidate, ++i) {
@@ -281,7 +281,7 @@ void SpatialCell::visitAllCandidates(CandidateVisitor *visitor, ///< Pass this o
         }
     }
 }
-    
+
 /**
  * Call the visitor's processCandidate method for each Candidate in the SpatialCell (const version)
  *
@@ -318,7 +318,7 @@ void SpatialCell::visitAllCandidates(
     }
 #endif
 }
-    
+
 /************************************************************************************************************/
 /// ctor; designed to be used to pass begin to SpatialCellCandidateIterator
 SpatialCellCandidateIterator::SpatialCellCandidateIterator(
@@ -329,7 +329,7 @@ SpatialCellCandidateIterator::SpatialCellCandidateIterator(
     : _iterator(iterator), _end(end), _ignoreBad(ignoreBad) {
     for (; _iterator != _end; ++_iterator) {
         (*_iterator)->instantiate();
-        
+
         if (!(_ignoreBad && (*_iterator)->isBad())) { // found a good candidate, or don't care
             return;
         }
@@ -357,10 +357,10 @@ void SpatialCellCandidateIterator::operator++() {
     if (_iterator != _end) {
         ++_iterator;
     }
-    
+
     for (; _iterator != _end; ++_iterator) {
         (*_iterator)->instantiate();
-        
+
         if (!(_ignoreBad && (*_iterator)->isBad())) { // found a good candidate, or don't care
             return;
         }
@@ -402,7 +402,7 @@ SpatialCellCandidate::Ptr SpatialCellCandidateIterator::operator*() {
 
     return *_iterator;
 }
-    
+
 /************************************************************************************************************/
 
 /**
@@ -418,13 +418,13 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const& region, ///< Bounding box for 
     if (ySize == 0) {
         ySize = xSize;
     }
-    
+
     if (xSize <= 0 || ySize <= 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Please specify cells that contain pixels, not %dx%d") %
                            xSize % ySize).str());
     }
-    
+
     int nx = region.getWidth()/xSize;
     if (nx*xSize != region.getWidth()) {
         nx++;
@@ -440,15 +440,15 @@ SpatialCellSet::SpatialCellSet(geom::Box2I const& region, ///< Bounding box for 
     int y0 = region.getMinY();
     for (int y = 0; y < ny; ++y) {
         // ny may not be a factor of height
-        int const y1 = (y == ny - 1) ? region.getMaxY() : y0 + ySize - 1; 
+        int const y1 = (y == ny - 1) ? region.getMaxY() : y0 + ySize - 1;
         int x0 = region.getMinX();
         for (int x = 0; x < nx; ++x) {
             // nx may not be a factor of width
-            int const x1 = (x == nx - 1) ? region.getMaxX() : x0 + xSize - 1; 
+            int const x1 = (x == nx - 1) ? region.getMaxX() : x0 + xSize - 1;
             geom::Box2I bbox(geom::Point2I(x0, y0), geom::Point2I(x1, y1));
             std::string label = (boost::format("Cell %dx%d") % x % y).str();
 
-            _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));        
+            _cellList.push_back(SpatialCell::Ptr(new SpatialCell(label, bbox)));
 
             x0 = x1 + 1;
         }
@@ -513,12 +513,12 @@ void SpatialCellSet::visitCandidates(
         bool const ignoreExceptions     ///< Ignore any exceptions thrown by the processing
                                     ) {
     visitor->reset();
-    
+
     for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
         (*cell)->visitCandidates(visitor, nMaxPerCell, ignoreExceptions, false);
     }
 }
-    
+
 /**
  * Call the visitor's processCandidate method for each Candidate in the SpatialCellSet (const version)
  *
@@ -548,12 +548,12 @@ void SpatialCellSet::visitAllCandidates(
         bool const ignoreExceptions     ///< Ignore any exceptions thrown by the processing
                                     ) {
     visitor->reset();
-    
+
     for (CellList::iterator cell = _cellList.begin(), end = _cellList.end(); cell != end; ++cell) {
         (*cell)->visitAllCandidates(visitor, ignoreExceptions, false);
     }
 }
-    
+
 /**
  * Call the visitor's processCandidate method for every Candidate in the SpatialCellSet (const version)
  *
@@ -603,5 +603,5 @@ void SpatialCellSet::setIgnoreBad(bool ignoreBad) {
         (*cell)->setIgnoreBad(ignoreBad);
     }
 }
-    
+
 }}}

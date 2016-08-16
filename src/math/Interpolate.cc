@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @brief Interpolate values for a set of x,y vector<>s
  * @ingroup afw
@@ -44,7 +44,7 @@ namespace afw {
 namespace math {
 
 /************************************************************************************************************/
-    
+
 namespace {
     std::pair<std::vector<double>, std::vector<double> >
     recenter(std::vector<double> const &x,
@@ -76,7 +76,7 @@ namespace {
         recentered_x[len] = 0.5*(3*x[len - 1] - x[len - 2]);
         recentered_y[len] = y[len - 1];
 
-        return std::make_pair(recentered_x, recentered_y);        
+        return std::make_pair(recentered_x, recentered_y);
     }
 }
 
@@ -94,8 +94,8 @@ private:
         Interpolate(recenter(x, y)), _old(_x.begin()) {}
     mutable std::vector<double>::const_iterator _old; // last position we found xInterp at
 };
-    
-    
+
+
 /// Interpolate a constant to the point \c xInterp
 double InterpolateConstant::interpolate(double const xInterp // the value we want to interpolate to
                                        ) const
@@ -171,7 +171,7 @@ styleToGslInterpType(Interpolate::Style const style)
     }
 }
 }
-    
+
 class InterpolateGsl : public Interpolate {
     friend PTR(Interpolate) makeInterpolate(std::vector<double> const &x, std::vector<double> const &y,
                                             Interpolate::Style const style);
@@ -196,7 +196,7 @@ InterpolateGsl::InterpolateGsl(std::vector<double> const &x, ///< the x-values o
     if (!_acc) {
         throw LSST_EXCEPT(pex::exceptions::MemoryError, "gsl_interp_accel_alloc failed");
     }
-    
+
     _interp = ::gsl_interp_alloc(_interpType, _y.size());
     if (!_interp) {
         throw LSST_EXCEPT(pex::exceptions::OutOfRangeError,
@@ -266,20 +266,20 @@ Interpolate::Style stringToInterpStyle(std::string const &style ///< desired typ
     static std::map<std::string, Interpolate::Style> gslInterpTypeStrings;
     if (gslInterpTypeStrings.empty()) {
         gslInterpTypeStrings["CONSTANT"]              = Interpolate::CONSTANT;
-        gslInterpTypeStrings["LINEAR"]                = Interpolate::LINEAR;               
-        gslInterpTypeStrings["CUBIC_SPLINE"]          = Interpolate::CUBIC_SPLINE;         
-        gslInterpTypeStrings["NATURAL_SPLINE"]        = Interpolate::NATURAL_SPLINE;      
+        gslInterpTypeStrings["LINEAR"]                = Interpolate::LINEAR;
+        gslInterpTypeStrings["CUBIC_SPLINE"]          = Interpolate::CUBIC_SPLINE;
+        gslInterpTypeStrings["NATURAL_SPLINE"]        = Interpolate::NATURAL_SPLINE;
         gslInterpTypeStrings["CUBIC_SPLINE_PERIODIC"] = Interpolate::CUBIC_SPLINE_PERIODIC;
-        gslInterpTypeStrings["AKIMA_SPLINE"]          = Interpolate::AKIMA_SPLINE;  
+        gslInterpTypeStrings["AKIMA_SPLINE"]          = Interpolate::AKIMA_SPLINE;
         gslInterpTypeStrings["AKIMA_SPLINE_PERIODIC"] = Interpolate::AKIMA_SPLINE_PERIODIC;
     }
-    
+
     if ( gslInterpTypeStrings.find(style) == gslInterpTypeStrings.end()) {
         throw LSST_EXCEPT(pex::exceptions::InvalidParameterError, "Interp style not found: "+style);
     }
     return gslInterpTypeStrings[style];
 }
-    
+
 /**
  * @brief Get the highest order Interpolation::Style available for 'n' points.
  */
@@ -293,7 +293,7 @@ Interpolate::Style lookupMaxInterpStyle(int const n ///< Number of points
         static std::vector<Interpolate::Style> styles;
         if (styles.empty()) {
             styles.resize(5);
-            
+
             styles[0] = Interpolate::UNKNOWN; // impossible to reach as we check for n < 1
             styles[1] = Interpolate::CONSTANT;
             styles[2] = Interpolate::LINEAR;

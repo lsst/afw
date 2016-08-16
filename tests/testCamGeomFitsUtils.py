@@ -1,9 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
-# 
+from builtins import object
+#
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
@@ -32,7 +33,9 @@ import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 from lsst.afw.cameraGeom.fitsUtils import getByKey, setByKey, HeaderAmpMap, HeaderDetectorMap, DetectorBuilder
 
+
 class TestAmpObject(object):
+
     def name(self, a):
         self.name = a
 
@@ -42,11 +45,15 @@ class TestAmpObject(object):
     def defaultval(self, c):
         self.defaultval = c
 
+
 class TestDetObject(object):
+
     def __init__(self):
         return
 
+
 class FitsUtilsTestCase(unittest.TestCase):
+
     def toTestStr(self, string):
         return "Test String"
 
@@ -64,7 +71,6 @@ class FitsUtilsTestCase(unittest.TestCase):
         self.mdMapList = [('NAME', 'name'),
                           ('TESTSEC', 'testsec', None, self.toTestStr),
                           ('TESTDEF', 'defaultval', 'Default', None)]
-
 
     def tearDown(self):
         del self.metadata
@@ -111,12 +117,13 @@ class FitsUtilsTestCase(unittest.TestCase):
         """
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             self.exposure.writeFits(tmpFile)
-            #test that it raises without setting non-defaulted keywords
+            # test that it raises without setting non-defaulted keywords
             self.assertRaises(Exception, DetectorBuilder(tmpFile, [tmpFile, tmpFile]))
-            #ignore non-defaulted keywords
+            # ignore non-defaulted keywords
             detBuilder = DetectorBuilder(tmpFile, [tmpFile, ], doRaise=False)
             detBuilder.makeCalib()
-            detBuilder.makeExposure(afwImage.ImageF(10,10), afwImage.MaskU(10,10), afwImage.ImageF(10,10))
+            detBuilder.makeExposure(afwImage.ImageF(10, 10), afwImage.MaskU(10, 10), afwImage.ImageF(10, 10))
+
 
 def suite():
     """Returns a suite containing all the test cases in this module."""
@@ -128,7 +135,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

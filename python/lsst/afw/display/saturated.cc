@@ -114,7 +114,7 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
                     if (val > maxR) {
                         maxR = val;
                     }
-                    
+
                     val = gptr.image();
                     sumG += val;
                     if (val > maxG) {
@@ -136,7 +136,7 @@ replaceSaturatedPixels(ImageT & rim,    // R image (e.g. i)
             if (sumR > sumG) {
                 if (sumR > sumB) {
                     R = useMaxPixel ? maxR : saturatedPixelValue;
-                    
+
                     G = (R*sumG)/sumR;
                     B = (R*sumB)/sumR;
                 } else {

@@ -48,7 +48,7 @@ public:
             std::string module;
             for (
                 BaseCatalog::iterator indexIter = _index.find(id, indexKeys.id);
-                indexIter != _index.end() && indexIter->get(indexKeys.id) == id; 
+                indexIter != _index.end() && indexIter->get(indexKeys.id) == id;
                 ++indexIter
             ) {
                 if (name.empty()) {

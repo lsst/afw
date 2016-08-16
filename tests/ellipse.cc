@@ -49,7 +49,7 @@ void invokeCoreTest(bool no_circles) {
     TestCase::apply(SeparableDistortionTraceRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableDistortionLogDeterminantRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableDistortionLogTraceRadius(0.4,-0.25,2.3));
-    
+
     TestCase::apply(SeparableConformalShearDeterminantRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableConformalShearTraceRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableConformalShearLogDeterminantRadius(0.4,-0.25,2.3));
@@ -59,7 +59,7 @@ void invokeCoreTest(bool no_circles) {
     TestCase::apply(SeparableReducedShearTraceRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableReducedShearLogDeterminantRadius(0.4,-0.25,2.3));
     TestCase::apply(SeparableReducedShearLogTraceRadius(0.4,-0.25,2.3));
-    
+
     if (no_circles) return;
     TestCase::apply(Quadrupole(200.0,200.0,0.0));
     TestCase::apply(Axes(40,40,0.0));
@@ -67,7 +67,7 @@ void invokeCoreTest(bool no_circles) {
     TestCase::apply(SeparableDistortionTraceRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableDistortionLogDeterminantRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableDistortionLogTraceRadius(0.0, 0.0, 2.3));
-    
+
     TestCase::apply(SeparableConformalShearDeterminantRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableConformalShearTraceRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableConformalShearLogDeterminantRadius(0.0, 0.0, 2.3));
@@ -77,7 +77,7 @@ void invokeCoreTest(bool no_circles) {
     TestCase::apply(SeparableReducedShearTraceRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableReducedShearLogDeterminantRadius(0.0, 0.0, 2.3));
     TestCase::apply(SeparableReducedShearLogTraceRadius(0.0, 0.0, 2.3));
-    
+
 }
 
 template <typename TestCase>
@@ -94,10 +94,10 @@ struct EllipticityConversionTest {
 
     template <typename T1, typename T2>
     struct Functor {
-        
+
         static int const M = 2;
         static int const N = 2;
-        
+
         Eigen::Vector2d operator()(Eigen::Vector2d const & x) {
             T1 c1(x[0], x[1]);
             T2 c2(c1);
@@ -141,7 +141,7 @@ struct EllipticityConversionTest {
         BOOST_CHECK((a2 * a1).isIdentity(1E-5));
         BOOST_CHECK((a1 - b1).isMuchSmallerThan(1.0, 1E-4));
         BOOST_CHECK((a2 - b2).isMuchSmallerThan(1.0, 1E-4));
-        
+
     }
 
     template <typename T1>
@@ -213,7 +213,7 @@ struct CoreConversionTest {
         testCoreConversion<SeparableDistortionTraceRadius>(core);
         testCoreConversion<SeparableDistortionLogDeterminantRadius>(core);
         testCoreConversion<SeparableDistortionLogTraceRadius>(core);
-        
+
         testCoreConversion<SeparableConformalShearDeterminantRadius>(core);
         testCoreConversion<SeparableConformalShearTraceRadius>(core);
         testCoreConversion<SeparableConformalShearLogDeterminantRadius>(core);
@@ -245,7 +245,7 @@ struct TransformerTest {
         }
 
         Functor1(Ellipse const & ellipse_, AffineTransform const & transform_) :
-            ellipse(ellipse_), transform(transform_) 
+            ellipse(ellipse_), transform(transform_)
         {}
 
     };
@@ -264,7 +264,7 @@ struct TransformerTest {
         }
 
         Functor2(Ellipse const & ellipse_, AffineTransform const & transform_) :
-            ellipse(ellipse_), transform(transform_) 
+            ellipse(ellipse_), transform(transform_)
         {}
 
     };
@@ -273,7 +273,7 @@ struct TransformerTest {
     static void apply(Core const & core) {
         Ellipse input(core, Point2D(Eigen::Vector2d::Random()));
         Eigen::Matrix2d tm;
-        tm << 
+        tm <<
             -0.2704311, 0.9044595,
             0.0268018, 0.8323901;
         AffineTransform transform(tm, Eigen::Vector2d::Random());
@@ -290,7 +290,7 @@ struct TransformerTest {
             )
         );
         Eigen::Matrix<double,5,6> t_d_analytic = input.transform(transform).dTransform();
-        Eigen::Matrix<double,5,6> t_d_numeric = computeJacobian(f2, transform.getParameterVector());    
+        Eigen::Matrix<double,5,6> t_d_numeric = computeJacobian(f2, transform.getParameterVector());
         BOOST_CHECK_MESSAGE(
             t_d_analytic.isApprox(t_d_numeric,1E-4),
             boost::str(
@@ -303,7 +303,7 @@ struct TransformerTest {
 };
 
 struct GridTransformTest {
-    
+
     struct Functor {
 
         static int const M = 6;
@@ -330,7 +330,7 @@ struct GridTransformTest {
             boost::str(
                 boost::format("GridTransform::getMatrix incorrect %s:\ngetMatrix:\n%s\nTransform:\n%s\n")
                 % core.getName() % input.getGridTransform().getMatrix() % output.getMatrix()
-            )            
+            )
         );
         BOOST_CHECK_CLOSE(output.getLinear().getMatrix()(0,1), output.getLinear().getMatrix()(1,0), 1E-8);
         Ellipse unit_circle = input.transform(output);
@@ -339,7 +339,7 @@ struct GridTransformTest {
         BOOST_CHECK_CLOSE(unit_circle_axes.getB(), 1.0, 1E-8);
         Functor f(input);
         Ellipse::GridTransform::DerivativeMatrix d_analytic = input.getGridTransform().d();
-        Ellipse::GridTransform::DerivativeMatrix d_numeric 
+        Ellipse::GridTransform::DerivativeMatrix d_numeric
             = computeJacobian(f, input.getParameterVector());
         BOOST_CHECK_MESSAGE(
             d_analytic.isApprox(d_numeric,1E-4),
@@ -363,7 +363,7 @@ struct GridTransformTest {
 };
 
 struct ConvolutionTest {
-    
+
     template <typename T>
     struct Functor {
 
@@ -389,7 +389,7 @@ struct ConvolutionTest {
         T output = input.convolve(other);
         Functor<T> f(other);
         BaseCore::Convolution::DerivativeMatrix d_analytic = input.convolve(other).d();
-        BaseCore::Convolution::DerivativeMatrix d_numeric 
+        BaseCore::Convolution::DerivativeMatrix d_numeric
             = computeJacobian(f, input.getParameterVector());
         BOOST_CHECK_MESSAGE(
             d_analytic.isApprox(d_numeric,1E-4),
@@ -398,7 +398,7 @@ struct ConvolutionTest {
                 % core.getName() % d_analytic % d_numeric
             )
         );
-    
+
     }
 };
 
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(Normalization) {
     afwEllipses::Ellipse a3(afwEllipses::Axes(1.0, 1.0, 0.5));
     afwEllipses::Ellipse a4(afwEllipses::Axes(0.0, 0.0, 0.0));
     a3 = a4;
-    BOOST_CHECK_EQUAL(a3.getCore().getParameterVector(), a4.getCore().getParameterVector());    
+    BOOST_CHECK_EQUAL(a3.getCore().getParameterVector(), a4.getCore().getParameterVector());
 }
 
 BOOST_AUTO_TEST_CASE(Transformer) {

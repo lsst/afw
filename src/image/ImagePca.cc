@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -196,7 +196,7 @@ void ImagePca<ImageT>::analyze()
     _eigenValues.reserve(nImage);
     for (int i = 0; i != nImage; ++i) {
         _eigenValues.push_back(lambdaAndIndex[i].first);
-    }    
+    }
     //
     // Contruct the first ncomp eigenimages in basis
     //
@@ -226,7 +226,7 @@ void ImagePca<ImageT>::analyze()
 
 /************************************************************************************************************/
 /*
- * 
+ *
  */
 namespace {
 /*
@@ -280,7 +280,7 @@ typename MaskedImageT::Image::Ptr fitEigenImagesToImage(
     for (int i = 0; i != nEigen; ++i) {
         bestFitImage->scaledPlus(x[i], *eigenImages[i]->getImage());
     }
-    
+
     return bestFitImage;
 }
 
@@ -313,7 +313,7 @@ double do_updateBadPixels(
     }
     geom::Extent2I dimensions = imageList[0]->getDimensions();
     int const height = dimensions.getY();
-        
+
     double maxChange = 0.0;             // maximum change to the input images
 
     if (ncomp == 0) {                   // use mean of good pixels
@@ -423,8 +423,8 @@ double ImagePca<ImageT>::updateBadPixels(
     return do_updateBadPixels<ImageT>(typename ImageT::image_category(),
                                       _imageList, _fluxList, _eigenImages, mask, ncomp);
 }
-    
-/*******************************************************************************************************/    
+
+/*******************************************************************************************************/
 namespace {
     template<typename T, typename U>
     struct IsSame {
@@ -520,5 +520,5 @@ INSTANTIATE(double)
 
 INSTANTIATE2(float, double)             // the two types must be different
 /// \endcond
-    
+
 }}}

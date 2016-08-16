@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
 
 #
@@ -79,7 +79,7 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         ]
         for d in self.data:
             record = self.catalog.addNew()
-            for k, v in d.iteritems():
+            for k, v in d.items():
                 record.set(k, v)
 
     def tearDown(self):
@@ -189,7 +189,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

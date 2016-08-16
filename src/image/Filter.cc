@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 //
 //##====----------------                                ----------------====##/
 //
@@ -91,7 +91,7 @@ void FilterProperty::_insert(
         }
         _propertyMap->erase(keyVal);
     }
-    
+
     _propertyMap->insert(std::make_pair(getName(), *this));
 }
 
@@ -103,8 +103,8 @@ bool FilterProperty::operator==(FilterProperty const& rhs ///< Object to compare
 {
     return (_lambdaEff == rhs._lambdaEff);
 }
-            
-            
+
+
 /**
  * Initialise the Filter registry
  */
@@ -132,7 +132,7 @@ FilterProperty const& FilterProperty::lookup(std::string const& name ///< name o
     if (keyVal == _propertyMap->end()) {
         throw LSST_EXCEPT(pexEx::NotFoundError, "Unable to find filter " + name);
     }
-    
+
     return keyVal->second;
 }
 
@@ -156,7 +156,7 @@ Filter::Filter(CONST_PTR(lsst::daf::base::PropertySet) metadata, ///< Metadata t
         _name = filterName;
     }
 }
-            
+
 namespace detail {
 /**
  * Remove Filter-related keywords from the metadata
@@ -239,7 +239,7 @@ void Filter::_initRegistry()
     _aliasMap = new AliasMap;
     _nameMap = new NameMap;
     _idMap = new IdMap;
-    
+
     define(FilterProperty(unknownFilter, lsst::pex::policy::Policy(), true));
 }
 
@@ -288,7 +288,7 @@ int Filter::define(FilterProperty const& fp, int id, bool force)
         id = _id0;
         ++_id0;
     }
-    
+
     _nameMap->insert(std::make_pair(name, id));
     _idMap->insert(std::make_pair(id, name));
 
@@ -326,7 +326,7 @@ int Filter::defineAlias(std::string const& oldName, ///< old name for Filter
         }
         _aliasMap->erase(aliasKeyVal);
     }
-    
+
     _aliasMap->insert(std::make_pair(newName, oldName));
 
     return id;
@@ -357,7 +357,7 @@ int Filter::_lookup(std::string const& name, // Name of filter
             throw LSST_EXCEPT(pexEx::NotFoundError, "Unable to find filter " + name);
         }
     }
-    
+
     return keyVal->second;
 }
 
@@ -375,7 +375,7 @@ std::string const& Filter::_lookup(int id)
     if (keyVal == _idMap->end()) {
         throw LSST_EXCEPT(pexEx::NotFoundError, (boost::format("Unable to find filter %d") % id).str());
     }
-    
+
     return keyVal->second;
 }
 /**

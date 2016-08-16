@@ -1,5 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from builtins import range
 
 #
 # LSST Data Management System
@@ -49,24 +50,27 @@ try:
 except NameError:
     display = False
 
+
 def makeGaussianImage(bbox, sigma, xc=0.0, yc=0.0):
     image = lsst.afw.image.ImageD(bbox)
     array = image.getArray()
-    for yi, yv in enumerate(xrange(bbox.getBeginY(), bbox.getEndY())):
-        for xi, xv in enumerate(xrange(bbox.getBeginX(), bbox.getEndX())):
+    for yi, yv in enumerate(range(bbox.getBeginY(), bbox.getEndY())):
+        for xi, xv in enumerate(range(bbox.getBeginX(), bbox.getEndX())):
             array[yi, xi] = numpy.exp(-0.5*((xv - xc)**2 + (yv - yc)**2)/sigma**2)
     array /= array.sum()
     return image
+
 
 def computeNaiveApertureFlux(image, radius, xc=0.0, yc=0.0):
     bbox = image.getBBox()
     array = image.getArray()
     s = 0.0
-    for yi, yv in enumerate(xrange(bbox.getBeginY(), bbox.getEndY())):
-        for xi, xv in enumerate(xrange(bbox.getBeginX(), bbox.getEndX())):
+    for yi, yv in enumerate(range(bbox.getBeginY(), bbox.getEndY())):
+        for xi, xv in enumerate(range(bbox.getBeginX(), bbox.getEndX())):
             if (xv - xc)**2 + (yv - yc)**2 < radius**2:
                 s += array[yi, xi]
     return s
+
 
 class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
@@ -105,6 +109,7 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -115,7 +120,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,23 +9,23 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  *
  * \brief MaskedImage iterator tutorial.
  */
- 
+
 // Include the necessary headers;
 // if using many image modules then you may prefer to include "lsst/afw/image.h"
 #include "lsst/afw/image/MaskedImage.h"
@@ -50,7 +50,7 @@ int main() {
     for (int y = 0; y != img.getHeight(); ++y) {
         for (ImageT::x_iterator ptr = img.row_begin(y), end = img.row_end(y); ptr != end; ++ptr) {
             *ptr = ImageT::Pixel(100, 0x1, 10);
-            
+
             // Or, if you prefer, you may set image, mask and variance separately with no loss of speed
             ptr.image() = 100;
             ptr.mask() = 0x1;
@@ -64,7 +64,7 @@ int main() {
             *ptr = ImageT::Pixel(100, 0x1, 10);
         }
     }
-    
+
     // STL-compliant iterators are available.
     // However, they are not very efficient because the image data may not be contiguous
     // so these iterators must test for end-of-row on every increment.

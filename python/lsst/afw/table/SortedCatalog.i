@@ -19,7 +19,7 @@ public:
     SortedCatalogT(SortedCatalogT const & other);
 
     %feature(
-        "autodoc", 
+        "autodoc",
         "Constructors:  __init__(self, table) -> empty catalog with the given table\n"
         "               __init__(self, schema) -> empty catalog with a new table with the given schema\n"
         "               __init__(self, catalog) -> shallow copy of the given catalog\n"

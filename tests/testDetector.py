@@ -1,9 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
-# 
+from builtins import range
+#
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
@@ -26,6 +27,7 @@ Tests for lsst.afw.cameraGeom.Detector
 """
 import itertools
 import unittest
+from builtins import zip
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -33,7 +35,9 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
+
 class DetectorTestCase(unittest.TestCase):
+
     def testBasics(self):
         """Test getters and other basics
         """
@@ -42,9 +46,9 @@ class DetectorTestCase(unittest.TestCase):
         for methodName in ("begin", "end", "size"):
             if hasattr(detector, methodName):
                 self.assertFalse(hasattr(detector, methodName))
-        self.assertEquals(dw.name,   detector.getName())
-        self.assertEquals(dw.id,   detector.getId())
-        self.assertEquals(dw.type,   detector.getType())
+        self.assertEquals(dw.name, detector.getName())
+        self.assertEquals(dw.id, detector.getId())
+        self.assertEquals(dw.type, detector.getType())
         self.assertEquals(dw.serial, detector.getSerial())
         bbox = detector.getBBox()
         for i in range(2):
@@ -56,7 +60,7 @@ class DetectorTestCase(unittest.TestCase):
         orientation = detector.getOrientation()
 
         transformMap = detector.getTransformMap()
-        self.assertEquals(len(transformMap), len(dw.transMap) + 1) # add 1 for null transform
+        self.assertEquals(len(transformMap), len(dw.transMap) + 1)  # add 1 for null transform
         for cameraSys in dw.transMap:
             self.assertTrue(cameraSys in transformMap)
 
@@ -69,7 +73,7 @@ class DetectorTestCase(unittest.TestCase):
         self.assertEquals(orientation.getFpPosition(), offset)
         nativeCoordSys = transformMap.getNativeCoordSys()
         self.assertEquals(nativeCoordSys,
-            cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
+                          cameraGeom.CameraSys(cameraGeom.PIXELS.getSysName(), detectorName))
 
     def testConstructorErrors(self):
         """Test constructor errors
@@ -181,7 +185,7 @@ class DetectorTestCase(unittest.TestCase):
         dw = DetectorWrapper()
         for cameraSys in (cameraGeom.FOCAL_PLANE, cameraGeom.PIXELS):
             cornerList = dw.detector.getCorners(cameraSys)
-            for fromPoint, toPoint in itertools.izip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
+            for fromPoint, toPoint in zip(afwGeom.Box2D(dw.bbox).getCorners(), cornerList):
                 predToCameraPoint = dw.detector.transform(
                     dw.detector.makeCameraPoint(fromPoint, cameraGeom.PIXELS),
                     cameraSys,
@@ -221,7 +225,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

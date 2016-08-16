@@ -1,10 +1,10 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
 
-# 
+#
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +12,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -33,9 +33,10 @@ import pickle
 import lsst.daf.base as dafBase
 import lsst.utils.tests as utilsTests
 import lsst.afw.image as afwImage
-import lsst.afw.geom  as afwGeom
+import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as geomEllip
 import lsst.afw.coord as afwCoord
+
 
 class PickleTestCase(unittest.TestCase):
     """A test case for pickles"""
@@ -62,10 +63,13 @@ class PickleTestCase(unittest.TestCase):
 
 
 class AngleTestCase(PickleTestCase):
+
     def setUp(self):
         self.data = 1.0*afwGeom.degrees
 
+
 class CoordTestCase(PickleTestCase):
+
     def setUp(self):
         ra = 10.0*afwGeom.degrees
         dec = 1.0*afwGeom.degrees
@@ -78,60 +82,93 @@ class CoordTestCase(PickleTestCase):
                      # TopocentricCoord is not currently picklable
                      ]
 
+
 class QuadrupoleTestCase(PickleTestCase):
+
     def setUp(self):
         ixx, iyy, ixy = 1.0, 1.0, 0.0
         self.data = geomEllip.Quadrupole(ixx, iyy, ixy)
 
+
 class AxesTestCase(PickleTestCase):
+
     def setUp(self):
         a, b, theta = 1.0, 1.0, 0.0
         self.data = geomEllip.Axes(a, b, theta)
-        
+
+
 class Point2DTestCase(PickleTestCase):
+
     def setUp(self):
         x, y = 1.0, 1.0
         self.data = afwGeom.Point2D(x, y)
+
+
 class Point2ITestCase(PickleTestCase):
+
     def setUp(self):
         x, y = 1, 1
         self.data = afwGeom.Point2I(x, y)
+
+
 class Point3DTestCase(PickleTestCase):
+
     def setUp(self):
         x, y, z = 1.0, 1.0, 1.0
         self.data = afwGeom.Point3D(x, y, z)
+
+
 class Point3ITestCase(PickleTestCase):
+
     def setUp(self):
-        x, y, z = 1,1,1
+        x, y, z = 1, 1, 1
         self.data = afwGeom.Point3I(x, y, z)
-        
+
+
 class Extent2DTestCase(PickleTestCase):
+
     def setUp(self):
         x, y = 1.0, 1.0
         self.data = afwGeom.Extent2D(x, y)
+
+
 class Extent3DTestCase(PickleTestCase):
+
     def setUp(self):
-        x, y, z = 1,1,1
+        x, y, z = 1, 1, 1
         self.data = afwGeom.Extent3D(x, y, z)
+
+
 class Extent2ITestCase(PickleTestCase):
+
     def setUp(self):
         x, y = 1, 1
         self.data = afwGeom.Extent2I(x, y)
+
+
 class Extent3ITestCase(PickleTestCase):
+
     def setUp(self):
-        x, y, z = 1,1,1
+        x, y, z = 1, 1, 1
         self.data = afwGeom.Extent3I(x, y, z)
-        
-class Box2DTestCase(PickleTestCase):    
+
+
+class Box2DTestCase(PickleTestCase):
+
     def setUp(self):
         p, e = afwGeom.Point2D(1.0, 1.0), afwGeom.Extent2D(0.5, 0.5)
         self.data = afwGeom.Box2D(p, e)
-class Box2ITestCase(PickleTestCase):    
+
+
+class Box2ITestCase(PickleTestCase):
+
     def setUp(self):
         p, e = afwGeom.Point2I(1, 2), afwGeom.Extent2I(1, 1)
         self.data = afwGeom.Box2I(p, e)
-        
+
+
 class AffineTransformTestCase(PickleTestCase):
+
     def setUp(self):
         scale = 2.2
         linear = afwGeom.LinearTransform().makeScaling(scale)
@@ -141,8 +178,10 @@ class AffineTransformTestCase(PickleTestCase):
 
     def assertPickled(self, new):
         self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
-        
+
+
 class LinearTransformTestCase(PickleTestCase):
+
     def setUp(self):
         scale = 2.0
         self.data = afwGeom.LinearTransform().makeScaling(scale)
@@ -150,7 +189,9 @@ class LinearTransformTestCase(PickleTestCase):
     def assertPickled(self, new):
         self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
 
+
 class WcsPickleTestCase(PickleTestCase):
+
     def setUp(self):
         hdr = dafBase.PropertyList()
         hdr.add("NAXIS", 2)
@@ -170,7 +211,9 @@ class WcsPickleTestCase(PickleTestCase):
         hdr.add("CTYPE2", "DEC--TAN")
         self.data = afwImage.makeWcs(hdr)
 
+
 class TanWcsPickleTestCase(PickleTestCase):
+
     def setUp(self):
         hdr = dafBase.PropertyList()
         hdr.add("NAXIS", 2)
@@ -255,6 +298,7 @@ class TanWcsPickleTestCase(PickleTestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
 
@@ -280,6 +324,7 @@ def suite():
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
+
 
 def run(exit=False):
     """Run the tests"""

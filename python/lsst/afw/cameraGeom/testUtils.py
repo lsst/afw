@@ -1,3 +1,8 @@
+from __future__ import division
+from builtins import str
+from builtins import zip
+from builtins import range
+from builtins import object
 import os
 
 import numpy
@@ -126,7 +131,7 @@ class CameraWrapper(object):
         """
         afwDir = lsst.utils.getPackageDir("afw")
         self._afwTestDir = os.path.join(afwDir, "tests")
-        
+
         # Info to store for unit tests
         self.plateScale = float(plateScale)
         self.radialDistortion = float(radialDistortion)
@@ -320,4 +325,4 @@ class CameraWrapper(object):
         tmc.nativeSys = FOCAL_PLANE.getSysName()
         tmc.transforms = {PUPIL.getSysName():tConfig}
         camConfig.transformDict = tmc
-        return camConfig, ampCatalogDict 
+        return camConfig, ampCatalogDict

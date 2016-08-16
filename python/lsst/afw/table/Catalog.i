@@ -32,7 +32,7 @@ public:
     CatalogT(CatalogT const & other);
 
     %feature(
-        "autodoc", 
+        "autodoc",
         "Constructors:  __init__(self, table) -> empty catalog with the given table\n"
         "               __init__(self, schema) -> empty catalog with a new table with the given schema\n"
         "               __init__(self, catalog) -> shallow copy of the given catalog\n"
@@ -220,7 +220,7 @@ public:
     columns = property(__getColumns, doc="a column view of the catalog")
 
     def __iter__(self):
-        for i in xrange(len(self)):
+        for i in range(len(self)):
             yield self[i]
 
     def get(self, k):

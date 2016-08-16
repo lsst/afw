@@ -1,9 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
-# 
+#
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +11,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
@@ -26,12 +26,15 @@ Tests for lsst.afw.table.AmpInfoTable, etc.
 """
 import itertools
 import unittest
+from builtins import zip
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 
+
 class AmpInfoTableTestCase(unittest.TestCase):
+
     def setUp(self):
         self.schema = afwTable.AmpInfoTable.makeMinimalSchema()
         self.catalog = afwTable.AmpInfoCatalog(self.schema)
@@ -128,7 +131,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 self.assertEquals(rawXYOffset, record.getRawXYOffset())
 
         self.assertEquals(len(self.catalog), 2)
-        for i, data in enumerate(itertools.izip(nameRawInfoList, self.catalog)):
+        for i, data in enumerate(zip(nameRawInfoList, self.catalog)):
             name, hasRawInfo = data[0]
             record = data[1]
             self.assertEquals(name, self.catalog[i].getName())
@@ -140,13 +143,9 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.catalog.writeFits(fileName)
             catCopy = afwTable.AmpInfoCatalog.readFits(fileName)
             self.assertEquals(type(self.catalog), type(catCopy))
-            for rec1, rec2 in itertools.izip(self.catalog, catCopy):
+            for rec1, rec2 in zip(self.catalog, catCopy):
                 self.assertEquals(rec1.getName(), rec2.getName())
                 self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
-
-
-
-
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -161,7 +160,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

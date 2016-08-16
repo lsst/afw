@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * @file
  *
@@ -78,7 +78,7 @@ namespace {
         std::vector<double> _xPositionList;
         double _errorDef;
     };
-        
+
     /*
      * Minuit wrapper for a function(x, y)
      */
@@ -97,7 +97,7 @@ namespace {
         // Required by ROOT::Minuit2::FCNBase
         virtual double Up() const { return _errorDef; }
         virtual double operator() (const std::vector<double>& par) const;
-        
+
 #if 0                                   // not used
         inline std::vector<double> getMeasurements() const {return _measurementList;}
         inline std::vector<double> getVariances() const {return _varianceList;}
@@ -120,7 +120,7 @@ MinimizerFunctionBase1<ReturnT>::MinimizerFunctionBase1(
     lsst::afw::math::Function1<ReturnT> const &function,
     std::vector<double> const &measurementList,
     std::vector<double> const &varianceList,
-    std::vector<double> const &xPositionList, 
+    std::vector<double> const &xPositionList,
     double errorDef)
 :
     lsst::daf::base::Citizen(typeid(this)),
@@ -156,13 +156,13 @@ template<typename ReturnT>
 double MinimizerFunctionBase1<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
     this->_functionPtr->setParameters(par);
-    
+
     double chi2 = 0.0;
     for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
         double resid = (*(this->_functionPtr))(this->_xPositionList[i]) - this->_measurementList[i];
         chi2 += resid * resid / this->_varianceList[i];
     }
-    
+
     return chi2;
 }
 
@@ -171,14 +171,14 @@ template<typename ReturnT>
 double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& par) const {
     // Initialize the function with the fit parameters
     this->_functionPtr->setParameters(par);
-    
+
     double chi2 = 0.0;
     for (unsigned int i = 0; i < this->_measurementList.size(); i++) {
         double resid = (*(this->_functionPtr))(this->_xPositionList[i],
                                                this->_yPositionList[i]) - this->_measurementList[i];
         chi2 += resid * resid / this->_varianceList[i];
     }
-    
+
     return chi2;
 }
 /// \endcond
@@ -191,7 +191,7 @@ double MinimizerFunctionBase2<ReturnT>::operator() (const std::vector<double>& p
  * Uses the Minuit fitting package with a standard definition of chiSq
  * (see MinimizerFunctionBase1).
  *
- * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length 
+ * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length
  *
  * To do:
  * - Document stepSizeList better
@@ -245,14 +245,14 @@ afwMath::FitResults afwMath::minimize(
     ROOT::Minuit2::MnMigrad migrad(minimizerFunc, fitPar);
     ROOT::Minuit2::FunctionMinimum min = migrad();
     ROOT::Minuit2::MnMinos minos(minimizerFunc, min);
-    
+
     FitResults fitResults;
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
         lsst::pex::logging::Trace("lsst::afw::math::minimize", 1, "WARNING : Fit failed to converge");
     }
-    
+
     for (unsigned int i = 0; i < nParameters; ++i) {
         fitResults.parameterList.push_back(min.UserState().Value(paramNames[i].c_str()));
         if (fitResults.isValid) {
@@ -275,7 +275,7 @@ afwMath::FitResults afwMath::minimize(
  *
  * @return true if minimum is valid, false otherwise
  *
- * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length 
+ * @throw lsst::pex::exceptions::InvalidParameterError if any input vector is the wrong length
  *
  * To do:
  * - Document stepSizeList better
@@ -335,7 +335,7 @@ afwMath::FitResults afwMath::minimize(
     ROOT::Minuit2::MnMigrad migrad(minimizerFunc, fitPar);
     ROOT::Minuit2::FunctionMinimum min = migrad();
     ROOT::Minuit2::MnMinos minos(minimizerFunc, min);
-    
+
     FitResults fitResults;
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);

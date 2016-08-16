@@ -1,7 +1,7 @@
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008-2014 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -9,18 +9,18 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
-#ifndef LSST_AFW_GEOM_LINEAR_TRANSFORM_H 
+
+#ifndef LSST_AFW_GEOM_LINEAR_TRANSFORM_H
 #define LSST_AFW_GEOM_LINEAR_TRANSFORM_H
 
 #include "Eigen/Core"
@@ -52,10 +52,10 @@ LSST_EXCEPTION_TYPE(SingularTransformException, lsst::pex::exceptions::RuntimeEr
  *     y_i
  *     \end{array}\right]
  *  \f]
- *  where \f$(x_i,y_i)\f$ are the input coordinates and \f$(x_f,y_f)\f$ are 
+ *  where \f$(x_i,y_i)\f$ are the input coordinates and \f$(x_f,y_f)\f$ are
  *  the output coordinates.
  *
- *  If \f$ x_f(x_i,y_i) \f$ and \f$ y_f(x_i,y_i) \f$ are continuous 
+ *  If \f$ x_f(x_i,y_i) \f$ and \f$ y_f(x_i,y_i) \f$ are continuous
  *  differentiable functions, then
  *  \f[
  *     \mathbf{M} = \left[\begin{array}{ c c }
@@ -88,44 +88,44 @@ public:
     }
 
 
-    static LinearTransform makeScaling(double s) { 
+    static LinearTransform makeScaling(double s) {
         return LinearTransform((Matrix() << s, 0.0, 0.0, s).finished());
     }
-    
-    static LinearTransform makeScaling(double s, double t) { 
+
+    static LinearTransform makeScaling(double s, double t) {
         return LinearTransform((Matrix() << s, 0.0, 0.0, t).finished());
     }
 
     static LinearTransform makeRotation(Angle t) {
         return LinearTransform(Matrix(Eigen::Rotation2D<double>(t.asRadians())));
     }
-    
+
     LinearTransform & operator=(LinearTransform const & other) {
         _matrix = other._matrix;
         return *this;
     }
-    
+
     ParameterVector const getParameterVector() const;
     void setParameterVector(ParameterVector const & vector);
-    
+
     Matrix const & getMatrix() const { return _matrix; }
     Matrix & getMatrix() { return _matrix; }
 
     double & operator[](int i) { return _matrix(i % 2, i / 2); }
-    double const & operator[](int i) const { 
+    double const & operator[](int i) const {
         return const_cast<Matrix&>(_matrix)(i % 2, i / 2);
     }
 
 
     LinearTransform const invert() const;
-    
+
     double computeDeterminant() const;
 
     /** \brief Whether the transform is a no-op. */
     bool isIdentity() const { return getMatrix().isIdentity(); }
 
     /**
-     *  \brief Transform a Point2D object. 
+     *  \brief Transform a Point2D object.
      *
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Extent
@@ -133,7 +133,7 @@ public:
     Point2D operator()(Point2D const & p) const { return Point2D(getMatrix() * p.asEigen()); }
 
     /**
-     *  \brief Transform a Extent2D object. 
+     *  \brief Transform a Extent2D object.
      *
      *  This operation is equivalent to applying the LinearTransform to an
      *  lsst::afw::geom::Point

@@ -40,7 +40,7 @@ If you need access to nearby pixels, see the \link maskedImageLocators MaskedIma
 }}}
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
- 
+
 namespace lsst { namespace afw { namespace image {
 /**
  \page imageLocators Image Locators
@@ -121,7 +121,7 @@ of Image \link imageLocators locators\endlink; apart from an include
 file and a typedef, the only difference is the use of
 <tt>ImageT::Pixel(y, 0x1, 10)</tt> as the assigned pixel value instead
 of \c y).
- 
+
 \link imageIterators Iterators\endlink provide access to an %image, %pixel by %pixel.  You
 often want access to neighbouring pixels (e.g. computing a gradient, or smoothing).
 Let's consider the problem of smoothing with a

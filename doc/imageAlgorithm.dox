@@ -6,7 +6,7 @@ namespace lsst { namespace afw { namespace image {
 All of these algorithms require the inclusion of <TT>lsst/afw/image/ImageAlgorithm.h</TT>, and are in namespace @c lsst::afw::image.
 
  - \ref afwSecForEachPixel
- 
+
 \section afwSecForEachPixel Apply a functor to each pixel in an Image
 
 @c afw supports @c for_each_pixel as a way to process each pixel in an Image, in a similar way to the STL's @c

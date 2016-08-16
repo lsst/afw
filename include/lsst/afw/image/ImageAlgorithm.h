@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 /**
  * \file
  * \brief Support for functors over Image's pixels
@@ -56,7 +56,7 @@ namespace lsst { namespace afw { namespace image {
         virtual ~pixelOp0() {}
         virtual ValT operator()() const = 0;
     };
-    
+
     /**
      * A functor class equivalent to tr1::function<ValT (ValT)>, but with a virtual operator()
      */
@@ -65,7 +65,7 @@ namespace lsst { namespace afw { namespace image {
         virtual ~pixelOp1() {}
         virtual ValT operator()(ValT lhs) const = 0;
     };
-    
+
     /**
      * A functor class equivalent to tr1::function<ValT (int, int, ValT)>, but with a virtual operator()
      */
@@ -74,7 +74,7 @@ namespace lsst { namespace afw { namespace image {
         virtual ~pixelOp1XY() {}
         virtual ValT operator()(int x, int y, ValT lhs) const = 0;
     };
-    
+
     /**
      * A functor class equivalent to tr1::function<LhsT (LhsT, RhsT)>, but with a virtual operator()
      */
@@ -174,7 +174,7 @@ namespace lsst { namespace afw { namespace image {
 
     /**
      * Set each pixel in an Image<LhsT> to func(lhs, rhs), getting the rhs from an Image<RhsT>
-     */ 
+     */
     template<typename LhsT, typename RhsT>
     void for_each_pixel(Image<LhsT> &lhs,                ///< Image to set
                         Image<RhsT> const& rhs,          ///< other Image to pass to @c func
@@ -200,7 +200,7 @@ namespace lsst { namespace afw { namespace image {
      * Set each pixel in an Image<LhsT> to func(x, y, lhs, rhs), getting the rhs from an Image<RhsT>
      *
      * (x, y) allow for lhs.getXY0()
-     */ 
+     */
    template<typename LhsT, typename RhsT>
     void for_each_pixel(Image<LhsT> &lhs,                ///< Image to set
                         Image<RhsT> const& rhs,          ///< other Image to pass to @c func

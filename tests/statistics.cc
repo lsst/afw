@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #include <iostream>
 #include <limits>
 #include <cmath>
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         double const mean = stats.getValue(math::MEAN);
         double const dmean = stats.getError(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
-        
+
         BOOST_CHECK_EQUAL(stats.getValue(math::NPOINT), img.getWidth()*img.getHeight());
         BOOST_CHECK_EQUAL(mean, img(0, 0));
         BOOST_CHECK(std::isnan(dmean)); // we didn't ask for the error, so it's a NaN
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         math::Statistics stats = math::makeStatistics(img, math::STDEV | math::MEAN | math::ERRORS);
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
-        
+
         BOOST_CHECK_EQUAL(mean.first,  img(0, 0));
         BOOST_CHECK_EQUAL(mean.second, sd/sqrt(img.getWidth()*img.getHeight()));
     }
@@ -87,24 +87,24 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         math::Statistics stats = math::makeStatistics(img, math::MEDIAN);
         BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEDIAN));
     }
-    
+
     {
         math::Statistics stats = math::makeStatistics(img, math::IQRANGE);
         BOOST_CHECK_EQUAL(0.0, stats.getValue(math::IQRANGE));
     }
-    
+
     {
         math::Statistics stats = math::makeStatistics(img, math::MEANCLIP);
         BOOST_CHECK_EQUAL(pixval, stats.getValue(math::MEANCLIP));
     }
-    
+
     {
         math::Statistics stats = math::makeStatistics(img, math::VARIANCECLIP);
         BOOST_CHECK_EQUAL(0.0, stats.getValue(math::VARIANCECLIP));
     }
 
-    
-    
+
+
     {
         Image img2(img);
         //
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(StatisticsBasic) { /* parasoft-suppress  LsstDm-3-2a LsstDm
         std::pair<double, double> const mean = stats.getResult(math::MEAN);
         double const n = stats.getValue(math::NPOINT);
         double const sd = stats.getValue(math::STDEV);
-        
+
         BOOST_CHECK_EQUAL(mean.first,  img(0, 0) + 0.5);
         BOOST_CHECK_EQUAL(sd, 1/sqrt(4.0)*sqrt(n/(n - 1)));
         BOOST_CHECK_CLOSE(mean.second, sd/sqrt(img.getWidth()*img.getHeight()), 1e-10);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     int nx = 101;
     int ny = 64;
     Image img(geom::Extent2I(nx, ny));
-    
+
     double z0 = 10.0;
     double dzdx = 1.0;
     double mean = z0 + (nx/2)*dzdx;
@@ -152,12 +152,12 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         }
     }
     stdev = sqrt(stdev/(nx*ny - 1));
-    
+
     {
         math::Statistics stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN);
         double const testmean = stats.getValue(math::MEAN);
         double const teststdev = stats.getValue(math::STDEV);
-        
+
         BOOST_CHECK_EQUAL(stats.getValue(math::NPOINT), nx*ny);
         BOOST_CHECK_EQUAL(testmean, mean);
         BOOST_CHECK_CLOSE(teststdev, stdev, 1e-9);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         math::Statistics stats = math::makeStatistics(img, math::STDEV | math::MEAN | math::ERRORS);
         std::pair<double, double> const mean_meanErr = stats.getResult(math::MEAN);
         double const sd = stats.getValue(math::STDEV);
-        
+
         BOOST_CHECK_EQUAL(mean_meanErr.first,  img(nx/2, ny/2));
         BOOST_CHECK_EQUAL(mean_meanErr.second, sd/sqrt(img.getWidth()*img.getHeight()));
     }
@@ -178,12 +178,12 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
         math::Statistics stats = math::makeStatistics(img, math::MEDIAN);
         BOOST_CHECK_EQUAL(z0 + dzdx*(nx - 1)/2.0, stats.getValue(math::MEDIAN));
     }
-    
+
     {
         math::Statistics stats = math::makeStatistics(img, math::IQRANGE);
         BOOST_CHECK_EQUAL(dzdx*(nx - 1)/2.0, stats.getValue(math::IQRANGE));
     }
-    
+
     {
         math::Statistics stats = math::makeStatistics(img, math::MEANCLIP);
         BOOST_CHECK_EQUAL(z0 + dzdx*(nx - 1)/2.0, stats.getValue(math::MEANCLIP));
@@ -193,8 +193,8 @@ BOOST_AUTO_TEST_CASE(StatisticsRamp) { /* parasoft-suppress  LsstDm-3-2a LsstDm-
     //    BOOST_CHECK_EQUAL(0.0, stats.getValue(math::VARIANCECLIP));
     //}
 
-    
-    
+
+
 }
 
 
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
      * The problem was apparent when parasoft found a possible div-by-zero error
      *   for crude_mean = sum/n with no valid points.
      */
-    
+
     double const NaN = std::numeric_limits<double>::quiet_NaN();
 
     int nx = 101;
@@ -222,12 +222,12 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
     // set two pixels to non-nan ... neither on stride 10
     img(4, 4) = z0;
     img(3, 3) = z0 + 1.0;
-    
+
     double const mean = z0 + 0.5;
     double const stdev = std::sqrt( (0.5*0.5 + 0.5*0.5)/(2.0 - 1.0) );
     double const min = z0;
     double const max = z0 + 1.0;
-    
+
     {
         math::Statistics stats = math::makeStatistics(img, math::NPOINT | math::STDEV | math::MEAN |
                                                       math::MIN | math::MAX);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
         double const teststdev = stats.getValue(math::STDEV);
         double const testmin = stats.getValue(math::MIN);
         double const testmax = stats.getValue(math::MAX);
-        
+
         BOOST_CHECK_EQUAL(stats.getValue(math::NPOINT), 2);
         BOOST_CHECK_EQUAL(testmean, mean);
         BOOST_CHECK_EQUAL(teststdev, stdev );
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestAllNanButOne) { /* parasoft-suppress  LsstDm-
 }
 
 BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::description("requires afwdata to be setup")) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-    
+
     /* =============================================================================
      * Tests of mean and standard deviation for Russ Laher's noise images.
      * - only one for now (time consuming)
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::description("requires afwdata 
         std::string afwdata_dir;
         afwdata_dir = lsst::utils::getPackageDir("afwdata");
         for (vector<string>::iterator imgfile = imgfiles.begin(); imgfile != imgfiles.end(); ++imgfile) {
-            
+
             string img_path = afwdata_dir + "/Statistics/" + *imgfile;
 
             // get the image and header
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::description("requires afwdata 
             //double sampleToPop = 1.0; //sqrt( n/static_cast<double>(n - 1) );
             double const mean  = statobj.getValue(math::MEAN);
             double const stdev = statobj.getValue(math::STDEV);
-            
+
 
             BOOST_CHECK_CLOSE(mean, trueMean, 1e-8);
             BOOST_CHECK_CLOSE(stdev, trueStdev, 1e-8);

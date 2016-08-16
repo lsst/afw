@@ -24,7 +24,7 @@ public:
                               double const x0,    ///< specify desired range is [x0,x1)
                               double const x1     ///< specify desired range is [x0,x1)
                              ) const;
-    
+
 protected:
     Spline() {}
     void _allocateSpline(int const nknot);

@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE SourceMatch
 
@@ -82,7 +82,7 @@ struct CmpSourceMatch {
         if (m1.first->getId() == m2.first->getId()) {
             return m1.second->getId() < m2.second->getId();
         }
-        return m1.first->getId() < m2.first->getId(); 
+        return m1.first->getId() < m2.first->getId();
     }
 };
 
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(matchRaDec) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a
     makeSources(set1, N);
     makeSources(set2, N);
     std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, radius, false);
-    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec()); 
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, radius, DistRaDec());
     compareMatches(matches, refMatches, radius);
 }
 
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(matchNearPole) {
     normalizeRaDec(set2);
 
     std::vector<afwTable::SourceMatch> matches = afwTable::matchRaDec(set1, set2, rad, false);
-    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec()); 
+    std::vector<afwTable::SourceMatch> refMatches = bruteMatch(set1, set2, rad, DistRaDec());
     compareMatches(matches, refMatches, rad);
 
 }

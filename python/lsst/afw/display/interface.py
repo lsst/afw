@@ -1,3 +1,6 @@
+from __future__ import print_function
+from builtins import range
+from builtins import object
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010, 2015 LSST Corporation.
@@ -73,15 +76,28 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
     and import the ds9 implementation of DisplayImpl from lsst.display.ds9
     """
     _disp = None
+    exc = None
     for dt in (backend, ".%s" % backend, "lsst.afw.display.%s" % backend):
+        exc = None
+        # only specify the root package if we are not doing an absolute import
+        impargs = {}
+        if dt.startswith("."):
+            impargs["package"] = "lsst.display"
         try:
-            _disp = importlib.import_module(dt, package="lsst.display")
+            _disp = importlib.import_module(dt, **impargs)
             break
-        except ImportError as e:
-            pass
+        except (ImportError, SystemError) as e:
+            # SystemError can be raised in Python 3.5 if a relative import
+            # is attempted when the root package, lsst.display, does not exist.
+            # Copy the exception into outer scope
+            exc = e
 
     if not _disp:
-        raise e
+        if exc is not None:
+            # re-raise the final exception
+            raise exc
+        else:
+            raise ImportError("Could not load the requested backend: {}".format(backend))
 
     return _disp.DisplayImpl(display, *args, **kwargs)
 
@@ -106,7 +122,7 @@ class Display(object):
         SAT=GREEN,
     )
     _defaultMaskTransparency = {}
-    
+
     def __init__(self, frame, backend=None, *args, **kwargs):
         """!Create an object able to display images and overplot glyphs
 
@@ -150,7 +166,7 @@ class Display(object):
 
             for k in sorted(self._callbacks.keys()):
                 doc = self._callbacks[k].__doc__
-                print "   %-6s %s" % (k, doc.split("\n")[0] if doc else "???")
+                print("   %-6s %s" % (k, doc.split("\n")[0] if doc else "???"))
 
         self.setCallback('h', _h_callback)
 
@@ -166,7 +182,7 @@ class Display(object):
         self.close()
 
     def close(self):
-        if self._impl:
+        if hasattr(self, "_impl") and self._impl:
             del self._impl
             self._impl = None
 
@@ -276,7 +292,7 @@ class Display(object):
     def delAllDisplays():
         """!Delete and close all known display
         """
-        for disp in Display._displays.values():
+        for disp in list(Display._displays.values()):
             disp.close()
         Display._displays = {}
 
@@ -312,7 +328,7 @@ class Display(object):
         \c GREEN, \c CYAN, \c MAGENTA, \c YELLOW.
 
         The advantage of using the symbolic names is that the python interpreter can detect typos.
-        
+
         """
 
         if isinstance(name, dict):
@@ -325,7 +341,7 @@ class Display(object):
 
     def getMaskPlaneColor(self, name):
         """!Return the colour associated with the specified mask plane name"""
-        
+
         return self._maskPlaneColors.get(name)
 
     def setMaskTransparency(self, transparency=None, name=None):
@@ -338,7 +354,7 @@ class Display(object):
             return
 
         if transparency is not None and (transparency < 0 or transparency > 100):
-            print >> sys.stderr, "Mask transparency should be in the range [0, 100]; clipping"
+            print("Mask transparency should be in the range [0, 100]; clipping", file=sys.stderr)
             if transparency < 0:
                 transparency = 0
             else:
@@ -369,7 +385,7 @@ class Display(object):
 
         if re.search("::Exposure<", repr(data)): # it's an Exposure; display the MaskedImage with the WCS
             if wcs:
-                raise RuntimeError, "You may not specify a wcs with an Exposure"
+                raise RuntimeError("You may not specify a wcs with an Exposure")
             data, wcs = data.getMaskedImage(), data.getWcs()
         elif re.search("::DecoratedImage<", repr(data)): # it's a DecoratedImage; display it
             data, wcs = data.getImage(), afwImage.makeWcs(data.getMetadata())
@@ -386,7 +402,7 @@ class Display(object):
         elif re.search("::MaskedImage<", repr(data)): # it's a MaskedImage; display Image and overlay Mask
             self._impl._mtv(data.getImage(), data.getMask(True), wcs, title)
         else:
-            raise RuntimeError, "Unsupported type %s" % repr(data)
+            raise RuntimeError("Unsupported type %s" % repr(data))
     #
     # Graphics commands
     #
@@ -491,7 +507,7 @@ class Display(object):
         \param unit Units for min and max (e.g. Percent, Absolute, Sigma; None if min==minmax|zscale)
         \param *args Optional arguments
         \param **kwargs Optional keyword arguments
-        """    
+        """
         if min in ("minmax", "zscale"):
             assert max == None, "You may not specify \"%s\" and max" % min
             assert unit == None, "You may not specify \"%s\" and unit" % min
@@ -506,7 +522,7 @@ class Display(object):
         """!Zoom frame by specified amount, optionally panning also"""
 
         if (rowc and colc is None) or (colc and rowc is None):
-            raise RuntimeError, "Please specify row and column center to pan about"
+            raise RuntimeError("Please specify row and column center to pan about")
 
         if rowc is not None:
             if origin == afwImage.PARENT and self._xy0 is not None:
@@ -532,13 +548,13 @@ class Display(object):
             Exit with q, \c CR, \c ESC, or any other callback function that returns a ``True`` value.
         """
         interactFinished = False
-        
+
         while not interactFinished:
             ev = self._impl._getEvent()
             if not ev:
                 continue
             k, x, y = ev.k, ev.x, ev.y      # for now
-            
+
             if k not in self._callbacks:
                 logger.warn("No callback registered for {0}".format(k))
             else:
@@ -593,7 +609,7 @@ def noop_callback(k, x, y):
     return False
 
 def h_callback(k, x, y):
-    print "Enter q or <ESC> to leave interactive mode, h for this help, or a letter to fire a callback"
+    print("Enter q or <ESC> to leave interactive mode, h for this help, or a letter to fire a callback")
     return False
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -601,7 +617,7 @@ def h_callback(k, x, y):
 # Handle Displays, including the default one (the frame to use when a user specifies None)
 #
 # If the default frame is None, image display is disabled
-# 
+#
 def setDefaultBackend(backend):
     Display.setDefaultBackend(backend)
 

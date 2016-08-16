@@ -61,7 +61,7 @@ public:
         void operator()(std::pair< Key<T>, Key<T> > const & pair) const {
             _func(pair.first, pair.second);
         }
-        
+
         /**
          *  @brief Invoke the visitation.
          *

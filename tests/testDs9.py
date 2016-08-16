@@ -1,10 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
+from __future__ import print_function
 
-# 
+#
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -12,14 +13,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
@@ -33,29 +34,28 @@ or
    >>> import ds9
    >>> ds9.run()
 """
-
-from __future__ import absolute_import, division, print_function
-
 import unittest
 
 import lsst.utils.tests as tests
 import lsst.afw.image as afwImage
 try:
-    import  lsst.afw.display.ds9 as ds9
+    import lsst.afw.display.ds9 as ds9
 except Exception:
     ds9 = None
 
 if ds9:
     try:
-        ds9.mtv(afwImage.ImageF(1,1))
+        ds9.mtv(afwImage.ImageF(1, 1))
     except Exception as e:
         print("Unable to use ds9: %s" % e)
         ds9 = None
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 class DisplayTestCase(unittest.TestCase):
     """A test case for Display"""
+
     def setUp(self):
         pass
 
@@ -79,7 +79,7 @@ class DisplayTestCase(unittest.TestCase):
         """Test that we can do things with two frames"""
 
         exp = afwImage.ExposureF(300, 350)
-        
+
         for frame in (0, 1):
             ds9.setMaskTransparency(50, frame=frame)
 
@@ -108,8 +108,8 @@ class DisplayTestCase(unittest.TestCase):
         ds9.erase()
 
         exp = afwImage.ExposureF(300, 350)
-        ds9.mtv(exp, title="parent") # tells display0 about the image's xy0
-        
+        ds9.mtv(exp, title="parent")  # tells display0 about the image's xy0
+
         with ds9.Buffering():
             ds9.dot('o', 200, 220)
             vertices = [(200, 220), (210, 230), (224, 230), (214, 220), (200, 220)]
@@ -122,7 +122,7 @@ class DisplayTestCase(unittest.TestCase):
         ds9.erase()
 
         exp = afwImage.ExposureF(300, 350)
-        ds9.mtv(exp, title="parent") # tells display0 about the image's xy0
+        ds9.mtv(exp, title="parent")  # tells display0 about the image's xy0
 
         with ds9.Buffering():
             ds9.dot('hello', 200, 200)
@@ -139,6 +139,7 @@ class DisplayTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 def suite():
     """Returns a suite containing all the test cases in this module."""
     tests.init()
@@ -148,9 +149,10 @@ def suite():
     suites += unittest.makeSuite(tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
+
 def run(shouldExit=False):
     """Run the tests"""
-    
+
     tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":

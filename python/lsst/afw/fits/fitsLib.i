@@ -8,6 +8,8 @@ Python interface to lsst::afw::fits exception classes
 %module(package="lsst.afw.fits", docstring=fitsLib_DOCSTRING) fitsLib
 
 %{
+#undef SWIG_PYTHON_2_UNICODE
+#define SWIG_PYTHON_STRICT_BYTE_CHAR 1
 #include "lsst/afw/fits.h"
 #include "lsst/pex/exceptions.h"
 %}

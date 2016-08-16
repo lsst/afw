@@ -1,9 +1,9 @@
 // -*- lsst-c++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,14 +11,14 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 #include <vector>
@@ -82,18 +82,18 @@ namespace detail {
                 ++srcIndFracY.second;
                 --srcIndFracY.first;
             }
-        
+
             if (_srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
                 // Offset source pixel index from kernel center to kernel corner (0, 0)
                 // so we can convolveAtAPoint the pixels that overlap between source and kernel
                 int srcStartX = srcIndFracX.first - _kernelCtr[0];
                 int srcStartY = srcIndFracY.first - _kernelCtr[1];
-        
+
                 // Compute warped pixel
                 double kSum = _setFracIndex(srcIndFracX.second, srcIndFracY.second);
-        
+
                 typename SrcImageT::const_xy_locator srcLoc = _srcImage.xy_at(srcStartX, srcStartY);
-        
+
                 *destXIter = lsst::afw::math::convolveAtAPoint<DestImageT, SrcImageT>(srcLoc, _xList, _yList);
                 *destXIter *= relativeArea/kSum;
                 return true;
@@ -128,35 +128,35 @@ namespace detail {
                 ++srcIndFracY.second;
                 --srcIndFracY.first;
             }
-        
+
             if (_srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
                 // Offset source pixel index from kernel center to kernel corner (0, 0)
                 // so we can convolveAtAPoint the pixels that overlap between source and kernel
                 int srcStartX = srcIndFracX.first - _kernelCtr[0];
                 int srcStartY = srcIndFracY.first - _kernelCtr[1];
-        
+
                 // Compute warped pixel
                 double kSum = _setFracIndex(srcIndFracX.second, srcIndFracY.second);
-        
+
                 typename SrcImageT::const_xy_locator srcLoc = _srcImage.xy_at(srcStartX, srcStartY);
-        
+
                 *destXIter = lsst::afw::math::convolveAtAPoint<DestImageT, SrcImageT>(srcLoc, _xList, _yList);
                 *destXIter *= relativeArea/kSum;
-                
+
                 if (_hasMaskKernel) {
                     // compute mask value based on the mask kernel (replacing the value computed above)
                     int maskStartX = srcIndFracX.first - _maskKernelCtr[0];
                     int maskStartY = srcIndFracY.first - _maskKernelCtr[1];
-        
+
                     typename SrcImageT::Mask::const_xy_locator srcMaskLoc = \
                         _srcImage.getMask()->xy_at(maskStartX, maskStartY);
-            
+
                     typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
-                
+
                     typename DestImageT::Mask::SinglePixel destMaskValue = 0;
                     for (k_iter kernelYIter = _maskYList.begin(), yEnd = _maskYList.end();
                          kernelYIter != yEnd; ++kernelYIter) {
-                
+
                         typename DestImageT::Mask::SinglePixel destMaskValueY = 0;
                         for (k_iter kernelXIter = _maskXList.begin(), xEnd = _maskXList.end();
                              kernelXIter != xEnd; ++kernelXIter, ++srcMaskLoc.x()) {
@@ -165,15 +165,15 @@ namespace detail {
                                 destMaskValueY |= *srcMaskLoc;
                             }
                         }
-                
+
                         double const kValY = *kernelYIter;
                         if (kValY != 0) {
                             destMaskValue |= destMaskValueY;
                         }
-                
+
                         srcMaskLoc += lsst::afw::image::detail::difference_type(-_maskXList.size(), 1);
                     }
-        
+
                     destXIter.mask() = (destXIter.mask() & _growFullMask) | destMaskValue;
                 }
                 return true;
@@ -183,7 +183,7 @@ namespace detail {
                 return false;
             }
         }
-    
+
     private:
         /**
          * Set parameters of kernel (and mask kernel, if present) and update X and Y values

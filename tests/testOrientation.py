@@ -1,9 +1,11 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from __future__ import absolute_import, division
-# 
+from builtins import range
+from builtins import object
+#
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
-# 
+#
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
 #
@@ -11,14 +13,14 @@ from __future__ import absolute_import, division
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
-# You should have received a copy of the LSST License Statement and 
-# the GNU General Public License along with this program.  If not, 
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 """
@@ -32,14 +34,16 @@ import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 from lsst.afw.cameraGeom import Orientation
 
+
 class OrientationWrapper(object):
+
     def __init__(self,
-        fpPosition = afwGeom.Point2D(0, 0),
-        refPoint = afwGeom.Point2D(-0.5, -0.5),
-        yaw = afwGeom.Angle(0),
-        pitch = afwGeom.Angle(0),
-        roll = afwGeom.Angle(0),
-    ):
+                 fpPosition=afwGeom.Point2D(0, 0),
+                 refPoint=afwGeom.Point2D(-0.5, -0.5),
+                 yaw=afwGeom.Angle(0),
+                 pitch=afwGeom.Angle(0),
+                 roll=afwGeom.Angle(0),
+                 ):
         self.fpPosition = fpPosition
         self.refPoint = refPoint
         self.yaw = yaw
@@ -47,7 +51,9 @@ class OrientationWrapper(object):
         self.roll = roll
         self.orient = Orientation(fpPosition, refPoint, yaw, pitch, roll)
 
+
 class OrientationTestCase(unittest.TestCase):
+
     def testDefaultConstructor(self):
         """Test default constructor
         """
@@ -92,8 +98,6 @@ class OrientationTestCase(unittest.TestCase):
                 pixPos = afwGeom.Point2D(x, y)
                 pixToFpTransform.forwardTransform(pixPos)
 
-
-
     def compareTransforms(self, orient, pixelSize=afwGeom.Extent2D(0.12, 0.21)):
         """Compare makeFpPixelTransform and makePixelFpTransform to each other
         """
@@ -102,10 +106,10 @@ class OrientationTestCase(unittest.TestCase):
         for x in (-100.1, 0.0, 230.0):
             for y in (-45.0, 0.0, 25.1):
                 pixPos = afwGeom.Point2D(x, y)
-                fwdFPPos  = fwdTransform.forwardTransform(pixPos)
+                fwdFPPos = fwdTransform.forwardTransform(pixPos)
                 fwdPixPos = fwdTransform.reverseTransform(fwdFPPos)
                 revPixPos = revTransform.forwardTransform(fwdFPPos)
-                revFPPos  = revTransform.reverseTransform(pixPos)
+                revFPPos = revTransform.reverseTransform(pixPos)
 
                 for i in range(2):
                     self.assertAlmostEquals(pixPos[i], fwdPixPos[i])
@@ -116,11 +120,11 @@ class OrientationTestCase(unittest.TestCase):
         """Test getters
         """
         ow = OrientationWrapper(
-            fpPosition = afwGeom.Point2D(0.1, -0.2),
-            refPoint = afwGeom.Point2D(-5.7, 42.3),
-            yaw = afwGeom.Angle(-0.53),
-            pitch = afwGeom.Angle(0.234),
-            roll = afwGeom.Angle(1.2),
+            fpPosition=afwGeom.Point2D(0.1, -0.2),
+            refPoint=afwGeom.Point2D(-5.7, 42.3),
+            yaw=afwGeom.Angle(-0.53),
+            pitch=afwGeom.Angle(0.234),
+            roll=afwGeom.Angle(1.2),
         )
         for i in range(2):
             self.assertAlmostEquals(ow.fpPosition[i], ow.orient.getFpPosition()[i])
@@ -142,7 +146,8 @@ def suite():
     suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
     return unittest.TestSuite(suites)
 
-def run(shouldExit = False):
+
+def run(shouldExit=False):
     """Run the tests"""
     lsst.utils.tests.run(suite(), shouldExit)
 

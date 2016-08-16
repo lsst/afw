@@ -1,9 +1,9 @@
 // -*- LSST-C++ -*-
 
-/* 
+/*
  * LSST Data Management System
  * Copyright 2008, 2009, 2010 LSST Corporation.
- * 
+ *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
  *
@@ -11,17 +11,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
- * You should have received a copy of the LSST License Statement and 
- * the GNU General Public License along with this program.  If not, 
+ *
+ * You should have received a copy of the LSST License Statement and
+ * the GNU General Public License along with this program.  If not,
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
- 
+
 #if !defined(LSST_AFW_MATH_STATISTICS_H)
 #define LSST_AFW_MATH_STATISTICS_H
 /**
@@ -56,7 +56,7 @@ namespace math {
     template<typename> class MaskedVector; // forward declaration
 
     typedef lsst::afw::image::VariancePixel WeightPixel; // Type used for weights
-            
+
 /**
  * @brief control what is calculated
  */
@@ -81,13 +81,13 @@ enum Property {
 };
 Property stringToStatisticsProperty(std::string const property);
 
-    
+
 /**
  * @brief Pass parameters to a Statistics object
  * @ingroup afw
  *
  * A class to pass parameters which control how the stats are calculated.
- * 
+ *
  */
 class StatisticsControl {
     typedef enum { WEIGHTS_FALSE=0, WEIGHTS_TRUE=1, WEIGHTS_NONE } WeightsBoolean; // initial state is NONE
@@ -95,7 +95,7 @@ public:
 
     typedef std::shared_ptr<StatisticsControl> Ptr;
     typedef std::shared_ptr<StatisticsControl> const ConstPtr;
-    
+
     StatisticsControl(
         double numSigmaClip = 3.0, ///< number of standard deviations to clip at
         int numIter = 3,           ///< Number of iterations
@@ -140,7 +140,7 @@ public:
     bool getWeighted() const { return _useWeights == WEIGHTS_TRUE ? true : false; }
     bool getWeightedIsSet() const { return _useWeights != WEIGHTS_NONE ? true : false; }
     bool getCalcErrorFromInputVariance() const { return _calcErrorFromInputVariance; }
-        
+
     void setNumSigmaClip(double numSigmaClip) { assert(numSigmaClip > 0); _numSigmaClip = numSigmaClip; }
     void setNumIter(int numIter) { assert(numIter > 0); _numIter = numIter; }
     void setAndMask(int andMask) { _andMask = andMask; }
@@ -165,7 +165,7 @@ private:
     std::vector<double> _maskPropagationThresholds; // Thresholds for when to propagate mask bits,
                                                     // treated like a dict (unset bits are set to 1.0)
 };
-            
+
 /**
  * @ingroup afw
  *
@@ -179,15 +179,15 @@ private:
  *
  * @code
         // sets NumSigclip (3.0), and NumIter (3) for clipping
-        lsst::afw::math::StatisticsControl sctrl(3.0, 3); 
+        lsst::afw::math::StatisticsControl sctrl(3.0, 3);
 
         sctrl.setNumSigmaClip(4.0);            // reset number of standard deviations for N-sigma clipping
         sctrl.setNumIter(5);                   // reset number of iterations for N-sigma clipping
         sctrl.setAndMask(0x1);                 // ignore pixels with these mask bits set
         sctrl.setNanSafe(true);                // check for NaNs & Infs, a bit slower (default=true)
-        
+
         lsst::afw::math::Statistics statobj =
-            lsst::afw::math::makeStatistics(*img, afwMath::NPOINT | 
+            lsst::afw::math::makeStatistics(*img, afwMath::NPOINT |
                                                   afwMath::MEAN | afwMath::MEANCLIP, sctrl);
         double const n = statobj.getValue(lsst::afw::math::NPOINT);
         std::pair<double, double> const mean =
@@ -213,7 +213,7 @@ class Statistics {
 public:
     /// The type used to report (value, error) for desired statistics
     typedef std::pair<double, double> Value;
-    
+
     template<typename ImageT, typename MaskT, typename VarianceT>
     explicit Statistics(ImageT const &img,
                         MaskT const &msk,
@@ -230,13 +230,13 @@ public:
                         StatisticsControl const& sctrl = StatisticsControl());
 
     Value getResult(Property const prop = NOTHING) const;
-    
+
     double getError(Property const prop = NOTHING) const;
     double getValue(Property const prop = NOTHING) const;
     lsst::afw::image::MaskPixel getOrMask() const {
         return _allPixelOrMask;
     }
-    
+
 private:
     long _flags;                        // The desired calculation
 
@@ -263,7 +263,7 @@ private:
                       int const flags,
                       StatisticsControl const& sctrl);
 };
-            
+
 /*************************************  The factory functions **********************************/
 /**
  * @brief This iterator will never increment.  It is returned by row_begin() in the MaskImposter class
@@ -295,16 +295,16 @@ private:
     ValueT _val[1];
 };
 
-    
+
 /**
  * @brief Handle a watered-down front-end to the constructor (no variance)
  * @relates Statistics
  */
 template<typename Pixel>
 Statistics makeStatistics(lsst::afw::image::Image<Pixel> const &img,
-                          lsst::afw::image::Mask<image::MaskPixel> const &msk, 
-                          int const flags,  
-                          StatisticsControl const& sctrl = StatisticsControl() 
+                          lsst::afw::image::Mask<image::MaskPixel> const &msk,
+                          int const flags,
+                          StatisticsControl const& sctrl = StatisticsControl()
                          ) {
     MaskImposter<WeightPixel> var;
     return Statistics(img, msk, var, flags, sctrl);
@@ -319,8 +319,8 @@ template<typename ImageT, typename MaskT, typename VarianceT>
 Statistics makeStatistics(ImageT const &img,
                           MaskT const &msk,
                           VarianceT const &var,
-                          int const flags,  
-                          StatisticsControl const& sctrl = StatisticsControl() 
+                          int const flags,
+                          StatisticsControl const& sctrl = StatisticsControl()
                          ) {
     return Statistics(img, msk, var, flags, sctrl);
 }
@@ -331,9 +331,9 @@ Statistics makeStatistics(ImageT const &img,
  */
 template<typename Pixel>
 Statistics makeStatistics(
-        lsst::afw::image::MaskedImage<Pixel> const &mimg, 
-        int const flags,  
-        StatisticsControl const& sctrl = StatisticsControl() 
+        lsst::afw::image::MaskedImage<Pixel> const &mimg,
+        int const flags,
+        StatisticsControl const& sctrl = StatisticsControl()
                          )
 {
     if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance()) {
@@ -352,11 +352,11 @@ template<typename Pixel>
 Statistics makeStatistics(
         lsst::afw::image::MaskedImage<Pixel> const &mimg,
         lsst::afw::image::Image<WeightPixel> const &weights,
-        int const flags,  
-        StatisticsControl const& sctrl = StatisticsControl() 
+        int const flags,
+        StatisticsControl const& sctrl = StatisticsControl()
                          )
 {
-    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() || 
+    if (sctrl.getWeighted() || sctrl.getCalcErrorFromInputVariance() ||
         (!sctrl.getWeightedIsSet() && (weights.getWidth() != 0 && weights.getHeight() != 0))) {
         return Statistics(*mimg.getImage(), *mimg.getMask(), *mimg.getVariance(), weights, flags, sctrl);
     } else {
@@ -369,13 +369,13 @@ Statistics makeStatistics(
  * @brief Front end for specialization to handle Masks
  * @note The definition (in Statistics.cc) simply calls the specialized constructor
  * @relates Statistics
- */            
-Statistics makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &msk, 
-                          int const flags,  
+ */
+Statistics makeStatistics(lsst::afw::image::Mask<lsst::afw::image::MaskPixel> const &msk,
+                          int const flags,
                           StatisticsControl const& sctrl = StatisticsControl());
-            
-                        
-            
+
+
+
 /**
  * @brief The makeStatistics() overload to handle regular (non-masked) Images
  * @relates Statistics
@@ -400,7 +400,7 @@ Statistics makeStatistics(
 template<typename ValueT>
 class ImageImposter {
 public:
-    
+
     // types we'll use in Statistics
     typedef typename std::vector<ValueT>::const_iterator x_iterator;
     typedef typename std::vector<ValueT>::const_iterator fast_iterator;
@@ -417,7 +417,7 @@ public:
     int getWidth() const { return _v.size(); }
     int getHeight() const { return 1; }
     afw::geom::Extent2I getDimensions() const { return afw::geom::Extent2I(getWidth(), getHeight()); }
-    
+
     bool empty() const { return _v.empty(); }
 private:
     std::vector<ValueT> const &_v;                  // a private reference to the data
@@ -454,7 +454,7 @@ Statistics makeStatistics(std::vector<EntryT> const &v, ///< Image (or MaskedIma
     MaskImposter<WeightPixel> var;
 
     ImageImposter<WeightPixel> weights(vweights);
-    
+
     return Statistics(img, msk, var, weights, flags, sctrl);
 }
 
@@ -494,7 +494,7 @@ Statistics makeStatistics(lsst::afw::math::MaskedVector<EntryT> const &mv, ///< 
         return Statistics(*mv.getImage(), *mv.getMask(), var, weights, flags, sctrl);
     }
 }
-    
+
 }}}
 
 #endif

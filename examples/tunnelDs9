@@ -38,7 +38,7 @@ if [ $list = 1 ]; then
     if [ ! -z $1 ]; then
 	echo "Ignoring arguments: $@" >&2
     fi
-    
+
     ls $HOME/.ds9* 2> /dev/null | perl -ne 'if(/-([^-]+)-(\d+)$/) { printf "%-30s %d\n", $1, $2 }'
 
     exit 0
