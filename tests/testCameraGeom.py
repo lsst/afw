@@ -293,10 +293,8 @@ class CameraGeomTestCase(unittest.TestCase):
                             assemble(outImage, im, amp)
                     self.assertTrue((outImage.getArray() == compMap[trim].getArray()).all())
 
+    @unittest.skipIf(not display, "display variable not set; skipping cameraGeomUtils test")
     def testCameraGeomUtils(self):
-        if not display:
-            print("display variable not set; skipping cameraGeomUtils test")
-            return
         for cw in self.cameraList:
             camera = cw.camera
             cameraGeomUtils.showCamera(camera, referenceDetectorName=camera[0].getName())
