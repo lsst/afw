@@ -124,7 +124,7 @@ def BaseRecord_extract(self, *patterns, **kwds):
         d = self.schema.extract(*patterns, **kwds).copy()
     elif kwds:
         raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".join(kwds.keys()))
-    for name, schemaItem in list(d.items()):  # can't use iteritems because we might be adding/deleting elements
+    for name, schemaItem in list(d.items()):  # must use list because we might be adding/deleting elements
         key = schemaItem.key
         if split and key.HAS_NAMED_SUBFIELDS:
             for subname, subkey in zip(key.subfields, key.subkeys):
@@ -196,7 +196,7 @@ def BaseColumnView_extract(self, *patterns, **kwds):
         if copy:
             a = numpy.ascontiguousarray(a)
         return a
-    for name, schemaItem in list(d.items()): # can't use iteritems because we might be adding/deleting elements
+    for name, schemaItem in list(d.items()):  # must use list because we might be adding/deleting elements
         key = schemaItem.key
         if key.getTypeString() == "String":
             del d[name]
