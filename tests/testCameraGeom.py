@@ -185,13 +185,14 @@ class CameraGeomTestCase(unittest.TestCase):
     def testTransformDet(self):
         """Test Camera.transform with detector-based coordinate systems (PIXELS)
         """
-        numDetToTest = 3
         for cw in self.cameraList:
-            numOffUsable = 0
+            numOffUsable = 0  # number of points off one detector but on another
             camera = cw.camera
             detNameList = list(camera.getNameIter())
-            for detName in detNameList[0:numDetToTest]:
+            for detName in detNameList:
                 det = camera[detName]
+
+                # test transforms using a point on the detector
                 pixCP = det.makeCameraPoint(afwGeom.Point2D(10, 10), PIXELS)
                 fpCP = camera.transform(pixCP, FOCAL_PLANE)
                 pupilCP = camera.transform(pixCP, PUPIL)
@@ -206,10 +207,13 @@ class CameraGeomTestCase(unittest.TestCase):
                     pixFindRoundTripCP = camera.transform(intermedCP, PIXELS)
                     self.assertCamPointAlmostEquals(pixCP, pixFindRoundTripCP)
 
+                # test transforms using a point off the detector
                 pixOffDetCP = det.makeCameraPoint(afwGeom.Point2D(0, -10), PIXELS)
                 pixOffDetRoundTripCP = camera.transform(pixOffDetCP, det.makeCameraSys(PIXELS))
                 self.assertCamPointAlmostEquals(pixOffDetCP, pixOffDetRoundTripCP)
 
+                # the point off the detector MAY be on another detector
+                # (depending if the detector has neighbor on the correct edge)
                 detList = camera.findDetectors(pixOffDetCP)
                 if len(detList) == 1:
                     numOffUsable += 1
@@ -221,6 +225,7 @@ class CameraGeomTestCase(unittest.TestCase):
                     pixToPixCP = camera.transform(pixFindOffCP, det.makeCameraSys(PIXELS))
                     self.assertFalse(afwGeom.Box2D(det.getBBox()).contains(pixToPixCP.getPoint()))
             self.assertTrue(numOffUsable > 0)
+            print("numOffUsable=", numOffUsable)
 
     def testFindDetectors(self):
         for cw in self.cameraList:
