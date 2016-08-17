@@ -37,7 +37,7 @@ or
 import math
 import unittest
 import numpy
-import lsst.utils.tests as tests
+import lsst.utils.tests
 
 import lsst.afw.geom as afwGeom
 
@@ -50,9 +50,6 @@ class AngleTestCase(unittest.TestCase):
     def setUp(self):
         self.pi = afwGeom.Angle(math.pi, afwGeom.radians)
         self.d = 180*afwGeom.degrees
-
-    def tearDown(self):
-        pass
 
     def testCtor(self):
         self.assertEqual(self.pi, math.pi)
@@ -71,19 +68,16 @@ class AngleTestCase(unittest.TestCase):
         self.assertFalse(afwGeom.isAngle(self.pi.asRadians()))
         self.assertFalse(afwGeom.isAngle(math.pi))
 
-        def tst():
+        with self.assertRaises(TypeError):
             self.pi - math.pi           # subtracting a float from an Angle
-        self.assertRaises(TypeError, tst)
         self.assertEqual(self.pi - math.pi*afwGeom.radians, 0)  # OK with units specified
         self.assertEqual(self.pi - self.d, 0)                  # can subtract Angles
 
-        def tst():
+        with self.assertRaises(TypeError):
             self.pi + math.pi           # adding a float to an Angle
-        self.assertRaises(TypeError, tst)
 
-        def tst():
+        with self.assertRaises(NotImplementedError):
             self.pi*afwGeom.degrees     # self.pi is already an Angle
-        self.assertRaises(NotImplementedError, tst)
 
         self.assertEqual((self.pi + self.d).asAngularUnits(afwGeom.degrees), 360)
         self.assertEqual((self.pi).asRadians(), math.pi)
@@ -226,21 +220,21 @@ class AngleTestCase(unittest.TestCase):
                             self.assertAlmostEqual(math.cos(nearAngRad), cosAng)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+class DemoTestCase(lsst.utils.tests.TestCase):
+    """Demo test case."""
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
-
-    suites = []
-    suites += unittest.makeSuite(AngleTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+    def testDemo(self):
+        self.assertNotIn("i", "team")
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    tests.run(suite(), shouldExit)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
+
+
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
