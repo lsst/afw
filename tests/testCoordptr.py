@@ -39,16 +39,10 @@ import lsst.utils
 import lsst.afw.image as image
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord.coordLib as coord
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 
 
 class CoordPtrTestCase(unittest.TestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
 
     def testMakeCoord(self):
         c = coord.Coord(1 * afwGeom.degrees, 2 * afwGeom.degrees)
@@ -76,25 +70,15 @@ class CoordPtrTestCase(unittest.TestCase):
             derived2 = CoordClass.cast(base)
             self.assertEqual(type(derived2), CoordClass)
 
-#################################################################
-# Test suite boiler plate
-#################################################################
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(CoordPtrTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(exit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), exit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
