@@ -38,7 +38,7 @@ or
 import unittest
 import numpy
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom.ellipses
 import lsst.afw.image
@@ -61,7 +61,7 @@ class EllipseTestCase(unittest.TestCase):
             self.classes.append(s)
 
     def assertClose(self, a, b):
-        self.assert_(numpy.allclose(a, b), "%s != %s" % (a, b))
+        self.assertTrue(numpy.allclose(a, b), "%s != %s" % (a, b))
 
     def testRadii(self):
         for core, det, trace in zip(self.cores, [144, 14], [25, 8]):
@@ -85,7 +85,7 @@ class EllipseTestCase(unittest.TestCase):
         for core in self.cores:
             vec = numpy.random.randn(3) * 1E-3 + core.getParameterVector()
             core.setParameterVector(vec)
-            self.assert_((core.getParameterVector() == vec).all())
+            self.assertTrue((core.getParameterVector() == vec).all())
             center = lsst.afw.geom.Point2D(*numpy.random.randn(2))
             ellipse = lsst.afw.geom.ellipses.Ellipse(core, center)
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
@@ -96,18 +96,18 @@ class EllipseTestCase(unittest.TestCase):
             core.assign(newcore)
             ellipse.setCore(core)
             self.assertClose(core.getParameterVector(), ellipse.getCore().getParameterVector())
-            self.assert_((core.clone().getParameterVector() == core.getParameterVector()).all())
-            self.assert_(core is not core.clone())
-            self.assert_((lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector()
+            self.assertTrue((core.clone().getParameterVector() == core.getParameterVector()).all())
+            self.assertIsNot(core, core.clone())
+            self.assertTrue((lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector()
                           == ellipse.getParameterVector()).all())
-            self.assert_(ellipse is not lsst.afw.geom.ellipses.Ellipse(ellipse))
+            self.assertIsNot(ellipse, lsst.afw.geom.ellipses.Ellipse(ellipse))
 
     def testTransform(self):
         for core in self.cores:
             transform = lsst.afw.geom.LinearTransform(numpy.random.randn(2, 2))
             t1 = core.transform(transform)
             core.transformInPlace(transform)
-            self.assert_(t1 is not core)
+            self.assertIsNot(t1, core)
             self.assertClose(t1.getParameterVector(), core.getParameterVector())
 
     def testPixelRegion(self):
@@ -129,27 +129,19 @@ class EllipseTestCase(unittest.TestCase):
                     transformed = gt(lsst.afw.geom.Point2D(point))
                     r = (transformed.getX()**2 + transformed.getY()**2)**0.5
                     if array[adjusted.getY(), adjusted.getX()]:
-                        self.assert_(r <= 1.0, "Point %s is in region but r=%f" % (point, r))
+                        self.assertLessEqual(r, 1.0, "Point %s is in region but r=%f" % (point, r))
                     else:
-                        self.assert_(r > 1.0, "Point %s is outside region but r=%f" % (point, r))
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+                        self.assertGreater(r, 1.0, "Point %s is outside region but r=%f" % (point, r))
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(EllipseTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
