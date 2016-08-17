@@ -39,7 +39,7 @@ or
 """
 
 import unittest
-import lsst.utils.tests as tests
+import lsst.utils.tests
 import lsst.pex.logging as logging
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -701,23 +701,15 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         self.checkPeaks(frame=3)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(FootprintSetTestCase)
-    suites += unittest.makeSuite(PeaksInFootprintsTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
