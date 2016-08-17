@@ -26,15 +26,14 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-
 import math
 import unittest
-import lsst.utils.tests as tests
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDet
 
 
-class FootprintTestCase(unittest.TestCase):
+class FootprintTestCase(lsst.utils.tests.TestCase):
 
     def testCircle(self):
         xc, yc = 30, 50
@@ -52,28 +51,20 @@ class FootprintTestCase(unittest.TestCase):
 
         self.assertEqual(len(test.getSpans()), len(control.getSpans()))
         for s0, s1 in zip(test.getSpans(), control.getSpans()):
-            print(s0.getY(), s0.getX0(), s0.getX1(), s1.getY(), s1.getX0(), s1.getX1())
             self.assertEqual(s0.getX0(), s1.getX0())
             self.assertEqual(s0.getX1(), s1.getX1())
             self.assertEqual(s0.getY(), s1.getY())
         self.assertEqual(test.getNpix(), control.getNpix())
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
-
-    suites = []
-    suites += unittest.makeSuite(FootprintTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    tests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
