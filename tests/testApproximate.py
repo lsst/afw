@@ -23,19 +23,9 @@ from builtins import range
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
-"""
-Tests for Approximate
-
-Run with:
-   ./approximate.py
-or
-   python
-   >>> import approximate; approximate.run()
-"""
 import unittest
 import numpy as np
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -47,23 +37,10 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-class ApproximateTestCase(unittest.TestCase):
-
-    """A test case for Approximate"""
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
+class ApproximateTestCase(lsst.utils.tests.TestCase):
     def makeRamp(self, binsize=1):
-        #
-        # make a linear ramp
-        #
+        """Make a linear ramp"""
         ramp = afwImage.MaskedImageF(20, 40)
 
         x = []
@@ -146,10 +123,8 @@ class ApproximateTestCase(unittest.TestCase):
 
         if display:
             ds9.mtv(ramp, title="Input", frame=0)
-        #
         # Here's the range that the approximation should be valid (and also the
         # bbox of the image returned by getImage)
-        #
         bkgd = afwMath.makeBackground(ramp, afwMath.BackgroundControl(10, 10))
 
         orderMax = 3                    # 1 would be enough to fit the ramp
@@ -157,9 +132,7 @@ class ApproximateTestCase(unittest.TestCase):
             actrl = afwMath.ApproximateControl(afwMath.ApproximateControl.CHEBYSHEV, order)
 
             approx = bkgd.getApproximate(actrl)
-            #
             # Get the Image, the MaskedImage, and the Image with a truncated expansion
-            #
             for i, aim in enumerate([approx.getImage(),
                                      approx.getMaskedImage().getImage(),
                                      approx.getImage(order - 1 if order > 1 else -1),
@@ -172,29 +145,19 @@ class ApproximateTestCase(unittest.TestCase):
                         rampCoeffs[0] + rampCoeffs[1]*x + rampCoeffs[1]*y
 
                     self.assertEqual(aim.get(x, y), val)
-        #
         # Check that we can't "truncate" the expansion to a higher order than we requested
-        #
         self.assertRaises(pexExcept.InvalidParameterError,
                           lambda: approx.getImage(orderMax + 1, orderMax + 1))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(ApproximateTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
