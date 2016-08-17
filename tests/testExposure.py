@@ -39,11 +39,11 @@ import unittest
 import numpy
 
 import lsst.utils
+import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
-import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pexExcept
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
@@ -344,7 +344,7 @@ class ExposureTestCase(unittest.TestCase):
         calib /= scale
         self.assertEqual((fluxMag0, fluxMag0Err), calib.getFluxMag0())
 
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             mainExposure.writeFits(tmpFile)
 
             readExposure = type(mainExposure)(tmpFile)
@@ -359,9 +359,9 @@ class ExposureTestCase(unittest.TestCase):
             self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
 
             psf = readExposure.getPsf()
-            self.assert_(psf is not None)
+            self.assertIsNotNone(psf)
             dummyPsf = DummyPsf.swigConvert(psf)
-            self.assert_(dummyPsf is not None)
+            self.assertIsNotNone(dummyPsf)
             self.assertEqual(dummyPsf.getValue(), self.psf.getValue())
 
     def checkWcs(self, parentExposure, subExposure):
@@ -501,7 +501,7 @@ class ExposureTestCase(unittest.TestCase):
         self.assertEqual(expMeta.get("foo"), 5)  # this will fail if the bug is present
 
     def testMakeExposureLeaks(self):
-        """Test for memory leaks in makeExposure (the test is in utilsTests.MemoryTestCase)"""
+        """Test for memory leaks in makeExposure (the test is in lsst.utils.tests.MemoryTestCase)"""
         afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20)))
         afwImage.makeExposure(afwImage.makeMaskedImage(afwImage.ImageU(afwGeom.Extent2I(10, 20))))
 
@@ -526,7 +526,7 @@ class ExposureTestCase(unittest.TestCase):
         self.assertRaises(TypeError, float, im[0, 0])  # actually, can't convert (img, msk, var) to scalar
 
     def testReadMetadata(self):
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             self.exposureCrWcs.getMetadata().set("FRAZZLE", True)
             # This will write the main metadata (inc. FRAZZLE) to the primary HDU, and the
             # WCS to subsequent HDUs, along with INHERIT=T.
@@ -538,12 +538,12 @@ class ExposureTestCase(unittest.TestCase):
             wcs = afwImage.makeWcs(md, True)
             self.assertEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
             self.assertEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
-            self.assert_(numpy.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
+            self.assertTrue(numpy.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
             frazzle = md.get("FRAZZLE")
-            self.assert_(frazzle is True)
+            self.assertTrue(frazzle)
 
     def testArchiveKeys(self):
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             exposure1 = afwImage.ExposureF(100, 100, self.wcs)
             exposure1.setPsf(self.psf)
             exposure1.writeFits(tmpFile)
@@ -553,7 +553,7 @@ class ExposureTestCase(unittest.TestCase):
             self.assertFalse(exposure2.getMetadata().exists("WCS_ID"))
 
     def testTicket2861(self):
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             exposure1 = afwImage.ExposureF(100, 100, self.wcs)
             exposure1.setPsf(self.psf)
             schema = afwTable.ExposureTable.makeMinimalSchema()
@@ -566,24 +566,14 @@ class ExposureTestCase(unittest.TestCase):
             self.assertIsNotNone(exposure3.getInfo().getCoaddInputs())
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def suite():
-    """
-    Returns a suite containing all the test cases in this module.
-    """
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(ExposureTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
