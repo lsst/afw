@@ -39,7 +39,7 @@ import re
 import numpy
 
 import lsst.utils
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -180,7 +180,7 @@ def sameMaskPlaneDicts(maskedImageA, maskedImageB):
     return True
 
 
-class ConvolveTestCase(utilsTests.TestCase):
+class ConvolveTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         if dataDir is not None:
@@ -296,7 +296,8 @@ class ConvolveTestCase(utilsTests.TestCase):
                 if (inWidth == self.width) and (inHeight == self.height):
                     continue
                 inMaskedImage = afwImage.MaskedImageF(afwGeom.Extent2I(inWidth, inHeight))
-                self.assertRaises(Exception, afwMath.convolve, self.cnvMaskedImage, inMaskedImage, kernel)
+                with self.assertRaises(Exception):
+                    afwMath.convolve(self.cnvMaskedImage, inMaskedImage, kernel)
 
         for doNormalize in (True,):  # (False, True):
             convControl.setDoNormalize(doNormalize)
@@ -346,15 +347,15 @@ class ConvolveTestCase(utilsTests.TestCase):
         """Test the ConvolutionControl object
         """
         convControl = afwMath.ConvolutionControl()
-        self.assert_(convControl.getDoNormalize())
+        self.assertTrue(convControl.getDoNormalize())
         for doNormalize in (False, True):
             convControl.setDoNormalize(doNormalize)
             self.assertEqual(convControl.getDoNormalize(), doNormalize)
 
-        self.assert_(not convControl.getDoCopyEdge())
+        self.assertFalse(convControl.getDoCopyEdge())
         for doCopyEdge in (False, True):
             convControl.setDoCopyEdge(doCopyEdge)
-            self.assert_(convControl.getDoCopyEdge() == doCopyEdge)
+            self.assertEqual(convControl.getDoCopyEdge(), doCopyEdge)
 
         self.assertEqual(convControl.getMaxInterpolationDistance(), 10)
         for maxInterpDist in (0, 1, 2, 10, 100):
@@ -603,8 +604,8 @@ class ConvolveTestCase(utilsTests.TestCase):
         ]
         convolutionControl = afwMath.ConvolutionControl()
         for kernel in kernelList:
-            self.assertRaises(Exception, afwMath.convolve, self.cnvMaskedImage, self.maskedImage, kernel,
-                              convolutionControl)
+            with self.assertRaises(Exception):
+                afwMath.convolve(self.cnvMaskedImage, self.maskedImage, kernel, convolutionControl)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testTicket873(self):
@@ -656,23 +657,15 @@ class ConvolveTestCase(utilsTests.TestCase):
                 maxInterpDist=maxInterpDist,
                 rtol=rtol)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(ConvolveTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(doExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), doExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
