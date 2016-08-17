@@ -42,7 +42,7 @@ import math
 import sys
 import unittest
 import numpy
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.logging as logging
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
@@ -182,7 +182,7 @@ class ThresholdTestCase(unittest.TestCase):
             self.fail("Failed to build Threshold with PIXEL_STDEV parameters")
 
 
-class FootprintTestCase(utilsTests.TestCase):
+class FootprintTestCase(lsst.utils.tests.TestCase):
     """A test case for Footprint"""
 
     def setUp(self):
@@ -230,7 +230,7 @@ class FootprintTestCase(utilsTests.TestCase):
         fp1 = afwDetect.Footprint(ellipse)
         fp1.addPeak(6, 7, 2)
         fp1.addPeak(8, 9, 3)
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             fp1.writeFits(tmpFile)
             fp2 = afwDetect.Footprint.readFits(tmpFile)
             self.assertEqual(fp1.getArea(), fp2.getArea())
@@ -270,7 +270,7 @@ class FootprintTestCase(utilsTests.TestCase):
         # clip with a bbox that doesn't overlap at all
         bbox2 = afwGeom.Box2I(afwGeom.Point2I(5, 90), afwGeom.Extent2I(1, 2))
         foot.clipTo(bbox2)
-        self.assert_(foot.getBBox().isEmpty())
+        self.assertTrue(foot.getBBox().isEmpty())
         self.assertEqual(foot.getArea(), 0)
 
     def testSpanShift(self):
@@ -1358,27 +1358,15 @@ class NaNFootprintSetTestCase(unittest.TestCase):
         for i in range(len(objects)):
             self.assertEqual(objects[i], self.objects[i])
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(ThresholdTestCase)
-    suites += unittest.makeSuite(SpanTestCase)
-    suites += unittest.makeSuite(FootprintTestCase)
-    suites += unittest.makeSuite(FootprintSetTestCase)
-    suites += unittest.makeSuite(NaNFootprintSetTestCase)
-    suites += unittest.makeSuite(MaskFootprintSetTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
