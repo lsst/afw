@@ -40,7 +40,7 @@ or
 import os
 import unittest
 
-import lsst.utils.tests as tests
+import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.display as afwDisplay
 
@@ -172,35 +172,15 @@ class DisplayTestCase(unittest.TestCase):
         """
         self.display0.interact()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(DisplayTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-
-    tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Run the image display test suite")
-
-    parser.add_argument('backend', type=str, nargs="?", default="virtualDevice",
-                        help="The backend to use, e.g. ds9.  You may need to have the device setup")
-    args = parser.parse_args()
-
-    # check that that backend is valid
-    with afwDisplay.Display("test", backend=args.backend) as disp:
-        pass
-
-    backend = args.backend              # backend is just a variable in this file
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
