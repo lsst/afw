@@ -39,9 +39,9 @@ or
 
 import math
 import unittest
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
-import lsst.utils.tests as utilsTests
 import lsst.daf.base as dafBase
 import lsst.pex.exceptions as pexEx
 
@@ -53,7 +53,7 @@ import lsst.pex.exceptions as pexEx
 ######################################
 
 
-class CoordTestCase(utilsTests.TestCase):
+class CoordTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         # define some arbitrary values
@@ -136,14 +136,16 @@ class CoordTestCase(utilsTests.TestCase):
             self.assertEqual(myCoord.getLatitude().asDegrees(), 1.0)
 
         # verify that makeCoord throws when given an epoch for an epochless system
-        self.assertRaises(pexEx.Exception,
-                          lambda: afwCoord.makeCoord(afwCoord.GALACTIC, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0))
-        self.assertRaises(pexEx.Exception,
-                          lambda: afwCoord.makeCoord(afwCoord.ICRS, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0))
+        with self.assertRaises(pexEx.Exception):
+            afwCoord.makeCoord(afwCoord.GALACTIC, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0)
+
+        with self.assertRaises(pexEx.Exception):
+            afwCoord.makeCoord(afwCoord.ICRS, self.l * afwGeom.degrees, self.b * afwGeom.degrees, 2000.0)
 
     def testCoordEnum(self):
         """Verify that makeCoordEnum throws an exception for non-existant systems."""
-        self.assertRaises(pexEx.Exception, lambda: afwCoord.makeCoordEnum("FOO"))
+        with self.assertRaises(pexEx.Exception):
+            afwCoord.makeCoordEnum("FOO")
 
     def testGetClassName(self):
         """Test getClassName, including after cloning
@@ -163,7 +165,8 @@ class CoordTestCase(utilsTests.TestCase):
                 self.assertEqual(c[1], c.getLatitude())
 
             # raise if we ask for too many values
-            self.assertRaises(Exception, c.__getitem__, 2)
+            with self.assertRaises(Exception):
+                 c[2]
 
     def testStrRepr(self):
         """Test __str__ and __repr__
@@ -477,14 +480,16 @@ class CoordTestCase(utilsTests.TestCase):
         # make sure Galactic throws an exception. As there's no epoch, there's no precess() method.
         gal = afwCoord.GalacticCoord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
         epochNew = 2010.0
-        self.assertRaises(AttributeError, lambda: gal.precess(epochNew))
+        with self.assertRaises(AttributeError):
+            gal.precess(epochNew)
 
         ### Icrs ###
 
         # make sure Icrs throws an exception. As there's no epoch, there's no precess() method.
         icrs = afwCoord.IcrsCoord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
         epochNew = 2010.0
-        self.assertRaises(AttributeError, lambda: icrs.precess(epochNew))
+        with self.assertRaises(AttributeError):
+            icrs.precess(epochNew)
 
         ### Ecliptic ###
 
@@ -664,8 +669,10 @@ class CoordTestCase(utilsTests.TestCase):
 
     def testTicket2915(self):
         """SegFault in construction of Coord from strings"""
-        self.assertRaises(pexEx.Exception, afwCoord.IcrsCoord, "79.891963", "-10.110075")
-        self.assertRaises(pexEx.Exception, afwCoord.IcrsCoord, "01:23", "45:67")
+        with self.assertRaises(pexEx.Exception):
+            afwCoord.IcrsCoord("79.891963", "-10.110075")
+        with self.assertRaises(pexEx.Exception):
+            afwCoord.IcrsCoord("01:23", "45:67")
 
     def testTicket3093(self):
         """Declination -1 < delta < 0 always prints positive as a string"""
@@ -701,7 +708,7 @@ class CoordTestCase(utilsTests.TestCase):
         self.assertTrue(c3 == c1)
         self.assertFalse(c3 != c1)
 
-    @utilsTests.debugger(Exception)
+    @lsst.utils.tests.debugger(Exception)
     def testAverage(self):
         """Tests for lsst.afw.coord.averageCoord"""
         icrs = afwCoord.IcrsCoord(self.ra, self.dec)
@@ -747,23 +754,14 @@ class CoordTestCase(utilsTests.TestCase):
             circle(center, start)
 
 
-#################################################################
-# Test suite boiler plate
-#################################################################
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(CoordTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
