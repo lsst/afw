@@ -1,15 +1,35 @@
 #!/usr/bin/env python
 
+#
+# LSST Data Management System
+# Copyright 2008, 2009, 2010 LSST Corporation.
+#
+# This product includes software developed by the
+# LSST Project (http://www.lsst.org/).
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the LSST License Statement and
+# the GNU General Public License along with this program.  If not,
+# see <http://www.lsstcorp.org/LegalNotices/>.
+#
 from __future__ import division
 import unittest
-import lsst.utils.tests as tests
+import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.detection as afwDetect
 import lsst.afw.table as afwTable
 import numpy as np
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 def insertPsf(pos, im, psf, kernelSize, flux):
@@ -45,10 +65,8 @@ def isPeakInCatalog(peak, catalog):
                 return True
     return False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-class FootprintMergeCatalogTestCase(tests.TestCase):
+class FootprintMergeCatalogTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         """Build up three different sets of objects that are to be merged"""
@@ -122,23 +140,22 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         pixArea.fill(69)
         pixArea[1] = 135
         measArea = [i.getFootprint().getArea() for i in merge]
-        self.assert_(np.all(pixArea == measArea))
+        np.testing.assert_array_equal(pixArea, measArea)
 
         # Add the first catalog and second catalog with the wrong name, which should result
         # an exception being raised
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError,
-                                 mergeCatalogs, [self.catalog1, self.catalog2], ["1", "2"], [0, 0],
-                                 self.idFactory, ["1", "3"])
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [0, 0], self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of peakDist elements,
         # which should raise an exception
-        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1, self.catalog2], ["1", "2"], [0],
-                          self.idFactory, ["1", "3"])
+        with self.assertRaises(ValueError):
+            mergeCatalogs([self.catalog1, self.catalog2], ["1", "2"], [0], self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with the wrong number of filters,
         # which should raise an exception
-        self.assertRaises(ValueError, mergeCatalogs, [self.catalog1, self.catalog2], ["1"], [0],
-                          self.idFactory, ["1", "3"])
+        with self.assertRaises(ValueError):
+            mergeCatalogs([self.catalog1, self.catalog2], ["1"], [0], self.idFactory, ["1", "3"])
 
         # Add the first catalog and second catalog with minPeak < 1 so it will not add new peaks
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2],
@@ -157,7 +174,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         pixArea[8:14].fill(69)
         pixArea[14:22].fill(261)
         measArea = [i.getFootprint().getArea() for i in merge]
-        self.assert_(np.all(pixArea == measArea))
+        np.testing.assert_array_equal(pixArea, measArea)
 
         for record in merge:
             for peak in record.getFootprint().getPeaks():
@@ -187,7 +204,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         pixArea[9:13].fill(69)
         pixArea[12:19].fill(261)
         measArea = [i.getFootprint().getArea() for i in merge]
-        self.assert_(np.all(pixArea == measArea))
+        np.testing.assert_array_equal(pixArea, measArea)
 
         for record in merge:
             for peak in record.getFootprint().getPeaks():
@@ -206,7 +223,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 30)
         measArea = [i.getFootprint().getArea() for i in merge]
-        self.assert_(np.all(pixArea == measArea))
+        np.testing.assert_array_equal(pixArea, measArea)
 
         # Add all the catalogs with minPeak = 10 so some peaks will be added to the footprint
         merge, nob, npeak = mergeCatalogs([self.catalog1, self.catalog2, self.catalog3],
@@ -214,7 +231,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 25)
         measArea = [i.getFootprint().getArea() for i in merge]
-        self.assert_(np.all(pixArea == measArea))
+        np.testing.assert_array_equal(pixArea, measArea)
 
         for record in merge:
             for peak in record.getFootprint().getPeaks():
@@ -236,7 +253,7 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
         self.assertEqual(nob, 19)
         self.assertEqual(npeak, 20)
         measArea = [i.getFootprint().getArea() for i in merge]
-        self.assert_(np.all(pixArea == measArea))
+        np.testing.assert_array_equal(pixArea, measArea)
 
         for record in merge:
             for peak in record.getFootprint().getPeaks():
@@ -265,27 +282,20 @@ class FootprintMergeCatalogTestCase(tests.TestCase):
                 numPeak = np.sum([peak.get("merge_peak_1"), peak.get("merge_peak_2"),
                                   peak.get("merge_peak_3")])
                 if peakIndex in multiPeakIndex:
-                    self.assertTrue(numPeak > 1)
+                    self.assertGreater(numPeak, 1)
                 else:
-                    self.assertTrue(numPeak == 1)
+                    self.assertEqual(numPeak, 1)
                 peakIndex += 1
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(FootprintMergeCatalogTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
