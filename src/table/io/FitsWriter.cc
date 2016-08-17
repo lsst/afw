@@ -74,8 +74,9 @@ struct ProcessSchema {
     }
 
     void specialize(SchemaItem<Angle> const & item, int n) const {
-        if (!item.field.getUnits().empty())
-            fits->writeColumnKey("TUNIT", n, item.field.getUnits());
+        // Always write units for Angles as radians (in-memory Angles field don't use the unit attribute,
+        // single Angle abstracts that away).
+        fits->writeColumnKey("TUNIT", n, "rad");
         fits->writeColumnKey("TCCLS", n, "Angle", "Field template used by lsst.afw.table");
     }
 
