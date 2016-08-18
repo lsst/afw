@@ -190,36 +190,28 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testColumnView(self):
         cols1 = self.catalog.getColumnView()
         cols2 = self.catalog.columns
-        self.assert_(cols1 is cols2)
-        self.assert_(isinstance(cols1, lsst.afw.table.SourceColumnView))
+        self.assertIs(cols1, cols2)
+        self.assertIsInstance(cols1, lsst.afw.table.SourceColumnView)
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assert_((cols2["a_flux"] == cols2.getPsfFlux()).all())
-        self.assert_((cols2["a_fluxSigma"] == cols2.getPsfFluxErr()).all())
-        self.assert_((cols2["b_x"] == cols2.getX()).all())
-        self.assert_((cols2["b_y"] == cols2.getY()).all())
-        self.assert_((cols2["c_xx"] == cols2.getIxx()).all())
-        self.assert_((cols2["c_yy"] == cols2.getIyy()).all())
-        self.assert_((cols2["c_xy"] == cols2.getIxy()).all())
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        self.assertTrue((cols2["a_flux"] == cols2.getPsfFlux()).all())
+        self.assertTrue((cols2["a_fluxSigma"] == cols2.getPsfFluxErr()).all())
+        self.assertTrue((cols2["b_x"] == cols2.getX()).all())
+        self.assertTrue((cols2["b_y"] == cols2.getY()).all())
+        self.assertTrue((cols2["c_xx"] == cols2.getIxx()).all())
+        self.assertTrue((cols2["c_yy"] == cols2.getIyy()).all())
+        self.assertTrue((cols2["c_xy"] == cols2.getIxy()).all())
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
+
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(SourceTableTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
