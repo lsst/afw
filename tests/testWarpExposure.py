@@ -34,6 +34,7 @@ import unittest
 import numpy
 
 import lsst.utils
+import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
@@ -41,7 +42,6 @@ import lsst.afw.gpu as afwGpu
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.utils as imageUtils
-import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
@@ -112,7 +112,7 @@ def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX
     return afwImage.makeWcs(ps)
 
 
-class WarpExposureTestCase(utilsTests.TestCase):
+class WarpExposureTestCase(lsst.utils.tests.TestCase):
     """Test case for warpExposure
     """
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
@@ -143,8 +143,8 @@ class WarpExposureTestCase(utilsTests.TestCase):
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull.fits")
 
-        self.assertEquals(afwWarpedExposure.getFilter().getName(), originalFilter.getName())
-        self.assertEquals(afwWarpedExposure.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
+        self.assertEqual(afwWarpedExposure.getFilter().getName(), originalFilter.getName())
+        self.assertEqual(afwWarpedExposure.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
 
         afwWarpedMaskedImage = afwWarpedExposure.getMaskedImage()
         afwWarpedMask = afwWarpedMaskedImage.getMask()
@@ -259,27 +259,27 @@ class WarpExposureTestCase(utilsTests.TestCase):
             ("bilinear", "lanczos4"),
             ("lanczos3", "lanczos4"),
         ):
-            self.assertRaises(pexExcept.Exception,
-                              afwMath.WarpingControl, kernelName, maskKernelName)
+            with self.assertRaises(pexExcept.Exception):
+                afwMath.WarpingControl(kernelName, maskKernelName)
 
         # error: new mask kernel larger than main kernel
         warpingControl = afwMath.WarpingControl("bilinear")
         for maskKernelName in ("lanczos3", "lanczos4"):
-            self.assertRaises(pexExcept.Exception,
-                              warpingControl.setMaskWarpingKernelName, maskKernelName)
+            with self.assertRaises(pexExcept.Exception):
+                warpingControl.setMaskWarpingKernelName(maskKernelName)
 
         # error: new kernel smaller than mask kernel
         warpingControl = afwMath.WarpingControl("lanczos4", "lanczos4")
         for kernelName in ("bilinear", "lanczos3"):
-            self.assertRaises(pexExcept.Exception,
-                              warpingControl.setWarpingKernelName, kernelName)
+            with self.assertRaises(pexExcept.Exception):
+                warpingControl.setWarpingKernelName(kernelName)
 
         # error: GPU only works with Lanczos kernels
-        self.assertRaises(pexExcept.Exception,
-                          afwMath.WarpingControl, "bilinear", "", 0, 0, afwGpu.USE_GPU)
+        with self.assertRaises(pexExcept.Exception):
+            afwMath.WarpingControl("bilinear", "", 0, 0, afwGpu.USE_GPU)
         warpingControl = afwMath.WarpingControl("bilinear")
-        self.assertRaises(pexExcept.Exception,
-                          warpingControl.setDevicePreference, afwGpu.USE_GPU)
+        with self.assertRaises(pexExcept.Exception):
+            warpingControl.setDevicePreference(afwGpu.USE_GPU)
 
         # OK: GPU works with Lanczos kernels
         for kernelName in ("lanczos3", "lanczos4"):
@@ -304,8 +304,8 @@ class WarpExposureTestCase(utilsTests.TestCase):
             ("lanczos3", "badname"),
             ("lanczos3", "lanczos"),
         ):
-            self.assertRaises(pexExcept.Exception,
-                              afwMath.WarpingControl, kernelName, maskKernelName)
+            with self.assertRaises(pexExcept.Exception):
+                afwMath.WarpingControl(kernelName, maskKernelName)
 
     def testWarpMask(self):
         """Test that warping the mask plane with a different kernel does the right thing
@@ -693,24 +693,14 @@ class WarpExposureTestCase(utilsTests.TestCase):
                 raise
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def suite():
-    """
-    Returns a suite containing all the test cases in this module.
-    """
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(WarpExposureTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(doExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), doExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
