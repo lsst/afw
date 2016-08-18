@@ -75,7 +75,16 @@ public:
                 "All catalogs passed to saveCatalog must be created by makeCatalog"
             );
         }
-        iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
+        // Add the name of the class to the header so anyone looking at it can
+        // tell what's stored there.  But we don't want to add it multiple times.
+        try {
+            auto names = iter->getTable()->getMetadata()->getArray<std::string>("AR_NAME");
+            if (std::find(names.begin(), names.end(), name) == names.end()) {
+                iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
+            }
+        } catch (pex::exceptions::NotFoundError &) {
+            iter->getTable()->getMetadata()->add("AR_NAME", name, "Class name for objects stored here");
+        }
         indexRecord->set(indexKeys.row0, iter->size());
         indexRecord->set(indexKeys.catArchive, catArchive);
         iter->insert(iter->end(), catalog.begin(), catalog.end(), false);

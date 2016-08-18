@@ -16,6 +16,8 @@
 #include "boost/filesystem.hpp"
 #include "Eigen/Core"
 
+#include "lsst/afw/detection/Footprint.h"
+#include "lsst/afw/detection/HeavyFootprint.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/ArchiveIndexSchema.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -641,4 +643,34 @@ BOOST_AUTO_TEST_CASE(ArchiveImporter) {
     std::cerr << "--------------------------------------------------------------------------------------\n";
     lsst::afw::image::Exposure<float> exposure("tests/data/archiveImportTest.fits");
     BOOST_CHECK(!exposure.getPsf());
+}
+
+
+BOOST_AUTO_TEST_CASE(ArchiveMetadata) {
+    // Test that we only write one AR_NAME header key for each class saved in an HDU, not each instance
+    // (see DM-7221).
+    using namespace lsst::afw::table::io;
+    using namespace lsst::afw::fits;
+    using namespace lsst::afw::detection;
+    using namespace lsst::afw::geom;
+    OutputArchive outArchive;
+    outArchive.put(std::make_shared<Footprint>(Box2I(Point2I(2, 3), Point2I(5, 4))));
+    outArchive.put(std::make_shared<Footprint>(Box2I(Point2I(1, 2), Point2I(7, 6))));
+    outArchive.put(std::make_shared<HeavyFootprint<float>>(Footprint(Box2I(Point2I(1, 2), Point2I(7, 6)))));
+    MemFileManager manager;
+    Fits outFits(manager, "w", Fits::AUTO_CHECK);
+    outArchive.writeFits(outFits);
+    outFits.closeFile();
+    Fits inFits(manager, "r", Fits::AUTO_CHECK);
+    inFits.setHdu(3);
+    lsst::daf::base::PropertyList metadata;
+    inFits.readMetadata(metadata);
+    inFits.closeFile();
+    // Get all values corresponding to the AR_NAME key as a list; there
+    // should be exactly two.
+    auto names = metadata.getArray<std::string>("AR_NAME");
+    std::sort(names.begin(), names.end());
+    BOOST_CHECK_EQUAL(names.size(), 2u);
+    BOOST_CHECK_EQUAL(names[0], "Footprint");
+    BOOST_CHECK_EQUAL(names[1], "HeavyFootprintF");
 }
