@@ -24,7 +24,7 @@ from __future__ import absolute_import, division
 #
 
 import unittest
-import lsst.utils.tests as tests
+import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.pex.exceptions as pexExcept
@@ -68,24 +68,18 @@ class TanSipTestCases(unittest.TestCase):
         del self.metadata
 
     def testExcept(self):
-        self.assertRaises(pexExcept.Exception, afwImage.makeWcs, self.metadata)
-
-#####
-
-
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
-
-    suites = []
-    suites += unittest.makeSuite(TanSipTestCases)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+        with self.assertRaises(pexExcept.Exception):
+            afwImage.makeWcs(self.metadata)
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    tests.run(suite(), shouldExit)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
+
+
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
