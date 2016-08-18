@@ -138,7 +138,8 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.schema.setAliasMap(None)  # remove all current aliases
         self.schema.getAliasMap().set("t", "a")
         self.schema.getAliasMap().set("a", "t")
-        self.assertRaises(lsst.pex.exceptions.RuntimeError, self.schema.find, "t")
+        with self.assertRaises(lsst.pex.exceptions.RuntimeError):
+            self.schema.find("t")
 
     def testReplace(self):
         aliases = self.schema.getAliasMap()
@@ -160,23 +161,15 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.schema.contains(copy, self.schema.EQUAL_ALIASES), self.schema.EQUAL_ALIASES)
         self.assertEqual(self.schema.contains(copy, self.schema.IDENTICAL), self.schema.IDENTICAL)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(TableAliasTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
