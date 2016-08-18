@@ -254,12 +254,14 @@ class XYTransformTestCase(unittest.TestCase):
             (0.0, 0.0),  # coeffs[1] must be nonzero
             (0.0, 0.0, 0.1),  # coeffs[1] must be nonzero
         ):
-            self.assertRaises(lsst.pex.exceptions.Exception, RadialXYTransform, badCoeffs)
+            with self.assertRaises(lsst.pex.exceptions.Exception):
+                RadialXYTransform(badCoeffs)
 
             radialClass = xyTransformRegistry["radial"]
             radialConfig = radialClass.ConfigClass()
             radialConfig.coeffs = badCoeffs
-            self.assertRaises(Exception, radialConfig.validate)
+            with self.assertRaises(Exception):
+                radialConfig.validate()
 
     def testMulti(self):
         """Test multi = MultiXYTransform
