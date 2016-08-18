@@ -29,7 +29,7 @@ import re
 
 import numpy as np
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
@@ -38,7 +38,7 @@ from lsst.afw.image.testUtils import imagesDiffer
 from lsst.afw.image.basicUtils import _compareWcsOverBBox
 
 
-class TestTestUtils(utilsTests.TestCase):
+class TestTestUtils(lsst.utils.tests.TestCase):
     """Test test methods added to lsst.utils.tests.TestCase
     """
 
@@ -51,62 +51,62 @@ class TestTestUtils(utilsTests.TestCase):
                 ang0 + 0.01*afwGeom.arcseconds,
                 maxDiff=0.010001*afwGeom.arcseconds,
             )
-            self.assertRaises(AssertionError,
-                              self.assertAnglesNearlyEqual,
-                              ang0,
-                              ang0 + 0.01*afwGeom.arcseconds,
-                              maxDiff=0.009999*afwGeom.arcseconds,
-                              )
+            with self.assertRaises(AssertionError):
+                self.assertAnglesNearlyEqual(
+                    ang0,
+                    ang0 + 0.01*afwGeom.arcseconds,
+                    maxDiff=0.009999*afwGeom.arcseconds,
+                    )
 
             self.assertAnglesNearlyEqual(
                 ang0,
                 ang0 - 0.01*afwGeom.arcseconds,
                 maxDiff=0.010001*afwGeom.arcseconds,
             )
-            self.assertRaises(AssertionError,
-                              self.assertAnglesNearlyEqual,
-                              ang0,
-                              ang0 - 0.01*afwGeom.arcseconds,
-                              maxDiff=0.009999*afwGeom.arcseconds,
-                              )
+            with self.assertRaises(AssertionError):
+                self.assertAnglesNearlyEqual(
+                    ang0,
+                    ang0 - 0.01*afwGeom.arcseconds,
+                    maxDiff=0.009999*afwGeom.arcseconds,
+                    )
 
             self.assertAnglesNearlyEqual(
                 ang0 - 720*afwGeom.degrees,
                 ang0 + 0.01*afwGeom.arcseconds,
                 maxDiff=0.010001*afwGeom.arcseconds,
             )
-            self.assertRaises(AssertionError,
-                              self.assertAnglesNearlyEqual,
-                              ang0 - 720*afwGeom.degrees,
-                              ang0 + 0.01*afwGeom.arcseconds,
-                              ignoreWrap=False,
-                              maxDiff=0.010001*afwGeom.arcseconds,
-                              )
-            self.assertRaises(AssertionError,
-                              self.assertAnglesNearlyEqual,
-                              ang0 - 720*afwGeom.degrees,
-                              ang0 + 0.01*afwGeom.arcseconds,
-                              maxDiff=0.009999*afwGeom.arcseconds,
-                              )
+            with self.assertRaises(AssertionError):
+                self.assertAnglesNearlyEqual(
+                    ang0 - 720*afwGeom.degrees,
+                    ang0 + 0.01*afwGeom.arcseconds,
+                    ignoreWrap=False,
+                    maxDiff=0.010001*afwGeom.arcseconds,
+                    )
+            with self.assertRaises(AssertionError):
+                self.assertAnglesNearlyEqual(
+                    ang0 - 720*afwGeom.degrees,
+                    ang0 + 0.01*afwGeom.arcseconds,
+                    maxDiff=0.009999*afwGeom.arcseconds,
+                    )
 
             self.assertAnglesNearlyEqual(
                 ang0,
                 ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
                 maxDiff=0.010001*afwGeom.arcseconds,
             )
-            self.assertRaises(AssertionError,
-                              self.assertAnglesNearlyEqual,
-                              ang0,
-                              ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
-                              ignoreWrap=False,
-                              maxDiff=0.010001*afwGeom.arcseconds,
-                              )
-            self.assertRaises(AssertionError,
-                              self.assertAnglesNearlyEqual,
-                              ang0,
-                              ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
-                              maxDiff=0.009999*afwGeom.arcseconds,
-                              )
+            with self.assertRaises(AssertionError):
+                self.assertAnglesNearlyEqual(
+                    ang0,
+                    ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
+                    ignoreWrap=False,
+                    maxDiff=0.010001*afwGeom.arcseconds,
+                    )
+            with self.assertRaises(AssertionError):
+                self.assertAnglesNearlyEqual(
+                    ang0,
+                    ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
+                    maxDiff=0.009999*afwGeom.arcseconds,
+                    )
 
     def testAssertBoxesNearlyEqual(self):
         """Test assertBoxesNearlyEqual"""
@@ -121,18 +121,21 @@ class TestTestUtils(utilsTests.TestCase):
                     box1 = afwGeom.Box2D(box0.getMin() + deltaExtent, box0.getMax())
                     radDiff = math.hypot(*deltaExtent)
                     self.assertBoxesNearlyEqual(box0, box1, maxDiff=radDiff*1.00001)
-                    self.assertRaises(AssertionError, self.assertBoxesNearlyEqual,
-                                      box0, box1, maxDiff=radDiff*0.99999)
+                    with self.assertRaises(AssertionError):
+                        self.assertBoxesNearlyEqual(
+                            box0, box1, maxDiff=radDiff*0.99999)
 
                     box2 = afwGeom.Box2D(box0.getMin() - deltaExtent, box0.getMax())
                     self.assertBoxesNearlyEqual(box0, box2, maxDiff=radDiff*1.00001)
-                    self.assertRaises(AssertionError, self.assertBoxesNearlyEqual,
-                                      box0, box2, maxDiff=radDiff*0.999999)
+                    with self.assertRaises(AssertionError):
+                        self.assertBoxesNearlyEqual(
+                            box0, box2, maxDiff=radDiff*0.999999)
 
                     box3 = afwGeom.Box2D(box0.getMin(), box0.getMax() + deltaExtent)
                     self.assertBoxesNearlyEqual(box0, box3, maxDiff=radDiff*1.00001)
-                    self.assertRaises(AssertionError, self.assertBoxesNearlyEqual,
-                                      box0, box3, maxDiff=radDiff*0.999999)
+                    with self.assertRaises(AssertionError):
+                        self.assertBoxesNearlyEqual(
+                            box0, box3, maxDiff=radDiff*0.999999)
 
     def testAssertCoordsNearlyEqual(self):
         """Test assertCoordsNearlyEqual"""
@@ -148,8 +151,8 @@ class TestTestUtils(utilsTests.TestCase):
                     coord1 = coord0.toGalactic()
                     coord1.offset(offAng, offDist)
                     self.assertCoordsNearlyEqual(coord0, coord1, maxDiff=offDist*1.00001)
-                    self.assertRaises(AssertionError,
-                                      self.assertCoordsNearlyEqual, coord0, coord1, maxDiff=offDist*0.99999)
+                    with self.assertRaises(AssertionError):
+                        self.assertCoordsNearlyEqual(coord0, coord1, maxDiff=offDist*0.99999)
 
             # test wraparound in RA
             coord2 = afwCoord.IcrsCoord(raDecDeg[0] + 360*afwGeom.degrees, raDecDeg[1])
@@ -164,9 +167,8 @@ class TestTestUtils(utilsTests.TestCase):
                 pair1 = [pair0[i] + diff[i] for i in range(2)]
                 radialDiff = math.hypot(*diff)
                 self.assertPairsNearlyEqual(pair0, pair1, maxDiff=radialDiff+1e-7)
-                self.assertRaises(AssertionError,
-                                  self.assertPairsNearlyEqual,
-                                  pair0, pair1, maxDiff=radialDiff-1e-7)
+                with self.assertRaises(AssertionError):
+                    self.assertPairsNearlyEqual(pair0, pair1, maxDiff=radialDiff-1e-7)
 
     def testAssertWcssNearlyEqualOverBBox(self):
         """Test assertWcsNearlyEqualOverBBox and wcsNearlyEqualOverBBox"""
@@ -201,13 +203,15 @@ class TestTestUtils(utilsTests.TestCase):
         self.assertTrue(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
                                                         maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.02))
 
-        self.assertRaises(AssertionError, self.assertWcsNearlyEqualOverBBox, wcs0, wcs1, bbox,
+        with self.assertRaises(AssertionError):
+            self.assertWcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
                           maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02)
         self.assertFalse(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
                                                          maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02))
 
-        self.assertRaises(AssertionError, self.assertWcsNearlyEqualOverBBox, wcs0, wcs1, bbox,
-                          maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
+        with self.assertRaises(AssertionError):
+            self.assertWcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
+                maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
         self.assertFalse(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
                                                          maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001))
 
@@ -455,22 +459,14 @@ def makeRampMaskedImage(width, height, imgClass=afwImage.MaskedImageF):
     return mi
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(TestTestUtils)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(exit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), exit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
