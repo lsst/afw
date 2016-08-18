@@ -31,11 +31,11 @@ import unittest
 import numpy
 
 import lsst.utils
+import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
-import lsst.utils.tests as utilsTests
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 import lsst
@@ -135,7 +135,7 @@ def localMakeCoord(coordSys, posDeg, equinox):
     return afwCoord.makeCoord(coordSys, posDeg[0]*afwGeom.degrees, posDeg[1]*afwGeom.degrees, equinox)
 
 
-class WcsTestCase(utilsTests.TestCase):
+class WcsTestCase(lsst.utils.tests.TestCase):
 
     def testCD_PC(self):
         """Test that we can read a FITS file with both CD and PC keys (like early Suprimecam files)"""
@@ -259,7 +259,7 @@ class WcsTestCase(utilsTests.TestCase):
                              makeWcs(coordSys=coordSys, projection="TAN")):
                 dummyExposure = afwImage.ExposureF()
                 dummyExposure.setWcs(dummyWcs)
-                with utilsTests.getTempFilePath(".fits") as tmpFile:
+                with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
                     dummyExposure.writeFits(tmpFile)
                     metadata = afwImage.readMetadata(tmpFile)
                     self.assertEqual(metadata.get("RADESYS"), coordSysName)
@@ -403,7 +403,8 @@ class WCSTestCaseSDSS(unittest.TestCase):
         quite right as the result is invalid, but make sure that it still is"""
         raDec = afwCoord.makeCoord(afwCoord.ICRS, 1 * afwGeom.degrees, 2 * afwGeom.degrees)
 
-        self.assertRaises(lsst.pex.exceptions.Exception, self.wcs.skyToPixel, raDec)
+        with self.assertRaises(lsst.pex.exceptions.Exception):
+            self.wcs.skyToPixel(raDec)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testCD(self):
@@ -480,7 +481,7 @@ class WCSTestCaseSDSS(unittest.TestCase):
             print("pixPos=", pixPos)
         skyPos = wcs.pixelToSky(pixPos)
 
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             exposure.writeFits(tmpFile)
             for useExposure in (False, True):
                 if useExposure:
@@ -639,27 +640,15 @@ class TestWcsCompare(unittest.TestCase):
         self.assertNotEqual(distortedWcsCopy, sipWcsCopy)
         self.assertNotEqual(sipWcsCopy, distortedWcsCopy)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(WcsTestCase)
-    suites += unittest.makeSuite(WCSTestCaseSDSS)
-    suites += unittest.makeSuite(TestWcsCompare)
-    suites += unittest.makeSuite(WCSTestCaseCFHT)
-    suites += unittest.makeSuite(WCSRotateFlip)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
