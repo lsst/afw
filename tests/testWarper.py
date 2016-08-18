@@ -28,11 +28,11 @@ import unittest
 import warnings
 
 import lsst.utils
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 import lsst.afw.math as afwMath
-import lsst.utils.tests as utilsTests
 import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
@@ -56,7 +56,7 @@ else:
     originalFullExposurePath = os.path.join(dataDir, originalFullExposureName)
 
 
-class WarpExposureTestCase(utilsTests.TestCase):
+class WarpExposureTestCase(lsst.utils.tests.TestCase):
     """Test case for Warp
     """
 
@@ -106,10 +106,10 @@ class WarpExposureTestCase(utilsTests.TestCase):
         nGood2 = (mask2Arr & noDataBitMask == 0).sum()
         nGood3 = (mask3Arr & noDataBitMask == 0).sum()
         self.assertEqual(nGood1, nGood2)
-        self.assertTrue(nGood3 < nGood1)
+        self.assertLess(nGood3, nGood1)
 
-        self.assertEquals(warpedExposure1.getFilter().getName(), originalFilter.getName())
-        self.assertEquals(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
+        self.assertEqual(warpedExposure1.getFilter().getName(), originalFilter.getName())
+        self.assertEqual(warpedExposure1.getCalib().getFluxMag0(), originalCalib.getFluxMag0())
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testDestBBox(self):
@@ -128,7 +128,7 @@ class WarpExposureTestCase(utilsTests.TestCase):
             border=-2,  # should be ignored
             maxBBox=afwGeom.Box2I(afwGeom.Point2I(1, 2), afwGeom.Extent2I(8, 9)),  # should be ignored
         )
-        self.assertTrue(bbox == warpedExposure.getBBox(afwImage.PARENT))
+        self.assertEqual(bbox, warpedExposure.getBBox(afwImage.PARENT))
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def getSwarpedImage(self, kernelName, useSubregion=False, useDeepCopy=False):
@@ -211,24 +211,14 @@ class WarpExposureTestCase(utilsTests.TestCase):
                                      skipMask=noDataMask, rtol=rtol, atol=atol, msg=msg)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def suite():
-    """
-    Returns a suite containing all the test cases in this module.
-    """
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(WarpExposureTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(doExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), doExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
