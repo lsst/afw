@@ -29,7 +29,7 @@ import unittest
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -84,11 +84,11 @@ class MatchXyTest(unittest.TestCase):
 
     def testMatchXy(self):
         matches = afwTable.matchXy(self.cat1, self.cat2, self.matchRadius)
-        self.assertEquals(len(matches), self.nUniqueMatch)
+        self.assertEqual(len(matches), self.nUniqueMatch)
 
         for m in matches:
-            self.assertEquals(m.first.getId() + self.nobj, m.second.getId())
-            self.assertEquals(m.distance, 0.0)
+            self.assertEqual(m.first.getId() + self.nobj, m.second.getId())
+            self.assertEqual(m.distance, 0.0)
 
     def testMatchXyMatchControl(self):
         """Test using MatchControl to return all matches
@@ -118,15 +118,15 @@ class MatchXyTest(unittest.TestCase):
                     matches = afwTable.matchXy(catMatches, self.cat2, self.matchRadius, mc)
                     mc.includeMismatches = False
                     noMatches = afwTable.matchXy(catMismatches, self.cat2, self.matchRadius, mc)
-                    self.assertEquals(len(noMatches), 0)
+                    self.assertEqual(len(noMatches), 0)
 
                 # If we're not getting only the closest match, then we get an extra match due to the
                 # source we offset by 2 pixels and a bit.  Everything else should match exactly.
-                self.assertEquals(len(matches), self.nUniqueMatch if closest else self.nUniqueMatch + 1)
-                self.assertEquals(sum(1 for m in matches if m.distance == 0.0), self.nUniqueMatch)
+                self.assertEqual(len(matches), self.nUniqueMatch if closest else self.nUniqueMatch + 1)
+                self.assertEqual(sum(1 for m in matches if m.distance == 0.0), self.nUniqueMatch)
                 for m in matches:
                     if closest:
-                        self.assertEquals(m.first.getId() + self.nobj, m.second.getId())
+                        self.assertEqual(m.first.getId() + self.nobj, m.second.getId())
                     else:
                         self.assertLessEqual(m.distance, self.matchRadius)
 
@@ -145,25 +145,17 @@ class MatchXyTest(unittest.TestCase):
             # offset by 2 pixels and a bit.
             # If we're getting symmetric matches, that multiplies the expected number by 2 because it
             # produces s1,s2 and s2,s1.
-            self.assertEquals(len(matches), 2 if symmetric else 1)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            self.assertEqual(len(matches), 2 if symmetric else 1)
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(MatchXyTest)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
