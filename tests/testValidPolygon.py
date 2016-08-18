@@ -34,7 +34,7 @@ from builtins import zip
 
 import os
 import unittest
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
@@ -45,7 +45,7 @@ from lsst.afw.geom.polygon import Polygon
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class ValidPolygonTestCase(utilsTests.TestCase):
+class ValidPolygonTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.bbox = afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Point2I(20, 20))
@@ -97,23 +97,15 @@ class ValidPolygonTestCase(utilsTests.TestCase):
         record2 = cat2[0]
         self.assertIsNone(record2.getValidPolygon())
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(ValidPolygonTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
