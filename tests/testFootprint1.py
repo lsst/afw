@@ -115,6 +115,8 @@ class SpanTestCase(unittest.TestCase):
         span7 = afwDetect.Span(42, 0, 200)
         span8 = afwDetect.Span(42, 0, 100)
 
+        # Cannot use assertLess and friends here
+        # because Span only has operator <
         def assertOrder(x1, x2):
             self.assertTrue(x1 < x2)
             self.assertFalse(x2 < x1)
@@ -370,9 +372,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         axes.scale(2)                   # <r^2> = 1/2 for a disk
 
         self.assertEqual(foot.getCentroid(), cen)
-        self.assertTrue(abs(a - axes.getA()) < 0.15, "a: %g v. %g" % (a, axes.getA()))
-        self.assertTrue(abs(b - axes.getB()) < 0.02, "b: %g v. %g" % (b, axes.getB()))
-        self.assertTrue(abs(theta - math.degrees(axes.getTheta())) < 0.2,
+        self.assertLess(abs(a - axes.getA()), 0.15, "a: %g v. %g" % (a, axes.getA()))
+        self.assertLess(abs(b - axes.getB()), 0.02, "b: %g v. %g" % (b, axes.getB()))
+        self.assertLess(abs(theta - math.degrees(axes.getTheta())), 0.2,
                         "theta: %g v. %g" % (theta, math.degrees(axes.getTheta())))
 
     def testCopy(self):
@@ -548,7 +550,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             # Check that peaks got copied into grown footprint
             self.assertEqual(len(foot2.getPeaks()), 3)
             for peak in foot2.getPeaks():
-                self.assertTrue((peak.getIx(), peak.getIy()) in [(20, 20), (30, 35), (25, 45)])
+                self.assertIn((peak.getIx(), peak.getIy()), [(20, 20), (30, 35), (25, 45)])
 
             bbox2 = foot2.getBBox()
 
@@ -676,7 +678,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
             idImage -= im
 
-            self.assertTrue(box == foot.getBBox())
+            self.assertEqual(box, foot.getBBox())
             self.assertEqual(afwMath.makeStatistics(idImage, afwMath.MAX).getValue(), 0)
 
     def testSetFromFootprint(self):

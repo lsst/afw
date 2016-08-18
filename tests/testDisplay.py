@@ -92,7 +92,7 @@ class DisplayTestCase(unittest.TestCase):
     def testWith(self):
         """Test using displays with with statement"""
         with afwDisplay.getDisplay(0) as disp:
-            self.assertTrue(disp is not None)
+            self.assertIsNotNone(disp)
 
     def testTwoDisplays(self):
         """Test that we can do things with two frames"""

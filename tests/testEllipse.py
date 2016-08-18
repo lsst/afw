@@ -25,30 +25,20 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-"""
-Tests for geom.ellipses
-
-Run with:
-   ./ellipse.py
-or
-   python
-   >>> import ellipse; ellipse.run()
-"""
-
 import unittest
-import numpy
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom.ellipses
 import lsst.afw.image
 
-numpy.random.seed(500)
+np.random.seed(500)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class EllipseTestCase(unittest.TestCase):
+class EllipseTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.cores = [
@@ -60,14 +50,11 @@ class EllipseTestCase(unittest.TestCase):
             self.cores.append(s(0.5, 0.3, 2.1))
             self.classes.append(s)
 
-    def assertClose(self, a, b):
-        self.assertTrue(numpy.allclose(a, b), "%s != %s" % (a, b))
-
     def testRadii(self):
         for core, det, trace in zip(self.cores, [144, 14], [25, 8]):
             detRadius = det**0.25
             traceRadius = (0.5 * trace)**0.5
-            area = numpy.pi * det**0.5
+            area = np.pi * det**0.5
             self.assertClose(core.getDeterminantRadius(), detRadius)
             self.assertClose(core.getTraceRadius(), traceRadius)
             self.assertClose(core.getArea(), area)
@@ -83,10 +70,10 @@ class EllipseTestCase(unittest.TestCase):
 
     def testAccessors(self):
         for core in self.cores:
-            vec = numpy.random.randn(3) * 1E-3 + core.getParameterVector()
+            vec = np.random.randn(3) * 1E-3 + core.getParameterVector()
             core.setParameterVector(vec)
-            self.assertTrue((core.getParameterVector() == vec).all())
-            center = lsst.afw.geom.Point2D(*numpy.random.randn(2))
+            self.assertImagesEqual(core.getParameterVector(), vec)
+            center = lsst.afw.geom.Point2D(*np.random.randn(2))
             ellipse = lsst.afw.geom.ellipses.Ellipse(core, center)
             self.assertClose(core.getParameterVector(), ellipse.getParameterVector()[:3])
             self.assertEqual(tuple(center), tuple(ellipse.getCenter()))
@@ -95,16 +82,16 @@ class EllipseTestCase(unittest.TestCase):
             newcore.normalize()
             core.assign(newcore)
             ellipse.setCore(core)
-            self.assertClose(core.getParameterVector(), ellipse.getCore().getParameterVector())
-            self.assertTrue((core.clone().getParameterVector() == core.getParameterVector()).all())
+            np.testing.assert_allclose(core.getParameterVector(), ellipse.getCore().getParameterVector())
+            self.assertClose(core.clone().getParameterVector(), core.getParameterVector())
             self.assertIsNot(core, core.clone())
-            self.assertTrue((lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector()
-                          == ellipse.getParameterVector()).all())
+            self.assertClose(lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector(),
+                ellipse.getParameterVector())
             self.assertIsNot(ellipse, lsst.afw.geom.ellipses.Ellipse(ellipse))
 
     def testTransform(self):
         for core in self.cores:
-            transform = lsst.afw.geom.LinearTransform(numpy.random.randn(2, 2))
+            transform = lsst.afw.geom.LinearTransform(np.random.randn(2, 2))
             t1 = core.transform(transform)
             core.transformInPlace(transform)
             self.assertIsNot(t1, core)
@@ -112,11 +99,11 @@ class EllipseTestCase(unittest.TestCase):
 
     def testPixelRegion(self):
         for core in self.cores:
-            e = lsst.afw.geom.ellipses.Ellipse(core, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
+            e = lsst.afw.geom.ellipses.Ellipse(core, lsst.afw.geom.Point2D(*np.random.randn(2)))
             region = lsst.afw.geom.ellipses.PixelRegion(e)
             bbox = region.getBBox()
             bbox.grow(2)
-            array = numpy.zeros((bbox.getHeight(), bbox.getWidth()), dtype=bool)
+            array = np.zeros((bbox.getHeight(), bbox.getWidth()), dtype=bool)
             for span in region:
                 for point in span:
                     adjusted = point - bbox.getMin()

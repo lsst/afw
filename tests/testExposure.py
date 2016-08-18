@@ -77,7 +77,7 @@ else:
 
 
 @unittest.skipIf(dataDir is None, "afwdata not setup")
-class ExposureTestCase(unittest.TestCase):
+class ExposureTestCase(lsst.utils.tests.TestCase):
     """
     A test case for the Exposure Class
     """
@@ -180,14 +180,14 @@ class ExposureTestCase(unittest.TestCase):
         Exposures should throw a lsst::pex::exceptions::NotFound.
         """
 
-        self.assertTrue(not self.exposureBlank.getWcs())
-        self.assertTrue(not self.exposureMiOnly.getWcs())
+        self.assertFalse(self.exposureBlank.getWcs())
+        self.assertFalse(self.exposureMiOnly.getWcs())
 
         # These two should pass
         self.exposureMiWcs.getWcs()
         self.exposureCrWcs.getWcs()
 
-        self.assertTrue(not self.exposureCrOnly.getWcs())
+        self.assertFalse(self.exposureCrOnly.getWcs())
 
     def testSetMembers(self):
         """
@@ -443,13 +443,13 @@ class ExposureTestCase(unittest.TestCase):
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
 
-        self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
+        self.assertClose(miCopy.getImage().getArray(), -50)
         self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
-        self.assertTrue(numpy.allclose(miCopy.getVariance().getArray(), 175))
+        self.assertClose(miCopy.getVariance().getArray(), 175)
 
-        self.assertTrue(numpy.allclose(mi.getImage().getArray(), 100))
+        self.assertClose(mi.getImage().getArray(), 100)
         self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
-        self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
+        self.assertClose(mi.getVariance().getArray(), 200)
 
     def testDeepCopySubData(self):
         """Make sure a deep copy of a subregion of an Exposure has its own data (ticket #2625)
@@ -467,13 +467,13 @@ class ExposureTestCase(unittest.TestCase):
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
 
-        self.assertTrue(numpy.allclose(miCopy.getImage().getArray(), -50))
+        self.assertClose(miCopy.getImage().getArray(), -50)
         self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
-        self.assertTrue(numpy.allclose(miCopy.getVariance().getArray(), 175))
+        self.assertClose(miCopy.getVariance().getArray(), 175)
 
-        self.assertTrue(numpy.allclose(mi.getImage().getArray(), 100))
+        self.assertClose(mi.getImage().getArray(), 100)
         self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
-        self.assertTrue(numpy.allclose(mi.getVariance().getArray(), 200))
+        self.assertClose(mi.getVariance().getArray(), 200)
 
     def testDeepCopyMetadata(self):
         """Make sure a deep copy of an Exposure has a deep copy of metadata (ticket #2568)
