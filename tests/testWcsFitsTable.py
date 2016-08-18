@@ -28,7 +28,7 @@ import pyfits
 
 import lsst.afw.image
 import lsst.afw.geom
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.daf.base
 
 
@@ -71,7 +71,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
         return wcsOut
 
     def testSimpleWcs(self):
-        with utilsTests.getTempFilePath(".fits") as fileName:
+        with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             wcsIn = lsst.afw.image.makeWcs(self.metadata)
             wcsOut = self.doFitsRoundTrip(fileName, wcsIn)
             self.assertEqual(wcsIn, wcsOut)
@@ -146,14 +146,14 @@ class WcsFitsTableTestCase(unittest.TestCase):
     def testTanWcs(self):
         self.addSipMetadata()
         wcsIn = lsst.afw.image.makeWcs(self.metadata)
-        with utilsTests.getTempFilePath(".fits") as fileName:
+        with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             wcsOut = self.doFitsRoundTrip(fileName, wcsIn)
             wcsIn1 = lsst.afw.image.cast_TanWcs(wcsIn)
             wcsOut1 = lsst.afw.image.cast_TanWcs(wcsOut)
-            self.assert_(wcsIn1 is not None)
-            self.assert_(wcsOut1 is not None)
-            self.assert_(wcsIn1.hasDistortion())
-            self.assert_(wcsOut1.hasDistortion())
+            self.assertIsNotNone(wcsIn1)
+            self.assertIsNotNone(wcsOut1)
+            self.assertTrue(wcsIn1.hasDistortion())
+            self.assertTrue(wcsOut1.hasDistortion())
             self.assertEqual(wcsIn1, wcsOut1)
 
     def testExposure(self):
@@ -163,7 +163,7 @@ class WcsFitsTableTestCase(unittest.TestCase):
         dim = lsst.afw.geom.Extent2I(20, 30)
         expIn = lsst.afw.image.ExposureF(dim)
         expIn.setWcs(wcsIn)
-        with utilsTests.getTempFilePath(".fits") as fileName:
+        with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             expIn.writeFits(fileName)
             # Manually mess up the headers, so we'd know if we were loading the Wcs from that;
             # when there is a WCS in the header and a WCS in the FITS table, we should use the
@@ -188,26 +188,20 @@ class WcsFitsTableTestCase(unittest.TestCase):
         self.assertFalse(exp.getWcs().isPersistable(),
                          "Test assumes that ZPN projections are not persistable")
 
-        with utilsTests.getTempFilePath(".fits") as fileName:
+        with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             exp.writeFits(fileName)
             exp2 = lsst.afw.image.ExposureF(fileName)
             self.assertEqual(exp.getWcs(), exp2.getWcs())
-#####
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(WcsFitsTableTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
