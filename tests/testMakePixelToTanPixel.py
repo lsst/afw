@@ -34,10 +34,6 @@ import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom import makePixelToTanPixel
 
 
-def setup_module(module):
-    lsst.utils.tests.init()
-
-
 class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
 
     def testSimpleCurvedFocalPlane(self):
@@ -180,8 +176,13 @@ class MakePixelToTanPixelTestCaseCase(lsst.utils.tests.TestCase):
             self.assertPairsNearlyEqual(pointTanPix, pointPix)
 
 
-class MyMemoryTestCase(lsst.utils.tests.MemoryTestCase):
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
+
+
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()
