@@ -84,17 +84,13 @@ class FunctorTestCase(unittest.TestCase):
                               self.y0, 1e-10, 1)
 
 
-def suite():
-    """Return a suite containing all of the test cases in this module."""
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
+
+
+def setup_module(module):
     lsst.utils.tests.init()
-    suites = []
-    suites += unittest.makeSuite(FunctorTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == '__main__':
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
