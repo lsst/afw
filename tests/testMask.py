@@ -312,7 +312,7 @@ class MaskTestCase(utilsTests.TestCase):
         mask = afwImage.MaskU(100, 200, {FOO: val}
                               )
         mpd = mask.getMaskPlaneDict()
-        self.assertTrue(FOO in mpd.keys())
+        self.assertIn(FOO, mpd.keys())
         self.assertEqual(mpd[FOO], val)
 
     def testImageSlices(self):
@@ -458,7 +458,7 @@ class OldMaskTestCase(unittest.TestCase):
         d = testMask2.getMaskPlaneDict()
 
         checkPlaneBP()                                        # still present in default mask
-        self.assertTrue("BP" in testMask2.getMaskPlaneDict())  # should still be in testMask2
+        self.assertIn("BP", testMask2.getMaskPlaneDict())  # should still be in testMask2
 
         self.Mask.removeMaskPlane("BP")  # remove from default mask too
 
