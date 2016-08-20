@@ -40,7 +40,7 @@ import unittest
 
 import numpy as np
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.detection as afwDetect
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
@@ -195,7 +195,7 @@ class RgbTestCase(unittest.TestCase):
     def testMakeRGB(self):
         """Test the function that does it all"""
         satValue = 1000.0
-        with utilsTests.getTempFilePath(".png") as fileName:
+        with lsst.utils.tests.getTempFilePath(".png") as fileName:
             red = saturate(self.images[R], satValue)
             green = saturate(self.images[G], satValue)
             blue = saturate(self.images[B], satValue)
@@ -237,7 +237,7 @@ class RgbTestCase(unittest.TestCase):
         """Test writing RGB files to disk"""
         asinhMap = rgb.AsinhMapping(self.min, self.range, self.Q)
         rgbImage = asinhMap.makeRgbImage(self.images[R], self.images[G], self.images[B])
-        with utilsTests.getTempFilePath(".png") as fileName:
+        with lsst.utils.tests.getTempFilePath(".png") as fileName:
             rgb.writeRGB(fileName, rgbImage)
             self.assertTrue(os.path.exists(fileName))
 
@@ -317,7 +317,7 @@ class RgbTestCase(unittest.TestCase):
         """Test the function that does it all, including rescaling"""
         rgb.makeRGB(self.images[R], self.images[G], self.images[B], xSize=40, ySize=60)
 
-        with utilsTests.getTempFilePath(".png") as fileName:
+        with lsst.utils.tests.getTempFilePath(".png") as fileName:
             rgb.makeRGB(self.images[R], self.images[G], self.images[B], fileName=fileName, rescaleFactor=0.5)
             self.assertTrue(os.path.exists(fileName))
 
@@ -337,27 +337,19 @@ class RgbTestCase(unittest.TestCase):
 
     @unittest.skipUnless(HAVE_MATPLOTLIB, NO_MATPLOTLIB_STRING)
     def testWriteStarsLegacyAPI(self):
-        with utilsTests.getTempFilePath(".png") as fileName:
+        with lsst.utils.tests.getTempFilePath(".png") as fileName:
             self.writeFileLegacyAPI(fileName)
             self.assertTrue(os.path.exists(fileName))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(RgbTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
