@@ -72,7 +72,7 @@ class MinimizeTestCase(unittest.TestCase):
 
         print("modelParams=", modelParams)
         print("fitParams  =", fitResults.parameterList)
-        self.assert_(fitResults.isValid, "fit failed")
+        self.assertTrue(fitResults.isValid, "fit failed")
         if not numpy.allclose(modelParams, fitResults.parameterList):
             self.fail("fit not accurate")
 
