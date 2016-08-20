@@ -48,7 +48,7 @@ import numpy
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.exceptions as pexEx
 import lsst.afw.display.ds9 as ds9
 
@@ -64,7 +64,7 @@ except:
 ######################################
 
 
-class StackTestCase(utilsTests.TestCase):
+class StackTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.nImg = 10
@@ -354,20 +354,12 @@ class StackTestCase(utilsTests.TestCase):
 #################################################################
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(StackTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
