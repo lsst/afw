@@ -29,7 +29,7 @@ import unittest
 
 import numpy
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -52,7 +52,7 @@ LocNameDict = {
 NameLocDict = dict((name, loc) for (loc, name) in LocNameDict.items())
 
 
-class KernelImagesForRegion(utilsTests.TestCase):
+class KernelImagesForRegion(lsst.utils.tests.TestCase):
 
     def setUp(self):
         boxCorner = afwGeom.Point2I(11, 50)
@@ -232,20 +232,12 @@ class KernelImagesForRegion(utilsTests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(KernelImagesForRegion)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(doExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), doExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
