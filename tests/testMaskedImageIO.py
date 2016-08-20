@@ -45,7 +45,7 @@ import numpy
 import pyfits
 
 import lsst.utils
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
@@ -170,7 +170,7 @@ class MaskedImageTestCase(unittest.TestCase):
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im.writeFits(tmpFile)
 
             im2 = im.Factory(tmpFile)
@@ -273,7 +273,7 @@ class MultiExtensionTestCase(object):
             self._checkImage(self._constructImage(fitsfile, needAllHdus=False), 1, 1, 1, 2, 0)
 
 
-class MaskedMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
+class MaskedMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.TestCase):
     """Derived version of MultiExtensionTestCase for MaskedImages."""
 
     def _constructImage(self, filename, hdu=None, needAllHdus=False):
@@ -323,7 +323,7 @@ class MaskedMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
             self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
 
 
-class ExposureMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase):
+class ExposureMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.TestCase):
     """Derived version of MultiExtensionTestCase for Exposures."""
 
     def _constructImage(self, filename, hdu=None, needAllHdus=False):
@@ -344,22 +344,12 @@ class ExposureMultiExtensionTestCase(MultiExtensionTestCase, utilsTests.TestCase
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(MaskedImageTestCase)
-    suites += unittest.makeSuite(MaskedMultiExtensionTestCase)
-    suites += unittest.makeSuite(ExposureMultiExtensionTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
