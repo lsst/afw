@@ -36,7 +36,7 @@ except NameError:
     debug = False
 
 import unittest
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.table as afwTable
 
 
@@ -105,20 +105,12 @@ class MatchFitsTestCase(unittest.TestCase):
 #################################################################
 # Test suite boiler plate
 #################################################################
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(MatchFitsTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
