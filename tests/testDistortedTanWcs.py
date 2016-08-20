@@ -30,7 +30,7 @@ from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 from lsst.afw.image.utils import getDistortedWcs
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.daf.base as dafBase
 
 try:
@@ -39,7 +39,7 @@ except NameError:
     verbose = 0
 
 
-class DistortedTanWcsTestCase(unittest.TestCase):
+class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
     """Test that makeWcs correctly returns a Wcs or TanWcs object
        as appropriate based on the contents of a fits header
     """
@@ -127,7 +127,7 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         self.assertFalse(self.tanWcs.hasDistortion())
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertTrue(outWcs.hasDistortion())
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is not None)
+        self.assertIsNotNone(afwImage.DistortedTanWcs.cast(outWcs))
         del exposure  # avoid accidental reuse
         del outWcs
 
@@ -140,7 +140,7 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         exposure.setDetector(detector)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertTrue(outWcs.hasDistortion())
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is not None)
+        self.assertIsNotNone(afwImage.DistortedTanWcs.cast(outWcs))
         del exposure
         del distortedWcs
         del outWcs
@@ -148,7 +148,8 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         # raise an exception if exposure has no WCS
         exposure = afwImage.ExposureF(10, 10)
         exposure.setDetector(detector)
-        self.assertRaises(Exception, getDistortedWcs, exposure.getInfo())
+        with self.assertRaises(Exception):
+            getDistortedWcs(exposure.getInfo())
         del exposure
 
         # return the original pure TAN WCS if the exposure has no detector
@@ -156,8 +157,8 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         exposure.setWcs(self.tanWcs)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertFalse(outWcs.hasDistortion())
-        self.assertTrue(afwImage.TanWcs.cast(outWcs) is not None)
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is None)
+        self.assertIsNotNone(afwImage.TanWcs.cast(outWcs))
+        self.assertIsNone(afwImage.DistortedTanWcs.cast(outWcs))
         del exposure
         del outWcs
 
@@ -171,25 +172,20 @@ class DistortedTanWcsTestCase(unittest.TestCase):
         exposure.setDetector(detectorNoTanPix)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertFalse(outWcs.hasDistortion())
-        self.assertTrue(afwImage.TanWcs.cast(outWcs) is not None)
-        self.assertTrue(afwImage.DistortedTanWcs.cast(outWcs) is None)
+        self.assertIsNotNone(afwImage.TanWcs.cast(outWcs))
+        self.assertIsNone(afwImage.DistortedTanWcs.cast(outWcs))
         del exposure
         del outWcs
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(DistortedTanWcsTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
