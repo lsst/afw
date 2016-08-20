@@ -30,7 +30,7 @@ import unittest
 
 import numpy
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.math as afwMath
 import lsst.afw.image as afwImage
 
@@ -93,15 +93,12 @@ class weightedStatsBugTestCase(unittest.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(weightedStatsBugTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    utilsTests.run(suite())
+    lsst.utils.tests.init()
+    unittest.main()
