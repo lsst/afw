@@ -120,9 +120,10 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testArrays(self):
         image, mask, variance = self.mimage.getArrays()
-        self.assert_((self.mimage.getImage().getArray() == image).all())
-        self.assert_((self.mimage.getMask().getArray() == mask).all())
-        self.assert_((self.mimage.getVariance().getArray() == variance).all())
+        self.assertListEqual(self.mimage.getImage().getArray().flatten().tolist(), image.flatten().tolist())
+        self.assertListEqual(self.mimage.getMask().getArray().flatten().tolist(), mask.flatten().tolist())
+        self.assertListEqual(self.mimage.getVariance().getArray().flatten().tolist(), 
+                             variance.flatten().tolist())
         mimage2 = afwImage.makeMaskedImageFromArrays(image, mask, variance)
         self.assertEqual(type(mimage2), type(self.mimage))
 
@@ -293,7 +294,8 @@ class MaskedImageTestCase(unittest.TestCase):
                         destMI.assign(srcMI, bbox, origin)
                         destMIView = afwImage.MaskedImageF(destMI, bbox, origin)
                     for i in range(3):
-                        self.assertTrue(np.all(destMIView.getArrays()[i] == srcMI.getArrays()[i]))
+                        self.assertListEqual(destMIView.getArrays()[i].flatten().tolist(),
+                                             srcMI.getArrays()[i].flatten().tolist())
                     numPixNotAssigned = (destMIDim[0] * destMIDim[1]) - (srcMIDim[0] * srcMIDim[1])
                     self.assertEqual(np.sum(destImage.getArray() < -0.5), numPixNotAssigned)
                     self.assertEqual(np.sum(destVariance.getArray() < -0.5), numPixNotAssigned)
@@ -335,14 +337,16 @@ class MaskedImageTestCase(unittest.TestCase):
             destMask[:] = 0xFFFF
             destMI.assign(srcMI)
             for i in range(3):
-                self.assertTrue(np.all(destMI.getArrays()[i] == srcMI.getArrays()[i]))
+                self.assertListEqual(destMI.getArrays()[i].flatten().tolist(), 
+                                     srcMI.getArrays()[i].flatten().tolist())
 
             destImage[:] = -1.0
             destVariance[:] = -1.0
             destMask[:] = 0xFFFF
             destMI.assign(srcMI, afwGeom.Box2I())
             for i in range(3):
-                self.assertTrue(np.all(destMI.getArrays()[i] == srcMI.getArrays()[i]))
+                self.assertListEqual(destMI.getArrays()[i].flatten().tolist(),
+                                     srcMI.getArrays()[i].flatten().tolist())
 
     def testSubtractImages(self):
         "Test subtraction"
