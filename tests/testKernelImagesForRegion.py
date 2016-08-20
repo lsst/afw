@@ -122,7 +122,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
         kernel = self.makeKernel()
         for doNormalize in (False, True):
             region = mathDetail.KernelImagesForRegion(kernel, self.bbox, self.xy0, doNormalize)
-            self.assert_(region.getDoNormalize() == doNormalize)
+            self.assertEqual(region.getDoNormalize(), doNormalize)
 
     def testGetPixelIndex(self):
         """Test getPixelIndex method
@@ -142,7 +142,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             (region.TOP_RIGHT, (rightInd, topInd)),
         ):
             desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
-            self.assert_(region.getPixelIndex(location) == desPixIndex,
+            self.assertEqual(region.getPixelIndex(location), desPixIndex,
                          "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
                                                            desPixIndex)
                          )
@@ -153,9 +153,9 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
         nx = 6
         ny = 5
         regionRow = mathDetail.RowOfKernelImagesForRegion(nx, ny)
-        self.assert_(not regionRow.hasData())
-        self.assert_(not regionRow.isLastRow())
-        self.assert_(regionRow.getYInd() == -1)
+        self.assertTrue(not regionRow.hasData())
+        self.assertTrue(not regionRow.isLastRow())
+        self.assertEqual(regionRow.getYInd(), -1)
 
         region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)
         floatWidth = self.bbox.getWidth() / float(nx)
@@ -169,21 +169,21 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
         for yInd in range(ny):
             rowWidth = 0
             isOK = region.computeNextRow(regionRow)
-            self.assert_(isOK)
-            self.assert_(regionRow.hasData())
-            self.assert_(regionRow.isLastRow() == (yInd + 1 >= ny))
-            self.assert_(regionRow.getYInd() == yInd)
+            self.assertTrue(isOK)
+            self.assertTrue(regionRow.hasData())
+            self.assertEqual(regionRow.isLastRow(), (yInd + 1 >= ny))
+            self.assertEqual(regionRow.getYInd(), yInd)
             firstBBox = regionRow.getRegion(0).getBBox()
-            self.assert_(firstBBox.getMinX() == self.bbox.getMinX())
+            self.assertEqual(firstBBox.getMinX(), self.bbox.getMinX())
             if yInd == 0:
-                self.assert_(firstBBox.getMinY() == self.bbox.getMinY())
+                self.assertEqual(firstBBox.getMinY(), self.bbox.getMinY())
             firstBBoxHeight = firstBBox.getHeight()
-            self.assert_(firstBBoxHeight in validHeights)
+            self.assertTrue(firstBBoxHeight in validHeights)
             totalHeight += firstBBoxHeight
             if yInd > 0:
-                self.assert_(firstBBox.getMinY() == prevFirstBBox.getMaxY() + 1)
+                self.assertEqual(firstBBox.getMinY(), prevFirstBBox.getMaxY() + 1)
                 if yInd == ny - 1:
-                    self.assert_(firstBBox.getMaxY() == self.bbox.getMaxY())
+                    self.assertEqual(firstBBox.getMaxY(), self.bbox.getMaxY())
             prevFirstBBox = firstBBox
             for xInd in range(nx):
                 subregion = regionRow.getRegion(xInd)
@@ -194,18 +194,18 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
                     raise
                 bbox = subregion.getBBox()
                 rowWidth += bbox.getWidth()
-                self.assert_(bbox.getWidth() in validWidths)
-                self.assert_(bbox.getHeight() == firstBBoxHeight)
+                self.assertTrue(bbox.getWidth() in validWidths)
+                self.assertEqual(bbox.getHeight(), firstBBoxHeight)
                 if xInd > 0:
-                    self.assert_(bbox.getMinX() == prevBBox.getMaxX() + 1)
-                    self.assert_(bbox.getMinY() == prevBBox.getMinY())
-                    self.assert_(bbox.getMaxY() == prevBBox.getMaxY())
+                    self.assertEqual(bbox.getMinX(), prevBBox.getMaxX() + 1)
+                    self.assertEqual(bbox.getMinY(), prevBBox.getMinY())
+                    self.assertEqual(bbox.getMaxY(), prevBBox.getMaxY())
                     if xInd == nx - 1:
-                        self.assert_(bbox.getMaxX() == self.bbox.getMaxX())
+                        self.assertEqual(bbox.getMaxX(), self.bbox.getMaxX())
                 prevBBox = bbox
-            self.assert_(rowWidth == self.bbox.getWidth())
-        self.assert_(totalHeight == self.bbox.getHeight())
-        self.assert_(not region.computeNextRow(regionRow))
+            self.assertEqual(rowWidth, self.bbox.getWidth())
+        self.assertEqual(totalHeight, self.bbox.getHeight())
+        self.assertTrue(not region.computeNextRow(regionRow))
 
     def testExactImages(self):
         """Confirm that kernel image at each location is correct
