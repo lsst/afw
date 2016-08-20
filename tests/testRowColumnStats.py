@@ -44,7 +44,7 @@ import unittest
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 
 
 class RowColumnStatisticsTestCase(unittest.TestCase):
@@ -125,20 +125,12 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
 #################################################################
 # Test suite boiler plate
 #################################################################
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(RowColumnStatisticsTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
