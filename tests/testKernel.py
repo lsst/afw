@@ -147,14 +147,14 @@ class KernelTestCase(unittest.TestCase):
                             continue
 
                         shrunkBBox = kernel.shrinkBBox(fullBBox)
-                        self.assert_((shrunkBBox.getWidth() == fullWidth + 1 - kWidth) and
+                        self.assertTrue((shrunkBBox.getWidth() == fullWidth + 1 - kWidth) and
                                      (shrunkBBox.getHeight() == fullHeight + 1 - kHeight),
                                      "shrinkBBox returned box of wrong size")
-                        self.assert_((shrunkBBox.getMinX() == boxStart[0] + kernel.getCtrX()) and
+                        self.assertTrue((shrunkBBox.getMinX() == boxStart[0] + kernel.getCtrX()) and
                                      (shrunkBBox.getMinY() == boxStart[1] + kernel.getCtrY()),
                                      "shrinkBBox returned box with wrong minimum")
                         newFullBBox = kernel.growBBox(shrunkBBox)
-                        self.assert_(newFullBBox == fullBBox, "growBBox(shrinkBBox(x)) != x")
+                        self.assertEqual(newFullBBox, fullBBox, "growBBox(shrinkBBox(x)) != x")
 
     def testDeltaFunctionKernel(self):
         """Test DeltaFunctionKernel
@@ -241,7 +241,7 @@ class KernelTestCase(unittest.TestCase):
 
         kParams = [0.0]*len(basisKernelList)
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
-        self.assert_(kernel.isDeltaFunctionBasis())
+        self.assertTrue(kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, len(kParams))
         for ii in range(len(basisKernelList)):
             kParams = [0.0]*len(basisKernelList)
@@ -283,7 +283,7 @@ class KernelTestCase(unittest.TestCase):
             kernelList = afwMath.KernelList()
             kernelList.append(analKernel)
             lcKernel = afwMath.LinearCombinationKernel(kernelList, [1])
-            self.assert_(not lcKernel.isDeltaFunctionBasis())
+            self.assertTrue(not lcKernel.isDeltaFunctionBasis())
 
             doRaise = (coeff == 0)
             self.basicTestComputeImageRaise(analKernel, doRaise, "AnalyticKernel")
@@ -316,7 +316,7 @@ class KernelTestCase(unittest.TestCase):
 
         kParams = [0.0]*len(basisKernelList)
         kernel = afwMath.LinearCombinationKernel(basisKernelList, kParams)
-        self.assert_(not kernel.isDeltaFunctionBasis())
+        self.assertTrue(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, len(kParams))
 
         # make sure the linear combination kernel has private copies of its basis kernels
@@ -538,7 +538,7 @@ class KernelTestCase(unittest.TestCase):
         )
 
         kernel = afwMath.LinearCombinationKernel(basisKernelList, spFunc)
-        self.assert_(not kernel.isDeltaFunctionBasis())
+        self.assertTrue(not kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, 2, 3)
         kernel.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
@@ -666,7 +666,7 @@ class KernelTestCase(unittest.TestCase):
             kernel.setSpatialParameters(sParamList)
 
             refKernel = kernel.refactor()
-            self.assert_(refKernel)
+            self.assertTrue(refKernel)
             errStr = self.compareKernels(kernel, refKernel, compareParams=False)
             if errStr:
                 self.fail("failed with %s for spOrder=%s (numSpCoeff=%s)" % (errStr, spOrder, numSpParams))
@@ -695,22 +695,22 @@ class KernelTestCase(unittest.TestCase):
             kernel.setSpatialParameters(sParamList)
 
             refKernel = kernel.refactor()
-            self.assert_(refKernel)
+            self.assertTrue(refKernel)
             errStr = self.compareKernels(kernel, refKernel, compareParams=False)
             if errStr:
                 self.fail("failed with %s for spOrder=%s; numSpCoeff=%s" % (errStr, spOrder, numSpParams))
 
     def basicTests(self, kernel, nKernelParams, nSpatialParams=0, dimMustMatch=True):
         """Basic tests of a kernel"""
-        self.assert_(kernel.getNSpatialParameters() == nSpatialParams)
-        self.assert_(kernel.getNKernelParameters() == nKernelParams)
+        self.assertTrue(kernel.getNSpatialParameters() == nSpatialParams)
+        self.assertTrue(kernel.getNKernelParameters() == nKernelParams)
         if nSpatialParams == 0:
-            self.assert_(not kernel.isSpatiallyVarying())
+            self.assertTrue(not kernel.isSpatiallyVarying())
             for ii in range(nKernelParams+5):
                 self.assertRaises(pexExcept.InvalidParameterError,
                                   kernel.getSpatialFunction, ii)
         else:
-            self.assert_(kernel.isSpatiallyVarying())
+            self.assertTrue(kernel.isSpatiallyVarying())
             for ii in range(nKernelParams):
                 kernel.getSpatialFunction(ii)
             for ii in range(nKernelParams, nKernelParams+5):
@@ -722,7 +722,7 @@ class KernelTestCase(unittest.TestCase):
                 spatialParams = (spatialParamsForOneKernel,)*nkp
                 if ((nkp == nKernelParams) and ((nsp == nSpatialParams) or (nkp == 0))):
                     kernel.setSpatialParameters(spatialParams)
-                    self.assert_(numpy.all(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
+                    self.assertTrue(numpy.all(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
                 else:
                     self.assertRaises(pexExcept.InvalidParameterError,
                                       kernel.setSpatialParameters, spatialParams)
