@@ -25,7 +25,7 @@ from __future__ import absolute_import, division
 
 import unittest
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -38,7 +38,7 @@ pexLog.Debug("lsst.afw", VERBOSITY)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class ScaledPlus(utilsTests.TestCase):
+class ScaledPlus(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.random = afwMath.Random()
@@ -94,20 +94,12 @@ class ScaledPlus(utilsTests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(ScaledPlus)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(doExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), doExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
