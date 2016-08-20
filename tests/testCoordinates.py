@@ -40,21 +40,25 @@ import numpy
 import math
 import operator
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.geom as geom
-
-numpy.random.seed(1)
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class CoordinateTestCase(unittest.TestCase):
+class CoordinateTestCase(object):
+    """Mixin for some of the tests below.
+    """
 
-    def assertClose(self, a, b, msg=None):
+    def _assertClose(self, a, b, msg=None):
+        """Note that this will not be used by all tests, only by those
+           that derive from this class. The rest will use assertClose
+           from the tests package.
+        """
         if not numpy.allclose(a, b):
             return self.assertEqual(a, b, msg=msg)
         else:
-            return self.assert_(True, msg=msg)
+            return self.assertTrue(True, msg=msg)
 
     def testAccessors(self):
         for dtype, cls, rnd in self.classes:
@@ -63,7 +67,7 @@ class CoordinateTestCase(unittest.TestCase):
             self.assertEqual(p.__class__, cls)
             self.assertEqual(tuple(p), tuple(vector1))
             self.assertEqual(tuple(p.clone()), tuple(p))
-            self.assert_(p.clone() is not p)
+            self.assertIsNot(p.clone(), p)
             vector2 = rnd()
             for n in range(cls.dimensions):
                 p[n] = vector2[n]
@@ -79,7 +83,7 @@ class CoordinateTestCase(unittest.TestCase):
 
             self.assertEqual(p1 == p2, all(p1.eq(p2)))
             self.assertEqual(p1 != p2, any(p1.ne(p2)))
-            self.assertNotEqual(p1, None)  # should not throw
+            self.assertIsNotNone(p1)  # should not throw
             self.assertNotEqual(p1, tuple(p1))  # should not throw
 
             self.assertEqual(tuple(p1.eq(p2)), tuple([v1 == v2 for v1, v2 in zip(vector1, vector2)]))
@@ -109,7 +113,7 @@ class CoordinateTestCase(unittest.TestCase):
             self.assertEqual(type(p1.ge(scalar)), CoordinateExpr)
 
 
-class PointTestCase(CoordinateTestCase):
+class PointTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     """A test case for Point"""
 
     def setUp(self):
@@ -130,40 +134,40 @@ class PointTestCase(CoordinateTestCase):
         # test 2-d
         e1 = geom.Point2I(1, 2)
         e2 = geom.Point2I(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Point2D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point2I(1, 3)
         e2 = geom.Point2D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         # test 3-d
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Point3I(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Point3D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Point3D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         # test rounding to integral coordinates
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Point2I(e1)
-        self.assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+        self._assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
 
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Point3I(e1)
-        self.assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+        self._assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
 
 
-class ExtentTestCase(CoordinateTestCase):
+class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     """A test case for Extent"""
 
     def setUp(self):
@@ -184,54 +188,54 @@ class ExtentTestCase(CoordinateTestCase):
         # test extent from extent 2-d
         e1 = geom.Extent2I(1, 2)
         e2 = geom.Extent2I(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Extent2D(1.2, 3.4)
         e2 = geom.Extent2D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Extent2I(1, 2)
         e2 = geom.Extent2D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         # test extent from extent 3-d
         e1 = geom.Extent3I(1, 2, 3)
         e2 = geom.Extent3I(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Extent3D(1.2, 3.4, 5.6)
         e2 = geom.Extent3D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Extent3I(1, 2, 3)
         e2 = geom.Extent3D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         # test extent from point 2-d
         e1 = geom.Point2I(1, 2)
         e2 = geom.Extent2I(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Extent2D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point2I(1, 2)
         e2 = geom.Extent2D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         # test extent from point 3-d
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Extent3I(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Extent3D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Extent3D(e1)
-        self.assertClose(tuple(e1), tuple(e2))
+        self._assertClose(tuple(e1), tuple(e2))
 
         # test invalid constructors
         try:
@@ -265,7 +269,7 @@ class ExtentTestCase(CoordinateTestCase):
             self.fail("Should not allow conversion Point3D to Extent3I")
 
 
-class OperatorTestCase(utilsTests.TestCase):
+class OperatorTestCase(lsst.utils.tests.TestCase):
 
     @staticmethod
     def makeRandom(cls):
@@ -293,7 +297,8 @@ class OperatorTestCase(utilsTests.TestCase):
         v1 = self.makeRandom(lhs)
         v2 = self.makeRandom(rhs)
         if issubclass(expected, Exception):
-            self.assertRaises(expected, op, v1, v2)
+            with self.assertRaises(expected):
+                op(v1, v2)
         else:
             check = op(numpy.array(v1), numpy.array(v2))
             result = op(v1, v2)
@@ -313,7 +318,7 @@ class OperatorTestCase(utilsTests.TestCase):
                 p = self.makeRandom(geom.Point[t, n])
                 e = p.asExtent()
                 self.assertEqual(type(e), geom.Extent[t, n])
-                self.assertClose(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
 
     def testExtentAsPoint(self):
         for n in (2, 3):
@@ -321,7 +326,7 @@ class OperatorTestCase(utilsTests.TestCase):
                 e = self.makeRandom(geom.Extent[t, n])
                 p = e.asPoint()
                 self.assertEqual(type(p), geom.Point[t, n])
-                self.assertClose(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
 
     def testUnaryOperators(self):
         for n in (2, 3):
@@ -329,10 +334,10 @@ class OperatorTestCase(utilsTests.TestCase):
                 e1 = self.makeRandom(geom.Extent[t, n])
                 e2 = +e1
                 self.assertEqual(type(e1), type(e2))
-                self.assertClose(numpy.array(e1), numpy.array(e2), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(numpy.array(e1), numpy.array(e2), rtol=0.0, atol=0.0)
                 e3 = -e1
                 self.assertEqual(type(e1), type(e3))
-                self.assertClose(numpy.array(e3), -numpy.array(e1), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(numpy.array(e3), -numpy.array(e1), rtol=0.0, atol=0.0)
 
     def testBinaryOperators(self):
         for n in (2, 3):
@@ -470,25 +475,17 @@ class OperatorTestCase(utilsTests.TestCase):
             self.checkOperator(operator.floordiv, eI, int, eI)
             self.checkOperator(operator.floordiv, eI, float, TypeError)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+def setup_module(module):
+    numpy.random.seed(1)
 
-    utilsTests.init()
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(PointTestCase)
-    suites += unittest.makeSuite(ExtentTestCase)
-    suites += unittest.makeSuite(OperatorTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
