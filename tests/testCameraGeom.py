@@ -29,6 +29,7 @@ from builtins import range
 
 import unittest
 import numpy
+import os
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -45,6 +46,8 @@ try:
 except NameError:
     display = False
 
+
+testPath = os.path.abspath(os.path.dirname(__file__))
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -57,9 +60,9 @@ class CameraGeomTestCase(unittest.TestCase):
         self.cameraList = (self.lsstCamWrapper, self.scCamWrapper)
         self.assemblyList = {}
         self.assemblyList[self.lsstCamWrapper.camera.getName()] =\
-            [afwImage.ImageU('tests/test_amp.fits.gz') for i in range(8)]
+            [afwImage.ImageU(os.path.join(testPath, 'test_amp.fits.gz')) for i in range(8)]
         self.assemblyList[self.scCamWrapper.camera.getName()] =\
-            [afwImage.ImageU('tests/test.fits.gz')]
+            [afwImage.ImageU(os.path.join(testPath, 'test.fits.gz'))]
 
     def tearDown(self):
         del self.lsstCamWrapper
@@ -276,8 +279,8 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testAssembly(self):
         ccdNames = ('R:0,0 S:1,0', 'R:0,0 S:0,1')
-        compMap = {True: afwImage.ImageU('tests/test_comp_trimmed.fits.gz'),
-                   False: afwImage.ImageU('tests/test_comp.fits.gz')}
+        compMap = {True: afwImage.ImageU(os.path.join(testPath, 'test_comp_trimmed.fits.gz')),
+                   False: afwImage.ImageU(os.path.join(testPath, 'test_comp.fits.gz'))}
         for cw in self.cameraList:
             camera = cw.camera
             imList = self.assemblyList[camera.getName()]
