@@ -36,7 +36,7 @@ import lsst.afw.cameraGeom as cameraGeom
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
 
-class DetectorTestCase(unittest.TestCase):
+class DetectorTestCase(lsst.utils.tests.TestCase):
 
     def testBasics(self):
         """Test getters and other basics
@@ -81,12 +81,14 @@ class DetectorTestCase(unittest.TestCase):
         def duplicateAmpName(dw):
             """Set two amplifiers to the same name"""
             dw.ampInfo[1].setName(dw.ampInfo[0].getName())
-        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, modFunc=duplicateAmpName)
+        with self.assertRaises(lsst.pex.exceptions.Exception):
+            DetectorWrapper(modFunc=duplicateAmpName)
 
         def addBadCameraSys(dw):
             """Add an invalid camera system"""
             dw.transMap[cameraGeom.CameraSys("foo", "wrong detector")] = afwGeom.IdentityXYTransform()
-        self.assertRaises(lsst.pex.exceptions.Exception, DetectorWrapper, modFunc=addBadCameraSys)
+        with self.assertRaises(lsst.pex.exceptions.Exception):
+            DetectorWrapper(modFunc=addBadCameraSys)
 
     def testTransform(self):
         """Test the transform method
@@ -113,7 +115,8 @@ class DetectorTestCase(unittest.TestCase):
         # make sure you cannot transform to a different detector
         pixCamPoint = dw.detector.makeCameraPoint(afwGeom.Point2D(1, 1), cameraGeom.PIXELS)
         otherCamSys = cameraGeom.CameraSys(cameraGeom.PIXELS, "other detector")
-        self.assertRaises(lsst.pex.exceptions.Exception, dw.detector.transform, pixCamPoint, otherCamSys)
+        with self.assertRaises(lsst.pex.exceptions.Exception):
+            dw.detector.transform(pixCamPoint, otherCamSys)
 
     def testIteration(self):
         """Test iteration over amplifiers and __getitem__
@@ -143,7 +146,8 @@ class DetectorTestCase(unittest.TestCase):
             cameraGeom.CameraSys("pixels", "badDetectorName")
         ):
             self.assertFalse(detector.hasTransform(badCamSys))
-            self.assertRaises(lsst.pex.exceptions.Exception, detector.getTransform, badCamSys)
+            with self.assertRaises(lsst.pex.exceptions.Exception):
+                detector.getTransform(badCamSys)
 
     def testMakeCameraPoint(self):
         """Test the makeCameraPoint method
@@ -215,20 +219,15 @@ class DetectorTestCase(unittest.TestCase):
                     self.assertAlmostEquals(ctrPixPoint[i], ctrPoint[i])
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
 
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
+
+
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(DetectorTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
