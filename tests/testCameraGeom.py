@@ -30,7 +30,7 @@ from builtins import range
 import unittest
 import numpy
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
@@ -342,30 +342,12 @@ class CameraGeomTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    if display:
-        ds9.cmdBuffer.pushSize()
-
-    suites = []
-    suites += unittest.makeSuite(CameraGeomTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    if display:
-        ds9.cmdBuffer.popSize()
-
-    return unittest.TestSuite(suites)
-
-
-def run(exit=False):
-    """Run the tests"""
-
-    if display:
-        ds9.setDefaultFrame(0)
-    utilsTests.run(suite(), exit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
