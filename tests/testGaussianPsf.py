@@ -83,22 +83,22 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
     def testKernelImage(self):
         image = self.psf.computeKernelImage()
         check = makeGaussianImage(image.getBBox(), self.psf.getSigma())
-        self.assertClose(image.getArray(), check.getArray())
-        self.assertClose(image.getArray().sum(), 1.0, atol=1E-14)
+        self.assertFloatsAlmostEqual(image.getArray(), check.getArray())
+        self.assertFloatsAlmostEqual(image.getArray().sum(), 1.0, atol=1E-14)
 
     def testOffsetImage(self):
         image = self.psf.computeImage(lsst.afw.geom.Point2D(0.25, 0.25))
         check = makeGaussianImage(image.getBBox(), self.psf.getSigma(), 0.25, 0.25)
-        self.assertClose(image.getArray(), check.getArray(), atol=1E-4, rtol=1E-4, plotOnFailure=True)
+        self.assertFloatsAlmostEqual(image.getArray(), check.getArray(), atol=1E-4, rtol=1E-4, plotOnFailure=True)
 
     def testApertureFlux(self):
         image = self.psf.computeKernelImage(lsst.afw.geom.Point2D(0.0, 0.0))
         # test aperture implementation is very crude; can only test to about 10%
-        self.assertClose(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0), rtol=0.1)
-        self.assertClose(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0), rtol=0.1)
+        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0), rtol=0.1)
+        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0), rtol=0.1)
 
     def testShape(self):
-        self.assertClose(self.psf.computeShape().getDeterminantRadius(), 4.0)
+        self.assertFloatsAlmostEqual(self.psf.computeShape().getDeterminantRadius(), 4.0)
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
@@ -107,23 +107,15 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(self.psf.getSigma(), psf.getSigma())
             self.assertEqual(self.psf.getDimensions(), psf.getDimensions())
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(GaussianPsfTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
