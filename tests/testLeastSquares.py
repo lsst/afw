@@ -49,29 +49,29 @@ lsst.pex.logging.getDefaultLog().setThresholdFor("afw.math.LeastSquares", -10)
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class LeastSquaresTestCase(unittest.TestCase):
+class LeastSquaresTestCase(lsst.utils.tests.TestCase):
 
-    def assertClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assert_(numpy.allclose(a, b, rtol=rtol, atol=atol), "\n%s\n!=\n%s" % (a, b))
+    def _assertClose(self, a, b, rtol=1E-5, atol=1E-8):
+        self.assertFloatsAlmostEqual(a, b, rtol=rtol, atol=atol, msg="\n%s\n!=\n%s" % (a, b))
 
-    def assertNotClose(self, a, b, rtol=1E-5, atol=1E-8):
-        self.assert_(not numpy.allclose(a, b, rtol=rtol, atol=atol), "\n%s\n==\n%s" % (a, b))
+    def _assertNotClose(self, a, b, rtol=1E-5, atol=1E-8):
+        self.assertFloatsNotEqual(a, b, rtol=rtol, atol=atol, msg="\n%s\n==\n%s" % (a, b))
 
     def check(self, solver, solution, rank, fisher, cov, sv):
         self.assertEqual(solver.getRank(), rank)
         self.assertEqual(solver.getDimension(), solution.shape[0])
-        self.assertClose(solver.getSolution(), solution)
-        self.assertClose(solver.getFisherMatrix(), fisher)
-        self.assertClose(solver.getCovariance(), cov)
+        self._assertClose(solver.getSolution(), solution)
+        self._assertClose(solver.getFisherMatrix(), fisher)
+        self._assertClose(solver.getCovariance(), cov)
         if solver.getFactorization() != LeastSquares.NORMAL_CHOLESKY:
-            self.assertClose(solver.getDiagnostic(LeastSquares.NORMAL_EIGENSYSTEM), sv**2)
+            self._assertClose(solver.getDiagnostic(LeastSquares.NORMAL_EIGENSYSTEM), sv**2)
             diagnostic = solver.getDiagnostic(solver.getFactorization())
             rcond = diagnostic[0] * solver.getThreshold()
-            self.assert_(diagnostic[rank-1] > rcond)
+            self.assertGreater(diagnostic[rank-1], rcond)
             if rank < solver.getDimension():
-                self.assert_(diagnostic[rank] < rcond)
+                self.assertLess(diagnostic[rank], rcond)
         else:
-            self.assertClose(numpy.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)),
+            self._assertClose(numpy.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)),
                              numpy.multiply.reduce(sv**2))
 
     def testFullRank(self):
@@ -142,7 +142,7 @@ class LeastSquaresTestCase(unittest.TestCase):
         rhs = numpy.dot(design.transpose(), data)
         threshold = 10 * sys.float_info.epsilon
         solution, residues, rank, sv = numpy.linalg.lstsq(design, data, rcond=threshold)
-        self.assertClose(svIn, sv)
+        self._assertClose(svIn, sv)
         cov = numpy.linalg.pinv(fisher, rcond=threshold)
         s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
         s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
@@ -159,27 +159,21 @@ class LeastSquaresTestCase(unittest.TestCase):
         # Just check that solutions are different from before, but consistent with each other;
         # I can't figure out how get numpy.lstsq to deal with the thresholds appropriately to
         # test against that.
-        self.assertNotClose(s_svd.getSolution(), solution)
-        self.assertNotClose(s_design_eigen.getSolution(), solution)
-        self.assertNotClose(s_normal_eigen.getSolution(), solution)
-        self.assertClose(s_svd.getSolution(), s_design_eigen.getSolution())
-        self.assertClose(s_svd.getSolution(), s_normal_eigen.getSolution())
+        self._assertNotClose(s_svd.getSolution(), solution)
+        self._assertNotClose(s_design_eigen.getSolution(), solution)
+        self._assertNotClose(s_normal_eigen.getSolution(), solution)
+        self._assertClose(s_svd.getSolution(), s_design_eigen.getSolution())
+        self._assertClose(s_svd.getSolution(), s_normal_eigen.getSolution())
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
-    suites = []
-    suites += unittest.makeSuite(LeastSquaresTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
