@@ -38,7 +38,7 @@ import lsst.afw.geom.ellipses as geomEllip
 import lsst.afw.coord as afwCoord
 
 
-class PickleTestCase(unittest.TestCase):
+class PickleBase:
     """A test case for pickles"""
 
     def setUp(self):
@@ -62,13 +62,13 @@ class PickleTestCase(unittest.TestCase):
         self.assertPickled(newData)
 
 
-class AngleTestCase(PickleTestCase):
+class AngleTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         self.data = 1.0*afwGeom.degrees
 
 
-class CoordTestCase(PickleTestCase):
+class CoordTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         ra = 10.0*afwGeom.degrees
@@ -83,91 +83,91 @@ class CoordTestCase(PickleTestCase):
                      ]
 
 
-class QuadrupoleTestCase(PickleTestCase):
+class QuadrupoleTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         ixx, iyy, ixy = 1.0, 1.0, 0.0
         self.data = geomEllip.Quadrupole(ixx, iyy, ixy)
 
 
-class AxesTestCase(PickleTestCase):
+class AxesTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         a, b, theta = 1.0, 1.0, 0.0
         self.data = geomEllip.Axes(a, b, theta)
 
 
-class Point2DTestCase(PickleTestCase):
+class Point2DTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y = 1.0, 1.0
         self.data = afwGeom.Point2D(x, y)
 
 
-class Point2ITestCase(PickleTestCase):
+class Point2ITestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y = 1, 1
         self.data = afwGeom.Point2I(x, y)
 
 
-class Point3DTestCase(PickleTestCase):
+class Point3DTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1.0, 1.0, 1.0
         self.data = afwGeom.Point3D(x, y, z)
 
 
-class Point3ITestCase(PickleTestCase):
+class Point3ITestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1, 1, 1
         self.data = afwGeom.Point3I(x, y, z)
 
 
-class Extent2DTestCase(PickleTestCase):
+class Extent2DTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y = 1.0, 1.0
         self.data = afwGeom.Extent2D(x, y)
 
 
-class Extent3DTestCase(PickleTestCase):
+class Extent3DTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1, 1, 1
         self.data = afwGeom.Extent3D(x, y, z)
 
 
-class Extent2ITestCase(PickleTestCase):
+class Extent2ITestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y = 1, 1
         self.data = afwGeom.Extent2I(x, y)
 
 
-class Extent3ITestCase(PickleTestCase):
+class Extent3ITestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         x, y, z = 1, 1, 1
         self.data = afwGeom.Extent3I(x, y, z)
 
 
-class Box2DTestCase(PickleTestCase):
+class Box2DTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         p, e = afwGeom.Point2D(1.0, 1.0), afwGeom.Extent2D(0.5, 0.5)
         self.data = afwGeom.Box2D(p, e)
 
 
-class Box2ITestCase(PickleTestCase):
+class Box2ITestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         p, e = afwGeom.Point2I(1, 2), afwGeom.Extent2I(1, 1)
         self.data = afwGeom.Box2I(p, e)
 
 
-class AffineTransformTestCase(PickleTestCase):
+class AffineTransformTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         scale = 2.2
@@ -180,7 +180,7 @@ class AffineTransformTestCase(PickleTestCase):
         self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
 
 
-class LinearTransformTestCase(PickleTestCase):
+class LinearTransformTestCase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         scale = 2.0
@@ -190,7 +190,7 @@ class LinearTransformTestCase(PickleTestCase):
         self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
 
 
-class WcsPickleTestCase(PickleTestCase):
+class WcsPickleBase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         hdr = dafBase.PropertyList()
@@ -212,7 +212,7 @@ class WcsPickleTestCase(PickleTestCase):
         self.data = afwImage.makeWcs(hdr)
 
 
-class TanWcsPickleTestCase(PickleTestCase):
+class TanWcsPickleBase(PickleBase,unittest.TestCase):
 
     def setUp(self):
         hdr = dafBase.PropertyList()
@@ -319,8 +319,8 @@ def suite():
     suites += unittest.makeSuite(Box2ITestCase)
     suites += unittest.makeSuite(AffineTransformTestCase)
     suites += unittest.makeSuite(LinearTransformTestCase)
-    suites += unittest.makeSuite(WcsPickleTestCase)
-    suites += unittest.makeSuite(TanWcsPickleTestCase)
+    suites += unittest.makeSuite(WcsPickleBase)
+    suites += unittest.makeSuite(TanWcsPickleBase)
     suites += unittest.makeSuite(utilsTests.MemoryTestCase)
 
     return unittest.TestSuite(suites)
