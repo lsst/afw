@@ -41,7 +41,7 @@ import unittest
 import numpy as np
 
 import lsst.utils
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image as afwImage
@@ -736,20 +736,12 @@ def printImg(img):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(MaskedImageTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
