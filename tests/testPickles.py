@@ -53,7 +53,7 @@ class PickleBase:
         Subclasses should override this method if the particular data
         doesn't support the == operator.
         """
-        self.assertTrue(new == self.data)
+        self.assertEqual(new, self.data)
 
     def testPickle(self):
         """Test round-trip pickle"""
@@ -177,7 +177,7 @@ class AffineTransformTestCase(PickleBase,unittest.TestCase):
         self.data = afwGeom.AffineTransform(linear, trans)
 
     def assertPickled(self, new):
-        self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
+        self.assertListEqual(new.getMatrix().flatten().tolist(), self.data.getMatrix().flatten().tolist())
 
 
 class LinearTransformTestCase(PickleBase,unittest.TestCase):
@@ -187,7 +187,7 @@ class LinearTransformTestCase(PickleBase,unittest.TestCase):
         self.data = afwGeom.LinearTransform().makeScaling(scale)
 
     def assertPickled(self, new):
-        self.assertTrue((new.getMatrix() == self.data.getMatrix()).all())
+        self.assertListEqual(new.getMatrix().flatten().tolist(), self.data.getMatrix().flatten().tolist())
 
 
 class WcsPickleBase(PickleBase,unittest.TestCase):
