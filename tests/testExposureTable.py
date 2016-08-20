@@ -56,7 +56,7 @@ except NameError:
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class ExposureTableTestCase(unittest.TestCase):
+class ExposureTableTestCase(lsst.utils.tests.TestCase):
 
     @staticmethod
     def createWcs():
@@ -83,8 +83,8 @@ class ExposureTableTestCase(unittest.TestCase):
     def comparePsfs(self, psf1, psf2):
         psf1 = DummyPsf.swigConvert(psf1)
         psf2 = DummyPsf.swigConvert(psf2)
-        self.assert_(psf1 is not None)
-        self.assert_(psf2 is not None)
+        self.assertIsNotNone(psf1)
+        self.assertIsNotNone(psf2)
         self.assertEqual(psf1.getValue(), psf2.getValue())
 
     def setUp(self):
@@ -141,9 +141,9 @@ class ExposureTableTestCase(unittest.TestCase):
         self.assertEqual(record0.getBBox(), self.bbox0)
         self.assertEqual(record1.getBBox(), self.bbox1)
         self.comparePsfs(record0.getPsf(), self.psf)
-        self.assertEqual(record1.getPsf(), None)
+        self.assertIsNone(record1.getPsf())
         self.assertEqual(record0.getCalib(), self.calib)
-        self.assertTrue(record1.getCalib() is None)
+        self.assertIsNone(record1.getCalib())
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
@@ -156,8 +156,8 @@ class ExposureTableTestCase(unittest.TestCase):
             self.assertEqual(self.cat[1].get(self.ka), cat1[1].get(self.ka))
             self.assertEqual(self.cat[1].get(self.kb), cat1[1].get(self.kb))
             self.assertEqual(self.cat[1].getWcs(), cat1[1].getWcs())
-            self.assertTrue(self.cat[1].getPsf() is None)
-            self.assertTrue(self.cat[1].getCalib() is None)
+            self.assertIsNone(self.cat[1].getPsf())
+            self.assertIsNone(self.cat[1].getCalib())
             self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
                              1].getWcs().getId())  # compare citizen IDs
             self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
@@ -215,23 +215,15 @@ class ExposureTableTestCase(unittest.TestCase):
             self.assertEqual(coaddInputsOut.ccds[0].getId(), 3)
             self.assertEqual(coaddInputsOut.ccds[1].getId(), 4)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(ExposureTableTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
