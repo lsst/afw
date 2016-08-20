@@ -114,10 +114,10 @@ class MaskedImageTestCase(unittest.TestCase):
         exposure = afwImage.ExposureF(filename)
         self.assertEqual(image.get(0, 0), maskedImage.getImage().get(0, 0))
         self.assertEqual(image.get(0, 0), exposure.getMaskedImage().getImage().get(0, 0))
-        self.assert_(numpy.all(maskedImage.getMask().getArray() == 0))
-        self.assert_(numpy.all(exposure.getMaskedImage().getMask().getArray() == 0))
-        self.assert_(numpy.all(maskedImage.getVariance().getArray() == 0.0))
-        self.assert_(numpy.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
+        self.assertTrue(numpy.all(maskedImage.getMask().getArray() == 0))
+        self.assertTrue(numpy.all(exposure.getMaskedImage().getMask().getArray() == 0))
+        self.assertTrue(numpy.all(maskedImage.getVariance().getArray() == 0.0))
+        self.assertTrue(numpy.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadConform(self):
