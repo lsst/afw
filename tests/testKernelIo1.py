@@ -28,6 +28,7 @@ from builtins import range
 import unittest
 
 import numpy
+import os
 
 import lsst.utils.tests
 import lsst.pex.logging as pexLog
@@ -41,6 +42,8 @@ import lsst.afw.geom as afwGeom
 Verbosity = 0  # increase to see trace
 pexLog.Debug("lsst.afw", Verbosity)
 # pexLog.Debug("afw.math.KernelFormatter", 30)
+
+testPath = os.path.abspath(os.path.dirname(__file__))
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -78,7 +81,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation("tests/data/kernel1.boost")
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel1.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         storageList = dafPersist.StorageList()
@@ -117,7 +120,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation("tests/data/kernel2.boost")
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel2.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
@@ -163,7 +166,7 @@ class KernelIOTestCase(unittest.TestCase):
         """
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation("tests/data/kernel3.boost")
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel3.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         for kWidth in range(1, 4):
@@ -204,7 +207,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation("tests/data/kernel4.boost")
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel4.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
@@ -255,7 +258,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation("tests/data/kernel5.boost")
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data","kernel5.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         # create list of kernels
@@ -305,7 +308,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation("tests/data/kernel6.boost")
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel6.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         # create image arrays for the basis kernels
@@ -375,7 +378,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation("tests/data/kernel7.boost")
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel7.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
