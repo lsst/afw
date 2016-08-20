@@ -69,13 +69,13 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testConstructor(self):
         for cw in self.cameraList:
-            self.assertTrue(isinstance(cw.camera, Camera))
+            self.assertIsInstance(cw.camera, Camera)
             self.assertEqual(cw.nDetectors, len(cw.camera))
             self.assertEqual(cw.nDetectors, len(cw.ampInfoDict))
             self.assertEqual(sorted(cw.detectorNameList), sorted(cw.camera.getNameIter()))
             self.assertEqual(sorted(cw.detectorIdList), sorted(cw.camera.getIdIter()))
             for det in cw.camera:
-                self.assertTrue(isinstance(det, Detector))
+                self.assertIsInstance(det, Detector)
                 self.assertEqual(cw.ampInfoDict[det.getName()]['namps'], len(det))
 
     def testMakeCameraPoint(self):
@@ -95,8 +95,7 @@ class CameraGeomTestCase(unittest.TestCase):
 
                     # test == and !=
                     cp2 = camera.makeCameraPoint(pt, coordSys)
-                    self.assertTrue(cp == cp2)
-                    self.assertFalse(cp != cp2)
+                    self.assertEqual(cp, cp2)
 
             det = camera[next(camera.getNameIter())]
             cp = camera.makeCameraPoint(point, FOCAL_PLANE)
@@ -137,9 +136,9 @@ class CameraGeomTestCase(unittest.TestCase):
         for cw in self.cameraList:
             camera = cw.camera
             for name in cw.detectorNameList:
-                self.assertTrue(isinstance(camera[name], Detector))
+                self.assertIsInstance(camera[name], Detector)
             for detId in cw.detectorIdList:
-                self.assertTrue(isinstance(camera[detId], Detector))
+                self.assertIsInstance(camera[detId], Detector)
 
     def testTransformSlalib(self):
         """Test Camera.transform against data computed using SLALIB
@@ -224,7 +223,7 @@ class CameraGeomTestCase(unittest.TestCase):
                     # the result should not be on the main detector
                     pixToPixCP = camera.transform(pixFindOffCP, det.makeCameraSys(PIXELS))
                     self.assertFalse(afwGeom.Box2D(det.getBBox()).contains(pixToPixCP.getPoint()))
-            self.assertTrue(numOffUsable > 0)
+            self.assertGreater(numOffUsable, 0)
             print("numOffUsable=", numOffUsable)
 
     def testFindDetectors(self):
@@ -253,8 +252,8 @@ class CameraGeomTestCase(unittest.TestCase):
             for name in cw.detectorNameList:
                 for corner in camera[name].getCorners(FOCAL_PLANE):
                     bbox.include(corner)
-            self.assertTrue(bbox.getMin(), camera.getFpBBox().getMin())
-            self.assertTrue(bbox.getMax(), camera.getFpBBox().getMax())
+            self.assertEqual(bbox.getMin(), camera.getFpBBox().getMin())
+            self.assertEqual(bbox.getMax(), camera.getFpBBox().getMax())
 
     def testLinearity(self):
         """Test if we can set/get Linearity parameters"""
@@ -296,7 +295,8 @@ class CameraGeomTestCase(unittest.TestCase):
                     else:
                         for amp, im in zip(det, imList):
                             assemble(outImage, im, amp)
-                    self.assertTrue((outImage.getArray() == compMap[trim].getArray()).all())
+                    self.assertListEqual(outImage.getArray().flatten().tolist(),
+                                         compMap[trim].getArray().flatten().tolist())
 
     @unittest.skipIf(not display, "display variable not set; skipping cameraGeomUtils test")
     def testCameraGeomUtils(self):
