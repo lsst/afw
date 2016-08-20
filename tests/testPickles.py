@@ -31,7 +31,7 @@ import unittest
 import pickle
 
 import lsst.daf.base as dafBase
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as geomEllip
@@ -299,36 +299,12 @@ class TanWcsPickleBase(PickleBase,unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(AngleTestCase)
-    suites += unittest.makeSuite(CoordTestCase)
-    suites += unittest.makeSuite(QuadrupoleTestCase)
-    suites += unittest.makeSuite(AxesTestCase)
-    suites += unittest.makeSuite(Point2DTestCase)
-    suites += unittest.makeSuite(Point3DTestCase)
-    suites += unittest.makeSuite(Point2ITestCase)
-    suites += unittest.makeSuite(Point3ITestCase)
-    suites += unittest.makeSuite(Extent2DTestCase)
-    suites += unittest.makeSuite(Extent3DTestCase)
-    suites += unittest.makeSuite(Box2DTestCase)
-    suites += unittest.makeSuite(Box2ITestCase)
-    suites += unittest.makeSuite(AffineTransformTestCase)
-    suites += unittest.makeSuite(LinearTransformTestCase)
-    suites += unittest.makeSuite(WcsPickleBase)
-    suites += unittest.makeSuite(TanWcsPickleBase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(exit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), exit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
