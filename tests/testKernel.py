@@ -72,7 +72,7 @@ def makeDeltaFunctionKernelList(kWidth, kHeight):
     return kVec
 
 
-class KernelTestCase(unittest.TestCase):
+class KernelTestCase(lsst.utils.tests.TestCase):
     """A test case for Kernels"""
 
     def testAnalyticKernel(self):
@@ -147,12 +147,10 @@ class KernelTestCase(unittest.TestCase):
                             continue
 
                         shrunkBBox = kernel.shrinkBBox(fullBBox)
-                        self.assertTrue((shrunkBBox.getWidth() == fullWidth + 1 - kWidth) and
-                                     (shrunkBBox.getHeight() == fullHeight + 1 - kHeight),
-                                     "shrinkBBox returned box of wrong size")
-                        self.assertTrue((shrunkBBox.getMinX() == boxStart[0] + kernel.getCtrX()) and
-                                     (shrunkBBox.getMinY() == boxStart[1] + kernel.getCtrY()),
-                                     "shrinkBBox returned box with wrong minimum")
+                        self.assertEqual(shrunkBBox.getWidth(), fullWidth + 1 - kWidth)
+                        self.assertEqual(shrunkBBox.getHeight(), fullHeight + 1 - kHeight)
+                        self.assertEqual(shrunkBBox.getMinX(), boxStart[0] + kernel.getCtrX())
+                        self.assertEqual(shrunkBBox.getMinY(), boxStart[1] + kernel.getCtrY())
                         newFullBBox = kernel.growBBox(shrunkBBox)
                         self.assertEqual(newFullBBox, fullBBox, "growBBox(shrinkBBox(x)) != x")
 
@@ -702,8 +700,8 @@ class KernelTestCase(unittest.TestCase):
 
     def basicTests(self, kernel, nKernelParams, nSpatialParams=0, dimMustMatch=True):
         """Basic tests of a kernel"""
-        self.assertTrue(kernel.getNSpatialParameters() == nSpatialParams)
-        self.assertTrue(kernel.getNKernelParameters() == nKernelParams)
+        self.assertEqual(kernel.getNSpatialParameters(), nSpatialParams)
+        self.assertEqual(kernel.getNKernelParameters(), nKernelParams)
         if nSpatialParams == 0:
             self.assertTrue(not kernel.isSpatiallyVarying())
             for ii in range(nKernelParams+5):
@@ -722,7 +720,9 @@ class KernelTestCase(unittest.TestCase):
                 spatialParams = (spatialParamsForOneKernel,)*nkp
                 if ((nkp == nKernelParams) and ((nsp == nSpatialParams) or (nkp == 0))):
                     kernel.setSpatialParameters(spatialParams)
-                    self.assertTrue(numpy.all(numpy.equal(kernel.getSpatialParameters(), spatialParams)))
+                    import numpy
+                    self.assertFloatsEqual(numpy.array(kernel.getSpatialParameters()), 
+                                           numpy.array(spatialParams))
                 else:
                     self.assertRaises(pexExcept.InvalidParameterError,
                                       kernel.setSpatialParameters, spatialParams)
