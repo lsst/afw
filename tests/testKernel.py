@@ -41,8 +41,6 @@ VERBOSITY = 0  # increase to see trace
 
 pexLog.Debug("lsst.afw", VERBOSITY)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def makeGaussianKernelList(kWidth, kHeight, gaussParamsList):
     """Create a list of gaussian kernels.
@@ -502,8 +500,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         self.assertTrue(numpy.allclose(kim.getArray(), kim2.getArray()))
 
     def testSVLinearCombinationKernelFixed(self):
-        """Test a spatially varying LinearCombinationKernel
-        """
+        """Test a spatially varying LinearCombinationKernel whose bases are FixedKernels"""
         kWidth = 3
         kHeight = 2
 
@@ -537,7 +534,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         kernel = afwMath.LinearCombinationKernel(basisKernelList, spFunc)
         self.assertTrue(not kernel.isDeltaFunctionBasis())
-        self.basicTests(kernel, 2, 3)
+        self.basicTests(kernel, 2, nSpatialParams=3)
         kernel.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
         for colPos, rowPos, coeff0, coeff1 in [
@@ -714,18 +711,24 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             for ii in range(nKernelParams, nKernelParams+5):
                 self.assertRaises(pexExcept.InvalidParameterError,
                                   kernel.getSpatialFunction, ii)
+
+        # test a range of numbers of parameters, including both valid and invalid sized tuples.
         for nsp in range(nSpatialParams + 2):
             spatialParamsForOneKernel = (1.0,)*nsp
             for nkp in range(nKernelParams + 2):
                 spatialParams = (spatialParamsForOneKernel,)*nkp
                 if ((nkp == nKernelParams) and ((nsp == nSpatialParams) or (nkp == 0))):
                     kernel.setSpatialParameters(spatialParams)
-                    import numpy
-                    self.assertFloatsEqual(numpy.array(kernel.getSpatialParameters()), 
-                                           numpy.array(spatialParams))
+                    if nsp == 0:
+                        # A non-spatially varying kernel returns an empty tuple, even though
+                        # it can only be set with a tuple of empty tuples, one per kernel parameter.
+                        self.assertEqual(kernel.getSpatialParameters(), ())
+                    else:
+                        # a spatially varying kernel should return exactly what we set it to be.
+                        self.assertEqual(kernel.getSpatialParameters(), spatialParams)
                 else:
-                    self.assertRaises(pexExcept.InvalidParameterError,
-                                      kernel.setSpatialParameters, spatialParams)
+                    with self.assertRaises(pexExcept.InvalidParameterError):
+                        kernel.setSpatialParameters(spatialParams)
 
         kernelDim = kernel.getDimensions()
         kernelCtr = kernel.getCtr()
@@ -808,7 +811,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     print("im2Arr =", im2Arr)
                     return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
 
-        if newCtr1 != None:
+        if newCtr1 is None:
             kernel1.setCtrX(newCtr1[0])
             kernel1.setCtrY(newCtr1[1])
             newCtr2 = kernel2.getCtrX(), kernel2.getCtrY()
@@ -833,11 +836,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             derived = Class.cast(base)
             self.assertEqual(type(derived), Class)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()
