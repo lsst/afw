@@ -81,7 +81,7 @@ def makeRampImage(width, height, imgClass=afwImage.ImageF):
     return im
 
 
-class ImageTestCase(unittest.TestCase):
+class ImageTestCase(lsst.utils.tests.TestCase):
     """A test case for Image"""
 
     def setUp(self):
@@ -198,7 +198,7 @@ class ImageTestCase(unittest.TestCase):
                     else:
                         destIm.assign(srcIm, bbox, origin)
                         destImView = afwImage.ImageF(destIm, bbox, origin)
-                    self.assertTrue(numpy.all(destImView.getArray() == srcIm.getArray()))
+                    self.assertFloatsEqual(destImView.getArray(), srcIm.getArray())
                     numPixNotAssigned = (destImDim[0] * destImDim[1]) - (srcImDim[0] * srcImDim[1])
                     self.assertEqual(numpy.sum(destIm.getArray() < -0.5), numPixNotAssigned)
 
@@ -232,11 +232,11 @@ class ImageTestCase(unittest.TestCase):
 
             destIm[:] = -1.0
             destIm.assign(srcIm)
-            self.assertTrue(numpy.all(destIm.getArray() == srcIm.getArray()))
+            self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
             destIm[:] = -1.0
             destIm.assign(srcIm, afwGeom.Box2I())
-            self.assertTrue(numpy.all(destIm.getArray() == srcIm.getArray()))
+            self.assertFloatsEqual(destIm.getArray(), srcIm.getArray())
 
     def testBoundsChecking(self):
         """Check that pixel indexes are checked in python"""
@@ -550,7 +550,7 @@ class ImageTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class DecoratedImageTestCase(unittest.TestCase):
+class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     """A test case for DecoratedImage"""
 
     def setUp(self):
@@ -681,7 +681,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         im = afwImage.DecoratedImageF(self.fileForMetadata)
 
         meta = afwImage.readMetadata(self.fileForMetadata)
-        self.assertTrue("NAXIS1" in meta.names())
+        self.assertIn("NAXIS1", meta.names())
         self.assertEqual(im.getWidth(), meta.get("NAXIS1"))
         self.assertEqual(im.getHeight(), meta.get("NAXIS2"))
 
