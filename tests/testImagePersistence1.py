@@ -28,7 +28,7 @@ import os
 import unittest
 
 import lsst.utils
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
 import lsst.daf.persistence as dafPers
@@ -42,7 +42,7 @@ except pexExcept.NotFoundError:
 
 
 @unittest.skipIf(dataDir is None, "afwdata not setup")
-class ImagePersistenceTestCase(unittest.TestCase):
+class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
     """A test case for Image Persistence"""
 
     def checkImages(self, image, image2):
@@ -104,7 +104,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
 
     def testBoostPersistence(self):
         """Persist the image using boost"""
-        with utilsTests.getTempFilePath(".boost") as boostFilePath:
+        with lsst.utils.tests.getTempFilePath(".boost") as boostFilePath:
             logicalLocation = dafPers.LogicalLocation(boostFilePath)
             storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
@@ -121,7 +121,7 @@ class ImagePersistenceTestCase(unittest.TestCase):
 
     def testBoostPersistenceU16(self):
         """Persist a U16 image using boost"""
-        with utilsTests.getTempFilePath(".boost") as boostFilePath:
+        with lsst.utils.tests.getTempFilePath(".boost") as boostFilePath:
             logicalLocation = dafPers.LogicalLocation(boostFilePath)
             storage = self.persistence.getPersistStorage("BoostStorage", logicalLocation)
             storageList = dafPers.StorageList([storage])
@@ -143,20 +143,12 @@ class ImagePersistenceTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(ImagePersistenceTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
