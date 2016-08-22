@@ -25,11 +25,11 @@ from builtins import range
 #
 
 import unittest
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.image as afwImage
 
 
-class ImageIoTestCase(unittest.TestCase):
+class ImageIoTestCase(lsst.utils.tests.TestCase):
     """A test case for Image Persistence"""
 
     def checkImages(self, image, original):
@@ -59,7 +59,7 @@ class ImageIoTestCase(unittest.TestCase):
                 for y in range(0, self.rows):
                     image.set(x, y, x + y)
 
-            with utilsTests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:
+            with lsst.utils.tests.getTempFilePath("_%s.fits" % (Image.__name__,)) as filename:
                 image.writeFits(filename)
                 readImage = Image(filename)
 
@@ -68,20 +68,12 @@ class ImageIoTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(ImageIoTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
