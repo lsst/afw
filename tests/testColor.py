@@ -25,23 +25,12 @@ from builtins import range
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-
-"""
-Tests for Calib, Color, and Filter
-
-Run with:
-   color.py
-or
-   python
-   >>> import color; color.run()
-"""
-
 import math
 import unittest
 
-import numpy
+import numpy as np
 
-import lsst.utils.tests as tests
+import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
@@ -50,23 +39,15 @@ import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
-try:
-    type(verbose)
-except NameError:
-    verbose = 0
-    logging.Debug("afwDetect.Footprint", verbose)
+import lsstDebug
+if lsstDebug.Info('testColor').verbose:
+    logging.Debug("afwDetect.Footprint", True)
 
-try:
-    type(display)
-except NameError:
-    display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+# Set to True to display things in ds9.
+display = False
 
 
-class CalibTestCase(unittest.TestCase):
-    """A test case for Calib"""
-
+class CalibTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         self.calib = afwImage.Calib()
         self.detector = DetectorWrapper().detector
@@ -117,12 +98,13 @@ class CalibTestCase(unittest.TestCase):
         for fluxErr in (flux / 1e2, flux / 1e4):
             mag, magErr = self.calib.getMagnitude(flux, fluxErr)
             self.assertAlmostEqual(flux, self.calib.getFlux(mag, magErr)[0])
-            self.assertTrue(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]) < 1.0e-4)
+            self.assertLess(abs(fluxErr - self.calib.getFlux(mag, magErr)[1]), 1.0e-4)
 
         # Test context manager; shouldn't raise an exception within the block, should outside
         with imageUtils.CalibNoThrow():
-            self.assert_(numpy.isnan(self.calib.getMagnitude(-50.0)))
-        self.assertRaises(pexExcept.DomainError, self.calib.getMagnitude, -50.0)
+            self.assertTrue(np.isnan(self.calib.getMagnitude(-50.0)))
+        with self.assertRaises(pexExcept.DomainError):
+            self.calib.getMagnitude(-50.0)
 
     def testPhotomMulti(self):
         self.calib.setFluxMag0(1e12, 1e10)
@@ -131,8 +113,8 @@ class CalibTestCase(unittest.TestCase):
 
         mag, magErr = self.calib.getMagnitude(flux, fluxErr)  # Result assumed to be true: tested elsewhere
 
-        fluxList = numpy.array([flux for i in range(num)], dtype=float)
-        fluxErrList = numpy.array([fluxErr for i in range(num)], dtype=float)
+        fluxList = np.array([flux for i in range(num)], dtype=float)
+        fluxErrList = np.array([fluxErr for i in range(num)], dtype=float)
 
         magList = self.calib.getMagnitude(fluxList)
         for m in magList:
@@ -183,15 +165,13 @@ class CalibTestCase(unittest.TestCase):
 
         self.assertAlmostEqual(self.calib.getMagnitude(flux, fluxErr)[1], 2.5/math.log(10)*fluxErr/flux)
 
-        #
         # Check that we can clean up metadata
-        #
         afwImage.stripCalibKeywords(metadata)
         self.assertEqual(len(metadata.names()), 0)
 
     def testCalibEquality(self):
         self.assertEqual(self.calib, self.calib)
-        self.assertFalse(self.calib != self.calib)
+        self.assertFalse(self.calib != self.calib)  # using assertFalse to directly test =! operator
 
         calib2 = afwImage.Calib()
         calib2.setExptime(12)
@@ -218,42 +198,38 @@ class CalibTestCase(unittest.TestCase):
 
         self.assertEqual(ocalib.getExptime(), ncalib*exptime)
         self.assertAlmostEqual(calibs[ncalib//2].getMidTime().get(), ocalib.getMidTime().get())
-        #
         # Check that we can only merge Calibs with the same fluxMag0 values
-        #
         calibs[0].setFluxMag0(1.001*mag0, mag0Sigma)
-        self.assertRaises(pexExcept.InvalidParameterError,
-                          lambda: afwImage.Calib(calibs))
+        with self.assertRaises(pexExcept.InvalidParameterError):
+            afwImage.Calib(calibs)
 
     def testCalibNegativeFlux(self):
-        """Check that we can control if -ve fluxes raise exceptions"""
+        """Check that we can control if negative fluxes raise exceptions"""
         self.calib.setFluxMag0(1e12)
 
-        funcs = [lambda: self.calib.getMagnitude(-10), lambda: self.calib.getMagnitude(-10, 1)]
-
-        for func in funcs:
-            self.assertRaises(pexExcept.DomainError, func)
+        with self.assertRaises(pexExcept.DomainError):
+            self.calib.getMagnitude(-10)
+        with self.assertRaises(pexExcept.DomainError):
+            self.calib.getMagnitude(-10, 1)
 
         afwImage.Calib.setThrowOnNegativeFlux(False)
-        for func in funcs:
-            mags = func()
-            try:                        # deal with returning mag or [mag, magErr]
-                mags[0]
-            except TypeError:
-                mags = [mags, None]
-
-            for m in mags:
-                if m is not None:
-                    self.assertTrue(numpy.isnan(m))
+        mags = self.calib.getMagnitude(-10)
+        self.assertTrue(np.isnan(mags))
+        mags = self.calib.getMagnitude(-10, 1)
+        self.assertTrue(np.isnan(mags[0]))
+        self.assertTrue(np.isnan(mags[1]))
 
         afwImage.Calib.setThrowOnNegativeFlux(True)
 
-        for func in funcs:
-            self.assertRaises(pexExcept.DomainError, func)
+        # Re-check that we raise after resetting ThrowOnNegativeFlux.
+        with self.assertRaises(pexExcept.DomainError):
+            self.calib.getMagnitude(-10)
+        with self.assertRaises(pexExcept.DomainError):
+            self.calib.getMagnitude(-10, 1)
 
 
 def defineSdssFilters(testCase):
-    # Initialise filters as used for our tests
+    """Initialise filters as used for our tests"""
     imageUtils.resetFilters()
     wavelengths = dict()
     testCase.aliases = dict(u=[], g=[], r=[], i=[], z=['zprime', "z'"])
@@ -263,14 +239,9 @@ def defineSdssFilters(testCase):
     return wavelengths
 
 
-class ColorTestCase(unittest.TestCase):
-    """A test case for Color"""
-
+class ColorTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         defineSdssFilters(self)
-
-    def tearDown(self):
-        pass
 
     def testCtor(self):
         afwImage.Color()
@@ -289,14 +260,10 @@ class ColorTestCase(unittest.TestCase):
         self.assertFalse(afwImage.Color(1.2).isIndeterminate())
 
 
-class FilterTestCase(unittest.TestCase):
-    """A test case for Filter"""
-
+class FilterTestCase(lsst.utils.tests.TestCase):
     def setUp(self):
         # Initialise our filters
-        #
         # Start by forgetting that we may already have defined filters
-        #
         wavelengths = defineSdssFilters(self)
         self.filters = tuple(sorted(wavelengths.keys()))
         self.g_lambdaEff = [lambdaEff for name,
@@ -308,11 +275,6 @@ class FilterTestCase(unittest.TestCase):
     def testListFilters(self):
         self.assertEqual(afwImage.Filter_getNames(), self.filters)
 
-    def testCtor(self):
-        """Test that we can construct a Filter"""
-        # A filter of type
-        afwImage.Filter("g")
-
     def testCtorFromMetadata(self):
         """Test building a Filter from metadata"""
 
@@ -321,23 +283,22 @@ class FilterTestCase(unittest.TestCase):
 
         f = afwImage.Filter(metadata)
         self.assertEqual(f.getName(), "g")
-        #
         # Check that we can clean up metadata
-        #
         afwImage.stripFilterKeywords(metadata)
         self.assertEqual(len(metadata.names()), 0)
 
         badFilter = "rhl"               # an undefined filter
         metadata.add("FILTER", badFilter)
         # Not defined
-        self.assertRaises(pexExcept.NotFoundError,
-                          lambda: afwImage.Filter(metadata))
+        with self.assertRaises(pexExcept.NotFoundError):
+            afwImage.Filter(metadata)
+
         # Force definition
         f = afwImage.Filter(metadata, True)
         self.assertEqual(f.getName(), badFilter)  # name is correctly defined
 
     def testFilterEquality(self):
-        # a "g" filter
+        """Test a "g" filter comparison"""
         f = afwImage.Filter("g")
         g = afwImage.Filter("g")
 
@@ -347,21 +308,15 @@ class FilterTestCase(unittest.TestCase):
         self.assertNotEqual(f, f)       # ... doesn't equal itself
 
     def testFilterProperty(self):
-        # a "g" filter
+        """Test properties of a "g" filter"""
         f = afwImage.Filter("g")
         # The properties of a g filter
         g = afwImage.FilterProperty.lookup("g")
 
-        if False:
-            print("Filter: %s == %d lambda_{eff}=%g" % (f.getName(), f.getId(),
-                                                        f.getFilterProperty().getLambdaEff()))
-
         self.assertEqual(f.getName(), "g")
         self.assertEqual(f.getId(), 1)
         self.assertEqual(f.getFilterProperty().getLambdaEff(), self.g_lambdaEff)
-        self.assertTrue(f.getFilterProperty() ==
-                        self.defineFilterProperty("gX", self.g_lambdaEff, True))
-
+        self.assertEqual(f.getFilterProperty(), self.defineFilterProperty("gX", self.g_lambdaEff, True))
         self.assertEqual(g.getLambdaEff(), self.g_lambdaEff)
 
     def testFilterAliases(self):
@@ -383,81 +338,58 @@ class FilterTestCase(unittest.TestCase):
 
     def testReset(self):
         """Test that we can reset filter IDs and properties if needs be"""
-        # The properties of a g filter
         g = afwImage.FilterProperty.lookup("g")
-        #
-        # First FilterProperty
-        #
 
-        def tst():
+        # Can we add a filter property?
+        with self.assertRaises(pexExcept.RuntimeError):
             self.defineFilterProperty("g", self.g_lambdaEff + 10)
-
-        self.assertRaises(pexExcept.RuntimeError, tst)
         self.defineFilterProperty("g", self.g_lambdaEff + 10, True)  # should not raise
         self.defineFilterProperty("g", self.g_lambdaEff, True)
-        #
-        # Can redefine
-        #
 
-        def tst():
+        # Can we redefine properties?
+        with self.assertRaises(pexExcept.RuntimeError):
             self.defineFilterProperty("g", self.g_lambdaEff + 10)  # changing definition is not allowed
-        self.assertRaises(pexExcept.RuntimeError, tst)
 
         self.defineFilterProperty("g", self.g_lambdaEff)  # identical redefinition is allowed
-        #
-        # Now Filter
-        #
+
         afwImage.Filter.define(g, afwImage.Filter("g").getId())  # OK if Id's the same
         afwImage.Filter.define(g, afwImage.Filter.AUTO)         # AUTO will assign the same ID
 
-        def tst():
+        with self.assertRaises(pexExcept.RuntimeError):
             afwImage.Filter.define(g, afwImage.Filter("g").getId() + 10)  # different ID
-
-        self.assertRaises(pexExcept.RuntimeError, tst)
 
     def testUnknownFilter(self):
         """Test that we can define, but not use, an unknown filter"""
         badFilter = "rhl"               # an undefined filter
-        # Not defined
-        self.assertRaises(pexExcept.NotFoundError,
-                          lambda: afwImage.Filter(badFilter))
+        with self.assertRaises(pexExcept.NotFoundError):
+            afwImage.Filter(badFilter)
         # Force definition
         f = afwImage.Filter(badFilter, True)
         self.assertEqual(f.getName(), badFilter)  # name is correctly defined
 
-        self.assertRaises(pexExcept.NotFoundError,
-                          lambda: f.getFilterProperty().getLambdaEff())  # can't use Filter f
-        #
+        # can't use Filter f
+        with self.assertRaises(pexExcept.NotFoundError):
+            f.getFilterProperty().getLambdaEff()
+
         # Now define badFilter
-        #
         lambdaEff = 666.0
         self.defineFilterProperty(badFilter, lambdaEff)
 
         self.assertEqual(f.getFilterProperty().getLambdaEff(), lambdaEff)  # but now we can
-        #
+
         # Check that we didn't accidently define the unknown filter
-        #
-        self.assertRaises(pexExcept.NotFoundError,
-                          lambda: afwImage.Filter().getFilterProperty().getLambdaEff())
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        with self.assertRaises(pexExcept.NotFoundError):
+            afwImage.Filter().getFilterProperty().getLambdaEff()
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
-
-    suites = []
-    suites += unittest.makeSuite(CalibTestCase)
-    suites += unittest.makeSuite(ColorTestCase)
-    suites += unittest.makeSuite(FilterTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    tests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
