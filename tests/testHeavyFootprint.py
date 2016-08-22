@@ -88,7 +88,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
         #
         # Check we didn't modify the input image
         #
-        self.assertTrue(np.all(np.equal(self.mi.getImage().getArray(), imi.getImage().getArray())))
+        self.assertFloatsEqual(self.mi.getImage().getArray(), imi.getImage().getArray())
 
         omi = self.mi.Factory(self.mi.getDimensions())
         omi.set((1, 0x4, 0.1))
@@ -158,7 +158,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             self.assertNotEqual(afwDetect.HeavyFootprintF.cast(foot), None)
             afwDetect.HeavyFootprintF.cast(foot).insert(omi)
 
-        self.assertTrue(np.all(np.equal(self.mi.getImage().getArray(), omi.getImage().getArray())))
+        self.assertFloatsEqual(self.mi.getImage().getArray(), omi.getImage().getArray())
 
     def testXY0(self):
         """Test that inserting a HeavyFootprint obeys XY0"""
@@ -178,7 +178,7 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             ds9.mtv(omi, frame=1, title="sub")
 
         submi = self.mi.Factory(self.mi, bbox, afwImage.LOCAL)
-        self.assertTrue(np.all(np.equal(submi.getImage().getArray(), omi.getImage().getArray())))
+        self.assertFloatsEqual(submi.getImage().getArray(), omi.getImage().getArray())
 
     def testCast_HeavyFootprint(self):
         """Test that we can cast a Footprint to a HeavyFootprint"""
@@ -231,21 +231,21 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         sa = msum.getImage().getArray()
 
-        self.assertTrue(np.all(sa[1, 9:13] == objectPixelVal[0]))
-        self.assertTrue(np.all(sa[2, 12:14] == objectPixelVal[0] + self.objectPixelVal[0]))
-        self.assertTrue(np.all(sa[2, 10:12] == self.objectPixelVal[0]))
+        self.assertFloatsEqual(sa[1, 9:13], objectPixelVal[0])
+        self.assertFloatsEqual(sa[2, 12:14], objectPixelVal[0] + self.objectPixelVal[0])
+        self.assertFloatsEqual(sa[2, 10:12], self.objectPixelVal[0])
 
         sv = msum.getVariance().getArray()
 
-        self.assertTrue(np.all(sv[1, 9:13] == objectPixelVal[2]))
-        self.assertTrue(np.all(sv[2, 12:14] == objectPixelVal[2] + self.objectPixelVal[2]))
-        self.assertTrue(np.all(sv[2, 10:12] == self.objectPixelVal[2]))
+        self.assertFloatsEqual(sv[1, 9:13], objectPixelVal[2])
+        self.assertFloatsEqual(sv[2, 12:14], objectPixelVal[2] + self.objectPixelVal[2])
+        self.assertFloatsEqual(sv[2, 10:12], self.objectPixelVal[2])
 
         sm = msum.getMask().getArray()
 
-        self.assertTrue(np.all(sm[1, 9:13] == objectPixelVal[1]))
-        self.assertTrue(np.all(sm[2, 12:14] == objectPixelVal[1] | self.objectPixelVal[1]))
-        self.assertTrue(np.all(sm[2, 10:12] == self.objectPixelVal[1]))
+        self.assertFloatsEqual(sm[1, 9:13], objectPixelVal[1])
+        self.assertFloatsEqual(sm[2, 12:14], objectPixelVal[1] | self.objectPixelVal[1])
+        self.assertFloatsEqual(sm[2, 10:12], self.objectPixelVal[1])
 
         if False:
             import matplotlib
