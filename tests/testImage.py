@@ -43,7 +43,7 @@ import unittest
 import numpy
 
 import lsst.utils
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.daf.base
 import lsst.afw.image as afwImage
@@ -633,7 +633,7 @@ class DecoratedImageTestCase(unittest.TestCase):
         #
         # Read a U16 image
         #
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             imgU.writeFits(tmpFile)
 
             afwImage.DecoratedImageF(tmpFile)  # read as unsigned short
@@ -642,7 +642,7 @@ class DecoratedImageTestCase(unittest.TestCase):
     def testWriteFits(self):
         """Test writing FITS files"""
 
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             if self.fileForMetadata:
                 imgU = afwImage.DecoratedImageF(self.fileForMetadata)
             else:
@@ -668,7 +668,7 @@ class DecoratedImageTestCase(unittest.TestCase):
 
         x0, y0 = 1, 2
         im.setXY0(x0, y0)
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im.writeFits(tmpFile)
 
             im2 = im.Factory(tmpFile)
@@ -735,21 +735,12 @@ def printImg(img):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(ImageTestCase)
-    suites += unittest.makeSuite(DecoratedImageTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
