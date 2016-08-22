@@ -38,7 +38,7 @@ or
 import numpy as np
 import os
 import unittest
-import lsst.utils.tests as tests
+import lsst.utils.tests
 import lsst.pex.logging as logging
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
@@ -59,7 +59,7 @@ except NameError:
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class HeavyFootprintTestCase(tests.TestCase):
+class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
     """A test case for HeavyFootprint"""
 
     def setUp(self):
@@ -317,19 +317,12 @@ class HeavyFootprintTestCase(tests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    tests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(HeavyFootprintTestCase)
-    suites += unittest.makeSuite(tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    tests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
