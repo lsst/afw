@@ -34,7 +34,7 @@ import unittest
 import lsst.utils
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 
@@ -51,7 +51,7 @@ except pexExcept.NotFoundError:
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class ReadFitsTestCase(unittest.TestCase):
+class ReadFitsTestCase(lsst.utils.tests.TestCase):
     """A test case for reading FITS images"""
 
     def setUp(self):
@@ -98,7 +98,7 @@ class ReadFitsTestCase(unittest.TestCase):
         # print "IM = ", im
     def testWriteReadF64(self):
         """Test writing then reading an F64 image"""
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im = afwImage.ImageD(afwGeom.Extent2I(100, 100))
             im.set(666)
             im.writeFits(tmpFile)
@@ -124,7 +124,7 @@ class ReadFitsTestCase(unittest.TestCase):
     def testMEF(self):
         """Test writing a set of images to an MEF fits file, and then reading them back"""
 
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im = afwImage.ImageF(afwGeom.Extent2I(20, 20))
 
             for hdu in range(1, 5):
@@ -144,7 +144,7 @@ class ReadFitsTestCase(unittest.TestCase):
         import lsst.afw.image as afwImage
         import lsst.daf.base as dafBase
 
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             im = afwImage.ImageF(afwGeom.ExtentI(10, 20))
             md = dafBase.PropertySet()
             keys = {"BAD": False,
@@ -162,7 +162,7 @@ class ReadFitsTestCase(unittest.TestCase):
 
     def testLongStrings(self):
         keyWord = 'ZZZ'
-        with utilsTests.getTempFilePath(".fits") as tmpFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             longString = ' '.join(['This is a long string.'] * 8)
 
             expOrig = afwImage.ExposureF(100, 100)
@@ -176,20 +176,12 @@ class ReadFitsTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(ReadFitsTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
