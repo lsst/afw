@@ -41,7 +41,7 @@ import random
 import math
 import itertools
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image.imageLib as afwImage
@@ -56,7 +56,7 @@ except NameError:
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class ImagePcaTestCase(unittest.TestCase):
+class ImagePcaTestCase(lsst.utils.tests.TestCase):
     """A test case for ImagePca"""
 
     def setUp(self):
@@ -216,20 +216,12 @@ class ImagePcaTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(ImagePcaTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
