@@ -40,7 +40,7 @@ import lsst.afw.image.utils as imageUtils
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
 import lsstDebug
-if lsstDebug.Info('testColor').verbose:
+if lsstDebug.Info(__name__).verbose:
     logging.Debug("afwDetect.Footprint", True)
 
 # Set to True to display things in ds9.
