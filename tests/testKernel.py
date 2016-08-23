@@ -811,7 +811,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                     print("im2Arr =", im2Arr)
                     return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)
 
-        if newCtr1 is None:
+        if newCtr1 is not None:
             kernel1.setCtrX(newCtr1[0])
             kernel1.setCtrY(newCtr1[1])
             newCtr2 = kernel2.getCtrX(), kernel2.getCtrY()
