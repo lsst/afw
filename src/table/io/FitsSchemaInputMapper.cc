@@ -36,29 +36,6 @@ private:
     std::string const & _v;
 };
 
-void addOldFluxSlotAliases(AliasMap & aliases, std::string const & prefix) {
-    aliases.set(prefix + "_flux", prefix);
-    aliases.set(prefix + "_fluxSigma", prefix + "_err");
-    aliases.set(prefix + "_flag", prefix + "_flags");
-}
-
-void addOldCentroidSlotAliases(AliasMap & aliases, std::string const & prefix) {
-    aliases.set(prefix + "_xSigma", prefix + "_err_xSigma");
-    aliases.set(prefix + "_ySigma", prefix + "_err_ySigma");
-    aliases.set(prefix + "_x_y_Cov", prefix + "_err_x_y_Cov");
-    aliases.set(prefix + "_flag", prefix + "_flags");
-}
-
-void addOldShapeSlotAliases(AliasMap & aliases, std::string const & prefix) {
-    aliases.set(prefix + "_xxSigma", prefix + "_err_xxSigma");
-    aliases.set(prefix + "_yySigma", prefix + "_err_yySigma");
-    aliases.set(prefix + "_xySigma", prefix + "_err_xySigma");
-    aliases.set(prefix + "_xx_yy_Cov", prefix + "_err_xx_yy_Cov");
-    aliases.set(prefix + "_xx_xy_Cov", prefix + "_err_xx_xy_Cov");
-    aliases.set(prefix + "_yy_xy_Cov", prefix + "_err_yy_xy_Cov");
-    aliases.set(prefix + "_flag", prefix + "_flags");
-}
-
 } // anonymous
 
 class FitsSchemaInputMapper::Impl {
@@ -416,6 +393,52 @@ private:
     Key<T> _key;
 };
 
+class AngleReader : public FitsColumnReader {
+public:
+
+    static std::unique_ptr<FitsColumnReader> make(
+        Schema & schema,
+        FitsSchemaItem const & item,
+        FieldBase<afw::geom::Angle> const & base=FieldBase<afw::geom::Angle>()
+    ) {
+        return std::unique_ptr<FitsColumnReader>(new AngleReader(schema, item, base));
+    }
+
+    AngleReader(
+        Schema & schema,
+        FitsSchemaItem const & item,
+        FieldBase<afw::geom::Angle> const & base
+    ) :
+        _column(item.column),
+        _key(schema.addField<afw::geom::Angle>(item.ttype, item.doc, "", base))
+    {
+        // We require an LSST-specific key in the headers before parsing a column
+        // as Angle at all, so we don't need to worry about other units or other
+        // spellings of radians.  We do continue to support no units for backwards
+        // compatibility.
+        if (!item.tunit.empty() && item.tunit != "rad") {
+            throw LSST_EXCEPT(
+                afw::fits::FitsError,
+                "Angle fields must be persisted in radians (TUNIT='rad')."
+            );
+        }
+    }
+
+    virtual void readCell(
+        BaseRecord & record, std::size_t row,
+        afw::fits::Fits & fits,
+        PTR(InputArchive) const & archive
+    ) const {
+        double tmp = 0;
+        fits.readTableScalar(row, _column, tmp);
+        record.set(_key, tmp * afw::geom::radians);
+    }
+
+private:
+    int _column;
+    Key<afw::geom::Angle> _key;
+};
+
 class StringReader : public FitsColumnReader {
 public:
 
@@ -728,7 +751,7 @@ std::unique_ptr<FitsColumnReader> makeColumnReader(
         }
         if (size == 1) {
             if (item.tccls == "Angle") {
-                return StandardReader<Angle>::make(schema, item);
+                return AngleReader::make(schema, item);
             }
             if (item.tccls == "Array") {
                 return StandardReader<Array<double>>::make(schema, item, 1);
