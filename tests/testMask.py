@@ -636,6 +636,13 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 def setup_module(module):
     lsst.utils.tests.init()
 
+def teardown_module(module):
+    # Reset the mask plane to the default
+    Mask = afwImage.MaskU
+    Mask.clearMaskPlaneDict()
+    for p in ("BAD", "SAT", "INTRP", "CR", "EDGE", "DETECTED", "DETECTED_NEGATIVE","SUSPECT","NO_DATA"):
+        Mask.addMaskPlane(p)
+
 if __name__ == "__main__":
     lsst.utils.tests.init()
     unittest.main()
