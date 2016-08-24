@@ -696,13 +696,14 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
     def testEquality(self):
         # (In)equality is determined by value, not identity. See DM-2347, -2465.
+        # These asserts are testing the functionality of `==` and `!=` and should not be changed
         c1 = afwCoord.IcrsCoord(self.ra, self.dec)
-        self.assertEqual(c1, c1)
-        self.assertNotEqual(c1, c1)
+        self.assertTrue(c1==c1)
+        self.assertFalse(c1!=c1)
 
         c2 = afwCoord.IcrsCoord(self.ra.replace('1', '2'), self.dec)
-        self.assertEquail(c2, c1)
-        self.assertNotEqual(c2, c1)
+        self.assertTrue(c2!=c1)
+        self.assertFalse(c2==c1)
 
         c3 = afwCoord.IcrsCoord(self.ra, self.dec)
         self.assertEqual(c3, c1)
