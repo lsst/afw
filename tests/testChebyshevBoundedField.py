@@ -46,8 +46,6 @@ try:
 except NameError:
     display = False
 
-numpy.random.seed(5)
-
 CHEBYSHEV_T = [
     lambda x: x**0,
     lambda x: x,
@@ -193,6 +191,7 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+    numpy.random.seed(5)
 
 
 if __name__ == "__main__":
