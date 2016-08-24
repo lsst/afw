@@ -52,8 +52,6 @@ import lsst.utils.tests
 import lsst.pex.exceptions as pexEx
 import lsst.afw.display.ds9 as ds9
 
-numpy.random.seed(1)
-
 try:
     type(display)
 except:
@@ -359,6 +357,7 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
+    numpy.random.seed(1)
 
 if __name__ == "__main__":
     lsst.utils.tests.init()
