@@ -37,8 +37,6 @@ import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
 
-numpy.random.seed(1)
-
 try:
     type(display)
 except NameError:
@@ -123,6 +121,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.shapeFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
 
     def setUp(self):
+        numpy.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.makeFlux(self.schema, "a", 1)
         self.makeCentroid(self.schema, "b", 2)

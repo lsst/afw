@@ -52,8 +52,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 
-numpy.random.seed(1)
-
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
 except pexExcept.NotFoundError:
@@ -85,6 +83,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     """A test case for Image"""
 
     def setUp(self):
+        numpy.random.seed(1)
         self.val1, self.val2 = 10, 100
         self.image1 = afwImage.ImageF(afwGeom.ExtentI(100, 200))
         self.image1.set(self.val1)
@@ -554,6 +553,7 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     """A test case for DecoratedImage"""
 
     def setUp(self):
+        numpy.random.seed(1)
         self.val1, self.val2 = 10, 100
         self.width, self.height = 200, 100
         self.dimage1 = afwImage.DecoratedImageF(

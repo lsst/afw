@@ -53,15 +53,10 @@ import lsst.afw.geom
 import lsst.afw.coord
 import lsst.afw.fits
 
-numpy.random.seed(1)
-
 try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def makeArray(size, dtype):
     return numpy.array(numpy.random.randn(size), dtype=dtype)
@@ -77,6 +72,9 @@ def makeCov(size, dtype):
 
 
 class SimpleTableTestCase(lsst.utils.tests.TestCase):
+
+    def setUp(self):
+        numpy.random.seed(1)
 
     def checkScalarAccessors(self, record, key, name, value1, value2):
         fastSetter = getattr(record, "set" + key.getTypeString())

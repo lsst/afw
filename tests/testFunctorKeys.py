@@ -47,11 +47,6 @@ try:
 except NameError:
     display = False
 
-numpy.random.seed(5)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-
 def makePositiveSymmetricMatrix(size):
     """Return a random symmetric matrix with only positive eigenvalues, suitable
     for use as a covariance matrix.
@@ -65,6 +60,10 @@ def makePositiveSymmetricMatrix(size):
 
 
 class FunctorKeysTestCase(lsst.utils.tests.TestCase):
+
+
+    def setUp(self):
+        numpy.random.seed(5)
 
     def doTestPointKey(self, fieldType, functorKeyType, valueType):
         schema = lsst.afw.table.Schema()

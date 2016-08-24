@@ -65,6 +65,7 @@ except:
 class StackTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
+        numpy.random.seed(1)
         self.nImg = 10
         self.nX, self.nY = 64, 64
         self.values = [1.0, 2.0, 2.0, 3.0, 8.0]
@@ -357,7 +358,6 @@ class TestMemory(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
-    numpy.random.seed(1)
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

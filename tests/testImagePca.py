@@ -60,6 +60,7 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
     """A test case for ImagePca"""
 
     def setUp(self):
+        random.seed(0)
         self.ImageSet = afwImage.ImagePcaF()
 
     def tearDown(self):
@@ -133,8 +134,6 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
 
     def testPca(self):
         """Test calculating PCA"""
-
-        random.seed(0)
         width, height = 200, 100
         numBases = 3
         numInputs = 3

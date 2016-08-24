@@ -33,14 +33,13 @@ import lsst.pex.exceptions
 import lsst.afw.geom.ellipses
 import lsst.afw.image
 
-np.random.seed(500)
-
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class EllipseTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
+        np.random.seed(500)
         self.cores = [
             lsst.afw.geom.ellipses.Axes(4, 3, 1),
             lsst.afw.geom.ellipses.Quadrupole(5, 3, -1)

@@ -61,6 +61,7 @@ CHEBYSHEV_T = [
 class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
+        numpy.random.seed(5)
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
         self.x1d = numpy.linspace(self.bbox.getBeginX(), self.bbox.getEndX())
         self.y1d = numpy.linspace(self.bbox.getBeginY(), self.bbox.getEndY())
@@ -191,7 +192,6 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
-    numpy.random.seed(5)
 
 
 if __name__ == "__main__":

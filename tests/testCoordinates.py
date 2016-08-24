@@ -117,6 +117,7 @@ class PointTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     """A test case for Point"""
 
     def setUp(self):
+        numpy.random.seed(1)
         self.classes = [
             (float, geom.Point2D, lambda: [float(x) for x in numpy.random.randn(2)]),
             (int, geom.Point2I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 2)]),
@@ -171,6 +172,7 @@ class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     """A test case for Extent"""
 
     def setUp(self):
+        numpy.random.seed(1)
         self.classes = [
             (float, geom.Extent2D, lambda: [float(x) for x in numpy.random.randn(2)]),
             (int, geom.Extent2I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 2)]),
@@ -481,8 +483,6 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 
 def setup_module(module):
-    numpy.random.seed(1)
-
     lsst.utils.tests.init()
 
 

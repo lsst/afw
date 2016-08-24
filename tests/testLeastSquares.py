@@ -42,12 +42,7 @@ import lsst.pex.exceptions
 import lsst.pex.logging
 from lsst.afw.math import LeastSquares
 
-numpy.random.seed(500)
-
 lsst.pex.logging.getDefaultLog().setThresholdFor("afw.math.LeastSquares", -10)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class LeastSquaresTestCase(lsst.utils.tests.TestCase):
 
@@ -56,6 +51,9 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
 
     def _assertNotClose(self, a, b, rtol=1E-5, atol=1E-8):
         self.assertFloatsNotEqual(a, b, rtol=rtol, atol=atol, msg="\n%s\n==\n%s" % (a, b))
+
+    def setUp(self):
+        numpy.random.seed(500)
 
     def check(self, solver, solution, rank, fisher, cov, sv):
         self.assertEqual(solver.getRank(), rank)

@@ -46,8 +46,6 @@ import lsst.afw.image
 import lsst.afw.detection
 from testTableArchivesLib import DummyPsf
 
-numpy.random.seed(1)
-
 try:
     type(display)
 except NameError:
@@ -88,6 +86,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(psf1.getValue(), psf2.getValue())
 
     def setUp(self):
+        numpy.random.seed(1)
         schema = lsst.afw.table.ExposureTable.makeMinimalSchema()
         self.ka = schema.addField("a", type=float, doc="doc for a")
         self.kb = schema.addField("b", type=int, doc="doc for b")

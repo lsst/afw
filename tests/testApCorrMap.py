@@ -47,14 +47,10 @@ try:
 except NameError:
     display = False
 
-numpy.random.seed(5)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-
 class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
+        numpy.random.seed(100)
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
         self.map = lsst.afw.image.ApCorrMap()
         for name in ("a", "b", "c"):

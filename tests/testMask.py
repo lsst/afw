@@ -50,8 +50,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 
-np.random.seed(1)
-
 try:
     type(display)
 except NameError:
@@ -85,6 +83,7 @@ class MaskTestCase(utilsTests.TestCase):
     """A test case for Mask"""
 
     def setUp(self):
+        np.random.seed(1)
         self.Mask = afwImage.MaskU
 
         self.Mask.clearMaskPlaneDict()  # reset so tests will be deterministic

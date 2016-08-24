@@ -50,8 +50,6 @@ import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
 
-numpy.random.seed(1)
-
 try:
     type(display)
 except NameError:
@@ -95,6 +93,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         record.set(self.shapeFlagKey, numpy.random.randn() > 0)
 
     def setUp(self):
+        numpy.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.fluxKey = self.schema.addField("a_flux", type="D")
         self.fluxErrKey = self.schema.addField("a_fluxSigma", type="D")

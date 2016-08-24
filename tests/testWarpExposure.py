@@ -115,6 +115,10 @@ def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX
 class WarpExposureTestCase(lsst.utils.tests.TestCase):
     """Test case for warpExposure
     """
+
+    def setUp(self):
+        numpy.random.seed(0)
+
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testNullWarpExposure(self, interpLength=10):
         """Test that warpExposure maps an image onto itself.
@@ -525,7 +529,6 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         srcArrays = srcMaskedImage.getArrays()
         shape = srcArrays[0].shape
-        numpy.random.seed(0)
         srcArrays[0][:] = numpy.random.normal(10000, 1000, size=shape)
         srcArrays[2][:] = numpy.random.normal(9000, 900, size=shape)
         srcArrays[1][:] = numpy.reshape(numpy.arange(0, shape[0] * shape[1], 1, dtype=numpy.uint16), shape)
