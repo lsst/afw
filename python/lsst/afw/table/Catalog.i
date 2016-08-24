@@ -255,7 +255,8 @@ public:
             # self._columns is created the when self.columns is accessed -
             # looking for it in self.columns below would trigger infinite
             # recursion.
-            if name == "_columns":
+            # Test for "this" as a temporary workaround for ticket 7377
+            if name in ("_columns", "this"):
                 raise
         try:
             return getattr(self.table, name)
