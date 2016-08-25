@@ -53,6 +53,7 @@ class OneXYTransformConfig(Config):
 def makeInvertedTransform(config):
     """Make an InvertedXYTransform
     """
+    
     return InvertedXYTransform(config.transform.apply())
 makeInvertedTransform.ConfigClass = OneXYTransformConfig
 xyTransformRegistry.register("inverted", makeInvertedTransform)
@@ -100,7 +101,7 @@ class RadialXYTransformConfig(Config):
 def makeRadialXYTransform(config):
     """Make a RadialXYTransform
     """
-    return RadialXYTransform(config.coeffs)
+    return RadialXYTransform(config.coeffs._list)
 makeRadialXYTransform.ConfigClass = RadialXYTransformConfig
 xyTransformRegistry.register("radial", makeRadialXYTransform)
 
@@ -119,4 +120,3 @@ def makeMultiTransform(config):
     return MultiXYTransform(transformList)
 makeMultiTransform.ConfigClass = MultiXYTransformConfig
 xyTransformRegistry.register("multi", makeMultiTransform)
-

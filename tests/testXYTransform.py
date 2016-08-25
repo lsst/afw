@@ -220,7 +220,7 @@ class XYTransformTestCase(unittest.TestCase):
         """
         radialClass = xyTransformRegistry["radial"]
         radialConfig = radialClass.ConfigClass()
-        radialConfig.coeffs = (0, 1.05, 0.1)
+        radialConfig.coeffs = [0, 1.05, 0.1]
         with lsst.utils.tests.getTempFilePath(".py") as filePath:
             self.checkConfig(radialClass, radialConfig, filePath)
             radial = radialClass(radialConfig)
@@ -242,10 +242,10 @@ class XYTransformTestCase(unittest.TestCase):
         """Test radial with invalid coefficients
         """
         for badCoeffs in (
-            (0.1,),     # len(coeffs) must be > 1
-            (0.1, 1.0), # coeffs[0] must be zero
-            (0.0, 0.0), # coeffs[1] must be nonzero
-            (0.0, 0.0, 0.1), # coeffs[1] must be nonzero
+            [0.1,],     # len(coeffs) must be > 1
+            [0.1, 1.0], # coeffs[0] must be zero
+            [0.0, 0.0], # coeffs[1] must be nonzero
+            [0.0, 0.0, 0.1], # coeffs[1] must be nonzero
         ):
             self.assertRaises(lsst.pex.exceptions.Exception, RadialXYTransform, badCoeffs)
 
