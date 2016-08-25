@@ -86,8 +86,12 @@ class MaskTestCase(utilsTests.TestCase):
         np.random.seed(1)
         self.Mask = afwImage.MaskU
 
-        self.Mask.clearMaskPlaneDict()  # reset so tests will be deterministic
+        # Store the default mask planes for later use
+        maskPlaneDict = self.Mask().getMaskPlaneDict()
+        self.defaultMaskPlanes = sorted(maskPlaneDict, key=maskPlaneDict.__getitem__)
 
+        # reset so tests will be deterministic
+        self.Mask.clearMaskPlaneDict()
         for p in ("BAD", "SAT", "INTRP", "CR", "EDGE"):
             self.Mask.addMaskPlane(p)
 
@@ -115,6 +119,10 @@ class MaskTestCase(utilsTests.TestCase):
     def tearDown(self):
         del self.mask1
         del self.mask2
+        # Reset the mask plane to the default
+        self.Mask.clearMaskPlaneDict()
+        for p in self.defaultMaskPlanes:
+            self.Mask.addMaskPlane(p)
 
     def testArrays(self):
         # could use MaskU(5, 6) but check extent(5, 6) form too
@@ -363,8 +371,12 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.testMask = self.Mask(afwGeom.Extent2I(300, 400), 0)
 
-        self.testMask.clearMaskPlaneDict()  # reset so tests will be deterministic
+        # Store the default mask planes for later use
+        maskPlaneDict = self.Mask().getMaskPlaneDict()
+        self.defaultMaskPlanes = sorted(maskPlaneDict, key=maskPlaneDict.__getitem__)
 
+        # reset so tests will be deterministic
+        self.Mask.clearMaskPlaneDict()
         for p in ("CR", "BP"):
             self.Mask.addMaskPlane(p)
 
@@ -381,6 +393,10 @@ class OldMaskTestCase(unittest.TestCase):
         del self.testMask
         del self.subTestMask
         del self.region
+        # Reset the mask plane to the default
+        self.Mask.clearMaskPlaneDict()
+        for p in self.defaultMaskPlanes:
+            self.Mask.addMaskPlane(p)
 
     def testPlaneAddition(self):
         """Test mask plane addition"""
@@ -632,15 +648,9 @@ def printMaskPlane(mask, plane,
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
+
 def setup_module(module):
     lsst.utils.tests.init()
-
-def teardown_module(module):
-    # Reset the mask plane to the default
-    Mask = afwImage.MaskU
-    Mask.clearMaskPlaneDict()
-    for p in ("BAD", "SAT", "INTRP", "CR", "EDGE", "DETECTED", "DETECTED_NEGATIVE","SUSPECT","NO_DATA"):
-        Mask.addMaskPlane(p)
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

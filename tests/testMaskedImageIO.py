@@ -74,9 +74,15 @@ class MaskedImageTestCase(unittest.TestCase):
         # Ideally we'd use the standard dictionary and a non-standard file, but
         # a standard file's what we have
         #
-        mask = afwImage.MaskU()
+        self.Mask = afwImage.MaskU
+        mask = self.Mask()
 
-        mask.clearMaskPlaneDict()
+        # Store the default mask planes for later use
+        maskPlaneDict = self.Mask().getMaskPlaneDict()
+        self.defaultMaskPlanes = sorted(maskPlaneDict, key=maskPlaneDict.__getitem__)
+
+        # reset so tests will be deterministic
+        self.Mask.clearMaskPlaneDict()
         for p in ("ZERO", "BAD", "SAT", "INTRP", "CR", "EDGE"):
             mask.addMaskPlane(p)
 
@@ -90,6 +96,10 @@ class MaskedImageTestCase(unittest.TestCase):
     def tearDown(self):
         if dataDir is not None:
             del self.mi
+        # Reset the mask plane to the default
+        self.Mask.clearMaskPlaneDict()
+        for p in self.defaultMaskPlanes:
+            self.Mask.addMaskPlane(p)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsRead(self):
@@ -347,15 +357,9 @@ class ExposureMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Te
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
+
 def setup_module(module):
     lsst.utils.tests.init()
-
-def teardown_module(module):
-    # Reset the mask plane to the default
-    Mask = afwImage.MaskU
-    Mask.clearMaskPlaneDict()
-    for p in ("BAD", "SAT", "INTRP", "CR", "EDGE", "DETECTED", "DETECTED_NEGATIVE","SUSPECT","NO_DATA"):
-        Mask.addMaskPlane(p)
 
 if __name__ == "__main__":
     lsst.utils.tests.init()
