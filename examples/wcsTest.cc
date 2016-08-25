@@ -39,7 +39,6 @@
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h" // turn off by recompiling with 'LSST_NO_TRACE 0'
 #include "lsst/afw/image.h"
 
 /**
