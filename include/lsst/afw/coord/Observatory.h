@@ -47,12 +47,12 @@ namespace coord {
  */
 class Observatory {
 public:
-    
+
     /**
      * @brief Constructor for the observatory with lat/long as afwGeom::Angles
      *
      * @param[in] longitude  observatory longitude (positive values are E of Greenwich)
-     * @param[in] latitude  observatory latitude 
+     * @param[in] latitude  observatory latitude
      * @param[in] elevation  observatory elevation (meters above reference spheroid)
      */
     Observatory(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude, double const elevation);
@@ -66,18 +66,18 @@ public:
      *
      */
     Observatory(std::string const longitude, std::string const latitude, double const elevation);
-    
+
     void setLatitude(lsst::afw::geom::Angle const latitude);
     void setLongitude(lsst::afw::geom::Angle const longitude);
     void setElevation(double const elevation);
-    
+
     /// get observatory latitude
     lsst::afw::geom::Angle getLatitude() const;
     /// get observatory longitude (positive values are E of Greenwich)
     lsst::afw::geom::Angle getLongitude() const;
     /// get observatory elevation (meters above reference spheroid)
     double getElevation() const { return _elevation; }
-    
+
     /// get observatory latitude as a dd:mm:ss.s string
     std::string getLatitudeStr() const;
     /// get observatory longitude as a dd:mm:ss.s string

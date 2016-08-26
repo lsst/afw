@@ -61,7 +61,7 @@ coord::Observatory::Observatory(
                                 std::string const longitude,
                                 std::string const latitude,
                                 double const elevation
-                               ) : 
+                               ) :
     _latitude(dmsStringToAngle(latitude)),
     _longitude(dmsStringToAngle(longitude)),
     _elevation(elevation) {
