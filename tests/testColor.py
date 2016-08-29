@@ -171,7 +171,7 @@ class CalibTestCase(lsst.utils.tests.TestCase):
 
     def testCalibEquality(self):
         self.assertEqual(self.calib, self.calib)
-        self.assertFalse(self.calib != self.calib)  # using assertFalse to directly test =! operator
+        self.assertFalse(self.calib != self.calib)  # using assertFalse to directly test != operator
 
         calib2 = afwImage.Calib()
         calib2.setExptime(12)

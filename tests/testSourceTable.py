@@ -55,7 +55,7 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+testPath = os.path.abspath(os.path.dirname(__file__))
 
 
 def makeArray(size, dtype):
@@ -412,7 +412,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.catalog.getChildren(0)  # Just care this succeeds
 
     def testFitsReadBackwardsCompatibility(self):
-        cat = lsst.afw.table.SourceCatalog.readFits("tests/data/empty-v0.fits")
+        cat = lsst.afw.table.SourceCatalog.readFits(os.path.join(testPath, "data/empty-v0.fits"))
         self.assertTrue(cat.getPsfFluxSlot().isValid())
         self.assertTrue(cat.getApFluxSlot().isValid())
         self.assertTrue(cat.getInstFluxSlot().isValid())
@@ -472,7 +472,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
         version of the pipeline with a different format.
         """
-        filename = os.path.join("tests", "data", "old-footprint-persistence.fits")
+        filename = os.path.join(testPath, "data", "old-footprint-persistence.fits")
         catalog1 = lsst.afw.table.SourceCatalog.readFits(filename)
         self.assertEqual(len(catalog1), 2)
         with self.assertRaises(KeyError):

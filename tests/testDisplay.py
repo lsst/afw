@@ -182,5 +182,6 @@ def setup_module(module):
 
 
 if __name__ == "__main__":
+    import argparse
     lsst.utils.tests.init()
     unittest.main()

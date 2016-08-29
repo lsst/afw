@@ -78,7 +78,7 @@ def makeRampImage(width, height, imgClass=afwImage.MaskedImageF):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-class MaskedImageTestCase(unittest.TestCase):
+class MaskedImageTestCase(lsst.utils.tests.TestCase):
     """A test case for MaskedImage"""
 
     def setUp(self):
@@ -120,10 +120,9 @@ class MaskedImageTestCase(unittest.TestCase):
 
     def testArrays(self):
         image, mask, variance = self.mimage.getArrays()
-        self.assertListEqual(self.mimage.getImage().getArray().flatten().tolist(), image.flatten().tolist())
-        self.assertListEqual(self.mimage.getMask().getArray().flatten().tolist(), mask.flatten().tolist())
-        self.assertListEqual(self.mimage.getVariance().getArray().flatten().tolist(), 
-                             variance.flatten().tolist())
+        self.assertFloatsEqual(self.mimage.getImage().getArray(), image)
+        self.assertFloatsEqual(self.mimage.getMask().getArray(), mask)
+        self.assertFloatsEqual(self.mimage.getVariance().getArray(), variance)
         mimage2 = afwImage.makeMaskedImageFromArrays(image, mask, variance)
         self.assertEqual(type(mimage2), type(self.mimage))
 
@@ -337,7 +336,7 @@ class MaskedImageTestCase(unittest.TestCase):
             destMask[:] = 0xFFFF
             destMI.assign(srcMI)
             for i in range(3):
-                self.assertListEqual(destMI.getArrays()[i].flatten().tolist(), 
+                self.assertListEqual(destMI.getArrays()[i].flatten().tolist(),
                                      srcMI.getArrays()[i].flatten().tolist())
 
             destImage[:] = -1.0

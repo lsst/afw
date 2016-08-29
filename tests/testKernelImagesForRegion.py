@@ -153,8 +153,8 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
         nx = 6
         ny = 5
         regionRow = mathDetail.RowOfKernelImagesForRegion(nx, ny)
-        self.assertTrue(not regionRow.hasData())
-        self.assertTrue(not regionRow.isLastRow())
+        self.assertFalse(regionRow.hasData())
+        self.assertFalse(regionRow.isLastRow())
         self.assertEqual(regionRow.getYInd(), -1)
 
         region = mathDetail.KernelImagesForRegion(self.kernel, self.bbox, self.xy0, False)

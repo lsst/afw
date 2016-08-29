@@ -88,7 +88,8 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.map["d"] = lsst.afw.math.ChebyshevBoundedField(self.bbox, numpy.random.randn(2, 2))
         self.assertIn("d", self.map)
         self.assertIsNone(self.map.get("e"))
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.NotFoundError, self.map.__getitem__, "e")
+        with self.assertRaises(lsst.pex.exceptions.NotFoundError):
+            self.map["e"]
         self.assertEqual(self.map.get("d"), self.map["d"])
 
     def testPersistence(self):

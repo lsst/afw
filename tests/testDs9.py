@@ -137,8 +137,6 @@ class DisplayTestCase(unittest.TestCase):
 
         ds9.scale("linear", "zscale")
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

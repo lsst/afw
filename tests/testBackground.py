@@ -42,8 +42,8 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
 import lsst.pex.exceptions as pexExcept
 
-# Set to True to display things in ds9.
-display = False
+# Set to True to display debug messages and images in ds9.
+debugMode = False
 
 try:
     AfwdataDir = lsst.utils.getPackageDir("afwdata")
@@ -52,6 +52,7 @@ except pexExcept.NotFoundError:
 
 
 class BackgroundTestCase(lsst.utils.tests.TestCase):
+
     def setUp(self):
         np.random.seed(1)
         self.val = 10
@@ -91,22 +92,6 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                           [back.get(0, y) for y in range(H)]):
             self.assertLess(abs(iy - by), 5)
 
-        if display:
-            import matplotlib
-            matplotlib.use('Agg')
-            import pylab as plt
-            plt.clf()
-            IY = [image.get(0, y) for y in range(H)]
-            BY = [back.get(0, y) for y in range(H)]
-            for iy, by in zip(IY, BY):
-                print('diff', iy - by)
-            b = np.linspace(0, H - 1, NY + 1)
-            plt.plot(IY, 'b-', lw=3, alpha=0.5)
-            plt.plot(BY, 'r-')
-            for y in b:
-                plt.axvline(y)
-            plt.savefig('bg.png')
-
     def testgetPixel(self):
         """Tests basic functionality of getPixel() method (floats)"""
         xcen, ycen = 50, 100
@@ -121,7 +106,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testBackgroundTestImages(self):
-        """tests Laher's afwdata/Statistics/*.fits images (doubles)"""
+        """Tests Laher's afwdata/Statistics/*.fits images (doubles)"""
         imginfolist = []
         imginfolist.append(["v1_i1_g_m400_s20_f.fits", 399.9912966583894])  # cooked to known value
 
@@ -179,26 +164,26 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(6)
         bctrl.setNySample(6)
-        bctrl.getStatisticsControl().setNumSigmaClip(20.0)  # something large enough to avoid clipping entirely
+        bctrl.getStatisticsControl().setNumSigmaClip(20.0) # something large enough to avoid clipping entirely
         bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.cast_BackgroundMI(afwMath.makeBackground(rampimg, bctrl))
 
-        if display:
+        if debugMode:
             print(rampimg.getArray())
 
         frame = 1
         for interp in ("CONSTANT", "LINEAR", "NATURAL_SPLINE", "AKIMA_SPLINE"):
             diff = backobj.getImageF(interp)
-            if display:
+            if debugMode:
                 ds9.mtv(diff, frame=frame)
                 frame += 1
             diff -= rampimg
-            if display:
+            if debugMode:
                 print(interp, diff.getArray().mean(), diff.getArray().std())
-            if display:
+            if debugMode:
                 ds9.mtv(diff, frame=frame)
                 frame += 1
-        if display:
+        if debugMode:
             ds9.mtv(rampimg, frame=frame)
             frame += 1
             ds9.mtv(backobj.getStatsImage(), frame=frame)
@@ -310,13 +295,13 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl.getStatisticsControl().setNumIter(2)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
 
-        if display:
+        if debugMode:
             ds9.mtv(mi, frame=0)
 
         im = mi.getImage()
         im -= backobj.getImageF()
 
-        if display:
+        if debugMode:
             ds9.mtv(mi, frame=1)
 
     def getCfhtImage(self):
@@ -374,7 +359,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         subArr = bgSubImage.getArray()
 
         # the pixels happen to be identical but it is safer not to rely on that; close is good enough
-        self.assertClose(subArr, subFullArr)
+        self.assertFloatsEqual(subArr, subFullArr)
 
     @unittest.skipIf(AfwdataDir is None, "afwdata not setup")
     def testCFHT(self):
@@ -386,18 +371,18 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl.getStatisticsControl().setNumIter(2)
         backobj = afwMath.makeBackground(mi.getImage(), bctrl)
 
-        if display:
+        if debugMode:
             ds9.mtv(mi, frame=0)
 
         im = mi.getImage()
         im -= backobj.getImageF("AKIMA_SPLINE")
 
-        if display:
+        if debugMode:
             ds9.mtv(mi, frame=1)
 
         statsImage = afwMath.cast_BackgroundMI(backobj).getStatsImage()
 
-        if display:
+        if debugMode:
             ds9.mtv(statsImage, frame=2)
             ds9.mtv(statsImage.getVariance(), frame=3)
 
@@ -495,7 +480,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         bkgd = afwMath.makeBackground(image, bctrl)
         bkgdImage = bkgd.getImageF("NATURAL_SPLINE", "THROW_EXCEPTION")
-        if display:
+        if debugMode:
             ds9.mtv(image)
             ds9.mtv(bkgdImage, frame=1)
 
@@ -522,7 +507,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl = afwMath.BackgroundControl(nx, ny, sctrl, afwMath.MEANCLIP)
 
         bkgd = afwMath.makeBackground(image, bctrl)
-        if display:
+        if debugMode:
             ds9.mtv(image)
             ds9.mtv(afwMath.cast_BackgroundMI(bkgd).getStatsImage(), frame=1)
         # Should throw if we don't permit REDUCE_INTERP_ORDER
@@ -532,7 +517,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         # where the NaNs don't permit spline interpolation (n.b. this happens to be exact)
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
 
-        if display:
+        if debugMode:
             ds9.mtv(bkgdImage, frame=2)
 
         image -= bkgdImage
@@ -551,7 +536,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         msk[0:400, :] |= badBits
         del msk
 
-        if display:
+        if debugMode:
             ds9.mtv(mi, frame=0)
 
         sctrl = afwMath.StatisticsControl()
@@ -561,13 +546,13 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         bkgd = afwMath.makeBackground(mi, bctrl)
         statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
-        if display:
+        if debugMode:
             ds9.mtv(statsImage, frame=1)
 
         # the test is that this doesn't fail if the bug (#2297) is fixed
         bkgdImage = bkgd.getImageF(afwMath.Interpolate.NATURAL_SPLINE, afwMath.REDUCE_INTERP_ORDER)
         self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
-        if display:
+        if debugMode:
             ds9.mtv(bkgdImage, frame=2)
         # Check that we can fix the NaNs in the statsImage
         sim = statsImage.getImage().getArray()
@@ -589,7 +574,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         msk[0:400, :] |= badBits
         del msk
 
-        if display:
+        if debugMode:
             ds9.mtv(mi, frame=0)
 
         sctrl = afwMath.StatisticsControl()
@@ -599,7 +584,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
 
         bkgd = afwMath.makeBackground(mi, bctrl)
         statsImage = afwMath.cast_BackgroundMI(bkgd).getStatsImage()
-        if display:
+        if debugMode:
             ds9.mtv(statsImage, frame=1)
 
         # the test is that this doesn't fail if the bug (#2297) is fixed
@@ -608,7 +593,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
                                              afwMath.Interpolate.AKIMA_SPLINE], 2):
             bkgdImage = bkgd.getImageF(interpStyle, afwMath.REDUCE_INTERP_ORDER)
             self.assertEqual(np.mean(bkgdImage[0:100, 0:100].getArray()), initialValue)
-            if display:
+            if debugMode:
                 ds9.mtv(bkgdImage, frame=frame)
 
     def testBadImage(self):

@@ -113,11 +113,9 @@ class SpatialCellTestCase(unittest.TestCase):
         id = self.cell[1].getId()
         self.assertEqual(self.cell.getCandidateById(id).getId(), id)
 
-        def tst():
-            self.cell.getCandidateById(-1)  # non-existent ID
-
         self.assertEqual(self.cell.getCandidateById(-1, True), None)
-        self.assertRaises(pexExcept.NotFoundError, tst)
+        with self.assertRaises(pexExcept.NotFoundError):
+            self.cell.getCandidateById(-1)
 
     def testSetIteratorBad(self):
         """Setting a candidate BAD shouldn't stop us seeing the rest of the candidates"""

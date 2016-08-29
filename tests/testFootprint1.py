@@ -41,6 +41,7 @@ or
 import math
 import sys
 import unittest
+import os
 import numpy
 import lsst.utils.tests
 import lsst.pex.logging as logging
@@ -65,6 +66,7 @@ try:
 except NameError:
     display = False
 
+testPath = os.path.abspath(os.path.dirname(__file__))
 
 def toString(*args):
     """toString written in python"""
@@ -73,8 +75,6 @@ def toString(*args):
 
     y, x0, x1 = args
     return "%d: %d..%d" % (y, x0, x1)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class Object(object):
@@ -1113,7 +1113,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.checkEdge(foot)
 
         # This footprint came from a very large Footprint in a deep HSC coadd patch
-        self.checkEdge(afwDetect.Footprint.readFits("tests/testFootprintEdge.fits"))
+        self.checkEdge(afwDetect.Footprint.readFits(os.path.join(testPath,"testFootprintEdge.fits")))
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

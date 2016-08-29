@@ -54,7 +54,9 @@ import pickle
 import lsst.afw.image as afwImage
 import lsst.utils.tests
 
-DATA = os.path.join("tests", "data", "ticket2233.fits")
+testPath = os.path.abspath(os.path.dirname(__file__))
+
+DATA = os.path.join(testPath, "data", "ticket2233.fits")
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

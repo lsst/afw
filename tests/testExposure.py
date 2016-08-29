@@ -443,13 +443,13 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
 
-        self.assertClose(miCopy.getImage().getArray(), -50)
+        self.assertFloatsAlmostEqual(miCopy.getImage().getArray(), -50)
         self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
-        self.assertClose(miCopy.getVariance().getArray(), 175)
+        self.assertFloatsAlmostEqual(miCopy.getVariance().getArray(), 175)
 
-        self.assertClose(mi.getImage().getArray(), 100)
+        self.assertFloatsAlmostEqual(mi.getImage().getArray(), 100)
         self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
-        self.assertClose(mi.getVariance().getArray(), 200)
+        self.assertFloatsAlmostEqual(mi.getVariance().getArray(), 200)
 
     def testDeepCopySubData(self):
         """Make sure a deep copy of a subregion of an Exposure has its own data (ticket #2625)
@@ -467,13 +467,13 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         miCopy.getMask().set(2)
         miCopy.getVariance().set(175)
 
-        self.assertClose(miCopy.getImage().getArray(), -50)
+        self.assertFloatsAlmostEqual(miCopy.getImage().getArray(), -50)
         self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
-        self.assertClose(miCopy.getVariance().getArray(), 175)
+        self.assertFloatsAlmostEqual(miCopy.getVariance().getArray(), 175)
 
-        self.assertClose(mi.getImage().getArray(), 100)
+        self.assertFloatsAlmostEqual(mi.getImage().getArray(), 100)
         self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
-        self.assertClose(mi.getVariance().getArray(), 200)
+        self.assertFloatsAlmostEqual(mi.getVariance().getArray(), 200)
 
     def testDeepCopyMetadata(self):
         """Make sure a deep copy of an Exposure has a deep copy of metadata (ticket #2568)

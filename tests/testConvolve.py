@@ -47,7 +47,7 @@ import lsst.afw.math as afwMath
 import lsst.afw.math.detail as mathDetail
 import lsst.pex.exceptions as pexExcept
 
-from kernel import makeDeltaFunctionKernelList, makeGaussianKernelList
+from testKernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 
 VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
 
@@ -210,7 +210,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
     def _removeGarbageChars(instring):
         # str.translate on python2 differs to that on python3
         # Performance is not critical in this helper function so use a regex
-        print("Translating '{}' -> '{}'".format(instring, re.sub("[" + GarbageChars + "]" , "", instring)))
+        print("Translating '{}' -> '{}'".format(instring, re.sub("[" + GarbageChars + "]", "", instring)))
         return re.sub("[" + GarbageChars + "]", "", instring)
 
     def runBasicTest(self, kernel, convControl, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08):
@@ -262,8 +262,10 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         if not sameMaskPlaneDicts(self.cnvMaskedImage, self.maskedImage):
             self.cnvMaskedImage.writeFits("act%s" % (shortKernelDescr,))
             refMaskedImage.writeFits("des%s" % (shortKernelDescr,))
-            self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" %
-                      (kernelDescr, doNormalize, doCopyEdge, maxInterpDist, "convolved mask dictionary does not match input"))
+            self.fail("convolve(MaskedImage, kernel=%s, doNormalize=%s, "
+                      "doCopyEdge=%s, maxInterpDist=%s) failed:\n%s" %
+                      (kernelDescr, doNormalize, doCopyEdge, maxInterpDist,
+                       "convolved mask dictionary does not match input"))
 
     def runStdTest(self, kernel, refKernel=None, kernelDescr="", rtol=1.0e-05, atol=1e-08,
                    maxInterpDist=10):
@@ -652,8 +654,9 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         ):
             self.runStdTest(
                 kernel,
-                kernelDescr="Spatially varying LinearCombinationKernel of basis kernels with low covariance, using %s" % (
-                    methodStr,),
+                kernelDescr="Spatially varying LinearCombinationKernel of basis "
+                            "kernels with low covariance, using %s" % (
+                                methodStr,),
                 maxInterpDist=maxInterpDist,
                 rtol=rtol)
 

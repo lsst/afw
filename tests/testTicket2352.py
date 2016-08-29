@@ -30,7 +30,8 @@ import unittest
 import lsst.afw.image as afwImage
 import lsst.utils.tests
 
-DATA = os.path.join("tests", "data", "ticket2352.fits")
+testPath = os.path.abspath(os.path.dirname(__file__))
+DATA = os.path.join(testPath, "data", "ticket2352.fits")
 
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

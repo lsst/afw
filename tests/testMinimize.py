@@ -28,19 +28,19 @@ from builtins import zip
 
 import unittest
 
-import numpy
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.math as afwMath
 
 
-class MinimizeTestCase(unittest.TestCase):
+class MinimizeTestCase(lsst.utils.tests.TestCase):
 
     def testMinimize2(self):
 
-        variances = numpy.array([0.01, 0.01, 0.01, 0.01])
-        xPositions = numpy.array([0.0, 1.0, 0.0, 1.0])
-        yPositions = numpy.array([0.0, 0.0, 1.0, 1.0])
+        variances = np.array([0.01, 0.01, 0.01, 0.01])
+        xPositions = np.array([0.0, 1.0, 0.0, 1.0])
+        yPositions = np.array([0.0, 0.0, 1.0, 1.0])
 
         polyOrder = 1
         polyFunc = afwMath.PolynomialFunction2D(polyOrder)
@@ -54,8 +54,8 @@ class MinimizeTestCase(unittest.TestCase):
 
         # Set up initial guesses
         nParameters = polyFunc.getNParameters()
-        initialParameters = numpy.zeros(nParameters, float)
-        stepsize = numpy.ones(nParameters, float)
+        initialParameters = np.zeros(nParameters, float)
+        stepsize = np.ones(nParameters, float)
         stepsize *= 0.1
 
         # Minimize!
@@ -73,11 +73,8 @@ class MinimizeTestCase(unittest.TestCase):
         print("modelParams=", modelParams)
         print("fitParams  =", fitResults.parameterList)
         self.assertTrue(fitResults.isValid, "fit failed")
-        if not numpy.allclose(modelParams, fitResults.parameterList):
-            self.fail("fit not accurate")
+        self.assertFloatsAlmostEqual(np.array(modelParams), np.array(fitResults.parameterList), 1e-11)
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

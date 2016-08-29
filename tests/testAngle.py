@@ -41,8 +41,6 @@ import lsst.utils.tests
 
 import lsst.afw.geom as afwGeom
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class AngleTestCase(unittest.TestCase):
     """A test case for Angle"""
@@ -218,13 +216,6 @@ class AngleTestCase(unittest.TestCase):
                             self.assertAlmostEqual(nearErrAng.asRadians(), 0)
                             self.assertAlmostEqual(math.sin(nearAngRad), sinAng)
                             self.assertAlmostEqual(math.cos(nearAngRad), cosAng)
-
-
-class DemoTestCase(lsst.utils.tests.TestCase):
-    """Demo test case."""
-
-    def testDemo(self):
-        self.assertNotIn("i", "team")
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

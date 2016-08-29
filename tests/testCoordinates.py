@@ -50,16 +50,6 @@ class CoordinateTestCase(object):
     """Mixin for some of the tests below.
     """
 
-    def _assertClose(self, a, b, msg=None):
-        """Note that this will not be used by all tests, only by those
-           that derive from this class. The rest will use assertClose
-           from the tests package.
-        """
-        if not numpy.allclose(a, b):
-            return self.assertEqual(a, b, msg=msg)
-        else:
-            return self.assertTrue(True, msg=msg)
-
     def testAccessors(self):
         for dtype, cls, rnd in self.classes:
             vector1 = rnd()
@@ -135,37 +125,37 @@ class PointTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
         # test 2-d
         e1 = geom.Point2I(1, 2)
         e2 = geom.Point2I(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Point2D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point2I(1, 3)
         e2 = geom.Point2D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         # test 3-d
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Point3I(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Point3D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Point3D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         # test rounding to integral coordinates
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Point2I(e1)
-        self._assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+        self.assertAlmostEqual(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
 
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Point3I(e1)
-        self._assertClose(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
+        self.assertAlmostEqual(tuple([math.floor(v + 0.5) for v in e1]), tuple(e2))
 
 
 class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
@@ -190,54 +180,54 @@ class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
         # test extent from extent 2-d
         e1 = geom.Extent2I(1, 2)
         e2 = geom.Extent2I(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Extent2D(1.2, 3.4)
         e2 = geom.Extent2D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Extent2I(1, 2)
         e2 = geom.Extent2D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         # test extent from extent 3-d
         e1 = geom.Extent3I(1, 2, 3)
         e2 = geom.Extent3I(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Extent3D(1.2, 3.4, 5.6)
         e2 = geom.Extent3D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Extent3I(1, 2, 3)
         e2 = geom.Extent3D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         # test extent from point 2-d
         e1 = geom.Point2I(1, 2)
         e2 = geom.Extent2I(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point2D(1.2, 3.4)
         e2 = geom.Extent2D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point2I(1, 2)
         e2 = geom.Extent2D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         # test extent from point 3-d
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Extent3I(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point3D(1.2, 3.4, 5.6)
         e2 = geom.Extent3D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         e1 = geom.Point3I(1, 2, 3)
         e2 = geom.Extent3D(e1)
-        self._assertClose(tuple(e1), tuple(e2))
+        self.assertAlmostEqual(tuple(e1), tuple(e2))
 
         # test invalid constructors
         try:

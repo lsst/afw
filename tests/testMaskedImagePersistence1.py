@@ -41,12 +41,8 @@ except pexExcept.NotFoundError:
     dataDir = None
 
 
-class MaskedImagePersistenceTestCase(unittest.TestCase):
+class MaskedImagePersistenceTestCase(lsst.utils.tests.TestCase):
     """A test case for MaskedImage Persistence"""
-
-    def checkImages(self, maskedImage, maskedImage2):
-        # Check that two MaskedImages are identical (well, actually check only every 4th pixel)
-        pass
 
     def setUp(self):
         # Create the additionalData PropertySet
@@ -91,7 +87,7 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
             self.persistence.unsafeRetrieve("MaskedImageF", storageList, self.additionalData))
 
         # Check the resulting MaskedImage
-        self.checkImages(self.maskedImage, maskedImage2)
+        self.assertMaskedImagesEqual(self.maskedImage, maskedImage2)
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testBoostPersistence(self):
@@ -103,8 +99,6 @@ class MaskedImagePersistenceTestCase(unittest.TestCase):
         storageList = dafPers.StorageList([storage])
         self.persistence.persist(self.maskedImage, storageList, self.additionalData)
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

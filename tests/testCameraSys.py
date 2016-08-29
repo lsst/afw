@@ -55,8 +55,12 @@ class CameraSysTestCase(unittest.TestCase):
                 else:
                     self.assertEqual(cameraSys, noDetSys)
 
-                self.assertNotEqual(cameraSys, camSysPrefix)
-                self.assertNotEqual(noDetSys, camSysPrefix)
+                # The following tests are checking the functionality of the == and !=
+                # operators and should not be replaced with assertEqual ot assertNotEqual
+                self.assertTrue(cameraSys != camSysPrefix)
+                self.assertTrue(noDetSys != camSysPrefix)
+                self.assertFalse(cameraSys == camSysPrefix)
+                self.assertFalse(noDetSys == camSysPrefix)
 
             for sysName2 in ("pupil", "pixels"):
                 for detectorName2 in ("", "det1", "det2"):

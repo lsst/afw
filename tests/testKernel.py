@@ -279,7 +279,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             kernelList = afwMath.KernelList()
             kernelList.append(analKernel)
             lcKernel = afwMath.LinearCombinationKernel(kernelList, [1])
-            self.assertTrue(not lcKernel.isDeltaFunctionBasis())
+            self.assertFalse(lcKernel.isDeltaFunctionBasis())
 
             doRaise = (coeff == 0)
             self.basicTestComputeImageRaise(analKernel, doRaise, "AnalyticKernel")
@@ -533,7 +533,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         )
 
         kernel = afwMath.LinearCombinationKernel(basisKernelList, spFunc)
-        self.assertTrue(not kernel.isDeltaFunctionBasis())
+        self.assertFalse(kernel.isDeltaFunctionBasis())
         self.basicTests(kernel, 2, nSpatialParams=3)
         kernel.setSpatialParameters(sParams)
         kImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
@@ -700,7 +700,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(kernel.getNSpatialParameters(), nSpatialParams)
         self.assertEqual(kernel.getNKernelParameters(), nKernelParams)
         if nSpatialParams == 0:
-            self.assertTrue(not kernel.isSpatiallyVarying())
+            self.assertFalse(kernel.isSpatiallyVarying())
             for ii in range(nKernelParams+5):
                 self.assertRaises(pexExcept.InvalidParameterError,
                                   kernel.getSpatialFunction, ii)
