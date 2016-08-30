@@ -183,5 +183,19 @@ def setup_module(module):
 
 if __name__ == "__main__":
     import argparse
+    import sys
+
+    parser = argparse.ArgumentParser(description="Run the image display test suite")
+
+    parser.add_argument('backend', type=str, nargs="?", default="virtualDevice",
+                        help="The backend to use, e.g. ds9.  You may need to have the device setup")
+    args = parser.parse_args()
+
+    # check that that backend is valid
+    with afwDisplay.Display("test", backend=args.backend) as disp:
+        pass
+
+    backend = args.backend              # backend is just a variable in this file
     lsst.utils.tests.init()
+    del sys.argv[1:]
     unittest.main()
