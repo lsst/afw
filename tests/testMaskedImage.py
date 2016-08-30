@@ -119,6 +119,10 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         del self.function
 
     def testArrays(self):
+        """
+        This method is testing that ``lsst.afw.image.MaskedImageF.getArrays()``
+        returns the proper image, mask, and variance.
+        """
         image, mask, variance = self.mimage.getArrays()
         self.assertFloatsEqual(self.mimage.getImage().getArray(), image)
         self.assertFloatsEqual(self.mimage.getMask().getArray(), mask)
