@@ -26,11 +26,11 @@ from builtins import str
 #
 
 import unittest
+import lsst.utils.tests
 
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
-import lsst.utils.tests as utilsTests
 import lsst.daf.base as dafBase
 
 import lsst
@@ -86,8 +86,8 @@ class MakeWcsTestCase(unittest.TestCase):
         """Test than an exception is thrown if we try to upcast to a TanWcs inappropriately"""
         wcs = afwImage.makeWcs(self.metadata)
 
-        excpt = lsst.pex.exceptions.Exception
-        self.assertRaises(excpt, afwImage.cast_TanWcs, wcs)
+        with self.assertRaises(lsst.pex.exceptions.Exception):
+            afwImage.cast_TanWcs(wcs)
 
     def testCreateTanWcs(self):
         """Check that a non-TAN projection in the header creates a base Wcs object"""
@@ -146,22 +146,15 @@ class MakeWcsTestCase(unittest.TestCase):
 
         afwImage.makeWcs(self.metadata)
 
-#####
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+def setup_module(module):
+    lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(MakeWcsTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

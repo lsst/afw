@@ -23,35 +23,33 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+import os
 import unittest
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.image as afwImage
 
+testPath = os.path.abspath(os.path.dirname(__file__))
 
-class ArchiveImportTestCase(unittest.TestCase):
+
+class ArchiveImportTestCase(lsst.utils.tests.TestCase):
 
     def testArchiveImports(self):
         # This file was saved with a Psf defined in testTableArchivesLib, so we'll only be able
         # to load it if the module-importer mechanism works.
-        filename = "tests/data/archiveImportTest.fits"
+        filename = os.path.join(testPath, "data", "archiveImportTest.fits")
         exposure = afwImage.ExposureF(filename)
-        self.assert_(exposure.getPsf() is not None)
+        self.assertIsNotNone(exposure.getPsf())
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
-
-    suites = []
-    suites += unittest.makeSuite(ArchiveImportTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(exit=False):
-    """Run the utilsTests"""
-    utilsTests.run(suite(), exit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

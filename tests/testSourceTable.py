@@ -50,14 +50,12 @@ import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
 
-numpy.random.seed(1)
-
 try:
     type(display)
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+testPath = os.path.abspath(os.path.dirname(__file__))
 
 
 def makeArray(size, dtype):
@@ -95,6 +93,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         record.set(self.shapeFlagKey, numpy.random.randn() > 0)
 
     def setUp(self):
+        numpy.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.fluxKey = self.schema.addField("a_flux", type="D")
         self.fluxErrKey = self.schema.addField("a_fluxSigma", type="D")
@@ -195,7 +194,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             for field in ("a_flux", "a_fluxSigma", "id"):  # Columns that are easy to test
                 k1 = self.catalog.schema.find(field).getKey()
                 k2 = new.schema.find(field).getKey()
-                self.assertTrue(r1[k1] == r2[k2])
+                self.assertEqual(r1[k1], r2[k2])
 
     def testCoordUpdate(self):
         self.table.defineCentroid("b")
@@ -208,11 +207,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testSorting(self):
         self.assertFalse(self.catalog.isSorted())
         self.catalog.sort()
-        self.assert_(self.catalog.isSorted())
+        self.assertTrue(self.catalog.isSorted())
         r = self.catalog.find(2)
         self.assertEqual(r["id"], 2)
         r = self.catalog.find(500)
-        self.assert_(r is None)
+        self.assertIsNone(r)
 
     def testConversion(self):
         catalog1 = self.catalog.cast(lsst.afw.table.SourceCatalog)
@@ -234,29 +233,30 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
     def testColumnView(self):
         cols1 = self.catalog.getColumnView()
         cols2 = self.catalog.columns
-        self.assert_(cols1 is cols2)
-        self.assert_(isinstance(cols1, lsst.afw.table.SourceColumnView))
+        self.assertIs(cols1, cols2)
+        self.assertIsInstance(cols1, lsst.afw.table.SourceColumnView)
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assert_((cols2["a_flux"] == cols2.getPsfFlux()).all())
-        self.assert_((cols2["a_fluxSigma"] == cols2.getPsfFluxErr()).all())
-        self.assert_((cols2["b_x"] == cols2.getX()).all())
-        self.assert_((cols2["b_y"] == cols2.getY()).all())
-        self.assert_((cols2["c_xx"] == cols2.getIxx()).all())
-        self.assert_((cols2["c_yy"] == cols2.getIyy()).all())
-        self.assert_((cols2["c_xy"] == cols2.getIxy()).all())
+        self.assertFloatsEqual(cols2["a_flux"], cols2.getPsfFlux())
+        self.assertFloatsEqual(cols2["a_fluxSigma"], cols2.getPsfFluxErr())
+        self.assertFloatsEqual(cols2["b_x"], cols2.getX())
+        self.assertFloatsEqual(cols2["b_y"], cols2.getY())
+        self.assertFloatsEqual(cols2["c_xx"], cols2.getIxx())
+        self.assertFloatsEqual(cols2["c_yy"], cols2.getIyy())
+        self.assertFloatsEqual(cols2["c_xy"], cols2.getIxy())
 
     def testForwarding(self):
         """Verify that Catalog forwards unknown methods to its table and/or columns."""
         self.table.definePsfFlux("a")
         self.table.defineCentroid("b")
         self.table.defineShape("c")
-        self.assert_((self.catalog.columns["a_flux"] == self.catalog["a_flux"]).all())
-        self.assert_((self.catalog.columns[self.fluxKey] == self.catalog.get(self.fluxKey)).all())
-        self.assert_((self.catalog.columns.get(self.fluxKey) == self.catalog.getPsfFlux()).all())
+        self.assertFloatsEqual(self.catalog.columns["a_flux"], self.catalog["a_flux"])
+        self.assertFloatsEqual(self.catalog.columns[self.fluxKey], self.catalog.get(self.fluxKey))
+        self.assertFloatsEqual(self.catalog.columns.get(self.fluxKey), self.catalog.getPsfFlux())
         self.assertEqual(self.fluxKey, self.catalog.getPsfFluxKey())
-        self.assertRaises(AttributeError, lambda c: c.foo(), self.catalog)
+        with self.assertRaises(AttributeError):
+            self.catalog.foo()
 
     def testBitsColumn(self):
         allBits = self.catalog.getBits()
@@ -266,11 +266,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(allBits.getMask("c_flag"), 0x4)
         self.assertEqual(someBits.getMask(self.fluxFlagKey), 0x1)
         self.assertEqual(someBits.getMask(self.shapeFlagKey), 0x2)
-        self.assert_(((allBits.array & 0x1 != 0) == self.catalog.columns["a_flag"]).all())
-        self.assert_(((allBits.array & 0x2 != 0) == self.catalog.columns["b_flag"]).all())
-        self.assert_(((allBits.array & 0x4 != 0) == self.catalog.columns["c_flag"]).all())
-        self.assert_(((someBits.array & 0x1 != 0) == self.catalog.columns["a_flag"]).all())
-        self.assert_(((someBits.array & 0x2 != 0) == self.catalog.columns["c_flag"]).all())
+        self.assertFloatsEqual((allBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
+        self.assertFloatsEqual((allBits.array & 0x2 != 0), self.catalog.columns["b_flag"])
+        self.assertFloatsEqual((allBits.array & 0x4 != 0), self.catalog.columns["c_flag"])
+        self.assertFloatsEqual((someBits.array & 0x1 != 0), self.catalog.columns["a_flag"])
+        self.assertFloatsEqual((someBits.array & 0x2 != 0), self.catalog.columns["c_flag"])
 
     def testCast(self):
         baseCat = self.catalog.cast(lsst.afw.table.BaseCatalog)
@@ -334,9 +334,9 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
                     MI.writeFits(fn2)
                     print('wrote', fn2)
 
-            self.assertTrue(all((mim2.getImage().getArray() == mim3.getImage().getArray()).ravel()))
-            self.assertTrue(all((mim2.getMask().getArray() == mim3.getMask().getArray()).ravel()))
-            self.assertTrue(all((mim2.getVariance().getArray() == mim3.getVariance().getArray()).ravel()))
+            self.assertFloatsEqual(mim2.getImage().getArray(), mim3.getImage().getArray())
+            self.assertFloatsEqual(mim2.getMask().getArray(), mim3.getMask().getArray())
+            self.assertFloatsEqual(mim2.getVariance().getArray(), mim3.getVariance().getArray())
 
             im3 = mim3.getImage()
             ma3 = mim3.getMask()
@@ -377,10 +377,12 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         id2 = factory()
         self.assertEqual(id2 - id1, 1)
         factory.notify(0xFFFFFFFF)
-        self.assertRaises(lsst.pex.exceptions.LengthError, factory)
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError, factory.notify, 0x1FFFFFFFF)
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                          lsst.afw.table.IdFactory.makeSource, 0x1FFFFFFFF, reserved)
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            factory()
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            factory.notify(0x1FFFFFFFF)
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            lsst.afw.table.IdFactory.makeSource(0x1FFFFFFFF, reserved)
 
     def testFamilies(self):
         self.catalog.sort()
@@ -404,12 +406,13 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
 
         # Check detection of unsorted catalog
         self.catalog.sort(self.fluxKey)
-        self.assertRaises(AssertionError, self.catalog.getChildren, 0)
+        with self.assertRaises(AssertionError):
+            self.catalog.getChildren(0)
         self.catalog.sort(parentKey)
         self.catalog.getChildren(0)  # Just care this succeeds
 
     def testFitsReadBackwardsCompatibility(self):
-        cat = lsst.afw.table.SourceCatalog.readFits("tests/data/empty-v0.fits")
+        cat = lsst.afw.table.SourceCatalog.readFits(os.path.join(testPath, "data/empty-v0.fits"))
         self.assertTrue(cat.getPsfFluxSlot().isValid())
         self.assertTrue(cat.getApFluxSlot().isValid())
         self.assertTrue(cat.getInstFluxSlot().isValid())
@@ -469,10 +472,11 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         """Test that we can still read SourceCatalogs with (Heavy)Footprints saved by an older
         version of the pipeline with a different format.
         """
-        filename = os.path.join("tests", "data", "old-footprint-persistence.fits")
+        filename = os.path.join(testPath, "data", "old-footprint-persistence.fits")
         catalog1 = lsst.afw.table.SourceCatalog.readFits(filename)
         self.assertEqual(len(catalog1), 2)
-        self.assertRaises(KeyError, catalog1.schema.find, "footprint")
+        with self.assertRaises(KeyError):
+            catalog1.schema.find("footprint")
         fp1 = catalog1[0].getFootprint()
         fp2 = catalog1[1].getFootprint()
         self.assertEqual(fp1.getArea(), 495)
@@ -511,6 +515,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         table = lsst.afw.table.SourceTable.make(schema)
 
         # Initially, the slot is undefined.
+        # For some reason this doesn't work with a context manager for assertRaises
         self.assertRaises(lsst.pex.exceptions.NotFoundError, getattr(table, "get%sDefinition" % (slotName,)))
 
         # After definition, it maps to the keys defined above.
@@ -542,25 +547,18 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
             self._testFluxSlot(slotName)
 
         # But, of course, we should not accept a slot which hasn't be defined.
-        self.assertRaises(AttributeError, self._testFluxSlot, "NotExtantFlux")
+        with self.assertRaises(AttributeError):
+            self._testFluxSlot("NotExtantFlux")
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(SourceTableTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

@@ -29,7 +29,7 @@ import unittest
 import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 from math import sqrt
 
 
@@ -38,7 +38,7 @@ class WCSTestRaWrap(unittest.TestCase):
 
     def setUp(self):
         mydir = lsst.utils.getPackageDir('afw')
-        self.assertTrue(mydir is not None)
+        self.assertIsNotNone(mydir)
         self.datadir = os.path.join(mydir, 'tests')
 
     def test1(self):
@@ -68,24 +68,18 @@ class WCSTestRaWrap(unittest.TestCase):
                 pixscale = 3600. * sqrt(wcs.pixArea(afwGeom.Point2D(x, y)))
                 ps2 = wcs.pixelScale().asArcseconds()
                 print(x, y, ra, dec, pixscale, ps2)
-                self.assertTrue(abs(pixscale - 0.2) < 1e-3)
-                self.assertTrue(abs(ps2 - 0.2) < 1e-3)
+                self.assertLess(abs(pixscale - 0.2), 1e-3)
+                self.assertLess(abs(ps2 - 0.2), 1e-3)
 
 
-# Ridiculous boilerplate
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-def suite():
-    utilsTests.init()
-    suites = []
-    suites += unittest.makeSuite(WCSTestRaWrap)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

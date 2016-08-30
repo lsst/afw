@@ -34,7 +34,7 @@ import lsst.afw.image as afwImage
 from lsst.afw.cameraGeom.fitsUtils import getByKey, setByKey, HeaderAmpMap, HeaderDetectorMap, DetectorBuilder
 
 
-class TestAmpObject(object):
+class AmpTestObject(object):
 
     def name(self, a):
         self.name = a
@@ -46,7 +46,7 @@ class TestAmpObject(object):
         self.defaultval = c
 
 
-class TestDetObject(object):
+class DetTestObject(object):
 
     def __init__(self):
         return
@@ -82,7 +82,7 @@ class FitsUtilsTestCase(unittest.TestCase):
         """Test getters and other basics
         """
         self.assertEqual(getByKey(self.metadata, 'HELLO'), 'hello')
-        self.assertTrue(getByKey(self.metadata, 'NOTAKEY') is None)
+        self.assertIsNone(getByKey(self.metadata, 'NOTAKEY'))
         setByKey(self.metadata, 'NEWKEY', 'new key', False)
         self.assertEqual(getByKey(self.metadata, 'NEWKEY'), 'new key')
         setByKey(self.metadata, 'DONTCLOBBER', 'clobbered', False)
@@ -93,7 +93,7 @@ class FitsUtilsTestCase(unittest.TestCase):
     def testMapper(self):
         """Test mapper
         """
-        tao = TestAmpObject()
+        tao = AmpTestObject()
         ham = HeaderAmpMap()
         for tup in self.mdMapList:
             ham.addEntry(*tup)
@@ -102,7 +102,7 @@ class FitsUtilsTestCase(unittest.TestCase):
         self.assertEqual(tao.testsec, 'Test String')
         self.assertEqual(tao.defaultval, 'Default')
 
-        tdo = TestDetObject()
+        tdo = DetTestObject()
         hdm = HeaderDetectorMap()
         for tup in self.mdMapList:
             hdm.addEntry(*tup)
@@ -125,20 +125,12 @@ class FitsUtilsTestCase(unittest.TestCase):
             detBuilder.makeExposure(afwImage.ImageF(10, 10), afwImage.MaskU(10, 10), afwImage.ImageF(10, 10))
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(FitsUtilsTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
-
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

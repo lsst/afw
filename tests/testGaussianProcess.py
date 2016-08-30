@@ -25,14 +25,17 @@ from builtins import range
 # see  < http://www.lsstcorp.org/LegalNotices/ > .
 #
 
+import os
 import unittest
 import numpy as np
+import lsst.utils.tests
 import lsst.afw.math as gp
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pex
 
+testPath = os.path.abspath(os.path.dirname(__file__))
 
-class GaussianProcessTestCase(unittest.TestCase):
+class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
     def testTooManyNeighbors(self):
         """
@@ -47,11 +50,16 @@ class GaussianProcessTestCase(unittest.TestCase):
         sigma = np.empty(1)
         mu_arr = np.empty(1)
 
-        self.assertRaises(pex.Exception, gg.interpolate, sigma, test, 2*nData)
-        self.assertRaises(pex.Exception, gg.interpolate, sigma, test, -5)
-        self.assertRaises(pex.Exception, gg.selfInterpolate, sigma, 0, 2*nData)
-        self.assertRaises(pex.Exception, gg.selfInterpolate, sigma, 0, -5)
-        self.assertRaises(pex.Exception, gg.selfInterpolate, sigma, -1, nData-1)
+        with self.assertRaises(pex.Exception):
+             gg.interpolate(sigma, test, 2*nData)
+        with self.assertRaises(pex.Exception):
+             gg.interpolate(sigma, test, -5)
+        with self.assertRaises(pex.Exception):
+             gg.selfInterpolate(sigma, 0, 2*nData)
+        with self.assertRaises(pex.Exception):
+             gg.selfInterpolate(sigma, 0, -5)
+        with self.assertRaises(pex.Exception):
+             gg.selfInterpolate(sigma, -1, nData-1)
         # the following segfaults, for unknown reasons, so run directly instead
         # self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
         try:
@@ -59,8 +67,10 @@ class GaussianProcessTestCase(unittest.TestCase):
             self.fail("gg.interpolate(mu_arr,sigma,2*nData) did not fail")
         except pex.Exception:
             pass
-        self.assertRaises(pex.Exception, gg.interpolate, mu_arr, sigma, 2*nData)
-        self.assertRaises(pex.Exception, gg.interpolate, mu_arr, sigma, -5)
+        with self.assertRaises(pex.Exception):
+             gg.interpolate(mu_arr, sigma, 2*nData)
+        with self.assertRaises(pex.Exception):
+             gg.interpolate(mu_arr, sigma, -5)
 
     def testInterpolate(self):
         """
@@ -89,7 +99,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         xx.setEllSquared(100.0)
 
         # read in the input data
-        f = open("tests/data/gp_exp_covar_data.sav")
+        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"))
         ff = f.readlines()
         f.close()
 
@@ -108,7 +118,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         gg.setLambda(0.001)
 
         # now, read in the test points and their corresponding known solutions
-        f = open("tests/data/gp_exp_covar_solutions.sav")
+        f = open(os.path.join(testPath,"data", "gp_exp_covar_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -147,8 +157,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
         # now try with the Neural Network covariogram
 
@@ -161,7 +171,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         gg.setCovariogram(nn)
         gg.setLambda(0.0045)
 
-        f = open("tests/data/gp_nn_solutions.sav")
+        f = open(os.path.join(testPath,"data", "gp_nn_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -200,8 +210,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
     def testMinMax(self):
         """
@@ -230,7 +240,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         nn.setSigma0(0.555)
         nn.setSigma1(0.112)
 
-        f = open("tests/data/gp_exp_covar_data.sav")
+        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"))
         ff = f.readlines()
         f.close()
 
@@ -256,7 +266,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         gg.setLambda(0.0045)
 
-        f = open("tests/data/gp_minmax_solutions.sav")
+        f = open(os.path.join(testPath, "data", "gp_minmax_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -294,8 +304,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
     def testAddition(self):
         """
@@ -315,7 +325,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         xx = gp.SquaredExpCovariogramD()
         xx.setEllSquared(5.0)
 
-        f = open("tests/data/gp_additive_test_root.sav")
+        f = open(os.path.join(testPath, "data", "gp_additive_test_root.sav"))
         ff = f.readlines()
         f.close()
 
@@ -335,7 +345,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         # now add new points to it and see if GaussianProcess.interpolate performs
         # correctly
-        f = open("tests/data/gp_additive_test_data.sav")
+        f = open(os.path.join(testPath, "data", "gp_additive_test_data.sav"))
         ff = f.readlines()
         f.close()
         for z in range(len(ff)):
@@ -348,7 +358,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             except pex.Exception as e:
                 print(e.what())
 
-        f = open("tests/data/gp_additive_test_solutions.sav")
+        f = open(os.path.join(testPath, "data", "gp_additive_test_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -385,8 +395,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
     def testKdTree(self):
         """
@@ -398,7 +408,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         data = np.zeros((pp, dd), dtype=float)
         tol = 1.0e-10
 
-        f = open("tests/data/kd_test_data.sav")
+        f = open(os.path.join(testPath, "data", "kd_test_data.sav"))
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -432,7 +442,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                     dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
                 if dd > worstErr:
                     worstErr = dd
-        self.assertTrue(worstErr < tol)
+        self.assertLess(worstErr, tol)
 
         try:
             kd.removePoint(2)
@@ -451,7 +461,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                     dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
                 if dd > worstErr:
                     worstErr = dd
-        self.assertTrue(worstErr < tol)
+        self.assertLess(worstErr, tol)
 
         try:
             kd.removePoint(10)
@@ -470,7 +480,7 @@ class GaussianProcessTestCase(unittest.TestCase):
                     dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
                 if dd > worstErr:
                     worstErr = dd
-        self.assertTrue(worstErr < tol)
+        self.assertLess(worstErr, tol)
         print("\nworst distance error in kdTest ", worstErr, "\n")
 
     def testBatch(self):
@@ -485,7 +495,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         data = np.zeros((pp, dd), dtype=float)
         fn = np.zeros((pp), dtype=float)
 
-        f = open("tests/data/gp_exp_covar_data.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(100):
@@ -504,7 +514,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         gg.setLambda(0.0032)
 
-        f = open("tests/data/gp_batch_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_batch_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
 
@@ -557,8 +567,8 @@ class GaussianProcessTestCase(unittest.TestCase):
             if err > worstMuErr:
                 worstMuErr = err
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstVarErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstVarErr, tol)
 
         print("\nThe errors for batch interpolation\n")
         print("worst mu error ", worstMuErr)
@@ -576,7 +586,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         data = np.zeros((pp, dd), dtype=float)
         fn = np.zeros((pp), dtype=float)
 
-        f = open("tests/data/gp_exp_covar_data.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(pp):
@@ -595,7 +605,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         gg.setKrigingParameter(30.0)
         gg.setLambda(0.00002)
 
-        f = open("tests/data/gp_self_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_self_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
         variance = np.zeros((1), dtype=float)
@@ -632,8 +642,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("\nThe errors for self interpolation\n")
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
     def testVector(self):
         """
@@ -651,7 +661,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         kk = 30
 
-        f = open("tests/data/gp_vector_data.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_vector_data.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -673,7 +683,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         worstMuErr = -1.0
         worstSigErr = -1.0
-        f = open("tests/data/gp_vector_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_vector_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -701,13 +711,13 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("\nThe errors for vector interpolation\n")
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
         worstMuErr = -1.0
         worstSigErr = -1.0
 
-        f = open("tests/data/gp_vector_selfinterpolate_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_vector_selfinterpolate_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -737,8 +747,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("\nThe errors for vector self interpolation\n")
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
         queries = np.zeros((100, 10), dtype=float)
         batchMu = np.zeros((100, 4), dtype=float)
@@ -748,7 +758,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         batchData = np.zeros((200, 10), dtype=float)
         batchFunctions = np.zeros((200, 4), dtype=float)
 
-        f = open("tests/data/gp_vectorbatch_data.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_vectorbatch_data.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -765,7 +775,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         ggbatch.setLambda(0.0045)
 
-        f = open("tests/data/gp_vectorbatch_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_vectorbatch_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -798,8 +808,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("\nThe errors for vector batch interpolation with variance\n")
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
         ggbatch.batchInterpolate(batchMu, queries)
         worstMuErr = -1.0
@@ -815,9 +825,9 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         print("\nThe errors for vector batch interpolation without variance\n")
         print("worst mu error ", worstMuErr)
-        self.assertTrue(worstMuErr < tol)
+        self.assertLess(worstMuErr, tol)
 
-        f = open("tests/data/gp_vector_add_data.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_vector_add_data.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -831,7 +841,7 @@ class GaussianProcessTestCase(unittest.TestCase):
             except pex.Exception as e:
                 print(e.what())
 
-        f = open("tests/data/gp_vector_add_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_vector_add_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -862,8 +872,8 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
 
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
     def testSubtraction(self):
         """
@@ -879,7 +889,7 @@ class GaussianProcessTestCase(unittest.TestCase):
         vv = np.zeros((10), dtype=float)
         kk = 30
 
-        f = open("tests/data/gp_subtraction_data.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_subtraction_data.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -909,7 +919,7 @@ class GaussianProcessTestCase(unittest.TestCase):
 
         worstMuErr = -1.0
         worstSigErr = -1.0
-        f = open("tests/data/gp_subtraction_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_subtraction_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -937,13 +947,13 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("\nThe errors for subtraction interpolation\n")
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
         worstMuErr = -1.0
         worstSigErr = -1.0
 
-        f = open("tests/data/gp_subtraction_selfinterpolate_solutions.sav", "r")
+        f = open(os.path.join(testPath, "data", "gp_subtraction_selfinterpolate_solutions.sav"), "r")
         ff = f.readlines()
         f.close()
         for i in range(len(ff)):
@@ -973,19 +983,18 @@ class GaussianProcessTestCase(unittest.TestCase):
         print("\nThe errors for subtraction self interpolation\n")
         print("worst mu error ", worstMuErr)
         print("worst sig2 error ", worstSigErr)
-        self.assertTrue(worstMuErr < tol)
-        self.assertTrue(worstSigErr < tol)
+        self.assertLess(worstMuErr, tol)
+        self.assertLess(worstSigErr, tol)
 
 
-def suite():
-    utilsTests.init()
-    suites = []
-    suites += unittest.makeSuite(GaussianProcessTestCase)
-    return unittest.TestSuite(suites)
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def run(shouldExit=False):
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

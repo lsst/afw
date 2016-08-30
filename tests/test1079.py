@@ -38,7 +38,7 @@ import numbers
 import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.display.ds9 as ds9
 
@@ -204,7 +204,7 @@ class SavingSubImagesTest(unittest.TestCase):
         for deep in (False, True):
             subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
-            with utilsTests.getTempFilePath("_%s.fits" % (deep,)) as outFile:
+            with lsst.utils.tests.getTempFilePath("_%s.fits" % (deep,)) as outFile:
                 subImg.writeFits(outFile)
                 newImg = afwImage.ExposureF(outFile)
 
@@ -238,7 +238,7 @@ class SavingSubImagesTest(unittest.TestCase):
         deep = False
         subImg = afwImage.ExposureF(self.parent, bbox, afwImage.LOCAL, deep)
 
-        with utilsTests.getTempFilePath(".fits") as outFile:
+        with lsst.utils.tests.getTempFilePath(".fits") as outFile:
             subImg.writeFits(outFile)
             hdr = afwImage.readMetadata(outFile)
 
@@ -262,19 +262,12 @@ class SavingSubImagesTest(unittest.TestCase):
 #####
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-    utilsTests.init()
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    suites = []
-    suites += unittest.makeSuite(SavingSubImagesTest)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    utilsTests.run(suite(), shouldExit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

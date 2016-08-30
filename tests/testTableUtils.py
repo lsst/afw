@@ -44,11 +44,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 
-
-def setup_module(module):
-    lsst.utils.tests.init()
-
-
 class UpdateTestCase(lsst.utils.tests.TestCase):
     """A test case for the lsst.afw.table.updateRefCentroids and updateSourceCoords
     """
@@ -194,8 +189,13 @@ class UpdateTestCase(lsst.utils.tests.TestCase):
                 refObj.set(self.refCoordKey, coord)
 
 
-class MyMemoryTestCase(lsst.utils.tests.MemoryTestCase):
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
+
+
+def setup_module(module):
+    lsst.utils.tests.init()
+
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

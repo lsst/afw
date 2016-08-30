@@ -102,28 +102,28 @@ class CameraTransformMapTestCase(unittest.TestCase):
         for methodName in ("begin", "end", "contains", "size"):
             self.assertFalse(hasattr(self.transformMap, methodName))
 
-        self.assertTrue(self.nativeSys in self.transformMap)
-        self.assertTrue(cameraGeom.PUPIL in self.transformMap)
-        self.assertFalse(cameraGeom.CameraSys("garbage") in self.transformMap)
+        self.assertIn(self.nativeSys, self.transformMap)
+        self.assertIn(cameraGeom.PUPIL, self.transformMap)
+        self.assertNotIn(cameraGeom.CameraSys("garbage"), self.transformMap)
 
         csList = self.transformMap.getCoordSysList()
-        self.assertTrue(len(csList) == 2)
-        self.assertTrue(self.nativeSys in csList)
-        self.assertTrue(cameraGeom.PUPIL in csList)
+        self.assertEqual(len(csList), 2)
+        self.assertIn(self.nativeSys, csList)
+        self.assertIn(cameraGeom.PUPIL, csList)
 
     def testIteration(self):
         """Test iteration, len and indexing
         """
-        self.assertEquals(len(self.transformMap), 2)
+        self.assertEqual(len(self.transformMap), 2)
 
         csList = self.transformMap.getCoordSysList()
         csList2 = [cs for cs in self.transformMap]
-        self.assertEquals(len(csList), len(self.transformMap))
-        self.assertEquals(tuple(csList), tuple(csList2))
+        self.assertEqual(len(csList), len(self.transformMap))
+        self.assertEqual(tuple(csList), tuple(csList2))
 
         for cs in csList:
             xyTrans = self.transformMap[cs]
-            self.assertTrue(isinstance(xyTrans, afwGeom.XYTransform))
+            self.assertIsInstance(xyTrans, afwGeom.XYTransform)
 
     def testGetItem(self):
         """Test that the contained transforms are the ones expected
@@ -137,23 +137,25 @@ class CameraTransformMapTestCase(unittest.TestCase):
         self.compare2DFunctions(pupilTr.reverseTransform, self.pupilTransform.reverseTransform)
 
         missingCamSys = cameraGeom.CameraSys("missing")
-        self.assertRaises(lsst.pex.exceptions.Exception, self.transformMap.__getitem__, missingCamSys)
+        with self.assertRaises(lsst.pex.exceptions.Exception):
+            self.transformMap.__getitem__(missingCamSys)
 
     def testGet(self):
         """Test the get method
         """
         for cs in self.transformMap.getCoordSysList():
             xyTrans2 = self.transformMap.get(cs)
-            self.assertTrue(isinstance(xyTrans2, afwGeom.XYTransform))
+            self.assertIsInstance(xyTrans2, afwGeom.XYTransform)
 
         missingCamSys = cameraGeom.CameraSys("missing")
         shouldBeNone = self.transformMap.get(missingCamSys)
-        self.assertTrue(shouldBeNone is None)
-        self.assertRaises(Exception, self.transformMap.get, "badDataType")
+        self.assertIsNone(shouldBeNone)
+        with self.assertRaises(Exception):
+            self.transformMap.get("badDataType")
 
         for default in (1, "hello", cameraGeom.CameraSys("default")):
             res = self.transformMap.get(missingCamSys, default)
-            self.assertEquals(res, default)
+            self.assertEqual(res, default)
 
     def testTransform(self):
         """Test transform method, point version
@@ -181,29 +183,21 @@ class CameraTransformMapTestCase(unittest.TestCase):
             for toSys in self.transformMap.getCoordSysList():
                 toList = self.transformMap.transform(fromList, fromSys, toSys)
 
-                self.assertEquals(len(fromList), len(toList))
+                self.assertEqual(len(fromList), len(toList))
                 for fromPoint, toPoint in zip(fromList, toList):
                     predToPoint = self.transformMap.transform(fromPoint, fromSys, toSys)
                     for i in range(2):
                         self.assertAlmostEqual(predToPoint[i], toPoint[i])
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(CameraTransformMapTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

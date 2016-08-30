@@ -116,7 +116,7 @@ class XYTransformTestCase(unittest.TestCase):
         with lsst.utils.tests.getTempFilePath(".py") as filePath:
             self.checkConfig(identClass, identClass.ConfigClass(), filePath)
             ident = identClass(identClass.ConfigClass())
-            self.assertEquals(type(ident), IdentityXYTransform)
+            self.assertEqual(type(ident), IdentityXYTransform)
             self.checkBasics(ident)
             for fromPoint in self.fromIter():
                 toPoint = ident.forwardTransform(fromPoint)
@@ -150,7 +150,7 @@ class XYTransformTestCase(unittest.TestCase):
         with lsst.utils.tests.getTempFilePath(".py") as filePath:
             self.checkConfig(affineClass, affineConfig, filePath)
             affine = affineClass(affineConfig)
-            self.assertEquals(type(affine), AffineXYTransform)
+            self.assertEqual(type(affine), AffineXYTransform)
             self.checkBasics(affine)
             for fromPoint in self.fromIter():
                 toPoint = affine.forwardTransform(fromPoint)
@@ -231,8 +231,8 @@ class XYTransformTestCase(unittest.TestCase):
         with lsst.utils.tests.getTempFilePath(".py") as filePath:
             self.checkConfig(radialClass, radialConfig, filePath)
             radial = radialClass(radialConfig)
-            self.assertEquals(type(radial), RadialXYTransform)
-            self.assertEquals(len(radial.getCoeffs()), len(radialConfig.coeffs))
+            self.assertEqual(type(radial), RadialXYTransform)
+            self.assertEqual(len(radial.getCoeffs()), len(radialConfig.coeffs))
             for coeff, predCoeff in zip(radial.getCoeffs(), radialConfig.coeffs):
                 self.assertAlmostEqual(coeff, predCoeff)
             self.checkBasics(radial)
@@ -254,12 +254,14 @@ class XYTransformTestCase(unittest.TestCase):
             (0.0, 0.0),  # coeffs[1] must be nonzero
             (0.0, 0.0, 0.1),  # coeffs[1] must be nonzero
         ):
-            self.assertRaises(lsst.pex.exceptions.Exception, RadialXYTransform, badCoeffs)
+            with self.assertRaises(lsst.pex.exceptions.Exception):
+                RadialXYTransform(badCoeffs)
 
             radialClass = xyTransformRegistry["radial"]
             radialConfig = radialClass.ConfigClass()
             radialConfig.coeffs = badCoeffs
-            self.assertRaises(Exception, radialConfig.validate)
+            with self.assertRaises(Exception):
+                radialConfig.validate()
 
     def testMulti(self):
         """Test multi = MultiXYTransform
@@ -313,22 +315,14 @@ class XYTransformTestCase(unittest.TestCase):
                     self.assertAlmostEqual(toPoint[i], predToPoint[i])
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
 
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(XYTransformTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

@@ -119,12 +119,15 @@ class SchemaTestCase(unittest.TestCase):
         schema.addField("g", type="Angle", units="rad")
         schema.checkUnits()
         # now try inserting invalid units
-        self.assertRaises(ValueError, schema.addField, "a", type="I", units="camel")
-        self.assertRaises(ValueError, schema.addField, "b", type="I", units="pixels^2^2")
+        with self.assertRaises(ValueError):
+            schema.addField("a", type="I", units="camel")
+        with self.assertRaises(ValueError):
+            schema.addField("b", type="I", units="pixels^2^2")
         # add invalid units in silent mode, should work fine
         schema.addField("h", type="I", units="lala", parse_strict='silent')
         # Now this check should raise because there is an invalid unit
-        self.assertRaises(ValueError, schema.checkUnits)
+        with self.assertRaises(ValueError):
+            schema.checkUnits()
 
     def testInspection(self):
         schema = lsst.afw.table.Schema()
@@ -135,13 +138,13 @@ class SchemaTestCase(unittest.TestCase):
         keys.append(schema.addField("a", type="F"))
         for key, item in zip(keys, schema):
             self.assertEqual(item.key, key)
-            self.assert_(key in schema)
+            self.assertIn(key, schema)
         for name in ("a", "b", "c", "d"):
-            self.assert_(name in schema)
-        self.assertFalse("e" in schema)
+            self.assertIn(name, schema)
+        self.assertNotIn("e", schema)
         otherSchema = lsst.afw.table.Schema()
         otherKey = otherSchema.addField("d", type=float)
-        self.assertFalse(otherKey in schema)
+        self.assertNotIn(otherKey, schema)
         self.assertNotEqual(keys[0], keys[1])
 
     def testKeyAccessors(self):
@@ -219,18 +222,18 @@ class SchemaMapperTestCase(unittest.TestCase):
         mapper3 = lsst.afw.table.SchemaMapper.removeMinimalSchema(full, front)
         mapper1.addMinimalSchema(front)
         mapper2.addMinimalSchema(front, False)
-        self.assert_(ka in mapper1.getOutputSchema())
-        self.assert_(kb in mapper1.getOutputSchema())
-        self.assert_(kc not in mapper1.getOutputSchema())
-        self.assert_(kd not in mapper1.getOutputSchema())
-        self.assert_(ka in mapper2.getOutputSchema())
-        self.assert_(kb in mapper2.getOutputSchema())
-        self.assert_(kc not in mapper2.getOutputSchema())
-        self.assert_(kd not in mapper2.getOutputSchema())
-        self.assert_(ka not in mapper3.getOutputSchema())
-        self.assert_(kb not in mapper3.getOutputSchema())
-        self.assert_(kc not in mapper3.getOutputSchema())
-        self.assert_(kd not in mapper3.getOutputSchema())
+        self.assertIn(ka, mapper1.getOutputSchema())
+        self.assertIn(kb, mapper1.getOutputSchema())
+        self.assertNotIn(kc, mapper1.getOutputSchema())
+        self.assertNotIn(kd, mapper1.getOutputSchema())
+        self.assertIn(ka, mapper2.getOutputSchema())
+        self.assertIn(kb, mapper2.getOutputSchema())
+        self.assertNotIn(kc, mapper2.getOutputSchema())
+        self.assertNotIn(kd, mapper2.getOutputSchema())
+        self.assertNotIn(ka, mapper3.getOutputSchema())
+        self.assertNotIn(kb, mapper3.getOutputSchema())
+        self.assertNotIn(kc, mapper3.getOutputSchema())
+        self.assertNotIn(kd, mapper3.getOutputSchema())
         inputRecord = lsst.afw.table.BaseTable.make(full).makeRecord()
         inputRecord.set(ka, numpy.pi)
         inputRecord.set(kb, 2)
@@ -246,17 +249,17 @@ class SchemaMapperTestCase(unittest.TestCase):
         out1 = mapper.getOutputSchema()
         out2 = mapper.editOutputSchema()
         k1 = out1.addField("a1", type=int)
-        self.assert_(k1 not in mapper.getOutputSchema())
-        self.assert_(k1 in out1)
-        self.assert_(k1 not in out2)
+        self.assertNotIn(k1, mapper.getOutputSchema())
+        self.assertIn(k1, out1)
+        self.assertNotIn(k1, out2)
         k2 = mapper.addOutputField(lsst.afw.table.Field[float]("a2", "doc for a2"))
-        self.assert_(k2 not in out1)
-        self.assert_(k2 in mapper.getOutputSchema())
-        self.assert_(k2 in out2)
+        self.assertNotIn(k2, out1)
+        self.assertIn(k2, mapper.getOutputSchema())
+        self.assertIn(k2, out2)
         k3 = out2.addField("a3", type=numpy.float32, doc="doc for a3")
-        self.assert_(k3 not in out1)
-        self.assert_(k3 in mapper.getOutputSchema())
-        self.assert_(k3 in out2)
+        self.assertNotIn(k3, out1)
+        self.assertIn(k3, mapper.getOutputSchema())
+        self.assertIn(k3, out2)
 
     def testDoReplace(self):
         inSchema = lsst.afw.table.Schema()
@@ -280,24 +283,15 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertEqual(s1.join("a", "b", "c"), "a_b_c")
         self.assertEqual(s1.join("a", "b", "c", "d"), "a_b_c_d")
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
-
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(SchemaTestCase)
-    suites += unittest.makeSuite(SchemaMapperTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

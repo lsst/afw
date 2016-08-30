@@ -52,19 +52,19 @@ class OrientationWrapper(object):
         self.orient = Orientation(fpPosition, refPoint, yaw, pitch, roll)
 
 
-class OrientationTestCase(unittest.TestCase):
+class OrientationTestCase(lsst.utils.tests.TestCase):
 
     def testDefaultConstructor(self):
         """Test default constructor
         """
         orient = Orientation()
         for i in range(2):
-            self.assertAlmostEquals(0, orient.getFpPosition()[i])
-            self.assertAlmostEquals(-0.5, orient.getReferencePoint()[i])
+            self.assertAlmostEqual(0, orient.getFpPosition()[i])
+            self.assertAlmostEqual(-0.5, orient.getReferencePoint()[i])
         zeroAngle = afwGeom.Angle(0)
-        self.assertAlmostEquals(zeroAngle, orient.getYaw())
-        self.assertAlmostEquals(zeroAngle, orient.getRoll())
-        self.assertAlmostEquals(zeroAngle, orient.getPitch())
+        self.assertAlmostEqual(zeroAngle, orient.getYaw())
+        self.assertAlmostEqual(zeroAngle, orient.getRoll())
+        self.assertAlmostEqual(zeroAngle, orient.getPitch())
 
         fwdTransform = orient.makeFpPixelTransform(afwGeom.Extent2D(1.0))
         for x in (-100.1, 0.0, 230.0):
@@ -72,7 +72,7 @@ class OrientationTestCase(unittest.TestCase):
                 xy = afwGeom.Point2D(x, y)
                 fwdXY = fwdTransform.forwardTransform(xy)
                 for i in range(2):
-                    self.assertAlmostEquals(xy[i] - 0.5, fwdXY[i])
+                    self.assertAlmostEqual(xy[i] - 0.5, fwdXY[i])
         self.compareTransforms(orient)
 
     def testGetNQuarter(self):
@@ -87,7 +87,7 @@ class OrientationTestCase(unittest.TestCase):
                   (359.9, 4))
         for angle in angles:
             orient = Orientation(fpPos, refPos, afwGeom.Angle(angle[0], afwGeom.degrees))
-            self.assertEquals(orient.getNQuarter(), angle[1])
+            self.assertEqual(orient.getNQuarter(), angle[1])
 
     def checkTransforms(self, orientWrapper, pixelSize=afwGeom.Extent2D(0.12, 0.21)):
         """Check that the transforms do what we expect them to
@@ -112,9 +112,9 @@ class OrientationTestCase(unittest.TestCase):
                 revFPPos = revTransform.reverseTransform(pixPos)
 
                 for i in range(2):
-                    self.assertAlmostEquals(pixPos[i], fwdPixPos[i])
-                    self.assertAlmostEquals(pixPos[i], revPixPos[i])
-                    self.assertAlmostEquals(fwdFPPos[i], revFPPos[i])
+                    self.assertAlmostEqual(pixPos[i], fwdPixPos[i])
+                    self.assertAlmostEqual(pixPos[i], revPixPos[i])
+                    self.assertAlmostEqual(fwdFPPos[i], revFPPos[i])
 
     def testGetters(self):
         """Test getters
@@ -127,29 +127,21 @@ class OrientationTestCase(unittest.TestCase):
             roll=afwGeom.Angle(1.2),
         )
         for i in range(2):
-            self.assertAlmostEquals(ow.fpPosition[i], ow.orient.getFpPosition()[i])
-            self.assertAlmostEquals(ow.refPoint[i], ow.orient.getReferencePoint()[i])
-        self.assertAlmostEquals(ow.yaw, ow.orient.getYaw())
-        self.assertAlmostEquals(ow.roll, ow.orient.getRoll())
-        self.assertAlmostEquals(ow.pitch, ow.orient.getPitch())
+            self.assertAlmostEqual(ow.fpPosition[i], ow.orient.getFpPosition()[i])
+            self.assertAlmostEqual(ow.refPoint[i], ow.orient.getReferencePoint()[i])
+        self.assertAlmostEqual(ow.yaw, ow.orient.getYaw())
+        self.assertAlmostEqual(ow.roll, ow.orient.getRoll())
+        self.assertAlmostEqual(ow.pitch, ow.orient.getPitch())
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
 
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(OrientationTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

@@ -53,15 +53,10 @@ import lsst.afw.geom
 import lsst.afw.coord
 import lsst.afw.fits
 
-numpy.random.seed(1)
-
 try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def makeArray(size, dtype):
     return numpy.array(numpy.random.randn(size), dtype=dtype)
@@ -77,6 +72,9 @@ def makeCov(size, dtype):
 
 
 class SimpleTableTestCase(lsst.utils.tests.TestCase):
+
+    def setUp(self):
+        numpy.random.seed(1)
 
     def checkScalarAccessors(self, record, key, name, value1, value2):
         fastSetter = getattr(record, "set" + key.getTypeString())
@@ -111,17 +109,17 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(record[name], value1)
         self.assertEqual(record.get(name), value1)
         self.assertEqual(fastGetter(key), value1)
-        self.assert_(key.subfields is None)
+        self.assertIsNone(key.subfields)
 
     def checkArrayAccessors(self, record, key, name, value):
         fastSetter = getattr(record, "set" + key.getTypeString())
         fastGetter = getattr(record, "get" + key.getTypeString())
         record.set(key, value)
-        self.assert_(numpy.all(record.get(key) == value))
+        self.assertFloatsEqual(record.get(key), value)
         record.set(name, value)
-        self.assert_(numpy.all(record.get(name) == value))
+        self.assertFloatsEqual(record.get(name), value)
         fastSetter(key, value)
-        self.assert_(numpy.all(fastGetter(key) == value))
+        self.assertFloatsEqual(fastGetter(key), value)
 
     def testRecordAccess(self):
         schema = lsst.afw.table.Schema()
@@ -140,8 +138,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record = table.makeRecord()
         self.assertEqual(record[k1], 0)
         self.assertEqual(record[k2], 0)
-        self.assert_(numpy.isnan(record[k3]))
-        self.assert_(numpy.isnan(record[k4]))
+        self.assertTrue(numpy.isnan(record[k3]))
+        self.assertTrue(numpy.isnan(record[k4]))
         self.checkScalarAccessors(record, k0, "f0", 5, 6)
         self.checkScalarAccessors(record, k1, "f1", 2, 3)
         self.checkScalarAccessors(record, k2, "f2", 2, 3)
@@ -155,14 +153,16 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(k.subfields, tuple(range(k.getSize())))
         sub1 = k11.slice(1, 3)
         sub2 = k11[0:2]
-        self.assertClose(record.get(sub1), record.get(k11)[1:3], rtol=0, atol=0)
-        self.assertClose(record.get(sub2), record.get(k11)[0:2], rtol=0, atol=0)
+        self.assertFloatsAlmostEqual(record.get(sub1), record.get(k11)[1:3], rtol=0, atol=0)
+        self.assertFloatsAlmostEqual(record.get(sub2), record.get(k11)[0:2], rtol=0, atol=0)
         self.assertEqual(sub1[0], sub2[1])
-        self.assert_(k18.subfields is None)
+        self.assertIsNone(k18.subfields)
         k0a = lsst.afw.table.Key["D"]()
         k0b = lsst.afw.table.Key["Flag"]()
-        self.assertRaises(lsst.pex.exceptions.LogicError, record.get, k0a)
-        self.assertRaises(lsst.pex.exceptions.LogicError, record.get, k0b)
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            record.get(k0a)
+        with self.assertRaises(lsst.pex.exceptions.LogicError):
+            record.get(k0b)
 
     def _testBaseFits(self, target):
         schema = lsst.afw.table.Schema()
@@ -180,7 +180,8 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
     def testBaseFits(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
             self._testBaseFits(tmpFile)
-        self.assertRaises(Exception, lsst.afw.table.BaseCatalog.readFits, "nonexistentfile.fits")
+        with self.assertRaises(Exception):
+            lsst.afw.table.BaseCatalog.readFits("nonexistentfile.fits")
 
     def testMemoryFits(self):
         mem = lsst.afw.fits.MemFileManager()
@@ -236,7 +237,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         for key in [k4, k5, k7]:
             array = columns[key]
             for i in [0, 1]:
-                self.assert_(numpy.all(array[i] == catalog[i].get(key)))
+                self.assertFloatsEqual(array[i], catalog[i].get(key))
         for key in [k6]:
             array = columns[key]
             for i in [0, 1]:
@@ -273,7 +274,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record2 = cat2[0]
         self.assertEqual(cat1.schema, cat2.schema)
         self.assertEqual(record1.get(k1), record2.get(k1))
-        self.assertTrue(numpy.all(record1.get(k2) == record2.get(k2)))
+        self.assertFloatsEqual(record1.get(k2), record2.get(k2))
         os.remove(filename)
 
     def testIteration(self):
@@ -342,15 +343,15 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             ({"where": sliceIdx, "copy": True}, sliceIdx),
         ]:
             d = catalog.extract("*", **kwds)
-            self.assert_(numpy.all(d["a_b_c1"] == catalog.get("a_b_c1")[idx]))
-            self.assert_(numpy.all(d["a_b_c2"] == catalog.get("a_b_c2")[idx]))
-            self.assert_(numpy.all(d["a_d1"] == catalog.get("a_d1")[idx]))
-            self.assert_(numpy.all(d["a_d2"] == catalog.get("a_d2")[idx]))
-            self.assert_(numpy.all(d["q_e1_x"] == catalog.get("q_e1_x")[idx]))
-            self.assert_(numpy.all(d["q_e1_y"] == catalog.get("q_e1_y")[idx]))
+            self.assertFloatsEqual(d["a_b_c1"], catalog.get("a_b_c1")[idx])
+            self.assertFloatsEqual(d["a_b_c2"], catalog.get("a_b_c2")[idx])
+            self.assertFloatsEqual(d["a_d1"], catalog.get("a_d1")[idx])
+            self.assertFloatsEqual(d["a_d2"], catalog.get("a_d2")[idx])
+            self.assertFloatsEqual(d["q_e1_x"], catalog.get("q_e1_x")[idx])
+            self.assertFloatsEqual(d["q_e1_y"], catalog.get("q_e1_y")[idx])
             if "copy" in kwds or idx is boolIdx:
                 for col in d.values():
-                    self.assert_(col.flags.c_contiguous)
+                    self.assertTrue(col.flags.c_contiguous)
         # Test that aliases are included in extract()
         schema.getAliasMap().set("b_f", "a_b")
         d = schema.extract("b_f*")
@@ -369,7 +370,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat2 = lsst.afw.table.BaseCatalog(schema1)
         cat2.extend(cat1, deep=True)
         self.assertEqual(len(cat1), len(cat2))
-        self.assert_(cat2.isContiguous())
+        self.assertTrue(cat2.isContiguous())
         cat3 = lsst.afw.table.BaseCatalog(cat1.table)
         cat3.extend(cat1, deep=False)
         self.assertFalse(cat3.isContiguous())
@@ -383,10 +384,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         mapper.addMinimalSchema(lsst.afw.table.SourceTable.makeMinimalSchema())
         mapper.addMapping(k2)
         schema2 = mapper.getOutputSchema()
-        self.assert_(mapper.getOutputSchema().contains(lsst.afw.table.SourceTable.makeMinimalSchema()))
+        self.assertTrue(mapper.getOutputSchema().contains(lsst.afw.table.SourceTable.makeMinimalSchema()))
         cat5 = lsst.afw.table.BaseCatalog(schema2)
         cat5.extend(cat1, mapper=mapper)
-        self.assert_(cat5.isContiguous())
+        self.assertTrue(cat5.isContiguous())
         cat6 = lsst.afw.table.SourceCatalog(schema2)
         cat6.extend(list(cat1), mapper=mapper)
         self.assertFalse(cat6.isContiguous())
@@ -395,7 +396,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat7.extend(list(cat1), mapper=mapper)
         cat7.extend(cat1, mapper)
         cat7.extend(list(cat1), mapper)
-        self.assert_(cat7.isContiguous())
+        self.assertTrue(cat7.isContiguous())
         cat8 = lsst.afw.table.BaseCatalog(schema2)
         cat8.extend(list(cat7), True)
         cat8.extend(list(cat7), deep=True)
@@ -440,12 +441,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat1.addNew().set(key, 2)
         cat1.addNew().set(key, 3)
         cat2 = cat1[numpy.array([True, False, False], dtype=bool)]
-        self.assertTrue((cat2[key] == numpy.array([1], dtype=int)).all())
+        self.assertFloatsEqual(cat2[key], numpy.array([1], dtype=int))
         self.assertEqual(cat2[0], cat1[0])  # records compare using pointer equality
         cat3 = cat1[numpy.array([True, True, False], dtype=bool)]
-        self.assertTrue((cat3[key] == numpy.array([1, 2], dtype=int)).all())
+        self.assertFloatsEqual(cat3[key], numpy.array([1, 2], dtype=int))
         cat4 = cat1[numpy.array([True, False, True], dtype=bool)]
-        self.assertTrue((cat4.copy(deep=True)[key] == numpy.array([1, 3], dtype=int)).all())
+        self.assertFloatsEqual(cat4.copy(deep=True)[key], numpy.array([1, 3], dtype=int))
 
     def testTicket2938(self):
         """Test heterogenous catalogs that have records from multiple tables"""
@@ -456,14 +457,15 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         t1 = lsst.afw.table.BaseTable.make(schema)
         cat.append(t1.makeRecord())
         self.assertEqual(cat[-1].getTable(), t1)
-        self.assertRaises(lsst.pex.exceptions.RuntimeError,
-                          cat.getColumnView)
+        with self.assertRaises(lsst.pex.exceptions.RuntimeError):
+            cat.getColumnView()
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             cat.writeFits(filename)  # shouldn't throw
             schema.addField("d", type=float, doc="doc for d")
             t2 = lsst.afw.table.BaseTable.make(schema)
             cat.append(t2.makeRecord())
-            self.assertRaises(lsst.pex.exceptions.LogicError, cat.writeFits, filename)
+            with self.assertRaises(lsst.pex.exceptions.LogicError):
+                cat.writeFits(filename)
 
     def testTicket3056(self):
         """Test sorting and sort-based searches of Catalogs"""
@@ -558,20 +560,20 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         k1a = schema.addField("f1", doc="f1a", type="I")
         k2a = schema.addField("f2", doc="f2a", type="Flag")
         k3a = schema.addField("f3", doc="f3a", type="ArrayF", size=4)
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                          schema.addField, "f1", doc="f1b", type="I")
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                          schema.addField, "f2", doc="f2b", type="Flag")
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                          schema.addField, "f1", doc="f1b", type="F")
-        self.assertRaises(lsst.pex.exceptions.InvalidParameterError,
-                          schema.addField, "f2", doc="f2b", type="F")
-        self.assertRaises(lsst.pex.exceptions.TypeError,
-                          schema.addField, "f1", doc="f1b", type="F", doReplace=True)
-        self.assertRaises(lsst.pex.exceptions.TypeError,
-                          schema.addField, "f2", doc="f2b", type="F", doReplace=True)
-        self.assertRaises(lsst.pex.exceptions.TypeError,
-                          schema.addField, "f3", doc="f3b", type="ArrayF",
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            schema.addField("f1", doc="f1b", type="I")
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            schema.addField("f2", doc="f2b", type="Flag")
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            schema.addField("f1", doc="f1b", type="F")
+        with self.assertRaises(lsst.pex.exceptions.InvalidParameterError):
+            schema.addField("f2", doc="f2b", type="F")
+        with self.assertRaises(lsst.pex.exceptions.TypeError):
+            schema.addField("f1", doc="f1b", type="F", doReplace=True)
+        with self.assertRaises(lsst.pex.exceptions.TypeError):
+            schema.addField("f2", doc="f2b", type="F", doReplace=True)
+        with self.assertRaises(lsst.pex.exceptions.TypeError):
+            schema.addField("f3", doc="f3b", type="ArrayF",
                           size=3, doReplace=True)
         k1b = schema.addField("f1", doc="f1b", type="I", doReplace=True)
         self.assertEqual(k1a, k1b)
@@ -613,9 +615,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record1.set(ka, a1)
         record1.set(kb, b1)
         record1.set(kc, c1)
-        self.assertTrue(numpy.all(record1.get(ka) == a1))
-        self.assertTrue(numpy.all(record1.get(kb) == b1))
-        self.assertTrue(numpy.all(record1.get(kc) == c1))
+        self.assertFloatsEqual(record1.get(ka), a1)
+        self.assertFloatsEqual(record1.get(kb), b1)
+        self.assertFloatsEqual(record1.get(kc), c1)
         # Test __getitem__ and view semantics
         record1[kb][2] = 3.5
         self.assertEqual(b1[2], 3.5)
@@ -625,9 +627,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         # Test copying records, both with and without SchemaMapper
         record2 = cat1.addNew()
         record2.assign(record1)
-        self.assertTrue(numpy.all(record1.get(ka) == a1))
-        self.assertTrue(numpy.all(record1.get(kb) == b1))
-        self.assertTrue(numpy.all(record1.get(kc) == c1))
+        self.assertFloatsEqual(record1.get(ka), a1)
+        self.assertFloatsEqual(record1.get(kb), b1)
+        self.assertFloatsEqual(record1.get(kc), c1)
         record1[kb][2] = 4.5
         self.assertEqual(record2[kb][2], 3.5)  # copy in assign() should be deep
         mapper = lsst.afw.table.SchemaMapper(schema)
@@ -635,7 +637,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat2 = lsst.afw.table.BaseCatalog(mapper.getOutputSchema())
         record3 = cat2.addNew()
         record3.assign(record1, mapper)
-        self.assertTrue(numpy.all(record3.get(kb2) == b1))
+        self.assertFloatsEqual(record3.get(kb2), b1)
         # Test that we throw if we try to get a column view of a variable-length arry
         self.assertRaisesLsstCpp(lsst.pex.exceptions.LogicError, cat1.get, ka)
         # Test that we can round-trip variable-length arrays through FITS
@@ -645,9 +647,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(schema.compare(cat3.schema, lsst.afw.table.Schema.IDENTICAL),
                          lsst.afw.table.Schema.IDENTICAL)
         record4 = cat3[0]
-        self.assertTrue(numpy.all(record4.get(ka) == a1))
-        self.assertTrue(numpy.all(record4.get(kb) == b1))
-        self.assertTrue(numpy.all(record4.get(kc) == c1))
+        self.assertFloatsEqual(record4.get(ka), a1)
+        self.assertFloatsEqual(record4.get(kb), b1)
+        self.assertFloatsEqual(record4.get(kc), c1)
         os.remove(filename)
 
     def testCompoundFieldFitsConversion(self):
@@ -679,27 +681,19 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         covZKey = lsst.afw.table.CovarianceMatrixXfKey(cat2.schema["cov_z"], ["0", "1", "2", "3"])
         covPKey = lsst.afw.table.CovarianceMatrix2fKey(cat2.schema["cov_p"], ["x", "y"])
         covMKey = lsst.afw.table.CovarianceMatrix3fKey(cat2.schema["cov_m"], ["xx", "yy", "xy"])
-        self.assertClose(record2.get(covZKey), covValues["cov_z"], rtol=1E-6)
-        self.assertClose(record2.get(covPKey), covValues["cov_p"], rtol=1E-6)
-        self.assertClose(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        self.assertFloatsAlmostEqual(record2.get(covZKey), covValues["cov_z"], rtol=1E-6)
+        self.assertFloatsAlmostEqual(record2.get(covPKey), covValues["cov_p"], rtol=1E-6)
+        self.assertFloatsAlmostEqual(record2.get(covMKey), covValues["cov_m"], rtol=1E-6)
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
+
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(SimpleTableTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

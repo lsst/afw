@@ -38,25 +38,25 @@ class CameraSysTestCase(unittest.TestCase):
         for sysName in ("pupil", "pixels"):
             for detectorName in ("", "det1", "det2"):
                 cameraSys = cameraGeom.CameraSys(sysName, detectorName)
-                self.assertEquals(cameraSys.getSysName(), sysName)
-                self.assertEquals(cameraSys.getDetectorName(), detectorName)
-                self.assertEquals(cameraSys.hasDetectorName(), bool(detectorName))
+                self.assertEqual(cameraSys.getSysName(), sysName)
+                self.assertEqual(cameraSys.getDetectorName(), detectorName)
+                self.assertEqual(cameraSys.hasDetectorName(), bool(detectorName))
 
                 noDetSys = cameraGeom.CameraSys(sysName)
-                self.assertEquals(noDetSys.getSysName(), sysName)
-                self.assertEquals(noDetSys.getDetectorName(), "")
+                self.assertEqual(noDetSys.getSysName(), sysName)
+                self.assertEqual(noDetSys.getDetectorName(), "")
                 self.assertFalse(noDetSys.hasDetectorName())
 
                 camSysPrefix = cameraGeom.CameraSysPrefix(sysName)
-                self.assertEquals(camSysPrefix.getSysName(), sysName)
+                self.assertEqual(camSysPrefix.getSysName(), sysName)
 
                 if detectorName:
-                    self.assertFalse(cameraSys == noDetSys)
-                    self.assertTrue(cameraSys != noDetSys)
+                    self.assertNotEqual(cameraSys, noDetSys)
                 else:
-                    self.assertTrue(cameraSys == noDetSys)
-                    self.assertFalse(cameraSys != noDetSys)
+                    self.assertEqual(cameraSys, noDetSys)
 
+                # The following tests are checking the functionality of the == and !=
+                # operators and should not be replaced with assertEqual ot assertNotEqual
                 self.assertTrue(cameraSys != camSysPrefix)
                 self.assertTrue(noDetSys != camSysPrefix)
                 self.assertFalse(cameraSys == camSysPrefix)
@@ -66,19 +66,15 @@ class CameraSysTestCase(unittest.TestCase):
                 for detectorName2 in ("", "det1", "det2"):
                     cameraSys2 = cameraGeom.CameraSys(sysName2, detectorName2)
                     if sysName == sysName2 and detectorName == detectorName2:
-                        self.assertTrue(cameraSys == cameraSys2)
-                        self.assertFalse(cameraSys != cameraSys2)
+                        self.assertEqual(cameraSys, cameraSys2)
                     else:
-                        self.assertFalse(cameraSys == cameraSys2)
-                        self.assertTrue(cameraSys != cameraSys2)
+                        self.assertNotEqual(cameraSys, cameraSys2)
 
                     camSysPrefix2 = cameraGeom.CameraSysPrefix(sysName2)
                     if sysName2 == sysName:
-                        self.assertTrue(camSysPrefix2 == camSysPrefix)
-                        self.assertFalse(camSysPrefix2 != camSysPrefix)
+                        self.assertEqual(camSysPrefix2, camSysPrefix)
                     else:
-                        self.assertFalse(camSysPrefix2 == camSysPrefix)
-                        self.assertTrue(camSysPrefix2 != camSysPrefix)
+                        self.assertNotEqual(camSysPrefix2, camSysPrefix)
 
     def testRepr(self):
         """Test __repr__
@@ -100,25 +96,17 @@ class CameraSysTestCase(unittest.TestCase):
         cs2Copy = cameraGeom.CameraSys("pixels", "det2")
         # import pdb; pdb.set_trace()
         csSet = set((cs1, cs1Copy, cs2, cs2Copy))
-        self.assertEquals(len(csSet), 2)
+        self.assertEqual(len(csSet), 2)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+class MemoryTester(lsst.utils.tests.MemoryTestCase):
+    pass
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
 
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(CameraSysTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

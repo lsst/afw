@@ -29,8 +29,9 @@ from builtins import range
 
 import unittest
 import numpy
+import os
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
@@ -45,6 +46,8 @@ try:
 except NameError:
     display = False
 
+
+testPath = os.path.abspath(os.path.dirname(__file__))
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
@@ -57,9 +60,9 @@ class CameraGeomTestCase(unittest.TestCase):
         self.cameraList = (self.lsstCamWrapper, self.scCamWrapper)
         self.assemblyList = {}
         self.assemblyList[self.lsstCamWrapper.camera.getName()] =\
-            [afwImage.ImageU('tests/test_amp.fits.gz') for i in range(8)]
+            [afwImage.ImageU(os.path.join(testPath, 'test_amp.fits.gz')) for i in range(8)]
         self.assemblyList[self.scCamWrapper.camera.getName()] =\
-            [afwImage.ImageU('tests/test.fits.gz')]
+            [afwImage.ImageU(os.path.join(testPath, 'test.fits.gz'))]
 
     def tearDown(self):
         del self.lsstCamWrapper
@@ -69,13 +72,13 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testConstructor(self):
         for cw in self.cameraList:
-            self.assertTrue(isinstance(cw.camera, Camera))
+            self.assertIsInstance(cw.camera, Camera)
             self.assertEqual(cw.nDetectors, len(cw.camera))
             self.assertEqual(cw.nDetectors, len(cw.ampInfoDict))
             self.assertEqual(sorted(cw.detectorNameList), sorted(cw.camera.getNameIter()))
             self.assertEqual(sorted(cw.detectorIdList), sorted(cw.camera.getIdIter()))
             for det in cw.camera:
-                self.assertTrue(isinstance(det, Detector))
+                self.assertIsInstance(det, Detector)
                 self.assertEqual(cw.ampInfoDict[det.getName()]['namps'], len(det))
 
     def testMakeCameraPoint(self):
@@ -137,9 +140,9 @@ class CameraGeomTestCase(unittest.TestCase):
         for cw in self.cameraList:
             camera = cw.camera
             for name in cw.detectorNameList:
-                self.assertTrue(isinstance(camera[name], Detector))
+                self.assertIsInstance(camera[name], Detector)
             for detId in cw.detectorIdList:
-                self.assertTrue(isinstance(camera[detId], Detector))
+                self.assertIsInstance(camera[detId], Detector)
 
     def testTransformSlalib(self):
         """Test Camera.transform against data computed using SLALIB
@@ -224,7 +227,7 @@ class CameraGeomTestCase(unittest.TestCase):
                     # the result should not be on the main detector
                     pixToPixCP = camera.transform(pixFindOffCP, det.makeCameraSys(PIXELS))
                     self.assertFalse(afwGeom.Box2D(det.getBBox()).contains(pixToPixCP.getPoint()))
-            self.assertTrue(numOffUsable > 0)
+            self.assertGreater(numOffUsable, 0)
             print("numOffUsable=", numOffUsable)
 
     def testFindDetectors(self):
@@ -253,8 +256,8 @@ class CameraGeomTestCase(unittest.TestCase):
             for name in cw.detectorNameList:
                 for corner in camera[name].getCorners(FOCAL_PLANE):
                     bbox.include(corner)
-            self.assertTrue(bbox.getMin(), camera.getFpBBox().getMin())
-            self.assertTrue(bbox.getMax(), camera.getFpBBox().getMax())
+            self.assertEqual(bbox.getMin(), camera.getFpBBox().getMin())
+            self.assertEqual(bbox.getMax(), camera.getFpBBox().getMax())
 
     def testLinearity(self):
         """Test if we can set/get Linearity parameters"""
@@ -277,8 +280,8 @@ class CameraGeomTestCase(unittest.TestCase):
 
     def testAssembly(self):
         ccdNames = ('R:0,0 S:1,0', 'R:0,0 S:0,1')
-        compMap = {True: afwImage.ImageU('tests/test_comp_trimmed.fits.gz'),
-                   False: afwImage.ImageU('tests/test_comp.fits.gz')}
+        compMap = {True: afwImage.ImageU(os.path.join(testPath, 'test_comp_trimmed.fits.gz')),
+                   False: afwImage.ImageU(os.path.join(testPath, 'test_comp.fits.gz'))}
         for cw in self.cameraList:
             camera = cw.camera
             imList = self.assemblyList[camera.getName()]
@@ -296,7 +299,8 @@ class CameraGeomTestCase(unittest.TestCase):
                     else:
                         for amp, im in zip(det, imList):
                             assemble(outImage, im, amp)
-                    self.assertTrue((outImage.getArray() == compMap[trim].getArray()).all())
+                    self.assertListEqual(outImage.getArray().flatten().tolist(),
+                                         compMap[trim].getArray().flatten().tolist())
 
     @unittest.skipIf(not display, "display variable not set; skipping cameraGeomUtils test")
     def testCameraGeomUtils(self):
@@ -342,30 +346,12 @@ class CameraGeomTestCase(unittest.TestCase):
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
-    utilsTests.init()
-
-    if display:
-        ds9.cmdBuffer.pushSize()
-
-    suites = []
-    suites += unittest.makeSuite(CameraGeomTestCase)
-    suites += unittest.makeSuite(utilsTests.MemoryTestCase)
-
-    if display:
-        ds9.cmdBuffer.popSize()
-
-    return unittest.TestSuite(suites)
-
-
-def run(exit=False):
-    """Run the tests"""
-
-    if display:
-        ds9.setDefaultFrame(0)
-    utilsTests.run(suite(), exit)
+def setup_module(module):
+    lsst.utils.tests.init()
 
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()

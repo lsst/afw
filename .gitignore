@@ -99,6 +99,7 @@ python/lsst/afw/display/*.os
 python/lsst/afw/display/*.so
 python/lsst/afw/display/fwDisplay.py
 python/lsst/afw/display/xpa.py
+tests/.cache
 tests/core.*
 tests/.tests
 tests/coordinates

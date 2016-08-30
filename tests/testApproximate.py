@@ -32,10 +32,8 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pexExcept
 
-try:
-    display
-except NameError:
-    display = False
+# Set to True to display things in ds9.
+display = False
 
 
 class ApproximateTestCase(lsst.utils.tests.TestCase):
@@ -64,17 +62,13 @@ class ApproximateTestCase(lsst.utils.tests.TestCase):
 
         binsize = 1
         ramp, rampCoeffs, xVec, yVec = self.makeRamp(binsize)
-        #
         # Add a (labelled) bad value
-        #
         ramp.set(ramp.getWidth()//2, ramp.getHeight()//2, (0, 0x1, np.nan))
 
         if display:
             ds9.mtv(ramp, title="Input", frame=0)
-        #
         # Here's the range that the approximation should be valid (and also the
         # bbox of the image returned by getImage)
-        #
         bbox = afwGeom.BoxI(afwGeom.PointI(0, 0), afwGeom.PointI(binsize*ramp.getWidth() - 1,
                                                                  binsize*ramp.getHeight() - 1))
 

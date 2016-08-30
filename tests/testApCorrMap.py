@@ -47,14 +47,10 @@ try:
 except NameError:
     display = False
 
-numpy.random.seed(5)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-
 class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
+        numpy.random.seed(100)
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
         self.map = lsst.afw.image.ApCorrMap()
         for name in ("a", "b", "c"):
@@ -87,12 +83,13 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(list(collections.OrderedDict(self.map).values()), list(self.map.values()))
         self.assertEqual(list(collections.OrderedDict(self.map).items()), list(self.map.items()))
         self.assertEqual(list(collections.OrderedDict(self.map).keys()), list(self.map))
-        self.assertTrue("b" in self.map)
-        self.assertTrue("d" not in self.map)
+        self.assertIn("b", self.map)
+        self.assertNotIn("d", self.map)
         self.map["d"] = lsst.afw.math.ChebyshevBoundedField(self.bbox, numpy.random.randn(2, 2))
-        self.assertTrue("d" in self.map)
+        self.assertIn("d", self.map)
         self.assertIsNone(self.map.get("e"))
-        self.assertRaisesLsstCpp(lsst.pex.exceptions.NotFoundError, self.map.__getitem__, "e")
+        with self.assertRaises(lsst.pex.exceptions.NotFoundError):
+            self.map["e"]
         self.assertEqual(self.map.get("d"), self.map["d"])
 
     def testPersistence(self):
@@ -152,20 +149,12 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-def suite():
-    """Returns a suite containing all the test cases in this module."""
+class TestMemory(lsst.utils.tests.MemoryTestCase):
+    pass
 
+def setup_module(module):
     lsst.utils.tests.init()
 
-    suites = []
-    suites += unittest.makeSuite(ApCorrMapTestCase)
-    suites += unittest.makeSuite(lsst.utils.tests.MemoryTestCase)
-    return unittest.TestSuite(suites)
-
-
-def run(shouldExit=False):
-    """Run the tests"""
-    lsst.utils.tests.run(suite(), shouldExit)
-
 if __name__ == "__main__":
-    run(True)
+    lsst.utils.tests.init()
+    unittest.main()
