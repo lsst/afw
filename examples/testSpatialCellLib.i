@@ -39,7 +39,7 @@ Various swigged-up C++ classes for testing
 %lsst_exceptions()
 
 %{
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/policy.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"

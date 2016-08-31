@@ -38,6 +38,7 @@
 #include <memory>
 
 #include "lsst/utils/Utils.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image.h"
 
@@ -53,6 +54,7 @@ using lsst::daf::base::PropertySet;
 
 int main(int argc, char **argv) {
     typedef double Pixel;
+    LOG_CONFIG();
 
     std::string inImagePath;
     if (argc < 2) {

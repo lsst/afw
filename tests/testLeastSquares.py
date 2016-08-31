@@ -40,6 +40,9 @@ import sys
 import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions
 from lsst.afw.math import LeastSquares
+from lsst.log import Log
+
+Log.getLogger("afw.math.LeastSquares").setLevel(Log.DEBUG)
 
 
 class LeastSquaresTestCase(lsst.utils.tests.TestCase):

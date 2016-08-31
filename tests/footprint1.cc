@@ -42,7 +42,8 @@ namespace geom = lsst::afw::geom;
 typedef float ImagePixelT;
 
 BOOST_AUTO_TEST_CASE(FootprintSets) { /* parasoft-suppress  LsstDm-3-2a LsstDm-3-4a LsstDm-4-6 LsstDm-5-25 "Boost non-Std" */
-	lsst::log::Log::setLevel("afw.detection", TRACE0);
+    LOG_CONFIG();
+    LOG_SET_LVL("afw.detection", LOG_LVL_INFO);
 
     image::MaskedImage<ImagePixelT> img(geom::Extent2I(10,20));
     *img.getImage() = 100;

@@ -31,7 +31,6 @@
 #pragma clang diagnostic pop
 #include "boost/test/floating_point_comparison.hpp"
 
-#include "lsst/log/Log.h"
 #include "lsst/afw/detection.h"
 #include "lsst/afw/detection/FootprintArray.cc"
 

@@ -25,11 +25,10 @@
 
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/math.h"
 #include "lsst/afw/image.h"
 
-namespace pexLog = lsst::pex::logging;
 namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 
@@ -45,8 +44,8 @@ const std::string outImagePath("svcOut.fits");
 int main(int argc, char **argv) {
     typedef afwMath::Kernel::Pixel Pixel;
 
-    pexLog::Trace::setDestination(std::cout);
-    pexLog::Trace::setVerbosity("lsst.afw.kernel", 5);
+    LOG_CONFIG();
+    LOG_SET_LVL("TRACE5.afw.math.convolve", LOG_LVL_INFO);
 
     double minSigma = 0.1;
     double maxSigma = 3.0;

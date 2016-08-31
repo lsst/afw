@@ -59,7 +59,7 @@ int test(int argc, char**argv) {
         outImagePath2 = string(argv[4]);
     }
 
-	lsst::log::Log::setLevel(".", TRACE0);
+    LOG_CONFIG();
 
     typedef image::MaskedImage<float> MaskedImage;
 

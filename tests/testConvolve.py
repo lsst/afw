@@ -47,6 +47,9 @@ import lsst.afw.math.detail as mathDetail
 import lsst.pex.exceptions as pexExcept
 
 from testKernel import makeDeltaFunctionKernelList, makeGaussianKernelList
+from lsst.log import Log
+
+Log.getLogger("afw.Mask").setLevel(Log.INFO)
 
 try:
     display

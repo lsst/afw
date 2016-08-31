@@ -45,6 +45,14 @@ import lsst.afw.image.utils as imageUtils
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
+from lsst.log import Log
+
+# Change the level to Log.DEBUG to see debug messages
+Log.getLogger("afw.Mask").setLevel(Log.INFO)
+Log.getLogger("TRACE2.afw.math.warp").setLevel(Log.INFO)
+Log.getLogger("TRACE3.afw.math.warp").setLevel(Log.INFO)
+
+
 try:
     display
 except:

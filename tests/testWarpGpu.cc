@@ -366,8 +366,6 @@ bool GpuTestAccuracy(
     const afwImage::MaskedImage<float>&   inImgFltFull
 )
 {
-	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
-
     afwGeom::Box2I inputBBox(afwGeom::Point2I(11, 19), afwGeom::Extent2I(40, 61));
 
     const afwImage::MaskedImage<double>  inMIDbl(inImgDblFull, inputBBox,afwImage::LOCAL, true);
@@ -402,8 +400,6 @@ bool GpuTestAccuracy(
 
 bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 {
-	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
-
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;
@@ -550,8 +546,6 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
 bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 {
-	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
-
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;
@@ -720,6 +714,9 @@ TestResult TestCpu(int argc, char**argv)
 
 int main(int argc, char **argv)
 {
+    LOG_CONFIG();
+    LOG_SET_LVL("", LOG_LVL_INFO);
+
     int status = EXIT_SUCCESS;
 
     PrintSeparator();

@@ -398,8 +398,6 @@ bool TestConvGpu(
 
 bool GpuTestAccuracy(string imgFileName)
 {
-	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
-
     afwGeom::Box2I inputBBox(afwGeom::Point2I(52, 574), afwGeom::Extent2I(76, 80));
 
     afwImage::MaskedImage<float>    inImgFlt(imgFileName);
@@ -476,8 +474,6 @@ bool GpuTestAccuracy(string imgFileName)
 
 bool GpuTestExceptions(const string imgFileName)
 {
-	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
-
     afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
@@ -621,8 +617,6 @@ bool GpuTestExceptions(const string imgFileName)
 
 bool CpuTestExceptions(const string imgFileName)
 {
-	lsst::log::Log::setLevel("lsst.afw.kernel", TRACE5);
-
     afwImage::MaskedImage<double> inImg(imgFileName);
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
@@ -789,6 +783,8 @@ TestResult TestCpu(int argc, char**argv)
 
 int main(int argc, char **argv)
 {
+    LOG_CONFIG();
+    LOG_SET_LVL("", LOG_LVL_INFO);
     cout << endl;
     cout << "Note: Dev =  coefficient of variation of RMSD" << endl;
     cout << endl;

@@ -43,6 +43,9 @@ import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
+from lsst.log import Log
+
+Log.getLogger("afw.Mask").setLevel(Log.INFO)
 
 try:
     type(display)
