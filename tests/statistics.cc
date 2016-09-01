@@ -263,7 +263,12 @@ BOOST_AUTO_TEST_CASE(StatisticsTestImages, * utf::description("requires afwdata 
         imgfiles.push_back("v2_i2_p_m9_u16.fits");
 
         std::string afwdata_dir;
-        afwdata_dir = lsst::utils::getPackageDir("afwdata");
+        try {
+            afwdata_dir = lsst::utils::getPackageDir("afwdata");
+        } catch (lsst::pex::exceptions::NotFoundError) {
+            cerr << "Skipping: Test requires afwdata to be available" << endl;
+            return;
+        }
         for (vector<string>::iterator imgfile = imgfiles.begin(); imgfile != imgfiles.end(); ++imgfile) {
 
             string img_path = afwdata_dir + "/Statistics/" + *imgfile;
