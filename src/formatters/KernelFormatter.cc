@@ -95,6 +95,7 @@ BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<float>)
 BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function2<float>)
 BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<float>)
 BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<float>)
+//BOOST_CLASS_EXPORT(lsst::afw::math::LinearFunction2<float>)
 
 BOOST_CLASS_EXPORT(lsst::afw::math::IntegerDeltaFunction2<double>)
 BOOST_CLASS_EXPORT(lsst::afw::math::GaussianFunction1<double>)
@@ -106,6 +107,7 @@ BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function1<double>)
 BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function2<double>)
 BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<double>)
 BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<double>)
+//BOOST_CLASS_EXPORT(lsst::afw::math::LinearFunction2<double>)
 
 #define EXEC_TRACE  20
 static void execTrace(std::string s, int level = EXEC_TRACE) {

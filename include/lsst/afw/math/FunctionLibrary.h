@@ -1198,6 +1198,83 @@ using boost::serialization::make_nvp;
         }
     };
 
+    /**
+     * @brief 2-dimensional separable linear basis function for interpolation
+     *
+     * f(x, y) = (b - b abs(x')) * (b - b abs(y'))
+     * where x' = x - xOffset and y' = y - yOffset and b = slope
+     *
+     * @ingroup afw
+     */
+    template<typename ReturnT>
+    class LinearBasisFunction2: public Function2<ReturnT> {
+    public:
+        typedef typename Function2<ReturnT>::Ptr Function2Ptr;
+
+        /**
+         * @brief Construct a Localized Linear interpolation function of
+         *        specified slope and x,y offset.
+         */
+        explicit LinearBasisFunction2(
+            double n,         ///< slope of linear function
+            double xOffset = 0.0,    ///< x offset
+            double yOffset = 0.0)    ///< y offset
+        :
+            Function2<ReturnT>(2),
+            _slope(static_cast<double>(n))
+        {
+            this->_params[0] = xOffset;
+            this->_params[1] = yOffset;
+        }
+
+        virtual ~LinearBasisFunction2() {}
+
+        virtual Function2Ptr clone() const {
+            return Function2Ptr(new LinearBasisFunction2(this->getSlope(), this->_params[0], this->_params[1]));
+        }
+
+        virtual ReturnT operator() (double x, double y) const {
+           double xFunc = _slope - _slope * std::abs(x - this->_params[0]);
+           if (xFunc < 0.0) {
+              xFunc = 0.0;
+           }
+           double yFunc = _slope - _slope * std::abs(y - this->_params[1]);
+           if (yFunc < 0.0) {
+              yFunc = 0.0;
+           }
+           return static_cast<ReturnT>(xFunc * yFunc);
+        }
+
+        /**
+         * @brief Get the slope of the Linear function
+         */
+        unsigned int getSlope() const {
+            return static_cast<unsigned int>(_slope);
+        };
+
+        virtual std::string toString(std::string const& prefix) const {
+            std::ostringstream os;
+            os << "LinearBasisFunction2 [" << this->getSlope() << "]: ";;
+            os << Function2<ReturnT>::toString(prefix);
+            return os.str();
+        }
+
+    private:
+        double _slope;   ///< 1/n
+
+    protected:
+        /* Default constructor: intended only for serialization */
+        explicit LinearBasisFunction2() : Function2<ReturnT>(2), _slope(1.0) {}
+
+    private:
+        friend class boost::serialization::access;
+        template <class Archive>
+        void serialize(Archive& ar, unsigned int const version) {
+            ar & make_nvp("fn2", boost::serialization::base_object<Function2<ReturnT> >(*this));
+            ar & make_nvp("slope", this->_slope);
+        }
+    };
+
 }}}   // lsst::afw::math
 
 #endif // #ifndef LSST_AFW_MATH_FUNCTIONLIBRARY_H

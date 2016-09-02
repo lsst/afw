@@ -78,6 +78,7 @@
     %functionPtr(IntegerDeltaFunction, 2, TYPE);
     %functionPtr(LanczosFunction, 1, TYPE);
     %functionPtr(LanczosFunction, 2, TYPE);
+    %functionPtr(LinearBasisFunction, 2, TYPE);
     %functionPtr(NullFunction, 1, TYPE);
     %functionPtr(NullFunction, 2, TYPE);
     %functionPtr(PolynomialFunction, 1, TYPE);
@@ -96,6 +97,7 @@
     %function(IntegerDeltaFunction, 2, NAME, TYPE);
     %function(LanczosFunction, 1, NAME, TYPE);
     %function(LanczosFunction, 2, NAME, TYPE);
+    %function(LinearBasisFunction, 2, NAME, TYPE);
     %function(NullFunction, 1, NAME, TYPE);
     %function(NullFunction, 2, NAME, TYPE);
     %function(PolynomialFunction, 1, NAME, TYPE);
