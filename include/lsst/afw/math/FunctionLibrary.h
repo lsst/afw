@@ -1148,6 +1148,11 @@ using boost::serialization::make_nvp;
         }
 
         virtual ReturnT operator() (double x, double y) const {
+            bool truncate = false;
+            if (truncate && (std::fabs(x - this->_params[0]) > 1./_invN ||
+                             std::fabs(y - this->_params[1]) > 1./_invN)) {
+               return 0.;
+            }
             double xArg1 = (x - this->_params[0]) * lsst::afw::geom::PI;
             double xArg2 = xArg1 * _invN;
             double xFunc = 1;
