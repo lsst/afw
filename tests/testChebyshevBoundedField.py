@@ -107,7 +107,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(ty.shape, (coefficients.shape[0], y.size))
             z2 = numpy.array([numpy.dot(ty[:, i], numpy.dot(coefficients, tx[:, i]))
                               for i in range(nPoints)])
-            self.assertFloatsAlmostEqual(z1, z2, rtol=1E-13)
+            self.assertFloatsAlmostEqual(z1, z2, rtol=1E-12)
 
             scaled = lsst.afw.math.ChebyshevBoundedField.cast(field*factor)
             self.assertFloatsAlmostEqual(scaled.evaluate(x, y), factor*z2, rtol=factor*1E-13)
