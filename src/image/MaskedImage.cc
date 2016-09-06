@@ -151,7 +151,7 @@ void checkExtType(
         }
         metadata->remove("EXTTYPE");
     } catch(lsst::pex::exceptions::NotFoundError) {
-        LOGLF_WARN("afw.image.MaskedImage", "Expected extension type not found: %s" % expected);
+        LOGLS_WARN("afw.image.MaskedImage", "Expected extension type not found: " << expected);
     }
 }
 
@@ -189,9 +189,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
     // If the mask and/or variance is unreadable, we log a warning and return
     // (blank) defaults.
 
-    // We log warnings about image loading through a child logger, so the user
-    // can disable them if required.
-    lsst::log::Log log("afw.image.MaskedImage");
+    LOG_LOGGER _log = LOG_GET("afw.image.MaskedImage");
 
     enum class Hdu {
         Primary = 1,
@@ -238,7 +236,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Mask");
                 throw e;
             }
-            LOGLF_WARN(log "Mask unreadable; using default");
+            LOGLS_WARN(_log, "Mask unreadable; using default");
             // By resetting the status we are able to read the next HDU (the variance).
             fitsfile.status = 0;
             _mask.reset(new Mask(_image->getBBox()));
@@ -254,7 +252,7 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::MaskedImage(
                 LSST_EXCEPT_ADD(e, "Reading Variance");
                 throw e;
             }
-            LOGLF_WARN(log, "Variance unreadable; using default");
+            LOGLS_WARN(_log, "Variance unreadable; using default");
             fitsfile.status = 0;
             _variance.reset(new Variance(_image->getBBox()));
         }

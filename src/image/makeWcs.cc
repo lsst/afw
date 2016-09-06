@@ -62,11 +62,9 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     //
     // Follow Dave's AST and switch TAN to TPV
     //
-    auto log = lsst::log::Log("makeWcs");
-
     if (ctype1.substr(5, 3) == "TAN" &&
         (metadata->exists("PV1_5") || metadata->exists("PV2_1"))) {
-        LOGLF_INFO(log, "Interpreting %s/%s + PVi_j as TPV" % ctype1 % ctype2);
+        LOGL_INFO("makeWcs", "Interpreting %s/%s + PVi_j as TPV", ctype1.c_str(), ctype2.c_str());
 
         if (!modifyable) {
             metadata = _metadata->deepCopy();
@@ -89,7 +87,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
             modifyable = true;
         }
 
-        LOGLF_WARN(log, "Stripping PVi_j keys from projection %s/%s" % ctype1 % ctype2);
+        LOGL_WARN("makeWcs", "Stripping PVi_j keys from projection %s/%s", ctype1.c_str(), ctype2.c_str());
 
         metadata->set<std::string>("CTYPE1", "RA---TAN");
         metadata->set<std::string>("CTYPE2", "DEC--TAN");

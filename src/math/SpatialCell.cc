@@ -86,8 +86,8 @@ SpatialCell::SpatialCell(std::string const& label, ///< string representing "nam
     _candidateList(candidateList),
     _ignoreBad(true)
 {
-    LOGF_TRACE3("lsst.afw.math.SpatialCell", "Cell %s : created with %d candidates",
-                                  this->_label.c_str(), this->_candidateList.size());
+    LOGL_DEBUG("afw.math.SpatialCell", "Cell %s : created with %d candidates",
+               this->_label.c_str(), this->_candidateList.size());
     sortCandidates();
 }
 

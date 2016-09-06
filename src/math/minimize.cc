@@ -250,7 +250,7 @@ afwMath::FitResults afwMath::minimize(
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        LOGL_WARN("lsst::afw::math::minimize", "Fit failed to converge");
+        LOGL_WARN("afw.math.minimize", "Fit failed to converge");
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {
@@ -340,7 +340,7 @@ afwMath::FitResults afwMath::minimize(
     fitResults.chiSq = min.Fval();
     fitResults.isValid = min.IsValid() && std::isfinite(fitResults.chiSq);
     if (!fitResults.isValid) {
-        LOGL_WARN("lsst::afw::math::minimize", "Fit failed to converge");
+        LOGL_WARN("afw.math.minimize", "Fit failed to converge");
     }
 
     for (unsigned int i = 0; i < nParameters; ++i) {

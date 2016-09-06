@@ -32,6 +32,10 @@
 #include "lsst/afw/cameraGeom/Detector.h"
 #include "lsst/afw/fits.h"
 
+namespace {
+LOG_LOGGER _log = LOG_GET("afw.image.ExposureInfo");
+}
+
 namespace lsst { namespace afw { namespace image {
 
 namespace {
@@ -249,7 +253,6 @@ void ExposureInfo::_readFits(
 
     if (archiveHdu) {
         fitsfile.setHdu(archiveHdu);
-        auto log = lsst::log::Log("afw.ExposureInfo._readFits");
         table::io::InputArchive archive = table::io::InputArchive::readFits(fitsfile);
         // Load the Psf and Wcs from the archive; id=0 results in a null pointer.
         // Note that the binary table Wcs, if present, clobbers the FITS header one,
@@ -259,7 +262,7 @@ void ExposureInfo::_readFits(
         try {
             _psf = archive.get<detection::Psf>(psfId);
         } catch (pex::exceptions::NotFoundError & err) {
-            LOGLF_WARN(log, "Could not read PSF; setting to null: %s" % err.what());
+            LOGLS_WARN(_log, "Could not read PSF; setting to null: " << err.what());
         }
         int wcsId = popInt(*metadata, "WCS_ID");
         try {
@@ -267,32 +270,32 @@ void ExposureInfo::_readFits(
             if (archiveWcs) {
                 _wcs = archiveWcs;
             } else {
-                LOGLF_INFO(log, "Empty WCS extension, using FITS header");
+                LOGLS_INFO(_log, "Empty WCS extension, using FITS header");
             }
         } catch (pex::exceptions::NotFoundError & err) {
             auto msg = str(boost::format("Could not read WCS extension; setting to null: %s") % err.what());
             if (_wcs) {
                 msg += " ; using WCS from FITS header";
             }
-            LOGLF_WARN(log, msg);
+            LOGLS_WARN(_log, msg);
         }
         int coaddInputsId = popInt(*metadata, "COADD_INPUTS_ID");
         try {
             _coaddInputs = archive.get<CoaddInputs>(coaddInputsId);
         } catch (pex::exceptions::NotFoundError & err) {
-            LOGLF_WARN(log, "Could not read CoaddInputs; setting to null: %s" % err.what());
+            LOGLS_WARN(_log, "Could not read CoaddInputs; setting to null: " << err.what());
         }
         int apCorrMapId = popInt(*metadata, "AP_CORR_MAP_ID");
         try {
             _apCorrMap = archive.get<ApCorrMap>(apCorrMapId);
         } catch (pex::exceptions::NotFoundError & err) {
-            LOGLF_WARN(log, "Could not read ApCorrMap; setting to null: %s" % err.what());
+            LOGLS_WARN(_log, "Could not read ApCorrMap; setting to null: " << err.what());
         }
         int validPolygonId = popInt(*metadata, "VALID_POLYGON_ID");
         try {
             _validPolygon = archive.get<geom::polygon::Polygon>(validPolygonId);
         } catch (pex::exceptions::NotFoundError & err) {
-            LOGLF_WARN(log, "Could not read ValidPolygon; setting to null: %s" % err.what());
+            LOGLS_WARN(_log, "Could not read ValidPolygon; setting to null: " << err.what());
         }
     }
 

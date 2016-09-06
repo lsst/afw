@@ -28,7 +28,6 @@
 
 #include "lsst/pex/exceptions.h"
 #include "lsst/log/Log.h"
-#include "lsst/log/Log.h"
 #include "lsst/afw/table/Match.h"
 #include "lsst/afw/geom/Angle.h"
 
@@ -93,7 +92,7 @@ size_t makeRecordPositions(
     }
     std::sort(positions, positions + n);
     if (n < cat.size()) {
-        LOGLF_WARN("afw.table.matchRaDec", "At least one source had ra or dec equal to NaN");
+        LOGLS_WARN("afw.table.matchRaDec", "At least one source had ra or dec equal to NaN");
     }
     return n;
 }
@@ -451,7 +450,7 @@ template BaseCatalog packMatches(SourceMatchVector const &);
 template <typename Cat1, typename Cat2>
 std::vector< Match< typename Cat1::Record, typename Cat2::Record> >
 unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & second) {
-    lsst::log::Log tableLog("afw.table");
+    LOG_LOGGER tableLog = LOG_GET("afw.table");
     Key<RecordId> inKey1 = matches.getSchema()["first"];
     Key<RecordId> inKey2 = matches.getSchema()["second"];
     Key<double> keyD = matches.getSchema()["distance"];
@@ -470,16 +469,14 @@ unpackMatches(BaseCatalog const & matches, Cat1 const & first, Cat2 const & seco
         if (k1 != first.end()) {
             j->first = k1;
         } else {
-            LOGLF_WARN(tableLog,
-                "Persisted match record with ID %s not found in catalog 1." % i->get(inKey1)
-            );
+            LOGLS_WARN(tableLog, "Persisted match record with ID " << i->get(inKey1)
+                       << " not found in catalog 1.");
         }
         if (k2 != second.end()) {
             j->second = k2;
         } else {
-            LOGLF_WARN(tableLog,
-                "Persisted match record with ID %s not found in catalog 2." % i->get(inKey2)
-            );
+            LOGLS_WARN(tableLog, "Persisted match record with ID " << i->get(inKey2)
+                       << " not found in catalog 2.");
         }
         j->distance = i->get(keyD);
     }

@@ -720,7 +720,7 @@ void writeKeyFromProperty(
         }
     } else {
         // FIXME: inherited this error handling from fitsIo.cc; need a better option.
-        LOGLF_WARN("afw.writeKeyFromProperty",
+        LOGLS_WARN("afw.writeKeyFromProperty",
             makeErrorMessage(
                 fits.fptr, fits.status,
                 boost::format("In %s, unknown type '%s' for key '%s'.")

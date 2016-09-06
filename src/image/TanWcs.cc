@@ -110,7 +110,7 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
     }
 
     if (isTpv) {
-        LOGLF_DEBUG("lsst.afw.wcs", "Ignoring TPV terms");
+        LOGL_DEBUG("afw.wcs", "Ignoring TPV terms");
     }
 
     switch (nSip) {

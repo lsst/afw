@@ -844,8 +844,8 @@ Schema FitsSchemaInputMapper::finalize() {
             if (reader) {
                 _impl->readers.push_back(std::move(reader));
             } else {
-                LOGLF_WARN("afw.FitsSchemaInputMapper",
-                    "Format '%s' for column '%s' not supported; skipping." % iter->tform % iter->ttype).str()
+                LOGLS_WARN("afw.FitsSchemaInputMapper",
+                    "Format " << iter->tform << " for column " << iter->ttype << " not supported; skipping."
                 );
             }
         } else {  // is a Flag column
