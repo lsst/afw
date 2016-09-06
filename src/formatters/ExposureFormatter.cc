@@ -65,7 +65,9 @@ static char const* SVNid __attribute__((unused)) =
 
 // #include "lsst/afw/image/LSSTFitsResource.h"
 
-static const std::string LogName{"afw.ExposureFormatter"};
+namespace {
+LOG_LOGGER _log = LOG_GET("afw.ExposureFormatter");
+}
 
 namespace afwGeom = lsst::afw::geom;
 namespace afwForm = lsst::afw::formatters;
@@ -189,28 +191,28 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr additionalData) {
-    LOGL_TRACE9(LogName, "ExposureFormatter write start");
+    LOGL_DEBUG(_log, "ExposureFormatter write start");
     afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const* ip =
         dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT> const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Exposure");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        LOGL_TRACE9(LogName, "ExposureFormatter write BoostStorage");
+        LOGL_DEBUG(_log, "ExposureFormatter write BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
-        LOGL_TRACE9(LogName, "ExposureFormatter write end");
+        LOGL_DEBUG(_log, "ExposureFormatter write end");
         return;
     }
     else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
-        LOGL_TRACE9(LogName, "ExposureFormatter write FitsStorage");
+        LOGL_DEBUG(_log, "ExposureFormatter write FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
 
         ip->writeFits(fits->getPath());
-        LOGL_TRACE9(LogName, "ExposureFormatter write end");
+        LOGL_DEBUG(_log, "ExposureFormatter write end");
         return;
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
-        LOGL_TRACE9(LogName, "ExposureFormatter write DbStorage");
+        LOGL_DEBUG(_log, "ExposureFormatter write DbStorage");
         dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
 
         // Get the Wcs headers.
@@ -300,7 +302,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::write(
         // Phew!  Insert the row now.
         db->insertRow();
 
-        LOGL_TRACE9(LogName, "ExposureFormatter write end");
+        LOGL_DEBUG(_log, "ExposureFormatter write end");
         return;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Exposure");
@@ -310,17 +312,17 @@ template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
 dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::read(
     dafPersist::Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr additionalData) {
-    LOGL_TRACE9(LogName, "ExposureFormatter read start");
+    LOGL_DEBUG(_log, "ExposureFormatter read start");
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        LOGL_TRACE9(LogName, "ExposureFormatter read BoostStorage");
+        LOGL_DEBUG(_log, "ExposureFormatter read BoostStorage");
         dafPersist::BoostStorage* boost = dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>;
         boost->getIArchive() & *ip;
-        LOGL_TRACE9(LogName, "ExposureFormatter read end");
+        LOGL_DEBUG(_log, "ExposureFormatter read end");
         return ip;
     } else if (typeid(*storage) == typeid(dafPersist::FitsStorage)) {
-        LOGL_TRACE9(LogName, "ExposureFormatter read FitsStorage");
+        LOGL_DEBUG(_log, "ExposureFormatter read FitsStorage");
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         afwGeom::Box2I box;
         if (additionalData->exists("llcX")) {
@@ -350,10 +352,10 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
             new afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>(
                 fits->getPath(), box, origin);
-        LOGL_TRACE9(LogName, "ExposureFormatter read end");
+        LOGL_DEBUG(_log, "ExposureFormatter read end");
         return ip;
     } else if (typeid(*storage) == typeid(dafPersist::DbStorage)) {
-        LOGL_TRACE9(LogName, "ExposureFormatter read DbStorage");
+        LOGL_DEBUG(_log, "ExposureFormatter read DbStorage");
         dafPersist::DbStorage* db = dynamic_cast<dafPersist::DbStorage*>(storage.get());
 
         // Select a table to retrieve from based on the itemName.
@@ -433,7 +435,7 @@ dafBase::Persistable* afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, Varian
         //! \todo Need to implement overwriting of FITS metadata PropertySet
         // with values from database. - KTL - 2007-12-18
 
-        LOGL_TRACE9(LogName, "ExposureFormatter read end");
+        LOGL_DEBUG(_log, "ExposureFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Exposure");
@@ -456,7 +458,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delega
     Archive& ar, unsigned int const, dafBase::Persistable* persistable
                                                                                            )
 {
-    LOGL_TRACE9(LogName, "ExposureFormatter delegateSerialize start");
+    LOGL_DEBUG(_log, "ExposureFormatter delegateSerialize start");
     afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>* ip =
         dynamic_cast<afwImg::Exposure<ImagePixelT, MaskPixelT, VariancePixelT>*>(persistable);
     if (ip == 0) {
@@ -464,7 +466,7 @@ void afwForm::ExposureFormatter<ImagePixelT, MaskPixelT, VariancePixelT>::delega
     }
     PTR(afwImg::Wcs) wcs = ip->getWcs();
     ar & *ip->getMetadata() & ip->_maskedImage & wcs;
-    LOGL_TRACE9(LogName, "ExposureFormatter delegateSerialize end");
+    LOGL_DEBUG(_log, "ExposureFormatter delegateSerialize end");
 }
 
 template <typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>

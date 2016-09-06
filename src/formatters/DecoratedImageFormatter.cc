@@ -56,7 +56,9 @@ static char const* SVNid __attribute__((unused)) =
 #include "lsst/afw/formatters/DecoratedImageFormatter.h"
 #include "lsst/afw/image/Image.h"
 
-static const std::string LogName{"afw.DecoratedImageFormatter"};
+namespace {
+LOG_LOGGER _log = LOG_GET("afw.DecoratedImageFormatter");
+}
 
 using boost::serialization::make_nvp;
 using lsst::daf::base::Persistable;
@@ -122,25 +124,25 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         lsst::daf::base::PropertySet::Ptr
                                                 )
 {
-    LOGL_TRACE9(LogName, "DecoratedImageFormatter write start");
+    LOGL_DEBUG(_log, "DecoratedImageFormatter write start");
     DecoratedImage<ImagePixelT> const* ip = dynamic_cast<DecoratedImage<ImagePixelT> const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-DecoratedImage");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter write BoostStorage");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter write BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter write end");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
         return;
     } else if (typeid(*storage) == typeid(XmlStorage)) {
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter write XmlStorage");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter write XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         boost->getOArchive() & make_nvp("img", *ip);
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter write end");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
         return;
     } else if (typeid(*storage) == typeid(FitsStorage)) {
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter write FitsStorage");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         typedef DecoratedImage<ImagePixelT> DecoratedImage;
 
@@ -148,7 +150,7 @@ void DecoratedImageFormatter<ImagePixelT>::write(
         // \todo Do something with these fields?
         // int _X0;
         // int _Y0;
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter write end");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter write end");
         return;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -161,31 +163,31 @@ Persistable* DecoratedImageFormatter<ImagePixelT>::read(
         lsst::daf::base::PropertySet::Ptr
                                                        )
 {
-    LOGL_TRACE9(LogName, "DecoratedImageFormatter read start");
+    LOGL_DEBUG(_log, "DecoratedImageFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter read BoostStorage");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>;
         boost->getIArchive() & *ip;
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter read end");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
     } else if (typeid(*storage) == typeid(XmlStorage)) {
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter read XmlStorage");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter read XmlStorage");
         XmlStorage* boost = dynamic_cast<XmlStorage*>(storage.get());
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>;
         boost->getIArchive() & make_nvp("img", *ip);
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter read end");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
     } else if(typeid(*storage) == typeid(FitsStorage)) {
 
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter read FitsStorage");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
 
         DecoratedImage<ImagePixelT>* ip = new DecoratedImage<ImagePixelT>(fits->getPath(), fits->getHdu());
         // \todo Do something with these fields?
         // int _X0;
         // int _Y0;
-        LOGL_TRACE9(LogName, "DecoratedImageFormatter read end");
+        LOGL_DEBUG(_log, "DecoratedImageFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
@@ -210,7 +212,7 @@ void DecoratedImageFormatter<ImagePixelT>::delegateSerialize(
         Persistable* persistable
                                                             )
 {
-    LOGL_TRACE9(LogName, "DecoratedImageFormatter delegateSerialize start");
+    LOGL_DEBUG(_log, "DecoratedImageFormatter delegateSerialize start");
     DecoratedImage<ImagePixelT>* ip = dynamic_cast<DecoratedImage<ImagePixelT>*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-DecoratedImage");

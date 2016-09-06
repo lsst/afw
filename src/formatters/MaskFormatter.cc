@@ -56,7 +56,9 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 
 #include "lsst/afw/image/LsstImageTypes.h"
 
-static const std::string LogName{"afw.MaskFormatter"};
+namespace {
+LOG_LOGGER _log = LOG_GET("afw.MaskFormatter");
+}
 
 using lsst::daf::base::Persistable;
 using lsst::daf::persistence::BoostStorage;
@@ -101,26 +103,26 @@ void MaskFormatter<MaskPixelT>::write(
     Persistable const* persistable,
     Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr) {
-    LOGL_TRACE9(LogName, "MaskFormatter write start");
+    LOGL_DEBUG(_log, "MaskFormatter write start");
     Mask<MaskPixelT> const* ip =
         dynamic_cast<Mask<MaskPixelT> const*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Mask");
     }
     if (typeid(*storage) == typeid(BoostStorage)) {
-        LOGL_TRACE9(LogName, "MaskFormatter write BoostStorage");
+        LOGL_DEBUG(_log, "MaskFormatter write BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         boost->getOArchive() & *ip;
-        LOGL_TRACE9(LogName, "MaskFormatter write end");
+        LOGL_DEBUG(_log, "MaskFormatter write end");
         return;
     }
     else if (typeid(*storage) == typeid(FitsStorage)) {
-        LOGL_TRACE9(LogName, "MaskFormatter write FitsStorage");
+        LOGL_DEBUG(_log, "MaskFormatter write FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         // Need to cast away const because writeFits modifies the metadata.
         Mask<MaskPixelT>* vip = const_cast<Mask<MaskPixelT>*>(ip);
         vip->writeFits(fits->getPath());
-        LOGL_TRACE9(LogName, "MaskFormatter write end");
+        LOGL_DEBUG(_log, "MaskFormatter write end");
         return;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Mask");
@@ -130,20 +132,20 @@ template <typename MaskPixelT>
 Persistable* MaskFormatter<MaskPixelT>::read(
     Storage::Ptr storage,
     lsst::daf::base::PropertySet::Ptr) {
-    LOGL_TRACE9(LogName, "MaskFormatter read start");
+    LOGL_DEBUG(_log, "MaskFormatter read start");
     if (typeid(*storage) == typeid(BoostStorage)) {
-        LOGL_TRACE9(LogName, "MaskFormatter read BoostStorage");
+        LOGL_DEBUG(_log, "MaskFormatter read BoostStorage");
         BoostStorage* boost = dynamic_cast<BoostStorage*>(storage.get());
         Mask<MaskPixelT>* ip = new Mask<MaskPixelT>;
         boost->getIArchive() & *ip;
-        LOGL_TRACE9(LogName, "MaskFormatter read end");
+        LOGL_DEBUG(_log, "MaskFormatter read end");
         return ip;
     }
     else if (typeid(*storage) == typeid(FitsStorage)) {
-        LOGL_TRACE9(LogName, "MaskFormatter read FitsStorage");
+        LOGL_DEBUG(_log, "MaskFormatter read FitsStorage");
         FitsStorage* fits = dynamic_cast<FitsStorage*>(storage.get());
         Mask<MaskPixelT>* ip = new Mask<MaskPixelT>(fits->getPath(), fits->getHdu());
-        LOGL_TRACE9(LogName, "MaskFormatter read end");
+        LOGL_DEBUG(_log, "MaskFormatter read end");
         return ip;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Mask");
@@ -160,7 +162,7 @@ void MaskFormatter<MaskPixelT>::update(
 template <typename MaskPixelT> template <class Archive>
 void MaskFormatter<MaskPixelT>::delegateSerialize(
     Archive& ar, int const version, Persistable* persistable) {
-    LOGL_TRACE9(LogName, "MaskFormatter delegateSerialize start");
+    LOGL_DEBUG(_log, "MaskFormatter delegateSerialize start");
     Mask<MaskPixelT>* ip = dynamic_cast<Mask<MaskPixelT>*>(persistable);
     if (ip == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Mask");
@@ -182,7 +184,7 @@ void MaskFormatter<MaskPixelT>::delegateSerialize(
     unsigned int pixels = cols * rows * planes;
     MaskPixelT* data = ip->_vwImagePtr->data();
     ar & boost::serialization::make_array(data, pixels);
-    LOGL_TRACE9(LogName, "MaskFormatter delegateSerialize end");
+    LOGL_DEBUG(_log, "MaskFormatter delegateSerialize end");
 }
 
 template <typename MaskPixelT>

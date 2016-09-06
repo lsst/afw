@@ -27,7 +27,9 @@
 
 BOOST_CLASS_EXPORT(lsst::afw::detection::Psf)
 
-static const std::string LogName = "afw.detection.PsfFormatter";
+namespace {
+LOG_LOGGER _log = LOG_GET("afw.detection.PsfFormatter");
+}
 
 namespace afwDetect = lsst::afw::detection;
 namespace afwMath = lsst::afw::math;
@@ -58,25 +60,25 @@ void afwDetect::PsfFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr) {
-    LOGL_TRACE9(LogName, "PsfFormatter write start");
+    LOGL_DEBUG(_log, "PsfFormatter write start");
     afwDetect::Psf const* ps = dynamic_cast<afwDetect::Psf const*>(persistable);
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Psf");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        LOGL_TRACE9(LogName, "PsfFormatter write BoostStorage");
+        LOGL_DEBUG(_log, "PsfFormatter write BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & ps;
-        LOGL_TRACE9(LogName, "PsfFormatter write end");
+        LOGL_DEBUG(_log, "PsfFormatter write end");
         return;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
-        LOGL_TRACE9(LogName, "PsfFormatter write XmlStorage");
+        LOGL_DEBUG(_log, "PsfFormatter write XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getOArchive() & make_nvp("psf", ps);
-        LOGL_TRACE9(LogName, "PsfFormatter write end");
+        LOGL_DEBUG(_log, "PsfFormatter write end");
         return;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
@@ -84,22 +86,22 @@ void afwDetect::PsfFormatter::write(
 
 dafBase::Persistable* afwDetect::PsfFormatter::read(
     dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
-    LOGL_TRACE9(LogName, "PsfFormatter read start");
+    LOGL_DEBUG(_log, "PsfFormatter read start");
     afwDetect::Psf* ps;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        LOGL_TRACE9(LogName, "PsfFormatter read BoostStorage");
+        LOGL_DEBUG(_log, "PsfFormatter read BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & ps;
-        LOGL_TRACE9(LogName, "PsfFormatter read end");
+        LOGL_DEBUG(_log, "PsfFormatter read end");
         return ps;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
-        LOGL_TRACE9(LogName, "PsfFormatter read XmlStorage");
+        LOGL_DEBUG(_log, "PsfFormatter read XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getIArchive() & make_nvp("psf", ps);
-        LOGL_TRACE9(LogName, "PsfFormatter read end");
+        LOGL_DEBUG(_log, "PsfFormatter read end");
         return ps;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Psf");
@@ -120,7 +122,7 @@ void afwDetect::PsfFormatter::delegateSerialize(
         unsigned int const,             ///< Version of the Psf class
         dafBase::Persistable* persistable ///< persistable Pointer to the Psf as a Persistable
                                                ) {
-    LOGL_TRACE9(LogName, "PsfFormatter delegateSerialize start");
+    LOGL_DEBUG(_log, "PsfFormatter delegateSerialize start");
     afwDetect::Psf* ps = dynamic_cast<afwDetect::Psf*>(persistable);
     if (ps == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Serializing non-Psf");
@@ -130,7 +132,7 @@ void afwDetect::PsfFormatter::delegateSerialize(
     ar & make_nvp("k", ps->_kernel);
 #endif
 
-    LOGL_TRACE9(LogName, "PsfFormatter delegateSerialize end");
+    LOGL_DEBUG(_log, "PsfFormatter delegateSerialize end");
 }
 
 /** Factory method for PsfFormatter.

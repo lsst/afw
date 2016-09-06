@@ -65,6 +65,7 @@ static char const* SVNid __attribute__((unused)) =
 #include "lsst/daf/persistence/LogicalLocation.h"
 #include "lsst/daf/persistence/BoostStorage.h"
 #include "lsst/daf/persistence/XmlStorage.h"
+#include "lsst/log/Log.h"
 #include <lsst/pex/exceptions.h>
 #include <lsst/pex/policy/Policy.h>
 
@@ -106,7 +107,9 @@ BOOST_CLASS_EXPORT(lsst::afw::math::Chebyshev1Function2<double>)
 BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction1<double>)
 BOOST_CLASS_EXPORT(lsst::afw::math::LanczosFunction2<double>)
 
-static const std::string LogName{"afw.math.KernelFormatter"};
+namespace {
+LOG_LOGGER _log = LOG_GET("afw.math.KernelFormatter");
+}
 
 namespace afwMath = lsst::afw::math;
 namespace afwForm = lsst::afw::formatters;
@@ -157,26 +160,26 @@ void afwForm::KernelFormatter::write(
     dafBase::Persistable const* persistable,
     dafPersist::Storage::Ptr storage,
     dafBase::PropertySet::Ptr) {
-    LOGL_TRACE9(LogName, "KernelFormatter write start");
+    LOGL_DEBUG(_log, "KernelFormatter write start");
     afwMath::Kernel const* kp =
         dynamic_cast<afwMath::Kernel const*>(persistable);
     if (kp == 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Persisting non-Kernel");
     }
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        LOGL_TRACE9(LogName, "KernelFormatter write BoostStorage");
+        LOGL_DEBUG(_log, "KernelFormatter write BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getOArchive() & kp;
-        LOGL_TRACE9(LogName, "KernelFormatter write end");
+        LOGL_DEBUG(_log, "KernelFormatter write end");
         return;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
-        LOGL_TRACE9(LogName, "KernelFormatter write XmlStorage");
+        LOGL_DEBUG(_log, "KernelFormatter write XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getOArchive() & make_nvp("ptr", kp);
-        LOGL_TRACE9(LogName, "KernelFormatter write end");
+        LOGL_DEBUG(_log, "KernelFormatter write end");
         return;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
@@ -184,22 +187,22 @@ void afwForm::KernelFormatter::write(
 
 dafBase::Persistable* afwForm::KernelFormatter::read(
     dafPersist::Storage::Ptr storage, dafBase::PropertySet::Ptr) {
-    LOGL_TRACE9(LogName, "KernelFormatter read start");
+    LOGL_DEBUG(_log, "KernelFormatter read start");
     afwMath::Kernel* kp;
     if (typeid(*storage) == typeid(dafPersist::BoostStorage)) {
-        LOGL_TRACE9(LogName, "KernelFormatter read BoostStorage");
+        LOGL_DEBUG(_log, "KernelFormatter read BoostStorage");
         dafPersist::BoostStorage* boost =
             dynamic_cast<dafPersist::BoostStorage*>(storage.get());
         boost->getIArchive() & kp;
-        LOGL_TRACE9(LogName, "KernelFormatter read end");
+        LOGL_DEBUG(_log, "KernelFormatter read end");
         return kp;
     }
     else if (typeid(*storage) == typeid(dafPersist::XmlStorage)) {
-        LOGL_TRACE9(LogName, "KernelFormatter read XmlStorage");
+        LOGL_DEBUG(_log, "KernelFormatter read XmlStorage");
         dafPersist::XmlStorage* xml =
             dynamic_cast<dafPersist::XmlStorage*>(storage.get());
         xml->getIArchive() & make_nvp("ptr", kp);
-        LOGL_TRACE9(LogName, "KernelFormatter read end");
+        LOGL_DEBUG(_log, "KernelFormatter read end");
         return kp;
     }
     throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError, "Unrecognized Storage for Kernel");
@@ -219,7 +222,7 @@ void afwForm::KernelFormatter::update(dafBase::Persistable*,
 template <class Archive>
 void afwForm::KernelFormatter::delegateSerialize(
     Archive& ar, unsigned int const, dafBase::Persistable* persistable) {
-    LOGL_TRACE9(LogName, "KernelFormatter delegateSerialize start");
+    LOGL_DEBUG(_log, "KernelFormatter delegateSerialize start");
     afwMath::Kernel* kp =
         dynamic_cast<afwMath::Kernel*>(persistable);
     if (kp == 0) {
@@ -234,7 +237,7 @@ void afwForm::KernelFormatter::delegateSerialize(
     ar & make_nvp("nParams", kp->_nKernelParams);
     ar & make_nvp("spatialFunctionList", kp->_spatialFunctionList);
 
-    LOGL_TRACE9(LogName, "KernelFormatter delegateSerialize end");
+    LOGL_DEBUG(_log, "KernelFormatter delegateSerialize end");
 }
 
 template void afwForm::KernelFormatter::delegateSerialize(
