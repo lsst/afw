@@ -236,6 +236,9 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
 
 class Box2DTestCase(lsst.utils.tests.TestCase):
 
+    def setUp(self):
+        numpy.random.seed(1)
+
     def testEmpty(self):
         box = geom.Box2D()
         self.assertTrue(box.isEmpty())
@@ -289,7 +292,7 @@ class Box2DTestCase(lsst.utils.tests.TestCase):
                 dim = -dim
                 box = geom.Box2D(pmin, dim)
                 self.assertEqual(box.getMin(), pmin + dim)
-                self.assertClose(box.getDimensions(), geom.Extent2D(abs(dim.getX()), abs(dim.getY())))
+                self.assertFloatsAlmostEqual(box.getDimensions(), geom.Extent2D(abs(dim.getX()), abs(dim.getY())))
 
     def testSwap(self):
         x00, y00, x01, y01 = (0., 1., 2., 3.)
