@@ -1,7 +1,6 @@
 setupRequired(daf_base)
 setupRequired(daf_persistence)
 setupRequired(pex_config)
-setupRequired(pex_logging)
 setupRequired(log)
 setupRequired(ndarray)
 setupRequired(cfitsio)
