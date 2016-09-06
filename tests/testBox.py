@@ -236,6 +236,9 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
 
 class Box2DTestCase(lsst.utils.tests.TestCase):
 
+    def setUp(self):
+        numpy.random.seed(1)
+
     def testEmpty(self):
         box = geom.Box2D()
         self.assertTrue(box.isEmpty())
