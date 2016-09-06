@@ -90,11 +90,11 @@ void mathDetail::convolveWithInterpolation(
         goodBBox,
         inImage.getXY0(),
         convolutionControl.getDoNormalize()));
-    LOGF_TRACE6("lsst.afw.math.convolve",
+    LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
         "convolveWithInterpolation: full bbox minimum=(%d, %d), extent=(%d, %d)",
             fullBBox.getMinX(), fullBBox.getMinY(),
             fullBBox.getWidth(), fullBBox.getHeight());
-    LOGF_TRACE6("lsst.afw.math.convolve",
+    LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
         "convolveWithInterpolation: goodRegion bbox minimum=(%d, %d), extent=(%d, %d)",
             goodRegion.getBBox().getMinX(), goodRegion.getBBox().getMinY(),
             goodRegion.getBBox().getWidth(), goodRegion.getBBox().getHeight());
@@ -102,7 +102,7 @@ void mathDetail::convolveWithInterpolation(
     // divide good region into subregions small enough to interpolate over
     int nx = 1 + (goodBBox.getWidth() / convolutionControl.getMaxInterpolationDistance());
     int ny = 1 + (goodBBox.getHeight() / convolutionControl.getMaxInterpolationDistance());
-    LOGF_TRACE4("lsst.afw.math.convolve",
+    LOGL_DEBUG("TRACE3.afw.math.convolve.convolveWithInterpolation",
         "convolveWithInterpolation: divide into %d x %d subregions", nx, ny);
 
     ConvolveWithInterpolationWorkingImages workingImages(kernel.getDimensions());
@@ -110,7 +110,7 @@ void mathDetail::convolveWithInterpolation(
     while (goodRegion.computeNextRow(regionRow)) {
         for (RowOfKernelImagesForRegion::ConstIterator rgnIter = regionRow.begin(), rgnEnd = regionRow.end();
             rgnIter != rgnEnd; ++rgnIter) {
-            LOGF_TRACE6("lsst.afw.math.convolve",
+            LOGL_DEBUG("TRACE5.afw.math.convolve.convolveWithInterpolation",
                 "convolveWithInterpolation: bbox minimum=(%d, %d), extent=(%d, %d)",
                     (*rgnIter)->getBBox().getMinX(), (*rgnIter)->getBBox().getMinY(),
                     (*rgnIter)->getBBox().getWidth(), (*rgnIter)->getBBox().getHeight());

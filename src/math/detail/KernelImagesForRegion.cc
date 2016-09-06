@@ -73,7 +73,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
-    LOGF_TRACE6("lsst.afw.math.convolve",
+    LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
     "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
@@ -114,7 +114,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
     _insertImage(TOP_LEFT, topLeftImagePtr);
     _insertImage(TOP_RIGHT, topRightImagePtr);
-    LOGF_TRACE6("lsst.afw.math.convolve",
+    LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
     "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
