@@ -52,11 +52,11 @@ inline void fits_read_array(
         );
     }
     int nAxis = fitsfile.getImageDim();
-    ndarray::Vector<int,2> shape;
+    ndarray::Vector<ndarray::Size,2> shape;
     if (nAxis == 2) {
         shape = fitsfile.getImageShape<2>();
     } else if (nAxis == 3) {
-        ndarray::Vector<int,3> shape3 = fitsfile.getImageShape<3>();
+        ndarray::Vector<ndarray::Size,3> shape3 = fitsfile.getImageShape<3>();
         if (shape3[0] != 1) {
             throw LSST_EXCEPT(
                 fits::FitsError,

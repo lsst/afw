@@ -1006,8 +1006,8 @@ int Fits::getImageDim() {
     return nAxis;
 }
 
-void Fits::getImageShapeImpl(int nAxis, long * nAxes) {
-    fits_get_img_size(reinterpret_cast<fitsfile*>(fptr), nAxis, nAxes, &status);
+void Fits::getImageShapeImpl(int maxDim, long * nAxes) {
+    fits_get_img_size(reinterpret_cast<fitsfile*>(fptr), maxDim, nAxes, &status);
     if (behavior & AUTO_CHECK)
         LSST_FITS_CHECK_STATUS(*this, "Getting NAXES");
 }

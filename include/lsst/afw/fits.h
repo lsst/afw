@@ -202,7 +202,7 @@ class Fits {
     template <typename T> void createImageImpl(int nAxis, long * nAxes);
     template <typename T> void writeImageImpl(T const * data, int nElements);
     template <typename T> void readImageImpl(int nAxis, T * data, long * begin, long * end, long * increment);
-    void getImageShapeImpl(int nAxis, long * nAxes);
+    void getImageShapeImpl(int maxDim, long * nAxes);
 public:
 
     enum BehaviorFlags {
@@ -347,7 +347,7 @@ public:
      *  if the FITS file is empty.
      */
     template <typename PixelT, int N>
-    void createImage(ndarray::Vector<int,N> const & shape) {
+    void createImage(ndarray::Vector<ndarray::Size,N> const & shape) {
         ndarray::Vector<long,N> nAxes(shape.reverse());
         createImageImpl<PixelT>(N, nAxes.elems);
     }
@@ -390,10 +390,10 @@ public:
      *  The template parameter must match the actual number of dimension in the image.
      */
     template <int N>
-    ndarray::Vector<int,N> getImageShape() {
+    ndarray::Vector<ndarray::Size,N> getImageShape() {
         ndarray::Vector<long,N> nAxes(1);
         getImageShapeImpl(N, nAxes.elems);
-        ndarray::Vector<int,N> shape;
+        ndarray::Vector<ndarray::Size,N> shape;
         for (int i = 0; i < N; ++i) shape[i] = nAxes[N-i-1];
         return shape;
     }
