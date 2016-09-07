@@ -1234,11 +1234,11 @@ using boost::serialization::make_nvp;
         }
 
         virtual ReturnT operator() (double x, double y) const {
-           double xFunc = _slope - _slope * std::abs(x - this->_params[0]);
+           double xFunc = _slope * (1.0 - std::abs(x - this->_params[0]));
            if (xFunc < 0.0) {
               xFunc = 0.0;
            }
-           double yFunc = _slope - _slope * std::abs(y - this->_params[1]);
+           double yFunc = _slope * (1.0 - std::abs(y - this->_params[1]));
            if (yFunc < 0.0) {
               yFunc = 0.0;
            }
