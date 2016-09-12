@@ -60,8 +60,8 @@ class CalibTestCase(lsst.utils.tests.TestCase):
         """Test the exposure time information"""
 
         isoDate = "1995-01-26T07:32:00.000000000Z"
-        self.calib.setMidTime(dafBase.DateTime(isoDate))
-        self.assertEqual(isoDate, self.calib.getMidTime().toString())
+        self.calib.setMidTime(dafBase.DateTime(isoDate, dafBase.DateTime.UTC))
+        self.assertEqual(isoDate, self.calib.getMidTime().toString(dafBase.DateTime.UTC))
         self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
 
         dt = 123.4
@@ -153,7 +153,7 @@ class CalibTestCase(lsst.utils.tests.TestCase):
 
         self.calib = afwImage.Calib(metadata)
 
-        self.assertEqual(isoDate, self.calib.getMidTime().toString())
+        self.assertEqual(isoDate, self.calib.getMidTime().toString(dafBase.DateTime.UTC))
         self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
         self.assertEqual(self.calib.getExptime(), exptime)
 
