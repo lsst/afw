@@ -104,7 +104,8 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
 
     std::string key = "TIME-MID";
     if (metadata->exists(key)) {
-        midTime  = lsst::daf::base::DateTime(boost::algorithm::trim_right_copy(metadata->getAsString(key)));
+        midTime  = lsst::daf::base::DateTime(boost::algorithm::trim_right_copy(metadata->getAsString(key)),
+                                             lsst::daf::base::DateTime::UTC);
     }
 
     key = "EXPTIME";
