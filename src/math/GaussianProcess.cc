@@ -1132,9 +1132,14 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
                           "Asked for zero or negative number of neighbors\n");
     }
 
-    if(numberOfNeighbors > _kdTree.getPoints()){
+    if(numberOfNeighbors + 1 > _kdTree.getPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
+    }
+
+    if(dex < 0 || dex >=_kdTree.getPoints()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Asked to self interpolate on a point that does not exist\n");
     }
 
     int i,j;
