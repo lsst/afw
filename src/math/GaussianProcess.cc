@@ -152,6 +152,17 @@ void KdTree < T > ::findNeighbors(ndarray::Array < int,1,1 >  neighdex,
                                   ndarray::Array < const T,1,1 >  const &v,
                                   int n_nn) const
 {
+
+    if(n_nn > _pts){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Asked for more neighbors than kd tree contains\n");
+    }
+
+    if(n_nn <= 0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Asked for zero or a negative number of neighbors\n");
+    }
+
     int i,start;
 
     _neighborCandidates = allocate(ndarray::makeVector(n_nn));
