@@ -411,7 +411,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 
     int const srcWidth = srcImage.getWidth();
     int const srcHeight = srcImage.getHeight();
-    LOGF_TRACE3("lsst.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
+    LOGL_DEBUG("TRACE2.afw.math.warp", "(GPU) source image width=%d; height=%d", srcWidth, srcHeight);
 
     if (!lsst::afw::gpu::isGpuBuild()) {
         throw LSST_EXCEPT(afwGpu::GpuRuntimeError, "Afw not compiled with GPU support");
@@ -449,7 +449,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 
     int const destWidth = destImage.getWidth();
     int const destHeight = destImage.getHeight();
-    LOGF_TRACE3("lsst.afw.math.warp", "(GPU) remap image width=%d; height=%d", destWidth, destHeight);
+    LOGL_DEBUG("TRACE2.afw.math.warp", "(GPU) remap image width=%d; height=%d", destWidth, destHeight);
 
     int const maxCol = destWidth - 1;
     int const maxRow = destHeight - 1;
@@ -480,7 +480,7 @@ std::pair<int, WarpImageGpuStatus::ReturnCode> warpImageGPU(
 
     int numGoodPixels = 0;
 
-    LOGF_TRACE3("lsst.afw.math.warp", "using GPU acceleration, remapping masked image");
+    LOGL_DEBUG("TRACE2.afw.math.warp", "using GPU acceleration, remapping masked image");
 
 #ifdef GPU_BUILD
     int maskKernelSize;
