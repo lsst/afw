@@ -249,7 +249,7 @@ template <int M, int N>
 std::vector< ndarray::Vector<PTR(Comparable),M> >
 roundtripAndCompare(
     ndarray::Vector<PTR(Comparable),M> const & inputs,
-    ndarray::Vector<int,N> const & expectedSizes
+    ndarray::Vector<ndarray::Size,N> const & expectedSizes
 ) {
     std::vector< ndarray::Vector<PTR(Comparable),M> > outputs;
     ndarray::Vector<int,M> inputIds;
@@ -262,7 +262,7 @@ roundtripAndCompare(
     CatalogVector catalogs;
     for (int j = 1; j <= N; ++j) {
         catalogs.push_back(outArchive.getCatalog(j));
-        BOOST_CHECK_EQUAL(expectedSizes[j-1], int(catalogs.back().size()));
+        BOOST_CHECK_EQUAL(expectedSizes[j-1], ndarray::Size(catalogs.back().size()));
     }
 
 #if PRINT_CATALOGS
@@ -319,18 +319,18 @@ BOOST_AUTO_TEST_CASE(Simple) {
     av1[0] = 1.1;
     av1[1] = 1.2;
     PTR(Comparable) a1(new ExampleA(3, 2.5, av1));
-    roundtripAndCompare(ndarray::makeVector(a1), ndarray::makeVector(1));
+    roundtripAndCompare(ndarray::makeVector(a1), ndarray::makeVector<ndarray::Size>(1));
 
     std::vector<double> bv1;
     bv1.push_back(2.1);
     bv1.push_back(2.2);
     PTR(Comparable) b1(new ExampleB(4, bv1));
 
-    roundtripAndCompare(ndarray::makeVector(b1), ndarray::makeVector(1, 2));
+    roundtripAndCompare(ndarray::makeVector(b1), ndarray::makeVector<ndarray::Size>(1, 2));
 
-    roundtripAndCompare(ndarray::makeVector(a1, b1), ndarray::makeVector(1, 1, 2));
+    roundtripAndCompare(ndarray::makeVector(a1, b1), ndarray::makeVector<ndarray::Size>(1, 1, 2));
 
-    roundtripAndCompare(ndarray::makeVector(b1, a1), ndarray::makeVector(1, 2, 1));
+    roundtripAndCompare(ndarray::makeVector(b1, a1), ndarray::makeVector<ndarray::Size>(1, 2, 1));
 }
 
 BOOST_AUTO_TEST_CASE(CompatibleSchemas) {
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(CompatibleSchemas) {
     av1[1] = 2.2;
     PTR(Comparable) a2(new ExampleA(4, 3.5, av2));
 
-    roundtripAndCompare(ndarray::makeVector(a1, a2), ndarray::makeVector(2));
+    roundtripAndCompare(ndarray::makeVector(a1, a2), ndarray::makeVector<ndarray::Size>(2));
 
     std::vector<double> bv1;
     bv1.push_back(2.1);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(CompatibleSchemas) {
     bv1.push_back(2.3);
     PTR(Comparable) b1(new ExampleB(4, bv1));
 
-    roundtripAndCompare(ndarray::makeVector(a1, a2, b1), ndarray::makeVector(2, 1, 3));
+    roundtripAndCompare(ndarray::makeVector(a1, a2, b1), ndarray::makeVector<ndarray::Size>(2, 1, 3));
 
     std::vector<double> bv2;
     bv2.push_back(3.1);
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(CompatibleSchemas) {
     bv2.push_back(3.4);
     PTR(Comparable) b2(new ExampleB(5, bv2));
 
-    roundtripAndCompare(ndarray::makeVector(a1, a2, b1, b2), ndarray::makeVector(2, 2, 7));
+    roundtripAndCompare(ndarray::makeVector(a1, a2, b1, b2), ndarray::makeVector<ndarray::Size>(2, 2, 7));
 }
 
 BOOST_AUTO_TEST_CASE(IncompatibleSchemas) {
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(IncompatibleSchemas) {
     av1[1] = 2.3;
     PTR(Comparable) a2(new ExampleA(4, 3.5, av2));
 
-    roundtripAndCompare(ndarray::makeVector(a1, a2), ndarray::makeVector(1, 1));
+    roundtripAndCompare(ndarray::makeVector(a1, a2), ndarray::makeVector<ndarray::Size>(1, 1));
 
     std::vector<double> bv1;
     bv1.push_back(2.1);
@@ -390,14 +390,14 @@ BOOST_AUTO_TEST_CASE(IncompatibleSchemas) {
     bv1.push_back(2.3);
     PTR(Comparable) b1(new ExampleB(4, bv1));
 
-    roundtripAndCompare(ndarray::makeVector(a1, a2, b1), ndarray::makeVector(1, 1, 1, 3));
+    roundtripAndCompare(ndarray::makeVector(a1, a2, b1), ndarray::makeVector<ndarray::Size>(1, 1, 1, 3));
 }
 
 BOOST_AUTO_TEST_CASE(Nested) {
     using namespace lsst::afw::table::io;
 
     PTR(Comparable) c1(new ExampleC(1));
-    roundtripAndCompare(ndarray::makeVector(c1), ndarray::makeVector(1));
+    roundtripAndCompare(ndarray::makeVector(c1), ndarray::makeVector<ndarray::Size>(1));
 
     ndarray::Array<float,1,1> av2 = ndarray::allocate(2);
     av2[0] = 1.1;
@@ -406,7 +406,7 @@ BOOST_AUTO_TEST_CASE(Nested) {
     PTR(Comparable) c2(new ExampleC(2, a2, a2));
 
     std::vector< ndarray::Vector<PTR(Comparable),1> > r2
-        = roundtripAndCompare(ndarray::makeVector(c2), ndarray::makeVector(1,1));
+        = roundtripAndCompare(ndarray::makeVector(c2), ndarray::makeVector<ndarray::Size>(1,1));
     for (std::size_t i = 0; i < r2.size(); ++i) {
         PTR(ExampleC) c3 = std::dynamic_pointer_cast<ExampleC>(r2[i][0]);
         BOOST_REQUIRE(c3);
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(Nested) {
     }
 
     std::vector< ndarray::Vector<PTR(Comparable),2> > r3
-        = roundtripAndCompare(ndarray::makeVector(a2,c2), ndarray::makeVector(1,1));
+        = roundtripAndCompare(ndarray::makeVector(a2,c2), ndarray::makeVector<ndarray::Size>(1,1));
     for (std::size_t i = 0; i < r3.size(); ++i) {
         PTR(ExampleC) c3 = std::dynamic_pointer_cast<ExampleC>(r3[i][1]);
         BOOST_CHECK_EQUAL(c3->var3, c3->var3);

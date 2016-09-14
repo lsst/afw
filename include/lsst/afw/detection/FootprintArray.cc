@@ -136,7 +136,7 @@ ndarray::Array<typename std::remove_const<T>::type, N-1, N-1> flattenArray(
     ndarray::Array<T,N,C> const & src,
     geom::Point2I const & xy0
 ) {
-    ndarray::Vector<int,N-1> shape
+    ndarray::Vector<ndarray::Size,N-1> shape
         = ndarray::concatenate(fp.getArea(), src.getShape().template last<N-2>());
     ndarray::Array<typename std::remove_const<T>::type, N-1,N-1> dest = ndarray::allocate(shape);
     flattenArray(fp, src, dest, xy0);
@@ -206,7 +206,7 @@ ndarray::Array<typename std::remove_const<T>::type, N+1, N+1> expandArray(
     }
     ndarray::Array<typename std::remove_const<T>::type, N+1, N+1> dest = ndarray::allocate(
         ndarray::concatenate(
-            ndarray::makeVector(box.getHeight(), box.getWidth()),
+            ndarray::makeVector<ndarray::Size>(box.getHeight(), box.getWidth()),
             src.getShape().template last<N-1>()
         )
     );

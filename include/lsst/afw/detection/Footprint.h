@@ -149,8 +149,8 @@ public:
      * Return the number of pixels in this Footprint (the real number
      * of pixels, not the area of the bbox).
      */
-    int getNpix() const { return _area; }
-    int getArea() const { return _area; }
+    size_t getNpix() const { return _area; }
+    size_t getArea() const { return _area; }
 
     /**
      * Return the Footprint's centroid
@@ -352,7 +352,7 @@ private:
 
     static int id;
     mutable int _fid;                    //!< unique ID
-    int _area;                           //!< number of pixels in this Footprint (not the area of the bbox)
+    size_t _area;                           //!< number of pixels in this Footprint (not the area of the bbox)
 
     SpanList _spans;                     //!< the Spans contained in this Footprint
     geom::Box2I _bbox;                   //!< the Footprint's bounding box
