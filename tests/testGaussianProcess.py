@@ -397,6 +397,34 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         self.assertLess(worstMuErr, tol)
         self.assertLess(worstSigErr, tol)
 
+    def testKdTreeNeighborExceptions(self):
+        """
+        This test will test that KdTree throws exceptions when you ask it for
+        nonsensical number of nearest neighbors.
+        """
+        rng = np.random.RandomState(112)
+        data = rng.random_sample((10,10))
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+        pt = rng.random_sample(10).astype(float)
+        neighdex = np.zeros((5), dtype=np.int32)
+        distances = np.zeros((5), dtype=float)
+
+        # ask for a negative number of neighbors
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances, pt, -2)
+
+        # ask for zero neighbors
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances, pt, 0)
+
+        # ask for more neighbors than you have data
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances, pt, 11)
+
+        # run something that works
+        kd.findNeighbors(neighdex, distances, pt, 5)
+
     def testKdTree(self):
         """
         This test will test the construction of KdTree in the pathological case
