@@ -51,7 +51,7 @@ from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 from lsst.log import Log
 from testTableArchivesLib import DummyPsf
 
-Log.getLogger("afw.Mask").setLevel(Log.INFO)
+Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
 try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")

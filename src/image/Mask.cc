@@ -391,7 +391,7 @@ namespace {
  */
 template<typename MaskPixelT>
 void Mask<MaskPixelT>::_initializePlanes(MaskPlaneDict const& planeDefs) {
-    LOGL_DEBUG("afw.Mask", "Number of mask planes: %d", getNumPlanesMax());
+    LOGL_DEBUG("afw.image.Mask", "Number of mask planes: %d", getNumPlanesMax());
 
     _maskDict = detail::MaskDict::makeMaskDict(planeDefs);
 }

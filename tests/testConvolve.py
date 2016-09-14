@@ -49,7 +49,7 @@ import lsst.pex.exceptions as pexExcept
 from testKernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 from lsst.log import Log
 
-Log.getLogger("afw.Mask").setLevel(Log.INFO)
+Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
 try:
     display
