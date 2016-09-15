@@ -204,6 +204,16 @@ void KdTree < T > ::findNeighbors(ndarray::Array < int,1,1 >  neighdex,
 template  < typename T >
 T KdTree < T > ::getData(int ipt, int idim) const
 {
+    if(ipt >= _pts || ipt < 0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Asked for point that does not exist in KdTree\n");
+    }
+
+    if(idim >= _dimensions || idim < 0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "KdTree does not have points of that many dimensions\n");
+    }
+
     return _data[ipt][idim];
 }
 
