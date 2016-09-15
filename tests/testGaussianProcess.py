@@ -34,6 +34,317 @@ import lsst.pex.exceptions as pex
 testPath = os.path.abspath(os.path.dirname(__file__))
 
 
+class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
+
+    def testKdTreeGetData(self):
+        """
+        Test that KdTree.getData() throws exceptions when it should and returns
+        the correct data when it should.
+        """
+        rng = np.random.RandomState(112)
+        data = rng.random_sample((10,10))
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+
+        # test that an exception is thrown if you ask for a point with
+        # a negative index
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(-1, 0)
+
+        # test that an exception is thrown if you ask for a point beyond
+        # the number of points stored in the tree
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(10, 0)
+
+        # test that an exception is thrown if you ask for dimensions that
+        # don't exist
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(0, -1)
+
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(0, 10)
+
+        # test that the correct values are returned when they should be
+        for ix in range(10):
+            for iy in range(10):
+                self.assertAlmostEqual(data[ix][iy], kd.getData(ix, iy), places=10)
+
+    def testKdTreeGetDataVec(self):
+        """
+        Test that KdTree.getData(int) throws exceptions when it should and returns
+        the correct data when it should.
+        """
+        rng = np.random.RandomState(112)
+        data = rng.random_sample((10,10))
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+
+        # test that an exception is thrown if you ask for a point with
+        # a negative index
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(-1)
+
+        # test that an exception is thrown if you ask for a point beyond
+        # the number of points stored in the tree
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(10)
+
+        # test that the correct values are returned when they should be
+        for ix in range(10):
+            vv = kd.getData(ix)
+            for iy in range(10):
+                self.assertAlmostEqual(data[ix][iy], vv[iy], places=10)
+
+    def testKdTreeNeighborExceptions(self):
+        """
+        This test will test that KdTree throws exceptions when you ask it for
+        nonsensical number of nearest neighbors.
+        """
+        rng = np.random.RandomState(112)
+        data = rng.random_sample((10,10))
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+        pt = rng.random_sample(10).astype(float)
+        neighdex = np.zeros((5), dtype=np.int32)
+        distances = np.zeros((5), dtype=float)
+
+        # ask for a negative number of neighbors
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances, pt, -2)
+
+        # ask for zero neighbors
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances, pt, 0)
+
+        # ask for more neighbors than you have data
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances, pt, 11)
+
+        # try sending neighdex of wrong size
+        neighdex_bad = np.zeros((1), dtype=np.int32)
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex_bad, distances, pt, 5)
+
+        # try sending distances array of wrong size
+        distances_bad = np.zeros((1), dtype=float)
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances_bad, pt, 5)
+
+        # run something that works
+        kd.findNeighbors(neighdex, distances, pt, 5)
+
+    def testKdTree(self):
+        """
+        This test will test the construction of KdTree in the pathological case
+        where many of the input data points are identical.
+        """
+        pp = 100
+        dd = 5
+        data = np.zeros((pp, dd), dtype=float)
+        tol = 1.0e-10
+
+        f = open(os.path.join(testPath, "data", "kd_test_data.sav"))
+        ff = f.readlines()
+        f.close()
+        for i in range(len(ff)):
+            s = ff[i].split()
+            for j in range(dd):
+                data[i][j] = float(s[j])
+
+        kd = gp.KdTreeD()
+        try:
+            kd.Initialize(data)
+        except pex.Exception as e:
+            print(e.what())
+
+        kds = gp.KdTreeD()
+        try:
+            kds.Initialize(data)
+        except pex.Exception as e:
+            print(e.what())
+
+        try:
+            kds.removePoint(2)
+        except pex.Exception as e:
+            print(e.what())
+
+        worstErr = -1.0
+        for i in range(100):
+            if i > 2:
+                dd = 0.0
+                for j in range(5):
+                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
+                if dd > worstErr:
+                    worstErr = dd
+        self.assertLess(worstErr, tol)
+
+        try:
+            kd.removePoint(2)
+        except pex.Exception as e:
+            print(e.what())
+
+        try:
+            kds.removePoint(10)
+        except pex.Exception as e:
+            print(e.what())
+
+        for i in range(99):
+            if i > 10:
+                dd = 0.0
+                for j in range(5):
+                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
+                if dd > worstErr:
+                    worstErr = dd
+        self.assertLess(worstErr, tol)
+
+        try:
+            kd.removePoint(10)
+        except pex.Exception as e:
+            print(e.what())
+
+        try:
+            kds.removePoint(21)
+        except pex.Exception as e:
+            print(e.what())
+
+        for i in range(98):
+            if i > 21:
+                dd = 0.0
+                for j in range(5):
+                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
+                if dd > worstErr:
+                    worstErr = dd
+        self.assertLess(worstErr, tol)
+        print("\nworst distance error in kdTest ", worstErr, "\n")
+
+    def testKdTreeNeighbors(self):
+        """
+        Test that KdTree.findNeighbors() does find the nearest neighbors
+        """
+        rng = np.random.RandomState(112)
+        data = rng.random_sample((10,10))
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+        pt = rng.random_sample(10).astype(float)
+        neighdex = np.zeros((5), dtype=np.int32)
+        distances = np.zeros((5), dtype=float)
+        kd.findNeighbors(neighdex, distances, pt,5)
+
+        # check that the distances to the nearest neighbors are
+        # correctly reported
+        for ix in range(len(neighdex)):
+            dd_true = np.sqrt(np.power(pt - data[neighdex[ix]],2).sum())
+            self.assertAlmostEqual(dd_true, distances[ix], places=10)
+
+        # check that the distances are returned in ascending order
+        for ix in range(len(distances)-1):
+            self.assertGreaterEqual(distances[ix+1], distances[ix])
+
+        # check that the actual nearest neighbors were found
+        dd_true = np.sqrt(np.power(pt-data,2).sum(axis=1))
+        sorted_dexes = np.argsort(dd_true)
+        for ix in range(len(neighdex)):
+            self.assertEqual(neighdex[ix], sorted_dexes[ix])
+
+    def testKdTreeAddPoint(self):
+        """
+        Test the behavior of KdTree.addPoint
+        """
+        data = np.array([[1.0, 0.0, 2.0], [1.1, 2.5, 0.0], [4.5, 6.1, 0.0]])
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+
+        # test that, if you try to add an improperly-sized point, an exception is thrown
+        with self.assertRaises(RuntimeError):
+            kd.addPoint(np.array([1.1]*2))
+
+        with self.assertRaises(RuntimeError):
+            kd.addPoint(np.array([1.1]*4))
+
+        # test that adding a correctly sized-point works
+        # (i.e. that the new point is added to the tree's data)
+        kd.addPoint(np.array([1.1]*3))
+
+        self.assertEqual(kd.getPoints(), 4)
+        for ix in range(3):
+            for iy in range(3):
+                self.assertAlmostEqual(data[ix][iy], kd.getData(ix, iy), places=10)
+
+        for ix in range(3):
+            self.assertAlmostEqual(kd.getData(3, ix), 1.1, places=10)
+
+        # check that the new point is accounted for in findNeighbors()
+        neighdex = np.ones(2, dtype=np.int32)
+        distances = np.ones(2, dtype=float)
+        vv = np.array([1.2]*3)
+        kd.findNeighbors(neighdex, distances, vv, 2)
+        self.assertEqual(neighdex[0], 3)
+        self.assertEqual(neighdex[1], 0)
+
+    def testKdTreeRemovePoint(self):
+        """
+        Test the behavior of KdTree.removePoint()
+        """
+        data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+        self.assertEqual(kd.getPoints(), 4)
+
+        # test that an exception is raised if you try to remove a non-existent point
+        with self.assertRaises(RuntimeError) as context:
+            kd.removePoint(-1)
+
+        with self.assertRaises(RuntimeError) as context:
+            kd.removePoint(4)
+
+        # test that things work correctly when you do remove a point
+        kd.removePoint(1)
+        self.assertEqual(kd.getPoints(), 3)
+        for ix in range(3):
+            self.assertAlmostEqual(kd.getData(0, ix), 1.5, places=10)
+            self.assertAlmostEqual(kd.getData(1, ix), 4.0, places=10)
+            self.assertAlmostEqual(kd.getData(2, ix), 3.0, places=10)
+
+        neighdex = np.zeros(2, dtype=np.int32)
+        distances = np.zeros(2, dtype=float)
+        kd.findNeighbors(neighdex, distances, np.array([2.0, 2.0, 2.0]), 2)
+        self.assertEqual(neighdex[0], 0)
+        self.assertEqual(neighdex[1], 2)
+
+        # test that an exception is raised when you try to remove the last point
+        kd.removePoint(0)
+        kd.removePoint(0)
+        with self.assertRaises(RuntimeError) as context:
+            kd.removePoint(0)
+
+    def testKdTreeGetTreeNode(self):
+        """
+        Test that KdTree.GetTreeNode raises exceptions if you give it bad inputs
+        """
+        data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+
+        vv = np.ones(4, dtype=np.int32)
+        vv_small = np.ones(1, dtype=np.int32)
+        vv_large = np.ones(5, dtype=np.int32)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv_small, 0)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv_large, 0)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv, -1)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv, 4)
+
+        # make sure that a call with good inputs passes
+        kd.getTreeNode(vv, 0)
+
+
 class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
     def testTooManyNeighbors(self):
@@ -50,15 +361,15 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         mu_arr = np.empty(1)
 
         with self.assertRaises(pex.Exception):
-            gg.interpolate(sigma, test, 2*nData)
+             gg.interpolate(sigma, test, 2*nData)
         with self.assertRaises(pex.Exception):
-            gg.interpolate(sigma, test, -5)
+             gg.interpolate(sigma, test, -5)
         with self.assertRaises(pex.Exception):
-            gg.selfInterpolate(sigma, 0, 2*nData)
+             gg.selfInterpolate(sigma, 0, 2*nData)
         with self.assertRaises(pex.Exception):
-            gg.selfInterpolate(sigma, 0, -5)
+             gg.selfInterpolate(sigma, 0, -5)
         with self.assertRaises(pex.Exception):
-            gg.selfInterpolate(sigma, -1, nData-1)
+             gg.selfInterpolate(sigma, -1, nData-1)
         # the following segfaults, for unknown reasons, so run directly instead
         # self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
         try:
@@ -67,9 +378,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         except pex.Exception:
             pass
         with self.assertRaises(pex.Exception):
-            gg.interpolate(mu_arr, sigma, 2*nData)
+             gg.interpolate(mu_arr, sigma, 2*nData)
         with self.assertRaises(pex.Exception):
-            gg.interpolate(mu_arr, sigma, -5)
+             gg.interpolate(mu_arr, sigma, -5)
 
     def testInterpolate(self):
         """
@@ -117,7 +428,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setLambda(0.001)
 
         # now, read in the test points and their corresponding known solutions
-        f = open(os.path.join(testPath, "data", "gp_exp_covar_solutions.sav"))
+        f = open(os.path.join(testPath,"data", "gp_exp_covar_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -170,7 +481,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setCovariogram(nn)
         gg.setLambda(0.0045)
 
-        f = open(os.path.join(testPath, "data", "gp_nn_solutions.sav"))
+        f = open(os.path.join(testPath,"data", "gp_nn_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -396,315 +707,6 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         self.assertLess(worstMuErr, tol)
         self.assertLess(worstSigErr, tol)
-
-    def testKdTreeGetData(self):
-        """
-        Test that KdTree.getData() throws exceptions when it should and returns
-        the correct data when it should.
-        """
-        rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
-        kd.Initialize(data)
-
-        # test that an exception is thrown if you ask for a point with
-        # a negative index
-        with self.assertRaises(RuntimeError) as context:
-            kd.getData(-1, 0)
-
-        # test that an exception is thrown if you ask for a point beyond
-        # the number of points stored in the tree
-        with self.assertRaises(RuntimeError) as context:
-            kd.getData(10, 0)
-
-        # test that an exception is thrown if you ask for dimensions that
-        # don't exist
-        with self.assertRaises(RuntimeError) as context:
-            kd.getData(0, -1)
-
-        with self.assertRaises(RuntimeError) as context:
-            kd.getData(0, 10)
-
-        # test that the correct values are returned when they should be
-        for ix in range(10):
-            for iy in range(10):
-                self.assertAlmostEqual(data[ix][iy], kd.getData(ix, iy), places=10)
-
-    def testKdTreeGetDataVec(self):
-        """
-        Test that KdTree.getData(int) throws exceptions when it should and returns
-        the correct data when it should.
-        """
-        rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
-        kd.Initialize(data)
-
-        # test that an exception is thrown if you ask for a point with
-        # a negative index
-        with self.assertRaises(RuntimeError) as context:
-            kd.getData(-1)
-
-        # test that an exception is thrown if you ask for a point beyond
-        # the number of points stored in the tree
-        with self.assertRaises(RuntimeError) as context:
-            kd.getData(10)
-
-        # test that the correct values are returned when they should be
-        for ix in range(10):
-            vv = kd.getData(ix)
-            for iy in range(10):
-                self.assertAlmostEqual(data[ix][iy], vv[iy], places=10)
-
-    def testKdTreeNeighborExceptions(self):
-        """
-        This test will test that KdTree throws exceptions when you ask it for
-        nonsensical number of nearest neighbors.
-        """
-        rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
-        kd.Initialize(data)
-        pt = rng.random_sample(10).astype(float)
-        neighdex = np.zeros((5), dtype=np.int32)
-        distances = np.zeros((5), dtype=float)
-
-        # ask for a negative number of neighbors
-        with self.assertRaises(RuntimeError) as context:
-            kd.findNeighbors(neighdex, distances, pt, -2)
-
-        # ask for zero neighbors
-        with self.assertRaises(RuntimeError) as context:
-            kd.findNeighbors(neighdex, distances, pt, 0)
-
-        # ask for more neighbors than you have data
-        with self.assertRaises(RuntimeError) as context:
-            kd.findNeighbors(neighdex, distances, pt, 11)
-
-        # try sending neighdex of wrong size
-        neighdex_bad = np.zeros((1), dtype=np.int32)
-        with self.assertRaises(RuntimeError) as context:
-            kd.findNeighbors(neighdex_bad, distances, pt, 5)
-
-        # try sending distances array of wrong size
-        distances_bad = np.zeros((1), dtype=float)
-        with self.assertRaises(RuntimeError) as context:
-            kd.findNeighbors(neighdex, distances_bad, pt, 5)
-
-        # run something that works
-        kd.findNeighbors(neighdex, distances, pt, 5)
-
-    def testKdTree(self):
-        """
-        This test will test the construction of KdTree in the pathological case
-        where many of the input data points are identical.
-        """
-        pp = 100
-        dd = 5
-        data = np.zeros((pp, dd), dtype=float)
-        tol = 1.0e-10
-
-        f = open(os.path.join(testPath, "data", "kd_test_data.sav"))
-        ff = f.readlines()
-        f.close()
-        for i in range(len(ff)):
-            s = ff[i].split()
-            for j in range(dd):
-                data[i][j] = float(s[j])
-
-        kd = gp.KdTreeD()
-        try:
-            kd.Initialize(data)
-        except pex.Exception as e:
-            print(e.what())
-
-        kds = gp.KdTreeD()
-
-        try:
-            kds.Initialize(data)
-        except pex.Exception as e:
-            print(e.what())
-
-        try:
-            kds.removePoint(2)
-        except pex.Exception as e:
-            print(e.what())
-
-        worstErr = -1.0
-        for i in range(100):
-            if i > 2:
-                dd = 0.0
-                for j in range(5):
-                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
-                if dd > worstErr:
-                    worstErr = dd
-        self.assertLess(worstErr, tol)
-
-        try:
-            kd.removePoint(2)
-        except pex.Exception as e:
-            print(e.what())
-
-        try:
-            kds.removePoint(10)
-        except pex.Exception as e:
-            print(e.what())
-
-        for i in range(99):
-            if i > 10:
-                dd = 0.0
-                for j in range(5):
-                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
-                if dd > worstErr:
-                    worstErr = dd
-        self.assertLess(worstErr, tol)
-
-        try:
-            kd.removePoint(10)
-        except pex.Exception as e:
-            print(e.what())
-
-        try:
-            kds.removePoint(21)
-        except pex.Exception as e:
-            print(e.what())
-
-        for i in range(98):
-            if i > 21:
-                dd = 0.0
-                for j in range(5):
-                    dd = dd+(kd.getData(i, j)-kds.getData(i-1, j))*(kd.getData(i, j)-kds.getData(i-1, j))
-                if dd > worstErr:
-                    worstErr = dd
-        self.assertLess(worstErr, tol)
-        print("\nworst distance error in kdTest ", worstErr, "\n")
-
-    def testKdTreeNeighbors(self):
-        """
-        Test that KdTree.findNeighbors() does find the nearest neighbors
-        """
-        rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
-        kd.Initialize(data)
-        pt = rng.random_sample(10).astype(float)
-        neighdex = np.zeros((5), dtype=np.int32)
-        distances = np.zeros((5), dtype=float)
-        kd.findNeighbors(neighdex, distances, pt,5)
-
-        # check that the distances to the nearest neighbors are
-        # correctly reported
-        for ix in range(len(neighdex)):
-            dd_true = np.sqrt(np.power(pt - data[neighdex[ix]],2).sum())
-            self.assertAlmostEqual(dd_true, distances[ix], places=10)
-
-        # check that the distances are returned in ascending order
-        for ix in range(len(distances)-1):
-            self.assertGreaterEqual(distances[ix+1], distances[ix])
-
-        # check that the actual nearest neighbors were found
-        dd_true = np.sqrt(np.power(pt-data,2).sum(axis=1))
-        sorted_dexes = np.argsort(dd_true)
-        for ix in range(len(neighdex)):
-            self.assertEqual(neighdex[ix], sorted_dexes[ix])
-
-    def testKdTreeAddPoint(self):
-        """
-        Test the behavior of KdTree.addPoint
-        """
-        data = np.array([[1.0, 0.0, 2.0], [1.1, 2.5, 0.0], [4.5, 6.1, 0.0]])
-        kd = gp.KdTreeD()
-        kd.Initialize(data)
-
-        # test that, if you try to add an improperly-sized point, an exception is thrown
-        with self.assertRaises(RuntimeError):
-            kd.addPoint(np.array([1.1]*2))
-
-        with self.assertRaises(RuntimeError):
-            kd.addPoint(np.array([1.1]*4))
-
-        # test that adding a correctly sized-point works
-        # (i.e. that the new point is added to the tree's data)
-        kd.addPoint(np.array([1.1]*3))
-
-        self.assertEqual(kd.getPoints(), 4)
-        for ix in range(3):
-            for iy in range(3):
-                self.assertAlmostEqual(data[ix][iy], kd.getData(ix, iy), places=10)
-
-        for ix in range(3):
-            self.assertAlmostEqual(kd.getData(3, ix), 1.1, places=10)
-
-        # check that the new point is accounted for in findNeighbors()
-        neighdex = np.ones(2, dtype=np.int32)
-        distances = np.ones(2, dtype=float)
-        vv = np.array([1.2]*3)
-        kd.findNeighbors(neighdex, distances, vv, 2)
-        self.assertEqual(neighdex[0], 3)
-        self.assertEqual(neighdex[1], 0)
-
-    def testKdTreeRemovePoint(self):
-        """
-        Test the behavior of KdTree.removePoint()
-        """
-        data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
-        kd = gp.KdTreeD()
-        kd.Initialize(data)
-        self.assertEqual(kd.getPoints(), 4)
-
-        # test that an exception is raised if you try to remove a non-existent point
-        with self.assertRaises(RuntimeError) as context:
-            kd.removePoint(-1)
-
-        with self.assertRaises(RuntimeError) as context:
-            kd.removePoint(4)
-
-        # test that things work correctly when you do remove a point
-        kd.removePoint(1)
-        self.assertEqual(kd.getPoints(), 3)
-        for ix in range(3):
-            self.assertAlmostEqual(kd.getData(0, ix), 1.5, places=10)
-            self.assertAlmostEqual(kd.getData(1, ix), 4.0, places=10)
-            self.assertAlmostEqual(kd.getData(2, ix), 3.0, places=10)
-
-        neighdex = np.zeros(2, dtype=np.int32)
-        distances = np.zeros(2, dtype=float)
-        kd.findNeighbors(neighdex, distances, np.array([2.0, 2.0, 2.0]), 2)
-        self.assertEqual(neighdex[0], 0)
-        self.assertEqual(neighdex[1], 2)
-
-        # test that an exception is raised when you try to remove the last point
-        kd.removePoint(0)
-        kd.removePoint(0)
-        with self.assertRaises(RuntimeError) as context:
-            kd.removePoint(0)
-
-    def testKdTreeGetTreeNode(self):
-        """
-        Test that KdTree.GetTreeNode raises exceptions if you give it bad inputs
-        """
-        data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
-        kd = gp.KdTreeD()
-        kd.Initialize(data)
-
-        vv = np.ones(4, dtype=np.int32)
-        vv_small = np.ones(1, dtype=np.int32)
-        vv_large = np.ones(5, dtype=np.int32)
-
-        with self.assertRaises(RuntimeError):
-            kd.getTreeNode(vv_small, 0)
-
-        with self.assertRaises(RuntimeError):
-            kd.getTreeNode(vv_large, 0)
-
-        with self.assertRaises(RuntimeError):
-            kd.getTreeNode(vv, -1)
-
-        with self.assertRaises(RuntimeError):
-            kd.getTreeNode(vv, 4)
-
-        # make sure that a call with good inputs passes
-        kd.getTreeNode(vv, 0)
 
     def testBatch(self):
         """
