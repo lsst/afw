@@ -232,6 +232,11 @@ template  < typename T >
 void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
 {
 
+    if(v.getNumElements() != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You are trying to add a point of the incorrect dimensionality to KdTree\n");
+    }
+
     int i,j,node,dim,dir;
 
     node = _findNode(v);
