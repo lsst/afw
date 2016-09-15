@@ -163,6 +163,16 @@ void KdTree < T > ::findNeighbors(ndarray::Array < int,1,1 >  neighdex,
                           "Asked for zero or a negative number of neighbors\n");
     }
 
+    if(neighdex.getNumElements() != n_nn){
+       throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                         "Size of neighdex does not equal n_nn in KdTree.findNeighbors\n");
+    }
+
+    if(dd.getNumElements() != n_nn){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Size of dd does not equal n_nn in KdTree.findNeighbors\n");
+    }
+
     int i,start;
 
     _neighborCandidates = allocate(ndarray::makeVector(n_nn));

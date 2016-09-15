@@ -422,6 +422,16 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             kd.findNeighbors(neighdex, distances, pt, 11)
 
+        # try sending neighdex of wrong size
+        neighdex_bad = np.zeros((1), dtype=np.int32)
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex_bad, distances, pt, 5)
+
+        # try sending distances array of wrong size
+        distances_bad = np.zeros((1), dtype=float)
+        with self.assertRaises(RuntimeError) as context:
+            kd.findNeighbors(neighdex, distances_bad, pt, 5)
+
         # run something that works
         kd.findNeighbors(neighdex, distances, pt, 5)
 
