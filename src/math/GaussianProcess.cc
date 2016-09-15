@@ -319,6 +319,11 @@ void KdTree < T > ::getTreeNode(ndarray::Array < int,1,1 >  const &v,
 template  < typename T >
 int KdTree < T > ::_testTree() const{
 
+    if(_pts == 1 && _tree[0][PARENT] < 0 && _masterParent==0){
+        // there is only one point in the tree
+        return 1;
+    }
+
     int i,j,output;
     std::vector < int >  isparent;
 
