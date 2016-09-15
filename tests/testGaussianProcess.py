@@ -679,6 +679,33 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             kd.removePoint(0)
 
+    def testKdTreeGetTreeNode(self):
+        """
+        Test that KdTree.GetTreeNode raises exceptions if you give it bad inputs
+        """
+        data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+
+        vv = np.ones(4, dtype=np.int32)
+        vv_small = np.ones(1, dtype=np.int32)
+        vv_large = np.ones(5, dtype=np.int32)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv_small, 0)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv_large, 0)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv, -1)
+
+        with self.assertRaises(RuntimeError):
+            kd.getTreeNode(vv, 4)
+
+        # make sure that a call with good inputs passes
+        kd.getTreeNode(vv, 0)
+
     def testBatch(self):
         """
         This test will test GaussianProcess.batchInterpolate both with
