@@ -13,6 +13,7 @@ setupRequired(gsl)
 setupRequired(fftw)
 setupRequired(utils)
 setupRequired(astropy)
+setupRequired(python_future)
 setupOptional(pyfits)
 setupOptional(matplotlib)
 
