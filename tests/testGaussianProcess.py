@@ -430,6 +430,32 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             for iy in range(10):
                 self.assertAlmostEqual(data[ix][iy], kd.getData(ix, iy), places=10)
 
+    def testKdTreeGetDataVec(self):
+        """
+        Test that KdTree.getData(int) throws exceptions when it should and returns
+        the correct data when it should.
+        """
+        rng = np.random.RandomState(112)
+        data = rng.random_sample((10,10))
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+
+        # test that an exception is thrown if you ask for a point with
+        # a negative index
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(-1)
+
+        # test that an exception is thrown if you ask for a point beyond
+        # the number of points stored in the tree
+        with self.assertRaises(RuntimeError) as context:
+            kd.getData(10)
+
+        # test that the correct values are returned when they should be
+        for ix in range(10):
+            vv = kd.getData(ix)
+            for iy in range(10):
+                self.assertAlmostEqual(data[ix][iy], vv[iy], places=10)
+
     def testKdTreeNeighborExceptions(self):
         """
         This test will test that KdTree throws exceptions when you ask it for
