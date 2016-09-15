@@ -625,6 +625,11 @@ void KdTree < T > ::removePoint(int target)
                           "You are trying to remove a point that doesn't exist from KdTree\n");
     }
 
+    if(_pts==1){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "There is only one point left in this KdTree.  You cannot call removePoint\n");
+    }
+
     int nl,nr,i,j,k,side;
     int root;
 

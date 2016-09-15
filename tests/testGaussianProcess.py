@@ -673,6 +673,12 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(neighdex[0], 0)
         self.assertEqual(neighdex[1], 2)
 
+        # test that an exception is raised when you try to remove the last point
+        kd.removePoint(0)
+        kd.removePoint(0)
+        with self.assertRaises(RuntimeError) as context:
+            kd.removePoint(0)
+
     def testBatch(self):
         """
         This test will test GaussianProcess.batchInterpolate both with
