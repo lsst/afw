@@ -220,6 +220,11 @@ T KdTree < T > ::getData(int ipt, int idim) const
 template  < typename T >
 ndarray::Array < T,1,1 >  KdTree < T > ::getData(int ipt) const
 {
+    if(ipt >= _pts || ipt<0){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Asked for point that does not exist in KdTree\n");
+    }
+
     return _data[ipt];
 }
 
