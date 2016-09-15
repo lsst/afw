@@ -310,6 +310,16 @@ template  < typename T >
 void KdTree < T > ::getTreeNode(ndarray::Array < int,1,1 >  const &v,
                                 int dex) const
 {
+    if(dex < 0 || dex >= _pts){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Asked for tree information on point that does not exist\n");
+    }
+
+    if(v.getNumElements() != 4){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Need to pass a 4-element ndarray into KdTree.getTreeNode()\n");
+    }
+
     v[0] = _tree[dex][DIMENSION];
     v[1] = _tree[dex][LT];
     v[2] = _tree[dex][GEQ];
