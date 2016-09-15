@@ -520,6 +520,35 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         self.assertLess(worstErr, tol)
         print("\nworst distance error in kdTest ", worstErr, "\n")
 
+    def testKdTreeNeighbors(self):
+        """
+        Test that KdTree.findNeighbors() does find the nearest neighbors
+        """
+        rng = np.random.RandomState(112)
+        data = rng.random_sample((10,10))
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+        pt = rng.random_sample(10).astype(float)
+        neighdex = np.zeros((5), dtype=np.int32)
+        distances = np.zeros((5), dtype=float)
+        kd.findNeighbors(neighdex, distances, pt,5)
+
+        # check that the distances to the nearest neighbors are
+        # correctly reported
+        for ix in range(len(neighdex)):
+            dd_true = np.sqrt(np.power(pt - data[neighdex[ix]],2).sum())
+            self.assertAlmostEqual(dd_true, distances[ix], places=10)
+
+        # check that the distances are returned in ascending order
+        for ix in range(len(distances)-1):
+            self.assertGreaterEqual(distances[ix+1], distances[ix])
+
+        # check that the actual nearest neighbors were found
+        dd_true = np.sqrt(np.power(pt-data,2).sum(axis=1))
+        sorted_dexes = np.argsort(dd_true)
+        for ix in range(len(neighdex)):
+            self.assertEqual(neighdex[ix], sorted_dexes[ix])
+
     def testBatch(self):
         """
         This test will test GaussianProcess.batchInterpolate both with
