@@ -643,6 +643,36 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(neighdex[0], 3)
         self.assertEqual(neighdex[1], 0)
 
+    def testKdTreeRemovePoint(self):
+        """
+        Test the behavior of KdTree.removePoint()
+        """
+        data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+        self.assertEqual(kd.getPoints(), 4)
+
+        # test that an exception is raised if you try to remove a non-existent point
+        with self.assertRaises(RuntimeError) as context:
+            kd.removePoint(-1)
+
+        with self.assertRaises(RuntimeError) as context:
+            kd.removePoint(4)
+
+        # test that things work correctly when you do remove a point
+        kd.removePoint(1)
+        self.assertEqual(kd.getPoints(), 3)
+        for ix in range(3):
+            self.assertAlmostEqual(kd.getData(0, ix), 1.5, places=10)
+            self.assertAlmostEqual(kd.getData(1, ix), 4.0, places=10)
+            self.assertAlmostEqual(kd.getData(2, ix), 3.0, places=10)
+
+        neighdex = np.zeros(2, dtype=np.int32)
+        distances = np.zeros(2, dtype=float)
+        kd.findNeighbors(neighdex, distances, np.array([2.0, 2.0, 2.0]), 2)
+        self.assertEqual(neighdex[0], 0)
+        self.assertEqual(neighdex[1], 2)
+
     def testBatch(self):
         """
         This test will test GaussianProcess.batchInterpolate both with
