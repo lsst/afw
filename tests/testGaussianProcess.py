@@ -608,6 +608,41 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         for ix in range(len(neighdex)):
             self.assertEqual(neighdex[ix], sorted_dexes[ix])
 
+    def testKdTreeAddPoint(self):
+        """
+        Test the behavior of KdTree.addPoint
+        """
+        data = np.array([[1.0, 0.0, 2.0], [1.1, 2.5, 0.0], [4.5, 6.1, 0.0]])
+        kd = gp.KdTreeD()
+        kd.Initialize(data)
+
+        # test that, if you try to add an improperly-sized point, an exception is thrown
+        with self.assertRaises(RuntimeError):
+            kd.addPoint(np.array([1.1]*2))
+
+        with self.assertRaises(RuntimeError):
+            kd.addPoint(np.array([1.1]*4))
+
+        # test that adding a correctly sized-point works
+        # (i.e. that the new point is added to the tree's data)
+        kd.addPoint(np.array([1.1]*3))
+
+        self.assertEqual(kd.getPoints(), 4)
+        for ix in range(3):
+            for iy in range(3):
+                self.assertAlmostEqual(data[ix][iy], kd.getData(ix, iy), places=10)
+
+        for ix in range(3):
+            self.assertAlmostEqual(kd.getData(3, ix), 1.1, places=10)
+
+        # check that the new point is accounted for in findNeighbors()
+        neighdex = np.ones(2, dtype=np.int32)
+        distances = np.ones(2, dtype=float)
+        vv = np.array([1.2]*3)
+        kd.findNeighbors(neighdex, distances, vv, 2)
+        self.assertEqual(neighdex[0], 3)
+        self.assertEqual(neighdex[1], 0)
+
     def testBatch(self):
         """
         This test will test GaussianProcess.batchInterpolate both with
