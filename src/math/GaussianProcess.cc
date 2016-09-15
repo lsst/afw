@@ -615,6 +615,11 @@ template  < typename T >
 void KdTree < T > ::removePoint(int target)
 {
 
+    if(target < 0 || target >= _pts){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You are trying to remove a point that doesn't exist from KdTree\n");
+    }
+
     int nl,nr,i,j,k,side;
     int root;
 
