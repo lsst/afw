@@ -99,6 +99,8 @@ public:
 
     virtual CoordSystem getCoordSystem() const { return UNKNOWN; }
 
+    virtual std::string toString() const;
+
     // These are inline functions and are defined at the end of this header file
     lsst::afw::geom::Angle operator[](int const index) const;
     bool operator==(Coord const &rhs) const;
@@ -169,6 +171,8 @@ public:
 
     virtual CoordSystem getCoordSystem() const { return ICRS; }
     
+    virtual std::string toString() const;
+
     virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude);
     
     lsst::afw::geom::Angle getRa() const         { return getLongitude(); }   
@@ -250,6 +254,8 @@ public:
     virtual std::string getClassName() const { return "GalacticCoord"; }
 
     virtual CoordSystem getCoordSystem() const { return GALACTIC; }
+
+    virtual std::string toString() const;
 
     virtual void reset(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude);
     
@@ -345,6 +351,8 @@ public:
     virtual std::string getClassName() const { return "TopocentricCoord"; }
 
     virtual CoordSystem getCoordSystem() const { return TOPOCENTRIC; }
+
+    virtual std::string toString() const;
 
     Observatory getObservatory() const { return _obs; }
 

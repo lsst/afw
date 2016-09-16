@@ -60,10 +60,10 @@ class CoordTestCase(utilsTests.TestCase):
 
         # a handy list of coords we want to test
         self.coordList = [
-            [afwCoord.Fk5Coord,      afwCoord.FK5,      afwCoord.cast_Fk5,      "FK5"],
-            [afwCoord.IcrsCoord,     afwCoord.ICRS,     afwCoord.cast_Icrs,     "ICRS"],
-            [afwCoord.GalacticCoord, afwCoord.GALACTIC, afwCoord.cast_Galactic, "GALACTIC"],
-            [afwCoord.EclipticCoord, afwCoord.ECLIPTIC, afwCoord.cast_Ecliptic, "ECLIPTIC"],
+            [afwCoord.Fk5Coord,      afwCoord.FK5,      "FK5"],
+            [afwCoord.IcrsCoord,     afwCoord.ICRS,     "ICRS"],
+            [afwCoord.GalacticCoord, afwCoord.GALACTIC, "GALACTIC"],
+            [afwCoord.EclipticCoord, afwCoord.ECLIPTIC, "ECLIPTIC"],
             # we can't factory an Topocentric ... Observatory must be specified.
             # [afwCoord.TopocentricCoord, afwCoord.TOPOCENTRIC]  
             ]
@@ -78,7 +78,7 @@ class CoordTestCase(utilsTests.TestCase):
         if includeCoord:
             yield afwCoord.Coord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
 
-        for coordClass, enum, cast, stringName in self.coordList:
+        for coordClass, enum, stringName in self.coordList:
             yield coordClass(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
 
         obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0) # peyton
@@ -105,6 +105,7 @@ class CoordTestCase(utilsTests.TestCase):
         self.assertEqual(equ.getRaStr(afwGeom.hours), self.ra)
 
 
+    @unittest.skip("Casts not needed since pybind11 automatically gives the most derived type")
     def testFactory(self):
         """Test the Factory function makeCoord()"""
 
@@ -177,6 +178,7 @@ class CoordTestCase(utilsTests.TestCase):
             className = type(coord).__name__
             coordStr = str(coord)
             coordRepr = repr(coord)
+
             self.assertEqual(coordStr, str(coord.clone()))
             self.assertEqual(coordRepr, repr(coord.clone()))
             self.assertTrue(coordStr.startswith("%s(" % (className,)))
@@ -188,6 +190,7 @@ class CoordTestCase(utilsTests.TestCase):
                 "GalacticCoord": 2,     # long, lat
                 "TopocentricCoord": 5,  # long, lat, epoch, Observatory (which has 3 arguments)
             }.get(className, 3)         # default to long, lat, epoch
+
             self.assertEqual(len(coordStr.split(",")), numArgs)
             self.assertEqual(len(coordRepr.split(",")), numArgs)
         
