@@ -61,6 +61,7 @@ public:
 
     std::string getLatitudeStr() const;
     std::string getLongitudeStr() const;
+    std::string toString() const;
 
     bool operator==(Observatory const& rhs) const {
         return

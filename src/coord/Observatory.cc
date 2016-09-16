@@ -153,16 +153,24 @@ std::string coord::Observatory::getLatitudeStr() const {
 }
 
 /**
+ * @brief Get string representation
+ */
+std::string coord::Observatory::toString() const {
+    return (boost::format("%gW, %gN  %g")
+            % getLatitude().asDegrees()
+            % getLongitude().asDegrees()
+            % getElevation()).str();
+}
+
+/**
  * Print an Observatory to the stream
  */
 std::ostream & coord::operator<<(std::ostream &os,             ///< Stream to print to
                                  coord::Observatory const& obs ///< the Observatory to print
                                 )
 {
-    return os << (boost::format("%gW, %gN  %g")
-                  % obs.getLatitude().asDegrees()
-                  % obs.getLongitude().asDegrees()
-                  % obs.getElevation()).str();
+    os << obs.toString();
+    return os;
 }
 
 /************************************************************************************************************/
