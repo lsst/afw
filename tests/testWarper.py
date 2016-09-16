@@ -33,13 +33,14 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 import lsst.afw.math as afwMath
-import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
+from lsst.log import Log
 
-VERBOSITY = 0                       # increase to see trace
-
-pexLog.Debug("lsst.afw.math", VERBOSITY)
+# Change the level to Log.DEBUG to see debug messages
+Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
+Log.getLogger("TRACE3.afw.math.warp").setLevel(Log.INFO)
+Log.getLogger("TRACE4.afw.math.warp").setLevel(Log.INFO)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")

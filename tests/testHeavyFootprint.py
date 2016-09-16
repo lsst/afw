@@ -39,17 +39,13 @@ import numpy as np
 import os
 import unittest
 import lsst.utils.tests
-import lsst.pex.logging as logging
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
+from lsst.log import Log
 
-try:
-    type(verbose)
-except NameError:
-    verbose = 0
-    logging.Debug("afwDetect.Footprint", verbose)
+Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
 try:
     type(display)

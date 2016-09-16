@@ -37,7 +37,7 @@
 #include "lsst/afw/formatters/Utils.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Log.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/geom/AffineTransform.h"
 #include "lsst/afw/image/TanWcs.h"
 #include "lsst/afw/table/io/OutputArchive.h"
@@ -110,8 +110,7 @@ TanWcs::TanWcs(CONST_PTR(daf::base::PropertySet) const& fitsMetadata) :
     }
 
     if (isTpv) {
-        pex::logging::Log log = pex::logging::Log(pex::logging::Log::getDefaultLog(), "lsst.afw.wcs");
-        log.log(-1, "Ignoring TPV terms");
+        LOGL_DEBUG("afw.wcs", "Ignoring TPV terms");
     }
 
     switch (nSip) {

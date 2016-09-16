@@ -24,7 +24,7 @@
 
 #include <memory>
 #include "Eigen/Core"
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image/Wcs.h"
 #include "lsst/afw/image/TanWcs.h"
 
@@ -62,12 +62,9 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
     //
     // Follow Dave's AST and switch TAN to TPV
     //
-    using pex::logging::Log;
-    auto log = Log(Log::getDefaultLog(), "makeWcs");
-
     if (ctype1.substr(5, 3) == "TAN" &&
         (metadata->exists("PV1_5") || metadata->exists("PV2_1"))) {
-        log.log(Log::INFO, str(boost::format("Interpreting %s/%s + PVi_j as TPV") % ctype1 % ctype2));
+        LOGL_INFO("makeWcs", "Interpreting %s/%s + PVi_j as TPV", ctype1.c_str(), ctype2.c_str());
 
         if (!modifyable) {
             metadata = _metadata->deepCopy();
@@ -90,7 +87,7 @@ afwImg::Wcs::Ptr afwImg::makeWcs(
             modifyable = true;
         }
 
-        log.log(Log::WARN, str(boost::format("Stripping PVi_j keys from projection %s/%s") % ctype1 % ctype2));
+        LOGL_WARN("makeWcs", "Stripping PVi_j keys from projection %s/%s", ctype1.c_str(), ctype2.c_str());
 
         metadata->set<std::string>("CTYPE1", "RA---TAN");
         metadata->set<std::string>("CTYPE2", "DEC--TAN");

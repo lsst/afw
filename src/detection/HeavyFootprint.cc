@@ -31,7 +31,6 @@
 #include <typeinfo>
 #include <algorithm>
 #include "boost/format.hpp"
-#include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/image/MaskedImage.h"

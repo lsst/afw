@@ -25,9 +25,9 @@ from builtins import input
 import sys
 import matplotlib.pyplot as plt
 
-import lsst.pex.logging as pexLog
 import lsst.daf.persistence as dafPersist
 import lsst.afw.cameraGeom.utils as cameraGeomUtils
+from lsst.log import Log
 
 if __name__ == '__main__':
     import argparse
@@ -64,8 +64,8 @@ if __name__ == '__main__':
     #
     # Control verbosity from butler
     #
-    log = pexLog.Log.getDefaultLog()
-    log.setThresholdFor("CameraMapper", pexLog.Log.FATAL)
+    log = Log.getLogger("CameraMapper")
+    log.setLevel(Log.FATAL)
     #
     # And finally find the camera
     #

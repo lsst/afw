@@ -43,7 +43,7 @@
 #include "lsst/utils/Utils.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math.h"
@@ -57,7 +57,6 @@ int const defaultInterpLen = 20;
 typedef int TestResult;
 
 using namespace std;
-using lsst::pex::logging::Trace;
 namespace pexEx = lsst::pex::exceptions;
 namespace afwImage = lsst::afw::image;
 namespace afwMath  = lsst::afw::math;
@@ -367,9 +366,6 @@ bool GpuTestAccuracy(
     const afwImage::MaskedImage<float>&   inImgFltFull
 )
 {
-    lsst::pex::logging::Trace::setDestination(std::cout);
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
-
     afwGeom::Box2I inputBBox(afwGeom::Point2I(11, 19), afwGeom::Extent2I(40, 61));
 
     const afwImage::MaskedImage<double>  inMIDbl(inImgDblFull, inputBBox,afwImage::LOCAL, true);
@@ -404,8 +400,6 @@ bool GpuTestAccuracy(
 
 bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 {
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
-
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;
@@ -552,8 +546,6 @@ bool GpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 
 bool CpuTestExceptions(const afwImage::MaskedImage<double>& inImg)
 {
-    lsst::pex::logging::Trace::setVerbosity("lsst.afw.kernel", 5);
-
     afwImage::MaskedImage<double> resImg(inImg.getDimensions());
 
     bool isSuccess = true;
@@ -722,6 +714,9 @@ TestResult TestCpu(int argc, char**argv)
 
 int main(int argc, char **argv)
 {
+    LOG_CONFIG();
+    LOG_SET_LVL("", LOG_LVL_INFO);
+
     int status = EXIT_SUCCESS;
 
     PrintSeparator();

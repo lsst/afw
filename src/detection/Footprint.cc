@@ -32,7 +32,6 @@
 #include <algorithm>
 #include <cmath>
 #include "boost/format.hpp"
-#include "lsst/pex/logging/Trace.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/image/Mask.h"
 #include "lsst/afw/math/Kernel.h"

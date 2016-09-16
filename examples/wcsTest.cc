@@ -38,8 +38,8 @@
 #include <memory>
 
 #include "lsst/utils/Utils.h"
+#include "lsst/log/Log.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h" // turn off by recompiling with 'LSST_NO_TRACE 0'
 #include "lsst/afw/image.h"
 
 /**
@@ -54,6 +54,7 @@ using lsst::daf::base::PropertySet;
 
 int main(int argc, char **argv) {
     typedef double Pixel;
+    LOG_CONFIG();
 
     std::string inImagePath;
     if (argc < 2) {

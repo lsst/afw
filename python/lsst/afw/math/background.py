@@ -23,6 +23,7 @@ from builtins import object
 #
 import os
 import lsst.daf.base as dafBase
+from lsst.log import Log
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 from lsst.afw.fits import FitsError, MemFileManager, reduceToFits
@@ -88,8 +89,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
         if subclassed is not None:
             bkgd = subclassed
         else:
-            from lsst.pex.logging import getDefaultLog
-            getDefaultLog().warn("Unrecognised Background object %s may be unpersistable." % (bkgd,))
+            logger = Log.getLogger("afw.BackgroundList.append")
+            logger.warn("Unrecognised Background object %s may be unpersistable.", bkgd)
 
         bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
                   approxOrderX, approxOrderY, approxWeighting)

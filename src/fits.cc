@@ -17,7 +17,7 @@ extern "C" {
 #include "boost/format.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Log.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/fits.h"
 #include "lsst/afw/geom/Angle.h"
 
@@ -720,8 +720,7 @@ void writeKeyFromProperty(
         }
     } else {
         // FIXME: inherited this error handling from fitsIo.cc; need a better option.
-        pex::logging::Log::getDefaultLog().log(
-            pex::logging::Log::WARN,
+        LOGLS_WARN("afw.writeKeyFromProperty",
             makeErrorMessage(
                 fits.fptr, fits.status,
                 boost::format("In %s, unknown type '%s' for key '%s'.")

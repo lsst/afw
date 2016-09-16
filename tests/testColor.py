@@ -32,7 +32,6 @@ import numpy as np
 
 import lsst.utils.tests
 import lsst.daf.base as dafBase
-import lsst.pex.logging as logging
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage

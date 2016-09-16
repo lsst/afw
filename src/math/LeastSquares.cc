@@ -30,7 +30,11 @@
 
 #include "lsst/afw/math/LeastSquares.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging.h"
+#include "lsst/log/Log.h"
+
+namespace {
+LOG_LOGGER _log = LOG_GET("afw.math.LeastSquares");
+}
 
 namespace lsst { namespace afw { namespace math {
 
@@ -62,8 +66,6 @@ public:
     ndarray::Array<double,1,1> solution;
     ndarray::Array<double,2,2> covariance;
     ndarray::Array<double,1,1> diagnostic;
-
-    pex::logging::Debug log;
 
     template <typename D>
     void setRank(Eigen::MatrixBase<D> const & values) {
@@ -116,8 +118,7 @@ public:
     virtual void updateDiagnostic() = 0;
 
     Impl(int dimension_, double threshold_=std::numeric_limits<double>::epsilon()) :
-        state(0), dimension(dimension_), rank(dimension_), threshold(threshold_),
-        log("afw.math.LeastSquares")
+        state(0), dimension(dimension_), rank(dimension_), threshold(threshold_)
         {}
 
     virtual ~Impl() {}
@@ -137,7 +138,7 @@ public:
         _eig.compute(fisher);
         if (_eig.info() == Eigen::Success) {
             setRank(_eig.eigenvalues().reverse());
-            log.debug<5>("SelfAdjointEigenSolver succeeded: dimension=%d, rank=%d", dimension, rank);
+            LOGL_DEBUG(_log, "SelfAdjointEigenSolver succeeded: dimension=%d, rank=%d", dimension, rank);
         } else {
             // Note that the fallback is using SVD of the Fisher to compute the Eigensystem, because those
             // are the same for a symmetric matrix; this is very different from doing a direct SVD of
@@ -145,7 +146,7 @@ public:
             ensure(FULL_FISHER_MATRIX);
             _svd.compute(fisher, Eigen::ComputeFullU); // Matrix is symmetric, so V == U == eigenvectors
             setRank(_svd.singularValues());
-            log.debug<5>(
+            LOGL_DEBUG(_log,
                 "SelfAdjointEigenSolver failed; falling back to equivalent SVD: dimension=%d, rank=%d",
                 dimension, rank
             );
@@ -265,7 +266,7 @@ public:
         }
         _svd.compute(design, Eigen::ComputeThinU | Eigen::ComputeThinV);
         setRank(_svd.singularValues());
-        log.debug<5>("Using direct SVD method; dimension=%d, rank=%d", dimension, rank);
+        LOGL_DEBUG(_log, "Using direct SVD method; dimension=%d, rank=%d", dimension, rank);
     }
 
     virtual void updateRank() { setRank(_svd.singularValues()); }

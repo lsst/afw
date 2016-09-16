@@ -45,18 +45,13 @@ import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.pex.exceptions as pexExcept
-import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.afw.fits
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
+from lsst.log import Log
 from testTableArchivesLib import DummyPsf
 
-try:
-    type(VERBOSITY)
-except:
-    VERBOSITY = 0                       # increase to see trace
-
-pexLog.Debug("lsst.afw.image", VERBOSITY)
+Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
 try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")

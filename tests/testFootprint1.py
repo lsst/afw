@@ -44,7 +44,6 @@ import unittest
 import os
 import numpy
 import lsst.utils.tests
-import lsst.pex.logging as logging
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
 import lsst.afw.coord as afwCoord
@@ -54,12 +53,6 @@ import lsst.afw.detection as afwDetect
 import lsst.afw.detection.utils as afwDetectUtils
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.display.utils as displayUtils
-
-try:
-    type(verbose)
-except NameError:
-    verbose = 0
-    logging.Debug("afwDetect.Footprint", verbose)
 
 try:
     type(display)

@@ -40,13 +40,12 @@
 #include "boost/assign/list_of.hpp"
 
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/detail/Convolve.h"
 
 namespace pexExcept = lsst::pex::exceptions;
-namespace pexLog = lsst::pex::logging;
 namespace afwGeom = lsst::afw::geom;
 namespace afwImage = lsst::afw::image;
 namespace mathDetail = lsst::afw::math::detail;
@@ -74,7 +73,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     if (!_kernelPtr) {
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, "kernelPtr is null");
     }
-    pexLog::TTrace<6>("lsst.afw.math.convolve",
+    LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
     "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }
@@ -115,7 +114,7 @@ mathDetail::KernelImagesForRegion::KernelImagesForRegion(
     _insertImage(BOTTOM_RIGHT, bottomRightImagePtr);
     _insertImage(TOP_LEFT, topLeftImagePtr);
     _insertImage(TOP_RIGHT, topRightImagePtr);
-    pexLog::TTrace<6>("lsst.afw.math.convolve",
+    LOGL_DEBUG("TRACE5.afw.math.convolve.KernelImagesForRegion",
     "KernelImagesForRegion(bbox(minimum=(%d, %d), extent=(%d, %d)), xy0=(%d, %d), doNormalize=%d, images...)",
        _bbox.getMinX(), _bbox.getMinY(), _bbox.getWidth(), _bbox.getHeight(), _xy0[0], _xy0[1], _doNormalize);
 }

@@ -27,12 +27,11 @@
 
 #include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/pex/logging/Trace.h"
+#include "lsst/log/Log.h"
 #include "lsst/afw/image.h"
 #include "lsst/utils/Utils.h"
 
 using namespace std;
-using lsst::pex::logging::Trace;
 namespace pexEx = lsst::pex::exceptions;
 namespace image = lsst::afw::image;
 namespace geom = lsst::afw::geom;
@@ -60,8 +59,7 @@ int test(int argc, char**argv) {
         outImagePath2 = string(argv[4]);
     }
 
-    Trace::setDestination(cout);
-    Trace::setVerbosity(".", 0);
+    LOG_CONFIG();
 
     typedef image::MaskedImage<float> MaskedImage;
 

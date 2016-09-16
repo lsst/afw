@@ -40,7 +40,6 @@ import numpy
 
 import lsst.utils
 import lsst.utils.tests
-import lsst.pex.logging as pexLog
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
@@ -48,10 +47,9 @@ import lsst.afw.math.detail as mathDetail
 import lsst.pex.exceptions as pexExcept
 
 from testKernel import makeDeltaFunctionKernelList, makeGaussianKernelList
+from lsst.log import Log
 
-VERBOSITY = 0   # increase to see trace; 3 will show the convolutions specializations being used
-
-pexLog.Debug("lsst.afw", VERBOSITY)
+Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
 try:
     display
@@ -283,9 +281,6 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
         to compare against the absolute difference between "a" and "b".
         """
-        if VERBOSITY > 0:
-            print("Test convolution with", kernelDescr)
-
         convControl = afwMath.ConvolutionControl()
         convControl.setMaxInterpolationDistance(maxInterpDist)
 

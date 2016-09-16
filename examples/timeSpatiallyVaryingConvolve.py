@@ -31,12 +31,13 @@ import os
 import time
 
 import lsst.utils
-import lsst.pex.logging as pexLog
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
+from lsst.log import Log
 
-pexLog.Debug("lsst.afw", 0)
+Log.getDefaultLogger().setLevel(Log.INFO)
+Log.getLogger("TRACE2.afw.math.convolve").setLevel(Log.DEBUG)
 
 MaxIter = 20
 MaxTime = 1.0 # seconds

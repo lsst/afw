@@ -35,10 +35,6 @@ import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pexExceptions
-import lsst.pex.logging as pexLog
-
-VERBOSITY = 0  # increase to see trace
-pexLog.Debug("lsst.afwMath", VERBOSITY)
 
 
 def nrange(num, start, delta):

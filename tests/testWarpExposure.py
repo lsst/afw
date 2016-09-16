@@ -42,22 +42,26 @@ import lsst.afw.gpu as afwGpu
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.utils as imageUtils
-import lsst.pex.logging as pexLog
 import lsst.pex.policy as pexPolicy
 import lsst.pex.exceptions as pexExcept
 import lsst.afw.display.ds9 as ds9
+from lsst.log import Log
+
+# Change the level to Log.DEBUG to see debug messages
+Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
+Log.getLogger("TRACE2.afw.math.warp").setLevel(Log.INFO)
+Log.getLogger("TRACE3.afw.math.warp").setLevel(Log.INFO)
+
+
 try:
     display
 except:
     display = False
-    VERBOSITY = 0                       # increase to see trace
     # set True to save afw-warped images as FITS files
     SAVE_FITS_FILES = False
     # set True to save failed afw-warped images as FITS files even if SAVE_FITS_FILES is False
     #SAVE_FAILED_FITS_FILES = False
     SAVE_FAILED_FITS_FILES = True
-
-pexLog.Debug("lsst.afw.math", VERBOSITY)
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
