@@ -41,6 +41,7 @@ import numpy
 import lsst.utils
 import lsst.utils.tests
 import lsst.afw.image as afwImage
+import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.pex.exceptions as pexExcept
@@ -182,6 +183,87 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.exposureCrWcs.getWcs()
 
         self.assertFalse(self.exposureCrOnly.getWcs())
+
+    def testExposureInfoConstructor(self):
+        """Test the Exposure(maskedImage, exposureInfo) constructor"""
+        exposureInfo = afwImage.ExposureInfo()
+        exposureInfo.setWcs(self.wcs)
+        exposureInfo.setDetector(self.detector)
+        gFilter = afwImage.Filter("g")
+        exposureInfo.setFilter(gFilter)
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        exposure = afwImage.ExposureF(maskedImage, exposureInfo)
+
+        self.assertTrue(exposure.hasWcs())
+        self.assertEqual(exposure.getWcs().getPixelOrigin(), self.wcs.getPixelOrigin())
+        self.assertEquals(exposure.getDetector().getName(), self.detector.getName())
+        self.assertEquals(exposure.getDetector().getSerial(), self.detector.getSerial())
+        self.assertEquals(exposure.getFilter(), gFilter)
+
+        self.assertTrue(exposure.getInfo().hasWcs())
+        self.assertEqual(exposure.getInfo().getWcs().getPixelOrigin(), self.wcs.getPixelOrigin())
+        self.assertEquals(exposure.getInfo().getDetector().getName(), self.detector.getName())
+        self.assertEquals(exposure.getInfo().getDetector().getSerial(), self.detector.getSerial())
+        self.assertEquals(exposure.getInfo().getFilter(), gFilter)
+
+    def testNullWcs(self):
+        """Test that an Exposure constructed with second argument None is usable
+
+        When the exposureInfo constructor was first added, trying to get a WCS
+        or other info caused a segfault because the ExposureInfo did not exist.
+        """
+        maskedImage = self.exposureMiOnly.getMaskedImage()
+        exposure = afwImage.ExposureF(maskedImage, None)
+        self.assertFalse(exposure.hasWcs())
+        self.assertFalse(exposure.hasPsf())
+
+    def testSetExposureInfo(self):
+        exposureInfo = afwImage.ExposureInfo()
+        exposureInfo.setWcs(self.wcs)
+        exposureInfo.setDetector(self.detector)
+        gFilter = afwImage.Filter("g")
+        exposureInfo.setFilter(gFilter)
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        exposure = afwImage.ExposureF(maskedImage)
+        self.assertFalse(exposure.hasWcs())
+
+        exposure.setInfo(exposureInfo)
+
+        self.assertTrue(exposure.hasWcs())
+        self.assertEqual(exposure.getWcs().getPixelOrigin(), self.wcs.getPixelOrigin())
+        self.assertEquals(exposure.getDetector().getName(), self.detector.getName())
+        self.assertEquals(exposure.getDetector().getSerial(), self.detector.getSerial())
+        self.assertEquals(exposure.getFilter(), gFilter)
+
+    def testVisitInfoFitsPersistence(self):
+        """Test saving an exposure to FITS and reading it back in preserves (some) VisitInfo fields"""
+        exposureId = 5
+        exposureTime = 12.3
+        boresightRotAngle = 45.6 * afwGeom.degrees
+        weather = afwCoord.Weather(1.1, 2.2, 0.3)
+        visitInfo = afwImage.makeVisitInfo(
+            exposureId = exposureId,
+            exposureTime = exposureTime,
+            boresightRotAngle = boresightRotAngle,
+            weather = weather,
+        )
+        # Calib used to have exposure time and exposure date, so check for lack of interference
+        calib = afwImage.Calib(3.4)
+        exposureInfo = afwImage.ExposureInfo()
+        exposureInfo.setVisitInfo(visitInfo)
+        exposureInfo.setCalib(calib)
+        exposureInfo.setDetector(self.detector)
+        gFilter = afwImage.Filter("g")
+        exposureInfo.setFilter(gFilter)
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        exposure = afwImage.ExposureF(maskedImage, exposureInfo)
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            exposure.writeFits(tmpFile)
+            rtExposure = afwImage.ExposureF(tmpFile)
+        rtVisitInfo = rtExposure.getInfo().getVisitInfo()
+        self.assertEqual(rtVisitInfo.getWeather(), weather)
+        self.assertEqual(rtExposure.getCalib(), calib)
+        self.assertEqual(rtExposure.getFilter(), gFilter)
 
     def testSetMembers(self):
         """

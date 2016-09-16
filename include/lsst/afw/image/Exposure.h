@@ -69,6 +69,11 @@ public:
     explicit Exposure(MaskedImageT & maskedImage,
                       CONST_PTR(Wcs) wcs = CONST_PTR(Wcs)());
 
+    explicit Exposure(
+        MaskedImageT & maskedImage,
+        PTR(ExposureInfo) info
+    );
+
     /**
      *  @brief Construct an Exposure by reading a regular FITS file.
      *
@@ -234,6 +239,9 @@ public:
 
     /// Get the ExposureInfo that aggregates all the non-image components.  Never null.
     CONST_PTR(ExposureInfo) getInfo() const { return _info; }
+
+    /// Set the ExposureInfo that aggregates all the non-image components.
+    void setInfo(PTR(ExposureInfo) exposureInfo) { _info = exposureInfo; }
 
     /**
      *  @brief Write an Exposure to a regular multi-extension FITS file.

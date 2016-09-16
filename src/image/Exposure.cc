@@ -117,7 +117,7 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _info(new ExposureInfo(wcs))
 {}
 
-/** @brief Construct an Exposure from a MaskedImage
+/** @brief Construct an Exposure from a MaskedImage and an optional Wcs
   */
 template<typename ImageT, typename MaskT, typename VarianceT>
 afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
@@ -129,6 +129,19 @@ afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
     _info(new ExposureInfo(wcs))
 {}
 
+/** @brief Construct an Exposure from a MaskedImage and an ExposureInfo
+  *
+  * If the ExposureInfo is an empty pointer then a new empty ExposureInfo is used
+  */
+template<typename ImageT, typename MaskT, typename VarianceT>
+afwImage::Exposure<ImageT, MaskT, VarianceT>::Exposure(
+    MaskedImageT & maskedImage, ///< the MaskedImage
+    PTR(ExposureInfo) info  ///< the ExposureInfo
+) :
+    lsst::daf::base::Citizen(typeid(this)),
+    _maskedImage(maskedImage),
+    _info(info ? info : std::make_shared<ExposureInfo>())
+{}
 
 /** @brief Copy an Exposure
   */
