@@ -26,3 +26,4 @@ import numpy
 from .imageLib import *
 from .basicUtils import *
 from .testUtils import *
+from .makeVisitInfo import makeVisitInfo

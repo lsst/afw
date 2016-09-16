@@ -281,6 +281,7 @@ def __int__(self):
 /************************************************************************************************************/
 
 %include "lsst/afw/image/Calib.i"
+%include "lsst/afw/image/VisitInfo.i"
 %include "lsst/afw/image/ApCorrMap.i"
 
 %{
