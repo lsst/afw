@@ -386,41 +386,6 @@ namespace {
         std::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr =
             std::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(warpingKernelPtr);
 
-        if (lsst::afw::gpu::isGpuEnabled()) {
-            if(!lanczosKernelPtr) {
-                if (devPref == lsst::afw::gpu::USE_GPU) {
-                    throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Gpu can process only Lanczos kernels");
-                }
-            } else if (devPref == lsst::afw::gpu::USE_GPU || (lsst::afw::gpu::isGpuBuild() && interpLength > 0) ) {
-                PTR(afwMath::SeparableKernel) maskWarpingKernelPtr = control.getWarpingKernel();
-                if (control.getMaskWarpingKernel() )
-                     maskWarpingKernelPtr = control.getMaskWarpingKernel();
-                if (devPref == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
-                    try {
-                        std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage,
-                                                             *lanczosKernelPtr, *maskWarpingKernelPtr,
-                                                             computeSrcPos,  interpLength, padValue, false);
-                        if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
-                    }
-                    catch(lsst::afw::gpu::GpuMemoryError) { }
-                    catch(pexExcept::MemoryError) { }
-                    catch(lsst::afw::gpu::GpuRuntimeError) { }
-                } else if (devPref != lsst::afw::gpu::USE_CPU) {
-                    std::pair<int, afwMath::detail::WarpImageGpuStatus::ReturnCode> result =
-                                           afwMath::detail::warpImageGPU(destImage, srcImage,
-                                                                      *lanczosKernelPtr, *maskWarpingKernelPtr,
-                                                                      computeSrcPos, interpLength, padValue,
-                                                                      devPref == lsst::afw::gpu::USE_GPU);
-                    if (result.second == afwMath::detail::WarpImageGpuStatus::OK) return result.first;
-                    if (devPref == lsst::afw::gpu::USE_GPU) {
-                        throw LSST_EXCEPT(pexExcept::RuntimeError,
-                                          "Gpu cannot perform this warp (kernel too big?)");
-                    }
-                }
-            }
-        }
-
         int numGoodPixels = 0;
 
         // Get the source MaskedImage and a pixel accessor to it.
