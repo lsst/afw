@@ -100,7 +100,7 @@ class RadialXYTransformConfig(Config):
 def makeRadialXYTransform(config):
     """Make a RadialXYTransform
     """
-    return RadialXYTransform(config.coeffs)
+    return RadialXYTransform(config.coeffs._list)
 makeRadialXYTransform.ConfigClass = RadialXYTransformConfig
 xyTransformRegistry.register("radial", makeRadialXYTransform)
 
