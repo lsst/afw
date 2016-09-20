@@ -929,7 +929,6 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _useMaxMin = 0;
 
-
     _kdTree.Initialize(dataIn);
 
     _pts = _kdTree.getPoints();
