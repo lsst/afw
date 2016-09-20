@@ -1006,6 +1006,11 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                           "Asked for more neighbors than you have data points\n");
     }
 
+    if(vin.getNumElements() != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You are interpolating at a point with different dimensionality than you data\n");
+    }
+
     int i,j;
     T fbar,mu;
 
@@ -1119,6 +1124,10 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
                           "Asked for more neighbors than you have data points\n");
     }
 
+    if(vin.getNumElements() != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You are interpolating at a point with different dimensionality than you data\n");
+    }
 
     int i,j,ii;
     T fbar;
