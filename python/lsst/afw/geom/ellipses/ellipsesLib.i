@@ -42,7 +42,7 @@ Python interface to lsst::afw::geom::ellipses classes and functions
 %initializeNumPy(afw_geom_ellipses)
 %{
 #include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
+#include "ndarray/converter/eigen.h"
 %}
 %include "ndarray.i"
 

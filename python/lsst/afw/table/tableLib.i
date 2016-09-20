@@ -40,7 +40,7 @@ Python interface to lsst::afw::table classes
 %initializeNumPy(afw_table)
 %{
 #include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
+#include "ndarray/converter/eigen.h"
 %}
 %include "ndarray.i"
 

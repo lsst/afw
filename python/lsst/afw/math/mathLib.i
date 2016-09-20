@@ -49,7 +49,7 @@ Python interface to lsst::afw::math classes
 %initializeNumPy(afw_math)
 %{
 #include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
+#include "ndarray/converter/eigen.h"
 %}
 %include "ndarray.i"
 
