@@ -826,6 +826,11 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     _nFunctions = 1;
     _function = allocate(ndarray::makeVector(_pts,1));
 
+    if(ff.getNumElements() != _pts){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not pass in the same number of data points as function values\n");
+    }
+
     for(i = 0; i < _pts; i++ ) _function[i][0] = ff[i];
 
     _krigingParameter = T(1.0);

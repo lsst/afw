@@ -347,6 +347,23 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
 
 class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
+    def testExceptions(self):
+        """
+        Test that exceptions are raised under expected conditions
+        """
+        rng = np.random.RandomState(22)
+
+        # when you pass a different number of data points and function
+        # values in
+        data = rng.random_sample((10, 4))
+        fn_values = rng.random_sample(11)
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
+
+        # check that the constructor runs when itshould
+        fn_values = rng.random_sample(data.shape[0])
+        gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
+
     def testTooManyNeighbors(self):
         """
         Test that GaussianProcess checks if too many neighbours are requested
