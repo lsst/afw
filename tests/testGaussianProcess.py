@@ -481,6 +481,26 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.interpolate(var, good_pt, 5)
         gg_many.interpolate(many_mu, many_var, good_pt, 5)
 
+    def testSelfInterpolateExceptions(self):
+        """
+        Test that selfInterpolate raises exceptions on bad arguments.
+        """
+        rng = np.random.RandomState(632)
+        data = rng.random_sample((15, 4))
+        many_fn = rng.random_sample((15, 3))
+        gg_many = gp.GaussianProcessD(data, many_fn, gp.SquaredExpCovariogramD())
+
+        var_good = np.zeros(3)
+        mu_good = np.zeros(3)
+
+        # test that an exception is raised when you try to use scalar
+        # selfInterpolation() on a many-function GaussianProcess
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.selfInterpolate(var_good, 11, 6)
+
+        # make surethat selfInterpolate runs when it should
+        gg_many.selfInterpolate(mu_good, var_good, 11, 6)
+
     def testTooManyNeighbors(self):
         """
         Test that GaussianProcess checks if too many neighbours are requested
