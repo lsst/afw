@@ -954,6 +954,16 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     _room = _pts;
     _roomStep = 5000;
 
+    if(ff.template getSize < 0 > () != _pts){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not pass in the same number of data points as function values\n");
+    }
+
+    if(mn.getNumElements() != _dimensions || mx.getNumElements() != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your min/max values have different dimensionality than your data points\n");
+    }
+
     _krigingParameter = T(1.0);
 
     _lambda = T(1.0e-5);

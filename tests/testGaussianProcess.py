@@ -370,16 +370,32 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             gp.GaussianProcessD(data, many_fn_values, gp.SquaredExpCovariogramD())
 
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, min_val, max_val, many_fn_values,
+                                gp.SquaredExpCovariogramD())
+
         fn_values = rng.random_sample(data.shape[0])
+        many_fn_values = rng.random_sample((10,3))
 
         # when you pass in improperly sized min and max val arrays
         bad_max_val = np.ones(3)
-        bad_min_val = np.ones(3)
+        bad_min_val = np.zeros(3)
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, bad_min_val, bad_max_val,
+            gp.GaussianProcessD(data, bad_min_val, max_val,
                                 fn_values, gp.SquaredExpCovariogramD())
 
-        many_fn_values = rng.random_sample((10,3))
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, min_val, bad_max_val,
+                                fn_values, gp.SquaredExpCovariogramD())
+
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, bad_min_val, max_val,
+                                many_fn_values, gp.SquaredExpCovariogramD())
+
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, min_val, bad_max_val,
+                                many_fn_values, gp.SquaredExpCovariogramD())
+
         # check that the constructor runs when it should
         gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
 
@@ -387,6 +403,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
                             gp.SquaredExpCovariogramD())
 
         gp.GaussianProcessD(data, many_fn_values, gp.SquaredExpCovariogramD())
+
+        gp.GaussianProcessD(data, min_val, max_val, many_fn_values,
+                            gp.SquaredExpCovariogramD())
 
     def testTooManyNeighbors(self):
         """
