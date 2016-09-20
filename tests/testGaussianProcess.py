@@ -349,7 +349,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
     def testConstructorExceptions(self):
         """
-        Test that exceptions are raised under expected conditions
+        Test that exceptions are raised when constructor is given
+        improper inputs
         """
         rng = np.random.RandomState(22)
 
