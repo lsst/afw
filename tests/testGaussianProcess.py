@@ -408,6 +408,34 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gp.GaussianProcessD(data, min_val, max_val, many_fn_values,
                             gp.SquaredExpCovariogramD())
 
+    def testInterpolateExceptions(self):
+        """
+        Test that interpolate() raises exceptions when given improper
+        arguments
+        """
+        rng = np.random.RandomState(88)
+        data = rng.random_sample((13, 5))
+        fn = rng.random_sample(13)
+        many_fn = rng.random_sample((13, 3))
+        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+        gg_many = gp.GaussianProcessD(data, many_fn, gp.SquaredExpCovariogramD())
+
+        var = np.zeros(1)
+
+        many_var = np.zeros(3)
+        many_mu = np.zeros(3)
+
+        bad_pt = rng.random_sample(3)
+        with self.assertRaises(RuntimeError):
+            gg.interpolate(var, bad_pt, 5)
+
+        with self.assertRaises(RuntimeError):
+            gg_many.interpolate(many_mu, many_var, bad_pt, 5)
+
+        good_pt = rng.random_sample(5)
+        gg.interpolate(var, good_pt, 5)
+        gg_many.interpolate(many_mu, many_var, good_pt, 5)
+
     def testTooManyNeighbors(self):
         """
         Test that GaussianProcess checks if too many neighbours are requested
