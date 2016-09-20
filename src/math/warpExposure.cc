@@ -64,6 +64,7 @@ namespace afwImage = lsst::afw::image;
 namespace afwGeom = lsst::afw::geom;
 namespace afwCoord = lsst::afw::coord;
 namespace afwMath = lsst::afw::math;
+namespace afwImage = lsst::afw::image;
 
 
 //
@@ -303,6 +304,7 @@ int afwMath::warpExposure(
     DestExposureT &destExposure,
     SrcExposureT const &srcExposure,
     afwMath::WarpingControl const &control,
+    afwImage::Image<float> &covImage,
     typename DestExposureT::MaskedImageT::SinglePixel padValue
     )
 {
@@ -317,7 +319,7 @@ int afwMath::warpExposure(
     destExposure.setCalib(calibCopy);
     destExposure.setFilter(srcExposure.getFilter());
     return warpImage(mi, *destExposure.getWcs(), srcExposure.getMaskedImage(), *srcExposure.getWcs(),
-        control, padValue);
+        control, covImage, padValue);
 }
 
 
@@ -357,6 +359,7 @@ namespace {
         afwMath::detail::PositionFunctor const &computeSrcPos,   ///< Functor to compute source position
             ///< called with dest row, column; returns source position (as a Point2D)
         afwMath::WarpingControl const &control,     ///< warping parameters
+        afwImage::Image<float> &covImage,
         typename DestImageT::SinglePixel padValue   ///< value to use for undefined pixels
     ) {
         if (afwMath::details::isSameObject(destImage, srcImage)) {
@@ -557,12 +560,13 @@ int afwMath::warpImage(
     SrcImageT const &srcImage,
     lsst::afw::image::Wcs const &srcWcs,
     afwMath::WarpingControl const &control,
+    lsst::afw::image::Image<float> &covImage,
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
     afwImage::XYTransformFromWcsPair xyTransform{destWcs.clone(), srcWcs.clone()};
     afwMath::detail::XYTransformPositionFunctor const computeSrcPos{destXY0, xyTransform};
-    return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
+    return doWarpImage(destImage, srcImage, computeSrcPos, control, covImage, padValue);
 }
 
 
@@ -572,11 +576,12 @@ int afwMath::warpImage(
     SrcImageT const &srcImage,
     afwGeom::XYTransform const &xyTransform,
     afwMath::WarpingControl const &control,
+    lsst::afw::image::Image<float> &covImage,
     typename DestImageT::SinglePixel padValue
 ) {
     afwGeom::Point2D const destXY0(destImage.getXY0());
     afwMath::detail::XYTransformPositionFunctor const computeSrcPos(destXY0, xyTransform);
-    return doWarpImage(destImage, srcImage, computeSrcPos, control, padValue);
+    return doWarpImage(destImage, srcImage, computeSrcPos, control, covImage, padValue);
 }
 
 
@@ -587,6 +592,7 @@ int afwMath::warpCenteredImage(
     afwGeom::LinearTransform const &linearTransform,
     afwGeom::Point2D const &centerPosition,
     afwMath::WarpingControl const &control,
+    lsst::afw::image::Image<float> &covImage,
     typename DestImageT::SinglePixel padValue
 ) {
     // force src and dest to be the same size and xy0
@@ -622,7 +628,7 @@ int afwMath::warpCenteredImage(
     t += dt;
     std::cout <<srcImage.getWidth()<<"x"<<srcImage.getHeight()<<": "<< dt <<" "<< t <<std::endl;
 #else
-    int n = warpImage(destImage, srcImageCopy, affXYTransform, control, padValue);
+    int n = warpImage(destImage, srcImageCopy, affXYTransform, control, covImage, padValue);
 #endif
 
     // fix the origin and we're done.
@@ -649,6 +655,7 @@ int afwMath::warpCenteredImage(
         afwGeom::LinearTransform const &linearTransform, \
         afwGeom::Point2D const &centerPosition, \
         afwMath::WarpingControl const &control, \
+        afwImage::Image<float> &covImage, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpCenteredImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
@@ -656,18 +663,21 @@ int afwMath::warpCenteredImage(
         afwGeom::LinearTransform const &linearTransform, \
         afwGeom::Point2D const &centerPosition, \
         afwMath::WarpingControl const &control, \
+        afwImage::Image<float> &covImage, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwGeom::XYTransform const &xyTransform, \
         afwMath::WarpingControl const &control, \
+        afwImage::Image<float> &covImage, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwGeom::XYTransform const &xyTransform, \
         afwMath::WarpingControl const &control, \
+        afwImage::Image<float> &covImage, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         IMAGE(DESTIMAGEPIXELT) &destImage, \
@@ -675,6 +685,7 @@ int afwMath::warpCenteredImage(
         IMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         afwMath::WarpingControl const &control, \
+        afwImage::Image<float> &covImage, \
         IMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpImage( \
         MASKEDIMAGE(DESTIMAGEPIXELT) &destImage, \
@@ -682,11 +693,13 @@ int afwMath::warpCenteredImage(
         MASKEDIMAGE(SRCIMAGEPIXELT) const &srcImage, \
         afwImage::Wcs const &srcWcs, \
         afwMath::WarpingControl const &control, \
+        afwImage::Image<float> &covImage, \
         MASKEDIMAGE(DESTIMAGEPIXELT)::SinglePixel padValue); NL \
     template int afwMath::warpExposure( \
         EXPOSURE(DESTIMAGEPIXELT) &destExposure, \
         EXPOSURE(SRCIMAGEPIXELT) const &srcExposure, \
-        afwMath::WarpingControl const &control,\
+        afwMath::WarpingControl const &control, \
+        afwImage::Image<float> &covImage, \
         EXPOSURE(DESTIMAGEPIXELT)::MaskedImageT::SinglePixel padValue);
 
 

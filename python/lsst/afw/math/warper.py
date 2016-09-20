@@ -21,6 +21,8 @@ from builtins import object
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+import math
+
 import lsst.pex.config as pexConfig
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
@@ -144,7 +146,40 @@ class Warper(object):
         """Get the mask warping kernel"""
         return self._warpingControl.getMaskWarpingKernel()
 
-    def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
+    def computeDestPos(self, srcX, srcY, srcWcs, destWcs):
+        return destWcs.skyToPixel(srcWcs.pixelToSky(srcX, srcY))
+
+
+    def computeSrcPos(self, destX, destY, srcWcs, destWcs):
+        return srcWcs.skyToPixel(destWcs.pixelToSky(destX, destY))
+
+
+    def getKernelSizeDest(self, srcExposure, destExposure):
+        """
+        Compute the size of the covImage by computing the maximum size of the warping kernel on the destination exposure.
+        """
+        destWidth = destExposure.getWidth()
+        destHeight = destExposure.getHeight()
+        warpKernel = self._warpingControl.getWarpingKernel()
+        kernelWidth = warpKernel.getWidth()
+        kernelHeight = warpKernel.getHeight()
+        srcWcs = srcExposure.getWcs()
+        destWcs = destExposure.getWcs()
+        srcBbox = srcExposure.getBBox()
+        srcBegX = float(srcBbox.getBeginX())
+        srcBegY = float(srcBbox.getBeginY())
+        srcEndX = float(srcBbox.getEndX())
+        srcEndY = float(srcBbox.getEndY())
+        # Map (srcBegX, srcBegY) and (srcBegX + kernelWidth, srcBegY + kernelHeight) -> dest & compute kernelWidthDest & kernelHeightDest
+        destX0, destY0 = self.computeDestPos(srcBegX, srcBegY, srcWcs, destWcs)
+        destX1, destY1 = self.computeDestPos(srcBegX + kernelWidth/2, srcBegY, srcWcs, destWcs)
+        destX2, destY2 = self.computeDestPos(srcBegX, srcBegY + kernelHeight/2, srcWcs, destWcs)
+        #destX3, destY3 = computeDestPos(srcBegX + kernelWidth/2, srcBegY + kernelHeight/2, srcWcs, destWcs)
+        kernelWidthDest = math.fabs(destX1 - destX0)
+        kernelHeightDest = math.fabs(destY2 - destY0)
+        return kernelWidthDest, kernelHeightDest
+
+    def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None, covName=None):
         """Warp an exposure
 
         @param destWcs: WCS of warped exposure
@@ -174,8 +209,14 @@ class Warper(object):
             maxBBox = maxBBox,
             destBBox = destBBox,
         )
+        if covName is None:
+            covName = srcExposure.getId()
         destExposure = srcExposure.Factory(destBBox, destWcs)
-        mathLib.warpExposure(destExposure, srcExposure, self._warpingControl)
+        kernelWidthDest, kernelHeightDest = self.getKernelSizeDest(srcExposure, destExposure)
+        covWidth = int(round(kernelWidthDest*srcExposure.getWidth()))
+        covHeight = int(round(kernelHeightDest*srcExposure.getHeight()))
+        covImage = afwImage.ImageF(covWidth, covHeight, 0.0)
+        mathLib.warpExposure(destExposure, srcExposure, self._warpingControl, covImage)
         return destExposure
 
     def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
