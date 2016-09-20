@@ -425,6 +425,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         many_var = np.zeros(3)
         many_mu = np.zeros(3)
 
+        # test that an exception is raised if you try to interpolate at
+        # a point with an incorrect number of dimensions
         bad_pt = rng.random_sample(3)
         with self.assertRaises(RuntimeError):
             gg.interpolate(var, bad_pt, 5)
@@ -433,6 +435,27 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             gg_many.interpolate(many_mu, many_var, bad_pt, 5)
 
         good_pt = rng.random_sample(5)
+
+        # test that an exception is raised if you try to ask for an improper
+        # number of nearest neighbors when interpolating
+        with self.assertRaises(RuntimeError) as context:
+            gg.interpolate(var, good_pt, 0)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg.interpolate(var, good_pt, -1)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg.interpolate(var, good_pt, 14)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.interpolate(many_mu, many_var, good_pt, 0)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.interpolate(many_mu, many_var, good_pt, -1)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.interpolate(many_mu, many_var, good_pt, 14)
+
         gg.interpolate(var, good_pt, 5)
         gg_many.interpolate(many_mu, many_var, good_pt, 5)
 
