@@ -1006,6 +1006,12 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                           "Asked for more neighbors than you have data points\n");
     }
 
+    if(variance.getNumElements() != _nFunctions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your variance array is the incorrect size for the number "
+                          "of functions you are trying to interpolate\n");
+    }
+
     if(vin.getNumElements() != _dimensions){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are interpolating at a point with different dimensionality than you data\n");

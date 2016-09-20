@@ -467,6 +467,11 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, bad_var, good_pt, 5)
 
+        # if you try to pass a variance array with len != 1 to
+        # the single value interpolate()
+        with self.assertRaises(RuntimeError) as context:
+            gg.interpolate(many_var, good_pt, 5)
+
         gg.interpolate(var, good_pt, 5)
         gg_many.interpolate(many_mu, many_var, good_pt, 5)
 
