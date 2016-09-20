@@ -456,6 +456,12 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, many_var, good_pt, 14)
 
+        # make sure that a Gaussian Process interpolating many functions
+        # does not let you call the interpolate() method that returns
+        # a scalar
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.interpolate(many_var, good_pt, 4)
+
         # test that the many-function interpolate throws an exception
         # on improperly-sized mu and variance arrays
         bad_var = np.zeros(6)

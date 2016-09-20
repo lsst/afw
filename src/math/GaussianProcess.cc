@@ -996,6 +996,13 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                                       int numberOfNeighbors) const
 {
 
+    if(_nFunctions > 1){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You need to call the version of GaussianProcess.interpolate() "
+                          "that accepts mu and variance arrays (which it populates with results). "
+                          "You are interpolating more than one function.");
+    }
+
     if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");
