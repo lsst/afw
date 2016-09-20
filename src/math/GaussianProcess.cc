@@ -1129,6 +1129,12 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
                           "You are interpolating at a point with different dimensionality than you data\n");
     }
 
+    if(mu.getNumElements() != _nFunctions || variance.getNumElements() != _nFunctions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your mu and/or var arrays are improperly sized for the number of functions "
+                          "you are interpolating\n");
+    }
+
     int i,j,ii;
     T fbar;
 

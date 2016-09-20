@@ -456,6 +456,17 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, many_var, good_pt, 14)
 
+        # test that the many-function interpolate throws an exception
+        # on improperly-sized mu and variance arrays
+        bad_var = np.zeros(6)
+        bad_mu = np.zeros(6)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.interpolate(bad_mu, many_var, good_pt, 5)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.interpolate(many_mu, bad_var, good_pt, 5)
+
         gg.interpolate(var, good_pt, 5)
         gg_many.interpolate(many_mu, many_var, good_pt, 5)
 
