@@ -864,6 +864,11 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     _room = _pts;
     _roomStep = 5000;
 
+    if(ff.getNumElements() != _pts){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not pass in the same number of data points as function values\n");
+    }
+
     _krigingParameter = T(1.0);
 
     _lambda = T(1.0e-5);

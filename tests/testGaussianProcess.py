@@ -360,9 +360,18 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
 
+        max_val = np.ones(4)
+        min_val = np.ones(4)
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, min_val, max_val, fn_values,
+                                gp.SquaredExpCovariogramD())
+
         # check that the constructor runs when itshould
         fn_values = rng.random_sample(data.shape[0])
         gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
+
+        gp.GaussianProcessD(data, min_val, max_val, fn_values,
+                            gp.SquaredExpCovariogramD())
 
     def testTooManyNeighbors(self):
         """
