@@ -366,8 +366,16 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             gp.GaussianProcessD(data, min_val, max_val, fn_values,
                                 gp.SquaredExpCovariogramD())
 
-        # check that the constructor runs when itshould
         fn_values = rng.random_sample(data.shape[0])
+
+        # when you pass in improperly sized min and max val arrays
+        bad_max_val = np.ones(3)
+        bad_min_val = np.ones(3)
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, bad_min_val, bad_max_val,
+                                fn_values, gp.SquaredExpCovariogramD())
+
+        # check that the constructor runs when it should
         gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
 
         gp.GaussianProcessD(data, min_val, max_val, fn_values,
