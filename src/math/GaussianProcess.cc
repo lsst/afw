@@ -914,6 +914,11 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     _room = _pts;
     _roomStep = 5000;
 
+    if(ff.template getSize < 0 > () != _pts){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not pass in the same number of data points as function values\n");
+    }
+
     _nFunctions = ff.template getSize < 1 > ();
     _function = allocate(ndarray::makeVector(_pts, _nFunctions));
     _function.deep() = ff;

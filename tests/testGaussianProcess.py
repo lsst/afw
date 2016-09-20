@@ -366,6 +366,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             gp.GaussianProcessD(data, min_val, max_val, fn_values,
                                 gp.SquaredExpCovariogramD())
 
+        many_fn_values = rng.random_sample((11,3))
+        with self.assertRaises(RuntimeError) as context:
+            gp.GaussianProcessD(data, many_fn_values, gp.SquaredExpCovariogramD())
+
         fn_values = rng.random_sample(data.shape[0])
 
         # when you pass in improperly sized min and max val arrays
@@ -375,11 +379,14 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             gp.GaussianProcessD(data, bad_min_val, bad_max_val,
                                 fn_values, gp.SquaredExpCovariogramD())
 
+        many_fn_values = rng.random_sample((10,3))
         # check that the constructor runs when it should
         gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
 
         gp.GaussianProcessD(data, min_val, max_val, fn_values,
                             gp.SquaredExpCovariogramD())
+
+        gp.GaussianProcessD(data, many_fn_values, gp.SquaredExpCovariogramD())
 
     def testTooManyNeighbors(self):
         """
