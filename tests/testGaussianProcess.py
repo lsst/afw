@@ -347,7 +347,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
 
 class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
-    def testExceptions(self):
+    def testConstructorExceptions(self):
         """
         Test that exceptions are raised under expected conditions
         """
