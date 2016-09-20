@@ -1257,6 +1257,12 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
                           "You are interpolating more than one function.");
     }
 
+    if(variance.getNumElements() != _nFunctions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your variance array is the incorrect size for the number "
+                          "of functions you are trying to interpolate\n");
+    }
+
     if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");

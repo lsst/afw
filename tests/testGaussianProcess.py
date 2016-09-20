@@ -487,6 +487,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         """
         rng = np.random.RandomState(632)
         data = rng.random_sample((15, 4))
+        fn = rng.random_sample(15)
+        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
         many_fn = rng.random_sample((15, 3))
         gg_many = gp.GaussianProcessD(data, many_fn, gp.SquaredExpCovariogramD())
 
@@ -498,8 +500,15 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             gg_many.selfInterpolate(var_good, 11, 6)
 
+        # test that an exception is raised when you pass a var_array that is
+        # too large into a scalar GaussianProcess
+        with self.assertRaises(RuntimeError) as context:
+            gg.selfInterpolate(var_good, 11, 6)
+
         # make surethat selfInterpolate runs when it should
         gg_many.selfInterpolate(mu_good, var_good, 11, 6)
+        var_one = np.zeros(1)
+        gg.selfInterpolate(var_one, 11, 6)
 
     def testTooManyNeighbors(self):
         """
