@@ -51,7 +51,7 @@ def computeWarpedBBox(destWcs, srcBBox, srcWcs):
     destBBox = afwGeom.Box2I(destPosBox, afwGeom.Box2I.EXPAND)
     return destBBox
 
-_DefaultInterpLength = 10
+_DefaultInterpLength = 0
 _DefaultCacheSize = 1000000
 
 class WarperConfig(pexConfig.Config):
