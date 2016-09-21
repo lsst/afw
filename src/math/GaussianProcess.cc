@@ -1382,6 +1382,12 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
                                              int dex,
                                              int numberOfNeighbors) const{
 
+    if(mu.getNumElements() != _nFunctions || variance.getNumElements() != _nFunctions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your mu and/or var arrays are improperly sized for the number of functions "
+                          "you are interpolating\n");
+    }
+
     if(numberOfNeighbors <= 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for zero or negative number of neighbors\n");

@@ -495,6 +495,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         var_good = np.zeros(3)
         mu_good = np.zeros(3)
 
+        var_bad = np.zeros(5)
+        mu_bad = np.zeros(5)
+
         # test that an exception is raised when you try to use scalar
         # selfInterpolation() on a many-function GaussianProcess
         with self.assertRaises(RuntimeError) as context:
@@ -504,6 +507,14 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # too large into a scalar GaussianProcess
         with self.assertRaises(RuntimeError) as context:
             gg.selfInterpolate(var_good, 11, 6)
+
+        # test that an exception is thrown when you pass in improperly-sized
+        # mu and/or var arrays
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.selfInterpolate(mu_good, var_bad, 11, 6)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.selfInterpolate(mu_bad, var_good, 11, 6)
 
         # make surethat selfInterpolate runs when it should
         gg_many.selfInterpolate(mu_good, var_good, 11, 6)
