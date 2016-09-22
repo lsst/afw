@@ -179,7 +179,7 @@ class Warper(object):
         kernelHeightDest = math.fabs(destY2 - destY0)
         return kernelWidthDest, kernelHeightDest
 
-    def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None, covName=None):
+    def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
         """Warp an exposure
 
         @param destWcs: WCS of warped exposure
@@ -209,15 +209,13 @@ class Warper(object):
             maxBBox = maxBBox,
             destBBox = destBBox,
         )
-        if covName is None:
-            covName = srcExposure.getId()
         destExposure = srcExposure.Factory(destBBox, destWcs)
         kernelWidthDest, kernelHeightDest = self.getKernelSizeDest(srcExposure, destExposure)
         covWidth = int(round(kernelWidthDest*srcExposure.getWidth()))
         covHeight = int(round(kernelHeightDest*srcExposure.getHeight()))
         covImage = afwImage.ImageF(covWidth, covHeight, 0.0)
         mathLib.warpExposure(destExposure, srcExposure, self._warpingControl, covImage)
-        return destExposure
+        return destExposure, covImage
 
     def warpImage(self, destWcs, srcImage, srcWcs, border=0, maxBBox=None, destBBox=None):
         """Warp an image or masked image
