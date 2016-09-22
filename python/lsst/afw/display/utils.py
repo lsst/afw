@@ -143,7 +143,17 @@ class Mosaic(object):
         If display or frame (deprecated) is specified, display the mosaic
         """
 
-        if not images:
+        if images:
+            if self.images:
+                raise RuntimeError("You have already appended %d images to this Mosaic" % len(self.images))
+
+            try:
+                len(images)             # check that it quacks like a list
+            except TypeError:
+                images = [images]
+
+            self.images = images
+        else:
             images = self.images
 
         if self.nImage == 0:
