@@ -425,9 +425,13 @@ def overlayCcdBoxes(ccd, untrimmedCcdBbox, nQuarter, isTrimmed, ccdOrigin, displ
                                     (amp.getRawVerticalOverscanBBox(), afwDisplay.MAGENTA),
                                     (amp.getRawPrescanBBox(), afwDisplay.YELLOW)):
                     if amp.getRawFlipX():
+                        x0 = bbox.getBeginX()
                         bbox.flipLR(amp.getRawBBox().getDimensions().getX())
+                        bbox.shift(afwGeom.ExtentI(x0 - bbox.getBeginX(), 0))
                     if amp.getRawFlipY():
+                        y0 = bbox.getBeginY()
                         bbox.flipTB(amp.getRawBBox().getDimensions().getY())
+                        bbox.shift(afwGeom.ExtentI(0, y0 - bbox.getBeginY()))
                     bbox.shift(amp.getRawXYOffset())
                     if nQuarter != 0:
                         bbox = rotateBBoxBy90(bbox, nQuarter, ccdDim)
