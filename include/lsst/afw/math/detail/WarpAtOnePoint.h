@@ -184,7 +184,6 @@ namespace detail {
             }
         }
 
-    private:
         /**
          * Set parameters of kernel (and mask kernel, if present) and update X and Y values
          *
@@ -201,6 +200,7 @@ namespace detail {
             return kSum;
         }
 
+    //private:
         SrcImageT _srcImage;
         PTR(lsst::afw::math::SeparableKernel) _kernelPtr;
         PTR(lsst::afw::math::SeparableKernel) _maskKernelPtr;

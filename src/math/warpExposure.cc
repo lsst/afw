@@ -353,6 +353,68 @@ namespace {
     }
 
     template<typename DestImageT, typename SrcImageT>
+    int doWarpCovariance(
+      DestImageT &destImage,                      ///< remapped %image
+      SrcImageT const &srcImage,                  ///< source %image
+      afwMath::detail::PositionFunctor const &computeSrcPos,   ///< Functor to compute source position
+          ///< called with dest row, column; returns source position (as a Point2D)
+      afwMath::WarpingControl const &control,     ///< warping parameters
+      afwImage::Image<float> &covImage,
+      typename DestImageT::SinglePixel padValue,  ///< value to use for undefined pixels
+      afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> &srcWarper,  ///< WarpAtOnePoint object to be
+           ///< used to perform warping.
+      int row,  ///< destRow position to warp at.
+      int col,  ///< destCol position to warp at.
+      int kernelWidth,  ///< Width of the warping kernel in the destImage
+      int kernelHeight  ///< Height of the warping kernel in the destImage
+    ) {
+      afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> offsetWarper = srcWarper; // Copy the supplied
+            ///< WarpAtOnePoint object. This will be used to compute the kernel corresponding to the adjacent
+            ///< pixels
+      afwGeom::Point2D srcPos = computeSrcPos(col, row);
+      // Convert image positions for srcPixel to indexes
+      std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], lsst::afw::image::X);
+      std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], lsst::afw::image::Y);
+      if (srcIndFracX.second < 0) {
+          ++srcIndFracX.second;
+          --srcIndFracX.first;
+      }
+      if (srcIndFracY.second < 0) {
+          ++srcIndFracY.second;
+          --srcIndFracY.first;
+      }
+      if (srcWarper._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+        int srcStartX = srcIndFracX.first - srcWarper._kernelCtr[0];
+        int srcStartY = srcIndFracY.first - srcWarper._kernelCtr[1];
+        double kSum = srcWarper._setFracIndex(srcIndFracX.second, srcIndFracY.second);
+        typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcStartX, srcStartY);
+        for (int destOffsetRow = 0; destOffsetRow < kernelHeight; ++destOffsetRow) { // Iterate over adjacent destPixels within 1/2 kernel width.
+          for (int destOffsetCol = 0; destOffsetCol < kernelWidth; ++destOffsetCol) { // Iterate over adjacent destPixels within 1/2 kernel height.
+            afwGeom::Point2D srcOffsetPos = computeSrcPos(col + destOffsetCol, row + destOffsetRow); // This is the srcPixel (fractional) corresponding to a neighbor destPixel.
+            // Convert image positions for adjacent srcPixels to indexes
+            std::pair<int, double> srcOffsetIndFracX = srcImage.positionToIndex(srcOffsetPos[0], lsst::afw::image::X);
+            std::pair<int, double> srcOffsetIndFracY = srcImage.positionToIndex(srcOffsetPos[1], lsst::afw::image::Y);
+            if (srcOffsetIndFracX.second < 0) {
+              ++srcOffsetIndFracX.second;
+              --srcOffsetIndFracX.first;
+            }
+            if (srcOffsetIndFracY.second < 0) {
+              ++srcOffsetIndFracY.second;
+              --srcOffsetIndFracY.first;
+            }
+            if (offsetWarper._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcOffsetIndFracX.first, srcOffsetIndFracY.first))) {
+              int srcOffsetStartX = srcOffsetIndFracX.first - offsetWarper._kernelCtr[0];
+              int srcOffsetStartY = srcOffsetIndFracY.first - offsetWarper._kernelCtr[1];
+              double kOffsetSum = srcWarper._setFracIndex(srcOffsetIndFracX.second, srcOffsetIndFracY.second);
+              typename SrcImageT::const_xy_locator srcOffsetLoc = srcImage.xy_at(srcStartX, srcStartY);
+            }
+        }   // for destOffsetCol
+      }   // for destOffsetRow
+    } // for waper bbox
+      return 0;
+    }
+
+    template<typename DestImageT, typename SrcImageT>
     int doWarpImage(
         DestImageT &destImage,                      ///< remapped %image
         SrcImageT const &srcImage,                  ///< source %image
@@ -523,6 +585,8 @@ namespace {
         } else {
             // No interpolation
 
+            int kernelHeight = covImage.getHeight()/destImage.getHeight(), kernelWidth = covImage.getWidth()/destImage.getWidth();
+
             // initialize _srcPosList for row -1;
             // the first value is not needed, but it's safer to compute it
             std::vector<afwGeom::Point2D>::iterator srcPosView = _srcPosList.begin() + 1;
@@ -543,6 +607,9 @@ namespace {
                     if (warpAtOnePoint(destXIter, srcPos, relativeArea,
                         typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())) {
                         ++numGoodPixels;
+                        if ((covImage.getWidth() != 0) and (covImage.getHeight() != 0)) { // Sometimes we don't care about computing the covariance matrix. Obviously there are cleaner ways of doing this that don't involve making a check at every loop iteration.
+                          doWarpCovariance(destImage, srcImage, computeSrcPos, control, covImage, padValue, warpAtOnePoint, row, col, kernelWidth, kernelHeight); // Compute covariance between destPixel[col, row] and neighbor destPixels.
+                        }
                     }
                 }   // for col
             }   // for row
@@ -552,6 +619,7 @@ namespace {
     }
 
 } // namespace
+
 
 template<typename DestImageT, typename SrcImageT>
 int afwMath::warpImage(
