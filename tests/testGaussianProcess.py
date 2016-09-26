@@ -42,26 +42,26 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         the correct data when it should.
         """
         rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
+        data = rng.random_sample((10, 10))
         kd = afwMath.KdTreeD()
         kd.Initialize(data)
 
         # test that an exception is thrown if you ask for a point with
         # a negative index
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.getData(-1, 0)
 
         # test that an exception is thrown if you ask for a point beyond
         # the number of points stored in the tree
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.getData(10, 0)
 
         # test that an exception is thrown if you ask for dimensions that
         # don't exist
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.getData(0, -1)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.getData(0, 10)
 
         # test that the correct values are returned when they should be
@@ -75,18 +75,18 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         the correct data when it should.
         """
         rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
+        data = rng.random_sample((10, 10))
         kd = afwMath.KdTreeD()
         kd.Initialize(data)
 
         # test that an exception is thrown if you ask for a point with
         # a negative index
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.getData(-1)
 
         # test that an exception is thrown if you ask for a point beyond
         # the number of points stored in the tree
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.getData(10)
 
         # test that the correct values are returned when they should be
@@ -101,7 +101,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         nonsensical number of nearest neighbors.
         """
         rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
+        data = rng.random_sample((10, 10))
         kd = afwMath.KdTreeD()
         kd.Initialize(data)
         pt = rng.random_sample(10).astype(float)
@@ -109,25 +109,25 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         distances = np.zeros((5), dtype=float)
 
         # ask for a negative number of neighbors
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.findNeighbors(neighdex, distances, pt, -2)
 
         # ask for zero neighbors
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.findNeighbors(neighdex, distances, pt, 0)
 
         # ask for more neighbors than you have data
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.findNeighbors(neighdex, distances, pt, 11)
 
         # try sending neighdex of wrong size
         neighdex_bad = np.zeros((1), dtype=np.int32)
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.findNeighbors(neighdex_bad, distances, pt, 5)
 
         # try sending distances array of wrong size
         distances_bad = np.zeros((1), dtype=float)
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.findNeighbors(neighdex, distances_bad, pt, 5)
 
         # run something that works
@@ -223,18 +223,18 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         Test that KdTree.findNeighbors() does find the nearest neighbors
         """
         rng = np.random.RandomState(112)
-        data = rng.random_sample((10,10))
+        data = rng.random_sample((10, 10))
         kd = afwMath.KdTreeD()
         kd.Initialize(data)
         pt = rng.random_sample(10).astype(float)
         neighdex = np.zeros((5), dtype=np.int32)
         distances = np.zeros((5), dtype=float)
-        kd.findNeighbors(neighdex, distances, pt,5)
+        kd.findNeighbors(neighdex, distances, pt, 5)
 
         # check that the distances to the nearest neighbors are
         # correctly reported
         for ix in range(len(neighdex)):
-            dd_true = np.sqrt(np.power(pt - data[neighdex[ix]],2).sum())
+            dd_true = np.sqrt(np.power(pt - data[neighdex[ix]], 2).sum())
             self.assertAlmostEqual(dd_true, distances[ix], places=10)
 
         # check that the distances are returned in ascending order
@@ -242,7 +242,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
             self.assertGreaterEqual(distances[ix+1], distances[ix])
 
         # check that the actual nearest neighbors were found
-        dd_true = np.sqrt(np.power(pt-data,2).sum(axis=1))
+        dd_true = np.sqrt(np.power(pt-data, 2).sum(axis=1))
         sorted_dexes = np.argsort(dd_true)
         for ix in range(len(neighdex)):
             self.assertEqual(neighdex[ix], sorted_dexes[ix])
@@ -292,10 +292,10 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         self.assertEqual(kd.getPoints(), 4)
 
         # test that an exception is raised if you try to remove a non-existent point
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.removePoint(-1)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.removePoint(4)
 
         # test that things work correctly when you do remove a point
@@ -315,7 +315,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         # test that an exception is raised when you try to remove the last point
         kd.removePoint(0)
         kd.removePoint(0)
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             kd.removePoint(0)
 
     def testKdTreeGetTreeNode(self):
@@ -359,42 +359,42 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # values in
         data = rng.random_sample((10, 4))
         fn_values = rng.random_sample(11)
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, fn_values, afwMath.SquaredExpCovariogramD())
 
         max_val = np.ones(4)
         min_val = np.ones(4)
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, min_val, max_val, fn_values,
                                      afwMath.SquaredExpCovariogramD())
 
-        many_fn_values = rng.random_sample((11,3))
-        with self.assertRaises(RuntimeError) as context:
+        many_fn_values = rng.random_sample((11, 3))
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, many_fn_values, afwMath.SquaredExpCovariogramD())
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, min_val, max_val, many_fn_values,
                                      afwMath.SquaredExpCovariogramD())
 
         fn_values = rng.random_sample(data.shape[0])
-        many_fn_values = rng.random_sample((10,3))
+        many_fn_values = rng.random_sample((10, 3))
 
         # when you pass in improperly sized min and max val arrays
         bad_max_val = np.ones(3)
         bad_min_val = np.zeros(3)
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, bad_min_val, max_val,
                                      fn_values, afwMath.SquaredExpCovariogramD())
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, min_val, bad_max_val,
                                      fn_values, afwMath.SquaredExpCovariogramD())
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, bad_min_val, max_val,
                                      many_fn_values, afwMath.SquaredExpCovariogramD())
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             afwMath.GaussianProcessD(data, min_val, bad_max_val,
                                      many_fn_values, afwMath.SquaredExpCovariogramD())
 
@@ -439,28 +439,28 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that an exception is raised if you try to ask for an improper
         # number of nearest neighbors when interpolating
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.interpolate(var, good_pt, 0)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.interpolate(var, good_pt, -1)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.interpolate(var, good_pt, 14)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.interpolate(many_mu, many_var, good_pt, 0)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.interpolate(many_mu, many_var, good_pt, -1)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.interpolate(many_mu, many_var, good_pt, 14)
 
         # make sure that a Gaussian Process interpolating many functions
         # does not let you call the interpolate() method that returns
         # a scalar
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.interpolate(many_var, good_pt, 4)
 
         # test that the many-function interpolate throws an exception
@@ -468,15 +468,15 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         bad_var = np.zeros(6)
         bad_mu = np.zeros(6)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.interpolate(bad_mu, many_var, good_pt, 5)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.interpolate(many_mu, bad_var, good_pt, 5)
 
         # if you try to pass a variance array with len != 1 to
         # the single value interpolate()
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.interpolate(many_var, good_pt, 5)
 
         gg.interpolate(var, good_pt, 5)
@@ -501,20 +501,20 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that an exception is raised when you try to use scalar
         # selfInterpolation() on a many-function GaussianProcess
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.selfInterpolate(var_good, 11, 6)
 
         # test that an exception is raised when you pass a var_array that is
         # too large into a scalar GaussianProcess
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.selfInterpolate(var_good, 11, 6)
 
         # test that an exception is thrown when you pass in improperly-sized
         # mu and/or var arrays
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.selfInterpolate(mu_good, var_bad, 11, 6)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.selfInterpolate(mu_bad, var_good, 11, 6)
 
         # make surethat selfInterpolate runs when it should
@@ -540,36 +540,36 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         var_bad = np.zeros(9)
 
         # test for exception on points of incorrect size
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.batchInterpolate(mu_good, var_good, pts_bad)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.batchInterpolate(mu_good, pts_bad)
 
         # test for exception on output arrays of incorrect size
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.batchInterpolate(mu_bad, var_good, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.batchInterpolate(mu_bad, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.batchInterpolate(mu_good, var_bad, pts_good)
 
         # test that it runs properly with good inputs
         gg.batchInterpolate(mu_good, var_good, pts_good)
         gg.batchInterpolate(mu_good, pts_good)
 
-        fn_many = rng.random_sample((15,6))
+        fn_many = rng.random_sample((15, 6))
         gg_many = afwMath.GaussianProcessD(data, fn_many, afwMath.SquaredExpCovariogramD())
 
         # test that a GaussianProcess on many functions raises an exception
         # when you call batchInterpolate with output arrays that only have
         # room for one function
-        with self.assertRaises(RuntimeError) as cnotext:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_good, var_good, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_good, pts_good)
 
         mu_good = np.zeros((11, 6))
@@ -581,30 +581,30 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that a Gaussian Process on many functions raises an exception
         # when you try to interpolate on points of the wrong dimensionality
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_good, var_good, pts_bad)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_good, pts_bad)
 
         # test that a Gaussian Process on many functions rases an exception
         # when the output arrays are of the wrong size
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_bad_fn, var_good, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_bad_pts, var_good, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_bad_pts, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_bad_fn, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_good, var_bad_fn, pts_good)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.batchInterpolate(mu_good, var_bad_pts, pts_good)
 
         # check that a Gaussian Process on many functions runs properly
@@ -626,15 +626,15 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         mu_arr = np.empty(1)
 
         with self.assertRaises(pex.Exception):
-             gg.interpolate(sigma, test, 2*nData)
+            gg.interpolate(sigma, test, 2*nData)
         with self.assertRaises(pex.Exception):
-             gg.interpolate(sigma, test, -5)
+            gg.interpolate(sigma, test, -5)
         with self.assertRaises(pex.Exception):
-             gg.selfInterpolate(sigma, 0, 2*nData)
+            gg.selfInterpolate(sigma, 0, 2*nData)
         with self.assertRaises(pex.Exception):
-             gg.selfInterpolate(sigma, 0, -5)
+            gg.selfInterpolate(sigma, 0, -5)
         with self.assertRaises(pex.Exception):
-             gg.selfInterpolate(sigma, -1, nData-1)
+            gg.selfInterpolate(sigma, -1, nData-1)
         # the following segfaults, for unknown reasons, so run directly instead
         # self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
         try:
@@ -643,9 +643,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         except pex.Exception:
             pass
         with self.assertRaises(pex.Exception):
-             gg.interpolate(mu_arr, sigma, 2*nData)
+            gg.interpolate(mu_arr, sigma, 2*nData)
         with self.assertRaises(pex.Exception):
-             gg.interpolate(mu_arr, sigma, -5)
+            gg.interpolate(mu_arr, sigma, -5)
 
     def testInterpolate(self):
         """
@@ -693,7 +693,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setLambda(0.001)
 
         # now, read in the test points and their corresponding known solutions
-        f = open(os.path.join(testPath,"data", "gp_exp_covar_solutions.sav"))
+        f = open(os.path.join(testPath, "data", "gp_exp_covar_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -746,7 +746,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setCovariogram(nn)
         gg.setLambda(0.0045)
 
-        f = open(os.path.join(testPath,"data", "gp_nn_solutions.sav"))
+        f = open(os.path.join(testPath, "data", "gp_nn_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -900,21 +900,21 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that, when you add a point of the wrong dimensionality,
         # an exception is raised
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.addPoint(pt_bad, 5.0)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.addPoint(pt_bad, fn_good)
 
         # test that a GaussianProcess on many functions raises an exception
         # when you try to add a point with just one function value
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.addPoint(pt_good, 5.0)
 
         # test that a GaussianProcess on many functions raises an
         # exception when you try to add a point with the wrong number
         # of function values
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg_many.addPoint(pt_good, fn_bad)
 
         # check that, given good inputs, addPoint will run
@@ -1418,10 +1418,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         fn = rng.random_sample(13)
         gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.removePoint(-1)
 
-        with self.assertRaises(RuntimeError) as context:
+        with self.assertRaises(RuntimeError):
             gg.removePoint(13)
 
         # test that it runs fine
