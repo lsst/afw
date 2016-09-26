@@ -911,7 +911,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # check that, given good inputs, addPoint will run
         gg.addPoint(pt_good, 5.0)
-        gg_many.addPoint(pt_good,fn_good)
+        gg_many.addPoint(pt_good, fn_good)
 
         # since we started with 10 data points, we should now have 11
         self.assertEqual(gg.getPoints(), 11)
