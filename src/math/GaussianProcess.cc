@@ -1982,6 +1982,12 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin,
                           "your GaussianProcess.\n");
     }
 
+    if(f.template getSize < 0 > () != _nFunctions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You are not adding the correct number of function values to "
+                          "your GaussianProcess.\n");
+    }
+
     int i,j;
 
     ndarray::Array < T,1,1 >  v;
