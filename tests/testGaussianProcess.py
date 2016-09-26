@@ -28,7 +28,7 @@ from builtins import range
 import numpy as np
 
 import lsst.utils.tests
-import lsst.afw.math as gp
+import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pex
 
 testPath = os.path.abspath(os.path.dirname(__file__))
@@ -43,7 +43,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         """
         rng = np.random.RandomState(112)
         data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         kd.Initialize(data)
 
         # test that an exception is thrown if you ask for a point with
@@ -76,7 +76,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         """
         rng = np.random.RandomState(112)
         data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         kd.Initialize(data)
 
         # test that an exception is thrown if you ask for a point with
@@ -102,7 +102,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         """
         rng = np.random.RandomState(112)
         data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         kd.Initialize(data)
         pt = rng.random_sample(10).astype(float)
         neighdex = np.zeros((5), dtype=np.int32)
@@ -151,13 +151,14 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
             for j in range(dd):
                 data[i][j] = float(s[j])
 
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         try:
             kd.Initialize(data)
         except pex.Exception as e:
             print(e.what())
 
-        kds = gp.KdTreeD()
+        kds = afwMath.KdTreeD()
+
         try:
             kds.Initialize(data)
         except pex.Exception as e:
@@ -223,7 +224,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         """
         rng = np.random.RandomState(112)
         data = rng.random_sample((10,10))
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         kd.Initialize(data)
         pt = rng.random_sample(10).astype(float)
         neighdex = np.zeros((5), dtype=np.int32)
@@ -251,7 +252,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         Test the behavior of KdTree.addPoint
         """
         data = np.array([[1.0, 0.0, 2.0], [1.1, 2.5, 0.0], [4.5, 6.1, 0.0]])
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         kd.Initialize(data)
 
         # test that, if you try to add an improperly-sized point, an exception is thrown
@@ -286,7 +287,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         Test the behavior of KdTree.removePoint()
         """
         data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         kd.Initialize(data)
         self.assertEqual(kd.getPoints(), 4)
 
@@ -322,7 +323,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         Test that KdTree.GetTreeNode raises exceptions if you give it bad inputs
         """
         data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
-        kd = gp.KdTreeD()
+        kd = afwMath.KdTreeD()
         kd.Initialize(data)
 
         vv = np.ones(4, dtype=np.int32)
@@ -359,21 +360,21 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         data = rng.random_sample((10, 4))
         fn_values = rng.random_sample(11)
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, fn_values, afwMath.SquaredExpCovariogramD())
 
         max_val = np.ones(4)
         min_val = np.ones(4)
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, min_val, max_val, fn_values,
-                                gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, min_val, max_val, fn_values,
+                                     afwMath.SquaredExpCovariogramD())
 
         many_fn_values = rng.random_sample((11,3))
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, many_fn_values, gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, many_fn_values, afwMath.SquaredExpCovariogramD())
 
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, min_val, max_val, many_fn_values,
-                                gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, min_val, max_val, many_fn_values,
+                                     afwMath.SquaredExpCovariogramD())
 
         fn_values = rng.random_sample(data.shape[0])
         many_fn_values = rng.random_sample((10,3))
@@ -382,31 +383,31 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         bad_max_val = np.ones(3)
         bad_min_val = np.zeros(3)
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, bad_min_val, max_val,
-                                fn_values, gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, bad_min_val, max_val,
+                                     fn_values, afwMath.SquaredExpCovariogramD())
 
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, min_val, bad_max_val,
-                                fn_values, gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, min_val, bad_max_val,
+                                     fn_values, afwMath.SquaredExpCovariogramD())
 
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, bad_min_val, max_val,
-                                many_fn_values, gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, bad_min_val, max_val,
+                                     many_fn_values, afwMath.SquaredExpCovariogramD())
 
         with self.assertRaises(RuntimeError) as context:
-            gp.GaussianProcessD(data, min_val, bad_max_val,
-                                many_fn_values, gp.SquaredExpCovariogramD())
+            afwMath.GaussianProcessD(data, min_val, bad_max_val,
+                                     many_fn_values, afwMath.SquaredExpCovariogramD())
 
         # check that the constructor runs when it should
-        gp.GaussianProcessD(data, fn_values, gp.SquaredExpCovariogramD())
+        afwMath.GaussianProcessD(data, fn_values, afwMath.SquaredExpCovariogramD())
 
-        gp.GaussianProcessD(data, min_val, max_val, fn_values,
-                            gp.SquaredExpCovariogramD())
+        afwMath.GaussianProcessD(data, min_val, max_val, fn_values,
+                                 afwMath.SquaredExpCovariogramD())
 
-        gp.GaussianProcessD(data, many_fn_values, gp.SquaredExpCovariogramD())
+        afwMath.GaussianProcessD(data, many_fn_values, afwMath.SquaredExpCovariogramD())
 
-        gp.GaussianProcessD(data, min_val, max_val, many_fn_values,
-                            gp.SquaredExpCovariogramD())
+        afwMath.GaussianProcessD(data, min_val, max_val, many_fn_values,
+                                 afwMath.SquaredExpCovariogramD())
 
     def testInterpolateExceptions(self):
         """
@@ -417,8 +418,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         data = rng.random_sample((13, 5))
         fn = rng.random_sample(13)
         many_fn = rng.random_sample((13, 3))
-        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
-        gg_many = gp.GaussianProcessD(data, many_fn, gp.SquaredExpCovariogramD())
+        gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
+        gg_many = afwMath.GaussianProcessD(data, many_fn, afwMath.SquaredExpCovariogramD())
 
         var = np.zeros(1)
 
@@ -488,9 +489,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         rng = np.random.RandomState(632)
         data = rng.random_sample((15, 4))
         fn = rng.random_sample(15)
-        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+        gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
         many_fn = rng.random_sample((15, 3))
-        gg_many = gp.GaussianProcessD(data, many_fn, gp.SquaredExpCovariogramD())
+        gg_many = afwMath.GaussianProcessD(data, many_fn, afwMath.SquaredExpCovariogramD())
 
         var_good = np.zeros(3)
         mu_good = np.zeros(3)
@@ -529,7 +530,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         rng = np.random.RandomState(632)
         data = rng.random_sample((15, 4))
         fn = rng.random_sample(15)
-        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+        gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
 
         pts_good = rng.random_sample((11, 4))
         pts_bad = rng.random_sample((11, 3))
@@ -560,7 +561,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.batchInterpolate(mu_good, pts_good)
 
         fn_many = rng.random_sample((15,6))
-        gg_many = gp.GaussianProcessD(data, fn_many, gp.SquaredExpCovariogramD())
+        gg_many = afwMath.GaussianProcessD(data, fn_many, afwMath.SquaredExpCovariogramD())
 
         # test that a GaussianProcess on many functions raises an exception
         # when you call batchInterpolate with output arrays that only have
@@ -619,7 +620,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         dimen = 10                         # dimension of each point
         data = np.zeros((nData, dimen))
         fn = np.zeros(nData)
-        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+        gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
         test = np.zeros(dimen)
         sigma = np.empty(1)
         mu_arr = np.empty(1)
@@ -669,7 +670,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         test = np.zeros((dd), dtype=float)  # query points
         sigma = np.zeros((1), dtype=float)  # variance
 
-        xx = gp.SquaredExpCovariogramD()
+        xx = afwMath.SquaredExpCovariogramD()
         xx.setEllSquared(100.0)
 
         # read in the input data
@@ -685,7 +686,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # first try the squared exponential covariogram (the default)
         try:
-            gg = gp.GaussianProcessD(data, fn, xx)
+            gg = afwMath.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
             print(e.what())
 
@@ -738,7 +739,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         kk = 50
 
-        nn = gp.NeuralNetCovariogramD()
+        nn = afwMath.NeuralNetCovariogramD()
         nn.setSigma0(1.23)
         nn.setSigma1(0.452)
 
@@ -810,7 +811,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         mins = np.zeros((dd), dtype=float)
         maxs = np.zeros((dd), dtype=float)
 
-        nn = gp.NeuralNetCovariogramD()
+        nn = afwMath.NeuralNetCovariogramD()
         nn.setSigma0(0.555)
         nn.setSigma1(0.112)
 
@@ -834,7 +835,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         mins[2] = 0.0
         maxs[2] = 10.0
         try:
-            gg = gp.GaussianProcessD(data, mins, maxs, fn, nn)
+            gg = afwMath.GaussianProcessD(data, mins, maxs, fn, nn)
         except pex.Exception as e:
             print(e.what())
 
@@ -888,9 +889,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         rng = np.random.RandomState(44)
         data = rng.random_sample((10, 3))
         fn = rng.random_sample(10)
-        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+        gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
         fn_many = rng.random_sample((10, 5))
-        gg_many = gp.GaussianProcessD(data, fn_many, gp.SquaredExpCovariogramD())
+        gg_many = afwMath.GaussianProcessD(data, fn_many, afwMath.SquaredExpCovariogramD())
 
         pt_good = rng.random_sample(3)
         pt_bad = rng.random_sample(6)
@@ -939,7 +940,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         test = np.zeros((dd), dtype=float)
         sigma = np.zeros((1), dtype=float)
 
-        xx = gp.SquaredExpCovariogramD()
+        xx = afwMath.SquaredExpCovariogramD()
         xx.setEllSquared(5.0)
 
         f = open(os.path.join(testPath, "data", "gp_additive_test_root.sav"))
@@ -954,7 +955,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # establish the Gaussian Process
         try:
-            gg = gp.GaussianProcessD(data, fn, xx)
+            gg = afwMath.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
             print(e.what())
 
@@ -1036,11 +1037,11 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
                 data[i][j] = float(s[j])
             fn[i] = float(s[dd])
 
-        xx = gp.SquaredExpCovariogramD()
+        xx = afwMath.SquaredExpCovariogramD()
         xx.setEllSquared(2.0)
 
         try:
-            gg = gp.GaussianProcessD(data, fn, xx)
+            gg = afwMath.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
             print(e.what())
 
@@ -1127,10 +1128,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
                 data[i][j] = float(s[j])
             fn[i] = float(s[dd])
 
-        xx = gp.SquaredExpCovariogramD()
+        xx = afwMath.SquaredExpCovariogramD()
         xx.setEllSquared(20.0)
         try:
-            gg = gp.GaussianProcessD(data, fn, xx)
+            gg = afwMath.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
             print(e.what())
 
@@ -1203,11 +1204,11 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             for j in range(4):
                 fn[i][j] = float(s[j+10])
 
-        nn = gp.NeuralNetCovariogramD()
+        nn = afwMath.NeuralNetCovariogramD()
         nn.setSigma0(2.25)
         nn.setSigma1(0.76)
         try:
-            gg = gp.GaussianProcessD(data, fn, nn)
+            gg = afwMath.GaussianProcessD(data, fn, nn)
         except pex.Exception as e:
             print(e.what())
 
@@ -1301,7 +1302,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
                 batchFunctions[i][j] = float(s[j+10])
 
         try:
-            ggbatch = gp.GaussianProcessD(batchData, batchFunctions, nn)
+            ggbatch = afwMath.GaussianProcessD(batchData, batchFunctions, nn)
         except pex.Exception as e:
             print(e.what())
 
@@ -1415,7 +1416,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         rng = np.random.RandomState(118)
         data = rng.random_sample((13, 6))
         fn = rng.random_sample(13)
-        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+        gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
 
         with self.assertRaises(RuntimeError) as context:
             gg.removePoint(-1)
@@ -1451,10 +1452,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             for j in range(4):
                 fn[i][j] = float(s[j+10])
 
-        xx = gp.SquaredExpCovariogramD()
+        xx = afwMath.SquaredExpCovariogramD()
         xx.setEllSquared(2.3)
         try:
-            gg = gp.GaussianProcessD(data, fn, xx)
+            gg = afwMath.GaussianProcessD(data, fn, xx)
         except pex.Exception as e:
             print(e.what())
 
