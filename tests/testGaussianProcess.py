@@ -521,6 +521,46 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         var_one = np.zeros(1)
         gg.selfInterpolate(var_one, 11, 6)
 
+    def testBatchInterpolateExceptions(self):
+        """
+        Test that batchInterpolate() throws exceptions on bad input
+        """
+        rng = np.random.RandomState(88)
+        rng = np.random.RandomState(632)
+        data = rng.random_sample((15, 4))
+        fn = rng.random_sample(15)
+        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+
+        pts_good = rng.random_sample((11, 4))
+        pts_bad = rng.random_sample((11, 3))
+        mu_good = np.zeros(11)
+        mu_bad = np.zeros(9)
+        var_good = np.zeros(11)
+        var_bad = np.zeros(9)
+
+        # test for exception on points of incorrect size
+        with self.assertRaises(RuntimeError) as context:
+            gg.batchInterpolate(mu_good, var_good, pts_bad)
+
+        # test for exception on output arrays of incorrect size
+        with self.assertRaises(RuntimeError) as context:
+            gg.batchInterpolate(mu_bad, var_good, pts_good)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg.batchInterpolate(mu_good, var_bad, pts_good)
+
+        # test that it runs properly with good inputs
+        gg.batchInterpolate(mu_good, var_good, pts_good)
+
+        fn_many = rng.random_sample((15,6))
+        gg_many = gp.GaussianProcessD(data, fn_many, gp.SquaredExpCovariogramD())
+
+        # test that a GaussianProcess on many functions raises an exception
+        # when you call batchInterpolate with output arrays that only have
+        # room for one function
+        with self.assertRaises(RuntimeError) as cnotext:
+            gg_many.batchInterpolate(mu_good, var_good, pts_good)
+
     def testTooManyNeighbors(self):
         """
         Test that GaussianProcess checks if too many neighbours are requested
