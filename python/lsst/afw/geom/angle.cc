@@ -72,6 +72,12 @@ PYBIND11_PLUGIN(_angle) {
     clsAngle.def(py::self - py::self);
     clsAngle.def(py::self + py::self);
     clsAngle.def("__float__", &Angle::operator double);
+    clsAngle.def("__truediv__", [](Angle &a, double d) {
+        return a / d;
+    });
+    clsAngle.def("__floordiv__", [](Angle &a, double d) {
+        return floor(a / d);
+    });
     clsAngle.def("__div__", [](Angle &a, double d) {
         return a / d;
     });
