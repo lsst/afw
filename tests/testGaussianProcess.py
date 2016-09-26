@@ -887,15 +887,31 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         """
         rng = np.random.RandomState(44)
         data = rng.random_sample((10, 3))
+        fn = rng.random_sample(10)
+        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
         fn_many = rng.random_sample((10, 5))
         gg_many = gp.GaussianProcessD(data, fn_many, gp.SquaredExpCovariogramD())
 
         pt_good = rng.random_sample(3)
+        pt_bad = rng.random_sample(6)
+        fn_good = rng.random_sample(5)
+
+        # test that, when you add a point of the wrong dimensionality,
+        # an exception is raised
+        with self.assertRaises(RuntimeError) as context:
+            gg.addPoint(pt_bad, 5.0)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg.addPoint(pt_bad, fn_good)
 
         # test that a GaussianProcess on many functions raises an exception
         # when you try to add a point with just one function value
         with self.assertRaises(RuntimeError) as context:
             gg_many.addPoint(pt_good, 5.0)
+
+        # check that, given good inputs, addPoint will run
+        gg.addPoint(pt_good, 5.0)
+        gg_many.addPoint(pt_good,fn_good)
 
     def testAddition(self):
         """

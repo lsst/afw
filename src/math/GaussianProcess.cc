@@ -1921,6 +1921,12 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
 
     }
 
+    if(vin.getNumElements() != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You are trying to add a point of the wrong dimensionality to "
+                          "your GaussianProcess.\n");
+    }
+
     ndarray::Array < T,1,1 >  v;
     v = allocate(ndarray::makeVector(_dimensions));
 
@@ -1958,6 +1964,12 @@ template  < typename T >
 void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin,
                                       ndarray::Array < T,1,1 >  const &f)
 {
+
+    if(vin.getNumElements() != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You are trying to add a point of the wrong dimensionality to "
+                          "your GaussianProcess.\n");
+    }
 
     int i,j;
 
