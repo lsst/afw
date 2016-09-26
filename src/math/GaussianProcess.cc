@@ -990,6 +990,17 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 }
 
 
+template < typename T >
+int GaussianProcess < T > ::getPoints() const{
+    return _pts;
+}
+
+
+template < typename T >
+int GaussianProcess < T > ::getDim() const{
+    return _dimensions;
+}
+
 template  < typename T >
 T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                                       ndarray::Array < T,1,1 >  const &vin,

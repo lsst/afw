@@ -603,6 +603,17 @@ public:
                     std::shared_ptr< Covariogram<T> > const &covarIn);
 
     /**
+     * @brief return the number of data points stored in the GaussianProcess
+    */
+    int getPoints() const;
+
+    /**
+     *@brief return the dimensionality of data points stored in the
+     * GaussianProcess
+    */
+    int getDim() const;
+
+    /**
      * @brief Interpolate the function value at one point using a specified number of nearest neighbors
      *
      * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussian
