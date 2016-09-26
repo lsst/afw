@@ -1624,6 +1624,26 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
 
     int i,j,ii,nQueries,ifn;
 
+    nQueries = queries.template getSize < 0 > ();
+
+    if(mu.template getSize < 0 > () != nQueries || variance.template getSize < 0 > () != nQueries){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your output arrays do not have room for all of the points at which "
+                          "you are interpolating your functions.\n");
+    }
+
+    if(mu.template getSize < 1 > () != _nFunctions || variance.template getSize < 1 > () != _nFunctions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your output arrays do not have room for all of the functions you are "
+                          "interpolating\n");
+    }
+
+    if(queries.template getSize < 1 > () != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "The points at which you are interpolating your functions have the "
+                          "wrong dimensionality.\n");
+    }
+
     T fbar;
     Eigen::Matrix  < T,Eigen::Dynamic,Eigen::Dynamic >  batchCovariance,batchbb,batchxx;
     Eigen::Matrix  < T,Eigen::Dynamic,Eigen::Dynamic >  queryCovariance;
@@ -1632,10 +1652,6 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
     ndarray::Array < T,1,1 >  v1;
 
     _timer.start();
-
-    nQueries = queries.template getSize < 0 > ();
-
-
 
     v1 = allocate(ndarray::makeVector(_dimensions));
     batchbb.resize(_pts, 1);
