@@ -913,6 +913,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.addPoint(pt_good, 5.0)
         gg_many.addPoint(pt_good,fn_good)
 
+        # since we started with 10 data points, we should now have 11
+        self.assertEqual(gg.getPoints(), 11)
+        self.assertEqual(gg_many.getPoints(), 11)
+
     def testAddition(self):
         """
         This will test the performance of interpolation after adding new points
