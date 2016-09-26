@@ -881,6 +881,22 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         self.assertLess(worstMuErr, tol)
         self.assertLess(worstSigErr, tol)
 
+    def testAddPointExceptions(self):
+        """
+        Test that addPoint() raises exceptions when it should
+        """
+        rng = np.random.RandomState(44)
+        data = rng.random_sample((10, 3))
+        fn_many = rng.random_sample((10, 5))
+        gg_many = gp.GaussianProcessD(data, fn_many, gp.SquaredExpCovariogramD())
+
+        pt_good = rng.random_sample(3)
+
+        # test that a GaussianProcess on many functions raises an exception
+        # when you try to add a point with just one function value
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.addPoint(pt_good, 5.0)
+
     def testAddition(self):
         """
         This will test the performance of interpolation after adding new points
