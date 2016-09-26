@@ -1407,6 +1407,26 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         self.assertLess(worstMuErr, tol)
         self.assertLess(worstSigErr, tol)
 
+    def testRemovePointException(self):
+        """
+        Test that an exception is raised if you try to remove
+        a point that does not exist from a Gaussian Process
+        """
+        rng = np.random.RandomState(118)
+        data = rng.random_sample((13, 6))
+        fn = rng.random_sample(13)
+        gg = gp.GaussianProcessD(data, fn, gp.SquaredExpCovariogramD())
+
+        with self.assertRaises(RuntimeError) as context:
+            gg.removePoint(-1)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg.removePoint(13)
+
+        # test that it runs fine
+        gg.removePoint(11)
+        self.assertEqual(gg.getPoints(), 12)
+
     def testSubtraction(self):
         """
         This will test interpolate after subtracting points
