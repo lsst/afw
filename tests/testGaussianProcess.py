@@ -561,6 +561,36 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as cnotext:
             gg_many.batchInterpolate(mu_good, var_good, pts_good)
 
+        mu_good = np.zeros((11, 6))
+        mu_bad_fn = np.zeros((11, 5))
+        mu_bad_pts = np.zeros((10, 6))
+        var_good = np.zeros((11, 6))
+        var_bad_fn = np.zeros((11, 5))
+        var_bad_pts = np.zeros((10, 6))
+
+        # test that a Gaussian Process on many functions raises an exception
+        # when you try to interpolate on points of the wrong dimensionality
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.batchInterpolate(mu_good, var_good, pts_bad)
+
+        # test that a Gaussian Process on many functions rases an exception
+        # when the output arrays are of the wrong size
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.batchInterpolate(mu_bad_fn, var_good, pts_good)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.batchInterpolate(mu_bad_pts, var_good, pts_good)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.batchInterpolate(mu_good, var_bad_fn, pts_good)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.batchInterpolate(mu_good, var_bad_pts, pts_good)
+
+        # check that a Gaussian Process on many functions runs properly
+        # when given good inputs
+        gg_many.batchInterpolate(mu_good, var_good, pts_good)
+
     def testTooManyNeighbors(self):
         """
         Test that GaussianProcess checks if too many neighbours are requested
