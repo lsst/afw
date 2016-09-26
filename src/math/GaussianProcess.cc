@@ -1937,8 +1937,6 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
         }
     }
 
-    _kdTree.addPoint(v);
-
     if(_pts == _room){
         ndarray::Array < T,2,2 >  buff;
         buff = allocate(ndarray::makeVector(_pts, _nFunctions));
@@ -1956,6 +1954,8 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
     }
 
     _function[_pts][0] = f;
+
+    _kdTree.addPoint(v);
     _pts = _kdTree.getPoints();
 
 }
@@ -1983,8 +1983,6 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin,
         }
     }
 
-    _kdTree.addPoint(v);
-
     if(_pts == _room) {
         ndarray::Array < T,2,2 >  buff;
         buff = allocate(ndarray::makeVector(_pts, _nFunctions));
@@ -2001,7 +1999,10 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin,
     }
     for(i = 0; i < _nFunctions; i++ )_function[_pts][i] = f[i];
 
+    _kdTree.addPoint(v);
     _pts = _kdTree.getPoints();
+
+
 }
 
 template  < typename T >
