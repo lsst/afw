@@ -211,7 +211,7 @@ private:
 
     template <typename Derived>
     void setValueDeep(Element * p, ndarray::ExpressionBase<Derived> const & value) const {
-        if (value.template getSize<0>() != _size) {
+        if (value.template getSize<0>() != static_cast<std::size_t>(_size)) {
             throw LSST_EXCEPT(
                 lsst::pex::exceptions::LengthError,
                 "Incorrect size in array field assignment."

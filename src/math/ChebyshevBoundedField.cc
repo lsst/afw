@@ -232,14 +232,14 @@ PTR(ChebyshevBoundedField) ChebyshevBoundedField::fit(
 // ------------------ modifier factories ---------------------------------------------------------------
 
 PTR(ChebyshevBoundedField) ChebyshevBoundedField::truncate(Control const & ctrl) const {
-    if (ctrl.orderX >= _coefficients.getSize<1>()) {
+    if (static_cast<std::size_t>(ctrl.orderX) >= _coefficients.getSize<1>()) {
         throw LSST_EXCEPT(
             pex::exceptions::LengthError,
             (boost::format("New x order (%d) exceeds old x order (%d)")
              % ctrl.orderX % (_coefficients.getSize<1>() - 1)).str()
         );
     }
-    if (ctrl.orderY >= _coefficients.getSize<0>()) {
+    if (static_cast<std::size_t>(ctrl.orderY) >= _coefficients.getSize<0>()) {
         throw LSST_EXCEPT(
             pex::exceptions::LengthError,
             (boost::format("New y order (%d) exceeds old y order (%d)")
