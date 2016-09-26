@@ -542,15 +542,22 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_good, var_good, pts_bad)
 
+        with self.assertRaises(RuntimeError) as context:
+            gg.batchInterpolate(mu_good, pts_bad)
+
         # test for exception on output arrays of incorrect size
         with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_bad, var_good, pts_good)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg.batchInterpolate(mu_bad, pts_good)
 
         with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_good, var_bad, pts_good)
 
         # test that it runs properly with good inputs
         gg.batchInterpolate(mu_good, var_good, pts_good)
+        gg.batchInterpolate(mu_good, pts_good)
 
         fn_many = rng.random_sample((15,6))
         gg_many = gp.GaussianProcessD(data, fn_many, gp.SquaredExpCovariogramD())
@@ -560,6 +567,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # room for one function
         with self.assertRaises(RuntimeError) as cnotext:
             gg_many.batchInterpolate(mu_good, var_good, pts_good)
+
+        with self.assertRaises(RuntimeError) as context:
+            gg_many.batchInterpolate(mu_good, pts_good)
 
         mu_good = np.zeros((11, 6))
         mu_bad_fn = np.zeros((11, 5))
