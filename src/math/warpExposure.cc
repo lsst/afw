@@ -368,10 +368,19 @@ namespace {
       int kernelWidth,  ///< Width of the warping kernel in the destImage
       int kernelHeight  ///< Height of the warping kernel in the destImage
     ) {
-      afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> offsetWarper = srcWarper; // Copy the supplied
+      std::cout << std::endl;
+      std::cout << std::endl;
+      std::cout << "row: " << row << std::endl;
+      std::cout << "col: " << col << std::endl;
+
+      afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> srcOffsetWarper = srcWarper; // Copy the supplied
             ///< WarpAtOnePoint object. This will be used to compute the kernel corresponding to the adjacent
             ///< pixels
+      PTR(afwMath::SeparableKernel) kernelPtr = srcWarper._kernelPtr;
+      PTR(afwMath::SeparableKernel) kernelOffsetPtr = srcOffsetWarper._kernelPtr;
       afwGeom::Point2D srcPos = computeSrcPos(col, row);
+      std::cout << "srcPos: " << srcPos << std::endl;
+
       // Convert image positions for srcPixel to indexes
       std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], lsst::afw::image::X);
       std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], lsst::afw::image::Y);
@@ -383,14 +392,36 @@ namespace {
           ++srcIndFracY.second;
           --srcIndFracY.first;
       }
+      std::cout << "srcIndFracX.first: " << srcIndFracX.first << std::endl;
+      std::cout << "srcIndFracY.first: " << srcIndFracY.first << std::endl;
+      std::cout << "srcIndFracX.second: " << srcIndFracX.second << std::endl;
+      std::cout << "srcIndFracY.second: " << srcIndFracY.second << std::endl;
       if (srcWarper._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
         int srcStartX = srcIndFracX.first - srcWarper._kernelCtr[0];
         int srcStartY = srcIndFracY.first - srcWarper._kernelCtr[1];
+        std::cout << "srcStartX: " << srcStartX << std::endl;
+        std::cout << "srcStartY: " << srcStartY << std::endl;
         double kSum = srcWarper._setFracIndex(srcIndFracX.second, srcIndFracY.second);
+        std::cout << "kSum: " << kSum << std::endl;
         typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcStartX, srcStartY);
+
+        // Check kernel1
+        /*for (std::vector<double>::const_iterator iter = srcWarper._xList.begin(); iter < srcWarper._xList.end(); ++iter) {
+          std::cout << "_xList[i]: " << *iter << std::endl;
+        }
+        for (std::vector<double>::const_iterator iter = srcWarper._yList.begin(); iter < srcWarper._yList.end(); ++iter) {
+          std::cout << "_yList[i]: " << *iter << std::endl;
+        }*/
+
         for (int destOffsetRow = 0; destOffsetRow < kernelHeight; ++destOffsetRow) { // Iterate over adjacent destPixels within 1/2 kernel width.
           for (int destOffsetCol = 0; destOffsetCol < kernelWidth; ++destOffsetCol) { // Iterate over adjacent destPixels within 1/2 kernel height.
-            afwGeom::Point2D srcOffsetPos = computeSrcPos(col + destOffsetCol, row + destOffsetRow); // This is the srcPixel (fractional) corresponding to a neighbor destPixel.
+            std::cout << std::endl;
+            int destRow = row + destOffsetRow;
+            int destCol = col + destOffsetCol;
+            std::cout << "destRow: " << destRow << std::endl;
+            std::cout << "destCol: " << destCol << std::endl;
+            afwGeom::Point2D srcOffsetPos = computeSrcPos(destCol, destRow); // This is the srcPixel (fractional) corresponding to a neighbor destPixel.
+            std::cout << "srcOffsetPos: " << srcOffsetPos << std::endl;
             // Convert image positions for adjacent srcPixels to indexes
             std::pair<int, double> srcOffsetIndFracX = srcImage.positionToIndex(srcOffsetPos[0], lsst::afw::image::X);
             std::pair<int, double> srcOffsetIndFracY = srcImage.positionToIndex(srcOffsetPos[1], lsst::afw::image::Y);
@@ -402,15 +433,36 @@ namespace {
               ++srcOffsetIndFracY.second;
               --srcOffsetIndFracY.first;
             }
-            if (offsetWarper._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcOffsetIndFracX.first, srcOffsetIndFracY.first))) {
-              int srcOffsetStartX = srcOffsetIndFracX.first - offsetWarper._kernelCtr[0];
-              int srcOffsetStartY = srcOffsetIndFracY.first - offsetWarper._kernelCtr[1];
-              double kOffsetSum = srcWarper._setFracIndex(srcOffsetIndFracX.second, srcOffsetIndFracY.second);
-              typename SrcImageT::const_xy_locator srcOffsetLoc = srcImage.xy_at(srcStartX, srcStartY);
+            std::cout << "srcOffsetIndFracX.first: " << srcOffsetIndFracX.first << std::endl;
+            std::cout << "srcOffsetIndFracY.first: " << srcOffsetIndFracY.first << std::endl;
+            std::cout << "srcOffsetIndFracX.second: " << srcOffsetIndFracX.second << std::endl;
+            std::cout << "srcOffsetIndFracY.second: " << srcOffsetIndFracY.second << std::endl;
+            if (srcOffsetWarper._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcOffsetIndFracX.first, srcOffsetIndFracY.first))) {
+              int srcOffsetStartX = srcOffsetIndFracX.first - srcOffsetWarper._kernelCtr[0];
+              int srcOffsetStartY = srcOffsetIndFracY.first - srcOffsetWarper._kernelCtr[1];
+              std::cout << "srcOffsetStartX: " << srcOffsetStartX << std::endl;
+              std::cout << "srcOffsetStartY: " << srcOffsetStartY << std::endl;
+              double kOffsetSum = srcOffsetWarper._setFracIndex(srcOffsetIndFracX.second, srcOffsetIndFracY.second);
+              std::cout << "kOffsetSum: " << kOffsetSum << std::endl;
+              typename SrcImageT::const_xy_locator srcOffsetLoc = srcImage.xy_at(srcOffsetStartX, srcOffsetStartY);
+
+              // Check kernel2
+              /*for (std::vector<double>::const_iterator iter = srcWarper._xList.begin(); iter < srcWarper._xList.end(); ++iter) {
+                std::cout << "_xList[i]: " << *iter << std::endl;
+              }
+              for (std::vector<double>::const_iterator iter = srcOffsetWarper._xList.begin(); iter < srcOffsetWarper._xList.end(); ++iter) {
+                std::cout << "_xOffsetList[i]: " << *iter << std::endl;
+              }
+              for (std::vector<double>::const_iterator iter = srcOffsetWarper._yList.begin(); iter < srcOffsetWarper._yList.end(); ++iter) {
+                std::cout << "_yList[i]: " << *iter << std::endl;
+              }*/
+
             }
         }   // for destOffsetCol
       }   // for destOffsetRow
     } // for waper bbox
+      std::cout << std::endl;
+      std::cout << std::endl;
       return 0;
     }
 
