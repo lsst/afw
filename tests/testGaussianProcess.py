@@ -1566,7 +1566,31 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.removePoint(11)
         self.assertEqual(gg.getPoints(), 12)
 
-    def testSubtraction(self):
+    def testRemovePoint(self):
+        """
+        Test that, after a point is removed, getData works as you would expect
+        """
+        rng = np.random.RandomState(99)
+        data = rng.random_sample((15, 4))
+        fn = rng.random_sample(15)
+        gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
+        self.assertEqual(gp.getPoints(), 15)
+        gp.removePoint(6)
+        self.assertEqual(gp.getPoints(), 14)
+        indices = np.array([9, 5, 4, 11], dtype=np.int32)
+        fn_out = np.zeros(4)
+        pts_out = np.zeros((4, 4))
+        gp.getData(pts_out, fn_out, indices)
+        for ii in range(len(indices)):
+            if indices[ii] >= 6:
+                target = indices[ii]+1
+            else:
+                target = indices[ii]
+            for jj in range(4):
+                self.assertAlmostEqual(pts_out[ii][jj], data[target][jj], 10)
+            self.assertAlmostEqual(fn_out[ii], fn[target], 10)
+
+    def testSubtractionInterpolation(self):
         """
         This will test interpolate after subtracting points
         """
