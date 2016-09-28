@@ -152,22 +152,14 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
                 data[i][j] = float(s[j])
 
         kd = afwMath.KdTreeD()
-        try:
-            kd.Initialize(data)
-        except pex.Exception as e:
-            print(e.what())
+
+        kd.Initialize(data)
 
         kds = afwMath.KdTreeD()
 
-        try:
-            kds.Initialize(data)
-        except pex.Exception as e:
-            print(e.what())
+        kds.Initialize(data)
 
-        try:
-            kds.removePoint(2)
-        except pex.Exception as e:
-            print(e.what())
+        kds.removePoint(2)
 
         worstErr = -1.0
         for i in range(100):
@@ -179,15 +171,9 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
                     worstErr = dd
         self.assertLess(worstErr, tol)
 
-        try:
-            kd.removePoint(2)
-        except pex.Exception as e:
-            print(e.what())
+        kd.removePoint(2)
 
-        try:
-            kds.removePoint(10)
-        except pex.Exception as e:
-            print(e.what())
+        kds.removePoint(10)
 
         for i in range(99):
             if i > 10:
@@ -198,15 +184,9 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
                     worstErr = dd
         self.assertLess(worstErr, tol)
 
-        try:
-            kd.removePoint(10)
-        except pex.Exception as e:
-            print(e.what())
+        kd.removePoint(10)
 
-        try:
-            kds.removePoint(21)
-        except pex.Exception as e:
-            print(e.what())
+        kds.removePoint(21)
 
         for i in range(98):
             if i > 21:
