@@ -1063,7 +1063,43 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(gg.getPoints(), 11)
         self.assertEqual(gg_many.getPoints(), 11)
 
-    def testAddition(self):
+    def testAddPoint(self):
+        """
+        Test that getData works as expected after running addPoint()
+        """
+        rng = np.random.RandomState(99)
+        data = rng.random_sample((15, 4))
+        fn = rng.random_sample(15)
+        gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
+        self.assertEqual(gp.getPoints(), 15)
+        pt_add = rng.random_sample(4)
+        fn_add = 0.98453
+        gp.addPoint(pt_add, fn_add)
+        self.assertEqual(gp.getPoints(), 16)
+        fn_out = np.zeros(1)
+        pt_out = np.zeros((1, 4))
+        indices = np.array([15], dtype=np.int32)
+        gp.getData(pt_out, fn_out, indices)
+        for ii in range(4):
+            self.assertAlmostEqual(pt_out[0][ii], pt_add[ii], 10)
+        self.assertAlmostEqual(fn_out[0], fn_add, 10)
+
+        # now try it with a GaussianProcess on many functions
+        fn = rng.random_sample((15, 3))
+        gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
+        self.assertEqual(gp.getPoints(), 15)
+        pt_add = rng.random_sample(4)
+        fn_add = rng.random_sample(3)
+        gp.addPoint(pt_add, fn_add)
+        self.assertEqual(gp.getPoints(), 16)
+        fn_out = np.zeros((1, 3))
+        gp.getData(pt_out, fn_out, indices)
+        for ii in range(4):
+            self.assertEqual(pt_out[0][ii], pt_add[ii], 10)
+        for ii in range(3):
+            self.assertEqual(fn_out[0][ii], fn_add[ii], 10)
+
+    def testAdditionInterpolation(self):
         """
         This will test the performance of interpolation after adding new points
         to GaussianProcess' data set
