@@ -1002,6 +1002,94 @@ int GaussianProcess < T > ::getDim() const{
 }
 
 template  < typename T >
+void GaussianProcess < T > ::getData(ndarray::Array <T, 2, 2> pts, ndarray::Array<T, 1, 1> fn,
+                                     ndarray::Array <int, 1, 1 > indices) const{
+
+    if(_nFunctions != 1){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your function value array does not have enough room for all of the functions "
+                          "in your GaussianProcess.\n");
+    }
+
+    if(pts.template getSize < 1 > () != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your pts array is constructed for points of the wrong dimensionality.\n");
+    }
+
+    if(pts.template getSize < 0 > () != indices.getNumElements()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not put enough room in your pts array to fit all the points "
+                          "you asked for in your indices array.\n");
+    }
+
+    if(fn.template getSize < 0 > () != indices.getNumElements()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not provide enough room in your function value array "
+                          "for all of the points you requested in your indices array.\n");
+    }
+
+    int i,j;
+    for(i = 0; i < indices.template getSize < 0 > (); i++){
+        pts[i] = _kdTree.getData(indices[i]);  // do this first in case one of the indices is invalid.
+                                               // _kdTree.getData() will raise an exception in that case
+        fn[i] = _function[indices[i]][0];
+        if(_useMaxMin == 1){
+            for(j = 0; j < _dimensions; j ++){
+                pts[i][j] *= (_max[j] - _min[j]);
+                pts[i][j] += _min[j];
+            }
+        }
+    }
+
+}
+
+
+template  < typename T >
+void GaussianProcess < T > ::getData(ndarray::Array <T, 2, 2> pts, ndarray::Array<T, 2, 2> fn,
+                                     ndarray::Array <int, 1, 1 > indices) const{
+
+    if(fn.template getSize < 1 > () != _nFunctions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your function value array does not have enough room for all of the functions "
+                          "in your GaussianProcess.\n");
+    }
+
+    if(pts.template getSize < 1 > () != _dimensions){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "Your pts array is constructed for points of the wrong dimensionality.\n");
+    }
+
+    if(pts.template getSize < 0 > () != indices.getNumElements()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not put enough room in your pts array to fit all the points "
+                          "you asked for in your indices array.\n");
+    }
+
+    if(fn.template getSize < 0 > () != indices.getNumElements()){
+        throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
+                          "You did not provide enough room in your function value array "
+                          "for all of the points you requested in your indices array.\n");
+    }
+
+    int i,j;
+    for(i = 0; i < indices.template getSize < 0 > (); i++){
+        pts[i] = _kdTree.getData(indices[i]);  // do this first in case one of the indices is invalid.
+                                               // _kdTree.getData() will raise an exception in that case
+        for(j = 0; j < _nFunctions; j ++){
+            fn[i][j] = _function[indices[i]][j];
+        }
+        if(_useMaxMin == 1){
+            for(j = 0; j < _dimensions; j ++){
+                pts[i][j] *= (_max[j] - _min[j]);
+                pts[i][j] += _min[j];
+            }
+        }
+    }
+
+}
+
+
+template  < typename T >
 T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                                       ndarray::Array < T,1,1 >  const &vin,
                                       int numberOfNeighbors) const

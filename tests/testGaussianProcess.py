@@ -409,6 +409,144 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         afwMath.GaussianProcessD(data, min_val, max_val, many_fn_values,
                                  afwMath.SquaredExpCovariogramD())
 
+    def testGetDataExceptions(self):
+        """
+        Test that getData() returns exceptions on bad input
+        """
+        rng = np.random.RandomState(111)
+        data = rng.random_sample((14, 3))
+        fn = rng.random_sample(14)
+        gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
+        indices = np.array([0, 5, 7], dtype=np.int32)
+        indices_bad = np.array([0, 5, 16], dtype=np.int32)
+        fn_out_good = np.zeros(3)
+        fn_out_bad = np.zeros(4)
+        pts_out_good = np.zeros((3, 3))
+        pts_out_bad_ct = np.zeros((5, 3))
+        pts_out_bad_dim = np.zeros((3, 7))
+
+        # check that an exception is raised if we pass in an invalid
+        # index
+        with self.assertRaises(RuntimeError):
+            gp.getData(pts_out_good, fn_out_good, indices_bad)
+
+        # check that an exception is raised if pts_out asks for
+        # the wrong number of points
+        with self.assertRaises(RuntimeError):
+            gp.getData(pts_out_bad_ct, fn_out_good, indices)
+
+        # check that an exception is raised if pts_out expects
+        # points of the wrong dimensionality
+        with self.assertRaises(RuntimeError):
+            gp.getData(pts_out_bad_dim, fn_out_good, indices)
+
+        # check that an exception is raised if fn_out expects
+        # the wrong number of points
+        with self.assertRaises(RuntimeError):
+            gp.getData(pts_out_good, fn_out_bad, indices)
+
+        # check that getData runs safely when given good input
+        gp.getData(pts_out_good, fn_out_good, indices)
+
+        fn_many = rng.random_sample((14, 5))
+        gp_many = afwMath.GaussianProcessD(data, fn_many, afwMath.SquaredExpCovariogramD())
+
+        # check that a GaussianProcess with many functions throws an
+        # exception when you try to run getData designed for just one
+        # function
+        with self.assertRaises(RuntimeError):
+            gp_many.getData(pts_out_good, fn_out_good, indices)
+
+        # now test on a GaussianProcess with many functions
+
+        fn_out_good = np.zeros((3, 5))
+        fn_out_bad_ct = np.zeros((4, 5))
+        fn_out_bad_fn = np.zeros((3, 6))
+
+        # check that an exception is raised when pts_out expects
+        # the wrong number of points
+        with self.assertRaises(RuntimeError):
+            gp_many.getData(pts_out_bad_ct, fn_out_good, indices)
+
+        # check that an exception is raised when pts_out expects
+        # pts of the wrong dimensionality
+        with self.assertRaises(RuntimeError):
+            gp_many.getData(pts_out_bad_dim, fn_out_good, indices)
+
+        # check that an exception is raised when fn_out expects the
+        # wrong number of pts
+        with self.assertRaises(RuntimeError):
+            gp_many.getData(pts_out_good, fn_out_bad_ct, indices)
+
+        # check that an exception is raised when fn_out expects the
+        # wrong number of functions
+        with self.assertRaises(RuntimeError):
+            gp_many.getData(pts_out_good, fn_out_bad_fn, indices)
+
+        # check that an exception is raised when one of the indices is
+        # invalid
+        with self.assertRaises(RuntimeError):
+            gp_many.getData(pts_out_good, fn_out_good, indices_bad)
+
+        # check that getData runs safely when given good input
+        gp_many.getData(pts_out_good, fn_out_good, indices)
+
+    def testGetData(self):
+        """
+        Test that getData actually returns what you expect
+        """
+        rng = np.random.RandomState(131)
+        data = rng.random_sample((14, 3))
+        fn = rng.random_sample(14)
+        gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
+        pts_out = np.zeros((4, 3))
+        fn_out = np.zeros(4)
+        indices = np.array([4, 1, 12, 8], dtype=np.int32)
+        gp.getData(pts_out, fn_out, indices)
+
+        for ii in range(len(indices)):
+            self.assertAlmostEqual(fn_out[ii], fn[indices[ii]], 10)
+            for jj in range(3):
+                self.assertAlmostEqual(pts_out[ii][jj], data[indices[ii]][jj])
+
+        # now test with a max and min array
+        max_arr = np.array([0.3]*3)
+        min_arr = np.array([0.12]*3)
+        gp = afwMath.GaussianProcessD(data, min_arr, max_arr,
+                                      fn, afwMath.SquaredExpCovariogramD())
+
+        gp.getData(pts_out, fn_out, indices)
+
+        for ii in range(len(indices)):
+            self.assertAlmostEqual(fn_out[ii], fn[indices[ii]], 10)
+            for jj in range(3):
+                self.assertAlmostEqual(pts_out[ii][jj], data[indices[ii]][jj])
+
+        # now test on a GaussianProcess with many functions
+        fn_many = rng.random_sample((14, 6))
+        fn_out = np.zeros((4, 6))
+        gp = afwMath.GaussianProcessD(data, fn_many, afwMath.SquaredExpCovariogramD())
+
+        gp.getData(pts_out, fn_out, indices)
+
+        for ii in range(len(indices)):
+            for jj in range(6):
+                self.assertAlmostEqual(fn_out[ii][jj], fn_many[indices[ii]][jj], 10)
+            for jj in range(3):
+                self.assertAlmostEqual(pts_out[ii][jj], data[indices[ii]][jj])
+
+        # with min and max array
+        gp = afwMath.GaussianProcessD(data, min_arr, max_arr,
+                                      fn_many, afwMath.SquaredExpCovariogramD())
+
+        gp.getData(pts_out, fn_out, indices)
+
+        for ii in range(len(indices)):
+            for jj in range(6):
+                self.assertAlmostEqual(fn_out[ii][jj], fn_many[indices[ii]][jj], 10)
+            for jj in range(3):
+                self.assertAlmostEqual(pts_out[ii][jj], data[indices[ii]][jj])
+
     def testInterpolateExceptions(self):
         """
         Test that interpolate() raises exceptions when given improper

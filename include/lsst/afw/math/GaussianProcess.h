@@ -614,6 +614,31 @@ public:
     int getDim() const;
 
     /**
+     * @brief Return a sub-sample the data underlying the Gaussian Process
+     *
+     * @param [out] pts will contain the data points from the Gaussian Process
+     *
+     * @param [out] fn will contain the function values from the Gaussian Process
+     *
+     * @param [in] indices is an array of indices indicating the points to return
+    */
+    void getData(ndarray::Array<T,2,2> pts, ndarray::Array<T,1,1> fn,
+                 ndarray::Array<int, 1, 1> indices) const;
+
+    /**
+     * @brief Return a sub-sample the data underlying the Gaussian Process
+     *
+     * @param [out] pts will contain the data points from the Gaussian Process
+     *
+     * @param [out] fn will contain the function values from the Gaussian Process
+     *
+     * @param [in] indices is an array of indices indicating the points to return
+    */
+    void getData(ndarray::Array<T,2,2> pts, ndarray::Array<T,2,2> fn,
+                 ndarray::Array<int, 1, 1> indices) const;
+
+
+    /**
      * @brief Interpolate the function value at one point using a specified number of nearest neighbors
      *
      * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussian
