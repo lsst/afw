@@ -143,9 +143,9 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         data = np.zeros((pp, dd), dtype=float)
         tol = 1.0e-10
 
-        f = open(os.path.join(testPath, "data", "kd_test_data.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "kd_test_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(dd):
@@ -792,9 +792,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         xx.setEllSquared(100.0)
 
         # read in the input data
-        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r") as f:
+            ff = f.readlines()
 
         for i in range(len(ff)):
             s = ff[i].split()
@@ -811,9 +810,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setLambda(0.001)
 
         # now, read in the test points and their corresponding known solutions
-        f = open(os.path.join(testPath, "data", "gp_exp_covar_solutions.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_exp_covar_solutions.sav"), "r") as f:
+            ff = f.readlines()
 
         worstMuErr = -1.0  # keep track of the worst fractional error in mu
         worstSigErr = -1.0  # keep track of the worst fractional error in the variance
@@ -864,9 +862,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setCovariogram(nn)
         gg.setLambda(0.0045)
 
-        f = open(os.path.join(testPath, "data", "gp_nn_solutions.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_nn_solutions.sav"), "r") as f:
+            ff = f.readlines()
 
         worstMuErr = -1.0
         worstSigErr = -1.0
@@ -933,9 +930,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         nn.setSigma0(0.555)
         nn.setSigma1(0.112)
 
-        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r") as f:
+            ff = f.readlines()
 
         for i in range(len(ff)):
             s = ff[i].split()
@@ -959,9 +955,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         gg.setLambda(0.0045)
 
-        f = open(os.path.join(testPath, "data", "gp_minmax_solutions.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_minmax_solutions.sav"), "r") as f:
+            ff = f.readlines()
 
         worstMuErr = -1.0
         worstSigErr = -1.0
@@ -1097,9 +1092,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         xx = afwMath.SquaredExpCovariogramD()
         xx.setEllSquared(5.0)
 
-        f = open(os.path.join(testPath, "data", "gp_additive_test_root.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_additive_test_root.sav"), "r") as f:
+            ff = f.readlines()
 
         for i in range(len(ff)):
             s = ff[i].split()
@@ -1117,9 +1111,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # now add new points to it and see if GaussianProcess.interpolate performs
         # correctly
-        f = open(os.path.join(testPath, "data", "gp_additive_test_data.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_additive_test_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for z in range(len(ff)):
             s = ff[z].split()
             for i in range(dd):
@@ -1130,9 +1124,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             except pex.Exception as e:
                 print(e.what())
 
-        f = open(os.path.join(testPath, "data", "gp_additive_test_solutions.sav"))
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_additive_test_solutions.sav"), "r") as f:
+            ff = f.readlines()
 
         worstMuErr = -1.0
         worstSigErr = -1.0
@@ -1182,9 +1175,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         data = np.zeros((pp, dd), dtype=float)
         fn = np.zeros((pp), dtype=float)
 
-        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(100):
             s = ff[i].split()
             for j in range(dd):
@@ -1201,9 +1194,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         gg.setLambda(0.0032)
 
-        f = open(os.path.join(testPath, "data", "gp_batch_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_batch_solutions.sav"), "r") as f:
+            ff = f.readlines()
 
         ntest = len(ff)
         mushld = np.zeros((ntest), dtype=float)
@@ -1273,9 +1265,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         data = np.zeros((pp, dd), dtype=float)
         fn = np.zeros((pp), dtype=float)
 
-        f = open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_exp_covar_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(pp):
             s = ff[i].split()
             for j in range(dd):
@@ -1292,9 +1284,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setKrigingParameter(30.0)
         gg.setLambda(0.00002)
 
-        f = open(os.path.join(testPath, "data", "gp_self_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_self_solutions.sav"), "r") as f:
+            ff = f.readlines()
+
         variance = np.zeros((1), dtype=float)
 
         worstMuErr = -1.0
@@ -1348,9 +1340,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         kk = 30
 
-        f = open(os.path.join(testPath, "data", "gp_vector_data.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_vector_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(10):
@@ -1370,9 +1362,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         worstMuErr = -1.0
         worstSigErr = -1.0
-        f = open(os.path.join(testPath, "data", "gp_vector_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+
+        with open(os.path.join(testPath, "data", "gp_vector_solutions.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(10):
@@ -1404,9 +1397,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         worstMuErr = -1.0
         worstSigErr = -1.0
 
-        f = open(os.path.join(testPath, "data", "gp_vector_selfinterpolate_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_vector_selfinterpolate_solutions.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             try:
@@ -1445,9 +1438,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         batchData = np.zeros((200, 10), dtype=float)
         batchFunctions = np.zeros((200, 4), dtype=float)
 
-        f = open(os.path.join(testPath, "data", "gp_vectorbatch_data.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_vectorbatch_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(10):
@@ -1462,9 +1455,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         ggbatch.setLambda(0.0045)
 
-        f = open(os.path.join(testPath, "data", "gp_vectorbatch_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_vectorbatch_solutions.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(10):
@@ -1514,9 +1507,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         print("worst mu error ", worstMuErr)
         self.assertLess(worstMuErr, tol)
 
-        f = open(os.path.join(testPath, "data", "gp_vector_add_data.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_vector_add_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(10):
@@ -1528,9 +1521,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             except pex.Exception as e:
                 print(e.what())
 
-        f = open(os.path.join(testPath, "data", "gp_vector_add_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_vector_add_solutions.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             try:
@@ -1640,9 +1633,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         vv = np.zeros((10), dtype=float)
         kk = 30
 
-        f = open(os.path.join(testPath, "data", "gp_subtraction_data.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_subtraction_data.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(10):
@@ -1670,9 +1663,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         worstMuErr = -1.0
         worstSigErr = -1.0
-        f = open(os.path.join(testPath, "data", "gp_subtraction_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+
+        with open(os.path.join(testPath, "data", "gp_subtraction_solutions.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             for j in range(10):
@@ -1704,9 +1698,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         worstMuErr = -1.0
         worstSigErr = -1.0
 
-        f = open(os.path.join(testPath, "data", "gp_subtraction_selfinterpolate_solutions.sav"), "r")
-        ff = f.readlines()
-        f.close()
+        with open(os.path.join(testPath, "data", "gp_subtraction_selfinterpolate_solutions.sav"), "r") as f:
+            ff = f.readlines()
+
         for i in range(len(ff)):
             s = ff[i].split()
             try:
