@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -22,130 +22,72 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-/**
- * @file
- * @brief Provide functions to handle dates
- * @ingroup afw
- * @author Steve Bickerton
- *
- */
 #include <sstream>
-#include <cmath>
+#include <string>
 
-#include "lsst/pex/exceptions.h"
 #include "boost/format.hpp"
-#include "boost/algorithm/string.hpp"
-#include "boost/tuple/tuple.hpp"
 
 #include "lsst/afw/geom/Angle.h"
 #include "lsst/afw/coord/Coord.h"
 #include "lsst/afw/coord/Observatory.h"
 
-namespace coord        = lsst::afw::coord;
-namespace ex           = lsst::pex::exceptions;
-namespace afwGeom      = lsst::afw::geom;
+namespace lsst {
+namespace afw {
+namespace coord {
 
-
-coord::Observatory::Observatory(
-                                afwGeom::Angle const longitude,
-                                afwGeom::Angle const latitude,
-                                double const elevation
-                               ) :
+Observatory::Observatory(
+    afw::geom::Angle const longitude,
+    afw::geom::Angle const latitude,
+    double const elevation
+) :
     _latitude(latitude),
     _longitude(longitude),
     _elevation(elevation) {
 }
 
-
-coord::Observatory::Observatory(
-                                std::string const longitude,
-                                std::string const latitude,
-                                double const elevation
-                               ) :
+Observatory::Observatory(
+    std::string const & longitude,
+    std::string const & latitude,
+    double const elevation
+) :
     _latitude(dmsStringToAngle(latitude)),
     _longitude(dmsStringToAngle(longitude)),
     _elevation(elevation) {
 }
 
-
-afwGeom::Angle coord::Observatory::getLongitude() const {
+afw::geom::Angle Observatory::getLongitude() const {
     return _longitude;
 }
 
-/**
- * @brief The main access method for the longitudinal coordinate
- *
- * @note There's no reason to want a latitude in hours, so that unit will cause
- *       an exception to be thrown
- *
- */
-afwGeom::Angle coord::Observatory::getLatitude() const {
+afw::geom::Angle Observatory::getLatitude() const {
     return _latitude;
 }
 
-
-/**
- * @brief Set the latitude
- */
-void coord::Observatory::setLatitude(
-                 afwGeom::Angle const latitude ///< the latitude
-                )   {
+void Observatory::setLatitude(afw::geom::Angle const latitude) {
     _latitude = latitude;
 }
 
-/**
- * @brief Set the longitude, positive eastward
- */
-void coord::Observatory::setLongitude(
-                                      afwGeom::Angle const longitude ///< the longitude
-                                     ) {
+void Observatory::setLongitude(afw::geom::Angle const longitude) {
     _longitude = longitude;
 }
 
-
-/**
- * @brief Set the geodetic elevation (meters above reference spheroid)
- */
-void coord::Observatory::setElevation(
-                                      double const elevation ///< the elevation
-                                     ) {
+void Observatory::setElevation(double const elevation) {
     _elevation = elevation;
 }
 
-
-
-/**
- * @brief Allow quick access to the longitudinal coordinate as a string
- *
- * @note There's no reason to want a longitude string in radians, so that unit will cause
- *       an exception to be thrown
- *
- */
-std::string coord::Observatory::getLongitudeStr() const {
+std::string Observatory::getLongitudeStr() const {
     return angleToDmsString(_longitude);
 }
-/**
- * @brief Allow quick access to the longitude coordinate as a string
- *
- * @note There's no reason to want a latitude string in radians or hours, so
- *       the units can not be explicitly requested.
- *
- */
-std::string coord::Observatory::getLatitudeStr() const {
+
+std::string Observatory::getLatitudeStr() const {
     return angleToDmsString(_latitude);
 }
 
-/**
- * Print an Observatory to the stream
- */
-std::ostream & coord::operator<<(std::ostream &os,             ///< Stream to print to
-                                 coord::Observatory const& obs ///< the Observatory to print
-                                )
-{
+std::ostream & operator<<(std::ostream &os, Observatory const& obs) {
     return os << (boost::format("%gW, %gN  %g")
                   % obs.getLatitude().asDegrees()
                   % obs.getLongitude().asDegrees()
                   % obs.getElevation()).str();
 }
 
-/************************************************************************************************************/
+}}}  // namespace lsst::afw::coord
