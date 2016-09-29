@@ -86,9 +86,13 @@ public:
     std::string getLatitudeStr() const;
 
     bool operator==(Observatory const& rhs) const {
+        auto deltaLongitude = _latitude - rhs.getLatitude();
+        deltaLongitude.wrapCtr();
+        auto deltaLatitude = _longitude - rhs.getLongitude();
+        deltaLatitude.wrapCtr();
         return
-            ((_latitude - rhs._latitude) == 0.0) &&
-            ((_longitude - rhs._longitude) == 0.0) &&
+            (deltaLongitude == 0.0*lsst::afw::geom::degrees) &&
+            (deltaLatitude == 0.0*lsst::afw::geom::degrees) &&
             ((_elevation - rhs._elevation) == 0.0);
     }
     bool operator!=(Observatory const& rhs) const {
