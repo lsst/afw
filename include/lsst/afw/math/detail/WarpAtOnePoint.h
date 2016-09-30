@@ -185,6 +185,103 @@ namespace detail {
         }
 
         /**
+         * Compute one warped mask, MaskedImage specialization
+         *
+         * The MaskedImage specialization uses the mask warping kernel, if present, to compute the mask plane;
+         * otherwise it uses the normal kernel to compute the mask plane.
+         */
+        bool computeMask(
+            typename DestImageT::x_iterator &destXIter,
+            lsst::afw::geom::Point2D const &srcPos,
+            double relativeArea,
+            lsst::afw::image::detail::Image_tag
+        ) {
+          // Do nothing
+          return true;
+        }
+
+        /**
+         * Compute one warped mask, MaskedImage specialization
+         *
+         * The MaskedImage specialization uses the mask warping kernel, if present, to compute the mask plane;
+         * otherwise it uses the normal kernel to compute the mask plane.
+         */
+        bool computeMask(
+            typename DestImageT::x_iterator &destXIter,
+            lsst::afw::geom::Point2D const &srcPos,
+            double relativeArea,
+            lsst::afw::image::detail::MaskedImage_tag
+        ) {
+            // Compute associated source pixel index as integer and nonnegative fractional parts;
+            // the latter is used to compute the remapping kernel.
+            std::pair<int, double> srcIndFracX = _srcImage.positionToIndex(srcPos[0], lsst::afw::image::X);
+            std::pair<int, double> srcIndFracY = _srcImage.positionToIndex(srcPos[1], lsst::afw::image::Y);
+            if (srcIndFracX.second < 0) {
+                ++srcIndFracX.second;
+                --srcIndFracX.first;
+            }
+            if (srcIndFracY.second < 0) {
+                ++srcIndFracY.second;
+                --srcIndFracY.first;
+            }
+
+            if (_srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+                // Offset source pixel index from kernel center to kernel corner (0, 0)
+                // so we can convolveAtAPoint the pixels that overlap between source and kernel
+                int srcStartX = srcIndFracX.first - _kernelCtr[0];
+                int srcStartY = srcIndFracY.first - _kernelCtr[1];
+
+                // Compute warped pixel
+                double kSum = _setFracIndex(srcIndFracX.second, srcIndFracY.second);
+
+                typename SrcImageT::const_xy_locator srcLoc = _srcImage.xy_at(srcStartX, srcStartY);
+
+                //*destXIter = lsst::afw::math::convolveAtAPoint<DestImageT, SrcImageT>(srcLoc, _xList, _yList);
+                //*destXIter *= relativeArea/kSum;
+
+                if (_hasMaskKernel) {
+                    // compute mask value based on the mask kernel (replacing the value computed above)
+                    int maskStartX = srcIndFracX.first - _maskKernelCtr[0];
+                    int maskStartY = srcIndFracY.first - _maskKernelCtr[1];
+
+                    typename SrcImageT::Mask::const_xy_locator srcMaskLoc = \
+                        _srcImage.getMask()->xy_at(maskStartX, maskStartY);
+
+                    typedef typename std::vector<lsst::afw::math::Kernel::Pixel>::const_iterator k_iter;
+
+                    typename DestImageT::Mask::SinglePixel destMaskValue = 0;
+                    for (k_iter kernelYIter = _maskYList.begin(), yEnd = _maskYList.end();
+                         kernelYIter != yEnd; ++kernelYIter) {
+
+                        typename DestImageT::Mask::SinglePixel destMaskValueY = 0;
+                        for (k_iter kernelXIter = _maskXList.begin(), xEnd = _maskXList.end();
+                             kernelXIter != xEnd; ++kernelXIter, ++srcMaskLoc.x()) {
+                            typename lsst::afw::math::Kernel::Pixel const kValX = *kernelXIter;
+                            if (kValX != 0) {
+                                destMaskValueY |= *srcMaskLoc;
+                            }
+                        }
+
+                        double const kValY = *kernelYIter;
+                        if (kValY != 0) {
+                            destMaskValue |= destMaskValueY;
+                        }
+
+                        srcMaskLoc += lsst::afw::image::detail::difference_type(-_maskXList.size(), 1);
+                    }
+
+                    destXIter.mask() = (destXIter.mask() & _growFullMask) | destMaskValue;
+                }
+                return true;
+            } else {
+               // Edge pixel
+                //*destXIter = _padValue;
+                return false;
+            }
+        }
+
+
+        /**
          * Set parameters of kernel (and mask kernel, if present) and update X and Y values
          *
          * @return sum of kernel

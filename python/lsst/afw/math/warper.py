@@ -213,7 +213,7 @@ class Warper(object):
         kernelWidthDest, kernelHeightDest = self.getKernelSizeDest(srcExposure, destExposure)
         covWidth = int(round(kernelWidthDest*srcExposure.getWidth()))
         covHeight = int(round(kernelHeightDest*srcExposure.getHeight()))
-        covImage = afwImage.ImageF(covWidth, covHeight, 0.0)
+        covImage = afwImage.ImageD(covWidth, covHeight, 0.0)
         mathLib.warpExposure(destExposure, srcExposure, self._warpingControl, covImage)
         return destExposure, covImage
 
