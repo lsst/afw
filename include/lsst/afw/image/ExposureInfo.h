@@ -30,6 +30,7 @@
 #include "lsst/afw/image/Filter.h"
 #include "lsst/afw/table/io/OutputArchive.h"
 #include "lsst/afw/image/CoaddInputs.h"
+#include "lsst/afw/image/VisitInfo.h"
 
 namespace lsst { namespace afw {
 
@@ -54,6 +55,7 @@ namespace image {
 class Calib;
 class Wcs;
 class ApCorrMap;
+class VisitInfo;
 
 /**
  *  @brief A collection of all the things that make an Exposure different from a MaskedImage
@@ -66,6 +68,7 @@ class ApCorrMap;
  *   - Detector is held by const pointer and only returned by const pointer (but if you're
  *     in Python, SWIG will have casted all that constness away).
  *   - Filter is held and returned by value.
+ *   - VisitInfo is immutable and is held by a const ptr and has a setter and getter.
  *   - Metadata is held by non-const pointer, and you can get a non-const pointer via a const
  *     member function accessor (i.e. constness is not propagated).
  *
@@ -176,6 +179,15 @@ public:
     /// Return a pair of catalogs that record the inputs, if this Exposure is a coadd (otherwise null).
     PTR(CoaddInputs) getCoaddInputs() const { return _coaddInputs; }
 
+    /// Return the exposure's visit info
+    CONST_PTR(image::VisitInfo) getVisitInfo() const { return _visitInfo; }
+
+    /// Does this exposure have visit info?
+    bool hasVisitInfo() const { return static_cast<bool>(_visitInfo); }
+
+    /// Set the exposure's visit info
+    void setVisitInfo(CONST_PTR(image::VisitInfo) const visitInfo) { _visitInfo = visitInfo; }
+
     /**
      *  @brief Construct an ExposureInfo from its various components.
      *
@@ -192,7 +204,8 @@ public:
         Filter const & filter = Filter(),
         PTR(daf::base::PropertySet) const & metadata = PTR(daf::base::PropertySet)(),
         PTR(CoaddInputs) const & coaddInputs = PTR(CoaddInputs)(),
-        PTR(ApCorrMap) const & apCorrMap = PTR(ApCorrMap)()
+        PTR(ApCorrMap) const & apCorrMap = PTR(ApCorrMap)(),
+        CONST_PTR(image::VisitInfo) const & visitInfo = CONST_PTR(image::VisitInfo)()
     );
 
     /// Copy constructor; deep-copies all components except the metadata.
@@ -282,6 +295,7 @@ private:
     PTR(daf::base::PropertySet) _metadata;
     PTR(CoaddInputs) _coaddInputs;
     PTR(ApCorrMap) _apCorrMap;
+    CONST_PTR(image::VisitInfo) _visitInfo;
 };
 
 }}} // lsst::afw::image
