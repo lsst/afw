@@ -33,7 +33,6 @@ import numpy as np
 import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.pex.exceptions as pexExcept
-import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
@@ -54,23 +53,6 @@ class CalibTestCase(lsst.utils.tests.TestCase):
     def tearDown(self):
         del self.calib
         del self.detector
-
-    def testTime(self):
-        """Test the exposure time information"""
-
-        isoDate = "1995-01-26T07:32:00.000000000Z"
-        self.calib.setMidTime(dafBase.DateTime(isoDate, dafBase.DateTime.UTC))
-        self.assertEqual(isoDate, self.calib.getMidTime().toString(dafBase.DateTime.UTC))
-        self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
-
-        dt = 123.4
-        self.calib.setExptime(dt)
-        self.assertEqual(self.calib.getExptime(), dt)
-
-    def testDetectorTime(self):
-        """Test that we can ask a calib for the MidTime at a point in a detector (ticket #1337)"""
-        p = afwGeom.PointI(3, 4)
-        self.calib.getMidTime(self.detector, p)
 
     def testPhotom(self):
         """Test the zero-point information"""
@@ -139,22 +121,14 @@ class CalibTestCase(lsst.utils.tests.TestCase):
     def testCtorFromMetadata(self):
         """Test building a Calib from metadata"""
 
-        isoDate = "1995-01-26T07:32:00.000000000Z"
-        exptime = 123.4
         flux0, flux0Err = 1e12, 1e10
         flux, fluxErr = 1000.0, 10.0
 
         metadata = dafBase.PropertySet()
-        metadata.add("TIME-MID", isoDate)
-        metadata.add("EXPTIME", exptime)
         metadata.add("FLUXMAG0", flux0)
         metadata.add("FLUXMAG0ERR", flux0Err)
 
         self.calib = afwImage.Calib(metadata)
-
-        self.assertEqual(isoDate, self.calib.getMidTime().toString(dafBase.DateTime.UTC))
-        self.assertAlmostEqual(self.calib.getMidTime().get(), 49743.3142245)
-        self.assertEqual(self.calib.getExptime(), exptime)
 
         self.assertEqual(flux0, self.calib.getFluxMag0()[0])
         self.assertEqual(flux0Err, self.calib.getFluxMag0()[1])
@@ -173,30 +147,26 @@ class CalibTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(self.calib != self.calib)  # using assertFalse to directly test != operator
 
         calib2 = afwImage.Calib()
-        calib2.setExptime(12)
+        calib2.setFluxMag0(1200)
 
         self.assertNotEqual(calib2, self.calib)
 
     def testCalibFromCalibs(self):
         """Test creating a Calib from an array of Calibs"""
-        exptime = 20
         mag0, mag0Sigma = 1.0, 0.01
-        time0 = dafBase.DateTime.now().get()
 
         calibs = afwImage.vectorCalib()
         ncalib = 3
         for i in range(ncalib):
             calib = afwImage.Calib()
-            calib.setMidTime(dafBase.DateTime(time0 + i))
-            calib.setExptime(exptime)
             calib.setFluxMag0(mag0, mag0Sigma)
 
             calibs.append(calib)
 
         ocalib = afwImage.Calib(calibs)
+        # the following is surely incorrect; see DM-7619
+        self.assertEqual(ocalib.getFluxMag0(), (0.0, 0.0))
 
-        self.assertEqual(ocalib.getExptime(), ncalib*exptime)
-        self.assertAlmostEqual(calibs[ncalib//2].getMidTime().get(), ocalib.getMidTime().get())
         # Check that we can only merge Calibs with the same fluxMag0 values
         calibs[0].setFluxMag0(1.001*mag0, mag0Sigma)
         with self.assertRaises(pexExcept.InvalidParameterError):

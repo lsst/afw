@@ -224,8 +224,6 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
     /**
      * We need to define these keywords properly! XXX
      */
-    data.metadata->set("TIME-MID", getCalib()->getMidTime().toString(daf::base::DateTime::UTC));
-    data.metadata->set("EXPTIME", getCalib()->getExptime());
     data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
     data.metadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
 

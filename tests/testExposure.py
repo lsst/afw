@@ -40,7 +40,6 @@ import numpy
 
 import lsst.utils
 import lsst.utils.tests
-import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
@@ -209,19 +208,19 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # Test the Calib member.  The Calib tests are in color.py, here we just check that it's in Exposure
         #
         calib = exposure.getCalib()
-        dt = 10
-        calib.setExptime(dt)
-        self.assertEqual(exposure.getCalib().getExptime(), dt)
+        fluxMag0, FluxMag0Err = 1.1e12, 2.2e10
+        calib.setFluxMag0(fluxMag0, FluxMag0Err)
+        self.assertEqual(exposure.getCalib().getFluxMag0(), (fluxMag0, FluxMag0Err))
         #
         # now check that we can set Calib
         #
         calib = afwImage.Calib()
-        dt = 666
-        calib.setExptime(dt)
+        fluxMag0_2, fluxMag0Err_2 = (511.1, 44.4)
+        calib.setFluxMag0(fluxMag0_2, fluxMag0Err_2)
 
         exposure.setCalib(calib)
 
-        self.assertEqual(exposure.getCalib().getExptime(), dt)
+        self.assertEqual(exposure.getCalib().getFluxMag0(), (fluxMag0_2, fluxMag0Err_2))
         #
         # Psfs next
         #
@@ -325,9 +324,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mainExposure.setPsf(self.psf)
 
         # Make sure we can write without an exception
-        mainExposure.getCalib().setExptime(10)
-        mainExposure.getCalib().setMidTime(dafBase.DateTime())
-        midMjd = mainExposure.getCalib().getMidTime().get()
         fluxMag0, fluxMag0Err = 1e12, 1e10
         mainExposure.getCalib().setFluxMag0(fluxMag0, fluxMag0Err)
 
@@ -349,8 +345,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             #
             self.assertEqual(mainExposure.getFilter().getName(), readExposure.getFilter().getName())
 
-            self.assertEqual(mainExposure.getCalib().getExptime(), readExposure.getCalib().getExptime())
-            self.assertEqual(midMjd, readExposure.getCalib().getMidTime().get())
             self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
 
             psf = readExposure.getPsf()
@@ -389,7 +383,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(e1.getFilter().getName(), e2.getFilter().getName())
         xy = afwGeom.Point2D(0, 0)
         self.assertEqual(e1.getWcs().pixelToSky(xy)[0], e2.getWcs().pixelToSky(xy)[0])
-        self.assertEqual(e1.getCalib().getExptime(), e2.getCalib().getExptime())
+        self.assertEqual(e1.getCalib(), e2.getCalib())
         # check PSF identity
         if not e1.getPsf():
             self.assertFalse(e2.getPsf())
@@ -405,7 +399,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureU.setWcs(self.wcs)
         exposureU.setDetector(self.detector)
         exposureU.setFilter(afwImage.Filter("g"))
-        exposureU.getCalib().setExptime(666)
         exposureU.setPsf(DummyPsf(4.0))
 
         exposureF = exposureU.convertF()

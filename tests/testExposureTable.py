@@ -123,8 +123,6 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         )
         self.calib = lsst.afw.image.Calib()
         self.calib.setFluxMag0(56.0, 2.2)
-        self.calib.setExptime(50.0)
-        self.calib.setMidTime(lsst.daf.base.DateTime.now())
         self.visitInfo = self.createVisitInfo()
         record0 = self.cat.addNew()
         record0.setId(1)
