@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import absolute_import, division
 
 #
@@ -27,7 +26,7 @@ from __future__ import absolute_import, division
 Tests for lsst.afw.table.ExposureTable
 
 Run with:
-   ./testExposureTable.py
+   python testExposureTable.py
 or
    python
    >>> import testExposureTable; testExposureTable.run()
