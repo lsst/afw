@@ -171,6 +171,8 @@ Python interface to lsst::afw::geom classes
 %include "XYTransform.i"
 %include "TransformMap.i"
 
+%include "SpherePoint.i"
+
 %import "lsst/pex/exceptions/exceptionsLib.i"
 
 %declareException(SingularTransformException, lsst.pex.exceptions.RuntimeError,
