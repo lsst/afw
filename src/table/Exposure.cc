@@ -11,6 +11,7 @@
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
+#include "lsst/afw/image/VisitInfo.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -65,6 +66,7 @@ struct PersistenceSchema {
     Key<int> calib;
     Key<int> apCorrMap;
     Key<int> validPolygon;
+    Key<int> visitInfo;
 
     static PersistenceSchema const & get() {
         static PersistenceSchema const instance;
@@ -103,6 +105,7 @@ struct PersistenceSchema {
         output.set(calib, archive.put(input.getCalib(), permissive));
         output.set(apCorrMap, archive.put(input.getApCorrMap(), permissive));
         output.set(validPolygon, archive.put(input.getValidPolygon(), permissive));
+        output.set(visitInfo, archive.put(input.getVisitInfo(), permissive));
     }
 
     void readRecord(
@@ -115,6 +118,7 @@ struct PersistenceSchema {
         output.setCalib(archive.get<image::Calib>(input.get(calib)));
         output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
         output.setValidPolygon(archive.get<geom::polygon::Polygon>(input.get(validPolygon)));
+        output.setVisitInfo(archive.get<image::VisitInfo>(input.get(visitInfo)));
     }
 
     // No copying
@@ -132,7 +136,8 @@ private:
         psf(schema.addField<int>("psf", "archive ID for Psf object")),
         calib(schema.addField<int>("calib", "archive ID for Calib object")),
         apCorrMap(schema.addField<int>("apCorrMap", "archive ID for ApCorrMap object")),
-        validPolygon(schema.addField<int>("validPolygon", "archive ID for Polygon object"))
+        validPolygon(schema.addField<int>("validPolygon", "archive ID for Polygon object")),
+        visitInfo(schema.addField<int>("visitInfo", "archive ID for VisitInfo object"))
     {
         schema.getCitizen().markPersistent();
     }
@@ -267,6 +272,8 @@ public:
             "apCorrMap", mapper);
         PersistableObjectColumnReader<geom::polygon::Polygon,&ExposureRecord::setValidPolygon>::setup(
             "validPolygon", mapper);
+        PersistableObjectColumnReader<image::VisitInfo, &ExposureRecord::setVisitInfo>::setup(
+            "visitInfo", mapper);
         PTR(ExposureTable) table = ExposureTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
@@ -333,6 +340,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
         _calib = s._calib;
         _apCorrMap = s._apCorrMap;
         _validPolygon = s._validPolygon;
+        _visitInfo = s._visitInfo;
     } catch (std::bad_cast&) {}
 }
 

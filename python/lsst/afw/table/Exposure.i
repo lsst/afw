@@ -35,6 +35,8 @@
 namespace lsst { namespace afw { namespace image {
 class Wcs;
 class Calib;
+class ApCorrMap;
+class VisitInfo;
 }
 namespace detection {
 class Psf;
@@ -45,6 +47,7 @@ class Psf;
 %shared_ptr(lsst::afw::image::ApCorrMap);
 %shared_ptr(lsst::afw::detection::Psf);
 %shared_ptr(lsst::afw::geom::polygon::Polygon)
+%shared_ptr(lsst::afw::image::VisitInfo)
 
 // =============== ExposureTable and ExposureRecord =========================================================
 
