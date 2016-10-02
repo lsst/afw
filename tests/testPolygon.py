@@ -1,360 +1,360 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import zip
-from builtins import range
-#
-# LSST Data Management System
-# Copyright 2008-2014 LSST Corporation.
-#
-# This product includes software developed by the
-# LSST Project (http://www.lsst.org/).
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the LSST License Statement and
-# the GNU General Public License along with this program.  If not,
-# see <http://www.lsstcorp.org/LegalNotices/>.
-#
-
-import numpy
-import pickle
-import unittest
-import os
-import lsst.utils.tests
-
-import lsst.afw.geom as afwGeom
-import lsst.afw.image as afwImage
-import lsst.afw.coord as afwCoord
-
-from lsst.afw.geom.polygon import Polygon, SinglePolygonException
-
-DEBUG = False
-
-
-def circle(radius, num, x0=0.0, y0=0.0):
-    """Generate points on a circle
-
-    @param radius: radius of circle
-    @param num: number of points
-    @param x0,y0: Offset in x,y
-    @return x,y coordinates as numpy array
-    """
-    theta = numpy.linspace(0, 2*numpy.pi, num=num, endpoint=False)
-    x = radius*numpy.cos(theta) + x0
-    y = radius*numpy.sin(theta) + y0
-    return numpy.array([x, y]).transpose()
-
-
-class PolygonTest(lsst.utils.tests.TestCase):
-
-    def setUp(self):
-        self.x0 = 0.0
-        self.y0 = 0.0
-
-    def polygon(self, num, radius=1.0, x0=None, y0=None):
-        """Generate a polygon
-
-        @param num: Number of points
-        @param radius: Radius of polygon
-        @param x0,y0: Offset of center
-        @return polygon
-        """
-        if x0 is None:
-            x0 = self.x0
-        if y0 is None:
-            y0 = self.y0
-        points = circle(radius, num, x0=x0, y0=y0)
-        return Polygon([afwGeom.Point2D(x, y) for x, y in reversed(points)])
-
-    def square(self, size=1.0, x0=0, y0=0):
-        """Generate a square
-
-        @param size: Half-length of the sides
-        @param x0,y0: Offset of center
-        """
-        return Polygon([afwGeom.Point2D(size*x + x0, size*y + y0) for
-                        x, y in ((-1, -1), (-1, 1), (1, 1), (1, -1))])
-
-    def testGetters(self):
-        """Test Polygon getters"""
-        for num in range(3, 30):
-            poly = self.polygon(num)
-            self.assertEqual(poly, poly)
-            self.assertNotEqual(poly, self.square(1.0, 2.0, 3.0))
-            self.assertEqual(poly.getNumEdges(), num)
-            self.assertEqual(len(poly.getVertices()), num + 1)  # One extra for the closing point
-            self.assertEqual(len(poly.getEdges()), num)
-            perimeter = 0.0
-            for p1, p2 in poly.getEdges():
-                perimeter += numpy.hypot(p1.getX() - p2.getX(), p1.getY() - p2.getY())
-            self.assertAlmostEqual(poly.calculatePerimeter(), perimeter)
-
-            self.assertEqual(pickle.loads(pickle.dumps(poly)), poly)
-
-        size = 3.0
-        poly = self.square(size=size)
-        self.assertEqual(poly.calculateArea(), (2*size)**2)
-        self.assertEqual(poly.calculatePerimeter(), 2*size*4)
-        edges = poly.getEdges()
-        self.assertEqual(len(edges), 4)
-        perimeter = 0.0
-        for p1, p2 in edges:
-            self.assertEqual(abs(p1.getX()), size)
-            self.assertEqual(abs(p1.getY()), size)
-            self.assertEqual(abs(p2.getX()), size)
-            self.assertEqual(abs(p2.getY()), size)
-            self.assertNotEqual(p1, p2)
-
-    def testFromBox(self):
-        size = 1.0
-        poly1 = self.square(size=size)
-        box = afwGeom.Box2D(afwGeom.Point2D(-1.0, -1.0), afwGeom.Point2D(1.0, 1.0))
-        poly2 = Polygon(box)
-        self.assertEqual(poly1, poly2)
-
-    def testBBox(self):
-        """Test Polygon.getBBox"""
-        size = 3.0
-        poly = self.square(size=size)
-        box = poly.getBBox()
-        self.assertEqual(box.getMinX(), -size)
-        self.assertEqual(box.getMinY(), -size)
-        self.assertEqual(box.getMaxX(), size)
-        self.assertEqual(box.getMaxY(), size)
-
-    def testCenter(self):
-        """Test Polygon.calculateCenter"""
-        for num in range(3, 30):
-            poly = self.polygon(num)
-            center = poly.calculateCenter()
-            self.assertAlmostEqual(center.getX(), self.x0)
-            self.assertAlmostEqual(center.getY(), self.y0)
-
-    def testContains(self):
-        """Test Polygon.contains"""
-        radius = 1.0
-        for num in range(3, 30):
-            poly = self.polygon(num, radius=radius)
-            self.assertTrue(poly.contains(afwGeom.Point2D(self.x0, self.y0)))
-            self.assertFalse(poly.contains(afwGeom.Point2D(self.x0 + radius, self.y0 + radius)))
-
-    def testOverlaps(self):
-        """Test Polygon.overlaps"""
-        radius = 1.0
-        for num in range(3, 30):
-            poly1 = self.polygon(num, radius=radius)
-            poly2 = self.polygon(num, radius=radius, x0=radius, y0=radius)
-            poly3 = self.polygon(num, radius=2*radius)
-            poly4 = self.polygon(num, radius=radius, x0=3*radius, y0=3*radius)
-            self.assertTrue(poly1.overlaps(poly2))
-            self.assertTrue(poly2.overlaps(poly1))
-            self.assertTrue(poly1.overlaps(poly3))
-            self.assertTrue(poly3.overlaps(poly1))
-            self.assertFalse(poly1.overlaps(poly4))
-            self.assertFalse(poly4.overlaps(poly1))
-
-    def testIntersection(self):
-        """Test Polygon.intersection"""
-        poly1 = self.square(2.0, -1.0, -1.0)
-        poly2 = self.square(2.0, +1.0, +1.0)
-        poly3 = self.square(1.0, 0.0, 0.0)
-        poly4 = self.square(1.0, +5.0, +5.0)
-
-        # intersectionSingle: assumes there's a single intersection (convex polygons)
-        self.assertEqual(poly1.intersectionSingle(poly2), poly3)
-        self.assertEqual(poly2.intersectionSingle(poly1), poly3)
-        self.assertRaises(SinglePolygonException, poly1.intersectionSingle, poly4)
-        self.assertRaises(SinglePolygonException, poly4.intersectionSingle, poly1)
-
-        # intersection: no assumptions
-        polyList1 = poly1.intersection(poly2)
-        polyList2 = poly2.intersection(poly1)
-        self.assertEqual(polyList1, polyList2)
-        self.assertEqual(len(polyList1), 1)
-        self.assertEqual(polyList1[0], poly3)
-        polyList3 = poly1.intersection(poly4)
-        polyList4 = poly4.intersection(poly1)
-        self.assertEqual(polyList3, polyList4)
-        self.assertEqual(len(polyList3), 0)
-
-    def testUnion(self):
-        """Test Polygon.union"""
-        poly1 = self.square(2.0, -1.0, -1.0)
-        poly2 = self.square(2.0, +1.0, +1.0)
-        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
-                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
-                          (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))])
-        poly4 = self.square(1.0, +5.0, +5.0)
-
-        # unionSingle: assumes there's a single union (intersecting polygons)
-        self.assertEqual(poly1.unionSingle(poly2), poly3)
-        self.assertEqual(poly2.unionSingle(poly1), poly3)
-        self.assertRaises(SinglePolygonException, poly1.unionSingle, poly4)
-        self.assertRaises(SinglePolygonException, poly4.unionSingle, poly1)
-
-        # union: no assumptions
-        polyList1 = poly1.union(poly2)
-        polyList2 = poly2.union(poly1)
-        self.assertEqual(polyList1, polyList2)
-        self.assertEqual(len(polyList1), 1)
-        self.assertEqual(polyList1[0], poly3)
-        polyList3 = poly1.union(poly4)
-        polyList4 = poly4.union(poly1)
-        self.assertEqual(len(polyList3), 2)
-        self.assertEqual(len(polyList3), len(polyList4))
-        self.assertTrue((polyList3[0] == polyList4[0] and polyList3[1] == polyList4[1]) or
-                        (polyList3[0] == polyList4[1] and polyList3[1] == polyList4[0]))
-        self.assertTrue((polyList3[0] == poly1 and polyList3[1] == poly4) or
-                        (polyList3[0] == poly4 and polyList3[1] == poly1))
-
-    def testSymDifference(self):
-        """Test Polygon.symDifference"""
-        poly1 = self.square(2.0, -1.0, -1.0)
-        poly2 = self.square(2.0, +1.0, +1.0)
-
-        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
-                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
-        poly4 = Polygon([afwGeom.Point2D(x, y) for x, y in
-                         ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
-
-        diff1 = poly1.symDifference(poly2)
-        diff2 = poly2.symDifference(poly1)
-
-        self.assertEqual(len(diff1), 2)
-        self.assertEqual(len(diff2), 2)
-        self.assertTrue((diff1[0] == diff2[0] and diff1[1] == diff2[1]) or
-                        (diff1[1] == diff2[0] and diff1[0] == diff2[1]))
-        self.assertTrue((diff1[0] == poly3 and diff1[1] == poly4) or
-                        (diff1[1] == poly3 and diff1[0] == poly4))
-
-    def testConvexHull(self):
-        """Test Polygon.convexHull"""
-        poly1 = self.square(2.0, -1.0, -1.0)
-        poly2 = self.square(2.0, +1.0, +1.0)
-        poly = poly1.unionSingle(poly2)
-        expected = Polygon([afwGeom.Point2D(x, y) for x, y in
-                            ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
-                             (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))])
-        self.assertEqual(poly.convexHull(), expected)
-
-    def testImage(self):
-        """Test Polygon.createImage"""
-        for i, num in enumerate(range(3, 30)):
-            poly = self.polygon(num, 25, 75, 75)
-            box = afwGeom.Box2I(afwGeom.Point2I(15, 15), afwGeom.Extent2I(115, 115))
-            image = poly.createImage(box)
-            if DEBUG:
-                import lsst.afw.display.ds9 as ds9
-                ds9.mtv(image, frame=i+1, title="Polygon nside=%d" % num)
-                for p1, p2 in poly.getEdges():
-                    ds9.line((p1, p2), frame=i+1)
-            self.assertAlmostEqual(image.getArray().sum()/poly.calculateArea(), 1.0, 6)
-
-    def testTransform(self):
-        """Test constructor for Polygon involving transforms"""
-        box = afwGeom.Box2D(afwGeom.Point2D(0.0, 0.0), afwGeom.Point2D(123.4, 567.8))
-        poly1 = Polygon(box)
-        scale = (0.2*afwGeom.arcseconds).asDegrees()
-        wcs = afwImage.makeWcs(afwCoord.Coord(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
-                               afwGeom.Point2D(0.0, 0.0), scale, 0.0, 0.0, scale)
-        transform = afwImage.XYTransformFromWcsPair(wcs, wcs)
-        poly2 = Polygon(box, transform)
-
-        # We lose some very small precision in the XYTransformFromWcsPair
-        # so we can't compare the polygons directly.
-        self.assertEqual(poly1.getNumEdges(), poly2.getNumEdges())
-        for p1, p2 in zip(poly1.getVertices(), poly2.getVertices()):
-            self.assertAlmostEqual(p1.getX(), p2.getX())
-            self.assertAlmostEqual(p1.getY(), p2.getY())
-
-        transform = afwGeom.AffineTransform.makeScaling(1.0)
-        poly3 = Polygon(box, transform)
-        self.assertEqual(poly1, poly3)
-
-    def testIteration(self):
-        """Test iteration over polygon"""
-        for num in range(3, 30):
-            poly = self.polygon(num)
-            self.assertEqual(len(poly), num)
-            points1 = [p for p in poly]
-            points2 = poly.getVertices()
-            self.assertEqual(points2[0], points2[-1])  # Closed representation
-            for p1, p2 in zip(points1, points2):
-                self.assertEqual(p1, p2)
-            for i, p1 in enumerate(points1):
-                self.assertEqual(poly[i], p1)
-
-    def testSubSample(self):
-        """Test Polygon.subSample"""
-        for num in range(3, 30):
-            poly = self.polygon(num)
-            sub = poly.subSample(2)
-
-            if DEBUG:
-                import matplotlib.pyplot as plt
-                axes = poly.plot(c='b')
-                sub.plot(axes, c='r')
-                plt.show()
-
-            self.assertEqual(len(sub), 2*num)
-            self.assertAlmostEqual(sub.calculateArea(), poly.calculateArea())
-            self.assertAlmostEqual(sub.calculatePerimeter(), poly.calculatePerimeter())
-            polyCenter = poly.calculateCenter()
-            subCenter = sub.calculateCenter()
-            self.assertAlmostEqual(polyCenter[0], subCenter[0])
-            self.assertAlmostEqual(polyCenter[1], subCenter[1])
-            for i in range(num):
-                self.assertEqual(sub[2*i], poly[i])
-
-            sub = poly.subSample(0.1)
-            self.assertAlmostEqual(sub.calculateArea(), poly.calculateArea())
-            self.assertAlmostEqual(sub.calculatePerimeter(), poly.calculatePerimeter())
-            polyCenter = poly.calculateCenter()
-            subCenter = sub.calculateCenter()
-            self.assertAlmostEqual(polyCenter[0], subCenter[0])
-            self.assertAlmostEqual(polyCenter[1], subCenter[1])
-
-    def testTransform2(self):
-        scale = 2.0
-        shift = afwGeom.Extent2D(3.0, 4.0)
-        transform = afwGeom.AffineTransform.makeTranslation(shift)*afwGeom.AffineTransform.makeScaling(scale)
-        for num in range(3, 30):
-            small = self.polygon(num, 1.0, 0.0, 0.0)
-            large = small.transform(transform)
-            expect = self.polygon(num, scale, shift[0], shift[1])
-            self.assertEqual(large, expect)
-
-            if DEBUG:
-                import matplotlib.pyplot as plt
-                axes = small.plot(c='k')
-                large.plot(axes, c='b')
-                plt.show()
-
-    def testReadWrite(self):
-        """Test that polygons can be read and written to fits files"""
-        for num in range(3, 30):
-            poly = self.polygon(num)
-            filename = 'polygon.fits'
-            poly.writeFits(filename)
-            poly2 = Polygon.readFits(filename)
-            self.assertEqual(poly, poly2)
-            os.remove(filename)
-
-
-class TestMemory(lsst.utils.tests.MemoryTestCase):
-    pass
-
-def setup_module(module):
-    lsst.utils.tests.init()
-
-if __name__ == "__main__":
-    lsst.utils.tests.init()
-    unittest.main()
+#pybind11##!/usr/bin/env python
+#pybind11#from __future__ import absolute_import, division
+#pybind11#from builtins import zip
+#pybind11#from builtins import range
+#pybind11##
+#pybind11## LSST Data Management System
+#pybind11## Copyright 2008-2014 LSST Corporation.
+#pybind11##
+#pybind11## This product includes software developed by the
+#pybind11## LSST Project (http://www.lsst.org/).
+#pybind11##
+#pybind11## This program is free software: you can redistribute it and/or modify
+#pybind11## it under the terms of the GNU General Public License as published by
+#pybind11## the Free Software Foundation, either version 3 of the License, or
+#pybind11## (at your option) any later version.
+#pybind11##
+#pybind11## This program is distributed in the hope that it will be useful,
+#pybind11## but WITHOUT ANY WARRANTY; without even the implied warranty of
+#pybind11## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#pybind11## GNU General Public License for more details.
+#pybind11##
+#pybind11## You should have received a copy of the LSST License Statement and
+#pybind11## the GNU General Public License along with this program.  If not,
+#pybind11## see <http://www.lsstcorp.org/LegalNotices/>.
+#pybind11##
+#pybind11#
+#pybind11#import numpy
+#pybind11#import pickle
+#pybind11#import unittest
+#pybind11#import os
+#pybind11#import lsst.utils.tests
+#pybind11#
+#pybind11#import lsst.afw.geom as afwGeom
+#pybind11#import lsst.afw.image as afwImage
+#pybind11#import lsst.afw.coord as afwCoord
+#pybind11#
+#pybind11#from lsst.afw.geom.polygon import Polygon, SinglePolygonException
+#pybind11#
+#pybind11#DEBUG = False
+#pybind11#
+#pybind11#
+#pybind11#def circle(radius, num, x0=0.0, y0=0.0):
+#pybind11#    """Generate points on a circle
+#pybind11#
+#pybind11#    @param radius: radius of circle
+#pybind11#    @param num: number of points
+#pybind11#    @param x0,y0: Offset in x,y
+#pybind11#    @return x,y coordinates as numpy array
+#pybind11#    """
+#pybind11#    theta = numpy.linspace(0, 2*numpy.pi, num=num, endpoint=False)
+#pybind11#    x = radius*numpy.cos(theta) + x0
+#pybind11#    y = radius*numpy.sin(theta) + y0
+#pybind11#    return numpy.array([x, y]).transpose()
+#pybind11#
+#pybind11#
+#pybind11#class PolygonTest(lsst.utils.tests.TestCase):
+#pybind11#
+#pybind11#    def setUp(self):
+#pybind11#        self.x0 = 0.0
+#pybind11#        self.y0 = 0.0
+#pybind11#
+#pybind11#    def polygon(self, num, radius=1.0, x0=None, y0=None):
+#pybind11#        """Generate a polygon
+#pybind11#
+#pybind11#        @param num: Number of points
+#pybind11#        @param radius: Radius of polygon
+#pybind11#        @param x0,y0: Offset of center
+#pybind11#        @return polygon
+#pybind11#        """
+#pybind11#        if x0 is None:
+#pybind11#            x0 = self.x0
+#pybind11#        if y0 is None:
+#pybind11#            y0 = self.y0
+#pybind11#        points = circle(radius, num, x0=x0, y0=y0)
+#pybind11#        return Polygon([afwGeom.Point2D(x, y) for x, y in reversed(points)])
+#pybind11#
+#pybind11#    def square(self, size=1.0, x0=0, y0=0):
+#pybind11#        """Generate a square
+#pybind11#
+#pybind11#        @param size: Half-length of the sides
+#pybind11#        @param x0,y0: Offset of center
+#pybind11#        """
+#pybind11#        return Polygon([afwGeom.Point2D(size*x + x0, size*y + y0) for
+#pybind11#                        x, y in ((-1, -1), (-1, 1), (1, 1), (1, -1))])
+#pybind11#
+#pybind11#    def testGetters(self):
+#pybind11#        """Test Polygon getters"""
+#pybind11#        for num in range(3, 30):
+#pybind11#            poly = self.polygon(num)
+#pybind11#            self.assertEqual(poly, poly)
+#pybind11#            self.assertNotEqual(poly, self.square(1.0, 2.0, 3.0))
+#pybind11#            self.assertEqual(poly.getNumEdges(), num)
+#pybind11#            self.assertEqual(len(poly.getVertices()), num + 1)  # One extra for the closing point
+#pybind11#            self.assertEqual(len(poly.getEdges()), num)
+#pybind11#            perimeter = 0.0
+#pybind11#            for p1, p2 in poly.getEdges():
+#pybind11#                perimeter += numpy.hypot(p1.getX() - p2.getX(), p1.getY() - p2.getY())
+#pybind11#            self.assertAlmostEqual(poly.calculatePerimeter(), perimeter)
+#pybind11#
+#pybind11#            self.assertEqual(pickle.loads(pickle.dumps(poly)), poly)
+#pybind11#
+#pybind11#        size = 3.0
+#pybind11#        poly = self.square(size=size)
+#pybind11#        self.assertEqual(poly.calculateArea(), (2*size)**2)
+#pybind11#        self.assertEqual(poly.calculatePerimeter(), 2*size*4)
+#pybind11#        edges = poly.getEdges()
+#pybind11#        self.assertEqual(len(edges), 4)
+#pybind11#        perimeter = 0.0
+#pybind11#        for p1, p2 in edges:
+#pybind11#            self.assertEqual(abs(p1.getX()), size)
+#pybind11#            self.assertEqual(abs(p1.getY()), size)
+#pybind11#            self.assertEqual(abs(p2.getX()), size)
+#pybind11#            self.assertEqual(abs(p2.getY()), size)
+#pybind11#            self.assertNotEqual(p1, p2)
+#pybind11#
+#pybind11#    def testFromBox(self):
+#pybind11#        size = 1.0
+#pybind11#        poly1 = self.square(size=size)
+#pybind11#        box = afwGeom.Box2D(afwGeom.Point2D(-1.0, -1.0), afwGeom.Point2D(1.0, 1.0))
+#pybind11#        poly2 = Polygon(box)
+#pybind11#        self.assertEqual(poly1, poly2)
+#pybind11#
+#pybind11#    def testBBox(self):
+#pybind11#        """Test Polygon.getBBox"""
+#pybind11#        size = 3.0
+#pybind11#        poly = self.square(size=size)
+#pybind11#        box = poly.getBBox()
+#pybind11#        self.assertEqual(box.getMinX(), -size)
+#pybind11#        self.assertEqual(box.getMinY(), -size)
+#pybind11#        self.assertEqual(box.getMaxX(), size)
+#pybind11#        self.assertEqual(box.getMaxY(), size)
+#pybind11#
+#pybind11#    def testCenter(self):
+#pybind11#        """Test Polygon.calculateCenter"""
+#pybind11#        for num in range(3, 30):
+#pybind11#            poly = self.polygon(num)
+#pybind11#            center = poly.calculateCenter()
+#pybind11#            self.assertAlmostEqual(center.getX(), self.x0)
+#pybind11#            self.assertAlmostEqual(center.getY(), self.y0)
+#pybind11#
+#pybind11#    def testContains(self):
+#pybind11#        """Test Polygon.contains"""
+#pybind11#        radius = 1.0
+#pybind11#        for num in range(3, 30):
+#pybind11#            poly = self.polygon(num, radius=radius)
+#pybind11#            self.assertTrue(poly.contains(afwGeom.Point2D(self.x0, self.y0)))
+#pybind11#            self.assertFalse(poly.contains(afwGeom.Point2D(self.x0 + radius, self.y0 + radius)))
+#pybind11#
+#pybind11#    def testOverlaps(self):
+#pybind11#        """Test Polygon.overlaps"""
+#pybind11#        radius = 1.0
+#pybind11#        for num in range(3, 30):
+#pybind11#            poly1 = self.polygon(num, radius=radius)
+#pybind11#            poly2 = self.polygon(num, radius=radius, x0=radius, y0=radius)
+#pybind11#            poly3 = self.polygon(num, radius=2*radius)
+#pybind11#            poly4 = self.polygon(num, radius=radius, x0=3*radius, y0=3*radius)
+#pybind11#            self.assertTrue(poly1.overlaps(poly2))
+#pybind11#            self.assertTrue(poly2.overlaps(poly1))
+#pybind11#            self.assertTrue(poly1.overlaps(poly3))
+#pybind11#            self.assertTrue(poly3.overlaps(poly1))
+#pybind11#            self.assertFalse(poly1.overlaps(poly4))
+#pybind11#            self.assertFalse(poly4.overlaps(poly1))
+#pybind11#
+#pybind11#    def testIntersection(self):
+#pybind11#        """Test Polygon.intersection"""
+#pybind11#        poly1 = self.square(2.0, -1.0, -1.0)
+#pybind11#        poly2 = self.square(2.0, +1.0, +1.0)
+#pybind11#        poly3 = self.square(1.0, 0.0, 0.0)
+#pybind11#        poly4 = self.square(1.0, +5.0, +5.0)
+#pybind11#
+#pybind11#        # intersectionSingle: assumes there's a single intersection (convex polygons)
+#pybind11#        self.assertEqual(poly1.intersectionSingle(poly2), poly3)
+#pybind11#        self.assertEqual(poly2.intersectionSingle(poly1), poly3)
+#pybind11#        self.assertRaises(SinglePolygonException, poly1.intersectionSingle, poly4)
+#pybind11#        self.assertRaises(SinglePolygonException, poly4.intersectionSingle, poly1)
+#pybind11#
+#pybind11#        # intersection: no assumptions
+#pybind11#        polyList1 = poly1.intersection(poly2)
+#pybind11#        polyList2 = poly2.intersection(poly1)
+#pybind11#        self.assertEqual(polyList1, polyList2)
+#pybind11#        self.assertEqual(len(polyList1), 1)
+#pybind11#        self.assertEqual(polyList1[0], poly3)
+#pybind11#        polyList3 = poly1.intersection(poly4)
+#pybind11#        polyList4 = poly4.intersection(poly1)
+#pybind11#        self.assertEqual(polyList3, polyList4)
+#pybind11#        self.assertEqual(len(polyList3), 0)
+#pybind11#
+#pybind11#    def testUnion(self):
+#pybind11#        """Test Polygon.union"""
+#pybind11#        poly1 = self.square(2.0, -1.0, -1.0)
+#pybind11#        poly2 = self.square(2.0, +1.0, +1.0)
+#pybind11#        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
+#pybind11#                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, +3.0),
+#pybind11#                          (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (+1.0, -3.0))])
+#pybind11#        poly4 = self.square(1.0, +5.0, +5.0)
+#pybind11#
+#pybind11#        # unionSingle: assumes there's a single union (intersecting polygons)
+#pybind11#        self.assertEqual(poly1.unionSingle(poly2), poly3)
+#pybind11#        self.assertEqual(poly2.unionSingle(poly1), poly3)
+#pybind11#        self.assertRaises(SinglePolygonException, poly1.unionSingle, poly4)
+#pybind11#        self.assertRaises(SinglePolygonException, poly4.unionSingle, poly1)
+#pybind11#
+#pybind11#        # union: no assumptions
+#pybind11#        polyList1 = poly1.union(poly2)
+#pybind11#        polyList2 = poly2.union(poly1)
+#pybind11#        self.assertEqual(polyList1, polyList2)
+#pybind11#        self.assertEqual(len(polyList1), 1)
+#pybind11#        self.assertEqual(polyList1[0], poly3)
+#pybind11#        polyList3 = poly1.union(poly4)
+#pybind11#        polyList4 = poly4.union(poly1)
+#pybind11#        self.assertEqual(len(polyList3), 2)
+#pybind11#        self.assertEqual(len(polyList3), len(polyList4))
+#pybind11#        self.assertTrue((polyList3[0] == polyList4[0] and polyList3[1] == polyList4[1]) or
+#pybind11#                        (polyList3[0] == polyList4[1] and polyList3[1] == polyList4[0]))
+#pybind11#        self.assertTrue((polyList3[0] == poly1 and polyList3[1] == poly4) or
+#pybind11#                        (polyList3[0] == poly4 and polyList3[1] == poly1))
+#pybind11#
+#pybind11#    def testSymDifference(self):
+#pybind11#        """Test Polygon.symDifference"""
+#pybind11#        poly1 = self.square(2.0, -1.0, -1.0)
+#pybind11#        poly2 = self.square(2.0, +1.0, +1.0)
+#pybind11#
+#pybind11#        poly3 = Polygon([afwGeom.Point2D(x, y) for x, y in
+#pybind11#                         ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +1.0), (-1.0, -1.0), (+1.0, -1.0), (1.0, -3.0))])
+#pybind11#        poly4 = Polygon([afwGeom.Point2D(x, y) for x, y in
+#pybind11#                         ((-1.0, +1.0), (-1.0, +3.0), (+3.0, +3.0), (+3.0, -1.0), (+1.0, -1.0), (1.0, +1.0))])
+#pybind11#
+#pybind11#        diff1 = poly1.symDifference(poly2)
+#pybind11#        diff2 = poly2.symDifference(poly1)
+#pybind11#
+#pybind11#        self.assertEqual(len(diff1), 2)
+#pybind11#        self.assertEqual(len(diff2), 2)
+#pybind11#        self.assertTrue((diff1[0] == diff2[0] and diff1[1] == diff2[1]) or
+#pybind11#                        (diff1[1] == diff2[0] and diff1[0] == diff2[1]))
+#pybind11#        self.assertTrue((diff1[0] == poly3 and diff1[1] == poly4) or
+#pybind11#                        (diff1[1] == poly3 and diff1[0] == poly4))
+#pybind11#
+#pybind11#    def testConvexHull(self):
+#pybind11#        """Test Polygon.convexHull"""
+#pybind11#        poly1 = self.square(2.0, -1.0, -1.0)
+#pybind11#        poly2 = self.square(2.0, +1.0, +1.0)
+#pybind11#        poly = poly1.unionSingle(poly2)
+#pybind11#        expected = Polygon([afwGeom.Point2D(x, y) for x, y in
+#pybind11#                            ((-3.0, -3.0), (-3.0, +1.0), (-1.0, +3.0),
+#pybind11#                             (+3.0, +3.0), (+3.0, -1.0), (+1.0, -3.0))])
+#pybind11#        self.assertEqual(poly.convexHull(), expected)
+#pybind11#
+#pybind11#    def testImage(self):
+#pybind11#        """Test Polygon.createImage"""
+#pybind11#        for i, num in enumerate(range(3, 30)):
+#pybind11#            poly = self.polygon(num, 25, 75, 75)
+#pybind11#            box = afwGeom.Box2I(afwGeom.Point2I(15, 15), afwGeom.Extent2I(115, 115))
+#pybind11#            image = poly.createImage(box)
+#pybind11#            if DEBUG:
+#pybind11#                import lsst.afw.display.ds9 as ds9
+#pybind11#                ds9.mtv(image, frame=i+1, title="Polygon nside=%d" % num)
+#pybind11#                for p1, p2 in poly.getEdges():
+#pybind11#                    ds9.line((p1, p2), frame=i+1)
+#pybind11#            self.assertAlmostEqual(image.getArray().sum()/poly.calculateArea(), 1.0, 6)
+#pybind11#
+#pybind11#    def testTransform(self):
+#pybind11#        """Test constructor for Polygon involving transforms"""
+#pybind11#        box = afwGeom.Box2D(afwGeom.Point2D(0.0, 0.0), afwGeom.Point2D(123.4, 567.8))
+#pybind11#        poly1 = Polygon(box)
+#pybind11#        scale = (0.2*afwGeom.arcseconds).asDegrees()
+#pybind11#        wcs = afwImage.makeWcs(afwCoord.Coord(0.0*afwGeom.degrees, 0.0*afwGeom.degrees),
+#pybind11#                               afwGeom.Point2D(0.0, 0.0), scale, 0.0, 0.0, scale)
+#pybind11#        transform = afwImage.XYTransformFromWcsPair(wcs, wcs)
+#pybind11#        poly2 = Polygon(box, transform)
+#pybind11#
+#pybind11#        # We lose some very small precision in the XYTransformFromWcsPair
+#pybind11#        # so we can't compare the polygons directly.
+#pybind11#        self.assertEqual(poly1.getNumEdges(), poly2.getNumEdges())
+#pybind11#        for p1, p2 in zip(poly1.getVertices(), poly2.getVertices()):
+#pybind11#            self.assertAlmostEqual(p1.getX(), p2.getX())
+#pybind11#            self.assertAlmostEqual(p1.getY(), p2.getY())
+#pybind11#
+#pybind11#        transform = afwGeom.AffineTransform.makeScaling(1.0)
+#pybind11#        poly3 = Polygon(box, transform)
+#pybind11#        self.assertEqual(poly1, poly3)
+#pybind11#
+#pybind11#    def testIteration(self):
+#pybind11#        """Test iteration over polygon"""
+#pybind11#        for num in range(3, 30):
+#pybind11#            poly = self.polygon(num)
+#pybind11#            self.assertEqual(len(poly), num)
+#pybind11#            points1 = [p for p in poly]
+#pybind11#            points2 = poly.getVertices()
+#pybind11#            self.assertEqual(points2[0], points2[-1])  # Closed representation
+#pybind11#            for p1, p2 in zip(points1, points2):
+#pybind11#                self.assertEqual(p1, p2)
+#pybind11#            for i, p1 in enumerate(points1):
+#pybind11#                self.assertEqual(poly[i], p1)
+#pybind11#
+#pybind11#    def testSubSample(self):
+#pybind11#        """Test Polygon.subSample"""
+#pybind11#        for num in range(3, 30):
+#pybind11#            poly = self.polygon(num)
+#pybind11#            sub = poly.subSample(2)
+#pybind11#
+#pybind11#            if DEBUG:
+#pybind11#                import matplotlib.pyplot as plt
+#pybind11#                axes = poly.plot(c='b')
+#pybind11#                sub.plot(axes, c='r')
+#pybind11#                plt.show()
+#pybind11#
+#pybind11#            self.assertEqual(len(sub), 2*num)
+#pybind11#            self.assertAlmostEqual(sub.calculateArea(), poly.calculateArea())
+#pybind11#            self.assertAlmostEqual(sub.calculatePerimeter(), poly.calculatePerimeter())
+#pybind11#            polyCenter = poly.calculateCenter()
+#pybind11#            subCenter = sub.calculateCenter()
+#pybind11#            self.assertAlmostEqual(polyCenter[0], subCenter[0])
+#pybind11#            self.assertAlmostEqual(polyCenter[1], subCenter[1])
+#pybind11#            for i in range(num):
+#pybind11#                self.assertEqual(sub[2*i], poly[i])
+#pybind11#
+#pybind11#            sub = poly.subSample(0.1)
+#pybind11#            self.assertAlmostEqual(sub.calculateArea(), poly.calculateArea())
+#pybind11#            self.assertAlmostEqual(sub.calculatePerimeter(), poly.calculatePerimeter())
+#pybind11#            polyCenter = poly.calculateCenter()
+#pybind11#            subCenter = sub.calculateCenter()
+#pybind11#            self.assertAlmostEqual(polyCenter[0], subCenter[0])
+#pybind11#            self.assertAlmostEqual(polyCenter[1], subCenter[1])
+#pybind11#
+#pybind11#    def testTransform2(self):
+#pybind11#        scale = 2.0
+#pybind11#        shift = afwGeom.Extent2D(3.0, 4.0)
+#pybind11#        transform = afwGeom.AffineTransform.makeTranslation(shift)*afwGeom.AffineTransform.makeScaling(scale)
+#pybind11#        for num in range(3, 30):
+#pybind11#            small = self.polygon(num, 1.0, 0.0, 0.0)
+#pybind11#            large = small.transform(transform)
+#pybind11#            expect = self.polygon(num, scale, shift[0], shift[1])
+#pybind11#            self.assertEqual(large, expect)
+#pybind11#
+#pybind11#            if DEBUG:
+#pybind11#                import matplotlib.pyplot as plt
+#pybind11#                axes = small.plot(c='k')
+#pybind11#                large.plot(axes, c='b')
+#pybind11#                plt.show()
+#pybind11#
+#pybind11#    def testReadWrite(self):
+#pybind11#        """Test that polygons can be read and written to fits files"""
+#pybind11#        for num in range(3, 30):
+#pybind11#            poly = self.polygon(num)
+#pybind11#            filename = 'polygon.fits'
+#pybind11#            poly.writeFits(filename)
+#pybind11#            poly2 = Polygon.readFits(filename)
+#pybind11#            self.assertEqual(poly, poly2)
+#pybind11#            os.remove(filename)
+#pybind11#
+#pybind11#
+#pybind11#class TestMemory(lsst.utils.tests.MemoryTestCase):
+#pybind11#    pass
+#pybind11#
+#pybind11#def setup_module(module):
+#pybind11#    lsst.utils.tests.init()
+#pybind11#
+#pybind11#if __name__ == "__main__":
+#pybind11#    lsst.utils.tests.init()
+#pybind11#    unittest.main()
