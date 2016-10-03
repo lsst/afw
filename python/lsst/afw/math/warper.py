@@ -244,7 +244,8 @@ class Warper(object):
             destBBox = destBBox,
         )
         destImage = srcImage.Factory(destBBox)
-        mathLib.warpImage(destImage, destWcs, srcImage, srcWcs, self._warpingControl)
+        covImage = afwImage.ImageD(0,0)
+        mathLib.warpImage(destImage, destWcs, srcImage, srcWcs, self._warpingControl, covImage)
         return destImage
 
     def _computeDestBBox(self, destWcs, srcImage, srcWcs, border, maxBBox, destBBox):
