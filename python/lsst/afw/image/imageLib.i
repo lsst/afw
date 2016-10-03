@@ -76,7 +76,7 @@ namespace boost {
 %initializeNumPy(afw_image)
 %{
 #include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
+#include "ndarray/converter/eigen.h"
 %}
 %include "lsst/daf/base/persistenceMacros.i"
 

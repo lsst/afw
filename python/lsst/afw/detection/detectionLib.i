@@ -60,7 +60,7 @@ import numpy  # used by some afw.table stuff we invoked here, but not included b
 %initializeNumPy(afw_detection)
 %{
 #include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
+#include "ndarray/converter/eigen.h"
 %}
 %include "ndarray.i"
 

@@ -50,7 +50,7 @@ Python interface to lsst::afw::geom classes
 %initializeNumPy(afw_geom)
 %{
 #include "ndarray/swig.h"
-#include "ndarray/swig/eigen.h"
+#include "ndarray/converter/eigen.h"
 %}
 %include "ndarray.i"
 
