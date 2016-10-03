@@ -99,7 +99,10 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
         else:
             raise ImportError("Could not load the requested backend: {}".format(backend))
 
-    return _disp.DisplayImpl(display, *args, **kwargs)
+    if display:
+        return _disp.DisplayImpl(display, *args, **kwargs)
+    else:
+        return True
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -145,6 +148,7 @@ class Display(object):
 
         self.frame = frame
         self._impl = _makeDisplayImpl(self, backend, *args, **kwargs)
+        self.name = backend
 
         self._xy0 = None                # the data displayed on the frame's XY0
         self.setMaskTransparency(Display._defaultMaskTransparency)
@@ -172,6 +176,8 @@ class Display(object):
                 print("   %-6s %s" % (k, doc.split("\n")[0] if doc else "???"))
 
         self.setCallback('h', _h_callback)
+
+        Display._displays[frame] = self
 
     def __enter__(self):
         """!Support for python's with statement"""
