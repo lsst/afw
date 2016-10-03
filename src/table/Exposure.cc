@@ -70,7 +70,11 @@ private:
 
 };
 
-// Schema prepended when saving an Exposure table
+/**
+ * Helper class for for persisting ExposureRecord
+ *
+ * Contains keys for columns beyond BaseRecord, a schema mapper and and helper functions
+ */
 struct PersistenceSchema {
     Schema schema;
     Key<int> wcs;
@@ -80,8 +84,7 @@ struct PersistenceSchema {
     Key<int> validPolygon;
     Key<int> visitInfo;
 
-    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord
-    // with IDs for Wcs, Psf, Calib and ApCorrMap.
+    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Wcs, Psf, etc.
     SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
         std::vector<Schema> inSchemas;
         inSchemas.push_back(PersistenceSchema().schema);
@@ -92,14 +95,14 @@ struct PersistenceSchema {
         return result;
     }
 
-    // Create a SchemaMapper that maps a BaseRecord with IDs for Psf and Wcs to an ExposureRecord
+    // Create a SchemaMapper that maps a BaseRecord to an ExposureRecord with IDs for WCS, Psf, etc.
     SchemaMapper makeReadMapper(Schema const & inputSchema) const {
         SchemaMapper result = SchemaMapper::removeMinimalSchema(inputSchema, schema);
         result.editOutputSchema().setAliasMap(inputSchema.getAliasMap());
         return result;
     }
 
-    // Convert an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
+    // Write psf, wcs, etc. from an ExposureRecord to an archive
     template <typename OutputArchiveIsh>
     void writeRecord(
         ExposureRecord const & input, BaseRecord & output,
@@ -115,6 +118,7 @@ struct PersistenceSchema {
         output.set(visitInfo, archive.put(input.getVisitInfo(), permissive));
     }
 
+    // Read psf, wcs, etc. from an archive to an ExposureRecord
     void readRecord(
         BaseRecord const & input, ExposureRecord & output,
         SchemaMapper const & mapper, io::InputArchive const & archive
