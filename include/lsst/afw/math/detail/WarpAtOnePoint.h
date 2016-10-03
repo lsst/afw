@@ -228,13 +228,13 @@ namespace detail {
             if (_srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
                 // Offset source pixel index from kernel center to kernel corner (0, 0)
                 // so we can convolveAtAPoint the pixels that overlap between source and kernel
-                int srcStartX = srcIndFracX.first - _kernelCtr[0];
-                int srcStartY = srcIndFracY.first - _kernelCtr[1];
+                //int srcStartX = srcIndFracX.first - _kernelCtr[0];
+                //int srcStartY = srcIndFracY.first - _kernelCtr[1];
 
                 // Compute warped pixel
-                double kSum = _setFracIndex(srcIndFracX.second, srcIndFracY.second);
+                _setFracIndex(srcIndFracX.second, srcIndFracY.second);
 
-                typename SrcImageT::const_xy_locator srcLoc = _srcImage.xy_at(srcStartX, srcStartY);
+                //typename SrcImageT::const_xy_locator srcLoc = _srcImage.xy_at(srcStartX, srcStartY);
 
                 //*destXIter = lsst::afw::math::convolveAtAPoint<DestImageT, SrcImageT>(srcLoc, _xList, _yList);
                 //*destXIter *= relativeArea/kSum;

@@ -172,9 +172,9 @@ class Warper(object):
         srcEndY = float(srcBbox.getEndY())
         # Map (srcBegX, srcBegY) and (srcBegX + kernelWidth, srcBegY + kernelHeight) -> dest & compute kernelWidthDest & kernelHeightDest
         destX0, destY0 = self.computeDestPos(srcBegX, srcBegY, srcWcs, destWcs)
-        destX1, destY1 = self.computeDestPos(srcBegX + kernelWidth/2, srcBegY, srcWcs, destWcs)
-        destX2, destY2 = self.computeDestPos(srcBegX, srcBegY + kernelHeight/2, srcWcs, destWcs)
-        #destX3, destY3 = computeDestPos(srcBegX + kernelWidth/2, srcBegY + kernelHeight/2, srcWcs, destWcs)
+        destX1, destY1 = self.computeDestPos(srcBegX + kernelWidth, srcBegY, srcWcs, destWcs)
+        destX2, destY2 = self.computeDestPos(srcBegX, srcBegY + kernelHeight, srcWcs, destWcs)
+        destX3, destY3 = self.computeDestPos(srcBegX + kernelWidth, srcBegY + kernelHeight, srcWcs, destWcs)
         kernelWidthDest = math.fabs(destX1 - destX0)
         kernelHeightDest = math.fabs(destY2 - destY0)
         return kernelWidthDest, kernelHeightDest
@@ -211,8 +211,8 @@ class Warper(object):
         )
         destExposure = srcExposure.Factory(destBBox, destWcs)
         kernelWidthDest, kernelHeightDest = self.getKernelSizeDest(srcExposure, destExposure)
-        covWidth = int(round(kernelWidthDest*srcExposure.getWidth()))
-        covHeight = int(round(kernelHeightDest*srcExposure.getHeight()))
+        covWidth = int(math.ceil(kernelWidthDest*destExposure.getWidth()))
+        covHeight = int(math.ceil(kernelHeightDest*destExposure.getHeight()))
         covImage = afwImage.ImageD(covWidth, covHeight, 0.0)
         mathLib.warpExposure(destExposure, srcExposure, self._warpingControl, covImage)
         return destExposure, covImage
