@@ -32,6 +32,7 @@ or
    >>> import testExposureTable; testExposureTable.run()
 """
 
+import os.path
 import unittest
 import numpy
 
@@ -233,6 +234,25 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(coaddInputsOut.visits[0].getId(), 2)
             self.assertEqual(coaddInputsOut.ccds[0].getId(), 3)
             self.assertEqual(coaddInputsOut.ccds[1].getId(), 4)
+
+    def testReadV1Catalog(self):
+        testDir = os.path.dirname(__file__)
+        v1CatalogPath = os.path.join(testDir, "data", "exposure_catalog_v1.fits")
+        catV1 = lsst.afw.table.ExposureCatalog.readFits(v1CatalogPath)
+        self.assertEqual(self.cat[0].get(self.ka), catV1[0].get(self.ka))
+        self.assertEqual(self.cat[0].get(self.kb), catV1[0].get(self.kb))
+        self.comparePsfs(self.cat[0].getPsf(), catV1[0].getPsf())
+        self.assertEqual(self.cat[0].getWcs(), catV1[0].getWcs())
+        self.assertEqual(self.cat[1].get(self.ka), catV1[1].get(self.ka))
+        self.assertEqual(self.cat[1].get(self.kb), catV1[1].get(self.kb))
+        self.assertEqual(self.cat[1].getWcs(), catV1[1].getWcs())
+        self.assertIsNone(self.cat[1].getPsf())
+        self.assertIsNone(self.cat[1].getCalib())
+        self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
+                         1].getWcs().getId())  # compare citizen IDs
+        self.assertEqual(self.cat[0].getCalib(), catV1[0].getCalib())
+        self.assertIsNone(catV1[0].getVisitInfo())
+        self.assertIsNone(catV1[1].getVisitInfo())
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

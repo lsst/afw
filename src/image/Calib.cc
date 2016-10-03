@@ -191,6 +191,7 @@ std::pair<double, double> Calib::getFluxMag0() const
 }
 
 namespace {
+
 inline void checkNegativeFlux0(double fluxMag0) {
     if (fluxMag0 <= 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
@@ -392,16 +393,16 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitu
 
 namespace {
 
+int const CALIB_TABLE_CURRENT_VERSION = 2;  // current version of ExposureTable
+std::string const EXPTIME_FIELD_NAME = "exptime";  // name of exposure time field
+
 class CalibSchema {
 public:
     table::Schema schema;
+    table::Key<std::int64_t> midTime;
+    table::Key<double> expTime;
     table::Key<double> fluxMag0;
     table::Key<double> fluxMag0Sigma;
-
-    static CalibSchema const & get() {
-        static CalibSchema instance;
-        return instance;
-    }
 
     // No copying
     CalibSchema (const CalibSchema&) = delete;
@@ -411,13 +412,22 @@ public:
     CalibSchema (CalibSchema&&) = delete;
     CalibSchema& operator=(CalibSchema&&) = delete;
 
-private:
-    CalibSchema() :
+    CalibSchema(int tableVersion=CALIB_TABLE_CURRENT_VERSION) :
         schema(),
-        fluxMag0(schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "count")),
-        fluxMag0Sigma(schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count"))
+        midTime(),
+        expTime(),
+        fluxMag0(),
+        fluxMag0Sigma()
     {
-        schema.getCitizen().markPersistent();
+        if (tableVersion == 1) {
+            // obsolete fields
+            midTime = schema.addField<std::int64_t>(
+                "midtime", "middle of the time of the exposure relative to Unix epoch", "ns"
+            );
+            expTime = schema.addField<double>(EXPTIME_FIELD_NAME, "exposure time", "s");
+        }
+        fluxMag0 = schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "count");
+        fluxMag0Sigma = schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count");
     }
 };
 
@@ -426,7 +436,16 @@ public:
 
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
-        CalibSchema const & keys = CalibSchema::get();
+        // table version is not persisted, so we don't have a clean way to determine the version;
+        // the hack is version = 1 if exptime found, else current
+        int tableVersion = 1;
+        try {
+            catalogs.front().getSchema().find<double>(EXPTIME_FIELD_NAME);
+        } catch (pex::exceptions::NotFoundError) {
+            tableVersion = CALIB_TABLE_CURRENT_VERSION;
+        }
+
+        CalibSchema const keys{tableVersion};
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
@@ -449,7 +468,7 @@ CalibFactory registration(getCalibPersistenceName());
 std::string Calib::getPersistenceName() const { return getCalibPersistenceName(); }
 
 void Calib::write(OutputArchiveHandle & handle) const {
-    CalibSchema const & keys = CalibSchema::get();
+    CalibSchema const keys{};
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
     PTR(table::BaseRecord) record = cat.addNew();
     std::pair<double,double> fluxMag0 = getFluxMag0();
