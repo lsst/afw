@@ -30,7 +30,6 @@ Angle.__eq__ = _Angle__eq__
 Angle.__ne__ = _Angle__ne__
 Angle.__mul__ = _Angle__mul__
 Angle.__rmul__ = _Angle__rmul__
-Angle.__truediv__ = Angle.__div__
 
 del _Angle__reduce__
 del _Angle__abs__
