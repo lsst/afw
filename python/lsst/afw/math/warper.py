@@ -21,7 +21,7 @@ from builtins import object
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
-import math
+import math; import pdb
 
 import lsst.pex.config as pexConfig
 import lsst.afw.geom as afwGeom
@@ -158,8 +158,6 @@ class Warper(object):
         """
         Compute the size of the covImage by computing the maximum size of the warping kernel on the destination exposure.
         """
-        destWidth = destExposure.getWidth()
-        destHeight = destExposure.getHeight()
         warpKernel = self._warpingControl.getWarpingKernel()
         kernelWidth = warpKernel.getWidth()
         kernelHeight = warpKernel.getHeight()
@@ -174,9 +172,9 @@ class Warper(object):
         destX0, destY0 = self.computeDestPos(srcBegX, srcBegY, srcWcs, destWcs)
         destX1, destY1 = self.computeDestPos(srcBegX + kernelWidth, srcBegY, srcWcs, destWcs)
         destX2, destY2 = self.computeDestPos(srcBegX, srcBegY + kernelHeight, srcWcs, destWcs)
-        destX3, destY3 = self.computeDestPos(srcBegX + kernelWidth, srcBegY + kernelHeight, srcWcs, destWcs)
-        kernelWidthDest = math.fabs(destX1 - destX0)
-        kernelHeightDest = math.fabs(destY2 - destY0)
+        #destX3, destY3 = self.computeDestPos(srcBegX + kernelWidth, srcBegY + kernelHeight, srcWcs, destWcs)
+        kernelWidthDest = int(round(math.sqrt((destX1 - destX0)**2 + (destY1 - destY0)**2)))
+        kernelHeightDest = int(round(math.sqrt((destX2 - destX0)**2 + (destY2 - destY0)**2)))
         return kernelWidthDest, kernelHeightDest
 
     def warpExposure(self, destWcs, srcExposure, border=0, maxBBox=None, destBBox=None):
@@ -211,8 +209,8 @@ class Warper(object):
         )
         destExposure = srcExposure.Factory(destBBox, destWcs)
         kernelWidthDest, kernelHeightDest = self.getKernelSizeDest(srcExposure, destExposure)
-        covWidth = int(math.ceil(kernelWidthDest*destExposure.getWidth()))
-        covHeight = int(math.ceil(kernelHeightDest*destExposure.getHeight()))
+        covWidth = kernelWidthDest*destExposure.getWidth()
+        covHeight = kernelHeightDest*destExposure.getHeight()
         covImage = afwImage.ImageD(covWidth, covHeight, 0.0)
         mathLib.warpExposure(destExposure, srcExposure, self._warpingControl, covImage)
         return destExposure, covImage

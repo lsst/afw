@@ -496,9 +496,7 @@ namespace {
           return 0;
       }
       PTR(afwMath::SeparableKernel) warpingKernelPtr = control.getWarpingKernel();
-
       std::shared_ptr<afwMath::LanczosWarpingKernel const> const lanczosKernelPtr = std::dynamic_pointer_cast<afwMath::LanczosWarpingKernel>(warpingKernelPtr);
-
       int numGoodPixels = 0;
 
       // Get the source MaskedImage and a pixel accessor to it.
@@ -507,11 +505,11 @@ namespace {
       int const destWidth = destImage.getWidth();
       int const destHeight = destImage.getHeight();
 
-      std::vector<afwGeom::Point2D> _srcPosList(1 + destWidth);
-      std::vector<afwGeom::Point2D> _srcAdjPosList(1 + destWidth);
+      afwImage::Image<double> akFactor(destImage.getDimensions(), 0.0); // relativeArea/kSum for each pixel
+      afwImage::Image<double>::xy_locator akLoc = akFactor.xy_at(0, 0);
 
-      int const maxCol = destWidth - 1;
-      int const maxRow = destHeight - 1;
+      std::vector<afwGeom::Point2D> _srcPosList(1 + destWidth);
+      //std::vector<afwGeom::Point2D> _srcAdjPosList(1 + destWidth);
 
       afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtOnePoint(srcImage, control, padValue);
       afwMath::detail::WarpAtOnePoint<DestImageT, SrcImageT> warpAtAdjPoint(srcImage, control, padValue); // Copy the supplied
@@ -530,6 +528,12 @@ namespace {
       for (int col = -1; col < destWidth; ++col) {
           srcPosView[col] = computeSrcPos(col, -1);
       }
+
+      //std::vector<afwGeom::Point2D>::iterator srcAdjPosView = _srcAdjPosList.begin() + 1;
+      //double kernelAdjFactor = 0.0;
+      //for (int col = -1; col < destWidth; ++col) {
+      //    srcAdjPosView[col] = computeSrcPos(col, -1);
+      //}
 
       for (int destRow = 0; destRow < destHeight; ++destRow) {
           typename DestImageT::x_iterator destXIter = destImage.row_begin(destRow);
@@ -586,18 +590,18 @@ namespace {
 
                               int srcLocX = srcIndFracX.first + offsetLocX; // Absolute src X index of current kernel pixel
                               int srcLocY = srcIndFracY.first + offsetLocY; // Absolute src Y index of current kernel pixel
-                              //std::cout << std::endl;
-                              afwImage::Image<double>::xy_locator covLoc = covImage.xy_at(destCol*destKernelWidth, destRow*destKernelHeight);
+                              afwImage::Image<double>::xy_locator covLoc = covImage.xy_at(destCol*destKernelWidth, destRow*destKernelHeight); // locator on covImage centered at current destCol, destRow
+                              typename SrcImageT::SinglePixel::VariancePixelT varVal = srcLoc(offsetLocX, offsetLocY).variance(); // Variance value of current kernel location.
                               for (int destOffsetRow = 0; destOffsetRow < destKernelHeight; ++destOffsetRow) { // Iterate over adjacent destPixels within kernel height.
-                                  //srcAdjPosView[-1] = computeSrcPos(-1, destOffsetRow);
+                                  //srcAdjPosView[-1] = computeSrcPos(-1, destRow + destOffsetRow);
                                   for (int destOffsetCol = 0; destOffsetCol < destKernelWidth; ++destOffsetCol) { // Iterate over adjacent destPixels within kernel width.
                                       //std::cout << std::endl;
                                       int destAdjRow = destRow + destOffsetRow; // Absolute dest row loc of destAdjPos
                                       int destAdjCol = destCol + destOffsetCol; // Absolute dest col loc of destAdjPos
                                       afwGeom::Point2D srcAdjPos = computeSrcPos(destAdjCol, destAdjRow); // This is the srcAdjPixel (fractional) corresponding to destAdjPos.
                                       //std::cout << "srcAdjPos: " << srcAdjPos << std::endl;
-                                      //double relativeAdjArea = computeRelativeArea(srcAdjPos, srcAdjPosView[destOffsetCol-1], srcAdjPosView[destOffsetCol]);
-                                      //srcAdjPosView[destOffsetCol] = srcAdjPos;
+                                      //double relativeAdjArea = computeRelativeArea(srcAdjPos, srcAdjPosView[destCol+destOffsetCol-1], srcAdjPosView[destCol+destOffsetCol]);
+                                      //srcAdjPosView[destCol+destOffsetCol] = srcAdjPos;
 
                                       std::pair<int, double> srcAdjIndFracX = srcImage.positionToIndex(srcAdjPos[0], lsst::afw::image::X);
                                       std::pair<int, double> srcAdjIndFracY = srcImage.positionToIndex(srcAdjPos[1], lsst::afw::image::Y);
@@ -616,16 +620,15 @@ namespace {
                                           // So srcAdjIndFracXY is inside the image. Now we just have to find out if the kernels overlap. This happens if the current kernel pixel location is
                                           //   within the kernel size of the integer portions of srcAdjIndFracXY.
                                           double kOffsetSum = warpAtAdjPoint._setFracIndex(srcAdjIndFracX.second, srcAdjIndFracY.second); // Set the second warpAtOnePoint object
-                                          int srcAdjLocX = srcAdjIndFracX.first - kernelAdjPtr->getWidth()/2; // Absolute X Start of kernel at Adj pt
-                                          int srcAdjLocY = srcAdjIndFracY.first - kernelAdjPtr->getHeight()/2; // Absolute Y Start of kernel at Adj pt
+                                          int srcAdjLocX = srcAdjIndFracX.first - warpAtAdjPoint._kernelCtr[0]; // Absolute X Start of kernel at Adj pt
+                                          int srcAdjLocY = srcAdjIndFracY.first - warpAtAdjPoint._kernelCtr[1]; // Absolute Y Start of kernel at Adj pt
                                           int kernelAdjIndexX = srcAdjLocX - srcLocX;
                                           int kernelAdjIndexY = srcAdjLocY - srcLocY;
-                                          if ((kernelAdjIndexX <= (warpAtAdjPoint._xList.size()/2)) and (kernelAdjIndexY <= (warpAtAdjPoint._yList.size()/2))) {
-                                              typename SrcImageT::SinglePixel::VariancePixelT varVal = srcLoc(offsetLocX, offsetLocY).variance();
+                                          if ((warpAtAdjPoint._xList[kernelAdjIndexX] != 0.0) and (warpAtAdjPoint._yList[kernelAdjIndexY] != 0.0)) {
                                               kernelFactor = warpAtAdjPoint._xList[kernelAdjIndexX]*warpAtAdjPoint._yList[kernelAdjIndexY]*warpAtOnePoint._xList[kernelIndexX]*warpAtOnePoint._yList[kernelIndexY];
-                                          //std::cout << "kernelFactor: " << kernelFactor << std::endl;
-                                          //double relativeAreaKernelFrac = (relativeArea/kSum)*(relativeAdjArea/kOffsetSum);
-                                          covLoc(destOffsetCol, destOffsetRow) += kernelFactor*static_cast<double>(varVal);
+                                              //std::cout << "kernelFactor: " << kernelFactor << std::endl;
+                                              //double relativeAreaKernelFrac = (relativeArea/kSum)*(relativeAdjArea/kOffsetSum);
+                                              covLoc(destOffsetCol, destOffsetRow) += kernelFactor*static_cast<double>(varVal);
                                           }
                                       }
                                   } // for destOffsetRow
@@ -641,21 +644,71 @@ namespace {
                   }
                   *destXIter = outValue;
                   *destXIter *= relativeArea/kSum;
+                  akLoc(destCol, destRow) = relativeArea/kSum;
                   numGoodPixels += 1;
                   warpAtOnePoint.computeMask(destXIter, srcPos, relativeArea, typename lsst::afw::image::detail::image_traits<DestImageT>::image_category());
               } else {
                   // Edge pixel
-                  //std::cout << "Pixel outside!" << std::endl;
                   *destXIter = padValue;
                   afwImage::Image<double>::xy_locator covLoc = covImage.xy_at(destCol*destKernelWidth, destRow*destKernelHeight);
                   for (int destOffsetRow = 0; destOffsetRow < destKernelHeight; ++destOffsetRow) { // Iterate over adjacent destPixels within kernel height.
                       for (int destOffsetCol = 0; destOffsetCol < destKernelWidth; ++destOffsetCol) {
                           covLoc(destOffsetCol, destOffsetRow) = padValue.variance();
-                      }
-                  }
+                      } // for destOffsetCol
+                  } // for destOffsetRow
+              } // if srcPos outside bbox
+          } // for destCol
+      } //for destRow
+
+      /*for (int destRow = 0; destRow < destHeight; ++destRow) {
+          for (int destCol = 0; destCol < destWidth; ++destCol, ++destXIter) {
+              afwGeom::Point2D srcPos = computeSrcPos(destCol, destRow);
+              std::pair<int, double> srcIndFracX = srcImage.positionToIndex(srcPos[0], lsst::afw::image::X);
+              std::pair<int, double> srcIndFracY = srcImage.positionToIndex(srcPos[1], lsst::afw::image::Y);
+              if (srcIndFracX.second < 0) {
+                  ++srcIndFracX.second;
+                  --srcIndFracX.first;
               }
-          }
-      }
+              if (srcIndFracY.second < 0) {
+                  ++srcIndFracY.second;
+                  --srcIndFracY.first;
+              }
+              afwImage::Image<double>::xy_locator covLoc = covImage.xy_at(destCol*destKernelWidth, destRow*destKernelHeight);
+              if (warpAtOnePoint._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcIndFracX.first, srcIndFracY.first))) {
+                  warpAtOnePoint._setFracIndex(srcIndFracX.second, srcIndFracY.second);
+                  typename SrcImageT::const_xy_locator srcLoc = srcImage.xy_at(srcIndFracX.first, srcIndFracY.first);
+                  for (int destAdjRow = destRow; destAdjRow < destRow + destKernelWidth; ++destAdjRow) {
+                      for (int destAdjCol = destCol; destAdjCol < destCol + destKernelHeight; ++destAdjCol) {
+                          afwGeom::Point2D srcAdjPos = computeSrcPos(destAdjCol, destAdjRow);
+                          std::pair<int, double> srcAdjIndFracX = srcImage.positionToIndex(srcAdjPos[0], lsst::afw::image::X);
+                          std::pair<int, double> srcAdjIndFracY = srcImage.positionToIndex(srcAdjPos[1], lsst::afw::image::Y);
+                          if (srcAdjIndFracX.second < 0) {
+                              ++srcAdjIndFracX.second;
+                              --srcAdjIndFracX.first;
+                          }
+                          if (srcAdjIndFracY.second < 0) {
+                              ++srcAdjIndFracY.second;
+                              --srcAdjIndFracY.first;
+                          }
+                          if (warpAtAdjPoint._srcGoodBBox.contains(lsst::afw::geom::Point2I(srcAdjIndFracX.first, srcAdjIndFracY.first))) {
+                              warpAtAdjPoint._setFracIndex(srcAdjIndFracX.second, srcAdjIndFracY.second);
+                              typename SrcImageT::const_xy_locator srcAjLoc = srcImage.xy_at(srcAdjIndFracX.first, srcAdjIndFracY.first);
+
+                                  // Now just iterate over all the common pixels in the mask.
+
+                          } // if warpAtAdjPoint._srcGoodBBox.contains
+                      } // for destAdjCol
+                  } // for destAdjRow
+              } else { // if warpAtOnePoint._srcGoodBBox.contains
+                  for (int destOffsetRow = 0; destOffsetRow < destKernelHeight; ++destOffsetRow) { // Iterate over adjacent destPixels within kernel height.
+                      for (int destOffsetCol = 0; destOffsetCol < destKernelWidth; ++destOffsetCol) {
+                          covLoc(destOffsetCol, destOffsetRow) = padValue.variance();
+                      } // for destOffsetCol
+                  } // for destOffsetRow
+              } // else
+          } // destCol
+      }*/ // destRow
+
       return numGoodPixels;
       }
 
