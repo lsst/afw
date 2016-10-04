@@ -42,14 +42,14 @@ class DisplayImpl(object):
     def _close(self):
         """!Close the display, cleaning up any allocated resources"""
         if hasattr(self, "verbose") and self.verbose and hasattr(self, "display"):
-            print("virtual[%s]._close()" % (self.display.frame))
+            print("virtual[%s]._close()" % (self.frame))
 
     def _buffer(self, enable=True):
         """!Enable or disable buffering of writes to the display
         \param enable  True or False, as appropriate
         """
         if self.verbose:
-            print("virtual[%s]._buffer(%s)" % (self.display.frame, enable))
+            print("virtual[%s]._buffer(%s)" % (self.frame, enable))
 
     def _dot(self, symb, c, r, size, ctype, *args, **kwargs):
         """!Draw symbol a symbol at (c, r)
@@ -63,7 +63,7 @@ class DisplayImpl(object):
         """
         if self.verbose:
             print("virtual[%s]._dot('%s', %.2f, %.2f, size=%g, ctype=%s, %s, %s)" % \
-                (self.display.frame, symb, c, r, size, ctype, args, kwargs))
+                (self.frame, symb, c, r, size, ctype, args, kwargs))
 
     def _drawLines(self, points, ctype):
         """!Draw line defined by the list points
@@ -71,19 +71,19 @@ class DisplayImpl(object):
         \param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
         """
         if self.verbose:
-            print("virtual[%s]._drawLines(%s, ctype=%s)" % (self.display.frame, points, ctype))
+            print("virtual[%s]._drawLines(%s, ctype=%s)" % (self.frame, points, ctype))
 
     def _erase(self):
         """!Erase all glyphs drawn on display
         """
         if self.verbose:
-            print("virtual[%s]._erase()" % (self.display.frame))
+            print("virtual[%s]._erase()" % (self.frame))
 
     def _flush(self):
         """!Flush any I/O buffers
         """
         if self.verbose:
-            print("virtual[%s]._flush()" % self.display.frame)
+            print("virtual[%s]._flush()" % self.frame)
 
     def _setCallback(self, what, func):
         if self.verbose > 1:
@@ -96,7 +96,7 @@ class DisplayImpl(object):
         ev = Event("q")
 
         if self.verbose:
-            print("virtual[%s]._getEvent() -> %s" % (self.display.frame, ev))
+            print("virtual[%s]._getEvent() -> %s" % (self.frame, ev))
 
         return ev
 
@@ -104,7 +104,7 @@ class DisplayImpl(object):
         """Return the mask transparency for a display
         """
         if self.verbose:
-            print("virtual[%s]._getMaskTransparency()" % self.display.frame)
+            print("virtual[%s]._getMaskTransparency()" % self.frame)
 
     def _mtv(self, image, wcs=None, mask=None, title=""):
         """Display an image and maybe a mask overlay on a display
@@ -115,7 +115,7 @@ class DisplayImpl(object):
         """
         if self.verbose:
             print("virtual[%s]._mtv(image=%s, mask=%s, wcs=%s, title=\"%s\")" % \
-                (self.display.frame, "Image" if image else None,
+                (self.frame, "Image" if image else None,
                  "Mask" if mask else None, "Wcs" if wcs else None, title))
 
     def _setMaskTransparency(self, transparency, maskplane):
@@ -124,7 +124,7 @@ class DisplayImpl(object):
         \param maskplane The maskplane to set (None: all)
         """
         if self.verbose:
-            print("virtual[%s]._setMaskTransparency(%g, maskplane=\"%s\")" % (self.display.frame, transparency, maskplane))
+            print("virtual[%s]._setMaskTransparency(%g, maskplane=\"%s\")" % (self.frame, transparency, maskplane))
 
     def _scale(self, algorithm, min, max, unit=None, *args, **kwargs):
         """Set the scaling from DN to displayed pixels
@@ -136,14 +136,14 @@ class DisplayImpl(object):
         \param **kwargs Optional keyword arguments
         """
         if self.verbose:
-            print("virtual[%s]._scale(%s, %s, %s, %s, %s, %s)" % (self.display.frame, algorithm,
+            print("virtual[%s]._scale(%s, %s, %s, %s, %s, %s)" % (self.frame, algorithm,
                                                                  min, max, unit, args, kwargs))
 
     def _show(self):
         """Show the requested display
         """
         if self.verbose:
-            print("virtual[%s]._show()" % self.display.frame)
+            print("virtual[%s]._show()" % self.frame)
 
     def _pan(self, r, c):
         """Pan to (colc, rowc)
@@ -151,11 +151,11 @@ class DisplayImpl(object):
         \param r Desired row (y) position
         """
         if self.verbose:
-            print("virtual[%s]._pan(%.2f, %.2f)" % (self.display.frame, r, c))
+            print("virtual[%s]._pan(%.2f, %.2f)" % (self.frame, r, c))
 
     def _zoom(self, zoomfac):
         """Set the zoom
         \param zoomfac  Zoom factor to use
         """
         if self.verbose:
-            print("virtual[%s]._zoom(%g)" % (self.display.frame, zoomfac))
+            print("virtual[%s]._zoom(%g)" % (self.frame, zoomfac))

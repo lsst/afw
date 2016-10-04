@@ -100,7 +100,11 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
             raise ImportError("Could not load the requested backend: {}".format(backend))
 
     if display:
-        return _disp.DisplayImpl(display, *args, **kwargs)
+        _impl = _disp.DisplayImpl(display, *args, **kwargs)
+        if not hasattr(_impl, "frame"):
+            _impl.frame = display.frame
+
+        return _impl
     else:
         return True
 
