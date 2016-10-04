@@ -133,7 +133,7 @@ ndarray::Array<T const,1,1> ArrayKey<T>::get(BaseRecord const & record) const {
 template <typename T>
 void ArrayKey<T>::set(BaseRecord & record, ndarray::Array<T const,1,1> const & value) const {
     LSST_THROW_IF_NE(
-        value.template getSize<0>(), _size,
+        value.template getSize<0>(), static_cast<std::size_t>(_size),
         pex::exceptions::LengthError,
         "Size of input array (%d) does not match size of array field (%d)"
     );

@@ -531,7 +531,7 @@ Footprint::getCentroid() const
         xc += npix*0.5*(x1 + x0);
         yc += npix*y;
     }
-    assert(n == _area);
+    assert(static_cast<std::size_t>(n) == _area);
 
     return geom::Point2D(xc/_area, yc/_area);
 }

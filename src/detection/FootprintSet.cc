@@ -720,7 +720,7 @@ static void findFootprints(
                     fp->addSpan(spans[i0]->y + row0, spans[i0]->x0 + col0, spans[i0]->x1 + col0);
                 }
 
-                if (good && !(fp->getNpix() < npixMin)) {
+                if (good && fp->getNpix() >= static_cast<std::size_t>(npixMin)) {
                     _footprints->push_back(fp);
                 }
             }
