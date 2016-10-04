@@ -75,7 +75,7 @@ private:
  *
  * Contains keys for columns beyond BaseRecord, a schema mapper and and helper functions
  */
-struct PersistenceSchema {
+struct PersistenceHelper {
     Schema schema;
     Key<int> wcs;
     Key<int> psf;
@@ -87,7 +87,7 @@ struct PersistenceSchema {
     // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Wcs, Psf, etc.
     SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
         std::vector<Schema> inSchemas;
-        inSchemas.push_back(PersistenceSchema().schema);
+        inSchemas.push_back(PersistenceHelper().schema);
         inSchemas.push_back(inputSchema);
         // don't need front; it's an identity mapper
         SchemaMapper result = SchemaMapper::join(inSchemas).back();
@@ -133,21 +133,21 @@ struct PersistenceSchema {
     }
 
     // No copying
-    PersistenceSchema (const PersistenceSchema&) = delete;
-    PersistenceSchema& operator=(const PersistenceSchema&) = delete;
+    PersistenceHelper (const PersistenceHelper&) = delete;
+    PersistenceHelper& operator=(const PersistenceHelper&) = delete;
 
     // No moving
-    PersistenceSchema (PersistenceSchema&&) = delete;
-    PersistenceSchema& operator=(PersistenceSchema&&) = delete;
+    PersistenceHelper (PersistenceHelper&&) = delete;
+    PersistenceHelper& operator=(PersistenceHelper&&) = delete;
 
     /**
-     * Construct a PersistenceSchema
+     * Construct a PersistenceHelper
      *
      * @param[in] tableVersion  version of ExposureTable:
      *              - 1 has no VisitInfo and no version number in the metadata
      *              - 2 adds VisitInfo and specifies the version number in the metadat
      */
-    PersistenceSchema(int tableVersion=EXPOSURE_TABLE_CURRENT_VERSION) :
+    PersistenceHelper(int tableVersion=EXPOSURE_TABLE_CURRENT_VERSION) :
         schema(),
         wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
         psf(schema.addField<int>("psf", "archive ID for Psf object")),
@@ -203,7 +203,7 @@ protected:
     bool _doWriteArchive;
     PTR(io::OutputArchive) _archive;
     PTR(BaseRecord) _record;
-    PersistenceSchema _keys;
+    PersistenceHelper _helper;
     SchemaMapper _mapper;
 };
 
@@ -215,7 +215,7 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
             "Cannot use a ExposureFitsWriter on a non-Exposure table."
         );
     }
-    _mapper = _keys.makeWriteMapper(inTable->getSchema());
+    _mapper = _helper.makeWriteMapper(inTable->getSchema());
     PTR(BaseTable) outTable = BaseTable::make(_mapper.getOutputSchema());
     io::FitsWriter::_writeTable(outTable, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
@@ -225,7 +225,7 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
 
 void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
     ExposureRecord const & record = static_cast<ExposureRecord const &>(r);
-    _keys.writeRecord(record, *_record, _mapper, *_archive, false);
+    _helper.writeRecord(record, *_record, _mapper, *_archive, false);
     io::FitsWriter::_writeRecord(*_record);
 }
 
@@ -416,12 +416,12 @@ ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) arch
 
 template <typename RecordT>
 void ExposureCatalogT<RecordT>::writeToArchive(io::OutputArchiveHandle & handle, bool permissive) const {
-    PersistenceSchema keys{};
-    SchemaMapper mapper = keys.makeWriteMapper(this->getSchema());
+    PersistenceHelper helper{};
+    SchemaMapper mapper = helper.makeWriteMapper(this->getSchema());
     BaseCatalog outputCat = handle.makeCatalog(mapper.getOutputSchema());
     outputCat.reserve(this->size());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
-        keys.writeRecord(*i, *outputCat.addNew(), mapper, handle, permissive);
+        helper.writeRecord(*i, *outputCat.addNew(), mapper, handle, permissive);
     }
     handle.saveCatalog(outputCat);
 }
@@ -438,12 +438,12 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
     } catch (pex::exceptions::NotFoundError) {
         tableVersion = 1;
     }
-    PersistenceSchema keys{tableVersion};
-    SchemaMapper mapper = keys.makeReadMapper(catalog.getSchema());
+    PersistenceHelper helper{tableVersion};
+    SchemaMapper mapper = helper.makeReadMapper(catalog.getSchema());
     ExposureCatalogT<ExposureRecord> result(mapper.getOutputSchema());
     result.reserve(catalog.size());
     for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-        keys.readRecord(*i, *result.addNew(), mapper, archive);
+        helper.readRecord(*i, *result.addNew(), mapper, archive);
     }
     return result;
 }
