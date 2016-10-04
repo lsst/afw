@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -27,7 +22,8 @@ from builtins import range
 import math
 import unittest
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -81,7 +77,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             desImage = regionCopy.getImage(location)
             desImArr = desImage.getArray().transpose().copy()
             actImArr -= desImArr
-            if not numpy.allclose(actImArr, 0):
+            if not np.allclose(actImArr, 0):
                 actImage.writeFits("actImage%s.fits" % (location,))
                 desImage.writeFits("desImage%s.fits" % (location,))
                 self.fail("failed on location %s" % (location,))

@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-from builtins import str
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -37,8 +32,13 @@ or
    >>> Coord.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import math
 import unittest
+
+from builtins import str
+from builtins import range
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord

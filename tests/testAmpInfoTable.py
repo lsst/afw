@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -24,7 +22,9 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.table.AmpInfoTable, etc.
 """
+from __future__ import absolute_import, division
 import unittest
+
 from builtins import zip
 
 import lsst.utils.tests

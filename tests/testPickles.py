@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -27,6 +24,7 @@ from __future__ import absolute_import, division
 Tests for pickles of some afw types
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
 import pickle
 

@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -24,13 +20,15 @@ from __future__ import print_function
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+from math import sqrt
+
 import lsst.utils
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.utils.tests
-from math import sqrt
 
 
 class WCSTestRaWrap(unittest.TestCase):

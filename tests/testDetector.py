@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -25,7 +22,10 @@ from builtins import range
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import range
 from builtins import zip
 
 import lsst.utils.tests

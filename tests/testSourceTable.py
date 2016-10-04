@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import zip
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -35,12 +29,16 @@ or
    python
    >>> import testSourceTable; testSourceTable.run()
 """
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
-import numpy
 import tempfile
 import pickle
 import math
+
+from builtins import zip
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -59,12 +57,12 @@ testPath = os.path.abspath(os.path.dirname(__file__))
 
 
 def makeArray(size, dtype):
-    return numpy.array(numpy.random.randn(*size), dtype=dtype)
+    return np.array(np.random.randn(*size), dtype=dtype)
 
 
 def makeCov(size, dtype):
-    m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
-    return numpy.dot(m, m.transpose())
+    m = np.array(np.random.randn(size, size), dtype=dtype)
+    return np.dot(m, m.transpose())
 
 
 def makeWcs():
@@ -76,24 +74,24 @@ def makeWcs():
 class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def fillRecord(self, record):
-        record.set(self.fluxKey, numpy.random.randn())
-        record.set(self.fluxErrKey, numpy.random.randn())
-        record.set(self.centroidKey.getX(), numpy.random.randn())
-        record.set(self.centroidKey.getY(), numpy.random.randn())
-        record.set(self.xErrKey, numpy.random.randn())
-        record.set(self.yErrKey, numpy.random.randn())
-        record.set(self.shapeKey.getIxx(), numpy.random.randn())
-        record.set(self.shapeKey.getIyy(), numpy.random.randn())
-        record.set(self.shapeKey.getIxy(), numpy.random.randn())
-        record.set(self.xxErrKey, numpy.random.randn())
-        record.set(self.yyErrKey, numpy.random.randn())
-        record.set(self.xyErrKey, numpy.random.randn())
-        record.set(self.fluxFlagKey, numpy.random.randn() > 0)
-        record.set(self.centroidFlagKey, numpy.random.randn() > 0)
-        record.set(self.shapeFlagKey, numpy.random.randn() > 0)
+        record.set(self.fluxKey, np.random.randn())
+        record.set(self.fluxErrKey, np.random.randn())
+        record.set(self.centroidKey.getX(), np.random.randn())
+        record.set(self.centroidKey.getY(), np.random.randn())
+        record.set(self.xErrKey, np.random.randn())
+        record.set(self.yErrKey, np.random.randn())
+        record.set(self.shapeKey.getIxx(), np.random.randn())
+        record.set(self.shapeKey.getIyy(), np.random.randn())
+        record.set(self.shapeKey.getIxy(), np.random.randn())
+        record.set(self.xxErrKey, np.random.randn())
+        record.set(self.yyErrKey, np.random.randn())
+        record.set(self.xyErrKey, np.random.randn())
+        record.set(self.fluxFlagKey, np.random.randn() > 0)
+        record.set(self.centroidFlagKey, np.random.randn() > 0)
+        record.set(self.shapeFlagKey, np.random.randn() > 0)
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.fluxKey = self.schema.addField("a_flux", type="D")
         self.fluxErrKey = self.schema.addField("a_fluxSigma", type="D")

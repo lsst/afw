@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -25,10 +20,11 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-
+from __future__ import absolute_import, division, print_function
 import unittest
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.math as afwMath
@@ -46,9 +42,9 @@ class weightedStatsBugTestCase(unittest.TestCase):
         - the number of non-finite values in the variance plane
         """
         arrayList = maskedImage.getArrays()
-        nBadImg = numpy.logical_not(numpy.isfinite(arrayList[0])).sum()
-        nBadMsk = numpy.sum(numpy.bitwise_and(arrayList[1], badPixelMask) > 0)
-        nBadVar = numpy.logical_not(numpy.isfinite(arrayList[2])).sum()
+        nBadImg = np.logical_not(np.isfinite(arrayList[0])).sum()
+        nBadMsk = np.sum(np.bitwise_and(arrayList[1], badPixelMask) > 0)
+        nBadVar = np.logical_not(np.isfinite(arrayList[2])).sum()
         print("%d bad image pixels, %d bad mask pixels, %d bad variance pixels" % (nBadImg, nBadMsk, nBadVar))
         self.assertEqual(nBadImg, 0)
         self.assertEqual(nBadMsk, 0)

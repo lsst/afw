@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -31,11 +30,12 @@ or
    >>> import testSchema; testSchema.run()
 """
 from __future__ import division
-
+import collections
 import os
 import unittest
-import numpy
-import collections
+
+import numpy as np
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom
@@ -51,11 +51,11 @@ except NameError:
 class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        numpy.random.seed(100)
+        np.random.seed(100)
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
         self.map = lsst.afw.image.ApCorrMap()
         for name in ("a", "b", "c"):
-            self.map.set(name, lsst.afw.math.ChebyshevBoundedField(self.bbox, numpy.random.randn(3, 3)))
+            self.map.set(name, lsst.afw.math.ChebyshevBoundedField(self.bbox, np.random.randn(3, 3)))
 
     def tearDown(self):
         del self.map
@@ -86,7 +86,7 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(list(collections.OrderedDict(self.map).keys()), list(self.map))
         self.assertIn("b", self.map)
         self.assertNotIn("d", self.map)
-        self.map["d"] = lsst.afw.math.ChebyshevBoundedField(self.bbox, numpy.random.randn(2, 2))
+        self.map["d"] = lsst.afw.math.ChebyshevBoundedField(self.bbox, np.random.randn(2, 2))
         self.assertIn("d", self.map)
         self.assertIsNone(self.map.get("e"))
         with self.assertRaises(lsst.pex.exceptions.NotFoundError):

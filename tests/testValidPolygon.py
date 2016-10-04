@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -30,10 +29,12 @@ or
    python
    >>> import testValidPolygonTestCase; testPolygonTestCase.run()
 """
-from builtins import zip
-
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+
+from builtins import zip
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage

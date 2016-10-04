@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -26,8 +24,10 @@ from __future__ import absolute_import, division
 Tests for SourceTable slots with version > 0
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
+
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -44,12 +44,12 @@ except NameError:
 
 
 def makeArray(size, dtype):
-    return numpy.array(numpy.random.randn(*size), dtype=dtype)
+    return np.array(np.random.randn(*size), dtype=dtype)
 
 
 def makeCov(size, dtype):
-    m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
-    return numpy.dot(m, m.transpose())
+    m = np.array(np.random.randn(size, size), dtype=dtype)
+    return np.dot(m, m.transpose())
 
 
 def makeWcs():
@@ -61,15 +61,15 @@ def makeWcs():
 class SourceTableTestCase(lsst.utils.tests.TestCase):
 
     def fillRecord(self, record):
-        record.set(self.fluxKey, numpy.random.randn())
-        record.set(self.fluxErrKey, numpy.random.randn())
-        record.set(self.centroidKey, lsst.afw.geom.Point2D(*numpy.random.randn(2)))
-        record.set(self.centroidErrKey, makeCov(2, numpy.float32))
-        record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*numpy.random.randn(3)))
-        record.set(self.shapeErrKey, makeCov(3, numpy.float32))
-        record.set(self.fluxFlagKey, numpy.random.randn() > 0)
-        record.set(self.centroidFlagKey, numpy.random.randn() > 0)
-        record.set(self.shapeFlagKey, numpy.random.randn() > 0)
+        record.set(self.fluxKey, np.random.randn())
+        record.set(self.fluxErrKey, np.random.randn())
+        record.set(self.centroidKey, lsst.afw.geom.Point2D(*np.random.randn(2)))
+        record.set(self.centroidErrKey, makeCov(2, np.float32))
+        record.set(self.shapeKey, lsst.afw.geom.ellipses.Quadrupole(*np.random.randn(3)))
+        record.set(self.shapeErrKey, makeCov(3, np.float32))
+        record.set(self.fluxFlagKey, np.random.randn() > 0)
+        record.set(self.centroidFlagKey, np.random.randn() > 0)
+        record.set(self.shapeFlagKey, np.random.randn() > 0)
 
     def makeFlux(self, schema, prefix, uncertainty):
         self.fluxKey = self.schema.addField(prefix+"_flux", type="D")
@@ -119,7 +119,7 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.shapeFlagKey = self.schema.addField(prefix+"_flag", type="Flag")
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         self.schema = lsst.afw.table.SourceTable.makeMinimalSchema()
         self.makeFlux(self.schema, "a", 1)
         self.makeCentroid(self.schema, "b", 2)

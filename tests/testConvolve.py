@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -29,6 +24,7 @@ from builtins import range
 
 Tests convolution of various kernels with Images and MaskedImages.
 """
+from __future__ import absolute_import, division, print_function
 import math
 import os
 import os.path
@@ -36,6 +32,7 @@ import unittest
 import string
 import re
 
+from builtins import range
 import numpy
 
 import lsst.utils

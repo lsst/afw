@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -27,11 +25,13 @@
 Tests for ticket 1043 - Photometry fails when no PSF is provided
 """
 
-import lsst.afw.math as afwMath
-import numpy as num
-
+from __future__ import absolute_import, division, print_function
 import math
 import unittest
+
+import numpy as np
+
+import lsst.afw.math as afwMath
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
 
@@ -52,7 +52,7 @@ class Ticket1045TestCase(unittest.TestCase):
 
     def testTicket1045(self):
         values = [1.08192, 1.08792, 1.08774, 1.09953, 1.1122, 1.09408, 0.879792, 1.12235, 1.10115, 1.08999]
-        knownMean, knownStdev = num.mean(values), 0.069903889977279199
+        knownMean, knownStdev = np.mean(values), 0.069903889977279199
 
         # this was reported to work
         dmean1 = afwMath.makeStatistics(values, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
@@ -73,28 +73,28 @@ class Ticket1045TestCase(unittest.TestCase):
         self.assertEqual(stdev2, knownStdevClip)
 
         # check the median, just for giggles
-        knownMedian = num.median(values)
+        knownMedian = np.median(values)
         stat = afwMath.makeStatistics(values, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertEqual(median, knownMedian)
 
         # check the median with an odd number of values
         vals = values[1:]
-        knownMedian = num.median(vals)
+        knownMedian = np.median(vals)
         stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertEqual(median, knownMedian)
 
         # check the median with only two values
         vals = values[0:2]
-        knownMedian = num.median(vals)
+        knownMedian = np.median(vals)
         stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertEqual(median, knownMedian)
 
         # check the median with only 1 value
         vals = values[0:1]
-        knownMedian = num.median(vals)
+        knownMedian = np.median(vals)
         stat = afwMath.makeStatistics(vals, afwMath.MEDIAN)
         median = stat.getValue(afwMath.MEDIAN)
         self.assertEqual(median, knownMedian)
@@ -111,11 +111,11 @@ class Ticket1045TestCase(unittest.TestCase):
     def testUnexpectedNan1051(self):
 
         values = [7824.0, 7803.0, 7871.0, 7567.0, 7813.0, 7809.0, 8011.0, 7807.0]
-        npValues = num.array(values)
+        npValues = np.array(values)
 
         meanClip = afwMath.makeStatistics(values, afwMath.MEANCLIP).getValue()
-        iKept = num.array([0, 1, 2, 4, 5, 7])  # note ... it will clip indices 3 and 6
-        knownMeanClip = num.mean(npValues[iKept])
+        iKept = np.array([0, 1, 2, 4, 5, 7])  # note ... it will clip indices 3 and 6
+        knownMeanClip = np.mean(npValues[iKept])
         self.assertEqual(meanClip, knownMeanClip)
 
 

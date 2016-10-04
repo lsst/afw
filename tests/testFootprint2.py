@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import zip
-from builtins import range
-from builtins import object
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -37,7 +30,13 @@ or
    >>> import footprint2; footprint2.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import zip
+from builtins import range
+from builtins import object
+
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom

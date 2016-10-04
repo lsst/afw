@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import zip
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -35,8 +29,12 @@ or
    python
    >>> import spline; spline.run()
 """
+from __future__ import absolute_import, division, print_function
 import math
 import unittest
+
+from builtins import zip
+from builtins import range
 
 import lsst.utils.tests
 import lsst.afw.math as afwMath

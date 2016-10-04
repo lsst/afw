@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-from builtins import object
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -26,8 +22,12 @@ from builtins import object
 """
 Tests for lsst.afw.geom.XYTransform and xyTransformRegistry
 """
+from __future__ import absolute_import, division, print_function
 import math
 import unittest
+
+from builtins import range
+from builtins import object
 
 import lsst.utils.tests
 import lsst.pex.exceptions

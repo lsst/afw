@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import zip
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -25,9 +20,10 @@ from builtins import zip
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-
+from __future__ import absolute_import, division, print_function
 import unittest
 
+from builtins import zip
 import numpy as np
 
 import lsst.utils.tests

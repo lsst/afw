@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import str
-from builtins import range
-from functools import reduce
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -37,14 +30,14 @@ or
    python
    >>> import Stacker; Stacker.run()
 """
-
-##########################
-# simpleStacker.py
-# Steve Bickerton
-# An example executible which calls the example 'stack' code
-
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
+from functools import reduce
+
+from builtins import str
+from builtins import range
+import numpy as np
+
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
@@ -52,10 +45,7 @@ import lsst.utils.tests
 import lsst.pex.exceptions as pexEx
 import lsst.afw.display.ds9 as ds9
 
-try:
-    type(display)
-except:
-    display = False
+display = False
 
 ######################################
 # main body of code
@@ -65,7 +55,7 @@ except:
 class StackTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         self.nImg = 10
         self.nX, self.nY = 64, 64
         self.values = [1.0, 2.0, 2.0, 3.0, 8.0]
@@ -277,8 +267,8 @@ class StackTestCase(lsst.utils.tests.TestCase):
         for i in range(3):
             mi = afwImage.MaskedImageF(Size, Size)
             imArr, maskArr, varArr = mi.getArrays()
-            imArr[:] = numpy.random.normal(10, 0.1, (Size, Size))
-            varArr[:] = numpy.random.normal(10, 0.1, (Size, Size))
+            imArr[:] = np.random.normal(10, 0.1, (Size, Size))
+            varArr[:] = np.random.normal(10, 0.1, (Size, Size))
             maskedImageList.append(mi)
             weightList.append(1.0)
 
@@ -286,7 +276,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         if False:
             print("image=", stack.getImage().getArray())
             print("variance=", stack.getVariance().getArray())
-        self.assertNotEqual(numpy.sum(stack.getVariance().getArray()), 0.0)
+        self.assertNotEqual(np.sum(stack.getVariance().getArray()), 0.0)
 
     def testRejectedMaskPropagation(self):
         """Test that we can propagate mask bits from rejected pixels, when the amount
@@ -300,12 +290,12 @@ class StackTestCase(lsst.utils.tests.TestCase):
         maskedImageList = afwImage.vectorMaskedImageF()
 
         # start with 4 images with no mask bits set
-        partialSum = numpy.zeros((1, 4), dtype=numpy.float32)
-        finalImage = numpy.array([12.0, 12.0, 12.0, 12.0], dtype=numpy.float32)
+        partialSum = np.zeros((1, 4), dtype=np.float32)
+        finalImage = np.array([12.0, 12.0, 12.0, 12.0], dtype=np.float32)
         for i in range(4):
             mi = afwImage.MaskedImageF(4, 1)
             imArr, maskArr, varArr = mi.getArrays()
-            imArr[:, :] = numpy.ones((1, 4), dtype=numpy.float32)
+            imArr[:, :] = np.ones((1, 4), dtype=np.float32)
             maskedImageList.append(mi)
             partialSum += imArr
         # add one more image with all permutations of the first two bits set in different pixels
@@ -330,7 +320,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(stack1.get(2, 0)[1], 1 << propagatedBit)
         self.assertEqual(stack1.get(3, 0)[1], 0x0)
         self.assertClose(stack1.getImage().getArray(),
-                         (partialSum + finalImage) / numpy.array([5.0, 4.0, 5.0, 4.0]),
+                         (partialSum + finalImage) / np.array([5.0, 4.0, 5.0, 4.0]),
                          rtol=1E-7)
 
         # Give the masked image more weight: we should see pixel 2 and pixel 3 set with propagatedBit,
@@ -344,7 +334,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(stack2.get(2, 0)[1], 1 << propagatedBit)
         self.assertEqual(stack2.get(3, 0)[1], 1 << propagatedBit)
         self.assertClose(stack2.getImage().getArray(),
-                         (partialSum + 2*finalImage) / numpy.array([6.0, 4.0, 6.0, 4.0]),
+                         (partialSum + 2*finalImage) / np.array([6.0, 4.0, 6.0, 4.0]),
                          rtol=1E-7)
 
 #################################################################

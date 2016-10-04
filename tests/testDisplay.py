@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import next
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -37,8 +31,12 @@ or
    >>> display.backend = "ds9"   # optional
    >>> display.run()
 """
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+
+from builtins import next
+from builtins import range
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage

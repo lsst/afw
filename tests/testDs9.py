@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -34,6 +30,7 @@ or
    >>> import ds9
    >>> ds9.run()
 """
+from __future__ import absolute_import, division, print_function
 import unittest
 
 import lsst.utils.tests

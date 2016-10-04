@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -23,8 +19,11 @@ from builtins import range
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
+
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -33,7 +32,7 @@ import lsst.afw.geom as geom
 
 class Box2ITestCase(lsst.utils.tests.TestCase):
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
 
     def testEmpty(self):
         box = geom.Box2I()
@@ -52,7 +51,7 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
 
     def testConstruction(self):
         for n in range(10):
-            xmin, xmax, ymin, ymax = [int(i) for i in numpy.random.randint(low=-5, high=5, size=4)]
+            xmin, xmax, ymin, ymax = [int(i) for i in np.random.randint(low=-5, high=5, size=4)]
             if xmin > xmax:
                 xmin, xmax = xmax, xmin
             if ymin > ymax:
@@ -123,7 +122,7 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
 
     def testConversion(self):
         for n in range(10):
-            xmin, xmax, ymin, ymax = numpy.random.uniform(low=-10, high=10, size=4)
+            xmin, xmax, ymin, ymax = np.random.uniform(low=-10, high=10, size=4)
             if xmin > xmax:
                 xmin, xmax = xmax, xmin
             if ymin > ymax:
@@ -148,7 +147,7 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
                           geom.Box2D(geom.Point2D(), geom.Point2D(float("inf"), float("inf"))))
 
     def testAccessors(self):
-        xmin, xmax, ymin, ymax = [int(i) for i in numpy.random.randint(low=-5, high=5, size=4)]
+        xmin, xmax, ymin, ymax = [int(i) for i in np.random.randint(low=-5, high=5, size=4)]
         if xmin > xmax:
             xmin, xmax = xmax, xmin
         if ymin > ymax:
@@ -237,7 +236,7 @@ class Box2ITestCase(lsst.utils.tests.TestCase):
 class Box2DTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
 
     def testEmpty(self):
         box = geom.Box2D()
@@ -256,7 +255,7 @@ class Box2DTestCase(lsst.utils.tests.TestCase):
 
     def testConstruction(self):
         for n in range(10):
-            xmin, xmax, ymin, ymax = numpy.random.uniform(low=-5, high=5, size=4)
+            xmin, xmax, ymin, ymax = np.random.uniform(low=-5, high=5, size=4)
             if xmin > xmax:
                 xmin, xmax = xmax, xmin
             if ymin > ymax:
@@ -314,7 +313,7 @@ class Box2DTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(box1.getMaxY(), y01)
 
     def testAccessors(self):
-        xmin, xmax, ymin, ymax = numpy.random.uniform(low=-5, high=5, size=4)
+        xmin, xmax, ymin, ymax = np.random.uniform(low=-5, high=5, size=4)
         if xmin > xmax:
             xmin, xmax = xmax, xmin
         if ymin > ymax:

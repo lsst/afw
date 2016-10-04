@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -25,10 +20,13 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import os.path
 import math
 import unittest
-import numpy
+
+from builtins import range
+import numpy as np
 
 import lsst.utils
 import lsst.utils.tests
@@ -107,8 +105,8 @@ def makeWcs(
     crPixFits = [ind + 1.0 for ind in crPixPos]  # convert pix position to FITS standard
     posAngRad = posAng.asRadians()
     pixelScaleDeg = pixelScale.asDegrees()
-    cdMat = numpy.array([[math.cos(posAngRad), math.sin(posAngRad)],
-                         [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
+    cdMat = np.array([[math.cos(posAngRad), math.sin(posAngRad)],
+                      [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
     if doFlipX:
         cdMat[:, 0] = -cdMat[:, 0]
     for i in range(2):
@@ -422,11 +420,11 @@ class WCSTestCaseSDSS(unittest.TestCase):
         md.set("EQUINOX", 2000.0)
 
         wcs = afwImage.makeWcs(md)
-        self.assertTrue(numpy.all(wcs.getCDMatrix() == numpy.array([[1.0, 0.0], [0.0, 1.0]])))
+        self.assertTrue(np.all(wcs.getCDMatrix() == np.array([[1.0, 0.0], [0.0, 1.0]])))
 
         md.set("PC1_1", 2)
         wcs = afwImage.makeWcs(md)
-        self.assertTrue(numpy.all(wcs.getCDMatrix() == numpy.array([[2.0, 0.0], [0.0, 1.0]])))
+        self.assertTrue(np.all(wcs.getCDMatrix() == np.array([[2.0, 0.0], [0.0, 1.0]])))
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testStripKeywords(self):
@@ -607,7 +605,7 @@ class TestWcsCompare(unittest.TestCase):
     def setUp(self):
         crval = afwGeom.Point2D(1.23, 5.67)
         crpix = afwGeom.Point2D(102., 201.)
-        cd = numpy.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]], dtype=float)
+        cd = np.array([[5.399452e-5, -1.30770e-5], [1.30770e-5, 5.399452e-5]], dtype=float)
         self.plainWcs = afwImage.Wcs(crval, crpix, cd)
         self.sipWcs = afwImage.TanWcs(crval, crpix, cd)
         self.distortedWcs = afwImage.TanWcs(crval, crpix, cd, cd, cd, cd, cd)

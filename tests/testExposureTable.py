@@ -1,5 +1,3 @@
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2008-2016 LSST Corporation.
@@ -32,9 +30,11 @@ or
    >>> import testExposureTable; testExposureTable.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
-import numpy
+
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -102,7 +102,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(psf1.getValue(), psf2.getValue())
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         schema = lsst.afw.table.ExposureTable.makeMinimalSchema()
         self.ka = schema.addField("a", type=float, doc="doc for a")
         self.kb = schema.addField("b", type=int, doc="doc for b")
@@ -126,7 +126,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.visitInfo = self.createVisitInfo()
         record0 = self.cat.addNew()
         record0.setId(1)
-        record0.set(self.ka, numpy.pi)
+        record0.set(self.ka, np.pi)
         record0.set(self.kb, 4)
         record0.setBBox(self.bbox0)
         record0.setPsf(self.psf)
@@ -185,8 +185,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
     def testGeometry(self):
         bigBox = lsst.afw.geom.Box2D(lsst.afw.geom.Box2I(self.bbox0))
         bigBox.include(lsst.afw.geom.Box2D(self.bbox1))
-        points = (numpy.random.rand(100, 2) * numpy.array([bigBox.getWidth(), bigBox.getHeight()]) +
-                  numpy.array([bigBox.getMinX(), bigBox.getMinY()]))
+        points = (np.random.rand(100, 2) * np.array([bigBox.getWidth(), bigBox.getHeight()]) +
+                  np.array([bigBox.getMinX(), bigBox.getMinY()]))
 
         # make a very slightly perturbed wcs so the celestial transform isn't a no-op
         crval2 = self.wcs.getSkyOrigin()
@@ -210,7 +210,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(inside, record in subset1)
                 self.assertEqual(inside, record in subset2)
 
-        crazyPoint = lsst.afw.coord.IcrsCoord(crval2.getLongitude() + numpy.pi*radians,
+        crazyPoint = lsst.afw.coord.IcrsCoord(crval2.getLongitude() + np.pi*radians,
                                               crval2.getLatitude())
         subset3 = self.cat.subsetContaining(crazyPoint)
         self.assertEqual(len(subset3), 0)

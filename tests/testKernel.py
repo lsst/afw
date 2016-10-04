@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -24,11 +19,13 @@ from builtins import range
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division, print_function
 import math
 import re
 import unittest
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
@@ -77,7 +74,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         kernel = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
         self.basicTests(kernel, 3, dimMustMatch=False)
-        fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
+        fArr = np.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
                 gaussFunc.setParameters((xsigma, ysigma, 0.0))
@@ -94,7 +91,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 kernel.computeImage(kImage, True)
 
                 kArr = kImage.getArray().transpose()
-                if not numpy.allclose(fArr, kArr):
+                if not np.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
                               (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
@@ -184,7 +181,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kWidth = 5
         kHeight = 6
 
-        inArr = numpy.arange(kWidth * kHeight, dtype=float)
+        inArr = np.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
         inImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
@@ -198,7 +195,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kernel.computeImage(outImage, False)
 
         outArr = outImage.getArray().transpose()
-        if not numpy.allclose(inArr, outArr):
+        if not np.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" %
                       (kernel.__class__.__name__, inArr, outArr))
 
@@ -206,7 +203,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         normOutImage = afwImage.ImageD(kernel.getDimensions())
         kernel.computeImage(normOutImage, True)
         normOutArr = normOutImage.getArray().transpose()
-        if not numpy.allclose(normOutArr, normInArr):
+        if not np.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" %
                       (kernel.__class__.__name__, normInArr, normOutArr))
 
@@ -241,7 +238,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             kIm = afwImage.ImageD(kernel.getDimensions())
             kernel.computeImage(kIm, True)
             kImArr = kIm.getArray()
-            if not numpy.allclose(kImArr, basisImArrList[ii]):
+            if not np.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" %
                           (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
 
@@ -326,10 +323,10 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             kIm = afwImage.ImageD(kernel.getDimensions())
             kernel.computeImage(kIm, True)
             kImArr = kIm.getArray()
-            if not numpy.allclose(kImArr, basisImArrList[ii]):
+            if not np.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" %
                           (kernel.__class__.__name__, kImArr, basisImArrList[ii], ii))
-            if numpy.allclose(kImArr, modBasisImArrList[ii]):
+            if np.allclose(kImArr, modBasisImArrList[ii]):
                 self.fail("%s = %s == %s for *modified* %s'th basis kernel" %
                           (kernel.__class__.__name__, kImArr, modBasisImArrList[ii], ii))
 
@@ -349,7 +346,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         kernel = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
         self.basicTests(kernel, 2)
-        fArr = numpy.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
+        fArr = np.zeros(shape=[kernel.getWidth(), kernel.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
@@ -367,7 +364,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 kImage = afwImage.ImageD(kernel.getDimensions())
                 kernel.computeImage(kImage, True)
                 kArr = kImage.getArray().transpose()
-                if not numpy.allclose(fArr, kArr):
+                if not np.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
                               (kernel.__class__.__name__, kArr, fArr, xsigma, ysigma))
         kernelClone = kernel.clone()
@@ -492,7 +489,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         kim2 = afwImage.ImageD(kernel2.getDimensions())
         kernel2.computeImage(kim2, True)
 
-        self.assertTrue(numpy.allclose(kim.getArray(), kim2.getArray()))
+        self.assertTrue(np.allclose(kim.getArray(), kim2.getArray()))
 
     def testSVLinearCombinationKernelFixed(self):
         """Test a spatially varying LinearCombinationKernel whose bases are FixedKernels"""
@@ -501,11 +498,11 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         # create image arrays for the basis kernels
         basisImArrList = []
-        imArr = numpy.zeros((kWidth, kHeight), dtype=float)
+        imArr = np.zeros((kWidth, kHeight), dtype=float)
         imArr += 0.1
         imArr[kWidth//2, :] = 0.9
         basisImArrList.append(imArr)
-        imArr = numpy.zeros((kWidth, kHeight), dtype=float)
+        imArr = np.zeros((kWidth, kHeight), dtype=float)
         imArr += 0.2
         imArr[:, kHeight//2] = 0.8
         basisImArrList.append(imArr)
@@ -542,7 +539,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             kernel.computeImage(kImage, False, colPos, rowPos)
             kImArr = kImage.getArray().transpose()
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
-            if not numpy.allclose(kImArr, refKImArr):
+            if not np.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" %
                           (kernel.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
 
@@ -652,7 +649,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
             numBasisKernels = kernel.getNKernelParameters()
             maxVal = 1.01 + ((numSpParams - 1) * 0.1)
-            sParamList = [numpy.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
+            sParamList = [np.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
             kernel.setSpatialParameters(sParamList)
 
             refKernel = kernel.refactor()
@@ -681,7 +678,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
             numBasisKernels = kernel.getNKernelParameters()
             maxVal = 1.01 + ((numSpParams - 1) * 0.1)
-            sParamList = [numpy.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
+            sParamList = [np.arange(kInd + 1.0, kInd + maxVal, 0.1) for kInd in range(numBasisKernels)]
             kernel.setSpatialParameters(sParamList)
 
             refKernel = kernel.refactor()
@@ -801,7 +798,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 kernel2.computeImage(im2, doNormalize, pos[0], pos[1])
                 im1Arr = im1.getArray()
                 im2Arr = im2.getArray()
-                if not numpy.allclose(im1Arr, im2Arr):
+                if not np.allclose(im1Arr, im2Arr):
                     print("im1Arr =", im1Arr)
                     print("im2Arr =", im2Arr)
                     return "kernel images do not match at %s with doNormalize=%s" % (pos, doNormalize)

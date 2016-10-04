@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -33,10 +28,12 @@ Contact: nms@astro.washington.edu
 Created on: Mon Sep 10, 2007
 """
 
+from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils
 import lsst.utils.tests
@@ -512,11 +509,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         miCopy.getVariance().set(175)
 
         self.assertFloatsAlmostEqual(miCopy.getImage().getArray(), -50)
-        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertTrue(np.all(miCopy.getMask().getArray() == 2))
         self.assertFloatsAlmostEqual(miCopy.getVariance().getArray(), 175)
 
         self.assertFloatsAlmostEqual(mi.getImage().getArray(), 100)
-        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
+        self.assertTrue(np.all(mi.getMask().getArray() == 5))
         self.assertFloatsAlmostEqual(mi.getVariance().getArray(), 200)
 
     def testDeepCopySubData(self):
@@ -536,11 +533,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         miCopy.getVariance().set(175)
 
         self.assertFloatsAlmostEqual(miCopy.getImage().getArray(), -50)
-        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertTrue(np.all(miCopy.getMask().getArray() == 2))
         self.assertFloatsAlmostEqual(miCopy.getVariance().getArray(), 175)
 
         self.assertFloatsAlmostEqual(mi.getImage().getArray(), 100)
-        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
+        self.assertTrue(np.all(mi.getMask().getArray() == 5))
         self.assertFloatsAlmostEqual(mi.getVariance().getArray(), 200)
 
     def testDeepCopyMetadata(self):
@@ -606,7 +603,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             wcs = afwImage.makeWcs(md, True)
             self.assertEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
             self.assertEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
-            self.assertTrue(numpy.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
+            self.assertTrue(np.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
             frazzle = md.get("FRAZZLE")
             self.assertTrue(frazzle)
 

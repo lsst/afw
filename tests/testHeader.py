@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2008-2013 LSST Corporation.
@@ -23,9 +20,11 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import numpy
+from __future__ import absolute_import, division, print_function
 import unittest
+
 from past.builtins import long
+import numpy
 
 import lsst.afw.image as afwImage
 import lsst.utils.tests

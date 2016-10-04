@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -33,9 +30,10 @@ or
    >>> import statisticsMasked; statisticsMasked.run()
 """
 
-
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
+
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
@@ -87,7 +85,7 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertEqual(stats.getValue(afwMath.STDEV), stdev)
 
         # set the right side to NaN and stats should be just for the left side
-        self.mimgR.set(numpy.nan, 0x0, self.valR)
+        self.mimgR.set(np.nan, 0x0, self.valR)
 
         statsNaN = afwMath.makeStatistics(self.mimg, afwMath.NPOINT | afwMath.MEAN | afwMath.STDEV)
         mean = self.valL
@@ -164,10 +162,10 @@ class StatisticsTestCase(unittest.TestCase):
         n = 2
         # original estimate; just a rewrite of the usual n/(n - 1) correction
         stddev = (1.0*(vsum2)/(wsum*(1.0-1.0/n)) - (vsum**2)/(wsum**2*(1.0-1.0/n)))**0.5
-        self.assertAlmostEqual(stddev, numpy.sqrt(variance*n/(n - 1)))
+        self.assertAlmostEqual(stddev, np.sqrt(variance*n/(n - 1)))
         #
         # The correct formula:
-        stddev = numpy.sqrt(variance*wsum**2/(wsum**2 - wwsum))
+        stddev = np.sqrt(variance*wsum**2/(wsum**2 - wwsum))
 
         # get the stats for the image with two values
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mean, 10)

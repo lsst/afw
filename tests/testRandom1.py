@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import str
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -36,9 +30,13 @@ or
    >>> import unittest; T=load("Random_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
 
+from __future__ import absolute_import, division, print_function
 import sys
 import time
 import unittest
+
+from builtins import str
+from builtins import range
 
 import lsst.pex.exceptions
 import lsst.pex.policy as pexPolicy

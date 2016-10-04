@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -34,10 +29,12 @@ or
    python
    >>> import offsetImage; offsetImage.run()
 """
+from __future__ import absolute_import, division, print_function
 import math
-
 import unittest
-import numpy
+
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
@@ -150,7 +147,7 @@ class offsetImageTestCase(unittest.TestCase):
                         ds9.mtv(im, frame=1)
 
                     imArr = im.getArray()
-                    imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
+                    imGoodVals = np.ma.array(imArr, copy=False, mask=np.isnan(imArr)).compressed()
 
                     try:
                         imXY0 = tuple(im.getXY0())

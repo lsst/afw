@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -31,7 +26,8 @@ import math
 import os
 import unittest
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils
 import lsst.utils.tests
@@ -94,8 +90,8 @@ def makeWcs(pixelScale, crPixPos, crValCoord, posAng=afwGeom.Angle(0.0), doFlipX
     crValDeg = crValCoord.getPosition(afwGeom.degrees)
     posAngRad = posAng.asRadians()
     pixelScaleDeg = pixelScale.asDegrees()
-    cdMat = numpy.array([[math.cos(posAngRad), math.sin(posAngRad)],
-                         [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
+    cdMat = np.array([[math.cos(posAngRad), math.sin(posAngRad)],
+                      [-math.sin(posAngRad), math.cos(posAngRad)]], dtype=float) * pixelScaleDeg
     if doFlipX:
         cdMat[:, 0] = -cdMat[:, 0]
     for i in range(2):
@@ -117,7 +113,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
     """
 
     def setUp(self):
-        numpy.random.seed(0)
+        np.random.seed(0)
 
     @unittest.skipIf(afwdataDir is None, "afwdata not setup")
     def testNullWarpExposure(self, interpLength=10):
@@ -183,7 +179,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         if SAVE_FITS_FILES:
             afwWarpedImage.writeFits("afwWarpedImageNull.fits")
         afwWarpedImageArr = afwWarpedImage.getArray()
-        noDataMaskArr = numpy.isnan(afwWarpedImageArr)
+        noDataMaskArr = np.isnan(afwWarpedImageArr)
         # relax specs a bit because of minor noise introduced by bad pixels
         msg = "afw null-warped Image"
         self.assertImagesNearlyEqual(originalImage, afwWarpedImage, skipMask=noDataMaskArr,
@@ -417,7 +413,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             self.assertGreater(numGoodPix, 50)
 
             afwWarpedImageArr = afwWarpedImage.getArray()
-            noDataMaskArr = numpy.isnan(afwWarpedImageArr)
+            noDataMaskArr = np.isnan(afwWarpedImageArr)
             if changeEquinox:
                 with self.assertRaises(AssertionError):
                     self.assertImagesNearlyEqual(afwWarpedImage, swarpedImage,
@@ -453,15 +449,15 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
     def testTicketDM4063(self):
         """Test that a uint16 array can be cast to a bool array, to avoid DM-4063
         """
-        a = numpy.array([0, 1, 0, 23], dtype=numpy.uint16)
-        b = numpy.array([True, True, False, False], dtype=bool)
-        acast = numpy.array(a != 0, dtype=bool)
+        a = np.array([0, 1, 0, 23], dtype=np.uint16)
+        b = np.array([True, True, False, False], dtype=bool)
+        acast = np.array(a != 0, dtype=bool)
         orArr = acast | b
-        desOrArr = numpy.array([True, True, False, True], dtype=bool)
+        desOrArr = np.array([True, True, False, True], dtype=bool)
         # Note: assertEqual(bool arr, bool arr) fails with:
         # ValueError: The truth value of an array with more than one element is ambiguous
         try:
-            self.assertTrue(numpy.all(orArr == desOrArr))
+            self.assertTrue(np.all(orArr == desOrArr))
         except Exception as e:
             print("Failed: %r != %r: %s" % (orArr, desOrArr, e))
             raise
@@ -492,10 +488,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
         self.assertEqual(numGoodPix, 0)
         imArr, maskArr, varArr = toExp.getMaskedImage().getArrays()
-        self.assertTrue(numpy.all(numpy.isnan(imArr)))
-        self.assertTrue(numpy.all(numpy.isinf(varArr)))
+        self.assertTrue(np.all(np.isnan(imArr)))
+        self.assertTrue(np.all(np.isinf(varArr)))
         noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
-        self.assertTrue(numpy.all(maskArr == noDataBitMask))
+        self.assertTrue(np.all(maskArr == noDataBitMask))
 
     def verifyMaskWarp(self, kernelName, maskKernelName, growFullMask, interpLength=10, cacheSize=100000,
                        rtol=4e-05, atol=1e-2):
@@ -509,8 +505,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             0 disables the cache
             10000 gives some speed improvement but less accurate results (atol must be increased)
             100000 gives better accuracy but no speed improvement in this test
-        - rtol: relative tolerance as used by numpy.allclose
-        - atol: absolute tolerance as used by numpy.allclose
+        - rtol: relative tolerance as used by np.allclose
+        - atol: absolute tolerance as used by np.allclose
         """
         srcWcs = makeWcs(
             pixelScale=afwGeom.Angle(0.2, afwGeom.degrees),
@@ -529,9 +525,9 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         srcArrays = srcMaskedImage.getArrays()
         shape = srcArrays[0].shape
-        srcArrays[0][:] = numpy.random.normal(10000, 1000, size=shape)
-        srcArrays[2][:] = numpy.random.normal(9000, 900, size=shape)
-        srcArrays[1][:] = numpy.reshape(numpy.arange(0, shape[0] * shape[1], 1, dtype=numpy.uint16), shape)
+        srcArrays[0][:] = np.random.normal(10000, 1000, size=shape)
+        srcArrays[2][:] = np.random.normal(9000, 900, size=shape)
+        srcArrays[1][:] = np.reshape(np.arange(0, shape[0] * shape[1], 1, dtype=np.uint16), shape)
 
         warpControl = afwMath.WarpingControl(
             kernelName,
@@ -560,10 +556,10 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         if (kernelName != maskKernelName) and (growFullMask != 0xFFFF):
             # we expect the mask planes to differ
-            if numpy.all(narrowArrays[1] == broadArrays[1]):
+            if np.all(narrowArrays[1] == broadArrays[1]):
                 self.fail("No difference between broad and narrow mask")
 
-        predMask = (broadArrays[1] & growFullMask) | (narrowArrays[1] & ~growFullMask).astype(numpy.uint16)
+        predMask = (broadArrays[1] & growFullMask) | (narrowArrays[1] & ~growFullMask).astype(np.uint16)
         predArraySet = (broadArrays[0], predMask, broadArrays[2])
         predExposure = afwImage.makeMaskedImageFromArrays(*predArraySet)
 
@@ -595,8 +591,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             0 disables the cache
             10000 gives some speed improvement but less accurate results (atol must be increased)
             100000 gives better accuracy but no speed improvement in this test
-        - rtol: relative tolerance as used by numpy.allclose
-        - atol: absolute tolerance as used by numpy.allclose
+        - rtol: relative tolerance as used by np.allclose
+        - atol: absolute tolerance as used by np.allclose
         """
         warpingControl = afwMath.WarpingControl(
             kernelName,
@@ -668,7 +664,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
                 afwWarpedImage.writeFits(afwWarpedImagePath)
 
             afwWarpedImageArr = afwWarpedImage.getArray()
-            noDataMaskArr = numpy.isnan(afwWarpedImageArr)
+            noDataMaskArr = np.isnan(afwWarpedImageArr)
             msg = "afw and swarp %s-warped images do not match (ignoring NaN pixels)" % \
                 (kernelName,)
             try:

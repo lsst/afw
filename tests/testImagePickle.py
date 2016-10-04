@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008-2013 LSST Corporation.
@@ -24,10 +20,12 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import unittest
 import pickle
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.coord as afwCoord
@@ -59,7 +57,7 @@ class ImagePickleTestCase(lsst.utils.tests.TestCase):
         return image
 
     def createPattern(self):
-        yy, xx = numpy.ogrid[0:self.ySize, 0:self.xSize]  # NB: numpy operates 'backwards'
+        yy, xx = np.ogrid[0:self.ySize, 0:self.xSize]  # NB: numpy operates 'backwards'
         return self.xSize*yy + xx
 
     def assertImagesEqual(self, image, original):

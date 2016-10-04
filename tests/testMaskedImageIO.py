@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import object
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -34,14 +30,15 @@ or
    >>> import MaskedImageIO; MaskedImageIO.run()
 """
 
-
+from __future__ import absolute_import, division, print_function
 import contextlib
 import os.path
 import unittest
 import shutil
 import tempfile
 
-import numpy
+from builtins import object
+import numpy as np
 import pyfits
 
 import lsst.utils
@@ -122,10 +119,10 @@ class MaskedImageTestCase(unittest.TestCase):
         exposure = afwImage.ExposureF(filename)
         self.assertEqual(image.get(0, 0), maskedImage.getImage().get(0, 0))
         self.assertEqual(image.get(0, 0), exposure.getMaskedImage().getImage().get(0, 0))
-        self.assertTrue(numpy.all(maskedImage.getMask().getArray() == 0))
-        self.assertTrue(numpy.all(exposure.getMaskedImage().getMask().getArray() == 0))
-        self.assertTrue(numpy.all(maskedImage.getVariance().getArray() == 0.0))
-        self.assertTrue(numpy.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
+        self.assertTrue(np.all(maskedImage.getMask().getArray() == 0))
+        self.assertTrue(np.all(exposure.getMaskedImage().getMask().getArray() == 0))
+        self.assertTrue(np.all(maskedImage.getVariance().getArray() == 0.0))
+        self.assertTrue(np.all(exposure.getMaskedImage().getVariance().getArray() == 0.0))
 
     @unittest.skipIf(dataDir is None, "afwdata not setup")
     def testFitsReadConform(self):
@@ -257,27 +254,27 @@ class MultiExtensionTestCase(object):
 
     def testUnreadableExtensionAsImage(self):
         # Test for case 2.1.1 above.
-        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16), None) as fitsfile:
+        with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16), None) as fitsfile:
             self.assertRaises(Exception, self._constructImage, fitsfile, 3)
 
     def testReadableExtensionAsImage(self):
         # Test for case 2.1.2 above.
-        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16),
-                     numpy.array([[3]])) as fitsfile:
+        with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16),
+                     np.array([[3]])) as fitsfile:
             self._checkImage(self._constructImage(fitsfile, 3), 1, 1, 3, 0, 0)
 
     def testUnreadbleDefaultAsImage(self):
         # Test for case 2.2.1 above.
-        with tmpFits(None, None, numpy.array([[2]], dtype=numpy.int16), numpy.array([[3]])) as fitsfile:
+        with tmpFits(None, None, np.array([[2]], dtype=np.int16), np.array([[3]])) as fitsfile:
             self.assertRaises(Exception, self._constructImage, fitsfile)
 
     def testUnreadbleOptionalExtensions(self):
         # Test for case 2.2.2 above.
         # Unreadable mask.
-        with tmpFits(None, numpy.array([[1]]), None, numpy.array([[3]])) as fitsfile:
+        with tmpFits(None, np.array([[1]]), None, np.array([[3]])) as fitsfile:
             self._checkImage(self._constructImage(fitsfile), 1, 1, 1, 0, 3)
         # Unreadable variance.
-        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16), None) as fitsfile:
+        with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16), None) as fitsfile:
             self._checkImage(self._constructImage(fitsfile, needAllHdus=False), 1, 1, 1, 2, 0)
 
 
@@ -304,8 +301,8 @@ class MaskedMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Test
         # * The "zeroeth" (primary) HDU;
         # * The first (first extension) HDU.
         # Any others should raise when needAllHdus is true
-        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16),
-                     numpy.array([[3]])) as fitsfile:
+        with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16),
+                     np.array([[3]])) as fitsfile:
             # No HDU specified -> ok.
             self._checkImage(self._constructImage(fitsfile, needAllHdus=True), 1, 1, 1, 2, 3)
             # First HDU -> ok.
@@ -317,17 +314,17 @@ class MaskedMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Test
 
     def testUnreadableImage(self):
         # Test for case 1.2.1 above.
-        with tmpFits(None, None, numpy.array([[2]], dtype=numpy.int16), numpy.array([[3]])) as fitsfile:
+        with tmpFits(None, None, np.array([[2]], dtype=np.int16), np.array([[3]])) as fitsfile:
             self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
 
     def testUnreadableMask(self):
         # Test for case 1.2.1 above.
-        with tmpFits(None, numpy.array([[1]]), None, numpy.array([[3]])) as fitsfile:
+        with tmpFits(None, np.array([[1]]), None, np.array([[3]])) as fitsfile:
             self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
 
     def testUnreadableVariance(self):
         # Test for case 1.2.1 above.
-        with tmpFits(None, numpy.array([[1]]), numpy.array([[2]], dtype=numpy.int16), None) as fitsfile:
+        with tmpFits(None, np.array([[1]]), np.array([[2]], dtype=np.int16), None) as fitsfile:
             self.assertRaises(Exception, self._constructImage, fitsfile, None, needAllHdus=True)
 
 

@@ -35,7 +35,9 @@ from builtins import range
 
 import os
 import unittest
-import numpy
+
+import numpy as np
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom
@@ -59,24 +61,24 @@ CHEBYSHEV_T = [
 class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        numpy.random.seed(5)
+        np.random.seed(5)
         self.bbox = lsst.afw.geom.Box2I(lsst.afw.geom.Point2I(-5, -5), lsst.afw.geom.Point2I(5, 5))
-        self.x1d = numpy.linspace(self.bbox.getBeginX(), self.bbox.getEndX())
-        self.y1d = numpy.linspace(self.bbox.getBeginY(), self.bbox.getEndY())
-        self.x2d, self.y2d = numpy.meshgrid(self.x1d, self.y1d)
-        self.xFlat = numpy.ravel(self.x2d)
-        self.yFlat = numpy.ravel(self.y2d)
+        self.x1d = np.linspace(self.bbox.getBeginX(), self.bbox.getEndX())
+        self.y1d = np.linspace(self.bbox.getBeginY(), self.bbox.getEndY())
+        self.x2d, self.y2d = np.meshgrid(self.x1d, self.y1d)
+        self.xFlat = np.ravel(self.x2d)
+        self.yFlat = np.ravel(self.y2d)
         self.cases = []
         for orderX in range(0, 5):
             for orderY in range(0, 5):
-                indexX, indexY = numpy.meshgrid(numpy.arange(orderX+1, dtype=int),
-                                                numpy.arange(orderY+1, dtype=int))
+                indexX, indexY = np.meshgrid(np.arange(orderX+1, dtype=int),
+                                             np.arange(orderY+1, dtype=int))
                 for triangular in (True, False):
                     ctrl = lsst.afw.math.ChebyshevBoundedFieldControl()
                     ctrl.orderX = orderX
                     ctrl.orderY = orderY
                     ctrl.triangular = triangular
-                    coefficients = numpy.random.randn(orderY+1, orderX+1)
+                    coefficients = np.random.randn(orderY+1, orderX+1)
                     if triangular:
                         coefficients[indexX + indexY > max(orderX, orderY)] = 0.0
                     self.cases.append((ctrl, coefficients))
@@ -96,15 +98,14 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
         nPoints = 50
         for ctrl, coefficients in self.cases:
             field = lsst.afw.math.ChebyshevBoundedField(self.bbox, coefficients)
-            x = numpy.random.rand(nPoints)*boxD.getWidth() + boxD.getMinX()
-            y = numpy.random.rand(nPoints)*boxD.getHeight() + boxD.getMinY()
+            x = np.random.rand(nPoints)*boxD.getWidth() + boxD.getMinX()
+            y = np.random.rand(nPoints)*boxD.getHeight() + boxD.getMinY()
             z1 = field.evaluate(x, y)
-            tx = numpy.array([CHEBYSHEV_T[i](sx*x) for i in range(coefficients.shape[1])])
-            ty = numpy.array([CHEBYSHEV_T[i](sy*y) for i in range(coefficients.shape[0])])
+            tx = np.array([CHEBYSHEV_T[i](sx*x) for i in range(coefficients.shape[1])])
+            ty = np.array([CHEBYSHEV_T[i](sy*y) for i in range(coefficients.shape[0])])
             self.assertEqual(tx.shape, (coefficients.shape[1], x.size))
             self.assertEqual(ty.shape, (coefficients.shape[0], y.size))
-            z2 = numpy.array([numpy.dot(ty[:, i], numpy.dot(coefficients, tx[:, i]))
-                              for i in range(nPoints)])
+            z2 = np.array([np.dot(ty[:, i], np.dot(coefficients, tx[:, i])) for i in range(nPoints)])
             self.assertFloatsAlmostEqual(z1, z2, rtol=1E-12)
 
             scaled = lsst.afw.math.ChebyshevBoundedField.cast(field*factor)
@@ -134,7 +135,7 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
                 outField1 = lsst.afw.math.ChebyshevBoundedField.fit(self.bbox, self.xFlat, self.yFlat,
                                                                     array, ctrl)
                 self.assertFloatsAlmostEqual(outField1.getCoefficients(), coefficients, rtol=1E-6, atol=1E-7)
-                weights = (1.0 + numpy.random.randn(array.size)**2)
+                weights = (1.0 + np.random.randn(array.size)**2)
                 # Should get same results with different weights, since we still have no noise
                 # and a model that can exactly reproduce the data.
                 outField2 = lsst.afw.math.ChebyshevBoundedField.fit(self.bbox, self.xFlat, self.yFlat,
@@ -154,8 +155,8 @@ class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
             outField = lsst.afw.math.ChebyshevBoundedField.readFits(filename)
             self.assertEqual(inField.getBBox(), outField.getBBox())
             self.assertFloatsAlmostEqual(inField.getCoefficients(), outField.getCoefficients())
-            x = numpy.random.rand(nPoints)*boxD.getWidth() + boxD.getMinX()
-            y = numpy.random.rand(nPoints)*boxD.getHeight() + boxD.getMinY()
+            x = np.random.rand(nPoints)*boxD.getWidth() + boxD.getMinX()
+            y = np.random.rand(nPoints)*boxD.getHeight() + boxD.getMinY()
             z1 = inField.evaluate(x, y)
             z2 = inField.evaluate(x, y)
             self.assertFloatsAlmostEqual(z1, z2, rtol=1E-13)

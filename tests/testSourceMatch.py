@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import zip
-from builtins import range
 
 #
 # LSST Data Management System
@@ -35,12 +30,15 @@ or
    python
    >>> import SourceMatch; SourceMatch.run()
 """
+from __future__ import absolute_import, division, print_function
 import os
 import re
-
-import numpy
 import pickle
 import unittest
+
+from builtins import zip
+from builtins import range
+import numpy as np
 
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
@@ -358,7 +356,7 @@ class SourceMatchTestCase(unittest.TestCase):
     def assertEqualFloat(self, value1, value2):
         """Compare floating point values, allowing for NAN
         """
-        self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
+        self.assertTrue(value1 == value2 or (np.isnan(value1) and np.isnan(value2)))
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

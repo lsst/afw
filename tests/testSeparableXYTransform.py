@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -23,10 +22,13 @@
 """
 Tests for lsst.afw.geom.SeparableXYTransform class.
 """
-from builtins import zip
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import zip
 import numpy as np
 import numpy.random as random
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 

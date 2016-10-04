@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -34,10 +30,13 @@ or
    >>> import statistics; statistics.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import math
 import os
-import numpy as np
 import unittest
+
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions

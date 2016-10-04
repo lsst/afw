@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -33,9 +29,12 @@ or
    python
    >>> import testFunctorKeys; testFunctorKeys.run()
 """
-
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import range
 import numpy
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table

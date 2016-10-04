@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -35,9 +30,13 @@ or
    >>> import heavyFootprint; heavyFootprint.run()
 """
 
-import numpy as np
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+
+from builtins import range
+import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect

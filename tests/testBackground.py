@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-from builtins import zip
-from builtins import range
-from functools import reduce
-
 #
 # LSST Data Management System
 # Copyright 2008-2015 AURA/LSST.
@@ -26,11 +20,16 @@ from functools import reduce
 # see <https://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import math
 import os.path
 import unittest
-import numpy as np
 import pickle
+from functools import reduce
+
+from builtins import zip
+from builtins import range
+import numpy as np
 
 import lsst.utils
 import lsst.utils.tests

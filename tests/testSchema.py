@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import zip
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -34,8 +30,12 @@ or
    >>> import testSchema; testSchema.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
+
+from builtins import zip
+import numpy as np
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
@@ -60,7 +60,7 @@ class SchemaTestCase(unittest.TestCase):
         ab_k = lsst.afw.table.CoordKey.addFields(schema, "a_b", "parent coord")
         abp_k = lsst.afw.table.Point2DKey.addFields(schema, "a_b_p", "point", "pixel")
         abi_k = schema.addField("a_b_i", type=int, doc="int")
-        acf_k = schema.addField("a_c_f", type=numpy.float32, doc="float")
+        acf_k = schema.addField("a_c_f", type=np.float32, doc="float")
         egd_k = schema.addField("e_g_d", type=lsst.afw.geom.Angle, doc="angle")
 
         # Basic test for all native key types.
@@ -183,10 +183,10 @@ class SchemaMapperTestCase(unittest.TestCase):
         inputs = [lsst.afw.table.Schema(), lsst.afw.table.Schema(), lsst.afw.table.Schema()]
         inputs = lsst.afw.table.SchemaVector(inputs)
         prefixes = ["u", "v", "w"]
-        ka = inputs[0].addField("a", type=numpy.float64, doc="doc for a")
-        kb = inputs[0].addField("b", type=numpy.int32, doc="doc for b")
-        kc = inputs[1].addField("c", type=numpy.float32, doc="doc for c")
-        kd = inputs[2].addField("d", type=numpy.int64, doc="doc for d")
+        ka = inputs[0].addField("a", type=np.float64, doc="doc for a")
+        kb = inputs[0].addField("b", type=np.int32, doc="doc for b")
+        kc = inputs[1].addField("c", type=np.float32, doc="doc for c")
+        kd = inputs[2].addField("d", type=np.int64, doc="doc for d")
         flags1 = lsst.afw.table.Schema.IDENTICAL
         flags2 = flags1 & ~lsst.afw.table.Schema.EQUAL_NAMES
         mappers1 = lsst.afw.table.SchemaMapper.join(inputs)
@@ -210,11 +210,11 @@ class SchemaMapperTestCase(unittest.TestCase):
 
     def testMinimalSchema(self):
         front = lsst.afw.table.Schema()
-        ka = front.addField("a", type=numpy.float64, doc="doc for a")
-        kb = front.addField("b", type=numpy.int32, doc="doc for b")
+        ka = front.addField("a", type=np.float64, doc="doc for a")
+        kb = front.addField("b", type=np.int32, doc="doc for b")
         full = lsst.afw.table.Schema(front)
-        kc = full.addField("c", type=numpy.float32, doc="doc for c")
-        kd = full.addField("d", type=numpy.int64, doc="doc for d")
+        kc = full.addField("c", type=np.float32, doc="doc for c")
+        kd = full.addField("d", type=np.int64, doc="doc for d")
         mapper1 = lsst.afw.table.SchemaMapper(full)
         mapper2 = lsst.afw.table.SchemaMapper(full)
         mapper3 = lsst.afw.table.SchemaMapper.removeMinimalSchema(full, front)
@@ -233,9 +233,9 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertNotIn(kc, mapper3.getOutputSchema())
         self.assertNotIn(kd, mapper3.getOutputSchema())
         inputRecord = lsst.afw.table.BaseTable.make(full).makeRecord()
-        inputRecord.set(ka, numpy.pi)
+        inputRecord.set(ka, np.pi)
         inputRecord.set(kb, 2)
-        inputRecord.set(kc, numpy.exp(1))
+        inputRecord.set(kc, np.exp(1))
         inputRecord.set(kd, 4)
         outputRecord1 = lsst.afw.table.BaseTable.make(mapper1.getOutputSchema()).makeRecord()
         outputRecord1.assign(inputRecord, mapper1)
@@ -254,7 +254,7 @@ class SchemaMapperTestCase(unittest.TestCase):
         self.assertNotIn(k2, out1)
         self.assertIn(k2, mapper.getOutputSchema())
         self.assertIn(k2, out2)
-        k3 = out2.addField("a3", type=numpy.float32, doc="doc for a3")
+        k3 = out2.addField("a3", type=np.float32, doc="doc for a3")
         self.assertNotIn(k3, out1)
         self.assertIn(k3, mapper.getOutputSchema())
         self.assertIn(k3, out2)

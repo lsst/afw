@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -46,6 +43,7 @@ It causes inconsistency at the destructor, and SEGV arrises.
 The example file above has been copied and is used in the below test.
 """
 
+from __future__ import absolute_import, division, print_function
 import os
 import os.path
 import unittest
