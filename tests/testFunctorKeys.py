@@ -47,6 +47,7 @@ try:
 except NameError:
     display = False
 
+
 def makePositiveSymmetricMatrix(size):
     """Return a random symmetric matrix with only positive eigenvalues, suitable
     for use as a covariance matrix.
@@ -60,7 +61,6 @@ def makePositiveSymmetricMatrix(size):
 
 
 class FunctorKeysTestCase(lsst.utils.tests.TestCase):
-
 
     def setUp(self):
         numpy.random.seed(5)
@@ -420,8 +420,6 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.doTestArrayKey("F", numpy.float32)
         self.doTestArrayKey("D", numpy.float64)
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

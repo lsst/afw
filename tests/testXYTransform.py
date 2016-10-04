@@ -26,7 +26,6 @@ from builtins import object
 """
 Tests for lsst.afw.geom.XYTransform and xyTransformRegistry
 """
-import itertools
 import math
 import unittest
 

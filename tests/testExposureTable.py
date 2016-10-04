@@ -185,8 +185,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
     def testGeometry(self):
         bigBox = lsst.afw.geom.Box2D(lsst.afw.geom.Box2I(self.bbox0))
         bigBox.include(lsst.afw.geom.Box2D(self.bbox1))
-        points = (numpy.random.rand(100, 2) * numpy.array([bigBox.getWidth(), bigBox.getHeight()])
-                  + numpy.array([bigBox.getMinX(), bigBox.getMinY()]))
+        points = (numpy.random.rand(100, 2) * numpy.array([bigBox.getWidth(), bigBox.getHeight()]) +
+                  numpy.array([bigBox.getMinX(), bigBox.getMinY()]))
 
         # make a very slightly perturbed wcs so the celestial transform isn't a no-op
         crval2 = self.wcs.getSkyOrigin()

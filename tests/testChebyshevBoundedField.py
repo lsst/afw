@@ -55,8 +55,6 @@ CHEBYSHEV_T = [
     lambda x: ((16*x**2 - 20)*x**2 + 5)*x,
 ]
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class ChebyshevBoundedFieldTestCase(lsst.utils.tests.TestCase):
 

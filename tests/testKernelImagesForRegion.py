@@ -39,8 +39,6 @@ from lsst.log import Log
 # Change the level to Log.DEBUG to see debug messages
 Log.getLogger("TRACE5.afw.math.convolve").setLevel(Log.INFO)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 LocNameDict = {
     mathDetail.KernelImagesForRegion.BOTTOM_LEFT: "BOTTOM_LEFT",
     mathDetail.KernelImagesForRegion.BOTTOM_RIGHT: "BOTTOM_RIGHT",
@@ -141,10 +139,8 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             (region.TOP_RIGHT, (rightInd, topInd)),
         ):
             desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
-            self.assertEqual(region.getPixelIndex(location), desPixIndex,
-                         "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
-                                                           desPixIndex)
-                         )
+            self.assertEqual(region.getPixelIndex(location), desPixIndex, "getPixelIndex(%s) = %s != %s" %
+                             (LocNameDict[location], region.getPixelIndex(location), desPixIndex))
 
     def testComputeNextRow(self):
         """Test computeNextRow method and the resulting RowOfKernelImagesForRegion
@@ -229,10 +225,9 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
                 self.assertImagesNearlyEqual(actImage, desImage, msg=msg)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

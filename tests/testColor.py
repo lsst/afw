@@ -37,10 +37,6 @@ import lsst.afw.image as afwImage
 import lsst.afw.image.utils as imageUtils
 from lsst.afw.cameraGeom.testUtils import DetectorWrapper
 
-import lsstDebug
-if lsstDebug.Info(__name__).verbose:
-    logging.Debug("afwDetect.Footprint", True)
-
 # Set to True to display things in ds9.
 display = False
 

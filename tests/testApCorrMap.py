@@ -47,6 +47,7 @@ try:
 except NameError:
     display = False
 
+
 class ApCorrMapTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
@@ -147,10 +148,9 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.compare(self.map, new)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

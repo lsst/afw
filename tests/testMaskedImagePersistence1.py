@@ -103,6 +103,7 @@ class MaskedImagePersistenceTestCase(lsst.utils.tests.TestCase):
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
 
+
 def setup_module(module):
     lsst.utils.tests.init()
 

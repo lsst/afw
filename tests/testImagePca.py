@@ -53,8 +53,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class ImagePcaTestCase(lsst.utils.tests.TestCase):
     """A test case for ImagePca"""
@@ -212,11 +210,10 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             mos = displayUtils.Mosaic(background=-10)
             ds9.mtv(mos.makeMosaic(eImages), frame=1)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

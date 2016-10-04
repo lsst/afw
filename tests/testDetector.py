@@ -25,7 +25,6 @@ from builtins import range
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
-import itertools
 import unittest
 from builtins import zip
 
@@ -217,7 +216,6 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                 self.assertAlmostEquals(ctrPoint[i], predCtrPoint[i])
                 if cameraSys == cameraGeom.PIXELS:
                     self.assertAlmostEquals(ctrPixPoint[i], ctrPoint[i])
-
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

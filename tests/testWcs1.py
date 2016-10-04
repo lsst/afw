@@ -58,7 +58,6 @@ else:
 InputCorruptMaskedImageName = "small_MI_corrupt"
 currDir = os.path.abspath(os.path.dirname(__file__))
 InputCorruptFilePath = os.path.join(currDir, "data", InputCorruptMaskedImageName)
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 CoordSysList = [afwCoord.ICRS, afwCoord.FK5, afwCoord.ECLIPTIC, afwCoord.GALACTIC]
 
@@ -236,7 +235,8 @@ class WcsTestCase(lsst.utils.tests.TestCase):
         def refIsSameSkySystem(wcs1, wcs2):
             if isIcrs(wcs1) and isIcrs(wcs2):
                 return True
-            return (wcs1.getCoordSystem() == wcs2.getCoordSystem()) and (wcs1.getEquinox() == wcs2.getEquinox())
+            return (wcs1.getCoordSystem() == wcs2.getCoordSystem()) and \
+                   (wcs1.getEquinox() == wcs2.getEquinox())
 
         for coordSys, equinox in coordSysEquinoxIter():
             wcs = makeWcs(coordSys=coordSys, equinox=equinox)
@@ -266,8 +266,6 @@ class WcsTestCase(lsst.utils.tests.TestCase):
                     self.assertTrue(("EQUINOX" in metadata.names()) == writeEquinox)
         checkEquinoxHeader("ICRS", False)
         checkEquinoxHeader("FK5", True)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class WCSRotateFlip(unittest.TestCase):
@@ -497,8 +495,6 @@ class WCSTestCaseSDSS(unittest.TestCase):
 
                 for i in range(2):
                     self.assertAlmostEqual(unpPixPos[i], 1009.5)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 @unittest.skipIf(afwdataDir is None, "afwdata not setup")

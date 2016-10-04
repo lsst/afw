@@ -31,7 +31,6 @@ import lsst.afw.image as afwImage
 import lsst.utils.tests
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class HeaderTestCase(lsst.utils.tests.TestCase):
     """Test that headers round-trip"""
 
@@ -64,10 +63,9 @@ class HeaderTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(metadata.get(k), v)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

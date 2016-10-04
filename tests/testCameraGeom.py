@@ -48,7 +48,6 @@ except NameError:
 
 
 testPath = os.path.abspath(os.path.dirname(__file__))
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class CameraGeomTestCase(unittest.TestCase):
@@ -238,7 +237,6 @@ class CameraGeomTestCase(unittest.TestCase):
                 # position of any detector.  That is not enforced and multiple detectors
                 # at a given PUPIL position is supported.  Change this if the default
                 # camera changes.
-                #cp = cw.camera.makeCameraPoint(det.getCenter(), PUPIL)
                 cp = det.getCenter(FOCAL_PLANE)
                 detPointsList.append(cp.getPoint())
                 detList = cw.camera.findDetectors(cp)
@@ -343,11 +341,10 @@ class CameraGeomTestCase(unittest.TestCase):
         for i in range(2):
             self.assertAlmostEquals(cp1.getPoint()[i], cp2.getPoint()[i], 6)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

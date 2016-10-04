@@ -50,8 +50,6 @@ except NameError:
     backend = "virtualDevice"
     oldBackend = None
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class DisplayTestCase(unittest.TestCase):
     """A test case for Display"""

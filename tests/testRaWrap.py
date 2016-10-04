@@ -42,8 +42,6 @@ class WCSTestRaWrap(unittest.TestCase):
         self.datadir = os.path.join(mydir, 'tests')
 
     def test1(self):
-        # This fails due to #1386
-        #wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs')
         wcsfn = os.path.join(self.datadir, 'imsim-v85518312-fu-R43-S12.wcs2')
         hdr = afwImage.readMetadata(wcsfn)
         wcs1 = afwImage.makeWcs(hdr)

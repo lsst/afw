@@ -53,15 +53,11 @@ Log.getLogger("TRACE2.afw.math.warp").setLevel(Log.INFO)
 Log.getLogger("TRACE3.afw.math.warp").setLevel(Log.INFO)
 
 
-try:
-    display
-except:
-    display = False
-    # set True to save afw-warped images as FITS files
-    SAVE_FITS_FILES = False
-    # set True to save failed afw-warped images as FITS files even if SAVE_FITS_FILES is False
-    #SAVE_FAILED_FITS_FILES = False
-    SAVE_FAILED_FITS_FILES = True
+display = False
+# set True to save afw-warped images as FITS files
+SAVE_FITS_FILES = False
+# set True to save failed afw-warped images as FITS files even if SAVE_FITS_FILES is False
+SAVE_FAILED_FITS_FILES = True
 
 try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
@@ -645,8 +641,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             msg = "afw and swarp %s-warped differ (ignoring bad pixels)" % (kernelName,)
             try:
                 self.assertMaskedImagesNearlyEqual(afwWarpedMaskedImage, swarpedMaskedImage,
-                                                   doImage=True, doMask=False, doVariance=False, skipMask=afwWarpedMask,
-                                                   rtol=rtol, atol=atol, msg=msg)
+                                                   doImage=True, doMask=False, doVariance=False,
+                                                   skipMask=afwWarpedMask, rtol=rtol, atol=atol, msg=msg)
             except Exception:
                 if SAVE_FAILED_FITS_FILES:
                     afwWarpedExposure.writeFits(afwWarpedImagePath)

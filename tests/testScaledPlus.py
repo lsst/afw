@@ -33,8 +33,6 @@ from lsst.log import Log
 
 Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class ScaledPlus(lsst.utils.tests.TestCase):
 
@@ -90,10 +88,9 @@ class ScaledPlus(lsst.utils.tests.TestCase):
                 self.runScaledAddTest(coeff0, coeff1)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

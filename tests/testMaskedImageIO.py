@@ -62,8 +62,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class MaskedImageTestCase(unittest.TestCase):
     """A test case for MaskedImage"""
@@ -351,8 +349,6 @@ class ExposureMultiExtensionTestCase(MultiExtensionTestCase, lsst.utils.tests.Te
     def _checkImage(self, im, width, height, val1, val2, val3):
         self._checkMaskedImage(im.getMaskedImage(), width, height, val1, val2, val3)
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass

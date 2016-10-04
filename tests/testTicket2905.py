@@ -33,7 +33,6 @@ import lsst.utils.tests
 testPath = os.path.abspath(os.path.dirname(__file__))
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Ticket2905Test(unittest.TestCase):
     """Test reading a FITS header that contains:
 
@@ -54,7 +53,6 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
-
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

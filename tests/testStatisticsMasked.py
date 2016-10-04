@@ -43,8 +43,6 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.math as afwMath
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class StatisticsTestCase(unittest.TestCase):
 
     """A test case to check that special values (NaN and Masks) are begin handled in Statistics"""
@@ -176,10 +174,9 @@ class StatisticsTestCase(unittest.TestCase):
         self.assertAlmostEqual(stats.getValue(afwMath.STDEV), stddev, 10)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

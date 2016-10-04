@@ -68,8 +68,6 @@ else:
     inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
     inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 @unittest.skipIf(dataDir is None, "afwdata not setup")
 class ExposureTestCase(lsst.utils.tests.TestCase):

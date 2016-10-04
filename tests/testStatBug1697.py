@@ -91,10 +91,9 @@ class weightedStatsBugTestCase(unittest.TestCase):
             self.reportBadPixels(coaddMaskedImage, badPixelMask)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

@@ -130,7 +130,8 @@ class AngleTestCase(unittest.TestCase):
         oneEightyWithSlop = 180 * (1 + eps)
         self.assertNotEqual(1 + eps, eps)
         for wrap in (-1000, -10, -1, 0, 1, 10, 1000):
-            for offset in (-2*math.pi, -math.pi, -math.pi*0.5, 0.0, math.pi*0.5, math.pi*0.75, math.pi, math.pi*2.0):
+            for offset in (-2*math.pi, -math.pi, -math.pi*0.5, 0.0, math.pi*0.5, math.pi*0.75, math.pi,
+                           math.pi*2.0):
                 for epsMult in (-3, -2, -1, 0, 1, 2, 3):
                     angRad = (offset + (wrap * math.pi)) * (1 + (eps * epsMult))
                     ang = angRad * afwGeom.radians

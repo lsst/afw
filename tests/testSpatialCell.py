@@ -47,8 +47,6 @@ import testLib
 def getFlux(x):
     return 1000 - 10*x
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class SpatialCellTestCase(unittest.TestCase):
     """A test case for SpatialCell"""
@@ -141,12 +139,11 @@ class SpatialCellTestCase(unittest.TestCase):
 
         self.cell.sortCandidates()
         self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in self.cell])
+
         def sortKey(a):
             return -a
         self.assertEqual(sorted(ratings0, key=sortKey),
                          [cand.getCandidateRating() for cand in self.cell])
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class SpatialCellSetTestCase(unittest.TestCase):
@@ -286,12 +283,11 @@ class SpatialCellSetTestCase(unittest.TestCase):
 
         self.cellSet.sortCandidates()
         self.assertNotEqual(ratings0, [cand.getCandidateRating() for cand in cell1])
+
         def sortKey(a):
             return -a
         self.assertEqual(sorted(ratings0, key=sortKey),
                          [cand.getCandidateRating() for cand in cell1])
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class TestMaskedImageCandidateCase(unittest.TestCase):
@@ -328,11 +324,10 @@ class TestMaskedImageCandidateCase(unittest.TestCase):
         self.assertEqual(im.getWidth(), width)
         self.assertEqual(im.getHeight(), height)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

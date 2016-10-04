@@ -50,8 +50,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class offsetImageTestCase(unittest.TestCase):
     """A test case for offsetImage"""
@@ -235,8 +233,6 @@ class transformImageTestCase(unittest.TestCase):
         mask = afwImage.MaskU(10, 20)
         afwMath.flipImage(mask, True, False)  # for a while, swig couldn't handle the resulting Mask::Ptr
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class binImageTestCase(unittest.TestCase):
     """A test case for binning images"""
@@ -291,10 +287,10 @@ class binImageTestCase(unittest.TestCase):
             ds9.mtv(inImage, frame=2, title="unbinned")
             ds9.mtv(outImage, frame=3, title="binned %dx%d" % (binX, binY))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

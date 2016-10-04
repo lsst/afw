@@ -37,7 +37,6 @@ or
 
 import os.path
 
-import sys
 import unittest
 import numpy as np
 
@@ -48,7 +47,6 @@ import lsst.daf.base
 import lsst.afw.image as afwImage
 import lsst.afw.geom as afwGeom
 import lsst.afw.display.ds9 as ds9
-import lsst.pex.exceptions as pexExcept
 
 try:
     type(display)
@@ -59,8 +57,6 @@ try:
     afwdataDir = lsst.utils.getPackageDir("afwdata")
 except pexExcept.NotFoundError:
     afwdataDir = None
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 def showMaskDict(d=None, msg=None):
@@ -182,14 +178,14 @@ class MaskTestCase(utilsTests.TestCase):
         i2 = afwImage.MaskU(afwGeom.ExtentI(10, 10))
         i2.set(10)
 
-        def tst(i1, i2): i1 |= i2
-        self.assertRaises(lsst.pex.exceptions.LengthError, tst, i1, i2)
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            i1 |= i2
 
-        def tst2(i1, i2): i1 &= i2
-        self.assertRaises(lsst.pex.exceptions.LengthError, tst2, i1, i2)
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            i1 &= i2
 
-        def tst2(i1, i2): i1 ^= i2
-        self.assertRaises(lsst.pex.exceptions.LengthError, tst2, i1, i2)
+        with self.assertRaises(lsst.pex.exceptions.LengthError):
+            i1 ^= i2
 
     def testMaskPlanes(self):
         planes = self.Mask().getMaskPlaneDict()
@@ -359,8 +355,6 @@ class MaskTestCase(utilsTests.TestCase):
             self.assertEqual(im.getAsString(i, 0), p)
         self.assertEqual(self.Mask.interpret(allBits), ",".join(planes.keys()))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class OldMaskTestCase(unittest.TestCase):
     """A test case for Mask (based on MaskU_1.cc); these are taken over from the DC2 fw tests
@@ -411,7 +405,7 @@ class OldMaskTestCase(unittest.TestCase):
 
         nextra = 8
         for p in range(0, nextra):
-            plane = self.Mask.addMaskPlane(pname(p))
+            self.Mask.addMaskPlane(pname(p))
 
         for p in range(0, nextra):
             self.testMask.removeAndClearMaskPlane(pname(p))
@@ -453,12 +447,8 @@ class OldMaskTestCase(unittest.TestCase):
             for p in planes.keys():
                 self.testMask.setMaskPlaneValues(planes[p], self.pixelList)
 
-        #printMaskPlane(self.testMask, planes['CR'])
-
         # print "\nClearing mask"
         self.testMask.clearMaskPlane(planes['CR'])
-
-        #printMaskPlane(self.testMask, planes['CR'])
 
     def testPlaneRemoval(self):
         """Test mask plane removal"""
@@ -470,7 +460,7 @@ class OldMaskTestCase(unittest.TestCase):
         self.testMask = self.Mask(self.testMask.getDimensions())
         self.testMask.removeAndClearMaskPlane("BP")
 
-        d = testMask2.getMaskPlaneDict()
+        testMask2.getMaskPlaneDict()
 
         checkPlaneBP()                                        # still present in default mask
         self.assertIn("BP", testMask2.getMaskPlaneDict())  # should still be in testMask2
@@ -485,9 +475,9 @@ class OldMaskTestCase(unittest.TestCase):
                           lambda: self.testMask.removeMaskPlane("RHL gets names right"))
         #
         self.Mask.clearMaskPlaneDict()
-        p0 = self.Mask.addMaskPlane("P0")
-        p1 = self.Mask.addMaskPlane("P1")
-        p1 = self.Mask.addMaskPlane("P1")		# a no-op -- readding a plane has no effect
+        self.Mask.addMaskPlane("P0")
+        self.Mask.addMaskPlane("P1")
+        self.Mask.addMaskPlane("P1")  # a no-op -- readding a plane has no effect
         #
         # Check that removing default mask planes doesn't affect pre-existing planes
         #
@@ -625,8 +615,6 @@ class OldMaskTestCase(unittest.TestCase):
 
         self.testMask |= testMask3
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
 
 def printMaskPlane(mask, plane,
                    xrange=list(range(250, 300, 10)), yrange=list(range(300, 400, 20))):
@@ -641,8 +629,6 @@ def printMaskPlane(mask, plane,
                 print(x, y, mask(x, y), mask(x, y, plane))
             else:
                 print(x, y, mask(x, y, plane))
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):

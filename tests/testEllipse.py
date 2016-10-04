@@ -33,8 +33,6 @@ import lsst.pex.exceptions
 import lsst.afw.geom.ellipses
 import lsst.afw.image
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class EllipseTestCase(lsst.utils.tests.TestCase):
 
@@ -85,7 +83,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             self.assertClose(core.clone().getParameterVector(), core.getParameterVector())
             self.assertIsNot(core, core.clone())
             self.assertClose(lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector(),
-                ellipse.getParameterVector())
+                             ellipse.getParameterVector())
             self.assertIsNot(ellipse, lsst.afw.geom.ellipses.Ellipse(ellipse))
 
     def testTransform(self):

@@ -140,11 +140,10 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
             # Check the resulting Image
             self.checkImages(self.image, image2)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

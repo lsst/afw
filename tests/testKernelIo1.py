@@ -45,8 +45,6 @@ Log.getLogger("afw.math.KernelFormatter").setLevel(Log.INFO)
 
 testPath = os.path.abspath(os.path.dirname(__file__))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class KernelIOTestCase(unittest.TestCase):
     """A test case for Kernel I/O"""
@@ -258,7 +256,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data","kernel5.boost"))
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel5.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         # create list of kernels
@@ -406,10 +404,9 @@ class KernelIOTestCase(unittest.TestCase):
                 self.assertEqual(k2.getCtrY(), yCtr)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

@@ -24,7 +24,6 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.table.AmpInfoTable, etc.
 """
-import itertools
 import unittest
 from builtins import zip
 
@@ -148,10 +147,9 @@ class AmpInfoTableTestCase(unittest.TestCase):
                 self.assertEquals(rec1.getHasRawInfo(), rec2.getHasRawInfo())
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

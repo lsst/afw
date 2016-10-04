@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import, division
 from __future__ import print_function
-from past.builtins import cmp
 from builtins import zip
 from builtins import range
 from builtins import object
@@ -65,8 +64,6 @@ def peakFromImage(im, pos):
     val = im.get(pos[0], pos[1])[0]
     return -1.0 * val
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class Object(object):
 
@@ -87,8 +84,6 @@ class Object(object):
                 return False
 
         return True
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class FootprintSetTestCase(unittest.TestCase):
@@ -223,13 +218,11 @@ class FootprintSetTestCase(unittest.TestCase):
         self.assertTrue(fctrl.isCircular()[1])
         self.assertFalse(fctrl.isIsotropic()[1])
 
-        #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         fctrl = afwDetect.FootprintControl()
         fctrl.growLeft(False)
         self.assertTrue(fctrl.isLeft()[0])  # it's now set
         self.assertFalse(fctrl.isLeft()[1])  # ... but False
 
-        #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
         fctrl = afwDetect.FootprintControl(True, False, False, False)
         self.assertTrue(fctrl.isLeft()[0])
         self.assertTrue(fctrl.isRight()[0])
@@ -385,8 +378,6 @@ class FootprintSetTestCase(unittest.TestCase):
 
         self.assertEqual(len(objects), 1)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class PeaksInFootprintsTestCase(unittest.TestCase):
     """A test case for detecting Peaks within Footprints"""
@@ -429,7 +420,8 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
         del self.im
         del self.fs
 
-    def doTestPeaks(self, dwidth=0, dheight=0, x0=0, y0=0, threshold=10, callback=None, polarity=True, grow=0):
+    def doTestPeaks(self, dwidth=0, dheight=0, x0=0, y0=0, threshold=10, callback=None, polarity=True,
+                    grow=0):
         """Worker routine for tests
         polarity:  True if should search for +ve pixels"""
 
@@ -439,10 +431,9 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
 
         if callback:
             callback()
-        #
-        # Sort self.peaks in decreasing peak height to match Footprint.getPeaks()
-        #
+
         def peakDescending(p):
+            """Sort self.peaks in decreasing peak height to match Footprint.getPeaks()"""
             return p[2] * -1.0
         for i, peaks in enumerate(self.peaks):
             self.peaks[i] = sorted([(x, y, self.im.getImage().get(x, y)) for x, y in peaks],
@@ -650,7 +641,7 @@ class PeaksInFootprintsTestCase(unittest.TestCase):
             self.fs.merge(fs2, grow1, grow2)
             self.peaks[-2] += peaks2
 
-            if grow1 + grow2 > 2:                                                         # grow merged all peaks
+            if grow1 + grow2 > 2:  # grow merged all peaks
                 def peaksSortKey(p):
                     return peakFromImage(self.im, p)
                 self.peaks[0] = sorted(sum(self.peaks, []), key=peaksSortKey)

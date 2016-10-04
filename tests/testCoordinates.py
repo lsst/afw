@@ -43,8 +43,6 @@ import operator
 import lsst.utils.tests
 import lsst.afw.geom as geom
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class CoordinateTestCase(object):
     """Mixin for some of the tests below.

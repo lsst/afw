@@ -61,6 +61,7 @@ except NameError:
 
 testPath = os.path.abspath(os.path.dirname(__file__))
 
+
 def toString(*args):
     """toString written in python"""
     if len(args) == 1:
@@ -92,8 +93,6 @@ class Object(object):
                 return False
 
         return True
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class SpanTestCase(unittest.TestCase):
@@ -1106,10 +1105,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.checkEdge(foot)
 
         # This footprint came from a very large Footprint in a deep HSC coadd patch
-        self.checkEdge(afwDetect.Footprint.readFits(os.path.join(testPath,"testFootprintEdge.fits")))
+        self.checkEdge(afwDetect.Footprint.readFits(os.path.join(testPath, "testFootprintEdge.fits")))
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
@@ -1259,8 +1256,6 @@ class FootprintSetTestCase(unittest.TestCase):
 
         self.assertEqual(len(foot.getPeaks()), 5)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class MaskFootprintSetTestCase(unittest.TestCase):
     """A test case for generating FootprintSet from Masks"""
@@ -1304,8 +1299,6 @@ class MaskFootprintSetTestCase(unittest.TestCase):
             if o.val & level:
                 self.assertEqual(o, objects[i])
                 i += 1
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class NaNFootprintSetTestCase(unittest.TestCase):

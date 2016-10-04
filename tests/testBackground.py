@@ -164,7 +164,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl.setInterpStyle(afwMath.Interpolate.CUBIC_SPLINE)
         bctrl.setNxSample(6)
         bctrl.setNySample(6)
-        bctrl.getStatisticsControl().setNumSigmaClip(20.0) # something large enough to avoid clipping entirely
+        bctrl.getStatisticsControl().setNumSigmaClip(20.0)  # large enough to entirely avoid clipping
         bctrl.getStatisticsControl().setNumIter(1)
         backobj = afwMath.cast_BackgroundMI(afwMath.makeBackground(rampimg, bctrl))
 
@@ -251,7 +251,7 @@ class BackgroundTestCase(lsst.utils.tests.TestCase):
         bctrl.setNySample(4)
         bctrl.getStatisticsControl().setNumSigmaClip(10.0)
         bctrl.getStatisticsControl().setNumIter(1)
-        backobj = afwMath.makeBackground(parabimg, bctrl)
+        afwMath.makeBackground(parabimg, bctrl)
 
     def testParabola(self):
         """Test an image which varies parabolicly (spline should be exact for 2rd order polynomial)"""

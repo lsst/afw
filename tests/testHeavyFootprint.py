@@ -52,8 +52,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
     """A test case for HeavyFootprint"""
@@ -142,7 +140,6 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         if display:
             ds9.mtv(self.mi, frame=0, title="input")
-            #ds9.mtv(omi, frame=1, title="output")
 
         omi = self.mi.Factory(self.mi.getDimensions())
 
@@ -311,10 +308,9 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(hfp2.dot(hfp1), dot)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

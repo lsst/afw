@@ -48,8 +48,6 @@ try:
 except pexExcept.NotFoundError:
     dataDir = None
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class ReadFitsTestCase(lsst.utils.tests.TestCase):
     """A test case for reading FITS images"""
@@ -173,11 +171,10 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             expNew = afwImage.ExposureF(tmpFile)
             self.assertEqual(expNew.getMetadata().get(keyWord), longString)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

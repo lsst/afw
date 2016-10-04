@@ -37,7 +37,7 @@ import unittest
 import numpy
 import sys
 
-import lsst.utils.tests as utilsTests
+import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.afw.math import LeastSquares
 from lsst.log import Log
@@ -71,7 +71,7 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
                 self.assertLess(diagnostic[rank], rcond)
         else:
             self._assertClose(numpy.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)),
-                             numpy.multiply.reduce(sv**2))
+                              numpy.multiply.reduce(sv**2))
 
     def testFullRank(self):
         dimension = 10

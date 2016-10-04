@@ -46,8 +46,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class SplineTestCase(unittest.TestCase):
     """A test case for Image"""
@@ -164,11 +162,10 @@ class SplineTestCase(unittest.TestCase):
         self.assertAlmostEqual(roots[0], 30, 5)
         self.assertAlmostEqual(roots[1], 150, 5)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

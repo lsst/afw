@@ -205,7 +205,6 @@ class StackTestCase(lsst.utils.tests.TestCase):
             bbox = afwGeom.Box2I(llc, dim//2)
 
             smimg = mimg.Factory(mimg, bbox, afwImage.LOCAL)
-            #smimg.set(numpy.nan, INTRP, numpy.nan)
             del smimg
             #
             # And the bottom corner to SAT
@@ -355,6 +354,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

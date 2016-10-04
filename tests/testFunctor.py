@@ -46,9 +46,7 @@ class FunctorTestCase(unittest.TestCase):
         self.y0 = 1
 
     def tearDown(self):
-        while self.funcs:
-            func = self.funcs.pop()
-            del func
+        del self.funcs
 
     def testDerivatives(self):
         for func in self.funcs:

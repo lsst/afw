@@ -75,8 +75,6 @@ def makeRampImage(width, height, imgClass=afwImage.MaskedImageF):
             val += 1
     return mi
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class MaskedImageTestCase(lsst.utils.tests.TestCase):
     """A test case for MaskedImage"""
@@ -599,7 +597,6 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.mimage.set(9, 4, (888, 0x0, 0))
-        #printImg(afwImage.ImageF(self.mimage, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         smimage = afwImage.MaskedImageF(
             self.mimage,
@@ -725,8 +722,6 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         self.assertRaises(TypeError, float, im)  # only single pixel images may be converted
         self.assertRaises(TypeError, float, im[0, 0])  # actually, can't convert (img, msk, var) to scalar
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def printImg(img):
     print("%4s " % "", end=' ')
@@ -740,11 +735,10 @@ def printImg(img):
             print("%7.1f" % float(img.get(c, r)), end=' ')
         print()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

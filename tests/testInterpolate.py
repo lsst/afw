@@ -42,8 +42,6 @@ import lsst.utils.tests
 import lsst.afw.math as afwMath
 import lsst.pex.exceptions as pexExcept
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class InterpolateTestCase(lsst.utils.tests.TestCase):
 
@@ -128,23 +126,21 @@ class InterpolateTestCase(lsst.utils.tests.TestCase):
     def testInvalidInputs(self):
         """Test that invalid inputs cause an abort"""
 
-        self.assertRaises(pexExcept.OutOfRangeError,
-                          lambda: afwMath.makeInterpolate(np.array([], dtype=float), np.array([], dtype=float),
-                                                          afwMath.Interpolate.CONSTANT)
-                          )
+        with self.assertRaises(pexExcept.OutOfRangeError):
+            afwMath.makeInterpolate(np.array([], dtype=float), np.array([], dtype=float),
+                                    afwMath.Interpolate.CONSTANT)
 
         afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
                                 afwMath.Interpolate.CONSTANT)
 
-        self.assertRaises(pexExcept.OutOfRangeError,
-                          lambda: afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
-                                                          afwMath.Interpolate.LINEAR))
+        with self.assertRaises(pexExcept.OutOfRangeError):
+            afwMath.makeInterpolate(np.array([0], dtype=float), np.array([1], dtype=float),
+                                    afwMath.Interpolate.LINEAR)
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

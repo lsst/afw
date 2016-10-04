@@ -47,8 +47,6 @@ import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def checkRngEquivalence(rng1, rng2):
     for i in range(1000):
@@ -136,11 +134,9 @@ class RandomImageTestCase(unittest.TestCase):
 
     def testRandomUniformImage(self):
         afwMath.randomUniformImage(self.image, self.rand)
-        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
 
     def testRandomGaussianImage(self):
         afwMath.randomGaussianImage(self.image, self.rand)
-        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
 
     def testRandomChisqImage(self):
         nu = 10
@@ -162,11 +158,10 @@ class RandomImageTestCase(unittest.TestCase):
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), mu, 1)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

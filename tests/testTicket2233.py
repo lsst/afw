@@ -59,7 +59,6 @@ testPath = os.path.abspath(os.path.dirname(__file__))
 DATA = os.path.join(testPath, "data", "ticket2233.fits")
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class WcsFormatterTest(unittest.TestCase):
     """Test the WCS formatter, by round-trip pickling."""
 
@@ -82,7 +81,6 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
-
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

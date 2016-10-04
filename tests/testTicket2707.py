@@ -32,7 +32,6 @@ import lsst.afw.table as afwTable
 import lsst.utils.tests
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class MatchXyTest(unittest.TestCase):
     """Test that matching sources by centroid works as expected,
     even when some of the centroids contain NaN.
@@ -154,7 +153,6 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
-
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

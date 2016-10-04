@@ -34,7 +34,6 @@ or
    >>> import statistics; statistics.run()
 """
 
-import sys
 import math
 import os
 import numpy as np
@@ -57,8 +56,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class StatisticsTestCase(lsst.utils.tests.TestCase):
@@ -438,7 +435,8 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
 
         ctrl.setCalcErrorFromInputVariance(True)
         weighted = afwMath.makeStatistics(mi, weights,
-                                          afwMath.MEAN | afwMath.MEANCLIP | afwMath.SUM | afwMath.ERRORS, ctrl)
+                                          afwMath.MEAN | afwMath.MEANCLIP | afwMath.SUM | afwMath.ERRORS,
+                                          ctrl)
 
         self.assertAlmostEqual(weighted.getValue(afwMath.SUM)/(npix*mean*weight), 1)
         self.assertAlmostEqual(weighted.getValue(afwMath.MEAN), mean)
@@ -476,11 +474,10 @@ class StatisticsTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(afwMath.makeStatistics(self.image, subMask, afwMath.MEDIAN, ctrl).getValue(),
                          self.val)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

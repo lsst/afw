@@ -54,8 +54,6 @@ try:
 except pexExcept.NotFoundError:
     afwdataDir = None
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class SourceMatchTestCase(unittest.TestCase):
     """A test case for matching SourceSets
@@ -362,11 +360,10 @@ class SourceMatchTestCase(unittest.TestCase):
         """
         self.assertTrue(value1 == value2 or (numpy.isnan(value1) and numpy.isnan(value2)))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

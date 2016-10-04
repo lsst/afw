@@ -438,7 +438,8 @@ class SourceTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(cat.getCentroidSlot().getErrKey(),
                          lsst.afw.table.CovarianceMatrix2fKey(cat.schema["centroid_sdss_err"], ["x", "y"]))
         self.assertEqual(cat.getShapeSlot().getErrKey(),
-                         lsst.afw.table.CovarianceMatrix3fKey(cat.schema["shape_hsm_moments_err"], ["xx", "yy", "xy"]))
+                         lsst.afw.table.CovarianceMatrix3fKey(cat.schema["shape_hsm_moments_err"],
+                         ["xx", "yy", "xy"]))
         self.assertEqual(cat.getPsfFluxSlot().getFlagKey(), cat.schema.find("flux_psf_flags").key)
         self.assertEqual(cat.getApFluxSlot().getFlagKey(), cat.schema.find("flux_sinc_flags").key)
         self.assertEqual(cat.getInstFluxSlot().getFlagKey(), cat.schema.find("flux_naive_flags").key)

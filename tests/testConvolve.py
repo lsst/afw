@@ -49,15 +49,15 @@ import lsst.pex.exceptions as pexExcept
 from testKernel import makeDeltaFunctionKernelList, makeGaussianKernelList
 from lsst.log import Log
 
+import lsst.afw.display.ds9 as ds9
+import lsst.afw.display.utils as displayUtils
+
 Log.getLogger("afw.image.Mask").setLevel(Log.INFO)
 
 try:
     display
 except NameError:
     display = False
-
-import lsst.afw.display.ds9 as ds9
-import lsst.afw.display.utils as displayUtils
 
 try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
@@ -81,8 +81,6 @@ NoDataMaskPixel = afwImage.MaskU.getPlaneBitMask("NO_DATA")
 IgnoreKernelZeroPixels = True
 
 GarbageChars = string.punctuation + string.whitespace
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 def refConvolve(imMaskVar, xy0, kernel, doNormalize, doCopyEdge):
@@ -195,8 +193,6 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
 
             self.width = self.maskedImage.getWidth()
             self.height = self.maskedImage.getHeight()
-    #         smask = afwImage.MaskU(self.maskedImage.getMask(), afwGeom.Box2I(afwGeom.Point2I(15, 17), afwGeom.Extent2I(10, 5)))
-    #         smask.set(0x8)
 
     def tearDown(self):
         if dataDir is not None:
@@ -226,7 +222,7 @@ class ConvolveTestCase(lsst.utils.tests.TestCase):
         The relative difference (rtol * abs(b)) and the absolute difference "atol" are added together
         to compare against the absolute difference between "a" and "b".
         """
-        if refKernel == None:
+        if refKernel is None:
             refKernel = kernel
         # strip garbage characters (whitespace and punctuation) to make a short description for saving files
         shortKernelDescr = self._removeGarbageChars(kernelDescr)

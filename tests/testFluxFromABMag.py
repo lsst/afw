@@ -56,9 +56,6 @@ class FluxFromABMagTableTestCase(unittest.TestCase):
                 self.assertAlmostEqual(fluxErr, fluxErrRoundTrip)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass
 

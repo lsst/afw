@@ -44,6 +44,7 @@ import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 
+
 class UpdateTestCase(lsst.utils.tests.TestCase):
     """A test case for the lsst.afw.table.updateRefCentroids and updateSourceCoords
     """

@@ -37,7 +37,6 @@ or
 
 import os.path
 import shutil
-import sys
 import tempfile
 import unittest
 import numpy
@@ -61,8 +60,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 def makeRampImage(width, height, imgClass=afwImage.ImageF):
@@ -427,7 +424,6 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.image1.set(9, 4, 888)
-        #printImg(afwImage.ImageF(self.image1, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         simage1 = afwImage.ImageF(
             self.image1,
@@ -545,8 +541,6 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(im.get(0, 0), im2.get(0, 0))
         im2[0, 0] += 10
         self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))  # equivalent to im.get(0, 0) etc.
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class DecoratedImageTestCase(lsst.utils.tests.TestCase):
@@ -717,8 +711,6 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         for imtype in (afwImage.ImageD, afwImage.ImageF, afwImage.ImageI, afwImage.ImageU):
             self.assertRaises(lsst.pex.exceptions.LengthError, imtype, 60000, 60000)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def printImg(img):
     print("%4s " % "", end=' ')
@@ -732,11 +724,10 @@ def printImg(img):
             print("%7.1f" % float(img.get(c, r)), end=' ')
         print()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

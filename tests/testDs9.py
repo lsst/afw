@@ -50,8 +50,6 @@ if ds9:
         print("Unable to use ds9: %s" % e)
         ds9 = None
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class DisplayTestCase(unittest.TestCase):
     """A test case for Display"""
@@ -140,6 +138,7 @@ class DisplayTestCase(unittest.TestCase):
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

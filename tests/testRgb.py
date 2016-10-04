@@ -72,8 +72,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def saturate(image, satValue):
     """Simulate saturation on an image, so we can test 'replaceSaturatedPixels'
@@ -321,11 +319,8 @@ class RgbTestCase(unittest.TestCase):
             rgb.makeRGB(self.images[R], self.images[G], self.images[B], fileName=fileName, rescaleFactor=0.5)
             self.assertTrue(os.path.exists(fileName))
 
-    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    #
-    # Test that the legacy API still works, although it's deprecated
-    #
     def writeFileLegacyAPI(self, fileName):
+        """Test that the legacy API still works, although it's deprecated"""
         asinh = rgb.asinhMappingF(self.min, self.range, self.Q)
         rgbImage = rgb.RgbImageF(self.images[R], self.images[G], self.images[B], asinh)
         if False:
@@ -341,11 +336,10 @@ class RgbTestCase(unittest.TestCase):
             self.writeFileLegacyAPI(fileName)
             self.assertTrue(os.path.exists(fileName))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

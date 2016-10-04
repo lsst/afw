@@ -25,7 +25,6 @@ from __future__ import absolute_import, division
 """
 import os
 import unittest
-import warnings
 
 import lsst.utils
 import lsst.utils.tests

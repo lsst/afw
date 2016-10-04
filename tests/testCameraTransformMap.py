@@ -26,7 +26,6 @@ from builtins import object
 """
 Tests for lsst.afw.cameraGeom.CameraTransformMap
 """
-import itertools
 import unittest
 from builtins import zip
 
