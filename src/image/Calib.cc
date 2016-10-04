@@ -396,7 +396,7 @@ namespace {
 int const CALIB_TABLE_CURRENT_VERSION = 2;  // current version of ExposureTable
 std::string const EXPTIME_FIELD_NAME = "exptime";  // name of exposure time field
 
-class CalibSchema {
+class CalibKeys {
 public:
     table::Schema schema;
     table::Key<std::int64_t> midTime;
@@ -405,14 +405,14 @@ public:
     table::Key<double> fluxMag0Sigma;
 
     // No copying
-    CalibSchema (const CalibSchema&) = delete;
-    CalibSchema& operator=(const CalibSchema&) = delete;
+    CalibKeys (const CalibKeys&) = delete;
+    CalibKeys& operator=(const CalibKeys&) = delete;
 
     // No moving
-    CalibSchema (CalibSchema&&) = delete;
-    CalibSchema& operator=(CalibSchema&&) = delete;
+    CalibKeys (CalibKeys&&) = delete;
+    CalibKeys& operator=(CalibKeys&&) = delete;
 
-    CalibSchema(int tableVersion=CALIB_TABLE_CURRENT_VERSION) :
+    CalibKeys(int tableVersion=CALIB_TABLE_CURRENT_VERSION) :
         schema(),
         midTime(),
         expTime(),
@@ -445,7 +445,7 @@ public:
             tableVersion = CALIB_TABLE_CURRENT_VERSION;
         }
 
-        CalibSchema const keys{tableVersion};
+        CalibKeys const keys{tableVersion};
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
@@ -468,7 +468,7 @@ CalibFactory registration(getCalibPersistenceName());
 std::string Calib::getPersistenceName() const { return getCalibPersistenceName(); }
 
 void Calib::write(OutputArchiveHandle & handle) const {
-    CalibSchema const keys{};
+    CalibKeys const keys{};
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
     PTR(table::BaseRecord) record = cat.addNew();
     std::pair<double,double> fluxMag0 = getFluxMag0();
