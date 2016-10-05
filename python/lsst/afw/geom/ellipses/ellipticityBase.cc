@@ -24,22 +24,33 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/ellipses/EllipticityBase.h"
+
 namespace py = pybind11;
+
+using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
 PYBIND11_PLUGIN(_ellipticityBase) {
     py::module mod("_ellipticityBase", "Python wrapper for afw _ellipticityBase library");
 
-    /* Module level */
+    py::class_<detail::EllipticityBase> cls(mod, "EllipticityBase");
 
     /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
+    py::enum_<detail::EllipticityBase::ParameterEnum>(cls, "ParameterEnum")
+        .value("E1", detail::EllipticityBase::ParameterEnum::E1)
+        .value("E2", detail::EllipticityBase::ParameterEnum::E2)
+        .export_values();
 
     /* Members */
+    cls.def("getComplex", (std::complex<double> & (detail::EllipticityBase::*)()) &detail::EllipticityBase::getComplex);
+    cls.def("setComplex", &detail::EllipticityBase::setComplex);
+    cls.def("getE1", &detail::EllipticityBase::getE1);
+    cls.def("setE1", &detail::EllipticityBase::setE1);
+    cls.def("getE2", &detail::EllipticityBase::getE2);
+    cls.def("setE2", &detail::EllipticityBase::setE2);
+    cls.def("getTheta", &detail::EllipticityBase::getTheta);
 
     return mod.ptr();
 }

@@ -24,22 +24,31 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/ellipses/ReducedShear.h"
+#include "lsst/afw/geom/ellipses/EllipticityBase.h"
+
 namespace py = pybind11;
+
+using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
 PYBIND11_PLUGIN(_reducedShear) {
     py::module mod("_reducedShear", "Python wrapper for afw _reducedShear library");
 
-    /* Module level */
-
-    /* Member types and enums */
+    py::class_<ReducedShear, detail::EllipticityBase> cls(mod, "ReducedShear");
 
     /* Constructors */
-
-    /* Operators */
+    cls.def(py::init<std::complex<double> const &>());
+    cls.def(py::init<double, double>(),
+            "e1"_a=0.0, "e2"_a=0.0);
 
     /* Members */
+//    cls.def("dAssign", (Jacobian (ReducedShear::*)(Distortion const &)) &ReducedShear::dAssign);
+//    cls.def("dAssign", (Jacobian (ReducedShear::*)(ReducedShear const &)) &ReducedShear::dAssign);
+    cls.def("getAxisRatio", &ReducedShear::getAxisRatio);
+    cls.def("normalize", &ReducedShear::normalize);
+    cls.def("getName", &ReducedShear::getName);
 
     return mod.ptr();
 }

@@ -75,35 +75,18 @@ class MakeWcsTestCase(unittest.TestCase):
         """Check that a non-TAN projection in the header creates a base Wcs object"""
 
         wcs = afwImage.makeWcs(self.metadata)
-        strRepresentation = str(wcs)
-        self.assertNotEqual(strRepresentation.find("image::Wcs"), -1, "non Wcs object returned")
-
-    def testNoCreateTanWcs(self):
-        """Test than an exception is thrown if we try to upcast to a TanWcs inappropriately"""
-        wcs = afwImage.makeWcs(self.metadata)
-
-        with self.assertRaises(lsst.pex.exceptions.Exception):
-            afwImage.cast_TanWcs(wcs)
+        self.assertIsInstance(wcs, afwImage.Wcs)
+        self.assertNotIsInstance(wcs, afwImage.TanWcs)
 
     def testCreateTanWcs(self):
-        """Check that a non-TAN projection in the header creates a base Wcs object"""
+        """Check that a TAN projection in the header creates a TanWcs object"""
 
         self.metadata.set("CTYPE1", "RA---TAN")
         self.metadata.set("CTYPE2", "DEC--TAN")
 
         afwImage.makeWcs(self.metadata)
-        wcs = afwImage.cast_TanWcs(afwImage.makeWcs(self.metadata))
-        strRepresentation = str(wcs)
-        self.assertNotEqual(strRepresentation.find("image::TanWcs"), -1, "non TanWcs object returned")
-
-    def testCreateTanSipWcs(self):
-
-        self.metadata.set("CTYPE1", "RA---TAN")
-        self.metadata.set("CTYPE2", "DEC--TAN")
-
-        wcs = afwImage.cast_TanWcs(afwImage.makeWcs(self.metadata))
-        strRepresentation = str(wcs)
-        self.assertNotEqual(strRepresentation.find("image::TanWcs"), -1, "non TanWcs object returned")
+        wcs = afwImage.makeWcs(self.metadata)
+        self.assertIsInstance(wcs, afwImage.TanWcs)
 
     def testPythonLevelMakeWcs(self):
         """Verify that we can make a Wcs by providing the CD matrix elements in python."""

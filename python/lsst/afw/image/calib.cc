@@ -21,8 +21,10 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/operators.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/image/Calib.h"
 
 namespace py = pybind11;
 
@@ -32,14 +34,45 @@ PYBIND11_PLUGIN(_calib) {
     py::module mod("_calib", "Python wrapper for afw _calib library");
 
     /* Module level */
+    mod.def("abMagFromFlux", abMagFromFlux);
+    mod.def("abMagErrFromFluxErr", abMagErrFromFluxErr);
+    mod.def("fluxFromABMag", fluxFromABMag);
+    mod.def("fluxErrFromABMagErr", fluxErrFromABMagErr);
 
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+//    py::class_<Calib> cls(mod, "Calib");
+//
+//    /* Constructors */
+//    cls.def(py::init<>());
+//    cls.def(py::init<double>();
+//    cls.def(py::init<std::vector<CONST_PTR(Calib) const &>());
+//    cls.def(py::init<CONST_PTR(lsst::daf::base::PropertySet)>());
+//
+//    /* Operators */
+//    cls.def(py::self == py::self);
+//    cls.def(py::self != py::self);
+//    cls.def(py::self *= py::double_);
+//    cls.def(py::self /= py::double_);
+//
+//    /* Members */
+//    cls.def("setMidTime", &Calib::setMidTime);
+//    cls.def("getMidTime", (lsst::daf::base::DateTime (Calib::*)() const) &Calib::getMidTime);
+//    cls.def("setExptime", &Calib::setExptime);
+//    cls.def("getExptime", &Calib::getExptime);
+//    cls.def("setFluxMag0", (void (Calib::*)(double, double)) &Calib::setFluxMag0,
+//        py::arg("fluxMag0"), py::arg("fluxMag0Sigma")=0.0);
+//    cls.def("setFluxMag0", (void (Calib::*)(std::pair<double, double>)) &Calib::setFluxMag0);
+//    cls.def("getFluxMag0", &Calib::getFluxMag0);
+//    cls.def("getFlux", (double (Calib::*)(double const) const) &Calib::getFlux);
+//    cls.def("getFlux", (std::pair<double, double> (Calib::*)(double const, double const) const) &Calib::getFlux);
+//    cls.def("getFlux", (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const) &Calib::getFlux);
+//    cls.def("getFlux", (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> (Calib::*)(ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &) const) &Calib::getFlux);
+//    cls.def("getMagnitude", (double (Calib::*)(double const) const) &Calib::getMagnitude);
+//    cls.def("getMagnitude", (std::pair<double, double> (Calib::*)(double const, double const) const) &Calib::getMagnitude);
+//    cls.def("getMagnitude", (ndarray::Array<double, 1> (Calib::*)(ndarray::Array<double const, 1> const &) const) &Calib::getMagnitude);
+//    cls.def("getMagnitude", (std::pair<ndarray::Array<double, 1>, ndarray::Array<double, 1>> (Calib::*)(ndarray::Array<double const, 1> const &, ndarray::Array<double const, 1> const &) const) &Calib::getMagnitude);
+//    cls.def_static("setThrowOnNegativeFlux", Calib::setThrowOnNegativeFlux);
+//    cls.def_static("getThrowOnNegativeFlux", Calib::getThrowOnNegativeFlux);
+//    cls.def("isPersistable", &Calib::isPersistable);
 
     return mod.ptr();
 }

@@ -22,24 +22,65 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/geom/polygon/Polygon.h"
 
 namespace py = pybind11;
+
+using namespace py::literals;
 
 using namespace lsst::afw::geom::polygon;
 
 PYBIND11_PLUGIN(_polygon) {
     py::module mod("_polygon", "Python wrapper for afw _polygon library");
 
+    py::class_<Polygon, std::shared_ptr<Polygon>> clsPolygon(mod, "Polygon");
+
     /* Module level */
 
     /* Member types and enums */
 
     /* Constructors */
+    clsPolygon.def(py::init<Polygon::Box const &>());
+//    clsPolygon.def(py::init<Polygon::Box const &, CONST_PTR(XYTransform) const &>());
+//    clsPolygon.def(py::init<Polygon::Box const &, AffineTransform const &>());
+    clsPolygon.def(py::init<std::vector<Polygon::Point> const &>());
 
     /* Operators */
 
     /* Members */
+//    clsPolygon.def("swap", &Polygon::swap);
+//    clsPolygon.def("getNumEdges", &Polygon::getNumEdges);
+//    clsPolygon.def("getBPolygon::Box", &Polygon::getBPolygon::Box);
+//    clsPolygon.def("calculateCenter", &Polygon::calculateCenter);
+//    clsPolygon.def("calculateArea", &Polygon::calculateArea);
+//    clsPolygon.def("calculatePerimeter", &Polygon::calculatePerimeter);
+//    clsPolygon.def("getVertices", &Polygon::getVertices);
+//    clsPolygon.def("getEdges", &Polygon::getEdges);
+//    clsPolygon.def("contains", &Polygon::contains);
+//    clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon const &) const) &Polygon::overlaps);
+//    clsPolygon.def("overlaps", (bool (Polygon::*)(Polygon::Box const &) const) &Polygon::overlaps);
+//    clsPolygon.def("intersectionSingle", (PTR(Polygon) (Polygon::*)(Polygon const &) const) &Polygon::intersectionSingle);
+//    clsPolygon.def("intersectionSingle", (PTR(Polygon) (Polygon::*)(Polygon::Box const &) const) &Polygon::intersectionSingle);
+//    clsPolygon.def("intersection", (std::vector<PTR(Polygon)> (Polygon::*)(Polygon const &) const) &Polygon::intersection);
+//    clsPolygon.def("intersection", (std::vector<PTR(Polygon)> (Polygon::*)(Polygon::Box const &) const) &Polygon::intersection);
+//    clsPolygon.def("unionSingle", (PTR(Polygon) (Polygon::*)(Polygon const &) const) &Polygon::unionSingle);
+//    clsPolygon.def("unionSingle", (PTR(Polygon) (Polygon::*)(Polygon::Box const &) const) &Polygon::unionSingle);
+//
+//    clsPolygon.def("union_", (std::vector<PTR(Polygon)> (Polygon::*)(Polygon const &) const) &Polygon::union_);
+//    clsPolygon.def("union_", (std::vector<PTR(Polygon)> (Polygon::*)(Polygon::Box const &) const) &Polygon::union_);
+//    clsPolygon.def("symDifference_", (std::vector<PTR(Polygon)> (Polygon::*)(Polygon const &) const) &Polygon::symDifference_);
+//    clsPolygon.def("symDifference_", (std::vector<PTR(Polygon)> (Polygon::*)(Polygon::Box const &) const) &Polygon::symDifference_);
+//    clsPolygon.def("simplify", &Polygon::simplify);
+//    clsPolygon.def("convexHull", &Polygon::convexHull);
+//    clsPolygon.def("transform" (PTR(Polygon) (Polygon::*)(CONST_PTR(XYTransform) const &) const) &Polygon::transform);
+//    clsPolygon.def("transform" (PTR(Polygon) (Polygon::*)(AffineTransform const &) const) &Polygon::transform);
+//    clsPolygon.def("subSample", (PTR(Polygon) (Polygon::*)(size_t) const) &Polygon::subSample);
+//    clsPolygon.def("subSample", (PTR(Polygon) (Polygon::*)(double) const) &Polygon::subSample);
+//    clsPolygon.def("createImage", (PTR::afw::image::image<float>) (Polygon::*)(Polygon::Box2I const &) const) &Polygon::createImage);
+//    clsPolygon.def("createImage", (PTR::afw::image::image<float>) (Polygon::*)(Extent2I const &) const) &Polygon::createImage);
+//    clsPolygon.def("isPersistable", &Polygon::isPersistable);
 
     return mod.ptr();
 }
