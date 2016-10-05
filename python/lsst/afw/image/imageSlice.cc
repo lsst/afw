@@ -24,22 +24,50 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/image/ImageSlice.h"
+
 namespace py = pybind11;
 
+using namespace py::literals;
+
 using namespace lsst::afw::image;
+
+template <typename PixelT>
+void declareImageSlice(py::module & mod, std::string const & suffix) {
+    using Class = ImageSlice<PixelT>;
+
+    py::class_<Class, std::shared_ptr<Class>, Image<PixelT>> cls(mod, ("ImageSlice" + suffix).c_str());
+
+    cls.def(py::init<Image<PixelT> const &>(), "img"_a);
+
+    py::enum_<typename Class::ImageSliceType>(cls, "ImageSliceType")
+        .value("ROW", Class::ImageSliceType::ROW)
+        .value("COLUMN", Class::ImageSliceType::COLUMN)
+        .export_values();
+
+    cls.def("getImageSliceType", &Class::getImageSliceType);
+
+    cls.def("__add__", [](ImageSlice<PixelT> & self, Image<PixelT> const & other) { return self + other; }, py::is_operator());
+    cls.def("__mul__", [](ImageSlice<PixelT> & self, Image<PixelT> const & other) { return self * other; }, py::is_operator());
+    cls.def("__iadd__", [](ImageSlice<PixelT> & self, Image<PixelT> const & other) { self += other; return self; }, py::is_operator());
+    cls.def("__imul__", [](ImageSlice<PixelT> & self, Image<PixelT> const & other) { self *= other; return self; }, py::is_operator());
+
+    cls.def("__add__", [](Image<PixelT> const & self, ImageSlice<PixelT> const & other) { return self + other; }, py::is_operator());
+    cls.def("__sub__", [](Image<PixelT> const & self, ImageSlice<PixelT> const & other) { return self - other; }, py::is_operator());
+    cls.def("__mul__", [](Image<PixelT> const & self, ImageSlice<PixelT> const & other) { return self * other; }, py::is_operator());
+    cls.def("__truediv__", [](Image<PixelT> const & self, ImageSlice<PixelT> const & other) { return self / other; }, py::is_operator());
+    cls.def("__iadd__", [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self += other; return self; }, py::is_operator());
+    cls.def("__isub__", [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self -= other; return self; }, py::is_operator());
+    cls.def("__imul__", [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self *= other; return self; }, py::is_operator());
+    cls.def("__itruediv__", [](Image<PixelT> & self, ImageSlice<PixelT> const & other) { self /= other; return self; }, py::is_operator());
+
+}
 
 PYBIND11_PLUGIN(_imageSlice) {
     py::module mod("_imageSlice", "Python wrapper for afw _imageSlice library");
 
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+    declareImageSlice<float>(mod, "F");
+    declareImageSlice<double>(mod, "D");
 
     return mod.ptr();
 }

@@ -24,12 +24,23 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/gpu/DevicePreference.h"
+
 namespace py = pybind11;
 
 using namespace lsst::afw::gpu;
 
 PYBIND11_PLUGIN(_devicePreference) {
     py::module mod("_devicePreference", "Python wrapper for afw _devicePreference library");
+
+    py::enum_<DevicePreference>(mod, "DevicePreference")
+        .value("AUTO", DevicePreference::AUTO)
+        .value("AUTO_WITH_CPU_FALLBACK", DevicePreference::AUTO_WITH_CPU_FALLBACK)
+        .value("USE_CPU", DevicePreference::USE_CPU)
+        .value("USE_GPU", DevicePreference::USE_GPU)
+        .export_values();
+
+    mod.attr("DEFAULT_DEVICE_PREFERENCE") = py::cast(AUTO);
 
     /* Module level */
 

@@ -24,22 +24,31 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/ellipses/Distortion.h"
+#include "lsst/afw/geom/ellipses/EllipticityBase.h"
+
 namespace py = pybind11;
+
+using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
 PYBIND11_PLUGIN(_distortion) {
     py::module mod("_distortion", "Python wrapper for afw _distortion library");
 
-    /* Module level */
-
-    /* Member types and enums */
+    py::class_<Distortion, detail::EllipticityBase> cls(mod, "Distortion");
 
     /* Constructors */
-
-    /* Operators */
+    cls.def(py::init<std::complex<double> const &>());
+    cls.def(py::init<double, double>(),
+            "e1"_a=0.0, "e2"_a=0.0);
 
     /* Members */
+//    cls.def("dAssign", (Jacobian (Distortion::*)(Distortion const &)) &Distortion::dAssign);
+//    cls.def("dAssign", (Jacobian (Distortion::*)(ReducedShear const &)) &Distortion::dAssign);
+    cls.def("getAxisRatio", &Distortion::getAxisRatio);
+    cls.def("normalize", &Distortion::normalize);
+    cls.def("getName", &Distortion::getName);
 
     return mod.ptr();
 }
