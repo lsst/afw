@@ -24,22 +24,19 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/image/Utils.h"
+
 namespace py = pybind11;
 
 using namespace lsst::afw::image;
+using namespace pybind11::literals;
 
 PYBIND11_PLUGIN(_utils) {
     py::module mod("_utils", "Python wrapper for afw _utils library");
 
     /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+    mod.def("readMetadata", readMetadata,
+            "fileName"_a, "hdu"_a=0, "strip"_a=false);
 
     return mod.ptr();
 }

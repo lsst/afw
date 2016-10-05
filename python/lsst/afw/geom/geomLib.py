@@ -11,3 +11,4 @@ from ._span import *
 from ._xYTransform import *
 from ._separableXYTransform import *
 from ._affineTransform import *
+from ._linearTransform import *

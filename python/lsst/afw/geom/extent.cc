@@ -86,8 +86,8 @@ py::class_<Extent<T,N>> declareExtent(py::module &mod, const std::string & suffi
     cls.def("__sub__", [](Extent<T,N> &e, Extent<double,N> &o) { return e - o; });
     cls.def("__eq__", [](Extent<T,N> &e, Extent<T,N> &o) { return e == o; });
     cls.def("__eq__", [](Extent<T,N> &e, py::none) { return false; });
-    cls.def("__neq__", [](Extent<T,N> &e, Extent<T,N> &o) { return e != o; });
-    cls.def("__neq__", [](Extent<T,N> &e, py::none) { return true; });
+    cls.def("__ne__", [](Extent<T,N> &e, Extent<T,N> &o) { return e != o; });
+    cls.def("__ne__", [](Extent<T,N> &e, py::none) { return true; });
 
     /* Members */
     cls.def("clone", [](Extent<T,N> &p) {return Extent<T,N>{p};});
