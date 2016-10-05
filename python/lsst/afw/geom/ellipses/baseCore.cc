@@ -24,7 +24,12 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
+
 #include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/ellipses/Transformer.h"
 
 namespace py = pybind11;
 
@@ -33,16 +38,49 @@ using namespace lsst::afw::geom::ellipses;
 PYBIND11_PLUGIN(_baseCore) {
     py::module mod("_baseCore", "Python wrapper for afw _baseCore library");
 
+    if (_import_array() < 0) {
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
+        }
+
     /* Module level */
     py::class_<BaseCore, std::shared_ptr<BaseCore>> clsBaseCore(mod, "BaseCore");
 
     /* Member types and enums */
+    py::class_<typename BaseCore::Transformer> clsBaseCoreTransformer(mod, "Transformer");
+
+//    clsBaseCoreTransformer.def(py::init<BaseCore &, LinearTransform const &>());
+//
+//    clsBaseCoreTransformer.def("inPlace", &BaseCore::Transformer::inPlace);
+//    clsBaseCoreTransformer.def("apply", &BaseCore::Transformer::apply);
+//    clsBaseCoreTransformer.def("d", &BaseCore::Transformer::d);
+//    clsBaseCoreTransformer.def("dTransform", &BaseCore::Transformer::dTransform);
+//
+//    clsBaseCoreTransformer.def_readwrite("input", &BaseCore::Transformer::input);
+//    clsBaseCoreTransformer.def_readonly("transform", &BaseCore::Transformer::transform);
 
     /* Constructors */
 
     /* Operators */
 
     /* Members */
+    clsBaseCore.def("getName", &BaseCore::getName);
+    clsBaseCore.def("clone", &BaseCore::clone);
+    clsBaseCore.def("normalize", &BaseCore::normalize);
+    clsBaseCore.def("grow", &BaseCore::grow);
+    clsBaseCore.def("scale", &BaseCore::scale);
+    clsBaseCore.def("getArea", &BaseCore::getArea);
+    clsBaseCore.def("getDeterminantRadius", &BaseCore::getDeterminantRadius);
+    clsBaseCore.def("getTraceRadius", &BaseCore::getTraceRadius);
+//    clsBaseCore.def("transform", (typename BaseCore::Transformer const (BaseCore::*)(lsst::afw::geom::LinearTransform const &) const) &BaseCore::transform);
+//    clsBaseCore.def("getGridTransform", &BaseCore::getGridTransform);
+//    clsBaseCore.def("convolve", (Convolution const (BaseCore::*)(BaseCore const &) const) &BaseCore::convolve);
+    clsBaseCore.def("computeDimensions", &BaseCore::computeDimensions);
+    clsBaseCore.def("getParameterVector", &BaseCore::getParameterVector);
+    clsBaseCore.def("setParameterVector", &BaseCore::setParameterVector);
+//    clsBaseCore.def("transformInPlace", [](BaseCore & self, lsst::afw::geom::LinearTransform const & t) {
+//       self.transform(t).inPlace();
+//    });
 
     return mod.ptr();
 }

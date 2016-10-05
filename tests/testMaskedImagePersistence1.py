@@ -81,8 +81,7 @@ class MaskedImagePersistenceTestCase(lsst.utils.tests.TestCase):
         storageList = dafPers.StorageList([storage])
 
         # Let's do the retrieval!
-        maskedImage2 = afwImage.MaskedImageF.swigConvert(
-            self.persistence.unsafeRetrieve("MaskedImageF", storageList, self.additionalData))
+        maskedImage2 = self.persistence.unsafeRetrieve("MaskedImageF", storageList, self.additionalData)
 
         # Check the resulting MaskedImage
         self.assertMaskedImagesEqual(self.maskedImage, maskedImage2)

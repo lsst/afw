@@ -24,22 +24,45 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/ellipses/Axes.h"
+
 namespace py = pybind11;
+
+using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
 PYBIND11_PLUGIN(_axes) {
     py::module mod("_axes", "Python wrapper for afw _axes library");
 
-    /* Module level */
-
-    /* Member types and enums */
+    py::class_<Axes, std::shared_ptr<Axes>, BaseCore> clsAxes(mod, "Axes");
 
     /* Constructors */
-
-    /* Operators */
+    clsAxes.def(py::init<double, double, double, bool>(),
+            "a"_a=1.0, "b"_a=1.0, "theta"_a=0.0, "normalize"_a=false);
+    clsAxes.def(py::init<Axes const &>());
+    clsAxes.def(py::init<BaseCore const &>());
 
     /* Members */
+    clsAxes.def("getA", &Axes::getA);
+    clsAxes.def("setA", &Axes::setA);
+    clsAxes.def("getB", &Axes::getB);
+    clsAxes.def("setB", &Axes::setB);
+    clsAxes.def("getTheta", &Axes::getTheta);
+    clsAxes.def("setTheta", &Axes::setTheta);
+    clsAxes.def("clone", &Axes::clone);
+    clsAxes.def("getName", &Axes::getName);
+    clsAxes.def("normalize", &Axes::normalize);
+    clsAxes.def("readParameters", &Axes::readParameters);
+    clsAxes.def("writeParameters", &Axes::writeParameters);
+    clsAxes.def("assign", [](Axes & self, Axes & other) { self = other; });
+    clsAxes.def("assign", [](Axes & self, BaseCore & other) { self = other; });
+    clsAxes.def("transform", [](Axes & self, lsst::afw::geom::LinearTransform const & t) {
+        return std::static_pointer_cast<Axes>(self.transform(t).copy());
+    });
+    clsAxes.def("transformInPlace", [](Axes & self, lsst::afw::geom::LinearTransform const & t) {
+       self.transform(t).inPlace();
+    });
 
     return mod.ptr();
 }

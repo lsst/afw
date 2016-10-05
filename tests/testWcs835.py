@@ -22,7 +22,6 @@
 
 from __future__ import absolute_import, division, print_function
 import unittest
-
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.daf.base as dafBase
