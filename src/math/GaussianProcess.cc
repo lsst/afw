@@ -301,7 +301,7 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
 }
 
 template  < typename T >
-int KdTree < T > ::getPoints() const
+int KdTree < T > ::getNPoints() const
 {
     return _pts;
 }
@@ -841,7 +841,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _kdTree.Initialize(dataIn);
 
-    _pts = _kdTree.getPoints();
+    _pts = _kdTree.getNPoints();
 
 }
 
@@ -894,7 +894,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _kdTree.Initialize(normalizedData);
 
-    _pts = _kdTree.getPoints();
+    _pts = _kdTree.getNPoints();
     _nFunctions = 1;
     _function = allocate(ndarray::makeVector(_pts, 1));
     for(i = 0; i < _pts; i++ )_function[i][0] = ff[i];
@@ -931,7 +931,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _kdTree.Initialize(dataIn);
 
-    _pts = _kdTree.getPoints();
+    _pts = _kdTree.getNPoints();
 }
 
 template  < typename T >
@@ -983,7 +983,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     }
 
     _kdTree.Initialize(normalizedData);
-    _pts = _kdTree.getPoints();
+    _pts = _kdTree.getNPoints();
     _nFunctions = ff.template getSize < 1 > ();
     _function = allocate(ndarray::makeVector(_pts, _nFunctions));
     _function.deep() = ff;
@@ -991,7 +991,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
 
 template < typename T >
-int GaussianProcess < T > ::getPoints() const{
+int GaussianProcess < T > ::getNPoints() const{
     return _pts;
 }
 
@@ -1107,7 +1107,7 @@ T GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  variance,
                           "Asked for zero or negative number of neighbors\n");
     }
 
-    if(numberOfNeighbors > _kdTree.getPoints()){
+    if(numberOfNeighbors > _kdTree.getNPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1231,7 +1231,7 @@ void GaussianProcess < T > ::interpolate(ndarray::Array < T,1,1 >  mu,
                           "Asked for zero or negative number of neighbors\n");
     }
 
-    if(numberOfNeighbors > _kdTree.getPoints()){
+    if(numberOfNeighbors > _kdTree.getNPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
@@ -1367,12 +1367,12 @@ T GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  variance,
                           "Asked for zero or negative number of neighbors\n");
     }
 
-    if(numberOfNeighbors + 1 > _kdTree.getPoints()){
+    if(numberOfNeighbors + 1 > _kdTree.getNPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
 
-    if(dex < 0 || dex >=_kdTree.getPoints()){
+    if(dex < 0 || dex >=_kdTree.getNPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked to self interpolate on a point that does not exist\n");
     }
@@ -1492,12 +1492,12 @@ void GaussianProcess < T > ::selfInterpolate(ndarray::Array < T,1,1 >  mu,
                           "Asked for zero or negative number of neighbors\n");
     }
 
-    if(numberOfNeighbors + 1 > _kdTree.getPoints()){
+    if(numberOfNeighbors + 1 > _kdTree.getNPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than you have data points\n");
     }
 
-    if(dex < 0 || dex >=_kdTree.getPoints()){
+    if(dex < 0 || dex >=_kdTree.getNPoints()){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked to self interpolate on a point that does not exist\n");
     }
@@ -2055,7 +2055,7 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
     _function[_pts][0] = f;
 
     _kdTree.addPoint(v);
-    _pts = _kdTree.getPoints();
+    _pts = _kdTree.getNPoints();
 
 }
 
@@ -2105,7 +2105,7 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin,
     for(i = 0; i < _nFunctions; i++ )_function[_pts][i] = f[i];
 
     _kdTree.addPoint(v);
-    _pts = _kdTree.getPoints();
+    _pts = _kdTree.getNPoints();
 
 
 }
@@ -2123,7 +2123,7 @@ void GaussianProcess < T > ::removePoint(int dex)
              _function[i][j] = _function[i + 1][j];
         }
     }
-    _pts = _kdTree.getPoints();
+    _pts = _kdTree.getNPoints();
 }
 
 template  < typename T >

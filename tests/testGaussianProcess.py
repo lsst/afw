@@ -246,7 +246,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         # (i.e. that the new point is added to the tree's data)
         kd.addPoint(np.array([1.1]*3))
 
-        self.assertEqual(kd.getPoints(), 4)
+        self.assertEqual(kd.getNPoints(), 4)
         for ix in range(3):
             for iy in range(3):
                 self.assertAlmostEqual(data[ix][iy], kd.getData(ix, iy), places=10)
@@ -269,7 +269,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         data = np.array([[1.5, 1.5, 1.5], [2.0, 2.0, 2.0], [4.0, 4.0, 4.0], [3.0, 3.0, 3.0]])
         kd = afwMath.KdTreeD()
         kd.Initialize(data)
-        self.assertEqual(kd.getPoints(), 4)
+        self.assertEqual(kd.getNPoints(), 4)
 
         # test that an exception is raised if you try to remove a non-existent point
         with self.assertRaises(RuntimeError):
@@ -280,7 +280,7 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
 
         # test that things work correctly when you do remove a point
         kd.removePoint(1)
-        self.assertEqual(kd.getPoints(), 3)
+        self.assertEqual(kd.getNPoints(), 3)
         for ix in range(3):
             self.assertAlmostEqual(kd.getData(0, ix), 1.5, places=10)
             self.assertAlmostEqual(kd.getData(1, ix), 4.0, places=10)
@@ -1036,8 +1036,8 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg_many.addPoint(pt_good, fn_good)
 
         # since we started with 10 data points, we should now have 11
-        self.assertEqual(gg.getPoints(), 11)
-        self.assertEqual(gg_many.getPoints(), 11)
+        self.assertEqual(gg.getNPoints(), 11)
+        self.assertEqual(gg_many.getNPoints(), 11)
 
     def testAddPoint(self):
         """
@@ -1047,11 +1047,11 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         data = rng.random_sample((15, 4))
         fn = rng.random_sample(15)
         gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
-        self.assertEqual(gp.getPoints(), 15)
+        self.assertEqual(gp.getNPoints(), 15)
         pt_add = rng.random_sample(4)
         fn_add = 0.98453
         gp.addPoint(pt_add, fn_add)
-        self.assertEqual(gp.getPoints(), 16)
+        self.assertEqual(gp.getNPoints(), 16)
         fn_out = np.zeros(1)
         pt_out = np.zeros((1, 4))
         indices = np.array([15], dtype=np.int32)
@@ -1063,11 +1063,11 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # now try it with a GaussianProcess on many functions
         fn = rng.random_sample((15, 3))
         gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
-        self.assertEqual(gp.getPoints(), 15)
+        self.assertEqual(gp.getNPoints(), 15)
         pt_add = rng.random_sample(4)
         fn_add = rng.random_sample(3)
         gp.addPoint(pt_add, fn_add)
-        self.assertEqual(gp.getPoints(), 16)
+        self.assertEqual(gp.getNPoints(), 16)
         fn_out = np.zeros((1, 3))
         gp.getData(pt_out, fn_out, indices)
         for ii in range(4):
@@ -1574,7 +1574,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that it runs fine
         gg.removePoint(11)
-        self.assertEqual(gg.getPoints(), 12)
+        self.assertEqual(gg.getNPoints(), 12)
 
     def testRemovePoint(self):
         """
@@ -1584,9 +1584,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         data = rng.random_sample((15, 4))
         fn = rng.random_sample(15)
         gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
-        self.assertEqual(gp.getPoints(), 15)
+        self.assertEqual(gp.getNPoints(), 15)
         gp.removePoint(6)
-        self.assertEqual(gp.getPoints(), 14)
+        self.assertEqual(gp.getNPoints(), 14)
         indices = np.array([9, 5, 4, 11], dtype=np.int32)
         fn_out = np.zeros(4)
         pts_out = np.zeros((4, 4))
@@ -1603,9 +1603,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # now test it on a GaussianProcess on many functions
         fn = rng.random_sample((15, 5))
         gp = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
-        self.assertEqual(gp.getPoints(), 15)
+        self.assertEqual(gp.getNPoints(), 15)
         gp.removePoint(6)
-        self.assertEqual(gp.getPoints(), 14)
+        self.assertEqual(gp.getNPoints(), 14)
         indices = np.array([9, 5, 4, 11], dtype=np.int32)
         fn_out = np.zeros((4, 5))
         pts_out = np.zeros((4, 4))

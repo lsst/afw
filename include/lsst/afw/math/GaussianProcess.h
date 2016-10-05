@@ -346,7 +346,7 @@ public:
     /**
      * @brief return the number of data points stored in the tree
     */
-    int getPoints() const;
+    int getNPoints() const;
 
    /**
      * @brief Return the _tree information for a given data point
@@ -605,7 +605,7 @@ public:
     /**
      * @brief return the number of data points stored in the GaussianProcess
     */
-    int getPoints() const;
+    int getNPoints() const;
 
     /**
      *@brief return the dimensionality of data points stored in the
