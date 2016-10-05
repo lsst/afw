@@ -88,8 +88,7 @@ class KernelIOTestCase(unittest.TestCase):
         storageList2 = dafPersist.StorageList()
         storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
         storageList2.append(storage2)
-        x = persistence.unsafeRetrieve("FixedKernel", storageList2, additionalData)
-        k2 = afwMath.FixedKernel.swigConvert(x)
+        k2 = persistence.unsafeRetrieve("FixedKernel", storageList2, additionalData)
 
         self.kernelCheck(k, k2)
 
@@ -144,9 +143,8 @@ class KernelIOTestCase(unittest.TestCase):
                     storageList2 = dafPersist.StorageList()
                     storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                     storageList2.append(storage2)
-                    x = persistence.unsafeRetrieve("AnalyticKernel",
+                    k2 = persistence.unsafeRetrieve("AnalyticKernel",
                                                    storageList2, additionalData)
-                    k2 = afwMath.AnalyticKernel.swigConvert(x)
 
                     self.kernelCheck(k, k2)
 
@@ -180,9 +178,8 @@ class KernelIOTestCase(unittest.TestCase):
                         storageList2 = dafPersist.StorageList()
                         storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                         storageList2.append(storage2)
-                        x = persistence.unsafeRetrieve("DeltaFunctionKernel",
+                        k2 = persistence.unsafeRetrieve("DeltaFunctionKernel",
                                                        storageList2, additionalData)
-                        k2 = afwMath.DeltaFunctionKernel.swigConvert(x)
 
                         self.kernelCheck(kernel, k2)
                         self.assertEqual(kernel.getPixel(), k2.getPixel())
@@ -233,9 +230,8 @@ class KernelIOTestCase(unittest.TestCase):
                 storageList2 = dafPersist.StorageList()
                 storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                 storageList2.append(storage2)
-                x = persistence.unsafeRetrieve("SeparableKernel",
+                k2 = persistence.unsafeRetrieve("SeparableKernel",
                                                storageList2, additionalData)
-                k2 = afwMath.SeparableKernel.swigConvert(x)
 
                 self.kernelCheck(k, k2)
 
@@ -259,7 +255,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         # create list of kernels
         basisImArrList = []
-        kVec = afwMath.KernelList()
+        kVec = []
         for row in range(kHeight):
             for col in range(kWidth):
                 kernel = afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(col, row))
@@ -283,9 +279,8 @@ class KernelIOTestCase(unittest.TestCase):
             storageList2 = dafPersist.StorageList()
             storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
             storageList2.append(storage2)
-            x = persistence.unsafeRetrieve("LinearCombinationKernel",
+            k2 = persistence.unsafeRetrieve("LinearCombinationKernel",
                                            storageList2, additionalData)
-            k2 = afwMath.LinearCombinationKernel.swigConvert(x)
 
             self.kernelCheck(k, k2)
 
@@ -319,7 +314,7 @@ class KernelIOTestCase(unittest.TestCase):
         basisImArrList.append(imArr)
 
         # create a list of basis kernels from the images
-        kVec = afwMath.KernelList()
+        kVec = []
         for basisImArr in basisImArrList:
             basisImage = afwImage.makeImageFromArray(basisImArr.transpose().copy())
             kernel = afwMath.FixedKernel(basisImage)
@@ -346,9 +341,8 @@ class KernelIOTestCase(unittest.TestCase):
         storageList2 = dafPersist.StorageList()
         storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
         storageList2.append(storage2)
-        x = persistence.unsafeRetrieve("LinearCombinationKernel",
+        k2 = persistence.unsafeRetrieve("LinearCombinationKernel",
                                        storageList2, additionalData)
-        k2 = afwMath.LinearCombinationKernel.swigConvert(x)
 
         self.kernelCheck(k, k2)
 
@@ -392,9 +386,8 @@ class KernelIOTestCase(unittest.TestCase):
                 storageList2 = dafPersist.StorageList()
                 storage2 = persistence.getRetrieveStorage("XmlStorage", loc)
                 storageList2.append(storage2)
-                x = persistence.unsafeRetrieve("AnalyticKernel",
+                k2 = persistence.unsafeRetrieve("AnalyticKernel",
                                                storageList2, additionalData)
-                k2 = afwMath.AnalyticKernel.swigConvert(x)
 
                 self.kernelCheck(k, k2)
 
