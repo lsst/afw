@@ -753,8 +753,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
             gg.selfInterpolate(sigma, 0, -5)
         with self.assertRaises(pex.Exception):
             gg.selfInterpolate(sigma, -1, nData-1)
-        # the following segfaults, for unknown reasons, so run directly instead
-        # self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
+        with self.assertRaises(pex.Exception):
+            gg.selfInterpolate(sigma, nData, nData-1)
+
         try:
             gg.interpolate(mu_arr, sigma, 2*nData)
             self.fail("gg.interpolate(mu_arr,sigma,2*nData) did not fail")
