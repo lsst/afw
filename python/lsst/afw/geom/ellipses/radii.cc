@@ -24,22 +24,40 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/ellipses/radii.h"
+
 namespace py = pybind11;
+
+using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
 PYBIND11_PLUGIN(_radii) {
     py::module mod("_radii", "Python wrapper for afw _radii library");
 
-    /* Module level */
+    py::class_<DeterminantRadius> clsDeterminantRadius(mod, "DeterminantRadius");
+    
+    clsDeterminantRadius.def(py::init<double>(), "value"_a=1.0);
+    clsDeterminantRadius.def("normalize", &DeterminantRadius::normalize);
+    clsDeterminantRadius.def_static("getName", DeterminantRadius::getName);
 
-    /* Member types and enums */
+    py::class_<TraceRadius> clsTraceRadius(mod, "TraceRadius");
+    
+    clsTraceRadius.def(py::init<double>(), "value"_a=1.0);
+    clsTraceRadius.def("normalize", &TraceRadius::normalize);
+    clsTraceRadius.def_static("getName", TraceRadius::getName);
 
-    /* Constructors */
+    py::class_<LogDeterminantRadius> clsLogDeterminantRadius(mod, "LogDeterminantRadius");
+    
+    clsLogDeterminantRadius.def(py::init<double>(), "value"_a=0.0);
+    clsLogDeterminantRadius.def("normalize", &LogDeterminantRadius::normalize);
+    clsLogDeterminantRadius.def_static("getName", LogDeterminantRadius::getName);
 
-    /* Operators */
-
-    /* Members */
+    py::class_<LogTraceRadius> clsLogTraceRadius(mod, "LogTraceRadius");
+    
+    clsLogTraceRadius.def(py::init<double>(), "value"_a=0.0);
+    clsLogTraceRadius.def("normalize", &LogTraceRadius::normalize);
+    clsLogTraceRadius.def_static("getName", LogTraceRadius::getName);
 
     return mod.ptr();
 }

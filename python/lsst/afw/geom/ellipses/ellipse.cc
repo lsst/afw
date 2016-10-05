@@ -24,8 +24,13 @@
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
+
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/ellipses/GridTransform.h"
 #include "lsst/afw/geom/ellipses/Ellipse.h"
 
 namespace py = pybind11;
@@ -37,13 +42,29 @@ using namespace ellipses;
 PYBIND11_PLUGIN(_ellipse) {
     py::module mod("_ellipse", "Python wrapper for afw _ellipse library");
 
+    if (_import_array() < 0) {
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
+        }
+
     /* Module level */
     py::class_<Ellipse, std::shared_ptr<Ellipse>> clsEllipse(mod, "Ellipse");
 
-    /* Member types and enums */
+//    /* Member types and enums */
+//    py::class_<Ellipse::GridTransform> clsEllipseGridTransform(clsEllipse, "GridTransform");
+//
+//    /* Constructors */
+//    clsEllipseGridTransform.def(py::init<Ellipse const &>());
+//
+//    /* Members */
+//    clsEllipseGridTransform.def("getMatrix", &Ellipse::GridTransform::getMatrix);
+//    clsEllipseGridTransform.def("d", &Ellipse::GridTransform::d);
+//    clsEllipseGridTransform.def("getDeterminant", &Ellipse::GridTransform::getDeterminant);
+//    clsEllipseGridTransform.def("invert", &Ellipse::GridTransform::invert);
 
     /* Constructors */
     clsEllipse.def(py::init<BaseCore const &, Point2D const &>(), "core"_a, "center"_a=Point2D());
+    clsEllipse.def(py::init<Ellipse const &>());
 
     /* Operators */
 
@@ -52,6 +73,20 @@ PYBIND11_PLUGIN(_ellipse) {
         return ellipse.getCorePtr();
     });
     clsEllipse.def("getCenter", (Point2D & (Ellipse::*)())&Ellipse::getCenter);
+    clsEllipse.def("setCenter", &Ellipse::setCenter);
+    clsEllipse.def("setCore", &Ellipse::setCore);
+    clsEllipse.def("normalize", &Ellipse::normalize);
+    clsEllipse.def("grow", &Ellipse::grow);
+    clsEllipse.def("scale", &Ellipse::scale);
+    clsEllipse.def("shift", &Ellipse::shift);
+    clsEllipse.def("getParameterVector", &Ellipse::getParameterVector);
+    clsEllipse.def("setParameterVector", &Ellipse::setParameterVector);
+//    clsEllipse.def("transform", (Transformer const (Ellipse::*)(AffineTransform const &) const) &Ellipse::transform);
+//    clsEllipse.def("convolve", (Convolution const (Ellipse::*)(Ellipse const &) const) &Ellipse::convolve);
+    clsEllipse.def("getGridTransform", [](Ellipse & self) -> AffineTransform {
+        return self.getGridTransform(); // delibarate conversion to AffineTransform
+    });
+    clsEllipse.def("computeBBox", &Ellipse::computeBBox);
 
     return mod.ptr();
 }

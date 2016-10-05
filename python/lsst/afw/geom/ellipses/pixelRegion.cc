@@ -24,6 +24,8 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/ellipses/PixelRegion.h"
+
 namespace py = pybind11;
 
 using namespace lsst::afw::geom::ellipses;
@@ -31,15 +33,17 @@ using namespace lsst::afw::geom::ellipses;
 PYBIND11_PLUGIN(_pixelRegion) {
     py::module mod("_pixelRegion", "Python wrapper for afw _pixelRegion library");
 
-    /* Module level */
-
-    /* Member types and enums */
+    py::class_<PixelRegion> clsPixelRegion(mod, "PixelRegion");
 
     /* Constructors */
-
-    /* Operators */
+    clsPixelRegion.def(py::init<Ellipse const &>());
 
     /* Members */
+    clsPixelRegion.def("getBBox", &PixelRegion::getBBox);
+    clsPixelRegion.def("getSpanAt", &PixelRegion::getSpanAt);
+    clsPixelRegion.def("__iter__", [](const PixelRegion & self) {
+            return py::make_iterator(self.begin(), self.end());
+    }, py::keep_alive<0, 1>() /* Essential: keep object alive while iterator exists */);
 
     return mod.ptr();
 }
