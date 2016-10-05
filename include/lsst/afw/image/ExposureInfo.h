@@ -260,6 +260,7 @@ private:
      *
      *  @param[in]  fitsfile   Open FITS object to write to.  Does not need to be positioned to any
      *                         particular HDU.
+     *  @param[in,out] data    The data returned by this object's _startWriteFits method.
      *
      *  The additional HDUs will be appended to the FITS file, and should line up with the HDU index
      *  keys included in the result of getFitsMetadata() if this is called after writing the
