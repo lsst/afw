@@ -22,7 +22,7 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
 
 #include "lsst/afw/geom/ellipses/BaseCore.h"
 #include "lsst/afw/geom/ellipses/Quadrupole.h"
@@ -48,7 +48,8 @@ PYBIND11_PLUGIN(_quadrupole) {
                       "vector"_a, "normalize"_a=false);
     clsQuadrupole.def(py::init<Matrix const &, bool>(),
                       "matrix"_a, "normalize"_a=true);
-    
+    clsQuadrupole.def(py::init<Quadrupole const &>());
+    clsQuadrupole.def(py::init<BaseCore const &>());
 
     /* Operators */
 
@@ -59,5 +60,14 @@ PYBIND11_PLUGIN(_quadrupole) {
     clsQuadrupole.def("setIxx", &Quadrupole::setIxx);
     clsQuadrupole.def("setIyy", &Quadrupole::setIyy);
     clsQuadrupole.def("setIxy", &Quadrupole::setIxy);
+    clsQuadrupole.def("assign", [](Quadrupole & self, Quadrupole & other) { self = other; });
+    clsQuadrupole.def("assign", [](Quadrupole & self, BaseCore & other) { self = other; });
+    clsQuadrupole.def("transform", [](Quadrupole & self, lsst::afw::geom::LinearTransform const & t) {
+        return std::static_pointer_cast<Quadrupole>(self.transform(t).copy());
+    });
+    clsQuadrupole.def("transformInPlace", [](Quadrupole & self, lsst::afw::geom::LinearTransform const & t) {
+       self.transform(t).inPlace();
+    });
+
     return mod.ptr();
 }

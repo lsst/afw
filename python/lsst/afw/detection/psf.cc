@@ -24,6 +24,8 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/detection/Psf.h"
+
 namespace py = pybind11;
 
 using namespace lsst::afw::detection;
@@ -31,6 +33,7 @@ using namespace lsst::afw::detection;
 PYBIND11_PLUGIN(_psf) {
     py::module mod("_psf", "Python wrapper for afw _psf library");
 
+    py::class_<Psf, std::shared_ptr<Psf>> cls(mod, "Psf");
     /* Module level */
 
     /* Member types and enums */

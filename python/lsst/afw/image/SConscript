@@ -1,4 +1,19 @@
 ## -*- python -*-
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.pybind11(['image',
+                                  'apCorrMap',
+                                  'calib',
+                                  'wcs',
+                                  'tanWcs',
+                                  'exposure',
+                                  'exposureInfo',
+                                  'mask',
+                                  'maskedImage',
+                                  'imageUtils',
+                                  'imageSlice',
+                                  'utils'])
+
+## -*- python -*-
 #from lsst.sconsUtils import env, targets
 #
 ## We can't use BasicSConscript here because the circular dependency requires the -D option in SWIGFLAGS

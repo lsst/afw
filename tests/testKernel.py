@@ -43,7 +43,7 @@ def makeGaussianKernelList(kWidth, kHeight, gaussParamsList):
     - kWidth, kHeight: width and height of kernel
     - gaussParamsList: a list of parameters for GaussianFunction2D (each a 3-tuple of floats)
     """
-    kVec = afwMath.KernelList()
+    kVec = []
     for majorSigma, minorSigma, angle in gaussParamsList:
         kFunc = afwMath.GaussianFunction2D(majorSigma, minorSigma, angle)
         kVec.append(afwMath.AnalyticKernel(kWidth, kHeight, kFunc))
@@ -55,7 +55,7 @@ def makeDeltaFunctionKernelList(kWidth, kHeight):
 
     This is useful for constructing a LinearCombinationKernel.
     """
-    kVec = afwMath.KernelList()
+    kVec = []
     for activeCol in range(kWidth):
         for activeRow in range(kHeight):
             kVec.append(afwMath.DeltaFunctionKernel(kWidth, kHeight, afwGeom.Point2I(activeCol, activeRow)))
@@ -268,7 +268,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             sepKernel = afwMath.SeparableKernel(kWidth, kHeight, polyFunc1, polyFunc1)
             sepKernel.setKernelParameters([coeff, coeff])
 
-            kernelList = afwMath.KernelList()
+            kernelList = []
             kernelList.append(analKernel)
             lcKernel = afwMath.LinearCombinationKernel(kernelList, [1])
             self.assertFalse(lcKernel.isDeltaFunctionBasis())
@@ -293,7 +293,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         # create list of kernels
         basisImArrList = []
-        basisKernelList = afwMath.KernelList()
+        basisKernelList = []
         for basisKernelParams in [(1.2, 0.3, 1.570796), (1.0, 0.2, 0.0)]:
             basisKernelFunction = afwMath.GaussianFunction2D(*basisKernelParams)
             basisKernel = afwMath.AnalyticKernel(kWidth, kHeight, basisKernelFunction)
@@ -388,12 +388,12 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         gaussFunc2 = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         spFunc = afwMath.PolynomialFunction2D(1)
-        kernelList = afwMath.KernelList()
+        kernelList = []
         kernelList.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.1)))
         kernelList.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight), 0.2)))
 
         for numKernelParams in (2, 4):
-            spFuncList = afwMath.Function2DList()
+            spFuncList = []
             for ii in range(numKernelParams):
                 spFuncList.append(spFunc.clone())
             try:
@@ -403,7 +403,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
                 pass
 
         for numKernelParams in (1, 3):
-            spFuncList = afwMath.Function2DList()
+            spFuncList = []
             for ii in range(numKernelParams):
                 spFuncList.append(spFunc.clone())
             try:
@@ -508,7 +508,7 @@ class KernelTestCase(lsst.utils.tests.TestCase):
         basisImArrList.append(imArr)
 
         # create a list of basis kernels from the images
-        basisKernelList = afwMath.KernelList()
+        basisKernelList = []
         for basisImArr in basisImArrList:
             basisImage = afwImage.makeImageFromArray(basisImArr.transpose().copy())
             kernel = afwMath.FixedKernel(basisImage)
@@ -706,15 +706,15 @@ class KernelTestCase(lsst.utils.tests.TestCase):
 
         # test a range of numbers of parameters, including both valid and invalid sized tuples.
         for nsp in range(nSpatialParams + 2):
-            spatialParamsForOneKernel = (1.0,)*nsp
+            spatialParamsForOneKernel = [1.0,]*nsp
             for nkp in range(nKernelParams + 2):
-                spatialParams = (spatialParamsForOneKernel,)*nkp
+                spatialParams = [spatialParamsForOneKernel,]*nkp
                 if ((nkp == nKernelParams) and ((nsp == nSpatialParams) or (nkp == 0))):
                     kernel.setSpatialParameters(spatialParams)
                     if nsp == 0:
                         # A non-spatially varying kernel returns an empty tuple, even though
                         # it can only be set with a tuple of empty tuples, one per kernel parameter.
-                        self.assertEqual(kernel.getSpatialParameters(), ())
+                        self.assertEqual(kernel.getSpatialParameters(), [])
                     else:
                         # a spatially varying kernel should return exactly what we set it to be.
                         self.assertEqual(kernel.getSpatialParameters(), spatialParams)
@@ -810,23 +810,6 @@ class KernelTestCase(lsst.utils.tests.TestCase):
             if ctr2 != newCtr2:
                 return "changing center of kernel1 to %s changed the center of kernel2 from %s to %s" % \
                     (newCtr1, ctr2, newCtr2)
-
-    def testCast(self):
-        instances = []
-        kVec = makeGaussianKernelList(9, 9, [(2.0, 2.0, 0.0)])
-        kParams = [0.0]*len(kVec)
-        instances.append(afwMath.LinearCombinationKernel(kVec, kParams))
-        instances.append(afwMath.AnalyticKernel(7, 7, afwMath.GaussianFunction2D(2.0, 2.0, 0.0)))
-        instances.append(afwMath.DeltaFunctionKernel(5, 5, afwGeom.Point2I(1, 1)))
-        instances.append(afwMath.FixedKernel(afwImage.ImageD(afwGeom.Extent2I(7, 7))))
-        instances.append(afwMath.SeparableKernel(3, 3, afwMath.PolynomialFunction1D(0),
-                                                 afwMath.PolynomialFunction1D(0)))
-        for instance in instances:
-            Class = type(instance)
-            base = instance.clone()
-            self.assertEqual(type(base), afwMath.Kernel)
-            derived = Class.cast(base)
-            self.assertEqual(type(derived), Class)
 
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
