@@ -48,21 +48,29 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
 
         # test that an exception is thrown if you ask for a point with
         # a negative index
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getData(-1, 0)
+        self.assertIn("Asked for point that does not exist",
+                      context.exception.args[0])
 
         # test that an exception is thrown if you ask for a point beyond
         # the number of points stored in the tree
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getData(10, 0)
+        self.assertIn("Asked for point that does not exist",
+                      context.exception.args[0])
 
         # test that an exception is thrown if you ask for dimensions that
         # don't exist
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getData(0, -1)
+        self.assertIn("points of that many dimensions",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getData(0, 10)
+        self.assertIn("points of that many dimensions",
+                      context.exception.args[0])
 
         # test that the correct values are returned when they should be
         for ix in range(10):
@@ -81,13 +89,17 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
 
         # test that an exception is thrown if you ask for a point with
         # a negative index
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getData(-1)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
 
         # test that an exception is thrown if you ask for a point beyond
         # the number of points stored in the tree
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getData(10)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
 
         # test that the correct values are returned when they should be
         for ix in range(10):
@@ -109,26 +121,36 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         distances = np.zeros((5), dtype=float)
 
         # ask for a negative number of neighbors
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.findNeighbors(neighdex, distances, pt, -2)
+        self.assertIn("zero or a negative number of neighbors",
+                      context.exception.args[0])
 
         # ask for zero neighbors
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.findNeighbors(neighdex, distances, pt, 0)
+        self.assertIn("zero or a negative number of neighbors",
+                      context.exception.args[0])
 
         # ask for more neighbors than you have data
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.findNeighbors(neighdex, distances, pt, 11)
+        self.assertIn("more neighbors than kd tree contains",
+                      context.exception.args[0])
 
         # try sending neighdex of wrong size
         neighdex_bad = np.zeros((1), dtype=np.int32)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.findNeighbors(neighdex_bad, distances, pt, 5)
+        self.assertIn("Size of neighdex",
+                      context.exception.args[0])
 
         # try sending distances array of wrong size
         distances_bad = np.zeros((1), dtype=float)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.findNeighbors(neighdex, distances_bad, pt, 5)
+        self.assertIn("Size of dd",
+                      context.exception.args[0])
 
         # run something that works
         kd.findNeighbors(neighdex, distances, pt, 5)
@@ -236,11 +258,15 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         kd.Initialize(data)
 
         # test that, if you try to add an improperly-sized point, an exception is thrown
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.addPoint(np.array([1.1]*2))
+        self.assertIn("incorrect dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.addPoint(np.array([1.1]*4))
+        self.assertIn("incorrect dimensionality",
+                      context.exception.args[0])
 
         # test that adding a correctly sized-point works
         # (i.e. that the new point is added to the tree's data)
@@ -272,11 +298,15 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         self.assertEqual(kd.getNPoints(), 4)
 
         # test that an exception is raised if you try to remove a non-existent point
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.removePoint(-1)
+        self.assertIn("point that doesn't exist",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.removePoint(4)
+        self.assertIn("point that doesn't exist",
+                      context.exception.args[0])
 
         # test that things work correctly when you do remove a point
         kd.removePoint(1)
@@ -295,8 +325,10 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         # test that an exception is raised when you try to remove the last point
         kd.removePoint(0)
         kd.removePoint(0)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.removePoint(0)
+        self.assertIn("There is only one point",
+                      context.exception.args[0])
 
     def testKdTreeGetTreeNode(self):
         """
@@ -310,17 +342,25 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         vv_small = np.ones(1, dtype=np.int32)
         vv_large = np.ones(5, dtype=np.int32)
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getTreeNode(vv_small, 0)
+        self.assertIn("Need to pass a 4-element",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getTreeNode(vv_large, 0)
+        self.assertIn("Need to pass a 4-element",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getTreeNode(vv, -1)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             kd.getTreeNode(vv, 4)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
 
         # make sure that a call with good inputs passes
         kd.getTreeNode(vv, 0)
@@ -339,22 +379,30 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # values in
         data = rng.random_sample((10, 4))
         fn_values = rng.random_sample(11)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, fn_values, afwMath.SquaredExpCovariogramD())
+        self.assertIn("did not pass in the same number",
+                      context.exception.args[0])
 
         max_val = np.ones(4)
         min_val = np.ones(4)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, min_val, max_val, fn_values,
                                      afwMath.SquaredExpCovariogramD())
+        self.assertIn("did not pass in the same number",
+                      context.exception.args[0])
 
         many_fn_values = rng.random_sample((11, 3))
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, many_fn_values, afwMath.SquaredExpCovariogramD())
+        self.assertIn("did not pass in the same number",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, min_val, max_val, many_fn_values,
                                      afwMath.SquaredExpCovariogramD())
+        self.assertIn("did not pass in the same number",
+                      context.exception.args[0])
 
         fn_values = rng.random_sample(data.shape[0])
         many_fn_values = rng.random_sample((10, 3))
@@ -362,21 +410,29 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # when you pass in improperly sized min and max val arrays
         bad_max_val = np.ones(3)
         bad_min_val = np.zeros(3)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, bad_min_val, max_val,
                                      fn_values, afwMath.SquaredExpCovariogramD())
+        self.assertIn("min/max values have different dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, min_val, bad_max_val,
                                      fn_values, afwMath.SquaredExpCovariogramD())
+        self.assertIn("min/max values have different dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, bad_min_val, max_val,
                                      many_fn_values, afwMath.SquaredExpCovariogramD())
+        self.assertIn("min/max values have different dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             afwMath.GaussianProcessD(data, min_val, bad_max_val,
                                      many_fn_values, afwMath.SquaredExpCovariogramD())
+        self.assertIn("min/max values have different dimensionality",
+                      context.exception.args[0])
 
         # check that the constructor runs when it should
         afwMath.GaussianProcessD(data, fn_values, afwMath.SquaredExpCovariogramD())
@@ -407,23 +463,31 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # check that an exception is raised if we pass in an invalid
         # index
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp.getData(pts_out_good, fn_out_good, indices_bad)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
 
         # check that an exception is raised if pts_out asks for
         # the wrong number of points
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp.getData(pts_out_bad_ct, fn_out_good, indices)
+        self.assertIn("enough room in your pts array",
+                      context.exception.args[0])
 
         # check that an exception is raised if pts_out expects
         # points of the wrong dimensionality
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp.getData(pts_out_bad_dim, fn_out_good, indices)
+        self.assertIn("points of the wrong dimensionality",
+                      context.exception.args[0])
 
         # check that an exception is raised if fn_out expects
         # the wrong number of points
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp.getData(pts_out_good, fn_out_bad, indices)
+        self.assertIn("room in your function value array",
+                      context.exception.args[0])
 
         # check that getData runs safely when given good input
         gp.getData(pts_out_good, fn_out_good, indices)
@@ -434,8 +498,10 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # check that a GaussianProcess with many functions throws an
         # exception when you try to run getData designed for just one
         # function
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp_many.getData(pts_out_good, fn_out_good, indices)
+        self.assertIn("enough room for all of the functions",
+                      context.exception.args[0])
 
         # now test on a GaussianProcess with many functions
 
@@ -445,28 +511,38 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # check that an exception is raised when pts_out expects
         # the wrong number of points
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp_many.getData(pts_out_bad_ct, fn_out_good, indices)
+        self.assertIn("room in your pts array",
+                      context.exception.args[0])
 
         # check that an exception is raised when pts_out expects
         # pts of the wrong dimensionality
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp_many.getData(pts_out_bad_dim, fn_out_good, indices)
+        self.assertIn("points of the wrong dimensionality",
+                      context.exception.args[0])
 
         # check that an exception is raised when fn_out expects the
         # wrong number of pts
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp_many.getData(pts_out_good, fn_out_bad_ct, indices)
+        self.assertIn("room in your function value array",
+                      context.exception.args[0])
 
         # check that an exception is raised when fn_out expects the
         # wrong number of functions
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp_many.getData(pts_out_good, fn_out_bad_fn, indices)
+        self.assertIn("enough room for all of the functions",
+                      context.exception.args[0])
 
         # check that an exception is raised when one of the indices is
         # invalid
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gp_many.getData(pts_out_good, fn_out_good, indices_bad)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
 
         # check that getData runs safely when given good input
         gp_many.getData(pts_out_good, fn_out_good, indices)
@@ -547,55 +623,79 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # test that an exception is raised if you try to interpolate at
         # a point with an incorrect number of dimensions
         bad_pt = rng.random_sample(3)
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.interpolate(var, bad_pt, 5)
+        self.assertIn("point with different dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, many_var, bad_pt, 5)
+        self.assertIn("point with different dimensionality",
+                      context.exception.args[0])
 
         good_pt = rng.random_sample(5)
 
         # test that an exception is raised if you try to ask for an improper
         # number of nearest neighbors when interpolating
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.interpolate(var, good_pt, 0)
+        self.assertIn("zero or negative number of neighbors",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.interpolate(var, good_pt, -1)
+        self.assertIn("zero or negative number of neighbors",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.interpolate(var, good_pt, 14)
+        self.assertIn("more neighbors than you have",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, many_var, good_pt, 0)
+        self.assertIn("zero or negative number of neighbors",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, many_var, good_pt, -1)
+        self.assertIn("zero or negative number of neighbors",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, many_var, good_pt, 14)
+        self.assertIn("more neighbors than you have",
+                      context.exception.args[0])
 
         # make sure that a Gaussian Process interpolating many functions
         # does not let you call the interpolate() method that returns
         # a scalar
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_var, good_pt, 4)
+        self.assertIn("You need to call the version",
+                      context.exception.args[0])
 
         # test that the many-function interpolate throws an exception
         # on improperly-sized mu and variance arrays
         bad_var = np.zeros(6)
         bad_mu = np.zeros(6)
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(bad_mu, many_var, good_pt, 5)
+        self.assertIn("mu and/or var arrays are improperly sized",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.interpolate(many_mu, bad_var, good_pt, 5)
+        self.assertIn("mu and/or var arrays are improperly sized",
+                      context.exception.args[0])
 
         # if you try to pass a variance array with len != 1 to
         # the single value interpolate()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.interpolate(many_var, good_pt, 5)
+        self.assertIn("variance array is the incorrect size",
+                      context.exception.args[0])
 
         gg.interpolate(var, good_pt, 5)
         gg_many.interpolate(many_mu, many_var, good_pt, 5)
@@ -619,21 +719,29 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that an exception is raised when you try to use scalar
         # selfInterpolation() on a many-function GaussianProcess
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.selfInterpolate(var_good, 11, 6)
+        self.assertIn("that accepts mu and variance array",
+                      context.exception.args[0])
 
         # test that an exception is raised when you pass a var_array that is
         # too large into a scalar GaussianProcess
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.selfInterpolate(var_good, 11, 6)
+        self.assertIn("variance array is the incorrect size",
+                      context.exception.args[0])
 
         # test that an exception is thrown when you pass in improperly-sized
         # mu and/or var arrays
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.selfInterpolate(mu_good, var_bad, 11, 6)
+        self.assertIn("mu and/or var arrays are improperly sized",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.selfInterpolate(mu_bad, var_good, 11, 6)
+        self.assertIn("mu and/or var arrays are improperly sized",
+                      context.exception.args[0])
 
         # make surethat selfInterpolate runs when it should
         gg_many.selfInterpolate(mu_good, var_good, 11, 6)
@@ -658,21 +766,31 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         var_bad = np.zeros(9)
 
         # test for exception on points of incorrect size
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_good, var_good, pts_bad)
+        self.assertIn("wrong dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_good, pts_bad)
+        self.assertIn("wrong dimensionality",
+                      context.exception.args[0])
 
         # test for exception on output arrays of incorrect size
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_bad, var_good, pts_good)
+        self.assertIn("do not have room for all of the points",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_bad, pts_good)
+        self.assertIn("does not have enough room for all of the points",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.batchInterpolate(mu_good, var_bad, pts_good)
+        self.assertIn("do not have room",
+                      context.exception.args[0])
 
         # test that it runs properly with good inputs
         gg.batchInterpolate(mu_good, var_good, pts_good)
@@ -684,11 +802,15 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         # test that a GaussianProcess on many functions raises an exception
         # when you call batchInterpolate with output arrays that only have
         # room for one function
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_good, var_good, pts_good)
+        self.assertIn("do not have room for all of the functions",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_good, pts_good)
+        self.assertIn("does not have enough room for all of the functions",
+                      context.exception.args[0])
 
         mu_good = np.zeros((11, 6))
         mu_bad_fn = np.zeros((11, 5))
@@ -699,31 +821,47 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that a Gaussian Process on many functions raises an exception
         # when you try to interpolate on points of the wrong dimensionality
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_good, var_good, pts_bad)
+        self.assertIn("wrong dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_good, pts_bad)
+        self.assertIn("do not have the correct dimensionality",
+                      context.exception.args[0])
 
         # test that a Gaussian Process on many functions rases an exception
         # when the output arrays are of the wrong size
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_bad_fn, var_good, pts_good)
+        self.assertIn("do not have room for all of the functions",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_bad_pts, var_good, pts_good)
+        self.assertIn("do not have room for all of the points",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_bad_pts, pts_good)
+        self.assertIn("does not have enough room for all of the points",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_bad_fn, pts_good)
+        self.assertIn("does not have enough room for all of the functions",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_good, var_bad_fn, pts_good)
+        self.assertIn("do not have room for all of the functions",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.batchInterpolate(mu_good, var_bad_pts, pts_good)
+        self.assertIn("do not have room for all of the points",
+                      context.exception.args[0])
 
         # check that a Gaussian Process on many functions runs properly
         # when given good inputs
@@ -743,28 +881,50 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         sigma = np.empty(1)
         mu_arr = np.empty(1)
 
-        with self.assertRaises(pex.Exception):
+        with self.assertRaises(pex.Exception) as context:
             gg.interpolate(sigma, test, 2*nData)
-        with self.assertRaises(pex.Exception):
-            gg.interpolate(sigma, test, -5)
-        with self.assertRaises(pex.Exception):
-            gg.selfInterpolate(sigma, 0, 2*nData)
-        with self.assertRaises(pex.Exception):
-            gg.selfInterpolate(sigma, 0, -5)
-        with self.assertRaises(pex.Exception):
-            gg.selfInterpolate(sigma, -1, nData-1)
-        with self.assertRaises(pex.Exception):
-            gg.selfInterpolate(sigma, nData, nData-1)
+        self.assertIn("more neighbors than",
+                      context.exception.args[0])
 
-        try:
+        with self.assertRaises(pex.Exception) as context:
+            gg.interpolate(sigma, test, -5)
+        self.assertIn("zero or negative number of neighbors",
+                      context.exception.args[0])
+
+        with self.assertRaises(pex.Exception) as context:
+            gg.selfInterpolate(sigma, 0, 2*nData)
+        self.assertIn("more neighbors than",
+                      context.exception.args[0])
+
+        with self.assertRaises(pex.Exception) as context:
+            gg.selfInterpolate(sigma, 0, -5)
+        self.assertIn("zero or negative number of neighbors",
+                      context.exception.args[0])
+
+        with self.assertRaises(pex.Exception) as context:
+            gg.selfInterpolate(sigma, -1, nData-1)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
+
+        with self.assertRaises(pex.Exception) as context:
+            gg.selfInterpolate(sigma, nData, nData-1)
+        self.assertIn("point that does not exist",
+                      context.exception.args[0])
+
+        with self.assertRaises(RuntimeError) as context:
             gg.interpolate(mu_arr, sigma, 2*nData)
-            self.fail("gg.interpolate(mu_arr,sigma,2*nData) did not fail")
-        except pex.Exception:
-            pass
-        with self.assertRaises(pex.Exception):
+        self.assertIn("more neighbors than",
+                      context.exception.args[0])
+
+        with self.assertRaises(pex.Exception) as context:
             gg.interpolate(mu_arr, sigma, 2*nData)
-        with self.assertRaises(pex.Exception):
+        self.assertIn("more neighbors than",
+                      context.exception.args[0])
+
+        with self.assertRaises(pex.Exception) as context:
             gg.interpolate(mu_arr, sigma, -5)
+        self.assertIn("zero or negative number of neighbors",
+                      context.exception.args[0])
 
     def testInterpolate(self):
         """
@@ -1014,22 +1174,30 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
         # test that, when you add a point of the wrong dimensionality,
         # an exception is raised
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.addPoint(pt_bad, 5.0)
+        self.assertIn("dimensionality",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.addPoint(pt_bad, fn_good)
+        self.assertIn("dimensionality",
+                      context.exception.args[0])
 
         # test that a GaussianProcess on many functions raises an exception
         # when you try to add a point with just one function value
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.addPoint(pt_good, 5.0)
+        self.assertIn("calling the wrong addPoint",
+                      context.exception.args[0])
 
         # test that a GaussianProcess on many functions raises an
         # exception when you try to add a point with the wrong number
         # of function values
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg_many.addPoint(pt_good, fn_bad)
+        self.assertIn("number of function values",
+                      context.exception.args[0])
 
         # check that, given good inputs, addPoint will run
         gg.addPoint(pt_good, 5.0)
@@ -1566,11 +1734,15 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         fn = rng.random_sample(13)
         gg = afwMath.GaussianProcessD(data, fn, afwMath.SquaredExpCovariogramD())
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.removePoint(-1)
+        self.assertIn("doesn't exist",
+                      context.exception.args[0])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(RuntimeError) as context:
             gg.removePoint(13)
+        self.assertIn("doesn't exist",
+                      context.exception.args[0])
 
         # test that it runs fine
         gg.removePoint(11)
