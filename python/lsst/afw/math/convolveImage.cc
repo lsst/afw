@@ -24,22 +24,45 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/math/ConvolveImage.h"
+
 namespace py = pybind11;
 
 using namespace lsst::afw::math;
 
+template <typename ImageType1, typename ImageType2>
+void declareConvolveByType(py::module & mod) {
+    /* Members */
+    // declarations for convolve overloads go here...
+    mod.def("scaledPlus", (void (*)(ImageType1 &, double, ImageType2 const &, double, ImageType2 const &)) scaledPlus);
+}
+
+template <typename PixelType1, typename PixelType2>
+void declareConvolve(py::module & mod) {
+    using lsst::afw::image::Image;
+    using lsst::afw::image::MaskedImage;
+    using lsst::afw::image::MaskPixel;
+    using lsst::afw::image::VariancePixel;
+
+    using M1 = MaskedImage<PixelType1, MaskPixel, VariancePixel>;
+    using M2 = MaskedImage<PixelType2, MaskPixel, VariancePixel>;
+
+    declareConvolveByType<Image<PixelType1>, Image<PixelType2>>(mod);
+    declareConvolveByType<M1, M2>(mod);
+}
+
 PYBIND11_PLUGIN(_convolveImage) {
     py::module mod("_convolveImage", "Python wrapper for afw _convolveImage library");
 
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+    declareConvolve<double, double>(mod);
+    declareConvolve<double, float>(mod);
+    declareConvolve<double, int>(mod);
+    declareConvolve<double, std::uint16_t>(mod);
+    declareConvolve<float, float>(mod);
+    declareConvolve<float, int>(mod);
+    declareConvolve<float, std::uint16_t>(mod);
+    declareConvolve<int, int>(mod);
+    declareConvolve<std::uint16_t, std::uint16_t>(mod);
 
     return mod.ptr();
 }

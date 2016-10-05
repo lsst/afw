@@ -24,6 +24,8 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/image/ImageUtils.h"
+
 namespace py = pybind11;
 
 using namespace lsst::afw::image;
@@ -32,14 +34,10 @@ PYBIND11_PLUGIN(_imageUtils) {
     py::module mod("_imageUtils", "Python wrapper for afw _imageUtils library");
 
     /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
+    mod.def("indexToPosition", indexToPosition);
+    mod.def("positionToIndex", (int (*)(double)) positionToIndex);
+    mod.def("positionToIndex", (int (*)(double &, double)) positionToIndex);
+    mod.def("positionToIndex", (std::pair<int, double> (*)(double const, bool)) positionToIndex);
 
     return mod.ptr();
 }
