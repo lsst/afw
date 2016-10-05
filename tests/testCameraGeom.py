@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import next
-from builtins import zip
-from builtins import range
 
 #
 # LSST Data Management System
@@ -27,15 +21,19 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
 import os
+
+from builtins import next
+from builtins import zip
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.display.ds9 as ds9
-
 from lsst.afw.cameraGeom import PIXELS, PUPIL, FOCAL_PLANE, CameraSys, CameraSysPrefix, \
     CameraPoint, Camera, Detector, assembleAmplifierImage, assembleAmplifierRawImage
 import lsst.afw.cameraGeom.testUtils as testUtils
@@ -48,7 +46,6 @@ except NameError:
 
 
 testPath = os.path.abspath(os.path.dirname(__file__))
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class CameraGeomTestCase(unittest.TestCase):
@@ -238,7 +235,6 @@ class CameraGeomTestCase(unittest.TestCase):
                 # position of any detector.  That is not enforced and multiple detectors
                 # at a given PUPIL position is supported.  Change this if the default
                 # camera changes.
-                #cp = cw.camera.makeCameraPoint(det.getCenter(), PUPIL)
                 cp = det.getCenter(FOCAL_PLANE)
                 detPointsList.append(cp.getPoint())
                 detList = cw.camera.findDetectors(cp)
@@ -275,7 +271,7 @@ class CameraGeomTestCase(unittest.TestCase):
                                       amp.getLinearityType())
                     for c1, c2 in zip(cw.ampInfoDict[det.getName()]['linInfo'][amp.getName()]['lincoeffs'],
                                       amp.getLinearityCoeffs()):
-                        if numpy.isfinite(c1) and numpy.isfinite(c2):
+                        if np.isfinite(c1) and np.isfinite(c2):
                             self.assertEquals(c1, c2)
 
     def testAssembly(self):
@@ -343,11 +339,10 @@ class CameraGeomTestCase(unittest.TestCase):
         for i in range(2):
             self.assertAlmostEquals(cp1.getPoint()[i], cp2.getPoint()[i], 6)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

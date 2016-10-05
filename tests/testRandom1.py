@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import str
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -36,9 +30,13 @@ or
    >>> import unittest; T=load("Random_1"); unittest.TextTestRunner(verbosity=1).run(T.suite())
 """
 
+from __future__ import absolute_import, division, print_function
 import sys
 import time
 import unittest
+
+from builtins import str
+from builtins import range
 
 import lsst.pex.exceptions
 import lsst.pex.policy as pexPolicy
@@ -46,8 +44,6 @@ import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 def checkRngEquivalence(rng1, rng2):
@@ -136,11 +132,9 @@ class RandomImageTestCase(unittest.TestCase):
 
     def testRandomUniformImage(self):
         afwMath.randomUniformImage(self.image, self.rand)
-        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
 
     def testRandomGaussianImage(self):
         afwMath.randomGaussianImage(self.image, self.rand)
-        #stats = afwMath.makeStatistics(self.image, afwMath.MEAN | afwMath.STDEV)
 
     def testRandomChisqImage(self):
         nu = 10
@@ -162,11 +156,10 @@ class RandomImageTestCase(unittest.TestCase):
         self.assertAlmostEqual(stats.getValue(afwMath.MEAN), mu, 1)
         self.assertAlmostEqual(stats.getValue(afwMath.VARIANCE), mu, 1)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

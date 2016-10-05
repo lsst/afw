@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -33,12 +29,13 @@ or
    python
    >>> import angle; angle.run()
 """
-
+from __future__ import absolute_import, division, print_function
 import math
 import unittest
-import numpy
-import lsst.utils.tests
 
+import numpy as np
+
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 
 
@@ -126,11 +123,12 @@ class AngleTestCase(unittest.TestCase):
         self.assertAlmostEqual(math.sin(thirty), 0.5, places=15)
 
     def testWrap(self):
-        eps = numpy.finfo(float).eps
+        eps = np.finfo(float).eps
         oneEightyWithSlop = 180 * (1 + eps)
         self.assertNotEqual(1 + eps, eps)
         for wrap in (-1000, -10, -1, 0, 1, 10, 1000):
-            for offset in (-2*math.pi, -math.pi, -math.pi*0.5, 0.0, math.pi*0.5, math.pi*0.75, math.pi, math.pi*2.0):
+            for offset in (-2*math.pi, -math.pi, -math.pi*0.5, 0.0, math.pi*0.5, math.pi*0.75, math.pi,
+                           math.pi*2.0):
                 for epsMult in (-3, -2, -1, 0, 1, 2, 3):
                     angRad = (offset + (wrap * math.pi)) * (1 + (eps * epsMult))
                     ang = angRad * afwGeom.radians

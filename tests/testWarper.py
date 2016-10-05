@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -23,9 +21,9 @@ from __future__ import absolute_import, division
 #
 """Basic test of Warp (the warping algorithm is thoroughly tested in lsst.afw.math)
 """
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
-import warnings
 
 import lsst.utils
 import lsst.utils.tests

@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import zip
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -25,15 +20,17 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import zip
+from builtins import range
 import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.geom.ellipses
 import lsst.afw.image
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class EllipseTestCase(lsst.utils.tests.TestCase):
@@ -85,7 +82,7 @@ class EllipseTestCase(lsst.utils.tests.TestCase):
             self.assertClose(core.clone().getParameterVector(), core.getParameterVector())
             self.assertIsNot(core, core.clone())
             self.assertClose(lsst.afw.geom.ellipses.Ellipse(ellipse).getParameterVector(),
-                ellipse.getParameterVector())
+                             ellipse.getParameterVector())
             self.assertIsNot(ellipse, lsst.afw.geom.ellipses.Ellipse(ellipse))
 
     def testTransform(self):

@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-from builtins import object
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -28,7 +24,11 @@ Tests for lsst.afw.cameraGeom.Orientation
 
 @todo: test the transforms against expected
 """
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import range
+from builtins import object
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom

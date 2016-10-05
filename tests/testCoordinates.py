@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import zip
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -35,15 +30,17 @@ or
    >>> import coordinates; coordinates.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
 import math
 import operator
 
+from builtins import zip
+from builtins import range
+import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.geom as geom
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class CoordinateTestCase(object):
@@ -107,12 +104,12 @@ class PointTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     """A test case for Point"""
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         self.classes = [
-            (float, geom.Point2D, lambda: [float(x) for x in numpy.random.randn(2)]),
-            (int, geom.Point2I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 2)]),
-            (float, geom.Point3D, lambda: [float(x) for x in numpy.random.randn(3)]),
-            (int, geom.Point3I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 3)]),
+            (float, geom.Point2D, lambda: [float(x) for x in np.random.randn(2)]),
+            (int, geom.Point2I, lambda: [int(x) for x in np.random.randint(-5, 5, 2)]),
+            (float, geom.Point3D, lambda: [float(x) for x in np.random.randn(3)]),
+            (int, geom.Point3I, lambda: [int(x) for x in np.random.randint(-5, 5, 3)]),
         ]
 
     def testSpanIteration(self):
@@ -162,12 +159,12 @@ class ExtentTestCase(CoordinateTestCase, lsst.utils.tests.TestCase):
     """A test case for Extent"""
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         self.classes = [
-            (float, geom.Extent2D, lambda: [float(x) for x in numpy.random.randn(2)]),
-            (int, geom.Extent2I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 2)]),
-            (float, geom.Extent3D, lambda: [float(x) for x in numpy.random.randn(3)]),
-            (int, geom.Extent3I, lambda: [int(x) for x in numpy.random.randint(-5, 5, 3)]),
+            (float, geom.Extent2D, lambda: [float(x) for x in np.random.randn(2)]),
+            (int, geom.Extent2I, lambda: [int(x) for x in np.random.randint(-5, 5, 2)]),
+            (float, geom.Extent3D, lambda: [float(x) for x in np.random.randn(3)]),
+            (int, geom.Extent3I, lambda: [int(x) for x in np.random.randint(-5, 5, 3)]),
         ]
 
     def testRounding(self):
@@ -269,15 +266,15 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
         if cls is int:
             v = 0
             while v == 0:
-                v = int(numpy.random.randn()*10)
+                v = int(np.random.randn()*10)
         elif cls is float:
-            v = float(numpy.random.randn()*10)
+            v = float(np.random.randn()*10)
         else:
             v = cls()
             t = type(v[0])
             for i in range(len(v)):
                 while v[i] == 0:
-                    v[i] = t(numpy.random.randn()*10)
+                    v[i] = t(np.random.randn()*10)
         return v
 
     def checkOperator(self, op, lhs, rhs, expected, inPlace=False):
@@ -292,13 +289,13 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
             with self.assertRaises(expected):
                 op(v1, v2)
         else:
-            check = op(numpy.array(v1), numpy.array(v2))
+            check = op(np.array(v1), np.array(v2))
             result = op(v1, v2)
             if type(result) != expected:
                 self.fail("%s(%s, %s): expected %s, got %s" %
                           (op.__name__, lhs.__name__, rhs.__name__,
                            expected.__name__, type(result).__name__))
-            if not numpy.allclose(result, check):
+            if not np.allclose(result, check):
                 self.fail("%s(%s, %s): expected %s, got %s" %
                           (op.__name__, lhs.__name__, rhs.__name__, tuple(check), tuple(result)))
             if inPlace and result is not v1:
@@ -310,7 +307,7 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
                 p = self.makeRandom(geom.Point[t, n])
                 e = p.asExtent()
                 self.assertEqual(type(e), geom.Extent[t, n])
-                self.assertFloatsAlmostEqual(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(np.array(p), np.array(e), rtol=0.0, atol=0.0)
 
     def testExtentAsPoint(self):
         for n in (2, 3):
@@ -318,7 +315,7 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
                 e = self.makeRandom(geom.Extent[t, n])
                 p = e.asPoint()
                 self.assertEqual(type(p), geom.Point[t, n])
-                self.assertFloatsAlmostEqual(numpy.array(p), numpy.array(e), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(np.array(p), np.array(e), rtol=0.0, atol=0.0)
 
     def testUnaryOperators(self):
         for n in (2, 3):
@@ -326,10 +323,10 @@ class OperatorTestCase(lsst.utils.tests.TestCase):
                 e1 = self.makeRandom(geom.Extent[t, n])
                 e2 = +e1
                 self.assertEqual(type(e1), type(e2))
-                self.assertFloatsAlmostEqual(numpy.array(e1), numpy.array(e2), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(np.array(e1), np.array(e2), rtol=0.0, atol=0.0)
                 e3 = -e1
                 self.assertEqual(type(e1), type(e3))
-                self.assertFloatsAlmostEqual(numpy.array(e3), -numpy.array(e1), rtol=0.0, atol=0.0)
+                self.assertFloatsAlmostEqual(np.array(e3), -np.array(e1), rtol=0.0, atol=0.0)
 
     def testBinaryOperators(self):
         for n in (2, 3):

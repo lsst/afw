@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import zip
-from builtins import range
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -24,16 +20,19 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-import numpy
+from __future__ import absolute_import, division, print_function
 import pickle
 import unittest
 import os
-import lsst.utils.tests
 
+from builtins import zip
+from builtins import range
+import numpy as np
+
+import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.coord as afwCoord
-
 from lsst.afw.geom.polygon import Polygon, SinglePolygonException
 
 DEBUG = False
@@ -47,10 +46,10 @@ def circle(radius, num, x0=0.0, y0=0.0):
     @param x0,y0: Offset in x,y
     @return x,y coordinates as numpy array
     """
-    theta = numpy.linspace(0, 2*numpy.pi, num=num, endpoint=False)
-    x = radius*numpy.cos(theta) + x0
-    y = radius*numpy.sin(theta) + y0
-    return numpy.array([x, y]).transpose()
+    theta = np.linspace(0, 2*np.pi, num=num, endpoint=False)
+    x = radius*np.cos(theta) + x0
+    y = radius*np.sin(theta) + y0
+    return np.array([x, y]).transpose()
 
 
 class PolygonTest(lsst.utils.tests.TestCase):
@@ -94,7 +93,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
             self.assertEqual(len(poly.getEdges()), num)
             perimeter = 0.0
             for p1, p2 in poly.getEdges():
-                perimeter += numpy.hypot(p1.getX() - p2.getX(), p1.getY() - p2.getY())
+                perimeter += np.hypot(p1.getX() - p2.getX(), p1.getY() - p2.getY())
             self.assertAlmostEqual(poly.calculatePerimeter(), perimeter)
 
             self.assertEqual(pickle.loads(pickle.dumps(poly)), poly)
@@ -351,6 +350,7 @@ class PolygonTest(lsst.utils.tests.TestCase):
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

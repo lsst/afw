@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -32,6 +30,7 @@ or
    >>> import testTableAliases; testTableAliases.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
 
 import lsst.utils.tests
@@ -44,8 +43,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class TableAliasTestCase(lsst.utils.tests.TestCase):

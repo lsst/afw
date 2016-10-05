@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from __future__ import absolute_import, division
 from __future__ import print_function
 from builtins import range
@@ -259,11 +258,10 @@ class SavingSubImagesTest(unittest.TestCase):
             self.assertAlmostEqual(fitsCrpix[0] - hdr.get("LTV1"), parentCrpix[0]+1, 6, "CRPIX1 saved wrong")
             self.assertAlmostEqual(fitsCrpix[1] - hdr.get("LTV2"), parentCrpix[1]+1, 6, "CRPIX2 saved wrong")
 
-#####
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

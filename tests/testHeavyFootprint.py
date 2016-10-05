@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -35,9 +30,13 @@ or
    >>> import heavyFootprint; heavyFootprint.run()
 """
 
-import numpy as np
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+
+from builtins import range
+import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.image as afwImage
 import lsst.afw.detection as afwDetect
@@ -51,8 +50,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
@@ -142,7 +139,6 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
 
         if display:
             ds9.mtv(self.mi, frame=0, title="input")
-            #ds9.mtv(omi, frame=1, title="output")
 
         omi = self.mi.Factory(self.mi.getDimensions())
 
@@ -311,10 +307,9 @@ class HeavyFootprintTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(hfp2.dot(hfp1), dot)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

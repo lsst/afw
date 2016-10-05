@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -33,9 +29,12 @@ or
    python
    >>> import testFunctorKeys; testFunctorKeys.run()
 """
-
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import range
 import numpy
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
@@ -46,6 +45,7 @@ try:
     type(display)
 except NameError:
     display = False
+
 
 def makePositiveSymmetricMatrix(size):
     """Return a random symmetric matrix with only positive eigenvalues, suitable
@@ -60,7 +60,6 @@ def makePositiveSymmetricMatrix(size):
 
 
 class FunctorKeysTestCase(lsst.utils.tests.TestCase):
-
 
     def setUp(self):
         numpy.random.seed(5)
@@ -420,8 +419,6 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         self.doTestArrayKey("F", numpy.float32)
         self.doTestArrayKey("D", numpy.float64)
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
     pass

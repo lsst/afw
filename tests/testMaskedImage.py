@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -35,9 +30,11 @@ or
    >>> import MaskedImage; MaskedImage.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
 
+from builtins import range
 import numpy as np
 
 import lsst.utils
@@ -74,8 +71,6 @@ def makeRampImage(width, height, imgClass=afwImage.MaskedImageF):
             mask.set(xInd, yInd, val % 0x100)
             val += 1
     return mi
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class MaskedImageTestCase(lsst.utils.tests.TestCase):
@@ -599,7 +594,6 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.mimage.set(9, 4, (888, 0x0, 0))
-        #printImg(afwImage.ImageF(self.mimage, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         smimage = afwImage.MaskedImageF(
             self.mimage,
@@ -725,8 +719,6 @@ class MaskedImageTestCase(lsst.utils.tests.TestCase):
         self.assertRaises(TypeError, float, im)  # only single pixel images may be converted
         self.assertRaises(TypeError, float, im[0, 0])  # actually, can't convert (img, msk, var) to scalar
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def printImg(img):
     print("%4s " % "", end=' ')
@@ -740,11 +732,10 @@ def printImg(img):
             print("%7.1f" % float(img.get(c, r)), end=' ')
         print()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

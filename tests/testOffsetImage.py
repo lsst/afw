@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -34,10 +29,12 @@ or
    python
    >>> import offsetImage; offsetImage.run()
 """
+from __future__ import absolute_import, division, print_function
 import math
-
 import unittest
-import numpy
+
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.image as afwImage
@@ -49,8 +46,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class offsetImageTestCase(unittest.TestCase):
@@ -152,7 +147,7 @@ class offsetImageTestCase(unittest.TestCase):
                         ds9.mtv(im, frame=1)
 
                     imArr = im.getArray()
-                    imGoodVals = numpy.ma.array(imArr, copy=False, mask=numpy.isnan(imArr)).compressed()
+                    imGoodVals = np.ma.array(imArr, copy=False, mask=np.isnan(imArr)).compressed()
 
                     try:
                         imXY0 = tuple(im.getXY0())
@@ -235,8 +230,6 @@ class transformImageTestCase(unittest.TestCase):
         mask = afwImage.MaskU(10, 20)
         afwMath.flipImage(mask, True, False)  # for a while, swig couldn't handle the resulting Mask::Ptr
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class binImageTestCase(unittest.TestCase):
     """A test case for binning images"""
@@ -291,10 +284,10 @@ class binImageTestCase(unittest.TestCase):
             ds9.mtv(inImage, frame=2, title="unbinned")
             ds9.mtv(outImage, frame=3, title="binned %dx%d" % (binX, binY))
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

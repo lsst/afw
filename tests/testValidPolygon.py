@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -30,19 +29,18 @@ or
    python
    >>> import testValidPolygonTestCase; testPolygonTestCase.run()
 """
-from builtins import zip
-
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+
+from builtins import zip
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
 
-
 from lsst.afw.geom.polygon import Polygon
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class ValidPolygonTestCase(lsst.utils.tests.TestCase):
@@ -104,7 +102,6 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
-
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -34,6 +30,7 @@ or
    >>> import ds9
    >>> ds9.run()
 """
+from __future__ import absolute_import, division, print_function
 import unittest
 
 import lsst.utils.tests
@@ -49,8 +46,6 @@ if ds9:
     except Exception as e:
         print("Unable to use ds9: %s" % e)
         ds9 = None
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class DisplayTestCase(unittest.TestCase):
@@ -140,6 +135,7 @@ class DisplayTestCase(unittest.TestCase):
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

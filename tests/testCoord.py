@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-from builtins import str
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -37,8 +32,13 @@ or
    >>> Coord.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import math
 import unittest
+
+from builtins import str
+from builtins import range
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.coord as afwCoord
@@ -166,7 +166,7 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
             # raise if we ask for too many values
             with self.assertRaises(Exception):
-                 c[2]
+                c[2]
 
     def testStrRepr(self):
         """Test __str__ and __repr__
@@ -307,8 +307,9 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         radec4, known4 = afwCoord.IcrsCoord(self.ra, self.dec).getCoordNames(), ["RA", "Dec"]
         lb, known5 = afwCoord.GalacticCoord(self.ra, self.dec).getCoordNames(), ["L", "B"]
         lambet, known6 = afwCoord.EclipticCoord(self.ra, self.dec).getCoordNames(), ["Lambda", "Beta"]
-        altaz, known7 = afwCoord.TopocentricCoord(self.ra, self.dec, 2000.0,
-                                                  afwCoord.Observatory(0 * afwGeom.degrees, 0 * afwGeom.degrees, 0)).getCoordNames(), ["Az", "Alt"]
+        observatory = afwCoord.Observatory(0*afwGeom.degrees, 0*afwGeom.degrees, 0)
+        altaz = afwCoord.TopocentricCoord(self.ra, self.dec, 2000.0, observatory).getCoordNames()
+        known7 = ["Az", "Alt"]
 
         pairs = [[radec1, known1],
                  [radec3, known3],
@@ -499,13 +500,11 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         # known values for -214, June 30.0
         # they're actually 118.704, 1.615, but I suspect discrepancy is a rounding error in Meeus
         # -- we use double precision, he carries 7 places only.
-
         # originally 214BC, but that broke the DateTime
         # It did work previously, so for the short term, I've taken the answer it
         #  returns for 1920, and used that as the 'known answer' for future tests.
-
-        #year = -214
-        #lamb214bc, beta214bc = 118.704, 1.606
+        # year = -214
+        # lamb214bc, beta214bc = 118.704, 1.606
         year = 1920
         lamb214bc, beta214bc = 148.37119237032144, 1.7610036104147864
 

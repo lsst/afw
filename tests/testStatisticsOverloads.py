@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -34,8 +30,10 @@ or
    >>> import statisticsOverloads; statisticsOverloads.run()
 """
 
-
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import range
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -47,8 +45,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class StatisticsTestCase(unittest.TestCase):
@@ -181,11 +177,10 @@ class StatisticsTestCase(unittest.TestCase):
             afwMath.makeStatistics(mask, afwMath.MEAN)
         self.assertRaises(lsst.pex.exceptions.InvalidParameterError, tst)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

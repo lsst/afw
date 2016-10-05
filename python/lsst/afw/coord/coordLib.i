@@ -48,4 +48,5 @@ Python interface to lsst::afw::coord
 %import "lsst/daf/base/baseLib.i"
 %import "lsst/afw/geom/geomLib.i"
 %include "observatory.i"
+%include "weather.i"
 %include "coord.i"

@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -34,12 +30,14 @@ or
    >>> import imagePca; imagePca.run()
 """
 
-
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy as np
 import random
 import math
 import itertools
+
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions as pexExcept
@@ -52,8 +50,6 @@ try:
     type(display)
 except NameError:
     display = False
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class ImagePcaTestCase(lsst.utils.tests.TestCase):
@@ -212,11 +208,10 @@ class ImagePcaTestCase(lsst.utils.tests.TestCase):
             mos = displayUtils.Mosaic(background=-10)
             ds9.mtv(mos.makeMosaic(eImages), frame=1)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

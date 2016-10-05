@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -23,8 +19,12 @@ from builtins import range
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division
 import unittest
+
+from builtins import range
 import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.display.ds9 as ds9
 import lsst.afw.geom as afwGeom

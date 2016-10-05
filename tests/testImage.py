@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -35,12 +30,14 @@ or
    >>> import Image; Image.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import os.path
 import shutil
-import sys
 import tempfile
 import unittest
-import numpy
+
+from builtins import range
+import numpy as np
 
 import lsst.utils
 import lsst.utils.tests
@@ -62,8 +59,6 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def makeRampImage(width, height, imgClass=afwImage.ImageF):
     """Make a ramp image of the specified size and image class
@@ -83,7 +78,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
     """A test case for Image"""
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         self.val1, self.val2 = 10, 100
         self.image1 = afwImage.ImageF(afwGeom.ExtentI(100, 200))
         self.image1.set(self.val1)
@@ -110,7 +105,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(array1.shape[0], image2.getHeight())
             self.assertEqual(array1.shape[1], image2.getWidth())
             self.assertEqual(type(image3), cls)
-            array1[:, :] = numpy.random.uniform(low=0, high=10, size=array1.shape)
+            array1[:, :] = np.random.uniform(low=0, high=10, size=array1.shape)
             for j in range(image1.getHeight()):
                 for i in range(image1.getWidth()):
                     self.assertEqual(image1.get(i, j), array1[j, i])
@@ -199,7 +194,7 @@ class ImageTestCase(lsst.utils.tests.TestCase):
                         destImView = afwImage.ImageF(destIm, bbox, origin)
                     self.assertFloatsEqual(destImView.getArray(), srcIm.getArray())
                     numPixNotAssigned = (destImDim[0] * destImDim[1]) - (srcImDim[0] * srcImDim[1])
-                    self.assertEqual(numpy.sum(destIm.getArray() < -0.5), numPixNotAssigned)
+                    self.assertEqual(np.sum(destIm.getArray() < -0.5), numPixNotAssigned)
 
             for badMin in (afwGeom.Point2I(*val) + afwGeom.Extent2I(xy0) for val in (
                 (-1, 0),
@@ -427,7 +422,6 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         """Test subimages when we've played with the (x0, y0) value"""
 
         self.image1.set(9, 4, 888)
-        #printImg(afwImage.ImageF(self.image1, afwGeom.Box2I(afwGeom.Point2I(0, 0), afwGeom.Extent2I(10, 5)))); print
 
         simage1 = afwImage.ImageF(
             self.image1,
@@ -546,14 +540,12 @@ class ImageTestCase(lsst.utils.tests.TestCase):
         im2[0, 0] += 10
         self.assertNotEqual(float(im[0, 0]), float(im2[0, 0]))  # equivalent to im.get(0, 0) etc.
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class DecoratedImageTestCase(lsst.utils.tests.TestCase):
     """A test case for DecoratedImage"""
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         self.val1, self.val2 = 10, 100
         self.width, self.height = 200, 100
         self.dimage1 = afwImage.DecoratedImageF(
@@ -717,8 +709,6 @@ class DecoratedImageTestCase(lsst.utils.tests.TestCase):
         for imtype in (afwImage.ImageD, afwImage.ImageF, afwImage.ImageI, afwImage.ImageU):
             self.assertRaises(lsst.pex.exceptions.LengthError, imtype, 60000, 60000)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 def printImg(img):
     print("%4s " % "", end=' ')
@@ -732,11 +722,10 @@ def printImg(img):
             print("%7.1f" % float(img.get(c, r)), end=' ')
         print()
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -23,9 +22,11 @@
 """
 Tests for lsst.afw.geom.Functor classes.
 """
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 import unittest
+
 import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.pex.exceptions as pexExcept
@@ -46,9 +47,7 @@ class FunctorTestCase(unittest.TestCase):
         self.y0 = 1
 
     def tearDown(self):
-        while self.funcs:
-            func = self.funcs.pop()
-            del func
+        del self.funcs
 
     def testDerivatives(self):
         for func in self.funcs:

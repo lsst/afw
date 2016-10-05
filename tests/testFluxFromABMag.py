@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -24,6 +22,7 @@ from __future__ import absolute_import, division
 """
 Tests for lsst.afw.table.FluxFromABMagTable, etc.
 """
+from __future__ import absolute_import, division, print_function
 import unittest
 import math
 
@@ -54,9 +53,6 @@ class FluxFromABMagTableTestCase(unittest.TestCase):
                 self.assertAlmostEqual(abMagErr, refABMagErrFromFluxErr(fluxErr, flux))
                 fluxErrRoundTrip = afwImage.fluxErrFromABMagErr(abMagErr, abMag)
                 self.assertAlmostEqual(fluxErr, fluxErrRoundTrip)
-
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

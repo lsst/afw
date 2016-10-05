@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -33,11 +30,13 @@ or
    >>> import testLeastSquares; testLeastSquares.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
 import sys
 
-import lsst.utils.tests as utilsTests
+import numpy as np
+
+import lsst.utils.tests
 import lsst.pex.exceptions
 from lsst.afw.math import LeastSquares
 from lsst.log import Log
@@ -54,7 +53,7 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
         self.assertFloatsNotEqual(a, b, rtol=rtol, atol=atol, msg="\n%s\n==\n%s" % (a, b))
 
     def setUp(self):
-        numpy.random.seed(500)
+        np.random.seed(500)
 
     def check(self, solver, solution, rank, fisher, cov, sv):
         self.assertEqual(solver.getRank(), rank)
@@ -70,18 +69,18 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
             if rank < solver.getDimension():
                 self.assertLess(diagnostic[rank], rcond)
         else:
-            self._assertClose(numpy.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)),
-                             numpy.multiply.reduce(sv**2))
+            self._assertClose(np.multiply.reduce(solver.getDiagnostic(LeastSquares.NORMAL_CHOLESKY)),
+                              np.multiply.reduce(sv**2))
 
     def testFullRank(self):
         dimension = 10
         nData = 500
-        design = numpy.random.randn(dimension, nData).transpose()
-        data = numpy.random.randn(nData)
-        fisher = numpy.dot(design.transpose(), design)
-        rhs = numpy.dot(design.transpose(), data)
-        solution, residues, rank, sv = numpy.linalg.lstsq(design, data)
-        cov = numpy.linalg.inv(fisher)
+        design = np.random.randn(dimension, nData).transpose()
+        data = np.random.randn(nData)
+        fisher = np.dot(design.transpose(), design)
+        rhs = np.dot(design.transpose(), data)
+        solution, residues, rank, sv = np.linalg.lstsq(design, data)
+        cov = np.linalg.inv(fisher)
         s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
         s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
         s_design_cholesky = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_CHOLESKY)
@@ -93,12 +92,12 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
         self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
         self.check(s_normal_cholesky, solution, rank, fisher, cov, sv)
         # test updating solver in-place with the same kind of inputs
-        design = numpy.random.randn(dimension, nData).transpose()
-        data = numpy.random.randn(nData)
-        fisher = numpy.dot(design.transpose(), design)
-        rhs = numpy.dot(design.transpose(), data)
-        solution, residues, rank, sv = numpy.linalg.lstsq(design, data)
-        cov = numpy.linalg.inv(fisher)
+        design = np.random.randn(dimension, nData).transpose()
+        data = np.random.randn(nData)
+        fisher = np.dot(design.transpose(), design)
+        rhs = np.dot(design.transpose(), data)
+        solution, residues, rank, sv = np.linalg.lstsq(design, data)
+        cov = np.linalg.inv(fisher)
         s_svd.setDesignMatrix(design, data)
         s_design_eigen.setDesignMatrix(design, data)
         s_design_cholesky.setDesignMatrix(design, data)
@@ -110,12 +109,12 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
         self.check(s_normal_eigen, solution, rank, fisher, cov, sv)
         self.check(s_normal_cholesky, solution, rank, fisher, cov, sv)
         # test updating solver in-place with the opposite kind of inputs
-        design = numpy.random.randn(dimension, nData).transpose()
-        data = numpy.random.randn(nData)
-        fisher = numpy.dot(design.transpose(), design)
-        rhs = numpy.dot(design.transpose(), data)
-        solution, residues, rank, sv = numpy.linalg.lstsq(design, data)
-        cov = numpy.linalg.inv(fisher)
+        design = np.random.randn(dimension, nData).transpose()
+        data = np.random.randn(nData)
+        fisher = np.dot(design.transpose(), design)
+        rhs = np.dot(design.transpose(), data)
+        solution, residues, rank, sv = np.linalg.lstsq(design, data)
+        cov = np.linalg.inv(fisher)
         s_normal_eigen.setDesignMatrix(design, data)
         s_normal_cholesky.setDesignMatrix(design, data)
         s_design_eigen.setNormalEquations(fisher, rhs)
@@ -128,21 +127,21 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
     def testSingular(self):
         dimension = 10
         nData = 100
-        svIn = (numpy.random.randn(dimension) + 1.0)**2 + 1.0
-        svIn = numpy.sort(svIn)[::-1]
+        svIn = (np.random.randn(dimension) + 1.0)**2 + 1.0
+        svIn = np.sort(svIn)[::-1]
         svIn[-1] = 0.0
         svIn[-2] = svIn[0] * 1E-4
         # Just use SVD to get a pair of orthogonal matrices; we'll use our own singular values
         # so we can control the stability of the matrix.
-        u, s, vt = numpy.linalg.svd(numpy.random.randn(dimension, nData), full_matrices=False)
-        design = numpy.dot(u * svIn, vt).transpose()
-        data = numpy.random.randn(nData)
-        fisher = numpy.dot(design.transpose(), design)
-        rhs = numpy.dot(design.transpose(), data)
+        u, s, vt = np.linalg.svd(np.random.randn(dimension, nData), full_matrices=False)
+        design = np.dot(u * svIn, vt).transpose()
+        data = np.random.randn(nData)
+        fisher = np.dot(design.transpose(), design)
+        rhs = np.dot(design.transpose(), data)
         threshold = 10 * sys.float_info.epsilon
-        solution, residues, rank, sv = numpy.linalg.lstsq(design, data, rcond=threshold)
+        solution, residues, rank, sv = np.linalg.lstsq(design, data, rcond=threshold)
         self._assertClose(svIn, sv)
-        cov = numpy.linalg.pinv(fisher, rcond=threshold)
+        cov = np.linalg.pinv(fisher, rcond=threshold)
         s_svd = LeastSquares.fromDesignMatrix(design, data, LeastSquares.DIRECT_SVD)
         s_design_eigen = LeastSquares.fromDesignMatrix(design, data, LeastSquares.NORMAL_EIGENSYSTEM)
         s_normal_eigen = LeastSquares.fromNormalEquations(fisher, rhs, LeastSquares.NORMAL_EIGENSYSTEM)
@@ -156,7 +155,7 @@ class LeastSquaresTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(s_design_eigen.getRank(), dimension - 2)
         self.assertEqual(s_normal_eigen.getRank(), dimension - 2)
         # Just check that solutions are different from before, but consistent with each other;
-        # I can't figure out how get numpy.lstsq to deal with the thresholds appropriately to
+        # I can't figure out how get np.lstsq to deal with the thresholds appropriately to
         # test against that.
         self._assertNotClose(s_svd.getSolution(), solution)
         self._assertNotClose(s_design_eigen.getSolution(), solution)

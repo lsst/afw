@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2008-2016 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -27,20 +24,23 @@ from __future__ import absolute_import, division
 Tests for lsst.afw.table.ExposureTable
 
 Run with:
-   ./testExposureTable.py
+   python testExposureTable.py
 or
    python
    >>> import testExposureTable; testExposureTable.run()
 """
 
+from __future__ import absolute_import, division, print_function
+import os.path
 import unittest
-import numpy
+
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
-import lsst.daf.base
+from lsst.daf.base import DateTime, PropertySet
 import lsst.afw.table
-import lsst.afw.geom
+from lsst.afw.geom import arcseconds, degrees, radians
 import lsst.afw.coord
 import lsst.afw.image
 import lsst.afw.detection
@@ -51,14 +51,12 @@ try:
 except NameError:
     display = False
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class ExposureTableTestCase(lsst.utils.tests.TestCase):
 
     @staticmethod
     def createWcs():
-        metadata = lsst.daf.base.PropertySet()
+        metadata = PropertySet()
         metadata.set("SIMPLE", "T")
         metadata.set("BITPIX", -32)
         metadata.set("NAXIS", 2)
@@ -78,6 +76,24 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         metadata.setDouble("CD2_1", -8.27440751733828E-07)
         return lsst.afw.image.makeWcs(metadata)
 
+    @staticmethod
+    def createVisitInfo():
+        return lsst.afw.image.VisitInfo(
+            10313423,
+            10.01,
+            11.02,
+            DateTime(65321.1, DateTime.MJD, DateTime.TAI),
+            12345.1,
+            45.1*lsst.afw.geom.degrees,
+            lsst.afw.coord.IcrsCoord(23.1*degrees, 73.2*degrees),
+            lsst.afw.coord.Coord(134.5*degrees, 33.3*degrees),
+            1.73,
+            73.2*degrees,
+            lsst.afw.image.RotType_SKY,
+            lsst.afw.coord.Observatory(11.1*degrees, 22.2*degrees, 0.333),
+            lsst.afw.coord.Weather(1.1, 2.2, 34.5),
+        )
+
     def comparePsfs(self, psf1, psf2):
         psf1 = DummyPsf.swigConvert(psf1)
         psf2 = DummyPsf.swigConvert(psf2)
@@ -86,7 +102,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(psf1.getValue(), psf2.getValue())
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
         schema = lsst.afw.table.ExposureTable.makeMinimalSchema()
         self.ka = schema.addField("a", type=float, doc="doc for a")
         self.kb = schema.addField("b", type=int, doc="doc for b")
@@ -107,16 +123,16 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         )
         self.calib = lsst.afw.image.Calib()
         self.calib.setFluxMag0(56.0, 2.2)
-        self.calib.setExptime(50.0)
-        self.calib.setMidTime(lsst.daf.base.DateTime.now())
+        self.visitInfo = self.createVisitInfo()
         record0 = self.cat.addNew()
         record0.setId(1)
-        record0.set(self.ka, numpy.pi)
+        record0.set(self.ka, np.pi)
         record0.set(self.kb, 4)
         record0.setBBox(self.bbox0)
         record0.setPsf(self.psf)
         record0.setWcs(self.wcs)
         record0.setCalib(self.calib)
+        record0.setVisitInfo(self.visitInfo)
         record1 = self.cat.addNew()
         record1.setId(2)
         record1.set(self.ka, 2.5)
@@ -129,6 +145,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         del self.psf
         del self.wcs
         del self.calib
+        del self.visitInfo
 
     def testAccessors(self):
         record0 = self.cat[0]
@@ -143,6 +160,8 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertIsNone(record1.getPsf())
         self.assertEqual(record0.getCalib(), self.calib)
         self.assertIsNone(record1.getCalib())
+        self.assertEqual(record0.getVisitInfo(), self.visitInfo)
+        self.assertIsNone(record1.getVisitInfo())
 
     def testPersistence(self):
         with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
@@ -160,17 +179,19 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
                              1].getWcs().getId())  # compare citizen IDs
             self.assertEqual(self.cat[0].getCalib(), cat1[0].getCalib())
+            self.assertEqual(self.cat[0].getVisitInfo(), cat1[0].getVisitInfo())
+            self.assertIsNone(cat1[1].getVisitInfo())
 
     def testGeometry(self):
         bigBox = lsst.afw.geom.Box2D(lsst.afw.geom.Box2I(self.bbox0))
         bigBox.include(lsst.afw.geom.Box2D(self.bbox1))
-        points = (numpy.random.rand(100, 2) * numpy.array([bigBox.getWidth(), bigBox.getHeight()])
-                  + numpy.array([bigBox.getMinX(), bigBox.getMinY()]))
+        points = (np.random.rand(100, 2) * np.array([bigBox.getWidth(), bigBox.getHeight()]) +
+                  np.array([bigBox.getMinX(), bigBox.getMinY()]))
 
         # make a very slightly perturbed wcs so the celestial transform isn't a no-op
         crval2 = self.wcs.getSkyOrigin()
-        crval2.reset(crval2.getLongitude() + 5 * lsst.afw.geom.arcseconds,
-                     crval2.getLatitude() - 5 * lsst.afw.geom.arcseconds)
+        crval2.reset(crval2.getLongitude() + 5*arcseconds,
+                     crval2.getLatitude() - 5*arcseconds)
         wcs2 = lsst.afw.image.Wcs(
             crval2.getPosition(), self.wcs.getPixelOrigin() + lsst.afw.geom.Extent2D(30.0, -50.0),
             self.wcs.getCDMatrix() * 1.1
@@ -189,7 +210,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(inside, record in subset1)
                 self.assertEqual(inside, record in subset2)
 
-        crazyPoint = lsst.afw.coord.IcrsCoord(crval2.getLongitude() + numpy.pi * lsst.afw.geom.radians,
+        crazyPoint = lsst.afw.coord.IcrsCoord(crval2.getLongitude() + np.pi*radians,
                                               crval2.getLatitude())
         subset3 = self.cat.subsetContaining(crazyPoint)
         self.assertEqual(len(subset3), 0)
@@ -213,6 +234,25 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
             self.assertEqual(coaddInputsOut.visits[0].getId(), 2)
             self.assertEqual(coaddInputsOut.ccds[0].getId(), 3)
             self.assertEqual(coaddInputsOut.ccds[1].getId(), 4)
+
+    def testReadV1Catalog(self):
+        testDir = os.path.dirname(__file__)
+        v1CatalogPath = os.path.join(testDir, "data", "exposure_catalog_v1.fits")
+        catV1 = lsst.afw.table.ExposureCatalog.readFits(v1CatalogPath)
+        self.assertEqual(self.cat[0].get(self.ka), catV1[0].get(self.ka))
+        self.assertEqual(self.cat[0].get(self.kb), catV1[0].get(self.kb))
+        self.comparePsfs(self.cat[0].getPsf(), catV1[0].getPsf())
+        self.assertEqual(self.cat[0].getWcs(), catV1[0].getWcs())
+        self.assertEqual(self.cat[1].get(self.ka), catV1[1].get(self.ka))
+        self.assertEqual(self.cat[1].get(self.kb), catV1[1].get(self.kb))
+        self.assertEqual(self.cat[1].getWcs(), catV1[1].getWcs())
+        self.assertIsNone(self.cat[1].getPsf())
+        self.assertIsNone(self.cat[1].getCalib())
+        self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
+                         1].getWcs().getId())  # compare citizen IDs
+        self.assertEqual(self.cat[0].getCalib(), catV1[0].getCalib())
+        self.assertIsNone(catV1[0].getVisitInfo())
+        self.assertIsNone(catV1[1].getVisitInfo())
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

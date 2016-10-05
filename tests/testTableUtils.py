@@ -34,8 +34,8 @@
 from __future__ import absolute_import, division, print_function
 import math
 import unittest
-from builtins import zip
 
+from builtins import zip
 import numpy as np
 
 import lsst.utils.tests
@@ -43,6 +43,7 @@ import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
 import lsst.afw.table as afwTable
+
 
 class UpdateTestCase(lsst.utils.tests.TestCase):
     """A test case for the lsst.afw.table.updateRefCentroids and updateSourceCoords

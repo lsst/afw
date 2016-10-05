@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2008-2013 LSST Corporation.
@@ -23,6 +20,7 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import os
 import os.path
 import unittest
@@ -33,7 +31,6 @@ import lsst.utils.tests
 testPath = os.path.abspath(os.path.dirname(__file__))
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 class Ticket2905Test(unittest.TestCase):
     """Test reading a FITS header that contains:
 
@@ -54,7 +51,6 @@ class MemoryTester(lsst.utils.tests.MemoryTestCase):
 
 def setup_module(module):
     lsst.utils.tests.init()
-
 
 if __name__ == "__main__":
     lsst.utils.tests.init()

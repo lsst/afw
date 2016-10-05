@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-
 #
 # LSST Data Management System
 # Copyright 2016 AURA/LSST
@@ -32,11 +29,11 @@ or
    python
    >>> import testAstropyTableViews; testAstropyTableViews.run()
 """
-
+from __future__ import absolute_import, division
 import unittest
 import operator
 
-import numpy
+import numpy as np
 import astropy.table
 import astropy.units
 
@@ -67,12 +64,12 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
         self.catalog = lsst.afw.table.BaseCatalog(schema)
         self.data = [
             {
-                "a1": 5.0, "a2": 3, "a3": numpy.array([0.5, 0.0, -0.5], dtype=numpy.float32),
+                "a1": 5.0, "a2": 3, "a3": np.array([0.5, 0.0, -0.5], dtype=np.float32),
                 "a4": True, "a5_ra": 45.0*lsst.afw.geom.degrees, "a5_dec": 30.0*lsst.afw.geom.degrees,
                 "a6": "bubbles"
             },
             {
-                "a1": 2.5, "a2": 7, "a3": numpy.array([1.0, 0.5, -1.5], dtype=numpy.float32),
+                "a1": 2.5, "a2": 7, "a3": np.array([1.0, 0.5, -1.5], dtype=np.float32),
                 "a4": False, "a5_ra": 25.0*lsst.afw.geom.degrees, "a5_dec": -60.0*lsst.afw.geom.degrees,
                 "a6": "pingpong"
             },
@@ -181,6 +178,7 @@ class AstropyTableViewTestCase(lsst.utils.tests.TestCase):
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

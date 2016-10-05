@@ -83,7 +83,8 @@ ExposureInfo::ExposureInfo(
     Filter const & filter,
     PTR(daf::base::PropertySet) const & metadata,
     PTR(CoaddInputs) const & coaddInputs,
-    PTR(ApCorrMap) const & apCorrMap
+    PTR(ApCorrMap) const & apCorrMap,
+    CONST_PTR(image::VisitInfo) const & visitInfo
 ) : _wcs(_cloneWcs(wcs)),
     _psf(std::const_pointer_cast<detection::Psf>(psf)),
     _calib(calib ? _cloneCalib(calib) : PTR(Calib)(new Calib())),
@@ -92,7 +93,8 @@ ExposureInfo::ExposureInfo(
     _filter(filter),
     _metadata(metadata ? metadata : PTR(daf::base::PropertySet)(new daf::base::PropertyList())),
     _coaddInputs(coaddInputs),
-    _apCorrMap(_cloneApCorrMap(apCorrMap))
+    _apCorrMap(_cloneApCorrMap(apCorrMap)),
+    _visitInfo(visitInfo)
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other) :
@@ -104,7 +106,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other) :
     _filter(other._filter),
     _metadata(other._metadata),
     _coaddInputs(other._coaddInputs),
-    _apCorrMap(_cloneApCorrMap(other._apCorrMap))
+    _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
+    _visitInfo(other._visitInfo)
 {}
 
 ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
@@ -116,7 +119,8 @@ ExposureInfo::ExposureInfo(ExposureInfo const & other, bool copyMetadata) :
     _filter(other._filter),
     _metadata(other._metadata),
     _coaddInputs(other._coaddInputs),
-    _apCorrMap(_cloneApCorrMap(other._apCorrMap))
+    _apCorrMap(_cloneApCorrMap(other._apCorrMap)),
+    _visitInfo(other._visitInfo)
 {
     if (copyMetadata) _metadata = _metadata->deepCopy();
 }
@@ -132,6 +136,7 @@ ExposureInfo & ExposureInfo::operator=(ExposureInfo const & other) {
         _metadata = other._metadata;
         _coaddInputs = other._coaddInputs;
         _apCorrMap = _cloneApCorrMap(other._apCorrMap);
+        _visitInfo = other._visitInfo;
     }
     return *this;
 }
@@ -210,11 +215,15 @@ ExposureInfo::_startWriteFits(afw::geom::Point2I const & xy0) const {
         data.metadata->set("DETNAME", getDetector()->getName());
         data.metadata->set("DETSER", getDetector()->getSerial());
     }
+
+    auto visitInfoPtr = getVisitInfo();
+    if (visitInfoPtr) {
+        detail::setVisitInfoMetadata(*(data.metadata), *visitInfoPtr);
+    }
+
     /**
      * We need to define these keywords properly! XXX
      */
-    data.metadata->set("TIME-MID", getCalib()->getMidTime().toString(daf::base::DateTime::UTC));
-    data.metadata->set("EXPTIME", getCalib()->getExptime());
     data.metadata->set("FLUXMAG0", getCalib()->getFluxMag0().first);
     data.metadata->set("FLUXMAG0ERR", getCalib()->getFluxMag0().second);
 
@@ -244,6 +253,9 @@ void ExposureInfo::_readFits(
 
     _filter = Filter(metadata, true);
     detail::stripFilterKeywords(metadata);
+
+    _visitInfo = CONST_PTR(VisitInfo)(new VisitInfo(*metadata));
+    detail::stripVisitInfoKeywords(*metadata);
 
     PTR(Calib) newCalib(new Calib(metadata));
     setCalib(newCalib);

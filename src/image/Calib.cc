@@ -47,11 +47,11 @@ namespace lsst { namespace afw { namespace image {
 /**
  * ctor
  */
-Calib::Calib() : _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
+Calib::Calib() : _fluxMag0(0.0), _fluxMag0Sigma(0.0) {}
 /**
  * ctor from a given fluxMagnitude zero point
  */
-Calib::Calib(double fluxMag0): _midTime(), _exptime(0.0), _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
+Calib::Calib(double fluxMag0): _fluxMag0(fluxMag0), _fluxMag0Sigma(0.0) {}
 /**
  * ctor from a vector of Calibs
  *
@@ -59,7 +59,7 @@ Calib::Calib(double fluxMag0): _midTime(), _exptime(0.0), _fluxMag0(fluxMag0), _
  */
 Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to be merged
             ) :
-    _midTime(), _exptime(0.0), _fluxMag0(0.0), _fluxMag0Sigma(0.0)
+    _fluxMag0(0.0), _fluxMag0Sigma(0.0)
 {
     if (calibs.empty()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::InvalidParameterError,
@@ -69,7 +69,6 @@ Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to b
     double const fluxMag00 = calibs[0]->_fluxMag0;
     double const fluxMag0Sigma0 = calibs[0]->_fluxMag0Sigma;
 
-    double midTimeSum = 0.0;            // sum(time*expTime)
     for (std::vector<CONST_PTR(Calib)>::const_iterator ptr = calibs.begin(); ptr != calibs.end(); ++ptr) {
         Calib const& calib = **ptr;
 
@@ -82,43 +81,17 @@ Calib::Calib(std::vector<CONST_PTR(Calib)> const& calibs ///< Set of calibs to b
                                % calibs[0]->getFluxMag0().first % calibs[0]->getFluxMag0().second
                               ).str());
         }
-
-        double const exptime = calib._exptime;
-
-        midTimeSum += calib._midTime.get()*exptime;
-        _exptime += exptime;
     }
 
-    daf::base::DateTime tmp(midTimeSum/_exptime); // there's no way to set the double value directly
-    using std::swap;
-    swap(_midTime, tmp);
 }
 
 /**
  * ctor
  */
 Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
-    lsst::daf::base::DateTime midTime;
-    double exptime = 0.0;
     double fluxMag0 = 0.0, fluxMag0Sigma = 0.0;
 
-    std::string key = "TIME-MID";
-    if (metadata->exists(key)) {
-        midTime  = lsst::daf::base::DateTime(boost::algorithm::trim_right_copy(metadata->getAsString(key)),
-                                             lsst::daf::base::DateTime::UTC);
-    }
-
-    key = "EXPTIME";
-    if (metadata->exists(key)) {
-        try {
-            exptime = metadata->getAsDouble(key);
-        } catch (lsst::pex::exceptions::TypeError & err) {
-            std::string exptimeStr = metadata->getAsString(key);
-            exptime = std::stod(exptimeStr);
-        }
-    }
-
-    key = "FLUXMAG0";
+    auto key = "FLUXMAG0";
     if (metadata->exists(key)) {
         fluxMag0 = metadata->getAsDouble(key);
 
@@ -128,8 +101,6 @@ Calib::Calib(CONST_PTR(lsst::daf::base::PropertySet) metadata) {
         }
     }
 
-    _midTime = midTime;
-    _exptime = exptime;
     _fluxMag0 = fluxMag0;
     _fluxMag0Sigma = fluxMag0Sigma;
 }
@@ -167,19 +138,7 @@ int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata 
 {
     int nstripped = 0;
 
-    std::string key = "TIME-MID";
-    if (metadata->exists(key)) {
-        metadata->remove(key);
-        nstripped++;
-    }
-
-    key = "EXPTIME";
-    if (metadata->exists(key)) {
-        metadata->remove(key);
-        nstripped++;
-    }
-
-    key = "FLUXMAG0";
+    auto key = "FLUXMAG0";
     if (metadata->exists(key)) {
         metadata->remove(key);
         nstripped++;
@@ -202,59 +161,8 @@ int stripCalibKeywords(PTR(lsst::daf::base::PropertySet) metadata ///< Metadata 
  */
 bool Calib::operator==(Calib const& rhs) const {
     return
-        ::fabs(_midTime.get() - rhs._midTime.get()) < std::numeric_limits<double>::epsilon() &&
-        _exptime == rhs._exptime &&
         _fluxMag0 == rhs._fluxMag0 &&
         _fluxMag0Sigma == rhs._fluxMag0Sigma;
-}
-
-/**
- * Set the time of the middle of an exposure
- *
- * \note In general this is a function of position of the position of the detector in the focal plane
- */
-void Calib::setMidTime(lsst::daf::base::DateTime const& midTime ///< Time at middle of exposure
-                      )
-{
-    _midTime = midTime;
-}
-
-/**
- * Return the time at the middle of an exposure
- */
-lsst::daf::base::DateTime Calib::getMidTime () const
-{
-    return _midTime;
-}
-
-/**
- * Return the time at the middle of an exposure at the specified position in the focal plane (as
- * described by a cameraGeom::Detector)
- *
- * @warning This implementation ignores its arguments!
- */
-lsst::daf::base::DateTime Calib::getMidTime(
-        std::shared_ptr<const lsst::afw::cameraGeom::Detector>, ///< description of focal plane (ignored)
-        lsst::afw::geom::Point2I const&            ///< position in focal plane (ignored)
-                                           ) const
-{
-    return _midTime;
-}
-
-/**
- * Set the length of an exposure
- */
-void Calib::setExptime(double exptime      ///< the length of the exposure (s)
-                       ) {
-    _exptime = exptime;
-}
-
-/**
- * Return the length of an exposure in seconds
- */
-double Calib::getExptime() const
-{
-    return _exptime;
 }
 
 /**
@@ -283,6 +191,7 @@ std::pair<double, double> Calib::getFluxMag0() const
 }
 
 namespace {
+
 inline void checkNegativeFlux0(double fluxMag0) {
     if (fluxMag0 <= 0) {
         throw LSST_EXCEPT(lsst::pex::exceptions::DomainError,
@@ -484,7 +393,10 @@ std::pair<ndarray::Array<double,1>, ndarray::Array<double,1> > Calib::getMagnitu
 
 namespace {
 
-class CalibSchema {
+int const CALIB_TABLE_CURRENT_VERSION = 2;  // current version of ExposureTable
+std::string const EXPTIME_FIELD_NAME = "exptime";  // name of exposure time field
+
+class CalibKeys {
 public:
     table::Schema schema;
     table::Key<std::int64_t> midTime;
@@ -492,30 +404,30 @@ public:
     table::Key<double> fluxMag0;
     table::Key<double> fluxMag0Sigma;
 
-    static CalibSchema const & get() {
-        static CalibSchema instance;
-        return instance;
-    }
-
     // No copying
-    CalibSchema (const CalibSchema&) = delete;
-    CalibSchema& operator=(const CalibSchema&) = delete;
+    CalibKeys (const CalibKeys&) = delete;
+    CalibKeys& operator=(const CalibKeys&) = delete;
 
     // No moving
-    CalibSchema (CalibSchema&&) = delete;
-    CalibSchema& operator=(CalibSchema&&) = delete;
+    CalibKeys (CalibKeys&&) = delete;
+    CalibKeys& operator=(CalibKeys&&) = delete;
 
-private:
-    CalibSchema() :
+    CalibKeys(int tableVersion=CALIB_TABLE_CURRENT_VERSION) :
         schema(),
-        midTime(schema.addField<std::int64_t>(
-                    "midtime", "middle of the time of the exposure relative to Unix epoch", "ns"
-                )),
-        expTime(schema.addField<double>("exptime", "exposure time", "s")),
-        fluxMag0(schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "count")),
-        fluxMag0Sigma(schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count"))
+        midTime(),
+        expTime(),
+        fluxMag0(),
+        fluxMag0Sigma()
     {
-        schema.getCitizen().markPersistent();
+        if (tableVersion == 1) {
+            // obsolete fields
+            midTime = schema.addField<std::int64_t>(
+                "midtime", "middle of the time of the exposure relative to Unix epoch", "ns"
+            );
+            expTime = schema.addField<double>(EXPTIME_FIELD_NAME, "exposure time", "s");
+        }
+        fluxMag0 = schema.addField<double>("fluxmag0", "flux of a zero-magnitude object", "count");
+        fluxMag0Sigma = schema.addField<double>("fluxmag0.err", "1-sigma error on fluxmag0", "count");
     }
 };
 
@@ -524,14 +436,21 @@ public:
 
     virtual PTR(table::io::Persistable)
     read(InputArchive const & archive, CatalogVector const & catalogs) const {
-        CalibSchema const & keys = CalibSchema::get();
+        // table version is not persisted, so we don't have a clean way to determine the version;
+        // the hack is version = 1 if exptime found, else current
+        int tableVersion = 1;
+        try {
+            catalogs.front().getSchema().find<double>(EXPTIME_FIELD_NAME);
+        } catch (pex::exceptions::NotFoundError) {
+            tableVersion = CALIB_TABLE_CURRENT_VERSION;
+        }
+
+        CalibKeys const keys{tableVersion};
         LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().size() == 1u);
         LSST_ARCHIVE_ASSERT(catalogs.front().getSchema() == keys.schema);
         table::BaseRecord const & record = catalogs.front().front();
         PTR(Calib) result(new Calib());
-        result->setMidTime(daf::base::DateTime(static_cast<long long>(record.get(keys.midTime))));
-        result->setExptime(record.get(keys.expTime));
         result->setFluxMag0(record.get(keys.fluxMag0), record.get(keys.fluxMag0Sigma));
         return result;
     }
@@ -549,11 +468,9 @@ CalibFactory registration(getCalibPersistenceName());
 std::string Calib::getPersistenceName() const { return getCalibPersistenceName(); }
 
 void Calib::write(OutputArchiveHandle & handle) const {
-    CalibSchema const & keys = CalibSchema::get();
+    CalibKeys const keys{};
     table::BaseCatalog cat = handle.makeCatalog(keys.schema);
     PTR(table::BaseRecord) record = cat.addNew();
-    record->set(keys.midTime, getMidTime().nsecs());
-    record->set(keys.expTime, getExptime());
     std::pair<double,double> fluxMag0 = getFluxMag0();
     record->set(keys.fluxMag0, fluxMag0.first);
     record->set(keys.fluxMag0Sigma, fluxMag0.second);

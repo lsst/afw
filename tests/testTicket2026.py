@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
+from __future__ import absolute_import, division, print_function
 import unittest
 
-import lsst.utils.tests
+from builtins import range
 
+import lsst.utils.tests
 import lsst.afw.table as afwTable
 
 # Subtract 1 so that ids == indices

@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008-2014 LSST Corporation.
@@ -34,8 +30,11 @@ or
    >>> import testGaussianPsf; testGaussianPsf.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import unittest
-import numpy
+
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -56,7 +55,7 @@ def makeGaussianImage(bbox, sigma, xc=0.0, yc=0.0):
     array = image.getArray()
     for yi, yv in enumerate(range(bbox.getBeginY(), bbox.getEndY())):
         for xi, xv in enumerate(range(bbox.getBeginX(), bbox.getEndX())):
-            array[yi, xi] = numpy.exp(-0.5*((xv - xc)**2 + (yv - yc)**2)/sigma**2)
+            array[yi, xi] = np.exp(-0.5*((xv - xc)**2 + (yv - yc)**2)/sigma**2)
     array /= array.sum()
     return image
 
@@ -89,13 +88,16 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
     def testOffsetImage(self):
         image = self.psf.computeImage(lsst.afw.geom.Point2D(0.25, 0.25))
         check = makeGaussianImage(image.getBBox(), self.psf.getSigma(), 0.25, 0.25)
-        self.assertFloatsAlmostEqual(image.getArray(), check.getArray(), atol=1E-4, rtol=1E-4, plotOnFailure=True)
+        self.assertFloatsAlmostEqual(image.getArray(), check.getArray(), atol=1E-4, rtol=1E-4,
+                                     plotOnFailure=True)
 
     def testApertureFlux(self):
         image = self.psf.computeKernelImage(lsst.afw.geom.Point2D(0.0, 0.0))
         # test aperture implementation is very crude; can only test to about 10%
-        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0), rtol=0.1)
-        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0), rtol=0.1)
+        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(5.0), computeNaiveApertureFlux(image, 5.0),
+                                     rtol=0.1)
+        self.assertFloatsAlmostEqual(self.psf.computeApertureFlux(7.0), computeNaiveApertureFlux(image, 7.0),
+                                     rtol=0.1)
 
     def testShape(self):
         self.assertFloatsAlmostEqual(self.psf.computeShape().getDeterminantRadius(), 4.0)

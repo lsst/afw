@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008-2015 AURA/LSST.
+ * Copyright 2008-2016 AURA/LSST.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -47,7 +47,7 @@ Basic routines to talk to lsst::afw::image classes
 #include "lsst/afw/cameraGeom.h"
 #include "lsst/afw/image.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/coord.h"
 #include "lsst/afw/image/Color.h"
 #include "lsst/afw/image/Defect.h"
 #include "lsst/afw/fits.h" // just for exceptions
@@ -281,6 +281,7 @@ def __int__(self):
 /************************************************************************************************************/
 
 %include "lsst/afw/image/Calib.i"
+%include "lsst/afw/image/VisitInfo.i"
 %include "lsst/afw/image/ApCorrMap.i"
 
 %{

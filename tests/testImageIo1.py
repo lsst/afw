@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -27,9 +23,11 @@ from builtins import range
 """
 Test cases to test image I/O
 """
+from __future__ import absolute_import, division, print_function
 import os.path
-
 import unittest
+
+from builtins import range
 
 import lsst.utils
 import lsst.afw.geom as afwGeom
@@ -47,8 +45,6 @@ try:
     dataDir = os.path.join(lsst.utils.getPackageDir("afwdata"), "data")
 except pexExcept.NotFoundError:
     dataDir = None
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class ReadFitsTestCase(lsst.utils.tests.TestCase):
@@ -173,11 +169,10 @@ class ReadFitsTestCase(lsst.utils.tests.TestCase):
             expNew = afwImage.ExposureF(tmpFile)
             self.assertEqual(expNew.getMetadata().get(keyWord), longString)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

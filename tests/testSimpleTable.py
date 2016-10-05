@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import zip
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008-2014 AURA/LSST
@@ -35,8 +29,12 @@ or
    python
    >>> import testSimpleTable; testSimpleTable.run()
 """
+from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
+
+from builtins import zip
+from builtins import range
 import numpy
 
 try:
@@ -57,6 +55,7 @@ try:
     type(display)
 except NameError:
     display = False
+
 
 def makeArray(size, dtype):
     return numpy.array(numpy.random.randn(size), dtype=dtype)
@@ -574,7 +573,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             schema.addField("f2", doc="f2b", type="F", doReplace=True)
         with self.assertRaises(lsst.pex.exceptions.TypeError):
             schema.addField("f3", doc="f3b", type="ArrayF",
-                          size=3, doReplace=True)
+                            size=3, doReplace=True)
         k1b = schema.addField("f1", doc="f1b", type="I", doReplace=True)
         self.assertEqual(k1a, k1b)
         self.assertEqual(schema.find(k1a).field.getDoc(), "f1b")

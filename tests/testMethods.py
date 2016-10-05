@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division, print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -23,10 +19,12 @@ from builtins import range
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division, print_function
 import math
 import unittest
 import re
 
+from builtins import range
 import numpy as np
 
 import lsst.utils.tests
@@ -56,7 +54,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     ang0,
                     ang0 + 0.01*afwGeom.arcseconds,
                     maxDiff=0.009999*afwGeom.arcseconds,
-                    )
+                )
 
             self.assertAnglesNearlyEqual(
                 ang0,
@@ -68,7 +66,7 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     ang0,
                     ang0 - 0.01*afwGeom.arcseconds,
                     maxDiff=0.009999*afwGeom.arcseconds,
-                    )
+                )
 
             self.assertAnglesNearlyEqual(
                 ang0 - 720*afwGeom.degrees,
@@ -81,13 +79,13 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     ang0 + 0.01*afwGeom.arcseconds,
                     ignoreWrap=False,
                     maxDiff=0.010001*afwGeom.arcseconds,
-                    )
+                )
             with self.assertRaises(AssertionError):
                 self.assertAnglesNearlyEqual(
                     ang0 - 720*afwGeom.degrees,
                     ang0 + 0.01*afwGeom.arcseconds,
                     maxDiff=0.009999*afwGeom.arcseconds,
-                    )
+                )
 
             self.assertAnglesNearlyEqual(
                 ang0,
@@ -100,13 +98,13 @@ class TestTestUtils(lsst.utils.tests.TestCase):
                     ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
                     ignoreWrap=False,
                     maxDiff=0.010001*afwGeom.arcseconds,
-                    )
+                )
             with self.assertRaises(AssertionError):
                 self.assertAnglesNearlyEqual(
                     ang0,
                     ang0 + 360*afwGeom.degrees + 0.01*afwGeom.arcseconds,
                     maxDiff=0.009999*afwGeom.arcseconds,
-                    )
+                )
 
     def testAssertBoxesNearlyEqual(self):
         """Test assertBoxesNearlyEqual"""
@@ -205,21 +203,25 @@ class TestTestUtils(lsst.utils.tests.TestCase):
 
         with self.assertRaises(AssertionError):
             self.assertWcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
-                          maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02)
+                                              maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02)
         self.assertFalse(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
-                                                         maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.02))
+                                                         maxDiffSky=0.001*afwGeom.arcseconds,
+                                                         maxDiffPix=0.02))
 
         with self.assertRaises(AssertionError):
             self.assertWcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
-                maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
+                                              maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001)
         self.assertFalse(afwImage.wcsNearlyEqualOverBBox(wcs0, wcs1, bbox,
-                                                         maxDiffSky=0.04*afwGeom.arcseconds, maxDiffPix=0.001))
+                                                         maxDiffSky=0.04*afwGeom.arcseconds,
+                                                         maxDiffPix=0.001))
 
         # check that doShortCircuit works in the private implementation
         errStr1 = _compareWcsOverBBox(wcs0, wcs1, bbox,
-                                      maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001, doShortCircuit=False)
+                                      maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001,
+                                      doShortCircuit=False)
         errStr2 = _compareWcsOverBBox(wcs0, wcs1, bbox,
-                                      maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001, doShortCircuit=True)
+                                      maxDiffSky=0.001*afwGeom.arcseconds, maxDiffPix=0.001,
+                                      doShortCircuit=True)
         self.assertNotEqual(errStr1, errStr2)
 
     def checkMaskedImage(self, mi):

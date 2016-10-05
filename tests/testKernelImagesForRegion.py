@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -27,7 +22,8 @@ from builtins import range
 import math
 import unittest
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
@@ -38,8 +34,6 @@ from lsst.log import Log
 
 # Change the level to Log.DEBUG to see debug messages
 Log.getLogger("TRACE5.afw.math.convolve").setLevel(Log.INFO)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 LocNameDict = {
     mathDetail.KernelImagesForRegion.BOTTOM_LEFT: "BOTTOM_LEFT",
@@ -83,7 +77,7 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             desImage = regionCopy.getImage(location)
             desImArr = desImage.getArray().transpose().copy()
             actImArr -= desImArr
-            if not numpy.allclose(actImArr, 0):
+            if not np.allclose(actImArr, 0):
                 actImage.writeFits("actImage%s.fits" % (location,))
                 desImage.writeFits("desImage%s.fits" % (location,))
                 self.fail("failed on location %s" % (location,))
@@ -141,10 +135,8 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
             (region.TOP_RIGHT, (rightInd, topInd)),
         ):
             desPixIndex = afwGeom.Point2I(desIndex[0], desIndex[1])
-            self.assertEqual(region.getPixelIndex(location), desPixIndex,
-                         "getPixelIndex(%s) = %s != %s" % (LocNameDict[location], region.getPixelIndex(location),
-                                                           desPixIndex)
-                         )
+            self.assertEqual(region.getPixelIndex(location), desPixIndex, "getPixelIndex(%s) = %s != %s" %
+                             (LocNameDict[location], region.getPixelIndex(location), desPixIndex))
 
     def testComputeNextRow(self):
         """Test computeNextRow method and the resulting RowOfKernelImagesForRegion
@@ -229,10 +221,9 @@ class KernelImagesForRegion(lsst.utils.tests.TestCase):
                 self.assertImagesNearlyEqual(actImage, desImage, msg=msg)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

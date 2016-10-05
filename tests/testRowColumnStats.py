@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -32,15 +30,11 @@ or
    python
    >>> import rowColumnStats; rowColumnStats.run()
 """
-from __future__ import division
+from __future__ import absolute_import, division, print_function
+import unittest
+
 from builtins import range
 
-##########################
-# rowColumnStats.py
-# Steve Bickerton
-# An python test to check the row/column statistics from statisticsStack
-
-import unittest
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.geom as afwGeom
@@ -127,6 +121,7 @@ class RowColumnStatisticsTestCase(unittest.TestCase):
 #################################################################
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

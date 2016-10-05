@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
 
 #
 # LSST Data Management System
@@ -24,11 +21,12 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-
+from __future__ import absolute_import, division, print_function
 import unittest
-
-import numpy
 import os
+
+from builtins import range
+import numpy as np
 
 import lsst.utils.tests
 import lsst.pex.policy as pexPolicy
@@ -44,8 +42,6 @@ Log.getLogger("afw.math.KernelFormatter").setLevel(Log.INFO)
 
 
 testPath = os.path.abspath(os.path.dirname(__file__))
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class KernelIOTestCase(unittest.TestCase):
@@ -69,7 +65,7 @@ class KernelIOTestCase(unittest.TestCase):
         kWidth = 5
         kHeight = 6
 
-        inArr = numpy.arange(kWidth * kHeight, dtype=float)
+        inArr = np.arange(kWidth * kHeight, dtype=float)
         inArr.shape = [kWidth, kHeight]
 
         inImage = afwImage.ImageD(afwGeom.Extent2I(kWidth, kHeight))
@@ -101,14 +97,14 @@ class KernelIOTestCase(unittest.TestCase):
         k2.computeImage(outImage, False)
 
         outArr = outImage.getArray().transpose()
-        if not numpy.allclose(inArr, outArr):
+        if not np.allclose(inArr, outArr):
             self.fail("%s = %s != %s (not normalized)" %
                       (k2.__class__.__name__, inArr, outArr))
         normInArr = inArr / inArr.sum()
         normOutImage = afwImage.ImageD(k2.getDimensions())
         k2.computeImage(normOutImage, True)
         normOutArr = normOutImage.getArray().transpose()
-        if not numpy.allclose(normOutArr, normInArr):
+        if not np.allclose(normOutArr, normInArr):
             self.fail("%s = %s != %s (normalized)" %
                       (k2.__class__.__name__, normInArr, normOutArr))
 
@@ -125,7 +121,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         k = afwMath.AnalyticKernel(kWidth, kHeight, gaussFunc)
-        fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
+        fArr = np.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         for xsigma in (0.1, 1.0, 3.0):
             for ysigma in (0.1, 1.0, 3.0):
                 for angle in (0.0, 0.4, 1.1):
@@ -157,7 +153,7 @@ class KernelIOTestCase(unittest.TestCase):
                     kImage = afwImage.ImageD(k2.getDimensions())
                     k2.computeImage(kImage, True)
                     kArr = kImage.getArray().transpose()
-                    if not numpy.allclose(fArr, kArr):
+                    if not np.allclose(fArr, kArr):
                         self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
                                   (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
@@ -212,8 +208,8 @@ class KernelIOTestCase(unittest.TestCase):
 
         gaussFunc1 = afwMath.GaussianFunction1D(1.0)
         k = afwMath.SeparableKernel(kWidth, kHeight, gaussFunc1, gaussFunc1)
-        fArr = numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
-        numpy.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
+        fArr = np.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
+        np.zeros(shape=[k.getWidth(), k.getHeight()], dtype=float)
         gaussFunc = afwMath.GaussianFunction2D(1.0, 1.0, 0.0)
         for xsigma in (0.1, 1.0, 3.0):
             gaussFunc1.setParameters((xsigma,))
@@ -246,7 +242,7 @@ class KernelIOTestCase(unittest.TestCase):
                 kImage = afwImage.ImageD(k2.getDimensions())
                 k2.computeImage(kImage, True)
                 kArr = kImage.getArray().transpose()
-                if not numpy.allclose(fArr, kArr):
+                if not np.allclose(fArr, kArr):
                     self.fail("%s = %s != %s for xsigma=%s, ysigma=%s" %
                               (k2.__class__.__name__, kArr, fArr, xsigma, ysigma))
 
@@ -258,7 +254,7 @@ class KernelIOTestCase(unittest.TestCase):
 
         pol = pexPolicy.Policy()
         additionalData = dafBase.PropertySet()
-        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data","kernel5.boost"))
+        loc = dafPersist.LogicalLocation(os.path.join(testPath, "data", "kernel5.boost"))
         persistence = dafPersist.Persistence.getPersistence(pol)
 
         # create list of kernels
@@ -296,7 +292,7 @@ class KernelIOTestCase(unittest.TestCase):
             kIm = afwImage.ImageD(k2.getDimensions())
             k2.computeImage(kIm, True)
             kImArr = kIm.getArray().transpose()
-            if not numpy.allclose(kImArr, basisImArrList[ii]):
+            if not np.allclose(kImArr, basisImArrList[ii]):
                 self.fail("%s = %s != %s for the %s'th basis kernel" %
                           (k2.__class__.__name__, kImArr, basisImArrList[ii], ii))
 
@@ -313,11 +309,11 @@ class KernelIOTestCase(unittest.TestCase):
 
         # create image arrays for the basis kernels
         basisImArrList = []
-        imArr = numpy.zeros((kWidth, kHeight), dtype=float)
+        imArr = np.zeros((kWidth, kHeight), dtype=float)
         imArr += 0.1
         imArr[kWidth//2, :] = 0.9
         basisImArrList.append(imArr)
-        imArr = numpy.zeros((kWidth, kHeight), dtype=float)
+        imArr = np.zeros((kWidth, kHeight), dtype=float)
         imArr += 0.2
         imArr[:, kHeight//2] = 0.8
         basisImArrList.append(imArr)
@@ -367,7 +363,7 @@ class KernelIOTestCase(unittest.TestCase):
             k2.computeImage(kImage, False, colPos, rowPos)
             kImArr = kImage.getArray().transpose()
             refKImArr = (basisImArrList[0] * coeff0) + (basisImArrList[1] * coeff1)
-            if not numpy.allclose(kImArr, refKImArr):
+            if not np.allclose(kImArr, refKImArr):
                 self.fail("%s = %s != %s at colPos=%s, rowPos=%s" %
                           (k2.__class__.__name__, kImArr, refKImArr, colPos, rowPos))
 
@@ -406,10 +402,9 @@ class KernelIOTestCase(unittest.TestCase):
                 self.assertEqual(k2.getCtrY(), yCtr)
 
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

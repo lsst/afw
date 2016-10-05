@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -25,15 +20,19 @@ from builtins import range
 # see  < http://www.lsstcorp.org/LegalNotices/ > .
 #
 
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+
+from builtins import range
 import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.math as gp
-import lsst.utils.tests as utilsTests
 import lsst.pex.exceptions as pex
 
 testPath = os.path.abspath(os.path.dirname(__file__))
+
 
 class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
@@ -51,15 +50,15 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         mu_arr = np.empty(1)
 
         with self.assertRaises(pex.Exception):
-             gg.interpolate(sigma, test, 2*nData)
+            gg.interpolate(sigma, test, 2*nData)
         with self.assertRaises(pex.Exception):
-             gg.interpolate(sigma, test, -5)
+            gg.interpolate(sigma, test, -5)
         with self.assertRaises(pex.Exception):
-             gg.selfInterpolate(sigma, 0, 2*nData)
+            gg.selfInterpolate(sigma, 0, 2*nData)
         with self.assertRaises(pex.Exception):
-             gg.selfInterpolate(sigma, 0, -5)
+            gg.selfInterpolate(sigma, 0, -5)
         with self.assertRaises(pex.Exception):
-             gg.selfInterpolate(sigma, -1, nData-1)
+            gg.selfInterpolate(sigma, -1, nData-1)
         # the following segfaults, for unknown reasons, so run directly instead
         # self.assertRaises(pex.Exception,gg.selfInterpolate,sigma,nData,nData-1)
         try:
@@ -68,9 +67,9 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         except pex.Exception:
             pass
         with self.assertRaises(pex.Exception):
-             gg.interpolate(mu_arr, sigma, 2*nData)
+            gg.interpolate(mu_arr, sigma, 2*nData)
         with self.assertRaises(pex.Exception):
-             gg.interpolate(mu_arr, sigma, -5)
+            gg.interpolate(mu_arr, sigma, -5)
 
     def testInterpolate(self):
         """
@@ -118,7 +117,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setLambda(0.001)
 
         # now, read in the test points and their corresponding known solutions
-        f = open(os.path.join(testPath,"data", "gp_exp_covar_solutions.sav"))
+        f = open(os.path.join(testPath, "data", "gp_exp_covar_solutions.sav"))
         ff = f.readlines()
         f.close()
 
@@ -171,7 +170,7 @@ class GaussianProcessTestCase(lsst.utils.tests.TestCase):
         gg.setCovariogram(nn)
         gg.setLambda(0.0045)
 
-        f = open(os.path.join(testPath,"data", "gp_nn_solutions.sav"))
+        f = open(os.path.join(testPath, "data", "gp_nn_solutions.sav"))
         ff = f.readlines()
         f.close()
 

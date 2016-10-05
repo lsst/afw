@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import str
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2012 LSST Corporation.
@@ -29,15 +23,15 @@ from builtins import range
 """
 Test for match persistence via FITS
 """
-
-try:
-    debug
-except NameError:
-    debug = False
-
 import unittest
+
+from builtins import str
+from builtins import range
+
 import lsst.utils.tests
 import lsst.afw.table as afwTable
+
+Debug = False  # set True to print some debugging information
 
 
 class MatchFitsTestCase(unittest.TestCase):
@@ -61,7 +55,7 @@ class MatchFitsTestCase(unittest.TestCase):
         for i in range(self.numMatches):
             index = 2*i
             match = afwTable.SimpleMatch(self.cat1[index], self.cat2[self.size - index - 1], index)
-            if debug:
+            if Debug:
                 print("Inject:", match.first.getId(), match.second.getId())
             self.matches.push_back(match)
 
@@ -77,7 +71,7 @@ class MatchFitsTestCase(unittest.TestCase):
         self.assertEqual(len(matches), self.numMatches)
         for m in matches:
             str(m)  # Check __str__ works
-            if debug:
+            if Debug:
                 print("Test:", m.first.getId(), m.second.getId())
             self.assertEqual(m.first.getId(), m.second.getId())
 
@@ -102,11 +96,9 @@ class MatchFitsTestCase(unittest.TestCase):
         afwTable.unpackMatches(packed, cat1, cat2)
 
 
-#################################################################
-# Test suite boiler plate
-#################################################################
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

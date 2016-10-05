@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -24,8 +20,11 @@ from builtins import range
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
+from __future__ import absolute_import, division, print_function
 import os
 import unittest
+
+from builtins import range
 
 import lsst.utils
 import lsst.utils.tests
@@ -140,11 +139,10 @@ class ImagePersistenceTestCase(lsst.utils.tests.TestCase):
             # Check the resulting Image
             self.checkImages(self.image, image2)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()

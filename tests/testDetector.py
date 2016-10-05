@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import range
 #
 # LSST Data Management System
 # Copyright 2014 LSST Corporation.
@@ -25,8 +22,10 @@ from builtins import range
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
-import itertools
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import range
 from builtins import zip
 
 import lsst.utils.tests
@@ -217,7 +216,6 @@ class DetectorTestCase(lsst.utils.tests.TestCase):
                 self.assertAlmostEquals(ctrPoint[i], predCtrPoint[i])
                 if cameraSys == cameraGeom.PIXELS:
                     self.assertAlmostEquals(ctrPixPoint[i], ctrPoint[i])
-
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

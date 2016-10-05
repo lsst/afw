@@ -89,14 +89,6 @@ public :
     explicit Calib(std::vector<CONST_PTR(Calib)> const& calibs);
     explicit Calib(CONST_PTR(lsst::daf::base::PropertySet));
 
-    void setMidTime(lsst::daf::base::DateTime const& midTime);
-    lsst::daf::base::DateTime getMidTime () const;
-    lsst::daf::base::DateTime getMidTime(std::shared_ptr<const lsst::afw::cameraGeom::Detector>,
-                                         lsst::afw::geom::Point2I const&) const;
-
-    void setExptime(double exptime);
-    double getExptime() const;
-
     void setFluxMag0(double fluxMag0, double fluxMag0Sigma=0.0);
     void setFluxMag0(std::pair<double, double> fluxMag0AndSigma);
     std::pair<double, double> getFluxMag0() const;
@@ -143,8 +135,6 @@ protected:
     virtual void write(OutputArchiveHandle & handle) const;
 
 private:
-    lsst::daf::base::DateTime _midTime;
-    double _exptime;
     double _fluxMag0;
     double _fluxMag0Sigma;
     static bool _throwOnNegativeFlux;

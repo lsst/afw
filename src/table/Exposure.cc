@@ -1,6 +1,10 @@
 // -*- lsst-c++ -*-
 #include <typeinfo>
+#include <string>
 
+#include "lsst/daf/base/PropertySet.h"
+#include "lsst/daf/base/PropertyList.h"
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/io/FitsWriter.h"
 #include "lsst/afw/table/Exposure.h"
 #include "lsst/afw/table/detail/Access.h"
@@ -11,6 +15,7 @@
 #include "lsst/afw/image/ApCorrMap.h"
 #include "lsst/afw/detection/Psf.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
+#include "lsst/afw/image/VisitInfo.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -23,6 +28,14 @@ namespace lsst { namespace afw { namespace table {
 // classes than to do a lot of friending.
 
 namespace {
+
+int const EXPOSURE_TABLE_CURRENT_VERSION = 2;  // current version of ExposureTable
+std::string const EXPOSURE_TABLE_VERSION_KEY = "EXPTABLE_VER";  // FITS header key for ExposureTable version
+std::string const VISIT_INFO_FIELD_NAME = "visitInfo"; // name of field used for VisitInfo
+
+int getTableVersion(daf::base::PropertySet &metadata) {
+    return metadata.exists(EXPOSURE_TABLE_VERSION_KEY) ? metadata.get<int>(EXPOSURE_TABLE_VERSION_KEY) : 1;
+}
 
 class ExposureTableImpl;
 
@@ -57,25 +70,24 @@ private:
 
 };
 
-// Schema prepended when saving an Exposure table
-struct PersistenceSchema {
+/**
+ * Helper class for for persisting ExposureRecord
+ *
+ * Contains keys for columns beyond BaseRecord, a schema mapper and and helper functions
+ */
+struct PersistenceHelper {
     Schema schema;
     Key<int> wcs;
     Key<int> psf;
     Key<int> calib;
     Key<int> apCorrMap;
     Key<int> validPolygon;
+    Key<int> visitInfo;
 
-    static PersistenceSchema const & get() {
-        static PersistenceSchema const instance;
-        return instance;
-    }
-
-    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord
-    // with IDs for Wcs, Psf, Calib and ApCorrMap.
+    // Create a SchemaMapper that maps an ExposureRecord to a BaseRecord with IDs for Wcs, Psf, etc.
     SchemaMapper makeWriteMapper(Schema const & inputSchema) const {
         std::vector<Schema> inSchemas;
-        inSchemas.push_back(PersistenceSchema::get().schema);
+        inSchemas.push_back(PersistenceHelper().schema);
         inSchemas.push_back(inputSchema);
         // don't need front; it's an identity mapper
         SchemaMapper result = SchemaMapper::join(inSchemas).back();
@@ -83,14 +95,14 @@ struct PersistenceSchema {
         return result;
     }
 
-    // Create a SchemaMapper that maps a BaseRecord with IDs for Psf and Wcs to an ExposureRecord
+    // Create a SchemaMapper that maps a BaseRecord to an ExposureRecord with IDs for WCS, Psf, etc.
     SchemaMapper makeReadMapper(Schema const & inputSchema) const {
         SchemaMapper result = SchemaMapper::removeMinimalSchema(inputSchema, schema);
         result.editOutputSchema().setAliasMap(inputSchema.getAliasMap());
         return result;
     }
 
-    // Convert an ExposureRecord to a BaseRecord with IDs for Psf and Wcs.
+    // Write psf, wcs, etc. from an ExposureRecord to an archive
     template <typename OutputArchiveIsh>
     void writeRecord(
         ExposureRecord const & input, BaseRecord & output,
@@ -103,8 +115,10 @@ struct PersistenceSchema {
         output.set(calib, archive.put(input.getCalib(), permissive));
         output.set(apCorrMap, archive.put(input.getApCorrMap(), permissive));
         output.set(validPolygon, archive.put(input.getValidPolygon(), permissive));
+        output.set(visitInfo, archive.put(input.getVisitInfo(), permissive));
     }
 
+    // Read psf, wcs, etc. from an archive to an ExposureRecord
     void readRecord(
         BaseRecord const & input, ExposureRecord & output,
         SchemaMapper const & mapper, io::InputArchive const & archive
@@ -115,26 +129,36 @@ struct PersistenceSchema {
         output.setCalib(archive.get<image::Calib>(input.get(calib)));
         output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
         output.setValidPolygon(archive.get<geom::polygon::Polygon>(input.get(validPolygon)));
+        output.setVisitInfo(archive.get<image::VisitInfo>(input.get(visitInfo)));
     }
 
     // No copying
-    PersistenceSchema (const PersistenceSchema&) = delete;
-    PersistenceSchema& operator=(const PersistenceSchema&) = delete;
+    PersistenceHelper (const PersistenceHelper&) = delete;
+    PersistenceHelper& operator=(const PersistenceHelper&) = delete;
 
     // No moving
-    PersistenceSchema (PersistenceSchema&&) = delete;
-    PersistenceSchema& operator=(PersistenceSchema&&) = delete;
+    PersistenceHelper (PersistenceHelper&&) = delete;
+    PersistenceHelper& operator=(PersistenceHelper&&) = delete;
 
-private:
-    PersistenceSchema() :
+    /**
+     * Construct a PersistenceHelper
+     *
+     * @param[in] tableVersion  version of ExposureTable:
+     *              - 1 has no VisitInfo and no version number in the metadata
+     *              - 2 adds VisitInfo and specifies the version number in the metadat
+     */
+    PersistenceHelper(int tableVersion=EXPOSURE_TABLE_CURRENT_VERSION) :
         schema(),
         wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
         psf(schema.addField<int>("psf", "archive ID for Psf object")),
         calib(schema.addField<int>("calib", "archive ID for Calib object")),
         apCorrMap(schema.addField<int>("apCorrMap", "archive ID for ApCorrMap object")),
-        validPolygon(schema.addField<int>("validPolygon", "archive ID for Polygon object"))
+        validPolygon(schema.addField<int>("validPolygon", "archive ID for Polygon object")),
+        visitInfo()
     {
-        schema.getCitizen().markPersistent();
+        if (tableVersion > 1) {
+            visitInfo = schema.addField<int>(VISIT_INFO_FIELD_NAME, "archive ID for VisitInfo object");
+        }
     }
 };
 
@@ -144,17 +168,21 @@ private:
 //----- ExposureFitsWriter ---------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------
 
-// A custom FitsWriter for Exposure - this just sets the AFW_TYPE key to EXPOSURE, which should ensure
-// we use ExposureFitsReader to read it.
+// A custom FitsWriter for Exposure - this sets the AFW_TYPE key to EXPOSURE, which should ensure
+// we use ExposureFitsReader to read it, and sets EXPOSURE_TABLE_VERSION_KEY to the current version:
+// EXPOSURE_TABLE_CURRENT_VERSION
 
 namespace {
-
 
 class ExposureFitsWriter : public io::FitsWriter {
 public:
 
     ExposureFitsWriter(Fits * fits, PTR(io::OutputArchive) archive, int flags)
-        : io::FitsWriter(fits, flags), _doWriteArchive(false), _archive(archive)
+    :
+        io::FitsWriter(fits, flags),
+        _doWriteArchive(false),
+        _archive(archive),
+        _helper(EXPOSURE_TABLE_CURRENT_VERSION)
     {
         if (!_archive) {
             _doWriteArchive = true;
@@ -175,6 +203,7 @@ protected:
     bool _doWriteArchive;
     PTR(io::OutputArchive) _archive;
     PTR(BaseRecord) _record;
+    PersistenceHelper _helper;
     SchemaMapper _mapper;
 };
 
@@ -186,16 +215,17 @@ void ExposureFitsWriter::_writeTable(CONST_PTR(BaseTable) const & t, std::size_t
             "Cannot use a ExposureFitsWriter on a non-Exposure table."
         );
     }
-    _mapper = PersistenceSchema::get().makeWriteMapper(inTable->getSchema());
+    _mapper = _helper.makeWriteMapper(inTable->getSchema());
     PTR(BaseTable) outTable = BaseTable::make(_mapper.getOutputSchema());
     io::FitsWriter::_writeTable(outTable, nRows);
     _fits->writeKey("AFW_TYPE", "EXPOSURE", "Tells lsst::afw to load this as an Exposure table.");
+    _fits->writeKey(EXPOSURE_TABLE_VERSION_KEY, EXPOSURE_TABLE_CURRENT_VERSION, "Exposure table version");
     _record = outTable->makeRecord();
 }
 
 void ExposureFitsWriter::_writeRecord(BaseRecord const & r) {
     ExposureRecord const & record = static_cast<ExposureRecord const &>(r);
-    PersistenceSchema::get().writeRecord(record, *_record, _mapper, *_archive, false);
+    _helper.writeRecord(record, *_record, _mapper, *_archive, false);
     io::FitsWriter::_writeRecord(*_record);
 }
 
@@ -260,6 +290,7 @@ public:
         int ioFlags,
         bool stripMetadata
     ) const {
+        auto tableVersion = getTableVersion(*metadata);
         PersistableObjectColumnReader<detection::Psf,&ExposureRecord::setPsf>::setup("psf", mapper);
         PersistableObjectColumnReader<image::Wcs,&ExposureRecord::setWcs>::setup("wcs", mapper);
         PersistableObjectColumnReader<image::Calib,&ExposureRecord::setCalib>::setup("calib", mapper);
@@ -267,6 +298,10 @@ public:
             "apCorrMap", mapper);
         PersistableObjectColumnReader<geom::polygon::Polygon,&ExposureRecord::setValidPolygon>::setup(
             "validPolygon", mapper);
+        if (tableVersion > 1) {
+            PersistableObjectColumnReader<image::VisitInfo, &ExposureRecord::setVisitInfo>::setup(
+                "visitInfo", mapper);
+        }
         PTR(ExposureTable) table = ExposureTable::make(mapper.finalize());
         table->setMetadata(metadata);
         return table;
@@ -333,6 +368,7 @@ void ExposureRecord::_assign(BaseRecord const & other) {
         _calib = s._calib;
         _apCorrMap = s._apCorrMap;
         _validPolygon = s._validPolygon;
+        _visitInfo = s._visitInfo;
     } catch (std::bad_cast&) {}
 }
 
@@ -380,11 +416,12 @@ ExposureTable::makeFitsWriter(fits::Fits * fitsfile, PTR(io::OutputArchive) arch
 
 template <typename RecordT>
 void ExposureCatalogT<RecordT>::writeToArchive(io::OutputArchiveHandle & handle, bool permissive) const {
-    SchemaMapper mapper = PersistenceSchema::get().makeWriteMapper(this->getSchema());
+    PersistenceHelper helper{};
+    SchemaMapper mapper = helper.makeWriteMapper(this->getSchema());
     BaseCatalog outputCat = handle.makeCatalog(mapper.getOutputSchema());
     outputCat.reserve(this->size());
     for (const_iterator i = this->begin(); i != this->end(); ++i) {
-        PersistenceSchema::get().writeRecord(*i, *outputCat.addNew(), mapper, handle, permissive);
+        helper.writeRecord(*i, *outputCat.addNew(), mapper, handle, permissive);
     }
     handle.saveCatalog(outputCat);
 }
@@ -393,11 +430,20 @@ template <typename RecordT>
 ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
     io::InputArchive const & archive, BaseCatalog const & catalog
 ) {
-    SchemaMapper mapper = PersistenceSchema::get().makeReadMapper(catalog.getSchema());
+    // table metadata is not available, so we don't have a clean way to determine the version;
+    // the hack is version = current version if visitInfo key is found, else 1
+    int tableVersion = EXPOSURE_TABLE_CURRENT_VERSION;
+    try {
+        catalog.getSchema().find<int>(VISIT_INFO_FIELD_NAME);
+    } catch (pex::exceptions::NotFoundError) {
+        tableVersion = 1;
+    }
+    PersistenceHelper helper{tableVersion};
+    SchemaMapper mapper = helper.makeReadMapper(catalog.getSchema());
     ExposureCatalogT<ExposureRecord> result(mapper.getOutputSchema());
     result.reserve(catalog.size());
     for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-        PersistenceSchema::get().readRecord(*i, *result.addNew(), mapper, archive);
+        helper.readRecord(*i, *result.addNew(), mapper, archive);
     }
     return result;
 }

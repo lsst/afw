@@ -2,7 +2,7 @@
 
 /*
  * LSST Data Management System
- * Copyright 2008, 2009, 2010 LSST Corporation.
+ * Copyright 2008-2016 LSST Corporation.
  *
  * This product includes software developed by the
  * LSST Project (http://www.lsst.org/).
@@ -26,7 +26,7 @@
 #define LSST_AFW_COORD_OBSERVATORY_H
 /**
  * @file
- * @brief Class to hold observatory information
+ * @brief Class to hold observatory/telescope location
  * @ingroup afw
  * @author Steve Bickerton
  *
@@ -40,32 +40,59 @@ namespace lsst {
 namespace afw {
 namespace coord {
 
-
 /**
  * @class Observatory
- * @brief Store information about an observatory ... lat/long, elevation
+ * @brief Hold the location of an observatory
  */
 class Observatory {
 public:
 
+    /**
+     * @brief Construct an Observatory with longitude and latitude specified as lsst::afw::geom::Angle
+     *
+     * @param[in] longitude  telescope longitude (positive values are E of Greenwich)
+     * @param[in] latitude  telescope latitude
+     * @param[in] elevation  telescope elevation (meters above reference spheroid)
+     */
     Observatory(lsst::afw::geom::Angle const longitude, lsst::afw::geom::Angle const latitude, double const elevation);
-    Observatory(std::string const longitude, std::string const latitude, double const elevation);
 
-    void setLatitude(lsst::afw::geom::Angle const latitude);
+    /**
+     * @brief Construct an Observatory with longitude and latitude specified as sexagesimal strings
+     *
+     * @param[in] longitude  telescope longitude (dd:mm:ss.s, positive values are E of Greenwich)
+     * @param[in] latitude  telescope latitude  (dd:mm:ss.s)
+     * @param[in] elevation  telescope elevation (meters above reference spheroid)
+     *
+     */
+    Observatory(std::string const & longitude, std::string const & latitude, double const elevation);
+
+    /// set telescope longitude
     void setLongitude(lsst::afw::geom::Angle const longitude);
+    /// set telescope latitude (positive values are E of Greenwich)
+    void setLatitude(lsst::afw::geom::Angle const latitude);
+    /// set telescope elevation (meters above reference spheroid)
     void setElevation(double const elevation);
 
-    lsst::afw::geom::Angle getLatitude() const;
+    /// get telescope longitude (positive values are E of Greenwich)
     lsst::afw::geom::Angle getLongitude() const;
+    /// get telescope latitude
+    lsst::afw::geom::Angle getLatitude() const;
+    /// get telescope elevation (meters above reference spheroid)
     double getElevation() const { return _elevation; }
 
-    std::string getLatitudeStr() const;
+    /// get telescope longitude as a dd:mm:ss.s string (positive values are E of Greenwich)
     std::string getLongitudeStr() const;
+    /// get telescope latitude as a dd:mm:ss.s string
+    std::string getLatitudeStr() const;
 
     bool operator==(Observatory const& rhs) const {
+        auto deltaLongitude = _latitude - rhs.getLatitude();
+        deltaLongitude.wrapCtr();
+        auto deltaLatitude = _longitude - rhs.getLongitude();
+        deltaLatitude.wrapCtr();
         return
-            ((_latitude - rhs._latitude) == 0.0) &&
-            ((_longitude - rhs._longitude) == 0.0) &&
+            (deltaLongitude == 0.0*lsst::afw::geom::degrees) &&
+            (deltaLatitude == 0.0*lsst::afw::geom::degrees) &&
             ((_elevation - rhs._elevation) == 0.0);
     }
     bool operator!=(Observatory const& rhs) const {

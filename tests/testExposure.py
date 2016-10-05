@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import range
-
 #
 # LSST Data Management System
 # Copyright 2008, 2009, 2010 LSST Corporation.
@@ -33,15 +28,17 @@ Contact: nms@astro.washington.edu
 Created on: Mon Sep 10, 2007
 """
 
+from __future__ import absolute_import, division, print_function
 import os.path
 import unittest
 
-import numpy
+from builtins import range
+import numpy as np
 
 import lsst.utils
 import lsst.utils.tests
-import lsst.daf.base as dafBase
 import lsst.afw.image as afwImage
+import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
 import lsst.afw.table as afwTable
 import lsst.pex.exceptions as pexExcept
@@ -67,8 +64,6 @@ else:
     inFilePath = os.path.join(dataDir, InputMaskedImageName)
     inFilePathSmall = os.path.join(dataDir, InputMaskedImageNameSmall)
     inFilePathSmallImage = os.path.join(dataDir, InputImageNameSmall)
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 @unittest.skipIf(dataDir is None, "afwdata not setup")
@@ -184,6 +179,87 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
 
         self.assertFalse(self.exposureCrOnly.getWcs())
 
+    def testExposureInfoConstructor(self):
+        """Test the Exposure(maskedImage, exposureInfo) constructor"""
+        exposureInfo = afwImage.ExposureInfo()
+        exposureInfo.setWcs(self.wcs)
+        exposureInfo.setDetector(self.detector)
+        gFilter = afwImage.Filter("g")
+        exposureInfo.setFilter(gFilter)
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        exposure = afwImage.ExposureF(maskedImage, exposureInfo)
+
+        self.assertTrue(exposure.hasWcs())
+        self.assertEqual(exposure.getWcs().getPixelOrigin(), self.wcs.getPixelOrigin())
+        self.assertEquals(exposure.getDetector().getName(), self.detector.getName())
+        self.assertEquals(exposure.getDetector().getSerial(), self.detector.getSerial())
+        self.assertEquals(exposure.getFilter(), gFilter)
+
+        self.assertTrue(exposure.getInfo().hasWcs())
+        self.assertEqual(exposure.getInfo().getWcs().getPixelOrigin(), self.wcs.getPixelOrigin())
+        self.assertEquals(exposure.getInfo().getDetector().getName(), self.detector.getName())
+        self.assertEquals(exposure.getInfo().getDetector().getSerial(), self.detector.getSerial())
+        self.assertEquals(exposure.getInfo().getFilter(), gFilter)
+
+    def testNullWcs(self):
+        """Test that an Exposure constructed with second argument None is usable
+
+        When the exposureInfo constructor was first added, trying to get a WCS
+        or other info caused a segfault because the ExposureInfo did not exist.
+        """
+        maskedImage = self.exposureMiOnly.getMaskedImage()
+        exposure = afwImage.ExposureF(maskedImage, None)
+        self.assertFalse(exposure.hasWcs())
+        self.assertFalse(exposure.hasPsf())
+
+    def testSetExposureInfo(self):
+        exposureInfo = afwImage.ExposureInfo()
+        exposureInfo.setWcs(self.wcs)
+        exposureInfo.setDetector(self.detector)
+        gFilter = afwImage.Filter("g")
+        exposureInfo.setFilter(gFilter)
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        exposure = afwImage.ExposureF(maskedImage)
+        self.assertFalse(exposure.hasWcs())
+
+        exposure.setInfo(exposureInfo)
+
+        self.assertTrue(exposure.hasWcs())
+        self.assertEqual(exposure.getWcs().getPixelOrigin(), self.wcs.getPixelOrigin())
+        self.assertEquals(exposure.getDetector().getName(), self.detector.getName())
+        self.assertEquals(exposure.getDetector().getSerial(), self.detector.getSerial())
+        self.assertEquals(exposure.getFilter(), gFilter)
+
+    def testVisitInfoFitsPersistence(self):
+        """Test saving an exposure to FITS and reading it back in preserves (some) VisitInfo fields"""
+        exposureId = 5
+        exposureTime = 12.3
+        boresightRotAngle = 45.6 * afwGeom.degrees
+        weather = afwCoord.Weather(1.1, 2.2, 0.3)
+        visitInfo = afwImage.makeVisitInfo(
+            exposureId = exposureId,
+            exposureTime = exposureTime,
+            boresightRotAngle = boresightRotAngle,
+            weather = weather,
+        )
+        # Calib used to have exposure time and exposure date, so check for lack of interference
+        calib = afwImage.Calib(3.4)
+        exposureInfo = afwImage.ExposureInfo()
+        exposureInfo.setVisitInfo(visitInfo)
+        exposureInfo.setCalib(calib)
+        exposureInfo.setDetector(self.detector)
+        gFilter = afwImage.Filter("g")
+        exposureInfo.setFilter(gFilter)
+        maskedImage = afwImage.MaskedImageF(inFilePathSmall)
+        exposure = afwImage.ExposureF(maskedImage, exposureInfo)
+        with lsst.utils.tests.getTempFilePath(".fits") as tmpFile:
+            exposure.writeFits(tmpFile)
+            rtExposure = afwImage.ExposureF(tmpFile)
+        rtVisitInfo = rtExposure.getInfo().getVisitInfo()
+        self.assertEqual(rtVisitInfo.getWeather(), weather)
+        self.assertEqual(rtExposure.getCalib(), calib)
+        self.assertEqual(rtExposure.getFilter(), gFilter)
+
     def testSetMembers(self):
         """
         Test that the MaskedImage and the WCS of an Exposure can be set.
@@ -209,19 +285,19 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         # Test the Calib member.  The Calib tests are in color.py, here we just check that it's in Exposure
         #
         calib = exposure.getCalib()
-        dt = 10
-        calib.setExptime(dt)
-        self.assertEqual(exposure.getCalib().getExptime(), dt)
+        fluxMag0, FluxMag0Err = 1.1e12, 2.2e10
+        calib.setFluxMag0(fluxMag0, FluxMag0Err)
+        self.assertEqual(exposure.getCalib().getFluxMag0(), (fluxMag0, FluxMag0Err))
         #
         # now check that we can set Calib
         #
         calib = afwImage.Calib()
-        dt = 666
-        calib.setExptime(dt)
+        fluxMag0_2, fluxMag0Err_2 = (511.1, 44.4)
+        calib.setFluxMag0(fluxMag0_2, fluxMag0Err_2)
 
         exposure.setCalib(calib)
 
-        self.assertEqual(exposure.getCalib().getExptime(), dt)
+        self.assertEqual(exposure.getCalib().getFluxMag0(), (fluxMag0_2, fluxMag0Err_2))
         #
         # Psfs next
         #
@@ -325,9 +401,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         mainExposure.setPsf(self.psf)
 
         # Make sure we can write without an exception
-        mainExposure.getCalib().setExptime(10)
-        mainExposure.getCalib().setMidTime(dafBase.DateTime())
-        midMjd = mainExposure.getCalib().getMidTime().get()
         fluxMag0, fluxMag0Err = 1e12, 1e10
         mainExposure.getCalib().setFluxMag0(fluxMag0, fluxMag0Err)
 
@@ -349,8 +422,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             #
             self.assertEqual(mainExposure.getFilter().getName(), readExposure.getFilter().getName())
 
-            self.assertEqual(mainExposure.getCalib().getExptime(), readExposure.getCalib().getExptime())
-            self.assertEqual(midMjd, readExposure.getCalib().getMidTime().get())
             self.assertEqual((fluxMag0, fluxMag0Err), readExposure.getCalib().getFluxMag0())
 
             psf = readExposure.getPsf()
@@ -389,7 +460,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(e1.getFilter().getName(), e2.getFilter().getName())
         xy = afwGeom.Point2D(0, 0)
         self.assertEqual(e1.getWcs().pixelToSky(xy)[0], e2.getWcs().pixelToSky(xy)[0])
-        self.assertEqual(e1.getCalib().getExptime(), e2.getCalib().getExptime())
+        self.assertEqual(e1.getCalib(), e2.getCalib())
         # check PSF identity
         if not e1.getPsf():
             self.assertFalse(e2.getPsf())
@@ -405,7 +476,6 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureU.setWcs(self.wcs)
         exposureU.setDetector(self.detector)
         exposureU.setFilter(afwImage.Filter("g"))
-        exposureU.getCalib().setExptime(666)
         exposureU.setPsf(DummyPsf(4.0))
 
         exposureF = exposureU.convertF()
@@ -439,11 +509,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         miCopy.getVariance().set(175)
 
         self.assertFloatsAlmostEqual(miCopy.getImage().getArray(), -50)
-        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertTrue(np.all(miCopy.getMask().getArray() == 2))
         self.assertFloatsAlmostEqual(miCopy.getVariance().getArray(), 175)
 
         self.assertFloatsAlmostEqual(mi.getImage().getArray(), 100)
-        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
+        self.assertTrue(np.all(mi.getMask().getArray() == 5))
         self.assertFloatsAlmostEqual(mi.getVariance().getArray(), 200)
 
     def testDeepCopySubData(self):
@@ -463,11 +533,11 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         miCopy.getVariance().set(175)
 
         self.assertFloatsAlmostEqual(miCopy.getImage().getArray(), -50)
-        self.assertTrue(numpy.all(miCopy.getMask().getArray() == 2))
+        self.assertTrue(np.all(miCopy.getMask().getArray() == 2))
         self.assertFloatsAlmostEqual(miCopy.getVariance().getArray(), 175)
 
         self.assertFloatsAlmostEqual(mi.getImage().getArray(), 100)
-        self.assertTrue(numpy.all(mi.getMask().getArray() == 5))
+        self.assertTrue(np.all(mi.getMask().getArray() == 5))
         self.assertFloatsAlmostEqual(mi.getVariance().getArray(), 200)
 
     def testDeepCopyMetadata(self):
@@ -533,7 +603,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
             wcs = afwImage.makeWcs(md, True)
             self.assertEqual(wcs.getPixelOrigin(), self.wcs.getPixelOrigin())
             self.assertEqual(wcs.getSkyOrigin(), self.wcs.getSkyOrigin())
-            self.assertTrue(numpy.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
+            self.assertTrue(np.all(wcs.getCDMatrix() == self.wcs.getCDMatrix()))
             frazzle = md.get("FRAZZLE")
             self.assertTrue(frazzle)
 

@@ -37,6 +37,7 @@ namespace image {
 class Wcs;
 class Calib;
 class ApCorrMap;
+class VisitInfo;
 } // namespace image
 
 namespace detection {
@@ -118,6 +119,9 @@ public:
 
     CONST_PTR(geom::polygon::Polygon) getValidPolygon() const { return _validPolygon; }
     void setValidPolygon(CONST_PTR(geom::polygon::Polygon) polygon) { _validPolygon = polygon; }
+
+    CONST_PTR(image::VisitInfo) getVisitInfo() const { return _visitInfo; }
+    void setVisitInfo(CONST_PTR(image::VisitInfo) visitInfo) { _visitInfo = visitInfo; }
     //@}
 
 protected:
@@ -132,6 +136,7 @@ private:
     CONST_PTR(image::Calib) _calib;
     CONST_PTR(image::ApCorrMap) _apCorrMap;
     CONST_PTR(geom::polygon::Polygon) _validPolygon;
+    CONST_PTR(image::VisitInfo) _visitInfo;
 };
 
 /**

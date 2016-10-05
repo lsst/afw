@@ -1,6 +1,6 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 import unittest
+
 import lsst.utils.tests
 import lsst.afw.detection as afwDet
 import lsst.afw.image as afwImage
@@ -14,9 +14,6 @@ class SourceHeavyFootprintTestCase(unittest.TestCase):
         im = afwImage.ImageF(100, 100)
         im += 42.
         fp = afwDet.Footprint(afwGeom.Point2I(50, 50), 10.)
-        #seed = 42
-        #rand = afwMath.Random(afwMath.Random.MT19937, seed)
-        #afwMath.randomGaussianImage(im, rand)
         mi = afwImage.MaskedImageF(im)
         # set a mask bit before grabbing the heavyfootprint
         mi.getMask().set(50, 50, 1)

@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from __future__ import print_function
-from builtins import zip
-from builtins import str
-from builtins import range
-from builtins import object
-
 #
 # LSST Data Management System
 # Copyright 2008-2015 LSST Corporation.
@@ -38,11 +30,18 @@ or
    >>> import footprint1; footprint1.run()
 """
 
+from __future__ import absolute_import, division, print_function
 import math
 import sys
 import unittest
 import os
-import numpy
+
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+import numpy as np
+
 import lsst.utils.tests
 import lsst.afw.geom as afwGeom
 import lsst.afw.geom.ellipses as afwGeomEllipses
@@ -60,6 +59,7 @@ except NameError:
     display = False
 
 testPath = os.path.abspath(os.path.dirname(__file__))
+
 
 def toString(*args):
     """toString written in python"""
@@ -92,8 +92,6 @@ class Object(object):
                 return False
 
         return True
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class SpanTestCase(unittest.TestCase):
@@ -758,7 +756,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         subSource = imSource.Factory(imSource, fpSource.getBBox())
         subTarget = imTarget.Factory(imTarget, fpTarget.getBBox())
-        self.assertTrue(numpy.all(subSource.getArray() == subTarget.getArray()))
+        self.assertTrue(np.all(subSource.getArray() == subTarget.getArray()))
 
         # make a bbox smaller than the target footprint
         bbox2 = afwGeom.Box2I(fpTarget.getBBox())
@@ -797,8 +795,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(da[5, 3], 503)
         self.assertEqual(da[5, 4], 504)
         self.assertEqual(da[5, 5], 0)
-        self.assertTrue(numpy.all(da[:4, :] == 0))
-        self.assertTrue(numpy.all(da[6:, :] == 0))
+        self.assertTrue(np.all(da[:4, :] == 0))
+        self.assertTrue(np.all(da[6:, :] == 0))
 
     def testCopyWithinFootprintOutside(self):
         """Copy a footprint that is larger than the image"""
@@ -816,10 +814,10 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         afwDetect.copyWithinFootprintImage(foot, source, subTarget)
 
-        expected = numpy.zeros((100, 100))
+        expected = np.zeros((100, 100))
         expected[50, 50:55] = 1.0
 
-        self.assertTrue(numpy.all(target.getArray() == expected))
+        self.assertTrue(np.all(target.getArray() == expected))
 
     def testCopyWithinFootprintMaskedImage(self):
         W, H = 10, 10
@@ -855,8 +853,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(da[5, 3], 503)
         self.assertEqual(da[5, 4], 504)
         self.assertEqual(da[5, 5], 0)
-        self.assertTrue(numpy.all(da[:4, :] == 0))
-        self.assertTrue(numpy.all(da[6:, :] == 0))
+        self.assertTrue(np.all(da[:4, :] == 0))
+        self.assertTrue(np.all(da[6:, :] == 0))
 
         self.assertEqual(dv[4, 2], 0)
         self.assertEqual(dv[4, 3], 304)
@@ -869,15 +867,15 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(dv[5, 3], 305)
         self.assertEqual(dv[5, 4], 405)
         self.assertEqual(dv[5, 5], 0)
-        self.assertTrue(numpy.all(dv[:4, :] == 0))
-        self.assertTrue(numpy.all(dv[6:, :] == 0))
+        self.assertTrue(np.all(dv[:4, :] == 0))
+        self.assertTrue(np.all(dv[6:, :] == 0))
 
-        self.assertTrue(numpy.all(dm[4, 3:7] == 1))
-        self.assertTrue(numpy.all(dm[5, 2:5] == 1))
-        self.assertTrue(numpy.all(dm[:4, :] == 0))
-        self.assertTrue(numpy.all(dm[6:, :] == 0))
-        self.assertTrue(numpy.all(dm[4, :3] == 0))
-        self.assertTrue(numpy.all(dm[4, 7:] == 0))
+        self.assertTrue(np.all(dm[4, 3:7] == 1))
+        self.assertTrue(np.all(dm[5, 2:5] == 1))
+        self.assertTrue(np.all(dm[:4, :] == 0))
+        self.assertTrue(np.all(dm[6:, :] == 0))
+        self.assertTrue(np.all(dm[4, :3] == 0))
+        self.assertTrue(np.all(dm[4, 7:] == 0))
 
     def testMergeFootprints(self):
         f1 = self.foot
@@ -932,11 +930,11 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
             a2 = ims[1].getArray()
             # Slightly looser tests to start...
             # Every pixel in f1 is in f[AB]
-            self.assertTrue(numpy.all(m.flat[numpy.flatnonzero(a1)] == 1))
+            self.assertTrue(np.all(m.flat[np.flatnonzero(a1)] == 1))
             # Every pixel in f2 is in f[AB]
-            self.assertTrue(numpy.all(m.flat[numpy.flatnonzero(a2)] == 1))
+            self.assertTrue(np.all(m.flat[np.flatnonzero(a2)] == 1))
             # merged == a1 | a2.
-            self.assertTrue(numpy.all(m == numpy.maximum(a1, a2)))
+            self.assertTrue(np.all(m == np.maximum(a1, a2)))
 
         if False:
             import matplotlib
@@ -991,7 +989,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
-        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+        self.assertTrue(np.all(img.getArray()[source.getArray() == 0] == 0))
 
         if plots:
             plt.clf()
@@ -1010,7 +1008,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
 
         img = afwImage.ImageU(bb)
         foot.insertIntoImage(img, 1)
-        self.assertTrue(numpy.all(img.getArray()[source.getArray() == 0] == 0))
+        self.assertTrue(np.all(img.getArray()[source.getArray() == 0] == 0))
 
         if plots:
             plt.clf()
@@ -1057,7 +1055,7 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         mask123 = afwImage.MaskU(region)
         afwDetect.setMaskFromFootprint(maskChildren, childOnly, 1)
         afwDetect.setMaskFromFootprint(mask123, merge123, 1)
-        self.assertTrue(numpy.all(maskChildren.getArray() == mask123.getArray()))
+        self.assertTrue(np.all(maskChildren.getArray() == mask123.getArray()))
 
     def checkEdge(self, footprint):
         """Check that Footprint::findEdgePixels() works"""
@@ -1087,9 +1085,9 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         result.set(0)
         afwMath.convolve(result, image, afwMath.FixedKernel(kernel), afwMath.ConvolutionControl(False))
         result.getArray().__imul__(image.getArray())
-        trueEdges = numpy.where(result.getArray() > 0, 1, 0)
+        trueEdges = np.where(result.getArray() > 0, 1, 0)
 
-        self.assertTrue(numpy.all(trueEdges == edgeImage.getArray()))
+        self.assertTrue(np.all(trueEdges == edgeImage.getArray()))
 
     def testEdge(self):
         """Test for Footprint::findEdgePixels()"""
@@ -1106,10 +1104,8 @@ class FootprintTestCase(lsst.utils.tests.TestCase):
         self.checkEdge(foot)
 
         # This footprint came from a very large Footprint in a deep HSC coadd patch
-        self.checkEdge(afwDetect.Footprint.readFits(os.path.join(testPath,"testFootprintEdge.fits")))
+        self.checkEdge(afwDetect.Footprint.readFits(os.path.join(testPath, "testFootprintEdge.fits")))
 
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 class FootprintSetTestCase(unittest.TestCase):
     """A test case for FootprintSet"""
@@ -1259,8 +1255,6 @@ class FootprintSetTestCase(unittest.TestCase):
 
         self.assertEqual(len(foot.getPeaks()), 5)
 
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
 
 class MaskFootprintSetTestCase(unittest.TestCase):
     """A test case for generating FootprintSet from Masks"""
@@ -1304,8 +1298,6 @@ class MaskFootprintSetTestCase(unittest.TestCase):
             if o.val & level:
                 self.assertEqual(o, objects[i])
                 i += 1
-
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 class NaNFootprintSetTestCase(unittest.TestCase):

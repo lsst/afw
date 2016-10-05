@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-from __future__ import absolute_import, division
-from builtins import object
 #
 # LSST Data Management System
 # Copyright 2015 LSST Corporation.
@@ -25,7 +22,10 @@ from builtins import object
 """
 Tests for lsst.afw.cameraGeom.Detector
 """
+from __future__ import absolute_import, division, print_function
 import unittest
+
+from builtins import object
 
 import lsst.utils.tests
 import lsst.pex.exceptions
@@ -127,6 +127,7 @@ class FitsUtilsTestCase(unittest.TestCase):
 
 class TestMemory(lsst.utils.tests.MemoryTestCase):
     pass
+
 
 def setup_module(module):
     lsst.utils.tests.init()
