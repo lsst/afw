@@ -76,9 +76,9 @@ PYBIND11_PLUGIN(_coord) {
     });
 
     /* Members */
-    clsCoord.def("clone", &Coord::clone);
     clsCoord.def("reset", (void (Coord::*)(lsst::afw::geom::Angle const, lsst::afw::geom::Angle const)) &Coord::reset);
     clsCoord.def("reset", (void (Coord::*)(lsst::afw::geom::Angle const, lsst::afw::geom::Angle const, double const)) &Coord::reset);
+    clsCoord.def("clone", &Coord::clone);
     clsCoord.def("getEpoch", &Coord::getEpoch);
     clsCoord.def("getPosition", &Coord::getPosition,
         py::arg("unit") = lsst::afw::geom::degrees);
@@ -122,7 +122,8 @@ PYBIND11_PLUGIN(_coord) {
     clsIcrsCoord.def("clone", &IcrsCoord::clone);
     clsIcrsCoord.def("getClassName", &IcrsCoord::getClassName);
     clsIcrsCoord.def("getCoordSystem", &IcrsCoord::getCoordSystem);
-    clsIcrsCoord.def("reset", &IcrsCoord::reset);
+    clsIcrsCoord.def("reset", (void (IcrsCoord::*)(lsst::afw::geom::Angle const, lsst::afw::geom::Angle const)) &IcrsCoord::reset);
+    clsIcrsCoord.def("reset", (void (IcrsCoord::*)(lsst::afw::geom::Angle const, lsst::afw::geom::Angle const, double const)) &IcrsCoord::reset);
     clsIcrsCoord.def("getRa", &IcrsCoord::getRa);
     clsIcrsCoord.def("getDec", &IcrsCoord::getDec);
     clsIcrsCoord.def("getRaStr", &IcrsCoord::getRaStr);
@@ -178,7 +179,8 @@ PYBIND11_PLUGIN(_coord) {
     clsGalacticCoord.def("clone", &GalacticCoord::clone);
     clsGalacticCoord.def("getClassName", &GalacticCoord::getClassName);
     clsGalacticCoord.def("getCoordSystem", &GalacticCoord::getCoordSystem);
-    clsGalacticCoord.def("reset", &GalacticCoord::reset);
+    clsGalacticCoord.def("reset", (void (GalacticCoord::*)(lsst::afw::geom::Angle const, lsst::afw::geom::Angle const)) &GalacticCoord::reset);
+    clsGalacticCoord.def("reset", (void (GalacticCoord::*)(lsst::afw::geom::Angle const, lsst::afw::geom::Angle const, double const)) &GalacticCoord::reset);
     clsGalacticCoord.def("getCoordNames", &GalacticCoord::getCoordNames);
     clsGalacticCoord.def("getL", &GalacticCoord::getL);
     clsGalacticCoord.def("getB", &GalacticCoord::getB);
