@@ -2,4 +2,12 @@
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['quadrupole',
                                   'ellipse',
-                                  'baseCore'])
+                                  'pixelRegion',
+                                  'baseCore',
+                                  'axes',
+                                  'radii',
+                                  'ellipticityBase',
+                                  'distortion',
+                                  'conformalShear',
+                                  'reducedShear',
+                                  'separable'])

@@ -22,10 +22,12 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-#include <pybind11/stl.h>
+//#include <pybind11/stl.h>
 
 #include "lsst/pex/exceptions/Exception.h"
+#include "lsst/pex/exceptions/Runtime.h"
 #include "lsst/pex/exceptions/python/Exception.h"
+
 #include "lsst/afw/fits.h"
 
 namespace py = pybind11;
@@ -35,21 +37,30 @@ using namespace lsst::afw::fits;
 PYBIND11_PLUGIN(_fits) {
     py::module mod("_fits", "Python wrapper for afw _fits library");
 
-    /* Module level */
-    py::register_exception<FitsError>(mod, "FitsError");
-    py::register_exception<FitsTypeError>(mod, "FitsTypeError");
     py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
+
+    lsst::pex::exceptions::python::declareException<FitsError, lsst::pex::exceptions::IoError>(mod, "FitsError", "IoError");
+//    lsst::pex::exceptions::python::declareException<FitsTypeError, FitsError>(mod, "FitsTypeError", "FitsError");
+
+    clsMemFileManager.def(py::init<>());
+    clsMemFileManager.def(py::init<size_t>());
+
+    /* TODO: We should really revisit persistence and pickling as this is quite ugly.
+     * But it is what Swig did (sort of, it used the cdata.i extension), so I reckon this
+     * is cleaner because it does not expose casting to the Python side. */
+    clsMemFileManager.def("getLength", &MemFileManager::getLength);
+    clsMemFileManager.def("getData", [](MemFileManager & m) { return py::bytes(static_cast<char *>(m.getData()), m.getLength()); });
+    clsMemFileManager.def("setData", [](MemFileManager & m, py::bytes const & d, size_t size) { memcpy(m.getData(), PyBytes_AsString(d.ptr()), size); });
+
+    /* Module level */
 
     /* Member types and enums */
 
     /* Constructors */
-    clsMemFileManager.def(py::init<>());
 
     /* Operators */
 
     /* Members */
-    clsMemFileManager.def("getData", &MemFileManager::getData);
-    clsMemFileManager.def("getLength", &MemFileManager::getLength);
 
     return mod.ptr();
 }
