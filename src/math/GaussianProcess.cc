@@ -116,14 +116,14 @@ void KdTree < T > ::Initialize(ndarray::Array < T,2,2 >  const &dt)
 {
     int i;
 
-    _pts = dt.template getSize < 0 > ();
+    _npts = dt.template getSize < 0 > ();
     _dimensions = dt.template getSize < 1 > ();
 
     //a buffer to use when first building the tree
-    _inn = allocate(ndarray::makeVector(_pts));
+    _inn = allocate(ndarray::makeVector(_npts));
 
     _roomStep = 5000;
-    _room = _pts;
+    _room = _npts;
 
     _data = allocate(ndarray::makeVector(_room,_dimensions));
 
@@ -131,11 +131,11 @@ void KdTree < T > ::Initialize(ndarray::Array < T,2,2 >  const &dt)
 
     _tree = allocate(ndarray::makeVector(_room,4));
 
-    for (i = 0 ; i < _pts ; i++ ) {
+    for (i = 0 ; i < _npts ; i++ ) {
       _inn[i] = i;
     }
 
-    _organize(_inn,_pts, -1, -1);
+    _organize(_inn,_npts, -1, -1);
 
 
     i = _testTree();
@@ -153,7 +153,7 @@ void KdTree < T > ::findNeighbors(ndarray::Array < int,1,1 >  neighdex,
                                   int n_nn) const
 {
 
-    if(n_nn > _pts){
+    if(n_nn > _npts){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for more neighbors than kd tree contains\n");
     }
@@ -204,7 +204,7 @@ void KdTree < T > ::findNeighbors(ndarray::Array < int,1,1 >  neighdex,
 template  < typename T >
 T KdTree < T > ::getData(int ipt, int idim) const
 {
-    if(ipt >= _pts || ipt < 0){
+    if(ipt >= _npts || ipt < 0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for point that does not exist in KdTree\n");
     }
@@ -220,7 +220,7 @@ T KdTree < T > ::getData(int ipt, int idim) const
 template  < typename T >
 ndarray::Array < T,1,1 >  KdTree < T > ::getData(int ipt) const
 {
-    if(ipt >= _pts || ipt<0){
+    if(ipt >= _npts || ipt<0){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for point that does not exist in KdTree\n");
     }
@@ -243,10 +243,10 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
     dim = _tree[node][DIMENSION] + 1;
     if(dim == _dimensions)dim = 0;
 
-    if(_pts == _room){
+    if(_npts == _room){
 
-        ndarray::Array < T,2,2 >  dbuff = allocate(ndarray::makeVector(_pts, _dimensions));
-        ndarray::Array < int,2,2 >  tbuff = allocate(ndarray::makeVector(_pts, 4));
+        ndarray::Array < T,2,2 >  dbuff = allocate(ndarray::makeVector(_npts, _dimensions));
+        ndarray::Array < int,2,2 >  tbuff = allocate(ndarray::makeVector(_npts, 4));
 
         dbuff.deep() = _data;
         tbuff.deep() = _tree;
@@ -257,14 +257,14 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
         _data = allocate(ndarray::makeVector(_room, _dimensions));
 
 
-        for (i = 0; i < _pts; i++ ) {
+        for (i = 0; i < _npts; i++ ) {
             for (j = 0; j < _dimensions; j++ ) _data[i][j] = dbuff[i][j];
             for (j = 0; j < 4; j++ ) _tree[i][j] = tbuff[i][j];
         }
     }
 
-    _tree[_pts][DIMENSION] = dim;
-    _tree[_pts][PARENT] = node;
+    _tree[_npts][DIMENSION] = dim;
+    _tree[_npts][PARENT] = node;
     i = _tree[node][DIMENSION];
 
     if(_data[node][i] > v[i]){
@@ -272,7 +272,7 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
             "Trying to add to KdTree in a node that is already occupied\n");
         }
-        _tree[node][LT] = _pts;
+        _tree[node][LT] = _npts;
         dir=LT;
     }
     else{
@@ -280,19 +280,19 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
             throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
             "Trying to add to KdTree in a node that is already occupied\n");
         }
-        _tree[node][GEQ] = _pts;
+        _tree[node][GEQ] = _npts;
         dir=GEQ;
     }
-    _tree[_pts][LT] =  -1;
-    _tree[_pts][GEQ] =  -1;
+    _tree[_npts][LT] =  -1;
+    _tree[_npts][GEQ] =  -1;
     for (i = 0; i < _dimensions; i++ ) {
-        _data[_pts][i] = v[i];
+        _data[_npts][i] = v[i];
     }
 
-    _pts++;
+    _npts++;
 
 
-    i = _walkUpTree(_tree[_pts-1][PARENT], dir, _pts-1);
+    i = _walkUpTree(_tree[_npts-1][PARENT], dir, _npts-1);
     if (i != _masterParent){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
         "Adding to KdTree failed\n");
@@ -303,14 +303,14 @@ void KdTree < T > ::addPoint(ndarray::Array < const T,1,1 >  const &v)
 template  < typename T >
 int KdTree < T > ::getNPoints() const
 {
-    return _pts;
+    return _npts;
 }
 
 template  < typename T >
 void KdTree < T > ::getTreeNode(ndarray::Array < int,1,1 >  const &v,
                                 int dex) const
 {
-    if(dex < 0 || dex >= _pts){
+    if(dex < 0 || dex >= _npts){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "Asked for tree information on point that does not exist\n");
     }
@@ -329,7 +329,7 @@ void KdTree < T > ::getTreeNode(ndarray::Array < int,1,1 >  const &v,
 template  < typename T >
 int KdTree < T > ::_testTree() const{
 
-    if(_pts == 1 && _tree[0][PARENT] < 0 && _masterParent==0){
+    if(_npts == 1 && _tree[0][PARENT] < 0 && _masterParent==0){
         // there is only one point in the tree
         return 1;
     }
@@ -339,10 +339,10 @@ int KdTree < T > ::_testTree() const{
 
     output=1;
 
-    for (i = 0; i < _pts; i++ ) isparent.push_back(0);
+    for (i = 0; i < _npts; i++ ) isparent.push_back(0);
 
     j = 0;
-    for (i = 0; i < _pts; i++ ) {
+    for (i = 0; i < _npts; i++ ) {
         if(_tree[i][PARENT] < 0)j++;
     }
     if(j != 1){
@@ -350,13 +350,13 @@ int KdTree < T > ::_testTree() const{
         return 0;
     }
 
-    for (i = 0; i < _pts; i++ ) {
+    for (i = 0; i < _npts; i++ ) {
         if(_tree[i][PARENT] >= 0){
             isparent[_tree[i][PARENT]]++;
         }
     }
 
-    for (i = 0; i < _pts; i++ ) {
+    for (i = 0; i < _npts; i++ ) {
         if(isparent[i] > 2){
             std::cout << "_tree FAILURE " << i << " is parent to " << isparent[i] << "\n";
             return 0;
@@ -364,7 +364,7 @@ int KdTree < T > ::_testTree() const{
     }
 
 
-    for (i = 0; i < _pts; i++ ) {
+    for (i = 0; i < _npts; i++ ) {
         if(_tree[i][PARENT] >= 0) {
             if(_tree[_tree[i][PARENT]][LT] == i)j = LT;
             else j = GEQ;
@@ -630,12 +630,12 @@ template  < typename T >
 void KdTree < T > ::removePoint(int target)
 {
 
-    if(target < 0 || target >= _pts){
+    if(target < 0 || target >= _npts){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You are trying to remove a point that doesn't exist from KdTree\n");
     }
 
-    if(_pts==1){
+    if(_npts==1){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "There is only one point left in this KdTree.  You cannot call removePoint\n");
     }
@@ -712,14 +712,14 @@ void KdTree < T > ::removePoint(int target)
          _descend(root);
     }//if both sides are populated
 
-    if(target < _pts - 1){
-         for(i = target + 1;i < _pts;i++ ){
+    if(target < _npts - 1){
+         for(i = target + 1;i < _npts;i++ ){
              for(j = 0; j < 4; j++ ) _tree[i - 1][j] = _tree[i][j];
 
              for(j = 0; j < _dimensions; j++ ) _data[i - 1][j] = _data[i][j];
         }
 
-        for(i = 0; i < _pts; i++ ){
+        for(i = 0; i < _npts; i++ ){
             for(j = 1; j < 4; j++ ){
                 if(_tree[i][j] > target) _tree[i][j]--;
              }
@@ -727,7 +727,7 @@ void KdTree < T > ::removePoint(int target)
 
         if(_masterParent > target)_masterParent-- ;
     }
-    _pts--;
+    _npts--;
 
     i = _testTree();
     if (i == 0) {
@@ -817,21 +817,21 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _covariogram = covarIn;
 
-    _pts = dataIn.template getSize < 0 > ();
+    _npts = dataIn.template getSize < 0 > ();
     _dimensions = dataIn.template getSize < 1 > ();
 
-    _room = _pts;
+    _room = _npts;
     _roomStep = 5000;
 
     _nFunctions = 1;
-    _function = allocate(ndarray::makeVector(_pts,1));
+    _function = allocate(ndarray::makeVector(_npts,1));
 
-    if(ff.getNumElements() != _pts){
+    if(ff.getNumElements() != _npts){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
 
-    for(i = 0; i < _pts; i++ ) _function[i][0] = ff[i];
+    for(i = 0; i < _npts; i++ ) _function[i][0] = ff[i];
 
     _krigingParameter = T(1.0);
     _lambda = T(1.0e-5);
@@ -841,7 +841,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _kdTree.Initialize(dataIn);
 
-    _pts = _kdTree.getNPoints();
+    _npts = _kdTree.getNPoints();
 
 }
 
@@ -859,12 +859,12 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _covariogram = covarIn;
 
-    _pts = dataIn.template getSize < 0 > ();
+    _npts = dataIn.template getSize < 0 > ();
     _dimensions = dataIn.template getSize < 1 > ();
-    _room = _pts;
+    _room = _npts;
     _roomStep = 5000;
 
-    if(ff.getNumElements() != _pts){
+    if(ff.getNumElements() != _npts){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
@@ -884,8 +884,8 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     _max.deep() = mx;
     _min.deep() = mn;
     _useMaxMin = 1;
-    normalizedData = allocate(ndarray::makeVector(_pts, _dimensions));
-    for(i = 0; i < _pts; i++ ) {
+    normalizedData = allocate(ndarray::makeVector(_npts, _dimensions));
+    for(i = 0; i < _npts; i++ ) {
         for(j = 0; j < _dimensions; j++ ) {
             normalizedData[i][j] = (dataIn[i][j] - _min[j])/(_max[j] - _min[j]);
             //note the normalization by _max - _min in each dimension
@@ -894,10 +894,10 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _kdTree.Initialize(normalizedData);
 
-    _pts = _kdTree.getNPoints();
+    _npts = _kdTree.getNPoints();
     _nFunctions = 1;
-    _function = allocate(ndarray::makeVector(_pts, 1));
-    for(i = 0; i < _pts; i++ )_function[i][0] = ff[i];
+    _function = allocate(ndarray::makeVector(_npts, 1));
+    for(i = 0; i < _npts; i++ )_function[i][0] = ff[i];
 }
 
 template  < typename T >
@@ -908,19 +908,19 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _covariogram = covarIn;
 
-    _pts = dataIn.template getSize < 0 > ();
+    _npts = dataIn.template getSize < 0 > ();
     _dimensions = dataIn.template getSize < 1 > ();
 
-    _room = _pts;
+    _room = _npts;
     _roomStep = 5000;
 
-    if(ff.template getSize < 0 > () != _pts){
+    if(ff.template getSize < 0 > () != _npts){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
 
     _nFunctions = ff.template getSize < 1 > ();
-    _function = allocate(ndarray::makeVector(_pts, _nFunctions));
+    _function = allocate(ndarray::makeVector(_npts, _nFunctions));
     _function.deep() = ff;
 
     _krigingParameter = T(1.0);
@@ -931,7 +931,7 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _kdTree.Initialize(dataIn);
 
-    _pts = _kdTree.getNPoints();
+    _npts = _kdTree.getNPoints();
 }
 
 template  < typename T >
@@ -948,13 +948,13 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
 
     _covariogram = covarIn;
 
-    _pts = dataIn.template getSize < 0 > ();
+    _npts = dataIn.template getSize < 0 > ();
     _dimensions = dataIn.template getSize < 1 > ();
 
-    _room = _pts;
+    _room = _npts;
     _roomStep = 5000;
 
-    if(ff.template getSize < 0 > () != _pts){
+    if(ff.template getSize < 0 > () != _npts){
         throw LSST_EXCEPT(lsst::pex::exceptions::RuntimeError,
                           "You did not pass in the same number of data points as function values\n");
     }
@@ -974,8 +974,8 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     _max.deep() = mx;
     _min.deep() = mn;
     _useMaxMin = 1;
-    normalizedData = allocate(ndarray::makeVector(_pts,_dimensions));
-    for(i = 0; i < _pts; i++ ) {
+    normalizedData = allocate(ndarray::makeVector(_npts,_dimensions));
+    for(i = 0; i < _npts; i++ ) {
         for(j = 0; j < _dimensions; j++ ) {
             normalizedData[i][j] = (dataIn[i][j] - _min[j])/(_max[j] - _min[j]);
             //note the normalization by _max - _min in each dimension
@@ -983,16 +983,16 @@ GaussianProcess < T > ::GaussianProcess(ndarray::Array < T,2,2 >  const &dataIn,
     }
 
     _kdTree.Initialize(normalizedData);
-    _pts = _kdTree.getNPoints();
+    _npts = _kdTree.getNPoints();
     _nFunctions = ff.template getSize < 1 > ();
-    _function = allocate(ndarray::makeVector(_pts, _nFunctions));
+    _function = allocate(ndarray::makeVector(_npts, _nFunctions));
     _function.deep() = ff;
 }
 
 
 template < typename T >
 int GaussianProcess < T > ::getNPoints() const{
-    return _pts;
+    return _npts;
 }
 
 
@@ -1646,16 +1646,16 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
 
 
     v1 = allocate(ndarray::makeVector(_dimensions));
-    batchbb.resize(_pts, 1);
-    batchxx.resize(_pts, 1);
-    batchCovariance.resize(_pts, _pts);
-    queryCovariance.resize(_pts, 1);
+    batchbb.resize(_npts, 1);
+    batchxx.resize(_npts, 1);
+    batchCovariance.resize(_npts, _npts);
+    queryCovariance.resize(_npts, 1);
 
 
-    for(i = 0; i < _pts; i++ ) {
+    for(i = 0; i < _npts; i++ ) {
 
         batchCovariance(i, i) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(i)) + _lambda;
-        for(j = i + 1; j < _pts; j++ ) {
+        for(j = i + 1; j < _npts; j++ ) {
             batchCovariance(i, j) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(j));
             batchCovariance(j, i) = batchCovariance(i, j);
         }
@@ -1665,12 +1665,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
     ldlt.compute(batchCovariance);
 
     fbar = 0.0;
-    for(i = 0; i < _pts; i++ ) {
+    for(i = 0; i < _npts; i++ ) {
         fbar += _function[i][0];
     }
-    fbar = fbar/T(_pts);
+    fbar = fbar/T(_npts);
 
-    for(i = 0; i < _pts; i++ ){
+    for(i = 0; i < _npts; i++ ){
         batchbb(i, 0) = _function[i][0] - fbar;
     }
     batchxx = ldlt.solve(batchbb);
@@ -1683,7 +1683,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
             for(i = 0; i < _dimensions; i++ )v1[i] = (v1[i] - _min[i])/(_max[i] - _min[i]);
         }
         mu(ii) = fbar;
-        for(i = 0; i < _pts; i++ ){
+        for(i = 0; i < _npts; i++ ){
             mu(ii) += batchxx(i)*(*_covariogram)(v1, _kdTree.getData(i));
         }
     }
@@ -1695,7 +1695,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
             for(i = 0; i < _dimensions; i++ )v1[i] = (v1[i] - _min[i])/(_max[i] - _min[i]);
         }
 
-        for(i = 0; i < _pts; i++ ) {
+        for(i = 0; i < _npts; i++ ) {
             batchbb(i, 0) = (*_covariogram)(v1, _kdTree.getData(i));
             queryCovariance(i, 0) = batchbb(i, 0);
         }
@@ -1703,7 +1703,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
 
         variance[ii] = (*_covariogram)(v1, v1) + _lambda;
 
-        for(i = 0; i < _pts; i++ ){
+        for(i = 0; i < _npts; i++ ){
             variance[ii] -= queryCovariance(i, 0)*batchxx(i);
         }
 
@@ -1753,14 +1753,14 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
     _timer.start();
 
     v1 = allocate(ndarray::makeVector(_dimensions));
-    batchbb.resize(_pts, 1);
-    batchxx.resize(_pts, 1);
-    batchCovariance.resize(_pts, _pts);
-    queryCovariance.resize(_pts, 1);
+    batchbb.resize(_npts, 1);
+    batchxx.resize(_npts, 1);
+    batchCovariance.resize(_npts, _npts);
+    queryCovariance.resize(_npts, 1);
 
-    for(i = 0; i < _pts; i++ ){
+    for(i = 0; i < _npts; i++ ){
         batchCovariance(i, i) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(i)) + _lambda;
-        for(j = i + 1; j < _pts; j++ ) {
+        for(j = i + 1; j < _npts; j++ ) {
             batchCovariance(i, j) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(j));
             batchCovariance(j, i) = batchCovariance(i, j);
         }
@@ -1775,13 +1775,13 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
     for(ifn = 0; ifn < _nFunctions; ifn++ ) {
 
         fbar = 0.0;
-        for(i = 0; i < _pts; i++ ){
+        for(i = 0; i < _npts; i++ ){
             fbar += _function[i][ifn];
         }
-        fbar = fbar/T(_pts);
+        fbar = fbar/T(_npts);
         _timer.addToIteration();
 
-        for(i = 0; i < _pts; i++ ){
+        for(i = 0; i < _npts; i++ ){
             batchbb(i,0) = _function[i][ifn] - fbar;
         }
         batchxx = ldlt.solve(batchbb);
@@ -1794,7 +1794,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
                 for(i = 0; i < _dimensions; i++ ) v1[i] = (v1[i] - _min[i])/(_max[i] - _min[i]);
             }
             mu[ii][ifn] = fbar;
-            for(i = 0; i < _pts; i++ ){
+            for(i = 0; i < _npts; i++ ){
                 mu[ii][ifn] += batchxx(i)*(*_covariogram)(v1, _kdTree.getData(i));
             }
         }
@@ -1808,7 +1808,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
             for(i = 0; i < _dimensions; i++ ) v1[i] = (v1[i] - _min[i])/(_max[i] - _min[i]);
         }
 
-        for(i = 0;i < _pts;i++ ) {
+        for(i = 0;i < _npts;i++ ) {
             batchbb(i,0) = (*_covariogram)(v1,_kdTree.getData(i));
             queryCovariance(i,0) = batchbb(i,0);
         }
@@ -1816,7 +1816,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
 
         variance[ii][0] = (*_covariogram)(v1, v1) + _lambda;
 
-        for(i = 0; i < _pts; i++ ) {
+        for(i = 0; i < _npts; i++ ) {
               variance[ii][0] -= queryCovariance(i, 0)*batchxx(i);
         }
 
@@ -1866,15 +1866,15 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
 
     v1 = allocate(ndarray::makeVector(_dimensions));
 
-    batchbb.resize(_pts, 1);
-    batchxx.resize(_pts, 1);
-    batchCovariance.resize(_pts, _pts);
-    queryCovariance.resize(_pts, 1);
+    batchbb.resize(_npts, 1);
+    batchxx.resize(_npts, 1);
+    batchCovariance.resize(_npts, _npts);
+    queryCovariance.resize(_npts, 1);
 
 
-    for(i = 0; i < _pts; i++ ) {
+    for(i = 0; i < _npts; i++ ) {
         batchCovariance(i, i) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(i)) + _lambda;
-        for(j = i + 1; j < _pts; j++ ) {
+        for(j = i + 1; j < _npts; j++ ) {
             batchCovariance(i, j) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(j));
             batchCovariance(j, i) = batchCovariance(i, j);
         }
@@ -1884,12 +1884,12 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
     ldlt.compute(batchCovariance);
 
     fbar = 0.0;
-    for(i = 0; i < _pts; i++ ) {
+    for(i = 0; i < _npts; i++ ) {
         fbar += _function[i][0];
     }
-    fbar = fbar/T(_pts);
+    fbar = fbar/T(_npts);
 
-    for(i = 0; i < _pts; i++ ) {
+    for(i = 0; i < _npts; i++ ) {
         batchbb(i, 0) = _function[i][0] - fbar;
     }
     batchxx = ldlt.solve(batchbb);
@@ -1903,7 +1903,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,1,1 >  mu,
         }
 
         mu(ii) = fbar;
-        for(i = 0; i < _pts; i++ ) {
+        for(i = 0; i < _npts; i++ ) {
             mu(ii) += batchxx(i)*(*_covariogram)(v1, _kdTree.getData(i));
         }
     }
@@ -1950,15 +1950,15 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
 
     v1 = allocate(ndarray::makeVector(_dimensions));
 
-    batchbb.resize(_pts, 1);
-    batchxx.resize(_pts, 1);
-    batchCovariance.resize(_pts, _pts);
-    queryCovariance.resize(_pts, 1);
+    batchbb.resize(_npts, 1);
+    batchxx.resize(_npts, 1);
+    batchCovariance.resize(_npts, _npts);
+    queryCovariance.resize(_npts, 1);
 
 
-    for(i = 0; i < _pts; i++ ){
+    for(i = 0; i < _npts; i++ ){
         batchCovariance(i, i) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(i)) + _lambda;
-        for(j = i + 1; j < _pts; j++ ){
+        for(j = i + 1; j < _npts; j++ ){
             batchCovariance(i, j) = (*_covariogram)(_kdTree.getData(i), _kdTree.getData(j));
             batchCovariance(j, i) = batchCovariance(i, j);
         }
@@ -1973,14 +1973,14 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
     for(ifn = 0; ifn < _nFunctions; ifn++ ){
 
         fbar = 0.0;
-        for(i = 0; i < _pts; i++ ){
+        for(i = 0; i < _npts; i++ ){
             fbar += _function[i][ifn];
         }
-        fbar = fbar/T(_pts);
+        fbar = fbar/T(_npts);
 
         _timer.addToIteration();
 
-        for(i = 0; i < _pts; i++ ){
+        for(i = 0; i < _npts; i++ ){
             batchbb(i, 0) = _function[i][ifn] - fbar;
         }
         batchxx = ldlt.solve(batchbb);
@@ -1994,7 +1994,7 @@ void GaussianProcess < T > ::batchInterpolate(ndarray::Array < T,2,2 >  mu,
             }
 
             mu[ii][ifn] = fbar;
-            for(i = 0; i < _pts; i++ ){
+            for(i = 0; i < _npts; i++ ){
                  mu[ii][ifn] += batchxx(i)*(*_covariogram)(v1, _kdTree.getData(i));
             }
         }
@@ -2036,14 +2036,14 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
         }
     }
 
-    if(_pts == _room){
+    if(_npts == _room){
         ndarray::Array < T,2,2 >  buff;
-        buff = allocate(ndarray::makeVector(_pts, _nFunctions));
+        buff = allocate(ndarray::makeVector(_npts, _nFunctions));
         buff.deep() = _function;
 
         _room += _roomStep;
         _function = allocate(ndarray::makeVector(_room, _nFunctions));
-        for(i = 0; i < _pts; i++ ) {
+        for(i = 0; i < _npts; i++ ) {
 
             for(j = 0; j < _nFunctions; j++ ) {
                 _function[i][j] = buff[i][j];
@@ -2052,10 +2052,10 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin, T f)
         }
     }
 
-    _function[_pts][0] = f;
+    _function[_npts][0] = f;
 
     _kdTree.addPoint(v);
-    _pts = _kdTree.getNPoints();
+    _npts = _kdTree.getNPoints();
 
 }
 
@@ -2088,24 +2088,24 @@ void GaussianProcess < T > ::addPoint(ndarray::Array < T,1,1 >  const &vin,
         }
     }
 
-    if(_pts == _room) {
+    if(_npts == _room) {
         ndarray::Array < T,2,2 >  buff;
-        buff = allocate(ndarray::makeVector(_pts, _nFunctions));
+        buff = allocate(ndarray::makeVector(_npts, _nFunctions));
         buff.deep() = _function;
 
         _room += _roomStep;
         _function = allocate(ndarray::makeVector(_room, _nFunctions));
-        for(i = 0; i < _pts; i++ ) {
+        for(i = 0; i < _npts; i++ ) {
             for(j = 0; j < _nFunctions; j++ ) {
                  _function[i][j] = buff[i][j];
             }
         }
 
     }
-    for(i = 0; i < _nFunctions; i++ )_function[_pts][i] = f[i];
+    for(i = 0; i < _nFunctions; i++ )_function[_npts][i] = f[i];
 
     _kdTree.addPoint(v);
-    _pts = _kdTree.getNPoints();
+    _npts = _kdTree.getNPoints();
 
 
 }
@@ -2118,12 +2118,12 @@ void GaussianProcess < T > ::removePoint(int dex)
 
     _kdTree.removePoint(dex);
 
-    for(i = dex; i < _pts; i++ ) {
+    for(i = dex; i < _npts; i++ ) {
         for(j = 0; j < _nFunctions; j++ ) {
              _function[i][j] = _function[i + 1][j];
         }
     }
-    _pts = _kdTree.getNPoints();
+    _npts = _kdTree.getNPoints();
 }
 
 template  < typename T >
