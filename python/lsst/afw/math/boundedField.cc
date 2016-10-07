@@ -22,14 +22,36 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
+
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/math/BoundedField.h"
 
 namespace py = pybind11;
+PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
 
 using namespace lsst::afw::math;
 
 PYBIND11_PLUGIN(_boundedField) {
     py::module mod("_boundedField", "Python wrapper for afw _boundedField library");
+    
+    if (_import_array() < 0) {
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
+    };
+    
+    /* Bounded Field */
+    py::class_<BoundedField, std::shared_ptr<BoundedField>> clsBoundedField(mod, "BoundedField");
+    clsBoundedField.def("evaluate", (double (BoundedField::*)(double, double) const)
+        &BoundedField::evaluate);
+    clsBoundedField.def("evaluate", (ndarray::Array<double,1,1> 
+        (BoundedField::*)(ndarray::Array<double const,1> const &,
+                          ndarray::Array<double const,1> const &) const) &BoundedField::evaluate);
+    clsBoundedField.def("getBBox", &BoundedField::getBBox);
 
     /* Module level */
 
