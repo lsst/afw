@@ -22,9 +22,12 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/math/detail/Spline.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 using namespace lsst::afw::math::detail;
 
@@ -32,14 +35,31 @@ PYBIND11_PLUGIN(_spline) {
     py::module mod("_spline", "Python wrapper for afw _spline library");
 
     /* Module level */
+    py::class_<Spline> clsSpline(mod, "Spline");
+    py::class_<TautSpline, Spline> clsTautSpline(mod, "TautSpline");
 
     /* Member types and enums */
+    py::enum_<TautSpline::Symmetry>(clsTautSpline, "Symmetry")
+        .value("Unknown", TautSpline::Symmetry::Unknown)
+        .value("Odd", TautSpline::Symmetry::Odd)
+        .value("Even", TautSpline::Symmetry::Even)
+        .export_values();
 
     /* Constructors */
 
     /* Operators */
 
     /* Members */
+    clsSpline.def("interpolate", &Spline::interpolate);
+    clsSpline.def("derivative", &Spline::derivative);
+
+    clsTautSpline.def(py::init<std::vector<double> const&,
+                               std::vector<double> const&,
+                               double const,
+                               TautSpline::Symmetry>(),
+                      "x"_a, "y"_a, "gamma"_a=0, "type"_a=lsst::afw::math::detail::TautSpline::Unknown
+    );
+    clsTautSpline.def("roots", &TautSpline::roots);
 
     return mod.ptr();
 }
