@@ -63,10 +63,10 @@ ORANGE = "orange"
 def _makeDisplayImpl(display, backend, *args, **kwargs):
     """!Return the DisplayImpl for the named backend
 
-    \param backend Name of device.  Should be importable, either absolutely or relative to lsst.display
-    \param frame  Identifier for this instance of the backend
+    \param display Name of device.  Should be importable, either absolutely or relative to lsst.display
+    \param backend The desired backend
     \param args   Arguments passed to DisplayImpl.__init__
-    \param kwrgs  Keywords arguments passed to DisplayImpl.__init__
+    \param kwargs Keywords arguments passed to DisplayImpl.__init__
 
     E.g.
          import lsst.afw.display as afwDisplay

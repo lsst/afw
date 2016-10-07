@@ -58,6 +58,8 @@ class DisplayImpl(object):
         \param r (y) row position
         \param size  Size of symbol, in pixels
         \param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
+        \param args  Extra arguments
+        \param kwargs Extra keyword arguments
         """
         if self.verbose:
             print("virtual[%s]._dot('%s', %.2f, %.2f, size=%g, ctype=%s, %s, %s)" % \
@@ -65,7 +67,7 @@ class DisplayImpl(object):
 
     def _drawLines(self, points, ctype):
         """!Draw line defined by the list points
-        \param symb A list of 0-indexed positions (x, y)
+        \param points A list of 0-indexed positions [(x, y), (x, y), ...]
         \param ctype The desired colour, either e.g. afw.display.RED or a colour name known to X11
         """
         if self.verbose:

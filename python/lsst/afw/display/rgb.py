@@ -188,6 +188,7 @@ class LinearMapping(Mapping):
 
         \param minimum  Intensity that should be mapped to black (a scalar or array for R, G, B)
         \param maximum  Intensity that should be mapped to white (a scalar)
+        \param image    Image to estimate minimum/maximum if not explicitly set
         """
 
         if minimum is None or maximum is None:
@@ -227,6 +228,7 @@ class ZScaleMapping(LinearMapping):
 
     def __init__(self, image, nSamples=1000, contrast=0.25):
         """!A linear stretch from [z1, z2] chosen by the zscale algorithm
+        \param image    Image whose parameters are desired
         \param nSamples The number of samples to use to estimate the zscale parameters
         \param contrast The number of samples to use to estimate the zscale parameters
         """
