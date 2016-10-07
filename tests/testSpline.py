@@ -89,7 +89,7 @@ class SplineTestCase(unittest.TestCase):
         gamma = 0
         sp = afwMath.TautSpline(self.x, self.ySin, gamma)
 
-        y2 = afwMath.vectorD()
+        y2 = []
         sp.interpolate(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
@@ -99,7 +99,7 @@ class SplineTestCase(unittest.TestCase):
         """Test fitting a natural spline to a smooth function and finding its derivative"""
         sp = afwMath.TautSpline(self.x, self.ySin)
 
-        y2 = afwMath.vectorD()
+        y2 = []
         sp.derivative(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
@@ -110,7 +110,7 @@ class SplineTestCase(unittest.TestCase):
         gamma = 0
         sp = afwMath.TautSpline(self.x, self.yND, gamma)
 
-        y2 = afwMath.vectorD()
+        y2 = []
         sp.interpolate(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
@@ -121,7 +121,7 @@ class SplineTestCase(unittest.TestCase):
         gamma = 2.5
         sp = afwMath.TautSpline(self.x, self.ySin, gamma)
 
-        y2 = afwMath.vectorD()
+        y2 = []
         sp.interpolate(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
@@ -132,7 +132,7 @@ class SplineTestCase(unittest.TestCase):
         gamma = 2.5
         sp = afwMath.TautSpline(self.x, self.yND, gamma)
 
-        y2 = afwMath.vectorD()
+        y2 = []
         sp.interpolate(self.x2, y2)
 
         for x, y in zip(self.x2, y2):
@@ -148,7 +148,7 @@ class SplineTestCase(unittest.TestCase):
             self.assertEqual(sp.roots(value, self.x[0], self.x[-1])[0], 1 - value)
 
         if False:
-            y = afwMath.vectorD()
+            y = []
             sp.interpolate(self.x, y)
             for x, y in zip(self.x, y):
                 print(x, y)

@@ -21,25 +21,73 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/operators.h>
+#include <pybind11/stl.h>
+
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
+
+#include "lsst/afw/math/BoundedField.h"
+#include "lsst/afw/math/ChebyshevBoundedField.h"
 
 namespace py = pybind11;
+PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
 
 using namespace lsst::afw::math;
 
 PYBIND11_PLUGIN(_chebyshevBoundedField) {
     py::module mod("_chebyshevBoundedField", "Python wrapper for afw _chebyshevBoundedField library");
+    
+    if (_import_array() < 0) {
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
+    };
+
 
     /* Module level */
+    py::class_<ChebyshevBoundedFieldControl>
+        clsChebyshevBoundedFieldControl(mod, "ChebyshevBoundedFieldControl");
+    py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>, BoundedField>
+        clsChebyshevBoundedField(mod, "ChebyshevBoundedField");
 
     /* Member types and enums */
+    using Control = ChebyshevBoundedFieldControl;
 
     /* Constructors */
+    clsChebyshevBoundedFieldControl.def(py::init<>());
+    clsChebyshevBoundedField.def(py::init<lsst::afw::geom::Box2I const &, ndarray::Array<double const,2,2>
+        const &>());
 
     /* Operators */
+    clsChebyshevBoundedField.def("__rmul__", [](ChebyshevBoundedField &bf, double const scale){
+            return bf*scale;
+    }, py::is_operator());
+    clsChebyshevBoundedField.def("__mul__", [](ChebyshevBoundedField &bf, double const scale){
+            return bf*scale;
+    }, py::is_operator());
 
     /* Members */
+    clsChebyshevBoundedFieldControl.def_readwrite("orderX", &ChebyshevBoundedFieldControl::orderX);
+    clsChebyshevBoundedFieldControl.def_readwrite("orderY", &ChebyshevBoundedFieldControl::orderY);
+    clsChebyshevBoundedFieldControl.def_readwrite("triangular", &ChebyshevBoundedFieldControl::triangular);
+    
+    clsChebyshevBoundedField.def("getCoefficients", &ChebyshevBoundedField::getCoefficients);
+    clsChebyshevBoundedField.def_static("fit", (PTR(ChebyshevBoundedField) (*)
+        (lsst::afw::geom::Box2I const &,
+         ndarray::Array<double const,1> const &,
+         ndarray::Array<double const,1> const &,
+         ndarray::Array<double const,1> const &,
+         Control const &)) &ChebyshevBoundedField::fit);
+    clsChebyshevBoundedField.def_static("fit", (PTR(ChebyshevBoundedField) (*)
+        (lsst::afw::geom::Box2I const &,
+         ndarray::Array<double const,1> const &,
+         ndarray::Array<double const,1> const &,
+         ndarray::Array<double const,1> const &,
+         ndarray::Array<double const,1> const &,
+         Control const &)) &ChebyshevBoundedField::fit);
+    
+    clsChebyshevBoundedField.def("truncate", &ChebyshevBoundedField::truncate);
 
     return mod.ptr();
 }
