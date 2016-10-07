@@ -1,3 +1,11 @@
 ## -*- python -*-
-#from lsst.sconsUtils import scripts
-#scripts.BasicSConscript.python(['mathLib'])
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.pybind11(['function',
+                                  'functionLibrary',
+                                  'minimize',
+                                  'interpolate',
+                                  'gaussianProcess',
+                                  'spatialCell',
+                                  'boundedField',
+                                  'chebyshevBoundedField',
+                                  'leastSquares'])
