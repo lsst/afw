@@ -192,6 +192,9 @@ InterpolateGsl::InterpolateGsl(std::vector<double> const &x, ///< the x-values o
                               ) :
     Interpolate(x, y), _interpType(styleToGslInterpType(style))
 {
+    // Turn the gsl error handler off, we want to use our own exceptions
+    ::gsl_set_error_handler_off();
+
     _acc = ::gsl_interp_accel_alloc();
     if (!_acc) {
         throw LSST_EXCEPT(pex::exceptions::MemoryError, "gsl_interp_accel_alloc failed");
