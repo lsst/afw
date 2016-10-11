@@ -64,10 +64,10 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
         # a handy list of coords we want to test
         self.coordList = [
-            [afwCoord.Fk5Coord, afwCoord.FK5, afwCoord.cast_Fk5, "FK5"],
-            [afwCoord.IcrsCoord, afwCoord.ICRS, afwCoord.cast_Icrs, "ICRS"],
-            [afwCoord.GalacticCoord, afwCoord.GALACTIC, afwCoord.cast_Galactic, "GALACTIC"],
-            [afwCoord.EclipticCoord, afwCoord.ECLIPTIC, afwCoord.cast_Ecliptic, "ECLIPTIC"],
+            [afwCoord.Fk5Coord, afwCoord.FK5, "FK5"],
+            [afwCoord.IcrsCoord, afwCoord.ICRS, "ICRS"],
+            [afwCoord.GalacticCoord, afwCoord.GALACTIC, "GALACTIC"],
+            [afwCoord.EclipticCoord, afwCoord.ECLIPTIC, "ECLIPTIC"],
             # we can't factory an Topocentric ... Observatory must be specified.
             # [afwCoord.TopocentricCoord, afwCoord.TOPOCENTRIC]
         ]
@@ -81,7 +81,7 @@ class CoordTestCase(lsst.utils.tests.TestCase):
         if includeCoord:
             yield afwCoord.Coord(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
 
-        for coordClass, enum, cast, stringName in self.coordList:
+        for coordClass, enum, stringName in self.coordList:
             yield coordClass(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
 
         obs = afwCoord.Observatory(-74.659 * afwGeom.degrees, 40.384 * afwGeom.degrees, 100.0)  # peyton
@@ -111,7 +111,7 @@ class CoordTestCase(lsst.utils.tests.TestCase):
 
         # make a (eg galactic) coord with the constructor, and with the factory
         # and see if they agree.
-        for constructor, enum, cast, stringName in self.coordList:
+        for constructor, enum, stringName in self.coordList:
             con = constructor(self.l * afwGeom.degrees, self.b * afwGeom.degrees)
             self.assertEqual(con.getCoordSystem(), enum)
             factories = []
@@ -131,9 +131,8 @@ class CoordTestCase(lsst.utils.tests.TestCase):
             # can we create an empty coord, and use reset() to fill it?
             c = afwCoord.makeCoord(enum)
             c.reset(1.0 * afwGeom.degrees, 1.0 * afwGeom.degrees, 2000.0)
-            myCoord = cast(c)
-            self.assertEqual(myCoord.getLongitude().asDegrees(), 1.0)
-            self.assertEqual(myCoord.getLatitude().asDegrees(), 1.0)
+            self.assertEqual(c.getLongitude().asDegrees(), 1.0)
+            self.assertEqual(c.getLatitude().asDegrees(), 1.0)
 
         # verify that makeCoord throws when given an epoch for an epochless system
         with self.assertRaises(pexEx.Exception):
