@@ -3,8 +3,6 @@
 *.so
 *.os
 *.pyc
-*_wrap.cc
-*Lib.py
 _build.*
 *~
 *.dSYM/
@@ -82,18 +80,14 @@ python/lsst/afw/version.py
 python/lsst/afw/*.pyc
 python/lsst/afw/cameraGeom/*.pyc
 python/lsst/afw/cameraGeom/cameraGeomLib_wrap.*
-python/lsst/afw/cameraGeom/cameraGeomLib.py
 python/lsst/afw/cameraGeom/_cameraGeomLib.so
 python/lsst/afw/coord/*.os
 python/lsst/afw/coord/*.so
 python/lsst/afw/coord/*.pyc
-python/lsst/afw/coord/coordLib.py
-python/lsst/afw/coord/*wrap.cc
 python/lsst/afw/detection/*.os
 python/lsst/afw/detection/*.pyc
 python/lsst/afw/detection/*.so
 python/lsst/afw/detection/*_wrap.cc
-python/lsst/afw/detection/detectionLib.py
 python/lsst/afw/display/*.pyc
 python/lsst/afw/display/*.os
 python/lsst/afw/display/*.so
