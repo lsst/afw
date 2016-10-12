@@ -33,7 +33,7 @@ using namespace lsst::afw::geom;
 template <typename T, int N>
 py::class_<PointBase<T,N>> declarePointBase(py::module &mod, const std::string & suffix) {
     const std::string name = "PointBase" + suffix;
-    py::class_<PointBase<T,N>> cls(mod, name.c_str(), py::base<CoordinateBase<Point<T,N>,T,N>>());
+    py::class_<PointBase<T,N>, CoordinateBase<Point<T,N>,T,N>> cls(mod, name.c_str());
 
     /* Operators */
     cls.def("eq", [](PointBase<T,N> &p, Point<T,N> value) { return p.eq(value); });
@@ -64,7 +64,7 @@ py::class_<PointBase<T,N>> declarePointBase(py::module &mod, const std::string &
 template <typename T, int N>
 py::class_<Point<T,N>> declarePoint(py::module &mod, const std::string & suffix) {
     const std::string name = "Point" + suffix;
-    py::class_<Point<T,N>> cls(mod, name.c_str(), py::base<PointBase<T, N>>());
+    py::class_<Point<T,N>, PointBase<T, N>> cls(mod, name.c_str());
 
     /* Constructors */
     cls.def(py::init<T>(),
