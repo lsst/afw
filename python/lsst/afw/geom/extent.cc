@@ -33,7 +33,7 @@ using namespace lsst::afw::geom;
 template <typename T, int N>
 py::class_<ExtentBase<T,N>> declareExtentBase(py::module &mod, const std::string & suffix) {
     const std::string name = "ExtentBase" + suffix;
-    py::class_<ExtentBase<T,N>> cls(mod, name.c_str(), py::base<CoordinateBase<Extent<T,N>,T,N>>());
+    py::class_<ExtentBase<T,N>, CoordinateBase<Extent<T,N>,T,N>> cls(mod, name.c_str());
 
     /* Operators */
     cls.def("eq", [](ExtentBase<T,N> &p, Extent<T,N> value) { return p.eq(value); });
@@ -61,7 +61,7 @@ py::class_<ExtentBase<T,N>> declareExtentBase(py::module &mod, const std::string
 template <typename T, int N>
 py::class_<Extent<T,N>> declareExtent(py::module &mod, const std::string & suffix) {
     const std::string name = "Extent" + suffix;
-    py::class_<Extent<T,N>> cls(mod, name.c_str(), py::base<ExtentBase<T, N>>());
+    py::class_<Extent<T,N>, ExtentBase<T, N>> cls(mod, name.c_str());
 
     /* Constructors */
     cls.def(py::init<T>(),

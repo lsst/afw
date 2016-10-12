@@ -42,7 +42,7 @@ PYBIND11_PLUGIN(_functor) {
         py::arg("y"), py::arg("tol")=1e-10, py::arg("maxiter")=1000);
     clsFunctor.def("derivative", &Functor::derivative);
 
-    py::class_<LinearFunctor> clsLinearFunctor(mod, "LinearFunctor", py::base<Functor>());
+    py::class_<LinearFunctor, Functor> clsLinearFunctor(mod, "LinearFunctor");
 
     /* Constructors */
     clsLinearFunctor.def(py::init<double, double>());

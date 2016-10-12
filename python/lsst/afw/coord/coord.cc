@@ -105,7 +105,7 @@ PYBIND11_PLUGIN(_coord) {
     clsCoord.def("toEcliptic", (EclipticCoord (Coord::*)() const) &Coord::toEcliptic);
     clsCoord.def("toTopocentric", &Coord::toTopocentric);
 
-    py::class_<IcrsCoord, std::shared_ptr<IcrsCoord>> clsIcrsCoord(mod, "IcrsCoord", py::base<Coord>());
+    py::class_<IcrsCoord, std::shared_ptr<IcrsCoord>, Coord> clsIcrsCoord(mod, "IcrsCoord");
 
     /* Constructors */
     clsIcrsCoord.def(py::init<lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit>(),
@@ -132,7 +132,7 @@ PYBIND11_PLUGIN(_coord) {
     clsIcrsCoord.def("toFk5", (Fk5Coord (IcrsCoord::*)() const) &IcrsCoord::toFk5);
     clsIcrsCoord.def("toIcrs", &IcrsCoord::toIcrs);
 
-    py::class_<Fk5Coord, std::shared_ptr<Fk5Coord>> clsFk5Coord(mod, "Fk5Coord", py::base<Coord>());
+    py::class_<Fk5Coord, std::shared_ptr<Fk5Coord>, Coord> clsFk5Coord(mod, "Fk5Coord");
 
     /* Constructors */
     clsFk5Coord.def(py::init<lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit, double const>(),
@@ -162,7 +162,7 @@ PYBIND11_PLUGIN(_coord) {
     clsFk5Coord.def("toEcliptic", (EclipticCoord (Fk5Coord::*)() const) &Fk5Coord::toEcliptic);
     clsFk5Coord.def("toTopocentric", &Fk5Coord::toTopocentric);
 
-    py::class_<GalacticCoord, std::shared_ptr<GalacticCoord>> clsGalacticCoord(mod, "GalacticCoord", py::base<Coord>());
+    py::class_<GalacticCoord, std::shared_ptr<GalacticCoord>, Coord> clsGalacticCoord(mod, "GalacticCoord");
 
     /* Constructors */
     clsGalacticCoord.def(py::init<lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit>(),
@@ -190,7 +190,7 @@ PYBIND11_PLUGIN(_coord) {
     clsGalacticCoord.def("toFk5", (Fk5Coord (GalacticCoord::*)() const) &GalacticCoord::toFk5);
     clsGalacticCoord.def("toGalactic", &GalacticCoord::toGalactic);
 
-    py::class_<EclipticCoord, std::shared_ptr<EclipticCoord>> clsEclipticCoord(mod, "EclipticCoord", py::base<Coord>());
+    py::class_<EclipticCoord, std::shared_ptr<EclipticCoord>, Coord> clsEclipticCoord(mod, "EclipticCoord");
 
     /* Constructors */
     clsEclipticCoord.def(py::init<lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit, double const>(),
@@ -218,7 +218,7 @@ PYBIND11_PLUGIN(_coord) {
     clsGalacticCoord.def("toEcliptic", (EclipticCoord (GalacticCoord::*)() const) &GalacticCoord::toEcliptic);
     clsEclipticCoord.def("precess", &EclipticCoord::precess);
 
-    py::class_<TopocentricCoord, std::shared_ptr<TopocentricCoord>> clsTopocentricCoord(mod, "TopocentricCoord", py::base<Coord>());
+    py::class_<TopocentricCoord, std::shared_ptr<TopocentricCoord>, Coord> clsTopocentricCoord(mod, "TopocentricCoord");
 
     /* Constructors */
     clsTopocentricCoord.def(py::init<lsst::afw::geom::Point2D const &, lsst::afw::geom::AngleUnit, double const, Observatory const &>(),
