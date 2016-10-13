@@ -248,8 +248,7 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(self.cat[1].getWcs(), catV1[1].getWcs())
         self.assertIsNone(self.cat[1].getPsf())
         self.assertIsNone(self.cat[1].getCalib())
-        self.assertEqual(self.cat[0].getWcs().getId(), self.cat[
-                         1].getWcs().getId())  # compare citizen IDs
+        self.assertEqual(self.cat[0].getWcs().getId(), self.cat[1].getWcs().getId())  # compare citizen IDs
         self.assertEqual(self.cat[0].getCalib(), catV1[0].getCalib())
         self.assertIsNone(catV1[0].getVisitInfo())
         self.assertIsNone(catV1[1].getVisitInfo())
