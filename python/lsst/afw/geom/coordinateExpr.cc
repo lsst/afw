@@ -31,8 +31,7 @@ using namespace lsst::afw::geom;
 template <int N>
 void declareCoordinateExpr(py::module & mod, const std::string & suffix) {
     const std::string name = "CoordinateExpr" + suffix;
-    py::class_<CoordinateExpr<N>> clsCoordinateExpr(mod, name.c_str(),
-        py::base<CoordinateBase<CoordinateExpr<N>,bool,N>>());
+    py::class_<CoordinateExpr<N>, CoordinateBase<CoordinateExpr<N>,bool,N>> clsCoordinateExpr(mod, name.c_str());
 
     /* Constructors */
     clsCoordinateExpr.def(py::init<bool>(), py::arg("val")=false);

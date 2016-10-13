@@ -44,7 +44,7 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsXYTransform.def("linearizeForwardTransform", &XYTransform::linearizeForwardTransform);
     clsXYTransform.def("linearizeReverseTransform", &XYTransform::linearizeReverseTransform);
 
-    py::class_<IdentityXYTransform, std::shared_ptr<IdentityXYTransform>> clsIdentityXYTransform(mod, "IdentityXYTransform", py::base<XYTransform>());
+    py::class_<IdentityXYTransform, std::shared_ptr<IdentityXYTransform>, XYTransform> clsIdentityXYTransform(mod, "IdentityXYTransform");
 
     /* Constructors */
     clsIdentityXYTransform.def(py::init<>());
@@ -55,7 +55,7 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsIdentityXYTransform.def("linearizeForwardTransform", &IdentityXYTransform::linearizeForwardTransform);
     clsIdentityXYTransform.def("linearizeReverseTransform", &IdentityXYTransform::linearizeReverseTransform);
 
-    py::class_<InvertedXYTransform, std::shared_ptr<InvertedXYTransform>> clsInvertedXYTransform(mod, "InvertedXYTransform", py::base<XYTransform>());
+    py::class_<InvertedXYTransform, std::shared_ptr<InvertedXYTransform>, XYTransform> clsInvertedXYTransform(mod, "InvertedXYTransform");
 
     /* Constructors */
     clsInvertedXYTransform.def(py::init<CONST_PTR(XYTransform)>());
@@ -67,7 +67,7 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsInvertedXYTransform.def("linearizeForwardTransform", &InvertedXYTransform::linearizeForwardTransform);
     clsInvertedXYTransform.def("linearizeReverseTransform", &InvertedXYTransform::linearizeReverseTransform);
 
-    py::class_<MultiXYTransform, std::shared_ptr<MultiXYTransform>> clsMultiXYTransform(mod, "MultiXYTransform", py::base<XYTransform>());
+    py::class_<MultiXYTransform, std::shared_ptr<MultiXYTransform>, XYTransform> clsMultiXYTransform(mod, "MultiXYTransform");
 
     /* Constructors */
     clsMultiXYTransform.def(py::init<MultiXYTransform::TransformList const &>());
@@ -80,7 +80,7 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsMultiXYTransform.def("linearizeReverseTransform", &MultiXYTransform::linearizeReverseTransform);
     clsMultiXYTransform.def("getTransformList", &MultiXYTransform::getTransformList);
 
-    py::class_<AffineXYTransform, std::shared_ptr<AffineXYTransform>> clsAffineXYTransform(mod, "AffineXYTransform", py::base<XYTransform>());
+    py::class_<AffineXYTransform, std::shared_ptr<AffineXYTransform>, XYTransform> clsAffineXYTransform(mod, "AffineXYTransform");
 
     /* Constructors */
     clsAffineXYTransform.def(py::init<AffineTransform const &>());
@@ -94,7 +94,7 @@ PYBIND11_PLUGIN(_xYTransform) {
     clsAffineXYTransform.def("getForwardTransform", &AffineXYTransform::getForwardTransform);
     clsAffineXYTransform.def("getReverseTransform", &AffineXYTransform::getReverseTransform);
 
-    py::class_<RadialXYTransform, std::shared_ptr<RadialXYTransform>> clsRadialXYTransform(mod, "RadialXYTransform", py::base<XYTransform>());
+    py::class_<RadialXYTransform, std::shared_ptr<RadialXYTransform>, XYTransform> clsRadialXYTransform(mod, "RadialXYTransform");
 
     /* Constructors */
     clsRadialXYTransform.def(py::init<std::vector<double> const &>());
