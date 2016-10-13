@@ -1,4 +1,5 @@
 // -*- lsst-c++ -*-
+#include <memory>
 #include <typeinfo>
 #include <string>
 
@@ -121,7 +122,8 @@ struct PersistenceHelper {
     // Read psf, wcs, etc. from an archive to an ExposureRecord
     void readRecord(
         BaseRecord const & input, ExposureRecord & output,
-        SchemaMapper const & mapper, io::InputArchive const & archive
+        SchemaMapper const & mapper, io::InputArchive const & archive,
+        int tableVersion
     ) const {
         output.assign(input, mapper);
         output.setPsf(archive.get<detection::Psf>(input.get(psf)));
@@ -129,7 +131,12 @@ struct PersistenceHelper {
         output.setCalib(archive.get<image::Calib>(input.get(calib)));
         output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
         output.setValidPolygon(archive.get<geom::polygon::Polygon>(input.get(validPolygon)));
-        output.setVisitInfo(archive.get<image::VisitInfo>(input.get(visitInfo)));
+        if (tableVersion > 1) {
+            output.setVisitInfo(archive.get<image::VisitInfo>(input.get(visitInfo)));
+        } else {
+            // VisitInfo not available; set to invalid values
+            output.setVisitInfo(nullptr);
+        }
     }
 
     // No copying
@@ -443,7 +450,7 @@ ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
     ExposureCatalogT<ExposureRecord> result(mapper.getOutputSchema());
     result.reserve(catalog.size());
     for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-        helper.readRecord(*i, *result.addNew(), mapper, archive);
+        helper.readRecord(*i, *result.addNew(), mapper, archive, tableVersion);
     }
     return result;
 }
