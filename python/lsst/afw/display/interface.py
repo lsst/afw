@@ -77,7 +77,7 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
     """
     _disp = None
     exc = None
-    for dt in (backend, ".%s" % backend, "lsst.afw.display.%s" % backend):
+    for dt in ("lsst.display.%s" % backend, backend, ".%s" % backend, "lsst.afw.display.%s" % backend):
         exc = None
         # only specify the root package if we are not doing an absolute import
         impargs = {}
@@ -99,7 +99,10 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
         else:
             raise ImportError("Could not load the requested backend: {}".format(backend))
 
-    return _disp.DisplayImpl(display, *args, **kwargs)
+    if display:
+        return _disp.DisplayImpl(display, *args, **kwargs)
+    else:
+        return True
 
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -123,7 +126,7 @@ class Display(object):
     )
     _defaultMaskTransparency = {}
 
-    def __init__(self, frame, backend=None, *args, **kwargs):
+    def __init__(self, frame=None, backend=None, *args, **kwargs):
         """!Create an object able to display images and overplot glyphs
 
         \param frame An identifier for the display
@@ -131,6 +134,9 @@ class Display(object):
         \param args Arguments to pass to the backend
         \param kwargs Arguments to pass to the backend
         """
+        if frame is None:
+            frame = getDefaultFrame()
+
         if backend is None:
             if Display._defaultBackend is None:
                 try:
@@ -142,6 +148,7 @@ class Display(object):
 
         self.frame = frame
         self._impl = _makeDisplayImpl(self, backend, *args, **kwargs)
+        self.name = backend
 
         self._xy0 = None                # the data displayed on the frame's XY0
         self.setMaskTransparency(Display._defaultMaskTransparency)
@@ -170,6 +177,8 @@ class Display(object):
 
         self.setCallback('h', _h_callback)
 
+        Display._displays[frame] = self
+
     def __enter__(self):
         """!Support for python's with statement"""
         return self
@@ -180,6 +189,24 @@ class Display(object):
 
     def __del__(self):
         self.close()
+
+    def __getattr__(self, name, *args, **kwargs):
+        """Try to call self._impl.name(*args, *kwargs)"""
+        
+        if not (hasattr(self, "_impl") and self._impl):
+            raise AttributeError("Device has no _impl attached")
+        #
+        # We need a wrapper to get the arguments passed through
+        #
+        try:
+            attr = getattr(self._impl, name)
+        except AttributeError:
+            raise AttributeError("Device %s has no attribute \"%s\"" % (self.name, name))
+
+        def wrapper(*args, **kwargs):
+            return attr(*args, **kwargs)
+        
+        return wrapper
 
     def close(self):
         if hasattr(self, "_impl") and self._impl:
