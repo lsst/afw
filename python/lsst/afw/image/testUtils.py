@@ -21,8 +21,11 @@ from __future__ import absolute_import, division
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-##\file
-## \brief Utilities to help write tests, mostly using numpy
+"""
+@file
+@brief Utilities to help write tests, mostly using numpy
+"""
+import math
 import numpy as np
 
 import lsst.utils.tests
@@ -49,6 +52,7 @@ def makeGaussianNoiseMaskedImage(dimensions, sigma, variance=1.0):
 
     return makeMaskedImageFromArrays(image, mask, variance)
 
+
 def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
         """!Make an image whose values are a linear ramp
 
@@ -65,12 +69,13 @@ def makeRampImage(bbox, start=0, stop=None, imageClass=ImageF):
             # increase by integer values
             stop = start + numPix - 1
         rampArr = np.linspace(start=start, stop=stop, endpoint=True, num=numPix, dtype=imArr.dtype)
-        imArr[:] = np.reshape(rampArr, (imDim[1], imDim[0])) # numpy arrays are transposed w.r.t. afwImage
+        imArr[:] = np.reshape(rampArr, (imDim[1], imDim[0]))  # numpy arrays are transposed w.r.t. afwImage
         return im
+
 
 @lsst.utils.tests.inTestCase
 def assertImagesNearlyEqual(testCase, image0, image1, skipMask=None,
-        rtol=1.0e-05, atol=1e-08, msg="Images differ"):
+                            rtol=1.0e-05, atol=1e-08, msg="Images differ"):
     """!Assert that two images are nearly equal, including non-finite values
 
     @param[in] testCase  unittest.TestCase instance the test is part of;
@@ -109,6 +114,7 @@ def assertImagesNearlyEqual(testCase, image0, image1, skipMask=None,
     if errStr:
         testCase.fail("%s: %s" % (msg, errStr))
 
+
 @lsst.utils.tests.inTestCase
 def assertImagesEqual(*args, **kwds):
     """!Assert that two images are exactly equal, including non-finite values.
@@ -117,6 +123,7 @@ def assertImagesEqual(*args, **kwds):
     which are set to zero.
     """
     return assertImagesNearlyEqual(*args, atol=0, rtol=0, **kwds)
+
 
 @lsst.utils.tests.inTestCase
 def assertMasksEqual(testCase, mask0, mask1, skipMask=None, msg="Masks differ"):
@@ -146,10 +153,13 @@ def assertMasksEqual(testCase, mask0, mask1, skipMask=None, msg="Masks differ"):
     if errStr:
         testCase.fail("%s: %s" % (msg, errStr))
 
+
 @lsst.utils.tests.inTestCase
-def assertMaskedImagesNearlyEqual(testCase, maskedImage0, maskedImage1,
+def assertMaskedImagesNearlyEqual(
+    testCase, maskedImage0, maskedImage1,
     doImage=True, doMask=True, doVariance=True, skipMask=None,
-    rtol=1.0e-05, atol=1e-08, msg="Masked images differ"):
+    rtol=1.0e-05, atol=1e-08, msg="Masked images differ",
+):
     """!Assert that two masked images are nearly equal, including non-finite values
 
     @param[in] testCase  unittest.TestCase instance the test is part of;
@@ -204,8 +214,8 @@ def assertMaskedImagesNearlyEqual(testCase, maskedImage0, maskedImage1,
             # and mask is int of some kind
             for i in (0, 2):
                 assert arrList[i].shape == arrList[1].shape
-                assert arrList[i].dtype.kind in  ("b", "i", "u", "f", "c")
-            assert arrList[1].dtype.kind in  ("b", "i", "u")
+                assert arrList[i].dtype.kind in ("b", "i", "u", "f", "c")
+            assert arrList[1].dtype.kind in ("b", "i", "u")
         except Exception:
             raise TypeError("%s=%r is not a supported type" % (name, arg))
 
@@ -218,12 +228,12 @@ def assertMaskedImagesNearlyEqual(testCase, maskedImage0, maskedImage1,
 
         if planeName == "mask":
             errStr = imagesDiffer(maskedImageArrList0[ind], maskedImageArrList1[ind], skipMask=skipMask,
-                rtol=0, atol=0)
+                                  rtol=0, atol=0)
             if errStr:
                 errStrList.append(errStr)
         else:
             errStr = imagesDiffer(maskedImageArrList0[ind], maskedImageArrList1[ind],
-                skipMask=skipMask, rtol=rtol, atol=atol)
+                                  skipMask=skipMask, rtol=rtol, atol=atol)
             if errStr:
                 errStrList.append("%s planes differ: %s" % (planeName, errStr))
 
@@ -271,8 +281,8 @@ def imagesDiffer(image0, image1, skipMask=None, rtol=1.0e-05, atol=1e-08):
     or any are not of a numeric data type.
     """
     errStrList = []
-    imageArr0   = image0.getArray()   if hasattr(image0,   "getArray") else image0
-    imageArr1   = image1.getArray()   if hasattr(image1,   "getArray") else image1
+    imageArr0 = image0.getArray() if hasattr(image0, "getArray") else image0
+    imageArr1 = image1.getArray() if hasattr(image1, "getArray") else image1
     skipMaskArr = skipMask.getArray() if hasattr(skipMask, "getArray") else skipMask
 
     # check the inputs
