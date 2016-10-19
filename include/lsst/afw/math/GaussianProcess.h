@@ -346,7 +346,7 @@ public:
     /**
      * @brief return the number of data points stored in the tree
     */
-    int getPoints() const;
+    int getNPoints() const;
 
    /**
      * @brief Return the _tree information for a given data point
@@ -379,11 +379,11 @@ private:
     //_data actually stores the data points
 
 
-    int _pts,_dimensions,_room,_roomStep,_masterParent;
+    int _npts,_dimensions,_room,_roomStep,_masterParent;
     mutable int _neighborsFound,_neighborsWanted;
 
     //_room denotes the capacity of _data and _tree.  It will usually be larger
-    //than _pts so that we do not have to reallocate
+    //than _npts so that we do not have to reallocate
     //_tree and _data every time we add a new point to the tree
 
     mutable ndarray::Array<double,1,1> _neighborDistances;
@@ -603,6 +603,42 @@ public:
                     std::shared_ptr< Covariogram<T> > const &covarIn);
 
     /**
+     * @brief return the number of data points stored in the GaussianProcess
+    */
+    int getNPoints() const;
+
+    /**
+     *@brief return the dimensionality of data points stored in the
+     * GaussianProcess
+    */
+    int getDim() const;
+
+    /**
+     * @brief Return a sub-sample the data underlying the Gaussian Process
+     *
+     * @param [out] pts will contain the data points from the Gaussian Process
+     *
+     * @param [out] fn will contain the function values from the Gaussian Process
+     *
+     * @param [in] indices is an array of indices indicating the points to return
+    */
+    void getData(ndarray::Array<T,2,2> pts, ndarray::Array<T,1,1> fn,
+                 ndarray::Array<int, 1, 1> indices) const;
+
+    /**
+     * @brief Return a sub-sample the data underlying the Gaussian Process
+     *
+     * @param [out] pts will contain the data points from the Gaussian Process
+     *
+     * @param [out] fn will contain the function values from the Gaussian Process
+     *
+     * @param [in] indices is an array of indices indicating the points to return
+    */
+    void getData(ndarray::Array<T,2,2> pts, ndarray::Array<T,2,2> fn,
+                 ndarray::Array<int, 1, 1> indices) const;
+
+
+    /**
      * @brief Interpolate the function value at one point using a specified number of nearest neighbors
      *
      * @param [out] variance a one-dimensional ndarray.  The value of the variance predicted by the Gaussian
@@ -695,8 +731,8 @@ public:
      * @param [in] queries a 2-dimensional ndarray containing the points to be interpolated.
      * queries[i][j] is the jth component of the ith point
      *
-     * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
-     * Be wary of using it in the case where _pts is very large.
+     * This method will attempt to construct a _npts X _npts covariance matrix C and solve the problem Cx=b.
+     * Be wary of using it in the case where _npts is very large.
      *
      * This version of the method will also return variances for all of the query points.
      * That is a very time consuming calculation relative to just returning estimates for
@@ -718,8 +754,8 @@ public:
      * @param [in] queries a 2-dimensional ndarray containing the points to be interpolated.
      * queries[i][j] is the jth component of the ith point
      *
-     * This method will attempt to construct a _pts X _pts covariance matrix C and solve the problem Cx=b.
-     * Be wary of using it in the case where _pts is very large.
+     * This method will attempt to construct a _npts X _npts covariance matrix C and solve the problem Cx=b.
+     * Be wary of using it in the case where _npts is very large.
      *
      * This version of the method does not return variances.
      * It is an order of magnitude faster than the version of the method
@@ -834,7 +870,7 @@ public:
     GaussianProcessTimer& getTimes() const;
 
  private:
-    int _pts,_useMaxMin,_dimensions,_room,_roomStep,_nFunctions;
+    int _npts,_useMaxMin,_dimensions,_room,_roomStep,_nFunctions;
 
     T _krigingParameter,_lambda;
 
