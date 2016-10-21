@@ -1060,16 +1060,17 @@ void Mask<MaskPixelT>::checkMaskDictionaries(Mask<MaskPixelT> const &other) {
  * \brief OR a bitmask into a Mask
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::operator|=(MaskPixelT const val) {
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator|=(MaskPixelT const val) {
     transform_pixels(_getRawView(), _getRawView(),
                      [&val](MaskPixelT const& l) -> MaskPixelT { return l | val; });
+    return *this;
 }
 
 /**
  * \brief OR a Mask into a Mask
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::operator|=(Mask const &rhs) {
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator|=(Mask const &rhs) {
     checkMaskDictionaries(rhs);
 
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -1079,22 +1080,24 @@ void Mask<MaskPixelT>::operator|=(Mask const &rhs) {
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
                      [](MaskPixelT const& l, MaskPixelT const& r) -> MaskPixelT { return l | r; });
+    return *this;
 }
 
 /**
  * \brief AND a bitmask into a Mask
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::operator&=(MaskPixelT const val) {
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator&=(MaskPixelT const val) {
     transform_pixels(_getRawView(), _getRawView(),
                      [&val](MaskPixelT const& l) { return l & val; });
+    return *this;
 }
 
 /**
  * \brief AND a Mask into a Mask
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::operator&=(Mask const &rhs) {
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator&=(Mask const &rhs) {
     checkMaskDictionaries(rhs);
 
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -1104,22 +1107,24 @@ void Mask<MaskPixelT>::operator&=(Mask const &rhs) {
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
                      [](MaskPixelT const& l, MaskPixelT const& r) -> MaskPixelT { return l & r; });
+    return *this;
 }
 
 /**
  * \brief XOR a bitmask into a Mask
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::operator^=(MaskPixelT const val) {
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator^=(MaskPixelT const val) {
     transform_pixels(_getRawView(), _getRawView(),
                      [&val](MaskPixelT const& l) -> MaskPixelT { return l ^ val; });
+    return *this;
 }
 
 /**
  * \brief XOR a Mask into a Mask
  */
 template<typename MaskPixelT>
-void Mask<MaskPixelT>::operator^=(Mask const &rhs) {
+Mask<MaskPixelT>& Mask<MaskPixelT>::operator^=(Mask const &rhs) {
     checkMaskDictionaries(rhs);
 
     if (this->getDimensions() != rhs.getDimensions()) {
@@ -1129,6 +1134,7 @@ void Mask<MaskPixelT>::operator^=(Mask const &rhs) {
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
                      [](MaskPixelT const& l, MaskPixelT const& r) -> MaskPixelT { return l ^ r; });
+    return *this;
 }
 
 /**
