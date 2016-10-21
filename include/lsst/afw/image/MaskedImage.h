@@ -166,22 +166,27 @@ public:
         }
 
         /// Increment the iterator by \c delta
-        void operator+=(std::ptrdiff_t delta ///< how far to move the iterator
+        MaskedImageIteratorBase& operator+=(std::ptrdiff_t delta ///< how far to move the iterator
                        ) {
             _iter += delta;
+            return *this;
         }
         /// Decrement the iterator by \c delta
-        void operator-=(std::ptrdiff_t delta ///< how far to move the iterator
+        MaskedImageIteratorBase& operator-=(std::ptrdiff_t delta ///< how far to move the iterator
                        ) {
             _iter -= delta;
+            return *this;
         }
         /// Increment the iterator (prefix)
-        void operator++() {         // prefix
+        MaskedImageIteratorBase& operator++() {         // prefix
             ++_iter;
+            return *this;
         }
         /// Increment the iterator (postfix)
-        void operator++(int) {      // postfix
+        MaskedImageIteratorBase operator++(int) {      // postfix
+            MaskedImageIteratorBase tmp(*this);
             _iter++;
+            return tmp;
         }
         /// Return the distance between two iterators
         std::ptrdiff_t operator-(MaskedImageIteratorBase const& rhs) {
@@ -284,18 +289,20 @@ public:
         public:
             _x_or_y_iterator(MaskedImageLocatorBase* mil) : _mil(mil) {}
 
-            void operator+=(const int di) {
+            _x_or_y_iterator& operator+=(const int di) {
                 // Equivalent to "_mil->_loc.template get<0>().x() += di;"
                 X_OR_Y<ImageLocator>(_mil->_loc.template get<0>())() += di;
                 X_OR_Y<MaskLocator>(_mil->_loc.template get<1>())() += di;
                 X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())() += di;
+                return *this;
             }
 
-            void operator++() {     // prefix
+            _x_or_y_iterator& operator++() {     // prefix
                 // Equivalent to "++_mil->_loc.template get<0>().x();"
                 ++X_OR_Y<ImageLocator>(_mil->_loc.template get<0>())();
                 ++X_OR_Y<MaskLocator>(_mil->_loc.template get<1>())();
                 ++X_OR_Y<VarianceLocator>(_mil->_loc.template get<2>())();
+                return *this;
             }
 
             bool operator==(_x_or_y_iterator const& rhs) {
@@ -746,45 +753,51 @@ public:
     MaskedImage& operator=(Pixel const& rhs);
     MaskedImage& operator=(SinglePixel const& rhs);
 
-    void operator<<=(MaskedImage const& rhs);
+    MaskedImage& operator<<=(MaskedImage const& rhs);
 
     void assign(MaskedImage const &rsh, geom::Box2I const &bbox = geom::Box2I(), ImageOrigin origin=PARENT);
 
-    void operator+=(ImagePixelT const rhs);
-    void operator+=(MaskedImage const& rhs);
-    void operator+=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+    MaskedImage& operator+=(ImagePixelT const rhs);
+    MaskedImage& operator+=(MaskedImage const& rhs);
+    MaskedImage& operator+=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
         *_image += rhs;
+        return *this;
     }
-    void operator+=(lsst::afw::math::Function2<double> const& function) {
+    MaskedImage& operator+=(lsst::afw::math::Function2<double> const& function) {
         *_image += function;
+        return *this;
     }
     void scaledPlus(double const c, MaskedImage const& rhs);
 
-    void operator-=(ImagePixelT const rhs);
-    void operator-=(MaskedImage const& rhs);
-    void operator-=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+    MaskedImage& operator-=(ImagePixelT const rhs);
+    MaskedImage& operator-=(MaskedImage const& rhs);
+    MaskedImage& operator-=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
         *_image -= rhs;
+        return *this;
     }
-    void operator-=(lsst::afw::math::Function2<double> const& function) {
+    MaskedImage& operator-=(lsst::afw::math::Function2<double> const& function) {
         *_image -= function;
+        return *this;
     }
     void scaledMinus(double const c, MaskedImage const& rhs);
 
-    void operator*=(ImagePixelT const rhs);
-    void operator*=(MaskedImage const& rhs);
-    void operator*=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+    MaskedImage& operator*=(ImagePixelT const rhs);
+    MaskedImage& operator*=(MaskedImage const& rhs);
+    MaskedImage& operator*=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
         *_image *= rhs;
         *_variance *= rhs;           // yes, multiply twice
         *_variance *= rhs;
+        return *this;
     }
     void scaledMultiplies(double const c, MaskedImage const& rhs);
 
-    void operator/=(ImagePixelT const rhs);
-    void operator/=(MaskedImage const& rhs);
-    void operator/=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
+    MaskedImage& operator/=(ImagePixelT const rhs);
+    MaskedImage& operator/=(MaskedImage const& rhs);
+    MaskedImage& operator/=(lsst::afw::image::Image<ImagePixelT> const& rhs) {
         *_image /= rhs;
         *_variance /= rhs; // yes, divide twice
         *_variance /= rhs;
+        return *this;
     }
     void scaledDivides(double const c, MaskedImage const& rhs);
 
