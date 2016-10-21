@@ -228,15 +228,15 @@ public:
     Mask& operator=(MaskPixelT const rhs);
     Mask& operator=(const Mask& rhs);
 
-    void operator|=(Mask const& rhs);
-    void operator|=(MaskPixelT const rhs);
+    Mask& operator|=(Mask const& rhs);
+    Mask& operator|=(MaskPixelT const rhs);
 
-    void operator&=(Mask const& rhs);
-    void operator&=(MaskPixelT const rhs);
+    Mask& operator&=(Mask const& rhs);
+    Mask& operator&=(MaskPixelT const rhs);
         static MaskPixelT getPlaneBitMask(const std::vector<std::string> &names);
 
-    void operator^=(Mask const& rhs);
-    void operator^=(MaskPixelT const rhs);
+    Mask& operator^=(Mask const& rhs);
+    Mask& operator^=(MaskPixelT const rhs);
 
     typename ImageBase<MaskPixelT>::PixelReference operator()(int x, int y);
     typename ImageBase<MaskPixelT>::PixelConstReference operator()(int x, int y) const;
