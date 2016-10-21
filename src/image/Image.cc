@@ -223,8 +223,9 @@ image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator=(ImageBase const& r
 ///
 /// \deprecated use assign(rhs) instead
 template<typename PixelT>
-void image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
+image::ImageBase<PixelT>& image::ImageBase<PixelT>::operator<<=(ImageBase const& rhs) {
     assign(rhs);
+    return *this;
 }
 
 /**
@@ -649,14 +650,15 @@ void image::Image<PixelT>::sqrt() {
 
 /// Add scalar rhs to lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator+=(PixelT const rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator+=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
                      [&rhs](PixelT const& l) -> PixelT { return l + rhs; });
+    return *this;
 }
 
 /// Add Image rhs to lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
@@ -664,13 +666,14 @@ void image::Image<PixelT>::operator+=(Image<PixelT> const& rhs) {
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
                      [](PixelT const& l, PixelT const& r) -> PixelT { return l + r; });
+    return *this;
 }
 
 /**
  * @brief Add a Function2(x, y) to an Image
  */
 template<typename PixelT>
-void image::Image<PixelT>::operator+=(
+image::Image<PixelT>& image::Image<PixelT>::operator+=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
@@ -681,6 +684,7 @@ void image::Image<PixelT>::operator+=(
             *ptr += function(xPos, yPos);
         }
     }
+    return *this;
 }
 
 /// Add Image c*rhs to lhs
@@ -697,14 +701,15 @@ void image::Image<PixelT>::scaledPlus(double const c, Image<PixelT> const& rhs) 
 
 /// Subtract scalar rhs from lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator-=(PixelT const rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator-=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
                      [&rhs](PixelT const& l) -> PixelT { return l - rhs; });
+    return *this;
 }
 
 /// Subtract Image rhs from lhs
 template<typename PixelT>
-void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
@@ -712,6 +717,7 @@ void image::Image<PixelT>::operator-=(Image<PixelT> const& rhs) {
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
                      [](PixelT const& l, PixelT const& r) -> PixelT { return l - r; });
+    return *this;
 }
 
 /// Subtract Image c*rhs from lhs
@@ -730,7 +736,7 @@ void image::Image<PixelT>::scaledMinus(double const c, Image<PixelT> const& rhs)
  * @brief Subtract a Function2(x, y) from an Image
  */
 template<typename PixelT>
-void image::Image<PixelT>::operator-=(
+image::Image<PixelT>& image::Image<PixelT>::operator-=(
         lsst::afw::math::Function2<double> const& function ///< function to add
                                      ) {
     for (int y = 0; y != this->getHeight(); ++y) {
@@ -741,18 +747,20 @@ void image::Image<PixelT>::operator-=(
             *ptr -= function(xPos, yPos);
         }
     }
+    return *this;
 }
 
 /// Multiply lhs by scalar rhs
 template<typename PixelT>
-void image::Image<PixelT>::operator*=(PixelT const rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator*=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
                      [&rhs](PixelT const& l) -> PixelT { return l*rhs; });
+    return *this;
 }
 
 /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication)
 template<typename PixelT>
-void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
@@ -760,6 +768,7 @@ void image::Image<PixelT>::operator*=(Image<PixelT> const& rhs) {
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
                      [](PixelT const& l, PixelT const& r) -> PixelT { return l*r; });
+    return *this;
 }
 
 /// Multiply lhs by Image c*rhs (i.e. %pixel-by-%pixel multiplication)
@@ -778,30 +787,33 @@ void image::Image<PixelT>::scaledMultiplies(double const c, Image<PixelT> const&
 ///
 /// \note Floating point types implement this by multiplying by the 1/rhs
 template<typename PixelT>
-void image::Image<PixelT>::operator/=(PixelT const rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator/=(PixelT const rhs) {
     transform_pixels(_getRawView(), _getRawView(),
                      [&rhs](PixelT const& l) -> PixelT { return l/rhs; });
+    return *this;
 }
 //
 // Specialize float and double for efficiency
 //
 namespace lsst { namespace afw { namespace image {
 template<>
-void Image<double>::operator/=(double const rhs) {
+Image<double>& Image<double>::operator/=(double const rhs) {
     double const irhs = 1/rhs;
     *this *= irhs;
+    return *this;
 }
 
 template<>
-void Image<float>::operator/=(float const rhs) {
+Image<float>& Image<float>::operator/=(float const rhs) {
     float const irhs = 1/rhs;
     *this *= irhs;
+    return *this;
 }
 }}}
 
 /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division)
 template<typename PixelT>
-void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
+image::Image<PixelT>& image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
     if (this->getDimensions() != rhs.getDimensions()) {
         throw LSST_EXCEPT(lsst::pex::exceptions::LengthError,
                           (boost::format("Images are of different size, %dx%d v %dx%d") %
@@ -809,6 +821,7 @@ void image::Image<PixelT>::operator/=(Image<PixelT> const& rhs) {
     }
     transform_pixels(_getRawView(), rhs._getRawView(), _getRawView(),
                      [](PixelT const& l, PixelT const& r) -> PixelT { return l/r; });
+    return *this;
 }
 
 /// Divide lhs by Image c*rhs (i.e. %pixel-by-%pixel division)
@@ -861,29 +874,33 @@ struct divideEq : public lsst::afw::image::pixelOp2<LhsPixelT, RhsPixelT> {
 /// Add lhs to Image rhs (i.e. %pixel-by-%pixel addition) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator+=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
+image::Image<LhsPixelT>& image::operator+=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, plusEq<LhsPixelT, RhsPixelT>());
+    return lhs;
 }
 
 /// Subtract lhs from Image rhs (i.e. %pixel-by-%pixel subtraction) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator-=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
+image::Image<LhsPixelT>& image::operator-=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, minusEq<LhsPixelT, RhsPixelT>());
+    return lhs;
 }
 
 /// Multiply lhs by Image rhs (i.e. %pixel-by-%pixel multiplication) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator*=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
+image::Image<LhsPixelT>& image::operator*=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, timesEq<LhsPixelT, RhsPixelT>());
+    return lhs;
 }
 
 /// Divide lhs by Image rhs (i.e. %pixel-by-%pixel division) where types are different
 ///
 template<typename LhsPixelT, typename RhsPixelT>
-void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
+image::Image<LhsPixelT>& image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> const& rhs) {
     image::for_each_pixel(lhs, rhs, divideEq<LhsPixelT, RhsPixelT>());
+    return lhs;
 }
 
 /************************************************************************************************************/
@@ -892,11 +909,11 @@ void image::operator/=(image::Image<LhsPixelT> &lhs, image::Image<RhsPixelT> con
 //
 /// \cond
 #define INSTANTIATE_OPERATOR(OP_EQ, T) \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<std::uint16_t> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<float> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs); \
-   template void image::operator OP_EQ(image::Image<T>& lhs, image::Image<std::uint64_t> const& rhs);
+   template image::Image<T>& image::operator OP_EQ(image::Image<T>& lhs, image::Image<std::uint16_t> const& rhs); \
+   template image::Image<T>& image::operator OP_EQ(image::Image<T>& lhs, image::Image<int> const& rhs); \
+   template image::Image<T>& image::operator OP_EQ(image::Image<T>& lhs, image::Image<float> const& rhs); \
+   template image::Image<T>& image::operator OP_EQ(image::Image<T>& lhs, image::Image<double> const& rhs); \
+   template image::Image<T>& image::operator OP_EQ(image::Image<T>& lhs, image::Image<std::uint64_t> const& rhs);
 
 #define INSTANTIATE(T) \
    template class image::ImageBase<T>; \
