@@ -22,14 +22,40 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/table/FieldBase.h"
+#include "lsst/afw/table/Key.h"
 
 namespace py = pybind11;
 
 using namespace lsst::afw::table;
 
+template <typename T>
+void declareKey(py::module &mod, const std::string & suffix){
+    py::class_<Key<T>, KeyBase<T>, FieldBase<T>> clsKey(mod, ("Key_"+suffix).c_str());
+    clsKey.def(py::init<>());
+    clsKey.def("_eq_impl", [](const Key<T> & self, Key<T> const & other)-> bool {
+        return self == other;
+    });
+    clsKey.def("isValid", &Key<T>::isValid);
+    clsKey.def("getOffset", &Key<T>::getOffset);
+};
+
 PYBIND11_PLUGIN(_key) {
     py::module mod("_key", "Python wrapper for afw _key library");
+    
+    declareKey<std::uint16_t>(mod, "U");
+    declareKey<std::int32_t>(mod, "I");
+    declareKey<std::int64_t>(mod, "L");
+    declareKey<float>(mod, "F");
+    declareKey<double>(mod, "D");
+    declareKey<std::string>(mod, "String");
+    declareKey<lsst::afw::geom::Angle>(mod, "Angle");
+    declareKey<lsst::afw::table::Array<std::uint16_t>>(mod, "ArrayU");
+    declareKey<lsst::afw::table::Array<int>>(mod, "ArrayI");
+    declareKey<lsst::afw::table::Array<float>>(mod, "ArrayF");
+    declareKey<lsst::afw::table::Array<double>>(mod, "ArrayD");
 
     /* Module level */
 

@@ -22,7 +22,9 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/table/AliasMap.h"
 
 namespace py = pybind11;
 
@@ -32,14 +34,29 @@ PYBIND11_PLUGIN(_aliasMap) {
     py::module mod("_aliasMap", "Python wrapper for afw _aliasMap library");
 
     /* Module level */
+    py::class_<AliasMap, std::shared_ptr<AliasMap>> clsAliasMap(mod, "AliasMap");
 
     /* Member types and enums */
 
     /* Constructors */
+    clsAliasMap.def(py::init<>());
+    clsAliasMap.def(py::init<AliasMap const &>());
 
     /* Operators */
 
     /* Members */
+    //clsAliasMap.def("begin", &AliasMap::begin);
+    //clsAliasMap.def("end", &AliasMap::end);
+    clsAliasMap.def("__len__", &AliasMap::size);
+    //clsAliasMap.def("empty", &AliasMap::empty);
+    //clsAliasMap.def("apply", &AliasMap::apply);
+    clsAliasMap.def("get", &AliasMap::get);
+    clsAliasMap.def("set", &AliasMap::set);
+    clsAliasMap.def("erase", &AliasMap::erase);
+    clsAliasMap.def("contains", &AliasMap::contains);
+    clsAliasMap.def("__iter__", [](AliasMap & self){
+        return py::make_iterator(self.begin(), self.end());
+    }, py::keep_alive<0,1>());
 
     return mod.ptr();
 }

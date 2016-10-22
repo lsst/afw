@@ -31,7 +31,7 @@ tests/testCoordinates.py
 #tests/testFootprintMergeCatalog.py
 tests/testFunction.py
 tests/testFunctor.py
-#tests/testFunctorKeys.py
+tests/testFunctorKeys.py
 tests/testGaussianProcess.py
 #tests/testGaussianPsf.py
 tests/testGeomTestUtils.py
@@ -67,9 +67,9 @@ tests/testMinimize.py
 #tests/testRgb.py
 #tests/testRowColumnStats.py
 #tests/testScaledPlus.py
-#tests/testSchema.py
+tests/testSchema.py
 tests/testSeparableXYTransform.py
-#tests/testSimpleTable.py
+tests/testSimpleTable.py
 #tests/testSourceMatch.py
 #tests/testSourceTable.py
 tests/testSpatialCell.py

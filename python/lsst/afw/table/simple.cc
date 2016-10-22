@@ -22,7 +22,12 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/coord/Coord.h"
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseTable.h"
+#include "lsst/afw/table/Simple.h"
 
 namespace py = pybind11;
 
@@ -32,6 +37,8 @@ PYBIND11_PLUGIN(_simple) {
     py::module mod("_simple", "Python wrapper for afw _simple library");
 
     /* Module level */
+    py::class_<SimpleTable, std::shared_ptr<SimpleTable>, BaseTable> clsSimpleTable(mod, "SimpleTable");
+    py::class_<SimpleRecord, std::shared_ptr<SimpleRecord>, BaseRecord> clsSimpleRecord(mod, "SimpleRecord");
 
     /* Member types and enums */
 
@@ -40,6 +47,17 @@ PYBIND11_PLUGIN(_simple) {
     /* Operators */
 
     /* Members */
+    clsSimpleTable.def_static("makeMinimalSchema", &SimpleTable::makeMinimalSchema);
+
+    clsSimpleRecord.def("getId", &SimpleRecord::getId);
+    clsSimpleRecord.def("setId", &SimpleRecord::setId);
+    clsSimpleRecord.def("getCoord", &SimpleRecord::getCoord);
+    clsSimpleRecord.def("setCoord", (void (SimpleRecord::*)(IcrsCoord const &)) &SimpleRecord::setCoord);
+    clsSimpleRecord.def("setCoord", (void (SimpleRecord::*)(Coord const &)) &SimpleRecord::setCoord);
+    clsSimpleRecord.def("getRa", &SimpleRecord::getRa);
+    clsSimpleRecord.def("setRa", &SimpleRecord::setRa);
+    clsSimpleRecord.def("getDec", &SimpleRecord::getDec);
+    clsSimpleRecord.def("setDec", &SimpleRecord::setDec);
 
     return mod.ptr();
 }
