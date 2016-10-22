@@ -40,10 +40,12 @@ void declareKdTree(py::module &mod, const std::string & suffix) {
     clsKdTree.def(py::init<>());
     clsKdTree.def("Initialize", &KdTree<T>::Initialize);
     clsKdTree.def("removePoint", &KdTree<T>::removePoint);
-    /*clsKdTree.def("getData", [](KdTree<T> &t, int ipt, int idim) -> T {
-            return t.getData(ipt, idim);
-    });*/
-    clsKdTree.def("getData", (T (KdTree<T>::*)(int ipt, int idim) const) &KdTree<T>::getData);
+    clsKdTree.def("getData", (T (KdTree<T>::*)(int, int) const) &KdTree<T>::getData);
+    clsKdTree.def("getData", (ndarray::Array<T,1,1> (KdTree<T>::*)(int) const) &KdTree<T>::getData);
+    clsKdTree.def("addPoint", &KdTree<T>::addPoint);
+    clsKdTree.def("getNPoints", &KdTree<T>::getNPoints);
+    clsKdTree.def("getTreeNode", &KdTree<T>::getTreeNode);
+    clsKdTree.def("findNeighbors", &KdTree<T>::findNeighbors);
 };
 
 template <typename T>
@@ -148,6 +150,15 @@ void declareGaussianProcess(py::module &mod, const std::string & suffix) {
     );
     clsGaussianProcess.def("setKrigingParameter", &GaussianProcess<T>::setKrigingParameter);
     clsGaussianProcess.def("removePoint", &GaussianProcess<T>::removePoint);
+    clsGaussianProcess.def("getNPoints", &GaussianProcess<T>::getNPoints);
+    clsGaussianProcess.def("getData",
+        (void (GaussianProcess<T>::*)(ndarray::Array<T,2,2>,
+                                      ndarray::Array<T,1,1>,
+                                      ndarray::Array<int, 1, 1>) const) &GaussianProcess<T>::getData);
+    clsGaussianProcess.def("getData",
+        (void (GaussianProcess<T>::*)(ndarray::Array<T,2,2>,
+                                      ndarray::Array<T,2,2>,
+                                      ndarray::Array<int, 1, 1>) const) &GaussianProcess<T>::getData);
 };
 
 PYBIND11_PLUGIN(_gaussianProcess) {
