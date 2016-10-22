@@ -33,6 +33,8 @@ or
 from __future__ import absolute_import, division, print_function
 import unittest
 
+import numpy as np
+
 import lsst.utils.tests
 import lsst.pex.exceptions
 import lsst.afw.table
@@ -49,10 +51,10 @@ class TableAliasTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
         self.schema = lsst.afw.table.Schema()
-        self.a11 = self.schema.addField("a11", type=int, doc="")
-        self.a12 = self.schema.addField("a12", type=int, doc="")
-        self.ab11 = self.schema.addField("ab11", type=int, doc="")
-        self.ab12 = self.schema.addField("ab12", type=int, doc="")
+        self.a11 = self.schema.addField("a11", type=np.int32, doc="")
+        self.a12 = self.schema.addField("a12", type=np.int32, doc="")
+        self.ab11 = self.schema.addField("ab11", type=np.int32, doc="")
+        self.ab12 = self.schema.addField("ab12", type=np.int32, doc="")
         self.dict = dict(q="a", r="a1", s="ab", t="ab11")
         for k, v in self.dict.items():
             self.schema.getAliasMap().set(k, v)

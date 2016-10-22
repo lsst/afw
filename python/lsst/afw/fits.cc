@@ -22,20 +22,28 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/pex/exceptions/Exception.h"
+#include "lsst/pex/exceptions/python/Exception.h"
+#include "lsst/afw/fits.h"
 
 namespace py = pybind11;
 
-using namespace lsst::afw::.;
+using namespace lsst::afw::fits;
 
 PYBIND11_PLUGIN(_fits) {
     py::module mod("_fits", "Python wrapper for afw _fits library");
 
     /* Module level */
+    py::register_exception<FitsError>(mod, "FitsError");
+    py::register_exception<FitsTypeError>(mod, "FitsTypeError");
+    py::class_<MemFileManager> clsMemFileManager(mod, "MemFileManager");
 
     /* Member types and enums */
 
     /* Constructors */
+    clsMemFileManager.def(py::init<>());
 
     /* Operators */
 

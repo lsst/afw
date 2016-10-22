@@ -22,16 +22,24 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/table/SchemaMapper.h"
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseTable.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 PYBIND11_PLUGIN(_baseTable) {
     py::module mod("_baseTable", "Python wrapper for afw _baseTable library");
 
     /* Module level */
+    py::class_<BaseTable, std::shared_ptr<BaseTable>> clsBaseTable(mod, "BaseTable");
 
     /* Member types and enums */
 
@@ -40,6 +48,22 @@ PYBIND11_PLUGIN(_baseTable) {
     /* Operators */
 
     /* Members */
+    clsBaseTable.def_static("make", &BaseTable::make);
+
+    clsBaseTable.def("getMetadata", &BaseTable::getMetadata);
+    clsBaseTable.def("setMetadata", &BaseTable::setMetadata, "metadata"_a);
+    //clsBaseTable.def("popMetadata", &BaseTable::popMetadata);
+    clsBaseTable.def("makeRecord", &BaseTable::makeRecord);
+    clsBaseTable.def("copyRecord", (PTR(BaseRecord) (BaseTable::*)(BaseRecord const &))
+        &BaseTable::copyRecord);
+    clsBaseTable.def("copyRecord", (PTR(BaseRecord) (BaseTable::*)(BaseRecord const &, SchemaMapper const &))
+        &BaseTable::copyRecord);
+    //clsBaseTable.def("getSchema", &BaseTable::getSchema);
+    clsBaseTable.def("getBufferSize", &BaseTable::getBufferSize);
+    clsBaseTable.def("clone", &BaseTable::clone);
+    clsBaseTable.def("preallocate", &BaseTable::preallocate);
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

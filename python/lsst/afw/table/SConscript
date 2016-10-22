@@ -1,3 +1,25 @@
 ## -*- python -*-
-#from lsst.sconsUtils import scripts
-#scripts.BasicSConscript.python(['tableLib'])
+from lsst.sconsUtils import scripts
+scripts.BasicSConscript.pybind11(['misc',
+                                  'flag',
+                                  'keyBase',
+                                  'fieldBase',
+                                  'key',
+                                  'field',
+                                  'aliasMap',
+                                  'schema',
+                                  'schemaMapper',
+                                  'baseRecord',
+                                  'baseTable',
+                                  'baseColumnView',
+                                  'baseCatalog',
+                                  'functorKey',
+                                  'arrays',
+                                  'aggregates',
+                                  'simple',
+                                  'simpleCatalog',
+                                  'source',
+                                  'sourceCatalog',
+                                  'match',
+                                  'ampInfo',
+                                  ])

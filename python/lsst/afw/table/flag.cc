@@ -24,22 +24,40 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/table/misc.h"
+#include "lsst/afw/table/Flag.h"
+
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 PYBIND11_PLUGIN(_flag) {
     py::module mod("_flag", "Python wrapper for afw _flag library");
 
     /* Module level */
+    py::class_<FieldBase<Flag>> clsFieldBase(mod, "FieldBase_Flag");
+    py::class_<KeyBase<Flag>> clsKeyBase(mod, "KeyBase_Flag");
+    py::class_<Key<Flag>, KeyBase<Flag>, FieldBase<Flag>> clsKey(mod, "Key_Flag");
+    clsKey.def("_eq_impl", [](const Key<Flag> & self, Key<Flag> const & other)-> bool {
+        return self == other;
+    });
 
     /* Member types and enums */
 
     /* Constructors */
+    clsFieldBase.def(py::init<>());
+    clsFieldBase.def(py::init<int>());
+    clsKey.def(py::init<>());
 
     /* Operators */
 
     /* Members */
+    clsFieldBase.def_static("getTypeString", &FieldBase<Flag>::getTypeString);
+    clsKey.def("getBit", &Key<Flag>::getBit);
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

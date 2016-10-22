@@ -22,16 +22,75 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
+
+#include "lsst/afw/table/Key.h"
+#include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/FunctorKey.h"
+#include "lsst/afw/table/arrays.h"
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
+
+template <typename T>
+void declareArrayKey(py::module & mod, std::string const & suffix) {
+    py::class_<ArrayKey<T>,
+               std::shared_ptr<ArrayKey<T>>,
+               FunctorKey<ndarray::Array<T const, 1, 1>>> clsArrayKey(mod, ("Array"+suffix+"Key").c_str());
+    
+    clsArrayKey.def(py::init<>());
+    clsArrayKey.def(py::init<Key<Array<T>> const &>());
+    clsArrayKey.def(py::init<std::vector< Key<T> > const &>());
+    clsArrayKey.def(py::init<SubSchema const &>());
+    
+    clsArrayKey.def_static("addFields", (ArrayKey<T> (*)(
+        Schema &,
+        std::string const &,
+        std::string const &,
+        std::string const &,
+        std::vector<T> const &
+    )) &ArrayKey<T>::addFields);
+    clsArrayKey.def_static("addFields", (ArrayKey<T> (*)(
+        Schema &,
+        std::string const &,
+        std::string const &,
+        std::string const &,
+        int size
+    )) &ArrayKey<T>::addFields);
+    clsArrayKey.def("get", &ArrayKey<T>::get);
+    clsArrayKey.def("set", &ArrayKey<T>::set);
+    clsArrayKey.def("isValid", &ArrayKey<T>::isValid);
+    clsArrayKey.def("__eq__", [](ArrayKey<T> & self, ArrayKey<T> & other) {
+        return self==other;
+    });
+    clsArrayKey.def("__ne__", [](ArrayKey<T> & self, ArrayKey<T> & other) {
+        return self!=other;
+    });
+    clsArrayKey.def("_get_", [](ArrayKey<T> & self, int i) {
+        return self[i];
+    });
+    clsArrayKey.def("getSize", &ArrayKey<T>::getSize);
+    clsArrayKey.def("slice", &ArrayKey<T>::slice);
+};
 
 PYBIND11_PLUGIN(_arrays) {
     py::module mod("_arrays", "Python wrapper for afw _arrays library");
+    
+    if (_import_array() < 0) {
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
+    };
 
     /* Module level */
+    declareArrayKey<float>(mod, "F");
+    declareArrayKey<double>(mod, "D");
 
     /* Member types and enums */
 
@@ -43,3 +102,5 @@ PYBIND11_PLUGIN(_arrays) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

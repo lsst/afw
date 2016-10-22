@@ -35,7 +35,7 @@ import unittest
 
 from builtins import zip
 from builtins import range
-import numpy
+import numpy as np
 
 try:
     import pyfits
@@ -58,12 +58,12 @@ except NameError:
 
 
 def makeArray(size, dtype):
-    return numpy.array(numpy.random.randn(size), dtype=dtype)
+    return np.array(np.random.randn(size), dtype=dtype)
 
 
 def makeCov(size, dtype):
-    m = numpy.array(numpy.random.randn(size, size), dtype=dtype)
-    r = numpy.dot(m, m.transpose())  # not quite symmetric for single-precision on some platforms
+    m = np.array(np.random.randn(size, size), dtype=dtype)
+    r = np.dot(m, m.transpose())  # not quite symmetric for single-precision on some platforms
     for i in range(r.shape[0]):
         for j in range(i):
             r[i, j] = r[j, i]
@@ -73,11 +73,11 @@ def makeCov(size, dtype):
 class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        numpy.random.seed(1)
+        np.random.seed(1)
 
     def checkScalarAccessors(self, record, key, name, value1, value2):
         fastSetter = getattr(record, "set" + key.getTypeString())
-        fastGetter = getattr(record, "get" + key.getTypeString())
+        fastGetter = getattr(record, "get")
         record[key] = value1
         self.assertEqual(record[key], value1)
         self.assertEqual(record.get(key), value1)
@@ -112,7 +112,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def checkArrayAccessors(self, record, key, name, value):
         fastSetter = getattr(record, "set" + key.getTypeString())
-        fastGetter = getattr(record, "get" + key.getTypeString())
+        fastGetter = getattr(record, "get")
         record.set(key, value)
         self.assertFloatsEqual(record.get(key), value)
         record.set(name, value)
@@ -137,17 +137,17 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         record = table.makeRecord()
         self.assertEqual(record[k1], 0)
         self.assertEqual(record[k2], 0)
-        self.assertTrue(numpy.isnan(record[k3]))
-        self.assertTrue(numpy.isnan(record[k4]))
+        self.assertTrue(np.isnan(record[k3]))
+        self.assertTrue(np.isnan(record[k4]))
         self.checkScalarAccessors(record, k0, "f0", 5, 6)
         self.checkScalarAccessors(record, k1, "f1", 2, 3)
         self.checkScalarAccessors(record, k2, "f2", 2, 3)
         self.checkScalarAccessors(record, k3, "f3", 2.5, 3.5)
         self.checkScalarAccessors(record, k4, "f4", 2.5, 3.5)
-        self.checkArrayAccessors(record, k10b, "f10b", makeArray(k10b.getSize(), dtype=numpy.uint16))
-        self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=numpy.int32))
-        self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=numpy.float32))
-        self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=numpy.float64))
+        self.checkArrayAccessors(record, k10b, "f10b", makeArray(k10b.getSize(), dtype=np.uint16))
+        self.checkArrayAccessors(record, k10a, "f10a", makeArray(k10a.getSize(), dtype=np.int32))
+        self.checkArrayAccessors(record, k10, "f10", makeArray(k10.getSize(), dtype=np.float32))
+        self.checkArrayAccessors(record, k11, "f11", makeArray(k11.getSize(), dtype=np.float64))
         for k in (k10, k11):
             self.assertEqual(k.subfields, tuple(range(k.getSize())))
         sub1 = k11.slice(1, 3)
@@ -169,7 +169,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         cat1 = lsst.afw.table.BaseCatalog(schema)
         for i in range(50):
             record = cat1.addNew()
-            record.set(k, numpy.random.randn())
+            record.set(k, np.random.randn())
         cat1.writeFits(target)
         cat2 = lsst.afw.table.BaseCatalog.readFits(target)
         self.assertEqual(len(cat1), len(cat2))
@@ -208,10 +208,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[0].set(kb1, False)
         catalog[0].set(kb2, True)
         catalog[0].set(kb3, False)
-        catalog[0].set(k4, numpy.array([-0.5, -0.25], dtype=numpy.float32))
-        catalog[0].set(k5, numpy.array([-1.5, -1.25, 3.375], dtype=numpy.float64))
+        catalog[0].set(k4, np.array([-0.5, -0.25], dtype=np.float32))
+        catalog[0].set(k5, np.array([-1.5, -1.25, 3.375], dtype=np.float64))
         catalog[0].set(k6, lsst.afw.geom.Angle(0.25))
-        catalog[0].set(k7, numpy.array([2, 3, 4, 1], dtype=numpy.uint16))
+        catalog[0].set(k7, np.array([2, 3, 4, 1], dtype=np.uint16))
         col1a = catalog[k1]
         self.assertEqual(col1a.shape, (1,))
         catalog.addNew()
@@ -222,10 +222,10 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog[1].set(kb1, True)
         catalog[1].set(kb2, False)
         catalog[1].set(kb3, True)
-        catalog[1].set(k4, numpy.array([-3.25, -0.75], dtype=numpy.float32))
-        catalog[1].set(k5, numpy.array([-1.25, -2.75, 0.625], dtype=numpy.float64))
+        catalog[1].set(k4, np.array([-3.25, -0.75], dtype=np.float32))
+        catalog[1].set(k5, np.array([-1.25, -2.75, 0.625], dtype=np.float64))
         catalog[1].set(k6, lsst.afw.geom.Angle(0.15))
-        catalog[1].set(k7, numpy.array([5, 6, 8, 7], dtype=numpy.uint16))
+        catalog[1].set(k7, np.array([5, 6, 8, 7], dtype=np.uint16))
         col1b = catalog[k1]
         self.assertEqual(col1b.shape, (2,))
         columns = catalog.getColumnView()
@@ -250,7 +250,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
                 self.assertEqual(catalog[i].get(key), vals[i])
                 self.assertEqual(array[i], vals[i])
         catalog[k1] = 4
-        f3v = numpy.random.randn(2)
+        f3v = np.random.randn(2)
         catalog["f3"] = f3v
         for i in [0, 1]:
             self.assertEqual(catalog[i].get(k1), 4)
@@ -261,12 +261,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         from signed columns
         """
         schema = lsst.afw.table.Schema()
-        k1 = schema.addField("f1", type=numpy.uint16, doc="scalar uint16")
+        k1 = schema.addField("f1", type=np.uint16, doc="scalar uint16")
         k2 = schema.addField("f2", type="ArrayU", doc="array uint16", size=4)
         cat1 = lsst.afw.table.BaseCatalog(schema)
         record1 = cat1.addNew()
         record1.set(k1, 4)
-        record1.set(k2, numpy.array([5, 6, 7, 8], dtype=numpy.uint16))
+        record1.set(k2, np.array([5, 6, 7, 8], dtype=np.uint16))
         filename = "testSimpleTable-testUnsignedFitsPersistence.fits"
         cat1.writeFits(filename)
         cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
@@ -278,7 +278,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testIteration(self):
         schema = lsst.afw.table.Schema()
-        k = schema.addField("a", type=int)
+        k = schema.addField("a", type=np.int32)
         catalog = lsst.afw.table.BaseCatalog(schema)
         for n in range(5):
             record = catalog.addNew()
@@ -295,17 +295,17 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testExtract(self):
         schema = lsst.afw.table.Schema()
-        schema.addField("a_b_c1", type=numpy.float64)
+        schema.addField("a_b_c1", type=np.float64)
         schema.addField("a_b_c2", type="Flag")
-        schema.addField("a_d1", type=numpy.int32)
-        schema.addField("a_d2", type=numpy.float32)
+        schema.addField("a_d1", type=np.int32)
+        schema.addField("a_d2", type=np.float32)
         pointKey = lsst.afw.table.Point2IKey.addFields(schema, "q_e1", "doc for point field", "pixel")
-        schema.addField("q_e2_xxSigma", type=numpy.float32)
-        schema.addField("q_e2_yySigma", type=numpy.float32)
-        schema.addField("q_e2_xySigma", type=numpy.float32)
-        schema.addField("q_e2_xx_yy_Cov", type=numpy.float32)
-        schema.addField("q_e2_xx_xy_Cov", type=numpy.float32)
-        schema.addField("q_e2_yy_xy_Cov", type=numpy.float32)
+        schema.addField("q_e2_xxSigma", type=np.float32)
+        schema.addField("q_e2_yySigma", type=np.float32)
+        schema.addField("q_e2_xySigma", type=np.float32)
+        schema.addField("q_e2_xx_yy_Cov", type=np.float32)
+        schema.addField("q_e2_xx_xy_Cov", type=np.float32)
+        schema.addField("q_e2_yy_xy_Cov", type=np.float32)
         covKey = lsst.afw.table.CovarianceMatrix3fKey(schema["q_e2"], ["xx", "yy", "xy"])
         self.assertEqual(list(schema.extract("a_b_*", ordered=True).keys()), ["a_b_c1", "a_b_c2"])
         self.assertEqual(list(schema.extract("*1", ordered=True).keys()), ["a_b_c1", "a_d1"])
@@ -316,12 +316,12 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         catalog = lsst.afw.table.BaseCatalog(schema)
         for i in range(5):
             record = catalog.addNew()
-            record.set("a_b_c1", numpy.random.randn())
+            record.set("a_b_c1", np.random.randn())
             record.set("a_b_c2", True)
-            record.set("a_d1", numpy.random.randint(100))
-            record.set("a_d2", numpy.random.randn())
-            record.set(pointKey, lsst.afw.geom.Point2I(numpy.random.randint(10), numpy.random.randint(10)))
-            record.set(covKey, numpy.random.randn(3, 3).astype(numpy.float32))
+            record.set("a_d1", np.random.randint(100))
+            record.set("a_d2", np.random.randn())
+            record.set(pointKey, lsst.afw.geom.Point2I(np.random.randint(10), np.random.randint(10)))
+            record.set(covKey, np.random.randn(3, 3).astype(np.float32))
         d = record.extract("*")
         self.assertEqual(set(d.keys()), set(schema.getNames()))
         self.assertEqual(d["a_b_c1"], record.get("a_b_c1"))
@@ -332,7 +332,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(d["q_e1_y"], record.get(pointKey.getY()))
         allIdx = slice(None)
         sliceIdx = slice(0, 4, 2)
-        boolIdx = numpy.array([True, False, False, True, True])
+        boolIdx = np.array([True, False, False, True, True])
         for kwds, idx in [
             ({}, allIdx),
             ({"copy": True}, allIdx),
@@ -358,13 +358,13 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testExtend(self):
         schema1 = lsst.afw.table.SourceTable.makeMinimalSchema()
-        k1 = schema1.addField("f1", type=int)
-        k2 = schema1.addField("f2", type=float)
+        k1 = schema1.addField("f1", type=np.int32)
+        k2 = schema1.addField("f2", type=np.float64)
         cat1 = lsst.afw.table.BaseCatalog(schema1)
         for i in range(1000):
             record = cat1.addNew()
             record.setI(k1, i)
-            record.setD(k2, numpy.random.randn())
+            record.setD(k2, np.random.randn())
         self.assertFalse(cat1.isContiguous())
         cat2 = lsst.afw.table.BaseCatalog(schema1)
         cat2.extend(cat1, deep=True)
@@ -422,7 +422,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testTicket2393(self):
         schema = lsst.afw.table.Schema()
-        k = schema.addField(lsst.afw.table.Field[int]("i", "doc for i"))
+        k = schema.addField(lsst.afw.table.Field[np.int32]("i", "doc for i"))
         item = schema.find("i")
         self.assertEqual(k, item.key)
 
@@ -434,23 +434,23 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
     def testTicket2894(self):
         """Test boolean-array indexing of catalogs"""
         schema = lsst.afw.table.Schema()
-        key = schema.addField(lsst.afw.table.Field[int]("i", "doc for i"))
+        key = schema.addField(lsst.afw.table.Field[np.int32]("i", "doc for i"))
         cat1 = lsst.afw.table.BaseCatalog(schema)
         cat1.addNew().set(key, 1)
         cat1.addNew().set(key, 2)
         cat1.addNew().set(key, 3)
-        cat2 = cat1[numpy.array([True, False, False], dtype=bool)]
-        self.assertFloatsEqual(cat2[key], numpy.array([1], dtype=int))
+        cat2 = cat1[np.array([True, False, False], dtype=bool)]
+        self.assertFloatsEqual(cat2[key], np.array([1], dtype=np.int32))
         self.assertEqual(cat2[0], cat1[0])  # records compare using pointer equality
-        cat3 = cat1[numpy.array([True, True, False], dtype=bool)]
-        self.assertFloatsEqual(cat3[key], numpy.array([1, 2], dtype=int))
-        cat4 = cat1[numpy.array([True, False, True], dtype=bool)]
-        self.assertFloatsEqual(cat4.copy(deep=True)[key], numpy.array([1, 3], dtype=int))
+        cat3 = cat1[np.array([True, True, False], dtype=bool)]
+        self.assertFloatsEqual(cat3[key], np.array([1, 2], dtype=np.int32))
+        cat4 = cat1[np.array([True, False, True], dtype=bool)]
+        self.assertFloatsEqual(cat4.copy(deep=True)[key], np.array([1, 3], dtype=np.int32))
 
     def testTicket2938(self):
         """Test heterogenous catalogs that have records from multiple tables"""
         schema = lsst.afw.table.Schema()
-        schema.addField("i", type=int, doc="doc for i")
+        schema.addField("i", type=np.int32, doc="doc for i")
         cat = lsst.afw.table.BaseCatalog(schema)
         cat.addNew()
         t1 = lsst.afw.table.BaseTable.make(schema)
@@ -460,7 +460,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             cat.getColumnView()
         with lsst.utils.tests.getTempFilePath(".fits") as filename:
             cat.writeFits(filename)  # shouldn't throw
-            schema.addField("d", type=float, doc="doc for d")
+            schema.addField("d", type=np.float64, doc="doc for d")
             t2 = lsst.afw.table.BaseTable.make(schema)
             cat.append(t2.makeRecord())
             with self.assertRaises(lsst.pex.exceptions.LogicError):
@@ -469,15 +469,15 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
     def testTicket3056(self):
         """Test sorting and sort-based searches of Catalogs"""
         schema = lsst.afw.table.SimpleTable.makeMinimalSchema()
-        ki = schema.addField("i", type=int, doc="doc for i")
-        kl = schema.addField("l", type=numpy.int64, doc="doc for l")
-        kf = schema.addField("f", type=float, doc="doc for f")
+        ki = schema.addField("i", type=np.int32, doc="doc for i")
+        kl = schema.addField("l", type=np.int64, doc="doc for l")
+        kf = schema.addField("f", type=np.float64, doc="doc for f")
         cat = lsst.afw.table.SimpleCatalog(schema)
         for j in range(50, 0, -1):
             record = cat.addNew()
             record.set(ki, j//10)
             record.set(kl, j)
-            record.set(kf, numpy.random.randn())
+            record.set(kf, np.random.randn())
         self.assertFalse(cat.isSorted(ki))
         self.assertFalse(cat.isSorted(kl))
         # sort by unique int64 field, try unique lookups
@@ -510,7 +510,7 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
 
     def testRename(self):
         """Test field-renaming functionality in Field, SchemaMapper"""
-        field1i = lsst.afw.table.Field[int]("i1", "doc for i", "m")
+        field1i = lsst.afw.table.Field[np.int32]("i1", "doc for i", "m")
         field2i = field1i.copyRenamed("i2")
         self.assertEqual(field1i.getName(), "i1")
         self.assertEqual(field2i.getName(), "i2")
@@ -607,9 +607,9 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
         self.assertEqual(list(record1.get(ka)), [])
         self.assertEqual(list(record1.get(kb)), [])
         self.assertEqual(list(record1.get(kc)), [])
-        a1 = numpy.random.randint(low=3, high=6, size=4).astype(numpy.int32)
-        b1 = numpy.random.randn(5).astype(numpy.float32)
-        c1 = numpy.random.randn(6).astype(numpy.float64)
+        a1 = np.random.randint(low=3, high=6, size=4).astype(np.int32)
+        b1 = np.random.randn(5).astype(np.float32)
+        c1 = np.random.randn(6).astype(np.float64)
         # Test get/set
         record1.set(ka, a1)
         record1.set(kb, b1)
@@ -662,15 +662,15 @@ class SimpleTableTestCase(lsst.utils.tests.TestCase):
             "coord_ra": 1.0*lsst.afw.geom.radians, "coord_dec": 0.5*lsst.afw.geom.radians,
         }
         covValues = {
-            "cov_z": numpy.array([[4.00, 1.25, 1.50, 0.75],
+            "cov_z": np.array([[4.00, 1.25, 1.50, 0.75],
                                   [1.25, 2.25, 0.50, 0.25],
                                   [1.50, 0.50, 6.25, 1.75],
-                                  [0.75, 0.25, 1.75, 9.00]], dtype=numpy.float32),
-            "cov_p": numpy.array([[5.50, -2.0],
-                                  [-2.0, 3.25]], dtype=numpy.float32),
-            "cov_m": numpy.array([[3.75, -0.5, 1.25],
+                                  [0.75, 0.25, 1.75, 9.00]], dtype=np.float32),
+            "cov_p": np.array([[5.50, -2.0],
+                                  [-2.0, 3.25]], dtype=np.float32),
+            "cov_m": np.array([[3.75, -0.5, 1.25],
                                   [-0.5, 4.50, 0.75],
-                                  [1.25, 0.75, 6.25]], dtype=numpy.float32),
+                                  [1.25, 0.75, 6.25]], dtype=np.float32),
         }
         filename = os.path.join(os.path.split(__file__)[0], "data", "CompoundFieldConversion.fits")
         cat2 = lsst.afw.table.BaseCatalog.readFits(filename)
