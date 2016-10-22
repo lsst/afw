@@ -24,14 +24,22 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/table/misc.h"
+
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 PYBIND11_PLUGIN(_misc) {
     py::module mod("_misc", "Python wrapper for afw _misc library");
 
     /* Module level */
+    py::enum_<CoordinateType>(mod, "CoordinateType")
+        .value("PIXEL", CoordinateType::PIXEL)
+        .value("CELESTIAL", CoordinateType::CELESTIAL)
+        .export_values();
 
     /* Member types and enums */
 
@@ -43,3 +51,5 @@ PYBIND11_PLUGIN(_misc) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table
