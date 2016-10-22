@@ -22,7 +22,9 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/geom/ellipses/BaseCore.h"
 
 namespace py = pybind11;
 
@@ -32,6 +34,7 @@ PYBIND11_PLUGIN(_baseCore) {
     py::module mod("_baseCore", "Python wrapper for afw _baseCore library");
 
     /* Module level */
+    py::class_<BaseCore, std::shared_ptr<BaseCore>> clsBaseCore(mod, "BaseCore");
 
     /* Member types and enums */
 

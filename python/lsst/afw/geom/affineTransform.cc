@@ -30,6 +30,7 @@
 #include "lsst/afw/geom/AffineTransform.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 using namespace lsst::afw::geom;
 
@@ -81,8 +82,8 @@ PYBIND11_PLUGIN(_affineTransform) {
     clsAffineTransform.def("setParameterVector", &AffineTransform::setParameterVector);
     clsAffineTransform.def_static("makeScaling", (AffineTransform (*)(double)) &AffineTransform::makeScaling);
     clsAffineTransform.def_static("makeScaling", (AffineTransform (*)(double, double)) &AffineTransform::makeScaling);
-    clsAffineTransform.def_static("makeRotation", (AffineTransform (*)(Angle)) &AffineTransform::makeRotation);
-    clsAffineTransform.def_static("makeRotation", (AffineTransform (*)(Extent2D)) &AffineTransform::makeRotation);
+    clsAffineTransform.def_static("makeRotation", &AffineTransform::makeRotation, "angle"_a);
+    clsAffineTransform.def_static("makeTranslation", &AffineTransform::makeTranslation, "translation"_a);
 
     /* Non-members */
     mod.def("makeAffineTransformFromTriple", makeAffineTransformFromTriple);

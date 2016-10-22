@@ -51,13 +51,13 @@ class MatchFitsTestCase(unittest.TestCase):
             self.cat1.append(record1)
             self.cat2.append(record2)
 
-        self.matches = afwTable.SimpleMatchVector()
+        self.matches = []
         for i in range(self.numMatches):
             index = 2*i
             match = afwTable.SimpleMatch(self.cat1[index], self.cat2[self.size - index - 1], index)
             if Debug:
                 print("Inject:", match.first.getId(), match.second.getId())
-            self.matches.push_back(match)
+            self.matches.append(match)
 
     def tearDown(self):
         del self.schema

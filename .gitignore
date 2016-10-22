@@ -2,6 +2,7 @@
 *.o
 *.so
 *.os
+*.os-*
 *.pyc
 _build.*
 *~
