@@ -1,2 +1,3 @@
 from .fitsLib import FitsError, FitsTypeError, MemFileManager
-from .pickleFits import reduceToFits, unreduceFromFits
+# pickleFits is not yet wrapped, so importing this causes an error
+#from .pickleFits import reduceToFits, unreduceFromFits

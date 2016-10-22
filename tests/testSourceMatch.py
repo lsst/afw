@@ -59,8 +59,8 @@ class SourceMatchTestCase(unittest.TestCase):
 
     def setUp(self):
         schema = afwTable.SourceTable.makeMinimalSchema()
-        schema.addField("flux_flux", type=float)
-        schema.addField("flux_fluxSigma", type=float)
+        schema.addField("flux_flux", type=np.float64)
+        schema.addField("flux_fluxSigma", type=np.float64)
         schema.addField("flux_flag", type="Flag")
         self.table = afwTable.SourceTable.make(schema)
         self.table.definePsfFlux("flux")
@@ -90,10 +90,6 @@ class SourceMatchTestCase(unittest.TestCase):
             s.set(afwTable.SourceTable.getCoordKey().getRa(), (10 + 0.0010001*i) * afwGeom.degrees)
             s.set(afwTable.SourceTable.getCoordKey().getDec(), (10 + 0.0010001*i) * afwGeom.degrees)
 
-        # Old API (pre DM-855)
-        mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0 * afwGeom.arcseconds, False)
-        self.assertEqual(len(mat), nobj)
-        # New API
         mc = afwTable.MatchControl()
         mc.findOnlyClosest = False
         mat = afwTable.matchRaDec(self.ss1, self.ss2, 1.0*afwGeom.arcseconds, mc)
@@ -306,7 +302,7 @@ class SourceMatchTestCase(unittest.TestCase):
 
         Also checks that the slots survive pickling, if checkSlots is True.
         """
-        orig = afwTable.SourceMatchVector(matches)
+        orig = matches[:]
         unpickled = pickle.loads(pickle.dumps(orig))
         self.assertEqual(len(orig), len(unpickled))
         for m1, m2 in zip(orig, unpickled):

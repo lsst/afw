@@ -47,8 +47,8 @@ void declarePolynomialFunctions(py::module &mod, const std::string & suffix) {
                    clsPolynomialFunction1(mod, ("PolynomialFunction1" + suffix).c_str());
 
     /* PolynomialFunction1 Constructors */
-    clsPolynomialFunction1.def(py::init<unsigned int>());
     clsPolynomialFunction1.def(py::init<std::vector<double> const &>());
+    clsPolynomialFunction1.def(py::init<unsigned int>());
 
     /* PolynomialFunction1 Members */
     clsPolynomialFunction1.def("__call__", &PolynomialFunction1<ReturnT>::operator());
@@ -61,8 +61,8 @@ void declarePolynomialFunctions(py::module &mod, const std::string & suffix) {
                BasePolynomialFunction2<ReturnT>>
                    clsPolynomialFunction2(mod, ("PolynomialFunction2" + suffix).c_str());
     /* PolynomialFunction2 Constructors */
-    clsPolynomialFunction2.def(py::init<unsigned int>());
     clsPolynomialFunction2.def(py::init<std::vector<double> const &>());
+    clsPolynomialFunction2.def(py::init<unsigned int>());
     
     /* PolynomialFunction2 Members */
     clsPolynomialFunction2.def("__call__", &PolynomialFunction2<ReturnT>::operator());
@@ -78,12 +78,12 @@ void declareChebyshevFunctions(py::module &mod, const std::string & suffix) {
                std::shared_ptr<Chebyshev1Function1<ReturnT>>,
                Function1<ReturnT>> clsChebyshev1Function1(mod, ("Chebyshev1Function1" + suffix).c_str());
     /* Chebyshev1Function1 Consructors */
-    clsChebyshev1Function1.def(py::init<unsigned int, double, double>(),
-                              "order"_a,
-                              "minX"_a=-1,
-                              "maxX"_a=1);
     clsChebyshev1Function1.def(py::init<std::vector<double>, double, double>(),
                               "params"_a,
+                              "minX"_a=-1,
+                              "maxX"_a=1);
+    clsChebyshev1Function1.def(py::init<unsigned int, double, double>(),
+                              "order"_a,
                               "minX"_a=-1,
                               "maxX"_a=1);
     /* Chebyshev1Function1 Members */
@@ -99,12 +99,12 @@ void declareChebyshevFunctions(py::module &mod, const std::string & suffix) {
                BasePolynomialFunction2<ReturnT>>
                    clsChebyshev1Function2(mod, ("Chebyshev1Function2" + suffix).c_str());
     /* Chebyshev1Function2 Consructors */
-    clsChebyshev1Function2.def(py::init<unsigned int, lsst::afw::geom::Box2D const &>(),
+    clsChebyshev1Function2.def(py::init<std::vector<double>, lsst::afw::geom::Box2D const &>(),
                               "order"_a,
                               "xyRange"_a=
                                   lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(-1.0, -1.0),
                                                          lsst::afw::geom::Point2D( 1.0,  1.0)));
-    clsChebyshev1Function2.def(py::init<std::vector<double>, lsst::afw::geom::Box2D const &>(),
+    clsChebyshev1Function2.def(py::init<unsigned int, lsst::afw::geom::Box2D const &>(),
                               "order"_a,
                               "xyRange"_a=
                                   lsst::afw::geom::Box2D(lsst::afw::geom::Point2D(-1.0, -1.0),
