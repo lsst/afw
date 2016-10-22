@@ -115,7 +115,7 @@ class AmpInfoTableTestCase(unittest.TestCase):
             self.assertEquals(saturation, record.getSaturation())
             self.assertEquals(readNoise, record.getReadNoise())
             self.assertEquals(readoutCorner, record.getReadoutCorner())
-            self.assertEquals(linearityCoeffs, record.getLinearityCoeffs())
+            self.assertEquals(list(linearityCoeffs), record.getLinearityCoeffs())
             self.assertEquals(linearityType, record.getLinearityType())
             self.assertEquals(bbox, record.getBBox())
             self.assertEquals(hasRawInfo, record.getHasRawInfo())

@@ -22,24 +22,36 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/geom/ellipses/BaseCore.h"
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/geom/ellipses/Ellipse.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::geom::ellipses;
+using namespace lsst::afw::geom;
+using namespace ellipses;
 
 PYBIND11_PLUGIN(_ellipse) {
     py::module mod("_ellipse", "Python wrapper for afw _ellipse library");
 
     /* Module level */
+    py::class_<Ellipse, std::shared_ptr<Ellipse>> clsEllipse(mod, "Ellipse");
 
     /* Member types and enums */
 
     /* Constructors */
+    clsEllipse.def(py::init<BaseCore const &, Point2D const &>(), "core"_a, "center"_a=Point2D());
 
     /* Operators */
 
     /* Members */
+    clsEllipse.def("getCore", [](Ellipse & ellipse){
+        return ellipse.getCorePtr();
+    });
+    clsEllipse.def("getCenter", (Point2D & (Ellipse::*)())&Ellipse::getCenter);
 
     return mod.ptr();
 }

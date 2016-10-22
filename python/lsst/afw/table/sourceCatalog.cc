@@ -22,16 +22,32 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/SortedCatalog.h"
+#include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/sortedCatalog.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
-PYBIND11_PLUGIN(_sortedCatalog) {
-    py::module mod("_sortedCatalog", "Python wrapper for afw _sortedCatalog library");
+PYBIND11_PLUGIN(_sourceCatalog) {
+    py::module mod("_sourceCatalog", "Python wrapper for afw _sourceCatalog library");
+
+    typedef py::class_<CatalogT<SourceRecord>, std::shared_ptr<CatalogT<SourceRecord>>> PyBaseSourceCatalog;
+
+    typedef py::class_<SourceCatalog, std::shared_ptr<SourceCatalog>, CatalogT<SourceRecord>> PySourceCatalog;
 
     /* Module level */
+    PyBaseSourceCatalog clsBaseSourceCatalog(mod, "_BaseSourceCatalog");
+
+    PySourceCatalog clsSourceCatalog(mod, "SourceCatalog");
 
     /* Member types and enums */
 
@@ -40,6 +56,11 @@ PYBIND11_PLUGIN(_sortedCatalog) {
     /* Operators */
 
     /* Members */
+    declareCatalog<SourceRecord>(clsBaseSourceCatalog);
+
+    declareSortedCatalog<SourceRecord>(clsSourceCatalog);
 
     return mod.ptr();
 }
+
+}}} // lsst::afw::table

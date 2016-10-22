@@ -230,6 +230,7 @@ class FunctorKeysTestCase(lsst.utils.tests.TestCase):
         record.set(pKey, lsst.afw.geom.Point2D(5, 6))
         # test that the return type and value is correct
         self.assertIsInstance(record.get(fKey1), lsst.afw.geom.ellipses.Ellipse)
+        
         self.assertClose(record.get(fKey1).getCore().getIxx(), record.get(qKey).getIxx(), rtol=1E-14)
         self.assertClose(record.get(fKey1).getCore().getIyy(), record.get(qKey).getIyy(), rtol=1E-14)
         self.assertClose(record.get(fKey1).getCore().getIxy(), record.get(qKey).getIxy(), rtol=1E-14)

@@ -26,7 +26,9 @@
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 PYBIND11_PLUGIN(_slots) {
     py::module mod("_slots", "Python wrapper for afw _slots library");
@@ -43,3 +45,5 @@ PYBIND11_PLUGIN(_slots) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table
