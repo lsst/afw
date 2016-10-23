@@ -30,8 +30,6 @@
 
 #include "lsst/afw/math/GaussianProcess.h"
 
-PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
-
 namespace py = pybind11;
 
 using namespace lsst::afw::math;
@@ -42,14 +40,10 @@ void declareKdTree(py::module &mod, const std::string & suffix) {
     clsKdTree.def(py::init<>());
     clsKdTree.def("Initialize", &KdTree<T>::Initialize);
     clsKdTree.def("removePoint", &KdTree<T>::removePoint);
-    //clsKdTree.def("getData", &KdTree<T>::getData);
-    clsKdTree.def("getData", [](KdTree<T> &t, int ipt, int idim) -> T {
+    /*clsKdTree.def("getData", [](KdTree<T> &t, int ipt, int idim) -> T {
             return t.getData(ipt, idim);
-    });
-    //clsKdTree.def("", &KdTree<T>::);
-    //clsKdTree.def("", &KdTree<T>::);
-    //clsKdTree.def("", &KdTree<T>::);
-    //clsKdTree.def("", &KdTree<T>::);
+    });*/
+    clsKdTree.def("getData", (T (KdTree<T>::*)(int ipt, int idim) const) &KdTree<T>::getData);
 };
 
 template <typename T>

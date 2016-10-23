@@ -35,8 +35,6 @@ using namespace pybind11::literals;
 
 using namespace lsst::afw::math;
 
-PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
-
 PYBIND11_PLUGIN(_interpolate) {
     py::module mod("_interpolate", "Python wrapper for afw _interpolate library");
 
@@ -58,9 +56,14 @@ PYBIND11_PLUGIN(_interpolate) {
         .value("NUM_STYLES", Interpolate::Style::NUM_STYLES)
         .export_values();
 
-    clsInterpolate.def("interpolate", [](Interpolate &t, double const x) -> double {
-            return t.interpolate(x);
+    clsInterpolate.def("interpolate", [](Interpolate &t, double const x) {
+        /*
+        We use a lambda function here because interpolate (with a double) is a virtual function and therefor
+        cannot be wrapped directly.
+        */
+        return t.interpolate(x);
     });
+    
     clsInterpolate.def("interpolate",
                        (std::vector<double> (Interpolate::*) (std::vector<double> const&) const)
                            &Interpolate::interpolate);
@@ -72,12 +75,12 @@ PYBIND11_PLUGIN(_interpolate) {
                        (PTR(Interpolate) (*)(std::vector<double> const &,
                                              std::vector<double> const &,
                                              Interpolate::Style const)) makeInterpolate,
-                       py::arg("x"), py::arg("y"), py::arg("style")=Interpolate::AKIMA_SPLINE);
+                       "x"_a, "y"_a, "style"_a=Interpolate::AKIMA_SPLINE);
     mod.def("makeInterpolate", 
                        (PTR(Interpolate) (*)(ndarray::Array<double const, 1> const &,
                                              ndarray::Array<double const, 1> const &y,
                                              Interpolate::Style const)) makeInterpolate,
-                       py::arg("x"), py::arg("y"), py::arg("style")=Interpolate::AKIMA_SPLINE);
+                       "x"_a, "y"_a, "style"_a=Interpolate::AKIMA_SPLINE);
     /* Module level */
 
     /* Member types and enums */

@@ -73,7 +73,6 @@ void declareLeastSquares(py::module &mod){
     cls.def("getDiagnostic", &LeastSquares::getDiagnostic);
     cls.def("getThreshold", &LeastSquares::getThreshold);
     cls.def("setThreshold", &LeastSquares::setThreshold);
-    //cls.def("", &LeastSquares::);
 };
 
 PYBIND11_PLUGIN(_leastSquares) {

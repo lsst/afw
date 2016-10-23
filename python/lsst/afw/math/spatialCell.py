@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 from lsst.pex.exceptions import NotFoundError
-#import lsst.afw.image as afwImage
 from ._spatialCell import *
 
 def spatialCellCandidateIter(self):
