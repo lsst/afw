@@ -44,32 +44,34 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
             return nullptr;
     };
 
-    /* ChebyshevBoundedFieldControl */
+
+    /* Module level */
     py::class_<ChebyshevBoundedFieldControl>
         clsChebyshevBoundedFieldControl(mod, "ChebyshevBoundedFieldControl");
-    /* ChebyshevBoundedFieldControl  Constructors */
-    clsChebyshevBoundedFieldControl.def(py::init<>());
-    /* ChebyshevBoundedFieldControl Members */
-    clsChebyshevBoundedFieldControl.def_readwrite("orderX", &ChebyshevBoundedFieldControl::orderX);
-    clsChebyshevBoundedFieldControl.def_readwrite("orderY", &ChebyshevBoundedFieldControl::orderY);
-    clsChebyshevBoundedFieldControl.def_readwrite("triangular", &ChebyshevBoundedFieldControl::triangular);
-    
-    typedef ChebyshevBoundedFieldControl Control;
-    
-    /* ChebyshevBoundedFieldControl */
     py::class_<ChebyshevBoundedField, std::shared_ptr<ChebyshevBoundedField>, BoundedField>
         clsChebyshevBoundedField(mod, "ChebyshevBoundedField");
-    /* ChebyshevBoundedFieldControl  Constructors */
+
+    /* Member types and enums */
+    using Control = ChebyshevBoundedFieldControl;
+
+    /* Constructors */
+    clsChebyshevBoundedFieldControl.def(py::init<>());
     clsChebyshevBoundedField.def(py::init<lsst::afw::geom::Box2I const &, ndarray::Array<double const,2,2>
         const &>());
-    /* ChebyshevBoundedFieldControl  Operators */
+
+    /* Operators */
     clsChebyshevBoundedField.def("__rmul__", [](ChebyshevBoundedField &bf, double const scale){
             return bf*scale;
     }, py::is_operator());
     clsChebyshevBoundedField.def("__mul__", [](ChebyshevBoundedField &bf, double const scale){
             return bf*scale;
     }, py::is_operator());
-    /* ChebyshevBoundedFieldControl  Members */
+
+    /* Members */
+    clsChebyshevBoundedFieldControl.def_readwrite("orderX", &ChebyshevBoundedFieldControl::orderX);
+    clsChebyshevBoundedFieldControl.def_readwrite("orderY", &ChebyshevBoundedFieldControl::orderY);
+    clsChebyshevBoundedFieldControl.def_readwrite("triangular", &ChebyshevBoundedFieldControl::triangular);
+    
     clsChebyshevBoundedField.def("getCoefficients", &ChebyshevBoundedField::getCoefficients);
     clsChebyshevBoundedField.def_static("fit", (PTR(ChebyshevBoundedField) (*)
         (lsst::afw::geom::Box2I const &,
@@ -86,16 +88,6 @@ PYBIND11_PLUGIN(_chebyshevBoundedField) {
          Control const &)) &ChebyshevBoundedField::fit);
     
     clsChebyshevBoundedField.def("truncate", &ChebyshevBoundedField::truncate);
-    
-    /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
-
-    /* Members */
 
     return mod.ptr();
 }

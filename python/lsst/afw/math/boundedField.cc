@@ -32,7 +32,6 @@
 #include "lsst/afw/math/BoundedField.h"
 
 namespace py = pybind11;
-PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
 
 using namespace lsst::afw::math;
 

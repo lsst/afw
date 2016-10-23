@@ -30,10 +30,8 @@ namespace py = pybind11;
 
 using namespace lsst::afw::math;
 
-PYBIND11_DECLARE_HOLDER_TYPE(MyType, std::shared_ptr<MyType>);
-
 template<typename ReturnT>
-void declareFunctions(py::module &mod, const std::string & suffix){
+void declareFunctions(py::module & mod, const std::string & suffix){
     /* Function */
     py::class_<Function<ReturnT>> clsFunction(mod, ("Function"+suffix).c_str());
     /* Function Constructors */
@@ -52,7 +50,7 @@ void declareFunctions(py::module &mod, const std::string & suffix){
     /* BasePolynomialFunction2 */
     py::class_<BasePolynomialFunction2<ReturnT>,
                std::shared_ptr<BasePolynomialFunction2<ReturnT>>,
-               Function2<ReturnT> > 
+               Function2<ReturnT>>
                    clsBasePolynomialFunction2(mod, ("BasePolynomialFunction2" + suffix).c_str());
     clsBasePolynomialFunction2.def_static("nParametersFromOrder",
                                    BasePolynomialFunction2<ReturnT>::nParametersFromOrder);

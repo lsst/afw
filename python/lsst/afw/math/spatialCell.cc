@@ -122,7 +122,6 @@ void declareTestClasses(py::module &mod){
         clsTestCandidateVisitor(mod, ("TestCandidateVisitor"));
     clsTestCandidateVisitor.def(py::init<>());
     clsTestCandidateVisitor.def("getN", &TestCandidateVisitor::getN);
-    //clsTestCandidateVisitor.def("", &TestCandidateVisitor::);
     
     py::class_<TestMaskedImageCandidate,
                std::shared_ptr<TestMaskedImageCandidate>,
@@ -225,7 +224,6 @@ PYBIND11_PLUGIN(_spatialCell) {
                           "visitor"_a, "nMaxPerCell"_a=-1, "ignoreExceptions"_a=false);
     clsSpatialCellSet.def("getCandidateById", &SpatialCellSet::getCandidateById, "id"_a, "noThrow"_a=false);
     clsSpatialCellSet.def("sortCandidates", &SpatialCellSet::sortCandidates);
-    //clsSpatialCellSet.def("", &SpatialCellSet::);
     
     /* CandidateVisitor */
     py::class_<CandidateVisitor, std::shared_ptr<CandidateVisitor>>
