@@ -12,7 +12,10 @@ pybind11_ported_tests = ['tests/testFunctor.py',
                          'tests/testAngle.py',
                          'tests/testBox.py',
                          'tests/testCoord.py',
-                         'tests/testCoordinates.py']
+                         'tests/testCoordinates.py',
+                         'tests/testFunction.py',
+                         'tests/testSpatialCell.py',
+                         'tests/testSpline.py']
 
 if not afwdataDir:
 	testArgs = dict(statistics = "--run_test=!StatisticsTestImages", background = "--run_test=!BackgroundTestImages",)

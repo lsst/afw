@@ -22,11 +22,32 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/math/minimize.h"
 
 namespace py = pybind11;
 
 using namespace lsst::afw::math;
+
+template <typename ReturnT>
+void declareMinimize(py::module & mod) {
+    mod.def("minimize", (FitResults (*) (lsst::afw::math::Function1<ReturnT> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         double)) minimize<ReturnT>);
+    mod.def("minimize", (FitResults (*) (lsst::afw::math::Function2<ReturnT> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         std::vector<double> const &,
+                                         double)) minimize<ReturnT>);
+};
 
 PYBIND11_PLUGIN(_minimize) {
     py::module mod("_minimize", "Python wrapper for afw _minimize library");
@@ -40,6 +61,14 @@ PYBIND11_PLUGIN(_minimize) {
     /* Operators */
 
     /* Members */
+    py::class_<FitResults> clsFitResults(mod, "FitResults");
+    clsFitResults.def_readwrite("isValid", &FitResults::isValid);
+    clsFitResults.def_readwrite("chiSq", &FitResults::chiSq);
+    clsFitResults.def_readwrite("parameterList", &FitResults::parameterList);
+    clsFitResults.def_readwrite("parameterErrorList", &FitResults::parameterErrorList);
+
+    declareMinimize<double>(mod);
+    declareMinimize<float>(mod);
 
     return mod.ptr();
 }
