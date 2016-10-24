@@ -70,7 +70,7 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
 
     E.g.
          import lsst.afw.display as afwDisplay
-         display = afwDisplay.Display("ds9", frame=1)
+         display = afwDisplay.Display(display=1, backend="ds9")
      would call
          _makeDisplayImpl(..., "ds9", 1)
     and import the ds9 implementation of DisplayImpl from lsst.display.ds9
