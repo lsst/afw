@@ -390,11 +390,11 @@ class Display(object):
     def getMaskTransparency(self, name=None):
         """!Return the current display's mask transparency"""
 
-        self._impl._getMaskTransparency(name)
+        return self._impl._getMaskTransparency(name)
 
     def show(self):
         """!Uniconify and Raise display.  N.b. throws an exception if frame doesn't exit"""
-        self._impl._show()
+        return self._impl._show()
 
     def mtv(self, data, title="", wcs=None):
         """!Display an Image or Mask on a DISPLAY display
