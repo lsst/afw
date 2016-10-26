@@ -92,7 +92,7 @@ def _makeDisplayImpl(display, backend, *args, **kwargs):
             # Copy the exception into outer scope
             exc = e
 
-    if not _disp:
+    if not _disp or not hasattr(_disp.DisplayImpl, "_show"):
         if exc is not None:
             # re-raise the final exception
             raise exc
