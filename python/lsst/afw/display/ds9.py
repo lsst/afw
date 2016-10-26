@@ -45,6 +45,10 @@ except NameError:
         def getDisplay(*args, **kwargs):
             raise e
 
+        class DisplayImpl(object):
+            def __init__(self, *args, **kwargs):
+                raise e
+
         loaded = False
     else:
         loaded = True
