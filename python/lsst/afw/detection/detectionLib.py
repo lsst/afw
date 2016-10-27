@@ -16,3 +16,4 @@ from ._gaussianPsf import *
 from ._footprintMerge import *
 from .footprintMerge import *
 from ._heavyFootprint import *
+from ._footprint import *
