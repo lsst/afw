@@ -73,6 +73,10 @@ void SpatialCellCandidate::setStatus(Status status) {
                       (boost::format("Saw unknown status %d") % status).str());
 }
 
+int SpatialCellImageCandidate::_width = 0;
+
+int SpatialCellImageCandidate::_height = 0;
+
 /************************************************************************************************************/
 /**
  * Ctor

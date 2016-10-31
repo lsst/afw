@@ -22,57 +22,6 @@
  * see <http://www.lsstcorp.org/LegalNotices/>.
  */
 
-//
-// A couple of macros (%IMAGE and %MASKEDIMAGE) to provide MaskedImage's default arguments,
-// We'll use these to define meta-macros (e.g. %SpatialCellImageCandidatePtr)
-//
-%define %IMAGE(PIXTYPE)
-lsst::afw::image::Image<PIXTYPE>
-%enddef
-
-%define %MASKEDIMAGE(PIXTYPE)
-lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>
-%enddef
-
-//
-// Must go BEFORE the include
-//
-%define %SpatialCellImageCandidatePtrs(TYPE, ...)
-    %shared_ptr(lsst::afw::math::SpatialCellImageCandidate<TYPE>);
-    %shared_ptr(lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE>);
-%enddef
-//
-// Must go AFTER the include
-//
-%define %SpatialCellImageCandidates(NAME, TYPE)
-    %template(SpatialCellImageCandidate##NAME) lsst::afw::math::SpatialCellImageCandidate<TYPE>;
-    %template(SpatialCellMaskedImageCandidate##NAME) lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE>;
-
-    //--------------------------------------------------------
-    // THESE CASTS NOW DEPRECATED IN FAVOR OF %castShared
-    %inline %{
-        std::shared_ptr<lsst::afw::math::SpatialCellImageCandidate<TYPE> >
-        cast_SpatialCellImageCandidate##NAME(std::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
-            return std::dynamic_pointer_cast<lsst::afw::math::SpatialCellImageCandidate<TYPE> >(candidate);
-        }
-
-        std::shared_ptr<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >
-        cast_SpatialCellMaskedImageCandidate##NAME(std::shared_ptr<lsst::afw::math::SpatialCellCandidate> candidate) {
-             return std::dynamic_pointer_cast<lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE> >(candidate);
-        }
-    %}
-    //--------------------------------------------------------
-
-    %castShared(lsst::afw::math::SpatialCellImageCandidate<TYPE>, lsst::afw::math::SpatialCellCandidate)
-    %castShared(lsst::afw::math::SpatialCellMaskedImageCandidate<TYPE>, lsst::afw::math::SpatialCellCandidate)
-
-%enddef
-
-//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-//
-// OK, now we'll generate some code
-//
-
 %{
 #include <memory>
 #include "lsst/afw/math/SpatialCell.h"
@@ -80,10 +29,8 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 
 %shared_ptr(lsst::afw::math::CandidateVisitor)
 %shared_ptr(lsst::afw::math::SpatialCellCandidate);
+%shared_ptr(lsst::afw::math::SpatialCellImageCandidate);
 %shared_ptr(lsst::afw::math::SpatialCell);
-
-%SpatialCellImageCandidatePtrs(float);
-%SpatialCellImageCandidatePtrs(double);
 
 %rename(__incr__) lsst::afw::math::SpatialCellCandidateIterator::operator++;
 %rename(__deref__) lsst::afw::math::SpatialCellCandidateIterator::operator*;
@@ -94,10 +41,6 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
 
 %template(SpatialCellCandidateList) std::vector<std::shared_ptr<lsst::afw::math::SpatialCellCandidate> >;
 %template(SpatialCellList) std::vector<std::shared_ptr<lsst::afw::math::SpatialCell> >;
-
-%SpatialCellImageCandidates(F, float);
-%SpatialCellImageCandidates(D, double);
-
 
 %extend lsst::afw::math::SpatialCell {
     %pythoncode %{
@@ -121,3 +64,5 @@ lsst::afw::image::MaskedImage<PIXTYPE, lsst::afw::image::MaskPixel, lsst::afw::i
             self.__incr__()
     %}
 }
+
+%castShared(lsst::afw::math::SpatialCellImageCandidate, lsst::afw::math::SpatialCellCandidate)

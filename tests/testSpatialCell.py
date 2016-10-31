@@ -288,8 +288,8 @@ class SpatialCellSetTestCase(unittest.TestCase):
                          [cand.getCandidateRating() for cand in cell1])
 
 
-class TestMaskedImageCandidateCase(unittest.TestCase):
-    """A test case for TestMaskedImageCandidate"""
+class TestImageCandidateCase(unittest.TestCase):
+    """A test case for TestImageCandidate"""
 
     def setUp(self):
         self.cellSet = afwMath.SpatialCellSet(afwGeom.Box2I(
@@ -302,16 +302,16 @@ class TestMaskedImageCandidateCase(unittest.TestCase):
         """Test that we can use SpatialCellMaskedImageCandidate"""
 
         flux = 10
-        self.cellSet.insertCandidate(testLib.TestMaskedImageCandidate(0, 0, flux))
+        self.cellSet.insertCandidate(testLib.TestImageCandidate(0, 0, flux))
 
         cand = self.cellSet.getCellList()[0][0]
         #
-        # Swig doesn't know that we're a SpatialCellMaskedImageCandidate;  all it knows is that we have
+        # Swig doesn't know that we're a SpatialCellImageCandidate;  all it knows is that we have
         # a SpatialCellCandidate, and SpatialCellCandidates don't know about getMaskedImage;  so cast the
         # pointer to SpatialCellMaskedImageCandidate<Image<float> > and all will be well;
         #
 
-        cand = afwMath.SpatialCellMaskedImageCandidateF.cast(cand)
+        cand = testLib.TestImageCandidate.cast(cand)
 
         width, height = 15, 21
         cand.setWidth(width)
