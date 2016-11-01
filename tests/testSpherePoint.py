@@ -758,11 +758,11 @@ class SpherePointTestSuite(lsst.utils.tests.TestCase):
                 self.assertRegexpMatches(numbers[0], r'-?nan')
             if not math.isnan(point.getLatitude().asRadians()):
                 self.assertAlmostEqual(point.getLatitude().asDegrees(), float(numbers[1]), delta=1e-6)
+                # Latitude must be signed
+                self.assertTrue(numbers[1].startswith("+") or numbers[1].startswith("-"))
             else:
-                self.assertRegexpMatches(numbers[1], r'\+|-nan')
-
-            # Latitude must be signed
-            self.assertTrue(numbers[1].startswith("+") or numbers[1].startswith("-"))
+                # Some C++ compilers will output NaN with a sign, others won't
+                self.assertRegexpMatches(numbers[1], r'(?:\+|-)?nan')
 
     def testReprValue(self):
         """Test if __repr__ is a machine-readable representation.
