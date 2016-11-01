@@ -32,7 +32,16 @@ namespace {
 
 int const EXPOSURE_TABLE_CURRENT_VERSION = 2;  // current version of ExposureTable
 std::string const EXPOSURE_TABLE_VERSION_KEY = "EXPTABLE_VER";  // FITS header key for ExposureTable version
-std::string const VISIT_INFO_FIELD_NAME = "visitInfo"; // name of field used for VisitInfo
+
+// Field names used to store the archive IDs of different components (used in
+// multiple places, so we define them here instead of as multiple string
+// literals).
+std::string const WCS_FIELD_NAME = "wcs";
+std::string const PSF_FIELD_NAME = "psf";
+std::string const CALIB_FIELD_NAME = "calib";
+std::string const VISIT_INFO_FIELD_NAME = "visitInfo";
+std::string const AP_CORR_MAP_FIELD_NAME = "apCorrMap";
+std::string const VALID_POLYGON_FIELD_NAME = "validPolygon";
 
 int getTableVersion(daf::base::PropertySet &metadata) {
     return metadata.exists(EXPOSURE_TABLE_VERSION_KEY) ? metadata.get<int>(EXPOSURE_TABLE_VERSION_KEY) : 1;
@@ -122,20 +131,26 @@ struct PersistenceHelper {
     // Read psf, wcs, etc. from an archive to an ExposureRecord
     void readRecord(
         BaseRecord const & input, ExposureRecord & output,
-        SchemaMapper const & mapper, io::InputArchive const & archive,
-        int tableVersion
+        SchemaMapper const & mapper, io::InputArchive const & archive
     ) const {
         output.assign(input, mapper);
-        output.setPsf(archive.get<detection::Psf>(input.get(psf)));
-        output.setWcs(archive.get<image::Wcs>(input.get(wcs)));
-        output.setCalib(archive.get<image::Calib>(input.get(calib)));
-        output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
-        output.setValidPolygon(archive.get<geom::polygon::Polygon>(input.get(validPolygon)));
-        if (tableVersion > 1) {
+        if (psf.isValid()) {
+            output.setPsf(archive.get<detection::Psf>(input.get(psf)));
+        }
+        if (wcs.isValid()) {
+            output.setWcs(archive.get<image::Wcs>(input.get(wcs)));
+        }
+        if (calib.isValid()) {
+            output.setCalib(archive.get<image::Calib>(input.get(calib)));
+        }
+        if (apCorrMap.isValid()) {
+            output.setApCorrMap(archive.get<image::ApCorrMap>(input.get(apCorrMap)));
+        }
+        if (validPolygon.isValid()) {
+            output.setValidPolygon(archive.get<geom::polygon::Polygon>(input.get(validPolygon)));
+        }
+        if (visitInfo.isValid()) {
             output.setVisitInfo(archive.get<image::VisitInfo>(input.get(visitInfo)));
-        } else {
-            // VisitInfo not available; set to invalid values
-            output.setVisitInfo(nullptr);
         }
     }
 
@@ -144,29 +159,40 @@ struct PersistenceHelper {
     PersistenceHelper& operator=(const PersistenceHelper&) = delete;
 
     // No moving
-    PersistenceHelper (PersistenceHelper&&) = delete;
+    PersistenceHelper (PersistenceHelper &&) = delete;
     PersistenceHelper& operator=(PersistenceHelper&&) = delete;
 
-    /**
-     * Construct a PersistenceHelper
-     *
-     * @param[in] tableVersion  version of ExposureTable:
-     *              - 1 has no VisitInfo and no version number in the metadata
-     *              - 2 adds VisitInfo and specifies the version number in the metadat
-     */
-    PersistenceHelper(int tableVersion=EXPOSURE_TABLE_CURRENT_VERSION) :
+    // Construct a PersistenceHelper using the most modern schema.
+    PersistenceHelper() :
         schema(),
-        wcs(schema.addField<int>("wcs", "archive ID for Wcs object")),
-        psf(schema.addField<int>("psf", "archive ID for Psf object")),
-        calib(schema.addField<int>("calib", "archive ID for Calib object")),
-        apCorrMap(schema.addField<int>("apCorrMap", "archive ID for ApCorrMap object")),
-        validPolygon(schema.addField<int>("validPolygon", "archive ID for Polygon object")),
-        visitInfo()
-    {
-        if (tableVersion > 1) {
-            visitInfo = schema.addField<int>(VISIT_INFO_FIELD_NAME, "archive ID for VisitInfo object");
-        }
+        wcs(schema.addField<int>(WCS_FIELD_NAME, "archive ID for Wcs object")),
+        psf(schema.addField<int>(PSF_FIELD_NAME, "archive ID for Psf object")),
+        calib(schema.addField<int>(CALIB_FIELD_NAME, "archive ID for Calib object")),
+        apCorrMap(schema.addField<int>(AP_CORR_MAP_FIELD_NAME, "archive ID for ApCorrMap object")),
+        validPolygon(schema.addField<int>(VALID_POLYGON_FIELD_NAME, "archive ID for Polygon object")),
+        visitInfo(schema.addField<int>(VISIT_INFO_FIELD_NAME, "archive ID for VisitInfo object"))
+    {}
+
+    // Add a field to this->schema, saving its key in 'key', if and only if 'name' is a field in 'oldSchema'
+    void addIfPresent(Schema const & oldSchema, Key<int> & key, std::string const & name) {
+        try {
+            auto item = oldSchema.find<int>(name);
+            key = schema.addField(item.field);
+        } catch (pex::exceptions::NotFoundError &) {}
     }
+
+    // Construct a PersistenceHelper from a possibly old on-disk schema
+    PersistenceHelper(Schema const & oldSchema) {
+        addIfPresent(oldSchema, wcs, WCS_FIELD_NAME);
+        addIfPresent(oldSchema, psf, PSF_FIELD_NAME);
+        addIfPresent(oldSchema, calib, CALIB_FIELD_NAME);
+        addIfPresent(oldSchema, apCorrMap, AP_CORR_MAP_FIELD_NAME);
+        addIfPresent(oldSchema, validPolygon, VALID_POLYGON_FIELD_NAME);
+        addIfPresent(oldSchema, visitInfo, VISIT_INFO_FIELD_NAME);
+        assert(oldSchema.contains(schema));
+    }
+
+
 };
 
 } // anonymous
@@ -189,7 +215,7 @@ public:
         io::FitsWriter(fits, flags),
         _doWriteArchive(false),
         _archive(archive),
-        _helper(EXPOSURE_TABLE_CURRENT_VERSION)
+        _helper()
     {
         if (!_archive) {
             _doWriteArchive = true;
@@ -297,6 +323,11 @@ public:
         int ioFlags,
         bool stripMetadata
     ) const {
+        // We rely on the table version stored in the metadata when loading an ExposureCatalog
+        // persisted on its own.  This is not as flexible in terms of backwards compatibility
+        // as the code that loads ExposureCatalogs persisted as part of something else, but
+        // we happen to know there are no ExposureCatalogs sitting on disk with with versions
+        // older than what this routine supports.
         auto tableVersion = getTableVersion(*metadata);
         PersistableObjectColumnReader<detection::Psf,&ExposureRecord::setPsf>::setup("psf", mapper);
         PersistableObjectColumnReader<image::Wcs,&ExposureRecord::setWcs>::setup("wcs", mapper);
@@ -437,20 +468,14 @@ template <typename RecordT>
 ExposureCatalogT<RecordT> ExposureCatalogT<RecordT>::readFromArchive(
     io::InputArchive const & archive, BaseCatalog const & catalog
 ) {
-    // table metadata is not available, so we don't have a clean way to determine the version;
-    // the hack is version = current version if visitInfo key is found, else 1
-    int tableVersion = EXPOSURE_TABLE_CURRENT_VERSION;
-    try {
-        catalog.getSchema().find<int>(VISIT_INFO_FIELD_NAME);
-    } catch (pex::exceptions::NotFoundError) {
-        tableVersion = 1;
-    }
-    PersistenceHelper helper{tableVersion};
+    // Helper constructor will infer which components are available
+    // (effectively the version, but more flexible).
+    PersistenceHelper helper{catalog.getSchema()};
     SchemaMapper mapper = helper.makeReadMapper(catalog.getSchema());
     ExposureCatalogT<ExposureRecord> result(mapper.getOutputSchema());
     result.reserve(catalog.size());
     for (BaseCatalog::const_iterator i = catalog.begin(); i != catalog.end(); ++i) {
-        helper.readRecord(*i, *result.addNew(), mapper, archive, tableVersion);
+        helper.readRecord(*i, *result.addNew(), mapper, archive);
     }
     return result;
 }
