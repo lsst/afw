@@ -44,5 +44,6 @@
 #include "lsst/afw/geom/SeparableXYTransform.h"
 #include "lsst/afw/geom/polygon/Polygon.h"
 #include "lsst/afw/geom/TransformMap.h"
+#include "lsst/afw/geom/SpherePoint.h"
 
 #endif // LSST_GEOM_H
