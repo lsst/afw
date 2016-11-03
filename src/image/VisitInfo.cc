@@ -447,5 +447,12 @@ void VisitInfo::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(cat);
 }
 
+geom::Angle VisitInfo::getLocalEra() const {
+    return getEra() + getObservatory().getLongitude();
+}
+
+geom::Angle VisitInfo::getBoresightHourAngle() const {
+    return getLocalEra() - getBoresightRaDec()[0];
+}
 
 }}}  // namespace
