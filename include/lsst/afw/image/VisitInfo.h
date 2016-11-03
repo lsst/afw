@@ -177,6 +177,12 @@ public:
 
     bool isPersistable() const { return true; }
 
+    // get the local sidereal time on the meridian (equivalent, but not equal, to Local Mean Sidereal Time)
+    geom::Angle getLocalEra() const;
+
+    // get hour angle at the boresight
+    geom::Angle getBoresightHourAngle() const;
+
 protected:
 
     virtual std::string getPersistenceName() const;

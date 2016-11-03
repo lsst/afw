@@ -41,7 +41,7 @@ RotTypeEnumNameDict = {
 
 
 def propertySetFromDict(keyValDict):
-    """Make an lst.daf.base.PropertySet from a dict of key: value"""
+    """Make an lsst.daf.base.PropertySet from a dict of key: value"""
     metadata = PropertySet()
     for key, val in keyValDict.items():
         metadata.set(key, val)
@@ -52,6 +52,12 @@ class VisitInfoTestCase(unittest.TestCase):
     """Test lsst.afw.image.VisitInfo, a simple struct-like class"""
     def setUp(self):
         self.testDir = os.path.dirname(__file__)
+
+        def computeLstHA(data):
+            """Return LST, Hour Angle, computed from VisitInfoData."""
+            localEra = data.era + data.observatory.getLongitude()
+            hourAngle = localEra - data.boresightRaDec[0]
+            return localEra, hourAngle
 
         fields = ['exposureId',
                   'exposureTime',
@@ -82,6 +88,8 @@ class VisitInfoTestCase(unittest.TestCase):
                               observatory=Observatory(11.1*degrees, 22.2*degrees, 0.333),
                               weather=Weather(1.1, 2.2, 34.5),
                               )
+        self.data1 = data1
+        self.localEra1, self.hourAngle1 = computeLstHA(data1)
         data2 = VisitInfoData(exposureId=1,
                               exposureTime=15.5,
                               darkTime=17.8,
@@ -96,40 +104,48 @@ class VisitInfoTestCase(unittest.TestCase):
                               observatory=Observatory(22.2*degrees, 33.3*degrees, 0.444),
                               weather=Weather(2.2, 3.3, 44.4),
                               )
-        self.data = (data1, data2)
+        self.data2 = data2
+        self.localEra2, self.hourAngle2 = computeLstHA(data2)
 
-    def testValueConstructor(self):
-        for item in self.data:
-            visitInfo = afwImage.VisitInfo(item.exposureId,
-                                           item.exposureTime,
-                                           item.darkTime,
-                                           item.date,
-                                           item.ut1,
-                                           item.era,
-                                           item.boresightRaDec,
-                                           item.boresightAzAlt,
-                                           item.boresightAirmass,
-                                           item.boresightRotAngle,
-                                           item.rotType,
-                                           item.observatory,
-                                           item.weather,
-                                           )
-            self.assertEqual(visitInfo.getExposureId(), item.exposureId)
-            self.assertEqual(visitInfo.getExposureTime(), item.exposureTime)
-            self.assertEqual(visitInfo.getDarkTime(), item.darkTime)
-            self.assertEqual(visitInfo.getDate(), item.date)
-            self.assertEqual(visitInfo.getUt1(), item.ut1)
-            self.assertEqual(visitInfo.getEra(), item.era)
-            self.assertEqual(visitInfo.getBoresightRaDec(), item.boresightRaDec)
-            self.assertEqual(visitInfo.getBoresightAzAlt(), item.boresightAzAlt)
-            self.assertEqual(visitInfo.getBoresightAirmass(), item.boresightAirmass)
-            self.assertEqual(visitInfo.getBoresightRotAngle(), item.boresightRotAngle)
-            self.assertEqual(visitInfo.getRotType(), item.rotType)
-            self.assertEqual(visitInfo.getObservatory(), item.observatory)
-            self.assertEqual(visitInfo.getWeather(), item.weather)
+    def _testValueConstructor(self, data, localEra, hourAngle):
+        visitInfo = afwImage.VisitInfo(data.exposureId,
+                                       data.exposureTime,
+                                       data.darkTime,
+                                       data.date,
+                                       data.ut1,
+                                       data.era,
+                                       data.boresightRaDec,
+                                       data.boresightAzAlt,
+                                       data.boresightAirmass,
+                                       data.boresightRotAngle,
+                                       data.rotType,
+                                       data.observatory,
+                                       data.weather,
+                                       )
+        self.assertEqual(visitInfo.getExposureId(), data.exposureId)
+        self.assertEqual(visitInfo.getExposureTime(), data.exposureTime)
+        self.assertEqual(visitInfo.getDarkTime(), data.darkTime)
+        self.assertEqual(visitInfo.getDate(), data.date)
+        self.assertEqual(visitInfo.getUt1(), data.ut1)
+        self.assertEqual(visitInfo.getEra(), data.era)
+        self.assertEqual(visitInfo.getBoresightRaDec(), data.boresightRaDec)
+        self.assertEqual(visitInfo.getBoresightAzAlt(), data.boresightAzAlt)
+        self.assertEqual(visitInfo.getBoresightAirmass(), data.boresightAirmass)
+        self.assertEqual(visitInfo.getBoresightRotAngle(), data.boresightRotAngle)
+        self.assertEqual(visitInfo.getRotType(), data.rotType)
+        self.assertEqual(visitInfo.getObservatory(), data.observatory)
+        self.assertEqual(visitInfo.getWeather(), data.weather)
+        self.assertEqual(visitInfo.getLocalEra(), localEra)
+        self.assertEqual(visitInfo.getBoresightHourAngle(), hourAngle)
+
+    def testValueConstructor_data1(self):
+        self._testValueConstructor(self.data1, self.localEra1, self.hourAngle1)
+
+    def testValueConstructor_data2(self):
+        self._testValueConstructor(self.data2, self.localEra2, self.hourAngle2)
 
     def testTablePersistence(self):
-        for item in self.data:
+        for item in (self.data1, self.data2):
             tablePath = os.path.join(self.testDir, "testVisitInfo_testTablePersistence.fits")
             v1 = afwImage.VisitInfo(*item)
             v1.writeFits(tablePath)
@@ -138,7 +154,7 @@ class VisitInfoTestCase(unittest.TestCase):
             os.unlink(tablePath)
 
     def testSetVisitInfoMetadata(self):
-        for item in self.data:
+        for item in (self.data1, self.data2):
             visitInfo = afwImage.VisitInfo(item.exposureId,
                                            item.exposureTime,
                                            item.darkTime,
@@ -186,7 +202,7 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertEqual(metadata.nameCount(), 1)
 
     def testStripVisitInfoKeywords(self):
-        for argList in self.data:
+        for argList in (self.data1, self.data2):
             visitInfo = afwImage.VisitInfo(*argList)
             metadata = PropertyList()
             afwImage.setVisitInfoMetadata(metadata, visitInfo)
@@ -215,13 +231,14 @@ class VisitInfoTestCase(unittest.TestCase):
         self.assertTrue(math.isnan(visitInfo.getWeather().getAirTemperature()))
         self.assertTrue(math.isnan(visitInfo.getWeather().getAirPressure()))
         self.assertTrue(math.isnan(visitInfo.getWeather().getHumidity()))
+        self.assertTrue(math.isnan(visitInfo.getBoresightHourAngle()))
 
     def testMetadataConstructor(self):
         """Test the metadata constructor
 
         This constructor allows missing values
         """
-        data = self.data[0]
+        data = self.data1
 
         metadata = propertySetFromDict({})
         visitInfo = afwImage.VisitInfo(metadata)
@@ -323,7 +340,7 @@ class VisitInfoTestCase(unittest.TestCase):
 
     def testMakeVisitInfo(self):
         """Test the makeVisitInfo factory function"""
-        data = self.data[0]
+        data = self.data1
 
         visitInfo = afwImage.makeVisitInfo()
         self._testIsEmpty(visitInfo)
