@@ -13,6 +13,8 @@
 #include "lsst/afw/table/Schema.h"
 #include "lsst/afw/table/detail/Access.h"
 #include "lsst/afw/table/io/FitsReader.h"
+#include "lsst/afw/table/io/FitsSchemaInputMapper.h"
+#include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace table {
 
@@ -643,6 +645,28 @@ Schema::Schema(Schema const & other) :
     _impl(other._impl),
     _aliases(other._aliases)
 {}
+
+Schema Schema::readFits(std::string const& filename, int hdu) {
+    fits::Fits fp{filename, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK};
+    fp.setHdu(hdu);
+    return readFits(fp);
+}
+
+Schema Schema::readFits(fits::MemFileManager & manager, int hdu) {
+    fits::Fits fp{manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK};
+    fp.setHdu(hdu);
+    return readFits(fp);
+}
+
+Schema Schema::readFits(fits::Fits & fitsfile) {
+    daf::base::PropertyList header;
+    fitsfile.readMetadata(header, false);
+    return fromFitsMetadata(header);
+}
+
+Schema Schema::fromFitsMetadata(daf::base::PropertyList & header, bool stripMetadata) {
+    return io::FitsSchemaInputMapper(header, stripMetadata).finalize();
+}
 
 std::string Schema::join(std::string const & a, std::string const & b) const {
     // delegate to utility funcs at top of this file
