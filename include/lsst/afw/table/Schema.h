@@ -272,6 +272,20 @@ public:
     /// @brief Copy constructor.
     Schema(Schema const & other);
 
+    /// @brief Construct from reading a FITS file.
+    ///
+    /// Reads from the nominated 'hdu' (1=PHU which cannot be a catalog,
+    /// 0 is a special value meaning read from the first HDU with NAXIS != 0).
+    static Schema readFits(std::string const& filename, int hdu=0);
+    static Schema readFits(fits::MemFileManager & manager, int hdu=0);
+    static Schema readFits(fits::Fits & fitsfile);
+
+    /// @brief Construct from reading a FITS header
+    ///
+    /// If 'stripMetadata', then the header will be modified,
+    /// removing the relevant keywords.
+    static Schema fromFitsMetadata(daf::base::PropertyList & header, bool stripMetadata=true);
+
     /// Stringification.
     friend std::ostream & operator<<(std::ostream & os, Schema const & schema);
 
