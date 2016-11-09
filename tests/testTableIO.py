@@ -27,6 +27,7 @@ import astropy.io.fits
 import lsst.utils.tests
 import lsst.afw.geom
 import lsst.afw.table
+import lsst.afw.image
 
 
 class TableIoTestCase(lsst.utils.tests.TestCase):
@@ -44,6 +45,27 @@ class TableIoTestCase(lsst.utils.tests.TestCase):
             inFits = astropy.io.fits.open(tmpFile)
             self.assertEqual(inFits[1].header["TTYPE1"], "a")
             self.assertEqual(inFits[1].header["TUNIT1"], "rad")
+
+    def testSchemaReading(self):
+        """Test that a Schema can be read from a FITS file
+
+        Per DM-8211.
+        """
+        schema = lsst.afw.table.Schema()
+        aa = schema.addField("a", type=int, doc="a")
+        bb = schema.addField("b", type=float, doc="b")
+        schema.getAliasMap().set("c", "a")
+        schema.getAliasMap().set("d", "b")
+        cat = lsst.afw.table.BaseCatalog(schema)
+        row = cat.addNew()
+        row.set(aa, 12345)
+        row.set(bb, 1.2345)
+        with lsst.utils.tests.getTempFilePath(".fits") as temp:
+            cat.writeFits(temp)
+            self.assertEqual(lsst.afw.table.Schema.readFits(temp), schema)
+            # Not testing Schema.fromFitsMetadata because afw.image.readMetadata (which is the only
+            # python-accessible FITS header reader) returns a PropertySet, but we want a PropertyList
+            # and it doesn't up-convert easily.
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):
