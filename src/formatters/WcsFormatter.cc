@@ -60,6 +60,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/formatters/WcsFormatter.h"
 #include "lsst/afw/image/Wcs.h"
+#include "lsst/afw/fits.h"
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.WcsFormatter");
@@ -121,7 +122,7 @@ dafBase::Persistable* afwForm::WcsFormatter::read(
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", 0);
         dafBase::PropertySet::Ptr md =
-            afwImg::readMetadata(fits->getPath(), hdu);
+            afw::fits::readMetadata(fits->getPath(), hdu);
         afwImg::Wcs* ip = new afwImg::Wcs(md);
         LOGL_DEBUG(_log, "WcsFormatter read end");
         return ip;
