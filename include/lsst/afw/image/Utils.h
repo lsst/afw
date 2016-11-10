@@ -44,12 +44,14 @@
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
 #include "lsst/pex/exceptions.h"
-#include "lsst/afw/formatters/ImageFormatter.h"
+#include "lsst/afw/fits.h"
 
 namespace lsst { namespace afw { namespace image {
 
 /**
  *  @brief Return the metadata (header entries) from a FITS file.
+ *
+ *  @deprecated Use lsst::afw::fits::readMetadata instead.
  *
  *  @param[in]    fileName            File to read.
  *  @param[in]    hdu                 HDU to read, 1-indexed.  The special value of 0 will read the
@@ -57,7 +59,9 @@ namespace lsst { namespace afw { namespace image {
  *  @param[in]    strip               If true, ignore special header keys usually managed by cfitsio
  *                                    (e.g. NAXIS).
  */
-PTR(daf::base::PropertySet) readMetadata(std::string const & fileName, int hdu=0, bool strip=false);
+inline PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu=0, bool strip=false) {
+    return afw::fits::readMetadata(fileName, hdu, strip);
+}
 
 /**
  * Return a value indicating a bad pixel for the given Image type

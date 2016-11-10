@@ -11,6 +11,7 @@ Python interface to lsst::afw::fits exception classes
 #undef SWIG_PYTHON_2_UNICODE
 #define SWIG_PYTHON_STRICT_BYTE_CHAR 1
 #include "lsst/afw/fits.h"
+#include "lsst/daf/base.h"
 #include "lsst/pex/exceptions.h"
 %}
 
@@ -24,6 +25,7 @@ Python interface to lsst::afw::fits exception classes
 %naturalvar;  // use const reference typemaps
 
 %import "lsst/pex/exceptions/exceptionsLib.i"
+%import "lsst/daf/base/baseLib.i"
 
 %include "lsst/afw/fits.h"
 

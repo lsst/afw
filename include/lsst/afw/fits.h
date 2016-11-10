@@ -19,6 +19,7 @@
 
 #include <boost/format.hpp>
 
+#include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/daf/base.h"
 #include "ndarray.h"
@@ -509,6 +510,19 @@ public:
 };
 
 #endif // !SWIG
+
+//@{
+/// @brief Read FITS header
+///
+/// If 'strip' is true, common FITS keys that usually have non-metadata intepretations
+/// (e.g. NAXIS, BITPIX) will be ignored.
+///
+/// Includes support for the INHERIT convention: if 'INHERIT = T' is in the header, the
+/// PHU will be read as well, and nominated HDU will override any duplicated values.
+PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu=0, bool strip=false);
+PTR(daf::base::PropertyList) readMetadata(fits::MemFileManager & manager, int hdu=0, bool strip=false);
+PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip=false);
+//@}
 
 }}} /// namespace lsst::afw::fits
 
