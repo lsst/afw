@@ -30,7 +30,6 @@
 #include <limits>
 #include <vector>
 #include "lsst/afw/geom.h"
-#include "lsst/afw/image/Utils.h"
 
 namespace lsst {
 namespace afw {
