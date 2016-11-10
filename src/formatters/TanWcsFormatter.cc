@@ -59,6 +59,7 @@ static char const* SVNid __attribute__((unused)) = "$Id$";
 #include "lsst/afw/formatters/MaskedImageFormatter.h"
 #include "lsst/afw/formatters/TanWcsFormatter.h"
 #include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/fits.h"
 
 namespace {
 LOG_LOGGER _log = LOG_GET("afw.TanWcsFormatter");
@@ -119,7 +120,7 @@ dafBase::Persistable* afwForm::TanWcsFormatter::read(
         dafPersist::FitsStorage* fits = dynamic_cast<dafPersist::FitsStorage*>(storage.get());
         int hdu = additionalData->get<int>("hdu", 0);
         dafBase::PropertySet::Ptr md =
-            afwImg::readMetadata(fits->getPath(), hdu);
+            afw::fits::readMetadata(fits->getPath(), hdu);
         afwImg::TanWcs* ip = new afwImg::TanWcs(md);
         LOGL_DEBUG(_log, "TanWcsFormatter read end");
         return ip;
