@@ -168,6 +168,25 @@
         self->set(key, v);
     }
 }
+
+// To help with python3, we need to be able to deal with bytestrings directly.
+%extend lsst::afw::table::BaseRecord {
+    PyObject * getBytes(lsst::afw::table::Key< std::string > const & key) const {
+        auto str = self->get(key);
+        return PyBytes_FromStringAndSize(str.data(), str.size());
+    }
+    PyObject * setBytes(lsst::afw::table::Key< std::string > const & key, PyObject * bytes) {
+        char * buffer = nullptr;
+        Py_ssize_t len = 0;
+        if (PyBytes_AsStringAndSize(bytes, &buffer, &len) == 0) {
+            std::string str(buffer, len);
+            self->set(key, str);
+            Py_RETURN_NONE;
+        }
+        return nullptr;
+    }
+}
+
 %extend lsst::afw::table::KeyBase< std::string > {
     %pythoncode %{
         subfields = None
