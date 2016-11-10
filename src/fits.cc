@@ -1128,6 +1128,47 @@ void Fits::closeFile() {
     fits_close_file(reinterpret_cast<fitsfile*>(fptr), &status);
 }
 
+
+PTR(daf::base::PropertyList) readMetadata(std::string const & fileName, int hdu, bool strip) {
+    fits::Fits fp(fileName, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fp.setHdu(hdu);
+    return readMetadata(fp, strip);
+}
+
+PTR(daf::base::PropertyList) readMetadata(fits::MemFileManager & manager, int hdu, bool strip) {
+    fits::Fits fp(manager, "r", fits::Fits::AUTO_CLOSE | fits::Fits::AUTO_CHECK);
+    fp.setHdu(hdu);
+    return readMetadata(fp, strip);
+}
+
+PTR(daf::base::PropertyList) readMetadata(fits::Fits & fitsfile, bool strip) {
+    auto metadata = std::make_shared<lsst::daf::base::PropertyList>();
+    fitsfile.readMetadata(*metadata, strip);
+    // if INHERIT=T, we want to also include header entries from the primary HDU
+    if (fitsfile.getHdu() != 1 && metadata->exists("INHERIT")) {
+        bool inherit = false;
+        if (metadata->typeOf("INHERIT") == typeid(std::string)) {
+            inherit = (metadata->get<std::string>("INHERIT") == "T");
+        } else {
+            inherit = metadata->get<bool>("INHERIT");
+        }
+        if (strip) metadata->remove("INHERIT");
+        if (inherit) {
+            fitsfile.setHdu(1);
+            // We don't want to just just call fitsfile.readMetadata to append the new keys,
+            // because PropertySet::get will return the last value added when multiple values
+            // are present and a scalar is requested; in that case, we want the non-inherited
+            // value to be added last, so it's the one that takes precedence.
+            PTR(daf::base::PropertyList) inherited(new daf::base::PropertyList);
+            fitsfile.readMetadata(*inherited, strip);
+            inherited->combine(metadata);
+            inherited.swap(metadata);
+        }
+    }
+    return metadata;
+}
+
+
 #define INSTANTIATE_KEY_OPS(r, data, T)                                \
     template void Fits::updateKey(std::string const &, T const &, std::string const &); \
     template void Fits::writeKey(std::string const &, T const &, std::string const &); \
