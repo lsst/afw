@@ -44,7 +44,6 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Point.h"
 #include "lsst/afw/image/lsstGil.h"
-#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/afw/math/Function.h"
 #include "lsst/daf/base.h"
