@@ -86,7 +86,7 @@ std::string Observatory::getLatitudeStr() const {
 /**
  * @brief Get string representation
  */
-std::string coord::Observatory::toString() const {
+std::string Observatory::toString() const {
     return (boost::format("%gW, %gN  %g")
             % getLatitude().asDegrees()
             % getLongitude().asDegrees()
@@ -96,8 +96,8 @@ std::string coord::Observatory::toString() const {
 /**
  * Print an Observatory to the stream
  */
-std::ostream & coord::operator<<(std::ostream &os,             ///< Stream to print to
-                                 coord::Observatory const& obs ///< the Observatory to print
+std::ostream & operator<<(std::ostream &os,             ///< Stream to print to
+                                 Observatory const& obs ///< the Observatory to print
                                 )
 {
     os << obs.toString();
