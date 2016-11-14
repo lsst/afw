@@ -40,7 +40,6 @@
 #include <memory>
 
 #include "lsst/afw/image/lsstGil.h"
-#include "lsst/afw/image/Utils.h"
 #include "lsst/afw/image/ImageUtils.h"
 #include "lsst/daf/base.h"
 #include "lsst/daf/base/Citizen.h"
