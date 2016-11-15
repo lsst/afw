@@ -27,7 +27,7 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/Point.h"
 
-#include "lsst/afw/math/functionLibrary.h"
+#include "lsst/afw/math/FunctionLibrary.h"
 #include "lsst/afw/math/Function.h"
 
 namespace py = pybind11;

@@ -28,7 +28,7 @@
 #include "ndarray/pybind11.h"
 #include "ndarray/converter.h"
 
-#include "lsst/afw/math/interpolate.h"
+#include "lsst/afw/math/Interpolate.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
