@@ -79,39 +79,6 @@ void declareTestClasses(py::module &mod){
     };
     
     
-/*
-     * Test class for SpatialCellMaskedImageCandidate
-     */
-    class TestMaskedImageCandidate : public lsst::afw::math::SpatialCellMaskedImageCandidate<float> {
-    public:
-        typedef lsst::afw::image::MaskedImage<float> MaskedImageT;
-
-        TestMaskedImageCandidate(float const xCenter, ///< The object's column-centre
-                                 float const yCenter, ///< The object's row-centre
-                                 float const flux     ///< The object's flux
-                                ) :
-            lsst::afw::math::SpatialCellMaskedImageCandidate<float>(xCenter, yCenter), _flux(flux) {
-        }
-
-        /// Return candidates rating
-        double getCandidateRating() const {
-            return _flux;
-        }
-
-        /// Return the %image
-        MaskedImageT::ConstPtr getMaskedImage() const {
-            if (_image.get() == NULL) {
-                _image = MaskedImageT::Ptr(new MaskedImageT(lsst::afw::geom::ExtentI(getWidth(), getHeight())));
-                *_image->getImage() = _flux;
-            }
-
-            return _image;
-        }
-    private:
-        double _flux;
-    };
-    
-    
     py::class_<TestCandidate, std::shared_ptr<TestCandidate>, SpatialCellCandidate> 
         clsTestCandidate(mod, ("TestCandidate"));
     clsTestCandidate.def(py::init<float const, float const, float const>());
@@ -123,25 +90,6 @@ void declareTestClasses(py::module &mod){
     clsTestCandidateVisitor.def(py::init<>());
     clsTestCandidateVisitor.def("getN", &TestCandidateVisitor::getN);
     
-    py::class_<TestMaskedImageCandidate,
-               std::shared_ptr<TestMaskedImageCandidate>,
-               SpatialCellMaskedImageCandidate<float>> 
-        clsTestMaskedImageCandidate(mod, ("TestMaskedImageCandidate"));
-    clsTestMaskedImageCandidate.def(py::init<float const, float const, float const>());
-    clsTestMaskedImageCandidate.def("getMaskedImage", &TestMaskedImageCandidate::getMaskedImage);
-    
-};
-
-template<typename PixelT>
-void declareSpatialCellMaskedImageCandidate(py::module &mod, const std::string & suffix){
-    py::class_<SpatialCellMaskedImageCandidate<PixelT>,
-               std::shared_ptr<SpatialCellMaskedImageCandidate<PixelT>>,
-               SpatialCellCandidate>
-        clsSpatialCellMaskedImageCandidate(mod, ("SpatialCellMaskedImageCandidate"+suffix).c_str());
-    clsSpatialCellMaskedImageCandidate.def_static("setWidth", &SpatialCellMaskedImageCandidate<PixelT>::setWidth);
-    clsSpatialCellMaskedImageCandidate.def_static("getWidth", &SpatialCellMaskedImageCandidate<PixelT>::getWidth);
-    clsSpatialCellMaskedImageCandidate.def_static("setHeight", &SpatialCellMaskedImageCandidate<PixelT>::setHeight);
-    clsSpatialCellMaskedImageCandidate.def_static("getHeight", &SpatialCellMaskedImageCandidate<PixelT>::getHeight);
 };
 
 PYBIND11_PLUGIN(_spatialCell) {
@@ -176,9 +124,6 @@ PYBIND11_PLUGIN(_spatialCell) {
     clsSpatialCellCandidate.def("getYCenter", &SpatialCellCandidate::getYCenter);
     clsSpatialCellCandidate.def("setStatus", &SpatialCellCandidate::setStatus);
     clsSpatialCellCandidate.def("getId", &SpatialCellCandidate::getId);
-    
-    declareSpatialCellMaskedImageCandidate<double>(mod, "D");
-    declareSpatialCellMaskedImageCandidate<float>(mod, "F");
     
     /* SpatialCell */
     py::class_<SpatialCell, std::shared_ptr<SpatialCell>>
