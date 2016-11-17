@@ -7,6 +7,7 @@ afwdataDir = env.ProductDir("afwdata")
 
 with open('test.txt', 'r') as f:
     tests = f.readlines()
+# Load the tests that have been wrapped (ignoring the "test/" preceeding the test name)
 pybind11_ported_tests = [t[6:].strip() for t in tests if not t.startswith('#')]
 
 if not afwdataDir:
