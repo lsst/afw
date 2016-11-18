@@ -24,11 +24,20 @@ from .baseRecord import *
 from ._baseTable import *
 from ._baseColumnView import *
 from .baseColumnView import *
-from ._catalog import *
-from .catalog import *
 from ._simple import *
+from ._simpleCatalog import *
 from ._source import *
-from ._sortedCatalog import *
+from .catalog import *
+from .sortedCatalog import *
+from ._match import *
+from .match import *
+from ._simpleCatalog import *
+from ._sourceCatalog import *
+from .baseCatalog import *
+from .simpleCatalog import *
+from .sourceCatalog import *
+from ._ampInfo import *
+from .ampInfo import *
 
 # In order for some of the module to be imported, lsst.afw.geom.ellipses is required
 # Even though the modules themselves are wrapped using ellipses, it must still be
@@ -37,5 +46,5 @@ import lsst.afw.geom.ellipses
 
 #from .tableEnumDicts import *
 #from .multiMatch import *
-#from .catalogMatches import *
+from .catalogMatches import *
 #from .utils import *

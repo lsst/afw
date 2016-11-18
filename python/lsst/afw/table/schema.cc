@@ -138,6 +138,8 @@ PYBIND11_PLUGIN(_schema) {
     clsSchema.def("getNonFlagFieldCount", &Schema::getNonFlagFieldCount);
     clsSchema.def("getNames", &Schema::getNames, "topOnly"_a=false);
     clsSchema.def("getAliasMap", &Schema::getAliasMap);
+    clsSchema.def("setAliasMap", &Schema::setAliasMap, "aliases"_a);
+    clsSchema.def("disconnectAliases", &Schema::disconnectAliases);
     clsSchema.def("_forEach", [](Schema & self, py::object & obj){
         self.forEach(obj);
     });

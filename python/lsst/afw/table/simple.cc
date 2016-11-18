@@ -47,7 +47,24 @@ PYBIND11_PLUGIN(_simple) {
     /* Operators */
 
     /* Members */
+    clsSimpleTable.def_static("make", (PTR(SimpleTable) (*)(Schema const &, PTR(IdFactory) const &))
+        &SimpleTable::make);
+    clsSimpleTable.def_static("make", (PTR(SimpleTable) (*)(Schema const &)) &SimpleTable::make);
     clsSimpleTable.def_static("makeMinimalSchema", &SimpleTable::makeMinimalSchema);
+    // Commented-out methods have not yet been tested
+    // clsSimpleTable.def_static("checkSchema", &SimpleTable::checkSchema, "other"_a);
+    clsSimpleTable.def_static("getIdKey", &SimpleTable::getIdKey);
+    clsSimpleTable.def_static("getCoordKey", &SimpleTable::getCoordKey);
+
+    // clsSimpleTable.def("getIdFactory", (PTR(IdFactory) (*)()) &SimpleTable::getIdFactory);
+    // clsSimpleTable.def("getIdFactory", (CONST_PTR(IdFactory) (*)()) &SimpleTable::getIdFactory);
+    // clsSimpleTable.def("setIdFactory", &SimpleTable::setIdFactory, "idFactory"_a);
+    // clsSimpleTable.def("clone", &SimpleTable::clone);
+    clsSimpleTable.def("makeRecord", &SimpleTable::makeRecord);
+    // clsSimpleTable.def("copyRecord", (PTR(SimpleRecord) (*)(BaseRecord const &)
+    //                    &SimpleTable::copyRecord, "other"_a);
+    // clsSimpleTable.def("copyRecord", (PTR(SimpleRecord) (*)(BaseRecord const &, SchemaMapper const &)
+    //                    &SimpleTable::copyRecord, "other"_a);
 
     clsSimpleRecord.def("getId", &SimpleRecord::getId);
     clsSimpleRecord.def("setId", &SimpleRecord::setId);

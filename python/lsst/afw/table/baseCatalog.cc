@@ -19,25 +19,46 @@
  * the GNU General Public License along with this program.  If not, 
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <sstream>
+#include <stdexcept>
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
-#include "lsst/afw/table/SchemaMapper.h"
+#include "numpy/arrayobject.h"
+#include "ndarray/pybind11.h"
+#include "ndarray/converter.h"
+
+#include "lsst/pex/exceptions.h"
 #include "lsst/afw/table/BaseRecord.h"
-#include "lsst/afw/table/BaseTable.h"
+#include "lsst/afw/table/BaseColumnView.h"
+#include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/pybind11/catalog.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
-PYBIND11_PLUGIN(_baseTable) {
-    py::module mod("_baseTable", "Python wrapper for afw _baseTable library");
+PYBIND11_PLUGIN(_baseCatalog) {
+    py::module mod("_baseCatalog", "Python wrapper for afw _baseCatalog library");
+
+    typedef CatalogT<BaseRecord> BaseCatalog;
+
+    if (_import_array() < 0) {
+            PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
+            return nullptr;
+    };
 
     /* Module level */
-    py::class_<BaseTable, std::shared_ptr<BaseTable>> clsBaseTable(mod, "BaseTable");
+    py::class_<BaseCatalog, std::shared_ptr<BaseCatalog>> clsCatalog(mod, "BaseCatalog");
 
     /* Member types and enums */
 
@@ -46,20 +67,9 @@ PYBIND11_PLUGIN(_baseTable) {
     /* Operators */
 
     /* Members */
-    clsBaseTable.def_static("make", &BaseTable::make);
-
-    clsBaseTable.def("getMetadata", &BaseTable::getMetadata);
-    clsBaseTable.def("setMetadata", &BaseTable::setMetadata, "metadata"_a);
-    //clsBaseTable.def("popMetadata", &BaseTable::popMetadata);
-    clsBaseTable.def("makeRecord", &BaseTable::makeRecord);
-    clsBaseTable.def("copyRecord", (PTR(BaseRecord) (BaseTable::*)(BaseRecord const &))
-        &BaseTable::copyRecord);
-    clsBaseTable.def("copyRecord", (PTR(BaseRecord) (BaseTable::*)(BaseRecord const &, SchemaMapper const &))
-        &BaseTable::copyRecord);
-    //clsBaseTable.def("getSchema", &BaseTable::getSchema);
-    clsBaseTable.def("getBufferSize", &BaseTable::getBufferSize);
-    clsBaseTable.def("clone", &BaseTable::clone);
-    clsBaseTable.def("preallocate", &BaseTable::preallocate);
+    declareCatalog<BaseRecord>(clsCatalog);
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

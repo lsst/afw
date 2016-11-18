@@ -27,30 +27,27 @@
 #include "lsst/afw/table/Source.h"
 #include "lsst/afw/table/Catalog.h"
 #include "lsst/afw/table/SortedCatalog.h"
+#include "lsst/afw/table/pybind11/catalog.h"
+#include "lsst/afw/table/pybind11/sortedCatalog.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
-template <typename RecordT>
-void declareSortedCatalog(py::module & mod, const std::string & prefix){
-    typedef typename RecordT::Table Table;
-    py::class_<SortedCatalogT<RecordT>,
-               std::shared_ptr<SortedCatalogT<RecordT>>,
-               CatalogT<RecordT>> clsSortedCatalog(mod, (prefix+"CatalogBase").c_str());
-    clsSortedCatalog.def(py::init<PTR(Table) const &>(),
-                         "table"_a=PTR(Table)());
-    clsSortedCatalog.def("isSorted", (bool (SortedCatalogT<RecordT>::*)() const)
-        &SortedCatalogT<RecordT>::isSorted);
-};
+PYBIND11_PLUGIN(_simpleCatalog) {
+    py::module mod("_simpleCatalog", "Python wrapper for afw _simpleCatalog library");
 
-PYBIND11_PLUGIN(_sortedCatalog) {
-    py::module mod("_sortedCatalog", "Python wrapper for afw _sortedCatalog library");
+    typedef py::class_<CatalogT<SimpleRecord>, std::shared_ptr<CatalogT<SimpleRecord>>> PyBaseSimpleCatalog;
+
+    typedef py::class_<SimpleCatalog, std::shared_ptr<SimpleCatalog>, CatalogT<SimpleRecord>> PySimpleCatalog;
 
     /* Module level */
-    declareSortedCatalog<SourceRecord>(mod, "Source");
-    declareSortedCatalog<SimpleRecord>(mod, "Simple");
+    PyBaseSimpleCatalog clsBaseSimpleCatalog(mod, "_BaseSimpleCatalog");
+
+    PySimpleCatalog clsSimpleCatalog(mod, "SimpleCatalog");
 
     /* Member types and enums */
 
@@ -59,6 +56,11 @@ PYBIND11_PLUGIN(_sortedCatalog) {
     /* Operators */
 
     /* Members */
+    declareCatalog<SimpleRecord>(clsBaseSimpleCatalog);
+
+    declareSortedCatalog<SimpleRecord>(clsSimpleCatalog);
 
     return mod.ptr();
 }
+
+}}} // lsst::afw::table

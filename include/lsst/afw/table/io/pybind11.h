@@ -40,7 +40,7 @@ namespace io {
      * @brief Wraps an instantiation of @ref PersistableFacade.
      *
      * Pybind11 shall assume that `PersistableFacade` is managed using
-     * @ref std::shared_ptr, as this is required for compatibility with
+     * `std::shared_ptr`, as this is required for compatibility with
      * existing subclasses of `PersistableFacade`. This means that wrapping
      * will only work if new classes also use `std::shared_ptr` as their
      * holder type.

@@ -42,18 +42,18 @@ using namespace lsst::afw::table;
 
 template <typename T>
 void declareBaseColumnViewOverloads(py::class_<BaseColumnView> clsBaseColumnView){
-    clsBaseColumnView.def("__getitem__", [](BaseColumnView & self, Key<T> const & key)->typename ndarray::Array<T,1> const{
+    clsBaseColumnView.def("_basicget", [](BaseColumnView & self, Key<T> const & key)->typename ndarray::Array<T,1> const{
         return self[key];
     });
 };
 template <typename U>
 void declareBaseColumnViewArrayOverloads(py::class_<BaseColumnView> clsBaseColumnView){
-    clsBaseColumnView.def("__getitem__", [](BaseColumnView & self, Key<lsst::afw::table::Array<U>> const & key)->typename ndarray::Array<U,2,1> const{
+    clsBaseColumnView.def("_basicget", [](BaseColumnView & self, Key<lsst::afw::table::Array<U>> const & key)->typename ndarray::Array<U,2,1> const{
         return self[key];
     });
 };
 void declareBaseColumnViewFlagOverloads(py::class_<BaseColumnView> clsBaseColumnView){
-    clsBaseColumnView.def("__getitem__", [](BaseColumnView & self, Key<Flag> const & key)->ndarray::Array<bool const,1,1> const {
+    clsBaseColumnView.def("_basicget", [](BaseColumnView & self, Key<Flag> const & key)->ndarray::Array<bool const,1,1> const {
         return ndarray::copy(self[key]);
     });
 };

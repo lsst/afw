@@ -4,30 +4,40 @@ from past.builtins import basestring
 
 import numpy as np
 
+from ._flag import Key_Flag
 from ._baseColumnView import BaseColumnView
 
-def _get(self, key):
-    """ If the key is a string, search the Schema for the correct key object and return the 
-    column view
+__all__ = []  # importing this module adds methods to BaseColumnView
+
+
+def _getitem(self, key):
+    """Get a column view; key may be a key object or the name of a field.
     """
     if isinstance(key, basestring):
-        return self[self.schema.find(key).key]
-    return self[key]
+        keyobj = self.schema.find(key).key
+    else:
+        keyobj = key
+    return self._basicget(keyobj)
 
-def _setitem_(self, key, value):
-    """ Set the values of a column
+
+def _setitem(self, key, value):
+    """Set a full column to an array or scalar; key may be a key object or the name of a field.
     """
     self.get(key)[:] = value
 
-def _set(self, key, value):
+
+def _get_bool_array(self, key):
+    """Get the value of a flag column as a boolean array; key must be a key object or the name of a field.
     """
-    Set the value of a column
-    """
-    self[key] = value
+    if isinstance(key, Key_Flag):
+        return self[key]
+    raise TypeError("key={} not an lsst.afw.table.Key_Flag".format(key))
+
 
 def _extract(self, *patterns, **kwds):
-    """ Extract a dictionary of {<name>: <column-array>} in which the field names
+    """Extract a dictionary of {<name>: <column-array>} in which the field names
     match the given shell-style glob pattern(s).
+
     Any number of glob patterns may be passed (including none); the result will be the union of all
     the result of each glob considered separately.
     Note that extract("*", copy=True) provides an easy way to transform a row-major
@@ -71,6 +81,7 @@ def _extract(self, *patterns, **kwds):
         d = self.schema.extract(*patterns, **kwds).copy()
     elif kwds:
         raise ValueError("kwd 'items' was specified, which is not compatible with additional keywords")
+
     def processArray(a):
         if where is not None:
             a = a[where]
@@ -87,7 +98,9 @@ def _extract(self, *patterns, **kwds):
 
 BaseColumnView.table = property(BaseColumnView.getTable)
 BaseColumnView.schema = property(BaseColumnView.getSchema)
-BaseColumnView.get = _get
-BaseColumnView.set = _set
-BaseColumnView.__setitem__ = _setitem_
+BaseColumnView.get = _getitem
+BaseColumnView.set = _setitem
+BaseColumnView.__getitem__ = _getitem
+BaseColumnView.__setitem__ = _setitem
+BaseColumnView.get_bool_array = _get_bool_array
 BaseColumnView.extract = _extract
