@@ -22,16 +22,28 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/table/Simple.h"
+#include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/Source.h"
 
 namespace py = pybind11;
 
 using namespace lsst::afw::table;
 
+template <typename RecordT>
+void declareSourceColumnView(py::module & mod){
+    py::class_<SourceColumnViewT<RecordT>, std::shared_ptr<SourceColumnViewT<RecordT>>> cls(mod, "SourceColumnViewT");
+    //cls.def_static("make", &SourceColumnViewT<RecordT>::make);
+};
+
 PYBIND11_PLUGIN(_source) {
     py::module mod("_source", "Python wrapper for afw _source library");
 
     /* Module level */
+    py::class_<SourceTable, std::shared_ptr<SourceTable>> clsSourceTable(mod, "SourceTable");
+    py::class_<SourceRecord, std::shared_ptr<SourceRecord>, SimpleRecord> clsSourceRecord(mod, "SourceRecord");
 
     /* Member types and enums */
 
@@ -40,6 +52,15 @@ PYBIND11_PLUGIN(_source) {
     /* Operators */
 
     /* Members */
+    clsSourceTable.def_static("make", (PTR(SourceTable) (*)(Schema const &, PTR(IdFactory) const &))
+        &SourceTable::make);
+    clsSourceTable.def_static("make", (PTR(SourceTable) (*)(Schema const &)) &SourceTable::make);
+    clsSourceTable.def_static("makeMinimalSchema", &SourceTable::makeMinimalSchema);
+    clsSourceTable.def("copyRecord", (PTR(SourceRecord) (SourceTable::*)(BaseRecord const &)) & SourceTable::copyRecord);
+    clsSourceTable.def("copyRecord", (PTR(SourceRecord) (SourceTable::*)(BaseRecord const &, SchemaMapper const &)) & SourceTable::copyRecord);
+    clsSourceTable.def("makeRecord", &SourceTable::makeRecord);
+    
+    declareSourceColumnView<SourceRecord>(mod);
 
     return mod.ptr();
 }

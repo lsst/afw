@@ -365,7 +365,6 @@ class KdTreeTestCase_GaussianProcess(lsst.utils.tests.TestCase):
         # make sure that a call with good inputs passes
         kd.getTreeNode(vv, 0)
 
-
 class GaussianProcessTestCase(lsst.utils.tests.TestCase):
 
     def testConstructorExceptions(self):

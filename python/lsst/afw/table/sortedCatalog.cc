@@ -22,16 +22,35 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/table/Source.h"
+#include "lsst/afw/table/Catalog.h"
+#include "lsst/afw/table/SortedCatalog.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 using namespace lsst::afw::table;
+
+template <typename RecordT>
+void declareSortedCatalog(py::module & mod, const std::string & prefix){
+    typedef typename RecordT::Table Table;
+    py::class_<SortedCatalogT<RecordT>,
+               std::shared_ptr<SortedCatalogT<RecordT>>,
+               CatalogT<RecordT>> clsSortedCatalog(mod, (prefix+"CatalogBase").c_str());
+    clsSortedCatalog.def(py::init<PTR(Table) const &>(),
+                         "table"_a=PTR(Table)());
+    clsSortedCatalog.def("isSorted", (bool (SortedCatalogT<RecordT>::*)() const)
+        &SortedCatalogT<RecordT>::isSorted);
+};
 
 PYBIND11_PLUGIN(_sortedCatalog) {
     py::module mod("_sortedCatalog", "Python wrapper for afw _sortedCatalog library");
 
     /* Module level */
+    declareSortedCatalog<SourceRecord>(mod, "Source");
+    declareSortedCatalog<SimpleRecord>(mod, "Simple");
 
     /* Member types and enums */
 

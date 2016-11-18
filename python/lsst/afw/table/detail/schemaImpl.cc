@@ -22,16 +22,30 @@
 
 #include <pybind11/pybind11.h>
 //#include <pybind11/operators.h>
-//#include <pybind11/stl.h>
+#include <pybind11/stl.h>
+
+#include "lsst/afw/table/misc.h"
+#include "lsst/afw/table/Key.h"
+#include "lsst/afw/table/Field.h"
+#include "lsst/afw/table/detail/SchemaImpl.h"
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table::detail;
+using namespace lsst::afw::table;
+using namespace detail;
+
+template <typename T>
+void declareSchemaItem(py::module & mod, const std::string suffix){
+    py::class_<SchemaItem<T>> clsSchemaItem(mod, ("SchemaItem_"+suffix).c_str());
+    clsSchemaItem.def_readwrite("key", &SchemaItem<T>::key);
+    clsSchemaItem.def_readwrite("field", &SchemaItem<T>::field);
+};
 
 PYBIND11_PLUGIN(_schemaImpl) {
     py::module mod("_schemaImpl", "Python wrapper for afw _schemaImpl library");
 
     /* Module level */
+    py::class_<SchemaImpl, std::shared_ptr<SchemaImpl>> clsSchemaImpl(mod, "SchemaImpl");
 
     /* Member types and enums */
 
@@ -40,6 +54,18 @@ PYBIND11_PLUGIN(_schemaImpl) {
     /* Operators */
 
     /* Members */
+    declareSchemaItem<std::uint16_t>(mod, "U");
+    declareSchemaItem<std::int32_t>(mod, "I");
+    declareSchemaItem<std::int64_t>(mod, "L");
+    declareSchemaItem<float>(mod, "F");
+    declareSchemaItem<double>(mod, "D");
+    declareSchemaItem<std::string>(mod, "String");
+    declareSchemaItem<lsst::afw::geom::Angle>(mod, "Angle");
+    declareSchemaItem<lsst::afw::table::Flag>(mod, "Flag");
+    declareSchemaItem<lsst::afw::table::Array<std::uint16_t>>(mod, "ArrayU");
+    declareSchemaItem<lsst::afw::table::Array<int>>(mod, "ArrayI");
+    declareSchemaItem<lsst::afw::table::Array<float>>(mod, "ArrayF");
+    declareSchemaItem<lsst::afw::table::Array<double>>(mod, "ArrayD");
 
     return mod.ptr();
 }
