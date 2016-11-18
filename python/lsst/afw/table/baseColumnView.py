@@ -28,7 +28,7 @@ def _set(self, key, value):
 def _extract(self, *patterns, **kwds):
     """ Extract a dictionary of {<name>: <column-array>} in which the field names
     match the given shell-style glob pattern(s).
-    Any number of glob patterns may be passed; the result will be the union of all
+    Any number of glob patterns may be passed (including none); the result will be the union of all
     the result of each glob considered separately.
     Note that extract("*", copy=True) provides an easy way to transform a row-major
     ColumnView into a possibly more efficient set of contiguous NumPy arrays.
@@ -65,10 +65,12 @@ def _extract(self, *patterns, **kwds):
     copy = kwds.pop("copy", False)
     where = kwds.pop("where", None)
     d = kwds.pop("items", None)
+    # If ``items`` is given as a kwd, an extraction has already been performed and there shouldn't be
+    # any additional keywords. Otherwise call schema.extract to load the dictionary.
     if d is None:
         d = self.schema.extract(*patterns, **kwds).copy()
     elif kwds:
-        raise ValueError("Unrecognized keyword arguments for extract: %s" % ", ".list(kwds.keys()))
+        raise ValueError("kwd 'items' was specified, which is not compatible with additional keywords")
     def processArray(a):
         if where is not None:
             a = a[where]
