@@ -47,6 +47,10 @@ PYBIND11_PLUGIN(_simple) {
     /* Operators */
 
     /* Members */
+    // Enabling the following makes no difference to the bug:
+    // clsSimpleTable.def_static("make", (PTR(SimpleTable) (*)(Schema const &, PTR(IdFactory) const &))
+    //     &SimpleTable::make);
+    // clsSimpleTable.def_static("make", (PTR(SimpleTable) (*)(Schema const &)) &SimpleTable::make);
     clsSimpleTable.def_static("makeMinimalSchema", &SimpleTable::makeMinimalSchema);
 
     clsSimpleRecord.def("getId", &SimpleRecord::getId);
