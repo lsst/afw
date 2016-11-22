@@ -168,6 +168,7 @@ Python interface to lsst::afw::geom classes
 %include "Box.i"
 %include "Angle.i"
 %include "Span.i"
+%include "SpanSet.i"
 %include "XYTransform.i"
 %include "TransformMap.i"
 

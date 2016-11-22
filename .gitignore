@@ -146,6 +146,7 @@ tests/testWcs
 tests/testWarpGpu
 tests/ticket1145
 tests/wcsCopy
+tests/testSpanSets
 tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageInOut.fit
 tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_imageOut.fit
 tests/ramFitsIO_fpC-005902-r6-0677_sub.fits_exposureRamOut.fit
