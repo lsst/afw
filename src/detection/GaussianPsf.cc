@@ -138,9 +138,8 @@ void GaussianPsf::write(OutputArchiveHandle & handle) const {
 PTR(GaussianPsf::Image) GaussianPsf::doComputeKernelImage(
     geom::Point2D const &, image::Color const &
 ) const {
-    PTR(Image) r(new Image(_dimensions));
+    PTR(Image) r(new Image(computeBBox()));
     Image::Array array = r->getArray();
-    r->setXY0(geom::Point2I(-_dimensions / 2)); // integer truncation intentional
     double sum = 0.0;
     for (int yIndex = 0, y = r->getY0(); yIndex < _dimensions.getY(); ++yIndex, ++y) {
         Image::Array::Reference row = array[yIndex];
@@ -162,6 +161,13 @@ geom::ellipses::Quadrupole GaussianPsf::doComputeShape(
     geom::Point2D const & position, image::Color const & color
 ) const {
     return geom::ellipses::Quadrupole(_sigma*_sigma, _sigma*_sigma, 0.0);
+}
+
+geom::Box2I GaussianPsf::doComputeBBox(
+        geom::Point2D const & position,
+        image::Color const & color
+) const {
+    return geom::Box2I(geom::Point2I(-_dimensions/2), _dimensions);  // integer truncation intentional
 }
 
 }}} // namespace lsst::afw::detection

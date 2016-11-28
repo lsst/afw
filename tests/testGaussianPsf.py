@@ -74,7 +74,8 @@ def computeNaiveApertureFlux(image, radius, xc=0.0, yc=0.0):
 class GaussianPsfTestCase(lsst.utils.tests.TestCase):
 
     def setUp(self):
-        self.psf = lsst.afw.detection.GaussianPsf(51, 51, 4.0)
+        self.kernelSize = 51
+        self.psf = lsst.afw.detection.GaussianPsf(self.kernelSize, self.kernelSize, 4.0)
 
     def tearDown(self):
         del self.psf
@@ -108,6 +109,18 @@ class GaussianPsfTestCase(lsst.utils.tests.TestCase):
             psf = lsst.afw.detection.GaussianPsf.readFits(filename)
             self.assertEqual(self.psf.getSigma(), psf.getSigma())
             self.assertEqual(self.psf.getDimensions(), psf.getDimensions())
+
+    def testBBox(self):
+
+        self.assertEqual(self.psf.computeKernelImage().getBBox(),
+                         self.psf.computeBBox())
+
+        self.assertEqual(self.psf.computeBBox().getWidth(), self.kernelSize)
+
+        # Test interface. GaussianPsf does not vary spatially
+        self.assertEqual(self.psf.computeKernelImage(lsst.afw.geom.Point2D(0.0, 0.0)).getBBox(),
+                         self.psf.computeBBox(lsst.afw.geom.Point2D(0.0, 0.0)))
+
 
 
 class MemoryTester(lsst.utils.tests.MemoryTestCase):

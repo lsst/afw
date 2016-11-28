@@ -86,6 +86,14 @@ protected:
         return lsst::afw::geom::ellipses::Quadrupole();
     }
 
+    virtual lsst::afw::geom::Box2I doComputeBBox(
+        lsst::afw::geom::Point2D const & position,
+        lsst::afw::image::Color const & color
+    ) const {
+        return lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(-1, -1),
+                                      lsst::afw::geom::Point2I(1, 1));
+    }
+
     virtual std::string getPersistenceName() const { return "DummyPsf"; }
 
     virtual std::string getPythonModule() const { return "testTableArchivesLib"; }

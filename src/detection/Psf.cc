@@ -87,6 +87,12 @@ PTR(Psf::Image) Psf::computeKernelImage(
     return result;
 }
 
+geom::Box2I Psf::computeBBox(geom::Point2D position, image::Color color) const {
+    if (isPointNull(position)) position = getAveragePosition();
+    if (color.isIndeterminate()) color = getAverageColor();
+    return doComputeBBox(position, color);
+}
+
 PTR(math::Kernel const) Psf::getLocalKernel(geom::Point2D position, image::Color color) const {
     if (isPointNull(position)) position = getAveragePosition();
     if (color.isIndeterminate()) color = getAverageColor();
