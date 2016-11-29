@@ -477,6 +477,25 @@ std::pair<std::shared_ptr<afwGeom::SpanSet>, std::shared_ptr<afwGeom::SpanSet>> 
                      std::shared_ptr<afwGeom::SpanSet>>(firstSpanSet, secondSpanSet);
 }
 
+std::pair<lsst::afw::image::Mask<lsst::afw::image::MaskPixel>, std::shared_ptr<afwGeom::SpanSet>>
+ makeMaskAndSpanSetForOperationTests() {
+    // Create three overlapping regions in a mask, and a SpanSet to use in set operation tests
+    // This box will range from 0 to 4 in y and 0 to 4 in x
+    auto firstMaskPart = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 2);
+    // This box will range from 6 to 10 in y and 0 to 4 in x
+    auto secondMaskPart = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2, 8);
+    // This box will range from 3 to 7 in y and 0 to 4 in x
+    auto spanSetMaskOperation = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX)->shiftedBy(2,5);
+
+    lsst::afw::image::Mask<lsst::afw::image::MaskPixel> mask(20,20);
+    firstMaskPart->setMask(mask, static_cast<lsst::afw::image::MaskPixel>(3));
+    secondMaskPart->setMask(mask, static_cast<lsst::afw::image::MaskPixel>(3));
+    // This statement just sets the 4th bit to ensure that it is not included in the following tests
+    spanSetMaskOperation->setMask(mask, static_cast<lsst::afw::image::MaskPixel>(4));
+
+    return std::make_pair(mask, spanSetMaskOperation);
+}
+
 BOOST_AUTO_TEST_CASE(SpanSet_testIntersect) {
     auto result = makeOverlapSpanSets();
     auto firstSS = result.first;
@@ -491,6 +510,20 @@ BOOST_AUTO_TEST_CASE(SpanSet_testIntersect) {
         BOOST_CHECK(spn.getMinX() == 0);
         BOOST_CHECK(spn.getMaxX() == 4);
         ++yStart;
+    }
+    // Test intersecting with a mask
+    auto maskAndSet = makeMaskAndSpanSetForOperationTests();
+    auto mask = maskAndSet.first;
+    auto spanSetMaskOperation = maskAndSet.second;
+
+    // intersect where the mask has the second bit set;
+    auto spanSetIntersectMask = spanSetMaskOperation->intersect(mask,
+                                                                static_cast<lsst::afw::image::MaskPixel>(2));
+    std::vector<int> expectedYRange{3,4,6,7};
+    auto yRangeIter = expectedYRange.begin();
+    for (auto const & val : *spanSetIntersectMask ){
+        BOOST_CHECK(val.getY() == *yRangeIter);
+        ++yRangeIter;
     }
 
     // Test with a null SpanSet
@@ -517,6 +550,18 @@ BOOST_AUTO_TEST_CASE(SpanSet_testIntersectNot) {
         BOOST_CHECK(spn.getMaxX() == 4);
         ++yStart;
     }
+
+    // Test intersectingNot with a mask
+    auto maskAndSet = makeMaskAndSpanSetForOperationTests();
+    auto mask = maskAndSet.first;
+    auto spanSetMaskOperation = maskAndSet.second;
+
+    lsst::afw::image::MaskPixel bitmask(2);
+    // intersect where the mask has the second bit set
+    auto spanSetIntersectNotMask = spanSetMaskOperation->intersectNot(mask, bitmask);
+
+    BOOST_CHECK(spanSetIntersectNotMask->size() == 1);
+    BOOST_CHECK((*(spanSetIntersectNotMask->begin())).getY() == 5);
 
     // Test with a null SpanSet
     afwGeom::SpanSet nullSpanSet;
@@ -545,6 +590,24 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnion) {
         ++yStart;
     }
 
+    // Test union with a mask
+    auto maskAndSet = makeMaskAndSpanSetForOperationTests();
+    auto mask = maskAndSet.first;
+    auto spanSetMaskOperation = maskAndSet.second;
+
+    lsst::afw::image::MaskPixel bitmask(2);
+    // union where the mask has the second bit set
+    auto spanSetUnion = spanSetMaskOperation->union_(mask, bitmask);
+
+    int yCoord = 0;
+    for (auto const & val : *spanSetUnion) {
+        BOOST_CHECK(val.getY() == yCoord);
+        ++yCoord;
+    }
+
+    // Assert that the yCoord ends at the right place (one past the end)
+    BOOST_CHECK(yCoord == 11);
+
     // Test with a null SpanSet
     afwGeom::SpanSet nullSpanSet;
     auto nullAsOther = firstSS->union_(nullSpanSet);
@@ -554,6 +617,22 @@ BOOST_AUTO_TEST_CASE(SpanSet_testUnion) {
     auto spanSetAsOther = nullSpanSet.union_(*firstSS);
     BOOST_CHECK(*spanSetAsOther == *firstSS);
 
+}
+
+BOOST_AUTO_TEST_CASE(SpanSet_MaskToSpanSet) {
+    // This is to test the free function that turns Masks to SpanSets
+    auto maskAndSet = makeMaskAndSpanSetForOperationTests();
+    auto mask = maskAndSet.first;
+    auto spanSetFromMask = afwGeom::maskToSpanSet(mask);
+
+    int yCoord = 0;
+    for (auto const & val : *spanSetFromMask) {
+        BOOST_CHECK(val == afwGeom::Span(yCoord, 0, 4));
+        ++yCoord;
+    }
+
+    // Check that the yCoord ends at the right place (one past the end)
+    BOOST_CHECK(yCoord == 11);
 }
 
 BOOST_AUTO_TEST_CASE(SpanSet_testEquality) {
