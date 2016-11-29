@@ -38,6 +38,21 @@
 #include "lsst/afw/geom/Box.h"
 #include "lsst/afw/geom/SpanSetFunctorGetters.h"
 
+namespace lsst { namespace afw { namespace geom { namespace details {
+    /* Functor object to be used with maskToSpanSet function
+     */
+    template <typename T>
+    class AnyBitSetFunctor {
+     public:
+        bool operator()(T const & pixelValue) {
+            return pixelValue !=0;
+        }
+    };
+
+}}}} // end lsst::afw::geom::details
+
+
+
 namespace lsst { namespace afw { namespace geom {
 
 /** @brief An enumeration class which describes the shapes
@@ -47,6 +62,63 @@ namespace lsst { namespace afw { namespace geom {
            creates a box shape, and MANHATTAN creates a diamond shape.
  */
 enum class Stencil { CIRCLE, BOX, MANHATTAN };
+
+// Forward declaration of the SpanSet class
+class SpanSet;
+
+/** @brief Create a SpanSet from a mask.
+ *
+ * Create a SpanSet from a class. The default behaivor is to include any pixels which have any
+ * bits set. More complex selection/filtering of bit patterns can be done by supplying a comparator
+ * function.
+ *
+ * @param mask - mask to convert to a SpanSet
+ * @param comparator - Functor object to use in the decision to include pixel in SpanSet. Should return
+ *                     true when a given pixel in the mask should be part of the SpanSet, and false
+ *                     otherwise. The functor takes a single value taken from the mask at the
+ *                     pixel under consideration. Defaults to evaluating true if the mask has bits set,
+ *                     and false otherwise.
+ *
+ * @tparam T - Pixel type of the Mask
+ * @tparam F - Type of the functor
+ */
+template <typename T, typename UnaryPredicate = details::AnyBitSetFunctor<T>>
+std::shared_ptr<geom::SpanSet> maskToSpanSet(image::Mask<T> const & mask,
+                               UnaryPredicate p = details::AnyBitSetFunctor<T>() ) {
+    std::vector<Span> tempVec;
+    std::size_t startValue{0};
+    bool started{false};
+    auto const & maskArray = mask.getArray();
+    auto dimensions = maskArray.getShape();
+    for (size_t y = 0; y < dimensions[0]; ++y) {
+        startValue = 0;
+        started = false;
+        for (size_t x = 0; x < dimensions[1]; ++x) {
+            // If a new span has not been started, and a given x matches the functor condition
+            // start a new span
+            if (p(maskArray[y][x]) && !started) {
+                started = true;
+                startValue = x;
+            }
+            // If a span has been started, and the functor condition is false, that means the
+            // Span being created should be stopped, and appended to the Span vector
+            else if (started && !p(maskArray[y][x])) {
+                tempVec.push_back(Span(y, startValue, x-1));
+                started = false;
+            }
+            // If this is the last value in the Span's x range, and started is still true
+            // that means the last value does not evaluate false in the functor and should be
+            // included in the Span under construction. The Span should be completed and added
+            // to the Span Vector before the next span is concidered.
+            if (started && x == dimensions[1]) {
+                tempVec.push_back(Span(y, startValue, x));
+            }
+        }
+    }
+
+    // construct a SpanSet from the spans determined above
+    return std::make_shared<SpanSet>(std::move(tempVec));
+}
 
 /**
  * @brief A compact representation of a collection of pixels
@@ -457,6 +529,22 @@ class SpanSet {
      */
     std::shared_ptr<SpanSet> intersect(SpanSet const & other) const;
 
+    /** @brief Determine the common points between a SpanSet and a Mask with a given bit pattern
+     *
+     * @param other - Mask with which to calculate intersection
+     * @param bitmask - The bit value to concider when intersecting
+     *
+     * @tparam T - Pixel type of the Mask
+     */
+    template <typename T>
+    std::shared_ptr<SpanSet> intersect(image::Mask<T> const & other, T const & bitmask) const {
+        auto comparator = [bitmask]
+                          (T pixelValue)
+                          {return (pixelValue & bitmask) == bitmask;};
+        auto spanSetFromMask = geom::maskToSpanSet(other, comparator);
+        return intersect(*spanSetFromMask);
+    }
+
     /** @brief Determine the common points between a SpanSet and the logical inverse of a second SpanSet
      *         and return them in a new SpanSet.
      *
@@ -464,11 +552,45 @@ class SpanSet {
      */
     std::shared_ptr<SpanSet> intersectNot(SpanSet const & other) const;
 
+    /** @brief Determine the common points between a SpanSet and the logical inverse of a Mask for a
+               given bit pattern
+     *
+     * @param other - Mask with which to calculate instersection
+     * @param bitmask - The bit value to concider when intersecting
+     *
+     * @tparam T - Pixel type of the Mask
+     */
+    template <typename T>
+    std::shared_ptr<SpanSet> intersectNot(image::Mask<T> const & other, T const & bitmask) const {
+        auto comparator = [bitmask]
+                          (T pixelValue)
+                          {return (pixelValue & bitmask) == bitmask;};
+        auto spanSetFromMask = geom::maskToSpanSet(other, comparator);
+        return intersectNot(*spanSetFromMask);
+    }
+
     /** @brief Create a new SpanSet that contains all points from two SpanSets
      *
      * @param other - The SpanSet from which the union will be calculated
      */
     std::shared_ptr<SpanSet> union_(SpanSet const & other) const;
+
+
+    /** @brief Determine the union between a SpanSet and a Mask for a given bit pattern
+     *
+     * @param other - Mask with which to calculate instersection
+     * @param bitmask - The bit value to concider when intersecting
+     *
+     * @tparam T - Pixel type of the Mask
+     */
+    template <typename T>
+    std::shared_ptr<SpanSet> union_(image::Mask<T> const & other, T const & bitmask) const {
+        auto comparator = [bitmask]
+                          (T pixelValue)
+                          {return (pixelValue & bitmask) == bitmask;};
+        auto spanSetFromMask = geom::maskToSpanSet(other, comparator);
+        return union_(*spanSetFromMask);
+    }
 
     // Comparison Operators
     /** @brief Compute equality between two SpanSets
