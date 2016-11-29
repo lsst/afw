@@ -31,7 +31,9 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 PYBIND11_PLUGIN(_baseTable) {
     py::module mod("_baseTable", "Python wrapper for afw _baseTable library");
@@ -63,3 +65,5 @@ PYBIND11_PLUGIN(_baseTable) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

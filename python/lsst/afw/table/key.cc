@@ -29,10 +29,12 @@
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declareKey(py::module &mod, const std::string & suffix){
+void declareKey(py::module & mod, std::string const & suffix) {
     py::class_<Key<T>, KeyBase<T>, FieldBase<T>> clsKey(mod, ("Key_"+suffix).c_str());
     clsKey.def(py::init<>());
     clsKey.def("_eq_impl", [](const Key<T> & self, Key<T> const & other)-> bool {
@@ -69,3 +71,5 @@ PYBIND11_PLUGIN(_key) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

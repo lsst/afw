@@ -38,7 +38,7 @@ namespace table {
 
 /// Declare match code templated on two types of catalog
 template <typename Catalog1, typename Catalog2>
-void declareMatch2(py::module &mod, const std::string & prefix) {
+void declareMatch2(py::module & mod, std::string const & prefix) {
     typedef typename Catalog1::Record Record1;
     typedef typename Catalog2::Record Record2;
     typedef std::vector<Match<typename Catalog1::Record, typename Catalog2::Record>> MatchList;

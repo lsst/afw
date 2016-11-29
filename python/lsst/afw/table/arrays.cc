@@ -35,13 +35,15 @@
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declareArrayKey(py::module & mod, const std::string suffix){
+void declareArrayKey(py::module & mod, std::string const & suffix) {
     py::class_<ArrayKey<T>,
                std::shared_ptr<ArrayKey<T>>,
-               FunctorKey< ndarray::Array<T const,1,1> >> clsArrayKey(mod, ("Array"+suffix+"Key").c_str());
+               FunctorKey<ndarray::Array<T const, 1, 1>>> clsArrayKey(mod, ("Array"+suffix+"Key").c_str());
     
     clsArrayKey.def(py::init<>());
     clsArrayKey.def(py::init<Key<Array<T>> const &>());
@@ -65,13 +67,13 @@ void declareArrayKey(py::module & mod, const std::string suffix){
     clsArrayKey.def("get", &ArrayKey<T>::get);
     clsArrayKey.def("set", &ArrayKey<T>::set);
     clsArrayKey.def("isValid", &ArrayKey<T>::isValid);
-    clsArrayKey.def("__eq__", [](ArrayKey<T> & self, ArrayKey<T> & other){
+    clsArrayKey.def("__eq__", [](ArrayKey<T> & self, ArrayKey<T> & other) {
         return self==other;
     });
-    clsArrayKey.def("__ne__", [](ArrayKey<T> & self, ArrayKey<T> & other){
+    clsArrayKey.def("__ne__", [](ArrayKey<T> & self, ArrayKey<T> & other) {
         return self!=other;
     });
-    clsArrayKey.def("_get_", [](ArrayKey<T> & self, int i){
+    clsArrayKey.def("_get_", [](ArrayKey<T> & self, int i) {
         return self[i];
     });
     clsArrayKey.def("getSize", &ArrayKey<T>::getSize);
@@ -100,3 +102,5 @@ PYBIND11_PLUGIN(_arrays) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

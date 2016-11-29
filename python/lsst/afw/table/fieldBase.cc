@@ -35,7 +35,7 @@ namespace table {
 
 /// Declare a FieldBase<T>
 template <typename T>
-py::class_<FieldBase<T>> declareFieldBase(py::module & mod, const std::string & suffix) {
+py::class_<FieldBase<T>> declareFieldBase(py::module & mod, std::string const & suffix) {
     py::class_<FieldBase<T>> clsFieldBase(mod, ("FieldBase_"+suffix).c_str());
 
     clsFieldBase.def(py::init<>());

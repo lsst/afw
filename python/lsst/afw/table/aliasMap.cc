@@ -29,7 +29,9 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 PYBIND11_PLUGIN(_aliasMap) {
     py::module mod("_aliasMap", "Python wrapper for afw _aliasMap library");
@@ -57,12 +59,14 @@ PYBIND11_PLUGIN(_aliasMap) {
     clsAliasMap.def("__setitem__", &AliasMap::set);
     clsAliasMap.def("erase", &AliasMap::erase, "alias"_a);
     clsAliasMap.def("__delitem__", &AliasMap::erase, "alias"_a);
-    clsAliasMap.def("__eq__", [](AliasMap & self, AliasMap & other){ return self == other; });
-    clsAliasMap.def("__ne__", [](AliasMap & self, AliasMap & other){ return self != other; });
+    clsAliasMap.def("__eq__", [](AliasMap & self, AliasMap & other) { return self == other; });
+    clsAliasMap.def("__ne__", [](AliasMap & self, AliasMap & other) { return self != other; });
     clsAliasMap.def("contains", &AliasMap::contains, "other"_a);
-    clsAliasMap.def("items", [](AliasMap & self){
+    clsAliasMap.def("items", [](AliasMap & self) {
         return py::make_iterator(self.begin(), self.end());
     }, py::keep_alive<0,1>());
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

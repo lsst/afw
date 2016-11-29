@@ -34,10 +34,12 @@
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declareFunctorKeys(py::module & mod, const std::string suffix){
+void declareFunctorKeys(py::module & mod, std::string const & suffix) {
     py::class_<OutputFunctorKey<T>, std::shared_ptr<OutputFunctorKey<T>>>
         clsOutputFunctorKey(mod, ("OutputFunctorKey"+suffix).c_str());
     py::class_<InputFunctorKey<T>, std::shared_ptr<InputFunctorKey<T>>>
@@ -70,3 +72,5 @@ PYBIND11_PLUGIN(_functorKey) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

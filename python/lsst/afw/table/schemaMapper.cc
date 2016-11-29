@@ -33,10 +33,12 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declareSchemaMapperOverloads(py::class_<SchemaMapper> & clsSchemaMapper, const std::string & suffix){
+void declareSchemaMapperOverloads(py::class_<SchemaMapper> & clsSchemaMapper, std::string const & suffix) {
     clsSchemaMapper.def("addOutputField", (Key<T> (SchemaMapper::*)(Field<T> const &, bool))
         &SchemaMapper::addOutputField, "newField"_a, "doReplace"_a=false);
     clsSchemaMapper.def("addMapping",
@@ -93,3 +95,5 @@ PYBIND11_PLUGIN(_schemaMapper) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

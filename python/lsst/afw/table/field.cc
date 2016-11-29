@@ -44,8 +44,7 @@ Declare a Field<T>
                     but if T = std::string then specify FieldBase<std::string>(1)
 */
 template <typename T>
-void declareField(py::module & mod, std::string const & suffix,
-                                  FieldBase<T> const & defSize=FieldBase<T>()) {
+void declareField(py::module & mod, std::string const & suffix, FieldBase<T> const & defSize=FieldBase<T>()) {
     py::class_<Field<T>, FieldBase<T>> clsField(mod, ("Field_"+suffix).c_str());
     /* Constructors */
     clsField.def(py::init<std::string const &,

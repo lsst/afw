@@ -36,10 +36,12 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declareSchemaOverloads(py::class_<Schema> & clsSchema, const std::string & suffix){
+void declareSchemaOverloads(py::class_<Schema> & clsSchema, std::string const & suffix) {
     clsSchema.def(("_addField_"+suffix).c_str(),
                   (Key<T> (Schema::*)(Field<T> const &, bool)) &Schema::addField,
                   "field"_a, "doReplace"_a=false);
@@ -64,7 +66,7 @@ void declareSchemaOverloads(py::class_<Schema> & clsSchema, const std::string & 
                   "item"_a, "flags"_a=Schema::ComparisonFlags::EQUAL_KEYS);
 };
 template <>
-void declareSchemaOverloads<std::string>(py::class_<Schema> & clsSchema, const std::string & suffix){
+void declareSchemaOverloads<std::string>(py::class_<Schema> & clsSchema, std::string const & suffix) {
     clsSchema.def(("_addField_"+suffix).c_str(),
                   (Key<std::string> (Schema::*)(Field<std::string> const &, bool)) &Schema::addField,
                   "field"_a, "doReplace"_a=false);
@@ -91,7 +93,7 @@ void declareSchemaOverloads<std::string>(py::class_<Schema> & clsSchema, const s
 };
 
 template <typename T>
-void declareSubSchemaOverloads(py::class_<SubSchema> & clsSubSchema, const std::string & suffix){
+void declareSubSchemaOverloads(py::class_<SubSchema> & clsSubSchema, std::string const & suffix) {
     clsSubSchema.def(("_find_"+suffix).c_str(),
                      (SchemaItem<T> (SubSchema::*)(std::string const &) const) &SubSchema::find);
     clsSubSchema.def(("_asKey_"+suffix).c_str(), [](SubSchema & self)->Key<T> {
@@ -125,7 +127,7 @@ PYBIND11_PLUGIN(_schema) {
     clsSchema.def(py::init<Schema const &>());
 
     /* Operators */
-    clsSchema.def("__getitem__", [](Schema & self, std::string const & name){
+    clsSchema.def("__getitem__", [](Schema & self, std::string const & name) {
         return self[name];
     });
     clsSchema.def(py::self == py::self);
@@ -140,7 +142,7 @@ PYBIND11_PLUGIN(_schema) {
     clsSchema.def("getAliasMap", &Schema::getAliasMap);
     clsSchema.def("setAliasMap", &Schema::setAliasMap, "aliases"_a);
     clsSchema.def("disconnectAliases", &Schema::disconnectAliases);
-    clsSchema.def("_forEach", [](Schema & self, py::object & obj){
+    clsSchema.def("_forEach", [](Schema & self, py::object & obj) {
         self.forEach(obj);
     });
     clsSchema.def("compare", &Schema::compare, "other"_a, "flags"_a=Schema::ComparisonFlags::EQUAL_KEYS);
@@ -187,3 +189,5 @@ PYBIND11_PLUGIN(_schema) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

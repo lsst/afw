@@ -30,15 +30,17 @@
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declareKeyBase(py::module &mod, const std::string & suffix){
+void declareKeyBase(py::module & mod, std::string const & suffix) {
     py::class_<KeyBase<T>> clsKeyBase(mod, ("KeyBase_"+suffix).c_str());
 };
 
 template <typename U>
-void declareKeyBaseArray(py::module &mod, const std::string & suffix){
+void declareKeyBaseArray(py::module & mod, std::string const & suffix) {
     /*
     KeyBase has slightly different methods if the type is an Array.
     Currently it does not appear that those methods need to be wrapped but in case this changes
@@ -77,3 +79,5 @@ PYBIND11_PLUGIN(_keyBase) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

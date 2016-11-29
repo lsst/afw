@@ -36,14 +36,16 @@
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declareBaseRecordOverloads(py::class_<BaseRecord, std::shared_ptr<BaseRecord>> clsBaseRecord,
-                                const std::string & suffix){
+void declareBaseRecordOverloads(py::class_<BaseRecord, std::shared_ptr<BaseRecord>> & clsBaseRecord,
+                                std::string const & suffix) {
     clsBaseRecord.def(("_get_"+suffix).c_str(),
                       (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
-    clsBaseRecord.def("_getitem_", [](BaseRecord & self, Key<T> const & key)->typename Field<T>::Reference{
+    clsBaseRecord.def("_getitem_", [](BaseRecord & self, Key<T> const & key)->typename Field<T>::Reference {
         /*
         Define the python __getitem__ method in python to return a baserecord for the requested key
         */
@@ -53,11 +55,11 @@ void declareBaseRecordOverloads(py::class_<BaseRecord, std::shared_ptr<BaseRecor
 
 template <typename U>
 void declareBaseRecordArrayOverloads(py::class_<BaseRecord, std::shared_ptr<BaseRecord>> clsBaseRecord,
-                                const std::string & suffix){
+                                     std::string const & suffix) {
     typedef lsst::afw::table::Array<U> T;
     clsBaseRecord.def(("_get_"+suffix).c_str(),
                       (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
-    clsBaseRecord.def("_getitem_", [](BaseRecord & self, Key<T> const & key)->ndarray::Array<U,1,1>{
+    clsBaseRecord.def("_getitem_", [](BaseRecord & self, Key<T> const & key)->ndarray::Array<U,1,1> {
         /*
         Define the python __getitem__ method in python to return a baserecord for the requested key
         */
@@ -67,21 +69,21 @@ void declareBaseRecordArrayOverloads(py::class_<BaseRecord, std::shared_ptr<Base
 
 template <typename T>
 void declareBaseRecordOverloadsFlag(py::class_<BaseRecord, std::shared_ptr<BaseRecord>> clsBaseRecord,
-                                const std::string & suffix){
+                                    std::string const & suffix) {
     clsBaseRecord.def(("_get_"+suffix).c_str(),
                       (typename Field<T>::Value (BaseRecord::*)(Key<T> const &) const) &BaseRecord::get);
 }
 
 template <typename T, typename U>
 void declareBaseRecordSet(py::class_<BaseRecord, std::shared_ptr<BaseRecord>> clsBaseRecord,
-                                const std::string & suffix){
+                          std::string const & suffix) {
     clsBaseRecord.def(("set"+suffix).c_str(), (void (BaseRecord::*)(Key<T> const &, U const &))
         &BaseRecord::set);
 };
 
 template <typename U>
 void declareBaseRecordSetArray(py::class_<BaseRecord, std::shared_ptr<BaseRecord>> clsBaseRecord,
-                                const std::string & suffix){
+                               std::string const & suffix) {
     clsBaseRecord.def(("set"+suffix).c_str(),
                       (void (BaseRecord::*)(Key<lsst::afw::table::Array<U>> const &,
                                             ndarray::Array<U,1,1> const &)) &BaseRecord::set);
@@ -139,3 +141,5 @@ PYBIND11_PLUGIN(_baseRecord) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

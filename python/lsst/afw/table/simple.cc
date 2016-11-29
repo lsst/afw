@@ -31,7 +31,9 @@
 
 namespace py = pybind11;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 PYBIND11_PLUGIN(_simple) {
     py::module mod("_simple", "Python wrapper for afw _simple library");
@@ -78,3 +80,5 @@ PYBIND11_PLUGIN(_simple) {
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table

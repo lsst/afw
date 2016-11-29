@@ -35,7 +35,7 @@ using namespace lsst::afw::table;
 using namespace detail;
 
 template <typename T>
-void declareSchemaItem(py::module & mod, const std::string suffix){
+void declareSchemaItem(py::module & mod, const std::string suffix) {
     py::class_<SchemaItem<T>> clsSchemaItem(mod, ("SchemaItem_"+suffix).c_str());
     clsSchemaItem.def_readwrite("key", &SchemaItem<T>::key);
     clsSchemaItem.def_readwrite("field", &SchemaItem<T>::field);

@@ -41,10 +41,12 @@
 namespace py = pybind11;
 using namespace pybind11::literals;
 
-using namespace lsst::afw::table;
+namespace lsst {
+namespace afw {
+namespace table {
 
 template <typename T>
-void declarePointKey(py::module &mod, const std::string & suffix){
+void declarePointKey(py::module &mod, std::string const & suffix) {
     py::class_<PointKey<T>> clsPointKey(mod, ("Point"+suffix+"Key").c_str());
     /* Constructors */
     clsPointKey.def(py::init<>());
@@ -58,14 +60,15 @@ void declarePointKey(py::module &mod, const std::string & suffix){
     clsPointKey.def("getY", &PointKey<T>::getY);
     clsPointKey.def("isValid", &PointKey<T>::isValid);
     clsPointKey.def_static("addFields", &PointKey<T>::addFields);
-    clsPointKey.def("set", [](PointKey<T> & self, BaseRecord & record, lsst::afw::geom::Point<T,2> const & value){
+    clsPointKey.def("set",
+                    [](PointKey<T> & self, BaseRecord & record, lsst::afw::geom::Point<T,2> const & value) {
         return self.set(record, value);
     });
     clsPointKey.def("get", &PointKey<T>::get);
 };
 
 template <typename T, int N>
-void declareCovarianceMatrixKey(py::module &mod, const::std::string & suffix){
+void declareCovarianceMatrixKey(py::module &mod, const::std::string & suffix) {
     typedef std::vector< Key<T> > SigmaKeyArray;
     typedef std::vector< Key<T> > CovarianceKeyArray;
     typedef std::vector<std::string> NameArray;
@@ -93,19 +96,20 @@ void declareCovarianceMatrixKey(py::module &mod, const::std::string & suffix){
             bool)) &CovarianceMatrixKey<T,N>::addFields,
         "schema"_a, "prefix"_a, "names"_a, "units"_a, "diagonalOnly"_a=false
     );
-    cls.def("set", [](CovarianceMatrixKey<T,N> & cov, BaseRecord & record, Eigen::Matrix<T,N,N> const & value){
+    cls.def("set",
+            [](CovarianceMatrixKey<T,N> & cov, BaseRecord & record, Eigen::Matrix<T,N,N> const & value) {
         return cov.set(record, value);
     });
-    cls.def("get", [](CovarianceMatrixKey<T,N> & cov, BaseRecord const & record){
+    cls.def("get", [](CovarianceMatrixKey<T,N> & cov, BaseRecord const & record) {
         return cov.get(record);
     });
     cls.def("isValid", &CovarianceMatrixKey<T,N>::isValid);
     cls.def("setElement", &CovarianceMatrixKey<T,N>::setElement);
     cls.def("getElement", &CovarianceMatrixKey<T,N>::getElement);
-    cls.def("__eq__", [](CovarianceMatrixKey<T,N> & self, CovarianceMatrixKey<T,N> & other){
+    cls.def("__eq__", [](CovarianceMatrixKey<T,N> & self, CovarianceMatrixKey<T,N> & other) {
         return self==other;
     });
-    cls.def("__ne__", [](CovarianceMatrixKey<T,N> & self, CovarianceMatrixKey<T,N> & other){
+    cls.def("__ne__", [](CovarianceMatrixKey<T,N> & self, CovarianceMatrixKey<T,N> & other) {
         return self!=other;
     });
 };
@@ -157,14 +161,14 @@ PYBIND11_PLUGIN(_aggregates) {
     clsCoordKey.def_static("addFields", &CoordKey::addFields);
     clsCoordKey.def("getRa", &CoordKey::getRa);
     clsCoordKey.def("getDec", &CoordKey::getDec);
-    clsCoordKey.def("__eq__", [](CoordKey & self, CoordKey & other){
+    clsCoordKey.def("__eq__", [](CoordKey & self, CoordKey & other) {
         return self==other;
     });
-    clsCoordKey.def("__ne__", [](CoordKey & self, CoordKey & other){
+    clsCoordKey.def("__ne__", [](CoordKey & self, CoordKey & other) {
         return self!=other;
     });
     clsCoordKey.def("isValid", &CoordKey::isValid);
-    clsCoordKey.def("get", [](CoordKey & self, BaseRecord const & record){
+    clsCoordKey.def("get", [](CoordKey & self, BaseRecord const & record) {
         return self.get(record);
     });
     clsCoordKey.def("set",
@@ -181,10 +185,10 @@ PYBIND11_PLUGIN(_aggregates) {
     clsQuadrupoleKey.def("isValid", &QuadrupoleKey::isValid);
     clsQuadrupoleKey.def("set", &QuadrupoleKey::set);
     clsQuadrupoleKey.def("get", &QuadrupoleKey::get);
-    clsQuadrupoleKey.def("__eq__", [](QuadrupoleKey & self, QuadrupoleKey & other){
+    clsQuadrupoleKey.def("__eq__", [](QuadrupoleKey & self, QuadrupoleKey & other) {
         return self==other;
     });
-    clsQuadrupoleKey.def("__ne__", [](QuadrupoleKey & self, QuadrupoleKey & other){
+    clsQuadrupoleKey.def("__ne__", [](QuadrupoleKey & self, QuadrupoleKey & other) {
         return self!=other;
     });
     
@@ -194,12 +198,14 @@ PYBIND11_PLUGIN(_aggregates) {
     clsEllipseKey.def("isValid", &EllipseKey::isValid);
     clsEllipseKey.def("getCore", &EllipseKey::getCore);
     clsEllipseKey.def("getCenter", &EllipseKey::getCenter);
-    clsEllipseKey.def("__eq__", [](EllipseKey & self, EllipseKey & other){
+    clsEllipseKey.def("__eq__", [](EllipseKey & self, EllipseKey & other) {
         return self==other;
     });
-    clsEllipseKey.def("__ne__", [](EllipseKey & self, EllipseKey & other){
+    clsEllipseKey.def("__ne__", [](EllipseKey & self, EllipseKey & other) {
         return self!=other;
     });
     
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::table
