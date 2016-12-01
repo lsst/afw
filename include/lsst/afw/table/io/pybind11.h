@@ -28,6 +28,7 @@
 #include <string>
 
 #include <pybind11/pybind11.h>
+using namespace pybind11::literals;
 
 #include "lsst/afw/table/io/Persistable.h"
 
@@ -54,7 +55,6 @@ namespace io {
      */
     template <typename T>
     void declarePersistableFacade(pybind11::module & module, std::string const & suffix) {
-        using namespace pybind11::literals;
         // shared_ptr is used by subclasses of PersistableFacade
         pybind11::class_<PersistableFacade<T>, std::shared_ptr<PersistableFacade<T>>>
                 clsFacade(module, ("PersistableFacade" + suffix).c_str());

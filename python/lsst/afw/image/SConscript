@@ -3,6 +3,7 @@ from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['image',
                                   'apCorrMap',
                                   'calib',
+                                  'coaddInputs',
                                   'wcs',
                                   'tanWcs',
                                   'exposure',
@@ -11,7 +12,8 @@ scripts.BasicSConscript.pybind11(['image',
                                   'maskedImage',
                                   'imageUtils',
                                   'imageSlice',
-                                  'utils'])
+                                  'utils',
+                                  'visitInfo'])
 
 ## -*- python -*-
 #from lsst.sconsUtils import env, targets
