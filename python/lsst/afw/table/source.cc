@@ -20,12 +20,14 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/table/Simple.h"
 #include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/slots.h"
 #include "lsst/afw/table/Source.h"
 
 namespace py = pybind11;
@@ -58,12 +60,20 @@ PYBIND11_PLUGIN(_source) {
     /* Operators */
 
     /* Members */
-    clsSourceTable.def_static("make", (PTR(SourceTable) (*)(Schema const &, PTR(IdFactory) const &))
-        &SourceTable::make);
-    clsSourceTable.def_static("make", (PTR(SourceTable) (*)(Schema const &)) &SourceTable::make);
+    clsSourceTable.def_static("make",
+                              (std::shared_ptr<SourceTable> (*)(Schema const &,
+                                                                std::shared_ptr<IdFactory> const &))
+                                    &SourceTable::make);
+    clsSourceTable.def_static("make",
+                              (std::shared_ptr<SourceTable> (*)(Schema const &)) &SourceTable::make);
     clsSourceTable.def_static("makeMinimalSchema", &SourceTable::makeMinimalSchema);
-    clsSourceTable.def("copyRecord", (PTR(SourceRecord) (SourceTable::*)(BaseRecord const &)) & SourceTable::copyRecord);
-    clsSourceTable.def("copyRecord", (PTR(SourceRecord) (SourceTable::*)(BaseRecord const &, SchemaMapper const &)) & SourceTable::copyRecord);
+    clsSourceTable.def("copyRecord",
+                       (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &))
+                            &SourceTable::copyRecord);
+    clsSourceTable.def("copyRecord",
+                       (std::shared_ptr<SourceRecord> (SourceTable::*)(BaseRecord const &,
+                                                                       SchemaMapper const &))
+                            &SourceTable::copyRecord);
     clsSourceTable.def("makeRecord", &SourceTable::makeRecord);
 
     //clsSourceTable.def("getPsfFluxSlot", &SourceTable::getPsfFluxSlot);
@@ -124,42 +134,42 @@ PYBIND11_PLUGIN(_source) {
 
     declareSourceColumnView<SourceRecord>(mod);
 
-    //clsSourceRecord.def("getParent", &SourceTable::getParent);
-    //clsSourceRecord.def("setParent", &SourceTable::setParent, "id"_a);
+    //clsSourceRecord.def("getParent", &SourceRecord::getParent);
+    //clsSourceRecord.def("setParent", &SourceRecord::setParent, "id"_a);
 
-    //clsSourceRecord.def("getPsfFlux", &SourceTable::getPsfFlux);
-    //clsSourceRecord.def("getPsfFluxErr", &SourceTable::getPsfFluxErr);
-    //clsSourceRecord.def("getPsfFluxFlag", &SourceTable::getPsfFluxFlag);
+    //clsSourceRecord.def("getPsfFlux", &SourceRecord::getPsfFlux);
+    //clsSourceRecord.def("getPsfFluxErr", &SourceRecord::getPsfFluxErr);
+    //clsSourceRecord.def("getPsfFluxFlag", &SourceRecord::getPsfFluxFlag);
 
-    //clsSourceRecord.def("getModelFlux", &SourceTable::getModelFlux);
-    //clsSourceRecord.def("getModelFluxErr", &SourceTable::getModelFluxErr);
-    //clsSourceRecord.def("getModelFluxFlag", &SourceTable::getModelFluxFlag);
+    //clsSourceRecord.def("getModelFlux", &SourceRecord::getModelFlux);
+    //clsSourceRecord.def("getModelFluxErr", &SourceRecord::getModelFluxErr);
+    //clsSourceRecord.def("getModelFluxFlag", &SourceRecord::getModelFluxFlag);
 
-    //clsSourceRecord.def("getApFlux", &SourceTable::getApFlux);
-    //clsSourceRecord.def("getApFluxErr", &SourceTable::getApFluxErr);
-    //clsSourceRecord.def("getApFluxFlag", &SourceTable::getApFluxFlag);
+    //clsSourceRecord.def("getApFlux", &SourceRecord::getApFlux);
+    //clsSourceRecord.def("getApFluxErr", &SourceRecord::getApFluxErr);
+    //clsSourceRecord.def("getApFluxFlag", &SourceRecord::getApFluxFlag);
 
-    //clsSourceRecord.def("getInstFlux", &SourceTable::getInstFlux);
-    //clsSourceRecord.def("getInstFluxErr", &SourceTable::getInstFluxErr);
-    //clsSourceRecord.def("getInstFluxFlag", &SourceTable::getInstFluxFlag);
+    //clsSourceRecord.def("getInstFlux", &SourceRecord::getInstFlux);
+    //clsSourceRecord.def("getInstFluxErr", &SourceRecord::getInstFluxErr);
+    //clsSourceRecord.def("getInstFluxFlag", &SourceRecord::getInstFluxFlag);
 
-    //clsSourceRecord.def("getCalibFlux", &SourceTable::getCalibFlux);
-    //clsSourceRecord.def("getCalibFluxErr", &SourceTable::getCalibFluxErr);
-    //clsSourceRecord.def("getCalibFluxFlag", &SourceTable::getCalibFluxFlag);
+    //clsSourceRecord.def("getCalibFlux", &SourceRecord::getCalibFlux);
+    //clsSourceRecord.def("getCalibFluxErr", &SourceRecord::getCalibFluxErr);
+    //clsSourceRecord.def("getCalibFluxFlag", &SourceRecord::getCalibFluxFlag);
 
-    //clsSourceRecord.def("getCentroid", &SourceTable::getCentroid);
-    //clsSourceRecord.def("getCentroidErr", &SourceTable::getCentroidErr);
-    //clsSourceRecord.def("getCentroidFlag", &SourceTable::getCentroidFlag);
+    clsSourceRecord.def("getCentroid", &SourceRecord::getCentroid);
+    clsSourceRecord.def("getCentroidErr", &SourceRecord::getCentroidErr);
+    //clsSourceRecord.def("getCentroidFlag", &SourceRecord::getCentroidFlag);
 
-    //clsSourceRecord.def("getShape", &SourceTable::getShape);
-    //clsSourceRecord.def("getShapeErr", &SourceTable::getShapeErr);
-    //clsSourceRecord.def("getShapeFlag", &SourceTable::getShapeFlag);
+    //clsSourceRecord.def("getShape", &SourceRecord::getShape);
+    //clsSourceRecord.def("getShapeErr", &SourceRecord::getShapeErr);
+    //clsSourceRecord.def("getShapeFlag", &SourceRecord::getShapeFlag);
 
-    //clsSourceRecord.def("getX", &SourceTable::getX);
-    //clsSourceRecord.def("getY", &SourceTable::getY);
-    //clsSourceRecord.def("getIxx", &SourceTable::getIxx);
-    //clsSourceRecord.def("getIyy", &SourceTable::getIyy);
-    //clsSourceRecord.def("getIxy", &SourceTable::getIxy);
+    //clsSourceRecord.def("getX", &SourceRecord::getX);
+    //clsSourceRecord.def("getY", &SourceRecord::getY);
+    //clsSourceRecord.def("getIxx", &SourceRecord::getIxx);
+    //clsSourceRecord.def("getIyy", &SourceRecord::getIyy);
+    //clsSourceRecord.def("getIxy", &SourceRecord::getIxy);
 
     return mod.ptr();
 }
