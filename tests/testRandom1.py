@@ -91,7 +91,7 @@ class RandomTestCase(unittest.TestCase):
         pol = pexPolicy.Policy()
         seed = getSeed()
         pol.set("rngSeed", str(seed))
-        pol.set("rngAlgorithm", afwMath.Random.getAlgorithmNames()[afwMath.Random.RANLXD2])
+        pol.set("rngAlgorithm", afwMath.Random.getAlgorithmNames()[int(afwMath.Random.Algorithm.RANLXD2)])
         r1 = afwMath.Random(afwMath.Random.RANLXD2, seed)
         r2 = afwMath.Random(pol)
         checkRngEquivalence(r1, r2)

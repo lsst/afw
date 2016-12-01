@@ -24,22 +24,31 @@
 //#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/geom/ellipses/ConformalShear.h"
+#include "lsst/afw/geom/ellipses/EllipticityBase.h"
+
 namespace py = pybind11;
+
+using namespace py::literals;
 
 using namespace lsst::afw::geom::ellipses;
 
 PYBIND11_PLUGIN(_conformalShear) {
     py::module mod("_conformalShear", "Python wrapper for afw _conformalShear library");
 
-    /* Module level */
-
-    /* Member types and enums */
+    py::class_<ConformalShear, detail::EllipticityBase> cls(mod, "ConformalShear");
 
     /* Constructors */
-
-    /* Operators */
+    cls.def(py::init<std::complex<double> const &>());
+    cls.def(py::init<double, double>(),
+            "e1"_a=0.0, "e2"_a=0.0);
 
     /* Members */
+//    cls.def("dAssign", (Jacobian (ConformalShear::*)(Distortion const &)) &ConformalShear::dAssign);
+//    cls.def("dAssign", (Jacobian (ConformalShear::*)(ReducedShear const &)) &ConformalShear::dAssign);
+    cls.def("getAxisRatio", &ConformalShear::getAxisRatio);
+    cls.def("normalize", &ConformalShear::normalize);
+    cls.def("getName", &ConformalShear::getName);
 
     return mod.ptr();
 }

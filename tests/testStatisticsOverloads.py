@@ -60,19 +60,19 @@ class StatisticsTestCase(unittest.TestCase):
         self.mimgI = afwImage.MaskedImageI(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgI.set(self.val, 0x0, self.val)
         self.imgI = afwImage.ImageI(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
-        self.vecI = afwMath.vectorI(self.nRow*self.nCol, self.val)
+        self.vecI = [self.val for i in range(self.nRow*self.nCol)] # TODO: pybind11, this should probably be ndarray
 
         # floats
         self.mimgF = afwImage.MaskedImageF(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgF.set(self.val, 0x0, self.val)
         self.imgF = afwImage.ImageF(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
-        self.vecF = afwMath.vectorF(self.nRow*self.nCol, self.val)
+        self.vecF = [float(self.val) for i in range(self.nRow*self.nCol)] # TODO: pybind11, this should probably be ndarray
 
         # doubles
         self.mimgD = afwImage.MaskedImageD(afwGeom.Extent2I(self.nRow, self.nCol))
         self.mimgD.set(self.val, 0x0, self.val)
         self.imgD = afwImage.ImageD(afwGeom.Extent2I(self.nRow, self.nCol), self.val)
-        self.vecD = afwMath.vectorD(self.nRow*self.nCol, self.val)
+        self.vecD = [float(self.val) for i in range(self.nRow*self.nCol)] # TODO: pybind11, this should probably be ndarray
 
         self.imgList = [self.imgI, self.imgF, self.imgD]
         self.mimgList = [self.mimgI, self.mimgF, self.mimgD]
@@ -125,7 +125,7 @@ class StatisticsTestCase(unittest.TestCase):
     # Test the std::vectors
     def testVector(self):
         for vec in self.vecList:
-            self.compareMakeStatistics(vec, vec.size())
+            self.compareMakeStatistics(vec, len(vec))
 
     def testWeightedVector(self):
         """Test std::vector, but with weights"""
@@ -140,7 +140,7 @@ class StatisticsTestCase(unittest.TestCase):
                                            afwMath.NPOINT | afwMath.STDEV | afwMath.MEAN | afwMath.SUM, sctrl)
 
             self.assertAlmostEqual(0.5*weight*sum(vec)/stats.getValue(afwMath.SUM), 1.0)
-            self.assertAlmostEqual(sum(vec)/vec.size(), stats.getValue(afwMath.MEAN))
+            self.assertAlmostEqual(sum(vec)/len(vec), stats.getValue(afwMath.MEAN))
 
     # Try calling the Statistics constructor directly
     def testStatisticsConstructor(self):

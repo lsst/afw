@@ -1,4 +1,3 @@
-## -*- python -*-
 from lsst.sconsUtils import scripts
 scripts.BasicSConscript.pybind11(['function',
                                   'functionLibrary',
@@ -8,4 +7,10 @@ scripts.BasicSConscript.pybind11(['function',
                                   'spatialCell',
                                   'boundedField',
                                   'chebyshevBoundedField',
-                                  'leastSquares'])
+                                  'leastSquares',
+                                  'random',
+                                  'convolveImage',
+                                  'statistics',
+                                  'stack',
+                                  'kernel'])
+

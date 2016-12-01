@@ -147,8 +147,8 @@ class WcsFitsTableTestCase(unittest.TestCase):
         wcsIn = lsst.afw.image.makeWcs(self.metadata)
         with lsst.utils.tests.getTempFilePath(".fits") as fileName:
             wcsOut = self.doFitsRoundTrip(fileName, wcsIn)
-            wcsIn1 = lsst.afw.image.cast_TanWcs(wcsIn)
-            wcsOut1 = lsst.afw.image.cast_TanWcs(wcsOut)
+            wcsIn1 = wcsIn
+            wcsOut1 = wcsOut
             self.assertIsNotNone(wcsIn1)
             self.assertIsNotNone(wcsOut1)
             self.assertTrue(wcsIn1.hasDistortion())

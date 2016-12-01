@@ -10,4 +10,5 @@ scripts.BasicSConscript.pybind11(['affineTransform',
 				  'point',
 				  'separableXYTransform',
 				  'span',
+				  'linearTransform',
 				  'xYTransform'])

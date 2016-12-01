@@ -25,17 +25,16 @@
 from __future__ import absolute_import
 from .ellipsesLib import *
 
-# The following code is not yet implemented and will not work until ellipses is wrapped
-#Separable = {
-#    (Distortion, DeterminantRadius):SeparableDistortionDeterminantRadius,
-#    (Distortion, TraceRadius):SeparableDistortionTraceRadius,
-#    (Distortion, LogDeterminantRadius):SeparableDistortionLogDeterminantRadius,
-#    (Distortion, LogTraceRadius):SeparableDistortionLogTraceRadius,
-#    (ConformalShear, DeterminantRadius):SeparableConformalShearDeterminantRadius,
-#    (ConformalShear, TraceRadius):SeparableConformalShearTraceRadius,
-#    (ConformalShear, LogDeterminantRadius):SeparableConformalShearLogDeterminantRadius,
-#    (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius
-#}
+Separable = {
+    (Distortion, DeterminantRadius):SeparableDistortionDeterminantRadius,
+    (Distortion, TraceRadius):SeparableDistortionTraceRadius,
+    (Distortion, LogDeterminantRadius):SeparableDistortionLogDeterminantRadius,
+    (Distortion, LogTraceRadius):SeparableDistortionLogTraceRadius,
+    (ConformalShear, DeterminantRadius):SeparableConformalShearDeterminantRadius,
+    (ConformalShear, TraceRadius):SeparableConformalShearTraceRadius,
+    (ConformalShear, LogDeterminantRadius):SeparableConformalShearLogDeterminantRadius,
+    (ConformalShear, LogTraceRadius):SeparableConformalShearLogTraceRadius
+}
 
 #BaseCore.cast = lambda self: globals()[self.getName()].cast(self)
 

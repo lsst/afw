@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# See COPYRIGHT file at the top of the source tree.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -20,11 +21,18 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-"""Application Framework image-related classes including Image, Mask and MaskedImage
-"""
-import numpy
-from .imageLib import *
-from .basicUtils import *
-from .testUtils import *
-# temporarily disable for pybind11 port until we get to it
-#from .makeVisitInfo import makeVisitInfo
+from __future__ import absolute_import
+
+import lsst.pex.config
+
+from ._chebyshevBoundedField import *
+
+@lsst.pex.config.wrap(ChebyshevBoundedFieldControl)
+class ChebyshevBoundedFieldConfig(lsst.pex.config.Config):
+
+    def computeSize(self):
+        return self.makeControl().computeSize()
+
+
+ChebyshevBoundedField.Control = ChebyshevBoundedFieldControl
+ChebyshevBoundedField.ConfigClass = ChebyshevBoundedFieldConfig

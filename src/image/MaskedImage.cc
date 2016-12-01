@@ -372,8 +372,10 @@ image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator=(MaskedIma
  * \note operator=() is not equivalent to this command
  */
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator<<=(MaskedImage const& rhs) {
     assign(rhs);
+    return *this;
 }
 
 /**
@@ -403,10 +405,12 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::assign(MaskedI
 /// a Pixel operation (plus) which models the covariance, but this is not (yet?)
 /// available as full-MaskedImage operators
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage const& rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(MaskedImage const& rhs) {
     *_image += *rhs.getImage();
     *_mask  |= *rhs.getMask();
     *_variance += *rhs.getVariance();
+    return *this;
 }
 
 /// Add a scaled MaskedImage c*rhs to a MaskedImage
@@ -426,8 +430,10 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledPlus(dou
 
 /// Add a scalar rhs to a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePixelT const rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(ImagePixelT const rhs) {
     *_image += rhs;
+    return *this;
 }
 
 /// Subtract a MaskedImage rhs from a MaskedImage
@@ -436,10 +442,12 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator+=(Ima
 ///
 /// \note the pixels in the two images are taken to be independent
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage const& rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(MaskedImage const& rhs) {
     *_image -= *rhs.getImage();
     *_mask  |= *rhs.getMask();
     *_variance += *rhs.getVariance();
+    return *this;
 }
 
 /// Subtract a scaled MaskedImage c*rhs from a MaskedImage
@@ -457,8 +465,10 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMinus(do
 
 /// Subtract a scalar rhs from a MaskedImage
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePixelT const rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator-=(ImagePixelT const rhs) {
     *_image -= rhs;
+    return *this;
 }
 
 namespace {
@@ -482,7 +492,8 @@ namespace {
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(MaskedImage const& rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
     transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
@@ -493,6 +504,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(Mas
 
     *_image *= *rhs.getImage();
     *_mask  |= *rhs.getMask();
+    return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -511,9 +523,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledMultipli
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(ImagePixelT const rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator*=(ImagePixelT const rhs) {
     *_image *= rhs;
     *_variance *= rhs*rhs;
+    return *this;
 }
 
 
@@ -539,7 +553,8 @@ namespace {
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(MaskedImage const& rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(MaskedImage const& rhs) {
     // Must do variance before we modify the image values
     transform_pixels(_image->_getRawView(), // lhs
                      rhs._image->_getRawView(), // rhs,
@@ -550,6 +565,7 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(Mas
 
     *_image /= *rhs.getImage();
     *_mask  |= *rhs.getMask();
+    return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
@@ -568,9 +584,11 @@ void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::scaledDivides(
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
-void image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(ImagePixelT const rhs) {
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>&
+image::MaskedImage<ImagePixelT, MaskPixelT, VariancePixelT>::operator/=(ImagePixelT const rhs) {
     *_image /= rhs;
     *_variance /= rhs*rhs;
+    return *this;
 }
 
 template<typename ImagePixelT, typename MaskPixelT, typename VariancePixelT>
