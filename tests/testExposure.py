@@ -236,7 +236,7 @@ class ExposureTestCase(lsst.utils.tests.TestCase):
         exposureTime = 12.3
         boresightRotAngle = 45.6 * afwGeom.degrees
         weather = afwCoord.Weather(1.1, 2.2, 0.3)
-        visitInfo = afwImage.makeVisitInfo(
+        visitInfo = afwImage.VisitInfo(
             exposureId = exposureId,
             exposureTime = exposureTime,
             boresightRotAngle = boresightRotAngle,
