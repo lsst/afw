@@ -26,5 +26,4 @@ import numpy
 from .imageLib import *
 from .basicUtils import *
 from .testUtils import *
-# temporarily disable for pybind11 port until we get to it
-#from .makeVisitInfo import makeVisitInfo
+from .makeVisitInfo import makeVisitInfo
