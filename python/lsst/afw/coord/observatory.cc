@@ -25,26 +25,42 @@
 #include "lsst/afw/coord/Observatory.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
+
+namespace lsst {
+namespace afw {
+namespace coord {
 
 PYBIND11_PLUGIN(_observatory) {
     py::module mod("_observatory", "Python wrapper for afw _observatory library");
 
-    py::class_<lsst::afw::coord::Observatory> clsObservatory(mod, "Observatory");
+    py::class_<Observatory> cls(mod, "Observatory");
 
     /* Constructors */
-    clsObservatory.def(py::init<lsst::afw::geom::Angle const, lsst::afw::geom::Angle const,  double const>());
-    clsObservatory.def(py::init<std::string const, std::string const, double const>());
+    cls.def(py::init<lsst::afw::geom::Angle const, lsst::afw::geom::Angle const, double const>());
+    cls.def(py::init<std::string const, std::string const, double const>());
 
     /* Operators */
-    clsObservatory.def("__str__", &lsst::afw::coord::Observatory::toString);
-    clsObservatory.def("__repr__", &lsst::afw::coord::Observatory::toString);
+    cls.def("__eq__",
+            [](Observatory const & self, Observatory const & other) { return self == other; },
+            py::is_operator());
+    cls.def("__ne__",
+            [](Observatory const & self, Observatory const & other) { return self != other; },
+            py::is_operator());
+    cls.def("__str__", &Observatory::toString);
+    cls.def("__repr__", &Observatory::toString);
 
     /* Members */
-    clsObservatory.def("getLatitude", &lsst::afw::coord::Observatory::getLatitude);
-    clsObservatory.def("getLongitude", &lsst::afw::coord::Observatory::getLongitude);
-    clsObservatory.def("getLatitudeStr", &lsst::afw::coord::Observatory::getLatitudeStr);
-    clsObservatory.def("getLongitudeStr", &lsst::afw::coord::Observatory::getLongitudeStr);
+    cls.def("getLongitude", &Observatory::getLongitude);
+    cls.def("getLatitude", &Observatory::getLatitude);
+    cls.def("getElevation", &Observatory::getElevation);
+    cls.def("getLatitudeStr", &Observatory::getLatitudeStr);
+    cls.def("getLongitudeStr", &Observatory::getLongitudeStr);
+    cls.def("setLongitude", &Observatory::setLongitude, "longitude"_a);
+    cls.def("setLatitude", &Observatory::setLatitude, "latitude"_a);
+    cls.def("setElevation", &Observatory::setElevation, "elevation"_a);
 
     return mod.ptr();
 }
 
+}}} // namespace lsst::afw::coord
