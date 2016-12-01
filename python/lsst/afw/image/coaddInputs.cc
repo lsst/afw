@@ -19,27 +19,52 @@
  * the GNU General Public License along with this program.  If not, 
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
+#include <memory>
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/table/io/pybind11.h"
+#include "lsst/afw/table/Schema.h"
+#include "lsst/afw/table/Exposure.h"
+#include "lsst/afw/image/CoaddInputs.h"
 
-using namespace lsst::afw::image;
+namespace py = pybind11;
+using namespace pybind11::literals;
+
+namespace lsst {
+namespace afw {
+namespace image {
 
 PYBIND11_PLUGIN(_coaddInputs) {
     py::module mod("_coaddInputs", "Python wrapper for afw _coaddInputs library");
 
     /* Module level */
 
+    table::io::declarePersistableFacade<CoaddInputs>(mod, "CoaddInputs");
+
+    py::class_<CoaddInputs, std::shared_ptr<CoaddInputs>,
+               table::io::PersistableFacade<CoaddInputs>,
+               table::io::Persistable> cls(mod, "CoaddInputs");
+
     /* Member types and enums */
+    cls.def_readwrite("visits", &CoaddInputs::visits);
+    cls.def_readwrite("ccds", &CoaddInputs::ccds);
 
     /* Constructors */
+    cls.def(py::init<>());
+    cls.def(py::init<table::Schema const &, table::Schema const &>(),
+            "visitSchema"_a, "ccdSchema"_a);
+    cls.def(py::init<table::ExposureCatalog const &, table::ExposureCatalog const &>(),
+            "visits"_a, "ccds"_a);
 
     /* Operators */
 
     /* Members */
+    cls.def("isPersistable", &CoaddInputs::isPersistable);
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::image

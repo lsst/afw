@@ -110,7 +110,6 @@ class ApCorrMapTestCase(lsst.utils.tests.TestCase):
         self.compare(self.map, map2)
         os.remove(filename)
 
-    @unittest.skip("requires afw::table::ExposureCatalog(Schema) and PersistableFacade<ExposureCatalog>")
     def testExposureRecordPersistence(self):
         """Test that the ApCorrMap is saved with an ExposureRecord"""
         filename = "testApCorrMap.fits"

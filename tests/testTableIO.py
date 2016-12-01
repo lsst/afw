@@ -23,7 +23,9 @@
 from __future__ import absolute_import, division, print_function
 import unittest
 
+import numpy as np
 import astropy.io.fits
+
 import lsst.utils.tests
 import lsst.afw.geom
 import lsst.afw.table
@@ -52,8 +54,8 @@ class TableIoTestCase(lsst.utils.tests.TestCase):
         Per DM-8211.
         """
         schema = lsst.afw.table.Schema()
-        aa = schema.addField("a", type=int, doc="a")
-        bb = schema.addField("b", type=float, doc="b")
+        aa = schema.addField("a", type=np.int64, doc="a")
+        bb = schema.addField("b", type=np.float64, doc="b")
         schema.getAliasMap().set("c", "a")
         schema.getAliasMap().set("d", "b")
         cat = lsst.afw.table.BaseCatalog(schema)

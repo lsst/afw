@@ -21,27 +21,56 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/afw/table/slots.h"
+
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace lsst {
 namespace afw {
 namespace table {
 
+namespace {
+/**
+Declare standard methods for subclasses of SlotDefinition (but not SlotDefinition itself).
+*/
+template<typename SlotDefSubclass>
+void declareSlotDefinitions(py::class_<SlotDefSubclass, SlotDefinition> & cls) {
+    cls.def("isValid", &SlotDefSubclass::isValid);
+    cls.def("getMeasKey", &SlotDefSubclass::getMeasKey);
+    cls.def("getErrKey", &SlotDefSubclass::getErrKey);
+    cls.def("getFlagKey", &SlotDefSubclass::getFlagKey);
+    cls.def("setKeys", &SlotDefSubclass::setKeys, "alias"_a, "schema"_a);
+}
+
+}  // anonymous namespace
+
 PYBIND11_PLUGIN(_slots) {
     py::module mod("_slots", "Python wrapper for afw _slots library");
 
     /* Module level */
+    py::class_<SlotDefinition> clsSlotDefinition(mod, "SlotDefinition");
+    py::class_<FluxSlotDefinition, SlotDefinition> clsFluxSlotDefinition(mod, "FluxSlotDefinition");
+    py::class_<CentroidSlotDefinition, SlotDefinition>
+        clsCentroidSlotDefinition(mod, "CentroidSlotDefinition");
+    py::class_<ShapeSlotDefinition, SlotDefinition> clsShapeSlotDefinition(mod, "ShapeSlotDefinition");
 
     /* Member types and enums */
 
     /* Constructors */
+    clsSlotDefinition.def(py::init<std::string const &>(), "name"_a);
 
     /* Operators */
 
     /* Members */
+    clsSlotDefinition.def("getName", &SlotDefinition::getName);
+    clsSlotDefinition.def("getAlias", &SlotDefinition::getAlias);
+
+    declareSlotDefinitions(clsFluxSlotDefinition);
+    declareSlotDefinitions(clsCentroidSlotDefinition);
+    declareSlotDefinitions(clsShapeSlotDefinition);
 
     return mod.ptr();
 }

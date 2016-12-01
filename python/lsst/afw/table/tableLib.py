@@ -24,6 +24,7 @@ from .baseRecord import *
 from ._baseTable import *
 from ._baseColumnView import *
 from .baseColumnView import *
+from ._slots import *
 from ._simple import *
 from ._simpleCatalog import *
 from ._source import *
@@ -38,6 +39,8 @@ from .simpleCatalog import *
 from .sourceCatalog import *
 from ._ampInfo import *
 from .ampInfo import *
+from ._exposure import *
+from .exposure import *
 
 # In order for some of the module to be imported, lsst.afw.geom.ellipses is required
 # Even though the modules themselves are wrapped using ellipses, it must still be
