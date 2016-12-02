@@ -90,7 +90,8 @@ void declareImageBase(py::module & mod, const std::string & suffix) {
             "xy0"_a);
     cls.def("setXY0", (void (ImageBase<PixelT>::*)(int const, int const)) &ImageBase<PixelT>::setXY0,
             "x0"_a, "y0"_a);
-    cls.def("getBBox", &ImageBase<PixelT>::getBBox);
+    cls.def("getBBox", &ImageBase<PixelT>::getBBox,
+            "origin"_a=PARENT);
 }
 
 template <typename PixelT>
@@ -127,20 +128,36 @@ py::class_<Image<PixelT>,
             "array"_a, "deep"_a=false, "xy0"_a=geom::Point2I());
 
     /* Operators */
-    cls.def(py::self += PixelT());
-    cls.def(py::self += Image<PixelT>());
-    cls.def("__iadd__", [](Image<PixelT> &lhs, math::Function2<double> const & rhs) {
-                return lhs += rhs;
+    cls.def("__iadd__", [](Image<PixelT> & self, PixelT const & other) {
+                return self += other;
             }, py::is_operator());
-    cls.def(py::self -= PixelT());
-    cls.def(py::self -= Image<PixelT>());
-    cls.def("__isub__", [](Image<PixelT> &lhs, math::Function2<double> const & rhs) {
-                return lhs -= rhs;
+    cls.def("__iadd__", [](Image<PixelT> & self, Image<PixelT> const & other) {
+                return self += other;
             }, py::is_operator());
-    cls.def(py::self *= PixelT());
-    cls.def(py::self *= Image<PixelT>());
-    cls.def(py::self /= PixelT());
-    cls.def(py::self /= Image<PixelT>());
+    cls.def("__iadd__", [](Image<PixelT> & self, lsst::afw::math::Function2<double> const & other) {
+                return self += other;
+            }, py::is_operator());
+    cls.def("__isub__", [](Image<PixelT> & self, PixelT const & other) {
+                return self -= other;
+            }, py::is_operator());
+    cls.def("__isub__", [](Image<PixelT> & self, Image<PixelT> const & other) {
+                return self -= other;
+            }, py::is_operator());
+    cls.def("__isub__", [](Image<PixelT> & self, lsst::afw::math::Function2<double> const & other) {
+                return self -= other;
+            }, py::is_operator());
+    cls.def("__imul__", [](Image<PixelT> & self, PixelT const & other) {
+                return self *= other;
+            }, py::is_operator());
+    cls.def("__imul__", [](Image<PixelT> & self, Image<PixelT> const & other) {
+                return self *= other;
+            }, py::is_operator());
+    cls.def("__itruediv__", [](Image<PixelT> & self, PixelT const & other) {
+                return self /= other;
+            }, py::is_operator());
+    cls.def("__itruediv__", [](Image<PixelT> & self, Image<PixelT> const & other) {
+                return self /= other;
+            }, py::is_operator());
 
     /* Members */
     cls.def("scaledPlus", &Image<PixelT>::scaledPlus);
@@ -171,13 +188,50 @@ py::class_<Image<PixelT>,
 
     /* Add-ons for Python interface only */
     cls.def("set", [](Image<PixelT> &img, double val) { img=val; });
-    cls.def("set", [](Image<PixelT> &img, int x, int y, double val) { img(x, y, CheckIndices(true))=val; });
-    cls.def("get", [](Image<PixelT> &img, int x, int y) { return img(x, y, CheckIndices(true)); });
-    cls.def("set0", [](Image<PixelT> &img, int x, int y, double val)
-            { img.set0(x, y, val, CheckIndices(true)); });
-    cls.def("set0", [](Image<PixelT> &img, int x, int y) { return img.get0(x, y, CheckIndices(true)); });
+    cls.def("set", [](Image<PixelT> &img, int x, int y, double val) { img(x, y, lsst::afw::image::CheckIndices(true))=val; });
+    cls.def("get", [](Image<PixelT> &img, int x, int y) { return img(x, y, lsst::afw::image::CheckIndices(true)); });
+    cls.def("set0", [](Image<PixelT> &img, int x, int y, double val) { img.set0(x, y, val, lsst::afw::image::CheckIndices(true)); });
+    cls.def("get0", [](Image<PixelT> &img, int x, int y) { return img.get0(x, y, lsst::afw::image::CheckIndices(true)); });
 
     return cls;
+}
+
+template <typename PixelT>
+void declareDecoratedImage(py::module & mod, std::string const & suffix) {
+    using Class = DecoratedImage<PixelT>;
+
+    py::class_<Class, std::shared_ptr<Class>, lsst::daf::base::Persistable> cls(mod, ("DecoratedImage" + suffix).c_str());
+
+    cls.def(py::init<const lsst::afw::geom::Extent2I &>(),
+            "dimensions"_a=lsst::afw::geom::Extent2I());
+    cls.def(py::init<const lsst::afw::geom::Box2I &>(),
+            "bbox"_a);
+    cls.def(py::init<PTR(Image<PixelT>)>(),
+            "rhs"_a);
+    cls.def(py::init<Class const&, const bool>(),
+            "rhs"_a, "deep"_a=false);
+    cls.def(py::init<std::string const&,
+            const int,
+            lsst::afw::geom::Box2I const&,
+            ImageOrigin const>(),
+            "fileName"_a,
+            "hdu"_a=0,
+            "bbox"_a=lsst::afw::geom::Box2I(),
+            "origin"_a=PARENT);
+
+    cls.def("getMetadata", &Class::getMetadata);
+    cls.def("setMetadata", &Class::setMetadata);
+    cls.def("getWidth", &Class::getWidth);
+    cls.def("getHeight", &Class::getHeight);
+    cls.def("getX0", &Class::getX0);
+    cls.def("getY0", &Class::getY0);
+    cls.def("getDimensions", &Class::getDimensions);
+    cls.def("swap", &Class::swap);
+    cls.def("writeFits", &Class::writeFits,
+            "fileName"_a, "metadata"_a=CONST_PTR(lsst::daf::base::PropertySet)(), "mode"_a="w");
+    cls.def("getImage", (typename Class::ImagePtr (Class::*)()) &Class::getImage);
+    cls.def("getGain", &Class::getGain);
+    cls.def("setGain", &Class::setGain);
 }
 
 /* Declare ImageSlice operators separately since they are only instantiated for float double */
@@ -211,6 +265,24 @@ void addImageSliceOperators(py::class_<Image<PixelT>,
             py::is_operator());
 }
 
+template <typename PixelT, typename PyClass>
+void addGeneralizedCopyConstructors(PyClass & cls) {
+    cls.def(py::init<Image<int> const &, const bool>(), "rhs"_a, "deep"_a=false);
+    cls.def(py::init<Image<float> const &, const bool>(), "rhs"_a, "deep"_a=false);
+    cls.def(py::init<Image<double> const &, const bool>(), "rhs"_a, "deep"_a=false);
+    cls.def(py::init<Image<std::uint16_t> const &, const bool>(), "rhs"_a, "deep"_a=false);
+    cls.def(py::init<Image<std::uint64_t> const &, const bool>(), "rhs"_a, "deep"_a=false);
+
+	cls.def("convertI", [](Image<PixelT> const & self) { return Image<int>(self, true); });
+	cls.def("convertF", [](Image<PixelT> const & self) { return Image<float>(self, true); });
+	cls.def("convertD", [](Image<PixelT> const & self) { return Image<double>(self, true); });
+	cls.def("convertU", [](Image<PixelT> const & self) { return Image<std::uint16_t>(self, true); });
+	cls.def("convertL", [](Image<PixelT> const & self) { return Image<std::uint64_t>(self, true); });
+
+	cls.def("convertFloat", [](Image<PixelT> const & self) { return Image<float>(self, true); });
+	cls.def("convertDouble", [](Image<PixelT> const & self) { return Image<double>(self, true); });
+}
+
 PYBIND11_PLUGIN(_image) {
     py::module mod("_image", "Python wrapper for afw _image library");
 
@@ -224,21 +296,34 @@ PYBIND11_PLUGIN(_image) {
         .value("LOCAL", ImageOrigin::LOCAL)
         .export_values();
 
+    declareImageBase<int>(mod, "I");
     declareImageBase<float>(mod, "F");
     declareImageBase<double>(mod, "D");
-    declareImageBase<int>(mod, "I");
     declareImageBase<std::uint16_t>(mod, "U");
     declareImageBase<std::uint64_t>(mod, "L");
 
+    auto clsImageI = declareImage<int>(mod, "I");
     auto clsImageF = declareImage<float>(mod, "F");
     auto clsImageD = declareImage<double>(mod, "D");
-    declareImage<int>(mod, "I");
-    declareImage<std::uint16_t>(mod, "U");
-    declareImage<std::uint64_t>(mod, "L");
+    auto clsImageU = declareImage<std::uint16_t>(mod, "U");
+    auto clsImageL = declareImage<std::uint64_t>(mod, "L");
 
-    // Declare image slice operators for float and double images
+    // Add generalized copy constructors
+    addGeneralizedCopyConstructors<int>(clsImageI);
+    addGeneralizedCopyConstructors<float>(clsImageF);
+    addGeneralizedCopyConstructors<double>(clsImageD);
+    addGeneralizedCopyConstructors<std::uint16_t>(clsImageU);
+    addGeneralizedCopyConstructors<std::uint64_t>(clsImageL);
+
+    // Add slice operators only for float and double
     addImageSliceOperators<float>(clsImageF);
     addImageSliceOperators<double>(clsImageD);
+
+    declareDecoratedImage<int>(mod, "I");
+    declareDecoratedImage<float>(mod, "F");
+    declareDecoratedImage<double>(mod, "D");
+    declareDecoratedImage<std::uint16_t>(mod, "U");
+    declareDecoratedImage<std::uint64_t>(mod, "L");
 
     // Declare constructors for casting all exposure types to to float and double
     // (the only two types of casts that Python supports)

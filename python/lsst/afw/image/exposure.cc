@@ -91,6 +91,26 @@ py::class_<Exposure<PixelT, MaskPixel, VariancePixel>,
             "other"_a, "deep"_a=false);
     cls.def(py::init<ExposureT const &, geom::Box2I const&, ImageOrigin, bool>(),
            "other"_a, "bbox"_a, "origin"_a=PARENT, "deep"_a=false);
+// TODO: I can't spot the differences between the constructors above and below,
+// keep them for now but remove them if not needed.
+//    cls.def(py::init<unsigned int, unsigned int, CONST_PTR(Wcs)>(),
+//            py::arg("width"), py::arg("height"), py::arg("wcs")=CONST_PTR(Wcs)());
+//    cls.def(py::init<lsst::afw::geom::Extent2I const &, CONST_PTR(Wcs)>(),
+//            py::arg("dimensions")=lsst::afw::geom::Extent2I(), py::arg("wcs")=CONST_PTR(Wcs)());
+//    cls.def(py::init<lsst::afw::geom::Box2I const &, CONST_PTR(Wcs)>(),
+//            py::arg("bbox"), py::arg("wcs")=CONST_PTR(Wcs)());
+//    cls.def(py::init<typename Exposure<PixelT>::MaskedImageT &, CONST_PTR(Wcs)>(),
+//            py::arg("maskedImage"), py::arg("wcs")=CONST_PTR(Wcs)());
+//    cls.def(py::init<std::string const &, lsst::afw::geom::Box2I const&, ImageOrigin, bool>(),
+//            py::arg("fileName"), py::arg("bbox")=lsst::afw::geom::Box2I(), py::arg("origin")=PARENT, py::arg("conformMasks")=false);
+////    cls.def(py::init<lsst::afw::fits::MemFileManager &, lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
+////            py::arg("manager"), py::arg("bbox")=lsst::afw::geom::Box2I(), py::arg("origin")=PARENT, py::arg("conformMasks")=false);
+////    cls.def(py::init<lsst::afw::fits::Fits &, lsst::afw::geom::Box2I const &, ImageOrigin, bool>(),
+////            py::arg("fitsFile"), py::arg("bbox")=lsst::afw::geom::Box2I(), py::arg("origin")=PARENT, py::arg("conformMasks")=false);
+//    cls.def(py::init<Exposure<PixelT> const &, bool>(),
+//            py::arg("other"), py::arg("deep")=false);
+//    cls.def(py::init<Exposure<PixelT> const &, lsst::afw::geom::Box2I const&, ImageOrigin, bool>(),
+//            py::arg("other"), py::arg("bbox"), py::arg("origin")=PARENT, py::arg("deep")=false);
 
 
     /* Members */
@@ -105,7 +125,8 @@ py::class_<Exposure<PixelT, MaskPixel, VariancePixel>,
     cls.def("getY0", &ExposureT::getY0);
     cls.def("getXY0", &ExposureT::getXY0);
     cls.def("setXY0", &ExposureT::setXY0, "xy0"_a);
-    cls.def("getBBox", &ExposureT::getBBox);
+    cls.def("getBBox", &ExposureT::getBBox,
+            "origin"_a=PARENT);
     cls.def("getWcs", (std::shared_ptr<Wcs> (ExposureT::*)()) &ExposureT::getWcs);
     cls.def("setWcs", &ExposureT::setWcs, "wcs"_a);
     cls.def("hasWcs", &ExposureT::hasWcs);

@@ -45,6 +45,15 @@ PYBIND11_PLUGIN(_affineTransform) {
 
     py::class_<AffineTransform> clsAffineTransform(mod, "AffineTransform");
 
+    py::enum_<AffineTransform::Parameters>(clsAffineTransform, "Parameters", py::arithmetic())
+        .value("XX", AffineTransform::Parameters::XX)
+        .value("YX", AffineTransform::Parameters::YX)
+        .value("XY", AffineTransform::Parameters::XY)
+        .value("YY", AffineTransform::Parameters::YY)
+        .value("X", AffineTransform::Parameters::X)
+        .value("Y", AffineTransform::Parameters::Y)
+        .export_values();
+
     /* Constructors */
     clsAffineTransform.def(py::init<>());
     clsAffineTransform.def(py::init<Eigen::Matrix3d const &>());
@@ -65,11 +74,14 @@ PYBIND11_PLUGIN(_affineTransform) {
     });
     // These are used by __getitem__ in Python, this was adopted from the Swig approach,
     // but might actually be done better with pybind11.
-    clsAffineTransform.def("_getitem_nochecking", [](AffineTransform &t, int row, int col) -> double {
-        return (t.getMatrix())(row, col);
+    clsAffineTransform.def("_setitem_nochecking", [](AffineTransform & self, int i, double value) {
+        self[i] = value;
     });
-    clsAffineTransform.def("_getitem_nochecking", [](AffineTransform &t, int i) -> double {
-        return t.operator[](i);
+    clsAffineTransform.def("_getitem_nochecking", [](AffineTransform & self, int row, int col) {
+        return (self.getMatrix())(row, col);
+    });
+    clsAffineTransform.def("_getitem_nochecking", [](AffineTransform & self, int i) {
+        return self[i];
     });
 
     /* Members */
