@@ -21,25 +21,89 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
+
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
+#include "lsst/afw/math/offsetImage.h"
 
 namespace py = pybind11;
 
-using namespace lsst::afw::math;
+using namespace py::literals;
+
+namespace lsst { namespace afw { namespace math {
+
+namespace {
+template<typename ImageT>
+static void declareOffsetImage(py::module & mod) {
+    mod.def("offsetImage", offsetImage<ImageT>,
+            "image"_a, "dx"_a, "dy"_a, "algorithmName"_a="lanczos5", "buffer"_a=0);
+}
+
+template<typename ImageT>
+static void declareRotateImageBy90(py::module & mod) {
+    mod.def("rotateImageBy90", rotateImageBy90<ImageT>,
+            "image"_a, "nQuarter"_a);
+}
+
+template<typename ImageT>
+static void declareFlipImage(py::module & mod) {
+    mod.def("flipImage", flipImage<ImageT>,
+            "inImage"_a, "flipLR"_a, "flipTB"_a);
+}
+
+template<typename ImageT>
+static void declareBinImage(py::module & mod) {
+    mod.def("binImage", (PTR(ImageT) (*)(ImageT const&, int const, int const, lsst::afw::math::Property const))
+            binImage<ImageT>,
+            "inImage"_a, "binX"_a, "binY"_a, "flags"_a=lsst::afw::math::MEAN);
+    mod.def("binImage", (PTR(ImageT) (*)(ImageT const&, int const, lsst::afw::math::Property const))
+            binImage<ImageT>,
+            "inImage"_a, "binsize"_a, "flags"_a=lsst::afw::math::MEAN);
+}
+} // namespace
 
 PYBIND11_PLUGIN(_offsetImage) {
     py::module mod("_offsetImage", "Python wrapper for afw _offsetImage library");
 
     /* Module level */
+    declareOffsetImage<lsst::afw::image::Image<int>>(mod);
+    declareOffsetImage<lsst::afw::image::Image<float>>(mod);
+    declareOffsetImage<lsst::afw::image::Image<double>>(mod);
+    declareOffsetImage<lsst::afw::image::MaskedImage<int>>(mod);
+    declareOffsetImage<lsst::afw::image::MaskedImage<float>>(mod);
+    declareOffsetImage<lsst::afw::image::MaskedImage<double>>(mod);
 
-    /* Member types and enums */
+    declareRotateImageBy90<lsst::afw::image::Image<std::uint16_t>>(mod);
+    declareRotateImageBy90<lsst::afw::image::Image<int>>(mod);
+    declareRotateImageBy90<lsst::afw::image::Image<float>>(mod);
+    declareRotateImageBy90<lsst::afw::image::Image<double>>(mod);
+    declareRotateImageBy90<lsst::afw::image::MaskedImage<std::uint16_t>>(mod);
+    declareRotateImageBy90<lsst::afw::image::MaskedImage<int>>(mod);
+    declareRotateImageBy90<lsst::afw::image::MaskedImage<float>>(mod);
+    declareRotateImageBy90<lsst::afw::image::MaskedImage<double>>(mod);
+    declareRotateImageBy90<lsst::afw::image::Mask<std::uint16_t>>(mod);
 
-    /* Constructors */
+    declareFlipImage<lsst::afw::image::Image<std::uint16_t>>(mod);
+    declareFlipImage<lsst::afw::image::Image<int>>(mod);
+    declareFlipImage<lsst::afw::image::Image<float>>(mod);
+    declareFlipImage<lsst::afw::image::Image<double>>(mod);
+    declareFlipImage<lsst::afw::image::MaskedImage<std::uint16_t>>(mod);
+    declareFlipImage<lsst::afw::image::MaskedImage<int>>(mod);
+    declareFlipImage<lsst::afw::image::MaskedImage<float>>(mod);
+    declareFlipImage<lsst::afw::image::MaskedImage<double>>(mod);
+    declareFlipImage<lsst::afw::image::Mask<std::uint16_t>>(mod);
 
-    /* Operators */
-
-    /* Members */
+    declareBinImage<lsst::afw::image::Image<std::uint16_t>>(mod);
+    declareBinImage<lsst::afw::image::Image<int>>(mod);
+    declareBinImage<lsst::afw::image::Image<float>>(mod);
+    declareBinImage<lsst::afw::image::Image<double>>(mod);
+    declareBinImage<lsst::afw::image::MaskedImage<std::uint16_t>>(mod);
+    declareBinImage<lsst::afw::image::MaskedImage<int>>(mod);
+    declareBinImage<lsst::afw::image::MaskedImage<float>>(mod);
+    declareBinImage<lsst::afw::image::MaskedImage<double>>(mod);
 
     return mod.ptr();
 }
+
+}}} // lsst::afw::math
