@@ -78,19 +78,20 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             approxOrderY = None
             approxWeighting = None
 
-        # Check to see if the Background is actually a BackgroundMI.
-        # Such special treatment is not generally a good idea as it is against the whole idea of subclassing.
-        # However, lsst.afw.math.makeBackground() returns a Background, even though it's really a BackgroundMI
-        # under the covers.  Persistence requires that the type python sees is the actual type under the covers
-        # (or it will call the wrong python class's python persistence methods).
-        # The real solution is to not use makeBackground() in python but call the constructor directly;
-        # however there is already code using makeBackground(), so this is an attempt to assist the user.
-        subclassed = afwMath.cast_BackgroundMI(bkgd)
-        if subclassed is not None:
-            bkgd = subclassed
-        else:
-            logger = Log.getLogger("afw.BackgroundList.append")
-            logger.warn("Unrecognised Background object %s may be unpersistable.", bkgd)
+# TODO: No longer needed with pybind11, remove?
+#        # Check to see if the Background is actually a BackgroundMI.
+#        # Such special treatment is not generally a good idea as it is against the whole idea of subclassing.
+#        # However, lsst.afw.math.makeBackground() returns a Background, even though it's really a BackgroundMI
+#        # under the covers.  Persistence requires that the type python sees is the actual type under the covers
+#        # (or it will call the wrong python class's python persistence methods).
+#        # The real solution is to not use makeBackground() in python but call the constructor directly;
+#        # however there is already code using makeBackground(), so this is an attempt to assist the user.
+#        subclassed = afwMath.cast_BackgroundMI(bkgd)
+#        if subclassed is not None:
+#            bkgd = subclassed
+#        else:
+#            logger = Log.getLogger("afw.BackgroundList.append")
+#            logger.warn("Unrecognised Background object %s may be unpersistable.", bkgd)
 
         bgInfo = (bkgd, interpStyle, undersampleStyle, approxStyle,
                   approxOrderX, approxOrderY, approxWeighting)
@@ -119,9 +120,9 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             statsImage = bkgd.getStatsImage()
 
             md = dafBase.PropertyList()
-            md.set("INTERPSTYLE", interpStyle)
-            md.set("UNDERSAMPLESTYLE", undersampleStyle)
-            md.set("APPROXSTYLE", approxStyle)
+            md.set("INTERPSTYLE", int(interpStyle))
+            md.set("UNDERSAMPLESTYLE", int(undersampleStyle))
+            md.set("APPROXSTYLE", int(approxStyle))
             md.set("APPROXORDERX", approxOrderX)
             md.set("APPROXORDERY", approxOrderY)
             md.set("APPROXWEIGHTING", approxWeighting)
@@ -171,8 +172,8 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             height = md.get("BKGD_HEIGHT")
             imageBBox = afwGeom.BoxI(afwGeom.PointI(x0, y0), afwGeom.ExtentI(width, height))
 
-            interpStyle =      md.get("INTERPSTYLE")
-            undersampleStyle = md.get("UNDERSAMPLESTYLE")
+            interpStyle =      afwMath.Interpolate.Style(md.get("INTERPSTYLE"))
+            undersampleStyle = afwMath.UndersampleStyle(md.get("UNDERSAMPLESTYLE"))
 
             # Older outputs won't have APPROX* settings.  Provide alternative defaults.
             # Note: Currently X- and Y-orders must be equal due to a limitation in
@@ -180,6 +181,7 @@ afwMath.Background and extract the interpStyle and undersampleStyle from the as-
             #       to saying approxOrderY = approxOrderX.
             approxStyle = md.get("APPROXSTYLE") if "APPROXSTYLE" in md.names() \
                           else afwMath.ApproximateControl.UNKNOWN
+            approxStyle = afwMath.ApproximateControl.Style(approxStyle)
             approxOrderX = md.get("APPROXORDERX") if "APPROXORDERX" in md.names() else 1
             approxOrderY = md.get("APPROXORDERY") if "APPROXORDERY" in md.names() else -1
             approxWeighting = md.get("APPROXWEIGHTING") if "APPROXWEIGHTING" in md.names() else True

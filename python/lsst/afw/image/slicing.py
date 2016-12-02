@@ -62,7 +62,6 @@ def _getBBoxFromSliceTuple(img, imageSlice):
 def supportSlicing(cls):
     """Support image slicing
     """
-
     def Factory(self, *args):
         """Return an object of this type
         """
