@@ -61,16 +61,21 @@ void declareMask(py::module & mod, std::string const & suffix) {
             "fitsFile"_a, "metadata"_a=PTR(lsst::daf::base::PropertySet)(), "bbox"_a=lsst::afw::geom::Box2I(), "origin"_a=PARENT, "conformMasks"_a=false);
     cls.def(py::init<const Mask<MaskPixelT>&, const bool>(),
             "src"_a, "deep"_a=false);
+    cls.def(py::init<const Mask<MaskPixelT>&, const lsst::afw::geom::Box2I &, ImageOrigin const, const bool>(),
+            "src"_a, "bbox"_a, "origin"_a=PARENT, "deep"_a=false);
     cls.def(py::init<ndarray::Array<MaskPixelT,2,1> const &, bool, lsst::afw::geom::Point2I const &>(),
             "array"_a, "deep"_a=false, "xy0"_a=lsst::afw::geom::Point2I());
 
     /* Operators */
-    cls.def("__ior__", (Mask<MaskPixelT>& (Mask<MaskPixelT>::*)(Mask<MaskPixelT> const &)) &Mask<MaskPixelT>::operator|=);
-    cls.def("__ior__", (Mask<MaskPixelT>& (Mask<MaskPixelT>::*)(MaskPixelT const)) &Mask<MaskPixelT>::operator|=);
-    cls.def("__iand__", (Mask<MaskPixelT>& (Mask<MaskPixelT>::*)(Mask<MaskPixelT> const &)) &Mask<MaskPixelT>::operator&=);
-    cls.def("__iand__", (Mask<MaskPixelT>& (Mask<MaskPixelT>::*)(MaskPixelT const)) &Mask<MaskPixelT>::operator&=);
-    cls.def("__ixor__", (Mask<MaskPixelT>& (Mask<MaskPixelT>::*)(Mask<MaskPixelT> const &)) &Mask<MaskPixelT>::operator^=);
-    cls.def("__ixor__", (Mask<MaskPixelT>& (Mask<MaskPixelT>::*)(MaskPixelT const)) &Mask<MaskPixelT>::operator^=);
+    cls.def("__ior__", [](Mask<MaskPixelT> & self, Mask<MaskPixelT> & other) { return self |= other; }, py::is_operator());
+    cls.def("__ior__", [](Mask<MaskPixelT> & self, MaskPixelT const other) { return self |= other; }, py::is_operator());
+    cls.def("__ior__", [](Mask<MaskPixelT> & self, int other) { return self |= other; }, py::is_operator());
+    cls.def("__iand__", [](Mask<MaskPixelT> & self, Mask<MaskPixelT> & other) { return self &= other; }, py::is_operator());
+    cls.def("__iand__", [](Mask<MaskPixelT> & self, MaskPixelT const other) { return self &= other; }, py::is_operator());
+    cls.def("__iand__", [](Mask<MaskPixelT> & self, int other) { return self &= other; }, py::is_operator());
+    cls.def("__ixor__", [](Mask<MaskPixelT> & self, Mask<MaskPixelT> & other) { return self ^= other; }, py::is_operator());
+    cls.def("__ixor__", [](Mask<MaskPixelT> & self, MaskPixelT const other) { return self ^= other; }, py::is_operator());
+    cls.def("__ixor__", [](Mask<MaskPixelT> & self, int other) { return self ^= other; }, py::is_operator());
 
     /* Members */
     cls.def("writeFits", (void (Mask<MaskPixelT>::*)(std::string const &, CONST_PTR(lsst::daf::base::PropertySet), std::string const &) const) &Mask<MaskPixelT>::writeFits,
@@ -91,15 +96,18 @@ void declareMask(py::module & mod, std::string const & suffix) {
     cls.def_static("parseMaskPlaneMetadata", Mask<MaskPixelT>::parseMaskPlaneMetadata);
     cls.def_static("clearMaskPlaneDict", Mask<MaskPixelT>::clearMaskPlaneDict);
     cls.def_static("removeMaskPlane", Mask<MaskPixelT>::removeMaskPlane);
-    cls.def("removeAndClearMaskPlane", &Mask<MaskPixelT>::removeAndClearMaskPlane);
+    cls.def("removeAndClearMaskPlane", &Mask<MaskPixelT>::removeAndClearMaskPlane,
+            "name"_a, "removeFromDefault"_a=false);
     cls.def_static("getMaskPlane", Mask<MaskPixelT>::getMaskPlane);
-    cls.def_static("getPlaneBitMask", (MaskPixelT (*)(const std::string&))Mask<MaskPixelT>::getPlaneBitMask);
+    cls.def_static("getPlaneBitMask", (MaskPixelT (*)(const std::string&)) Mask<MaskPixelT>::getPlaneBitMask);
+    cls.def_static("getPlaneBitMask", (MaskPixelT (*)(const std::vector<std::string> &)) Mask<MaskPixelT>::getPlaneBitMask);
     cls.def_static("getNumPlanesMax", Mask<MaskPixelT>::getNumPlanesMax);
     cls.def_static("getNumPlanesUsed", Mask<MaskPixelT>::getNumPlanesUsed);
     cls.def("getMaskPlaneDict", &Mask<MaskPixelT>::getMaskPlaneDict);
     cls.def("printMaskPlanes", &Mask<MaskPixelT>::printMaskPlanes);
     cls.def_static("addMaskPlanesToMetadata", Mask<MaskPixelT>::addMaskPlanesToMetadata);
     cls.def("conformMaskPlanes", &Mask<MaskPixelT>::conformMaskPlanes);
+    cls.def_static("addMaskPlane", (int (*)(const std::string &)) Mask<MaskPixelT>::addMaskPlane);
 
     /**
      * Set an image to the value val

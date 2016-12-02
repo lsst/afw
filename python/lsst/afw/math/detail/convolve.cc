@@ -30,10 +30,42 @@ namespace py = pybind11;
 
 using namespace py::literals;
 
-using namespace lsst::afw::math::detail;
+namespace lsst {
+namespace afw {
+namespace math {
+namespace detail {
+
+namespace {
+template <typename OutImageT, typename InImageT>
+void declareByType(py::module & mod) {
+    mod.def("basicConvolve", (void (*)(OutImageT&, InImageT const&, lsst::afw::math::Kernel const&, lsst::afw::math::ConvolutionControl const&)) basicConvolve<OutImageT, InImageT>);
+    mod.def("basicConvolve", (void (*)(OutImageT&, InImageT const&, lsst::afw::math::DeltaFunctionKernel const&, lsst::afw::math::ConvolutionControl const&)) basicConvolve<OutImageT, InImageT>);
+    mod.def("basicConvolve", (void (*)(OutImageT&, InImageT const&, lsst::afw::math::LinearCombinationKernel const&, lsst::afw::math::ConvolutionControl const&)) basicConvolve<OutImageT, InImageT>);
+    mod.def("basicConvolve", (void (*)(OutImageT&, InImageT const&, lsst::afw::math::SeparableKernel const&, lsst::afw::math::ConvolutionControl const&)) basicConvolve<OutImageT, InImageT>);
+    mod.def("convolveWithBruteForce", (void (*)(OutImageT&, InImageT const&, lsst::afw::math::Kernel const&, lsst::afw::math::ConvolutionControl const&)) convolveWithBruteForce<OutImageT, InImageT>);
+}
+template <typename PixelType1, typename PixelType2>
+void declareAll(py::module & mod) {
+    using M1 = image::MaskedImage<PixelType1, image::MaskPixel, image::VariancePixel>;
+    using M2 = image::MaskedImage<PixelType2, image::MaskPixel, image::VariancePixel>;
+
+    declareByType<image::Image<PixelType1>, image::Image<PixelType2>>(mod);
+    declareByType<M1, M2>(mod);
+}
+} // namespace
 
 PYBIND11_PLUGIN(_convolve) {
     py::module mod("_convolve", "Python wrapper for afw _convolve library");
+
+    declareAll<double, double>(mod);
+    declareAll<double, float>(mod);
+    declareAll<double, int>(mod);
+    declareAll<double, std::uint16_t>(mod);
+    declareAll<float, float>(mod);
+    declareAll<float, int>(mod);
+    declareAll<float, std::uint16_t>(mod);
+    declareAll<int, int>(mod);
+    declareAll<std::uint16_t, std::uint16_t>(mod);
 
     py::class_<KernelImagesForRegion, std::shared_ptr<KernelImagesForRegion>> clsKernelImagesForRegion(mod, "KernelImagesForRegion");
 
@@ -106,3 +138,4 @@ PYBIND11_PLUGIN(_convolve) {
 
     return mod.ptr();
 }
+}}}} // lsst::afw::math::detail

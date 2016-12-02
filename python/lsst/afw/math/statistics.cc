@@ -84,7 +84,7 @@ PYBIND11_PLUGIN(_statistics) {
 
     mod.def("stringToStatisticsProperty", stringToStatisticsProperty);
 
-    py::class_<StatisticsControl> clsStatisticsControl(mod, "StatisticsControl");
+    py::class_<StatisticsControl, std::shared_ptr<StatisticsControl>> clsStatisticsControl(mod, "StatisticsControl");
 
     clsStatisticsControl.def(py::init<>());
 

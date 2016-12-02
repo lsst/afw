@@ -204,19 +204,21 @@ void BackgroundMI::_setGridColumns(Interpolate::Style const interpStyle,
 /**
  * @brief Add a scalar to the Background (equivalent to adding a constant to the original image)
  */
-void BackgroundMI::operator+=(float const delta ///< Value to add
+BackgroundMI& BackgroundMI::operator+=(float const delta ///< Value to add
                                   )
 {
     _statsImage += delta;
+    return *this;
 }
 
 /**
  * @brief Subtract a scalar from the Background (equivalent to subtracting a constant from the original image)
  */
-void BackgroundMI::operator-=(float const delta ///< Value to subtract
+BackgroundMI& BackgroundMI::operator-=(float const delta ///< Value to subtract
                                   )
 {
     _statsImage -= delta;
+    return *this;
 }
 
 /**
