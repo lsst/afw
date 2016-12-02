@@ -71,6 +71,7 @@ py::class_<Point<T,N>> declarePoint(py::module &mod, const std::string & suffix)
     // Note that we can't use T here because both types are needed
     cls.def(py::init<Point<double,N> const &>());
     cls.def(py::init<Point<int,N> const &>());
+    cls.def(py::init<Extent<T,N> const &>());
 
     /* Operators */
     cls.def(py::self + Extent<double,N>());

@@ -27,42 +27,75 @@
 #include "lsst/afw/math/ConvolveImage.h"
 
 namespace py = pybind11;
+using namespace py::literals;
 
-using namespace lsst::afw::math;
+namespace lsst {
+namespace afw {
+namespace math {
+
+namespace {
+template <typename OutImageT, typename InImageT, typename KernelT>
+void declareConvolve(py::module & mod) {
+    mod.def("convolve", (void (*)(OutImageT&, InImageT const&, KernelT const&, ConvolutionControl const&)) convolve<OutImageT, InImageT, KernelT>,
+            "convolvedImage"_a, "inImage"_a, "kernel"_a, "convolutionControl"_a=ConvolutionControl());
+    mod.def("convolve", (void (*)(OutImageT&, InImageT const&, KernelT const&, bool, bool)) convolve<OutImageT, InImageT, KernelT>,
+            "convolvedImage"_a, "inImage"_a, "kernel"_a, "doNormalize"_a, "doCopyEdge"_a=false);
+}
 
 template <typename ImageType1, typename ImageType2>
-void declareConvolveByType(py::module & mod) {
-    /* Members */
-    // declarations for convolve overloads go here...
+void declareScaledPlus(py::module & mod) {
     mod.def("scaledPlus", (void (*)(ImageType1 &, double, ImageType2 const &, double, ImageType2 const &)) scaledPlus);
 }
 
+template <typename ImageType1, typename ImageType2>
+void declareByType(py::module & mod) {
+    declareConvolve<ImageType1, ImageType2, AnalyticKernel>(mod);
+    declareConvolve<ImageType1, ImageType2, DeltaFunctionKernel>(mod);
+    declareConvolve<ImageType1, ImageType2, FixedKernel>(mod);
+    declareConvolve<ImageType1, ImageType2, LinearCombinationKernel>(mod);
+    declareConvolve<ImageType1, ImageType2, SeparableKernel>(mod);
+    declareConvolve<ImageType1, ImageType2, Kernel>(mod);
+    declareScaledPlus<ImageType1, ImageType2>(mod);
+}
+
 template <typename PixelType1, typename PixelType2>
-void declareConvolve(py::module & mod) {
-    using lsst::afw::image::Image;
-    using lsst::afw::image::MaskedImage;
-    using lsst::afw::image::MaskPixel;
-    using lsst::afw::image::VariancePixel;
+void declareAll(py::module & mod) {
+    using M1 = image::MaskedImage<PixelType1, image::MaskPixel, image::VariancePixel>;
+    using M2 = image::MaskedImage<PixelType2, image::MaskPixel, image::VariancePixel>;
 
-    using M1 = MaskedImage<PixelType1, MaskPixel, VariancePixel>;
-    using M2 = MaskedImage<PixelType2, MaskPixel, VariancePixel>;
-
-    declareConvolveByType<Image<PixelType1>, Image<PixelType2>>(mod);
-    declareConvolveByType<M1, M2>(mod);
+    declareByType<image::Image<PixelType1>, image::Image<PixelType2>>(mod);
+    declareByType<M1, M2>(mod);
+}
 }
 
 PYBIND11_PLUGIN(_convolveImage) {
     py::module mod("_convolveImage", "Python wrapper for afw _convolveImage library");
 
-    declareConvolve<double, double>(mod);
-    declareConvolve<double, float>(mod);
-    declareConvolve<double, int>(mod);
-    declareConvolve<double, std::uint16_t>(mod);
-    declareConvolve<float, float>(mod);
-    declareConvolve<float, int>(mod);
-    declareConvolve<float, std::uint16_t>(mod);
-    declareConvolve<int, int>(mod);
-    declareConvolve<std::uint16_t, std::uint16_t>(mod);
+    py::class_<ConvolutionControl, std::shared_ptr<ConvolutionControl>> clsConvolutionControl(mod, "ConvolutionControl");
+
+    clsConvolutionControl.def(py::init<bool, bool, int, lsst::afw::gpu::DevicePreference>(),
+            "doNormalize"_a=true, "doCopyEdge"_a=false, "maxInterpolationDistance"_a=10,
+            "devicePreference"_a=lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE);
+
+    clsConvolutionControl.def("getDoNormalize", &ConvolutionControl::getDoNormalize);
+    clsConvolutionControl.def("getDoCopyEdge", &ConvolutionControl::getDoCopyEdge);
+    clsConvolutionControl.def("getMaxInterpolationDistance", &ConvolutionControl::getMaxInterpolationDistance);
+    clsConvolutionControl.def("getDevicePreference", &ConvolutionControl::getDevicePreference);
+    clsConvolutionControl.def("setDoNormalize", &ConvolutionControl::setDoNormalize);
+    clsConvolutionControl.def("setDoCopyEdge", &ConvolutionControl::setDoCopyEdge);
+    clsConvolutionControl.def("setMaxInterpolationDistance", &ConvolutionControl::setMaxInterpolationDistance);
+    clsConvolutionControl.def("setDevicePreference", &ConvolutionControl::setDevicePreference);
+
+    declareAll<double, double>(mod);
+    declareAll<double, float>(mod);
+    declareAll<double, int>(mod);
+    declareAll<double, std::uint16_t>(mod);
+    declareAll<float, float>(mod);
+    declareAll<float, int>(mod);
+    declareAll<float, std::uint16_t>(mod);
+    declareAll<int, int>(mod);
+    declareAll<std::uint16_t, std::uint16_t>(mod);
 
     return mod.ptr();
 }
+}}} // lsst::afw::math
