@@ -349,7 +349,7 @@ class MaskTestCase(utilsTests.TestCase):
             self.assertEqual(im.interpret(bitmask), p)
             im.getArray()[0, i] = bitmask
             self.assertEqual(im.getAsString(i, 0), p)
-        self.assertEqual(self.Mask.interpret(allBits), ",".join(planes.keys()))
+        self.assertEqual(self.Mask.interpret(allBits), ",".join(sorted(planes.keys())))
 
 
 class OldMaskTestCase(unittest.TestCase):
@@ -501,7 +501,7 @@ class OldMaskTestCase(unittest.TestCase):
         testMask3.removeAndClearMaskPlane(name)
 
         self.Mask.getMaskPlane(name)    # should be fine
-        self.assertRaises(IndexError, lambda: testMask3.getMaskPlaneDict()[name])
+        self.assertRaises(KeyError, lambda: testMask3.getMaskPlaneDict()[name])
 
         def tst():
             self.testMask |= testMask3

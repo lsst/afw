@@ -240,9 +240,9 @@ public:
     typedef float InternalPixelT;    ///< type used for any internal images, and returned by getApproximate
 
     /// Add a constant level to a background
-    virtual void operator+=(float const delta) = 0;
+    virtual Background& operator+=(float const delta) = 0;
     /// Subtract a constant level from a background
-    virtual void operator-=(float const delta) = 0;
+    virtual Background& operator-=(float const delta) = 0;
     /**
      * \brief Method to interpolate and return the background for entire image
      *
@@ -408,8 +408,8 @@ public:
     explicit BackgroundMI(geom::Box2I const imageDimensions,
                           image::MaskedImage<InternalPixelT> const& statsImage);
 
-    virtual void operator+=(float const delta);
-    virtual void operator-=(float const delta);
+    virtual BackgroundMI& operator+=(float const delta);
+    virtual BackgroundMI& operator-=(float const delta);
 
 
     double getPixel(Interpolate::Style const style, int const x, int const y) const;

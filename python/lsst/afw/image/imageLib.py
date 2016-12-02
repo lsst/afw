@@ -27,3 +27,4 @@ import lsst.afw.detection  # ExposureInfo needs Psf
 from ._exposureInfo import *
 from ._visitInfo import *
 from ._imageUtils import *
+from ._imagePca import *
