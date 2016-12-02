@@ -1,11 +1,19 @@
 from __future__ import absolute_import
+from future.utils import with_metaclass
+
+from abc import ABCMeta
 
 from .slicing import supportSlicing
 from ._maskedImage import MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL
 
-__all__ = []  # import this module only for its side effects
+__all__ = ["MaskedImage"]
+
+class MaskedImage(with_metaclass(ABCMeta, object)):
+    pass
 
 for cls in (MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL):
+    MaskedImage.register(cls)
+
     def set(self, x, y=None, values=None):
         """Set the point (x, y) to a triple (value, mask, variance)"""
 
@@ -56,3 +64,4 @@ for cls in (MaskedImageI, MaskedImageF, MaskedImageD, MaskedImageU, MaskedImageL
     cls.convertD = convertD
 
     supportSlicing(cls)
+

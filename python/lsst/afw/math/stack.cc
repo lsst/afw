@@ -60,17 +60,6 @@ void declareStatisticsStack(py::module & mod) {
 
 template <typename PixelT>
 void declareStatisticsStackVectorOverloads(py::module & mod) {
-    mod.def("statisticsStack", (typename lsst::afw::image::Image<PixelT>::Ptr (*)(
-        std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &,
-        Property,
-        StatisticsControl const &,
-        std::vector<lsst::afw::image::VariancePixel> const &
-        )) statisticsStack<PixelT>,
-        "images"_a,
-        "flags"_a,
-        "sctrl"_a=StatisticsControl(),
-        "wvector"_a=std::vector<lsst::afw::image::VariancePixel>(0)
-    );
     mod.def("statisticsStack", (void (*)(
         lsst::afw::image::Image<PixelT> &,
         std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &,
@@ -84,8 +73,25 @@ void declareStatisticsStackVectorOverloads(py::module & mod) {
         "sctrl"_a=StatisticsControl(),
         "wvector"_a=std::vector<lsst::afw::image::VariancePixel>(0)
     );
-    mod.def("statisticsStack", (typename lsst::afw::image::MaskedImage<PixelT>::Ptr (*)(
+    mod.def("statisticsStack", (void (*)(
+        lsst::afw::image::MaskedImage<PixelT> &,
         std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &,
+        Property,
+        StatisticsControl const &,
+        std::vector<lsst::afw::image::VariancePixel> const &
+        )) statisticsStack<PixelT>,
+        "out"_a,
+        "images"_a,
+        "flags"_a,
+        "sctrl"_a=StatisticsControl(),
+        "wvector"_a=std::vector<lsst::afw::image::VariancePixel>(0)
+    );
+}
+
+template <typename PixelT>
+void declareStatisticsStackVectorOverloads2(py::module & mod) {
+    mod.def("statisticsStack", (typename lsst::afw::image::Image<PixelT>::Ptr (*)(
+        std::vector<typename lsst::afw::image::Image<PixelT>::Ptr > &,
         Property,
         StatisticsControl const &,
         std::vector<lsst::afw::image::VariancePixel> const &
@@ -95,14 +101,12 @@ void declareStatisticsStackVectorOverloads(py::module & mod) {
         "sctrl"_a=StatisticsControl(),
         "wvector"_a=std::vector<lsst::afw::image::VariancePixel>(0)
     );
-    mod.def("statisticsStack", (void (*)(
-        lsst::afw::image::MaskedImage<PixelT> &,
+    mod.def("statisticsStack", (typename lsst::afw::image::MaskedImage<PixelT>::Ptr (*)(
         std::vector<typename lsst::afw::image::MaskedImage<PixelT>::Ptr > &,
         Property,
         StatisticsControl const &,
         std::vector<lsst::afw::image::VariancePixel> const &
         )) statisticsStack<PixelT>,
-        "out"_a,
         "images"_a,
         "flags"_a,
         "sctrl"_a=StatisticsControl(),
@@ -129,6 +133,8 @@ PYBIND11_PLUGIN(_stack) {
     declareStatisticsStack<double>(mod);
     declareStatisticsStackVectorOverloads<float>(mod);
     declareStatisticsStackVectorOverloads<double>(mod);
+    declareStatisticsStackVectorOverloads2<float>(mod);
+    declareStatisticsStackVectorOverloads2<double>(mod);
 
     return mod.ptr();
 }

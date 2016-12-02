@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import lsst.afw.geom
+import lsst.afw.gpu
 
 from lsst.afw.table.io import Persistable
 from ._minimize import *
@@ -16,5 +17,10 @@ from ._leastSquares import *
 from ._random import *
 from ._convolveImage import *
 from ._statistics import *
+from ._offsetImage import *
 from ._stack import *
 from ._kernel import *
+from ._approximate import *
+from ._background import *
+from .background import *
+from ._warpExposure import *
