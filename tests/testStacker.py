@@ -64,9 +64,9 @@ class StackTestCase(lsst.utils.tests.TestCase):
         """ Test the statisticsStack() function for a MEAN"""
 
         knownMean = 0.0
-        imgList = afwImage.vectorImageF()
+        imgList = []
         for iImg in range(self.nImg):
-            imgList.push_back(afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), iImg))
+            imgList.append(afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), iImg))
             knownMean += iImg
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
@@ -80,9 +80,9 @@ class StackTestCase(lsst.utils.tests.TestCase):
     def testStatistics(self):
         """ Test the statisticsStack() function """
 
-        imgList = afwImage.vectorImageF()
+        imgList = []
         for val in self.values:
-            imgList.push_back(afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val))
+            imgList.append(afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val))
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
         mean = reduce(lambda x, y: x+y, self.values)/float(len(self.values))
@@ -97,11 +97,11 @@ class StackTestCase(lsst.utils.tests.TestCase):
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setWeighted(True)
-        mimgList = afwImage.vectorMaskedImageF()
+        mimgList = []
         for val in self.values:
             mimg = afwImage.MaskedImageF(afwGeom.Extent2I(self.nX, self.nY))
             mimg.set(val, 0x0, val)
-            mimgList.push_back(mimg)
+            mimgList.append(mimg)
         mimgStack = afwMath.statisticsStack(mimgList, afwMath.MEAN, sctrl)
 
         wvalues = [1.0/q for q in self.values]
@@ -116,12 +116,12 @@ class StackTestCase(lsst.utils.tests.TestCase):
         """ Test statisticsStack() function when weighting by a vector of weights"""
 
         sctrl = afwMath.StatisticsControl()
-        imgList = afwImage.vectorImageF()
-        weights = afwMath.vectorF()
+        imgList = []
+        weights = []
         for val in self.values:
             img = afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val)
-            imgList.push_back(img)
-            weights.push_back(val)
+            imgList.append(img)
+            weights.append(val)
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN, sctrl, weights)
 
         wsum = reduce(lambda x, y: x + y, self.values)
@@ -133,20 +133,20 @@ class StackTestCase(lsst.utils.tests.TestCase):
         """ Make sure we throw an exception if someone requests more than one type of statistics. """
 
         sctrl = afwMath.StatisticsControl()
-        imgList = afwImage.vectorImageF()
+        imgList = []
         for val in self.values:
             img = afwImage.ImageF(afwGeom.Extent2I(self.nX, self.nY), val)
-            imgList.push_back(img)
+            imgList.append(img)
 
         def tst():
-            afwMath.statisticsStack(imgList, afwMath.MEAN | afwMath.MEANCLIP, sctrl)
+            afwMath.statisticsStack(imgList, afwMath.Property(afwMath.MEAN | afwMath.MEANCLIP), sctrl)
 
         self.assertRaises(pexEx.InvalidParameterError, tst)
 
     def testReturnInputs(self):
         """ Make sure that a single file put into the stacker is returned unscathed"""
 
-        imgList = afwImage.vectorMaskedImageF()
+        imgList = []
 
         img = afwImage.MaskedImageF(afwGeom.Extent2I(10, 20))
         for y in range(img.getHeight()):
@@ -156,7 +156,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
                 afwImage.LOCAL)
             simg.set(y)
 
-        imgList.push_back(img)
+        imgList.append(img)
 
         imgStack = afwMath.statisticsStack(imgList, afwMath.MEAN)
 
@@ -169,12 +169,12 @@ class StackTestCase(lsst.utils.tests.TestCase):
     def testStackBadPixels(self):
         """Check that we properly ignore masked pixels, and set noGoodPixelsMask where there are
         no good pixels"""
-        mimgVec = afwImage.vectorMaskedImageF()
+        mimgVec = []
 
-        DETECTED = afwImage.MaskU_getPlaneBitMask("DETECTED")
-        EDGE = afwImage.MaskU_getPlaneBitMask("EDGE")
-        INTRP = afwImage.MaskU_getPlaneBitMask("INTRP")
-        SAT = afwImage.MaskU_getPlaneBitMask("SAT")
+        DETECTED = afwImage.MaskU.getPlaneBitMask("DETECTED")
+        EDGE = afwImage.MaskU.getPlaneBitMask("EDGE")
+        INTRP = afwImage.MaskU.getPlaneBitMask("INTRP")
+        SAT = afwImage.MaskU.getPlaneBitMask("SAT")
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setNanSafe(False)
@@ -203,7 +203,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
             smask |= SAT
             del smask
 
-            mimgVec.push_back(mimg)
+            mimgVec.append(mimg)
 
             if display > 1:
                 ds9.mtv(mimg, frame=i, title=str(i))
@@ -219,7 +219,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         # Check the output, ignoring EDGE pixels
         #
         sctrl = afwMath.StatisticsControl()
-        sctrl.setAndMask(afwImage.MaskU_getPlaneBitMask("EDGE"))
+        sctrl.setAndMask(afwImage.MaskU.getPlaneBitMask("EDGE"))
 
         stats = afwMath.makeStatistics(mimgStack, afwMath.MIN | afwMath.MAX, sctrl)
         self.assertEqual(stats.getValue(afwMath.MIN), val)
@@ -242,9 +242,9 @@ class StackTestCase(lsst.utils.tests.TestCase):
         mimg2 = afwImage.MaskedImageF(afwGeom.Extent2I(1, 1))
         mimg2.set(0, 0, (2, 0x3, 1))  # set 0010 and 0001
 
-        imgList = afwImage.vectorMaskedImageF()
-        imgList.push_back(mimg1)
-        imgList.push_back(mimg2)
+        imgList = []
+        imgList.append(mimg1)
+        imgList.append(mimg2)
 
         sctrl = afwMath.StatisticsControl()
         sctrl.setAndMask(0x1)  # andmask only 0001
@@ -262,7 +262,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         Size = 5
         statsCtrl = afwMath.StatisticsControl()
         statsCtrl.setCalcErrorFromInputVariance(True)
-        maskedImageList = afwImage.vectorMaskedImageF()
+        maskedImageList = []
         weightList = []
         for i in range(3):
             mi = afwImage.MaskedImageF(Size, Size)
@@ -287,7 +287,7 @@ class StackTestCase(lsst.utils.tests.TestCase):
         statsCtrl.setMaskPropagationThreshold(propagatedBit, 0.3)
         statsCtrl.setAndMask(1 << rejectedBit)
         statsCtrl.setWeighted(True)
-        maskedImageList = afwImage.vectorMaskedImageF()
+        maskedImageList = []
 
         # start with 4 images with no mask bits set
         partialSum = np.zeros((1, 4), dtype=np.float32)

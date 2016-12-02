@@ -10,7 +10,11 @@ scripts.BasicSConscript.pybind11(['function',
                                   'leastSquares',
                                   'random',
                                   'convolveImage',
+                                  'offsetImage',
                                   'statistics',
                                   'stack',
+                                  'approximate',
+                                  'background',
+                                  'warpExposure',
                                   'kernel'])
 

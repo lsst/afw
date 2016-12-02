@@ -33,6 +33,7 @@ namespace lsst {
 namespace afw {
 namespace image {
 
+namespace {
 /**
 Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
 
@@ -161,8 +162,10 @@ py::class_<MaskedImage<ImagePixelT, MaskPixel, VariancePixel>,
     cls.def("scaledMultiplies", &MI::scaledMultiplies);
     cls.def("__idiv__", (MI& (MI::*)(ImagePixelT const)) &MI::operator/=, py::is_operator());
     cls.def("__idiv__", (MI& (MI::*)(MI const &)) &MI::operator/=, py::is_operator());
-    cls.def("__idiv__",
-            (MI& (MI::*)(lsst::afw::image::Image<ImagePixelT> const &)) &MI::operator/=, py::is_operator());
+    cls.def("__idiv__", (MI& (MI::*)(lsst::afw::image::Image<ImagePixelT> const &)) &MI::operator/=, py::is_operator());
+    cls.def("__itruediv__", (MI& (MI::*)(ImagePixelT const)) &MI::operator/=, py::is_operator());
+    cls.def("__itruediv__", (MI& (MI::*)(MI const &)) &MI::operator/=, py::is_operator());
+    cls.def("__itruediv__", (MI& (MI::*)(lsst::afw::image::Image<ImagePixelT> const &)) &MI::operator/=, py::is_operator());
     cls.def("scaledDivides", &MI::scaledDivides);
 
     /* Members */
@@ -209,7 +212,8 @@ py::class_<MaskedImage<ImagePixelT, MaskPixel, VariancePixel>,
     cls.def("getWidth", &MI::getWidth);
     cls.def("getHeight", &MI::getHeight);
     cls.def("getDimensions", &MI::getDimensions);
-    cls.def("getBBox", &MI::getBBox);
+    cls.def("getBBox", &MI::getBBox,
+            "origin"_a=PARENT);
     cls.def("getX0", &MI::getX0);
     cls.def("getY0", &MI::getY0);
     cls.def("getXY0", &MI::getXY0);
@@ -223,33 +227,51 @@ py::class_<MaskedImage<ImagePixelT, MaskPixel, VariancePixel>,
     return cls;
 }
 
+template <typename ImagePixelT> // addtional template types do not seem to be needed
+void declareMakeMaskedImage(py::module & mod) {
+    mod.def("makeMaskedImage", makeMaskedImage<ImagePixelT, lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>,
+            "image"_a, "mask"_a=Mask<lsst::afw::image::MaskPixel>::Ptr(), "variance"_a=Image<lsst::afw::image::VariancePixel>::Ptr());
+}
+}
+
 PYBIND11_PLUGIN(_maskedImage) {
     py::module mod("_maskedImage", "Python wrapper for afw _maskedImage library");
 
     auto clsMaskedImageF = declareMaskedImage<float>(mod, "F");
     auto clsMaskedImageD = declareMaskedImage<double>(mod, "D");
-    declareMaskedImage<int>(mod, "I");
-    declareMaskedImage<std::uint16_t>(mod, "U");
-    declareMaskedImage<std::uint64_t>(mod, "L");
+    auto clsMaskedImageI = declareMaskedImage<int>(mod, "I");
+    auto clsMaskedImageU = declareMaskedImage<std::uint16_t>(mod, "U");
+    auto clsMaskedImageL = declareMaskedImage<std::uint64_t>(mod, "L");
 
     // Declare constructors for casting all exposure types to to float and double
     // (the only two types of casts that Python supports)
     declareCastConstructor<int, float>(clsMaskedImageF);
     declareCastConstructor<int, double>(clsMaskedImageD);
-
     declareCastConstructor<float, double>(clsMaskedImageD);
-
     declareCastConstructor<double, float>(clsMaskedImageF);
-
     declareCastConstructor<std::uint16_t, float>(clsMaskedImageF);
     declareCastConstructor<std::uint16_t, double>(clsMaskedImageD);
-
     declareCastConstructor<std::uint64_t, float>(clsMaskedImageF);
     declareCastConstructor<std::uint64_t, double>(clsMaskedImageD);
 
+    /* Yes, only for float and std::uint16_t */
+    clsMaskedImageF.def("convertD", [](MaskedImage<float> & self){
+         return lsst::afw::image::MaskedImage<double,
+                                            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(self, true);
+    });
+
+    clsMaskedImageU.def("convertF", [](MaskedImage<std::uint16_t> & self){
+         return lsst::afw::image::MaskedImage<float,
+                                            lsst::afw::image::MaskPixel, lsst::afw::image::VariancePixel>(self, true);
+    });
+
     /* Module level */
+    declareMakeMaskedImage<int>(mod);
+    declareMakeMaskedImage<float>(mod);
+    declareMakeMaskedImage<double>(mod);
+    declareMakeMaskedImage<std::uint16_t>(mod);
+    declareMakeMaskedImage<std::uint64_t>(mod);
 
     return mod.ptr();
 }
-
 }}}  // namspace lsst::afw::image
