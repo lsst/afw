@@ -44,7 +44,6 @@
 #include "lsst/afw/image/Image.h"
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
-#include "lsst/afw/gpu/DevicePreference.h"
 
 namespace lsst {
 namespace afw {
@@ -61,28 +60,23 @@ namespace math {
                 bool doNormalize = true,    ///< normalize the kernel to sum=1?
                 bool doCopyEdge = false,    ///< copy edge pixels from source image
                     ///< instead of setting them to the standard edge pixel?
-                int maxInterpolationDistance = 10,  ///< maximum width or height of a region
+                int maxInterpolationDistance = 10  ///< maximum width or height of a region
                     ///< over which to use linear interpolation interpolate
-                lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE  ///<
-                    ///< use Gpu acceleration?
                 )
         :
             _doNormalize(doNormalize),
             _doCopyEdge(doCopyEdge),
-            _maxInterpolationDistance(maxInterpolationDistance),
-            _devicePreference(devicePreference)
+            _maxInterpolationDistance(maxInterpolationDistance)
         { }
 
         bool getDoNormalize() const { return _doNormalize; }
         bool getDoCopyEdge() const { return _doCopyEdge; }
         int getMaxInterpolationDistance() const { return _maxInterpolationDistance; };
-        lsst::afw::gpu::DevicePreference getDevicePreference() const { return _devicePreference; };
 
         void setDoNormalize(bool doNormalize) {_doNormalize = doNormalize; }
         void setDoCopyEdge(bool doCopyEdge) { _doCopyEdge = doCopyEdge; }
         void setMaxInterpolationDistance(int maxInterpolationDistance) {
             _maxInterpolationDistance = maxInterpolationDistance; }
-        void setDevicePreference(lsst::afw::gpu::DevicePreference devicePreference) { _devicePreference = devicePreference; }
 
     private:
         bool _doNormalize;  ///< normalize the kernel to sum=1?
@@ -90,7 +84,6 @@ namespace math {
                     ///< instead of setting them to the standard edge pixel?
         int _maxInterpolationDistance;  ///< maximum width or height of a region
                     ///< over which to attempt interpolation
-        lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
     };
 
     template <typename OutImageT, typename InImageT>

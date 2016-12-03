@@ -25,7 +25,7 @@
 /**
  * @file
  *
- * @brief GPU accelerared image warping
+ * @brief image warping
  *
  * @author Kresimir Cosic
  *

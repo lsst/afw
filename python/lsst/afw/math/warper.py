@@ -24,7 +24,6 @@ from builtins import object
 import lsst.pex.config as pexConfig
 import lsst.afw.geom as afwGeom
 import lsst.afw.image as afwImage
-import lsst.afw.gpu as afwGpu
 from . import mathLib
 
 __all__ = ["Warper", "WarperConfig"]
@@ -86,11 +85,6 @@ class WarperConfig(pexConfig.Config):
         doc = "cacheSize argument to lsst.afw.math.SeparableKernel.computeCache",
         default = _DefaultCacheSize,
     )
-    devicePreference = pexConfig.Field(
-        dtype = int,
-        doc = "use GPU acceleration?",
-        default = afwGpu.DEFAULT_DEVICE_PREFERENCE,
-    )
     growFullMask = pexConfig.Field(
         dtype = int,
         doc = "mask bits to grow to full width of image/variance kernel,",
@@ -106,7 +100,6 @@ class Warper(object):
         interpLength = _DefaultInterpLength,
         cacheSize = _DefaultCacheSize,
         maskWarpingKernelName = "",
-        devicePreference = afwGpu.DEFAULT_DEVICE_PREFERENCE,
         growFullMask = afwImage.MaskU.getPlaneBitMask("EDGE"),
     ):
         """Create a Warper
@@ -119,7 +112,7 @@ class Warper(object):
             an argument to lsst.afw.math.makeWarpingKernel
         """
         self._warpingControl = mathLib.WarpingControl(
-            warpingKernelName, maskWarpingKernelName, cacheSize, interpLength, devicePreference, growFullMask)
+            warpingKernelName, maskWarpingKernelName, cacheSize, interpLength, growFullMask)
 
     @classmethod
     def fromConfig(cls, config):
@@ -132,7 +125,6 @@ class Warper(object):
             maskWarpingKernelName = config.maskWarpingKernelName,
             interpLength = config.interpLength,
             cacheSize = config.cacheSize,
-            devicePreference = config.devicePreference,
             growFullMask = config.growFullMask,
         )
 
