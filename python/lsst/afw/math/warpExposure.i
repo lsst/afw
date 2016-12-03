@@ -42,7 +42,6 @@
 %warnfilter(325) BilinearFunction1;
 %warnfilter(325) NearestFunction1;
 
-%import "lsst/afw/gpu/DevicePreference.h"
 %include "lsst/afw/math/warpExposure.h"
 
 %define %WarpFuncsByType(DESTIMAGEPIXEL, SRCIMAGEPIXEL)
