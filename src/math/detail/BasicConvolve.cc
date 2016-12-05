@@ -44,7 +44,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/detail/Convolve.h"
-#include "lsst/afw/math/detail/ConvCpuGpuShared.h"
+#include "lsst/afw/math/detail/ConvolveShared.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;

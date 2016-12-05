@@ -41,7 +41,7 @@
 #include "lsst/afw/image/MaskedImage.h"
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/math/detail/Convolve.h"
-#include "lsst/afw/math/detail/ConvCpuGpuShared.h"
+#include "lsst/afw/math/detail/ConvolveShared.h"
 
 namespace afwImage = lsst::afw::image;
 namespace mathDetail = lsst::afw::math::detail;
