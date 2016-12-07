@@ -61,7 +61,7 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         metadata.setDouble("CD1_2", 1.85579539217196E-07)
         metadata.setDouble("CD2_2", -5.10281493481982E-05)
         metadata.setDouble("CD2_1", -8.27440751733828E-07)
-        self.tanWcs = afwImage.cast_TanWcs(afwImage.makeWcs(metadata))
+        self.tanWcs = afwImage.makeWcs(metadata)
 
     def tearDown(self):
         del self.tanWcs
@@ -126,7 +126,7 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         self.assertFalse(self.tanWcs.hasDistortion())
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertTrue(outWcs.hasDistortion())
-        self.assertIsNotNone(afwImage.DistortedTanWcs.cast(outWcs))
+        self.assertIsInstance(outWcs, afwImage.DistortedTanWcs)
         del exposure  # avoid accidental reuse
         del outWcs
 
@@ -139,7 +139,7 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         exposure.setDetector(detector)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertTrue(outWcs.hasDistortion())
-        self.assertIsNotNone(afwImage.DistortedTanWcs.cast(outWcs))
+        self.assertIsInstance(outWcs, afwImage.DistortedTanWcs)
         del exposure
         del distortedWcs
         del outWcs
@@ -156,8 +156,8 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         exposure.setWcs(self.tanWcs)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertFalse(outWcs.hasDistortion())
-        self.assertIsNotNone(afwImage.TanWcs.cast(outWcs))
-        self.assertIsNone(afwImage.DistortedTanWcs.cast(outWcs))
+        self.assertIsInstance(outWcs, afwImage.TanWcs)
+        self.assertNotIsInstance(outWcs, afwImage.DistortedTanWcs)
         del exposure
         del outWcs
 
@@ -171,8 +171,8 @@ class DistortedTanWcsTestCase(lsst.utils.tests.TestCase):
         exposure.setDetector(detectorNoTanPix)
         outWcs = getDistortedWcs(exposure.getInfo())
         self.assertFalse(outWcs.hasDistortion())
-        self.assertIsNotNone(afwImage.TanWcs.cast(outWcs))
-        self.assertIsNone(afwImage.DistortedTanWcs.cast(outWcs))
+        self.assertIsInstance(outWcs, afwImage.TanWcs)
+        self.assertNotIsInstance(outWcs, afwImage.DistortedTanWcs)
         del exposure
         del outWcs
 

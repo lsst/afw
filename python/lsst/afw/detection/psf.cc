@@ -20,29 +20,72 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
+#include "lsst/daf/base/Citizen.h"
+#include "lsst/daf/base/Persistable.h"
+#include "lsst/afw/geom/Point.h"
+#include "lsst/afw/image/Color.h"
+#include "lsst/afw/table/io/Persistable.h"
+#include "lsst/afw/table/io/pybind11.h"  // for declarePersistableFacade
 #include "lsst/afw/detection/Psf.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
-using namespace lsst::afw::detection;
+namespace lsst {
+namespace afw {
+namespace detection {
+
+namespace {
+    auto const NullPoint = geom::Point2D(std::numeric_limits<double>::quiet_NaN());
+}
 
 PYBIND11_PLUGIN(_psf) {
     py::module mod("_psf", "Python wrapper for afw _psf library");
 
-    py::class_<Psf, std::shared_ptr<Psf>> cls(mod, "Psf");
     /* Module level */
+    table::io::declarePersistableFacade<Psf>(mod, "Psf");
+    py::class_<Psf,
+               std::shared_ptr<Psf>,
+               daf::base::Persistable,
+               afw::table::io::Persistable,
+               table::io::PersistableFacade<Psf>,
+               daf::base::Citizen> cls(mod, "Psf");
 
     /* Member types and enums */
+    py::enum_<Psf::ImageOwnerEnum>(cls, "ImageOwnerEnum")
+        .value("COPY", Psf::ImageOwnerEnum::COPY)
+        .value("INTERNAL", Psf::ImageOwnerEnum::INTERNAL)
+        .export_values();
 
     /* Constructors */
 
     /* Operators */
 
     /* Members */
+    cls.def("clone", &Psf::clone);
+    cls.def("computeImage", &Psf::computeImage,
+            "position"_a=NullPoint, "color"_a=image::Color(), "owner"_a=Psf::ImageOwnerEnum::COPY);
+    cls.def("computeKernelImage", &Psf::computeKernelImage,
+            "position"_a=NullPoint, "color"_a=image::Color(), "owner"_a=Psf::ImageOwnerEnum::COPY);
+    cls.def("computePeak", &Psf::computePeak,
+            "position"_a=NullPoint, "color"_a=image::Color());
+    cls.def("computeApertureFlux", &Psf::computeApertureFlux,
+            "radius"_a, "position"_a=NullPoint, "color"_a=image::Color());
+    cls.def("computeShape", &Psf::computeShape,
+            "position"_a=NullPoint, "color"_a=image::Color());
+    cls.def("getLocalKernel", &Psf::getLocalKernel,
+            "position"_a=NullPoint, "color"_a=image::Color());
+    cls.def("getAverageColor", &Psf::getAverageColor);
+    cls.def("getAveragePosition", &Psf::getAveragePosition);
+    cls.def_static("recenterKernelImage", &Psf::recenterKernelImage,
+            "im"_a, "position"_a, "warpAlgorithm"_a="lanczos5", "warpBuffer"_a=5);
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::detection;
