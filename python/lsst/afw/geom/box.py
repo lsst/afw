@@ -28,6 +28,9 @@ Box2I._getCorners = _Box2I_getCorners
 Box2I.Point = Point2I
 Box2I.Extent = Extent2I
 
+BoxI = Box2I
+
+
 del _Box2I__repr__
 del _Box2I__reduce__
 del _Box2I__str__

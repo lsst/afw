@@ -65,8 +65,8 @@ def assembleAmplifierImage(destImage, rawImage, amplifier):
     if type(destImage.Factory) != type(rawImage.Factory):
         raise RuntimeError("destImage type = %s != %s = rawImage type" % \
             type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
-    inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox(), False)
-    outView = destImage.Factory(destImage, amplifier.getBBox(), False)
+    inView = rawImage.Factory(rawImage, amplifier.getRawDataBBox())
+    outView = destImage.Factory(destImage, amplifier.getBBox())
 
     _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
 
@@ -91,9 +91,9 @@ def assembleAmplifierRawImage(destImage, rawImage, amplifier):
         raise RuntimeError("destImage type = %s != %s = rawImage type" % \
             type(destImage.Factory).__name__, type(rawImage.Factory).__name__)
     inBBox = amplifier.getRawBBox()
-    inView = rawImage.Factory(rawImage, inBBox, False)
+    inView = rawImage.Factory(rawImage, inBBox)
     outBBox = amplifier.getRawBBox()
     outBBox.shift(amplifier.getRawXYOffset())
-    outView = destImage.Factory(destImage, outBBox, False)
+    outView = destImage.Factory(destImage, outBBox)
 
     _insertPixelChunk(outView, inView, amplifier, hasattr(rawImage, "getArrays"))
