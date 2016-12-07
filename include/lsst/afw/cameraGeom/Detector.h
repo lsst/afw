@@ -150,6 +150,32 @@ public:
     lsst::afw::table::AmpInfoRecord const & operator[](std::string const &name) const;
 
     /**
+     * Get the amplifier specified by index as a shared_ptr
+     *
+     * @warning Intended only for internal use by pybind11. This exists because
+     * Operator[] returns a data type that is difficult for pybind11 to use.
+     * Since we have it, we also take advantage of the fact that it is only for pybind11
+     * to support negative indices in the python style.
+     *
+     * @param[in] i  Ampifier index; if < 0 then treat as an offset from the end (the Python convention)
+     *
+     * @throw std::out_of_range) if index is out of range
+     */
+    std::shared_ptr<lsst::afw::table::AmpInfoRecord const> _get(int i) const;
+
+    /**
+     * Get the amplifier specified by name as a shared_ptr
+     *
+     * @warning Intended only for internal use by pybind11. This exists because
+     * Operator[] returns a data type that is difficult for pybind11 to use.
+     *
+     * @param[in] name  Amplifier name
+     *
+     * @throw std::out_of_range) if index is out of range
+     */
+    std::shared_ptr<lsst::afw::table::AmpInfoRecord const> _get(std::string const &name) const;
+
+    /**
      * Get number of amplifiers. Renamed to __len__ in Python.
      */
     size_t size() const {return _ampInfoCatalog.size(); }
