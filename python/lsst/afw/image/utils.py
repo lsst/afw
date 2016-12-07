@@ -67,17 +67,22 @@ def getDistortedWcs(exposureInfo, log=None):
             raise RuntimeError("exposure must have a WCS")
         wcs = exposureInfo.getWcs()
         if not wcs.hasDistortion() and exposureInfo.hasDetector():
-            # warn but continue if TAN_PIXELS not present or the initial WCS is not a TanWcs;
+            # warn and return original Wcs the initial WCS is not a TanWcs or TAN_PIXELS not present;
             # other errors indicate a bug that should raise an exception
-            detector = exposureInfo.getDetector()
-            try:
-                pixelsToTanPixels = detector.getTransform(TAN_PIXELS)
-                tanWcs = afwImage.TanWcs.cast(wcs)
-            except Exception as e:
+            if not isinstance(wcs, afwImage.TanWcs):
                 if log:
-                    log.warn("Could not create a DistortedTanWcs: %s" % (e,))
-            else:
-                wcs = afwImage.DistortedTanWcs(tanWcs, pixelsToTanPixels)
+                    log.warn("Could not create a DistortedTanWcs:"
+                             "exposure's Wcs is a %r isntead of a TanWcs" % (wcs,))
+                return wcs
+
+            detector = exposureInfo.getDetector()
+            if not detector.hasTransform(TAN_PIXELS):
+                if log:
+                    log.warn("Could not create a DistortedTanWcs: exposure has no Detector")
+                return wcs
+
+            pixelsToTanPixels = detector.getTransform(TAN_PIXELS)
+            return afwImage.DistortedTanWcs(wcs, pixelsToTanPixels)
         return wcs
 
 def resetFilters():

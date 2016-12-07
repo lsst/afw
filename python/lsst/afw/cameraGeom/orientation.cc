@@ -53,6 +53,18 @@ PYBIND11_PLUGIN(_orientation) {
     /* Operators */
 
     /* Members */
+    cls.def("getFpPosition", &Orientation::getFpPosition);
+    cls.def("getReferencePoint", &Orientation::getReferencePoint);
+    cls.def("getYaw", &Orientation::getYaw);
+    cls.def("getPitch", &Orientation::getPitch);
+    cls.def("getRoll", &Orientation::getRoll);
+    cls.def("getNQuarter", &Orientation::getNQuarter);
+    cls.def("makePixelFpTransform", &Orientation::makePixelFpTransform, "pixelSizeMm"_a);
+    cls.def("makeFpPixelTransform", &Orientation::makeFpPixelTransform, "pixelSizeMm"_a);
+    cls.def("getFpPosition", &Orientation::getFpPosition);
+    cls.def("getFpPosition", &Orientation::getFpPosition);
+    cls.def("getFpPosition", &Orientation::getFpPosition);
+    cls.def("getFpPosition", &Orientation::getFpPosition);
 
     return mod.ptr();
 }
