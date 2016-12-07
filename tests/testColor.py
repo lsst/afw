@@ -148,7 +148,7 @@ class CalibTestCase(lsst.utils.tests.TestCase):
         """Test creating a Calib from an array of Calibs"""
         mag0, mag0Sigma = 1.0, 0.01
 
-        calibs = afwImage.vectorCalib()
+        calibs = []
         ncalib = 3
         for i in range(ncalib):
             calib = afwImage.Calib()
@@ -235,7 +235,7 @@ class FilterTestCase(lsst.utils.tests.TestCase):
         return afwImage.FilterProperty(name, lambdaEff, force)
 
     def testListFilters(self):
-        self.assertEqual(afwImage.Filter_getNames(), self.filters)
+        self.assertEqual(afwImage.Filter.getNames(), list(self.filters))
 
     def testCtorFromMetadata(self):
         """Test building a Filter from metadata"""
