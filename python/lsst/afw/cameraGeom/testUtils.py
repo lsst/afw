@@ -5,7 +5,7 @@ from builtins import range
 from builtins import object
 import os
 
-import numpy
+import numpy as np
 
 import lsst.utils
 import lsst.afw.geom as afwGeom
@@ -195,7 +195,12 @@ class CameraWrapper(object):
         @param[in] isLsstLike  if True then there is one raw image per amplifier;
             if False then there is one raw image per detector
         """
-        readoutMap = {'LL':0, 'LR':1, 'UR':2, 'UL':3}
+        readoutMap = {
+            'LL': afwTable.ReadoutCorner.LL,
+            'LR': afwTable.ReadoutCorner.LR,
+            'UR': afwTable.ReadoutCorner.UR,
+            'UL': afwTable.ReadoutCorner.UL,
+        }
         amps = []
         with open(ampFile) as fh:
             names = fh.readline().rstrip().lstrip("#").split("|")
@@ -205,8 +210,8 @@ class CameraWrapper(object):
                 amps.append(ampProps)
         ampTablesDict = {}
         schema = afwTable.AmpInfoTable.makeMinimalSchema()
-        linThreshKey = schema.addField('linearityThreshold', type=float)
-        linMaxKey = schema.addField('linearityMaximum', type=float)
+        linThreshKey = schema.addField('linearityThreshold', type=np.float64)
+        linMaxKey = schema.addField('linearityMaximum', type=np.float64)
         linUnitsKey = schema.addField('linearityUnits', type=str, size=9)
         self.ampInfoDict = {}
         for amp in amps:
@@ -293,7 +298,7 @@ class CameraWrapper(object):
             record.set(linUnitsKey, str(amp['lin_units']))
             #The current schema assumes third order coefficients
             saveCoeffs = (float(amp['lin_coeffs']),)
-            saveCoeffs += (numpy.nan, numpy.nan, numpy.nan)
+            saveCoeffs += (np.nan, np.nan, np.nan)
             self.ampInfoDict[amp['ccd_name']]['linInfo'][amp['name']] = \
             {'lincoeffs':saveCoeffs, 'lintype':str(amp['lin_type']),
              'linthresh':float(amp['lin_thresh']), 'linmax':float(amp['lin_max']),

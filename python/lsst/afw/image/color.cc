@@ -20,26 +20,44 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <limits>
+
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include "lsst/afw/image/Color.h"
 
-using namespace lsst::afw::image;
+namespace py = pybind11;
+using namespace pybind11::literals;
+
+namespace lsst {
+namespace afw {
+namespace image {
 
 PYBIND11_PLUGIN(_color) {
     py::module mod("_color", "Python wrapper for afw _color library");
 
     /* Module level */
+    py::class_<Color> cls(mod, "Color");
 
     /* Member types and enums */
 
     /* Constructors */
+    cls.def(py::init<double>(), "g_r"_a=std::numeric_limits<double>::quiet_NaN());
 
     /* Operators */
+    cls.def("__eq__",
+            [](Color const & self, Color const & other) { return self == other; },
+            py::is_operator());
+    cls.def("__ne__",
+            [](Color const & self, Color const & other) { return self != other; },
+            py::is_operator());
 
     /* Members */
+    cls.def("isIndeterminate", &Color::isIndeterminate);
+    cls.def("getLambdaEff", &Color::getLambdaEff, "filter"_a);
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::image

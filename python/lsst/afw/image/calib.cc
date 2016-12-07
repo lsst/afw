@@ -30,6 +30,7 @@
 #include "ndarray/converter.h"
 #include "ndarray_fwd.h"
 
+#include "lsst/daf/base/PropertySet.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/table/io/pybind11.h"
 #include "lsst/afw/image/Calib.h"
@@ -53,10 +54,11 @@ PYBIND11_PLUGIN(_calib) {
     // Add tests for it and enable it or remove it before the final pybind11 merge.
 
     /* Module level */
-    mod.def("abMagFromFlux", abMagFromFlux);
-    mod.def("abMagErrFromFluxErr", abMagErrFromFluxErr);
-    mod.def("fluxFromABMag", fluxFromABMag);
-    mod.def("fluxErrFromABMagErr", fluxErrFromABMagErr);
+    mod.def("abMagFromFlux", &abMagFromFlux, "flux"_a);
+    mod.def("abMagErrFromFluxErr", &abMagErrFromFluxErr, "fluxErr"_a, "flux"_a);
+    mod.def("fluxFromABMag", &fluxFromABMag, "mag"_a);
+    mod.def("fluxErrFromABMagErr", &fluxErrFromABMagErr, "magErr"_a, "mag"_a);
+    mod.def("stripCalibKeywords", &detail::stripCalibKeywords, "metadata"_a);
 
     table::io::declarePersistableFacade<Calib>(mod, "Calib");
 
@@ -67,16 +69,15 @@ PYBIND11_PLUGIN(_calib) {
     /* Constructors */
     cls.def(py::init<>());
     cls.def(py::init<double>(), "fluxMag0"_a);
-    // cls.def(py::init<std::vector<std::shared_ptr<const Calib>> const &>(), "calibs"_a);
-    // cls.def(py::init<std::shared_ptr<const lsst::daf::base::PropertySet>>(), "metadata"_a);
+    cls.def(py::init<std::vector<std::shared_ptr<const Calib>> const &>(), "calibs"_a);
+    cls.def(py::init<std::shared_ptr<const daf::base::PropertySet>>(), "metadata"_a);
 
     /* Operators */
-    cls.def("__eq__",
-            [](Calib const & self, Calib const & other) { return self == other; },
-            py::is_operator());
-    cls.def("__ne__",
-            [](Calib const & self, Calib const & other) { return self != other; },
-            py::is_operator());
+    cls.def("__eq__", &Calib::operator==, py::is_operator());
+    cls.def("__ne__", &Calib::operator!=, py::is_operator());
+    cls.def("__imul__", &Calib::operator*=, py::is_operator());
+    cls.def("__itruediv__", &Calib::operator/=, py::is_operator());
+    cls.def("__idiv__", &Calib::operator/=, py::is_operator());
 
     // /* Members */
     cls.def("setFluxMag0", (void (Calib::*)(double, double)) &Calib::setFluxMag0,
