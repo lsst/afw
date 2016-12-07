@@ -21,14 +21,16 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "lsst/afw/geom/Box.h"
 
 namespace py = pybind11;
+using namespace py::literals;
 
-using namespace lsst::afw::geom;
+namespace lsst {
+namespace afw {
+namespace geom {
 
 PYBIND11_PLUGIN(_box) {
     py::module mod("_box", "Python wrapper for afw _box library");
@@ -44,15 +46,20 @@ PYBIND11_PLUGIN(_box) {
     /* Constructors */
     clsBox2I.def(py::init<>());
     clsBox2I.def(py::init<Point2I const &, Point2I const &, bool>(),
-        py::arg("minimum"), py::arg("maximum"), py::arg("invert")=true);
+        "minimum"_a, "maximum"_a, "invert"_a=true);
     clsBox2I.def(py::init<Point2I const &, Extent2I const &, bool>(),
-        py::arg("minimum"), py::arg("dimensions"), py::arg("invert")=true);
+        "minimum"_a, "dimensions"_a, "invert"_a=true);
     clsBox2I.def(py::init<Box2D const &, Box2I::EdgeHandlingEnum>(),
-        py::arg("other"), py::arg("edgeHandling")=Box2I::EXPAND);
+        "other"_a, "edgeHandling"_a=Box2I::EXPAND);
+    clsBox2I.def(py::init<Box2I const &>(), "other"_a);
 
     /* Operators */
-    clsBox2I.def(py::self == py::self);
-    clsBox2I.def(py::self != py::self);
+    clsBox2I.def("__eq__",
+                 [](Box2I const & self, Box2I const & other) { return self == other; },
+                 py::is_operator());
+    clsBox2I.def("__ne__",
+                 [](Box2I const & self, Box2I const & other) { return self != other; },
+                 py::is_operator());
 
     /* Members */
     clsBox2I.def("swap", &Box2I::swap);
@@ -96,15 +103,19 @@ PYBIND11_PLUGIN(_box) {
     /* Constructors */
     clsBox2D.def(py::init<>());
     clsBox2D.def(py::init<Point2D const &, Point2D const &, bool>(),
-        py::arg("minimum"), py::arg("maximum"), py::arg("invert")=true);
+        "minimum"_a, "maximum"_a, "invert"_a=true);
     clsBox2D.def(py::init<Point2D const &, Extent2D const &, bool>(),
-        py::arg("minimum"), py::arg("dimensions"), py::arg("invert")=true);
+        "minimum"_a, "dimensions"_a, "invert"_a=true);
     clsBox2D.def(py::init<Box2I const &>());
     clsBox2D.def(py::init<Box2D const &>());
 
     /* Operators */
-    clsBox2D.def(py::self == py::self);
-    clsBox2D.def(py::self != py::self);
+    clsBox2D.def("__eq__",
+                 [](Box2D const & self, Box2D const & other) { return self == other; },
+                 py::is_operator());
+    clsBox2D.def("__ne__",
+                 [](Box2D const & self, Box2D const & other) { return self != other; },
+                 py::is_operator());
     
     /* Members */
     clsBox2D.def("swap", &Box2D::swap);
@@ -140,3 +151,4 @@ PYBIND11_PLUGIN(_box) {
     return mod.ptr();
 }
 
+}}} // namespace lsst::afw::geom

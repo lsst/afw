@@ -21,7 +21,6 @@
  */
 
 #include <pybind11/pybind11.h>
-#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
@@ -130,8 +129,12 @@ PYBIND11_PLUGIN(_schema) {
     clsSchema.def("__getitem__", [](Schema & self, std::string const & name) {
         return self[name];
     });
-    clsSchema.def(py::self == py::self);
-    clsSchema.def(py::self != py::self);
+    clsSchema.def("__eq__",
+                 [](Schema const & self, Schema const & other) { return self == other; },
+                 py::is_operator());
+    clsSchema.def("__ne__",
+                 [](Schema const & self, Schema const & other) { return self != other; },
+                 py::is_operator());
 
     /* Members */
     clsSchema.def("getRecordSize", &Schema::getRecordSize);
@@ -148,16 +151,32 @@ PYBIND11_PLUGIN(_schema) {
     clsSchema.def("compare", &Schema::compare, "other"_a, "flags"_a=Schema::ComparisonFlags::EQUAL_KEYS);
     clsSchema.def("contains", (int (Schema::*)(Schema const &, int) const) &Schema::contains,
                   "other"_a, "flags"_a=Schema::ComparisonFlags::EQUAL_KEYS);
-    clsSchema.def("join", (std::string (Schema::*)(std::string const &,
-                                                   std::string const &) const) &Schema::join);
-    clsSchema.def("join", (std::string (Schema::*)(std::string const &,
-                                                   std::string const &,
-                                                   std::string const &) const) &Schema::join);
-    clsSchema.def("join", (std::string (Schema::*)(std::string const &,
-                                                   std::string const &,
-                                                   std::string const &,
-                                                   std::string const &) const) &Schema::join);
-    
+
+    clsSchema.def_static("readFits",
+                         (Schema (*)(std::string const &, int)) &Schema::readFits,
+                         "filename"_a, "hdu"_a=0);
+    // clsSchema.def_static("readFits",
+    //                      (Schema (*)(fits::MemFileManager &, int)) &Schema::readFits,
+    //                      "manager"_a, "hdu"_a=0);
+    // clsSchema.def_static("readFits",
+    //                      (Schema (*)(fits::Fits &)) &Schema::readFits,
+    //                      "fitsfile"_a);
+
+    clsSchema.def("join",
+                  (std::string (Schema::*)(std::string const &, std::string const &) const) &Schema::join,
+                  "a"_a, "b"_a);
+    clsSchema.def("join",
+                  (std::string (Schema::*)(std::string const &,
+                                           std::string const &,
+                                           std::string const &) const) &Schema::join,
+                  "a"_a, "b"_a, "c"_a);
+    clsSchema.def("join",
+                  (std::string (Schema::*)(std::string const &,
+                                           std::string const &,
+                                           std::string const &,
+                                           std::string const &) const) &Schema::join,
+                  "a"_a, "b"_a, "c"_a, "d"_a);
+
     declareSchemaOverloads<std::uint16_t>(clsSchema, "U");
     declareSchemaOverloads<std::int32_t>(clsSchema, "I");
     declareSchemaOverloads<std::int64_t>(clsSchema, "L");
