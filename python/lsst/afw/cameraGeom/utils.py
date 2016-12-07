@@ -191,7 +191,7 @@ def makeImageFromAmp(amp, imValue=None, imageFactory=afwImage.ImageU, markSize=1
         markbbox.include(cornerPoint + afwGeom.Extent2I(markSize, -markSize))
     else:
         raise RuntimeError("Could not set readout corner")
-    mimg = imageFactory(img, markbbox, False)
+    mimg = imageFactory(img, markbbox)
     mimg.set(markValue)
     return img
 
@@ -297,7 +297,7 @@ class FakeImageDataSource(object):
                                     markSize=self.markSize,
                 markValue=self.markValue, scaleGain=self.scaleGain)
         if self.isTrimmed:
-            ampImage = ampImage.Factory(ampImage, amp.getRawDataBBox(), False)
+            ampImage = ampImage.Factory(ampImage, amp.getRawDataBBox())
         return ampImage
 
 class ButlerImage(FakeImageDataSource):

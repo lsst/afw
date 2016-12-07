@@ -53,6 +53,8 @@ class HeaderMap(dict):
         for key, attrDict in self.items():
             try:
                 value = getByKey(metadata, attrDict['keyName'])
+                # if attrDict['keyName'] == "RDCRNR" and value == 0:
+                #     import ipdb; ipdb.set_trace()
                 if value is not None:
                     self._applyVal(obj, value, key, attrDict['transform'])
                 else:
@@ -139,7 +141,7 @@ class DetectorBuilder(object):
             if dtm1 is not None and dtm2 is not None:
                 setByKey(metadata, 'FLIPX', dtm1 < 0, clobber)
                 setByKey(metadata, 'FLIPY', dtm2 < 0, clobber)
-            setByKey(metadata, 'RDCRNR', afwTable.LL, clobber)
+            setByKey(metadata, 'RDCRNR', int(afwTable.ReadoutCorner.LL), clobber)
         else:
             setByKey(metadata, 'FLIPX', False, clobber)
             setByKey(metadata, 'FLIPY', True, clobber)
@@ -180,7 +182,7 @@ class DetectorBuilder(object):
                    ('GAIN', 'setGain', 1.),
                    ('RDNOISE', 'setReadNoise', 0.),
                    ('SATURATE', 'setSaturation', 2<<15),
-                   ('RDCRNR', 'setReadoutCorner', afwTable.LL),
+                   ('RDCRNR', 'setReadoutCorner', int(afwTable.ReadoutCorner.LL), afwTable.ReadoutCorner),
                    ('LINCOEFF', 'setLinearityCoeffs', [0., 1.]),
                    ('LINTYPE', 'setLinearityType', 'POLY'),
                    ('RAWBBOX', 'setRawBBox', None, self._makeBbox),
@@ -207,7 +209,8 @@ class DetectorBuilder(object):
                    ('DETSIZE', 'bbox_x1', 0, self._getBboxX1),
                    ('DETSIZE', 'bbox_y1', 0, self._getBboxY1),
                    ('DETID', 'id', 0),
-                   ('OBSTYPE', 'detectorType', afwCameraGeom.SCIENCE),
+                   # DetectorConfig.detectorType is of type `int`, not `DetectorType`
+                   ('OBSTYPE', 'detectorType', int(afwCameraGeom.DetectorType.SCIENCE)),
                    ('SERSTR', 'serial', 'none'),
                    ('XPOS', 'offset_x', 0.),
                    ('YPOS', 'offset_y', 0.),
