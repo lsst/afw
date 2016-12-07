@@ -1,6 +1,6 @@
 #
 # LSST Data Management System
-# Copyright 2008, 2009, 2010 LSST Corporation.
+# Copyright 2016 LSST Corporation.
 #
 # This product includes software developed by the
 # LSST Project (http://www.lsst.org/).
@@ -19,12 +19,21 @@
 # the GNU General Public License along with this program.  If not,
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
+from __future__ import absolute_import, division, print_function
 
-"""Application Framework geometry code including Point, Extent, and ellipses
-"""
-from .geomLib import *
-from .xyTransformFactory import *
-from .transformConfig import *
-from .transformMap import *
-from .utils import *
+from ._detector import Detector, DetectorType
 
+__all__ = ["Detector", "DetectorType", "SCIENCE", "FOCUS", "GUIDER", "WAVEFRONT"]
+
+# export DetectorType enums as module globals for SWIG compatibility;
+# @TODO update our code to stop using these globals and remove this code
+SCIENCE = DetectorType.SCIENCE
+FOCUS = DetectorType.FOCUS
+GUIDER = DetectorType.GUIDER
+WAVEFRONT = DetectorType.WAVEFRONT
+
+
+def __iter__(self):
+    return (self[i] for i in range(len(self)))
+
+Detector.__iter__ = __iter__

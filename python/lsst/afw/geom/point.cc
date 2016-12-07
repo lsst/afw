@@ -48,7 +48,6 @@ py::class_<PointBase<T,N>> declarePointBase(py::module &mod, const std::string &
     cls.def("le", [](PointBase<T,N> &p, T value) { return p.le(value); });
     cls.def("gt", [](PointBase<T,N> &p, T value) { return p.gt(value); });
     cls.def("ge", [](PointBase<T,N> &p, T value) { return p.ge(value); });
-    cls.def("__str__", &PointBase<T,N>::toString);
 
     /* Members */
     cls.def("asExtent", &PointBase<T,N>::asExtent);

@@ -477,9 +477,10 @@ void Calib::write(OutputArchiveHandle & handle) const {
     handle.saveCatalog(cat);
 }
 
-void Calib::operator*=(double const scale) {
+Calib & Calib::operator*=(double const scale) {
     _fluxMag0 *= scale;
     _fluxMag0Sigma *= scale;
+    return *this;
 }
 
 }}}  // lsst::afw::image

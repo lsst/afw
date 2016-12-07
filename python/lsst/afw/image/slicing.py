@@ -1,7 +1,10 @@
 from __future__ import absolute_import
 
-import lsst.afw.geom.geomLib
+import lsst.afw.geom as afwGeom
 from ._image import LOCAL
+
+__all__ = ["supportSlicing"]
+
 
 def _getBBoxFromSliceTuple(img, imageSlice):
     """Given a slice specification return the proper Box2I
@@ -29,16 +32,14 @@ def _getBBoxFromSliceTuple(img, imageSlice):
      im[1:4, 6:10]
      im[:]
     """
-    afwGeom = lsst.afw.geom.geomLib
-
     if isinstance(imageSlice, afwGeom.Box2I):
         return imageSlice
 
     if isinstance(imageSlice, slice) and imageSlice.start is None and imageSlice.stop is None:
         imageSlice = (Ellipsis, Ellipsis,)
 
-    if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and \
-                sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
+    if not (isinstance(imageSlice, tuple) and len(imageSlice) == 2 and
+            sum([isinstance(_, (slice, type(Ellipsis), int)) for _ in imageSlice]) == 2):
         raise IndexError("Images may only be indexed as a 2-D slice not %s", imageSlice)
 
     imageSlice, _imageSlice = [], imageSlice
@@ -57,49 +58,48 @@ def _getBBoxFromSliceTuple(img, imageSlice):
     x, y = [_.indices(wh) for _, wh in zip(imageSlice, img.getDimensions())]
     return afwGeom.Box2I(afwGeom.Point2I(x[0], y[0]), afwGeom.Point2I(x[1] - 1, y[1] - 1))
 
-def supportSlicing(imageType):
+
+def supportSlicing(cls):
     """Support image slicing
     """
+
     def Factory(self, *args):
         """Return an object of this type
         """
-        return imageType(*args)
-    imageType.Factory = Factory
+        return cls(*args)
+    cls.Factory = Factory
+
+    def clone(self):
+        """Return a deep copy of self"""
+        return cls(self, True)
+    cls.clone = clone
 
     def __getitem__(self, imageSlice):
-        """
-        __getitem__(self, imageSlice) -> NAME""" + """PIXEL_TYPES
-        """
         return self.Factory(self, _getBBoxFromSliceTuple(self, imageSlice), LOCAL)
-    imageType.__getitem__ = __getitem__
-    
+    cls.__getitem__ = __getitem__
+
     def __setitem__(self, imageSlice, rhs):
-        """
-        __setitem__(self, imageSlice, value)
-        """
         bbox = _getBBoxFromSliceTuple(self, imageSlice)
-        
+
         if self.assign(rhs, bbox, LOCAL) is NotImplemented:
             lhs = self.Factory(self, bbox, LOCAL)
             lhs.set(rhs)
-    imageType.__setitem__ = __setitem__
-    
+    cls.__setitem__ = __setitem__
+
     def __float__(self):
         """Convert a 1x1 image to a floating scalar"""
-        if self.getDimensions() != lsst.afw.geom.geomLib.Extent2I(1, 1):
+        if self.getDimensions() != afwGeom.Extent2I(1, 1):
             raise TypeError("Only single-pixel images may be converted to python scalars")
-    
+
         try:
             return float(self.get(0, 0))
         except AttributeError:
-            raise TypeError("Unable to extract a single pixel for type %s" % "TYPE")
+            raise TypeError("Unable to extract a single pixel from a {}".format(type(self).__name__))
         except TypeError:
-            raise TypeError("Unable to convert a %s<%s> pixel to a scalar" % ("TYPE", "PIXEL_TYPES"))
-    imageType.__float__ = __float__
-    
+            raise TypeError("Unable to convert a {} pixel to a scalar".format(type(self).__name__))
+    cls.__float__ = __float__
+
     def __int__(self):
         """Convert a 1x1 image to a integral scalar"""
         return int(float(self))
-    imageType.__int__ = __int__
-
-
+    cls.__int__ = __int__

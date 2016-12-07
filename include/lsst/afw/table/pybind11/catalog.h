@@ -129,9 +129,9 @@ void declareCatalog(py::class_<CatalogT<RecordT>, std::shared_ptr<CatalogT<Recor
     cls.def("__len__", &Catalog::size);
     cls.def("set", &Catalog::set);
     cls.def("_getitem_", [](Catalog & self, int i) {
-        // If the index is less than 0, use the pythonic index
-        if(i<0){
-            i = self.size()+i;
+        // If the index is less than 0, treat as an offset from the end (the Python convention)
+        if (i < 0) {
+            i = self.size() + i;
         };
         return self.get(i);
     });

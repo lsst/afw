@@ -142,6 +142,9 @@ namespace {
     std::string const unknownFilter = "_unknown_";
 }
 
+int const Filter::AUTO = -1;
+int const Filter::UNKNOWN = -1;
+
 /**
  * Create a Filter from a PropertySet (e.g. a FITS header)
  */

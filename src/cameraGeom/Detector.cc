@@ -72,13 +72,24 @@ CameraPoint Detector::getCenter(CameraSysPrefix const &cameraSysPrefix) const {
 }
 
 const table::AmpInfoRecord & Detector::operator[](std::string const &name) const {
+    return *(_get(name));
+}
+
+std::shared_ptr<table::AmpInfoRecord const> Detector::_get(int i) const {
+    if (i < 0) {
+        i = _ampInfoCatalog.size() + i;
+    };
+    return _ampInfoCatalog.get(i);
+}
+
+std::shared_ptr<table::AmpInfoRecord const> Detector::_get(std::string const & name) const {
     _AmpInfoMap::const_iterator ampIter = _ampNameIterMap.find(name);
     if (ampIter == _ampNameIterMap.end()) {
         std::ostringstream os;
         os << "Unknown amplifier \"" << name << "\"";
         throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
     }
-    return *(ampIter->second);
+    return ampIter->second;
 }
 
 bool Detector::hasTransform(CameraSys const &cameraSys) const {
