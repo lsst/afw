@@ -36,6 +36,7 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/Box.h"
+#include "lsst/afw/image/Mask.h"
 #include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/SpanSetFunctorGetters.h"
 
