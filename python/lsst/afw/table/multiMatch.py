@@ -145,7 +145,7 @@ class GroupView(collections.Mapping):
         groups = numpy.zeros(len(ids), dtype=object)
         ends = list(indices[1:]) + [len(catalog)]
         for n, (i1, i2) in enumerate(zip(indices, ends)):
-            groups[n] = catalog[i1:i2]
+            groups[n] = catalog[int(i1):int(i2)]  # casts are a work-around for DM-8557
             assert (groups[n].get(groupKey) == ids[n]).all()
         return cls(catalog.schema, ids, groups)
 
