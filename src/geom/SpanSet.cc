@@ -23,6 +23,9 @@
  */
 
 #include "lsst/afw/geom/SpanSet.h"
+#include "lsst/afw/table/io/CatalogVector.h"
+#include "lsst/afw/table/io/InputArchive.h"
+#include "lsst/afw/table/io/OutputArchive.h"
 #include <algorithm>
 #include <iterator>
 
@@ -729,6 +732,84 @@ std::shared_ptr<geom::SpanSet> geom::SpanSet::transformedBy(geom::XYTransform co
         }
     }
     return std::make_shared<geom::SpanSet>(std::move(tempVec));
+}
+
+namespace {
+    // Singleton helper class that manages the schema and keys for the persistence of SpanSets
+    class SpanSetPersistenceHelper {
+    public:
+        table::Schema spanSetSchema;
+        table::Key<int> spanY;
+        table::Key<int> spanX0;
+        table::Key<int> spanX1;
+
+        static SpanSetPersistenceHelper const & get() {
+            static SpanSetPersistenceHelper instance;
+            return instance;
+        }
+
+        // No copying
+        SpanSetPersistenceHelper (const SpanSetPersistenceHelper &) = delete;
+        SpanSetPersistenceHelper & operator=(const SpanSetPersistenceHelper &) = delete;
+
+        // No Moving
+        SpanSetPersistenceHelper (SpanSetPersistenceHelper &&) = delete;
+        SpanSetPersistenceHelper & operator=(SpanSetPersistenceHelper &&) = delete;
+
+    private:
+        SpanSetPersistenceHelper() :
+            spanSetSchema(),
+            spanY(spanSetSchema.addField<int>("y", "row position of span", "pixel")),
+            spanX0(spanSetSchema.addField<int>("x0", "first column of span (inclusive)", "pixel")),
+            spanX1(spanSetSchema.addField<int>("x1", "first column of span (inclusive)", "pixel")) {}
+    };
+
+std::string getSpanSetPersistenceName() { return "SpanSet"; }
+
+class SpanSetFactory : public table::io::PersistableFactory {
+public:
+    virtual std::shared_ptr<table::io::Persistable>
+    read(InputArchive const & archive, CatalogVector const & catalogs) const {
+        // There should only be one catalog saved
+        LSST_ARCHIVE_ASSERT(catalogs.size() == 1u);
+        // Get the catalog with the spans
+        auto spansCatalog = catalogs.front();
+        // Retrieve the keys that will be used to reference the catalog
+        auto const & keys = SpanSetPersistenceHelper::get();
+        // Construct a temporary container which will later be turned into the SpanSet
+        std::vector<geom::Span> tempVec;
+        tempVec.reserve(spansCatalog.size());
+        for (auto const & val : spansCatalog) {
+            tempVec.push_back(geom::Span(val.get(keys.spanY), val.get(keys.spanX0), val.get(keys.spanX1)));
+        }
+        return std::make_shared<geom::SpanSet>(std::move(tempVec));
+    }
+    explicit SpanSetFactory(std::string const & name) : table::io::PersistableFactory(name) {}
+};
+
+// insert the factory into the registry (instantiating an instance is sufficient, because the code
+// that does the work is in the base class ctor)
+SpanSetFactory registration(getSpanSetPersistenceName());
+
+} // end anonymous
+
+
+
+std::string geom::SpanSet::getPersistenceName() const { return getSpanSetPersistenceName(); }
+
+std::string geom::SpanSet::getPythonModule() const { return "lsst.afw.geom"; }
+
+void geom::SpanSet::write(OutputArchiveHandle & handle) const {
+    auto const & keys = SpanSetPersistenceHelper::get();
+    auto spanCat = handle.makeCatalog(keys.spanSetSchema);
+    spanCat.reserve(size());
+    for (auto const & val : *this) {
+        auto record = spanCat.addNew();
+        record->set(keys.spanY, val.getY());
+        record->set(keys.spanX0, val.getX0());
+        record->set(keys.spanX1, val.getX1());
+    }
+    handle.saveCatalog(spanCat);
 }
 
 }} // Close lsst::afw
