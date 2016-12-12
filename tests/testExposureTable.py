@@ -213,7 +213,6 @@ class ExposureTableTestCase(lsst.utils.tests.TestCase):
         subset3 = self.cat.subsetContaining(crazyPoint)
         self.assertEqual(len(subset3), 0)
 
-    @unittest.skip("pybind11 CoaddInputs bug; access visits causes 'pointer being freed was not allocated'")
     def testCoaddInputs(self):
         coaddInputs = lsst.afw.image.CoaddInputs(
             lsst.afw.table.ExposureTable.makeMinimalSchema(),
