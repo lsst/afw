@@ -1,4 +1,5 @@
 
+
 // -*- lsst-c++ -*-
 
 /*
@@ -29,7 +30,9 @@
 #include <type_traits>
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/Point.h"
-#include "lsst/afw/image.h"
+#include "lsst/afw/geom/XYTransform.h"
+#include "lsst/afw/image/Image.h"
+#include "lsst/afw/image/Mask.h"
 #include "lsst/pex/exceptions.h"
 
 namespace lsst { namespace afw { namespace geom { namespace details {
