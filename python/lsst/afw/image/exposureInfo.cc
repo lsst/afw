@@ -56,57 +56,57 @@ PYBIND11_PLUGIN(_exposureInfo) {
     /* Member types and enums */
 
     /* Constructors */
-    //clsExposureInfo.def(py::init<std::shared_ptr<Wcs const> const &,
-    //                             std::shared_ptr<detection::Psf const> const &,
-    //                             std::shared_ptr<Calib const> const &,
-    //                             std::shared_ptr<cameraGeom::Detector const> const &,
-    //                             std::shared_ptr<geom::polygon::Polygon const> const &,
-    //                             Filter const &,
-    //                             std::shared_ptr<daf::base::PropertySet> const &,
-    //                             std::shared_ptr<CoaddInputs> const &,
-    //                             std::shared_ptr<ApCorrMap> const &,
-    //                             std::shared_ptr<VisitInfo const> const &>(),
-    //                    "wcs"_a=std::shared_ptr<Wcs const>(),
-    //                    "psf"_a=std::shared_ptr<detection::Psf const>(),
-    //                    "calib"_a=std::shared_ptr<Calib const>(),
-    //                    "detector"_a=std::shared_ptr<cameraGeom::Detector const>(),
-    //                    "polygon"_a=std::shared_ptr<geom::polygon::Polygon const>(),
-    //                    "filter"_a=Filter(),
-    //                    "metadata"_a=std::shared_ptr<daf::base::PropertySet>(),
-    //                    "coaddInputs"_a=std::shared_ptr<CoaddInputs>(),
-    //                    "apCorrMap"_a=std::shared_ptr<ApCorrMap>(),
-    //                    "visitInfo"_a=std::shared_ptr<VisitInfo const>());
-    //clsExposureInfo.def(py::init<ExposureInfo>(), "other"_a);
-    //clsExposureInfo.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);
+    clsExposureInfo.def(py::init<std::shared_ptr<Wcs const> const &,
+                                std::shared_ptr<detection::Psf const> const &,
+                                std::shared_ptr<Calib const> const &,
+                                std::shared_ptr<cameraGeom::Detector const> const &,
+                                std::shared_ptr<geom::polygon::Polygon const> const &,
+                                Filter const &,
+                                std::shared_ptr<daf::base::PropertySet> const &,
+                                std::shared_ptr<CoaddInputs> const &,
+                                std::shared_ptr<ApCorrMap> const &,
+                                std::shared_ptr<VisitInfo const>>(),
+                       "wcs"_a=std::shared_ptr<Wcs const>(),
+                       "psf"_a=std::shared_ptr<detection::Psf const>(),
+                       "calib"_a=std::shared_ptr<Calib const>(),
+                       "detector"_a=std::shared_ptr<cameraGeom::Detector const>(),
+                       "polygon"_a=std::shared_ptr<geom::polygon::Polygon const>(),
+                       "filter"_a=Filter(),
+                       "metadata"_a=std::shared_ptr<daf::base::PropertySet>(),
+                       "coaddInputs"_a=std::shared_ptr<CoaddInputs>(),
+                       "apCorrMap"_a=std::shared_ptr<ApCorrMap>(),
+                       "visitInfo"_a=std::shared_ptr<VisitInfo const>());
+    clsExposureInfo.def(py::init<ExposureInfo>(), "other"_a);
+    clsExposureInfo.def(py::init<ExposureInfo, bool>(), "other"_a, "copyMetadata"_a);
 
     /* Operators */
 
     /* Members */
-    //clsExposureInfo.def("hasWcs", &ExposureInfo::hasWcs);
+    clsExposureInfo.def("hasWcs", &ExposureInfo::hasWcs);
     clsExposureInfo.def("getWcs", (std::shared_ptr<Wcs> (ExposureInfo::*)()) &ExposureInfo::getWcs);
     clsExposureInfo.def("setWcs", &ExposureInfo::setWcs, "wcs"_a);
     //clsExposureInfo.def("initWcs", &ExposureInfo::initWcs);
 
-    //clsExposureInfo.def("hasDetector", &ExposureInfo::hasDetector);
-    //clsExposureInfo.def("getDetector", &ExposureInfo::getDetector);
-    //clsExposureInfo.def("setDetector", &ExposureInfo::setDetector, "detector"_a);
+    clsExposureInfo.def("hasDetector", &ExposureInfo::hasDetector);
+    clsExposureInfo.def("getDetector", &ExposureInfo::getDetector);
+    clsExposureInfo.def("setDetector", &ExposureInfo::setDetector, "detector"_a);
 
-    //clsExposureInfo.def("getFilter", &ExposureInfo::getFilter);
-    //clsExposureInfo.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
+    clsExposureInfo.def("getFilter", &ExposureInfo::getFilter);
+    clsExposureInfo.def("setFilter", &ExposureInfo::setFilter, "filter"_a);
 
-    //clsExposureInfo.def("hasCalib", &ExposureInfo::hasCalib);
-    //clsExposureInfo.def("getCalib", (std::shared_ptr<Calib> (ExposureInfo::*)()) &ExposureInfo::getCalib);
-    //clsExposureInfo.def("setCalib", &ExposureInfo::setCalib, "calib"_a);
+    clsExposureInfo.def("hasCalib", &ExposureInfo::hasCalib);
+    clsExposureInfo.def("getCalib", (std::shared_ptr<Calib> (ExposureInfo::*)()) &ExposureInfo::getCalib);
+    clsExposureInfo.def("setCalib", &ExposureInfo::setCalib, "calib"_a);
 
-    //clsExposureInfo.def("getMetadata", &ExposureInfo::getMetadata);
-    //clsExposureInfo.def("setMetadata", &ExposureInfo::setMetadata, "metadata"_a);
+    clsExposureInfo.def("getMetadata", &ExposureInfo::getMetadata);
+    clsExposureInfo.def("setMetadata", &ExposureInfo::setMetadata, "metadata"_a);
 
     //clsExposureInfo.def("hasPsf", &ExposureInfo::hasPsf);
-    //clsExposureInfo.def("getPsf", &ExposureInfo::getPsf);
-    //clsExposureInfo.def("setPsf", &ExposureInfo::setPsf, "psf"_a);
+    clsExposureInfo.def("getPsf", &ExposureInfo::getPsf);
+    clsExposureInfo.def("setPsf", &ExposureInfo::setPsf, "psf"_a);
 
-    clsExposureInfo.def("getValidPolygon", &ExposureInfo::getValidPolygon);
     //clsExposureInfo.def("hasValidPolygon", &ExposureInfo::hasValidPolygon);
+    clsExposureInfo.def("getValidPolygon", &ExposureInfo::getValidPolygon);
     clsExposureInfo.def("setValidPolygon", &ExposureInfo::setValidPolygon, "polygon"_a);
 
     //clsExposureInfo.def("hasApCorrMap", &ExposureInfo::hasApCorrMap);

@@ -1,14 +1,22 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division, print_function
 
-from ._exposure import *
+from .slicing import supportSlicing
+from ._exposure import ExposureI, ExposureF, ExposureD, ExposureU, ExposureL, makeExposure
 
-def __reduce__(self):
-    from lsst.afw.fits import reduceToFits
-    return reduceToFits(self)
+__all__ = ["ExposureI", "ExposureF", "ExposureD", "ExposureU", "ExposureL", "makeExposure"]
 
-ExposureI.__reduce__ = __reduce__
-ExposureF.__reduce__ = __reduce__
-ExposureD.__reduce__ = __reduce__
-ExposureU.__reduce__ = __reduce__
-ExposureL.__reduce__ = __reduce__
-del __reduce__
+for cls in (ExposureI, ExposureF, ExposureD, ExposureU, ExposureL):
+    supportSlicing(cls)
+
+    def __reduce__(self):
+        from lsst.afw.fits import reduceToFits
+        return reduceToFits(self)
+    cls.__reduce__ = __reduce__
+
+    def convertF(self):
+        return ExposureF(self, True)
+    cls.convertF = convertF
+
+    def convertD(self):
+        return ExposureD(self, True)
+    cls.convertD = convertD

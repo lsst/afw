@@ -20,26 +20,47 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
-namespace py = pybind11;
+#include "lsst/afw/geom/XYTransform.h"
+#include "lsst/afw/image/TanWcs.h"
+#include "lsst/afw/image/DistortedTanWcs.h"
 
-using namespace lsst::afw::image;
+namespace py = pybind11;
+using namespace py::literals;
+
+namespace lsst {
+namespace afw {
+namespace image {
 
 PYBIND11_PLUGIN(_distortedTanWcs) {
     py::module mod("_distortedTanWcs", "Python wrapper for afw _distortedTanWcs library");
 
     /* Module level */
+    py::class_<DistortedTanWcs,
+               std::shared_ptr<DistortedTanWcs>,
+               TanWcs> cls(mod, "DistortedTanWcs");
 
     /* Member types and enums */
 
     /* Constructors */
+    cls.def(py::init<TanWcs const &, geom::XYTransform const &>(), "tanWcs"_a, "pixelsToTanPixels"_a);
 
     /* Operators */
 
     /* Members */
+    cls.def("clone", &DistortedTanWcs::clone);
+    cls.def("flipImage", &DistortedTanWcs::flipImage, "flipLR"_a, "flipTB"_a, "dimensions"_a);
+    cls.def("rotateImageBy90", &DistortedTanWcs::rotateImageBy90, "nQuarter"_a, "dimensions"_a);
+    cls.def("shiftReferencePixel", &DistortedTanWcs::shiftReferencePixel, "dx"_a, "dy"_a);
+    cls.def("hasDistortion", &DistortedTanWcs::hasDistortion);
+    cls.def("getTanWcs", &DistortedTanWcs::getTanWcs);
+    cls.def("getPixelToTanPixel", &DistortedTanWcs::getPixelToTanPixel);
 
     return mod.ptr();
 }
+
+}}}  // namespace lsst::afw::image
