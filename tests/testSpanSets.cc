@@ -14,6 +14,9 @@
 #include "lsst/log/Log.h"
 #include "lsst/afw/geom/SpanSet.h"
 #include "lsst/afw/image.h"
+#include "lsst/afw/fits.h"
+#include "lsst/afw/table/io/OutputArchive.h"
+#include "lsst/afw/table/io/InputArchive.h"
 #include "ndarray.h"
 #include "Eigen/Core"
 
@@ -740,5 +743,35 @@ BOOST_AUTO_TEST_CASE(SpanSet_testFunctor) {
 
     for (auto const & nullVecValue : nullVecObject) {
         BOOST_CHECK(nullVecValue == initialValue);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(SpanSet_testPersistence) {
+    namespace tableIo = lsst::afw::table::io;
+    // Create a SpanSet to persist
+    auto spanSetPreArchive = afwGeom::SpanSet::spanSetFromShape(2, afwGeom::Stencil::BOX);
+    // Create an output object to save the SpanSet to
+    tableIo::OutputArchive outArchive;
+    auto id = outArchive.put(spanSetPreArchive);
+    // Create a in memory file manager, and save the fits file to that
+    lsst::afw::fits::MemFileManager manager;
+    lsst::afw::fits::Fits outFits(manager, "w", lsst::afw::fits::Fits::AUTO_CHECK);
+    outArchive.writeFits(outFits);
+    outFits.closeFile();
+    // Read back in the fits file and un-persist the SpanSet
+    lsst::afw::fits::Fits inFits(manager, "r", lsst::afw::fits::Fits::AUTO_CHECK);
+    inFits.setHdu(0);
+    lsst::afw::table::io::InputArchive inArchive = tableIo::InputArchive::readFits(inFits);
+    inFits.closeFile();
+    std::shared_ptr<afwGeom::SpanSet> spanSetPostArchive = std::dynamic_pointer_cast<afwGeom::SpanSet>(inArchive.get(id));
+
+    // Check that the two SpanSets are the same size
+    BOOST_CHECK(spanSetPreArchive->size() == spanSetPostArchive->size());
+
+    // Verify the values are the same for the two SpanSets
+    auto preArchiveIterator = spanSetPreArchive->begin();
+    for (auto const & val : *spanSetPostArchive) {
+        BOOST_CHECK(val == *preArchiveIterator);
+        ++preArchiveIterator;
     }
 }

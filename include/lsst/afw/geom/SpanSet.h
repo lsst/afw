@@ -36,6 +36,8 @@
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom/Span.h"
 #include "lsst/afw/geom/Box.h"
+#include "lsst/afw/image/Mask.h"
+#include "lsst/afw/table/io/Persistable.h"
 #include "lsst/afw/geom/SpanSetFunctorGetters.h"
 
 namespace lsst { namespace afw { namespace geom { namespace details {
@@ -129,7 +131,8 @@ std::shared_ptr<geom::SpanSet> maskToSpanSet(image::Mask<T> const & mask,
  * the collection of pixels, and helper functions which make use of the area defined
  * to perform localized actions
  */
-class SpanSet {
+class SpanSet : public afw::table::io::PersistableFacade<lsst::afw::geom::SpanSet>,
+                public afw::table::io::Persistable{
  public:
     typedef std::vector<Span>::const_iterator const_iterator;
     typedef std::vector<Span>::size_type size_type;
@@ -617,7 +620,25 @@ class SpanSet {
      */
     std::vector<std::shared_ptr<geom::SpanSet>> split() const;
 
- private:
+    bool isPersistable() const { return true; }
+
+private:
+    /* Returns the name used by the persistence layer to identify the SpanSet class
+     */
+    std::string getPersistenceName() const override;
+
+    /* Return a string corresponding to the python module that SpanSets lives in
+     */
+    inline std::string getPythonModule() const override { return "lsst.afw.geom"; }
+
+    /* Writes the representation of the class out to an output archive
+     */
+    void write(OutputArchiveHandle & handle) const override;
+
+    /* A class which is used by the persistence layer to restore SpanSets from an archive
+     */
+    friend class SpansSetFactory;
+
     /* A function to combine overlapping Spans in a SpanSet into a single Span
      */
     void _runNormalize();
