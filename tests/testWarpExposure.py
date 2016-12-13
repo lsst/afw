@@ -139,7 +139,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             originalExposure.getBBox(),
             originalExposure.getWcs())
         warpingControl = afwMath.WarpingControl("lanczos4", "", 0, interpLength)
-        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl)
+        covImage = afwImage.ImageD(0,0)
+        afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl, covImage)
         if SAVE_FITS_FILES:
             afwWarpedExposure.writeFits("afwWarpedExposureNull.fits")
 
@@ -175,7 +176,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalWcs = originalExposure.getWcs()
         afwWarpedWcs = afwWarpedExposure.getWcs()
         warpingControl = afwMath.WarpingControl("lanczos4", "", 0, interpLength)
-        afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage, originalWcs, warpingControl)
+        covImage = afwImage.ImageD(0,0)
+        afwMath.warpImage(afwWarpedImage, afwWarpedWcs, originalImage, originalWcs, warpingControl, covImage)
         if SAVE_FITS_FILES:
             afwWarpedImage.writeFits("afwWarpedImageNull.fits")
         afwWarpedImageArr = afwWarpedImage.getArray()
@@ -193,13 +195,14 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         mi = exposureWithWcs.getMaskedImage()
         exposureWithoutWcs = afwImage.ExposureF(mi.getDimensions())
         warpingControl = afwMath.WarpingControl("bilinear", "", 0, interpLength)
+        covImage = afwImage.ImageD(0,0)
         try:
-            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingControl)
+            afwMath.warpExposure(exposureWithWcs, exposureWithoutWcs, warpingControl, covImage)
             self.fail("warping from a source Exception with no Wcs should fail")
         except Exception:
             pass
         try:
-            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingControl)
+            afwMath.warpExposure(exposureWithoutWcs, exposureWithWcs, warpingControl, covImage)
             self.fail("warping into a destination Exception with no Wcs should fail")
         except Exception:
             pass
@@ -209,20 +212,21 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         """
         originalExposure = afwImage.ExposureF(afwGeom.Extent2I(100, 100))
         warpingControl = afwMath.WarpingControl("bilinear", "", 0, interpLength)
+        covImage = afwImage.ImageD(0,0)
         try:
-            afwMath.warpExposure(originalExposure, originalExposure, warpingControl)
+            afwMath.warpExposure(originalExposure, originalExposure, warpingControl, covImage)
             self.fail("warpExposure in place (dest is src) should fail")
         except Exception:
             pass
         try:
             afwMath.warpImage(originalExposure.getMaskedImage(), originalExposure.getWcs(),
-                              originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingControl)
+                              originalExposure.getMaskedImage(), originalExposure.getWcs(), warpingControl, covImage)
             self.fail("warpImage<MaskedImage> in place (dest is src) should fail")
         except Exception:
             pass
         try:
             afwMath.warpImage(originalExposure.getImage(), originalExposure.getWcs(),
-                              originalExposure.getImage(), originalExposure.getWcs(), warpingControl)
+                              originalExposure.getImage(), originalExposure.getWcs(), warpingControl, covImage)
             self.fail("warpImage<Image> in place (dest is src) should fail")
         except Exception:
             pass
@@ -397,6 +401,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         swarpedImagePath = os.path.join(dataDir, swarpedImageName)
         swarpedDecoratedImage = afwImage.DecoratedImageF(swarpedImagePath)
         swarpedImage = swarpedDecoratedImage.getImage()
+        covImage = afwImage.ImageD(0,0)
 
         for changeEquinox in (False, True):
             swarpedMetadata = swarpedDecoratedImage.getMetadata()
@@ -409,7 +414,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
             numGoodPix = afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                                           originalWcs, warpingControl)
+                                           originalWcs, warpingControl, covImage)
             self.assertGreater(numGoodPix, 50)
 
             afwWarpedImageArr = afwWarpedImage.getArray()
@@ -443,7 +448,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         warpControl = afwMath.WarpingControl("lanczos3")
         # if a bug described in ticket #2441 is present, this will raise an exception:
-        numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
+        covImage = afwImage.ImageD(0,0)
+        numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl, covImage)
         self.assertEqual(numGoodPix, 0)
 
     def testTicketDM4063(self):
@@ -485,7 +491,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         warpControl = afwMath.WarpingControl("lanczos3")
         # if a bug described in ticket #2441 is present, this will raise an exception:
-        numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl)
+        covImage = afwImage.ImageD(0,0)
+        numGoodPix = afwMath.warpExposure(toExp, fromExp, warpControl, covImage)
         self.assertEqual(numGoodPix, 0)
         imArr, maskArr, varArr = toExp.getMaskedImage().getArrays()
         self.assertTrue(np.all(np.isnan(imArr)))
@@ -539,19 +546,20 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         )
         destMaskedImage = afwImage.MaskedImageF(110, 121)
         destExposure = afwImage.ExposureF(destMaskedImage, destWcs)
-        afwMath.warpExposure(destExposure, srcExposure, warpControl)
+        covImage = afwImage.ImageD(0,0)
+        afwMath.warpExposure(destExposure, srcExposure, warpControl, covImage)
 
         # now compute with two separate mask planes
         warpControl.setGrowFullMask(0)
         narrowMaskedImage = afwImage.MaskedImageF(110, 121)
         narrowExposure = afwImage.ExposureF(narrowMaskedImage, destWcs)
-        afwMath.warpExposure(narrowExposure, srcExposure, warpControl)
+        afwMath.warpExposure(narrowExposure, srcExposure, warpControl, covImage)
         narrowArrays = narrowExposure.getMaskedImage().getArrays()
 
         warpControl.setMaskWarpingKernelName("")
         broadMaskedImage = afwImage.MaskedImageF(110, 121)
         broadExposure = afwImage.ExposureF(broadMaskedImage, destWcs)
-        afwMath.warpExposure(broadExposure, srcExposure, warpControl)
+        afwMath.warpExposure(broadExposure, srcExposure, warpControl, covImage)
         broadArrays = broadExposure.getMaskedImage().getArrays()
 
         if (kernelName != maskKernelName) and (growFullMask != 0xFFFF):
@@ -622,7 +630,8 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             afwWarpedMaskedImage = afwImage.MaskedImageF(swarpedImage.getDimensions())
             afwWarpedExposure = afwImage.ExposureF(afwWarpedMaskedImage, warpedWcs)
-            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl)
+            covImage = afwImage.ImageD(0,0)
+            afwMath.warpExposure(afwWarpedExposure, originalExposure, warpingControl, covImage)
             afwWarpedMask = afwWarpedMaskedImage.getMask()
             if SAVE_FITS_FILES:
                 afwWarpedExposure.writeFits(afwWarpedImagePath)
@@ -652,8 +661,9 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             afwWarpedImage = afwImage.ImageF(swarpedImage.getDimensions())
             originalImage = originalExposure.getMaskedImage().getImage()
             originalWcs = originalExposure.getWcs()
+            covImage = afwImage.ImageD(0,0)
             afwMath.warpImage(afwWarpedImage, warpedWcs, originalImage,
-                              originalWcs, warpingControl)
+                              originalWcs, warpingControl, covImage)
             if display:
                 ds9.mtv(afwWarpedImage, frame=1, title="Warped")
                 ds9.mtv(swarpedImage, frame=2, title="SWarped")
@@ -679,7 +689,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
             afwWarpedImage2 = afwImage.ImageF(swarpedImage.getDimensions())
             xyTransform = afwImage.XYTransformFromWcsPair(warpedWcs, originalWcs)
-            afwMath.warpImage(afwWarpedImage2, originalImage, xyTransform, warpingControl)
+            afwMath.warpImage(afwWarpedImage2, originalImage, xyTransform, warpingControl, covImage)
             msg = "afw xyTransform-based and WCS-based %s-warped images do not match" % (kernelName,)
             try:
                 self.assertImagesNearlyEqual(afwWarpedImage2, afwWarpedImage,

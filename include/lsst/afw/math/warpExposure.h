@@ -431,6 +431,7 @@ namespace math {
                                             ///< All other attributes are left alone (including Detector and Psf)
         SrcExposureT const &srcExposure,    ///< Source exposure
         WarpingControl const &control,      ///< control parameters
+        lsst::afw::image::Image<double> &covImage,
         typename DestExposureT::MaskedImageT::SinglePixel padValue =
             lsst::afw::math::edgePixel<typename DestExposureT::MaskedImageT>(
                 typename lsst::afw::image::detail::image_traits<
@@ -489,6 +490,7 @@ namespace math {
         SrcImageT const &srcImage,              ///< source %image
         lsst::afw::image::Wcs const &srcWcs,    ///< WCS of source %image
         WarpingControl const &control,          ///< control parameters
+        lsst::afw::image::Image<double> &covImage,
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
               typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
               ///< use this value for undefined (edge) pixels
@@ -505,6 +507,7 @@ namespace math {
         lsst::afw::geom::XYTransform const &xyTransform, ///<  xy transform mapping source position
             ///< to destination position in the forward direction (but only the reverse direction is used)
         WarpingControl const &control,      ///< control parameters
+        lsst::afw::image::Image<double> &covImage,
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
             typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
             ///< use this value for undefined (edge) pixels
@@ -522,6 +525,7 @@ namespace math {
         lsst::afw::geom::LinearTransform const &linearTransform, ///< linear transformation to apply
         lsst::afw::geom::Point2D const &centerPosition, ///< pixel position for location of linearTransform
         WarpingControl const &control,      ///< control parameters
+        lsst::afw::image::Image<double> &covImage,
         typename DestImageT::SinglePixel padValue = lsst::afw::math::edgePixel<DestImageT>(
             typename lsst::afw::image::detail::image_traits<DestImageT>::image_category())
             ///< use this value for undefined (edge) pixels

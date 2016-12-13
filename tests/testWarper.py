@@ -90,11 +90,11 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         originalExposure.setFilter(originalFilter)
         originalExposure.setCalib(originalCalib)
 
-        warpedExposure1 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure)
+        warpedExposure1, covImage = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure)
         # the default size must include all good pixels, so growing the bbox should not add any
-        warpedExposure2 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=1)
+        warpedExposure2, covImage = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=1)
         # a bit of excess border is allowed, but surely not as much as 10 (in fact it is approx. 5)
-        warpedExposure3 = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
+        warpedExposure3, covImage = warper.warpExposure(destWcs=swarpedWcs, srcExposure=originalExposure, border=-10)
         # assert that warpedExposure and warpedExposure2 have the same number of non-no_data pixels
         # and that warpedExposure3 has fewer
         noDataBitMask = afwImage.MaskU.getPlaneBitMask("NO_DATA")
@@ -120,7 +120,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             kernelName=kernelName, useSubregion=True, useDeepCopy=False)
 
         bbox = afwGeom.Box2I(afwGeom.Point2I(100, 25), afwGeom.Extent2I(3, 7))
-        warpedExposure = warper.warpExposure(
+        warpedExposure, covImage = warper.warpExposure(
             destWcs=swarpedWcs,
             srcExposure=originalExposure,
             destBBox=bbox,
@@ -194,7 +194,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
 
         # warning: this test assumes that the swarped image is smaller than it needs to be
         # to hold all of the warped pixels
-        afwWarpedExposure = warper.warpExposure(
+        afwWarpedExposure, covImage = warper.warpExposure(
             destWcs=swarpedWcs,
             srcExposure=originalExposure,
             maxBBox=maxBBox,
