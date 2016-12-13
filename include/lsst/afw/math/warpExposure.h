@@ -41,7 +41,6 @@
 #include "lsst/base.h"
 #include "lsst/pex/exceptions.h"
 #include "lsst/afw/geom.h"
-#include "lsst/afw/gpu/DevicePreference.h"
 #include "lsst/afw/image/LsstImageTypes.h"
 #include "lsst/afw/image/Exposure.h"
 #include "lsst/afw/math/ConvolveImage.h"
@@ -231,8 +230,6 @@ namespace math {
      *
      * \note padValue is not member of this class to avoid making this a templated class.
      *
-     * \warning: GPU acceleration requires interpLength > 0
-     *
      * \ingroup afw
      */
     class WarpingControl {
@@ -240,14 +237,8 @@ namespace math {
         /**
          * @brief Construct a WarpingControl object
          *
-         * @warning: the GPU code does not yet support warping the mask with
-         * a separate kernel. Thus if maskWarpingKernelName is provided
-         * the GPU is disabled (or an exception is raised if the GPU is required)
-         *
          * @throw pex_exceptions InvalidParameterError if the warping kernel
          * is smaller than the mask warping kernel.
-         * @throw pex_exceptions InvalidParameterError if GPU is required
-         * and maskWarpingKernelName supplied.
          */
         explicit WarpingControl(
             std::string const &warpingKernelName,   ///< name of warping kernel;
@@ -260,8 +251,6 @@ namespace math {
             int cacheSize = 0,      ///< cache size for warping kernel; no cache if 0
                 ///< (used as the argument to the warping kernels' computeCache method)
             int interpLength = 0,   ///< distance over which the WCS can be linearly interpolated
-            lsst::afw::gpu::DevicePreference devicePreference = lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE,
-                ///< use GPU acceleration?
             lsst::afw::image::MaskPixel growFullMask = 0
                 ///< mask bits to grow to full width of image/variance kernel
         ) :
@@ -269,11 +258,9 @@ namespace math {
             _maskWarpingKernelPtr(),
             _cacheSize(cacheSize),
             _interpLength(interpLength),
-            _devicePreference(devicePreference),
             _growFullMask(growFullMask)
         {
             setMaskWarpingKernelName(maskWarpingKernelName);
-            _testDevicePreference(_devicePreference, _warpingKernelPtr);
         }
 
 
@@ -312,21 +299,6 @@ namespace math {
         void setInterpLength(
             int interpLength ///< interpolation length (pixels)
         ) { _interpLength = interpLength; };
-
-        /**
-         * @brief get the GPU device preference
-         */
-        lsst::afw::gpu::DevicePreference getDevicePreference() const { return _devicePreference; };
-
-        /**
-         * @brief set the GPU device preference
-         */
-        void setDevicePreference(
-            lsst::afw::gpu::DevicePreference devicePreference  ///< device preference
-        ) {
-            _testDevicePreference(devicePreference, _warpingKernelPtr);
-            _devicePreference = devicePreference;
-        }
 
         /**
          * @brief get the warping kernel
@@ -400,21 +372,10 @@ namespace math {
             SeparableKernel const &maskWarpingKernel    ///< mask warping kernel
         ) const;
 
-        /**
-         * @brief test if GPU device preference and main warping kernel are compatible
-         *
-         * @throw lsst::pex::exceptions::InvalidParameterError if the parameters are incompatible
-         */
-        void _testDevicePreference(
-            lsst::afw::gpu::DevicePreference const &devicePreference,   ///< GPU device preference
-            CONST_PTR(SeparableKernel) const &warpingKernelPtr          ///< warping kernel
-        ) const;
-
         PTR(SeparableKernel) _warpingKernelPtr;
         PTR(SeparableKernel) _maskWarpingKernelPtr;
         int _cacheSize;
         int _interpLength;
-        lsst::afw::gpu::DevicePreference _devicePreference; ///< choose CPU or GPU acceleration
         lsst::afw::image::MaskPixel _growFullMask;
     };
 
@@ -447,8 +408,6 @@ namespace math {
      *
      * \return the number of valid pixels in destImage (those that are not edge pixels).
      *
-     * \note This function is able to use GPU acceleration when interpLength > 0.
-     *
      * \b Algorithm Without Interpolation:
      *
      * For each integer pixel position in the remapped Exposure:
@@ -474,8 +433,6 @@ namespace math {
      *
      * \throw lsst::pex::exceptions::InvalidParameterError if destImage is srcImage
      * \throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
-     * \throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
-     * \throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
      *
      * \todo Should support an additional color-based position correction in the remapping
      *   (differential chromatic refraction). This can be done either object-by-object or pixel-by-pixel.

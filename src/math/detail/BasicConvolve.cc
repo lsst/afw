@@ -44,9 +44,7 @@
 #include "lsst/afw/math/Kernel.h"
 #include "lsst/afw/geom.h"
 #include "lsst/afw/math/detail/Convolve.h"
-#include "lsst/afw/math/detail/ConvCpuGpuShared.h"
-#include "lsst/afw/math/detail/ConvolveGPU.h"
-#include "lsst/afw/gpu/IsGpuBuild.h"
+#include "lsst/afw/math/detail/ConvolveShared.h"
 
 namespace pexExcept = lsst::pex::exceptions;
 namespace afwGeom = lsst::afw::geom;
@@ -54,6 +52,44 @@ namespace afwImage = lsst::afw::image;
 namespace afwMath = lsst::afw::math;
 namespace mathDetail = lsst::afw::math::detail;
 
+/*
+ * Assert that the dimensions of convolvedImage, inImage and kernel are compatible with convolution.
+ *
+ * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dim.
+ * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or h.
+ * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
+ *
+ * @note Same as assertDimensionsOK in basicConvolve.cc, copy-pasted
+ */
+template <typename OutImageT, typename InImageT>
+void mathDetail::assertDimensionsOK(
+    OutImageT const &convolvedImage,
+    InImageT const &inImage,
+    lsst::afw::math::Kernel const &kernel
+) {
+    if (convolvedImage.getDimensions() != inImage.getDimensions()) {
+        std::ostringstream os;
+        os << "convolvedImage dimensions = ( "
+        << convolvedImage.getWidth() << ", " << convolvedImage.getHeight()
+        << ") != (" << inImage.getWidth() << ", " << inImage.getHeight() << ") = inImage dimensions";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+    }
+    if (inImage.getWidth() < kernel.getWidth() || inImage.getHeight() < kernel.getHeight()) {
+        std::ostringstream os;
+        os << "inImage dimensions = ( "
+        << inImage.getWidth() << ", " << inImage.getHeight()
+        << ") smaller than (" << kernel.getWidth() << ", " << kernel.getHeight()
+        << ") = kernel dimensions in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+    }
+    if ((kernel.getWidth() < 1) || (kernel.getHeight() < 1)) {
+        std::ostringstream os;
+        os << "kernel dimensions = ( "
+        << kernel.getWidth() << ", " << kernel.getHeight()
+        << ") smaller than (1, 1) in width and/or height";
+        throw LSST_EXCEPT(pexExcept::InvalidParameterError, os.str());
+    }
+}
 namespace {
 
     /*
@@ -94,44 +130,6 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
         }
         return outPixel;
     }
-
-    /**
-     * @brief Throws exception when trying to USE_GPU without GPU support
-     *
-     * If GPU support was not included at compile time, USE_GPU option will cause
-     * this function to throw an exception
-     *
-     * @throw lsst::pex::exceptions::RuntimeError when USE_GPU enabled with no GPU support
-     *
-     * @ingroup afw
-     */
-    void CheckForceGpuOnNoGpu(afwMath::ConvolutionControl const& convolutionControl)
-    {
-        #ifndef GPU_BUILD
-        if (lsst::afw::gpu::isGpuEnabled()==true
-            && convolutionControl.getDevicePreference()==lsst::afw::gpu::USE_GPU) {
-            throw LSST_EXCEPT(pexExcept::RuntimeError,
-                    "Gpu acceleration must be enabled at compiling for lsst::afw::gpu::USE_GPU");
-        }
-        #endif
-    }
-    /**
-     * @brief Throws exception whenever trying to USE_GPU
-     *
-     * USE_GPU option will cause this function to throw an exception
-     *
-     * @throw lsst::pex::exceptions::InvalidParameterError when USE_GPU is selected
-     *
-     * @ingroup afw
-     */
-    void CheckForceGpuOnUnsupportedKernel(afwMath::ConvolutionControl const& convolutionControl)
-    {
-        if (lsst::afw::gpu::isGpuEnabled()==true
-            && convolutionControl.getDevicePreference()==lsst::afw::gpu::USE_GPU) {
-            throw LSST_EXCEPT(pexExcept::InvalidParameterError, "Gpu can not process this type of kernel");
-        }
-    }
-
 }   // anonymous namespace
 
 /**
@@ -148,8 +146,6 @@ include/lsst/afw/image/Pixel.h:212: error: no type named ‘VariancePixelT’ in
  * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
  * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -203,8 +199,6 @@ void mathDetail::basicConvolve(
 /**
  * @brief A version of basicConvolve that should be used when convolving delta function kernels
  *
- * @throw lsst::pex::exceptions::InvalidParameterError when GPU acceleration forced
- *
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
@@ -216,8 +210,6 @@ void mathDetail::basicConvolve(
 {
     assert (!kernel.isSpatiallyVarying());
     assertDimensionsOK(convolvedImage, inImage, kernel);
-
-    CheckForceGpuOnUnsupportedKernel(convolutionControl);
 
     int const mImageWidth = inImage.getWidth(); // size of input region
     int const mImageHeight = inImage.getHeight();
@@ -252,8 +244,6 @@ void mathDetail::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
  * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -271,28 +261,6 @@ void mathDetail::basicConvolve(
         return mathDetail::convolveWithBruteForce(convolvedImage, inImage, kernel,
             convolutionControl.getDoNormalize());
     } else {
-        CheckForceGpuOnNoGpu(convolutionControl);
-        if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
-            if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
-                try {
-                    mathDetail::ConvolveGpuStatus::ReturnCode rc =
-                               mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
-                                                                                convolutionControl);
-                    if (rc == mathDetail::ConvolveGpuStatus::OK) return;
-                } catch(lsst::afw::gpu::GpuMemoryError) { }
-                catch(pexExcept::MemoryError) { }
-                catch(lsst::afw::gpu::GpuRuntimeError) { }
-            } else if (convolutionControl.getDevicePreference() != lsst::afw::gpu::USE_CPU) {
-                mathDetail::ConvolveGpuStatus::ReturnCode rc =
-                              mathDetail::convolveLinearCombinationGPU(convolvedImage,inImage,kernel,
-                                                                            convolutionControl);
-                if (rc == mathDetail::ConvolveGpuStatus::OK) return;
-                if (convolutionControl.getDevicePreference() == lsst::afw::gpu::USE_GPU) {
-                    throw LSST_EXCEPT(pexExcept::RuntimeError, "Gpu will not process this kernel");
-                }
-            }
-        }
-
         // refactor the kernel if this is reasonable and possible;
         // then use the standard algorithm for the spatially varying case
         PTR(afwMath::Kernel) refKernelPtr; // possibly refactored version of kernel
@@ -322,8 +290,6 @@ void mathDetail::basicConvolve(
 /**
  * @brief A version of basicConvolve that should be used when convolving separable kernels
  *
- * @throw lsst::pex::exceptions::InvalidParameterError when GPU acceleration forced
- *
  * @ingroup afw
  */
 template <typename OutImageT, typename InImageT>
@@ -343,8 +309,6 @@ void mathDetail::basicConvolve(
     typedef typename OutImageT::SinglePixel OutPixel;
 
     assertDimensionsOK(convolvedImage, inImage, kernel);
-
-    CheckForceGpuOnUnsupportedKernel(convolutionControl);
 
     afwGeom::Box2I const fullBBox = inImage.getBBox(image::LOCAL);
     afwGeom::Box2I const goodBBox = kernel.shrinkBBox(fullBBox);
@@ -457,10 +421,7 @@ void mathDetail::basicConvolve(
  * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage dimensions != inImage dimensions
  * @throw lsst::pex::exceptions::InvalidParameterError if inImage smaller than kernel in width or height
  * @throw lsst::pex::exceptions::InvalidParameterError if kernel width or height < 1
- * @throw lsst::pex::exceptions::InvalidParameterError when GPU acceleration forced on spatially varying kernel
  * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */
@@ -503,8 +464,6 @@ void mathDetail::convolveWithBruteForce(
         LOGL_DEBUG("TRACE4.afw.math.convolve.convolveWithBruteForce",
             "convolveWithBruteForce: kernel is spatially varying");
 
-        CheckForceGpuOnUnsupportedKernel(convolutionControl);
-
         for (int cnvY = cnvStartY; cnvY != cnvEndY; ++cnvY) {
             double const rowPos = inImage.indexToPosition(cnvY, afwImage::Y);
 
@@ -524,28 +483,6 @@ void mathDetail::convolveWithBruteForce(
     } else {
         LOGL_DEBUG("TRACE4.afw.math.convolve.convolveWithBruteForce",
             "convolveWithBruteForce: kernel is spatially invariant");
-
-        CheckForceGpuOnNoGpu(convolutionControl);
-        if (lsst::afw::gpu::isGpuBuild() && lsst::afw::gpu::isGpuEnabled()==true) {
-            if (convolutionControl.getDevicePreference() == lsst::afw::gpu::AUTO_WITH_CPU_FALLBACK) {
-                try {
-                    mathDetail::ConvolveGpuStatus::ReturnCode rc =
-                              mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
-                                                                                 convolutionControl);
-                    if (rc == mathDetail::ConvolveGpuStatus::OK) return;
-                } catch(lsst::afw::gpu::GpuMemoryError) { }
-                catch(pexExcept::MemoryError) { }
-                catch(lsst::afw::gpu::GpuRuntimeError) { }
-            } else if (convolutionControl.getDevicePreference() != lsst::afw::gpu::USE_CPU) {
-                mathDetail::ConvolveGpuStatus::ReturnCode rc =
-                            mathDetail::convolveSpatiallyInvariantGPU(convolvedImage,inImage,kernel,
-                                                                             convolutionControl);
-                if (rc == mathDetail::ConvolveGpuStatus::OK) return;
-                if (convolutionControl.getDevicePreference() == lsst::afw::gpu::USE_GPU) {
-                    throw LSST_EXCEPT(pexExcept::RuntimeError, "Gpu will not process this kernel");
-                }
-            }
-        }
 
         (void)kernel.computeImage(kernelImage, doNormalize);
 
