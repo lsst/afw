@@ -22,4 +22,5 @@ from ._kernel import *
 from ._approximate import *
 # background imports mathLib so don't import background in mathLib
 from ._background import *
+import lsst.afw.image.pixel  # for SinglePixel, needed by the warping functions
 from ._warpExposure import *

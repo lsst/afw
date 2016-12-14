@@ -148,7 +148,7 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             originalFullExposure = afwImage.ExposureF(originalExposurePath)
             # "medsub" is a subregion of med starting at 0-indexed pixel (40, 150) of size 145 x 200
             bbox = afwGeom.Box2I(afwGeom.Point2I(40, 150), afwGeom.Extent2I(145, 200))
-            originalExposure = afwImage.ExposureF(originalFullExposure, bbox, useDeepCopy)
+            originalExposure = afwImage.ExposureF(originalFullExposure, bbox, afwImage.LOCAL, useDeepCopy)
             swarpedImageName = "medsubswarp1%s.fits" % (kernelName,)
         else:
             originalExposure = afwImage.ExposureF(originalExposurePath)
