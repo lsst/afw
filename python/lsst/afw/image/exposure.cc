@@ -44,8 +44,7 @@ Declare a constructor that takes an Exposure of FromPixelT and returns an Exposu
 
 The mask and variance must be of the standard types.
 
-@param[in] src  The Exposure to cast.
-@param[in] deep  Make a deep copy? Must be specified and must be `true`, for disambiguation.
+@param[in] cls  The pybind11 class to which add the constructor
 */
 template <typename FromPixelT, typename ToPixelT>
 void declareCastConstructor(py::class_<Exposure<ToPixelT, MaskPixel, VariancePixel>,
@@ -125,8 +124,7 @@ py::class_<Exposure<PixelT, MaskPixel, VariancePixel>,
     cls.def("getY0", &ExposureT::getY0);
     cls.def("getXY0", &ExposureT::getXY0);
     cls.def("setXY0", &ExposureT::setXY0, "xy0"_a);
-    cls.def("getBBox", &ExposureT::getBBox,
-            "origin"_a=PARENT);
+    cls.def("getBBox", &ExposureT::getBBox, "origin"_a=PARENT);
     cls.def("getWcs", (std::shared_ptr<Wcs> (ExposureT::*)()) &ExposureT::getWcs);
     cls.def("setWcs", &ExposureT::setWcs, "wcs"_a);
     cls.def("hasWcs", &ExposureT::hasWcs);

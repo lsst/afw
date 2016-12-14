@@ -20,11 +20,6 @@
 # see <http://www.lsstcorp.org/LegalNotices/>.
 #
 
-"""Application Framework math code including Function, minimize, Kernel and convolve
+"""Application Framework image-related classes including Image, Mask and MaskedImage
 """
-from __future__ import absolute_import
-from .mathLib import *
-from .detail import *
-# background imports mathLib so don't import background in mathLib
-from .background import *
-from .warper import *
+from ._pixel import *
