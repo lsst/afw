@@ -39,8 +39,7 @@ Declare a constructor that takes a MaskedImage of FromPixelT and returns a Maske
 
 The mask and variance must be of the standard types.
 
-@param[in] src  The MaskedImage to cast.
-@param[in] deep  Make a deep copy? Must be specified and must be `true`, for disambiguation.
+@param[in] cls  The pybind11 class to which add the constructor
 */
 template <typename FromPixelT, typename ToPixelT>
 void declareCastConstructor(py::class_<MaskedImage<ToPixelT, MaskPixel, VariancePixel>,

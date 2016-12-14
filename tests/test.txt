@@ -94,7 +94,7 @@ tests/testTicket2905.py
 #tests/testTicketDM-433.py
 tests/testValidPolygon.py
 tests/testVisitInfo.py
-#tests/testWarper.py
+tests/testWarper.py
 tests/testWarpExposure.py
 tests/testWcs1.py
 tests/testWcs835.py
