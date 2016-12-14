@@ -34,7 +34,6 @@ import lsst.utils.tests
 import lsst.daf.base as dafBase
 import lsst.afw.coord as afwCoord
 import lsst.afw.geom as afwGeom
-import lsst.afw.gpu as afwGpu
 import lsst.afw.image as afwImage
 import lsst.afw.math as afwMath
 import lsst.afw.image.utils as imageUtils
@@ -273,19 +272,6 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
         for kernelName in ("bilinear", "lanczos3"):
             with self.assertRaises(pexExcept.Exception):
                 warpingControl.setWarpingKernelName(kernelName)
-
-        # error: GPU only works with Lanczos kernels
-        with self.assertRaises(pexExcept.Exception):
-            afwMath.WarpingControl("bilinear", "", 0, 0, afwGpu.USE_GPU)
-        warpingControl = afwMath.WarpingControl("bilinear")
-        with self.assertRaises(pexExcept.Exception):
-            warpingControl.setDevicePreference(afwGpu.USE_GPU)
-
-        # OK: GPU works with Lanczos kernels
-        for kernelName in ("lanczos3", "lanczos4"):
-            afwMath.WarpingControl(kernelName, "", 0, 0, afwGpu.USE_GPU)
-            warpingControl = afwMath.WarpingControl(kernelName)
-            warpingControl.setDevicePreference(afwGpu.USE_GPU)
 
         # OK: main kernel at least as big as mask kernel
         for kernelName, maskKernelName in (
@@ -534,7 +520,6 @@ class WarpExposureTestCase(lsst.utils.tests.TestCase):
             maskKernelName,
             cacheSize,
             interpLength,
-            afwGpu.DEFAULT_DEVICE_PREFERENCE,
             growFullMask
         )
         destMaskedImage = afwImage.MaskedImageF(110, 121)
