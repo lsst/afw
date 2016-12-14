@@ -308,17 +308,10 @@ void afwMath::scaledPlus(
  *
  * afw/examples offers programs that time convolution including timeConvolve and timeSpatiallyVaryingConvolve.
  *
- * \note This function is able to use GPU acceleration (for spatially invariant kernels and
- *       for LinearCombinationKernel).
- *       There is a limit on maximum kernel size, but kernels sized at most 17x17 should be accelerated
- *       on all supported GPU hardware (SM 1.3 and better). SM 2.x can accelerate kernels sized up to 22x22.
- *
  * @throw lsst::pex::exceptions::InvalidParameterError if convolvedImage is not the same size as inImage
  * @throw lsst::pex::exceptions::InvalidParameterError if inImage is smaller than kernel
  *  in columns and/or rows.
  * @throw lsst::pex::exceptions::MemoryError when allocation of CPU memory fails
- * @throw lsst::afw::gpu::GpuMemoryError when allocation or transfer to/from GPU memory fails
- * @throw lsst::afw::gpu::GpuRuntimeError when GPU code run fails
  *
  * @ingroup afw
  */

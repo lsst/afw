@@ -19,8 +19,6 @@ setupOptional(matplotlib)
 
 setupOptional(afwdata)
 
-setupOptional(cuda_toolkit)
-
 envPrepend(PATH, ${PRODUCT_DIR}/bin)
 
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
