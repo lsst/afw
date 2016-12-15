@@ -100,6 +100,10 @@ private:
         geom::Point2D const & position, image::Color const & color
     ) const;
 
+    virtual geom::Box2I doComputeBBox(
+        geom::Point2D const & position, image::Color const & color
+    ) const;
+
     geom::Extent2I _dimensions;
     double _sigma;
 };

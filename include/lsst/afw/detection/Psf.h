@@ -226,6 +226,14 @@ public:
     virtual geom::Point2D getAveragePosition() const;
 
     /**
+     *  @brief Return the bounding box of the image returned by computeKernelImage()
+     */
+    geom::Box2I computeBBox(
+        geom::Point2D position = makeNullPoint(),
+        image::Color color = image::Color()
+    ) const;
+
+    /**
      * Helper function for Psf::doComputeImage(): converts a kernel image (centered at (0,0) when xy0
      * is taken into account) to an image centered at position when xy0 is taken into account.
      *
@@ -280,6 +288,9 @@ private:
         double radius, geom::Point2D const & position, image::Color const & color
     ) const = 0;
     virtual geom::ellipses::Quadrupole doComputeShape(
+        geom::Point2D const & position, image::Color const & color
+    ) const = 0;
+    virtual geom::Box2I doComputeBBox(
         geom::Point2D const & position, image::Color const & color
     ) const = 0;
     //@}
