@@ -39,13 +39,14 @@ namespace lsst {
 namespace afw {
 namespace image {
 
+namespace {
+
 /**
 Declare a constructor that takes a MaskedImage of FromPixelT and returns a MaskedImage cast to ToPixelT
 
 The mask and variance must be of the standard types.
 
-@param[in] src  The MaskedImage to cast.
-@param[in] deep  Make a deep copy? Must be specified and must be `true`, for disambiguation.
+@param[in] cls  The pybind11 class to which add the constructor
 */
 template <typename FromPixelT, typename ToPixelT>
 void declareCastConstructor(py::class_<Image<ToPixelT>,
@@ -282,6 +283,8 @@ void addGeneralizedCopyConstructors(PyClass & cls) {
 	cls.def("convertFloat", [](Image<PixelT> const & self) { return Image<float>(self, true); });
 	cls.def("convertDouble", [](Image<PixelT> const & self) { return Image<double>(self, true); });
 }
+
+}  // anonymous namespace
 
 PYBIND11_PLUGIN(_image) {
     py::module mod("_image", "Python wrapper for afw _image library");

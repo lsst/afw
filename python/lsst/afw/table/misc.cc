@@ -27,6 +27,7 @@
 #include "lsst/afw/table/misc.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace lsst {
 namespace afw {
