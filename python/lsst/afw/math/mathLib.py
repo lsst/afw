@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import lsst.afw.geom
-import lsst.afw.gpu
 
 from lsst.afw.table.io import Persistable
 from ._minimize import *
