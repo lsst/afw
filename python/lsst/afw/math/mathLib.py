@@ -20,6 +20,6 @@ from ._offsetImage import *
 from ._stack import *
 from ._kernel import *
 from ._approximate import *
+# background imports mathLib so don't import background in mathLib
 from ._background import *
-from .background import *
 from ._warpExposure import *
