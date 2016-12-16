@@ -49,6 +49,14 @@ public:
 
     double getValue() const { return _x; }
 
+    virtual lsst::afw::geom::Box2I doComputeBBox(
+        lsst::afw::geom::Point2D const & position,
+        lsst::afw::image::Color const & color
+        ) const {
+            return lsst::afw::geom::Box2I(lsst::afw::geom::Point2I(-1, -1),
+            lsst::afw::geom::Point2I(1, 1));
+    }
+
     explicit DummyPsf(double x) : _x(x) {}
 
 protected:
@@ -152,6 +160,7 @@ PYBIND11_PLUGIN(_testTableArchivesLib) {
 
     cls.def(py::init<double>());
 
+    cls.def("doComputeBBox", &DummyPsf::doComputeBBox);
     cls.def("clone", &DummyPsf::clone);
     cls.def("isPersistable", &DummyPsf::isPersistable);
     cls.def("getValue", &DummyPsf::getValue);
