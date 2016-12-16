@@ -73,18 +73,15 @@ PYBIND11_PLUGIN(_convolveImage) {
 
     py::class_<ConvolutionControl, std::shared_ptr<ConvolutionControl>> clsConvolutionControl(mod, "ConvolutionControl");
 
-    clsConvolutionControl.def(py::init<bool, bool, int, lsst::afw::gpu::DevicePreference>(),
-            "doNormalize"_a=true, "doCopyEdge"_a=false, "maxInterpolationDistance"_a=10,
-            "devicePreference"_a=lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE);
+    clsConvolutionControl.def(py::init<bool, bool, int>(),
+            "doNormalize"_a=true, "doCopyEdge"_a=false, "maxInterpolationDistance"_a=10);
 
     clsConvolutionControl.def("getDoNormalize", &ConvolutionControl::getDoNormalize);
     clsConvolutionControl.def("getDoCopyEdge", &ConvolutionControl::getDoCopyEdge);
     clsConvolutionControl.def("getMaxInterpolationDistance", &ConvolutionControl::getMaxInterpolationDistance);
-    clsConvolutionControl.def("getDevicePreference", &ConvolutionControl::getDevicePreference);
     clsConvolutionControl.def("setDoNormalize", &ConvolutionControl::setDoNormalize);
     clsConvolutionControl.def("setDoCopyEdge", &ConvolutionControl::setDoCopyEdge);
     clsConvolutionControl.def("setMaxInterpolationDistance", &ConvolutionControl::setMaxInterpolationDistance);
-    clsConvolutionControl.def("setDevicePreference", &ConvolutionControl::setDevicePreference);
 
     declareAll<double, double>(mod);
     declareAll<double, float>(mod);
