@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import lsst.daf.base
+import lsst.afw.coord
 import lsst.afw.geom
 import lsst.afw.table.io
 

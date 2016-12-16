@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
-from .catalog import addCatalogMethods
+from .catalog import addCatalogMethods, searchTemplate
 
 __all__ = ["addSortedCatalogMethods"]
 
@@ -15,15 +15,27 @@ def addSortedCatalogMethods(cls):
     """
     addCatalogMethods(cls)
 
-    def _isSorted(self, key=None):
+    def isSorted(self, key=None):
         if key is None:
-            key = self.getIdKey()
+            key = self.table.getIdKey()
         return type(self).__base__.isSorted(self, key)
+    cls.isSorted = isSorted
 
-    def _sort(self, key=None):
+    def sort(self, key=None):
         if key is None:
-            key = self.getIdKey()
+            key = self.table.getIdKey()
         type(self).__base__.sort(self, key)
+    cls.sort = sort
 
-    cls.isSorted = _isSorted
-    cls.sort = _sort
+    def find(self, value, key=None):
+        """Return the record for which record.get(key) == value
+
+        If no such record is found, return None; if multiple such records are found,
+        return one of them.
+
+        The catalog must be sorted by this key before this method is called.
+        """
+        if key is None:
+            key = self.table.getIdKey()
+        return searchTemplate(self, "_find_", value, key)
+    cls.find = find

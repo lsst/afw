@@ -21,7 +21,6 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "numpy/arrayobject.h"
@@ -37,10 +36,13 @@ template <> struct NumpyTraits<lsst::afw::geom::Angle> : public NumpyTraits<doub
 }}
 
 namespace py = pybind11;
+using namespace py::literals;
 
 namespace lsst {
 namespace afw {
 namespace table {
+
+namespace {
 
 template <typename T>
 void declareBaseColumnViewOverloads(py::class_<BaseColumnView> clsBaseColumnView) {
@@ -66,7 +68,13 @@ void declareBaseColumnViewFlagOverloads(py::class_<BaseColumnView> clsBaseColumn
 template <typename RecordT>
 void declareColumnViewT(py::module & mod) {
     py::class_<ColumnViewT<RecordT>, BaseColumnView> cls(mod, "ColumnViewT");
+
+    cls.def("getTable", &ColumnViewT<RecordT>::getTable);
+    cls.def_property_readonly("table", &ColumnViewT<RecordT>::getTable);
 };
+
+} // namespace lsst::afw::table::<anonymous>
+
 
 PYBIND11_PLUGIN(_baseColumnView) {
     py::module mod("_baseColumnView", "Python wrapper for afw _baseColumnView library");
@@ -80,6 +88,7 @@ PYBIND11_PLUGIN(_baseColumnView) {
 
     /* Module level */
     py::class_<BaseColumnView> clsBaseColumnView(mod, "BaseColumnView");
+    py::class_<BitsColumn> clsBitsColumn(mod, "BitsColumn");
     py::class_<detail::FlagExtractor> clsFlagExtractor(mod, "FlagExtractor");
 
     /* Member types and enums */
@@ -91,7 +100,29 @@ PYBIND11_PLUGIN(_baseColumnView) {
 
     /* Members */
     clsBaseColumnView.def("getTable", &BaseColumnView::getTable);
+    clsBaseColumnView.def_property_readonly("table", &BaseColumnView::getTable);
     clsBaseColumnView.def("getSchema", &BaseColumnView::getSchema);
+    clsBaseColumnView.def_property_readonly("schema", &BaseColumnView::getSchema);
+    // _getBits supports a Python version of getBits that accepts None and field names as keys
+    clsBaseColumnView.def("_getBits", &BaseColumnView::getBits);
+    clsBaseColumnView.def("getAllBits", &BaseColumnView::getAllBits);
+    //clsBaseColumnView.def("__getitem__", &BaseColumnView::operator[]);
+
+    clsBitsColumn.def("getArray", &BitsColumn::getArray);
+    clsBitsColumn.def_property_readonly("array", &BitsColumn::getArray);
+    clsBitsColumn.def("getBit",
+                      (BitsColumn::IntT (BitsColumn::*)(Key<Flag> const &) const) &BitsColumn::getBit,
+                      "key"_a);
+    clsBitsColumn.def("getBit",
+                      (BitsColumn::IntT (BitsColumn::*)(std::string const &) const) &BitsColumn::getBit,
+                      "name"_a);
+    clsBitsColumn.def("getMask",
+                      (BitsColumn::IntT (BitsColumn::*)(Key<Flag> const &) const) &BitsColumn::getMask,
+                      "key"_a);
+    clsBitsColumn.def("getMask",
+                      (BitsColumn::IntT (BitsColumn::*)(std::string const &) const) &BitsColumn::getMask,
+                      "name"_a);
+
     clsFlagExtractor.def("__call__", [](detail::FlagExtractor & self, argument_type element) {
         return self(element);
     });

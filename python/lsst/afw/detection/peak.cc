@@ -20,11 +20,13 @@
  * see <https://www.lsstcorp.org/LegalNotices/>.
  */
 
+#include <memory>
+
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 //#include <pybind11/stl.h>
 
 #include "lsst/afw/table/BaseRecord.h"
+#include "lsst/afw/table/BaseTable.h"
 #include "lsst/afw/detection/Peak.h"
 #include "lsst/afw/table/pybind11/catalog.h"
 
@@ -35,40 +37,75 @@ namespace lsst {
 namespace afw {
 namespace detection {
 
+namespace {
+
+using PyPeakRecord = py::class_<PeakRecord, std::shared_ptr<PeakRecord>, table::BaseRecord>;
+using PyPeakTable = py::class_<PeakTable, std::shared_ptr<PeakTable>, table::BaseTable>;
+using PyPeakCatalog = py::class_<table::CatalogT<PeakRecord>,
+                                 std::shared_ptr<table::CatalogT<PeakRecord>>>;
+
+/**
+Declare constructors and member and static functions for a pybind11 PeakRecord
+*/
+void declarePeakRecord(PyPeakRecord & cls) {
+    table::pybind11::addCastFrom<table::BaseRecord>(cls);
+
+    cls.def("getTable", &PeakRecord::getTable);
+    cls.def("getId", &PeakRecord::getId);
+    cls.def("setId", &PeakRecord::setId);
+    cls.def("getIx", &PeakRecord::getIx);
+    cls.def("getIy", &PeakRecord::getIy);
+    cls.def("setIx", &PeakRecord::setIx);
+    cls.def("setIy", &PeakRecord::setIy);
+    cls.def("getI", &PeakRecord::getI);
+    cls.def("getCentroid", (afw::geom::Point2I (PeakRecord::*)(bool) const) &PeakRecord::getCentroid);
+    cls.def("getCentroid", (afw::geom::Point2D (PeakRecord::*)() const) &PeakRecord::getCentroid);
+    cls.def("getFx", &PeakRecord::getFx);
+    cls.def("getFy", &PeakRecord::getFy);
+    cls.def("setFx", &PeakRecord::setFx);
+    cls.def("setFy", &PeakRecord::setFy);
+    cls.def("getF", &PeakRecord::getF);
+    cls.def("getPeakValue", &PeakRecord::getPeakValue);
+    cls.def("setPeakValue", &PeakRecord::setPeakValue);
+}
+
+/**
+Declare constructors and member and static functions for a pybind11 PeakTable
+*/
+void declarePeakTable(PyPeakTable & cls) {
+    table::pybind11::addCastFrom<table::BaseTable>(cls);
+
+    cls.def_static("make", &PeakTable::make, "schema"_a, "forceNew"_a=false);
+    cls.def_static("makeMinimalSchema", &PeakTable::makeMinimalSchema);
+    cls.def_static("checkSchema", &PeakTable::checkSchema, "schema"_a);
+    cls.def("getIdFactory",
+            (std::shared_ptr<table::IdFactory> (PeakTable::*)()) &PeakTable::getIdFactory);
+    cls.def("setIdFactory", &PeakTable::setIdFactory, "factory"_a);
+    cls.def_static("getIdKey", &PeakTable::getIdKey);
+    cls.def_static("getIxKey", &PeakTable::getIxKey);
+    cls.def_static("getIyKey", &PeakTable::getIyKey);
+    cls.def_static("getFxKey", &PeakTable::getFxKey);
+    cls.def_static("getFyKey", &PeakTable::getFyKey);
+    cls.def_static("getPeakValueKey", &PeakTable::getPeakValueKey);
+}
+
+}  // lsst::afw::detection::<anonymous>
+
 PYBIND11_PLUGIN(_peak) {
     py::module mod("_peak", "Python wrapper for afw _peak library");
 
-    py::class_<PeakRecord, std::shared_ptr<PeakRecord>, lsst::afw::table::BaseRecord> clsPeakRecord(mod, "PeakRecord");
-
-    clsPeakRecord.def("getTable", &PeakRecord::getTable);
-    clsPeakRecord.def("getId", &PeakRecord::getId);
-    clsPeakRecord.def("setId", &PeakRecord::setId);
-    clsPeakRecord.def("getIx", &PeakRecord::getIx);
-    clsPeakRecord.def("getIy", &PeakRecord::getIy);
-    clsPeakRecord.def("setIx", &PeakRecord::setIx);
-    clsPeakRecord.def("setIy", &PeakRecord::setIy);
-    clsPeakRecord.def("getI", &PeakRecord::getI);
-    clsPeakRecord.def("getCentroid", (afw::geom::Point2I (PeakRecord::*)(bool) const) &PeakRecord::getCentroid);
-    clsPeakRecord.def("getCentroid", (afw::geom::Point2D (PeakRecord::*)() const) &PeakRecord::getCentroid);
-    clsPeakRecord.def("getFx", &PeakRecord::getFx);
-    clsPeakRecord.def("getFy", &PeakRecord::getFy);
-    clsPeakRecord.def("setFx", &PeakRecord::setFx);
-    clsPeakRecord.def("setFy", &PeakRecord::setFy);
-    clsPeakRecord.def("getF", &PeakRecord::getF);
-    clsPeakRecord.def("getPeakValue", &PeakRecord::getPeakValue);
-    clsPeakRecord.def("setPeakValue", &PeakRecord::setPeakValue);
-
-    py::class_<table::CatalogT<PeakRecord>, std::shared_ptr<table::CatalogT<PeakRecord>>> clsPeakRecordCatalog(mod, "PeakRecordCatalog");
-    declareCatalog(clsPeakRecordCatalog);
     /* Module level */
-
-    /* Member types and enums */
-
-    /* Constructors */
-
-    /* Operators */
+    PyPeakRecord clsPeakRecord(mod, "PeakRecord");
+    PyPeakTable clsPeakTable(mod, "PeakTable");
+    PyPeakCatalog clsPeakCatalog(mod, "PeakCatalog", py::dynamic_attr());
 
     /* Members */
+    declarePeakRecord(clsPeakRecord);
+    declarePeakTable(clsPeakTable);
+    table::pybind11::declareCatalog(clsPeakCatalog);
+
+    clsPeakCatalog.attr("Record") = clsPeakRecord;
+    clsPeakCatalog.attr("Table") = clsPeakTable;
 
     return mod.ptr();
 }

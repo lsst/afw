@@ -21,7 +21,6 @@
  */
 
 #include <pybind11/pybind11.h>
-//#include <pybind11/operators.h>
 #include <pybind11/stl.h>
 
 #include "numpy/arrayobject.h"
@@ -62,6 +61,8 @@ PYBIND11_PLUGIN(_baseCore) {
     /* Constructors */
 
     /* Operators */
+    clsBaseCore.def("__eq__", &BaseCore::operator==, py::is_operator());
+    clsBaseCore.def("__nq__", &BaseCore::operator!=, py::is_operator());
 
     /* Members */
     clsBaseCore.def("getName", &BaseCore::getName);
