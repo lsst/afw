@@ -82,20 +82,17 @@ PYBIND11_PLUGIN(_warpExposure) {
 
     py::class_<WarpingControl, std::shared_ptr<WarpingControl>> clsWarpingControl(mod, "WarpingControl");
 
-    clsWarpingControl.def(py::init<std::string const &, std::string const &, int, int, lsst::afw::gpu::DevicePreference, lsst::afw::image::MaskPixel>(),
+    clsWarpingControl.def(py::init<std::string const &, std::string const &, int, int, lsst::afw::image::MaskPixel>(),
             "warpingKernelName"_a,
             "maskWarpingKernelName"_a="",
             "cacheSize"_a=0,
             "interpLength"_a=0,
-            "devicePreference"_a=lsst::afw::gpu::DEFAULT_DEVICE_PREFERENCE,
             "growFullMask"_a=0);
 
     clsWarpingControl.def("getCacheSize", &WarpingControl::getCacheSize);
     clsWarpingControl.def("setCacheSize", &WarpingControl::setCacheSize);
     clsWarpingControl.def("getInterpLength", &WarpingControl::getInterpLength);
     clsWarpingControl.def("setInterpLength", &WarpingControl::setInterpLength);
-    clsWarpingControl.def("getDevicePreference", &WarpingControl::getDevicePreference);
-    clsWarpingControl.def("setDevicePreference", &WarpingControl::setDevicePreference);
     clsWarpingControl.def("getWarpingKernel", &WarpingControl::getWarpingKernel);
     clsWarpingControl.def("setWarpingKernelName", (void (WarpingControl::*)(std::string const &)) &WarpingControl::setWarpingKernelName);
     clsWarpingControl.def("setWarpingKernelName", (void (WarpingControl::*)(SeparableKernel const &)) &WarpingControl::setWarpingKernelName);
